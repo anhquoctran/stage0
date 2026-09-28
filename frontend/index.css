@@ -1,0 +1,257 @@
+@import "tailwindcss";
+@import "@git-diff-view/react/styles/diff-view.css";
+
+:root,
+[data-theme="mocha"],
+[data-theme="dark"],
+.mocha,
+.dark {
+  color-scheme: dark;
+  --ctp-rosewater: #f5e0dc;
+  --ctp-flamingo: #f2cdcd;
+  --ctp-pink: #f5c2e7;
+  --ctp-mauve: #cba6f7;
+  --ctp-red: #f38ba8;
+  --ctp-maroon: #eba0ac;
+  --ctp-peach: #fab387;
+  --ctp-yellow: #f9e2af;
+  --ctp-green: #a6e3a1;
+  --ctp-teal: #94e2d5;
+  --ctp-sky: #89dceb;
+  --ctp-sapphire: #74c7ec;
+  --ctp-blue: #89b4fa;
+  --ctp-lavender: #b4befe;
+  --ctp-text: #cdd6f4;
+  --ctp-subtext1: #bac2de;
+  --ctp-subtext0: #a6adc8;
+  --ctp-overlay2: #9399b2;
+  --ctp-overlay1: #7f849c;
+  --ctp-overlay0: #6c7086;
+  --ctp-surface2: #585b70;
+  --ctp-surface1: #45475a;
+  --ctp-surface0: #313244;
+  --ctp-base: #1e1e2e;
+  --ctp-mantle: #181825;
+  --ctp-crust: #11111b;
+
+  --bg-canvas: var(--ctp-crust);
+  --bg-subtle: var(--ctp-mantle);
+  --bg-surface: var(--ctp-base);
+  --bg-overlay: var(--ctp-surface0);
+  --border-default: var(--ctp-surface0);
+  --border-muted: var(--ctp-surface1);
+  --text-primary: var(--ctp-text);
+  --text-secondary: var(--ctp-subtext1);
+  --text-muted: var(--ctp-subtext0);
+}
+
+[data-theme="mocha-light"],
+[data-theme="latte"],
+[data-theme="light"],
+.mocha-light,
+.latte,
+.light {
+  color-scheme: light;
+  --ctp-rosewater: #dc8a78;
+  --ctp-flamingo: #dd7878;
+  --ctp-pink: #ea76cb;
+  --ctp-mauve: #8839ef;
+  --ctp-red: #d20f39;
+  --ctp-maroon: #e64553;
+  --ctp-peach: #fe640b;
+  --ctp-yellow: #df8e1d;
+  --ctp-green: #40a02b;
+  --ctp-teal: #179299;
+  --ctp-sky: #04a5e5;
+  --ctp-sapphire: #209fb5;
+  --ctp-blue: #1e66f5;
+  --ctp-lavender: #7287fd;
+  --ctp-text: #4c4f69;
+  --ctp-subtext1: #5c5f77;
+  --ctp-subtext0: #6c6f85;
+  --ctp-overlay2: #7c7f93;
+  --ctp-overlay1: #8c8fa1;
+  --ctp-overlay0: #9ca0b0;
+  --ctp-surface2: #acb0be;
+  --ctp-surface1: #bcc0cc;
+  --ctp-surface0: #ccd0da;
+  --ctp-base: #eff1f5;
+  --ctp-mantle: #e6e9ef;
+  --ctp-crust: #dce0e8;
+
+  --bg-canvas: var(--ctp-crust);
+  --bg-subtle: var(--ctp-mantle);
+  --bg-surface: var(--ctp-base);
+  --bg-overlay: var(--ctp-surface0);
+  --border-default: var(--ctp-surface0);
+  --border-muted: var(--ctp-surface1);
+  --text-primary: var(--ctp-text);
+  --text-secondary: var(--ctp-subtext1);
+  --text-muted: var(--ctp-subtext0);
+}
+
+@theme {
+  --color-rosewater: var(--ctp-rosewater);
+  --color-flamingo: var(--ctp-flamingo);
+  --color-pink: var(--ctp-pink);
+  --color-mauve: var(--ctp-mauve);
+  --color-red: var(--ctp-red);
+  --color-maroon: var(--ctp-maroon);
+  --color-peach: var(--ctp-peach);
+  --color-yellow: var(--ctp-yellow);
+  --color-green: var(--ctp-green);
+  --color-teal: var(--ctp-teal);
+  --color-sky: var(--ctp-sky);
+  --color-sapphire: var(--ctp-sapphire);
+  --color-blue: var(--ctp-blue);
+  --color-lavender: var(--ctp-lavender);
+  --color-text: var(--ctp-text);
+  --color-subtext1: var(--ctp-subtext1);
+  --color-subtext0: var(--ctp-subtext0);
+  --color-overlay2: var(--ctp-overlay2);
+  --color-overlay1: var(--ctp-overlay1);
+  --color-overlay0: var(--ctp-overlay0);
+  --color-surface2: var(--ctp-surface2);
+  --color-surface1: var(--ctp-surface1);
+  --color-surface0: var(--ctp-surface0);
+  --color-base: var(--ctp-base);
+  --color-mantle: var(--ctp-mantle);
+  --color-crust: var(--ctp-crust);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+code, kbd, samp, pre {
+  font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Git GUI Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ctp-crust);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ctp-surface1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ctp-surface2);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* @git-diff-view/react overrides for Catppuccin Aesthetic */
+.diff-view-wrapper {
+  background-color: var(--ctp-base) !important;
+  border-color: var(--ctp-surface0) !important;
+  color: var(--ctp-text) !important;
+  font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", ui-monospace, Menlo, Monaco, Consolas, monospace;
+}
+
+.diff-tailwindcss-wrapper {
+  background-color: var(--ctp-base) !important;
+  color: var(--ctp-text) !important;
+}
+
+.diff-tailwindcss-wrapper .split-diff-view,
+.diff-tailwindcss-wrapper .unified-diff-view {
+  background-color: var(--ctp-base) !important;
+}
+
+.diff-line-old {
+  background-color: color-mix(in srgb, var(--ctp-red) 16%, transparent) !important;
+}
+
+.diff-line-new {
+  background-color: color-mix(in srgb, var(--ctp-green) 16%, transparent) !important;
+}
+
+.diff-line-hunk-header {
+  background-color: color-mix(in srgb, var(--ctp-blue) 14%, transparent) !important;
+  color: var(--ctp-blue) !important;
+}
+
+.diff-tailwindcss-wrapper .diff-line-num {
+  color: var(--ctp-overlay0) !important;
+  background-color: var(--ctp-mantle) !important;
+  border-color: var(--ctp-surface0) !important;
+}
+
+/* Catppuccin Syntax Highlighting */
+.diff-tailwindcss-wrapper .hljs {
+  color: var(--ctp-text) !important;
+  background: var(--ctp-base) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-keyword,
+.diff-tailwindcss-wrapper .hljs-doctag,
+.diff-tailwindcss-wrapper .hljs-meta .hljs-keyword,
+.diff-tailwindcss-wrapper .hljs-template-tag {
+  color: var(--ctp-mauve) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-title,
+.diff-tailwindcss-wrapper .hljs-title.class_,
+.diff-tailwindcss-wrapper .hljs-title.function_ {
+  color: var(--ctp-blue) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-string,
+.diff-tailwindcss-wrapper .hljs-regexp,
+.diff-tailwindcss-wrapper .hljs-meta .hljs-string {
+  color: var(--ctp-green) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-number,
+.diff-tailwindcss-wrapper .hljs-literal,
+.diff-tailwindcss-wrapper .hljs-attr,
+.diff-tailwindcss-wrapper .hljs-attribute {
+  color: var(--ctp-peach) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-built_in,
+.diff-tailwindcss-wrapper .hljs-symbol,
+.diff-tailwindcss-wrapper .hljs-type {
+  color: var(--ctp-yellow) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-comment,
+.diff-tailwindcss-wrapper .hljs-code {
+  color: var(--ctp-overlay0) !important;
+  font-style: italic;
+}
+
+.diff-tailwindcss-wrapper .hljs-variable {
+  color: var(--ctp-rosewater) !important;
+}
+
+/* Smooth pulsing for conflict indicators */
+@keyframes conflict-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ctp-red) 40%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ctp-red) 0%, transparent);
+  }
+}
+
+.conflict-pulse {
+  animation: conflict-glow 2s infinite ease-in-out;
+}
