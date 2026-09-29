@@ -13,6 +13,7 @@ out/
 target/
 backend/target/
 backend/target_check/
+backend/target_tmp/
 src-tauri/target/
 **/*.rs.bk
 

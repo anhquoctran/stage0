@@ -22,6 +22,8 @@ import {
   Check,
   ChevronRight,
   Sliders,
+  Play,
+  SkipForward,
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useGitStore } from '../../store/useGitStore';
@@ -46,6 +48,8 @@ export const MenuBar: React.FC = () => {
     refreshDiff,
     runSync,
     isSyncing,
+    setIsPullFromOpen,
+    setIsRebaseFromOpen,
   } = useGitStore();
 
   const { themeMode, toggleTheme } = useThemeStore();
@@ -462,7 +466,7 @@ export const MenuBar: React.FC = () => {
           </button>
 
           {activeMenu === 'repository' && (
-            <div className="absolute left-0 top-full mt-0.5 w-64 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+            <div className="absolute left-0 top-full mt-0.5 w-68 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
               <button
                 type="button"
                 disabled={!currentRepo || isSyncing}
@@ -476,7 +480,10 @@ export const MenuBar: React.FC = () => {
                   <RefreshCw className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Fetch (All &amp; Prune)</span>
                 </div>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+F</span>
               </button>
+
+              <div className="my-1 border-t border-surface0" />
 
               <button
                 type="button"
@@ -489,9 +496,28 @@ export const MenuBar: React.FC = () => {
               >
                 <div className="flex items-center gap-2">
                   <Download className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Pull</span>
+                  <span>Pull (Quick)</span>
                 </div>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+P</span>
               </button>
+
+              <button
+                type="button"
+                disabled={!currentRepo || isSyncing}
+                onClick={() => {
+                  closeMenus();
+                  setIsPullFromOpen(true);
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Pull from...</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+P</span>
+              </button>
+
+              <div className="my-1 border-t border-surface0" />
 
               <button
                 type="button"
@@ -504,7 +530,71 @@ export const MenuBar: React.FC = () => {
               >
                 <div className="flex items-center gap-2">
                   <GitMerge className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Rebase</span>
+                  <span>Rebase (Quick)</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+R</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={!currentRepo || isSyncing}
+                onClick={() => {
+                  closeMenus();
+                  setIsRebaseFromOpen(true);
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Rebase from...</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+R</span>
+              </button>
+
+              <div className="my-1 border-t border-surface0" />
+
+              <button
+                type="button"
+                disabled={!currentRepo || isSyncing}
+                onClick={() => {
+                  runSync('rebase_continue');
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-green text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Play className="w-3.5 h-3.5 text-green" />
+                  <span>Rebase: Continue</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                disabled={!currentRepo || isSyncing}
+                onClick={() => {
+                  runSync('rebase_skip');
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-amber-400 text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <SkipForward className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Rebase: Skip Commit</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                disabled={!currentRepo || isSyncing}
+                onClick={() => {
+                  runSync('rebase_abort');
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-red text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <XCircle className="w-3.5 h-3.5 text-red" />
+                  <span>Rebase: Abort</span>
                 </div>
               </button>
 
@@ -613,14 +703,38 @@ export const MenuBar: React.FC = () => {
               </button>
             </div>
 
-            <div className="py-4 space-y-2.5 text-xs">
+            <div className="py-4 space-y-2 text-xs max-h-80 overflow-y-auto pr-1">
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Open Repository</span>
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+O</kbd>
               </div>
               <div className="flex items-center justify-between">
+                <span className="text-subtext1">Preferences</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+T</kbd>
+              </div>
+              <div className="flex items-center justify-between">
                 <span className="text-subtext1">Refresh Virtual Diff</span>
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+R</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Fetch (All &amp; Prune)</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+F</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Quick Pull</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+P</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Pull from... (Advanced)</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Alt+P</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Quick Rebase</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+R</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Rebase from... (Advanced)</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Alt+R</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Select Next File</span>

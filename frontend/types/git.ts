@@ -42,3 +42,22 @@ export interface RepoValidation {
   has_permission: boolean;
   error_message?: string | null;
 }
+
+export type GitSyncOperation =
+  | 'fetch'
+  | 'pull'
+  | 'rebase'
+  | 'rebase_continue'
+  | 'rebase_abort'
+  | 'rebase_skip';
+
+export interface GitSyncOptions {
+  remote?: string;
+  branch?: string;
+  rebase?: boolean;
+  autostash?: boolean;
+  ff_only?: boolean;
+  no_commit?: boolean;
+  prune?: boolean;
+}
+

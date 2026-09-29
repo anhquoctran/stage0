@@ -8,6 +8,8 @@ import {
   RepoInfo,
   RepoValidation,
   ViewMode,
+  GitSyncOperation,
+  GitSyncOptions,
 } from '../types/git';
 
 interface GitState {
@@ -44,7 +46,13 @@ interface GitState {
   selectPrevFile: () => void;
   setViewMode: (mode: ViewMode) => void;
   setFileListLayout: (layout: 'flat' | 'tree') => void;
-  runSync: (op: 'fetch' | 'pull' | 'rebase') => Promise<void>;
+  remotes: string[];
+  isPullFromOpen: boolean;
+  isRebaseFromOpen: boolean;
+  setIsPullFromOpen: (open: boolean) => void;
+  setIsRebaseFromOpen: (open: boolean) => void;
+  fetchRemotes: (repoPath: string) => Promise<void>;
+  runSync: (op: GitSyncOperation, options?: GitSyncOptions) => Promise<void>;
   clearError: () => void;
   closeRepo: () => void;
 }
@@ -53,6 +61,11 @@ export const useGitStore = create<GitState>((set, get) => ({
   currentRepo: null,
   recentRepos: [],
   branches: null,
+  remotes: [],
+  isPullFromOpen: false,
+  isRebaseFromOpen: false,
+  setIsPullFromOpen: (open) => set({ isPullFromOpen: open }),
+  setIsRebaseFromOpen: (open) => set({ isRebaseFromOpen: open }),
   baseBranch: '',
   compareBranch: '',
   diffPayload: null,
@@ -208,6 +221,9 @@ export const useGitStore = create<GitState>((set, get) => ({
         compareBranch: compare,
       });
 
+      // Also refresh remotes in background
+      get().fetchRemotes(repoPath);
+
       await get().loadDiff();
     } catch (err: unknown) {
       set({ error: String(err) });
@@ -353,18 +369,30 @@ export const useGitStore = create<GitState>((set, get) => ({
     set({ viewMode: mode });
   },
 
-  runSync: async (op: 'fetch' | 'pull' | 'rebase') => {
+  fetchRemotes: async (repoPath: string) => {
+    try {
+      const remotes = await invoke<string[]>('list_git_remotes', { repoPath });
+      set({ remotes });
+    } catch (err) {
+      console.warn('Failed to list git remotes:', err);
+    }
+  },
+
+  runSync: async (op: GitSyncOperation, options?: GitSyncOptions) => {
     const { currentRepo } = get();
     if (!currentRepo) return;
 
-    set({ isSyncing: true, syncStatus: `Running git ${op}...`, error: null });
+    const opLabel = op.replace('_', ' ');
+    set({ isSyncing: true, syncStatus: `Running git ${opLabel}...`, error: null });
     try {
       const result = await invoke<string>('run_git_sync', {
         repoPath: currentRepo.local_path,
         operation: op,
+        options: options || null,
       });
       set({ syncStatus: result });
       await get().fetchBranches(currentRepo.local_path);
+      await get().loadDiff();
     } catch (err: unknown) {
       set({ error: String(err), syncStatus: null });
     } finally {
