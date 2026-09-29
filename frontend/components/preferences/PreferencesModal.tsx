@@ -455,14 +455,7 @@ export const PreferencesModal: React.FC = () => {
               <Sliders className="w-4 h-4 text-subtext0" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-text">Preferences</h2>
-                {totalUnsaved > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-400/15 text-amber-400 border border-amber-400/30">
-                    {totalUnsaved} unsaved
-                  </span>
-                )}
-              </div>
+              <h2 className="text-sm font-bold text-text">Preferences</h2>
               <p className="text-[11px] text-subtext0">
                 Configure Appearance, Viewer Typography, Sandbox Engine, and AI
               </p>
