@@ -2,9 +2,11 @@ pub mod commands;
 pub mod credentials;
 pub mod db;
 pub mod git;
+pub mod sandbox;
 pub mod watcher;
 
 use db::Database;
+use sandbox::SandboxManager;
 use watcher::WatcherState;
 use tauri::Manager;
 
@@ -13,6 +15,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(WatcherState::new())
+        .manage(SandboxManager::new())
         .setup(|app| {
             let handle = app.handle();
             let db = Database::init(handle)
@@ -55,6 +58,13 @@ pub fn run() {
             commands::delete_git_credential,
             commands::verify_git_credential,
             commands::get_keyring_info,
+            commands::get_available_sandboxes,
+            commands::get_active_sandbox,
+            commands::set_active_sandbox,
+            commands::create_sandbox_instance,
+            commands::destroy_sandbox_instance,
+            commands::list_sandbox_instances,
+            commands::execute_sandbox_command,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   FolderGit2,
   GitBranch,
@@ -7,8 +6,10 @@ import {
   Columns2,
   Rows2,
   Keyboard,
+  Box,
 } from 'lucide-react';
 import { useGitStore } from '../../store/useGitStore';
+import { usePreferencesStore } from '../../store/usePreferencesStore';
 
 export const StatusBar: React.FC = () => {
   const {
@@ -18,7 +19,9 @@ export const StatusBar: React.FC = () => {
     conflictReport,
     selectedFile,
     viewMode,
+    activeSandboxType,
   } = useGitStore();
+  const { setIsPreferencesOpen } = usePreferencesStore();
 
   const totalFiles = diffPayload?.files.length || 0;
   const currentFileIndex = selectedFile && diffPayload
@@ -51,18 +54,30 @@ export const StatusBar: React.FC = () => {
         )}
       </div>
 
-      {/* Center: In-Memory Sandbox Status */}
+      {/* Center: Sandbox Engine & Conflict Status */}
       {currentRepo && (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsPreferencesOpen(true)}
+            className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface0 hover:bg-surface1 border border-surface1 hover:border-surface2 text-text transition-colors cursor-pointer"
+            title="Configure Sandbox Engine in Preferences"
+          >
+            <Box className="w-3 h-3 text-blue" />
+            <span className="font-medium">
+              Sandbox: {activeSandboxType === 'in_memory' ? 'In-Memory' : activeSandboxType === 'local_worktree' ? 'Worktree' : 'Docker'}
+            </span>
+          </button>
+
           {conflictReport?.has_conflicts ? (
             <div className="flex items-center gap-1.5 text-red font-medium px-2 py-0.5 rounded bg-red/10 border border-red/20">
               <AlertTriangle className="w-3 h-3 text-red" />
-              <span>Sandboxed: In-Memory Merge Conflicts Detected</span>
+              <span>Conflicts Detected</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-green font-medium px-2 py-0.5 rounded bg-green/10 border border-green/20">
               <ShieldCheck className="w-3 h-3 text-green" />
-              <span>Sandboxed</span>
+              <span>Clean Merge</span>
             </div>
           )}
         </div>
