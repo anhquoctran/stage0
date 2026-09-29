@@ -22,6 +22,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
     recentRepos,
     selectRepo,
     removeRecentRepo,
+    clearRecentRepos,
     openRepoDialog,
     setIsCloneModalOpen,
   } = useGitStore();
@@ -185,6 +186,16 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           <div className="flex items-center gap-3 text-[11px] font-mono tracking-wider text-subtext0 uppercase mb-2">
             <span>RECENT PROJECTS</span>
             <div className="flex-1 h-px bg-surface0/80" />
+            {recentList.length > 0 && (
+              <button
+                type="button"
+                onClick={clearRecentRepos}
+                className="text-[10px] lowercase text-subtext0/70 hover:text-red transition-colors cursor-pointer px-1 py-0.5 rounded hover:bg-surface0"
+                title="Clear all recent repositories"
+              >
+                clear all
+              </button>
+            )}
           </div>
 
           <div className="space-y-0.5">

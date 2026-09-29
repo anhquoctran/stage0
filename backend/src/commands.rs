@@ -192,6 +192,13 @@ pub async fn delete_recent_repo(app: AppHandle, id: String) -> Result<(), String
 }
 
 #[tauri::command]
+pub async fn clear_recent_repos(app: AppHandle) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.clear_all_repositories()
+        .map_err(|e| format!("Failed to clear repositories: {}", e))
+}
+
+#[tauri::command]
 pub async fn get_branches(app: AppHandle, repo_path: String) -> Result<BranchList, String> {
     let watcher = app.state::<WatcherState>();
     let _ = watcher.watch_repo(app.clone(), repo_path.clone());
