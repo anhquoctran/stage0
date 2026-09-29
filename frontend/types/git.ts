@@ -28,9 +28,19 @@ export interface MrDiffPayload {
   raw_diff: string;
 }
 
+export interface ConflictedFileInfo {
+  path: string;
+  conflict_type: string;
+  message: string;
+  conflict_markers_count?: number;
+}
+
 export interface ConflictReport {
   has_conflicts: boolean;
   conflicted_files: string[];
+  details?: ConflictedFileInfo[];
+  base_branch?: string | null;
+  compare_branch?: string | null;
 }
 
 export type ViewMode = 'split' | 'unified';

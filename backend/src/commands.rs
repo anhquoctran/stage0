@@ -481,6 +481,66 @@ pub async fn open_repo_in(
 }
 
 #[tauri::command]
+pub async fn open_file_in_editor(repo_path: String, file_path: String) -> Result<(), String> {
+    let full_path = std::path::Path::new(&repo_path).join(&file_path);
+    #[cfg(target_os = "windows")]
+    {
+        let win_path = full_path.to_string_lossy().to_string().replace('/', "\\");
+        let res = std::process::Command::new("cmd")
+            .args(&["/c", "code", "-g", &win_path])
+            .spawn();
+
+        if res.is_err() {
+            let mut found = false;
+            let local_appdata = std::env::var("LOCALAPPDATA").ok();
+            let prog_files = std::env::var("PROGRAMFILES").ok();
+
+            let candidates = [
+                local_appdata.as_ref().map(|p| std::path::PathBuf::from(p).join("Programs\\Microsoft VS Code\\Code.exe")),
+                prog_files.as_ref().map(|p| std::path::PathBuf::from(p).join("Microsoft VS Code\\Code.exe")),
+            ];
+
+            for cand in candidates.into_iter().flatten() {
+                if cand.exists() {
+                    if std::process::Command::new(&cand).arg("-g").arg(&win_path).spawn().is_ok() {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if !found {
+                return Err("Failed to launch Visual Studio Code. Please ensure 'code' command is in your PATH.".to_string());
+            }
+        }
+        Ok(())
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let res = std::process::Command::new("code")
+            .arg("-g")
+            .arg(full_path.to_str().unwrap_or(&file_path))
+            .spawn();
+        if res.is_err() {
+            std::process::Command::new("open")
+                .args(&["-a", "Visual Studio Code", full_path.to_str().unwrap_or(&file_path)])
+                .spawn()
+                .map_err(|e| format!("Failed to open VS Code: {}", e))?;
+        }
+        Ok(())
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        std::process::Command::new("code")
+            .arg("-g")
+            .arg(full_path.to_str().unwrap_or(&file_path))
+            .spawn()
+            .map_err(|e| format!("Failed to open VS Code: {}", e))?;
+        Ok(())
+    }
+}
+
+#[tauri::command]
 pub async fn window_minimize(window: Window) -> Result<(), String> {
     window.minimize().map_err(|e| e.to_string())
 }
