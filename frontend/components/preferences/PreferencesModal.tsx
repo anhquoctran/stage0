@@ -157,48 +157,44 @@ export const PreferencesModal: React.FC = () => {
         {/* Modal Body: Vertical Tabbed Layout */}
         <div className="flex-1 flex overflow-hidden">
           {/* Vertical Sidebar Tabs (Left) */}
-          <div className="w-56 bg-base/40 border-r border-surface0 p-3 flex flex-col gap-1 shrink-0 select-none">
-            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0/70">
+          <div className="w-56 bg-base/40 border-r border-surface0 flex flex-col shrink-0 select-none">
+            <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-subtext0/70 border-b border-surface0/40">
               Settings
             </div>
 
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-start gap-2.5 px-3 py-2.5 text-left transition-all cursor-pointer border ${isActive
-                      ? 'bg-surface1 border-surface2 text-text shadow-xs font-semibold ring-1 ring-surface2/50'
-                      : 'border-transparent text-subtext0 hover:bg-surface0/60 hover:text-text'
+            <div className="flex flex-col">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all cursor-pointer border-l-2 ${
+                      isActive
+                        ? 'bg-surface1 text-text font-semibold border-l-text'
+                        : 'border-l-transparent text-subtext0 hover:bg-surface0/50 hover:text-text'
                     }`}
-                >
-                  <div
-                    className={`mt-0.5 shrink-0 ${isActive ? 'text-text' : 'text-subtext0'
-                      }`}
                   >
-                    {tab.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-semibold leading-tight truncate">
-                      {tab.label}
+                    <div
+                      className={`mt-0.5 shrink-0 ${
+                        isActive ? 'text-text' : 'text-subtext0'
+                      }`}
+                    >
+                      {tab.icon}
                     </div>
-                    <div className="text-[10px] text-subtext0/80 leading-normal truncate mt-0.5">
-                      {tab.sublabel}
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold leading-tight truncate">
+                        {tab.label}
+                      </div>
+                      <div className="text-[10px] text-subtext0/80 leading-normal truncate mt-0.5">
+                        {tab.sublabel}
+                      </div>
                     </div>
-                  </div>
-                </button>
-              );
-            })}
-
-            {/* <div className="mt-auto p-2.5 bg-surface0/30 border border-surface0/60 flex items-center gap-2 text-[10px] text-subtext0">
-              <ShieldCheck className="w-3.5 h-3.5 text-green shrink-0" />
-              <div className="min-w-0">
-                <div className="text-text font-medium truncate">{keyringName}</div>
-                <div className="text-[9px] text-subtext0 truncate">Tokenized Hardware Vault</div>
-              </div>
-            </div> */}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Tab Content Panel (Right) */}
