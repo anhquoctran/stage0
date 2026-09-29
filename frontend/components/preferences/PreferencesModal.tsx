@@ -23,31 +23,134 @@ import { SUPPORTED_FONTS } from '../../constants/fonts';
 import {
   usePreferencesStore,
   checkFontLigaturesSupport,
+  applyViewerFontToDocument,
+  DEFAULT_VIEWER_FONT_SETTINGS,
+  ViewerFontSettings,
 } from '../../store/usePreferencesStore';
-import { useThemeStore } from '../../store/useThemeStore';
+import {
+  useThemeStore,
+  ThemeMode,
+  resolveTheme,
+  applyThemeToDocument,
+} from '../../store/useThemeStore';
 import { GitCredentialsTab } from './GitCredentialsTab';
 import { AiMcpTab } from './AiMcpTab';
 
 type PreferenceTab = 'appearance' | 'fonts' | 'credentials' | 'ai';
 
+interface PreferencesBaseline {
+  themeMode: ThemeMode;
+  fontFamily: string;
+  fontSize: number;
+  isBold: boolean;
+  isItalic: boolean;
+  isUnderline: boolean;
+  lineSpacing: number;
+  enableLigatures: boolean;
+}
+
 export const PreferencesModal: React.FC = () => {
   const {
     isPreferencesOpen,
     setIsPreferencesOpen,
-    fontFamily,
-    fontSize,
-    isBold,
-    isItalic,
-    isUnderline,
-    lineSpacing,
-    enableLigatures,
+    fontFamily: storedFontFamily,
+    fontSize: storedFontSize,
+    isBold: storedIsBold,
+    isItalic: storedIsItalic,
+    isUnderline: storedIsUnderline,
+    lineSpacing: storedLineSpacing,
+    enableLigatures: storedEnableLigatures,
     updateViewerFontSettings,
-    resetViewerFontSettings,
   } = usePreferencesStore();
 
-  const { themeMode, setThemeMode } = useThemeStore();
+  const { themeMode: storedThemeMode, setThemeMode } = useThemeStore();
 
   const [activeTab, setActiveTab] = useState<PreferenceTab>('appearance');
+
+  // Draft State (for Appearance & Fonts)
+  const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
+  const [draftFontFamily, setDraftFontFamily] = useState(storedFontFamily);
+  const [draftFontSize, setDraftFontSize] = useState(storedFontSize);
+  const [draftIsBold, setDraftIsBold] = useState(storedIsBold);
+  const [draftIsItalic, setDraftIsItalic] = useState(storedIsItalic);
+  const [draftIsUnderline, setDraftIsUnderline] = useState(storedIsUnderline);
+  const [draftLineSpacing, setDraftLineSpacing] = useState(storedLineSpacing);
+  const [draftEnableLigatures, setDraftEnableLigatures] = useState(storedEnableLigatures);
+
+  // Baseline Snapshot (committed values)
+  const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
+    themeMode: storedThemeMode,
+    fontFamily: storedFontFamily,
+    fontSize: storedFontSize,
+    isBold: storedIsBold,
+    isItalic: storedIsItalic,
+    isUnderline: storedIsUnderline,
+    lineSpacing: storedLineSpacing,
+    enableLigatures: storedEnableLigatures,
+  });
+
+  const [isApplied, setIsApplied] = useState(false);
+
+  // Synchronize draft states and baseline whenever modal is opened
+  useEffect(() => {
+    if (isPreferencesOpen) {
+      setDraftThemeMode(storedThemeMode);
+      setDraftFontFamily(storedFontFamily);
+      setDraftFontSize(storedFontSize);
+      setDraftIsBold(storedIsBold);
+      setDraftIsItalic(storedIsItalic);
+      setDraftIsUnderline(storedIsUnderline);
+      setDraftLineSpacing(storedLineSpacing);
+      setDraftEnableLigatures(storedEnableLigatures);
+
+      setSavedBaseline({
+        themeMode: storedThemeMode,
+        fontFamily: storedFontFamily,
+        fontSize: storedFontSize,
+        isBold: storedIsBold,
+        isItalic: storedIsItalic,
+        isUnderline: storedIsUnderline,
+        lineSpacing: storedLineSpacing,
+        enableLigatures: storedEnableLigatures,
+      });
+
+      setIsApplied(false);
+    }
+  }, [
+    isPreferencesOpen,
+    storedThemeMode,
+    storedFontFamily,
+    storedFontSize,
+    storedIsBold,
+    storedIsItalic,
+    storedIsUnderline,
+    storedLineSpacing,
+    storedEnableLigatures,
+  ]);
+
+  // Check if there are any uncommitted changes relative to saved baseline
+  const hasUnsavedChanges = useMemo(() => {
+    return (
+      draftThemeMode !== savedBaseline.themeMode ||
+      draftFontFamily !== savedBaseline.fontFamily ||
+      draftFontSize !== savedBaseline.fontSize ||
+      draftIsBold !== savedBaseline.isBold ||
+      draftIsItalic !== savedBaseline.isItalic ||
+      draftIsUnderline !== savedBaseline.isUnderline ||
+      draftLineSpacing !== savedBaseline.lineSpacing ||
+      draftEnableLigatures !== savedBaseline.enableLigatures
+    );
+  }, [
+    draftThemeMode,
+    draftFontFamily,
+    draftFontSize,
+    draftIsBold,
+    draftIsItalic,
+    draftIsUnderline,
+    draftLineSpacing,
+    draftEnableLigatures,
+    savedBaseline,
+  ]);
 
   // Custom Font Dropdown State
   const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
@@ -93,12 +196,91 @@ export const PreferencesModal: React.FC = () => {
     );
   }, [fontSearchQuery]);
 
+  // Theme selection handler with instant preview
+  const handleSelectTheme = (mode: ThemeMode) => {
+    setDraftThemeMode(mode);
+    applyThemeToDocument(resolveTheme(mode));
+  };
+
+  // Reset to default action
+  const handleResetToDefault = () => {
+    setDraftThemeMode('system');
+    applyThemeToDocument(resolveTheme('system'));
+
+    setDraftFontFamily(DEFAULT_VIEWER_FONT_SETTINGS.fontFamily);
+    setDraftFontSize(DEFAULT_VIEWER_FONT_SETTINGS.fontSize);
+    setDraftIsBold(DEFAULT_VIEWER_FONT_SETTINGS.isBold);
+    setDraftIsItalic(DEFAULT_VIEWER_FONT_SETTINGS.isItalic);
+    setDraftIsUnderline(DEFAULT_VIEWER_FONT_SETTINGS.isUnderline);
+    setDraftLineSpacing(DEFAULT_VIEWER_FONT_SETTINGS.lineSpacing);
+    setDraftEnableLigatures(DEFAULT_VIEWER_FONT_SETTINGS.enableLigatures);
+  };
+
+  // Apply (save only)
+  const handleApply = () => {
+    const committedFontSettings: ViewerFontSettings = {
+      fontFamily: draftFontFamily,
+      fontSize: draftFontSize,
+      isBold: draftIsBold,
+      isItalic: draftIsItalic,
+      isUnderline: draftIsUnderline,
+      lineSpacing: draftLineSpacing,
+      enableLigatures: draftEnableLigatures,
+    };
+
+    // Commit to stores & persistent storage
+    updateViewerFontSettings(committedFontSettings);
+    applyViewerFontToDocument(committedFontSettings);
+
+    setThemeMode(draftThemeMode);
+    applyThemeToDocument(resolveTheme(draftThemeMode));
+
+    // Update baseline
+    setSavedBaseline({
+      themeMode: draftThemeMode,
+      ...committedFontSettings,
+    });
+
+    setIsApplied(true);
+    setTimeout(() => setIsApplied(false), 1500);
+  };
+
+  // OK (save then close)
+  const handleOk = () => {
+    handleApply();
+    setIsPreferencesOpen(false);
+  };
+
+  // Cancel (close without saving)
+  const handleCancel = () => {
+    // Rollback any live previews to baseline
+    applyThemeToDocument(resolveTheme(savedBaseline.themeMode));
+    applyViewerFontToDocument(savedBaseline);
+
+    // Rollback stores
+    setThemeMode(savedBaseline.themeMode);
+    updateViewerFontSettings(savedBaseline);
+
+    setIsPreferencesOpen(false);
+  };
+
+  // Keyboard navigation & Esc listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isPreferencesOpen && !isFontDropdownOpen) {
+        handleCancel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPreferencesOpen, isFontDropdownOpen, savedBaseline]);
+
   if (!isPreferencesOpen) return null;
 
-  const currentFontSupportsLigatures = checkFontLigaturesSupport(fontFamily);
+  const currentFontSupportsLigatures = checkFontLigaturesSupport(draftFontFamily);
   const selectedFontObj = SUPPORTED_FONTS.find(
-    (f) => f.fontFamilyName.toLowerCase() === fontFamily.toLowerCase()
-  ) || { fontFamilyName: fontFamily, ligaturesSupport: currentFontSupportsLigatures };
+    (f) => f.fontFamilyName.toLowerCase() === draftFontFamily.toLowerCase()
+  ) || { fontFamilyName: draftFontFamily, ligaturesSupport: currentFontSupportsLigatures };
 
   const tabs: { id: PreferenceTab; label: string; sublabel: string; icon: React.ReactNode }[] = [
     {
@@ -146,9 +328,9 @@ export const PreferencesModal: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setIsPreferencesOpen(false)}
+            onClick={handleCancel}
             className="p-1.5 rounded-lg hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
-            title="Close (Esc)"
+            title="Cancel and close (Esc)"
           >
             <X className="w-4 h-4" />
           </button>
@@ -217,9 +399,9 @@ export const PreferencesModal: React.FC = () => {
                     <div>
                       <span className="text-xs font-semibold text-text block">Interface Theme</span>
                       <span className="text-[11px] text-subtext0 block mt-0.5">
-                        {themeMode === 'system'
+                        {draftThemeMode === 'system'
                           ? 'Synchronized with your operating system color scheme'
-                          : themeMode === 'dark'
+                          : draftThemeMode === 'dark'
                           ? 'Catppuccin Mocha aesthetic dark theme'
                           : 'Catppuccin Latte clean light theme'}
                       </span>
@@ -229,9 +411,9 @@ export const PreferencesModal: React.FC = () => {
                     <div className="inline-flex items-center p-0.5 bg-base border border-surface1 gap-0.5 shadow-inner">
                       <button
                         type="button"
-                        onClick={() => setThemeMode('system')}
+                        onClick={() => handleSelectTheme('system')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
-                          themeMode === 'system'
+                          draftThemeMode === 'system'
                             ? 'bg-surface2 text-text font-semibold shadow-xs'
                             : 'text-subtext0 hover:text-text hover:bg-surface0'
                         }`}
@@ -243,9 +425,9 @@ export const PreferencesModal: React.FC = () => {
 
                       <button
                         type="button"
-                        onClick={() => setThemeMode('dark')}
+                        onClick={() => handleSelectTheme('dark')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
-                          themeMode === 'dark'
+                          draftThemeMode === 'dark'
                             ? 'bg-surface2 text-text font-semibold shadow-xs'
                             : 'text-subtext0 hover:text-text hover:bg-surface0'
                         }`}
@@ -257,9 +439,9 @@ export const PreferencesModal: React.FC = () => {
 
                       <button
                         type="button"
-                        onClick={() => setThemeMode('light')}
+                        onClick={() => handleSelectTheme('light')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
-                          themeMode === 'light'
+                          draftThemeMode === 'light'
                             ? 'bg-surface2 text-text font-semibold shadow-xs'
                             : 'text-subtext0 hover:text-text hover:bg-surface0'
                         }`}
@@ -301,10 +483,11 @@ export const PreferencesModal: React.FC = () => {
                     id="preferences-font-family-trigger"
                     type="button"
                     onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${isFontDropdownOpen
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
+                      isFontDropdownOpen
                         ? 'bg-surface1 border-surface2 text-text ring-1 ring-surface2'
                         : 'bg-surface0/60 border-surface0 hover:bg-surface0 text-text'
-                      }`}
+                    }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span
@@ -321,8 +504,9 @@ export const PreferencesModal: React.FC = () => {
                     </div>
 
                     <ChevronDown
-                      className={`w-4 h-4 text-subtext0 transition-transform duration-200 shrink-0 ${isFontDropdownOpen ? 'rotate-180 text-text' : ''
-                        }`}
+                      className={`w-4 h-4 text-subtext0 transition-transform duration-200 shrink-0 ${
+                        isFontDropdownOpen ? 'rotate-180 text-text' : ''
+                      }`}
                     />
                   </button>
 
@@ -360,7 +544,7 @@ export const PreferencesModal: React.FC = () => {
                         ) : (
                           filteredFonts.map((font) => {
                             const isSelected =
-                              fontFamily.toLowerCase() === font.fontFamilyName.toLowerCase();
+                              draftFontFamily.toLowerCase() === font.fontFamilyName.toLowerCase();
 
                             return (
                               <div
@@ -368,26 +552,23 @@ export const PreferencesModal: React.FC = () => {
                                 role="button"
                                 tabIndex={0}
                                 onClick={() => {
-                                  updateViewerFontSettings({
-                                    fontFamily: font.fontFamilyName,
-                                    enableLigatures: font.ligaturesSupport,
-                                  });
+                                  setDraftFontFamily(font.fontFamilyName);
+                                  setDraftEnableLigatures(font.ligaturesSupport);
                                   setIsFontDropdownOpen(false);
                                 }}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter' || e.key === ' ') {
                                     e.preventDefault();
-                                    updateViewerFontSettings({
-                                      fontFamily: font.fontFamilyName,
-                                      enableLigatures: font.ligaturesSupport,
-                                    });
+                                    setDraftFontFamily(font.fontFamilyName);
+                                    setDraftEnableLigatures(font.ligaturesSupport);
                                     setIsFontDropdownOpen(false);
                                   }
                                 }}
-                                className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer group ${isSelected
+                                className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer group ${
+                                  isSelected
                                     ? 'bg-surface1 text-text font-semibold'
                                     : 'hover:bg-surface0/80 text-subtext1 hover:text-text'
-                                  }`}
+                                }`}
                               >
                                 <div className="flex flex-col min-w-0 pr-2">
                                   <span
@@ -442,20 +623,18 @@ export const PreferencesModal: React.FC = () => {
                         type="number"
                         min="10"
                         max="24"
-                        value={fontSize}
+                        value={draftFontSize}
                         onChange={(e) =>
-                          updateViewerFontSettings({
-                            fontSize: Math.max(10, Math.min(24, parseInt(e.target.value) || 13)),
-                          })
+                          setDraftFontSize(
+                            Math.max(10, Math.min(24, parseInt(e.target.value) || 13))
+                          )
                         }
-                        className="w-full px-3 py-2 bg-surface0/60 border border-surface0 text-text text-xs focus:outline-none focus:border-surface2"
+                        className="w-20 px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 font-mono"
                       />
-                      <div className="flex gap-1">
+                      <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() =>
-                            updateViewerFontSettings({ fontSize: Math.max(10, fontSize - 1) })
-                          }
+                          onClick={() => setDraftFontSize((prev) => Math.max(10, prev - 1))}
                           className="px-2.5 py-2 rounded-lg border border-surface0 hover:bg-surface0 text-text text-xs cursor-pointer font-bold"
                           title="Decrease font size"
                         >
@@ -463,9 +642,7 @@ export const PreferencesModal: React.FC = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() =>
-                            updateViewerFontSettings({ fontSize: Math.min(24, fontSize + 1) })
-                          }
+                          onClick={() => setDraftFontSize((prev) => Math.min(24, prev + 1))}
                           className="px-2.5 py-2 rounded-lg border border-surface0 hover:bg-surface0 text-text text-xs cursor-pointer font-bold"
                           title="Increase font size"
                         >
@@ -484,11 +661,12 @@ export const PreferencesModal: React.FC = () => {
                       {/* Bold */}
                       <button
                         type="button"
-                        onClick={() => updateViewerFontSettings({ isBold: !isBold })}
-                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs transition-all cursor-pointer ${isBold
+                        onClick={() => setDraftIsBold(!draftIsBold)}
+                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                          draftIsBold
                             ? 'bg-surface1 border-surface2 text-text font-bold shadow-xs'
                             : 'bg-surface0/40 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
-                          }`}
+                        }`}
                         title="Bold (Ctrl+B)"
                       >
                         <Bold className="w-3.5 h-3.5" />
@@ -498,11 +676,12 @@ export const PreferencesModal: React.FC = () => {
                       {/* Italic */}
                       <button
                         type="button"
-                        onClick={() => updateViewerFontSettings({ isItalic: !isItalic })}
-                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs transition-all cursor-pointer ${isItalic
+                        onClick={() => setDraftIsItalic(!draftIsItalic)}
+                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                          draftIsItalic
                             ? 'bg-surface1 border-surface2 text-text font-bold italic shadow-xs'
                             : 'bg-surface0/40 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
-                          }`}
+                        }`}
                         title="Italic (Ctrl+I)"
                       >
                         <Italic className="w-3.5 h-3.5" />
@@ -512,11 +691,12 @@ export const PreferencesModal: React.FC = () => {
                       {/* Underline */}
                       <button
                         type="button"
-                        onClick={() => updateViewerFontSettings({ isUnderline: !isUnderline })}
-                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs transition-all cursor-pointer ${isUnderline
+                        onClick={() => setDraftIsUnderline(!draftIsUnderline)}
+                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                          draftIsUnderline
                             ? 'bg-surface1 border-surface2 text-text font-bold underline shadow-xs'
                             : 'bg-surface0/40 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
-                          }`}
+                        }`}
                         title="Underline (Ctrl+U)"
                       >
                         <Underline className="w-3.5 h-3.5" />
@@ -536,7 +716,7 @@ export const PreferencesModal: React.FC = () => {
                       Line Spacing (Line Height)
                     </label>
                     <span className="text-xs font-mono font-bold text-text px-1.5 py-0.5 bg-surface1">
-                      {lineSpacing}x
+                      {draftLineSpacing}x
                     </span>
                   </div>
                   <input
@@ -545,12 +725,8 @@ export const PreferencesModal: React.FC = () => {
                     min="1.1"
                     max="2.2"
                     step="0.1"
-                    value={lineSpacing}
-                    onChange={(e) =>
-                      updateViewerFontSettings({
-                        lineSpacing: parseFloat(e.target.value),
-                      })
-                    }
+                    value={draftLineSpacing}
+                    onChange={(e) => setDraftLineSpacing(parseFloat(e.target.value))}
                     className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-text"
                   />
                   <div className="flex justify-between text-[10px] text-subtext0 mt-1 font-mono">
@@ -570,7 +746,7 @@ export const PreferencesModal: React.FC = () => {
                       {!currentFontSupportsLigatures && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-medium text-subtext0 bg-surface1 px-2 py-0.5 border border-surface2">
                           <AlertCircle className="w-3 h-3 text-subtext0" />
-                          Unsupported by {fontFamily}
+                          Unsupported by {draftFontFamily}
                         </span>
                       )}
                     </div>
@@ -585,10 +761,8 @@ export const PreferencesModal: React.FC = () => {
                     <input
                       type="checkbox"
                       disabled={!currentFontSupportsLigatures}
-                      checked={enableLigatures && currentFontSupportsLigatures}
-                      onChange={(e) =>
-                        updateViewerFontSettings({ enableLigatures: e.target.checked })
-                      }
+                      checked={draftEnableLigatures && currentFontSupportsLigatures}
+                      onChange={(e) => setDraftEnableLigatures(e.target.checked)}
                       className="sr-only peer"
                     />
                     <div className="w-10 h-5 bg-surface1 peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text after:h-4 after:w-4 after:transition-all peer-checked:bg-surface2 peer-disabled:opacity-40 peer-disabled:cursor-not-allowed"></div>
@@ -600,23 +774,23 @@ export const PreferencesModal: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-text">Live Preview</span>
                     <span className="text-[10px] text-subtext0 font-mono">
-                      {fontFamily} • {fontSize}px • {lineSpacing}x
+                      {draftFontFamily} • {draftFontSize}px • {draftLineSpacing}x
                     </span>
                   </div>
 
                   <div
                     className="p-3.5 bg-crust border border-surface0/80 overflow-x-auto select-text shadow-inner"
                     style={{
-                      fontFamily: `"${fontFamily}", monospace`,
-                      fontSize: `${fontSize}px`,
-                      fontWeight: isBold ? 700 : 400,
-                      fontStyle: isItalic ? 'italic' : 'normal',
-                      textDecoration: isUnderline ? 'underline' : 'none',
-                      lineHeight: lineSpacing,
+                      fontFamily: `"${draftFontFamily}", monospace`,
+                      fontSize: `${draftFontSize}px`,
+                      fontWeight: draftIsBold ? 700 : 400,
+                      fontStyle: draftIsItalic ? 'italic' : 'normal',
+                      textDecoration: draftIsUnderline ? 'underline' : 'none',
+                      lineHeight: draftLineSpacing,
                       fontVariantLigatures:
-                        enableLigatures && currentFontSupportsLigatures ? 'normal' : 'none',
+                        draftEnableLigatures && currentFontSupportsLigatures ? 'normal' : 'none',
                       fontFeatureSettings:
-                        enableLigatures && currentFontSupportsLigatures
+                        draftEnableLigatures && currentFontSupportsLigatures
                           ? '"liga" 1, "calt" 1'
                           : '"liga" 0, "calt" 0',
                     }}
@@ -656,28 +830,67 @@ export const PreferencesModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-surface0 flex items-center justify-between bg-base/60">
+        {/* Footer: Reset to default on the left, Cancel, Apply, OK on the right */}
+        <div className="px-6 py-3 border-t border-surface0 flex items-center justify-between bg-base/60 select-none">
+          {/* Left: Reset to default */}
           <div>
-            {activeTab === 'fonts' && (
-              <button
-                type="button"
-                onClick={resetViewerFontSettings}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface0 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Defaults</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleResetToDefault}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+              title="Reset all settings to system defaults"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset to default</span>
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsPreferencesOpen(false)}
-            className="px-5 py-1.5 bg-surface1 hover:bg-surface2 text-text font-semibold rounded-lg text-xs transition-colors cursor-pointer shadow-xs border border-surface2"
-          >
-            Done
-          </button>
+          {/* Right: Cancel, Apply, OK */}
+          <div className="flex items-center gap-2">
+            {/* Cancel (close without saving) */}
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-4 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium"
+              title="Close without saving"
+            >
+              Cancel
+            </button>
+
+            {/* Apply (save only) */}
+            <button
+              type="button"
+              onClick={handleApply}
+              disabled={!hasUnsavedChanges && !isApplied}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                isApplied
+                  ? 'bg-green/15 text-green border-green/30'
+                  : hasUnsavedChanges
+                  ? 'bg-surface1 hover:bg-surface2 text-text border-surface2 shadow-xs'
+                  : 'bg-surface0/40 text-subtext0/50 border-surface0 cursor-not-allowed'
+              }`}
+              title="Save changes and keep window open"
+            >
+              {isApplied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-green" />
+                  <span>Applied</span>
+                </>
+              ) : (
+                <span>Apply</span>
+              )}
+            </button>
+
+            {/* OK (save then close) */}
+            <button
+              type="button"
+              onClick={handleOk}
+              className="px-5 py-1.5 bg-surface2 hover:bg-surface1 text-text font-semibold rounded-lg text-xs transition-colors cursor-pointer shadow-xs border border-surface2"
+              title="Save changes and close window"
+            >
+              OK
+            </button>
+          </div>
         </div>
       </div>
     </div>
