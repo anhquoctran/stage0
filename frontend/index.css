@@ -318,3 +318,24 @@ code, kbd, samp, pre {
     transform: translateX(180%);
   }
 }
+
+/* VSCode-style Active Diff Line Highlight */
+tr.stage0-active-line > td {
+  background-color: color-mix(in srgb, var(--ctp-surface1) 22%, transparent) !important;
+}
+
+tr.stage0-active-line > td.diff-line-old-num,
+tr.stage0-active-line > td.diff-line-new-num,
+tr.stage0-active-line > td.diff-line-num {
+  border-left: 2px solid var(--ctp-subtext0) !important;
+}
+
+/* Inline Git Blame Container */
+.stage0-inline-blame-wrapper {
+  display: inline-flex;
+  align-items: center;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
+  vertical-align: baseline;
+}

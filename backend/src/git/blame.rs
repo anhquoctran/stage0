@@ -40,6 +40,8 @@ pub struct FileBlamePayload {
     pub lines: Vec<BlameLine>,
     pub author_stats: Vec<BlameAuthorStat>,
     pub total_lines: usize,
+    pub current_user_name: Option<String>,
+    pub current_user_email: Option<String>,
 }
 
 pub fn get_file_blame(
@@ -74,11 +76,27 @@ pub fn get_file_blame(
         return Err(format!("git blame failed: {}", err));
     }
 
-    Ok(parse_blame_porcelain(
+    let current_user_name = run_git(repo_path, &["config", "user.name"])
+        .ok()
+        .filter(|r| r.success)
+        .map(|r| r.stdout.trim().to_string())
+        .filter(|s| !s.is_empty());
+
+    let current_user_email = run_git(repo_path, &["config", "user.email"])
+        .ok()
+        .filter(|r| r.success)
+        .map(|r| r.stdout.trim().to_string())
+        .filter(|s| !s.is_empty());
+
+    let mut payload = parse_blame_porcelain(
         &res.stdout,
         file_path,
         effective_rev.unwrap_or("HEAD"),
-    ))
+    );
+    payload.current_user_name = current_user_name;
+    payload.current_user_email = current_user_email;
+
+    Ok(payload)
 }
 
 pub fn parse_blame_porcelain(
@@ -201,6 +219,8 @@ pub fn parse_blame_porcelain(
         lines,
         author_stats,
         total_lines,
+        current_user_name: None,
+        current_user_email: None,
     }
 }
 

@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   DiffView,
   DiffModeEnum,
@@ -17,14 +18,17 @@ import {
   GitPullRequest,
   CheckCircle2,
   History,
+  GitCommit,
 } from 'lucide-react';
-import { ChangedFile, MrDiffPayload, ViewMode } from '../../types/git';
+import { invoke } from '@tauri-apps/api/core';
+import { ChangedFile, MrDiffPayload, ViewMode, FileBlamePayload } from '../../types/git';
 import { extractFileHunks, inferLanguage } from '../../utils/diffParser';
 import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { FileActionMenu } from './FileActionMenu';
 import { BlameViewer } from './BlameViewer';
+import { InlineBlame } from './InlineBlame';
 
 interface DiffViewerProps {
   selectedFile: ChangedFile | null;
@@ -51,11 +55,34 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     fileViewTab,
     setFileViewTab,
     toggleFileBlame,
+    blamePayload,
+    fetchFileBlame,
+    remoteUrl,
+    showToast,
+    currentRepo,
   } = useGitStore();
   const { theme } = useThemeStore();
-  const { fontFamily, fontSize, lineSpacing, enableLigatures, isBold, isItalic, isUnderline } =
-    usePreferencesStore();
+  const {
+    fontFamily,
+    fontSize,
+    lineSpacing,
+    enableLigatures,
+    isBold,
+    isItalic,
+    isUnderline,
+    showInlineBlame,
+    toggleInlineBlame,
+  } = usePreferencesStore();
   const [copied, setCopied] = useState(false);
+
+  // Active line state for VSCode-style inline git blame
+  const [activeLine, setActiveLine] = useState<{
+    side: 'old' | 'new';
+    lineNo: number;
+  } | null>(null);
+  const [oldBlamePayload, setOldBlamePayload] = useState<FileBlamePayload | null>(null);
+  const [portalMount, setPortalMount] = useState<HTMLElement | null>(null);
+  const diffContainerRef = useRef<HTMLDivElement>(null);
 
   // Global Alt+B shortcut to toggle blame
   React.useEffect(() => {
@@ -68,6 +95,38 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleFileBlame]);
+
+  // Prefetch git blame for current file in background (for compare revision & base revision)
+  useEffect(() => {
+    if (selectedFile && currentRepo) {
+      fetchFileBlame(selectedFile.path, compareBranch || 'HEAD');
+      if (baseBranch) {
+        const oldPath = selectedFile.old_path || selectedFile.path;
+        invoke<FileBlamePayload>('get_file_blame', {
+          repoPath: currentRepo.local_path,
+          filePath: oldPath,
+          revision: baseBranch,
+          ignoreWhitespace: false,
+        })
+          .then((payload) => setOldBlamePayload(payload))
+          .catch(() => setOldBlamePayload(null));
+      }
+    }
+  }, [
+    selectedFile?.path,
+    selectedFile?.old_path,
+    compareBranch,
+    baseBranch,
+    currentRepo?.local_path,
+    fetchFileBlame,
+  ]);
+
+  // Set default active line on file change
+  useEffect(() => {
+    if (selectedFile) {
+      setActiveLine({ side: 'new', lineNo: 1 });
+    }
+  }, [selectedFile?.path]);
 
   const hunks = useMemo(() => {
     if (!diffPayload || !selectedFile) return [];
@@ -97,6 +156,179 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       hunks,
     };
   }, [selectedFile, fileLang, hunks]);
+
+  // Handle clicking any line in the diff viewer to move active inline blame line
+  const handleDiffClick = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.inline-blame-badge')) return;
+
+    const tr = target.closest('tr.diff-line') as HTMLTableRowElement | null;
+    if (!tr) return;
+
+    const oldNumTd = tr.querySelector('.diff-line-old-num') as HTMLElement | null;
+    const newNumTd = tr.querySelector('.diff-line-new-num') as HTMLElement | null;
+    const oldContentTd = tr.querySelector('.diff-line-old-content') as HTMLElement | null;
+    const newContentTd = tr.querySelector('.diff-line-new-content') as HTMLElement | null;
+
+    const unifiedNumTd = tr.querySelector('.diff-line-num') as HTMLElement | null;
+    const unifiedContentTd = tr.querySelector('.diff-line-content') as HTMLElement | null;
+
+    let side: 'old' | 'new' = 'new';
+    let lineNo: number | null = null;
+
+    if (oldContentTd && newContentTd) {
+      // Split mode
+      const isOldSide = Boolean(target.closest('.diff-line-old-content, .diff-line-old-num'));
+      if (isOldSide) {
+        side = 'old';
+        const numSpan = oldNumTd?.querySelector('[data-line-num]');
+        const raw = numSpan?.getAttribute('data-line-num');
+        lineNo = raw ? parseInt(raw, 10) : null;
+      } else {
+        side = 'new';
+        const numSpan = newNumTd?.querySelector('[data-line-num]');
+        const raw = numSpan?.getAttribute('data-line-num');
+        lineNo = raw ? parseInt(raw, 10) : null;
+      }
+    } else if (unifiedContentTd && unifiedNumTd) {
+      // Unified mode
+      const newSpan = unifiedNumTd.querySelector('[data-line-new-num]');
+      const oldSpan = unifiedNumTd.querySelector('[data-line-old-num]');
+      const newRaw = newSpan?.getAttribute('data-line-new-num');
+      const oldRaw = oldSpan?.getAttribute('data-line-old-num');
+
+      if (newRaw && parseInt(newRaw, 10)) {
+        side = 'new';
+        lineNo = parseInt(newRaw, 10);
+      } else if (oldRaw && parseInt(oldRaw, 10)) {
+        side = 'old';
+        lineNo = parseInt(oldRaw, 10);
+      }
+    }
+
+    if (lineNo && !isNaN(lineNo)) {
+      setActiveLine({ side, lineNo });
+    }
+  }, []);
+
+  // Compute active commit from blame payload
+  const activeBlameCommit = useMemo(() => {
+    if (!activeLine) return null;
+    const payload =
+      activeLine.side === 'old' && oldBlamePayload ? oldBlamePayload : blamePayload;
+    if (!payload) return null;
+    const line = payload.lines.find((l) => l.line_no === activeLine.lineNo);
+    if (!line) return null;
+    return payload.commits[line.commit_id] || null;
+  }, [activeLine, blamePayload, oldBlamePayload]);
+
+  // Mount inline blame DOM wrapper and set active line highlight
+  useEffect(() => {
+    if (!showInlineBlame) {
+      if (diffContainerRef.current) {
+        diffContainerRef.current
+          .querySelectorAll('.stage0-active-line')
+          .forEach((el) => el.classList.remove('stage0-active-line'));
+        diffContainerRef.current
+          .querySelectorAll('.stage0-inline-blame-wrapper')
+          .forEach((el) => el.remove());
+      }
+      setPortalMount(null);
+      return;
+    }
+
+    if (!activeLine || !diffContainerRef.current) return;
+    const container = diffContainerRef.current;
+
+    let targetTd: HTMLElement | null = null;
+
+    // Split view check
+    if (activeLine.side === 'new') {
+      const span = container.querySelector(
+        `.diff-line-new-num [data-line-num="${activeLine.lineNo}"]`
+      );
+      if (span) {
+        targetTd = span.closest('tr')?.querySelector('.diff-line-new-content') as HTMLElement | null;
+      }
+    } else {
+      const span = container.querySelector(
+        `.diff-line-old-num [data-line-num="${activeLine.lineNo}"]`
+      );
+      if (span) {
+        targetTd = span.closest('tr')?.querySelector('.diff-line-old-content') as HTMLElement | null;
+      }
+    }
+
+    // Unified view check
+    if (!targetTd) {
+      if (activeLine.side === 'new') {
+        const span = container.querySelector(
+          `[data-line-new-num="${activeLine.lineNo}"]`
+        );
+        if (span) {
+          targetTd = span.closest('tr')?.querySelector('.diff-line-content') as HTMLElement | null;
+        }
+      } else {
+        const span = container.querySelector(
+          `[data-line-old-num="${activeLine.lineNo}"]`
+        );
+        if (span) {
+          targetTd = span.closest('tr')?.querySelector('.diff-line-content') as HTMLElement | null;
+        }
+      }
+    }
+
+    if (!targetTd) {
+      setPortalMount(null);
+      return;
+    }
+
+    // Update active line highlight
+    container
+      .querySelectorAll('.stage0-active-line')
+      .forEach((el) => el.classList.remove('stage0-active-line'));
+    targetTd.closest('tr')?.classList.add('stage0-active-line');
+
+    // Remove old mount points from other lines
+    container.querySelectorAll('.stage0-inline-blame-wrapper').forEach((el) => {
+      if (el.parentElement !== targetTd) {
+        el.remove();
+      }
+    });
+
+    // Create or locate mount point in targetTd
+    let mount = targetTd.querySelector('.stage0-inline-blame-wrapper') as HTMLElement | null;
+    if (!mount) {
+      mount = document.createElement('span');
+      mount.className = 'stage0-inline-blame-wrapper';
+      targetTd.appendChild(mount);
+    }
+
+    setPortalMount(mount);
+  }, [
+    activeLine,
+    showInlineBlame,
+    diffData,
+    viewMode,
+    fileViewTab,
+    fontSize,
+    fontFamily,
+    theme,
+  ]);
+
+  // Clean up portal mount and active line highlight on unmount or file change
+  useEffect(() => {
+    return () => {
+      if (diffContainerRef.current) {
+        diffContainerRef.current
+          .querySelectorAll('.stage0-active-line')
+          .forEach((el) => el.classList.remove('stage0-active-line'));
+        diffContainerRef.current
+          .querySelectorAll('.stage0-inline-blame-wrapper')
+          .forEach((el) => el.remove());
+      }
+    };
+  }, [selectedFile?.path]);
 
   const handleCopyPath = () => {
     if (!selectedFile) return;
@@ -341,6 +573,23 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               </button>
             </div>
           )}
+
+          {/* Inline Blame Toggle Button */}
+          {fileViewTab === 'diff' && (
+            <button
+              type="button"
+              onClick={toggleInlineBlame}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold transition-colors cursor-pointer border ${
+                showInlineBlame
+                  ? 'bg-surface2 text-text border-surface2 shadow-xs'
+                  : 'bg-surface0 border-surface0 text-subtext1 hover:text-text'
+              }`}
+              title={`Toggle inline git blame on active line (Alt+Shift+B) - ${showInlineBlame ? 'Active' : 'Disabled'}`}
+            >
+              <GitCommit className="w-3.5 h-3.5" />
+              <span>Inline Blame</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -348,7 +597,11 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       {fileViewTab === 'blame' ? (
         <BlameViewer />
       ) : (
-        <div className="flex-1 overflow-auto bg-base p-2">
+        <div
+          ref={diffContainerRef}
+          onClick={handleDiffClick}
+          className="flex-1 overflow-auto bg-base p-2 relative"
+        >
           {diffData && hunks.length > 0 ? (
             <div className="border border-surface0 rounded-lg overflow-hidden bg-base shadow-sm">
               <DiffView
@@ -373,6 +626,26 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               </span>
             </div>
           )}
+
+          {/* Inline Blame React Portal mounted inside active line TD */}
+          {showInlineBlame &&
+            portalMount &&
+            activeBlameCommit &&
+            activeLine &&
+            createPortal(
+              <InlineBlame
+                commit={activeBlameCommit}
+                lineNo={activeLine.lineNo}
+                currentUser={{
+                  name: blamePayload?.current_user_name,
+                  email: blamePayload?.current_user_email,
+                }}
+                remoteUrl={remoteUrl}
+                onOpenFullBlame={() => setFileViewTab('blame')}
+                showToast={showToast}
+              />,
+              portalMount
+            )}
         </div>
       )}
     </section>

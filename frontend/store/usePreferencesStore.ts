@@ -16,9 +16,13 @@ interface PreferencesState extends ViewerFontSettings {
   setIsPreferencesOpen: (open: boolean) => void;
   updateViewerFontSettings: (settings: Partial<ViewerFontSettings>) => void;
   resetViewerFontSettings: () => void;
+  showInlineBlame: boolean;
+  setShowInlineBlame: (show: boolean) => void;
+  toggleInlineBlame: () => void;
 }
 
 const STORAGE_KEY = 'stage0_viewer_font_settings';
+const INLINE_BLAME_STORAGE_KEY = 'stage0_show_inline_blame';
 
 export const DEFAULT_VIEWER_FONT_SETTINGS: ViewerFontSettings = {
   fontFamily: 'Fira Code',
@@ -88,11 +92,36 @@ function getInitialSettings(): ViewerFontSettings {
 const initialSettings = getInitialSettings();
 applyViewerFontToDocument(initialSettings);
 
+function getInitialInlineBlame(): boolean {
+  if (typeof window === 'undefined') return true;
+  try {
+    const val = localStorage.getItem(INLINE_BLAME_STORAGE_KEY);
+    return val !== 'false';
+  } catch {
+    return true;
+  }
+}
+
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   ...initialSettings,
   isPreferencesOpen: false,
+  showInlineBlame: getInitialInlineBlame(),
 
   setIsPreferencesOpen: (open: boolean) => set({ isPreferencesOpen: open }),
+
+  setShowInlineBlame: (show: boolean) => {
+    try {
+      localStorage.setItem(INLINE_BLAME_STORAGE_KEY, String(show));
+    } catch {
+      // ignore
+    }
+    set({ showInlineBlame: show });
+  },
+
+  toggleInlineBlame: () => {
+    const next = !get().showInlineBlame;
+    get().setShowInlineBlame(next);
+  },
 
   updateViewerFontSettings: (partial: Partial<ViewerFontSettings>) => {
     const current = get();

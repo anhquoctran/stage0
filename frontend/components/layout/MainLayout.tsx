@@ -48,7 +48,8 @@ export const MainLayout: React.FC = () => {
     setTargetFileForUrl,
   } = useGitStore();
 
-  const { setIsPreferencesOpen } = usePreferencesStore();
+  const { setIsPreferencesOpen, showInlineBlame, toggleInlineBlame } =
+    usePreferencesStore();
 
   // Resizable Sidebar State with LocalStorage Persistence
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
@@ -234,6 +235,11 @@ export const MainLayout: React.FC = () => {
           setTargetFileForUrl(selectedFile);
           setIsRemoteUrlFromOpen(true);
         }
+      } else if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'b' || e.code === 'KeyB')) {
+        // Alt+Shift+B: Toggle inline git blame
+        e.preventDefault();
+        toggleInlineBlame();
+        showToast(showInlineBlame ? 'Disabled inline git blame' : 'Enabled inline git blame');
       }
     };
 
@@ -248,6 +254,12 @@ export const MainLayout: React.FC = () => {
     runSync,
     setIsPullFromOpen,
     setIsRebaseFromOpen,
+    selectedFile,
+    toggleInlineBlame,
+    showInlineBlame,
+    showToast,
+    setTargetFileForUrl,
+    setIsRemoteUrlFromOpen,
   ]);
 
   return (

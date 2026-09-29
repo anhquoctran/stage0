@@ -95,6 +95,8 @@ export interface FileBlamePayload {
   lines: BlameLine[];
   author_stats: BlameAuthorStat[];
   total_lines: number;
+  current_user_name?: string | null;
+  current_user_email?: string | null;
 }
 
 

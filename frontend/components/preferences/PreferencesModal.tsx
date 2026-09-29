@@ -47,6 +47,7 @@ interface PreferencesBaseline {
   isUnderline: boolean;
   lineSpacing: number;
   enableLigatures: boolean;
+  showInlineBlame: boolean;
 }
 
 export const PreferencesModal: React.FC = () => {
@@ -61,6 +62,8 @@ export const PreferencesModal: React.FC = () => {
     lineSpacing: storedLineSpacing,
     enableLigatures: storedEnableLigatures,
     updateViewerFontSettings,
+    showInlineBlame: storedShowInlineBlame,
+    setShowInlineBlame,
   } = usePreferencesStore();
 
   const { themeMode: storedThemeMode, setThemeMode } = useThemeStore();
@@ -76,6 +79,7 @@ export const PreferencesModal: React.FC = () => {
   const [draftIsUnderline, setDraftIsUnderline] = useState(storedIsUnderline);
   const [draftLineSpacing, setDraftLineSpacing] = useState(storedLineSpacing);
   const [draftEnableLigatures, setDraftEnableLigatures] = useState(storedEnableLigatures);
+  const [draftShowInlineBlame, setDraftShowInlineBlame] = useState(storedShowInlineBlame);
 
   // Baseline Snapshot (committed values)
   const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
@@ -87,6 +91,7 @@ export const PreferencesModal: React.FC = () => {
     isUnderline: storedIsUnderline,
     lineSpacing: storedLineSpacing,
     enableLigatures: storedEnableLigatures,
+    showInlineBlame: storedShowInlineBlame,
   });
 
   const [isApplied, setIsApplied] = useState(false);
@@ -102,6 +107,7 @@ export const PreferencesModal: React.FC = () => {
       setDraftIsUnderline(storedIsUnderline);
       setDraftLineSpacing(storedLineSpacing);
       setDraftEnableLigatures(storedEnableLigatures);
+      setDraftShowInlineBlame(storedShowInlineBlame);
 
       setSavedBaseline({
         themeMode: storedThemeMode,
@@ -112,6 +118,7 @@ export const PreferencesModal: React.FC = () => {
         isUnderline: storedIsUnderline,
         lineSpacing: storedLineSpacing,
         enableLigatures: storedEnableLigatures,
+        showInlineBlame: storedShowInlineBlame,
       });
 
       setIsApplied(false);
@@ -126,6 +133,7 @@ export const PreferencesModal: React.FC = () => {
     storedIsUnderline,
     storedLineSpacing,
     storedEnableLigatures,
+    storedShowInlineBlame,
   ]);
 
   // Check if there are any uncommitted changes relative to saved baseline
@@ -138,7 +146,8 @@ export const PreferencesModal: React.FC = () => {
       draftIsItalic !== savedBaseline.isItalic ||
       draftIsUnderline !== savedBaseline.isUnderline ||
       draftLineSpacing !== savedBaseline.lineSpacing ||
-      draftEnableLigatures !== savedBaseline.enableLigatures
+      draftEnableLigatures !== savedBaseline.enableLigatures ||
+      draftShowInlineBlame !== savedBaseline.showInlineBlame
     );
   }, [
     draftThemeMode,
@@ -149,6 +158,7 @@ export const PreferencesModal: React.FC = () => {
     draftIsUnderline,
     draftLineSpacing,
     draftEnableLigatures,
+    draftShowInlineBlame,
     savedBaseline,
   ]);
 
@@ -214,6 +224,7 @@ export const PreferencesModal: React.FC = () => {
     setDraftIsUnderline(DEFAULT_VIEWER_FONT_SETTINGS.isUnderline);
     setDraftLineSpacing(DEFAULT_VIEWER_FONT_SETTINGS.lineSpacing);
     setDraftEnableLigatures(DEFAULT_VIEWER_FONT_SETTINGS.enableLigatures);
+    setDraftShowInlineBlame(true);
   };
 
   // Apply (save only)
@@ -234,11 +245,13 @@ export const PreferencesModal: React.FC = () => {
 
     setThemeMode(draftThemeMode);
     applyThemeToDocument(resolveTheme(draftThemeMode));
+    setShowInlineBlame(draftShowInlineBlame);
 
     // Update baseline
     setSavedBaseline({
       themeMode: draftThemeMode,
       ...committedFontSettings,
+      showInlineBlame: draftShowInlineBlame,
     });
 
     setIsApplied(true);
@@ -260,6 +273,8 @@ export const PreferencesModal: React.FC = () => {
     // Rollback stores
     setThemeMode(savedBaseline.themeMode);
     updateViewerFontSettings(savedBaseline);
+    setShowInlineBlame(savedBaseline.showInlineBlame);
+    setDraftShowInlineBlame(savedBaseline.showInlineBlame);
 
     setIsPreferencesOpen(false);
   };
@@ -766,6 +781,30 @@ export const PreferencesModal: React.FC = () => {
                       className="sr-only peer"
                     />
                     <div className="w-10 h-5 bg-surface1 peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text after:h-4 after:w-4 after:transition-all peer-checked:bg-surface2 peer-disabled:opacity-40 peer-disabled:cursor-not-allowed"></div>
+                  </label>
+                </div>
+
+                {/* Inline Git Blame Toggle */}
+                <div className="bg-surface0/40 p-3.5 border border-surface0/80 flex items-center justify-between">
+                  <div className="space-y-0.5 pr-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-text">
+                        Inline Git Blame (VSCode Style)
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-subtext0 leading-relaxed">
+                      Show commit author, relative time, and summary annotation at the end of the active line in diff view (Alt+Shift+B).
+                    </p>
+                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={draftShowInlineBlame}
+                      onChange={(e) => setDraftShowInlineBlame(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-surface1 peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text after:h-4 after:w-4 after:transition-all peer-checked:bg-surface2"></div>
                   </label>
                 </div>
 
