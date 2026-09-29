@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { ChangedFile } from '../../types/git';
 import { useGitStore } from '../../store/useGitStore';
+import { FileContextMenu } from './FileActionMenu';
 
 interface FileListProps {
   files: ChangedFile[];
@@ -32,6 +33,21 @@ export const FileList: React.FC<FileListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [filterConflictedOnly, setFilterConflictedOnly] = useState(false);
   const [collapsedFolders, setCollapsedFolders] = useState<Record<string, boolean>>({});
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    file: ChangedFile;
+  } | null>(null);
+
+  const handleContextMenu = (e: React.MouseEvent, file: ChangedFile) => {
+    e.preventDefault();
+    onSelectFile(file);
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      file,
+    });
+  };
 
   const totalAdditions = files.reduce((acc, f) => acc + f.additions, 0);
   const totalDeletions = files.reduce((acc, f) => acc + f.deletions, 0);
@@ -255,7 +271,8 @@ export const FileList: React.FC<FileListProps> = ({
                   key={file.path}
                   type="button"
                   onClick={() => onSelectFile(file)}
-                  className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between gap-2 transition-colors ${
+                  onContextMenu={(e) => handleContextMenu(e, file)}
+                  className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                     isSelected
                       ? 'bg-blue/15 border-l-2 border-blue text-text'
                       : 'text-text hover:bg-mantle border-l-2 border-transparent'
@@ -330,7 +347,8 @@ export const FileList: React.FC<FileListProps> = ({
                             key={file.path}
                             type="button"
                             onClick={() => onSelectFile(file)}
-                            className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center justify-between gap-2 transition-colors ${
+                            onContextMenu={(e) => handleContextMenu(e, file)}
+                            className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                               isSelected
                                 ? 'bg-blue/15 border-l-2 border-blue text-text'
                                 : 'text-text hover:bg-mantle border-l-2 border-transparent'
@@ -362,6 +380,16 @@ export const FileList: React.FC<FileListProps> = ({
           </div>
         )}
       </div>
+
+      {/* Right-click Context Menu */}
+      {contextMenu && (
+        <FileContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          file={contextMenu.file}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </aside>
   );
 };

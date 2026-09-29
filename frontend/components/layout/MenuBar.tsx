@@ -24,7 +24,15 @@ import {
   Sliders,
   Play,
   SkipForward,
+  FileText,
+  Globe,
+  ExternalLink,
 } from 'lucide-react';
+import {
+  revealInOs,
+  getAbsoluteFilePath,
+  buildRemoteFileUrl,
+} from '../../utils/fileActions';
 import { invoke } from '@tauri-apps/api/core';
 import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
@@ -50,6 +58,11 @@ export const MenuBar: React.FC = () => {
     isSyncing,
     setIsPullFromOpen,
     setIsRebaseFromOpen,
+    remoteUrl,
+    compareBranch,
+    showToast,
+    setIsRemoteUrlFromOpen,
+    setTargetFileForUrl,
   } = useGitStore();
 
   const { themeMode, toggleTheme } = useThemeStore();
@@ -127,13 +140,6 @@ export const MenuBar: React.FC = () => {
     } catch {
       window.close();
     }
-  };
-
-  const handleCopyPath = () => {
-    if (selectedFile) {
-      navigator.clipboard.writeText(selectedFile.path);
-    }
-    closeMenus();
   };
 
   return (
@@ -292,18 +298,116 @@ export const MenuBar: React.FC = () => {
           </button>
 
           {activeMenu === 'edit' && (
-            <div className="absolute left-0 top-full mt-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+            <div className="absolute left-0 top-full mt-0.5 w-68 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+              <button
+                type="button"
+                disabled={!currentRepo || !selectedFile}
+                onClick={async () => {
+                  closeMenus();
+                  if (currentRepo && selectedFile) {
+                    try {
+                      await revealInOs(currentRepo.local_path, selectedFile.path);
+                      showToast('Revealed file in OS File Explorer');
+                    } catch (err) {
+                      showToast(`Failed to open explorer: ${err}`);
+                    }
+                  }
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <FolderOpen className="w-3.5 h-3.5 text-amber-400 group-hover:text-amber-400 transition-colors" />
+                  <span>Open in File Explorer</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+R</span>
+              </button>
+
+              <div className="my-1 border-t border-surface0" />
+
               <button
                 type="button"
                 disabled={!selectedFile}
-                onClick={handleCopyPath}
+                onClick={() => {
+                  closeMenus();
+                  if (selectedFile) {
+                    navigator.clipboard.writeText(selectedFile.path);
+                    showToast(`Copied relative path: ${selectedFile.path}`);
+                  }
+                }}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   <Copy className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Copy File Path</span>
+                  <span>Copy Relative Path</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+C</span>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+C</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={!currentRepo || !selectedFile}
+                onClick={() => {
+                  closeMenus();
+                  if (currentRepo && selectedFile) {
+                    const abs = getAbsoluteFilePath(currentRepo.local_path, selectedFile.path);
+                    navigator.clipboard.writeText(abs);
+                    showToast('Copied absolute path to clipboard');
+                  }
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Copy Absolute Path</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+C</span>
+              </button>
+
+              <div className="my-1 border-t border-surface0" />
+
+              <button
+                type="button"
+                disabled={!selectedFile}
+                onClick={() => {
+                  closeMenus();
+                  if (selectedFile) {
+                    const effectiveRemote = remoteUrl || (currentRepo ? `https://github.com/${currentRepo.name}` : '');
+                    if (effectiveRemote) {
+                      const ref = compareBranch || 'main';
+                      const url = buildRemoteFileUrl(effectiveRemote, ref, selectedFile.path);
+                      navigator.clipboard.writeText(url);
+                      showToast(`Copied remote file URL (${ref})`);
+                    } else {
+                      showToast('No remote URL configured');
+                    }
+                  }
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Globe className="w-3.5 h-3.5 text-blue" />
+                  <span>Copy Remote File URL</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+U</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={!selectedFile}
+                onClick={() => {
+                  closeMenus();
+                  if (selectedFile) {
+                    setTargetFileForUrl(selectedFile);
+                    setIsRemoteUrlFromOpen(true);
+                  }
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <ExternalLink className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Copy Remote File URL from...</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+U</span>
               </button>
 
               <div className="my-1 border-t border-surface0" />
@@ -735,6 +839,26 @@ export const MenuBar: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Rebase from... (Advanced)</span>
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Alt+R</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Open in File Explorer</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Shift+Alt+R</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Copy Relative Path</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+C</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Copy Absolute Path</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Shift+Alt+C</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Copy Remote File URL</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+U</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Copy Remote File URL from...</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Alt+U</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Select Next File</span>

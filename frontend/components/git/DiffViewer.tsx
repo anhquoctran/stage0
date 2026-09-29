@@ -12,8 +12,6 @@ import {
   FileText,
   AlertTriangle,
   FolderOpen,
-  Eye,
-  Code,
   ChevronLeft,
   ChevronRight,
   GitPullRequest,
@@ -24,6 +22,7 @@ import { extractFileHunks, inferLanguage } from '../../utils/diffParser';
 import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
+import { FileActionMenu } from './FileActionMenu';
 
 interface DiffViewerProps {
   selectedFile: ChangedFile | null;
@@ -47,7 +46,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const { fontFamily, fontSize, lineSpacing, enableLigatures, isBold, isItalic, isUnderline } =
     usePreferencesStore();
   const [copied, setCopied] = useState(false);
-  const [showRawPatch, setShowRawPatch] = useState(false);
 
   const hunks = useMemo(() => {
     if (!diffPayload || !selectedFile) return [];
@@ -202,8 +200,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           <button
             type="button"
             onClick={handleCopyPath}
-            title="Copy relative file path"
-            className="p-1 text-subtext1 hover:text-text rounded hover:bg-surface1 transition-colors"
+            title="Copy relative file path (Ctrl+Shift+C)"
+            className="p-1 text-subtext1 hover:text-text rounded hover:bg-surface1 transition-colors cursor-pointer"
           >
             {copied ? (
               <Check className="w-3.5 h-3.5 text-green" />
@@ -211,6 +209,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               <Copy className="w-3.5 h-3.5" />
             )}
           </button>
+
+          <FileActionMenu file={selectedFile} />
 
           {selectedFile.is_conflicted && (
             <div className="flex items-center gap-1 text-[10px] text-red bg-red/20 border border-red/40 px-2 py-0.5 rounded font-bold uppercase conflict-pulse">
@@ -256,31 +256,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           </div>
         )}
 
-        {/* Right: View Mode & Raw Patch Toggle */}
+        {/* Right: View Mode Toggle */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowRawPatch(!showRawPatch)}
-            title={showRawPatch ? 'Switch to Visual Diff' : 'Switch to Raw Patch'}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold border transition-colors ${
-              showRawPatch
-                ? 'bg-blue/25 border-blue/50 text-blue'
-                : 'bg-surface0 border-surface0 text-text hover:bg-surface1'
-            }`}
-          >
-            {showRawPatch ? (
-              <>
-                <Eye className="w-3.5 h-3.5 text-blue" />
-                <span>Visual</span>
-              </>
-            ) : (
-              <>
-                <Code className="w-3.5 h-3.5 text-subtext1" />
-                <span>Raw</span>
-              </>
-            )}
-          </button>
-
           {/* Split / Unified Segmented Control */}
           <div className="flex items-center bg-surface0 rounded-md p-0.5 border border-surface0">
             <button
@@ -313,15 +290,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         </div>
       </div>
 
-      {/* Main Diff Rendering Area */}
+      {/* Main Diff Rendering Area: Always Visual */}
       <div className="flex-1 overflow-auto bg-base p-2">
-        {showRawPatch ? (
-          <pre className="diff-raw-viewer p-4 bg-mantle border border-surface0 rounded-lg font-mono text-xs text-text overflow-auto whitespace-pre leading-relaxed select-text">
-            {hunks.length > 0
-              ? hunks.join('\n\n')
-              : 'No patch content found for this file.'}
-          </pre>
-        ) : diffData && hunks.length > 0 ? (
+        {diffData && hunks.length > 0 ? (
           <div className="border border-surface0 rounded-lg overflow-hidden bg-base shadow-sm">
             <DiffView
               key={`${selectedFile.path}-${viewMode}-${theme}-${fontFamily}-${fontSize}-${lineSpacing}-${enableLigatures}-${isBold}-${isItalic}-${isUnderline}`}

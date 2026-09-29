@@ -7,9 +7,15 @@ import { ConflictBanner } from '../git/ConflictBanner';
 import { PreferencesModal } from '../preferences/PreferencesModal';
 import { PullFromModal } from '../git/PullFromModal';
 import { RebaseFromModal } from '../git/RebaseFromModal';
+import { RemoteUrlFromModal } from '../git/RemoteUrlFromModal';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, Check } from 'lucide-react';
+import {
+  revealInOs,
+  getAbsoluteFilePath,
+  buildRemoteFileUrl,
+} from '../../utils/fileActions';
 
 const DEFAULT_SIDEBAR_WIDTH = 320;
 const MIN_SIDEBAR_WIDTH = 220;
@@ -34,6 +40,12 @@ export const MainLayout: React.FC = () => {
     setIsPullFromOpen,
     setIsRebaseFromOpen,
     openRepoDialog,
+    remoteUrl,
+    compareBranch,
+    toastMessage,
+    showToast,
+    setIsRemoteUrlFromOpen,
+    setTargetFileForUrl,
   } = useGitStore();
 
   const { setIsPreferencesOpen } = usePreferencesStore();
@@ -178,6 +190,50 @@ export const MainLayout: React.FC = () => {
       } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'r') {
         e.preventDefault();
         refreshDiff();
+      } else if (e.shiftKey && e.altKey && (e.key.toLowerCase() === 'r' || e.code === 'KeyR')) {
+        // Shift+Alt+R: Open current file in OS File Explorer
+        if (currentRepo && selectedFile) {
+          e.preventDefault();
+          revealInOs(currentRepo.local_path, selectedFile.path)
+            .then(() => showToast('Revealed file in OS File Explorer'))
+            .catch((err) => showToast(`Failed to open explorer: ${err}`));
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key.toLowerCase() === 'c' || e.code === 'KeyC')) {
+        // Ctrl+Shift+C: Copy relative path
+        if (selectedFile) {
+          e.preventDefault();
+          navigator.clipboard.writeText(selectedFile.path);
+          showToast(`Copied relative path: ${selectedFile.path}`);
+        }
+      } else if (e.shiftKey && e.altKey && (e.key.toLowerCase() === 'c' || e.code === 'KeyC')) {
+        // Shift+Alt+C: Copy absolute path
+        if (currentRepo && selectedFile) {
+          e.preventDefault();
+          const abs = getAbsoluteFilePath(currentRepo.local_path, selectedFile.path);
+          navigator.clipboard.writeText(abs);
+          showToast('Copied absolute path to clipboard');
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key.toLowerCase() === 'u' || e.code === 'KeyU')) {
+        // Ctrl+Shift+U: Copy remote file URL
+        if (selectedFile) {
+          e.preventDefault();
+          const effectiveRemote = remoteUrl || (currentRepo ? `https://github.com/${currentRepo.name}` : '');
+          if (effectiveRemote) {
+            const ref = compareBranch || 'main';
+            const url = buildRemoteFileUrl(effectiveRemote, ref, selectedFile.path);
+            navigator.clipboard.writeText(url);
+            showToast(`Copied remote file URL (${ref})`);
+          } else {
+            showToast('No remote URL configured');
+          }
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.altKey && (e.key.toLowerCase() === 'u' || e.code === 'KeyU')) {
+        // Ctrl+Alt+U: Copy remote file URL from...
+        if (selectedFile) {
+          e.preventDefault();
+          setTargetFileForUrl(selectedFile);
+          setIsRemoteUrlFromOpen(true);
+        }
       }
     };
 
@@ -207,6 +263,9 @@ export const MainLayout: React.FC = () => {
 
       {/* Rebase From Branch Modal Dialog */}
       <RebaseFromModal />
+
+      {/* Remote URL From Branch/Commit Modal Dialog */}
+      <RemoteUrlFromModal />
 
       {/* In-Memory Merge Conflict Banner */}
       <ConflictBanner
@@ -283,6 +342,14 @@ export const MainLayout: React.FC = () => {
 
       {/* Bottom Status Bar */}
       <StatusBar />
+
+      {/* Global Feedback Toast */}
+      {toastMessage && (
+        <div className="fixed bottom-10 right-6 z-50 bg-mantle border border-surface1 text-text text-xs px-3.5 py-2 shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <Check className="w-3.5 h-3.5 text-green shrink-0" />
+          <span className="font-medium">{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 };

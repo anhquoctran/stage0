@@ -20,6 +20,12 @@ pub fn list_remotes(repo_path: &str) -> Result<Vec<String>, String> {
         .collect())
 }
 
+pub fn get_remote_url(repo_path: &str, remote_name: Option<&str>) -> Result<String, String> {
+    let remote = remote_name.unwrap_or("origin");
+    let res = run_git_strict(repo_path, &["remote", "get-url", remote])?;
+    Ok(res.trim().to_string())
+}
+
 pub fn git_sync(
     repo_path: &str,
     operation: &str,
