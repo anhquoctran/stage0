@@ -12,6 +12,10 @@ import {
   GitSyncOperation,
   GitSyncOptions,
   FileBlamePayload,
+  SandboxType,
+  SandboxAdapterInfo,
+  SandboxInstanceInfo,
+  SandboxExecutionResult,
 } from '../types/git';
 
 interface GitState {
@@ -82,6 +86,16 @@ interface GitState {
   fetchFileBlame: (filePath?: string, revision?: string, ignoreWhitespace?: boolean) => Promise<void>;
   fetchConflictPreview: (filePath?: string) => Promise<void>;
   toggleFileBlame: () => void;
+  activeSandboxType: SandboxType;
+  availableSandboxes: SandboxAdapterInfo[];
+  activeSandboxInstances: SandboxInstanceInfo[];
+  isSandboxLoading: boolean;
+  fetchAvailableSandboxes: () => Promise<void>;
+  fetchActiveSandbox: () => Promise<void>;
+  setActiveSandbox: (type: SandboxType) => Promise<void>;
+  createSandboxInstance: () => Promise<SandboxInstanceInfo | null>;
+  destroySandboxInstance: (id: string) => Promise<void>;
+  executeSandboxCommand: (id: string, command: string, args: string[]) => Promise<SandboxExecutionResult | null>;
   clearError: () => void;
   closeRepo: () => void;
 }
@@ -115,6 +129,10 @@ export const useGitStore = create<GitState>((set, get) => ({
   activeConflictPreview: null,
   isConflictLoading: false,
   conflictPreviewError: null,
+  activeSandboxType: 'in_memory',
+  availableSandboxes: [],
+  activeSandboxInstances: [],
+  isSandboxLoading: false,
   setIsPullFromOpen: (open) => set({ isPullFromOpen: open }),
   setIsRebaseFromOpen: (open) => set({ isRebaseFromOpen: open }),
   setIsRemoteUrlFromOpen: (open) => set({ isRemoteUrlFromOpen: open }),
@@ -155,7 +173,11 @@ export const useGitStore = create<GitState>((set, get) => ({
   initApp: async () => {
     set({ isInitializing: true });
     try {
-      const repos = await invoke<RepoInfo[]>('get_recent_repos');
+      const [repos] = await Promise.all([
+        invoke<RepoInfo[]>('get_recent_repos'),
+        get().fetchAvailableSandboxes(),
+        get().fetchActiveSandbox(),
+      ]);
       set({ recentRepos: repos });
 
       // If there are recent repos, find the most recently opened one that is still valid
@@ -617,6 +639,90 @@ export const useGitStore = create<GitState>((set, get) => ({
     } finally {
       await get().checkRebaseStatus(currentRepo.local_path);
       set({ isSyncing: false });
+    }
+  },
+
+  fetchAvailableSandboxes: async () => {
+    try {
+      const sandboxes = await invoke<SandboxAdapterInfo[]>('get_available_sandboxes');
+      set({ availableSandboxes: sandboxes });
+    } catch (err) {
+      console.warn('Failed to fetch available sandboxes:', err);
+    }
+  },
+
+  fetchActiveSandbox: async () => {
+    try {
+      const active = await invoke<SandboxType>('get_active_sandbox');
+      set({ activeSandboxType: active });
+    } catch (err) {
+      console.warn('Failed to fetch active sandbox:', err);
+    }
+  },
+
+  setActiveSandbox: async (type: SandboxType) => {
+    set({ isSandboxLoading: true });
+    try {
+      const active = await invoke<SandboxType>('set_active_sandbox', { adapterType: type });
+      set({ activeSandboxType: active });
+      const label =
+        active === 'in_memory'
+          ? 'In-Memory Sandbox'
+          : active === 'local_worktree'
+          ? 'Local Worktree Sandbox'
+          : 'Docker Container Sandbox';
+      get().showToast(`Switched active sandbox to: ${label}`);
+      await get().refreshDiff();
+    } catch (err) {
+      get().showToast(`Failed to switch sandbox: ${err}`);
+    } finally {
+      set({ isSandboxLoading: false });
+    }
+  },
+
+  createSandboxInstance: async () => {
+    const { currentRepo, baseBranch, compareBranch } = get();
+    if (!currentRepo || !baseBranch || !compareBranch) return null;
+    try {
+      const instance = await invoke<SandboxInstanceInfo>('create_sandbox_instance', {
+        repoPath: currentRepo.local_path,
+        base: baseBranch,
+        compare: compareBranch,
+      });
+      set((state) => ({
+        activeSandboxInstances: [...state.activeSandboxInstances, instance],
+      }));
+      get().showToast(`Created sandbox instance: ${instance.id}`);
+      return instance;
+    } catch (err) {
+      get().showToast(`Failed to create sandbox instance: ${err}`);
+      return null;
+    }
+  },
+
+  destroySandboxInstance: async (id: string) => {
+    try {
+      await invoke('destroy_sandbox_instance', { instanceId: id });
+      set((state) => ({
+        activeSandboxInstances: state.activeSandboxInstances.filter((i) => i.id !== id),
+      }));
+      get().showToast(`Destroyed sandbox instance: ${id}`);
+    } catch (err) {
+      get().showToast(`Failed to destroy sandbox instance: ${err}`);
+    }
+  },
+
+  executeSandboxCommand: async (id: string, command: string, args: string[]) => {
+    try {
+      const result = await invoke<SandboxExecutionResult>('execute_sandbox_command', {
+        instanceId: id,
+        command,
+        args,
+      });
+      return result;
+    } catch (err) {
+      get().showToast(`Sandbox command failed: ${err}`);
+      return null;
     }
   },
 }));

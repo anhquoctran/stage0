@@ -11,6 +11,9 @@ use crate::git::{
     BranchList, ConflictReport, ConflictFilePreview, MrDiffPayload, RepoInfo, FileBlamePayload,
 };
 use crate::watcher::WatcherState;
+use crate::sandbox::{
+    SandboxAdapterInfo, SandboxExecutionResult, SandboxInstanceInfo, SandboxManager, SandboxType,
+};
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct RepoValidation {
@@ -199,30 +202,36 @@ pub async fn get_branches(app: AppHandle, repo_path: String) -> Result<BranchLis
 
 #[tauri::command]
 pub async fn get_mr_diff(
+    app: AppHandle,
     repo_path: String,
     base: String,
     compare: String,
 ) -> Result<MrDiffPayload, String> {
-    calc_mr_diff(&repo_path, &base, &compare)
+    let manager = app.state::<SandboxManager>();
+    manager.get_mr_diff(&repo_path, &base, &compare)
 }
 
 #[tauri::command]
 pub async fn check_merge_conflicts(
+    app: AppHandle,
     repo_path: String,
     base: String,
     compare: String,
 ) -> Result<ConflictReport, String> {
-    check_conflicts(&repo_path, &base, &compare)
+    let manager = app.state::<SandboxManager>();
+    manager.check_conflicts(&repo_path, &base, &compare)
 }
 
 #[tauri::command]
 pub async fn get_conflicted_file_preview(
+    app: AppHandle,
     repo_path: String,
     base: String,
     compare: String,
     file_path: String,
 ) -> Result<ConflictFilePreview, String> {
-    calc_conflicted_file_preview(&repo_path, &base, &compare, &file_path)
+    let manager = app.state::<SandboxManager>();
+    manager.get_conflict_preview(&repo_path, &base, &compare, &file_path)
 }
 
 #[tauri::command]
@@ -663,5 +672,75 @@ pub async fn verify_git_credential(app: AppHandle, id: String) -> Result<bool, S
 pub fn get_keyring_info() -> crate::credentials::OsKeyringInfo {
     crate::credentials::get_os_keyring_info()
 }
+
+// ---------------------------------------------------------------------------
+// Sandbox Adapter Management Commands
+// ---------------------------------------------------------------------------
+
+#[tauri::command]
+pub async fn get_available_sandboxes(
+    app: AppHandle,
+) -> Result<Vec<SandboxAdapterInfo>, String> {
+    let manager = app.state::<SandboxManager>();
+    Ok(manager.list_available_adapters())
+}
+
+#[tauri::command]
+pub async fn get_active_sandbox(
+    app: AppHandle,
+) -> Result<SandboxType, String> {
+    let manager = app.state::<SandboxManager>();
+    Ok(manager.get_active_type())
+}
+
+#[tauri::command]
+pub async fn set_active_sandbox(
+    app: AppHandle,
+    adapter_type: SandboxType,
+) -> Result<SandboxType, String> {
+    let manager = app.state::<SandboxManager>();
+    manager.set_active_type(adapter_type.clone());
+    Ok(adapter_type)
+}
+
+#[tauri::command]
+pub async fn create_sandbox_instance(
+    app: AppHandle,
+    repo_path: String,
+    base: String,
+    compare: String,
+) -> Result<SandboxInstanceInfo, String> {
+    let manager = app.state::<SandboxManager>();
+    manager.create_instance(&repo_path, &base, &compare)
+}
+
+#[tauri::command]
+pub async fn destroy_sandbox_instance(
+    app: AppHandle,
+    instance_id: String,
+) -> Result<(), String> {
+    let manager = app.state::<SandboxManager>();
+    manager.destroy_instance(&instance_id)
+}
+
+#[tauri::command]
+pub async fn list_sandbox_instances(
+    app: AppHandle,
+) -> Result<Vec<SandboxInstanceInfo>, String> {
+    let manager = app.state::<SandboxManager>();
+    Ok(manager.list_active_instances())
+}
+
+#[tauri::command]
+pub async fn execute_sandbox_command(
+    app: AppHandle,
+    instance_id: String,
+    command: String,
+    args: Vec<String>,
+) -> Result<SandboxExecutionResult, String> {
+    let manager = app.state::<SandboxManager>();
+    manager.execute_command(&instance_id, &command, &args)
+}
+
 
 

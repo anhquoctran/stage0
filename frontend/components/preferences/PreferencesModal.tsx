@@ -18,6 +18,7 @@ import {
   Palette,
   Key,
   Bot,
+  Box,
 } from 'lucide-react';
 import { SUPPORTED_FONTS } from '../../constants/fonts';
 import {
@@ -35,8 +36,9 @@ import {
 } from '../../store/useThemeStore';
 import { GitCredentialsTab } from './GitCredentialsTab';
 import { AiMcpTab } from './AiMcpTab';
+import { SandboxTab } from './SandboxTab';
 
-type PreferenceTab = 'appearance' | 'fonts' | 'credentials' | 'ai';
+type PreferenceTab = 'appearance' | 'fonts' | 'credentials' | 'ai' | 'sandbox';
 
 interface PreferencesBaseline {
   themeMode: ThemeMode;
@@ -321,6 +323,12 @@ export const PreferencesModal: React.FC = () => {
       label: 'AI & MCP',
       sublabel: 'Models, Agents & Tools',
       icon: <Bot className="w-4 h-4" />,
+    },
+    {
+      id: 'sandbox',
+      label: 'Sandbox Engine',
+      sublabel: 'InMemory / Worktree / Docker',
+      icon: <Box className="w-4 h-4" />,
     },
   ];
 
@@ -864,6 +872,13 @@ export const PreferencesModal: React.FC = () => {
             {activeTab === 'ai' && (
               <div className="animate-in fade-in duration-100">
                 <AiMcpTab />
+              </div>
+            )}
+
+            {/* TAB 5: SANDBOX ENGINE */}
+            {activeTab === 'sandbox' && (
+              <div className="animate-in fade-in duration-100">
+                <SandboxTab />
               </div>
             )}
           </div>

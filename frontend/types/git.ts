@@ -129,4 +129,48 @@ export interface FileBlamePayload {
   current_user_email?: string | null;
 }
 
+// ---------------------------------------------------------------------------
+// Sandbox Adapter Interfaces
+// ---------------------------------------------------------------------------
+
+export type SandboxType = 'in_memory' | 'local_worktree' | 'docker';
+
+export interface SandboxCapabilities {
+  can_run_commands: boolean;
+  can_write_files: boolean;
+  isolation_level: string;
+  requires_daemon: boolean;
+  supports_networking: boolean;
+}
+
+export interface SandboxAdapterInfo {
+  adapter_type: SandboxType;
+  name: string;
+  description: string;
+  is_available: boolean;
+  version_info?: string | null;
+  status_message: string;
+  capabilities: SandboxCapabilities;
+}
+
+export interface SandboxInstanceInfo {
+  id: string;
+  adapter_type: SandboxType;
+  repo_path: string;
+  base_branch: string;
+  compare_branch: string;
+  worktree_path?: string | null;
+  container_id?: string | null;
+  created_at: string;
+}
+
+export interface SandboxExecutionResult {
+  command: string;
+  stdout: string;
+  stderr: string;
+  exit_code: number;
+  duration_ms: number;
+}
+
+
 
