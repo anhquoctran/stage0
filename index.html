@@ -3,11 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/app-icon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Source+Code+Pro:ital,wght@0,400;0,700;1,400;1,700&family=Victor+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
     <title>Stage0 - Virtual MR Sandbox</title>
   </head>
-  <body class="bg-crust text-text antialiased h-screen overflow-hidden select-none">
-    <div id="root" class="h-full w-full"></div>
+  <body class="bg-crust text-text antialiased h-screen overflow-hidden select-none" style="background-color: #11111b; margin: 0;">
+    <div id="root" class="h-full w-full">
+      <div style="position: fixed; inset: 0; background-color: #11111b; color: #cdd6f4; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select: none;">
+        <!-- Glowing App Icon -->
+        <div style="position: relative; margin-bottom: 24px;">
+          <div style="width: 96px; height: 96px; border-radius: 20px; background-color: #181825; border: 1px solid #313244; box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+            <img src="/app-icon.svg" style="width: 64px; height: 64px;" alt="Stage0 Logo" />
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+          <span style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #cdd6f4;">Stage<span style="color: #89b4fa;">0</span></span>
+          <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 999px; background: rgba(137, 180, 250, 0.15); color: #89b4fa; border: 1px solid rgba(137, 180, 250, 0.3);">Virtual MR</span>
+        </div>
+
+        <p style="font-size: 12px; color: #bac2de; margin: 0 0 24px 0;">Local-first Virtual Merge Request &amp; Conflict Prediction Sandbox</p>
+
+        <!-- Progress bar -->
+        <div style="width: 220px; height: 5px; background: rgba(49, 50, 68, 0.6); border-radius: 999px; overflow: hidden; position: relative;">
+          <div style="width: 50%; height: 100%; background: linear-gradient(90deg, #89b4fa, #cba6f7, #a6e3a1); border-radius: 999px; animation: splash-pulse 1.4s ease-in-out infinite;"></div>
+        </div>
+
+        <div style="margin-top: 12px; font-size: 11px; color: #a6adc8; font-family: monospace;">Initializing Stage0 runtime...</div>
+      </div>
+      <style>
+        @keyframes splash-pulse {
+          0% { transform: translateX(-100%); }
+          50% { transform: translateX(50%); }
+          100% { transform: translateX(200%); }
+        }
+      </style>
+    </div>
     <script type="module" src="/frontend/main.tsx"></script>
   </body>
 </html>

@@ -17,7 +17,7 @@ export const ThemeSwitcher: React.FC = () => {
           : 'Switch to Catppuccin Mocha Light (Light)'
       }
       aria-label="Toggle Catppuccin Mocha Dark/Light mode"
-      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-surface0 hover:bg-surface1 border border-surface0 hover:border-surface2 text-text transition-all duration-200 select-none shadow-xs group cursor-pointer"
+      className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface0 hover:bg-surface1 border border-surface0 hover:border-surface2 text-text transition-all duration-200 select-none shadow-xs group cursor-pointer text-[10px]"
     >
       <div className="relative w-4 h-4 flex items-center justify-center">
         {isLight ? (

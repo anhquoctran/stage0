@@ -248,3 +248,92 @@ pub async fn window_close(window: Window) -> Result<(), String> {
 pub async fn window_is_maximized(window: Window) -> Result<bool, String> {
     window.is_maximized().map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn list_git_credentials(app: AppHandle) -> Result<Vec<crate::credentials::GitCredentialMeta>, String> {
+    let db = app.state::<Database>();
+    db.get_all_git_credentials()
+        .map_err(|e| format!("Failed to load git credentials: {}", e))
+}
+
+#[tauri::command]
+pub async fn save_git_credential(
+    app: AppHandle,
+    payload: crate::credentials::SaveGitCredentialPayload,
+) -> Result<crate::credentials::GitCredentialMeta, String> {
+    if payload.account_name.trim().is_empty() {
+        return Err("Account name cannot be empty".to_string());
+    }
+    if payload.secret.trim().is_empty() {
+        return Err("Secret / token cannot be empty".to_string());
+    }
+
+    let id = uuid::Uuid::new_v4().to_string();
+    let token_ref = format!("st0_tok_{}", uuid::Uuid::new_v4().simple());
+
+    // 1. Store secret in OS Credential Manager
+    crate::credentials::store_secret(&token_ref, payload.secret.trim())?;
+
+    // 2. Store tokenized record in SQLite
+    let db = app.state::<Database>();
+    if let Err(e) = db.insert_git_credential(
+        &id,
+        &payload.provider,
+        &payload.server_url,
+        payload.account_name.trim(),
+        &token_ref,
+        &payload.token_type,
+        payload.label.as_deref(),
+    ) {
+        // Rollback keyring secret if db fails
+        let _ = crate::credentials::delete_secret(&token_ref);
+        return Err(format!("Failed to save credential to database: {}", e));
+    }
+
+    Ok(crate::credentials::GitCredentialMeta {
+        id,
+        provider: payload.provider,
+        server_url: payload.server_url,
+        account_name: payload.account_name,
+        token_ref,
+        token_type: payload.token_type,
+        label: payload.label,
+        created_at: chrono::Utc::now().to_rfc3339(),
+        updated_at: chrono::Utc::now().to_rfc3339(),
+        is_in_keyring: true,
+    })
+}
+
+#[tauri::command]
+pub async fn delete_git_credential(app: AppHandle, id: String) -> Result<(), String> {
+    let db = app.state::<Database>();
+    let token_ref_opt = db
+        .delete_git_credential(&id)
+        .map_err(|e| format!("Failed to delete credential: {}", e))?;
+
+    if let Some(token_ref) = token_ref_opt {
+        let _ = crate::credentials::delete_secret(&token_ref);
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn verify_git_credential(app: AppHandle, id: String) -> Result<bool, String> {
+    let db = app.state::<Database>();
+    let token_ref_opt = db
+        .get_git_credential_token_ref(&id)
+        .map_err(|e| format!("Failed to query credential: {}", e))?;
+
+    if let Some(token_ref) = token_ref_opt {
+        Ok(crate::credentials::exists_in_keyring(&token_ref))
+    } else {
+        Err("Credential not found".to_string())
+    }
+}
+
+#[tauri::command]
+pub fn get_keyring_info() -> crate::credentials::OsKeyringInfo {
+    crate::credentials::get_os_keyring_info()
+}
+
+

@@ -18,6 +18,7 @@ interface FileListProps {
   selectedFile: ChangedFile | null;
   onSelectFile: (file: ChangedFile) => void;
   isLoading?: boolean;
+  width?: number;
 }
 
 export const FileList: React.FC<FileListProps> = ({
@@ -25,6 +26,7 @@ export const FileList: React.FC<FileListProps> = ({
   selectedFile,
   onSelectFile,
   isLoading = false,
+  width,
 }) => {
   const { fileListLayout, setFileListLayout } = useGitStore();
   const [searchTerm, setSearchTerm] = useState('');
@@ -130,7 +132,12 @@ export const FileList: React.FC<FileListProps> = ({
   };
 
   return (
-    <aside className="flex flex-col h-full bg-base border-r border-surface0 w-80 shrink-0 select-none">
+    <aside
+      style={width ? { width: `${width}px` } : undefined}
+      className={`flex flex-col h-full bg-base border-r border-surface0 shrink-0 select-none ${
+        !width ? 'w-80' : ''
+      }`}
+    >
       {/* Sidebar Header */}
       <div className="p-2.5 border-b border-surface0 bg-mantle space-y-2">
         <div className="flex items-center justify-between">

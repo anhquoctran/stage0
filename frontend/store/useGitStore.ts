@@ -46,6 +46,7 @@ interface GitState {
   setFileListLayout: (layout: 'flat' | 'tree') => void;
   runSync: (op: 'fetch' | 'pull' | 'rebase') => Promise<void>;
   clearError: () => void;
+  closeRepo: () => void;
 }
 
 export const useGitStore = create<GitState>((set, get) => ({
@@ -67,6 +68,17 @@ export const useGitStore = create<GitState>((set, get) => ({
   error: null,
 
   clearError: () => set({ error: null, syncStatus: null }),
+
+  closeRepo: () =>
+    set({
+      currentRepo: null,
+      branches: null,
+      baseBranch: '',
+      compareBranch: '',
+      diffPayload: null,
+      conflictReport: null,
+      selectedFile: null,
+    }),
 
   initApp: async () => {
     set({ isInitializing: true });

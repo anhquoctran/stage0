@@ -1,0 +1,194 @@
+import { AiProviderPreset, McpServerConfig } from '../types/ai';
+
+export const AI_PROVIDERS: AiProviderPreset[] = [
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    description: 'GPT-4o, o3-mini & reasoning models',
+    defaultBaseUrl: 'https://api.openai.com/v1',
+    defaultModel: 'gpt-4o',
+    requiresApiKey: true,
+    docUrl: 'https://platform.openai.com/api-keys',
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o (Omni)', recommendedFor: 'Fast & Intelligent' },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', recommendedFor: 'Ultra-fast & Cheap' },
+      { id: 'o3-mini', name: 'o3-mini', recommendedFor: 'Deep Code Reasoning' },
+      { id: 'o1', name: 'o1', recommendedFor: 'Complex Problem Solving' },
+      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', recommendedFor: 'Legacy High Performance' },
+    ],
+  },
+  {
+    id: 'anthropic',
+    name: 'Anthropic Claude',
+    description: 'Claude 3.7 Sonnet & 3.5 series',
+    defaultBaseUrl: 'https://api.anthropic.com/v1',
+    defaultModel: 'claude-3-7-sonnet-20250219',
+    requiresApiKey: true,
+    docUrl: 'https://console.anthropic.com/settings/keys',
+    models: [
+      { id: 'claude-3-7-sonnet-20250219', name: 'Claude 3.7 Sonnet', recommendedFor: 'Hybrid Reasoning & Coding' },
+      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet v2', recommendedFor: 'Industry Standard Code Review' },
+      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', recommendedFor: 'Speed & Low Latency' },
+      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', recommendedFor: 'Deep Writing & Reasoning' },
+    ],
+  },
+  {
+    id: 'gemini',
+    name: 'Google Gemini',
+    description: 'Gemini 2.0 Flash & 1.5 Pro',
+    defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    defaultModel: 'gemini-2.0-flash',
+    requiresApiKey: true,
+    docUrl: 'https://aistudio.google.com/app/apikey',
+    models: [
+      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', recommendedFor: 'Next-Gen Ultra Fast' },
+      { id: 'gemini-2.0-pro-exp-02-05', name: 'Gemini 2.0 Pro Experimental', recommendedFor: 'Advanced Coding' },
+      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', recommendedFor: '2M Context Window' },
+      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', recommendedFor: 'Lightweight & Efficient' },
+    ],
+  },
+  {
+    id: 'ollama',
+    name: 'Ollama (Local LLM)',
+    description: 'Run DeepSeek-R1, Llama 3 or Qwen locally offline',
+    defaultBaseUrl: 'http://localhost:11434',
+    defaultModel: 'deepseek-r1:latest',
+    requiresApiKey: false,
+    docUrl: 'https://ollama.com/library',
+    models: [
+      { id: 'deepseek-r1:latest', name: 'DeepSeek-R1', recommendedFor: 'Local Reasoning Model' },
+      { id: 'qwen2.5-coder:latest', name: 'Qwen 2.5 Coder', recommendedFor: 'Local Coding Champion' },
+      { id: 'llama3.3:latest', name: 'Llama 3.3 (70B)', recommendedFor: 'Meta SOTA Open Model' },
+      { id: 'codellama:latest', name: 'CodeLlama', recommendedFor: 'Specialized Code Completion' },
+      { id: 'mistral:latest', name: 'Mistral (7B)', recommendedFor: 'Balanced Local Performance' },
+    ],
+  },
+  {
+    id: 'custom',
+    name: 'Custom / OpenAI Compatible',
+    description: 'DeepSeek, Groq, OpenRouter, vLLM or LM Studio',
+    defaultBaseUrl: 'https://api.deepseek.com/v1',
+    defaultModel: 'deepseek-chat',
+    requiresApiKey: true,
+    docUrl: 'https://platform.deepseek.com/api_keys',
+    models: [
+      { id: 'deepseek-chat', name: 'DeepSeek V3 (Chat)', recommendedFor: 'Extremely Cost Efficient' },
+      { id: 'deepseek-reasoner', name: 'DeepSeek R1 (Reasoner)', recommendedFor: 'Chain-of-Thought Reasoning' },
+      { id: 'llama-3.3-70b-versatile', name: 'Groq: Llama 3.3 70B', recommendedFor: 'Ultra Low Latency' },
+      { id: 'meta-llama/llama-3.3-70b-instruct', name: 'OpenRouter Llama 3.3', recommendedFor: 'Universal Gateway' },
+    ],
+  },
+];
+
+export const DEFAULT_AI_CONFIG = {
+  provider: 'anthropic' as const,
+  model: 'claude-3-7-sonnet-20250219',
+  apiKey: '',
+  baseUrl: 'https://api.anthropic.com/v1',
+  temperature: 0.2,
+  maxTokens: 4096,
+  systemPrompt: `You are an expert software engineer and code reviewer embedded in Stage0 Git Reviewer.
+When reviewing git diffs:
+1. Identify logic flaws, subtle edge cases, concurrency hazards, and security issues.
+2. Recommend idiomatic, performant patterns conforming to the language standard.
+3. Be clear, constructive, and concise. Avoid superfluous praise.
+4. Format markdown with code blocks, line references, and actionable improvements.`,
+  streamResponse: true,
+  enableCodeReviewAssist: true,
+};
+
+export const DEFAULT_MCP_SERVERS: McpServerConfig[] = [
+  {
+    id: 'git-context',
+    name: 'Git Context Protocol',
+    description: 'Enables AI to query repository history, commit graphs, refs, and git blame',
+    type: 'stdio',
+    command: 'uvx',
+    args: ['mcp-server-git', '--repository', '.'],
+    env: {},
+    enabled: true,
+    toolsCount: 6,
+    resourcesCount: 3,
+    testStatus: 'success',
+  },
+  {
+    id: 'filesystem-workspace',
+    name: 'Filesystem Workspace',
+    description: 'Provides safe workspace read access for multi-file context analysis',
+    type: 'stdio',
+    command: 'npx',
+    args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+    env: {},
+    enabled: true,
+    toolsCount: 8,
+    resourcesCount: 2,
+    testStatus: 'success',
+  },
+  {
+    id: 'github-integration',
+    name: 'GitHub Remote Inspector',
+    description: 'Query remote pull requests, issues, discussions, and repository metadata',
+    type: 'stdio',
+    command: 'npx',
+    args: ['-y', '@modelcontextprotocol/server-github'],
+    env: {
+      GITHUB_PERSONAL_ACCESS_TOKEN: '',
+    },
+    enabled: false,
+    toolsCount: 14,
+    resourcesCount: 4,
+    testStatus: 'untested',
+  },
+];
+
+export const MCP_PRESET_TEMPLATES = [
+  {
+    name: 'Git Context Server',
+    description: 'Inspect repository commits, branches, and diffs via MCP',
+    type: 'stdio' as const,
+    command: 'uvx',
+    args: ['mcp-server-git', '--repository', '.'],
+    env: {},
+  },
+  {
+    name: 'Filesystem Access',
+    description: 'Allow reading workspace project directory and code files',
+    type: 'stdio' as const,
+    command: 'npx',
+    args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
+    env: {},
+  },
+  {
+    name: 'GitHub Integration',
+    description: 'Pull Requests, Issues, and GitHub API interactions',
+    type: 'stdio' as const,
+    command: 'npx',
+    args: ['-y', '@modelcontextprotocol/server-github'],
+    env: { GITHUB_PERSONAL_ACCESS_TOKEN: '' },
+  },
+  {
+    name: 'Memory Knowledge Graph',
+    description: 'Persistent memory across code review sessions',
+    type: 'stdio' as const,
+    command: 'npx',
+    args: ['-y', '@modelcontextprotocol/server-memory'],
+    env: {},
+  },
+  {
+    name: 'Web & API Fetcher',
+    description: 'Fetch external documentation, RFCs, and API references',
+    type: 'stdio' as const,
+    command: 'uvx',
+    args: ['mcp-server-fetch'],
+    env: {},
+  },
+  {
+    name: 'Custom SSE Server',
+    description: 'Connect to an external Model Context Protocol server via HTTP/SSE',
+    type: 'sse' as const,
+    command: '',
+    args: [],
+    env: {},
+    url: 'http://localhost:8000/sse',
+  },
+];
