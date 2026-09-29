@@ -27,6 +27,7 @@ import {
   FileText,
   Globe,
   ExternalLink,
+  History,
 } from 'lucide-react';
 import {
   revealInOs,
@@ -64,6 +65,10 @@ export const MenuBar: React.FC = () => {
     setIsRemoteUrlFromOpen,
     setTargetFileForUrl,
     isRebasing,
+    fileViewTab,
+    setFileViewTab,
+    toggleFileBlame,
+    fetchFileBlame,
   } = useGitStore();
 
   const { themeMode, toggleTheme } = useThemeStore();
@@ -323,6 +328,25 @@ export const MenuBar: React.FC = () => {
                 <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+R</span>
               </button>
 
+              <button
+                type="button"
+                disabled={!selectedFile}
+                onClick={() => {
+                  closeMenus();
+                  if (selectedFile) {
+                    setFileViewTab('blame');
+                    fetchFileBlame(selectedFile.path);
+                  }
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <History className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>View Git Blame</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Alt+B</span>
+              </button>
+
               <div className="my-1 border-t border-surface0" />
 
               <button
@@ -498,6 +522,26 @@ export const MenuBar: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-subtext0 font-mono">U</span>
                   {viewMode === 'unified' && <Check className="w-3.5 h-3.5 text-text" />}
+                </div>
+              </button>
+
+              <div className="my-1 border-t border-surface0" />
+
+              <button
+                type="button"
+                onClick={() => {
+                  toggleFileBlame();
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <History className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>File Git Blame</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-subtext0 font-mono">Alt+B</span>
+                  {fileViewTab === 'blame' && <Check className="w-3.5 h-3.5 text-text" />}
                 </div>
               </button>
 
@@ -856,6 +900,10 @@ export const MenuBar: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Copy Remote File URL</span>
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+U</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Toggle Git Blame View</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Alt+B</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Copy Remote File URL from...</span>
