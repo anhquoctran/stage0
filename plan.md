@@ -350,3 +350,13 @@ export interface ConflictReport {
   - SQLite persistence schema (`virtual_mr_sessions`).
   - Stacked PR & cascade conflict invalidation.
   - Sandbox instance binding per session.
+
+### Multi-Window Workspace (1 Unique Repo per Window)
+- **Specification Document:** [`docs/architecture/multi_window_spec.md`](docs/architecture/multi_window_spec.md)
+- **Goal:** Enable multi-window architecture where each window represents exactly one unique repository by canonical physical path on disk, with automatic focus redirection when opening duplicates.
+- **Key Modules:**
+  - Physical path canonicalization (`dunce::canonicalize`) to prevent duplicates from case-insensitivity, symlinks, or junctions.
+  - Rust `WindowManagerState` tracking `canonical_path` <-> `window_label`.
+  - Automatic focus redirection (`unminimize()`, `show()`, `set_focus()`) on duplicate open attempts.
+  - Independent frontend Zustand store instances per Webview window.
+  - SQLite WAL mode concurrency and selective file watcher event dispatching.
