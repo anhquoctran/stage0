@@ -117,6 +117,7 @@
   --color-base: var(--ctp-base);
   --color-mantle: var(--ctp-mantle);
   --color-crust: var(--ctp-crust);
+  --font-mono: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 body {
@@ -131,7 +132,9 @@ body {
 }
 
 code, kbd, samp, pre {
-  font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-ligatures: normal;
+  font-feature-settings: "liga" 1, "calt" 1;
 }
 
 /* Git GUI Custom Scrollbars */
@@ -157,12 +160,59 @@ code, kbd, samp, pre {
   background: transparent;
 }
 
+/* Diff Viewer & Raw Viewer: Dynamic Font, BIU, Line Spacing & Ligatures via Preferences */
+.diff-view-wrapper,
+.diff-tailwindcss-wrapper,
+.diff-viewer-container,
+.diff-line-content,
+.diff-line-content-raw,
+.diff-line-content-item,
+.diff-line-num,
+.diff-line-hunk-header,
+.diff-raw-viewer {
+  font-family: var(--viewer-font-family, "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace) !important;
+  font-size: var(--viewer-font-size, 13px) !important;
+  font-weight: var(--viewer-font-weight, 400) !important;
+  font-style: var(--viewer-font-style, normal) !important;
+  text-decoration: var(--viewer-text-decoration, none) !important;
+  line-height: var(--viewer-line-height, 1.5) !important;
+  font-variant-ligatures: var(--viewer-font-ligatures, normal) !important;
+  -webkit-font-variant-ligatures: var(--viewer-font-ligatures, normal) !important;
+  font-feature-settings: var(--viewer-font-features, "liga" 1, "calt" 1) !important;
+  -webkit-font-feature-settings: var(--viewer-font-features, "liga" 1, "calt" 1) !important;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.diff-view-wrapper pre,
+.diff-view-wrapper code,
+.diff-view-wrapper span,
+.diff-view-wrapper td,
+.diff-view-wrapper tr,
+.diff-view-wrapper table,
+.diff-tailwindcss-wrapper pre,
+.diff-tailwindcss-wrapper code,
+.diff-tailwindcss-wrapper span,
+.diff-tailwindcss-wrapper td,
+.diff-raw-viewer,
+.diff-raw-viewer * {
+  font-family: var(--viewer-font-family, "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace) !important;
+  font-weight: var(--viewer-font-weight, 400) !important;
+  font-style: var(--viewer-font-style, normal) !important;
+  text-decoration: var(--viewer-text-decoration, none) !important;
+  line-height: var(--viewer-line-height, 1.5) !important;
+  font-variant-ligatures: var(--viewer-font-ligatures, normal) !important;
+  -webkit-font-variant-ligatures: var(--viewer-font-ligatures, normal) !important;
+  font-feature-settings: var(--viewer-font-features, "liga" 1, "calt" 1) !important;
+  -webkit-font-feature-settings: var(--viewer-font-features, "liga" 1, "calt" 1) !important;
+}
+
 /* @git-diff-view/react overrides for Catppuccin Aesthetic */
 .diff-view-wrapper {
   background-color: var(--ctp-base) !important;
   border-color: var(--ctp-surface0) !important;
   color: var(--ctp-text) !important;
-  font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", ui-monospace, Menlo, Monaco, Consolas, monospace;
 }
 
 .diff-tailwindcss-wrapper {
@@ -254,4 +304,17 @@ code, kbd, samp, pre {
 
 .conflict-pulse {
   animation: conflict-glow 2s infinite ease-in-out;
+}
+
+/* Splash Screen Progress Bar Animation */
+@keyframes splash-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(35%);
+  }
+  100% {
+    transform: translateX(180%);
+  }
 }

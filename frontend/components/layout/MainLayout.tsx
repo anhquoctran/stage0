@@ -1,11 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { TopBar } from './TopBar';
 import { StatusBar } from './StatusBar';
 import { FileList } from '../git/FileList';
 import { DiffViewer } from '../git/DiffViewer';
 import { ConflictBanner } from '../git/ConflictBanner';
+import { PreferencesModal } from '../preferences/PreferencesModal';
 import { useGitStore } from '../../store/useGitStore';
+import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { X, AlertCircle } from 'lucide-react';
+
+const DEFAULT_SIDEBAR_WIDTH = 320;
+const MIN_SIDEBAR_WIDTH = 220;
+const MAX_SIDEBAR_WIDTH = 640;
 
 export const MainLayout: React.FC = () => {
   const {
@@ -24,6 +30,74 @@ export const MainLayout: React.FC = () => {
     refreshDiff,
     openRepoDialog,
   } = useGitStore();
+
+  const { setIsPreferencesOpen } = usePreferencesStore();
+
+  // Resizable Sidebar State with LocalStorage Persistence
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('stage0_sidebar_width');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed >= MIN_SIDEBAR_WIDTH && parsed <= MAX_SIDEBAR_WIDTH) {
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore storage access errors
+    }
+    return DEFAULT_SIDEBAR_WIDTH;
+  });
+
+  const [isResizing, setIsResizing] = useState(false);
+  const isResizingRef = useRef(false);
+
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingRef.current = true;
+    setIsResizing(true);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!isResizingRef.current) return;
+      const newWidth = Math.min(
+        Math.max(moveEvent.clientX, MIN_SIDEBAR_WIDTH),
+        MAX_SIDEBAR_WIDTH
+      );
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      isResizingRef.current = false;
+      setIsResizing(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+
+      setSidebarWidth((latestWidth) => {
+        try {
+          localStorage.setItem('stage0_sidebar_width', String(latestWidth));
+        } catch {
+          // ignore
+        }
+        return latestWidth;
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, []);
+
+  const resetSidebarWidth = () => {
+    setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);
+    try {
+      localStorage.setItem('stage0_sidebar_width', String(DEFAULT_SIDEBAR_WIDTH));
+    } catch {
+      // ignore
+    }
+  };
 
   const handleSelectConflictFile = (filePath: string) => {
     if (!diffPayload) return;
@@ -50,11 +124,18 @@ export const MainLayout: React.FC = () => {
       } else if (e.key === 'ArrowUp' || e.key === 'k') {
         e.preventDefault();
         selectPrevFile();
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key.toLowerCase() === 't' || e.code === 'KeyT')
+      ) {
+        e.preventDefault();
+        setIsPreferencesOpen(true);
       } else if (e.key === 's' && !e.ctrlKey && !e.metaKey) {
         setViewMode('split');
       } else if (e.key === 'u' && !e.ctrlKey && !e.metaKey) {
         setViewMode('unified');
-      } else if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r') {
         e.preventDefault();
         refreshDiff();
       }
@@ -62,12 +143,15 @@ export const MainLayout: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectNextFile, selectPrevFile, setViewMode, refreshDiff]);
+  }, [selectNextFile, selectPrevFile, setViewMode, refreshDiff, setIsPreferencesOpen]);
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-crust text-text font-sans">
-      {/* Top Application Bar */}
+      {/* Top Application Bar with Menu Bar & Action Toolbar */}
       <TopBar />
+
+      {/* Preferences Modal Dialog */}
+      <PreferencesModal />
 
       {/* In-Memory Merge Conflict Banner */}
       <ConflictBanner
@@ -85,7 +169,7 @@ export const MainLayout: React.FC = () => {
           <button
             type="button"
             onClick={clearError}
-            className="p-1 hover:bg-red/20 rounded text-red hover:text-text transition-colors"
+            className="p-1 hover:bg-red/20 rounded text-red hover:text-text transition-colors cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -93,7 +177,7 @@ export const MainLayout: React.FC = () => {
       )}
 
       {/* Central Review Workspace */}
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex overflow-hidden relative">
         {currentRepo ? (
           <>
             <FileList
@@ -101,7 +185,27 @@ export const MainLayout: React.FC = () => {
               selectedFile={selectedFile}
               onSelectFile={selectFile}
               isLoading={isDiffLoading}
+              width={sidebarWidth}
             />
+
+            {/* Draggable Resizer Splitter between Sidebar and DiffViewer */}
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              title="Drag to resize sidebar (double-click to reset)"
+              onMouseDown={startResizing}
+              onDoubleClick={resetSidebarWidth}
+              className={`w-1.5 -ml-1 relative z-20 cursor-col-resize hover:bg-blue/40 transition-colors flex items-center justify-center select-none group ${
+                isResizing ? 'bg-blue' : 'bg-transparent'
+              }`}
+            >
+              <div
+                className={`w-0.5 h-7 rounded-full transition-colors ${
+                  isResizing ? 'bg-crust' : 'bg-surface2 group-hover:bg-blue'
+                }`}
+              />
+            </div>
+
             <DiffViewer
               selectedFile={selectedFile}
               diffPayload={diffPayload}

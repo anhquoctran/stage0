@@ -1,4 +1,5 @@
 pub mod commands;
+pub mod credentials;
 pub mod db;
 pub mod git;
 pub mod watcher;
@@ -41,6 +42,11 @@ pub fn run() {
             commands::window_toggle_maximize,
             commands::window_close,
             commands::window_is_maximized,
+            commands::list_git_credentials,
+            commands::save_git_credential,
+            commands::delete_git_credential,
+            commands::verify_git_credential,
+            commands::get_keyring_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

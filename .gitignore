@@ -12,6 +12,7 @@ out/
 # Rust / Cargo Build Outputs
 target/
 backend/target/
+backend/target_check/
 src-tauri/target/
 **/*.rs.bk
 

@@ -21,7 +21,8 @@
         "decorations": false,
         "shadow": true,
         "titleBarStyle": "Overlay",
-        "hiddenTitle": true
+        "hiddenTitle": true,
+        "backgroundColor": "#11111b"
       }
     ],
     "security": {

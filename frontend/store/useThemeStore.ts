@@ -1,14 +1,30 @@
 import { create } from 'zustand';
 
+export type ThemeMode = 'system' | 'dark' | 'light';
 export type CatppuccinTheme = 'mocha' | 'mocha-light';
 
 interface ThemeState {
-  theme: CatppuccinTheme;
+  themeMode: ThemeMode;
+  theme: CatppuccinTheme; // Resolved theme ('mocha' | 'mocha-light')
+  setThemeMode: (mode: ThemeMode) => void;
   setTheme: (theme: CatppuccinTheme) => void;
   toggleTheme: () => void;
 }
 
-const STORAGE_KEY = 'stage0_catppuccin_theme';
+const STORAGE_KEY = 'stage0_catppuccin_theme_mode';
+
+function getSystemTheme(): CatppuccinTheme {
+  if (typeof window === 'undefined') return 'mocha';
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'mocha'
+    : 'mocha-light';
+}
+
+export function resolveTheme(mode: ThemeMode): CatppuccinTheme {
+  if (mode === 'dark') return 'mocha';
+  if (mode === 'light') return 'mocha-light';
+  return getSystemTheme();
+}
 
 export function applyThemeToDocument(theme: CatppuccinTheme) {
   if (typeof document === 'undefined') return;
@@ -18,7 +34,7 @@ export function applyThemeToDocument(theme: CatppuccinTheme) {
 
   root.classList.remove('mocha', 'mocha-light', 'mocha-oled', 'latte', 'light', 'dark');
 
-  if (theme === 'mocha-light' || (theme as string) === 'latte') {
+  if (theme === 'mocha-light') {
     root.classList.add('light', 'mocha-light', 'latte');
     root.style.colorScheme = 'light';
   } else {
@@ -30,32 +46,69 @@ export function applyThemeToDocument(theme: CatppuccinTheme) {
   document.body.style.color = 'var(--ctp-text)';
 }
 
-function getInitialTheme(): CatppuccinTheme {
-  if (typeof window === 'undefined') return 'mocha';
-  const saved = localStorage.getItem(STORAGE_KEY) as string | null;
-  if (saved === 'mocha-light' || saved === 'latte') {
-    return 'mocha-light';
+function getInitialThemeMode(): ThemeMode {
+  if (typeof window === 'undefined') return 'dark';
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === 'system' || saved === 'dark' || saved === 'light') {
+    return saved as ThemeMode;
   }
-  return 'mocha';
+  // Migration fallback from older key
+  const oldTheme = localStorage.getItem('stage0_catppuccin_theme');
+  if (oldTheme === 'mocha-light') return 'light';
+  if (oldTheme === 'mocha') return 'dark';
+  return 'dark';
 }
 
-const initialTheme = getInitialTheme();
-applyThemeToDocument(initialTheme);
+const initialMode = getInitialThemeMode();
+const initialResolved = resolveTheme(initialMode);
+applyThemeToDocument(initialResolved);
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
-  theme: initialTheme,
+  themeMode: initialMode,
+  theme: initialResolved,
+
+  setThemeMode: (mode: ThemeMode) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, mode);
+    } catch {
+      // ignore
+    }
+    const resolved = resolveTheme(mode);
+    applyThemeToDocument(resolved);
+    set({ themeMode: mode, theme: resolved });
+  },
 
   setTheme: (theme: CatppuccinTheme) => {
-    localStorage.setItem(STORAGE_KEY, theme);
+    const mode: ThemeMode = theme === 'mocha-light' ? 'light' : 'dark';
+    try {
+      localStorage.setItem(STORAGE_KEY, mode);
+    } catch {
+      // ignore
+    }
     applyThemeToDocument(theme);
-    set({ theme });
+    set({ themeMode: mode, theme });
   },
 
   toggleTheme: () => {
-    const nextTheme: CatppuccinTheme =
-      get().theme === 'mocha' ? 'mocha-light' : 'mocha';
-    localStorage.setItem(STORAGE_KEY, nextTheme);
-    applyThemeToDocument(nextTheme);
-    set({ theme: nextTheme });
+    const nextMode: ThemeMode = get().theme === 'mocha' ? 'light' : 'dark';
+    get().setThemeMode(nextMode);
   },
 }));
+
+// Listen to OS system color scheme changes
+if (typeof window !== 'undefined' && window.matchMedia) {
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const handleMediaChange = () => {
+    const { themeMode, setThemeMode } = useThemeStore.getState();
+    if (themeMode === 'system') {
+      setThemeMode('system');
+    }
+  };
+
+  try {
+    mediaQuery.addEventListener('change', handleMediaChange);
+  } catch {
+    // Safari / older browser fallback
+    mediaQuery.addListener(handleMediaChange);
+  }
+}

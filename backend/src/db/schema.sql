@@ -22,3 +22,18 @@ CREATE TABLE IF NOT EXISTS review_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_repos_last_opened ON repositories(last_opened_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sessions_repo ON review_sessions(repo_id);
+
+CREATE TABLE IF NOT EXISTS git_credentials (
+    id TEXT PRIMARY KEY,
+    provider TEXT NOT NULL,
+    server_url TEXT NOT NULL,
+    account_name TEXT NOT NULL,
+    token_ref TEXT NOT NULL UNIQUE,
+    token_type TEXT NOT NULL,
+    label TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_git_credentials_provider ON git_credentials(provider);
+CREATE INDEX IF NOT EXISTS idx_git_credentials_token_ref ON git_credentials(token_ref);

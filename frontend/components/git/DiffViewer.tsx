@@ -23,6 +23,7 @@ import { ChangedFile, MrDiffPayload, ViewMode } from '../../types/git';
 import { extractFileHunks, inferLanguage } from '../../utils/diffParser';
 import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
+import { usePreferencesStore } from '../../store/usePreferencesStore';
 
 interface DiffViewerProps {
   selectedFile: ChangedFile | null;
@@ -43,6 +44,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 }) => {
   const { selectNextFile, selectPrevFile, baseBranch, compareBranch } = useGitStore();
   const { theme } = useThemeStore();
+  const { fontFamily, fontSize, lineSpacing, enableLigatures, isBold, isItalic, isUnderline } =
+    usePreferencesStore();
   const [copied, setCopied] = useState(false);
   const [showRawPatch, setShowRawPatch] = useState(false);
 
@@ -313,7 +316,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       {/* Main Diff Rendering Area */}
       <div className="flex-1 overflow-auto bg-base p-2">
         {showRawPatch ? (
-          <pre className="p-4 bg-mantle border border-surface0 rounded-lg font-mono text-xs text-text overflow-auto whitespace-pre leading-relaxed select-text">
+          <pre className="diff-raw-viewer p-4 bg-mantle border border-surface0 rounded-lg font-mono text-xs text-text overflow-auto whitespace-pre leading-relaxed select-text">
             {hunks.length > 0
               ? hunks.join('\n\n')
               : 'No patch content found for this file.'}
@@ -321,15 +324,16 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         ) : diffData && hunks.length > 0 ? (
           <div className="border border-surface0 rounded-lg overflow-hidden bg-base shadow-sm">
             <DiffView
-              key={`${selectedFile.path}-${viewMode}-${theme}`}
+              key={`${selectedFile.path}-${viewMode}-${theme}-${fontFamily}-${fontSize}-${lineSpacing}-${enableLigatures}-${isBold}-${isItalic}-${isUnderline}`}
               data={diffData}
+              className="diff-viewer-container"
               diffViewMode={
                 viewMode === 'split' ? DiffModeEnum.Split : DiffModeEnum.Unified
               }
               diffViewTheme={theme === 'mocha' ? 'dark' : 'light'}
               diffViewHighlight={true}
               diffViewWrap={false}
-              diffViewFontSize={13}
+              diffViewFontSize={fontSize}
             />
           </div>
         ) : (

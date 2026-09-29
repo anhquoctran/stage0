@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { MainLayout } from './components/layout/MainLayout';
+import { SplashScreen } from './components/layout/SplashScreen';
 import { useGitStore } from './store/useGitStore';
 
 export const App: React.FC = () => {
-  const { initApp, refreshDiff } = useGitStore();
+  const { initApp, refreshDiff, isInitializing } = useGitStore();
 
   useEffect(() => {
     initApp();
@@ -22,7 +23,12 @@ export const App: React.FC = () => {
     };
   }, [initApp, refreshDiff]);
 
-  return <MainLayout />;
+  return (
+    <>
+      <SplashScreen isInitializing={isInitializing} />
+      <MainLayout />
+    </>
+  );
 };
 
 export default App;
