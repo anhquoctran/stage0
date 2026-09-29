@@ -4,8 +4,6 @@ use tauri_plugin_dialog::DialogExt;
 use crate::db::Database;
 use crate::git::{
     branches::list_branches,
-    conflict::{check_conflicts, get_conflicted_file_preview as calc_conflicted_file_preview},
-    diff::get_mr_diff as calc_mr_diff,
     ops::{git_sync, list_remotes, get_remote_url, is_rebase_in_progress, GitSyncOptions},
     blame::get_file_blame as calc_file_blame,
     BranchList, ConflictReport, ConflictFilePreview, MrDiffPayload, RepoInfo, FileBlamePayload,
@@ -740,6 +738,98 @@ pub async fn execute_sandbox_command(
 ) -> Result<SandboxExecutionResult, String> {
     let manager = app.state::<SandboxManager>();
     manager.execute_command(&instance_id, &command, &args)
+}
+
+#[tauri::command]
+pub async fn pick_folder(app: AppHandle) -> Result<Option<String>, String> {
+    let folder_opt = app.dialog().file().blocking_pick_folder();
+    Ok(folder_opt.map(|fp| fp.to_string()))
+}
+
+#[tauri::command]
+pub async fn clone_repository(
+    app: AppHandle,
+    url: String,
+    target_path: String,
+) -> Result<RepoInfo, String> {
+    let trimmed_url = url.trim();
+    if trimmed_url.is_empty() {
+        return Err("Repository URL cannot be empty".to_string());
+    }
+
+    let trimmed_target = target_path.trim();
+    if trimmed_target.is_empty() {
+        return Err("Destination path cannot be empty".to_string());
+    }
+
+    let dest = Path::new(trimmed_target);
+    if dest.exists() {
+        if let Ok(entries) = std::fs::read_dir(dest) {
+            if entries.count() > 0 {
+                return Err(format!(
+                    "Destination directory '{}' already exists and is not empty",
+                    trimmed_target
+                ));
+            }
+        }
+    } else if let Some(parent) = dest.parent() {
+        if !parent.exists() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+    }
+
+    let mut cmd = std::process::Command::new("git");
+    cmd.args(&["clone", trimmed_url, trimmed_target]);
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    let output = cmd
+        .output()
+        .map_err(|e| format!("Failed to execute git clone: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        let err_msg = if !stderr.trim().is_empty() {
+            stderr
+        } else if !stdout.trim().is_empty() {
+            stdout
+        } else {
+            "Git clone command failed with unknown error".to_string()
+        };
+        return Err(err_msg.trim().to_string());
+    }
+
+    if !dest.join(".git").exists() {
+        return Err("Cloned directory is missing .git metadata".to_string());
+    }
+
+    let name = dest
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_else(|| "Repository".to_string());
+
+    let id = uuid::Uuid::new_v4().to_string();
+
+    let db = app.state::<Database>();
+    db.upsert_repository(&id, &name, trimmed_target)
+        .map_err(|e| format!("Failed to save repository to database: {}", e))?;
+
+    let watcher = app.state::<WatcherState>();
+    if let Err(e) = watcher.watch_repo(app.clone(), trimmed_target.to_string()) {
+        eprintln!("Warning: Failed to start watcher: {}", e);
+    }
+
+    Ok(RepoInfo {
+        id,
+        name,
+        local_path: trimmed_target.to_string(),
+    })
 }
 
 

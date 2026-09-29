@@ -8,6 +8,8 @@ import { PreferencesModal } from '../preferences/PreferencesModal';
 import { PullFromModal } from '../git/PullFromModal';
 import { RebaseFromModal } from '../git/RebaseFromModal';
 import { RemoteUrlFromModal } from '../git/RemoteUrlFromModal';
+import { CloneRepoModal } from '../git/CloneRepoModal';
+import { WelcomeScreen } from './WelcomeScreen';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { X, AlertCircle, Check } from 'lucide-react';
@@ -323,6 +325,9 @@ export const MainLayout: React.FC = () => {
       {/* Remote URL From Branch/Commit Modal Dialog */}
       <RemoteUrlFromModal />
 
+      {/* Clone Remote Repository Modal Dialog */}
+      <CloneRepoModal />
+
       {/* In-Memory Merge Conflict Banner */}
       <ConflictBanner
         conflictReport={conflictReport}
@@ -386,13 +391,7 @@ export const MainLayout: React.FC = () => {
             />
           </>
         ) : (
-          <DiffViewer
-            selectedFile={null}
-            diffPayload={null}
-            viewMode={viewMode}
-            onToggleViewMode={setViewMode}
-            onOpenRepo={openRepoDialog}
-          />
+          <WelcomeScreen />
         )}
       </main>
 

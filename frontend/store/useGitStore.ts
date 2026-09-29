@@ -62,10 +62,14 @@ interface GitState {
   isPullFromOpen: boolean;
   isRebaseFromOpen: boolean;
   isRemoteUrlFromOpen: boolean;
+  isCloneModalOpen: boolean;
   targetFileForUrl: ChangedFile | null;
   setIsPullFromOpen: (open: boolean) => void;
   setIsRebaseFromOpen: (open: boolean) => void;
   setIsRemoteUrlFromOpen: (open: boolean) => void;
+  setIsCloneModalOpen: (open: boolean) => void;
+  cloneRepo: (url: string, targetPath: string) => Promise<RepoInfo | null>;
+  pickCloneFolder: () => Promise<string | null>;
   setTargetFileForUrl: (file: ChangedFile | null) => void;
   fetchRemotes: (repoPath: string) => Promise<void>;
   fetchRemoteUrl: (repoPath: string) => Promise<string | null>;
@@ -136,6 +140,8 @@ export const useGitStore = create<GitState>((set, get) => ({
   setIsPullFromOpen: (open) => set({ isPullFromOpen: open }),
   setIsRebaseFromOpen: (open) => set({ isRebaseFromOpen: open }),
   setIsRemoteUrlFromOpen: (open) => set({ isRemoteUrlFromOpen: open }),
+  isCloneModalOpen: false,
+  setIsCloneModalOpen: (open) => set({ isCloneModalOpen: open }),
   setTargetFileForUrl: (file) => set({ targetFileForUrl: file }),
   baseBranch: '',
   compareBranch: '',
@@ -236,6 +242,40 @@ export const useGitStore = create<GitState>((set, get) => ({
       }
     } catch (err: unknown) {
       set({ error: String(err) });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  pickCloneFolder: async () => {
+    try {
+      const folder = await invoke<string | null>('pick_folder');
+      return folder;
+    } catch (err) {
+      console.warn('Failed to pick folder:', err);
+      return null;
+    }
+  },
+
+  cloneRepo: async (url: string, targetPath: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const repo = await invoke<RepoInfo>('clone_repository', {
+        url,
+        targetPath,
+      });
+      if (repo) {
+        set({ currentRepo: repo });
+        await get().fetchBranches(repo.local_path);
+        await get().checkRebaseStatus(repo.local_path);
+        await get().loadRecentRepos();
+        get().showToast(`Cloned repository ${repo.name}`);
+        return repo;
+      }
+      return null;
+    } catch (err: unknown) {
+      set({ error: String(err) });
+      throw err;
     } finally {
       set({ isLoading: false });
     }
