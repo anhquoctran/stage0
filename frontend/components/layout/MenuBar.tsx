@@ -46,6 +46,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
+import { AppLogo } from '../common/AppLogo';
 
 export const MenuBar: React.FC = () => {
   const {
@@ -1107,9 +1108,7 @@ export const MenuBar: React.FC = () => {
       {showAboutModal && (
         <div className="fixed inset-0 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-mantle border border-surface0 rounded-xl p-5 max-w-sm w-full shadow-2xl text-center animate-in zoom-in-95 duration-150">
-            <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-surface0 border border-surface1 flex items-center justify-center text-subtext0 shadow-lg">
-              <img src="/app-icon.svg" className="w-10 h-10" alt="Logo" />
-            </div>
+            <AppLogo size="md" className="mx-auto mb-3" />
             <h3 className="text-base font-bold text-text">Stage0</h3>
             <p className="text-xs font-mono text-subtext1 mb-2">v0.1.0 • Local-First Virtual MR Sandbox</p>
             <p className="text-xs text-subtext1 mb-4 leading-relaxed">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { GitMerge, ShieldCheck, Zap } from 'lucide-react';
+import { AppLogo } from '../common/AppLogo';
 
 interface SplashScreenProps {
   isInitializing: boolean;
@@ -65,48 +66,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         {/* Animated App Brand Icon */}
         <div className="relative mb-6">
           {/* Pulsing Aura */}
-          <div className="absolute -inset-2 bg-gradient-to-r from-blue/30 via-mauve/25 to-teal/30 rounded-3xl blur-xl animate-pulse" />
-
-          {/* Logo Container */}
-          <div className="relative w-24 h-24 rounded-2xl bg-mantle border border-surface0/80 shadow-2xl flex items-center justify-center text-blue group">
-            <svg
-              className="w-16 h-16 drop-shadow-md"
-              viewBox="0 0 128 128"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <linearGradient id="splash-trunk" x1="0" y1="0" x2="0" y2="128" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#89b4fa" />
-                  <stop offset="100%" stopColor="#74c7ec" />
-                </linearGradient>
-                <linearGradient id="splash-branch" x1="44" y1="42" x2="84" y2="92" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#cba6f7" />
-                  <stop offset="100%" stopColor="#a6e3a1" />
-                </linearGradient>
-              </defs>
-
-              {/* Trunk line */}
-              <path d="M44 26 V102" stroke="#45475a" strokeWidth="6" strokeLinecap="round" />
-              <path d="M44 42 V86" stroke="url(#splash-trunk)" strokeWidth="6" strokeLinecap="round" />
-
-              {/* Branch curve */}
-              <path
-                d="M44 42 C44 58, 84 52, 84 66 C84 80, 44 76, 44 92"
-                stroke="url(#splash-branch)"
-                strokeWidth="6"
-                strokeLinecap="round"
-                fill="none"
-              />
-
-              {/* Commits */}
-              <circle cx="44" cy="36" r="8" fill="#1e1e2e" stroke="#89b4fa" strokeWidth="5" />
-              <circle cx="44" cy="94" r="8" fill="#1e1e2e" stroke="#a6e3a1" strokeWidth="5" />
-              <circle cx="84" cy="66" r="9" fill="#181825" stroke="#cba6f7" strokeWidth="5" />
-              <circle cx="84" cy="66" r="4" fill="#cba6f7" />
-              <circle cx="44" cy="94" r="3" fill="#a6e3a1" />
-            </svg>
-          </div>
+          <div className="absolute -inset-2 bg-gradient-to-r from-blue/20 via-mauve/15 to-teal/20 rounded-3xl blur-xl animate-pulse" />
+          <AppLogo size="lg" className="relative shadow-2xl" />
         </div>
 
         {/* Title & Tagline */}
