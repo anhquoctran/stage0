@@ -47,11 +47,19 @@ interface GitState {
   setViewMode: (mode: ViewMode) => void;
   setFileListLayout: (layout: 'flat' | 'tree') => void;
   remotes: string[];
+  remoteUrl: string | null;
+  toastMessage: string | null;
+  showToast: (msg: string) => void;
   isPullFromOpen: boolean;
   isRebaseFromOpen: boolean;
+  isRemoteUrlFromOpen: boolean;
+  targetFileForUrl: ChangedFile | null;
   setIsPullFromOpen: (open: boolean) => void;
   setIsRebaseFromOpen: (open: boolean) => void;
+  setIsRemoteUrlFromOpen: (open: boolean) => void;
+  setTargetFileForUrl: (file: ChangedFile | null) => void;
   fetchRemotes: (repoPath: string) => Promise<void>;
+  fetchRemoteUrl: (repoPath: string) => Promise<string | null>;
   runSync: (op: GitSyncOperation, options?: GitSyncOptions) => Promise<void>;
   clearError: () => void;
   closeRepo: () => void;
@@ -62,10 +70,24 @@ export const useGitStore = create<GitState>((set, get) => ({
   recentRepos: [],
   branches: null,
   remotes: [],
+  remoteUrl: null,
+  toastMessage: null,
+  showToast: (msg: string) => {
+    set({ toastMessage: msg });
+    setTimeout(() => {
+      if (get().toastMessage === msg) {
+        set({ toastMessage: null });
+      }
+    }, 2500);
+  },
   isPullFromOpen: false,
   isRebaseFromOpen: false,
+  isRemoteUrlFromOpen: false,
+  targetFileForUrl: null,
   setIsPullFromOpen: (open) => set({ isPullFromOpen: open }),
   setIsRebaseFromOpen: (open) => set({ isRebaseFromOpen: open }),
+  setIsRemoteUrlFromOpen: (open) => set({ isRemoteUrlFromOpen: open }),
+  setTargetFileForUrl: (file) => set({ targetFileForUrl: file }),
   baseBranch: '',
   compareBranch: '',
   diffPayload: null,
@@ -91,6 +113,8 @@ export const useGitStore = create<GitState>((set, get) => ({
       diffPayload: null,
       conflictReport: null,
       selectedFile: null,
+      remotes: [],
+      remoteUrl: null,
     }),
 
   initApp: async () => {
@@ -373,8 +397,21 @@ export const useGitStore = create<GitState>((set, get) => ({
     try {
       const remotes = await invoke<string[]>('list_git_remotes', { repoPath });
       set({ remotes });
+      await get().fetchRemoteUrl(repoPath);
     } catch (err) {
       console.warn('Failed to list git remotes:', err);
+    }
+  },
+
+  fetchRemoteUrl: async (repoPath: string) => {
+    try {
+      const url = await invoke<string>('get_git_remote_url', { repoPath, remote: null });
+      set({ remoteUrl: url });
+      return url;
+    } catch (err) {
+      console.warn('Failed to get remote url:', err);
+      set({ remoteUrl: null });
+      return null;
     }
   },
 

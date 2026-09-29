@@ -6,7 +6,7 @@ use crate::git::{
     branches::list_branches,
     conflict::check_conflicts,
     diff::get_mr_diff as calc_mr_diff,
-    ops::{git_sync, list_remotes, GitSyncOptions},
+    ops::{git_sync, list_remotes, get_remote_url, GitSyncOptions},
     BranchList, ConflictReport, MrDiffPayload, RepoInfo,
 };
 use crate::watcher::WatcherState;
@@ -228,6 +228,61 @@ pub async fn list_git_remotes(
     repo_path: String,
 ) -> Result<Vec<String>, String> {
     list_remotes(&repo_path)
+}
+
+#[tauri::command]
+pub async fn get_git_remote_url(
+    repo_path: String,
+    remote: Option<String>,
+) -> Result<String, String> {
+    get_remote_url(&repo_path, remote.as_deref())
+}
+
+#[tauri::command]
+pub async fn reveal_file_in_os(
+    repo_path: String,
+    file_path: String,
+) -> Result<(), String> {
+    let full_path = std::path::Path::new(&repo_path).join(&file_path);
+    #[cfg(target_os = "windows")]
+    {
+        let win_path = full_path.to_string_lossy().replace('/', "\\");
+        let path_obj = std::path::Path::new(&win_path);
+        let arg = if path_obj.exists() {
+            format!("/select,{}", win_path)
+        } else if let Some(parent) = path_obj.parent() {
+            parent.to_string_lossy().to_string()
+        } else {
+            win_path
+        };
+        std::process::Command::new("explorer")
+            .arg(arg)
+            .spawn()
+            .map_err(|e| format!("Failed to open file explorer: {}", e))?;
+        Ok(())
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg("-R")
+            .arg(&full_path)
+            .spawn()
+            .map_err(|e| format!("Failed to open in Finder: {}", e))?;
+        Ok(())
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        let target = if full_path.is_file() {
+            full_path.parent().unwrap_or(&full_path).to_path_buf()
+        } else {
+            full_path
+        };
+        std::process::Command::new("xdg-open")
+            .arg(target)
+            .spawn()
+            .map_err(|e| format!("Failed to open file manager: {}", e))?;
+        Ok(())
+    }
 }
 
 #[tauri::command]
