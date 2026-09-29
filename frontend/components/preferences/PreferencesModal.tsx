@@ -212,91 +212,64 @@ export const PreferencesModal: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  {/* System Option */}
-                  <button
-                    type="button"
-                    onClick={() => setThemeMode('system')}
-                    className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all cursor-pointer text-center relative group ${themeMode === 'system'
-                        ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
-                        : 'bg-surface0/50 border-surface0 text-subtext1 hover:bg-surface0 hover:text-text'
-                      }`}
-                  >
-                    {themeMode === 'system' && (
-                      <span className="absolute top-2.5 right-2.5">
-                        <Check className="w-3.5 h-3.5 text-text" />
+                <div className="p-4 bg-surface0/30 border border-surface0 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-semibold text-text block">Interface Theme</span>
+                      <span className="text-[11px] text-subtext0 block mt-0.5">
+                        {themeMode === 'system'
+                          ? 'Synchronized with your operating system color scheme'
+                          : themeMode === 'dark'
+                          ? 'Catppuccin Mocha aesthetic dark theme'
+                          : 'Catppuccin Latte clean light theme'}
                       </span>
-                    )}
-                    <div
-                      className={`p-2.5 mb-2 transition-colors ${themeMode === 'system'
-                          ? 'bg-surface2 text-text'
-                          : 'bg-surface0 text-subtext0 group-hover:text-text'
-                        }`}
-                    >
-                      <Monitor className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs font-semibold text-text">System</span>
-                    <span className="text-[10px] text-subtext0 mt-0.5">
-                      Sync with Operating System theme
-                    </span>
-                  </button>
-
-                  {/* Dark Option */}
-                  <button
-                    type="button"
-                    onClick={() => setThemeMode('dark')}
-                    className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all cursor-pointer text-center relative group ${themeMode === 'dark'
-                        ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
-                        : 'bg-surface0/50 border-surface0 text-subtext1 hover:bg-surface0 hover:text-text'
-                      }`}
-                  >
-                    {themeMode === 'dark' && (
-                      <span className="absolute top-2.5 right-2.5">
-                        <Check className="w-3.5 h-3.5 text-text" />
-                      </span>
-                    )}
-                    <div
-                      className={`p-2.5 mb-2 transition-colors ${themeMode === 'dark'
-                          ? 'bg-surface2 text-text'
-                          : 'bg-surface0 text-subtext0 group-hover:text-text'
-                        }`}
-                    >
-                      <Moon className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs font-semibold text-text">Dark</span>
-                    <span className="text-[10px] text-subtext0 mt-0.5">
-                      Catppuccin Mocha aesthetic
-                    </span>
-                  </button>
-
-                  {/* Light Option */}
-                  <button
-                    type="button"
-                    onClick={() => setThemeMode('light')}
-                    className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all cursor-pointer text-center relative group ${themeMode === 'light'
-                        ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
-                        : 'bg-surface0/50 border-surface0 text-subtext1 hover:bg-surface0 hover:text-text'
-                      }`}
-                  >
-                    {themeMode === 'light' && (
-                      <span className="absolute top-2.5 right-2.5">
-                        <Check className="w-3.5 h-3.5 text-text" />
-                      </span>
-                    )}
-                    <div
-                      className={`p-2.5 mb-2 transition-colors ${themeMode === 'light'
-                          ? 'bg-surface2 text-text'
-                          : 'bg-surface0 text-subtext0 group-hover:text-text'
-                        }`}
-                    >
-                      <Sun className="w-5 h-5" />
                     </div>
 
-                    <span className="text-xs font-semibold text-text">Light</span>
-                    <span className="text-[10px] text-subtext0 mt-0.5">
-                      Catppuccin Latte clean theme
-                    </span>
-                  </button>
+                    {/* 3-Step Compact Button Group */}
+                    <div className="inline-flex items-center p-0.5 bg-base border border-surface1 gap-0.5 shadow-inner">
+                      <button
+                        type="button"
+                        onClick={() => setThemeMode('system')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
+                          themeMode === 'system'
+                            ? 'bg-surface2 text-text font-semibold shadow-xs'
+                            : 'text-subtext0 hover:text-text hover:bg-surface0'
+                        }`}
+                        title="Sync with Operating System theme"
+                      >
+                        <Monitor className="w-3.5 h-3.5" />
+                        <span>System</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setThemeMode('dark')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
+                          themeMode === 'dark'
+                            ? 'bg-surface2 text-text font-semibold shadow-xs'
+                            : 'text-subtext0 hover:text-text hover:bg-surface0'
+                        }`}
+                        title="Catppuccin Mocha dark theme"
+                      >
+                        <Moon className="w-3.5 h-3.5" />
+                        <span>Dark</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setThemeMode('light')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
+                          themeMode === 'light'
+                            ? 'bg-surface2 text-text font-semibold shadow-xs'
+                            : 'text-subtext0 hover:text-text hover:bg-surface0'
+                        }`}
+                        title="Catppuccin Latte light theme"
+                      >
+                        <Sun className="w-3.5 h-3.5" />
+                        <span>Light</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
