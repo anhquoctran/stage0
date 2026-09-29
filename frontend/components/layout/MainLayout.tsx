@@ -15,6 +15,9 @@ import {
   revealInOs,
   getAbsoluteFilePath,
   buildRemoteFileUrl,
+  openRepoInTerminal,
+  openRepoInVsCode,
+  openRepoInExplorer,
 } from '../../utils/fileActions';
 
 const DEFAULT_SIDEBAR_WIDTH = 320;
@@ -240,12 +243,37 @@ export const MainLayout: React.FC = () => {
         e.preventDefault();
         toggleInlineBlame();
         showToast(showInlineBlame ? 'Disabled inline git blame' : 'Enabled inline git blame');
+      } else if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT')) {
+        // Alt+Shift+T: Open repository in default terminal
+        if (currentRepo) {
+          e.preventDefault();
+          openRepoInTerminal(currentRepo.local_path)
+            .then(() => showToast('Opened repository in terminal'))
+            .catch((err) => showToast(`Failed to open terminal: ${err}`));
+        }
+      } else if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'v' || e.code === 'KeyV')) {
+        // Alt+Shift+V: Open repository in VS Code
+        if (currentRepo) {
+          e.preventDefault();
+          openRepoInVsCode(currentRepo.local_path)
+            .then(() => showToast('Opened repository in VS Code'))
+            .catch((err) => showToast(`Failed to open VS Code: ${err}`));
+        }
+      } else if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'e' || e.code === 'KeyE')) {
+        // Alt+Shift+E: Open repository in OS File Explorer
+        if (currentRepo) {
+          e.preventDefault();
+          openRepoInExplorer(currentRepo.local_path)
+            .then(() => showToast('Opened repository in File Explorer'))
+            .catch((err) => showToast(`Failed to open explorer: ${err}`));
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
+    currentRepo,
     selectNextFile,
     selectPrevFile,
     setViewMode,

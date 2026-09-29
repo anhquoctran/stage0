@@ -309,6 +309,178 @@ pub async fn reveal_file_in_os(
 }
 
 #[tauri::command]
+pub async fn open_repo_in(
+    repo_path: String,
+    target: String, // "explorer" | "vscode" | "terminal"
+) -> Result<(), String> {
+    let path = std::path::Path::new(&repo_path);
+    if !path.exists() {
+        return Err(format!("Repository path does not exist: {}", repo_path));
+    }
+
+    match target.as_str() {
+        "explorer" => {
+            #[cfg(target_os = "windows")]
+            {
+                let win_path = repo_path.replace('/', "\\");
+                std::process::Command::new("explorer")
+                    .arg(&win_path)
+                    .spawn()
+                    .map_err(|e| format!("Failed to open Explorer: {}", e))?;
+                Ok(())
+            }
+            #[cfg(target_os = "macos")]
+            {
+                std::process::Command::new("open")
+                    .arg(&repo_path)
+                    .spawn()
+                    .map_err(|e| format!("Failed to open in Finder: {}", e))?;
+                Ok(())
+            }
+            #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+            {
+                std::process::Command::new("xdg-open")
+                    .arg(&repo_path)
+                    .spawn()
+                    .map_err(|e| format!("Failed to open file manager: {}", e))?;
+                Ok(())
+            }
+        }
+        "vscode" => {
+            #[cfg(target_os = "windows")]
+            {
+                let win_path = repo_path.replace('/', "\\");
+                let res = std::process::Command::new("cmd")
+                    .args(&["/c", "code", &win_path])
+                    .spawn();
+
+                if res.is_err() {
+                    let mut found = false;
+                    let local_appdata = std::env::var("LOCALAPPDATA").ok();
+                    let prog_files = std::env::var("PROGRAMFILES").ok();
+
+                    let candidates = [
+                        local_appdata.as_ref().map(|p| std::path::PathBuf::from(p).join("Programs\\Microsoft VS Code\\Code.exe")),
+                        prog_files.as_ref().map(|p| std::path::PathBuf::from(p).join("Microsoft VS Code\\Code.exe")),
+                    ];
+
+                    for cand in candidates.into_iter().flatten() {
+                        if cand.exists() {
+                            if std::process::Command::new(&cand).arg(&win_path).spawn().is_ok() {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if !found {
+                        return Err("Failed to launch Visual Studio Code. Please ensure 'code' command is in your PATH or VS Code is installed.".to_string());
+                    }
+                }
+                Ok(())
+            }
+            #[cfg(target_os = "macos")]
+            {
+                let res = std::process::Command::new("code")
+                    .arg(&repo_path)
+                    .spawn();
+                if res.is_err() {
+                    std::process::Command::new("open")
+                        .args(&["-a", "Visual Studio Code", &repo_path])
+                        .spawn()
+                        .map_err(|e| format!("Failed to open VS Code: {}", e))?;
+                }
+                Ok(())
+            }
+            #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+            {
+                std::process::Command::new("code")
+                    .arg(&repo_path)
+                    .spawn()
+                    .map_err(|e| format!("Failed to open VS Code: {}", e))?;
+                Ok(())
+            }
+        }
+        "terminal" => {
+            #[cfg(target_os = "windows")]
+            {
+                let win_path = repo_path.replace('/', "\\");
+                let mut launched = false;
+
+                // 1. Try Windows Terminal via wt.exe in LOCALAPPDATA
+                if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
+                    let wt_path = std::path::PathBuf::from(local_appdata).join("Microsoft\\WindowsApps\\wt.exe");
+                    if wt_path.exists() {
+                        if std::process::Command::new("cmd")
+                            .args(&["/c", "start", "", wt_path.to_str().unwrap(), "-d", &win_path])
+                            .spawn()
+                            .is_ok()
+                        {
+                            launched = true;
+                        }
+                    }
+                }
+
+                // 2. Try wt command directly
+                if !launched {
+                    if std::process::Command::new("cmd")
+                        .args(&["/c", "start", "wt", "-d", &win_path])
+                        .spawn()
+                        .is_ok()
+                    {
+                        launched = true;
+                    }
+                }
+
+                // 3. Fallback to PowerShell in the repo directory
+                if !launched {
+                    std::process::Command::new("cmd")
+                        .args(&[
+                            "/c",
+                            "start",
+                            "powershell",
+                            "-NoExit",
+                            "-Command",
+                            &format!("Set-Location -LiteralPath '{}'", win_path.replace('\'', "''")),
+                        ])
+                        .spawn()
+                        .map_err(|e| format!("Failed to launch terminal: {}", e))?;
+                }
+                Ok(())
+            }
+            #[cfg(target_os = "macos")]
+            {
+                std::process::Command::new("open")
+                    .args(&["-a", "Terminal", &repo_path])
+                    .spawn()
+                    .map_err(|e| format!("Failed to open Terminal: {}", e))?;
+                Ok(())
+            }
+            #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+            {
+                let terminals = ["x-terminal-emulator", "gnome-terminal", "konsole", "xfce4-terminal", "alacritty", "kitty", "xterm"];
+                let mut launched = false;
+                for term in terminals {
+                    if std::process::Command::new(term)
+                        .current_dir(&repo_path)
+                        .spawn()
+                        .is_ok()
+                    {
+                        launched = true;
+                        break;
+                    }
+                }
+                if !launched {
+                    return Err("No supported terminal emulator found".to_string());
+                }
+                Ok(())
+            }
+        }
+        _ => Err(format!("Unknown target: {}", target)),
+    }
+}
+
+#[tauri::command]
 pub async fn window_minimize(window: Window) -> Result<(), String> {
     window.minimize().map_err(|e| e.to_string())
 }

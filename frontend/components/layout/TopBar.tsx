@@ -3,6 +3,9 @@ import { clsx } from 'clsx';
 import { invoke } from '@tauri-apps/api/core';
 import {
   FolderOpen,
+  Folder,
+  Code2,
+  Terminal,
   ArrowLeft,
   ArrowLeftRight,
   RefreshCw,
@@ -24,6 +27,11 @@ import { BranchSelector } from '../git/BranchSelector';
 import { WindowControls } from './WindowControls';
 import { MenuBar } from './MenuBar';
 import { useGitStore } from '../../store/useGitStore';
+import {
+  openRepoInExplorer,
+  openRepoInVsCode,
+  openRepoInTerminal,
+} from '../../utils/fileActions';
 
 export const TopBar: React.FC = () => {
   const {
@@ -46,6 +54,7 @@ export const TopBar: React.FC = () => {
     setIsPullFromOpen,
     setIsRebaseFromOpen,
     isRebasing,
+    showToast,
   } = useGitStore();
 
   const [isRecentOpen, setIsRecentOpen] = useState(false);
@@ -55,6 +64,24 @@ export const TopBar: React.FC = () => {
   const recentDropdownRef = useRef<HTMLDivElement>(null);
   const pullMenuRef = useRef<HTMLDivElement>(null);
   const rebaseMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleOpenRepoIn = async (target: 'explorer' | 'vscode' | 'terminal') => {
+    if (!currentRepo) return;
+    try {
+      if (target === 'explorer') {
+        await openRepoInExplorer(currentRepo.local_path);
+        showToast('Opened repository in File Explorer');
+      } else if (target === 'vscode') {
+        await openRepoInVsCode(currentRepo.local_path);
+        showToast('Opened repository in VS Code');
+      } else if (target === 'terminal') {
+        await openRepoInTerminal(currentRepo.local_path);
+        showToast('Opened repository in Terminal');
+      }
+    } catch (err) {
+      showToast(`Failed to open: ${err}`);
+    }
+  };
 
   const isMac =
     typeof navigator !== 'undefined' &&
@@ -250,6 +277,58 @@ export const TopBar: React.FC = () => {
                     <span>Open from Disk...</span>
                   </button>
                 </div>
+
+                {currentRepo && (
+                  <div className="p-1 border-t border-surface0 bg-base space-y-0.5">
+                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0">
+                      Open Repository In...
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRecentOpen(false);
+                        handleOpenRepoIn('terminal');
+                      }}
+                      className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center justify-between font-medium cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Terminal className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+                        <span>System Default Terminal</span>
+                      </div>
+                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+T</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRecentOpen(false);
+                        handleOpenRepoIn('vscode');
+                      }}
+                      className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center justify-between font-medium cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Code2 className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+                        <span>Visual Studio Code</span>
+                      </div>
+                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+V</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRecentOpen(false);
+                        handleOpenRepoIn('explorer');
+                      }}
+                      className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center justify-between font-medium cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Folder className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+                        <span>System File Explorer</span>
+                      </div>
+                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+E</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
