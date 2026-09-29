@@ -142,7 +142,7 @@ export const TopBar: React.FC = () => {
       </div>
 
       {/* ROW 2: Git Workspace Action Toolbar */}
-      <div className="h-11 bg-mantle border-b border-surface0 px-3 flex items-center justify-between shrink-0 select-none z-20">
+      <div className="h-14 bg-mantle border-b border-surface0 px-3 flex items-center justify-between shrink-0 select-none z-20">
         {/* Left: Repository Dropdown Pill (GitHub Desktop / Fork style) */}
         <div className="flex items-center gap-3">
           <div className="relative" ref={recentDropdownRef}>
