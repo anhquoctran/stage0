@@ -40,6 +40,7 @@ import {
   openRepoInTerminal,
   openRepoInVsCode,
   openRepoInExplorer,
+  getOsFileManagerName,
 } from '../../utils/fileActions';
 import { invoke } from '@tauri-apps/api/core';
 import { useGitStore } from '../../store/useGitStore';
@@ -83,8 +84,11 @@ export const MenuBar: React.FC = () => {
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [showRecentSubmenu, setShowRecentSubmenu] = useState(false);
+  const [showOpenInSubmenu, setShowOpenInSubmenu] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
+
+  const fileManagerName = getOsFileManagerName();
 
   const menuBarRef = useRef<HTMLDivElement>(null);
 
@@ -94,6 +98,7 @@ export const MenuBar: React.FC = () => {
       if (menuBarRef.current && !menuBarRef.current.contains(e.target as Node)) {
         setActiveMenu(null);
         setShowRecentSubmenu(false);
+        setShowOpenInSubmenu(false);
       }
     };
 
@@ -101,6 +106,7 @@ export const MenuBar: React.FC = () => {
       if (e.key === 'Escape') {
         setActiveMenu(null);
         setShowRecentSubmenu(false);
+        setShowOpenInSubmenu(false);
       } else if (
         (e.ctrlKey || e.metaKey) &&
         e.shiftKey &&
@@ -109,6 +115,7 @@ export const MenuBar: React.FC = () => {
         e.preventDefault();
         setActiveMenu(null);
         setShowRecentSubmenu(false);
+        setShowOpenInSubmenu(false);
         setIsPreferencesOpen(true);
       } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'o') {
         e.preventDefault();
@@ -128,9 +135,11 @@ export const MenuBar: React.FC = () => {
     if (activeMenu === menuName) {
       setActiveMenu(null);
       setShowRecentSubmenu(false);
+      setShowOpenInSubmenu(false);
     } else {
       setActiveMenu(menuName);
       setShowRecentSubmenu(false);
+      setShowOpenInSubmenu(false);
     }
   };
 
@@ -138,12 +147,14 @@ export const MenuBar: React.FC = () => {
     if (activeMenu !== null && activeMenu !== menuName) {
       setActiveMenu(menuName);
       setShowRecentSubmenu(false);
+      setShowOpenInSubmenu(false);
     }
   };
 
   const closeMenus = () => {
     setActiveMenu(null);
     setShowRecentSubmenu(false);
+    setShowOpenInSubmenu(false);
   };
 
   const handleExitApp = async () => {
@@ -330,7 +341,7 @@ export const MenuBar: React.FC = () => {
               >
                 <div className="flex items-center gap-2">
                   <FolderOpen className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Open in File Explorer</span>
+                  <span>Open in {fileManagerName}</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+R</span>
               </button>
@@ -807,74 +818,88 @@ export const MenuBar: React.FC = () => {
 
               <div className="my-1 border-t border-surface0" />
 
-              <button
-                type="button"
-                disabled={!currentRepo}
-                onClick={async () => {
-                  closeMenus();
-                  if (currentRepo) {
-                    try {
-                      await openRepoInTerminal(currentRepo.local_path);
-                      showToast('Opened repository in terminal');
-                    } catch (err) {
-                      showToast(`Failed to open terminal: ${err}`);
-                    }
-                  }
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              {/* Open in Submenu Trigger */}
+              <div
+                className="relative"
+                onMouseEnter={() => setShowOpenInSubmenu(true)}
+                onMouseLeave={() => setShowOpenInSubmenu(false)}
               >
-                <div className="flex items-center gap-2">
-                  <Terminal className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Open in Default Terminal</span>
-                </div>
-                <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+T</span>
-              </button>
+                <button
+                  type="button"
+                  disabled={!currentRepo}
+                  className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <ExternalLink className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                    <span>Open in</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                </button>
 
-              <button
-                type="button"
-                disabled={!currentRepo}
-                onClick={async () => {
-                  closeMenus();
-                  if (currentRepo) {
-                    try {
-                      await openRepoInVsCode(currentRepo.local_path);
-                      showToast('Opened repository in VS Code');
-                    } catch (err) {
-                      showToast(`Failed to open VS Code: ${err}`);
-                    }
-                  }
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <Code2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Open in Visual Studio Code</span>
-                </div>
-                <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+V</span>
-              </button>
+                {showOpenInSubmenu && currentRepo && (
+                  <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        closeMenus();
+                        try {
+                          await openRepoInTerminal(currentRepo.local_path);
+                          showToast('Opened repository in terminal');
+                        } catch (err) {
+                          showToast(`Failed to open terminal: ${err}`);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Terminal className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                        <span>Terminal</span>
+                      </div>
+                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+T</span>
+                    </button>
 
-              <button
-                type="button"
-                disabled={!currentRepo}
-                onClick={async () => {
-                  closeMenus();
-                  if (currentRepo) {
-                    try {
-                      await openRepoInExplorer(currentRepo.local_path);
-                      showToast('Opened repository in File Explorer');
-                    } catch (err) {
-                      showToast(`Failed to open File Explorer: ${err}`);
-                    }
-                  }
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <Folder className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Open in File Explorer</span>
-                </div>
-                <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+E</span>
-              </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        closeMenus();
+                        try {
+                          await openRepoInVsCode(currentRepo.local_path);
+                          showToast('Opened repository in VS Code');
+                        } catch (err) {
+                          showToast(`Failed to open VS Code: ${err}`);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Code2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                        <span>Visual Studio Code</span>
+                      </div>
+                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+V</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        closeMenus();
+                        try {
+                          await openRepoInExplorer(currentRepo.local_path);
+                          showToast(`Opened repository in ${fileManagerName}`);
+                        } catch (err) {
+                          showToast(`Failed to open ${fileManagerName}: ${err}`);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Folder className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                        <span>{fileManagerName}</span>
+                      </div>
+                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+E</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -990,11 +1015,11 @@ export const MenuBar: React.FC = () => {
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Alt+Shift+V</kbd>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-subtext1">Open Repo in File Explorer</span>
+                <span className="text-subtext1">Open Repo in {fileManagerName}</span>
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Alt+Shift+E</kbd>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-subtext1">Open File in Explorer</span>
+                <span className="text-subtext1">Open File in {fileManagerName}</span>
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Shift+Alt+R</kbd>
               </div>
               <div className="flex items-center justify-between">

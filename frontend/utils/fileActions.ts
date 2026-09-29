@@ -114,6 +114,26 @@ export async function openRepoInTerminal(repoPath: string): Promise<void> {
 }
 
 /**
+ * Returns the OS-specific file manager name ('Finder' on macOS, 'File Manager' on Linux, 'File Explorer' on Windows).
+ */
+export function getOsFileManagerName(): string {
+  if (typeof navigator === 'undefined') return 'File Explorer';
+  const ua = navigator.userAgent || '';
+  const platform =
+    (navigator as unknown as { userAgentData?: { platform?: string } })
+      .userAgentData?.platform ||
+    navigator.platform ||
+    '';
+  if (/Mac|iPod|iPhone|iPad/i.test(platform) || /Mac/i.test(ua)) {
+    return 'Finder';
+  }
+  if (/Linux/i.test(platform) || /Linux/i.test(ua)) {
+    return 'File Manager';
+  }
+  return 'File Explorer';
+}
+
+/**
  * Fetches the remote URL for a repository from git.
  */
 export async function getRemoteUrl(repoPath: string, remote?: string): Promise<string> {
