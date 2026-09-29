@@ -110,7 +110,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-64 shadow-2xl bg-mantle border border-surface0 py-1 z-50 text-xs animate-in fade-in duration-100">
+        <div className="absolute left-0 top-full mt-1.5 w-72 shadow-2xl bg-mantle border border-surface0 py-1 z-50 text-xs animate-in fade-in duration-100">
           <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/70 mb-1 truncate">
             {file.path.split('/').pop() || file.path}
           </div>
@@ -118,13 +118,13 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           <button
             type="button"
             onClick={handleReveal}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
           >
             <div className="flex items-center gap-2">
-              <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+              <FolderOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span>Open in File Explorer</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+R</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+R</span>
           </button>
 
           <div className="my-1 border-t border-surface0" />
@@ -132,25 +132,25 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           <button
             type="button"
             onClick={handleCopyRelative}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
           >
             <div className="flex items-center gap-2">
-              <Copy className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+              <Copy className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Relative Path</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+C</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Shift+C</span>
           </button>
 
           <button
             type="button"
             onClick={handleCopyAbsolute}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
           >
             <div className="flex items-center gap-2">
-              <FileText className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+              <FileText className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Absolute Path</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+C</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+C</span>
           </button>
 
           <div className="my-1 border-t border-surface0" />
@@ -158,25 +158,25 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           <button
             type="button"
             onClick={handleCopyRemoteUrl}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
           >
             <div className="flex items-center gap-2">
-              <Globe className="w-3.5 h-3.5 text-blue" />
+              <Globe className="w-3.5 h-3.5 text-blue shrink-0" />
               <span>Copy Remote File URL</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+U</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Shift+U</span>
           </button>
 
           <button
             type="button"
             onClick={handleCopyRemoteUrlFrom}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
           >
             <div className="flex items-center gap-2">
-              <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+              <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Remote File URL from...</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+U</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Alt+U</span>
           </button>
         </div>
       )}
@@ -229,8 +229,8 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
   }, [onClose]);
 
   // Adjust coordinates so menu does not overflow viewport
-  const menuWidth = 260;
-  const menuHeight = 210;
+  const menuWidth = 288;
+  const menuHeight = 220;
   const adjustedX = Math.min(x, window.innerWidth - menuWidth - 8);
   const adjustedY = Math.min(y, window.innerHeight - menuHeight - 8);
 
@@ -282,7 +282,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
     <div
       ref={menuRef}
       style={{ left: `${adjustedX}px`, top: `${adjustedY}px` }}
-      className="fixed z-50 w-64 shadow-2xl bg-mantle border border-surface0 py-1.5 text-xs animate-in fade-in duration-75 select-none"
+      className="fixed z-50 w-72 shadow-2xl bg-mantle border border-surface0 py-1.5 text-xs animate-in fade-in duration-75 select-none"
     >
       <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/70 mb-1 truncate">
         {file.path.split('/').pop() || file.path}
@@ -291,13 +291,13 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
       <button
         type="button"
         onClick={handleReveal}
-        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group"
+        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
       >
         <div className="flex items-center gap-2">
-          <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+          <FolderOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
           <span>Open in File Explorer</span>
         </div>
-        <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+R</span>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+R</span>
       </button>
 
       <div className="my-1 border-t border-surface0" />
@@ -305,25 +305,25 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
       <button
         type="button"
         onClick={handleCopyRelative}
-        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group"
+        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
       >
         <div className="flex items-center gap-2">
-          <Copy className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+          <Copy className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
           <span>Copy Relative Path</span>
         </div>
-        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+C</span>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Shift+C</span>
       </button>
 
       <button
         type="button"
         onClick={handleCopyAbsolute}
-        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group"
+        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
       >
         <div className="flex items-center gap-2">
-          <FileText className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+          <FileText className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
           <span>Copy Absolute Path</span>
         </div>
-        <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+C</span>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+C</span>
       </button>
 
       <div className="my-1 border-t border-surface0" />
@@ -331,25 +331,25 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
       <button
         type="button"
         onClick={handleCopyRemoteUrl}
-        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group"
+        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
       >
         <div className="flex items-center gap-2">
-          <Globe className="w-3.5 h-3.5 text-blue" />
+          <Globe className="w-3.5 h-3.5 text-blue shrink-0" />
           <span>Copy Remote File URL</span>
         </div>
-        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+U</span>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Shift+U</span>
       </button>
 
       <button
         type="button"
         onClick={handleCopyRemoteUrlFrom}
-        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group"
+        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
       >
         <div className="flex items-center gap-2">
-          <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+          <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
           <span>Copy Remote File URL from...</span>
         </div>
-        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+U</span>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Alt+U</span>
       </button>
     </div>
   );
