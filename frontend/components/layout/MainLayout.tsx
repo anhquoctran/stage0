@@ -18,6 +18,7 @@ import {
   openRepoInTerminal,
   openRepoInVsCode,
   openRepoInExplorer,
+  getOsFileManagerName,
 } from '../../utils/fileActions';
 
 const DEFAULT_SIDEBAR_WIDTH = 320;
@@ -53,6 +54,8 @@ export const MainLayout: React.FC = () => {
 
   const { setIsPreferencesOpen, showInlineBlame, toggleInlineBlame } =
     usePreferencesStore();
+
+  const fileManagerName = getOsFileManagerName();
 
   // Resizable Sidebar State with LocalStorage Persistence
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
@@ -199,8 +202,8 @@ export const MainLayout: React.FC = () => {
         if (currentRepo && selectedFile) {
           e.preventDefault();
           revealInOs(currentRepo.local_path, selectedFile.path)
-            .then(() => showToast('Revealed file in OS File Explorer'))
-            .catch((err) => showToast(`Failed to open explorer: ${err}`));
+            .then(() => showToast(`Revealed file in ${fileManagerName}`))
+            .catch((err) => showToast(`Failed to open ${fileManagerName}: ${err}`));
         }
       } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key.toLowerCase() === 'c' || e.code === 'KeyC')) {
         // Ctrl+Shift+C: Copy relative path
@@ -260,12 +263,12 @@ export const MainLayout: React.FC = () => {
             .catch((err) => showToast(`Failed to open VS Code: ${err}`));
         }
       } else if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'e' || e.code === 'KeyE')) {
-        // Alt+Shift+E: Open repository in OS File Explorer
+        // Alt+Shift+E: Open repository in OS File Explorer / Finder / File Manager
         if (currentRepo) {
           e.preventDefault();
           openRepoInExplorer(currentRepo.local_path)
-            .then(() => showToast('Opened repository in File Explorer'))
-            .catch((err) => showToast(`Failed to open explorer: ${err}`));
+            .then(() => showToast(`Opened repository in ${fileManagerName}`))
+            .catch((err) => showToast(`Failed to open ${fileManagerName}: ${err}`));
         }
       }
     };

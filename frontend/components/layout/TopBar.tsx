@@ -12,6 +12,8 @@ import {
   Download,
   GitMerge,
   ChevronDown,
+  ChevronRight,
+  ExternalLink,
   FolderGit2,
   Clock,
   RotateCw,
@@ -31,6 +33,7 @@ import {
   openRepoInExplorer,
   openRepoInVsCode,
   openRepoInTerminal,
+  getOsFileManagerName,
 } from '../../utils/fileActions';
 
 export const TopBar: React.FC = () => {
@@ -58,8 +61,11 @@ export const TopBar: React.FC = () => {
   } = useGitStore();
 
   const [isRecentOpen, setIsRecentOpen] = useState(false);
+  const [showOpenInSubmenu, setShowOpenInSubmenu] = useState(false);
   const [isPullMenuOpen, setIsPullMenuOpen] = useState(false);
   const [isRebaseMenuOpen, setIsRebaseMenuOpen] = useState(false);
+
+  const fileManagerName = getOsFileManagerName();
 
   const recentDropdownRef = useRef<HTMLDivElement>(null);
   const pullMenuRef = useRef<HTMLDivElement>(null);
@@ -70,7 +76,7 @@ export const TopBar: React.FC = () => {
     try {
       if (target === 'explorer') {
         await openRepoInExplorer(currentRepo.local_path);
-        showToast('Opened repository in File Explorer');
+        showToast(`Opened repository in ${fileManagerName}`);
       } else if (target === 'vscode') {
         await openRepoInVsCode(currentRepo.local_path);
         showToast('Opened repository in VS Code');
@@ -95,6 +101,7 @@ export const TopBar: React.FC = () => {
         !recentDropdownRef.current.contains(target)
       ) {
         setIsRecentOpen(false);
+        setShowOpenInSubmenu(false);
       }
       if (
         pullMenuRef.current &&
@@ -208,7 +215,7 @@ export const TopBar: React.FC = () => {
             </div>
 
             {isRecentOpen && (
-              <div className="absolute left-0 mt-1.5 w-80 rounded-md shadow-2xl bg-mantle border border-surface0 z-50 overflow-hidden py-1 animate-in fade-in duration-100">
+              <div className="absolute left-0 mt-1.5 w-80 rounded-md shadow-2xl bg-mantle border border-surface0 z-50 py-1 animate-in fade-in duration-100">
                 <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext1 flex items-center justify-between bg-base border-b border-surface0">
                   <div className="flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
@@ -279,54 +286,75 @@ export const TopBar: React.FC = () => {
                 </div>
 
                 {currentRepo && (
-                  <div className="p-1 border-t border-surface0 bg-base space-y-0.5">
-                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0">
-                      Open Repository In...
+                  <div className="p-1 border-t border-surface0 bg-base">
+                    <div
+                      className="relative"
+                      onMouseEnter={() => setShowOpenInSubmenu(true)}
+                      onMouseLeave={() => setShowOpenInSubmenu(false)}
+                    >
+                      <button
+                        type="button"
+                        className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center justify-between font-medium cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text transition-colors" />
+                          <span>Open in</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                      </button>
+
+                      {showOpenInSubmenu && (
+                        <div className="absolute left-full top-0 ml-1 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1 z-50 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsRecentOpen(false);
+                              setShowOpenInSubmenu(false);
+                              handleOpenRepoIn('terminal');
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs text-text hover:bg-surface0 flex items-center justify-between font-medium cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Terminal className="w-3.5 h-3.5 text-subtext1 group-hover:text-text transition-colors" />
+                              <span>Terminal</span>
+                            </div>
+                            <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+T</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsRecentOpen(false);
+                              setShowOpenInSubmenu(false);
+                              handleOpenRepoIn('vscode');
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs text-text hover:bg-surface0 flex items-center justify-between font-medium cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Code2 className="w-3.5 h-3.5 text-subtext1 group-hover:text-text transition-colors" />
+                              <span>Visual Studio Code</span>
+                            </div>
+                            <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+V</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsRecentOpen(false);
+                              setShowOpenInSubmenu(false);
+                              handleOpenRepoIn('explorer');
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs text-text hover:bg-surface0 flex items-center justify-between font-medium cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Folder className="w-3.5 h-3.5 text-subtext1 group-hover:text-text transition-colors" />
+                              <span>{fileManagerName}</span>
+                            </div>
+                            <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+E</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsRecentOpen(false);
-                        handleOpenRepoIn('terminal');
-                      }}
-                      className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center justify-between font-medium cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Terminal className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
-                        <span>System Default Terminal</span>
-                      </div>
-                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+T</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsRecentOpen(false);
-                        handleOpenRepoIn('vscode');
-                      }}
-                      className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center justify-between font-medium cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Code2 className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
-                        <span>Visual Studio Code</span>
-                      </div>
-                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+V</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsRecentOpen(false);
-                        handleOpenRepoIn('explorer');
-                      }}
-                      className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center justify-between font-medium cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Folder className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
-                        <span>System File Explorer</span>
-                      </div>
-                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+E</span>
-                    </button>
                   </div>
                 )}
               </div>
