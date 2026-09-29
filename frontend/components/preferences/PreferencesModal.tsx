@@ -37,6 +37,8 @@ import {
 import { GitCredentialsTab } from './GitCredentialsTab';
 import { AiMcpTab } from './AiMcpTab';
 import { SandboxTab } from './SandboxTab';
+import { useGitStore } from '../../store/useGitStore';
+import { SandboxType } from '../../types/git';
 
 type PreferenceTab = 'appearance' | 'fonts' | 'credentials' | 'ai' | 'sandbox';
 
@@ -50,6 +52,7 @@ interface PreferencesBaseline {
   lineSpacing: number;
   enableLigatures: boolean;
   showInlineBlame: boolean;
+  sandboxType: SandboxType;
 }
 
 export const PreferencesModal: React.FC = () => {
@@ -69,10 +72,14 @@ export const PreferencesModal: React.FC = () => {
   } = usePreferencesStore();
 
   const { themeMode: storedThemeMode, setThemeMode } = useThemeStore();
+  const {
+    activeSandboxType: storedSandboxType,
+    setActiveSandbox,
+  } = useGitStore();
 
   const [activeTab, setActiveTab] = useState<PreferenceTab>('appearance');
 
-  // Draft State (for Appearance & Fonts)
+  // Draft State (for PreferenceTransaction)
   const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
   const [draftFontFamily, setDraftFontFamily] = useState(storedFontFamily);
   const [draftFontSize, setDraftFontSize] = useState(storedFontSize);
@@ -82,6 +89,7 @@ export const PreferencesModal: React.FC = () => {
   const [draftLineSpacing, setDraftLineSpacing] = useState(storedLineSpacing);
   const [draftEnableLigatures, setDraftEnableLigatures] = useState(storedEnableLigatures);
   const [draftShowInlineBlame, setDraftShowInlineBlame] = useState(storedShowInlineBlame);
+  const [draftSandboxType, setDraftSandboxType] = useState<SandboxType>(storedSandboxType);
 
   // Baseline Snapshot (committed values)
   const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
@@ -94,6 +102,7 @@ export const PreferencesModal: React.FC = () => {
     lineSpacing: storedLineSpacing,
     enableLigatures: storedEnableLigatures,
     showInlineBlame: storedShowInlineBlame,
+    sandboxType: storedSandboxType,
   });
 
   const [isApplied, setIsApplied] = useState(false);
@@ -110,6 +119,7 @@ export const PreferencesModal: React.FC = () => {
       setDraftLineSpacing(storedLineSpacing);
       setDraftEnableLigatures(storedEnableLigatures);
       setDraftShowInlineBlame(storedShowInlineBlame);
+      setDraftSandboxType(storedSandboxType);
 
       setSavedBaseline({
         themeMode: storedThemeMode,
@@ -121,6 +131,7 @@ export const PreferencesModal: React.FC = () => {
         lineSpacing: storedLineSpacing,
         enableLigatures: storedEnableLigatures,
         showInlineBlame: storedShowInlineBlame,
+        sandboxType: storedSandboxType,
       });
 
       setIsApplied(false);
@@ -136,6 +147,7 @@ export const PreferencesModal: React.FC = () => {
     storedLineSpacing,
     storedEnableLigatures,
     storedShowInlineBlame,
+    storedSandboxType,
   ]);
 
   // Check if there are any uncommitted changes relative to saved baseline
@@ -149,7 +161,8 @@ export const PreferencesModal: React.FC = () => {
       draftIsUnderline !== savedBaseline.isUnderline ||
       draftLineSpacing !== savedBaseline.lineSpacing ||
       draftEnableLigatures !== savedBaseline.enableLigatures ||
-      draftShowInlineBlame !== savedBaseline.showInlineBlame
+      draftShowInlineBlame !== savedBaseline.showInlineBlame ||
+      draftSandboxType !== savedBaseline.sandboxType
     );
   }, [
     draftThemeMode,
@@ -161,6 +174,7 @@ export const PreferencesModal: React.FC = () => {
     draftLineSpacing,
     draftEnableLigatures,
     draftShowInlineBlame,
+    draftSandboxType,
     savedBaseline,
   ]);
 
@@ -227,10 +241,11 @@ export const PreferencesModal: React.FC = () => {
     setDraftLineSpacing(DEFAULT_VIEWER_FONT_SETTINGS.lineSpacing);
     setDraftEnableLigatures(DEFAULT_VIEWER_FONT_SETTINGS.enableLigatures);
     setDraftShowInlineBlame(true);
+    setDraftSandboxType('in_memory');
   };
 
   // Apply (save only)
-  const handleApply = () => {
+  const handleApply = async () => {
     const committedFontSettings: ViewerFontSettings = {
       fontFamily: draftFontFamily,
       fontSize: draftFontSize,
@@ -249,11 +264,17 @@ export const PreferencesModal: React.FC = () => {
     applyThemeToDocument(resolveTheme(draftThemeMode));
     setShowInlineBlame(draftShowInlineBlame);
 
+    // Commit sandbox engine if changed
+    if (draftSandboxType !== savedBaseline.sandboxType) {
+      await setActiveSandbox(draftSandboxType);
+    }
+
     // Update baseline
     setSavedBaseline({
       themeMode: draftThemeMode,
       ...committedFontSettings,
       showInlineBlame: draftShowInlineBlame,
+      sandboxType: draftSandboxType,
     });
 
     setIsApplied(true);
@@ -261,12 +282,12 @@ export const PreferencesModal: React.FC = () => {
   };
 
   // OK (save then close)
-  const handleOk = () => {
-    handleApply();
+  const handleOk = async () => {
+    await handleApply();
     setIsPreferencesOpen(false);
   };
 
-  // Cancel (close without saving)
+  // Cancel (close without saving, rollback safely)
   const handleCancel = () => {
     // Rollback any live previews to baseline
     applyThemeToDocument(resolveTheme(savedBaseline.themeMode));
@@ -277,6 +298,7 @@ export const PreferencesModal: React.FC = () => {
     updateViewerFontSettings(savedBaseline);
     setShowInlineBlame(savedBaseline.showInlineBlame);
     setDraftShowInlineBlame(savedBaseline.showInlineBlame);
+    setDraftSandboxType(savedBaseline.sandboxType);
 
     setIsPreferencesOpen(false);
   };
@@ -878,7 +900,11 @@ export const PreferencesModal: React.FC = () => {
             {/* TAB 5: SANDBOX ENGINE */}
             {activeTab === 'sandbox' && (
               <div className="animate-in fade-in duration-100">
-                <SandboxTab />
+                <SandboxTab
+                  draftSandboxType={draftSandboxType}
+                  onSelectAdapter={setDraftSandboxType}
+                  isPendingCommit={draftSandboxType !== savedBaseline.sandboxType}
+                />
               </div>
             )}
           </div>
@@ -886,8 +912,8 @@ export const PreferencesModal: React.FC = () => {
 
         {/* Footer: Reset to default on the left, Cancel, Apply, OK on the right */}
         <div className="px-6 py-3 border-t border-surface0 flex items-center justify-between bg-base/60 select-none">
-          {/* Left: Reset to default */}
-          <div>
+          {/* Left: Reset to default & Transaction Indicator */}
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleResetToDefault}
@@ -897,6 +923,13 @@ export const PreferencesModal: React.FC = () => {
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset to default</span>
             </button>
+
+            {hasUnsavedChanges && (
+              <span className="hidden sm:flex items-center gap-1.5 text-[11px] text-amber-400 font-medium">
+                <AlertCircle className="w-3.5 h-3.5" />
+                <span>Uncommitted changes in transaction</span>
+              </span>
+            )}
           </div>
 
           {/* Right: Cancel, Apply, OK */}
