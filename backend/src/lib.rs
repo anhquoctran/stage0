@@ -72,6 +72,8 @@ pub fn run() {
             commands::destroy_sandbox_instance,
             commands::list_sandbox_instances,
             commands::execute_sandbox_command,
+            commands::pick_folder,
+            commands::clone_repository,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

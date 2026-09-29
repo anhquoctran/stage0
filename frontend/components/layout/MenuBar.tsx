@@ -55,6 +55,7 @@ export const MenuBar: React.FC = () => {
     viewMode,
     fileListLayout,
     openRepoDialog,
+    setIsCloneModalOpen,
     selectRepo,
     closeRepo,
     selectPrevFile,
@@ -203,6 +204,20 @@ export const MenuBar: React.FC = () => {
                   <span>Open Repository...</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Ctrl+O</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenus();
+                  setIsCloneModalOpen(true);
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Download className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Clone Repository...</span>
+                </div>
               </button>
 
               {/* Recent Repos Submenu Trigger */}

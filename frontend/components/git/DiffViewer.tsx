@@ -12,7 +12,6 @@ import {
   FileCode,
   FileText,
   AlertTriangle,
-  FolderOpen,
   ChevronLeft,
   ChevronRight,
   GitPullRequest,
@@ -36,6 +35,7 @@ import { FileActionMenu } from './FileActionMenu';
 import { BlameViewer } from './BlameViewer';
 import { InlineBlame } from './InlineBlame';
 import { ConflictViewer } from './ConflictViewer';
+import { WelcomeScreen } from '../layout/WelcomeScreen';
 
 interface DiffViewerProps {
   selectedFile: ChangedFile | null;
@@ -402,29 +402,27 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     );
   }
 
-  // Welcome Screen when no repository is open (GitHub Desktop / Fork style)
+  // Welcome Screen when no repository is open
+  if (!currentRepo) {
+    return <WelcomeScreen onOpenRepo={onOpenRepo} />;
+  }
+
+  // Fallback when repository is loaded but diff is not yet computed
   if (!diffPayload) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-base p-8 text-center select-none">
-        <div className="w-20 h-20 rounded-2xl bg-mantle border border-surface0 flex items-center justify-center text-blue mb-5 shadow-2xl">
-          <GitPullRequest className="w-10 h-10" />
+        <div className="w-16 h-16 rounded-xl bg-mantle border border-surface0 flex items-center justify-center text-blue mb-4 shadow-md">
+          <GitPullRequest className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-bold text-text mb-2 tracking-tight">
-          Welcome to Stage0
-        </h2>
-        <p className="text-xs text-subtext1 max-w-md mb-6 leading-relaxed">
-          Stage0 provides a local-first Virtual MR / PR Sandbox. Inspect branch differences, 3-dot diffs, and real-time merge conflict predictions with zero disk writes.
+        <h3 className="text-base font-bold text-text mb-1">
+          {currentRepo.name}
+        </h3>
+        <p className="text-xs text-subtext1 max-w-sm mb-4 leading-relaxed font-mono">
+          {currentRepo.local_path}
         </p>
-        {onOpenRepo && (
-          <button
-            type="button"
-            onClick={onOpenRepo}
-            className="flex items-center gap-2.5 px-6 py-2.5 bg-surface1 hover:bg-surface2 text-text border border-surface2 hover:border-blue/50 rounded-lg text-xs font-semibold shadow-lg shadow-crust/60 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-          >
-            <FolderOpen className="w-4 h-4 text-blue shrink-0" />
-            <span>Open Local Git Repository</span>
-          </button>
-        )}
+        <span className="text-xs text-subtext0">
+          Comparing branches to compute 3-dot Virtual MR diff...
+        </span>
       </div>
     );
   }

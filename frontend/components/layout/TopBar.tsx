@@ -47,6 +47,7 @@ export const TopBar: React.FC = () => {
     isSyncing,
     syncStatus,
     openRepoDialog,
+    setIsCloneModalOpen,
     selectRepo,
     removeRecentRepo,
     setBaseBranch,
@@ -271,7 +272,7 @@ export const TopBar: React.FC = () => {
                   )}
                 </div>
 
-                <div className="p-1 border-t border-surface0 bg-base">
+                <div className="p-1 border-t border-surface0 bg-base space-y-0.5">
                   <button
                     type="button"
                     onClick={() => {
@@ -282,6 +283,17 @@ export const TopBar: React.FC = () => {
                   >
                     <FolderOpen className="w-3.5 h-3.5 text-subtext1" />
                     <span>Open from Disk...</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsRecentOpen(false);
+                      setIsCloneModalOpen(true);
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center gap-2 font-medium cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-subtext1" />
+                    <span>Clone Repository...</span>
                   </button>
                 </div>
 
