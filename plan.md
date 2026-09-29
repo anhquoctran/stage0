@@ -337,3 +337,16 @@ export interface ConflictReport {
   - Compare two diverged branches.
   - Edit a tracked file externally in VS Code / IDE -> Verify diff updates instantly.
   - Verify in-memory conflict alert by comparing two known conflicting branches without altering local working tree.
+
+---
+
+## 7. Future Phases & Architecture Specifications (RFCs)
+
+### Multi-Session Virtual MR per Repository
+- **Specification Document:** [`docs/architecture/multi_virtual_mr_spec.md`](docs/architecture/multi_virtual_mr_spec.md)
+- **Goal:** Enable multi-tab concurrent Virtual MR comparisons on a single repository with zero disk writes, SQLite session persistence, and independent sandbox instances.
+- **Key Modules:**
+  - Tab-based workspace UI with hot-switching and cache isolation.
+  - SQLite persistence schema (`virtual_mr_sessions`).
+  - Stacked PR & cascade conflict invalidation.
+  - Sandbox instance binding per session.
