@@ -28,6 +28,7 @@ import {
   Globe,
   ExternalLink,
   History,
+  GitCommit,
 } from 'lucide-react';
 import {
   revealInOs,
@@ -72,7 +73,7 @@ export const MenuBar: React.FC = () => {
   } = useGitStore();
 
   const { themeMode, toggleTheme } = useThemeStore();
-  const { setIsPreferencesOpen } = usePreferencesStore();
+  const { setIsPreferencesOpen, showInlineBlame, toggleInlineBlame } = usePreferencesStore();
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [showRecentSubmenu, setShowRecentSubmenu] = useState(false);
@@ -542,6 +543,24 @@ export const MenuBar: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-subtext0 font-mono">Alt+B</span>
                   {fileViewTab === 'blame' && <Check className="w-3.5 h-3.5 text-text" />}
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  toggleInlineBlame();
+                  closeMenus();
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <GitCommit className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Inline Git Blame</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+B</span>
+                  {showInlineBlame && <Check className="w-3.5 h-3.5 text-text" />}
                 </div>
               </button>
 

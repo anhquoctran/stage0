@@ -91,7 +91,7 @@ export const TopBar: React.FC = () => {
     if ((e.target as HTMLElement).closest('button, input, select, [role="button"], a')) {
       return;
     }
-    invoke<boolean>('window_toggle_maximize').catch(() => {});
+    invoke<boolean>('window_toggle_maximize').catch(() => { });
   };
 
   return (
@@ -257,7 +257,7 @@ export const TopBar: React.FC = () => {
 
         {/* Center: Branch Merge Sandbox Comparison */}
         {currentRepo ? (
-          <div className="flex items-center gap-1.5 bg-base/80 border border-surface0 rounded-lg p-1 shadow-inner shrink-0">
+          <div className="flex items-center gap-1.5 p-1 shadow-inner shrink-0">
             <BranchSelector
               label="Base (Target)"
               value={baseBranch}
