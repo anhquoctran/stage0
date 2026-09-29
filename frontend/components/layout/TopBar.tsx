@@ -17,7 +17,6 @@ import {
   FolderGit2,
   Clock,
   RotateCw,
-  GitPullRequest,
   CheckCircle2,
   Trash2,
   Sliders,
@@ -28,6 +27,7 @@ import {
 import { BranchSelector } from '../git/BranchSelector';
 import { WindowControls } from './WindowControls';
 import { MenuBar } from './MenuBar';
+import { AppLogo } from '../common/AppLogo';
 import { useGitStore } from '../../store/useGitStore';
 import {
   openRepoInExplorer,
@@ -146,9 +146,7 @@ export const TopBar: React.FC = () => {
             data-tauri-drag-region
             className="flex items-center gap-1.5 pr-2.5 border-r border-surface0/80 cursor-default"
           >
-            <div className="w-5 h-5 rounded bg-gradient-to-tr from-blue via-sapphire to-mauve flex items-center justify-center text-crust shadow-xs">
-              <GitPullRequest className="w-3.5 h-3.5" />
-            </div>
+            <AppLogo size="sm" />
             <span className="text-xs font-bold tracking-tight text-text">Stage0</span>
           </div>
 

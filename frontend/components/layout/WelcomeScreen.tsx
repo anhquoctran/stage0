@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
+import { AppLogo } from '../common/AppLogo';
 
 interface WelcomeScreenProps {
   onOpenRepo?: () => void;
@@ -99,24 +100,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       <div className="w-full max-w-lg flex flex-col">
         {/* Header: Logo and Title side-by-side (Zed style) */}
         <div className="flex items-center gap-4 mb-8">
-          {/* Outlined App Logo */}
-          <div className="w-12 h-12 rounded-lg border border-surface1 bg-surface0/30 flex items-center justify-center text-blue shrink-0">
-            <svg
-              className="w-7 h-7"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="6" cy="6" r="2.5" />
-              <circle cx="6" cy="18" r="2.5" />
-              <circle cx="18" cy="12" r="2.5" />
-              <path d="M6 8.5v7" />
-              <path d="M6 8.5c0 3.5 12 0 12 3.5" />
-            </svg>
-          </div>
+          {/* App Logo Placeholder */}
+          <AppLogo size="md" />
 
           <div className="flex flex-col justify-center">
             <h1 className="text-xl font-normal text-text tracking-tight leading-tight">
