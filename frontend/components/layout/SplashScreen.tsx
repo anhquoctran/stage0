@@ -110,13 +110,10 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         </div>
 
         {/* Title & Tagline */}
-        <div className="flex items-center gap-2 mb-1.5">
+        <div className="mb-1.5">
           <h1 className="text-2xl font-extrabold tracking-tight text-text">
             Stage<span className="text-blue">0</span>
           </h1>
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue/15 text-blue border border-blue/30">
-            Virtual MR
-          </span>
         </div>
 
         <p className="text-xs text-subtext1 mb-6 leading-relaxed">
