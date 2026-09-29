@@ -37,6 +37,7 @@ pub fn run() {
             commands::get_branches,
             commands::get_mr_diff,
             commands::check_merge_conflicts,
+            commands::get_conflicted_file_preview,
             commands::run_git_sync,
             commands::list_git_remotes,
             commands::get_git_remote_url,

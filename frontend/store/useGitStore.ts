@@ -4,6 +4,7 @@ import {
   BranchList,
   ChangedFile,
   ConflictReport,
+  ConflictFilePreview,
   MrDiffPayload,
   RepoInfo,
   RepoValidation,
@@ -66,16 +67,20 @@ interface GitState {
   fetchRemoteUrl: (repoPath: string) => Promise<string | null>;
   checkRebaseStatus: (repoPath?: string) => Promise<boolean>;
   runSync: (op: GitSyncOperation, options?: GitSyncOptions) => Promise<void>;
-  fileViewTab: 'diff' | 'blame';
+  fileViewTab: 'diff' | 'blame' | 'conflicts';
   blamePayload: FileBlamePayload | null;
   isBlameLoading: boolean;
   blameError: string | null;
   blameRevision: string;
   blameIgnoreWhitespace: boolean;
-  setFileViewTab: (tab: 'diff' | 'blame') => void;
+  activeConflictPreview: ConflictFilePreview | null;
+  isConflictLoading: boolean;
+  conflictPreviewError: string | null;
+  setFileViewTab: (tab: 'diff' | 'blame' | 'conflicts') => void;
   setBlameRevision: (rev: string) => void;
   setBlameIgnoreWhitespace: (ignore: boolean) => void;
   fetchFileBlame: (filePath?: string, revision?: string, ignoreWhitespace?: boolean) => Promise<void>;
+  fetchConflictPreview: (filePath?: string) => Promise<void>;
   toggleFileBlame: () => void;
   clearError: () => void;
   closeRepo: () => void;
@@ -107,6 +112,9 @@ export const useGitStore = create<GitState>((set, get) => ({
   blameError: null,
   blameRevision: '',
   blameIgnoreWhitespace: false,
+  activeConflictPreview: null,
+  isConflictLoading: false,
+  conflictPreviewError: null,
   setIsPullFromOpen: (open) => set({ isPullFromOpen: open }),
   setIsRebaseFromOpen: (open) => set({ isRebaseFromOpen: open }),
   setIsRemoteUrlFromOpen: (open) => set({ isRemoteUrlFromOpen: open }),
@@ -388,9 +396,14 @@ export const useGitStore = create<GitState>((set, get) => ({
   },
 
   selectFile: (file: ChangedFile | null) => {
-    set({ selectedFile: file });
-    if (file && get().fileViewTab === 'blame') {
-      get().fetchFileBlame(file.path);
+    set({ selectedFile: file, activeConflictPreview: null });
+    if (file) {
+      if (file.is_conflicted) {
+        get().fetchConflictPreview(file.path);
+      }
+      if (get().fileViewTab === 'blame') {
+        get().fetchFileBlame(file.path);
+      }
     }
   },
 
@@ -466,10 +479,34 @@ export const useGitStore = create<GitState>((set, get) => ({
     get().selectFile(conflicted[prevIdx]);
   },
 
-  setFileViewTab: (tab: 'diff' | 'blame') => {
+  setFileViewTab: (tab: 'diff' | 'blame' | 'conflicts') => {
     set({ fileViewTab: tab });
     if (tab === 'blame') {
       get().fetchFileBlame();
+    } else if (tab === 'conflicts' && get().selectedFile?.is_conflicted) {
+      get().fetchConflictPreview();
+    }
+  },
+
+  fetchConflictPreview: async (filePath?: string) => {
+    const { currentRepo, baseBranch, compareBranch, selectedFile } = get();
+    const targetFile = filePath || selectedFile?.path;
+    if (!currentRepo || !baseBranch || !compareBranch || !targetFile) return;
+
+    set({ isConflictLoading: true, conflictPreviewError: null });
+    try {
+      const preview = await invoke<ConflictFilePreview>('get_conflicted_file_preview', {
+        repoPath: currentRepo.local_path,
+        base: baseBranch,
+        compare: compareBranch,
+        filePath: targetFile,
+      });
+      set({ activeConflictPreview: preview });
+    } catch (err: unknown) {
+      console.warn('Failed to load conflict preview:', err);
+      set({ conflictPreviewError: String(err) });
+    } finally {
+      set({ isConflictLoading: false });
     }
   },
 
