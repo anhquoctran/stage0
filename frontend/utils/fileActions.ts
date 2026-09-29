@@ -41,6 +41,26 @@ export function buildRemoteFileUrl(
 }
 
 /**
+ * Builds the direct remote web link for a specific commit hash.
+ */
+export function buildRemoteCommitUrl(
+  remoteUrl: string,
+  commitSha: string
+): string {
+  const base = formatRemoteWebUrl(remoteUrl);
+  if (base.includes('gitlab.')) {
+    return `${base}/-/commit/${commitSha}`;
+  }
+  if (base.includes('bitbucket.')) {
+    return `${base}/commits/${commitSha}`;
+  }
+  if (base.includes('dev.azure.com') || base.includes('visualstudio.com')) {
+    return `${base}/commit/${commitSha}`;
+  }
+  return `${base}/commit/${commitSha}`;
+}
+
+/**
  * Converts repository path and relative file path to native absolute OS path.
  */
 export function getAbsoluteFilePath(repoPath: string, relativePath: string): string {

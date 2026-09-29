@@ -5,6 +5,9 @@ pub mod branches;
 pub mod diff;
 pub mod conflict;
 pub mod ops;
+pub mod blame;
+
+pub use blame::{BlameAuthorStat, BlameCommit, BlameLine, FileBlamePayload};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RepoInfo {

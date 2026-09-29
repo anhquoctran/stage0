@@ -61,3 +61,40 @@ export interface GitSyncOptions {
   prune?: boolean;
 }
 
+export interface BlameCommit {
+  commit_id: string;
+  author: string;
+  author_mail: string;
+  author_time: number;
+  author_tz: string;
+  committer: string;
+  committer_mail: string;
+  committer_time: number;
+  summary: string;
+  previous_commit?: string | null;
+}
+
+export interface BlameLine {
+  line_no: number;
+  orig_line_no: number;
+  commit_id: string;
+  content: string;
+}
+
+export interface BlameAuthorStat {
+  name: string;
+  email: string;
+  line_count: number;
+  percentage: number;
+}
+
+export interface FileBlamePayload {
+  file_path: string;
+  revision: string;
+  commits: Record<string, BlameCommit>;
+  lines: BlameLine[];
+  author_stats: BlameAuthorStat[];
+  total_lines: number;
+}
+
+

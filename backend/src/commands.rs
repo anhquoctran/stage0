@@ -7,7 +7,8 @@ use crate::git::{
     conflict::check_conflicts,
     diff::get_mr_diff as calc_mr_diff,
     ops::{git_sync, list_remotes, get_remote_url, is_rebase_in_progress, GitSyncOptions},
-    BranchList, ConflictReport, MrDiffPayload, RepoInfo,
+    blame::get_file_blame as calc_file_blame,
+    BranchList, ConflictReport, MrDiffPayload, RepoInfo, FileBlamePayload,
 };
 use crate::watcher::WatcherState;
 
@@ -243,6 +244,21 @@ pub async fn check_rebase_status(
     repo_path: String,
 ) -> Result<bool, String> {
     Ok(is_rebase_in_progress(&repo_path))
+}
+
+#[tauri::command]
+pub async fn get_file_blame(
+    repo_path: String,
+    file_path: String,
+    revision: Option<String>,
+    ignore_whitespace: Option<bool>,
+) -> Result<FileBlamePayload, String> {
+    calc_file_blame(
+        &repo_path,
+        &file_path,
+        revision.as_deref(),
+        ignore_whitespace,
+    )
 }
 
 #[tauri::command]

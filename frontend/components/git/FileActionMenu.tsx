@@ -7,6 +7,7 @@ import {
   ExternalLink,
   MoreHorizontal,
   ChevronDown,
+  History,
 } from 'lucide-react';
 import { ChangedFile } from '../../types/git';
 import { useGitStore } from '../../store/useGitStore';
@@ -29,6 +30,9 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
     showToast,
     setIsRemoteUrlFromOpen,
     setTargetFileForUrl,
+    setFileViewTab,
+    fetchFileBlame,
+    selectFile,
   } = useGitStore();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -57,6 +61,13 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
     } catch (err) {
       showToast(`Failed to open explorer: ${err}`);
     }
+  };
+
+  const handleViewBlame = () => {
+    setIsOpen(false);
+    selectFile(file);
+    setFileViewTab('blame');
+    fetchFileBlame(file.path);
   };
 
   const handleCopyRelative = () => {
@@ -125,6 +136,18 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <span>Open in File Explorer</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+R</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleViewBlame}
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
+          >
+            <div className="flex items-center gap-2">
+              <History className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
+              <span>View Git Blame</span>
+            </div>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">Alt+B</span>
           </button>
 
           <div className="my-1 border-t border-surface0" />
@@ -204,6 +227,9 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
     showToast,
     setIsRemoteUrlFromOpen,
     setTargetFileForUrl,
+    setFileViewTab,
+    fetchFileBlame,
+    selectFile,
   } = useGitStore();
 
   const menuRef = useRef<HTMLDivElement>(null);
@@ -243,6 +269,13 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
     } catch (err) {
       showToast(`Failed to open explorer: ${err}`);
     }
+  };
+
+  const handleViewBlame = () => {
+    onClose();
+    selectFile(file);
+    setFileViewTab('blame');
+    fetchFileBlame(file.path);
   };
 
   const handleCopyRelative = () => {
@@ -298,6 +331,18 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
           <span>Open in File Explorer</span>
         </div>
         <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+R</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={handleViewBlame}
+        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
+      >
+        <div className="flex items-center gap-2">
+          <History className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
+          <span>View Git Blame</span>
+        </div>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">Alt+B</span>
       </button>
 
       <div className="my-1 border-t border-surface0" />

@@ -10,6 +10,7 @@ import {
   ViewMode,
   GitSyncOperation,
   GitSyncOptions,
+  FileBlamePayload,
 } from '../types/git';
 
 interface GitState {
@@ -63,6 +64,17 @@ interface GitState {
   fetchRemoteUrl: (repoPath: string) => Promise<string | null>;
   checkRebaseStatus: (repoPath?: string) => Promise<boolean>;
   runSync: (op: GitSyncOperation, options?: GitSyncOptions) => Promise<void>;
+  fileViewTab: 'diff' | 'blame';
+  blamePayload: FileBlamePayload | null;
+  isBlameLoading: boolean;
+  blameError: string | null;
+  blameRevision: string;
+  blameIgnoreWhitespace: boolean;
+  setFileViewTab: (tab: 'diff' | 'blame') => void;
+  setBlameRevision: (rev: string) => void;
+  setBlameIgnoreWhitespace: (ignore: boolean) => void;
+  fetchFileBlame: (filePath?: string, revision?: string, ignoreWhitespace?: boolean) => Promise<void>;
+  toggleFileBlame: () => void;
   clearError: () => void;
   closeRepo: () => void;
 }
@@ -87,6 +99,12 @@ export const useGitStore = create<GitState>((set, get) => ({
   isRemoteUrlFromOpen: false,
   targetFileForUrl: null,
   isRebasing: false,
+  fileViewTab: 'diff',
+  blamePayload: null,
+  isBlameLoading: false,
+  blameError: null,
+  blameRevision: '',
+  blameIgnoreWhitespace: false,
   setIsPullFromOpen: (open) => set({ isPullFromOpen: open }),
   setIsRebaseFromOpen: (open) => set({ isRebaseFromOpen: open }),
   setIsRemoteUrlFromOpen: (open) => set({ isRemoteUrlFromOpen: open }),
@@ -119,6 +137,9 @@ export const useGitStore = create<GitState>((set, get) => ({
       remotes: [],
       remoteUrl: null,
       isRebasing: false,
+      blamePayload: null,
+      blameError: null,
+      fileViewTab: 'diff',
     }),
 
   initApp: async () => {
@@ -366,6 +387,9 @@ export const useGitStore = create<GitState>((set, get) => ({
 
   selectFile: (file: ChangedFile | null) => {
     set({ selectedFile: file });
+    if (file && get().fileViewTab === 'blame') {
+      get().fetchFileBlame(file.path);
+    }
   },
 
   selectNextFile: () => {
@@ -373,11 +397,18 @@ export const useGitStore = create<GitState>((set, get) => ({
     if (!diffPayload || diffPayload.files.length === 0) return;
     if (!selectedFile) {
       set({ selectedFile: diffPayload.files[0] });
+      if (get().fileViewTab === 'blame') {
+        get().fetchFileBlame(diffPayload.files[0].path);
+      }
       return;
     }
     const idx = diffPayload.files.findIndex((f) => f.path === selectedFile.path);
     if (idx !== -1 && idx < diffPayload.files.length - 1) {
-      set({ selectedFile: diffPayload.files[idx + 1] });
+      const next = diffPayload.files[idx + 1];
+      set({ selectedFile: next });
+      if (get().fileViewTab === 'blame') {
+        get().fetchFileBlame(next.path);
+      }
     }
   },
 
@@ -386,12 +417,65 @@ export const useGitStore = create<GitState>((set, get) => ({
     if (!diffPayload || diffPayload.files.length === 0) return;
     if (!selectedFile) {
       set({ selectedFile: diffPayload.files[0] });
+      if (get().fileViewTab === 'blame') {
+        get().fetchFileBlame(diffPayload.files[0].path);
+      }
       return;
     }
     const idx = diffPayload.files.findIndex((f) => f.path === selectedFile.path);
     if (idx > 0) {
-      set({ selectedFile: diffPayload.files[idx - 1] });
+      const prev = diffPayload.files[idx - 1];
+      set({ selectedFile: prev });
+      if (get().fileViewTab === 'blame') {
+        get().fetchFileBlame(prev.path);
+      }
     }
+  },
+
+  setFileViewTab: (tab: 'diff' | 'blame') => {
+    set({ fileViewTab: tab });
+    if (tab === 'blame') {
+      get().fetchFileBlame();
+    }
+  },
+
+  setBlameRevision: (rev: string) => {
+    set({ blameRevision: rev });
+    get().fetchFileBlame(undefined, rev);
+  },
+
+  setBlameIgnoreWhitespace: (ignore: boolean) => {
+    set({ blameIgnoreWhitespace: ignore });
+    get().fetchFileBlame(undefined, undefined, ignore);
+  },
+
+  fetchFileBlame: async (filePath?: string, revision?: string, ignoreWhitespace?: boolean) => {
+    const { currentRepo, selectedFile, compareBranch, blameRevision, blameIgnoreWhitespace } = get();
+    const targetFile = filePath || selectedFile?.path;
+    if (!currentRepo || !targetFile) return;
+
+    const rev = revision !== undefined ? revision : (blameRevision || compareBranch || 'HEAD');
+    const ignoreWs = ignoreWhitespace !== undefined ? ignoreWhitespace : blameIgnoreWhitespace;
+
+    set({ isBlameLoading: true, blameError: null, blameRevision: rev, blameIgnoreWhitespace: ignoreWs });
+    try {
+      const payload = await invoke<FileBlamePayload>('get_file_blame', {
+        repoPath: currentRepo.local_path,
+        filePath: targetFile,
+        revision: rev || null,
+        ignoreWhitespace: ignoreWs,
+      });
+      set({ blamePayload: payload, isBlameLoading: false });
+    } catch (err: unknown) {
+      console.warn('Failed to fetch file blame:', err);
+      set({ blameError: String(err), isBlameLoading: false, blamePayload: null });
+    }
+  },
+
+  toggleFileBlame: () => {
+    const currentTab = get().fileViewTab;
+    const nextTab = currentTab === 'diff' ? 'blame' : 'diff';
+    get().setFileViewTab(nextTab);
   },
 
   setFileListLayout: (layout: 'flat' | 'tree') => {

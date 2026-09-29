@@ -16,6 +16,7 @@ import {
   ChevronRight,
   GitPullRequest,
   CheckCircle2,
+  History,
 } from 'lucide-react';
 import { ChangedFile, MrDiffPayload, ViewMode } from '../../types/git';
 import { extractFileHunks, inferLanguage } from '../../utils/diffParser';
@@ -23,6 +24,7 @@ import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { FileActionMenu } from './FileActionMenu';
+import { BlameViewer } from './BlameViewer';
 
 interface DiffViewerProps {
   selectedFile: ChangedFile | null;
@@ -41,11 +43,31 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   isLoading = false,
   onOpenRepo,
 }) => {
-  const { selectNextFile, selectPrevFile, baseBranch, compareBranch } = useGitStore();
+  const {
+    selectNextFile,
+    selectPrevFile,
+    baseBranch,
+    compareBranch,
+    fileViewTab,
+    setFileViewTab,
+    toggleFileBlame,
+  } = useGitStore();
   const { theme } = useThemeStore();
   const { fontFamily, fontSize, lineSpacing, enableLigatures, isBold, isItalic, isUnderline } =
     usePreferencesStore();
   const [copied, setCopied] = useState(false);
+
+  // Global Alt+B shortcut to toggle blame
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        toggleFileBlame();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleFileBlame]);
 
   const hunks = useMemo(() => {
     if (!diffPayload || !selectedFile) return [];
@@ -256,67 +278,103 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           </div>
         )}
 
-        {/* Right: View Mode Toggle */}
+        {/* Right: View Mode Toggle & Diff/Blame Switcher */}
         <div className="flex items-center gap-2">
-          {/* Split / Unified Segmented Control */}
+          {/* Diff / Blame Tab Switcher */}
           <div className="flex items-center bg-surface0 rounded-md p-0.5 border border-surface0">
             <button
               type="button"
-              onClick={() => onToggleViewMode('split')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
-                viewMode === 'split'
-                  ? 'bg-blue text-white shadow-xs'
+              onClick={() => setFileViewTab('diff')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold transition-colors cursor-pointer ${
+                fileViewTab === 'diff'
+                  ? 'bg-surface2 text-text shadow-xs'
                   : 'text-subtext1 hover:text-text'
               }`}
-              title="Side-by-side split view"
+              title="Inspect file diff"
             >
-              <Columns2 className="w-3.5 h-3.5" />
-              <span>Split</span>
+              <FileCode className="w-3.5 h-3.5" />
+              <span>Diff</span>
             </button>
             <button
               type="button"
-              onClick={() => onToggleViewMode('unified')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
-                viewMode === 'unified'
-                  ? 'bg-blue text-white shadow-xs'
+              onClick={() => setFileViewTab('blame')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold transition-colors cursor-pointer ${
+                fileViewTab === 'blame'
+                  ? 'bg-surface2 text-text shadow-xs'
                   : 'text-subtext1 hover:text-text'
               }`}
-              title="Inline unified view"
+              title="Inspect line-by-line git blame (Alt+B)"
             >
-              <Rows2 className="w-3.5 h-3.5" />
-              <span>Unified</span>
+              <History className="w-3.5 h-3.5" />
+              <span>Blame</span>
             </button>
           </div>
+
+          {/* Split / Unified Segmented Control (only when in Diff mode) */}
+          {fileViewTab === 'diff' && (
+            <div className="flex items-center bg-surface0 rounded-md p-0.5 border border-surface0">
+              <button
+                type="button"
+                onClick={() => onToggleViewMode('split')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-colors cursor-pointer ${
+                  viewMode === 'split'
+                    ? 'bg-surface2 text-text shadow-xs'
+                    : 'text-subtext1 hover:text-text'
+                }`}
+                title="Side-by-side split view"
+              >
+                <Columns2 className="w-3.5 h-3.5" />
+                <span>Split</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleViewMode('unified')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-colors cursor-pointer ${
+                  viewMode === 'unified'
+                    ? 'bg-surface2 text-text shadow-xs'
+                    : 'text-subtext1 hover:text-text'
+                }`}
+                title="Inline unified view"
+              >
+                <Rows2 className="w-3.5 h-3.5" />
+                <span>Unified</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Main Diff Rendering Area: Always Visual */}
-      <div className="flex-1 overflow-auto bg-base p-2">
-        {diffData && hunks.length > 0 ? (
-          <div className="border border-surface0 rounded-lg overflow-hidden bg-base shadow-sm">
-            <DiffView
-              key={`${selectedFile.path}-${viewMode}-${theme}-${fontFamily}-${fontSize}-${lineSpacing}-${enableLigatures}-${isBold}-${isItalic}-${isUnderline}`}
-              data={diffData}
-              className="diff-viewer-container"
-              diffViewMode={
-                viewMode === 'split' ? DiffModeEnum.Split : DiffModeEnum.Unified
-              }
-              diffViewTheme={theme === 'mocha' ? 'dark' : 'light'}
-              diffViewHighlight={true}
-              diffViewWrap={false}
-              diffViewFontSize={fontSize}
-            />
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-64 text-subtext1 text-xs space-y-1">
-            <CheckCircle2 className="w-8 h-8 text-green mb-2" />
-            <p className="font-semibold text-text">No textual difference</p>
-            <span className="text-[11px] text-subtext0">
-              File status: {selectedFile.status} (Binary, empty, or mode change)
-            </span>
-          </div>
-        )}
-      </div>
+      {/* Main Area: either Blame View or Visual Diff */}
+      {fileViewTab === 'blame' ? (
+        <BlameViewer />
+      ) : (
+        <div className="flex-1 overflow-auto bg-base p-2">
+          {diffData && hunks.length > 0 ? (
+            <div className="border border-surface0 rounded-lg overflow-hidden bg-base shadow-sm">
+              <DiffView
+                key={`${selectedFile.path}-${viewMode}-${theme}-${fontFamily}-${fontSize}-${lineSpacing}-${enableLigatures}-${isBold}-${isItalic}-${isUnderline}`}
+                data={diffData}
+                className="diff-viewer-container"
+                diffViewMode={
+                  viewMode === 'split' ? DiffModeEnum.Split : DiffModeEnum.Unified
+                }
+                diffViewTheme={theme === 'mocha' ? 'dark' : 'light'}
+                diffViewHighlight={true}
+                diffViewWrap={false}
+                diffViewFontSize={fontSize}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 text-subtext1 text-xs space-y-1">
+              <CheckCircle2 className="w-8 h-8 text-green mb-2" />
+              <p className="font-semibold text-text">No textual difference</p>
+              <span className="text-[11px] text-subtext0">
+                File status: {selectedFile.status} (Binary, empty, or mode change)
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 };
