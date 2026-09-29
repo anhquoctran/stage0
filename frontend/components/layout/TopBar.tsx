@@ -342,7 +342,7 @@ export const TopBar: React.FC = () => {
                       disabled={isSyncing}
                       onClick={() => runSync('pull')}
                       className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
-                      title="Quick Pull (Ctrl+Shift+P)"
+                      title="Pull (Ctrl+Shift+P)"
                     >
                       <Download className="w-3 h-3" />
                       <span>Pull</span>
@@ -376,7 +376,7 @@ export const TopBar: React.FC = () => {
                       >
                         <div className="flex items-center gap-2">
                           <Download className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
-                          <span>Quick Pull</span>
+                          <span>Pull</span>
                         </div>
                         <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+P</span>
                       </button>
@@ -407,7 +407,7 @@ export const TopBar: React.FC = () => {
                       disabled={isSyncing}
                       onClick={() => runSync('rebase')}
                       className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
-                      title="Quick Rebase (Ctrl+Shift+R)"
+                      title="Rebase (Ctrl+Shift+R)"
                     >
                       <GitMerge className="w-3 h-3" />
                       <span>Rebase</span>
@@ -441,7 +441,7 @@ export const TopBar: React.FC = () => {
                       >
                         <div className="flex items-center gap-2">
                           <GitMerge className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
-                          <span>Quick Rebase</span>
+                          <span>Rebase</span>
                         </div>
                         <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+R</span>
                       </button>

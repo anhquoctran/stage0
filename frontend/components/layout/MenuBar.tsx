@@ -496,7 +496,7 @@ export const MenuBar: React.FC = () => {
               >
                 <div className="flex items-center gap-2">
                   <Download className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Pull (Quick)</span>
+                  <span>Pull</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+P</span>
               </button>
@@ -530,7 +530,7 @@ export const MenuBar: React.FC = () => {
               >
                 <div className="flex items-center gap-2">
                   <GitMerge className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Rebase (Quick)</span>
+                  <span>Rebase</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+R</span>
               </button>
@@ -721,7 +721,7 @@ export const MenuBar: React.FC = () => {
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+F</kbd>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-subtext1">Quick Pull</span>
+                <span className="text-subtext1">Pull</span>
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+P</kbd>
               </div>
               <div className="flex items-center justify-between">
@@ -729,7 +729,7 @@ export const MenuBar: React.FC = () => {
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Alt+P</kbd>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-subtext1">Quick Rebase</span>
+                <span className="text-subtext1">Rebase</span>
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+R</kbd>
               </div>
               <div className="flex items-center justify-between">
