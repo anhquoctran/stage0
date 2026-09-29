@@ -90,7 +90,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                 placeholder="Filter branches..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-2.5 py-1 bg-mantle border border-surface0 rounded text-xs text-text placeholder-subtext0 focus:outline-none focus:border-blue"
+                className="w-full pl-8 pr-2.5 py-1 bg-mantle border border-surface0 rounded text-xs text-text placeholder-subtext0 focus:outline-none focus:border-surface2"
               />
             </div>
           </div>
@@ -117,7 +117,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-1.5 text-xs text-left transition-colors ${
                         isSelected
-                          ? 'bg-blue/20 text-blue font-semibold'
+                          ? 'bg-surface1 text-text font-semibold'
                           : 'text-text hover:bg-surface0'
                       }`}
                     >
@@ -125,13 +125,13 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                         <GitBranch className="w-3 h-3 text-subtext1 shrink-0" />
                         <span className="truncate">{branch}</span>
                         {isCurrent && (
-                          <span className="text-[9px] px-1 py-0.2 bg-green/20 text-green border border-green/30 rounded font-sans">
+                          <span className="text-[9px] px-1 py-0.2 bg-surface1 text-subtext1 border border-surface2 rounded font-sans">
                             HEAD
                           </span>
                         )}
                       </span>
                       {isSelected && (
-                        <Check className="w-3.5 h-3.5 text-blue shrink-0 ml-1" />
+                        <Check className="w-3.5 h-3.5 text-text shrink-0 ml-1" />
                       )}
                     </button>
                   );
@@ -156,7 +156,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-1.5 text-xs text-left transition-colors ${
                         isSelected
-                          ? 'bg-blue/20 text-blue font-semibold'
+                          ? 'bg-surface1 text-text font-semibold'
                           : 'text-subtext1 hover:bg-surface0 hover:text-text'
                       }`}
                     >
@@ -167,7 +167,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                         </span>
                       </span>
                       {isSelected && (
-                        <Check className="w-3.5 h-3.5 text-blue shrink-0 ml-1" />
+                        <Check className="w-3.5 h-3.5 text-text shrink-0 ml-1" />
                       )}
                     </button>
                   );

@@ -26,6 +26,31 @@ pub fn get_remote_url(repo_path: &str, remote_name: Option<&str>) -> Result<Stri
     Ok(res.trim().to_string())
 }
 
+pub fn is_rebase_in_progress(repo_path: &str) -> bool {
+    let git_dir = std::path::Path::new(repo_path).join(".git");
+    if git_dir.join("rebase-merge").exists() || git_dir.join("rebase-apply").exists() {
+        return true;
+    }
+    if git_dir.is_file() {
+        if let Ok(content) = std::fs::read_to_string(&git_dir) {
+            for line in content.lines() {
+                if let Some(actual_git_dir) = line.strip_prefix("gitdir: ") {
+                    let actual_path = std::path::Path::new(actual_git_dir.trim());
+                    let resolved = if actual_path.is_absolute() {
+                        actual_path.to_path_buf()
+                    } else {
+                        std::path::Path::new(repo_path).join(actual_path)
+                    };
+                    if resolved.join("rebase-merge").exists() || resolved.join("rebase-apply").exists() {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
 pub fn git_sync(
     repo_path: &str,
     operation: &str,

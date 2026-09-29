@@ -63,6 +63,7 @@ export const MenuBar: React.FC = () => {
     showToast,
     setIsRemoteUrlFromOpen,
     setTargetFileForUrl,
+    isRebasing,
   } = useGitStore();
 
   const { themeMode, toggleTheme } = useThemeStore();
@@ -270,10 +271,10 @@ export const MenuBar: React.FC = () => {
               <button
                 type="button"
                 onClick={handleExitApp}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text hover:text-red text-left transition-colors group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Power className="w-3.5 h-3.5 text-subtext0 group-hover:text-red transition-colors" />
+                  <Power className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Exit</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Alt+F4</span>
@@ -316,7 +317,7 @@ export const MenuBar: React.FC = () => {
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <FolderOpen className="w-3.5 h-3.5 text-amber-400 group-hover:text-amber-400 transition-colors" />
+                  <FolderOpen className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Open in File Explorer</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+R</span>
@@ -385,7 +386,7 @@ export const MenuBar: React.FC = () => {
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Globe className="w-3.5 h-3.5 text-blue" />
+                  <Globe className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Copy Remote File URL</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+U</span>
@@ -659,45 +660,45 @@ export const MenuBar: React.FC = () => {
 
               <button
                 type="button"
-                disabled={!currentRepo || isSyncing}
+                disabled={!currentRepo || isSyncing || !isRebasing}
                 onClick={() => {
                   runSync('rebase_continue');
                   closeMenus();
                 }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-green text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Play className="w-3.5 h-3.5 text-green" />
+                  <Play className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Rebase: Continue</span>
                 </div>
               </button>
 
               <button
                 type="button"
-                disabled={!currentRepo || isSyncing}
+                disabled={!currentRepo || isSyncing || !isRebasing}
                 onClick={() => {
                   runSync('rebase_skip');
                   closeMenus();
                 }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-amber-400 text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <SkipForward className="w-3.5 h-3.5 text-amber-400" />
+                  <SkipForward className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Rebase: Skip Commit</span>
                 </div>
               </button>
 
               <button
                 type="button"
-                disabled={!currentRepo || isSyncing}
+                disabled={!currentRepo || isSyncing || !isRebasing}
                 onClick={() => {
                   runSync('rebase_abort');
                   closeMenus();
                 }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-red text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <XCircle className="w-3.5 h-3.5 text-red" />
+                  <XCircle className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Rebase: Abort</span>
                 </div>
               </button>

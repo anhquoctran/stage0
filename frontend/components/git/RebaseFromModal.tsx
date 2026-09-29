@@ -19,6 +19,7 @@ export const RebaseFromModal: React.FC = () => {
     isRebaseFromOpen,
     setIsRebaseFromOpen,
     runSync,
+    isRebasing,
   } = useGitStore();
 
   const [selectedTargetBranch, setSelectedTargetBranch] = useState('main');
@@ -147,7 +148,7 @@ export const RebaseFromModal: React.FC = () => {
                 className="mt-0.5 accent-text cursor-pointer"
               />
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-text group-hover:text-blue transition-colors">
+                <div className="text-xs font-semibold text-text group-hover:text-text transition-colors">
                   Autostash uncommitted changes (<code className="font-mono">--autostash</code>)
                 </div>
                 <div className="text-[10px] text-subtext0">
@@ -161,7 +162,7 @@ export const RebaseFromModal: React.FC = () => {
           <div className="p-3 bg-surface0/30 border border-surface0 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-subtext0 flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5 text-yellow" />
+                <AlertTriangle className="w-3.5 h-3.5 text-subtext0" />
                 <span>Rebase In-Progress Actions:</span>
               </span>
             </div>
@@ -169,19 +170,19 @@ export const RebaseFromModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleRebaseContinue}
-                disabled={isSyncing}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-text text-[11px] font-medium border border-surface2 transition-colors cursor-pointer"
+                disabled={isSyncing || !isRebasing}
+                className="flex items-center gap-1 px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-text text-[11px] font-medium border border-surface2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 title="git rebase --continue"
               >
-                <Play className="w-3 h-3 text-green" />
+                <Play className="w-3 h-3 text-subtext0" />
                 <span>Continue</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleRebaseSkip}
-                disabled={isSyncing}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-text text-[11px] font-medium border border-surface2 transition-colors cursor-pointer"
+                disabled={isSyncing || !isRebasing}
+                className="flex items-center gap-1 px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-text text-[11px] font-medium border border-surface2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 title="git rebase --skip"
               >
                 <SkipForward className="w-3 h-3 text-subtext0" />
@@ -191,11 +192,11 @@ export const RebaseFromModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleRebaseAbort}
-                disabled={isSyncing}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-surface1 hover:bg-red/20 text-subtext0 hover:text-red text-[11px] font-medium border border-surface2 transition-colors cursor-pointer ml-auto"
+                disabled={isSyncing || !isRebasing}
+                className="flex items-center gap-1 px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-text text-[11px] font-medium border border-surface2 transition-colors cursor-pointer ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
                 title="git rebase --abort"
               >
-                <RotateCcw className="w-3 h-3" />
+                <RotateCcw className="w-3 h-3 text-subtext0" />
                 <span>Abort Rebase</span>
               </button>
             </div>
