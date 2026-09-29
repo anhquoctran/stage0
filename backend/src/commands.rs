@@ -6,7 +6,7 @@ use crate::git::{
     branches::list_branches,
     conflict::check_conflicts,
     diff::get_mr_diff as calc_mr_diff,
-    ops::git_sync,
+    ops::{git_sync, list_remotes, GitSyncOptions},
     BranchList, ConflictReport, MrDiffPayload, RepoInfo,
 };
 use crate::watcher::WatcherState;
@@ -218,8 +218,16 @@ pub async fn check_merge_conflicts(
 pub async fn run_git_sync(
     repo_path: String,
     operation: String,
+    options: Option<GitSyncOptions>,
 ) -> Result<String, String> {
-    git_sync(&repo_path, &operation)
+    git_sync(&repo_path, &operation, options)
+}
+
+#[tauri::command]
+pub async fn list_git_remotes(
+    repo_path: String,
+) -> Result<Vec<String>, String> {
+    list_remotes(&repo_path)
 }
 
 #[tauri::command]

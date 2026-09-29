@@ -5,6 +5,8 @@ import { FileList } from '../git/FileList';
 import { DiffViewer } from '../git/DiffViewer';
 import { ConflictBanner } from '../git/ConflictBanner';
 import { PreferencesModal } from '../preferences/PreferencesModal';
+import { PullFromModal } from '../git/PullFromModal';
+import { RebaseFromModal } from '../git/RebaseFromModal';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { X, AlertCircle } from 'lucide-react';
@@ -28,6 +30,9 @@ export const MainLayout: React.FC = () => {
     selectPrevFile,
     setViewMode,
     refreshDiff,
+    runSync,
+    setIsPullFromOpen,
+    setIsRebaseFromOpen,
     openRepoDialog,
   } = useGitStore();
 
@@ -131,11 +136,46 @@ export const MainLayout: React.FC = () => {
       ) {
         e.preventDefault();
         setIsPreferencesOpen(true);
-      } else if (e.key === 's' && !e.ctrlKey && !e.metaKey) {
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key.toLowerCase() === 'f' || e.code === 'KeyF')
+      ) {
+        e.preventDefault();
+        runSync('fetch');
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key.toLowerCase() === 'p' || e.code === 'KeyP')
+      ) {
+        e.preventDefault();
+        runSync('pull');
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.altKey &&
+        (e.key.toLowerCase() === 'p' || e.code === 'KeyP')
+      ) {
+        e.preventDefault();
+        setIsPullFromOpen(true);
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key.toLowerCase() === 'r' || e.code === 'KeyR')
+      ) {
+        e.preventDefault();
+        runSync('rebase');
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.altKey &&
+        (e.key.toLowerCase() === 'r' || e.code === 'KeyR')
+      ) {
+        e.preventDefault();
+        setIsRebaseFromOpen(true);
+      } else if (e.key === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setViewMode('split');
-      } else if (e.key === 'u' && !e.ctrlKey && !e.metaKey) {
+      } else if (e.key === 'u' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setViewMode('unified');
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r') {
+      } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'r') {
         e.preventDefault();
         refreshDiff();
       }
@@ -143,7 +183,16 @@ export const MainLayout: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectNextFile, selectPrevFile, setViewMode, refreshDiff, setIsPreferencesOpen]);
+  }, [
+    selectNextFile,
+    selectPrevFile,
+    setViewMode,
+    refreshDiff,
+    setIsPreferencesOpen,
+    runSync,
+    setIsPullFromOpen,
+    setIsRebaseFromOpen,
+  ]);
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-crust text-text font-sans">
@@ -152,6 +201,12 @@ export const MainLayout: React.FC = () => {
 
       {/* Preferences Modal Dialog */}
       <PreferencesModal />
+
+      {/* Pull From Remote Modal Dialog */}
+      <PullFromModal />
+
+      {/* Rebase From Branch Modal Dialog */}
+      <RebaseFromModal />
 
       {/* In-Memory Merge Conflict Banner */}
       <ConflictBanner

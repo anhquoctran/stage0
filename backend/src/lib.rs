@@ -38,6 +38,7 @@ pub fn run() {
             commands::get_mr_diff,
             commands::check_merge_conflicts,
             commands::run_git_sync,
+            commands::list_git_remotes,
             commands::window_minimize,
             commands::window_toggle_maximize,
             commands::window_close,

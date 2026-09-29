@@ -15,6 +15,10 @@ import {
   GitPullRequest,
   CheckCircle2,
   Trash2,
+  Sliders,
+  Play,
+  SkipForward,
+  XCircle,
 } from 'lucide-react';
 import { BranchSelector } from '../git/BranchSelector';
 import { WindowControls } from './WindowControls';
@@ -39,10 +43,17 @@ export const TopBar: React.FC = () => {
     swapBranches,
     refreshDiff,
     runSync,
+    setIsPullFromOpen,
+    setIsRebaseFromOpen,
   } = useGitStore();
 
   const [isRecentOpen, setIsRecentOpen] = useState(false);
+  const [isPullMenuOpen, setIsPullMenuOpen] = useState(false);
+  const [isRebaseMenuOpen, setIsRebaseMenuOpen] = useState(false);
+
   const recentDropdownRef = useRef<HTMLDivElement>(null);
+  const pullMenuRef = useRef<HTMLDivElement>(null);
+  const rebaseMenuRef = useRef<HTMLDivElement>(null);
 
   const isMac =
     typeof navigator !== 'undefined' &&
@@ -50,11 +61,24 @@ export const TopBar: React.FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
         recentDropdownRef.current &&
-        !recentDropdownRef.current.contains(event.target as Node)
+        !recentDropdownRef.current.contains(target)
       ) {
         setIsRecentOpen(false);
+      }
+      if (
+        pullMenuRef.current &&
+        !pullMenuRef.current.contains(target)
+      ) {
+        setIsPullMenuOpen(false);
+      }
+      if (
+        rebaseMenuRef.current &&
+        !rebaseMenuRef.current.contains(target)
+      ) {
+        setIsRebaseMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -295,13 +319,14 @@ export const TopBar: React.FC = () => {
                 </span>
               )}
 
-              <div className="flex items-center bg-surface0 rounded-md border border-surface0 p-0.5">
+              <div className="flex items-center bg-surface0 rounded-md border border-surface0 p-0.5 gap-0.5">
+                {/* FETCH BUTTON */}
                 <button
                   type="button"
                   disabled={isSyncing}
                   onClick={() => runSync('fetch')}
-                  className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:text-text hover:bg-surface1 rounded transition-colors disabled:opacity-50 cursor-pointer"
-                  title="git fetch --all --prune"
+                  className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:bg-surface1 rounded transition-colors disabled:opacity-50 cursor-pointer"
+                  title="git fetch --all --prune (Ctrl+Shift+F)"
                 >
                   <RefreshCw
                     className={`w-3 h-3 ${isSyncing ? 'animate-spin text-blue' : ''}`}
@@ -309,27 +334,183 @@ export const TopBar: React.FC = () => {
                   <span>Fetch</span>
                 </button>
 
-                <button
-                  type="button"
-                  disabled={isSyncing}
-                  onClick={() => runSync('pull')}
-                  className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:text-text hover:bg-surface1 rounded transition-colors disabled:opacity-50 cursor-pointer"
-                  title="git pull"
-                >
-                  <Download className="w-3 h-3" />
-                  <span>Pull</span>
-                </button>
+                {/* PULL SPLIT BUTTON */}
+                <div className="relative flex items-center" ref={pullMenuRef}>
+                  <div className="flex items-center rounded overflow-hidden">
+                    <button
+                      type="button"
+                      disabled={isSyncing}
+                      onClick={() => runSync('pull')}
+                      className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
+                      title="Quick Pull (Ctrl+Shift+P)"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span>Pull</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSyncing}
+                      onClick={() => {
+                        setIsPullMenuOpen((v) => !v);
+                        setIsRebaseMenuOpen(false);
+                      }}
+                      className="px-1 py-1 text-subtext1 hover:text-text hover:bg-surface1 border-l border-surface1 transition-colors cursor-pointer"
+                      title="Pull options (Ctrl+Alt+P)"
+                    >
+                      <ChevronDown className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
 
-                <button
-                  type="button"
-                  disabled={isSyncing}
-                  onClick={() => runSync('rebase')}
-                  className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:text-text hover:bg-surface1 rounded transition-colors disabled:opacity-50 cursor-pointer"
-                  title="git rebase"
-                >
-                  <GitMerge className="w-3 h-3" />
-                  <span>Rebase</span>
-                </button>
+                  {isPullMenuOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100">
+                      <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/70 mb-1">
+                        Pull Options
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsPullMenuOpen(false);
+                          runSync('pull');
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-text text-left transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Download className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+                          <span>Quick Pull</span>
+                        </div>
+                        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+P</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsPullMenuOpen(false);
+                          setIsPullFromOpen(true);
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-text text-left transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Sliders className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+                          <span>Pull from...</span>
+                        </div>
+                        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+P</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* REBASE SPLIT BUTTON */}
+                <div className="relative flex items-center" ref={rebaseMenuRef}>
+                  <div className="flex items-center rounded overflow-hidden">
+                    <button
+                      type="button"
+                      disabled={isSyncing}
+                      onClick={() => runSync('rebase')}
+                      className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
+                      title="Quick Rebase (Ctrl+Shift+R)"
+                    >
+                      <GitMerge className="w-3 h-3" />
+                      <span>Rebase</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSyncing}
+                      onClick={() => {
+                        setIsRebaseMenuOpen((v) => !v);
+                        setIsPullMenuOpen(false);
+                      }}
+                      className="px-1 py-1 text-subtext1 hover:text-text hover:bg-surface1 border-l border-surface1 transition-colors cursor-pointer"
+                      title="Rebase options (Ctrl+Alt+R)"
+                    >
+                      <ChevronDown className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+
+                  {isRebaseMenuOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 w-60 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100">
+                      <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/70 mb-1">
+                        Rebase Options
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRebaseMenuOpen(false);
+                          runSync('rebase');
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-text text-left transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <GitMerge className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+                          <span>Quick Rebase</span>
+                        </div>
+                        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+R</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRebaseMenuOpen(false);
+                          setIsRebaseFromOpen(true);
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-text text-left transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Sliders className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
+                          <span>Rebase from...</span>
+                        </div>
+                        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+R</span>
+                      </button>
+
+                      <div className="my-1 border-t border-surface0" />
+
+                      <div className="px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-subtext0">
+                        In-Progress Actions
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRebaseMenuOpen(false);
+                          runSync('rebase_continue');
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-green text-left transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Play className="w-3.5 h-3.5" />
+                          <span>Continue Rebase</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRebaseMenuOpen(false);
+                          runSync('rebase_skip');
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-amber-400 text-left transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <SkipForward className="w-3.5 h-3.5" />
+                          <span>Skip Commit</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRebaseMenuOpen(false);
+                          runSync('rebase_abort');
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-red text-left transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <XCircle className="w-3.5 h-3.5" />
+                          <span>Abort Rebase</span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <button
