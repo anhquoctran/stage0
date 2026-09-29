@@ -83,6 +83,37 @@ export async function revealInOs(repoPath: string, filePath: string): Promise<vo
 }
 
 /**
+ * Opens repository folder in specified target: 'explorer', 'vscode', or 'terminal'.
+ */
+export async function openRepoIn(
+  repoPath: string,
+  target: 'explorer' | 'vscode' | 'terminal'
+): Promise<void> {
+  await invoke('open_repo_in', { repoPath, target });
+}
+
+/**
+ * Opens repository in System File Explorer
+ */
+export async function openRepoInExplorer(repoPath: string): Promise<void> {
+  await openRepoIn(repoPath, 'explorer');
+}
+
+/**
+ * Opens repository in Visual Studio Code
+ */
+export async function openRepoInVsCode(repoPath: string): Promise<void> {
+  await openRepoIn(repoPath, 'vscode');
+}
+
+/**
+ * Opens repository in System Default Terminal
+ */
+export async function openRepoInTerminal(repoPath: string): Promise<void> {
+  await openRepoIn(repoPath, 'terminal');
+}
+
+/**
  * Fetches the remote URL for a repository from git.
  */
 export async function getRemoteUrl(repoPath: string, remote?: string): Promise<string> {

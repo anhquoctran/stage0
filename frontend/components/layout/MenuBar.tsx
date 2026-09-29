@@ -29,11 +29,17 @@ import {
   ExternalLink,
   History,
   GitCommit,
+  Terminal,
+  Code2,
+  Folder,
 } from 'lucide-react';
 import {
   revealInOs,
   getAbsoluteFilePath,
   buildRemoteFileUrl,
+  openRepoInTerminal,
+  openRepoInVsCode,
+  openRepoInExplorer,
 } from '../../utils/fileActions';
 import { invoke } from '@tauri-apps/api/core';
 import { useGitStore } from '../../store/useGitStore';
@@ -798,6 +804,77 @@ export const MenuBar: React.FC = () => {
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Ctrl+R</span>
               </button>
+
+              <div className="my-1 border-t border-surface0" />
+
+              <button
+                type="button"
+                disabled={!currentRepo}
+                onClick={async () => {
+                  closeMenus();
+                  if (currentRepo) {
+                    try {
+                      await openRepoInTerminal(currentRepo.local_path);
+                      showToast('Opened repository in terminal');
+                    } catch (err) {
+                      showToast(`Failed to open terminal: ${err}`);
+                    }
+                  }
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Terminal className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Open in Default Terminal</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+T</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={!currentRepo}
+                onClick={async () => {
+                  closeMenus();
+                  if (currentRepo) {
+                    try {
+                      await openRepoInVsCode(currentRepo.local_path);
+                      showToast('Opened repository in VS Code');
+                    } catch (err) {
+                      showToast(`Failed to open VS Code: ${err}`);
+                    }
+                  }
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Code2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Open in Visual Studio Code</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+V</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={!currentRepo}
+                onClick={async () => {
+                  closeMenus();
+                  if (currentRepo) {
+                    try {
+                      await openRepoInExplorer(currentRepo.local_path);
+                      showToast('Opened repository in File Explorer');
+                    } catch (err) {
+                      showToast(`Failed to open File Explorer: ${err}`);
+                    }
+                  }
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Folder className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Open in File Explorer</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+E</span>
+              </button>
             </div>
           )}
         </div>
@@ -905,7 +982,19 @@ export const MenuBar: React.FC = () => {
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Alt+R</kbd>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-subtext1">Open in File Explorer</span>
+                <span className="text-subtext1">Open Repo in Terminal</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Alt+Shift+T</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Open Repo in VS Code</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Alt+Shift+V</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Open Repo in File Explorer</span>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Alt+Shift+E</kbd>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-subtext1">Open File in Explorer</span>
                 <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Shift+Alt+R</kbd>
               </div>
               <div className="flex items-center justify-between">
