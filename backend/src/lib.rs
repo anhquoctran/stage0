@@ -44,6 +44,7 @@ pub fn run() {
             commands::get_recent_repos,
             commands::validate_repo,
             commands::delete_recent_repo,
+            commands::clear_recent_repos,
             commands::get_branches,
             commands::get_mr_diff,
             commands::check_merge_conflicts,

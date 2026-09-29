@@ -41,6 +41,7 @@ interface GitState {
   openRepoDialog: () => Promise<void>;
   selectRepo: (repo: RepoInfo) => Promise<void>;
   removeRecentRepo: (id: string) => Promise<void>;
+  clearRecentRepos: () => Promise<void>;
   fetchBranches: (repoPath: string) => Promise<void>;
   setBaseBranch: (branch: string) => Promise<void>;
   setCompareBranch: (branch: string) => Promise<void>;
@@ -318,6 +319,16 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().loadRecentRepos();
     } catch (err) {
       console.error('Failed to remove recent repo:', err);
+    }
+  },
+
+  clearRecentRepos: async () => {
+    try {
+      await invoke('clear_recent_repos');
+      set({ recentRepos: [] });
+      get().showToast('Cleared all recent repositories');
+    } catch (err) {
+      console.error('Failed to clear recent repositories:', err);
     }
   },
 

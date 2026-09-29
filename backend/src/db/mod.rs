@@ -78,6 +78,12 @@ impl Database {
         Ok(())
     }
 
+    pub fn clear_all_repositories(&self) -> Result<(), rusqlite::Error> {
+        let conn = self.0.lock().unwrap();
+        conn.execute("DELETE FROM repositories;", [])?;
+        Ok(())
+    }
+
     pub fn insert_git_credential(
         &self,
         id: &str,

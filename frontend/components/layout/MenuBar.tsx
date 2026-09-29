@@ -32,6 +32,7 @@ import {
   Terminal,
   Code2,
   Folder,
+  Trash2,
 } from 'lucide-react';
 import {
   revealInOs,
@@ -58,6 +59,7 @@ export const MenuBar: React.FC = () => {
     openRepoDialog,
     setIsCloneModalOpen,
     selectRepo,
+    clearRecentRepos,
     closeRepo,
     selectPrevFile,
     selectNextFile,
@@ -279,6 +281,22 @@ export const MenuBar: React.FC = () => {
                           )}
                         </button>
                       ))
+                    )}
+                    {recentRepos.length > 0 && (
+                      <>
+                        <div className="my-1 border-t border-surface0" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            clearRecentRepos();
+                            closeMenus();
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-subtext0 hover:text-red hover:bg-surface1 text-left transition-colors group cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-red transition-colors" />
+                          <span>Clear Recently Opened</span>
+                        </button>
+                      </>
                     )}
                   </div>
                 )}

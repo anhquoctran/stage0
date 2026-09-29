@@ -50,6 +50,7 @@ export const TopBar: React.FC = () => {
     setIsCloneModalOpen,
     selectRepo,
     removeRecentRepo,
+    clearRecentRepos,
     setBaseBranch,
     setCompareBranch,
     swapBranches,
@@ -220,9 +221,24 @@ export const TopBar: React.FC = () => {
                     <Clock className="w-3 h-3" />
                     <span>Recent Repositories</span>
                   </div>
-                  <span className="text-[10px] text-subtext0 font-mono">
-                    {recentRepos.length}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-subtext0 font-mono">
+                      {recentRepos.length}
+                    </span>
+                    {recentRepos.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearRecentRepos();
+                        }}
+                        className="text-[10px] text-subtext0 hover:text-red transition-colors cursor-pointer"
+                        title="Clear all recent repositories"
+                      >
+                        clear
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="max-h-56 overflow-y-auto divide-y divide-surface0">
