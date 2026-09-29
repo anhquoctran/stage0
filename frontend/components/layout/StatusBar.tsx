@@ -63,7 +63,7 @@ export const StatusBar: React.FC = () => {
             className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface0 hover:bg-surface1 border border-surface1 hover:border-surface2 text-text transition-colors cursor-pointer"
             title="Configure Sandbox Engine in Preferences"
           >
-            <Box className="w-3 h-3 text-blue" />
+            <Box className="w-3 h-3 text-subtext0" />
             <span className="font-medium">
               Sandbox: {activeSandboxType === 'in_memory' ? 'In-Memory' : activeSandboxType === 'local_worktree' ? 'Worktree' : 'Docker'}
             </span>
