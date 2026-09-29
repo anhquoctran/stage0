@@ -447,7 +447,7 @@ export const PreferencesModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
-      <div className="bg-mantle border border-surface0 max-w-4xl w-full shadow-2xl overflow-hidden flex flex-col h-[640px] max-h-[90vh] animate-in zoom-in-95 duration-150">
+      <div className="bg-mantle border border-surface0 w-full max-w-5xl xl:max-w-6xl shadow-2xl overflow-hidden flex flex-col h-[760px] max-h-[92vh] min-h-[580px] animate-in zoom-in-95 duration-150">
         {/* Header with Title and Unsaved Badge */}
         <div className="px-6 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60">
           <div className="flex items-center gap-2.5">
@@ -475,7 +475,7 @@ export const PreferencesModal: React.FC = () => {
         {/* Modal Body: Vertical Tabbed Layout */}
         <div className="flex-1 flex overflow-hidden">
           {/* Vertical Sidebar Tabs (Left) */}
-          <div className="w-56 bg-base/40 border-r border-surface0 flex flex-col shrink-0 select-none">
+          <div className="w-60 bg-base/40 border-r border-surface0 flex flex-col shrink-0 select-none">
             <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-subtext0/70 border-b border-surface0/40">
               Settings
             </div>
