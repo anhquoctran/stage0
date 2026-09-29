@@ -22,6 +22,13 @@ pub fn run() {
                 .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
             app.manage(db);
 
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_min_size(Some(tauri::Size::Logical(tauri::LogicalSize {
+                    width: 1024.0,
+                    height: 680.0,
+                })));
+            }
+
             #[cfg(target_os = "macos")]
             {
                 if let Some(window) = app.get_webview_window("main") {
