@@ -92,9 +92,18 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
               <span className="text-xs font-bold uppercase tracking-wider text-red">
                 Merge Conflicts Detected
               </span>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-red/25 text-red font-mono font-bold border border-red/40 conflict-pulse">
+              <button
+                type="button"
+                onClick={() => {
+                  if (conflictReport.conflicted_files.length > 0) {
+                    onSelectConflictFile?.(conflictReport.conflicted_files[0]);
+                  }
+                }}
+                className="text-[11px] px-2 py-0.5 rounded-full bg-red/25 hover:bg-red/35 text-red font-mono font-bold border border-red/40 conflict-pulse cursor-pointer transition-colors"
+                title="Click to jump directly to first conflicted file (Alt+C)"
+              >
                 {conflictedCount > 0 ? `${conflictedCount} file(s) in conflict` : 'In-memory conflict'}
-              </span>
+              </button>
               <span className="text-[11px] text-subtext1">
                 between <code className="font-mono text-text bg-surface0 px-1 py-0.5 rounded border border-surface1">{compare}</code> and <code className="font-mono text-text bg-surface0 px-1 py-0.5 rounded border border-surface1">{base}</code>
               </span>

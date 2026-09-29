@@ -38,6 +38,7 @@ export const MainLayout: React.FC = () => {
     selectFile,
     selectNextFile,
     selectPrevFile,
+    selectNextConflictFile,
     setViewMode,
     refreshDiff,
     runSync,
@@ -125,7 +126,16 @@ export const MainLayout: React.FC = () => {
 
   const handleSelectConflictFile = (filePath: string) => {
     if (!diffPayload) return;
-    const file = diffPayload.files.find((f) => f.path === filePath);
+    const normalized = filePath.replace(/\\/g, '/').toLowerCase();
+    const file = diffPayload.files.find((f) => {
+      const fNorm = f.path.replace(/\\/g, '/').toLowerCase();
+      return (
+        f.path === filePath ||
+        fNorm === normalized ||
+        fNorm.endsWith(normalized) ||
+        normalized.endsWith(fNorm)
+      );
+    });
     if (file) {
       selectFile(file);
     }
@@ -142,7 +152,10 @@ export const MainLayout: React.FC = () => {
         return;
       }
 
-      if (e.key === 'ArrowDown' || e.key === 'j') {
+      if (e.altKey && !e.ctrlKey && !e.shiftKey && (e.key.toLowerCase() === 'c' || e.code === 'KeyC')) {
+        e.preventDefault();
+        selectNextConflictFile();
+      } else if (e.key === 'ArrowDown' || e.key === 'j') {
         e.preventDefault();
         selectNextFile();
       } else if (e.key === 'ArrowUp' || e.key === 'k') {

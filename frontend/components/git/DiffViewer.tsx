@@ -21,6 +21,7 @@ import {
   GitCommit,
   Code2,
   RotateCw,
+  ArrowDown,
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { ChangedFile, MrDiffPayload, ViewMode, FileBlamePayload } from '../../types/git';
@@ -53,6 +54,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const {
     selectNextFile,
     selectPrevFile,
+    selectNextConflictFile,
+    selectPrevConflictFile,
     baseBranch,
     compareBranch,
     fileViewTab,
@@ -347,6 +350,41 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     return diffPayload.files.findIndex((f) => f.path === selectedFile.path);
   }, [diffPayload, selectedFile]);
 
+  const conflictedFiles = useMemo(
+    () => diffPayload?.files.filter((f) => f.is_conflicted) || [],
+    [diffPayload]
+  );
+
+  const currentConflictIndex = useMemo(
+    () => conflictedFiles.findIndex((f) => f.path === selectedFile?.path),
+    [conflictedFiles, selectedFile]
+  );
+
+  const scrollToFirstConflict = () => {
+    if (!diffContainerRef.current) return;
+    const items = diffContainerRef.current.querySelectorAll(
+      '.diff-line-content, .diff-line-content-item, .diff-line-old, .diff-line-new'
+    );
+    for (const el of items) {
+      if (
+        el.textContent?.includes('<<<<<<<') ||
+        el.textContent?.includes('=======') ||
+        el.textContent?.includes('>>>>>>>')
+      ) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('bg-red/30');
+        setTimeout(() => el.classList.remove('bg-red/30'), 2500);
+        showToast('Jumped to conflict marker');
+        return;
+      }
+    }
+    const firstHunk = diffContainerRef.current.querySelector('.diff-line-old, .diff-line-new');
+    if (firstHunk) {
+      firstHunk.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showToast('Jumped to first diff modification');
+    }
+  };
+
   const hasPrev = currentFileIndex > 0;
   const hasNext = diffPayload && currentFileIndex !== -1 && currentFileIndex < diffPayload.files.length - 1;
 
@@ -488,32 +526,66 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           </div>
         </div>
 
-        {/* Center: File Stepper (Prev / Next File) */}
-        {diffPayload && diffPayload.files.length > 1 && (
-          <div className="flex items-center gap-1 bg-surface0 rounded border border-surface0 px-1 py-0.5">
-            <button
-              type="button"
-              disabled={!hasPrev}
-              onClick={selectPrevFile}
-              className="p-1 text-subtext1 hover:text-text rounded hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-              title="Previous file"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-            <span className="text-[11px] text-subtext1 font-mono px-1.5">
-              {currentFileIndex + 1} of {diffPayload.files.length}
-            </span>
-            <button
-              type="button"
-              disabled={!hasNext}
-              onClick={selectNextFile}
-              className="p-1 text-subtext1 hover:text-text rounded hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-              title="Next file"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
+        {/* Center: File Stepper & Conflict Stepper */}
+        <div className="flex items-center gap-2">
+          {diffPayload && diffPayload.files.length > 1 && (
+            <div className="flex items-center gap-1 bg-surface0 rounded border border-surface0 px-1 py-0.5">
+              <button
+                type="button"
+                disabled={!hasPrev}
+                onClick={selectPrevFile}
+                className="p-1 text-subtext1 hover:text-text rounded hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                title="Previous file (Up / k)"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-[11px] text-subtext1 font-mono px-1.5">
+                {currentFileIndex + 1} of {diffPayload.files.length}
+              </span>
+              <button
+                type="button"
+                disabled={!hasNext}
+                onClick={selectNextFile}
+                className="p-1 text-subtext1 hover:text-text rounded hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                title="Next file (Down / j)"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {conflictedFiles.length > 0 && (
+            <div className="flex items-center gap-1 bg-red/15 border border-red/35 rounded px-1.5 py-0.5 shadow-xs">
+              <AlertTriangle className="w-3.5 h-3.5 text-red shrink-0" />
+              <button
+                type="button"
+                onClick={selectPrevConflictFile}
+                className="p-0.5 text-red hover:bg-red/20 rounded transition-colors cursor-pointer"
+                title="Previous conflict file"
+              >
+                <ChevronLeft className="w-3 h-3" />
+              </button>
+              <button
+                type="button"
+                onClick={selectNextConflictFile}
+                className="text-[11px] font-mono font-bold text-red hover:underline px-0.5 cursor-pointer"
+                title="Jump to next conflict file (Alt+C)"
+              >
+                {selectedFile?.is_conflicted && currentConflictIndex !== -1
+                  ? `Conflict ${currentConflictIndex + 1}/${conflictedFiles.length}`
+                  : `${conflictedFiles.length} Conflict${conflictedFiles.length > 1 ? 's' : ''} (Alt+C)`}
+              </button>
+              <button
+                type="button"
+                onClick={selectNextConflictFile}
+                className="p-0.5 text-red hover:bg-red/20 rounded transition-colors cursor-pointer"
+                title="Next conflict file (Alt+C)"
+              >
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Right: View Mode Toggle & Diff/Blame Switcher */}
         <div className="flex items-center gap-2">
@@ -629,6 +701,16 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={scrollToFirstConflict}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-red/20 hover:bg-red/30 border border-red/40 text-red font-semibold transition-colors cursor-pointer text-xs shadow-xs"
+              title="Scroll directly to conflict marker or first conflict change in this file"
+            >
+              <ArrowDown className="w-3.5 h-3.5 text-red" />
+              <span>Jump to Conflict</span>
+            </button>
+
             {currentRepo && (
               <button
                 type="button"

@@ -45,6 +45,8 @@ interface GitState {
   selectFile: (file: ChangedFile | null) => void;
   selectNextFile: () => void;
   selectPrevFile: () => void;
+  selectNextConflictFile: () => void;
+  selectPrevConflictFile: () => void;
   setViewMode: (mode: ViewMode) => void;
   setFileListLayout: (layout: 'flat' | 'tree') => void;
   remotes: string[];
@@ -430,6 +432,38 @@ export const useGitStore = create<GitState>((set, get) => ({
         get().fetchFileBlame(prev.path);
       }
     }
+  },
+
+  selectNextConflictFile: () => {
+    const { diffPayload, selectedFile } = get();
+    if (!diffPayload || diffPayload.files.length === 0) return;
+    const conflicted = diffPayload.files.filter((f) => f.is_conflicted);
+    if (conflicted.length === 0) return;
+
+    if (!selectedFile || !selectedFile.is_conflicted) {
+      get().selectFile(conflicted[0]);
+      return;
+    }
+
+    const currentIdx = conflicted.findIndex((f) => f.path === selectedFile.path);
+    const nextIdx = (currentIdx + 1) % conflicted.length;
+    get().selectFile(conflicted[nextIdx]);
+  },
+
+  selectPrevConflictFile: () => {
+    const { diffPayload, selectedFile } = get();
+    if (!diffPayload || diffPayload.files.length === 0) return;
+    const conflicted = diffPayload.files.filter((f) => f.is_conflicted);
+    if (conflicted.length === 0) return;
+
+    if (!selectedFile || !selectedFile.is_conflicted) {
+      get().selectFile(conflicted[conflicted.length - 1]);
+      return;
+    }
+
+    const currentIdx = conflicted.findIndex((f) => f.path === selectedFile.path);
+    const prevIdx = (currentIdx - 1 + conflicted.length) % conflicted.length;
+    get().selectFile(conflicted[prevIdx]);
   },
 
   setFileViewTab: (tab: 'diff' | 'blame') => {
