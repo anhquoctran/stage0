@@ -91,6 +91,10 @@ export const MenuBar: React.FC = () => {
 
   const fileManagerName = getOsFileManagerName();
 
+  const isMac =
+    typeof navigator !== 'undefined' &&
+    /Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+
   const menuBarRef = useRef<HTMLDivElement>(null);
 
   // Close menus when clicking outside or pressing Escape
@@ -110,8 +114,7 @@ export const MenuBar: React.FC = () => {
         setShowOpenInSubmenu(false);
       } else if (
         (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        (e.key.toLowerCase() === 't' || e.code === 'KeyT')
+        (e.key === ',' || (e.shiftKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT')))
       ) {
         e.preventDefault();
         setActiveMenu(null);
@@ -121,6 +124,13 @@ export const MenuBar: React.FC = () => {
       } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'o') {
         e.preventDefault();
         openRepoDialog();
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key.toLowerCase() === 'o' || e.code === 'KeyO')
+      ) {
+        e.preventDefault();
+        setIsCloneModalOpen(true);
       }
     };
 
@@ -130,7 +140,7 @@ export const MenuBar: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [openRepoDialog, setIsPreferencesOpen]);
+  }, [openRepoDialog, setIsPreferencesOpen, setIsCloneModalOpen]);
 
   const handleMenuClick = (menuName: string) => {
     if (activeMenu === menuName) {
@@ -218,6 +228,9 @@ export const MenuBar: React.FC = () => {
                   <Download className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Clone Repository...</span>
                 </div>
+                <span className="text-[10px] text-subtext0 font-mono">
+                  {isMac ? '⌘⇧O' : 'Ctrl+Shift+O'}
+                </span>
               </button>
 
               {/* Recent Repos Submenu Trigger */}
@@ -284,7 +297,9 @@ export const MenuBar: React.FC = () => {
                   <Sliders className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Preferences...</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+T</span>
+                <span className="text-[10px] text-subtext0 font-mono">
+                  {isMac ? '⌘,' : 'Ctrl+,'}
+                </span>
               </button>
 
               <div className="my-1 border-t border-surface0" />
@@ -995,7 +1010,7 @@ export const MenuBar: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Preferences</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+T</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{isMac ? '⌘,' : 'Ctrl+,'}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Refresh Virtual Diff</span>

@@ -82,8 +82,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         return;
       }
 
-      // Ctrl-, for Preferences
-      if (e.key === ',') {
+      // Ctrl-, for Preferences (and Ctrl-Shift-T as fallback)
+      if (e.key === ',' || (e.shiftKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT'))) {
         e.preventDefault();
         setIsPreferencesOpen(true);
       }

@@ -47,6 +47,7 @@ export const MainLayout: React.FC = () => {
     setIsPullFromOpen,
     setIsRebaseFromOpen,
     openRepoDialog,
+    setIsCloneModalOpen,
     remoteUrl,
     compareBranch,
     toastMessage,
@@ -165,11 +166,17 @@ export const MainLayout: React.FC = () => {
         selectPrevFile();
       } else if (
         (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        (e.key.toLowerCase() === 't' || e.code === 'KeyT')
+        (e.key === ',' || (e.shiftKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT')))
       ) {
         e.preventDefault();
         setIsPreferencesOpen(true);
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key.toLowerCase() === 'o' || e.code === 'KeyO')
+      ) {
+        e.preventDefault();
+        setIsCloneModalOpen(true);
       } else if (
         (e.ctrlKey || e.metaKey) &&
         e.shiftKey &&
