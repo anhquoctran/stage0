@@ -177,7 +177,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   return (
     <section className="flex-1 flex flex-col h-full bg-base overflow-hidden select-none">
       {/* File Diff Header Toolbar (Fork / GitHub Desktop style) */}
-      <div className="h-11 border-b border-surface0 bg-mantle px-3.5 flex items-center justify-between shrink-0">
+      <div className="h-11 border-b border-surface0 bg-mantle px-3.5 flex items-center justify-between shrink-0 relative z-20">
         {/* Left: Breadcrumbs & Copy Path */}
         <div className="flex items-center gap-2.5 min-w-0">
           <FileCode className="w-4 h-4 text-blue shrink-0" />
