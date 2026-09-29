@@ -19,10 +19,13 @@ import {
   CheckCircle2,
   History,
   GitCommit,
+  Code2,
+  RotateCw,
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { ChangedFile, MrDiffPayload, ViewMode, FileBlamePayload } from '../../types/git';
 import { extractFileHunks, inferLanguage } from '../../utils/diffParser';
+import { openFileInEditor } from '../../utils/fileActions';
 import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
@@ -60,6 +63,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     remoteUrl,
     showToast,
     currentRepo,
+    conflictReport,
+    refreshDiff,
   } = useGitStore();
   const { theme } = useThemeStore();
   const {
@@ -592,6 +597,69 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           )}
         </div>
       </div>
+
+      {/* Conflicted File Notification & External Resolution Action Bar */}
+      {selectedFile.is_conflicted && (
+        <div className="bg-red/10 border-b border-red/30 px-3.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-text select-none shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1 rounded bg-red/20 text-red border border-red/30 shrink-0">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-red">
+                  Unmerged Conflict in this file
+                </span>
+                {conflictReport?.details?.find((d) => d.path === selectedFile.path)?.conflict_type && (
+                  <span className="text-[10px] uppercase px-1.5 py-0.2 rounded bg-surface1 text-subtext1 font-bold">
+                    {conflictReport.details.find((d) => d.path === selectedFile.path)?.conflict_type}
+                  </span>
+                )}
+                {conflictReport?.details?.find((d) => d.path === selectedFile.path)?.conflict_markers_count ? (
+                  <span className="text-[10px] text-red font-semibold">
+                    ({conflictReport.details.find((d) => d.path === selectedFile.path)?.conflict_markers_count} active marker(s) on disk)
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-[11px] text-subtext1 mt-0.5 truncate max-w-2xl">
+                {conflictReport?.details?.find((d) => d.path === selectedFile.path)?.message ||
+                  'Stage0 is a virtual sandbox and does not modify your repository. Please resolve this conflict in your external editor.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {currentRepo && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await openFileInEditor(currentRepo.local_path, selectedFile.path);
+                    showToast(`Opened ${selectedFile.path} in VS Code`);
+                  } catch (err) {
+                    showToast(`Failed to open in VS Code: ${err}`);
+                  }
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface0 hover:bg-surface1 border border-surface1 text-text font-medium transition-colors cursor-pointer text-xs"
+                title="Open this file directly in Visual Studio Code to resolve conflict"
+              >
+                <Code2 className="w-3.5 h-3.5 text-subtext0" />
+                <span>Resolve in VS Code</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={refreshDiff}
+              className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface0 hover:bg-surface1 border border-surface1 text-text font-medium transition-colors cursor-pointer text-xs"
+              title="Re-check diff after resolving conflict in external tool (Ctrl+R)"
+            >
+              <RotateCw className="w-3 h-3 text-subtext0" />
+              <span>Refresh Diff</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Area: either Blame View or Visual Diff */}
       {fileViewTab === 'blame' ? (

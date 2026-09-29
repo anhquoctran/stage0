@@ -114,6 +114,13 @@ export async function openRepoInTerminal(repoPath: string): Promise<void> {
 }
 
 /**
+ * Opens specific file in Visual Studio Code
+ */
+export async function openFileInEditor(repoPath: string, filePath: string): Promise<void> {
+  await invoke('open_file_in_editor', { repoPath, filePath });
+}
+
+/**
  * Returns the OS-specific file manager name ('Finder' on macOS, 'File Manager' on Linux, 'File Explorer' on Windows).
  */
 export function getOsFileManagerName(): string {

@@ -31,6 +31,9 @@ pub fn get_mr_diff(
         super::ConflictReport {
             has_conflicts: false,
             conflicted_files: Vec::new(),
+            details: Vec::new(),
+            base_branch: Some(base.to_string()),
+            compare_branch: Some(compare.to_string()),
         }
     });
 

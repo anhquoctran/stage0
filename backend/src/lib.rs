@@ -42,6 +42,7 @@ pub fn run() {
             commands::get_git_remote_url,
             commands::reveal_file_in_os,
             commands::open_repo_in,
+            commands::open_file_in_editor,
             commands::check_rebase_status,
             commands::get_file_blame,
             commands::window_minimize,
