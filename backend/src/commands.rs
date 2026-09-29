@@ -4,11 +4,11 @@ use tauri_plugin_dialog::DialogExt;
 use crate::db::Database;
 use crate::git::{
     branches::list_branches,
-    conflict::check_conflicts,
+    conflict::{check_conflicts, get_conflicted_file_preview as calc_conflicted_file_preview},
     diff::get_mr_diff as calc_mr_diff,
     ops::{git_sync, list_remotes, get_remote_url, is_rebase_in_progress, GitSyncOptions},
     blame::get_file_blame as calc_file_blame,
-    BranchList, ConflictReport, MrDiffPayload, RepoInfo, FileBlamePayload,
+    BranchList, ConflictReport, ConflictFilePreview, MrDiffPayload, RepoInfo, FileBlamePayload,
 };
 use crate::watcher::WatcherState;
 
@@ -213,6 +213,16 @@ pub async fn check_merge_conflicts(
     compare: String,
 ) -> Result<ConflictReport, String> {
     check_conflicts(&repo_path, &base, &compare)
+}
+
+#[tauri::command]
+pub async fn get_conflicted_file_preview(
+    repo_path: String,
+    base: String,
+    compare: String,
+    file_path: String,
+) -> Result<ConflictFilePreview, String> {
+    calc_conflicted_file_preview(&repo_path, &base, &compare, &file_path)
 }
 
 #[tauri::command]

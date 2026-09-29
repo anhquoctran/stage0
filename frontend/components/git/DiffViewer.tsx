@@ -22,6 +22,8 @@ import {
   Code2,
   RotateCw,
   ArrowDown,
+  GitMerge,
+  ShieldAlert,
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { ChangedFile, MrDiffPayload, ViewMode, FileBlamePayload } from '../../types/git';
@@ -33,6 +35,7 @@ import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { FileActionMenu } from './FileActionMenu';
 import { BlameViewer } from './BlameViewer';
 import { InlineBlame } from './InlineBlame';
+import { ConflictViewer } from './ConflictViewer';
 
 interface DiffViewerProps {
   selectedFile: ChangedFile | null;
@@ -67,6 +70,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     showToast,
     currentRepo,
     conflictReport,
+    activeConflictPreview,
     refreshDiff,
   } = useGitStore();
   const { theme } = useThemeStore();
@@ -589,8 +593,24 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
         {/* Right: View Mode Toggle & Diff/Blame Switcher */}
         <div className="flex items-center gap-2">
-          {/* Diff / Blame Tab Switcher */}
+          {/* Diff / Blame / Conflict Tab Switcher */}
           <div className="flex items-center bg-surface0 rounded-md p-0.5 border border-surface0">
+            {selectedFile?.is_conflicted && (
+              <button
+                type="button"
+                onClick={() => setFileViewTab('conflicts')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
+                  fileViewTab === 'conflicts'
+                    ? 'bg-red text-white shadow-xs'
+                    : 'text-red hover:bg-red/20'
+                }`}
+                title="Inspect 3-way collision blocks side-by-side"
+              >
+                <GitMerge className="w-3.5 h-3.5" />
+                <span>Conflicts 3-Way</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setFileViewTab('diff')}
@@ -703,6 +723,18 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
+              onClick={() => setFileViewTab('conflicts')}
+              className="flex items-center gap-1.5 px-3 py-1 rounded bg-red hover:bg-red/90 text-white font-bold transition-colors cursor-pointer text-xs shadow-xs"
+              title="Inspect 3-way collision blocks side-by-side"
+            >
+              <GitMerge className="w-3.5 h-3.5" />
+              <span>
+                3-Way Conflict View {activeConflictPreview?.conflict_regions.length ? `(${activeConflictPreview.conflict_regions.length})` : ''}
+              </span>
+            </button>
+
+            <button
+              type="button"
               onClick={scrollToFirstConflict}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-red/20 hover:bg-red/30 border border-red/40 text-red font-semibold transition-colors cursor-pointer text-xs shadow-xs"
               title="Scroll directly to conflict marker or first conflict change in this file"
@@ -743,8 +775,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         </div>
       )}
 
-      {/* Main Area: either Blame View or Visual Diff */}
-      {fileViewTab === 'blame' ? (
+      {/* Main Area: Conflict View, Blame View, or Visual Diff */}
+      {fileViewTab === 'conflicts' && selectedFile?.is_conflicted ? (
+        <ConflictViewer onSwitchToDiff={() => setFileViewTab('diff')} />
+      ) : fileViewTab === 'blame' ? (
         <BlameViewer />
       ) : (
         <div
@@ -752,6 +786,45 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           onClick={handleDiffClick}
           className="flex-1 overflow-auto bg-base p-2 relative"
         >
+          {/* Conflict Alert & Quick Summary Card inside Diff View */}
+          {selectedFile.is_conflicted && activeConflictPreview && activeConflictPreview.conflict_regions.length > 0 && (
+            <div className="mb-3 border border-red/40 bg-gradient-to-r from-red/15 via-red/10 to-red/5 rounded-lg p-3 shadow-xs">
+              <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 text-red shrink-0" />
+                  <span className="text-xs font-bold text-red uppercase tracking-wider">
+                    Merge Conflict Collision ({activeConflictPreview.conflict_regions.length} block{activeConflictPreview.conflict_regions.length > 1 ? 's' : ''})
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFileViewTab('conflicts')}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-red text-white text-xs font-bold hover:bg-red/90 transition-colors cursor-pointer shadow-xs"
+                >
+                  <GitMerge className="w-3.5 h-3.5" />
+                  <span>Open 3-Way Side-by-Side Inspector</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-subtext1 mb-2 leading-relaxed">
+                Standard git diff only compares against the common ancestor. Both <code className="text-text font-semibold bg-surface0 px-1 py-0.5 rounded border border-surface1">{baseBranch}</code> and <code className="text-text font-semibold bg-surface0 px-1 py-0.5 rounded border border-surface1">{compareBranch}</code> modified overlapping lines in this file:
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono">
+                {activeConflictPreview.conflict_regions.slice(0, 2).map((r, idx) => (
+                  <div key={idx} className="bg-mantle/90 border border-surface0 rounded p-2 text-[11px]">
+                    <div className="text-[10px] font-bold text-red mb-1">
+                      Collision Region #{idx + 1} (Lines {r.start_line} – {r.end_line})
+                    </div>
+                    <div className="text-subtext0 truncate max-w-full">
+                      <span className="text-red font-semibold">Target ({baseBranch}):</span> {r.base_code.split('\n')[0] || '(empty)'}
+                    </div>
+                    <div className="text-subtext0 truncate max-w-full">
+                      <span className="text-blue font-semibold">Source ({compareBranch}):</span> {r.compare_code.split('\n')[0] || '(empty)'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {diffData && hunks.length > 0 ? (
             <div className="border border-surface0 rounded-lg overflow-hidden bg-base shadow-sm">
               <DiffView
