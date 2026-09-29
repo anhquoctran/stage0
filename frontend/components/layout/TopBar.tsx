@@ -180,7 +180,7 @@ export const TopBar: React.FC = () => {
         {/* Left: Repository Dropdown Pill (GitHub Desktop / Fork style) */}
         <div className="flex items-center gap-3">
           <div className="relative" ref={recentDropdownRef}>
-            <div className="flex items-center rounded-md border border-surface0 bg-surface0 overflow-hidden hover:border-surface2 transition-colors shadow-xs">
+            <div className="flex items-stretch rounded-md border border-surface0 bg-surface0 overflow-hidden hover:border-surface2 transition-colors shadow-xs">
               <button
                 type="button"
                 onClick={openRepoDialog}
@@ -207,10 +207,10 @@ export const TopBar: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsRecentOpen(!isRecentOpen)}
-                className="px-1.5 py-1.5 border-l border-surface0 text-subtext1 hover:text-text hover:bg-surface1 transition-colors cursor-pointer"
+                className="flex items-center justify-center px-2 border-l border-surface0 text-subtext1 hover:text-text hover:bg-surface1 transition-colors cursor-pointer"
                 title="Recent repositories"
               >
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -444,7 +444,7 @@ export const TopBar: React.FC = () => {
 
                 {/* PULL SPLIT BUTTON */}
                 <div className="relative flex items-center" ref={pullMenuRef}>
-                  <div className="flex items-center rounded overflow-hidden">
+                  <div className="flex items-stretch rounded overflow-hidden">
                     <button
                       type="button"
                       disabled={isSyncing}
@@ -462,7 +462,7 @@ export const TopBar: React.FC = () => {
                         setIsPullMenuOpen((v) => !v);
                         setIsRebaseMenuOpen(false);
                       }}
-                      className="px-1 py-1 text-subtext1 hover:text-text hover:bg-surface1 border-l border-surface1 transition-colors cursor-pointer"
+                      className="flex items-center justify-center px-1.5 text-subtext1 hover:text-text hover:bg-surface1 border-l border-surface1 transition-colors cursor-pointer"
                       title="Pull options (Ctrl+Alt+P)"
                     >
                       <ChevronDown className="w-2.5 h-2.5" />
@@ -509,7 +509,7 @@ export const TopBar: React.FC = () => {
 
                 {/* REBASE SPLIT BUTTON */}
                 <div className="relative flex items-center" ref={rebaseMenuRef}>
-                  <div className="flex items-center rounded overflow-hidden">
+                  <div className="flex items-stretch rounded overflow-hidden">
                     <button
                       type="button"
                       disabled={isSyncing}
@@ -527,7 +527,7 @@ export const TopBar: React.FC = () => {
                         setIsRebaseMenuOpen((v) => !v);
                         setIsPullMenuOpen(false);
                       }}
-                      className="px-1 py-1 text-subtext1 hover:text-text hover:bg-surface1 border-l border-surface1 transition-colors cursor-pointer"
+                      className="flex items-center justify-center px-1.5 text-subtext1 hover:text-text hover:bg-surface1 border-l border-surface1 transition-colors cursor-pointer"
                       title="Rebase options (Ctrl+Alt+R)"
                     >
                       <ChevronDown className="w-2.5 h-2.5" />
