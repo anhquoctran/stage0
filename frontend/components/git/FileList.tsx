@@ -72,6 +72,23 @@ export const FileList: React.FC<FileListProps> = ({
     }));
   };
 
+  // Auto-expand folder of selected file if collapsed
+  React.useEffect(() => {
+    if (!selectedFile) return;
+    const parts = selectedFile.path.split('/');
+    if (parts.length > 1) {
+      const folder = parts.slice(0, -1).join('/');
+      setCollapsedFolders((prev) => {
+        if (prev[folder]) {
+          const next = { ...prev };
+          delete next[folder];
+          return next;
+        }
+        return prev;
+      });
+    }
+  }, [selectedFile]);
+
   // Group files into folder tree
   const folderTree = useMemo(() => {
     const tree: Record<string, ChangedFile[]> = {};
