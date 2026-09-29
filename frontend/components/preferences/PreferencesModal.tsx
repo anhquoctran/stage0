@@ -10,6 +10,7 @@ import {
   Check,
   Sliders,
   AlertCircle,
+  AlertTriangle,
   ChevronDown,
   Search,
   Monitor,
@@ -38,6 +39,9 @@ import { GitCredentialsTab } from './GitCredentialsTab';
 import { AiMcpTab } from './AiMcpTab';
 import { SandboxTab } from './SandboxTab';
 import { useGitStore } from '../../store/useGitStore';
+import { useAiMcpStore } from '../../store/useAiMcpStore';
+import { DEFAULT_AI_CONFIG } from '../../constants/aiPresets';
+import { AiConfig } from '../../types/ai';
 import { SandboxType } from '../../types/git';
 
 type PreferenceTab = 'appearance' | 'fonts' | 'credentials' | 'ai' | 'sandbox';
@@ -53,6 +57,7 @@ interface PreferencesBaseline {
   enableLigatures: boolean;
   showInlineBlame: boolean;
   sandboxType: SandboxType;
+  aiConfig: AiConfig;
 }
 
 export const PreferencesModal: React.FC = () => {
@@ -75,7 +80,13 @@ export const PreferencesModal: React.FC = () => {
   const {
     activeSandboxType: storedSandboxType,
     setActiveSandbox,
+    showToast,
   } = useGitStore();
+  const {
+    aiConfig: storedAiConfig,
+    updateAiConfig,
+    resetAiConfig,
+  } = useAiMcpStore();
 
   const [activeTab, setActiveTab] = useState<PreferenceTab>('appearance');
 
@@ -90,6 +101,7 @@ export const PreferencesModal: React.FC = () => {
   const [draftEnableLigatures, setDraftEnableLigatures] = useState(storedEnableLigatures);
   const [draftShowInlineBlame, setDraftShowInlineBlame] = useState(storedShowInlineBlame);
   const [draftSandboxType, setDraftSandboxType] = useState<SandboxType>(storedSandboxType);
+  const [draftAiConfig, setDraftAiConfig] = useState<AiConfig>({ ...storedAiConfig });
 
   // Baseline Snapshot (committed values)
   const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
@@ -103,9 +115,11 @@ export const PreferencesModal: React.FC = () => {
     enableLigatures: storedEnableLigatures,
     showInlineBlame: storedShowInlineBlame,
     sandboxType: storedSandboxType,
+    aiConfig: { ...storedAiConfig },
   });
 
   const [isApplied, setIsApplied] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Synchronize draft states and baseline whenever modal is opened
   useEffect(() => {
@@ -120,6 +134,7 @@ export const PreferencesModal: React.FC = () => {
       setDraftEnableLigatures(storedEnableLigatures);
       setDraftShowInlineBlame(storedShowInlineBlame);
       setDraftSandboxType(storedSandboxType);
+      setDraftAiConfig({ ...storedAiConfig });
 
       setSavedBaseline({
         themeMode: storedThemeMode,
@@ -132,9 +147,11 @@ export const PreferencesModal: React.FC = () => {
         enableLigatures: storedEnableLigatures,
         showInlineBlame: storedShowInlineBlame,
         sandboxType: storedSandboxType,
+        aiConfig: { ...storedAiConfig },
       });
 
       setIsApplied(false);
+      setShowResetConfirm(false);
     }
   }, [
     isPreferencesOpen,
@@ -148,22 +165,40 @@ export const PreferencesModal: React.FC = () => {
     storedEnableLigatures,
     storedShowInlineBlame,
     storedSandboxType,
+    storedAiConfig,
   ]);
 
-  // Check if there are any uncommitted changes relative to saved baseline
-  const hasUnsavedChanges = useMemo(() => {
-    return (
-      draftThemeMode !== savedBaseline.themeMode ||
-      draftFontFamily !== savedBaseline.fontFamily ||
-      draftFontSize !== savedBaseline.fontSize ||
-      draftIsBold !== savedBaseline.isBold ||
-      draftIsItalic !== savedBaseline.isItalic ||
-      draftIsUnderline !== savedBaseline.isUnderline ||
-      draftLineSpacing !== savedBaseline.lineSpacing ||
-      draftEnableLigatures !== savedBaseline.enableLigatures ||
-      draftShowInlineBlame !== savedBaseline.showInlineBlame ||
-      draftSandboxType !== savedBaseline.sandboxType
-    );
+  // Track unsaved changes per domain and in total
+  const unsavedBreakdown = useMemo(() => {
+    let appearance = 0;
+    if (draftThemeMode !== savedBaseline.themeMode) appearance++;
+
+    let fonts = 0;
+    if (draftFontFamily !== savedBaseline.fontFamily) fonts++;
+    if (draftFontSize !== savedBaseline.fontSize) fonts++;
+    if (draftIsBold !== savedBaseline.isBold) fonts++;
+    if (draftIsItalic !== savedBaseline.isItalic) fonts++;
+    if (draftIsUnderline !== savedBaseline.isUnderline) fonts++;
+    if (draftLineSpacing !== savedBaseline.lineSpacing) fonts++;
+    if (draftEnableLigatures !== savedBaseline.enableLigatures) fonts++;
+    if (draftShowInlineBlame !== savedBaseline.showInlineBlame) fonts++;
+
+    let sandbox = 0;
+    if (draftSandboxType !== savedBaseline.sandboxType) sandbox++;
+
+    let ai = 0;
+    if (draftAiConfig.provider !== savedBaseline.aiConfig.provider) ai++;
+    if (draftAiConfig.model !== savedBaseline.aiConfig.model) ai++;
+    if (draftAiConfig.apiKey !== savedBaseline.aiConfig.apiKey) ai++;
+    if (draftAiConfig.baseUrl !== savedBaseline.aiConfig.baseUrl) ai++;
+    if (draftAiConfig.temperature !== savedBaseline.aiConfig.temperature) ai++;
+    if (draftAiConfig.maxTokens !== savedBaseline.aiConfig.maxTokens) ai++;
+    if (draftAiConfig.streamResponse !== savedBaseline.aiConfig.streamResponse) ai++;
+    if (draftAiConfig.enableCodeReviewAssist !== savedBaseline.aiConfig.enableCodeReviewAssist) ai++;
+    if (draftAiConfig.systemPrompt !== savedBaseline.aiConfig.systemPrompt) ai++;
+
+    const total = appearance + fonts + sandbox + ai;
+    return { appearance, fonts, sandbox, ai, total };
   }, [
     draftThemeMode,
     draftFontFamily,
@@ -175,8 +210,12 @@ export const PreferencesModal: React.FC = () => {
     draftEnableLigatures,
     draftShowInlineBlame,
     draftSandboxType,
+    draftAiConfig,
     savedBaseline,
   ]);
+
+  const totalUnsaved = unsavedBreakdown.total;
+  const hasUnsavedChanges = totalUnsaved > 0;
 
   // Custom Font Dropdown State
   const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
@@ -228,11 +267,16 @@ export const PreferencesModal: React.FC = () => {
     applyThemeToDocument(resolveTheme(mode));
   };
 
-  // Reset to default action
-  const handleResetToDefault = () => {
-    setDraftThemeMode('system');
+  // Reset to default action with immediate commit
+  const handleConfirmResetToDefault = async () => {
+    // 1. Commit Theme default
+    setThemeMode('system');
     applyThemeToDocument(resolveTheme('system'));
+    setDraftThemeMode('system');
 
+    // 2. Commit Font defaults
+    updateViewerFontSettings(DEFAULT_VIEWER_FONT_SETTINGS);
+    applyViewerFontToDocument(DEFAULT_VIEWER_FONT_SETTINGS);
     setDraftFontFamily(DEFAULT_VIEWER_FONT_SETTINGS.fontFamily);
     setDraftFontSize(DEFAULT_VIEWER_FONT_SETTINGS.fontSize);
     setDraftIsBold(DEFAULT_VIEWER_FONT_SETTINGS.isBold);
@@ -240,11 +284,33 @@ export const PreferencesModal: React.FC = () => {
     setDraftIsUnderline(DEFAULT_VIEWER_FONT_SETTINGS.isUnderline);
     setDraftLineSpacing(DEFAULT_VIEWER_FONT_SETTINGS.lineSpacing);
     setDraftEnableLigatures(DEFAULT_VIEWER_FONT_SETTINGS.enableLigatures);
+
+    // 3. Commit Blame default
+    setShowInlineBlame(true);
     setDraftShowInlineBlame(true);
+
+    // 4. Commit Sandbox default
+    await setActiveSandbox('in_memory');
     setDraftSandboxType('in_memory');
+
+    // 5. Commit AI default
+    resetAiConfig();
+    setDraftAiConfig({ ...DEFAULT_AI_CONFIG });
+
+    // 6. Update savedBaseline to defaults immediately (unsavedCount becomes 0, no badge)
+    setSavedBaseline({
+      themeMode: 'system',
+      ...DEFAULT_VIEWER_FONT_SETTINGS,
+      showInlineBlame: true,
+      sandboxType: 'in_memory',
+      aiConfig: { ...DEFAULT_AI_CONFIG },
+    });
+
+    setShowResetConfirm(false);
+    showToast('All preferences have been reset to defaults and committed');
   };
 
-  // Apply (save only)
+  // Apply (commit all transaction changes)
   const handleApply = async () => {
     const committedFontSettings: ViewerFontSettings = {
       fontFamily: draftFontFamily,
@@ -269,19 +335,23 @@ export const PreferencesModal: React.FC = () => {
       await setActiveSandbox(draftSandboxType);
     }
 
-    // Update baseline
+    // Commit AI configuration
+    updateAiConfig(draftAiConfig);
+
+    // Update baseline to match committed drafts
     setSavedBaseline({
       themeMode: draftThemeMode,
       ...committedFontSettings,
       showInlineBlame: draftShowInlineBlame,
       sandboxType: draftSandboxType,
+      aiConfig: { ...draftAiConfig },
     });
 
     setIsApplied(true);
     setTimeout(() => setIsApplied(false), 1500);
   };
 
-  // OK (save then close)
+  // OK (commit all transaction changes then close)
   const handleOk = async () => {
     await handleApply();
     setIsPreferencesOpen(false);
@@ -297,8 +367,19 @@ export const PreferencesModal: React.FC = () => {
     setThemeMode(savedBaseline.themeMode);
     updateViewerFontSettings(savedBaseline);
     setShowInlineBlame(savedBaseline.showInlineBlame);
+
+    // Rollback draft states to baseline
+    setDraftThemeMode(savedBaseline.themeMode);
+    setDraftFontFamily(savedBaseline.fontFamily);
+    setDraftFontSize(savedBaseline.fontSize);
+    setDraftIsBold(savedBaseline.isBold);
+    setDraftIsItalic(savedBaseline.isItalic);
+    setDraftIsUnderline(savedBaseline.isUnderline);
+    setDraftLineSpacing(savedBaseline.lineSpacing);
+    setDraftEnableLigatures(savedBaseline.enableLigatures);
     setDraftShowInlineBlame(savedBaseline.showInlineBlame);
     setDraftSandboxType(savedBaseline.sandboxType);
+    setDraftAiConfig({ ...savedBaseline.aiConfig });
 
     setIsPreferencesOpen(false);
   };
@@ -321,18 +402,26 @@ export const PreferencesModal: React.FC = () => {
     (f) => f.fontFamilyName.toLowerCase() === draftFontFamily.toLowerCase()
   ) || { fontFamilyName: draftFontFamily, ligaturesSupport: currentFontSupportsLigatures };
 
-  const tabs: { id: PreferenceTab; label: string; sublabel: string; icon: React.ReactNode }[] = [
+  const tabs: {
+    id: PreferenceTab;
+    label: string;
+    sublabel: string;
+    icon: React.ReactNode;
+    unsavedCount?: number;
+  }[] = [
     {
       id: 'appearance',
       label: 'Appearance',
       sublabel: 'Theme & Colors',
       icon: <Palette className="w-4 h-4" />,
+      unsavedCount: unsavedBreakdown.appearance,
     },
     {
       id: 'fonts',
       label: 'Viewer Fonts',
       sublabel: 'Diff & Raw Typography',
       icon: <Type className="w-4 h-4" />,
+      unsavedCount: unsavedBreakdown.fonts,
     },
     {
       id: 'credentials',
@@ -345,28 +434,37 @@ export const PreferencesModal: React.FC = () => {
       label: 'AI & MCP',
       sublabel: 'Models, Agents & Tools',
       icon: <Bot className="w-4 h-4" />,
+      unsavedCount: unsavedBreakdown.ai,
     },
     {
       id: 'sandbox',
       label: 'Sandbox Engine',
       sublabel: 'InMemory / Worktree / Docker',
       icon: <Box className="w-4 h-4" />,
+      unsavedCount: unsavedBreakdown.sandbox,
     },
   ];
 
   return (
     <div className="fixed inset-0 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
       <div className="bg-mantle border border-surface0 max-w-4xl w-full shadow-2xl overflow-hidden flex flex-col h-[640px] max-h-[90vh] animate-in zoom-in-95 duration-150">
-        {/* Header */}
+        {/* Header with Title and Unsaved Badge */}
         <div className="px-6 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 bg-surface0 border border-surface1 flex items-center justify-center text-text shadow-xs">
               <Sliders className="w-4 h-4 text-subtext0" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-text">Preferences</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-text">Preferences</h2>
+                {totalUnsaved > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-400/15 text-amber-400 border border-amber-400/30">
+                    {totalUnsaved} unsaved
+                  </span>
+                )}
+              </div>
               <p className="text-[11px] text-subtext0">
-                Configure Appearance, Viewer Typography, and Secure Git Credentials
+                Configure Appearance, Viewer Typography, Sandbox Engine, and AI
               </p>
             </div>
           </div>
@@ -410,7 +508,7 @@ export const PreferencesModal: React.FC = () => {
                     >
                       {tab.icon}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1 pr-1">
                       <div className="text-xs font-semibold leading-tight truncate">
                         {tab.label}
                       </div>
@@ -418,6 +516,11 @@ export const PreferencesModal: React.FC = () => {
                         {tab.sublabel}
                       </div>
                     </div>
+                    {Boolean(tab.unsavedCount && tab.unsavedCount > 0) && (
+                      <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded-full bg-amber-400/15 text-amber-400 border border-amber-400/30 shrink-0">
+                        {tab.unsavedCount}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -893,7 +996,12 @@ export const PreferencesModal: React.FC = () => {
             {/* TAB 4: AI & MCP */}
             {activeTab === 'ai' && (
               <div className="animate-in fade-in duration-100">
-                <AiMcpTab />
+                <AiMcpTab
+                  draftAiConfig={draftAiConfig}
+                  onUpdateAiConfig={(partial) =>
+                    setDraftAiConfig((prev) => ({ ...prev, ...partial }))
+                  }
+                />
               </div>
             )}
 
@@ -916,18 +1024,18 @@ export const PreferencesModal: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={handleResetToDefault}
+              onClick={() => setShowResetConfirm(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
-              title="Reset all settings to system defaults"
+              title="Reset all settings to application defaults"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset to default</span>
             </button>
 
-            {hasUnsavedChanges && (
-              <span className="hidden sm:flex items-center gap-1.5 text-[11px] text-amber-400 font-medium">
-                <AlertCircle className="w-3.5 h-3.5" />
-                <span>Uncommitted changes in transaction</span>
+            {totalUnsaved > 0 && (
+              <span className="flex items-center gap-1.5 text-[11px] font-mono text-amber-400 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span>{totalUnsaved} unsaved</span>
               </span>
             )}
           </div>
@@ -980,6 +1088,42 @@ export const PreferencesModal: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog for Reset to Defaults */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-[60] bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-100">
+          <div className="bg-mantle border border-surface0 max-w-md w-full p-5 rounded-xl shadow-2xl space-y-4 animate-in zoom-in-95 duration-100">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-surface0 border border-surface1 text-amber-400 shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-text">Reset all preferences to default?</h3>
+                <p className="text-xs text-subtext0 mt-1 leading-relaxed">
+                  This will immediately reset all settings (Theme, Viewer Fonts, Inline Blame, Sandbox Engine, and AI Configuration) to application defaults and commit them.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface0/60">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                className="px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmResetToDefault}
+                className="px-3.5 py-1.5 rounded-lg bg-red text-white text-xs font-semibold hover:bg-red/90 transition-colors cursor-pointer shadow-xs"
+              >
+                Reset to Defaults
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

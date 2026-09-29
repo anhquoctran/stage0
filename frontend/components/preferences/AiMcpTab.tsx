@@ -28,21 +28,30 @@ import {
   DEFAULT_AI_CONFIG,
 } from '../../constants/aiPresets';
 import {
+  AiConfig,
   McpServerConfig,
   McpServerType,
 } from '../../types/ai';
 
-export const AiMcpTab: React.FC = () => {
+interface AiMcpTabProps {
+  draftAiConfig?: AiConfig;
+  onUpdateAiConfig?: (partial: Partial<AiConfig>) => void;
+}
+
+export const AiMcpTab: React.FC<AiMcpTabProps> = ({
+  draftAiConfig,
+  onUpdateAiConfig,
+}) => {
   const {
-    aiConfig,
+    aiConfig: storeAiConfig,
     mcpServers,
     isTestingAi,
     aiTestResult,
     activeSubTab,
     setActiveSubTab,
-    updateAiConfig,
-    resetAiConfig,
-    setProvider,
+    updateAiConfig: storeUpdateAiConfig,
+    resetAiConfig: storeResetAiConfig,
+    setProvider: storeSetProvider,
     testAiConnection,
     clearAiTestResult,
     addMcpServer,
@@ -53,6 +62,29 @@ export const AiMcpTab: React.FC = () => {
     importMcpConfigFile,
     exportMcpConfigFile,
   } = useAiMcpStore();
+
+  const aiConfig = draftAiConfig || storeAiConfig;
+  const updateAiConfig = onUpdateAiConfig || storeUpdateAiConfig;
+  const setProvider = (providerId: AiConfig['provider']) => {
+    if (onUpdateAiConfig) {
+      const preset = AI_PROVIDERS.find((p) => p.id === providerId) || AI_PROVIDERS[0];
+      onUpdateAiConfig({
+        provider: providerId,
+        model: preset.defaultModel,
+        baseUrl: preset.defaultBaseUrl,
+      });
+    } else {
+      storeSetProvider(providerId);
+    }
+  };
+
+  const resetAiConfig = () => {
+    if (onUpdateAiConfig) {
+      onUpdateAiConfig(DEFAULT_AI_CONFIG);
+    } else {
+      storeResetAiConfig();
+    }
+  };
 
   const [showApiKey, setShowApiKey] = useState(false);
   const [testingServerId, setTestingServerId] = useState<string | null>(null);
