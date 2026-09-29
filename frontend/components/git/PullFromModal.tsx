@@ -185,7 +185,7 @@ export const PullFromModal: React.FC = () => {
                 className="mt-0.5 accent-text cursor-pointer"
               />
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-text group-hover:text-blue transition-colors">
+                <div className="text-xs font-semibold text-text group-hover:text-text transition-colors">
                   Rebase local commits onto upstream (<code className="font-mono">--rebase</code>)
                 </div>
                 <div className="text-[10px] text-subtext0">
@@ -203,7 +203,7 @@ export const PullFromModal: React.FC = () => {
                 className="mt-0.5 accent-text cursor-pointer"
               />
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-text group-hover:text-blue transition-colors">
+                <div className="text-xs font-semibold text-text group-hover:text-text transition-colors">
                   Autostash uncommitted changes (<code className="font-mono">--autostash</code>)
                 </div>
                 <div className="text-[10px] text-subtext0">
@@ -222,7 +222,7 @@ export const PullFromModal: React.FC = () => {
                 className="mt-0.5 accent-text cursor-pointer disabled:opacity-40"
               />
               <div className={`min-w-0 ${useRebase ? 'opacity-40' : ''}`}>
-                <div className="text-xs font-semibold text-text group-hover:text-blue transition-colors">
+                <div className="text-xs font-semibold text-text group-hover:text-text transition-colors">
                   Fast-forward only (<code className="font-mono">--ff-only</code>)
                 </div>
                 <div className="text-[10px] text-subtext0">
@@ -241,7 +241,7 @@ export const PullFromModal: React.FC = () => {
                 className="mt-0.5 accent-text cursor-pointer disabled:opacity-40"
               />
               <div className={`min-w-0 ${useRebase ? 'opacity-40' : ''}`}>
-                <div className="text-xs font-semibold text-text group-hover:text-blue transition-colors">
+                <div className="text-xs font-semibold text-text group-hover:text-text transition-colors">
                   No commit (<code className="font-mono">--no-commit</code>)
                 </div>
                 <div className="text-[10px] text-subtext0">

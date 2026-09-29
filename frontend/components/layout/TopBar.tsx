@@ -45,6 +45,7 @@ export const TopBar: React.FC = () => {
     runSync,
     setIsPullFromOpen,
     setIsRebaseFromOpen,
+    isRebasing,
   } = useGitStore();
 
   const [isRecentOpen, setIsRecentOpen] = useState(false);
@@ -152,7 +153,7 @@ export const TopBar: React.FC = () => {
                 className="flex items-center gap-2 px-2.5 py-1 text-xs text-text hover:bg-surface1 transition-colors cursor-pointer"
                 title={currentRepo?.local_path || 'Open Local Git Repository'}
               >
-                <FolderGit2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <FolderGit2 className="w-3.5 h-3.5 text-subtext1 shrink-0" />
                 <div className="text-left max-w-[170px]">
                   <span className="block font-semibold text-text truncate leading-tight text-xs">
                     {currentRepo ? currentRepo.name : 'Open Repository...'}
@@ -207,7 +208,7 @@ export const TopBar: React.FC = () => {
                         className="group flex items-center justify-between px-3 py-2 text-xs hover:bg-surface0 transition-colors cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <FolderOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
                           <div className="min-w-0 flex-1">
                             <div className="font-semibold text-text truncate">
                               {repo.name}
@@ -217,7 +218,7 @@ export const TopBar: React.FC = () => {
                             </div>
                           </div>
                           {currentRepo?.id === repo.id && (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-green shrink-0 ml-1" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-subtext0 shrink-0 ml-1" />
                           )}
                         </div>
                         <button
@@ -226,7 +227,7 @@ export const TopBar: React.FC = () => {
                             e.stopPropagation();
                             removeRecentRepo(repo.id);
                           }}
-                          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface1 text-subtext0 hover:text-red transition-all shrink-0 ml-1.5 cursor-pointer"
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface1 text-subtext0 hover:text-text transition-all shrink-0 ml-1.5 cursor-pointer"
                           title="Remove from recents"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -243,9 +244,9 @@ export const TopBar: React.FC = () => {
                       setIsRecentOpen(false);
                       openRepoDialog();
                     }}
-                    className="w-full text-left px-2.5 py-1.5 text-xs text-blue hover:bg-mantle rounded flex items-center gap-2 font-medium cursor-pointer"
+                    className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center gap-2 font-medium cursor-pointer"
                   >
-                    <FolderOpen className="w-3.5 h-3.5" />
+                    <FolderOpen className="w-3.5 h-3.5 text-subtext1" />
                     <span>Open from Disk...</span>
                   </button>
                 </div>
@@ -469,42 +470,45 @@ export const TopBar: React.FC = () => {
 
                       <button
                         type="button"
+                        disabled={isSyncing || !isRebasing}
                         onClick={() => {
                           setIsRebaseMenuOpen(false);
                           runSync('rebase_continue');
                         }}
-                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-green text-left transition-colors cursor-pointer group"
+                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-text text-left transition-colors cursor-pointer group disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                       >
                         <div className="flex items-center gap-2">
-                          <Play className="w-3.5 h-3.5" />
+                          <Play className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
                           <span>Continue Rebase</span>
                         </div>
                       </button>
 
                       <button
                         type="button"
+                        disabled={isSyncing || !isRebasing}
                         onClick={() => {
                           setIsRebaseMenuOpen(false);
                           runSync('rebase_skip');
                         }}
-                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-amber-400 text-left transition-colors cursor-pointer group"
+                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-text text-left transition-colors cursor-pointer group disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                       >
                         <div className="flex items-center gap-2">
-                          <SkipForward className="w-3.5 h-3.5" />
+                          <SkipForward className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
                           <span>Skip Commit</span>
                         </div>
                       </button>
 
                       <button
                         type="button"
+                        disabled={isSyncing || !isRebasing}
                         onClick={() => {
                           setIsRebaseMenuOpen(false);
                           runSync('rebase_abort');
                         }}
-                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-red text-left transition-colors cursor-pointer group"
+                        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-xs text-text text-left transition-colors cursor-pointer group disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                       >
                         <div className="flex items-center gap-2">
-                          <XCircle className="w-3.5 h-3.5" />
+                          <XCircle className="w-3.5 h-3.5 text-subtext1 group-hover:text-text" />
                           <span>Abort Rebase</span>
                         </div>
                       </button>
@@ -516,7 +520,7 @@ export const TopBar: React.FC = () => {
               <button
                 type="button"
                 onClick={refreshDiff}
-                className="p-1.5 rounded-md bg-surface0 border border-surface0 hover:bg-surface1 text-subtext1 hover:text-blue transition-colors cursor-pointer"
+                className="p-1.5 rounded-md bg-surface0 border border-surface0 hover:bg-surface1 text-subtext1 hover:text-text transition-colors cursor-pointer"
                 title="Refresh MR diff & conflict simulation (Ctrl+R)"
               >
                 <RotateCw className="w-3.5 h-3.5" />

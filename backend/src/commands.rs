@@ -6,7 +6,7 @@ use crate::git::{
     branches::list_branches,
     conflict::check_conflicts,
     diff::get_mr_diff as calc_mr_diff,
-    ops::{git_sync, list_remotes, get_remote_url, GitSyncOptions},
+    ops::{git_sync, list_remotes, get_remote_url, is_rebase_in_progress, GitSyncOptions},
     BranchList, ConflictReport, MrDiffPayload, RepoInfo,
 };
 use crate::watcher::WatcherState;
@@ -236,6 +236,13 @@ pub async fn get_git_remote_url(
     remote: Option<String>,
 ) -> Result<String, String> {
     get_remote_url(&repo_path, remote.as_deref())
+}
+
+#[tauri::command]
+pub async fn check_rebase_status(
+    repo_path: String,
+) -> Result<bool, String> {
+    Ok(is_rebase_in_progress(&repo_path))
 }
 
 #[tauri::command]

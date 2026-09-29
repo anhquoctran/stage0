@@ -48,6 +48,7 @@ interface GitState {
   setFileListLayout: (layout: 'flat' | 'tree') => void;
   remotes: string[];
   remoteUrl: string | null;
+  isRebasing: boolean;
   toastMessage: string | null;
   showToast: (msg: string) => void;
   isPullFromOpen: boolean;
@@ -60,6 +61,7 @@ interface GitState {
   setTargetFileForUrl: (file: ChangedFile | null) => void;
   fetchRemotes: (repoPath: string) => Promise<void>;
   fetchRemoteUrl: (repoPath: string) => Promise<string | null>;
+  checkRebaseStatus: (repoPath?: string) => Promise<boolean>;
   runSync: (op: GitSyncOperation, options?: GitSyncOptions) => Promise<void>;
   clearError: () => void;
   closeRepo: () => void;
@@ -84,6 +86,7 @@ export const useGitStore = create<GitState>((set, get) => ({
   isRebaseFromOpen: false,
   isRemoteUrlFromOpen: false,
   targetFileForUrl: null,
+  isRebasing: false,
   setIsPullFromOpen: (open) => set({ isPullFromOpen: open }),
   setIsRebaseFromOpen: (open) => set({ isRebaseFromOpen: open }),
   setIsRemoteUrlFromOpen: (open) => set({ isRemoteUrlFromOpen: open }),
@@ -115,6 +118,7 @@ export const useGitStore = create<GitState>((set, get) => ({
       selectedFile: null,
       remotes: [],
       remoteUrl: null,
+      isRebasing: false,
     }),
 
   initApp: async () => {
@@ -174,6 +178,7 @@ export const useGitStore = create<GitState>((set, get) => ({
       if (repo) {
         set({ currentRepo: repo });
         await get().fetchBranches(repo.local_path);
+        await get().checkRebaseStatus(repo.local_path);
         await get().loadRecentRepos();
       }
     } catch (err: unknown) {
@@ -193,6 +198,7 @@ export const useGitStore = create<GitState>((set, get) => ({
         console.warn('Failed to update repo last_opened_at:', touchErr);
       }
       await get().fetchBranches(repo.local_path);
+      await get().checkRebaseStatus(repo.local_path);
     } catch (err: unknown) {
       set({ error: String(err) });
     } finally {
@@ -213,6 +219,7 @@ export const useGitStore = create<GitState>((set, get) => ({
           diffPayload: null,
           conflictReport: null,
           selectedFile: null,
+          isRebasing: false,
         });
       }
       await get().loadRecentRepos();
@@ -307,6 +314,7 @@ export const useGitStore = create<GitState>((set, get) => ({
         conflictReport,
         selectedFile: nextSelected,
       });
+      get().checkRebaseStatus(currentRepo.local_path);
     } catch (err: unknown) {
       set({ error: String(err) });
     } finally {
@@ -350,6 +358,7 @@ export const useGitStore = create<GitState>((set, get) => ({
         conflictReport,
         selectedFile: nextSelected,
       });
+      get().checkRebaseStatus(currentRepo.local_path);
     } catch (err: unknown) {
       console.error('Silent refresh failed:', err);
     }
@@ -415,6 +424,23 @@ export const useGitStore = create<GitState>((set, get) => ({
     }
   },
 
+  checkRebaseStatus: async (repoPath?: string) => {
+    const path = repoPath || get().currentRepo?.local_path;
+    if (!path) {
+      set({ isRebasing: false });
+      return false;
+    }
+    try {
+      const active = await invoke<boolean>('check_rebase_status', { repoPath: path });
+      set({ isRebasing: active });
+      return active;
+    } catch (err) {
+      console.warn('Failed to check rebase status:', err);
+      set({ isRebasing: false });
+      return false;
+    }
+  },
+
   runSync: async (op: GitSyncOperation, options?: GitSyncOptions) => {
     const { currentRepo } = get();
     if (!currentRepo) return;
@@ -430,9 +456,11 @@ export const useGitStore = create<GitState>((set, get) => ({
       set({ syncStatus: result });
       await get().fetchBranches(currentRepo.local_path);
       await get().loadDiff();
+      await get().checkRebaseStatus(currentRepo.local_path);
     } catch (err: unknown) {
       set({ error: String(err), syncStatus: null });
     } finally {
+      await get().checkRebaseStatus(currentRepo.local_path);
       set({ isSyncing: false });
     }
   },

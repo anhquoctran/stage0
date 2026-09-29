@@ -51,7 +51,7 @@ export const RemoteUrlFromModal: React.FC = () => {
         sublabel: compareBranch,
         ref: compareBranch,
         badge: 'Compare',
-        icon: <GitBranch className="w-3.5 h-3.5 text-blue" />,
+        icon: <GitBranch className="w-3.5 h-3.5 text-subtext0" />,
         url: buildRemoteFileUrl(effectiveRemoteUrl, compareBranch, file.path),
       });
     }
@@ -63,7 +63,7 @@ export const RemoteUrlFromModal: React.FC = () => {
         sublabel: baseBranch,
         ref: baseBranch,
         badge: 'Base',
-        icon: <GitBranch className="w-3.5 h-3.5 text-mauve" />,
+        icon: <GitBranch className="w-3.5 h-3.5 text-subtext0" />,
         url: buildRemoteFileUrl(effectiveRemoteUrl, baseBranch, file.path),
       });
     }
@@ -75,7 +75,7 @@ export const RemoteUrlFromModal: React.FC = () => {
         sublabel: diffPayload.compare_commit.substring(0, 7),
         ref: diffPayload.compare_commit,
         badge: 'Commit',
-        icon: <GitCommit className="w-3.5 h-3.5 text-sapphire" />,
+        icon: <GitCommit className="w-3.5 h-3.5 text-subtext0" />,
         url: buildRemoteFileUrl(effectiveRemoteUrl, diffPayload.compare_commit, file.path),
       });
     }
@@ -118,7 +118,7 @@ export const RemoteUrlFromModal: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-surface0 bg-base">
           <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-blue" />
+            <Globe className="w-4 h-4 text-subtext0" />
             <h3 className="text-sm font-bold text-text">Copy Remote File URL from...</h3>
           </div>
           <button
@@ -183,7 +183,7 @@ export const RemoteUrlFromModal: React.FC = () => {
                         onClick={() => handleCopy(item.url, item.key)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors shrink-0 cursor-pointer ${
                           isCopied
-                            ? 'bg-green text-crust font-bold'
+                            ? 'bg-surface2 text-text font-bold'
                             : 'bg-surface1 hover:bg-surface2 text-text'
                         }`}
                       >
@@ -215,13 +215,13 @@ export const RemoteUrlFromModal: React.FC = () => {
                     value={customRef}
                     onChange={(e) => setCustomRef(e.target.value)}
                     placeholder="e.g. develop, v1.2.0, or commit hash..."
-                    className="flex-1 px-3 py-1.5 bg-base border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-hidden focus:border-blue font-mono"
+                    className="flex-1 px-3 py-1.5 bg-base border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-hidden focus:border-surface2 font-mono"
                   />
                   <button
                     type="button"
                     disabled={!customUrl}
                     onClick={() => handleCopy(customUrl, 'custom')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue hover:bg-blue/90 text-white rounded transition-colors disabled:opacity-40 cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-surface1 hover:bg-surface2 text-text border border-surface2 rounded transition-colors disabled:opacity-40 cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>Copy Custom URL</span>

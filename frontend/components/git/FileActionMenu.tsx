@@ -121,7 +121,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
             className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
           >
             <div className="flex items-center gap-2">
-              <FolderOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Open in File Explorer</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+R</span>
@@ -161,7 +161,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
             className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
           >
             <div className="flex items-center gap-2">
-              <Globe className="w-3.5 h-3.5 text-blue shrink-0" />
+              <Globe className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Remote File URL</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Shift+U</span>
@@ -294,7 +294,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
         className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
       >
         <div className="flex items-center gap-2">
-          <FolderOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
           <span>Open in File Explorer</span>
         </div>
         <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+R</span>
@@ -334,7 +334,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
         className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
       >
         <div className="flex items-center gap-2">
-          <Globe className="w-3.5 h-3.5 text-blue shrink-0" />
+          <Globe className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
           <span>Copy Remote File URL</span>
         </div>
         <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Shift+U</span>
