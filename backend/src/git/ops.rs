@@ -1,4 +1,4 @@
-use super::runner::{run_git, run_git_strict};
+use super::runner::{run_git, run_git_strict, resolve_ref};
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 pub struct GitSyncOptions {
@@ -320,7 +320,9 @@ pub fn get_commits_between(
     base: &str,
     compare: &str,
 ) -> Result<Vec<GitCommitItem>, String> {
-    let range = format!("{}..{}", base, compare);
+    let (_, effective_base) = resolve_ref(repo_path, base).unwrap_or((String::new(), base.to_string()));
+    let (_, effective_compare) = resolve_ref(repo_path, compare).unwrap_or((String::new(), compare.to_string()));
+    let range = format!("{}..{}", effective_base, effective_compare);
     // Use %x1f as field separator and %x1e as record separator
     let format = "%H%x1f%h%x1f%s%x1f%b%x1f%an%x1f%ae%x1f%aI%x1e";
     let res = run_git(

@@ -7,7 +7,10 @@ pub fn check_conflicts(
     base: &str,
     compare: &str,
 ) -> Result<ConflictReport, String> {
-    let res = run_git(repo_path, &["merge-tree", "--write-tree", base, compare])?;
+    let (_, effective_base) = super::runner::resolve_ref(repo_path, base).unwrap_or((String::new(), base.to_string()));
+    let (_, effective_compare) = super::runner::resolve_ref(repo_path, compare).unwrap_or((String::new(), compare.to_string()));
+
+    let res = run_git(repo_path, &["merge-tree", "--write-tree", &effective_base, &effective_compare])?;
 
     let combined = format!("{}\n{}", res.stdout, res.stderr);
     let mut conflicted_files = Vec::new();
@@ -84,6 +87,9 @@ pub fn get_conflicted_file_preview(
     compare: &str,
     file_path: &str,
 ) -> Result<ConflictFilePreview, String> {
+    let (_, effective_base) = super::runner::resolve_ref(repo_path, base).unwrap_or((String::new(), base.to_string()));
+    let (_, effective_compare) = super::runner::resolve_ref(repo_path, compare).unwrap_or((String::new(), compare.to_string()));
+
     let clean_path = file_path.replace('\\', "/");
     let on_disk_path = Path::new(repo_path).join(&clean_path);
     let mut on_disk_markers_count = 0;
@@ -99,14 +105,14 @@ pub fn get_conflicted_file_preview(
     }
 
     // 1. Get base content and compare content via git show
-    let base_spec = format!("{}:{}", base, clean_path);
-    let compare_spec = format!("{}:{}", compare, clean_path);
+    let base_spec = format!("{}:{}", effective_base, clean_path);
+    let compare_spec = format!("{}:{}", effective_compare, clean_path);
 
     let base_content = run_git(repo_path, &["show", &base_spec]).ok().map(|r| r.stdout);
     let compare_content = run_git(repo_path, &["show", &compare_spec]).ok().map(|r| r.stdout);
 
     // 2. Find common ancestor
-    let merge_base = run_git(repo_path, &["merge-base", base, compare])
+    let merge_base = run_git(repo_path, &["merge-base", &effective_base, &effective_compare])
         .map(|r| r.stdout.trim().to_string())
         .unwrap_or_default();
 

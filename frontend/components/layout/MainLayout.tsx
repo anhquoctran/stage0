@@ -79,17 +79,20 @@ export const MainLayout: React.FC = () => {
     repoSettings,
   } = useVirtualMrStore();
 
-  // Load Virtual MR data when repo changes
+  // Load Virtual MR data when repo changes or branches are fetched
   useEffect(() => {
     if (currentRepo) {
+      const allBranches = branches
+        ? [...(branches.local || []), ...(branches.remote || [])]
+        : [];
       useVirtualMrStore.getState().loadRepoData(
         currentRepo.id,
         currentRepo.local_path,
-        branches?.local || ['main'],
-        baseBranch
+        allBranches,
+        baseBranch || undefined
       );
     }
-  }, [currentRepo?.id, currentRepo?.local_path]);
+  }, [currentRepo?.id, currentRepo?.local_path, Boolean(branches)]);
 
   const fileManagerName = getOsFileManagerName();
 
@@ -348,7 +351,7 @@ export const MainLayout: React.FC = () => {
   ]);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-crust text-text font-sans">
+    <div className="flex flex-col h-full w-full flex-1 overflow-hidden bg-crust text-text font-sans">
       {/* Top Application Bar with Menu Bar & Action Toolbar */}
       <TopBar />
 

@@ -335,19 +335,41 @@ export const useGitStore = create<GitState>((set, get) => ({
   fetchBranches: async (repoPath: string) => {
     try {
       const branches = await invoke<BranchList>('get_branches', { repoPath });
+
+      // Smart default base branch (check local then remote)
       let base = 'main';
-      if (!branches.local.includes('main')) {
-        if (branches.local.includes('master')) {
-          base = 'master';
+      if (branches.local.includes('main')) {
+        base = 'main';
+      } else if (branches.remote.includes('origin/main')) {
+        base = 'origin/main';
+      } else if (branches.local.includes('master')) {
+        base = 'master';
+      } else if (branches.remote.includes('origin/master')) {
+        base = 'origin/master';
+      } else {
+        const remoteDefault = branches.remote.find((b) => b.endsWith('/main') || b.endsWith('/master'));
+        if (remoteDefault) {
+          base = remoteDefault;
         } else if (branches.local.length > 0) {
           base = branches.local[0];
+        } else if (branches.remote.length > 0) {
+          base = branches.remote[0];
+        } else {
+          base = 'HEAD';
         }
       }
 
       let compare = branches.current || base;
-      if (compare === base && branches.local.length > 1) {
-        const other = branches.local.find((b) => b !== base);
-        if (other) compare = other;
+      if (compare === base) {
+        const otherLocal = branches.local.find((b) => b !== base);
+        if (otherLocal) {
+          compare = otherLocal;
+        } else {
+          const otherRemote = branches.remote.find((b) => b !== base);
+          if (otherRemote) {
+            compare = otherRemote;
+          }
+        }
       }
 
       set({
