@@ -19,7 +19,7 @@ import { RepositorySettingsModal } from '../repository/RepositorySettingsModal';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
-import { X, AlertCircle, Check } from 'lucide-react';
+import { X, AlertCircle, Check } from '@/components/common/icons';
 import {
   revealInOs,
   getAbsoluteFilePath,

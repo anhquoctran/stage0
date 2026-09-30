@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::io;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use rusqlite::{params, Connection};
 use tauri::{AppHandle, Manager};
@@ -8,6 +9,63 @@ use crate::git::RepoInfo;
 pub struct Database(pub Mutex<Connection>);
 
 const SCHEMA_SQL: &str = include_str!("schema.sql");
+
+fn create_app_data_dir(path: &Path) -> io::Result<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::DirBuilderExt;
+
+        std::fs::DirBuilder::new()
+            .recursive(true)
+            .mode(0o700)
+            .create(path)?;
+    }
+
+    #[cfg(not(unix))]
+    std::fs::create_dir_all(path)?;
+
+    Ok(())
+}
+
+fn secure_app_data_dir(path: &Path) -> io::Result<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700))?;
+    }
+
+    #[cfg(not(unix))]
+    let _ = path; // App data inherits the current user's ACL on Windows.
+
+    Ok(())
+}
+
+fn reject_symlink(path: &Path) -> io::Result<()> {
+    match std::fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.file_type().is_symlink() => Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "SQLite data paths must not be symbolic links",
+        )),
+        Ok(_) => Ok(()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error),
+    }
+}
+
+fn secure_database_file(path: &Path) -> io::Result<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
+    }
+
+    #[cfg(not(unix))]
+    let _ = path;
+
+    Ok(())
+}
 
 impl Database {
     pub fn init(app: &AppHandle) -> Result<Self, Box<dyn std::error::Error>> {
@@ -21,15 +79,19 @@ impl Database {
             }
         };
 
-        if !app_dir.exists() {
-            std::fs::create_dir_all(&app_dir)?;
-        }
+        create_app_data_dir(&app_dir)?;
+        reject_symlink(&app_dir)?;
+        secure_app_data_dir(&app_dir)?;
 
         let db_path = app_dir.join("local_mr.db");
+        reject_symlink(&db_path)?;
         let conn = Connection::open(&db_path)?;
+        secure_database_file(&db_path)?;
 
         // High Performance SQLite Pragmas
         conn.execute_batch("
+            PRAGMA trusted_schema = OFF;
+            PRAGMA secure_delete = ON;
             PRAGMA journal_mode = WAL;
             PRAGMA synchronous = NORMAL;
             PRAGMA foreign_keys = ON;
@@ -49,8 +111,13 @@ impl Database {
         id: &str,
         name: &str,
         local_path: &str,
-    ) -> Result<(), rusqlite::Error> {
+    ) -> Result<RepoInfo, rusqlite::Error> {
         let conn = self.0.lock().unwrap();
+        let id = if id.is_empty() {
+            uuid::Uuid::new_v4().to_string()
+        } else {
+            id.to_string()
+        };
         conn.execute(
             "INSERT INTO repositories (id, name, local_path, last_opened_at)
              VALUES (?1, ?2, ?3, CURRENT_TIMESTAMP)
@@ -59,7 +126,17 @@ impl Database {
                 last_opened_at = CURRENT_TIMESTAMP;",
             params![id, name, local_path],
         )?;
-        Ok(())
+        conn.query_row(
+            "SELECT id, name, local_path FROM repositories WHERE local_path = ?1;",
+            params![local_path],
+            |row| {
+                Ok(RepoInfo {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                    local_path: row.get(2)?,
+                })
+            },
+        )
     }
 
     pub fn get_recent_repositories(&self) -> Result<Vec<RepoInfo>, rusqlite::Error> {
@@ -683,3 +760,76 @@ pub struct VirtualMrDiscussionDb {
     pub comments: Vec<VirtualMrCommentDb>,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sql_injection_payloads_are_stored_as_values() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA_SQL).unwrap();
+        let db = Database(Mutex::new(conn));
+        let payload = "x'); DROP TABLE repositories; --";
+
+        db.upsert_repository("safe-id", payload, "/tmp/safe-repo")
+            .unwrap();
+        db.upsert_repository(payload, "attacker-controlled id", "/tmp/attacker-repo")
+            .unwrap();
+
+        // A SQL-shaped ID is an ordinary lookup value and cannot broaden DELETE.
+        db.delete_repository("' OR 1=1 --").unwrap();
+        let repos = db.get_recent_repositories().unwrap();
+        assert_eq!(repos.len(), 2);
+        assert!(repos.iter().any(|repo| repo.name == payload));
+
+        // The same applies to key/value storage; the schema remains intact.
+        db.set_setting(payload, payload).unwrap();
+        assert_eq!(db.get_setting(payload).unwrap().as_deref(), Some(payload));
+    }
+
+    #[test]
+    fn repository_upsert_returns_the_persisted_id_for_an_existing_path() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA_SQL).unwrap();
+        let db = Database(Mutex::new(conn));
+
+        let first = db
+            .upsert_repository("", "First name", "/tmp/stable-repository")
+            .unwrap();
+        let second = db
+            .upsert_repository("", "Updated name", "/tmp/stable-repository")
+            .unwrap();
+
+        assert_eq!(first.id, second.id);
+        assert_eq!(second.name, "Updated name");
+        assert_eq!(second.local_path, "/tmp/stable-repository");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn app_database_storage_permissions_are_private() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = std::env::temp_dir().join(format!(
+            "stage0_db_permissions_{}",
+            uuid::Uuid::new_v4()
+        ));
+        create_app_data_dir(&dir).unwrap();
+        secure_app_data_dir(&dir).unwrap();
+
+        let db_path = dir.join("local_mr.db");
+        std::fs::write(&db_path, b"").unwrap();
+        secure_database_file(&db_path).unwrap();
+
+        assert_eq!(
+            std::fs::metadata(&dir).unwrap().permissions().mode() & 0o777,
+            0o700
+        );
+        assert_eq!(
+            std::fs::metadata(&db_path).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GitMerge, ShieldCheck, Zap } from 'lucide-react';
+import { GitMerge, ShieldCheck, Zap } from '@/components/common/icons';
 import { AppLogo } from '../common/AppLogo';
 
 interface SplashScreenProps {
@@ -84,7 +84,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
 
         {/* Dynamic Progress Bar */}
         <div className="w-full bg-surface0/60 rounded-full h-1.5 overflow-hidden mb-3.5 border border-surface0/40">
-          <div className="h-full bg-gradient-to-r from-blue via-mauve to-green rounded-full w-2/3 animate-[splash-progress_1.6s_ease-in-out_infinite]" />
+          <div className="h-full bg-primary rounded-full w-2/3 animate-[splash-progress_1.6s_ease-in-out_infinite]" />
         </div>
 
         {/* Step indicator */}

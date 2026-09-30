@@ -9,7 +9,7 @@ import {
   FolderOpen,
   ChevronRight,
   ChevronDown,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { ChangedFile } from '../../types/git';
 import { useGitStore } from '../../store/useGitStore';
 import { FileContextMenu } from './FileActionMenu';
@@ -29,7 +29,7 @@ export const FileList: React.FC<FileListProps> = ({
   isLoading = false,
   width,
 }) => {
-  const { fileListLayout, setFileListLayout } = useGitStore();
+  const { fileListLayout, setFileListLayout, diffError } = useGitStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterConflictedOnly, setFilterConflictedOnly] = useState(false);
   const [collapsedFolders, setCollapsedFolders] = useState<Record<string, boolean>>({});
@@ -51,6 +51,7 @@ export const FileList: React.FC<FileListProps> = ({
 
   const totalAdditions = files.reduce((acc, f) => acc + f.additions, 0);
   const totalDeletions = files.reduce((acc, f) => acc + f.deletions, 0);
+  const binaryCount = files.filter((f) => f.is_binary).length;
   const conflictedCount = files.filter((f) => f.is_conflicted).length;
 
   const filteredFiles = useMemo(() => {
@@ -214,6 +215,11 @@ export const FileList: React.FC<FileListProps> = ({
 
             {/* Total Lines Changed */}
             <div className="flex items-center gap-1.5 text-[11px] font-mono font-semibold">
+              {binaryCount > 0 && (
+                <span className="text-amber-400" title={`${binaryCount} binary file${binaryCount === 1 ? '' : 's'}; diff preview is not supported`}>
+                  {binaryCount} BIN
+                </span>
+              )}
               <span className="text-green">+{totalAdditions}</span>
               <span className="text-red">-{totalDeletions}</span>
             </div>
@@ -270,6 +276,12 @@ export const FileList: React.FC<FileListProps> = ({
             <div className="w-5 h-5 border-2 border-blue border-t-transparent rounded-full animate-spin mx-auto" />
             <p>Analyzing changes...</p>
           </div>
+        ) : diffError ? (
+          <div className="p-6 flex flex-col items-center gap-2 text-center text-xs text-red" title={diffError}>
+            <AlertTriangle className="w-4 h-4" />
+            <span>Comparison unavailable</span>
+            <span className="text-subtext0">See the details in the comparison view.</span>
+          </div>
         ) : filteredFiles.length === 0 ? (
           <div className="p-6 text-center text-xs text-subtext0">
             {searchTerm
@@ -297,6 +309,11 @@ export const FileList: React.FC<FileListProps> = ({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     {getStatusBadge(file.status, file.is_conflicted)}
+                    {file.is_binary && (
+                      <span className="shrink-0 text-[9px] font-bold text-amber-400" title="Binary file; diff preview is not supported">
+                        BIN
+                      </span>
+                    )}
                     <div className="min-w-0 font-mono leading-tight">
                       {dir && (
                         <span className="text-subtext1 text-[11px] block truncate">
@@ -373,6 +390,11 @@ export const FileList: React.FC<FileListProps> = ({
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               {getStatusBadge(file.status, file.is_conflicted)}
+                              {file.is_binary && (
+                                <span className="shrink-0 text-[9px] font-bold text-amber-400" title="Binary file; diff preview is not supported">
+                                  BIN
+                                </span>
+                              )}
                               <span className="truncate font-mono text-[12px] font-medium">
                                 {fileName}
                               </span>

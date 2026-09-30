@@ -13,8 +13,9 @@ import {
   Eye,
   PenLine,
   Sparkles,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { MarkdownPreview } from './MarkdownPreview';
+import { formatShortcutText } from '../../utils/shortcuts';
 
 export interface MarkdownEditorProps {
   value: string;
@@ -141,7 +142,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               onClick={() => insertMarkdown('**', '**', 'bold text')}
               disabled={disabled}
               className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Bold (Ctrl+B)"
+              title={formatShortcutText('Bold (Ctrl+B)')}
             >
               <Bold className="w-3.5 h-3.5" />
             </button>
@@ -150,7 +151,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               onClick={() => insertMarkdown('*', '*', 'italic text')}
               disabled={disabled}
               className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Italic (Ctrl+I)"
+              title={formatShortcutText('Italic (Ctrl+I)')}
             >
               <Italic className="w-3.5 h-3.5" />
             </button>
@@ -228,7 +229,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               onClick={() => insertMarkdown('[', '](https://example.com)', 'link text')}
               disabled={disabled}
               className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Insert link (Ctrl+K)"
+              title={formatShortcutText('Insert link (Ctrl+K)')}
             >
               <Link className="w-3.5 h-3.5" />
             </button>

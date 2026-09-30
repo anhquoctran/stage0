@@ -6,7 +6,7 @@ import {
   Check,
   ExternalLink,
   History,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { BlameCommit } from '../../types/git';
 import { buildRemoteCommitUrl } from '../../utils/fileActions';
 

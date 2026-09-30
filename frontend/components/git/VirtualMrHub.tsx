@@ -13,7 +13,7 @@ import {
   MessageSquare,
   RefreshCw,
   ArrowRight,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
 import { useBotReviewersStore } from '../../store/useBotReviewersStore';
@@ -23,7 +23,7 @@ import { MarkdownPreview } from '../common/MarkdownPreview';
 import { TabBranchSelector } from '../git/TabBranchSelector';
 
 export const VirtualMrHub: React.FC = () => {
-  const { currentRepo, showToast, diffPayload, branches, setBaseBranch, setCompareBranch } = useGitStore();
+  const { currentRepo, showToast, diffPayload, branches, setBranchComparison } = useGitStore();
   const {
     getActiveSession,
     updateSessionDetails,
@@ -153,8 +153,7 @@ export const VirtualMrHub: React.FC = () => {
     newCompare: string
   ) => {
     await updateSessionBranches(sessionId, newBase, newCompare);
-    await setBaseBranch(newBase);
-    await setCompareBranch(newCompare);
+    await setBranchComparison(newBase, newCompare);
   };
 
   const handleSwapBranches = async (
@@ -574,7 +573,7 @@ export const VirtualMrHub: React.FC = () => {
         <div className="p-4 bg-crust/50 border-b border-surface0 max-h-72 overflow-y-auto space-y-2">
           {session.commits.length === 0 ? (
             <div className="p-6 text-center text-subtext0 text-xs">
-              No commits found between {session.compareBranch} and {session.baseBranch}.
+              No commits unique to {session.compareBranch} relative to {session.baseBranch}.
             </div>
           ) : (
             session.commits.map((c) => (

@@ -9,7 +9,7 @@ import {
   Play,
   RotateCcw,
   SkipForward,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 
 export const RebaseFromModal: React.FC = () => {

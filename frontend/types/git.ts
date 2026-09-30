@@ -4,6 +4,16 @@ export interface RepoInfo {
   local_path: string;
 }
 
+export type OpenRepoOutcome =
+  | { action: 'opened_here'; repo: RepoInfo }
+  | { action: 'focused_existing'; window_label: string; repo: RepoInfo }
+  | { action: 'opened_new_window'; window_label: string; repo: RepoInfo };
+
+export interface WindowStartupContext {
+  repo: RepoInfo | null;
+  restore_recent: boolean;
+}
+
 export interface BranchList {
   current: string;
   local: string[];
@@ -18,6 +28,7 @@ export interface ChangedFile {
   status: FileStatus;
   additions: number;
   deletions: number;
+  is_binary: boolean;
   is_conflicted: boolean;
 }
 
@@ -171,6 +182,4 @@ export interface SandboxExecutionResult {
   exit_code: number;
   duration_ms: number;
 }
-
-
 

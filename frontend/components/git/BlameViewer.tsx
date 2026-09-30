@@ -13,7 +13,7 @@ import {
   ChevronDown,
   Info,
   Users,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { BlameCommit, BlameLine } from '../../types/git';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';

@@ -14,12 +14,13 @@ import {
   Play,
   SkipForward,
   Undo2,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { WindowControls } from './WindowControls';
 import { MenuBar } from './MenuBar';
 import { AppLogo } from '../common/AppLogo';
 import { useGitStore } from '../../store/useGitStore';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
+import { formatShortcutText } from '../../utils/shortcuts';
 
 export const TopBar: React.FC = () => {
   const { openRepoSettings } = useVirtualMrStore();
@@ -28,7 +29,6 @@ export const TopBar: React.FC = () => {
     baseBranch,
     compareBranch,
     isSyncing,
-    syncStatus,
     refreshDiff,
     runSync,
     setIsPullFromOpen,
@@ -46,6 +46,7 @@ export const TopBar: React.FC = () => {
     typeof navigator !== 'undefined' &&
     (/Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ||
       (typeof window !== 'undefined' && window.location.search.includes('platform=mac')));
+  const shortcut = (value: string) => formatShortcutText(value, isMac);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -91,10 +92,12 @@ export const TopBar: React.FC = () => {
             {/* Mounted for shortcuts & macOS native system menu events */}
             <MenuBar hidden />
 
-            {/* Left: macOS Traffic Lights Window Controls */}
-            <div data-tauri-drag-region className="flex items-center h-full pl-1 pr-3 shrink-0">
-              <WindowControls style="mac" />
-            </div>
+            {/* Reserve the native traffic-light area; the controls are rendered by macOS. */}
+            <div
+              data-tauri-drag-region
+              aria-hidden="true"
+              className="w-20 h-full shrink-0"
+            />
 
             {/* Center: Draggable Window Document Title */}
             <div
@@ -153,7 +156,7 @@ export const TopBar: React.FC = () => {
       </div>
 
       {/* ROW 2: Git Workspace Action Toolbar */}
-      <div className="h-16 bg-mantle border-b border-surface0 px-3.5 flex items-center justify-between shrink-0 select-none relative z-20">
+      <div className="h-16 bg-mantle border-b border-surface0 px-3.5 flex items-center justify-between shrink-0 select-none relative z-40">
         {/* Left Section: Active Repository + SourceTree Action Ribbon */}
         <div className="flex items-center gap-2 min-w-0">
           {/* Active Repository Indicator */}
@@ -192,7 +195,7 @@ export const TopBar: React.FC = () => {
                   disabled={isSyncing}
                   onClick={() => runSync('fetch')}
                   className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
-                  title="git fetch --all --prune (Ctrl+Shift+F)"
+                  title={shortcut('git fetch --all --prune (Ctrl+Shift+F)')}
                 >
                   <RefreshCw
                     className={`w-5 h-5 text-current shrink-0 transition-colors ${isSyncing ? 'animate-spin' : ''}`}
@@ -216,7 +219,7 @@ export const TopBar: React.FC = () => {
                     disabled={isSyncing}
                     onClick={() => runSync('pull')}
                     className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[54px]"
-                    title="Pull (Ctrl+Shift+P)"
+                    title={shortcut('Pull (Ctrl+Shift+P)')}
                   >
                     <Download className="w-5 h-5 text-current shrink-0 transition-colors" />
                     <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
@@ -232,7 +235,7 @@ export const TopBar: React.FC = () => {
                       setIsRebaseMenuOpen(false);
                     }}
                     className="flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer"
-                    title="Pull options (Ctrl+Alt+P)"
+                    title={shortcut('Pull options (Ctrl+Alt+P)')}
                   >
                     <ChevronDown className="w-3.5 h-3.5 text-current transition-colors" />
                   </button>
@@ -254,7 +257,7 @@ export const TopBar: React.FC = () => {
                           <Download className="w-3.5 h-3.5 text-current transition-colors" />
                           <span>Pull</span>
                         </div>
-                        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+P</span>
+                        <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+P')}</span>
                       </button>
 
                       <button
@@ -269,7 +272,7 @@ export const TopBar: React.FC = () => {
                           <DownloadCloud className="w-3.5 h-3.5 text-current transition-colors" />
                           <span>Pull from...</span>
                         </div>
-                        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+P</span>
+                        <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+P')}</span>
                       </button>
                     </div>
                   )}
@@ -289,7 +292,7 @@ export const TopBar: React.FC = () => {
                     disabled={isSyncing}
                     onClick={() => runSync('rebase')}
                     className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[58px]"
-                    title="Rebase (Ctrl+Shift+R)"
+                    title={shortcut('Rebase (Ctrl+Shift+R)')}
                   >
                     <GitMerge className="w-5 h-5 text-current shrink-0 transition-colors" />
                     <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
@@ -305,7 +308,7 @@ export const TopBar: React.FC = () => {
                       setIsPullMenuOpen(false);
                     }}
                     className="flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer"
-                    title="Rebase options (Ctrl+Alt+R)"
+                    title={shortcut('Rebase options (Ctrl+Alt+R)')}
                   >
                     <ChevronDown className="w-3.5 h-3.5 text-current transition-colors" />
                   </button>
@@ -327,7 +330,7 @@ export const TopBar: React.FC = () => {
                           <GitMerge className="w-3.5 h-3.5 text-current transition-colors" />
                           <span>Rebase</span>
                         </div>
-                        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+R</span>
+                        <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+R')}</span>
                       </button>
 
                       <button
@@ -342,7 +345,7 @@ export const TopBar: React.FC = () => {
                           <GitBranch className="w-3.5 h-3.5 text-current transition-colors" />
                           <span>Rebase from...</span>
                         </div>
-                        <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+R</span>
+                        <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+R')}</span>
                       </button>
 
                       <div className="my-1 border-t border-surface0" />
@@ -405,7 +408,7 @@ export const TopBar: React.FC = () => {
                   disabled={isSyncing}
                   onClick={refreshDiff}
                   className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
-                  title="Refresh MR diff & conflict simulation (Ctrl+R)"
+                  title={shortcut('Refresh MR diff & conflict simulation (Ctrl+R)')}
                 >
                   <RotateCw className="w-5 h-5 text-current shrink-0 transition-colors" />
                   <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
@@ -419,7 +422,7 @@ export const TopBar: React.FC = () => {
                   disabled={!currentRepo}
                   onClick={() => openRepoSettings('remotes')}
                   className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
-                  title="Repository Settings (Ctrl+Alt+S)"
+                  title={shortcut('Repository Settings (Ctrl+Alt+S)')}
                 >
                   <FolderCog className="w-5 h-5 text-current shrink-0 transition-colors" />
                   <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors whitespace-nowrap">
@@ -439,13 +442,6 @@ export const TopBar: React.FC = () => {
         <div className="flex items-center gap-2.5 shrink-0">
           {currentRepo && (
             <>
-              {syncStatus && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-surface0 text-white text-xs font-mono animate-pulse rounded">
-                  <RefreshCw className="w-3.5 h-3.5 text-white animate-spin" />
-                  <span>{syncStatus}</span>
-                </div>
-              )}
-
               {isRebasing && (
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950 text-white text-xs rounded">
                   <span className="text-xs font-semibold text-amber-200 uppercase tracking-wider mr-1">

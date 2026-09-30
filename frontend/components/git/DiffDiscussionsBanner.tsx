@@ -12,7 +12,7 @@ import {
   ChevronDown,
   ChevronRight,
   Code2,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
 import { openFileInEditor } from '../../utils/fileActions';
@@ -125,19 +125,27 @@ export const DiffDiscussionsBanner: React.FC<Props> = ({ selectedFile }) => {
             <Code2 className="w-3 h-3 text-subtext0" />
             <span>Open in IDE</span>
           </button>
-          <button
-            type="button"
-            onClick={() => setIsAddingComment(!isAddingComment)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-[11px] transition-colors cursor-pointer shadow-xs"
-          >
-            <Plus className="w-3 h-3" />
-            <span>Add Comment</span>
-          </button>
+          {!selectedFile.is_binary && (
+            <button
+              type="button"
+              onClick={() => setIsAddingComment(!isAddingComment)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-[11px] transition-colors cursor-pointer shadow-xs"
+            >
+              <Plus className="w-3 h-3" />
+              <span>Add Comment</span>
+            </button>
+          )}
         </div>
       </div>
 
+      {selectedFile.is_binary && (
+        <div className="px-3 py-2 rounded-lg bg-surface0/50 border border-surface1 text-subtext0">
+          Line comments are unavailable for binary files. Existing discussions are retained below.
+        </div>
+      )}
+
       {/* NEW COMMENT FORM */}
-      {isAddingComment && (
+      {isAddingComment && !selectedFile.is_binary && (
         <div className="p-3.5 rounded-lg bg-crust border border-surface0 space-y-2.5 shadow-md">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-xs text-text">Add review comment on code line</span>

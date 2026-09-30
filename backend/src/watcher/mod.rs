@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::Duration;
 use notify::RecursiveMode;
@@ -7,8 +8,7 @@ use tauri::{AppHandle, Emitter};
 use crate::git::RepoChangedEvent;
 
 pub struct WatcherManager {
-    _debouncer: Option<Debouncer<notify::RecommendedWatcher>>,
-    current_repo: Option<PathBuf>,
+    watchers: HashMap<String, Debouncer<notify::RecommendedWatcher>>,
 }
 
 pub struct WatcherState(pub Mutex<WatcherManager>);
@@ -16,23 +16,22 @@ pub struct WatcherState(pub Mutex<WatcherManager>);
 impl WatcherState {
     pub fn new() -> Self {
         Self(Mutex::new(WatcherManager {
-            _debouncer: None,
-            current_repo: None,
+            watchers: HashMap::new(),
         }))
     }
 
-    pub fn watch_repo(&self, app: AppHandle, repo_path: String) -> Result<(), String> {
-        let mut mgr = self.0.lock().map_err(|e| e.to_string())?;
-
-        let path = PathBuf::from(&repo_path);
+    pub fn watch_repo(
+        &self,
+        app: AppHandle,
+        window_label: String,
+        path: PathBuf,
+    ) -> Result<(), String> {
         if !path.exists() {
-            return Err(format!("Path does not exist: {}", repo_path));
+            return Err(format!("Path does not exist: {}", path.display()));
         }
 
-        mgr._debouncer = None;
-        mgr.current_repo = Some(path.clone());
-
-        let target_repo = repo_path.clone();
+        let target_repo = path.to_string_lossy().into_owned();
+        let target_window = window_label.clone();
         let app_clone = app.clone();
 
         let mut debouncer = new_debouncer(
@@ -42,7 +41,8 @@ impl WatcherState {
                     Ok(events) => {
                         let has_relevant_changes = events.iter().any(|ev| !should_ignore(&ev.path));
                         if has_relevant_changes {
-                            let _ = app_clone.emit(
+                            let _ = app_clone.emit_to(
+                                &target_window,
                                 "repo-fs-changed",
                                 RepoChangedEvent {
                                     repo_path: target_repo.clone(),
@@ -63,8 +63,24 @@ impl WatcherState {
             .watch(&path, RecursiveMode::Recursive)
             .map_err(|e| format!("Failed to watch directory: {}", e))?;
 
-        mgr._debouncer = Some(debouncer);
+        let previous = self
+            .0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .watchers
+            .insert(window_label, debouncer);
+        drop(previous);
         Ok(())
+    }
+
+    pub fn unwatch_window(&self, window_label: &str) {
+        let watcher = self
+            .0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .watchers
+            .remove(window_label);
+        drop(watcher);
     }
 }
 

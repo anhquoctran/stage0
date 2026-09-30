@@ -70,15 +70,15 @@
   --ctp-sapphire: #209fb5;
   --ctp-blue: #1e66f5;
   --ctp-lavender: #7287fd;
-  --ctp-text: #4c4f69;
-  --ctp-subtext1: #5c5f77;
-  --ctp-subtext0: #6c6f85;
-  --ctp-overlay2: #7c7f93;
-  --ctp-overlay1: #8c8fa1;
-  --ctp-overlay0: #9ca0b0;
-  --ctp-surface2: #acb0be;
-  --ctp-surface1: #bcc0cc;
-  --ctp-surface0: #ccd0da;
+  --ctp-text: #3b3e53;
+  --ctp-subtext1: #4b5066;
+  --ctp-subtext0: #5b6075;
+  --ctp-overlay2: #666c80;
+  --ctp-overlay1: #7a8093;
+  --ctp-overlay0: #8d92a3;
+  --ctp-surface2: #969eae;
+  --ctp-surface1: #aab1c0;
+  --ctp-surface0: #bec4d0;
   --ctp-base: #eff1f5;
   --ctp-mantle: #e6e9ef;
   --ctp-crust: #dce0e8;
@@ -92,6 +92,38 @@
   --text-primary: var(--ctp-text);
   --text-secondary: var(--ctp-subtext1);
   --text-muted: var(--ctp-subtext0);
+}
+
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .text-brand {
+  color: var(--ctp-mauve);
+}
+
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .border-brand {
+  border-color: var(--ctp-mauve);
+}
+
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext0/50"],
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext0/60"],
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext0/70"],
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext1/70"] {
+  color: var(--ctp-overlay2);
+}
+
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) :focus-visible {
+  outline-color: var(--ctp-mauve) !important;
+}
+
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) input:focus-visible,
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) textarea:focus-visible,
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) select:focus-visible {
+  border-color: var(--ctp-mauve) !important;
+  box-shadow: 0 0 0 1px var(--ctp-mauve) !important;
+}
+
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) input::placeholder,
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) textarea::placeholder {
+  color: var(--ctp-overlay2) !important;
+  opacity: 1;
 }
 
 @theme {
@@ -536,5 +568,3 @@ button.btn-primary:disabled {
   margin-right: 0.4em;
   accent-color: var(--color-brand);
 }
-
-

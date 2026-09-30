@@ -7,7 +7,7 @@ import {
   ExternalLink,
   GitBranch,
   GitCommit,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 import { buildRemoteFileUrl } from '../../utils/fileActions';
 

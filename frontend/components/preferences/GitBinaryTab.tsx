@@ -3,7 +3,6 @@ import {
   GitBranch,
   RefreshCw,
   Check,
-  CheckCircle2,
   AlertCircle,
   FolderOpen,
   Copy,
@@ -13,9 +12,7 @@ import {
   Info,
   ShieldCheck,
   Plus,
-  Play,
-  ExternalLink,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useGitBinaryStore } from '../../store/useGitBinaryStore';
 import { GitBinaryInfo } from '../../types/gitBinary';
 
@@ -37,12 +34,10 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
   const {
     binaries,
     isScanning,
-    isLoading,
     error,
     scanBinaries,
     validateCustomBinary,
     pickGitExecutable,
-    clearError,
   } = useGitBinaryStore();
 
   const [customPath, setCustomPath] = useState('');
@@ -135,49 +130,49 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
     switch (source) {
       case 'bundled':
         return (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sapphire/15 text-sapphire border border-sapphire/30">
+          <span className="text-[10px] font-medium px-2 py-0.5 bg-sapphire/15 text-sapphire border border-sapphire/30">
             Bundled
           </span>
         );
       case 'system':
         return (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-green/15 text-green border border-green/30">
+          <span className="text-[10px] font-medium px-2 py-0.5 bg-green/15 text-green border border-green/30">
             System PATH
           </span>
         );
       case 'github_desktop':
         return (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-mauve/15 text-mauve border border-mauve/30">
+          <span className="text-[10px] font-medium px-2 py-0.5 bg-mauve/15 text-mauve border border-mauve/30">
             GitHub Desktop
           </span>
         );
       case 'homebrew':
         return (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-yellow/15 text-yellow border border-yellow/30">
+          <span className="text-[10px] font-medium px-2 py-0.5 bg-yellow/15 text-yellow border border-yellow/30">
             Homebrew
           </span>
         );
       case 'xcode':
         return (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue/15 text-blue border border-blue/30">
+          <span className="text-[10px] font-medium px-2 py-0.5 bg-blue/15 text-blue border border-blue/30">
             Xcode Tools
           </span>
         );
       case 'scoop':
         return (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-teal/15 text-teal border border-teal/30">
+          <span className="text-[10px] font-medium px-2 py-0.5 bg-teal/15 text-teal border border-teal/30">
             Scoop
           </span>
         );
       case 'custom':
         return (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-peach/15 text-peach border border-peach/30">
+          <span className="text-[10px] font-medium px-2 py-0.5 bg-peach/15 text-peach border border-peach/30">
             Custom
           </span>
         );
       default:
         return (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-surface2 text-subtext0 border border-surface1">
+          <span className="text-[10px] font-medium px-2 py-0.5 bg-surface2 text-subtext0 border border-surface1">
             Standard
           </span>
         );
@@ -202,7 +197,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
           type="button"
           onClick={() => scanBinaries()}
           disabled={isScanning}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-all cursor-pointer shrink-0 disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-all cursor-pointer shrink-0 disabled:opacity-50"
           title="Rescan system paths for available Git binaries"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin text-brand' : ''}`} />
@@ -212,7 +207,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
 
       {/* Restart Notice Banner if user changed selection */}
       {isPendingRestart && (
-        <div className="p-3.5 rounded-xl bg-peach/10 border border-peach/30 flex items-start gap-3">
+        <div className="p-3.5 bg-peach/10 border border-peach/30 flex items-start gap-3">
           <Info className="w-4 h-4 text-peach shrink-0 mt-0.5" />
           <div className="text-xs">
             <div className="font-semibold text-text">
@@ -226,7 +221,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
       )}
 
       {/* Current Active Binary Info Card */}
-      <div className="p-4 rounded-xl bg-surface0/60 border border-surface1 space-y-2">
+      <div className="p-4 bg-surface0/60 border border-surface1 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-bold uppercase tracking-wider text-subtext0 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-green" />
@@ -239,7 +234,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
             <div className="min-w-0">
               <div className="text-xs font-semibold text-text flex items-center gap-2">
                 <span>{committedBinary.name}</span>
-                <span className="font-mono text-[11px] px-1.5 py-0.2 rounded bg-surface1 text-text border border-surface2">
+                <span className="font-mono text-[11px] px-1.5 py-0.2 bg-surface1 text-text border border-surface2">
                   {committedBinary.version || 'unknown version'}
                 </span>
               </div>
@@ -250,7 +245,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
             <button
               type="button"
               onClick={(e) => handleCopyPath(committedBinary.path, e)}
-              className="p-1.5 rounded-lg hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer shrink-0"
+              className="p-1.5 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer shrink-0"
               title="Copy active Git binary path"
             >
               {copiedPath === committedBinary.path ? (
@@ -279,14 +274,14 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
         </div>
 
         {error && (
-          <div className="p-3 rounded-lg bg-red/10 border border-red/30 text-red text-xs flex items-center gap-2">
+          <div className="p-3 bg-red/10 border border-red/30 text-red text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {isScanning && allBinaries.length === 0 ? (
-          <div className="p-8 rounded-xl border border-dashed border-surface1 flex flex-col items-center justify-center text-center gap-2.5">
+          <div className="p-8 border border-dashed border-surface1 flex flex-col items-center justify-center text-center gap-2.5">
             <RefreshCw className="w-5 h-5 text-brand animate-spin" />
             <div className="text-xs font-semibold text-text">Scanning for Git Binaries...</div>
             <div className="text-[11px] text-subtext0">
@@ -294,93 +289,104 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
             </div>
           </div>
         ) : allBinaries.length === 0 ? (
-          <div className="p-6 rounded-xl border border-dashed border-surface1 text-center text-xs text-subtext0">
+          <div className="p-6 border border-dashed border-surface1 text-center text-xs text-subtext0">
             No Git binaries found on your system. You can manually specify a custom path below.
           </div>
         ) : (
-          <div className="space-y-2">
-            {allBinaries.map((binary) => {
-              const isSelected = binary.id === draftBinaryId || binary.path === draftBinaryPath;
-              const isCurrentlyActive = binary.id === committedBinaryId || binary.path === committedBinaryPath;
+          <div className="border border-surface1 overflow-hidden">
+            <div className="max-h-72 overflow-auto">
+              <table className="w-full min-w-[900px] text-left text-xs">
+                <thead className="sticky top-0 z-10 bg-mantle text-[10px] uppercase tracking-wider text-subtext0">
+                  <tr className="border-b border-surface1">
+                    <th scope="col" className="w-10 px-3 py-2" aria-label="Select" />
+                    <th scope="col" className="px-3 py-2 font-semibold">Git Binary</th>
+                    <th scope="col" className="px-3 py-2 font-semibold">Version</th>
+                    <th scope="col" className="px-3 py-2 font-semibold">Path</th>
+                    <th scope="col" className="px-3 py-2 font-semibold">Source</th>
+                    <th scope="col" className="px-3 py-2 font-semibold">Status</th>
+                    <th scope="col" className="w-10 px-3 py-2" aria-label="Actions" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface0/70">
+                  {allBinaries.map((binary) => {
+                    const isSelected = binary.id === draftBinaryId || binary.path === draftBinaryPath;
+                    const isCurrentlyActive = binary.id === committedBinaryId || binary.path === committedBinaryPath;
 
-              return (
-                <div
-                  key={binary.id}
-                  onClick={() => onSelectBinary(binary.id, binary.path)}
-                  className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                    isSelected
-                      ? 'bg-brand/10 border-brand shadow-xs'
-                      : 'bg-surface0/40 border-surface0 hover:bg-surface0/80 hover:border-surface1'
-                  }`}
-                >
-                  {/* Left: Radio + Icon + Info */}
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    {/* Radio Button Circle */}
-                    <div className="pt-0.5 shrink-0">
-                      <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                    return (
+                      <tr
+                        key={binary.id}
+                        onClick={() => onSelectBinary(binary.id, binary.path)}
+                        className={`group cursor-pointer transition-colors ${
                           isSelected
-                            ? 'border-brand bg-brand text-[#11111b]'
-                            : 'border-surface2 bg-transparent hover:border-subtext0'
+                            ? 'bg-brand/10'
+                            : 'bg-surface0/20 hover:bg-surface0/70'
                         }`}
                       >
-                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#11111b]" />}
-                      </div>
-                    </div>
-
-                    {/* Source Icon */}
-                    <div className="pt-0.5 shrink-0">
-                      {getSourceIcon(binary.source)}
-                    </div>
-
-                    {/* Text Details */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-xs font-semibold ${isSelected ? 'text-text font-bold' : 'text-text'}`}>
-                          {binary.name}
-                        </span>
-                        {getSourceBadge(binary.source)}
-                        {isCurrentlyActive && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-green/15 text-green border border-green/30">
-                            Active
+                        <td className="px-3 py-2.5">
+                          <input
+                            type="radio"
+                            name="active-git-binary"
+                            checked={isSelected}
+                            onChange={() => onSelectBinary(binary.id, binary.path)}
+                            onClick={(event) => event.stopPropagation()}
+                            aria-label={`Select ${binary.name}`}
+                            className="h-4 w-4 accent-violet-500 cursor-pointer"
+                          />
+                        </td>
+                        <td className="max-w-[280px] px-3 py-2.5">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="shrink-0">{getSourceIcon(binary.source)}</span>
+                            <span className={`truncate ${isSelected ? 'font-bold text-text' : 'font-semibold text-text'}`}>
+                              {binary.name}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span className="font-mono text-[11px] text-subtext1 whitespace-nowrap">
+                            {binary.version || 'Version unknown'}
                           </span>
-                        )}
-                        {isSelected && !isCurrentlyActive && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-peach/15 text-peach border border-peach/30">
-                            Selected
+                        </td>
+                        <td className="max-w-[420px] px-3 py-2.5">
+                          <span className="block truncate font-mono text-[11px] text-subtext0" title={binary.path}>
+                            {binary.path}
                           </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="font-mono text-[11px] px-1.5 py-0.2 rounded bg-surface1 text-text border border-surface2 shrink-0">
-                          {binary.version || 'Version unknown'}
-                        </span>
-                        <span className="font-mono text-[11px] text-subtext0 truncate">
-                          {binary.path}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right: Copy Path Action */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
-                      onClick={(e) => handleCopyPath(binary.path, e)}
-                      className="p-1.5 rounded-lg hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
-                      title="Copy binary path to clipboard"
-                    >
-                      {copiedPath === binary.path ? (
-                        <Check className="w-3.5 h-3.5 text-green" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          {getSourceBadge(binary.source)}
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          {isCurrentlyActive ? (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-green/15 text-green border border-green/30">
+                              Active
+                            </span>
+                          ) : isSelected ? (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-peach/15 text-peach border border-peach/30">
+                              Selected
+                            </span>
+                          ) : (
+                            <span className="text-subtext0">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <button
+                            type="button"
+                            onClick={(event) => handleCopyPath(binary.path, event)}
+                            className="p-1.5 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
+                            title="Copy binary path to clipboard"
+                          >
+                            {copiedPath === binary.path ? (
+                              <Check className="w-3.5 h-3.5 text-green" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -397,7 +403,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
             <span>Add Custom Git Binary Path...</span>
           </button>
         ) : (
-          <div className="p-4 rounded-xl bg-surface0/40 border border-surface1 space-y-3 animate-in fade-in duration-100">
+          <div className="p-4 bg-surface0/40 border border-surface1 space-y-3 animate-in fade-in duration-100">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-text">
                 Specify Custom Git Executable
@@ -424,12 +430,12 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
                     ? 'C:\\Path\\To\\git.exe'
                     : '/usr/local/bin/git'
                 }
-                className="flex-1 px-3 py-1.5 text-xs font-mono bg-base border border-surface1 rounded-lg text-text focus:outline-none focus:border-brand placeholder:text-subtext0/50"
+                className="flex-1 px-3 py-1.5 text-xs font-mono bg-base border border-surface1 text-text focus:outline-none focus:border-brand placeholder:text-subtext0/50"
               />
               <button
                 type="button"
                 onClick={handleBrowseCustom}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer shrink-0"
+                className="flex items-center gap-1 px-3 py-1.5 border border-surface1 hover:bg-surface1 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer shrink-0"
                 title="Browse for executable file"
               >
                 <FolderOpen className="w-3.5 h-3.5" />
@@ -439,7 +445,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
                 type="button"
                 onClick={handleValidateAndAddCustom}
                 disabled={isValidatingCustom || !customPath.trim()}
-                className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-brand text-[#11111b] text-xs font-semibold hover:bg-brand/90 transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                className="flex items-center gap-1 px-3.5 py-1.5 bg-brand text-[#11111b] text-xs font-semibold hover:bg-brand/90 transition-colors cursor-pointer shrink-0 disabled:opacity-50"
               >
                 {isValidatingCustom ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -451,7 +457,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
             </div>
 
             {customError && (
-              <div className="p-2.5 rounded-lg bg-red/10 border border-red/30 text-red text-xs flex items-center gap-2">
+              <div className="p-2.5 bg-red/10 border border-red/30 text-red text-xs flex items-center gap-2">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{customError}</span>
               </div>

@@ -6,7 +6,7 @@ import {
   Globe,
   RefreshCw,
   Terminal,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 
 export const PullFromModal: React.FC = () => {

@@ -8,7 +8,7 @@ import {
   AlertCircle,
   RefreshCw,
   ArrowRight,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
 

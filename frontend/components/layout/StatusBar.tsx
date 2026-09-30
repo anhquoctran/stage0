@@ -3,11 +3,15 @@ import {
   GitBranch,
   ShieldCheck,
   AlertTriangle,
+  Loader2,
+  Info,
   Columns2,
   Rows2,
   Keyboard,
   Box,
-} from 'lucide-react';
+  Check,
+  RefreshCw,
+} from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 
@@ -16,10 +20,15 @@ export const StatusBar: React.FC = () => {
     currentRepo,
     branches,
     diffPayload,
+    diffError,
+    conflictCheckError,
     conflictReport,
     selectedFile,
     viewMode,
     activeSandboxType,
+    isSyncing,
+    syncStatus,
+    isDiffLoading,
   } = useGitStore();
   const { setIsPreferencesOpen } = usePreferencesStore();
 
@@ -31,7 +40,7 @@ export const StatusBar: React.FC = () => {
   return (
     <footer className="h-7 bg-mantle border-t border-surface0 pl-3 pr-3.5 flex items-center justify-between text-[11px] text-subtext1 shrink-0 select-none z-10">
       {/* Left: Repo & Active Branch */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
         {currentRepo ? (
           <>
             <div className="flex items-center gap-1.5 hover:text-text transition-colors" title={currentRepo.local_path}>
@@ -52,11 +61,25 @@ export const StatusBar: React.FC = () => {
             <span>No repository open</span>
           </div>
         )}
+
+        {syncStatus && (
+          <div
+            className="flex items-center gap-1.5 pl-2 border-l border-surface0 min-w-0 max-w-[34vw] text-[10px] text-subtext0"
+            title={syncStatus}
+          >
+            {isSyncing ? (
+              <RefreshCw className="w-3 h-3 text-blue animate-spin shrink-0" />
+            ) : (
+              <Check className="w-3 h-3 text-green shrink-0" />
+            )}
+            <span className="truncate">{syncStatus}</span>
+          </div>
+        )}
       </div>
 
       {/* Center: Sandbox Engine & Conflict Status */}
       {currentRepo && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setIsPreferencesOpen(true)}
@@ -69,22 +92,42 @@ export const StatusBar: React.FC = () => {
             </span>
           </button>
 
-          {conflictReport?.has_conflicts ? (
+          {diffError ? (
+            <div className="flex items-center gap-1.5 text-red font-medium px-2 py-0.5 bg-red/10 border border-red/20" title={diffError}>
+              <AlertTriangle className="w-3 h-3 text-red" />
+              <span>Compare Failed</span>
+            </div>
+          ) : isDiffLoading ? (
+            <div className="flex items-center gap-1.5 text-subtext0 font-medium px-2 py-0.5 bg-surface0/40 border border-surface0">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Comparing</span>
+            </div>
+          ) : conflictCheckError ? (
+            <div className="flex items-center gap-1.5 text-text font-medium px-2 py-0.5 bg-yellow/10 border border-yellow/20" title={conflictCheckError}>
+              <AlertTriangle className="w-3 h-3 text-yellow" />
+              <span>Merge Check Unavailable</span>
+            </div>
+          ) : diffPayload && diffPayload.files.length === 0 ? (
+            <div className="flex items-center gap-1.5 text-subtext1 font-medium px-2 py-0.5 bg-surface0/50 border border-surface0">
+              <Info className="w-3 h-3" />
+              <span>No Changes</span>
+            </div>
+          ) : conflictReport?.has_conflicts ? (
             <div className="flex items-center gap-1.5 text-red font-medium px-2 py-0.5 rounded bg-red/10 border border-red/20">
               <AlertTriangle className="w-3 h-3 text-red" />
               <span>Conflicts Detected</span>
             </div>
-          ) : (
+          ) : conflictReport ? (
             <div className="flex items-center gap-1.5 text-green font-medium px-2 py-0.5 rounded bg-green/10 border border-green/20">
               <ShieldCheck className="w-3 h-3 text-green" />
               <span>Clean Merge</span>
             </div>
-          )}
+          ) : null}
         </div>
       )}
 
       {/* Right: File Review Index, View Mode & Key Hints */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 shrink-0">
         {totalFiles > 0 && (
           <div className="flex items-center gap-1 text-text">
             <span>File</span>

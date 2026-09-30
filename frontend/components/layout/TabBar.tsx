@@ -6,17 +6,17 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
+import { formatShortcutText } from '../../utils/shortcuts';
 
 export const TabBar: React.FC = () => {
   const {
     currentRepo,
     conflictReport,
     isDiffLoading,
-    setBaseBranch,
-    setCompareBranch,
+    setBranchComparison,
   } = useGitStore();
 
   const {
@@ -36,8 +36,7 @@ export const TabBar: React.FC = () => {
     if (!session) return;
     switchSession(sessionId);
     // Sync with GitStore so DiffViewer updates smoothly
-    await setBaseBranch(session.baseBranch);
-    await setCompareBranch(session.compareBranch);
+    await setBranchComparison(session.baseBranch, session.compareBranch);
   };
 
   // Handle keyboard shortcuts (must be before any early return to obey React Rules of Hooks)
@@ -92,11 +91,11 @@ export const TabBar: React.FC = () => {
           type="button"
           onClick={() => openNewMrDraft()}
           className="flex items-center gap-1.5 px-2.5 py-1 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs cursor-pointer shadow-xs transition-colors"
-          title="Create new Virtual MR (Ctrl+T)"
+          title={formatShortcutText('Create new Virtual MR (Ctrl+T)')}
         >
           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
           <span>New Virtual MR</span>
-          <kbd className="ml-1 px-1 py-0.2 text-[9px] font-mono bg-black/15 text-[#11111b] border border-black/10">Ctrl+T</kbd>
+          <kbd className="ml-1 px-1 py-0.2 text-[9px] font-mono bg-black/15 text-[#11111b] border border-black/10">{formatShortcutText('Ctrl+T')}</kbd>
         </button>
       </div>
     );
@@ -191,7 +190,7 @@ export const TabBar: React.FC = () => {
                   closeSession(session.id);
                 }}
                 className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ml-1 cursor-pointer shrink-0"
-                title="Close Virtual MR (Ctrl+W)"
+                title={formatShortcutText('Close Virtual MR (Ctrl+W)')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -235,7 +234,7 @@ export const TabBar: React.FC = () => {
                 closeNewMrDraft();
               }}
               className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ml-1 cursor-pointer shrink-0"
-              title="Close Draft (Ctrl+W)"
+              title={formatShortcutText('Close Draft (Ctrl+W)')}
             >
               <X className="w-3 h-3" />
             </button>
@@ -250,7 +249,7 @@ export const TabBar: React.FC = () => {
           type="button"
           onClick={() => openNewMrDraft()}
           className="w-7 h-7 flex items-center justify-center rounded bg-surface1 hover:bg-surface2 text-white transition-colors shrink-0 cursor-pointer shadow-xs"
-          title="New Virtual MR (Ctrl+T)"
+          title={formatShortcutText('New Virtual MR (Ctrl+T)')}
         >
           <Plus className="w-4 h-4 text-white" />
         </button>

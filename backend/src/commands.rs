@@ -1,5 +1,5 @@
 use std::path::Path;
-use tauri::{AppHandle, Manager, Window};
+use tauri::{AppHandle, Manager, WebviewWindow, Window};
 use tauri_plugin_dialog::DialogExt;
 use crate::db::{
     Database, RepoSettingsDb, RepoLabelDb, VirtualMrSessionDb, VirtualMrDiscussionDb, VirtualMrCommentDb,
@@ -16,7 +16,10 @@ use crate::git::{
     blame::get_file_blame as calc_file_blame,
     BranchList, ConflictReport, ConflictFilePreview, MrDiffPayload, RepoInfo, FileBlamePayload,
 };
-use crate::watcher::WatcherState;
+use crate::window_manager::{
+    close_repo_for_window, create_welcome_window, open_repo_path, OpenRepoOutcome,
+    resolve_repository, WindowManagerState, WindowStartupContext,
+};
 use crate::sandbox::{
     SandboxAdapterInfo, SandboxExecutionResult, SandboxInstanceInfo, SandboxManager, SandboxType,
 };
@@ -31,7 +34,11 @@ pub struct RepoValidation {
 }
 
 #[tauri::command]
-pub async fn open_repo_dialog(app: AppHandle) -> Result<Option<RepoInfo>, String> {
+pub async fn open_repo_dialog(
+    app: AppHandle,
+    window: WebviewWindow,
+    force_new_window: Option<bool>,
+) -> Result<Option<OpenRepoOutcome>, String> {
     let folder_opt = app.dialog().file().blocking_pick_folder();
 
     let folder_path = match folder_opt {
@@ -39,65 +46,47 @@ pub async fn open_repo_dialog(app: AppHandle) -> Result<Option<RepoInfo>, String
         None => return Ok(None),
     };
 
-    let path = Path::new(&folder_path);
-    if !path.join(".git").exists() {
-        return Err("The selected directory is not a valid Git repository (missing .git directory)".to_string());
-    }
-
-    let name = path
-        .file_name()
-        .map(|n| n.to_string_lossy().to_string())
-        .unwrap_or_else(|| "Repository".to_string());
-
-    let id = uuid::Uuid::new_v4().to_string();
-
-    let db = app.state::<Database>();
-    db.upsert_repository(&id, &name, &folder_path)
-        .map_err(|e| format!("Failed to save repository to database: {}", e))?;
-
-    let watcher = app.state::<WatcherState>();
-    if let Err(e) = watcher.watch_repo(app.clone(), folder_path.clone()) {
-        eprintln!("Warning: Failed to start watcher: {}", e);
-    }
-
-    Ok(Some(RepoInfo {
-        id,
-        name,
-        local_path: folder_path,
-    }))
+    open_repo_path(
+        &app,
+        &folder_path,
+        Some(window.label()),
+        force_new_window.unwrap_or(false),
+    )
+    .map(Some)
 }
 
 #[tauri::command]
-pub async fn open_repo_by_path(app: AppHandle, repo_path: String) -> Result<RepoInfo, String> {
-    let path = Path::new(&repo_path);
-    if !path.exists() {
-        return Err("The repository path does not exist on disk".to_string());
-    }
-    if !path.join(".git").exists() {
-        return Err("The directory is not a valid Git repository (missing .git)".to_string());
-    }
+pub async fn open_repo_by_path(
+    app: AppHandle,
+    window: WebviewWindow,
+    repo_path: String,
+    force_new_window: Option<bool>,
+) -> Result<OpenRepoOutcome, String> {
+    open_repo_path(
+        &app,
+        &repo_path,
+        Some(window.label()),
+        force_new_window.unwrap_or(false),
+    )
+}
 
-    let name = path
-        .file_name()
-        .map(|n| n.to_string_lossy().to_string())
-        .unwrap_or_else(|| "Repository".to_string());
+#[tauri::command]
+pub async fn get_window_startup_context(
+    window: WebviewWindow,
+    manager: tauri::State<'_, WindowManagerState>,
+) -> Result<WindowStartupContext, String> {
+    Ok(manager.startup_context(window.label()))
+}
 
-    let id = uuid::Uuid::new_v4().to_string();
+#[tauri::command]
+pub async fn create_new_window(app: AppHandle) -> Result<String, String> {
+    create_welcome_window(&app)
+}
 
-    let db = app.state::<Database>();
-    db.upsert_repository(&id, &name, &repo_path)
-        .map_err(|e| format!("Failed to save repository to database: {}", e))?;
-
-    let watcher = app.state::<WatcherState>();
-    if let Err(e) = watcher.watch_repo(app.clone(), repo_path.clone()) {
-        eprintln!("Warning: Failed to start watcher: {}", e);
-    }
-
-    Ok(RepoInfo {
-        id,
-        name,
-        local_path: repo_path,
-    })
+#[tauri::command]
+pub async fn close_repository_window(app: AppHandle, window: WebviewWindow) -> Result<(), String> {
+    close_repo_for_window(&app, window.label());
+    Ok(())
 }
 
 #[tauri::command]
@@ -207,9 +196,7 @@ pub async fn clear_recent_repos(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn get_branches(app: AppHandle, repo_path: String) -> Result<BranchList, String> {
-    let watcher = app.state::<WatcherState>();
-    let _ = watcher.watch_repo(app.clone(), repo_path.clone());
+pub async fn get_branches(repo_path: String) -> Result<BranchList, String> {
     list_branches(&repo_path)
 }
 
@@ -620,6 +607,11 @@ pub async fn window_is_maximized(window: Window) -> Result<bool, String> {
 }
 
 #[tauri::command]
+pub async fn window_is_fullscreen(window: Window) -> Result<bool, String> {
+    window.is_fullscreen().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub async fn window_show(window: Window) -> Result<(), String> {
     window.show().map_err(|e| e.to_string())?;
     let _ = window.set_focus();
@@ -856,27 +848,10 @@ pub async fn clone_repository(
         return Err("Cloned directory is missing .git metadata".to_string());
     }
 
-    let name = dest
-        .file_name()
-        .map(|n| n.to_string_lossy().to_string())
-        .unwrap_or_else(|| "Repository".to_string());
-
-    let id = uuid::Uuid::new_v4().to_string();
-
+    let (canonical_path, _, name) = resolve_repository(trimmed_target)?;
     let db = app.state::<Database>();
-    db.upsert_repository(&id, &name, trimmed_target)
-        .map_err(|e| format!("Failed to save repository to database: {}", e))?;
-
-    let watcher = app.state::<WatcherState>();
-    if let Err(e) = watcher.watch_repo(app.clone(), trimmed_target.to_string()) {
-        eprintln!("Warning: Failed to start watcher: {}", e);
-    }
-
-    Ok(RepoInfo {
-        id,
-        name,
-        local_path: trimmed_target.to_string(),
-    })
+    db.upsert_repository("", &name, &canonical_path.to_string_lossy())
+        .map_err(|e| format!("Failed to save repository to database: {}", e))
 }
 
 // ===========================================================================
@@ -1189,7 +1164,3 @@ pub async fn restart_app(app: AppHandle) -> Result<(), String> {
     app.exit(0);
     Ok(())
 }
-
-
-
-

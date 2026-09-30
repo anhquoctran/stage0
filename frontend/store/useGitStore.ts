@@ -16,7 +16,30 @@ import {
   SandboxAdapterInfo,
   SandboxInstanceInfo,
   SandboxExecutionResult,
+  OpenRepoOutcome,
 } from '../types/git';
+
+const syncRecentRepositoriesMenu = async (repositories: RepoInfo[]): Promise<void> => {
+  if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) return;
+
+  try {
+    await invoke('update_recent_repositories_menu', { repositories });
+  } catch (error) {
+    console.warn('Failed to update the native recent repositories menu:', error);
+  }
+};
+
+const getErrorMessage = (error: unknown): string => {
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error) || String(error);
+  } catch {
+    return String(error);
+  }
+};
+
+let diffRequestVersion = 0;
 
 interface GitState {
   currentRepo: RepoInfo | null;
@@ -26,6 +49,8 @@ interface GitState {
   compareBranch: string;
   diffPayload: MrDiffPayload | null;
   conflictReport: ConflictReport | null;
+  diffError: string | null;
+  conflictCheckError: string | null;
   selectedFile: ChangedFile | null;
   viewMode: ViewMode;
   fileListLayout: 'flat' | 'tree';
@@ -36,15 +61,17 @@ interface GitState {
   syncStatus: string | null;
   error: string | null;
 
-  initApp: () => Promise<void>;
+  initApp: (restoreRecent?: boolean) => Promise<void>;
+  attachRepoToCurrentWindow: (repo: RepoInfo) => Promise<void>;
   loadRecentRepos: () => Promise<void>;
-  openRepoDialog: () => Promise<void>;
+  openRepoDialog: (forceNewWindow?: boolean) => Promise<void>;
   selectRepo: (repo: RepoInfo) => Promise<void>;
   removeRecentRepo: (id: string) => Promise<void>;
   clearRecentRepos: () => Promise<void>;
   fetchBranches: (repoPath: string) => Promise<void>;
   setBaseBranch: (branch: string) => Promise<void>;
   setCompareBranch: (branch: string) => Promise<void>;
+  setBranchComparison: (base: string, compare: string) => Promise<void>;
   swapBranches: () => Promise<void>;
   loadDiff: () => Promise<void>;
   refreshDiff: () => Promise<void>;
@@ -102,7 +129,7 @@ interface GitState {
   destroySandboxInstance: (id: string) => Promise<void>;
   executeSandboxCommand: (id: string, command: string, args: string[]) => Promise<SandboxExecutionResult | null>;
   clearError: () => void;
-  closeRepo: () => void;
+  closeRepo: () => Promise<void>;
 }
 
 export const useGitStore = create<GitState>((set, get) => ({
@@ -148,6 +175,8 @@ export const useGitStore = create<GitState>((set, get) => ({
   compareBranch: '',
   diffPayload: null,
   conflictReport: null,
+  diffError: null,
+  conflictCheckError: null,
   selectedFile: null,
   viewMode: 'split',
   fileListLayout: 'flat',
@@ -160,7 +189,14 @@ export const useGitStore = create<GitState>((set, get) => ({
 
   clearError: () => set({ error: null, syncStatus: null }),
 
-  closeRepo: () =>
+  closeRepo: async () => {
+    try {
+      await invoke('close_repository_window');
+    } catch (err) {
+      set({ error: getErrorMessage(err) });
+      return;
+    }
+    diffRequestVersion += 1;
     set({
       currentRepo: null,
       branches: null,
@@ -168,16 +204,20 @@ export const useGitStore = create<GitState>((set, get) => ({
       compareBranch: '',
       diffPayload: null,
       conflictReport: null,
+      diffError: null,
+      conflictCheckError: null,
       selectedFile: null,
+      isDiffLoading: false,
       remotes: [],
       remoteUrl: null,
       isRebasing: false,
       blamePayload: null,
       blameError: null,
       fileViewTab: 'diff',
-    }),
+    });
+  },
 
-  initApp: async () => {
+  initApp: async (restoreRecent = true) => {
     set({ isInitializing: true });
     try {
       const [repos] = await Promise.all([
@@ -186,9 +226,11 @@ export const useGitStore = create<GitState>((set, get) => ({
         get().fetchActiveSandbox(),
       ]);
       set({ recentRepos: repos });
+      await syncRecentRepositoriesMenu(repos);
 
-      // If there are recent repos, find the most recently opened one that is still valid
-      if (repos.length > 0) {
+      // Only the original welcome window restores the last repository. New windows
+      // start empty so opening another window cannot silently duplicate a repo.
+      if (restoreRecent && repos.length > 0) {
         for (const candidate of repos) {
           try {
             const validation = await invoke<RepoValidation>('validate_repo', {
@@ -226,23 +268,54 @@ export const useGitStore = create<GitState>((set, get) => ({
     try {
       const repos = await invoke<RepoInfo[]>('get_recent_repos');
       set({ recentRepos: repos });
+      await syncRecentRepositoriesMenu(repos);
     } catch (err: unknown) {
       console.warn('Failed to load recent repositories:', err);
     }
   },
 
-  openRepoDialog: async () => {
+  attachRepoToCurrentWindow: async (repo: RepoInfo) => {
+    if (get().currentRepo?.local_path === repo.local_path) return;
+    diffRequestVersion += 1;
+    set({
+      currentRepo: repo,
+      isLoading: true,
+      isDiffLoading: false,
+      diffPayload: null,
+      conflictReport: null,
+      diffError: null,
+      conflictCheckError: null,
+      selectedFile: null,
+      branches: null,
+      baseBranch: '',
+      compareBranch: '',
+      remotes: [],
+      remoteUrl: null,
+      error: null,
+    });
+    try {
+      await get().loadRecentRepos();
+      await get().fetchBranches(repo.local_path);
+      await get().checkRebaseStatus(repo.local_path);
+    } finally {
+      if (get().currentRepo?.local_path === repo.local_path) set({ isLoading: false });
+    }
+  },
+
+  openRepoDialog: async (forceNewWindow = false) => {
     set({ isLoading: true, error: null });
     try {
-      const repo = await invoke<RepoInfo | null>('open_repo_dialog');
-      if (repo) {
-        set({ currentRepo: repo });
-        await get().fetchBranches(repo.local_path);
-        await get().checkRebaseStatus(repo.local_path);
+      const outcome = await invoke<OpenRepoOutcome | null>('open_repo_dialog', {
+        forceNewWindow,
+      });
+      if (outcome?.action === 'opened_here') {
+        await get().attachRepoToCurrentWindow(outcome.repo);
+      } else if (outcome) {
         await get().loadRecentRepos();
+        get().showToast(`Opened ${outcome.repo.name} in another window`);
       }
     } catch (err: unknown) {
-      set({ error: String(err) });
+      set({ error: getErrorMessage(err) });
     } finally {
       set({ isLoading: false });
     }
@@ -266,10 +339,14 @@ export const useGitStore = create<GitState>((set, get) => ({
         targetPath,
       });
       if (repo) {
-        set({ currentRepo: repo });
-        await get().fetchBranches(repo.local_path);
-        await get().checkRebaseStatus(repo.local_path);
-        await get().loadRecentRepos();
+        const outcome = await invoke<OpenRepoOutcome>('open_repo_by_path', {
+          repoPath: repo.local_path,
+        });
+        if (outcome.action === 'opened_here') {
+          await get().attachRepoToCurrentWindow(outcome.repo);
+        } else {
+          await get().loadRecentRepos();
+        }
         get().showToast(`Cloned repository ${repo.name}`);
         return repo;
       }
@@ -283,18 +360,19 @@ export const useGitStore = create<GitState>((set, get) => ({
   },
 
   selectRepo: async (repo: RepoInfo) => {
-    set({ currentRepo: repo, isLoading: true, error: null });
+    set({ isLoading: true, error: null });
     try {
-      try {
-        await invoke<RepoInfo>('open_repo_by_path', { repoPath: repo.local_path });
+      const outcome = await invoke<OpenRepoOutcome>('open_repo_by_path', {
+        repoPath: repo.local_path,
+      });
+      if (outcome.action === 'opened_here') {
+        await get().attachRepoToCurrentWindow(outcome.repo);
+      } else {
         await get().loadRecentRepos();
-      } catch (touchErr) {
-        console.warn('Failed to update repo last_opened_at:', touchErr);
+        get().showToast(`Opened ${repo.name} in another window`);
       }
-      await get().fetchBranches(repo.local_path);
-      await get().checkRebaseStatus(repo.local_path);
     } catch (err: unknown) {
-      set({ error: String(err) });
+      set({ error: getErrorMessage(err) });
     } finally {
       set({ isLoading: false });
     }
@@ -305,6 +383,7 @@ export const useGitStore = create<GitState>((set, get) => ({
       await invoke('delete_recent_repo', { id });
       const { currentRepo } = get();
       if (currentRepo?.id === id) {
+        diffRequestVersion += 1;
         set({
           currentRepo: null,
           branches: null,
@@ -312,6 +391,9 @@ export const useGitStore = create<GitState>((set, get) => ({
           compareBranch: '',
           diffPayload: null,
           conflictReport: null,
+          diffError: null,
+          conflictCheckError: null,
+          isDiffLoading: false,
           selectedFile: null,
           isRebasing: false,
         });
@@ -326,6 +408,7 @@ export const useGitStore = create<GitState>((set, get) => ({
     try {
       await invoke('clear_recent_repos');
       set({ recentRepos: [] });
+      await syncRecentRepositoriesMenu([]);
       get().showToast('Cleared all recent repositories');
     } catch (err) {
       console.error('Failed to clear recent repositories:', err);
@@ -335,6 +418,7 @@ export const useGitStore = create<GitState>((set, get) => ({
   fetchBranches: async (repoPath: string) => {
     try {
       const branches = await invoke<BranchList>('get_branches', { repoPath });
+      if (get().currentRepo?.local_path !== repoPath) return;
 
       // Smart default base branch (check local then remote)
       let base = 'main';
@@ -397,6 +481,11 @@ export const useGitStore = create<GitState>((set, get) => ({
     await get().loadDiff();
   },
 
+  setBranchComparison: async (base: string, compare: string) => {
+    set({ baseBranch: base, compareBranch: compare });
+    await get().loadDiff();
+  },
+
   swapBranches: async () => {
     const { baseBranch, compareBranch } = get();
     set({ baseBranch: compareBranch, compareBranch: baseBranch });
@@ -405,98 +494,104 @@ export const useGitStore = create<GitState>((set, get) => ({
 
   loadDiff: async () => {
     const { currentRepo, baseBranch, compareBranch } = get();
-    if (!currentRepo || !baseBranch || !compareBranch) return;
+    const requestVersion = ++diffRequestVersion;
+    if (!currentRepo || !baseBranch || !compareBranch) {
+      set({
+        isDiffLoading: false,
+        diffPayload: null,
+        conflictReport: null,
+        diffError: null,
+        conflictCheckError: null,
+        selectedFile: null,
+      });
+      return;
+    }
 
-    set({ isDiffLoading: true, error: null });
+    const repoPath = currentRepo.local_path;
+    const selectedPath = get().selectedFile?.path;
+    const isCurrentRequest = () => {
+      const current = get();
+      return requestVersion === diffRequestVersion
+        && current.currentRepo?.local_path === repoPath
+        && current.baseBranch === baseBranch
+        && current.compareBranch === compareBranch;
+    };
+
+    set({
+      isDiffLoading: true,
+      error: null,
+      diffError: null,
+      conflictCheckError: null,
+      diffPayload: null,
+      conflictReport: null,
+      selectedFile: null,
+    });
     try {
-      const [diffPayload, conflictReport] = await Promise.all([
-        invoke<MrDiffPayload>('get_mr_diff', {
-          repoPath: currentRepo.local_path,
-          base: baseBranch,
-          compare: compareBranch,
-        }),
-        invoke<ConflictReport>('check_merge_conflicts', {
-          repoPath: currentRepo.local_path,
-          base: baseBranch,
-          compare: compareBranch,
-        }),
-      ]);
+      const diffPayload = await invoke<MrDiffPayload>('get_mr_diff', {
+        repoPath,
+        base: baseBranch,
+        compare: compareBranch,
+      });
+      if (!isCurrentRequest()) return;
 
-      const currentSelected = get().selectedFile;
+      let conflictReport: ConflictReport | null = null;
+      let conflictCheckError: string | null = null;
+      try {
+        conflictReport = await invoke<ConflictReport>('check_merge_conflicts', {
+          repoPath,
+          base: baseBranch,
+          compare: compareBranch,
+        });
+      } catch (err: unknown) {
+        conflictCheckError = getErrorMessage(err);
+      }
+      if (!isCurrentRequest()) return;
+
       let nextSelected: ChangedFile | null = null;
 
       if (diffPayload.files.length > 0) {
-        if (currentSelected) {
-          nextSelected =
-            diffPayload.files.find((f) => f.path === currentSelected.path) ||
-            diffPayload.files[0];
-        } else {
-          nextSelected = diffPayload.files[0];
-        }
+        nextSelected =
+          diffPayload.files.find((f) => f.path === selectedPath) ||
+          diffPayload.files[0];
       }
 
       set({
         diffPayload,
         conflictReport,
+        diffError: null,
+        conflictCheckError,
         selectedFile: nextSelected,
+        ...(nextSelected?.is_binary && get().fileViewTab !== 'diff' ? { fileViewTab: 'diff' as const } : {}),
       });
-      get().checkRebaseStatus(currentRepo.local_path);
+      get().checkRebaseStatus(repoPath);
     } catch (err: unknown) {
-      set({ error: String(err) });
+      if (isCurrentRequest()) {
+        set({
+          diffPayload: null,
+          conflictReport: null,
+          diffError: getErrorMessage(err),
+          conflictCheckError: null,
+          selectedFile: null,
+        });
+      }
     } finally {
-      set({ isDiffLoading: false });
+      if (isCurrentRequest()) set({ isDiffLoading: false });
     }
   },
 
-  refreshDiff: async () => {
-    const { currentRepo, baseBranch, compareBranch } = get();
-    if (!currentRepo || !baseBranch || !compareBranch) return;
-
-    try {
-      const [diffPayload, conflictReport] = await Promise.all([
-        invoke<MrDiffPayload>('get_mr_diff', {
-          repoPath: currentRepo.local_path,
-          base: baseBranch,
-          compare: compareBranch,
-        }),
-        invoke<ConflictReport>('check_merge_conflicts', {
-          repoPath: currentRepo.local_path,
-          base: baseBranch,
-          compare: compareBranch,
-        }),
-      ]);
-
-      const currentSelected = get().selectedFile;
-      let nextSelected: ChangedFile | null = null;
-
-      if (diffPayload.files.length > 0) {
-        if (currentSelected) {
-          nextSelected =
-            diffPayload.files.find((f) => f.path === currentSelected.path) ||
-            diffPayload.files[0];
-        } else {
-          nextSelected = diffPayload.files[0];
-        }
-      }
-
-      set({
-        diffPayload,
-        conflictReport,
-        selectedFile: nextSelected,
-      });
-      get().checkRebaseStatus(currentRepo.local_path);
-    } catch (err: unknown) {
-      console.error('Silent refresh failed:', err);
-    }
-  },
+  refreshDiff: async () => get().loadDiff(),
 
   selectFile: (file: ChangedFile | null) => {
-    set({ selectedFile: file, activeConflictPreview: null });
+    set({
+      selectedFile: file,
+      activeConflictPreview: null,
+      ...(file?.is_binary && get().fileViewTab !== 'diff' ? { fileViewTab: 'diff' as const } : {}),
+    });
     if (file) {
-      if (file.is_conflicted) {
+      if (file.is_conflicted && !file.is_binary) {
         get().fetchConflictPreview(file.path);
       }
-      if (get().fileViewTab === 'blame') {
+      if (get().fileViewTab === 'blame' && !file.is_binary) {
         get().fetchFileBlame(file.path);
       }
     }
@@ -506,17 +601,24 @@ export const useGitStore = create<GitState>((set, get) => ({
     const { diffPayload, selectedFile } = get();
     if (!diffPayload || diffPayload.files.length === 0) return;
     if (!selectedFile) {
-      set({ selectedFile: diffPayload.files[0] });
-      if (get().fileViewTab === 'blame') {
-        get().fetchFileBlame(diffPayload.files[0].path);
+      const first = diffPayload.files[0];
+      set({
+        selectedFile: first,
+        ...(first.is_binary && get().fileViewTab !== 'diff' ? { fileViewTab: 'diff' as const } : {}),
+      });
+      if (get().fileViewTab === 'blame' && !first.is_binary) {
+        get().fetchFileBlame(first.path);
       }
       return;
     }
     const idx = diffPayload.files.findIndex((f) => f.path === selectedFile.path);
     if (idx !== -1 && idx < diffPayload.files.length - 1) {
       const next = diffPayload.files[idx + 1];
-      set({ selectedFile: next });
-      if (get().fileViewTab === 'blame') {
+      set({
+        selectedFile: next,
+        ...(next.is_binary && get().fileViewTab !== 'diff' ? { fileViewTab: 'diff' as const } : {}),
+      });
+      if (get().fileViewTab === 'blame' && !next.is_binary) {
         get().fetchFileBlame(next.path);
       }
     }
@@ -526,17 +628,24 @@ export const useGitStore = create<GitState>((set, get) => ({
     const { diffPayload, selectedFile } = get();
     if (!diffPayload || diffPayload.files.length === 0) return;
     if (!selectedFile) {
-      set({ selectedFile: diffPayload.files[0] });
-      if (get().fileViewTab === 'blame') {
-        get().fetchFileBlame(diffPayload.files[0].path);
+      const first = diffPayload.files[0];
+      set({
+        selectedFile: first,
+        ...(first.is_binary && get().fileViewTab !== 'diff' ? { fileViewTab: 'diff' as const } : {}),
+      });
+      if (get().fileViewTab === 'blame' && !first.is_binary) {
+        get().fetchFileBlame(first.path);
       }
       return;
     }
     const idx = diffPayload.files.findIndex((f) => f.path === selectedFile.path);
     if (idx > 0) {
       const prev = diffPayload.files[idx - 1];
-      set({ selectedFile: prev });
-      if (get().fileViewTab === 'blame') {
+      set({
+        selectedFile: prev,
+        ...(prev.is_binary && get().fileViewTab !== 'diff' ? { fileViewTab: 'diff' as const } : {}),
+      });
+      if (get().fileViewTab === 'blame' && !prev.is_binary) {
         get().fetchFileBlame(prev.path);
       }
     }
@@ -545,10 +654,10 @@ export const useGitStore = create<GitState>((set, get) => ({
   selectNextConflictFile: () => {
     const { diffPayload, selectedFile } = get();
     if (!diffPayload || diffPayload.files.length === 0) return;
-    const conflicted = diffPayload.files.filter((f) => f.is_conflicted);
+    const conflicted = diffPayload.files.filter((f) => f.is_conflicted && !f.is_binary);
     if (conflicted.length === 0) return;
 
-    if (!selectedFile || !selectedFile.is_conflicted) {
+    if (!selectedFile || !selectedFile.is_conflicted || selectedFile.is_binary) {
       get().selectFile(conflicted[0]);
       return;
     }
@@ -561,10 +670,10 @@ export const useGitStore = create<GitState>((set, get) => ({
   selectPrevConflictFile: () => {
     const { diffPayload, selectedFile } = get();
     if (!diffPayload || diffPayload.files.length === 0) return;
-    const conflicted = diffPayload.files.filter((f) => f.is_conflicted);
+    const conflicted = diffPayload.files.filter((f) => f.is_conflicted && !f.is_binary);
     if (conflicted.length === 0) return;
 
-    if (!selectedFile || !selectedFile.is_conflicted) {
+    if (!selectedFile || !selectedFile.is_conflicted || selectedFile.is_binary) {
       get().selectFile(conflicted[conflicted.length - 1]);
       return;
     }
@@ -575,6 +684,11 @@ export const useGitStore = create<GitState>((set, get) => ({
   },
 
   setFileViewTab: (tab: 'diff' | 'blame' | 'conflicts') => {
+    const { selectedFile } = get();
+    if (selectedFile?.is_binary && tab !== 'diff') {
+      set({ fileViewTab: 'diff' });
+      return;
+    }
     set({ fileViewTab: tab });
     if (tab === 'blame') {
       get().fetchFileBlame();
@@ -619,6 +733,10 @@ export const useGitStore = create<GitState>((set, get) => ({
     const { currentRepo, selectedFile, compareBranch, blameRevision, blameIgnoreWhitespace } = get();
     const targetFile = filePath || selectedFile?.path;
     if (!currentRepo || !targetFile) return;
+    if (selectedFile?.path === targetFile && selectedFile.is_binary) {
+      set({ isBlameLoading: false, blameError: null, blamePayload: null });
+      return;
+    }
 
     const rev = revision !== undefined ? revision : (blameRevision || compareBranch || 'HEAD');
     const ignoreWs = ignoreWhitespace !== undefined ? ignoreWhitespace : blameIgnoreWhitespace;
@@ -655,6 +773,7 @@ export const useGitStore = create<GitState>((set, get) => ({
   fetchRemotes: async (repoPath: string) => {
     try {
       const remotes = await invoke<string[]>('list_git_remotes', { repoPath });
+      if (get().currentRepo?.local_path !== repoPath) return;
       set({ remotes });
       await get().fetchRemoteUrl(repoPath);
     } catch (err) {
@@ -682,6 +801,7 @@ export const useGitStore = create<GitState>((set, get) => ({
     }
     try {
       const active = await invoke<boolean>('check_rebase_status', { repoPath: path });
+      if (get().currentRepo?.local_path !== path) return false;
       set({ isRebasing: active });
       return active;
     } catch (err) {

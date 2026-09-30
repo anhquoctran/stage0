@@ -8,7 +8,7 @@ import {
   MoreHorizontal,
   ChevronDown,
   History,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { ChangedFile } from '../../types/git';
 import { useGitStore } from '../../store/useGitStore';
 import {
@@ -16,6 +16,7 @@ import {
   getAbsoluteFilePath,
   buildRemoteFileUrl,
 } from '../../utils/fileActions';
+import { formatShortcutText } from '../../utils/shortcuts';
 
 interface FileActionMenuProps {
   file: ChangedFile | null;
@@ -65,6 +66,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
 
   const handleViewBlame = () => {
     setIsOpen(false);
+    if (file.is_binary) return;
     selectFile(file);
     setFileViewTab('blame');
     fetchFileBlame(file.path);
@@ -135,20 +137,22 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Open in File Explorer</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+R</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Shift+Alt+R')}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={handleViewBlame}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
-          >
-            <div className="flex items-center gap-2">
-              <History className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
-              <span>View Git Blame</span>
-            </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">Alt+B</span>
-          </button>
+          {!file.is_binary && (
+            <button
+              type="button"
+              onClick={handleViewBlame}
+              className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
+            >
+              <div className="flex items-center gap-2">
+                <History className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
+                <span>View Git Blame</span>
+              </div>
+              <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Alt+B')}</span>
+            </button>
+          )}
 
           <div className="my-1 border-t border-surface0" />
 
@@ -161,7 +165,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <Copy className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Relative Path</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Shift+C</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Ctrl+Shift+C')}</span>
           </button>
 
           <button
@@ -173,7 +177,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <FileText className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Absolute Path</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+C</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Shift+Alt+C')}</span>
           </button>
 
           <div className="my-1 border-t border-surface0" />
@@ -187,7 +191,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <Globe className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Remote File URL</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Shift+U</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Ctrl+Shift+U')}</span>
           </button>
 
           <button
@@ -199,7 +203,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Remote File URL from...</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Alt+U</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Ctrl+Alt+U')}</span>
           </button>
         </div>
       )}
@@ -273,6 +277,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
 
   const handleViewBlame = () => {
     onClose();
+    if (file.is_binary) return;
     selectFile(file);
     setFileViewTab('blame');
     fetchFileBlame(file.path);
@@ -330,20 +335,22 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
           <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
           <span>Open in File Explorer</span>
         </div>
-        <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+R</span>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Shift+Alt+R')}</span>
       </button>
 
-      <button
-        type="button"
-        onClick={handleViewBlame}
-        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
-      >
-        <div className="flex items-center gap-2">
-          <History className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
-          <span>View Git Blame</span>
-        </div>
-        <span className="text-[10px] text-subtext0 font-mono ml-3">Alt+B</span>
-      </button>
+      {!file.is_binary && (
+        <button
+          type="button"
+          onClick={handleViewBlame}
+          className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
+        >
+          <div className="flex items-center gap-2">
+            <History className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
+            <span>View Git Blame</span>
+          </div>
+          <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Alt+B')}</span>
+        </button>
+      )}
 
       <div className="my-1 border-t border-surface0" />
 
@@ -356,7 +363,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
           <Copy className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
           <span>Copy Relative Path</span>
         </div>
-        <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Shift+C</span>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Ctrl+Shift+C')}</span>
       </button>
 
       <button
@@ -368,7 +375,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
           <FileText className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
           <span>Copy Absolute Path</span>
         </div>
-        <span className="text-[10px] text-subtext0 font-mono ml-3">Shift+Alt+C</span>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Shift+Alt+C')}</span>
       </button>
 
       <div className="my-1 border-t border-surface0" />
@@ -382,7 +389,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
           <Globe className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
           <span>Copy Remote File URL</span>
         </div>
-        <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Shift+U</span>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Ctrl+Shift+U')}</span>
       </button>
 
       <button
@@ -394,7 +401,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
           <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
           <span>Copy Remote File URL from...</span>
         </div>
-        <span className="text-[10px] text-subtext0 font-mono ml-3">Ctrl+Alt+U</span>
+        <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Ctrl+Alt+U')}</span>
       </button>
     </div>
   );

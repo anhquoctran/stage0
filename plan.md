@@ -15,7 +15,7 @@
 - **Git Execution:** Rust `std::process::Command` (calling system Git CLI binary directly).
 - **File System Monitoring:** Rust `notify` crate with 300ms debounce.
 - **State Management:** Zustand.
-- **Icons:** `lucide-react`.
+- **Icons:** Font Awesome Free 7 (Classic Solid and Regular).
 
 ---
 
@@ -286,7 +286,10 @@ export interface ConflictReport {
 - [ ] Install npm dependencies:
   - `@git-diff-view/react`
   - `zustand`
-  - `lucide-react`
+  - `@fortawesome/fontawesome-svg-core`
+  - `@fortawesome/react-fontawesome`
+  - `@fortawesome/free-solid-svg-icons`
+  - `@fortawesome/free-regular-svg-icons`
   - `clsx`
   - `tailwind-merge`
 

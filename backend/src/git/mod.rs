@@ -32,6 +32,7 @@ pub struct ChangedFile {
     pub status: String, // "ADDED" | "MODIFIED" | "DELETED" | "RENAMED"
     pub additions: u32,
     pub deletions: u32,
+    pub is_binary: bool,
     pub is_conflicted: bool,
 }
 
@@ -94,6 +95,7 @@ mod tests {
     use super::branches::list_branches;
     use super::conflict::check_conflicts;
     use super::diff::get_mr_diff;
+    use super::ops::get_commits_between;
 
     fn run_git(dir: &str, args: &[&str]) {
         let status = Command::new("git")
@@ -121,6 +123,28 @@ mod tests {
         run_git(dir_str, &["add", "."]);
         run_git(dir_str, &["commit", "-m", "Initial commit on main"]);
 
+        // Identical refs and different branch names at the same commit are
+        // valid comparisons with no files or commits to review.
+        run_git(dir_str, &["branch", "same-tip"]);
+        let same_branch_diff = get_mr_diff(dir_str, "main", "main").unwrap();
+        assert!(same_branch_diff.files.is_empty());
+        assert!(same_branch_diff.raw_diff.is_empty());
+        assert_eq!(same_branch_diff.base_commit, same_branch_diff.compare_commit);
+
+        let same_tip_diff = get_mr_diff(dir_str, "main", "same-tip").unwrap();
+        assert!(same_tip_diff.files.is_empty());
+        assert_eq!(same_tip_diff.base_commit, same_tip_diff.compare_commit);
+        assert!(get_commits_between(dir_str, "main", "same-tip")
+            .unwrap()
+            .is_empty());
+
+        let same_tip_conflicts = check_conflicts(dir_str, "main", "same-tip").unwrap();
+        assert!(!same_tip_conflicts.has_conflicts);
+        assert!(same_tip_conflicts.conflicted_files.is_empty());
+
+        assert!(get_mr_diff(dir_str, "missing-branch", "main").is_err());
+        assert!(get_commits_between(dir_str, "missing-branch", "main").is_err());
+
         // 3. Create feature branch and add non-conflicting change
         run_git(dir_str, &["checkout", "-b", "feature-x"]);
         fs::write(&file_path, "Line 1: Header\nLine 2: Content\nLine 3: From feature\n").unwrap();
@@ -139,6 +163,7 @@ mod tests {
         assert_eq!(diff.files[0].status, "MODIFIED");
         assert_eq!(diff.files[0].additions, 1);
         assert_eq!(diff.files[0].deletions, 0);
+        assert!(!diff.files[0].is_binary);
         assert!(!diff.files[0].is_conflicted);
         assert!(diff.raw_diff.contains("+Line 3: From feature"));
 
@@ -160,6 +185,38 @@ mod tests {
         let disk_content = fs::read_to_string(&file_path).unwrap();
         assert!(!disk_content.contains("<<<<<<<"), "Working tree must remain untouched by git merge-tree");
         assert_eq!(disk_content, "Line 1: Header\nLine 2: Content\nLine 3: From main conflicting\n");
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn detects_binary_files_in_branch_diff() {
+        let temp_dir = std::env::temp_dir().join(format!(
+            "binary_diff_test_{}",
+            uuid::Uuid::new_v4()
+        ));
+        fs::create_dir_all(&temp_dir).unwrap();
+        let dir_str = temp_dir.to_str().unwrap();
+
+        run_git(dir_str, &["init", "-b", "main"]);
+        run_git(dir_str, &["config", "user.name", "Test User"]);
+        run_git(dir_str, &["config", "user.email", "test@test.com"]);
+
+        let binary_path = temp_dir.join("image.bin");
+        fs::write(&binary_path, [0, 1, 2, 3, 0xff]).unwrap();
+        run_git(dir_str, &["add", "."]);
+        run_git(dir_str, &["commit", "-m", "Add binary file"]);
+
+        run_git(dir_str, &["checkout", "-b", "binary-change"]);
+        fs::write(&binary_path, [0, 9, 8, 7, 0xff]).unwrap();
+        run_git(dir_str, &["commit", "-am", "Change binary file"]);
+
+        let diff = get_mr_diff(dir_str, "main", "binary-change").unwrap();
+        assert_eq!(diff.files.len(), 1);
+        assert_eq!(diff.files[0].path, "image.bin");
+        assert!(diff.files[0].is_binary);
+        assert_eq!(diff.files[0].additions, 0);
+        assert_eq!(diff.files[0].deletions, 0);
 
         let _ = fs::remove_dir_all(&temp_dir);
     }

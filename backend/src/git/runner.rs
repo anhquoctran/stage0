@@ -102,29 +102,9 @@ pub fn resolve_ref(repo_path: &str, r: &str) -> Result<(String, String), String>
         }
     }
 
-    // 4. If ref was "main" or "master", try fallback to the other
-    if trimmed == "main" || trimmed == "origin/main" {
-        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "master"]) {
-            return Ok((out.trim().to_string(), "master".to_string()));
-        }
-        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "origin/master"]) {
-            return Ok((out.trim().to_string(), "origin/master".to_string()));
-        }
-    } else if trimmed == "master" || trimmed == "origin/master" {
-        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "main"]) {
-            return Ok((out.trim().to_string(), "main".to_string()));
-        }
-        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "origin/main"]) {
-            return Ok((out.trim().to_string(), "origin/main".to_string()));
-        }
-    }
-
-    // 5. Try HEAD as ultimate fallback
-    if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "HEAD"]) {
-        return Ok((out.trim().to_string(), "HEAD".to_string()));
-    }
-
-    // 6. Fail with original error message from git
+    // Never silently substitute another branch or HEAD: comparisons must use
+    // the refs the user selected, otherwise a deleted ref can show a false diff.
+    // Fail with the original Git error when none of the expected aliases exist.
     let out = run_git_strict(repo_path, &["rev-parse", "--short", trimmed])?;
     Ok((out.trim().to_string(), trimmed.to_string()))
 }
