@@ -118,51 +118,14 @@ export interface GitTagInfo {
 export interface AiReviewerBotMeta {
   id: string;
   name: string;
-  tagline: string;
-  category: 'security' | 'performance' | 'style' | 'architecture';
-  avatarEmoji: string;
-  description: string;
-  defaultRules: string;
+  tagline?: string;
+  category?: 'security' | 'performance' | 'style' | 'architecture' | 'custom';
+  avatarEmoji?: string;
+  description?: string;
+  defaultRules?: string;
 }
 
-export const AVAILABLE_AI_BOTS: AiReviewerBotMeta[] = [
-  {
-    id: 'security-bot',
-    name: 'Security Auditor Bot',
-    tagline: 'OWASP & Secret Leak Detection',
-    category: 'security',
-    avatarEmoji: '🛡️',
-    description: 'Specializes in scanning for vulnerabilities, API token leaks, secret keys, and input validation.',
-    defaultRules: 'Strictly check for hardcoded secrets, sanitization, token leaks, injection flaws, and critical security risks.',
-  },
-  {
-    id: 'codestyle-bot',
-    name: 'Code Style & Quality Bot',
-    tagline: 'Naming, Clean Code & Lints',
-    category: 'style',
-    avatarEmoji: '✨',
-    description: 'Detects code smells, unused variables, inconsistent conventions, and formatting flaws.',
-    defaultRules: 'Adhere to clean code practices, meaningful variable names, duplicate avoidance, and strict type safety.',
-  },
-  {
-    id: 'performance-bot',
-    name: 'Performance & Memory Bot',
-    tagline: 'Big-O, Allocation & N+1 Queries',
-    category: 'performance',
-    avatarEmoji: '⚡',
-    description: 'Analyzes algorithmic complexity, redundant memory allocations, and inefficient loops.',
-    defaultRules: 'Focus on runtime performance, avoid unnecessary memory clones, optimize loops and blocking operations.',
-  },
-  {
-    id: 'arch-bot',
-    name: 'Architecture Reviewer Bot',
-    tagline: 'SOLID, Modularity & Breaking Changes',
-    category: 'architecture',
-    avatarEmoji: '🏛️',
-    description: 'Evaluates modularity, clean/hexagonal architecture patterns, and prevents breaking API changes.',
-    defaultRules: 'Ensure loose coupling between layers, uphold SOLID principles, and preserve backward compatibility.',
-  },
-];
+export const AVAILABLE_AI_BOTS: AiReviewerBotMeta[] = [];
 
 export const PRESET_REPO_LABELS: Omit<RepoLabel, 'id' | 'repoId'>[] = [
   { name: 'feature', color: '#3b82f6', description: 'New feature or enhancement' },
