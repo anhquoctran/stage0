@@ -4,10 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:app": "tauri dev",
+    "dev": "node scripts/dev.mjs --web",
+    "dev:web": "node scripts/dev.mjs --web",
+    "dev:app": "node scripts/dev.mjs --app",
+    "dev:desktop": "node scripts/dev.mjs --app",
     "build": "vite build",
-    "build:app": "tauri build",
+    "build:web": "vite build",
+    "build:app": "node scripts/build.mjs",
+    "build:prod": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "tauri": "tauri"
