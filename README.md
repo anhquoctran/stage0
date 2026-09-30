@@ -1,195 +1,139 @@
 <div align="center">
 
-  <img src="./app-icon.svg" alt="Stage0 Logo" width="80" height="80" />
+  <img src="./app-icon.svg" alt="Stage0 logo" width="80" height="80" />
 
   # Stage0
 
-  **High-Performance Local-First Virtual MR / PR Sandbox**
-
-  *Simulate 3-dot branch comparisons and predict merge conflicts in memory with zero disk modifications.*
-
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-  [![Tauri](https://img.shields.io/badge/Tauri-v2-FFC131?logo=tauri&logoColor=white)](https://tauri.app/)
-  [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-  [![Rust](https://img.shields.io/badge/Rust-2021_Edition-DEA584?logo=rust&logoColor=white)](https://www.rust-lang.org/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+  [![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC131?logo=tauri&logoColor=white)](https://tauri.app/)
+  [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+  [![Rust 2021](https://img.shields.io/badge/Rust-2021_Edition-DEA584?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+  [![TypeScript 5.7](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
 </div>
 
----
+Stage0 is a local-first desktop application for reviewing changes between Git branches. It provides three-dot diffs, merge-conflict previews, Git blame, and locally stored Virtual MR sessions without checking out a merge into the current working tree.
 
-## 📖 Overview
+Stage0 is built with Tauri 2, Rust, React, and TypeScript. It uses the Git executable installed on the user's machine.
 
-**Stage0** is a desktop application built for developers who need to review merge requests, inspect virtual branch differences, and identify merge conflicts **before** pushing to remote servers (GitHub, GitLab, Bitbucket) or altering local working branches.
+## Features
 
-By leveraging low-level Git commands like `git merge-tree --write-tree` and safe subprocess streaming in Rust, Stage0 predicts conflicts and computes 3-dot diffs completely in memory without touching your `.git/index` or dirtying your uncommitted changes.
+- Compare two refs using Git's three-dot diff semantics and browse changed files with addition and deletion counts.
+- Inspect predicted merge conflicts and preview conflicted files.
+- View file-level and inline Git blame.
+- Keep local Virtual MR sessions, labels, discussions, and comments in an embedded SQLite database.
+- Monitor the active repository for filesystem changes and refresh the review view.
+- Fetch, pull, and rebase branches; manage local branches, tags, and remotes.
+- Open repositories and files in the system file manager, terminal, or Visual Studio Code.
+- Store Git credential metadata locally and secrets in the operating system credential store.
 
----
+## Important behavior and limitations
 
-## ✨ Features
+Stage0's diff and conflict checks do not check out or merge branches into the working tree or Git index. Conflict detection uses `git merge-tree --write-tree`; Git may write tree or blob objects to the repository's object database while calculating the result. The guarantee is about leaving the working tree and index untouched, not about making no disk writes at all.
 
-- **🛡️ Zero-Risk Merge Sandbox**:
-  - In-memory conflict detection via `git merge-tree` with exact conflicting file isolation.
-  - Test merges and rebases safely before committing or pushing.
-- **⚡ 3-Dot Comparison (`base...compare`)**:
-  - Accurately computes merge-base commits and changed files with addition/deletion statistics (`numstat`).
-  - Single-click **Swap Base & Compare** to reverse perspective instantly.
-- **🔍 Virtualized Diff Engine**:
-  - Powered by `@git-diff-view/react` for buttery-smooth virtual scrolling over thousands of lines.
-  - Side-by-side (Split) and Inline (Unified) diff layouts with keyboard shortcuts.
-- **📜 Deep Blame Inspector & Inline Blame**:
-  - Dedicated **File Blame** view showing commit hashes, authors, commit dates, and commit messages.
-  - **Inline Git Blame** (VS Code style) that displays the author and commit context right on the active diff line.
-- **🔄 Realtime File & Git Watcher**:
-  - Multi-threaded debounced watcher (via Rust `notify`) detects disk changes and branch switches automatically.
-  - Preserves view state, selected files, and scroll positions across updates.
-- **🛠️ Direct Toolchain Integration**:
-  - Open current repository or files directly in your system's default terminal, Visual Studio Code, or native file manager (**File Explorer** on Windows, **Finder** on macOS, **File Manager** on Linux).
-  - Quick copy commands for relative path, absolute path, and remote web URL (`github.com/.../blob/...`).
-- **🎨 Sleek Monochromatic UI**:
-  - Curated Catppuccin-inspired dark and light palettes.
-  - Customizable typography (Fira Code, JetBrains Mono, Cascadia Code, SF Mono, etc.) with ligature toggle.
-- **🔒 100% Local & Private**:
-  - Built-in embedded SQLite (`rusqlite` with WAL mode) for persisting recent repositories and review sessions.
-  - Zero external telemetry, no required cloud accounts.
+Virtual MR sessions are local application records. Stage0 does not currently create or update pull requests on GitHub, GitLab, or other hosting services. Fetch and pull contact Git remotes, and pull or rebase can change local repository state. Stage0 does not provide a push operation.
 
----
+Sandbox adapters have different scopes:
 
-## 🏗️ Architecture
+| Adapter | Behavior | Limitations |
+| --- | --- | --- |
+| In-memory | Supports diff and conflict inspection. | Does not run commands. |
+| Local worktree | Creates a detached worktree at the compare ref and runs commands in it. | It does not create the predicted merge result. Commands run on the host with the current user's permissions; a worktree is not operating-system-level isolation. |
+| Docker | Runs commands in a container with the repository mounted read-only. | It does not create the predicted merge result. The container's network access is not disabled by Stage0. |
 
-```mermaid
-flowchart TD
-    subgraph UI ["Frontend (React 19 + TypeScript)"]
-        TopBar["TopBar & MenuBar"]
-        FileList["FileList Sidebar (Tree / Flat)"]
-        DiffViewer["Virtualized DiffViewer & Blame"]
-        Zustand["Zustand Store (useGitStore)"]
-    end
+AI and MCP preferences are currently configuration UI rather than complete integrations. Cloud AI and MCP connection checks are simulated, bot re-verification does not inspect source code, and assigned reviewers are not persisted across application restarts. Saved Git credentials are stored in the OS credential store but are not currently injected into Git operations.
 
-    subgraph RustCore ["Backend (Tauri v2 + Rust)"]
-        IPC["Tauri IPC Commands"]
-        GitRunner["Git CLI Runner (std::process::Command)"]
-        MergeTree["In-Memory merge-tree Engine"]
-        Watcher["Debounced File Watcher (notify)"]
-        SQLite["Embedded SQLite (rusqlite WAL)"]
-    end
+## Requirements
 
-    subgraph OS ["Operating System & Disk"]
-        GitRepo["Local Git Repository (.git)"]
-        ExtApps["VS Code / Terminal / File Explorer"]
-    end
+- Git 2.38 or later is recommended for `git merge-tree --write-tree`.
+- Node.js 18 or later and npm.
+- A stable Rust toolchain.
+- Native build tools for your platform:
+  - Windows: Microsoft C++ Build Tools and WebView2 Runtime.
+  - macOS: Xcode Command Line Tools.
+  - Linux: WebKit2GTK 4.1 development packages, OpenSSL development packages, `pkg-config`, and a C/C++ toolchain. Ubuntu/Debian users can install the common requirements with:
 
-    TopBar <-->|IPC Invocation| IPC
-    FileList <-->|IPC Invocation| IPC
-    DiffViewer <-->|IPC Invocation| IPC
-    Zustand <-->|State Updates| TopBar
-
-    IPC --> GitRunner
-    IPC --> SQLite
-    GitRunner --> MergeTree
-    MergeTree -->|Subprocess| GitRepo
-    Watcher -->|Listen for changes| GitRepo
-    Watcher -->|repo-fs-changed Event| Zustand
-    IPC -->|Spawn process| ExtApps
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-Ensure you have the following installed on your machine:
-- **Git CLI** (v2.38+ recommended for `git merge-tree --write-tree` support).
-- **Node.js** (v18.0.0 or higher) and `npm`.
-- **Rust Toolchain** (latest stable version):
-  ```bash
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  ```
-- **OS Build Essentials**:
-  - **Windows**: Microsoft C++ Build Tools (via Visual Studio Installer).
-  - **macOS**: Xcode Command Line Tools (`xcode-select --install`).
-  - **Linux (Ubuntu/Debian)**:
     ```bash
-    sudo apt update && sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libayatana-appindicator3-dev librsvg2-dev
+    sudo apt update
+    sudo apt install build-essential pkg-config libwebkit2gtk-4.1-dev libssl-dev libsecret-1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
     ```
 
-### Installation & Local Development
+## Development
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/anhquoctran/stage0.git
-   cd stage0
-   ```
+Clone the repository and install frontend dependencies:
 
-2. **Install frontend dependencies:**
-   ```bash
-   npm install
-   ```
+```bash
+git clone https://github.com/anhquoctran/stage0.git
+cd stage0
+npm install
+```
 
-3. **Run the development application:**
-   ```bash
-   npm run dev:app
-   ```
-   *This starts the Vite local server and compiles the Tauri native window with live hot-reloading.*
+Run the native desktop application with frontend and Rust hot reload:
 
-4. **Verify TypeScript & Rust types:**
-   ```bash
-   npm run typecheck
-   cd backend && cargo check
-   ```
+```bash
+npm run dev:app
+```
 
-### Building for Production
+The web development server can be started with `npm run dev:web`, but most repository features require the Tauri backend and are not available in a regular browser.
 
-To create a production-ready desktop installer/executable:
+Run the available static checks:
+
+```bash
+npm run typecheck
+cd backend && cargo check
+```
+
+## Build
+
+Build the frontend assets only:
+
+```bash
+npm run build:web
+```
+
+Build and package the native desktop application for the current platform:
+
 ```bash
 npm run build:app
 ```
-Artifacts will be packaged in `backend/target/release/bundle/`.
 
----
+The desktop build runs the TypeScript check and writes Tauri bundle artifacts under `backend/target/release/bundle/`.
 
-## ⌨️ Keyboard Shortcuts
+## Architecture
 
-| Shortcut | Action | Scope |
-| :--- | :--- | :--- |
-| <kbd>Ctrl</kbd> + <kbd>O</kbd> | Open repository folder dialog | Global |
-| <kbd>Ctrl</kbd> + <kbd>R</kbd> | Refresh virtual diff & re-check conflicts | Global |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> | Open Preferences dialog | Global |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> | Fetch all remotes and prune | Repository |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> | Quick Pull from default remote branch | Repository |
-| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>P</kbd> | Pull from... (advanced options modal) | Repository |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> | Quick Rebase onto compare branch | Repository |
-| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>R</kbd> | Rebase from... (advanced options modal) | Repository |
-| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> | Open repository in default terminal | Global |
-| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> | Open repository in Visual Studio Code | Global |
-| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd> | Open repository in File Explorer / Finder | Global |
-| <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>R</kbd> | Reveal selected file in native file manager | Selected File |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> | Copy relative file path | Selected File |
-| <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd> | Copy absolute file path | Selected File |
-| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>U</kbd> | Copy remote web file URL | Selected File |
-| <kbd>Alt</kbd> + <kbd>B</kbd> | Toggle file Git Blame view | Active File |
-| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> | Toggle inline Git Blame annotations | Diff View |
-| <kbd>S</kbd> | Switch to side-by-side (split) diff view | Diff View |
-| <kbd>U</kbd> | Switch to inline (unified) diff view | Diff View |
-| <kbd>↓</kbd> / <kbd>J</kbd> | Navigate to next modified file | File List |
-| <kbd>↑</kbd> / <kbd>K</kbd> | Navigate to previous modified file | File List |
+```mermaid
+flowchart TD
+    UI[React and TypeScript UI] -->|Tauri IPC| Commands[Rust command handlers]
+    UI -->|Filesystem events| Watcher[Repository watcher]
+    Commands --> Git[Git CLI]
+    Commands --> DB[SQLite database]
+    Commands --> Keyring[OS credential store]
+    Commands --> Sandbox[Sandbox adapters]
+    Sandbox --> Git
+    Watcher -->|repo-fs-changed| UI
+```
 
----
+The main source directories are:
 
-## 🤝 Contributing
+| Path | Contents |
+| --- | --- |
+| `frontend/` | React components, Zustand stores, types, and UI utilities. |
+| `backend/src/commands.rs` | Tauri IPC command handlers. |
+| `backend/src/git/` | Git command runner, diff, branch, conflict, blame, and remote operations. |
+| `backend/src/sandbox/` | In-memory, local worktree, and Docker adapters. |
+| `backend/src/db/` | SQLite initialization, schema, and persistence methods. |
+| `backend/src/watcher/` | Debounced repository filesystem watcher. |
+| `scripts/` | Cross-platform development and build scripts. |
 
-We welcome contributions from the open-source community! Whether fixing bugs, improving docs, or proposing new features, please read our [CONTRIBUTING.md](./CONTRIBUTING.md) and adhere to our [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+## Contributing
 
----
+Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the development workflow and pull request guidelines. By participating, you agree to follow the [Code of Conduct](./CODE_OF_CONDUCT.md).
 
-## 🔒 Security
+## Security
 
-For security vulnerability disclosures, please review our [SECURITY.md](./SECURITY.md).
+Please do not report security vulnerabilities in public issues. Follow the private reporting instructions in [SECURITY.md](./SECURITY.md).
 
----
+## License
 
-## 📄 License
-
-Stage0 is open-source software licensed under the [MIT License](./LICENSE).
+Stage0 is distributed under the [MIT License](./LICENSE).
