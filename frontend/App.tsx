@@ -3,7 +3,6 @@ import { clsx } from 'clsx';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { MainLayout } from './components/layout/MainLayout';
-import { SplashScreen } from './components/layout/SplashScreen';
 import { useGitStore } from './store/useGitStore';
 import type { RepoInfo, WindowStartupContext } from './types/git';
 
@@ -18,24 +17,27 @@ export const App: React.FC = () => {
   const hideCustomFrame = isFullscreen || (isMaximized && !usesNativeMacFrame);
 
   useEffect(() => {
+    if (isInitializing) return;
+
+    const splash = document.getElementById('startup-splash');
+    if (!splash) return;
+
+    let removeTimer: number | undefined;
+    const fadeTimer = window.setTimeout(() => {
+      splash.classList.add('is-hidden');
+      removeTimer = window.setTimeout(() => splash.remove(), 350);
+    }, 500);
+
+    return () => {
+      window.clearTimeout(fadeTimer);
+      if (removeTimer !== undefined) window.clearTimeout(removeTimer);
+    };
+  }, [isInitializing]);
+
+  useEffect(() => {
     let disposed = false;
     let unlistenFs: (() => void) | undefined;
     let unlistenOpen: (() => void) | undefined;
-    const preventWebViewContextMenu = (event: MouseEvent) => {
-      const target = event.target;
-      if (
-        target instanceof Element &&
-        target.closest('input, textarea, [contenteditable="true"]')
-      ) {
-        return;
-      }
-      event.preventDefault();
-    };
-
-    if (isTauri()) {
-      // Keep native text-editing menus, but hide WebView's Reload/Inspect menu.
-      document.addEventListener('contextmenu', preventWebViewContextMenu);
-    }
 
     const initializeWindow = async () => {
       try {
@@ -88,7 +90,6 @@ export const App: React.FC = () => {
       disposed = true;
       unlistenFs?.();
       unlistenOpen?.();
-      document.removeEventListener('contextmenu', preventWebViewContextMenu);
       window.removeEventListener('resize', checkWindowState);
     };
   }, [initApp, attachRepoToCurrentWindow, refreshDiff]);
@@ -104,7 +105,6 @@ export const App: React.FC = () => {
             : 'border border-primary rounded-[8px]'
       )}
     >
-      <SplashScreen isInitializing={isInitializing} />
       <MainLayout />
     </div>
   );

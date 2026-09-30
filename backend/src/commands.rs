@@ -585,6 +585,12 @@ pub async fn window_minimize(window: Window) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn open_webview_devtools(window: WebviewWindow) -> Result<(), String> {
+    window.open_devtools();
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn window_toggle_maximize(window: Window) -> Result<bool, String> {
     let is_max = window.is_maximized().map_err(|e| e.to_string())?;
     if is_max {

@@ -345,19 +345,6 @@ code, kbd, samp, pre {
   animation: conflict-glow 2s infinite ease-in-out;
 }
 
-/* Splash Screen Progress Bar Animation */
-@keyframes splash-progress {
-  0% {
-    transform: translateX(-100%);
-  }
-  50% {
-    transform: translateX(35%);
-  }
-  100% {
-    transform: translateX(180%);
-  }
-}
-
 /* VSCode-style Active Diff Line Highlight */
 tr.stage0-active-line > td {
   background-color: color-mix(in srgb, var(--ctp-surface1) 22%, transparent) !important;

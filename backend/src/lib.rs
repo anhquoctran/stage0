@@ -22,6 +22,24 @@ pub fn run() {
                 destroy_window(&window.app_handle(), window.label());
             }
         })
+        .plugin(
+            tauri::plugin::Builder::<tauri::Wry>::new("context-menu-policy")
+                .js_init_script(
+                    r#"
+                    document.addEventListener('contextmenu', (event) => {
+                      const target = event.target;
+                      if (
+                        target instanceof Element &&
+                        target.closest('input, textarea, [contenteditable="true"]')
+                      ) {
+                        return;
+                      }
+                      event.preventDefault();
+                    }, true);
+                    "#,
+                )
+                .build(),
+        )
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             if let Some(repo_path) = find_repo_argument(&args, Path::new(&cwd)) {
                 if let Err(error) = open_repo_path(app, &repo_path, None, false) {
@@ -112,6 +130,7 @@ pub fn run() {
             commands::check_rebase_status,
             commands::get_file_blame,
             commands::window_minimize,
+            commands::open_webview_devtools,
             commands::window_toggle_maximize,
             commands::window_close,
             commands::window_is_maximized,

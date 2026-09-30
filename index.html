@@ -12,39 +12,195 @@
       onload="this.media='all'"
     />
     <title>Stage0 - Virtual MR Sandbox</title>
+    <style>
+      #startup-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: #11111b;
+        color: #cdd6f4;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        user-select: none;
+        opacity: 1;
+        transform: scale(1);
+        transition: opacity 350ms ease, transform 350ms ease;
+      }
+
+      #startup-splash.is-hidden {
+        opacity: 0;
+        transform: scale(1.02);
+        pointer-events: none;
+      }
+
+      #startup-splash .splash-glow {
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        filter: blur(48px);
+        pointer-events: none;
+      }
+
+      #startup-splash .splash-glow-top {
+        top: 25%;
+        left: -80px;
+        background: rgba(137, 180, 250, 0.1);
+      }
+
+      #startup-splash .splash-glow-bottom {
+        right: -80px;
+        bottom: 25%;
+        background: rgba(203, 166, 247, 0.1);
+      }
+
+      #startup-splash .splash-content {
+        position: relative;
+        display: flex;
+        width: min(100%, 384px);
+        flex-direction: column;
+        align-items: center;
+        padding: 0 24px;
+        text-align: center;
+      }
+
+      #startup-splash .splash-logo {
+        display: flex;
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-bottom: 24px;
+        border: 1px solid rgba(184, 127, 244, 0.4);
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(184, 127, 244, 0.2), rgba(184, 127, 244, 0.1) 55%, #313244);
+        box-shadow: 0 12px 30px rgba(184, 127, 244, 0.12);
+        color: #b87ff4;
+      }
+
+      #startup-splash .splash-logo svg {
+        width: 32px;
+        height: 32px;
+      }
+
+      #startup-splash .splash-logo-label {
+        color: #b87ff4;
+        font-family: 'Fira Code', 'SFMono-Regular', Consolas, monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      #startup-splash .splash-title {
+        margin: 0 0 6px;
+        color: #cdd6f4;
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      #startup-splash .splash-title-accent {
+        color: #89b4fa;
+      }
+
+      #startup-splash .splash-tagline {
+        margin: 0 0 24px;
+        color: #bac2de;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      #startup-splash .splash-progress-track {
+        width: 100%;
+        height: 6px;
+        margin-bottom: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(49, 50, 68, 0.4);
+        border-radius: 999px;
+        background: rgba(49, 50, 68, 0.6);
+      }
+
+      #startup-splash .splash-progress {
+        width: 66.666%;
+        height: 100%;
+        border-radius: 999px;
+        background: #b87ff4;
+        animation: startup-splash-progress 1.6s ease-in-out infinite;
+      }
+
+      #startup-splash .splash-status {
+        min-height: 20px;
+        color: #a6adc8;
+        font-family: 'Fira Code', 'SFMono-Regular', Consolas, monospace;
+        font-size: 11px;
+      }
+
+      #startup-splash .splash-highlights {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 32px;
+        color: #7f849c;
+        font-size: 10px;
+        font-weight: 500;
+      }
+
+      #startup-splash .splash-highlight {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+      }
+
+      #startup-splash .splash-highlight-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+
+      @keyframes startup-splash-progress {
+        0% { transform: translateX(-100%); }
+        50% { transform: translateX(35%); }
+        100% { transform: translateX(180%); }
+      }
+    </style>
   </head>
   <body class="bg-crust text-text antialiased h-screen overflow-hidden select-none" style="background-color: #11111b; margin: 0;">
-    <div id="root" class="h-full w-full">
-      <div style="position: fixed; inset: 0; background-color: #11111b; color: #cdd6f4; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select: none;">
-        <!-- Glowing App Icon -->
-        <div style="position: relative; margin-bottom: 24px;">
-          <div style="width: 96px; height: 96px; border-radius: 20px; background-color: #181825; border: 1px solid #313244; box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
-            <img src="/app-icon.svg" style="width: 64px; height: 64px;" alt="Stage0 Logo" />
-          </div>
+    <div id="root" class="h-full w-full"></div>
+    <div id="startup-splash" role="status" aria-live="polite">
+      <div class="splash-glow splash-glow-top"></div>
+      <div class="splash-glow splash-glow-bottom"></div>
+      <div class="splash-content">
+        <div class="splash-logo" aria-label="Stage0 logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="8" />
+            <line x1="16" y1="8" x2="8" y2="16" stroke-width="2" opacity="0.65" />
+            <circle cx="12" cy="4" r="1.5" fill="currentColor" />
+            <circle cx="12" cy="20" r="1.5" fill="currentColor" />
+          </svg>
+          <span class="splash-logo-label">STAGE0</span>
         </div>
-
-        <!-- Title -->
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-          <span style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #cdd6f4;">Stage<span style="color: #b87ff4;">0</span></span>
-          <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 999px; background: rgba(184, 127, 244, 0.15); color: #b87ff4; border: 1px solid rgba(184, 127, 244, 0.3);">Virtual MR</span>
+        <h1 class="splash-title">Stage<span class="splash-title-accent">0</span></h1>
+        <p class="splash-tagline">Local-first Virtual Merge Request &amp; Conflict Prediction Sandbox</p>
+        <div class="splash-progress-track" aria-hidden="true">
+          <div class="splash-progress"></div>
         </div>
-
-        <p style="font-size: 12px; color: #bac2de; margin: 0 0 24px 0;">Local-first Virtual Merge Request &amp; Conflict Prediction Sandbox</p>
-
-        <!-- Progress bar -->
-        <div style="width: 220px; height: 5px; background: rgba(49, 50, 68, 0.6); border-radius: 999px; overflow: hidden; position: relative;">
-          <div style="width: 50%; height: 100%; background: linear-gradient(90deg, #b87ff4, #b4befe, #89dceb); border-radius: 999px; animation: splash-pulse 1.4s ease-in-out infinite;"></div>
+        <div class="splash-status">Initializing Stage0 runtime...</div>
+        <div class="splash-highlights" aria-hidden="true">
+          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#fab387"></span>Zero Disk Writes</span>
+          <span>·</span>
+          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#94e2d5"></span>git merge-tree</span>
+          <span>·</span>
+          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#a6e3a1"></span>100% Isolated</span>
         </div>
-
-        <div style="margin-top: 12px; font-size: 11px; color: #a6adc8; font-family: monospace;">Initializing Stage0 runtime...</div>
       </div>
-      <style>
-        @keyframes splash-pulse {
-          0% { transform: translateX(-100%); }
-          50% { transform: translateX(50%); }
-          100% { transform: translateX(200%); }
-        }
-      </style>
     </div>
     <script type="module" src="/frontend/main.tsx"></script>
   </body>
