@@ -27,6 +27,7 @@ pub fn run() {
                     width: 1024.0,
                     height: 680.0,
                 })));
+                let _ = window.maximize();
             }
 
             #[cfg(target_os = "macos")]
