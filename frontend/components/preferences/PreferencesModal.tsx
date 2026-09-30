@@ -446,11 +446,14 @@ export const PreferencesModal: React.FC = () => {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
       <div className="bg-mantle border border-surface0 w-full max-w-5xl xl:max-w-6xl shadow-2xl overflow-hidden flex flex-col h-[760px] max-h-[92vh] min-h-[580px] animate-in zoom-in-95 duration-150">
         {/* Header with Title and Unsaved Badge */}
-        <div className="px-6 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60">
-          <div className="flex items-center gap-2.5">
+        <div
+          data-tauri-drag-region
+          className="px-6 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60 cursor-default"
+        >
+          <div data-tauri-drag-region className="flex items-center gap-2.5 pointer-events-none">
             <div className="w-7 h-7 bg-surface0 border border-surface1 flex items-center justify-center text-text shadow-xs">
               <Sliders className="w-4 h-4 text-subtext0" />
             </div>
@@ -490,13 +493,13 @@ export const PreferencesModal: React.FC = () => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all cursor-pointer border-l-2 ${
                       isActive
-                        ? 'bg-surface1 text-text font-semibold border-l-text'
+                        ? 'bg-brand/10 text-brand font-semibold border-l-brand'
                         : 'border-l-transparent text-subtext0 hover:bg-surface0/50 hover:text-text'
                     }`}
                   >
                     <div
                       className={`mt-0.5 shrink-0 ${
-                        isActive ? 'text-text' : 'text-subtext0'
+                        isActive ? 'text-brand' : 'text-subtext0'
                       }`}
                     >
                       {tab.icon}
@@ -510,7 +513,7 @@ export const PreferencesModal: React.FC = () => {
                       </div>
                     </div>
                     {Boolean(tab.unsavedCount && tab.unsavedCount > 0) && (
-                      <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded-full bg-amber-400/15 text-amber-400 border border-amber-400/30 shrink-0">
+                      <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded-full bg-surface2 text-text border border-surface1 shrink-0">
                         {tab.unsavedCount}
                       </span>
                     )}
@@ -1026,8 +1029,8 @@ export const PreferencesModal: React.FC = () => {
             </button>
 
             {totalUnsaved > 0 && (
-              <span className="flex items-center gap-1.5 text-[11px] font-mono text-amber-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <span className="flex items-center gap-1.5 text-[11px] font-mono text-subtext0 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-subtext0" />
                 <span>{totalUnsaved} unsaved</span>
               </span>
             )}
@@ -1052,7 +1055,7 @@ export const PreferencesModal: React.FC = () => {
               disabled={!hasUnsavedChanges && !isApplied}
               className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
                 isApplied
-                  ? 'bg-green/15 text-green border-green/30'
+                  ? 'bg-surface2 text-text border-surface1'
                   : hasUnsavedChanges
                   ? 'bg-surface1 hover:bg-surface2 text-text border-surface2 shadow-xs'
                   : 'bg-surface0/40 text-subtext0/50 border-surface0 cursor-not-allowed'
@@ -1061,7 +1064,7 @@ export const PreferencesModal: React.FC = () => {
             >
               {isApplied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-green" />
+                  <Check className="w-3.5 h-3.5 text-text" />
                   <span>Applied</span>
                 </>
               ) : (
@@ -1073,7 +1076,7 @@ export const PreferencesModal: React.FC = () => {
             <button
               type="button"
               onClick={handleOk}
-              className="px-5 py-1.5 bg-surface2 hover:bg-surface1 text-text font-semibold rounded-lg text-xs transition-colors cursor-pointer shadow-xs border border-surface2"
+              className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand"
               title="Save changes and close window"
             >
               OK
@@ -1084,10 +1087,10 @@ export const PreferencesModal: React.FC = () => {
 
       {/* Confirmation Dialog for Reset to Defaults */}
       {showResetConfirm && (
-        <div className="fixed inset-0 z-[60] bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-100">
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-[60] bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-100">
           <div className="bg-mantle border border-surface0 max-w-md w-full p-5 rounded-xl shadow-2xl space-y-4 animate-in zoom-in-95 duration-100">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-surface0 border border-surface1 text-amber-400 shrink-0">
+              <div className="p-2 rounded-lg bg-surface0 border border-surface1 text-subtext0 shrink-0">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>

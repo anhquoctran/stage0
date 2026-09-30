@@ -52,6 +52,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
 
   return (
     <div
+      data-tauri-drag-region
       className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-crust select-none transition-all duration-300 ${
         isFading ? 'opacity-0 scale-[1.02] pointer-events-none' : 'opacity-100 scale-100'
       }`}

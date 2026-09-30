@@ -61,6 +61,7 @@ pub fn run() {
             commands::window_toggle_maximize,
             commands::window_close,
             commands::window_is_maximized,
+            commands::window_show,
             commands::list_git_credentials,
             commands::save_git_credential,
             commands::delete_git_credential,
@@ -75,6 +76,39 @@ pub fn run() {
             commands::execute_sandbox_command,
             commands::pick_folder,
             commands::clone_repository,
+            commands::check_remote_repo_url,
+            // Repo Settings & Labels
+            commands::get_repo_settings,
+            commands::save_repo_settings,
+            commands::list_repo_labels,
+            commands::create_repo_label,
+            commands::update_repo_label,
+            commands::delete_repo_label,
+            // Git Remotes Detailed & Connectivity
+            commands::list_git_remotes_detailed,
+            commands::add_git_remote,
+            commands::remove_git_remote,
+            commands::set_git_remote_url,
+            commands::test_git_remote,
+            // Git Branches & Tags
+            commands::list_git_tags,
+            commands::create_git_tag,
+            commands::delete_git_tag,
+            commands::create_git_branch,
+            commands::delete_git_branch,
+            commands::rename_git_branch,
+            // Virtual MR Sessions, Commits & Identity
+            commands::list_virtual_mr_sessions,
+            commands::save_virtual_mr_session,
+            commands::delete_virtual_mr_session,
+            commands::get_commits_between_refs,
+            commands::get_git_user_identity_cmd,
+            // Discussions & Comments
+            commands::list_mr_discussions,
+            commands::create_mr_discussion,
+            commands::add_mr_comment,
+            commands::resolve_mr_discussion,
+            commands::verify_mr_discussion,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -33,6 +33,8 @@ import {
   Code2,
   Folder,
   Trash2,
+  FolderGit2,
+  GitPullRequest,
 } from 'lucide-react';
 import {
   revealInOs,
@@ -47,9 +49,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
+import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { AppLogo } from '../common/AppLogo';
 
 export const MenuBar: React.FC = () => {
+  const { openRepoSettings, openNewMrDraft } = useVirtualMrStore();
   const {
     currentRepo,
     recentRepos,
@@ -60,6 +64,7 @@ export const MenuBar: React.FC = () => {
     setIsCloneModalOpen,
     selectRepo,
     clearRecentRepos,
+    removeRecentRepo,
     closeRepo,
     selectPrevFile,
     selectNextFile,
@@ -204,11 +209,52 @@ export const MenuBar: React.FC = () => {
 
           {activeMenu === 'file' && (
             <div className="absolute left-0 top-full mt-0.5 w-64 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+              {/* Active Repository Info */}
+              {currentRepo && (
+                <div className="px-3 py-2 bg-surface0/40 border-b border-surface0 mb-1.5">
+                  <div className="text-[10px] uppercase font-bold tracking-wider text-subtext1 flex items-center gap-1.5 mb-1">
+                    <FolderGit2 className="w-3 h-3 text-primary" />
+                    <span>Active Repository</span>
+                  </div>
+                  <div className="font-semibold text-text truncate text-xs">
+                    {currentRepo.name}
+                  </div>
+                  <div className="text-[10px] text-subtext0 truncate font-mono" title={currentRepo.local_path}>
+                    {currentRepo.local_path}
+                  </div>
+                </div>
+              )}
+
+              {/* New Virtual MR */}
+              <button
+                type="button"
+                disabled={!currentRepo}
+                onClick={() => {
+                  closeMenus();
+                  openNewMrDraft();
+                }}
+                onMouseEnter={() => {
+                  setShowRecentSubmenu(false);
+                  setShowOpenInSubmenu(false);
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <GitPullRequest className="w-3.5 h-3.5 text-brand group-hover:text-brand transition-colors" />
+                  <span>New Virtual MR...</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+T</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
                   closeMenus();
                   openRepoDialog();
+                }}
+                onMouseEnter={() => {
+                  setShowRecentSubmenu(false);
+                  setShowOpenInSubmenu(false);
                 }}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
@@ -225,6 +271,10 @@ export const MenuBar: React.FC = () => {
                   closeMenus();
                   setIsCloneModalOpen(true);
                 }}
+                onMouseEnter={() => {
+                  setShowRecentSubmenu(false);
+                  setShowOpenInSubmenu(false);
+                }}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
@@ -236,10 +286,99 @@ export const MenuBar: React.FC = () => {
                 </span>
               </button>
 
+              {/* Open in Submenu Trigger */}
+              <div
+                className="relative"
+                onMouseEnter={() => {
+                  setShowOpenInSubmenu(true);
+                  setShowRecentSubmenu(false);
+                }}
+                onMouseLeave={() => setShowOpenInSubmenu(false)}
+              >
+                <button
+                  type="button"
+                  disabled={!currentRepo}
+                  className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <ExternalLink className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                    <span>Open in</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                </button>
+
+                {showOpenInSubmenu && currentRepo && (
+                  <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        closeMenus();
+                        try {
+                          await openRepoInTerminal(currentRepo.local_path);
+                          showToast('Opened repository in terminal');
+                        } catch (err) {
+                          showToast(`Failed to open terminal: ${err}`);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Terminal className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                        <span>Terminal</span>
+                      </div>
+                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+T</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        closeMenus();
+                        try {
+                          await openRepoInVsCode(currentRepo.local_path);
+                          showToast('Opened repository in VS Code');
+                        } catch (err) {
+                          showToast(`Failed to open VS Code: ${err}`);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Code2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                        <span>Visual Studio Code</span>
+                      </div>
+                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+V</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        closeMenus();
+                        try {
+                          await openRepoInExplorer(currentRepo.local_path);
+                          showToast(`Opened repository in ${fileManagerName}`);
+                        } catch (err) {
+                          showToast(`Failed to open ${fileManagerName}: ${err}`);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Folder className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                        <span>{fileManagerName}</span>
+                      </div>
+                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+E</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Recent Repos Submenu Trigger */}
               <div
                 className="relative"
-                onMouseEnter={() => setShowRecentSubmenu(true)}
+                onMouseEnter={() => {
+                  setShowRecentSubmenu(true);
+                  setShowOpenInSubmenu(false);
+                }}
                 onMouseLeave={() => setShowRecentSubmenu(false)}
               >
                 <button
@@ -254,16 +393,15 @@ export const MenuBar: React.FC = () => {
                 </button>
 
                 {showRecentSubmenu && (
-                  <div className="absolute left-full top-0 ml-0.5 w-72 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs max-h-72 overflow-y-auto">
+                  <div className="absolute left-full top-0 ml-0.5 w-80 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs max-h-72 overflow-y-auto">
                     {recentRepos.length === 0 ? (
                       <div className="px-3 py-2 text-subtext0 text-center italic">
                         No recent repositories
                       </div>
                     ) : (
                       recentRepos.map((repo) => (
-                        <button
+                        <div
                           key={repo.id}
-                          type="button"
                           onClick={() => {
                             selectRepo(repo);
                             closeMenus();
@@ -271,15 +409,31 @@ export const MenuBar: React.FC = () => {
                           className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
                         >
                           <div className="min-w-0 flex-1 pr-2">
-                            <div className="font-medium truncate text-text">{repo.name}</div>
+                            <div className="font-medium truncate text-text flex items-center gap-1.5">
+                              <FolderOpen className="w-3 h-3 text-subtext0 shrink-0" />
+                              <span className="truncate">{repo.name}</span>
+                            </div>
                             <div className="text-[10px] text-subtext0 truncate font-mono">
                               {repo.local_path}
                             </div>
                           </div>
-                          {currentRepo?.id === repo.id && (
-                            <Check className="w-3.5 h-3.5 text-subtext0 group-hover:text-text shrink-0" />
-                          )}
-                        </button>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {currentRepo?.id === repo.id && (
+                              <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeRecentRepo(repo.id);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface2 text-subtext0 hover:text-red transition-all cursor-pointer"
+                              title="Remove from recent repositories"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
                       ))
                     )}
                     {recentRepos.length > 0 && (
@@ -306,9 +460,34 @@ export const MenuBar: React.FC = () => {
 
               <button
                 type="button"
+                disabled={!currentRepo}
+                onClick={() => {
+                  closeRepo();
+                  closeMenus();
+                }}
+                onMouseEnter={() => {
+                  setShowRecentSubmenu(false);
+                  setShowOpenInSubmenu(false);
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <XCircle className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Close Repository</span>
+                </div>
+              </button>
+
+              <div className="my-1 border-t border-surface0" />
+
+              <button
+                type="button"
                 onClick={() => {
                   closeMenus();
                   setIsPreferencesOpen(true);
+                }}
+                onMouseEnter={() => {
+                  setShowRecentSubmenu(false);
+                  setShowOpenInSubmenu(false);
                 }}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
@@ -325,24 +504,11 @@ export const MenuBar: React.FC = () => {
 
               <button
                 type="button"
-                disabled={!currentRepo}
-                onClick={() => {
-                  closeRepo();
-                  closeMenus();
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <XCircle className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Close Repository</span>
-                </div>
-              </button>
-
-              <div className="my-1 border-t border-surface0" />
-
-              <button
-                type="button"
                 onClick={handleExitApp}
+                onMouseEnter={() => {
+                  setShowRecentSubmenu(false);
+                  setShowOpenInSubmenu(false);
+                }}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
@@ -949,6 +1115,24 @@ export const MenuBar: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              <div className="my-1 border-t border-surface0" />
+
+              <button
+                type="button"
+                disabled={!currentRepo}
+                onClick={() => {
+                  closeMenus();
+                  openRepoSettings('remotes');
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-3.5 h-3.5 text-accent group-hover:text-text transition-colors" />
+                  <span className="font-medium text-accent">Repository Settings...</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+S</span>
+              </button>
             </div>
           )}
         </div>
@@ -1006,10 +1190,13 @@ export const MenuBar: React.FC = () => {
 
       {/* Keyboard Shortcuts Modal */}
       {showShortcutsModal && (
-        <div className="fixed inset-0 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-mantle border border-surface0 rounded-xl p-5 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-surface0">
-              <div className="flex items-center gap-2">
+            <div
+              data-tauri-drag-region
+              className="flex items-center justify-between pb-3 border-b border-surface0 cursor-default"
+            >
+              <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
                 <Keyboard className="w-4 h-4 text-subtext0" />
                 <h3 className="text-sm font-bold text-text">Keyboard Shortcuts</h3>
               </div>
@@ -1124,11 +1311,14 @@ export const MenuBar: React.FC = () => {
 
       {/* About Modal */}
       {showAboutModal && (
-        <div className="fixed inset-0 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-mantle border border-surface0 rounded-xl p-5 max-w-sm w-full shadow-2xl text-center animate-in zoom-in-95 duration-150">
-            <AppLogo size="md" className="mx-auto mb-3" />
-            <h3 className="text-base font-bold text-text">Stage0</h3>
-            <p className="text-xs font-mono text-subtext1 mb-2">v0.1.0 • Local-First Virtual MR Sandbox</p>
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div
+            data-tauri-drag-region
+            className="bg-mantle border border-surface0 rounded-xl p-5 max-w-sm w-full shadow-2xl text-center animate-in zoom-in-95 duration-150 cursor-default"
+          >
+            <AppLogo size="md" className="mx-auto mb-3 pointer-events-none" />
+            <h3 data-tauri-drag-region className="text-base font-bold text-text pointer-events-none">Stage0</h3>
+            <p data-tauri-drag-region className="text-xs font-mono text-subtext1 mb-2 pointer-events-none">v0.1.0 • Local-First Virtual MR Sandbox</p>
             <p className="text-xs text-subtext1 mb-4 leading-relaxed">
               Stage0 simulates 3-dot branch comparisons and merge conflict predictions completely in memory via <code className="text-text bg-surface0 px-1 py-0.5 rounded border border-surface1 font-mono">git merge-tree</code> with zero disk modifications.
             </p>

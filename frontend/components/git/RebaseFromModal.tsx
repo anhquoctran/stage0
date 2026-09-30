@@ -73,11 +73,14 @@ export const RebaseFromModal: React.FC = () => {
   const commandPreview = `git rebase ${selectedTargetBranch}${useAutostash ? ' --autostash' : ''}`;
 
   return (
-    <div className="fixed inset-0 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
       <div className="bg-mantle border border-surface0 max-w-lg w-full shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="px-5 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60">
-          <div className="flex items-center gap-2.5">
+        <div
+          data-tauri-drag-region
+          className="px-5 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60 cursor-default"
+        >
+          <div data-tauri-drag-region className="flex items-center gap-2.5 pointer-events-none">
             <div className="w-7 h-7 bg-surface0 border border-surface1 flex items-center justify-center text-text shadow-xs">
               <GitMerge className="w-4 h-4 text-subtext0" />
             </div>
@@ -226,7 +229,7 @@ export const RebaseFromModal: React.FC = () => {
             <button
               type="submit"
               disabled={isSyncing || !selectedTargetBranch.trim()}
-              className="flex items-center gap-1.5 px-5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs border border-surface2 disabled:opacity-50"
+              className="flex items-center gap-1.5 px-5 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] text-xs font-semibold transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand disabled:opacity-50"
             >
               {isSyncing ? (
                 <>

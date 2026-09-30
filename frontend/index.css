@@ -7,6 +7,8 @@
 .mocha,
 .dark {
   color-scheme: dark;
+  --brand: #b87ff4;
+  --ctp-brand: #b87ff4;
   --ctp-rosewater: #f5e0dc;
   --ctp-flamingo: #f2cdcd;
   --ctp-pink: #f5c2e7;
@@ -52,6 +54,8 @@
 .latte,
 .light {
   color-scheme: light;
+  --brand: #b87ff4;
+  --ctp-brand: #b87ff4;
   --ctp-rosewater: #dc8a78;
   --ctp-flamingo: #dd7878;
   --ctp-pink: #ea76cb;
@@ -91,6 +95,8 @@
 }
 
 @theme {
+  --color-brand: #b87ff4;
+  --color-accent: #b87ff4;
   --color-rosewater: var(--ctp-rosewater);
   --color-flamingo: var(--ctp-flamingo);
   --color-pink: var(--ctp-pink);
@@ -339,3 +345,195 @@ tr.stage0-active-line > td.diff-line-num {
   pointer-events: auto;
   vertical-align: baseline;
 }
+
+/* Base: Buttons default to zero-radius (sharp corners for text & icon+text buttons) */
+@layer base {
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  .btn {
+    border-radius: 0;
+  }
+}
+
+/* Brand Color #cba6f6 System: Focus Highlight, Border Primary & Primary Buttons */
+::selection {
+  background-color: color-mix(in srgb, var(--color-brand) 35%, transparent);
+  color: #ffffff;
+}
+
+/* Global Focus Highlights for inputs, selects and textareas */
+:focus-visible {
+  outline: 2px solid var(--color-brand) !important;
+  outline-offset: 1px !important;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  border-color: var(--color-brand) !important;
+  box-shadow: 0 0 0 1px var(--color-brand) !important;
+  outline: none !important;
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  accent-color: var(--color-brand) !important;
+}
+
+/* Standard Primary Button Styles */
+.btn-primary,
+button.btn-primary {
+  background-color: var(--color-brand) !important;
+  color: #11111b !important;
+  border: 1px solid var(--color-brand) !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-brand) 25%, transparent);
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-primary:hover:not(:disabled),
+button.btn-primary:hover:not(:disabled) {
+  background-color: #b88ff3 !important;
+  border-color: #b88ff3 !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand) 35%, transparent);
+}
+
+.btn-primary:active:not(:disabled),
+button.btn-primary:active:not(:disabled) {
+  background-color: #a476ed !important;
+  border-color: #a476ed !important;
+}
+
+.btn-primary:disabled,
+button.btn-primary:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* Markdown Content Rendering Styles */
+.markdown-preview {
+  word-break: break-word;
+}
+.markdown-preview > *:first-child {
+  margin-top: 0 !important;
+}
+.markdown-preview > *:last-child {
+  margin-bottom: 0 !important;
+}
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4 {
+  color: var(--ctp-text);
+  font-weight: 700;
+  margin-top: 0.8em;
+  margin-bottom: 0.3em;
+  line-height: 1.3;
+}
+.markdown-preview h1 { font-size: 1.25em; border-bottom: 1px solid var(--ctp-surface0); padding-bottom: 0.2em; }
+.markdown-preview h2 { font-size: 1.1em; border-bottom: 1px solid var(--ctp-surface0); padding-bottom: 0.2em; }
+.markdown-preview h3 { font-size: 1.0em; }
+.markdown-preview h4 { font-size: 0.9em; }
+
+.markdown-preview p {
+  margin-top: 0.35em;
+  margin-bottom: 0.35em;
+  line-height: 1.6;
+}
+
+.markdown-preview ul {
+  list-style-type: disc;
+  padding-left: 1.25em;
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}
+.markdown-preview ol {
+  list-style-type: decimal;
+  padding-left: 1.25em;
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}
+.markdown-preview li {
+  margin-top: 0.15em;
+  margin-bottom: 0.15em;
+}
+
+.markdown-preview code {
+  font-family: monospace;
+  font-size: 0.9em;
+  background-color: var(--ctp-surface0);
+  color: var(--ctp-text);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+  border: 1px solid var(--ctp-surface1);
+}
+
+.markdown-preview pre {
+  background-color: var(--ctp-crust);
+  border: 1px solid var(--ctp-surface0);
+  border-radius: 4px;
+  padding: 0.65em 0.85em;
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+  overflow-x: auto;
+}
+.markdown-preview pre code {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.85em;
+  line-height: 1.5;
+  display: block;
+}
+
+.markdown-preview blockquote {
+  border-left: 3px solid var(--color-brand);
+  background-color: color-mix(in srgb, var(--ctp-surface0) 40%, transparent);
+  padding: 0.35em 0.75em;
+  margin: 0.4em 0;
+  color: var(--ctp-subtext0);
+  font-style: italic;
+}
+
+.markdown-preview a {
+  color: var(--color-brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown-preview a:hover {
+  opacity: 0.85;
+}
+
+.markdown-preview hr {
+  border: 0;
+  border-top: 1px solid var(--ctp-surface0);
+  margin: 0.75em 0;
+}
+
+.markdown-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5em 0;
+  font-size: 0.9em;
+}
+.markdown-preview th,
+.markdown-preview td {
+  border: 1px solid var(--ctp-surface0);
+  padding: 0.35em 0.6em;
+  text-align: left;
+}
+.markdown-preview th {
+  background-color: var(--ctp-surface0);
+  font-weight: 600;
+}
+
+.markdown-preview input[type="checkbox"] {
+  margin-right: 0.4em;
+  accent-color: var(--color-brand);
+}
+
+
