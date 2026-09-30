@@ -345,7 +345,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   },
 
   createSession: async (baseBranch, compareBranch, customTitle) => {
-    let { currentRepoId, currentRepoPath, repoSettings, repoLabels, sessions } = get();
+    let { currentRepoId, currentRepoPath, repoSettings, sessions } = get();
 
     // Auto-recover repository context from useGitStore if not set in virtualMrStore
     if (!currentRepoId || !currentRepoPath) {
