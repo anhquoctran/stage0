@@ -21,6 +21,7 @@ import {
   Bot,
   Box,
   ShieldCheck,
+  GitBranch,
 } from 'lucide-react';
 import { SUPPORTED_FONTS } from '../../constants/fonts';
 import {
@@ -40,13 +41,15 @@ import { GitCredentialsTab } from './GitCredentialsTab';
 import { AiMcpTab } from './AiMcpTab';
 import { BotReviewersTab } from './BotReviewersTab';
 import { SandboxTab } from './SandboxTab';
+import { GitBinaryTab } from './GitBinaryTab';
 import { useGitStore } from '../../store/useGitStore';
 import { useAiMcpStore } from '../../store/useAiMcpStore';
+import { useGitBinaryStore } from '../../store/useGitBinaryStore';
 import { DEFAULT_AI_CONFIG } from '../../constants/aiPresets';
 import { AiConfig } from '../../types/ai';
 import { SandboxType } from '../../types/git';
 
-type PreferenceTab = 'appearance' | 'fonts' | 'credentials' | 'ai' | 'reviewers' | 'sandbox';
+type PreferenceTab = 'appearance' | 'fonts' | 'credentials' | 'ai' | 'reviewers' | 'sandbox' | 'git';
 
 interface PreferencesBaseline {
   themeMode: ThemeMode;
@@ -60,6 +63,8 @@ interface PreferencesBaseline {
   showInlineBlame: boolean;
   sandboxType: SandboxType;
   aiConfig: AiConfig;
+  gitBinaryId: string;
+  gitBinaryPath: string;
 }
 
 export const PreferencesModal: React.FC = () => {
@@ -89,6 +94,13 @@ export const PreferencesModal: React.FC = () => {
     updateAiConfig,
     resetAiConfig,
   } = useAiMcpStore();
+  const {
+    activeBinaryId: storedGitBinaryId,
+    activeBinaryPath: storedGitBinaryPath,
+    fetchActiveBinary,
+    setActiveBinary,
+    restartApp,
+  } = useGitBinaryStore();
 
   const [activeTab, setActiveTab] = useState<PreferenceTab>('appearance');
 
@@ -104,6 +116,8 @@ export const PreferencesModal: React.FC = () => {
   const [draftShowInlineBlame, setDraftShowInlineBlame] = useState(storedShowInlineBlame);
   const [draftSandboxType, setDraftSandboxType] = useState<SandboxType>(storedSandboxType);
   const [draftAiConfig, setDraftAiConfig] = useState<AiConfig>({ ...storedAiConfig });
+  const [draftGitBinaryId, setDraftGitBinaryId] = useState(storedGitBinaryId);
+  const [draftGitBinaryPath, setDraftGitBinaryPath] = useState(storedGitBinaryPath);
 
   // Baseline Snapshot (committed values)
   const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
@@ -118,10 +132,13 @@ export const PreferencesModal: React.FC = () => {
     showInlineBlame: storedShowInlineBlame,
     sandboxType: storedSandboxType,
     aiConfig: { ...storedAiConfig },
+    gitBinaryId: storedGitBinaryId,
+    gitBinaryPath: storedGitBinaryPath,
   });
 
   const [isApplied, setIsApplied] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showRestartPrompt, setShowRestartPrompt] = useState(false);
 
   // Synchronize draft states and baseline whenever modal is opened
   useEffect(() => {
@@ -137,6 +154,8 @@ export const PreferencesModal: React.FC = () => {
       setDraftShowInlineBlame(storedShowInlineBlame);
       setDraftSandboxType(storedSandboxType);
       setDraftAiConfig({ ...storedAiConfig });
+      setDraftGitBinaryId(storedGitBinaryId);
+      setDraftGitBinaryPath(storedGitBinaryPath);
 
       setSavedBaseline({
         themeMode: storedThemeMode,
@@ -150,10 +169,24 @@ export const PreferencesModal: React.FC = () => {
         showInlineBlame: storedShowInlineBlame,
         sandboxType: storedSandboxType,
         aiConfig: { ...storedAiConfig },
+        gitBinaryId: storedGitBinaryId,
+        gitBinaryPath: storedGitBinaryPath,
+      });
+
+      // Also ensure latest active git binary is fetched from backend
+      fetchActiveBinary().then((res) => {
+        setDraftGitBinaryId(res.id);
+        setDraftGitBinaryPath(res.path);
+        setSavedBaseline((prev) => ({
+          ...prev,
+          gitBinaryId: res.id,
+          gitBinaryPath: res.path,
+        }));
       });
 
       setIsApplied(false);
       setShowResetConfirm(false);
+      setShowRestartPrompt(false);
     }
   }, [
     isPreferencesOpen,
@@ -168,6 +201,8 @@ export const PreferencesModal: React.FC = () => {
     storedShowInlineBlame,
     storedSandboxType,
     storedAiConfig,
+    storedGitBinaryId,
+    storedGitBinaryPath,
   ]);
 
   // Track unsaved changes per domain and in total
@@ -199,8 +234,11 @@ export const PreferencesModal: React.FC = () => {
     if (draftAiConfig.enableCodeReviewAssist !== savedBaseline.aiConfig.enableCodeReviewAssist) ai++;
     if (draftAiConfig.systemPrompt !== savedBaseline.aiConfig.systemPrompt) ai++;
 
-    const total = appearance + fonts + sandbox + ai;
-    return { appearance, fonts, sandbox, ai, total };
+    let git = 0;
+    if (draftGitBinaryId !== savedBaseline.gitBinaryId || draftGitBinaryPath !== savedBaseline.gitBinaryPath) git++;
+
+    const total = appearance + fonts + sandbox + ai + git;
+    return { appearance, fonts, sandbox, ai, git, total };
   }, [
     draftThemeMode,
     draftFontFamily,
@@ -213,6 +251,8 @@ export const PreferencesModal: React.FC = () => {
     draftShowInlineBlame,
     draftSandboxType,
     draftAiConfig,
+    draftGitBinaryId,
+    draftGitBinaryPath,
     savedBaseline,
   ]);
 
@@ -299,13 +339,20 @@ export const PreferencesModal: React.FC = () => {
     resetAiConfig();
     setDraftAiConfig({ ...DEFAULT_AI_CONFIG });
 
-    // 6. Update savedBaseline to defaults immediately (unsavedCount becomes 0, no badge)
+    // 6. Commit Git binary default
+    setDraftGitBinaryId('system-default');
+    setDraftGitBinaryPath('git');
+    await setActiveBinary('system-default', 'git');
+
+    // 7. Update savedBaseline to defaults immediately (unsavedCount becomes 0, no badge)
     setSavedBaseline({
       themeMode: 'system',
       ...DEFAULT_VIEWER_FONT_SETTINGS,
       showInlineBlame: true,
       sandboxType: 'in_memory',
       aiConfig: { ...DEFAULT_AI_CONFIG },
+      gitBinaryId: 'system-default',
+      gitBinaryPath: 'git',
     });
 
     setShowResetConfirm(false);
@@ -340,6 +387,16 @@ export const PreferencesModal: React.FC = () => {
     // Commit AI configuration
     updateAiConfig(draftAiConfig);
 
+    // Commit Git binary if changed
+    let gitChanged = false;
+    if (
+      draftGitBinaryId !== savedBaseline.gitBinaryId ||
+      draftGitBinaryPath !== savedBaseline.gitBinaryPath
+    ) {
+      await setActiveBinary(draftGitBinaryId, draftGitBinaryPath);
+      gitChanged = true;
+    }
+
     // Update baseline to match committed drafts
     setSavedBaseline({
       themeMode: draftThemeMode,
@@ -347,16 +404,29 @@ export const PreferencesModal: React.FC = () => {
       showInlineBlame: draftShowInlineBlame,
       sandboxType: draftSandboxType,
       aiConfig: { ...draftAiConfig },
+      gitBinaryId: draftGitBinaryId,
+      gitBinaryPath: draftGitBinaryPath,
     });
 
     setIsApplied(true);
     setTimeout(() => setIsApplied(false), 1500);
+
+    if (gitChanged) {
+      setShowRestartPrompt(true);
+    }
   };
 
-  // OK (commit all transaction changes then close)
+  // OK (commit all transaction changes then close or prompt restart)
   const handleOk = async () => {
+    const gitChanged =
+      draftGitBinaryId !== savedBaseline.gitBinaryId ||
+      draftGitBinaryPath !== savedBaseline.gitBinaryPath;
     await handleApply();
-    setIsPreferencesOpen(false);
+    if (gitChanged) {
+      setShowRestartPrompt(true);
+    } else {
+      setIsPreferencesOpen(false);
+    }
   };
 
   // Cancel (close without saving, rollback safely)
@@ -382,6 +452,9 @@ export const PreferencesModal: React.FC = () => {
     setDraftShowInlineBlame(savedBaseline.showInlineBlame);
     setDraftSandboxType(savedBaseline.sandboxType);
     setDraftAiConfig({ ...savedBaseline.aiConfig });
+    setDraftGitBinaryId(savedBaseline.gitBinaryId);
+    setDraftGitBinaryPath(savedBaseline.gitBinaryPath);
+    setShowRestartPrompt(false);
 
     setIsPreferencesOpen(false);
   };
@@ -389,13 +462,13 @@ export const PreferencesModal: React.FC = () => {
   // Keyboard navigation & Esc listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isPreferencesOpen && !isFontDropdownOpen) {
+      if (e.key === 'Escape' && isPreferencesOpen && !isFontDropdownOpen && !showRestartPrompt) {
         handleCancel();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPreferencesOpen, isFontDropdownOpen, savedBaseline]);
+  }, [isPreferencesOpen, isFontDropdownOpen, showRestartPrompt, savedBaseline]);
 
   if (!isPreferencesOpen) return null;
 
@@ -424,6 +497,13 @@ export const PreferencesModal: React.FC = () => {
       sublabel: 'Diff & Raw Typography',
       icon: <Type className="w-4 h-4" />,
       unsavedCount: unsavedBreakdown.fonts,
+    },
+    {
+      id: 'git',
+      label: 'Git Executable',
+      sublabel: 'Bundled / System Binaries',
+      icon: <GitBranch className="w-4 h-4" />,
+      unsavedCount: unsavedBreakdown.git,
     },
     {
       id: 'credentials',
@@ -990,7 +1070,23 @@ export const PreferencesModal: React.FC = () => {
               </div>
             )}
 
-            {/* TAB 3: GIT CREDENTIALS */}
+            {/* TAB 3: GIT EXECUTABLE BINARY */}
+            {activeTab === 'git' && (
+              <div className="animate-in fade-in duration-100">
+                <GitBinaryTab
+                  draftBinaryId={draftGitBinaryId}
+                  draftBinaryPath={draftGitBinaryPath}
+                  onSelectBinary={(id, path) => {
+                    setDraftGitBinaryId(id);
+                    setDraftGitBinaryPath(path);
+                  }}
+                  committedBinaryId={savedBaseline.gitBinaryId}
+                  committedBinaryPath={savedBaseline.gitBinaryPath}
+                />
+              </div>
+            )}
+
+            {/* TAB 4: GIT CREDENTIALS */}
             {activeTab === 'credentials' && (
               <div className="animate-in fade-in duration-100">
                 <GitCredentialsTab />
@@ -1130,6 +1226,53 @@ export const PreferencesModal: React.FC = () => {
                 className="px-3.5 py-1.5 rounded-lg bg-red text-white text-xs font-semibold hover:bg-red/90 transition-colors cursor-pointer shadow-xs"
               >
                 Reset to Defaults
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog for Restart to Apply Git Binary */}
+      {showRestartPrompt && (
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-[70] bg-crust/80 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-100">
+          <div className="bg-mantle border border-surface0 max-w-md w-full p-5 rounded-xl shadow-2xl space-y-4 animate-in zoom-in-95 duration-100">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-lg bg-peach/15 border border-peach/30 text-peach shrink-0">
+                <RotateCcw className="w-5 h-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-text">Restart Required to Apply Git Binary</h3>
+                <p className="text-xs text-subtext0 mt-1 leading-relaxed">
+                  The active Git binary has been switched to:
+                </p>
+                <div className="mt-1.5 p-2 rounded-lg bg-surface0 border border-surface1 font-mono text-[11px] text-text break-all">
+                  {draftGitBinaryPath}
+                </div>
+                <p className="text-xs text-subtext0 mt-2 leading-relaxed">
+                  A restart of Stage0 is required to apply this Git executable across all background watchers, diff comparisons, and sandbox worktrees cleanly.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface0/60">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRestartPrompt(false);
+                  setIsPreferencesOpen(false);
+                }}
+                className="px-3.5 py-1.5 rounded-lg border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+              >
+                Restart Later
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await restartApp();
+                }}
+                className="px-4 py-1.5 rounded-lg bg-brand text-[#11111b] text-xs font-semibold hover:bg-brand/90 transition-colors cursor-pointer shadow-xs"
+              >
+                Restart Now
               </button>
             </div>
           </div>

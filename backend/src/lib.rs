@@ -21,6 +21,14 @@ pub fn run() {
             let handle = app.handle();
             let db = Database::init(handle)
                 .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+
+            // Initialize active Git binary path from persisted settings
+            if let Ok(Some(saved_path)) = db.get_setting("git_binary_path") {
+                if !saved_path.trim().is_empty() && saved_path != "system" {
+                    crate::git::runner::set_active_git_path(Some(saved_path));
+                }
+            }
+
             app.manage(db);
 
             if let Some(window) = app.get_webview_window("main") {
@@ -119,6 +127,13 @@ pub fn run() {
             commands::add_mr_comment,
             commands::resolve_mr_discussion,
             commands::verify_mr_discussion,
+            // Git Binary Management & App Lifecycle
+            commands::scan_git_binaries,
+            commands::get_active_git_binary,
+            commands::set_active_git_binary,
+            commands::validate_custom_git_binary,
+            commands::pick_git_executable,
+            commands::restart_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
