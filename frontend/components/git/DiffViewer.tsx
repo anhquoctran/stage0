@@ -593,19 +593,19 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         {/* Right: View Mode Toggle & Diff/Blame Switcher */}
         <div className="flex items-center gap-2">
           {/* Diff / Blame / Conflict Tab Switcher */}
-          <div className="flex items-center bg-surface0 p-0.5 border border-surface0">
+          <div className="flex items-center bg-surface0 p-0.5 gap-0.5">
             {selectedFile?.is_conflicted && (
               <button
                 type="button"
                 onClick={() => setFileViewTab('conflicts')}
                 className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
                   fileViewTab === 'conflicts'
-                    ? 'bg-red text-white shadow-xs'
-                    : 'text-red hover:bg-red/20'
+                    ? 'bg-red-600 text-white shadow-xs'
+                    : 'bg-surface1 text-white hover:bg-surface2'
                 }`}
                 title="Inspect 3-way collision blocks side-by-side"
               >
-                <GitMerge className="w-3.5 h-3.5" />
+                <GitMerge className="w-3.5 h-3.5 text-white" />
                 <span>Conflicts 3-Way</span>
               </button>
             )}
@@ -615,12 +615,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               onClick={() => setFileViewTab('diff')}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
                 fileViewTab === 'diff'
-                  ? 'bg-surface2 text-text shadow-xs'
-                  : 'text-subtext1 hover:text-text'
+                  ? 'bg-surface2 text-white shadow-xs'
+                  : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
               }`}
               title="Inspect file diff"
             >
-              <FileCode className="w-3.5 h-3.5" />
+              <FileCode className="w-3.5 h-3.5 text-white" />
               <span>Diff</span>
             </button>
             <button
@@ -628,30 +628,30 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               onClick={() => setFileViewTab('blame')}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
                 fileViewTab === 'blame'
-                  ? 'bg-surface2 text-text shadow-xs'
-                  : 'text-subtext1 hover:text-text'
+                  ? 'bg-surface2 text-white shadow-xs'
+                  : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
               }`}
               title="Inspect line-by-line git blame (Alt+B)"
             >
-              <History className="w-3.5 h-3.5" />
+              <History className="w-3.5 h-3.5 text-white" />
               <span>Blame</span>
             </button>
           </div>
 
           {/* Split / Unified Segmented Control (only when in Diff mode) */}
           {fileViewTab === 'diff' && (
-            <div className="flex items-center bg-surface0 p-0.5 border border-surface0">
+            <div className="flex items-center bg-surface0 p-0.5 gap-0.5">
               <button
                 type="button"
                 onClick={() => onToggleViewMode('split')}
                 className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
                   viewMode === 'split'
-                    ? 'bg-surface2 text-text shadow-xs'
-                    : 'text-subtext1 hover:text-text'
+                    ? 'bg-surface2 text-white shadow-xs'
+                    : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
                 }`}
                 title="Side-by-side split view"
               >
-                <Columns2 className="w-3.5 h-3.5" />
+                <Columns2 className="w-3.5 h-3.5 text-white" />
                 <span>Split</span>
               </button>
               <button
@@ -659,12 +659,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 onClick={() => onToggleViewMode('unified')}
                 className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
                   viewMode === 'unified'
-                    ? 'bg-surface2 text-text shadow-xs'
-                    : 'text-subtext1 hover:text-text'
+                    ? 'bg-surface2 text-white shadow-xs'
+                    : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
                 }`}
                 title="Inline unified view"
               >
-                <Rows2 className="w-3.5 h-3.5" />
+                <Rows2 className="w-3.5 h-3.5 text-white" />
                 <span>Unified</span>
               </button>
             </div>
@@ -675,14 +675,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <button
               type="button"
               onClick={toggleInlineBlame}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer border ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
                 showInlineBlame
-                  ? 'bg-surface2 text-text border-surface2 shadow-xs'
-                  : 'bg-surface0 border-surface0 text-subtext1 hover:text-text'
+                  ? 'bg-surface2 text-white shadow-xs'
+                  : 'bg-surface1 text-white/80 hover:text-white hover:bg-surface2'
               }`}
               title={`Toggle inline git blame on active line (Alt+Shift+B) - ${showInlineBlame ? 'Active' : 'Disabled'}`}
             >
-              <GitCommit className="w-3.5 h-3.5" />
+              <GitCommit className="w-3.5 h-3.5 text-white" />
               <span>Inline Blame</span>
             </button>
           )}
@@ -723,10 +723,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <button
               type="button"
               onClick={() => setFileViewTab('conflicts')}
-              className="flex items-center gap-1.5 px-3 py-1 bg-red hover:bg-red/90 text-white font-bold transition-colors cursor-pointer text-xs shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold transition-colors cursor-pointer text-xs shadow-xs"
               title="Inspect 3-way collision blocks side-by-side"
             >
-              <GitMerge className="w-3.5 h-3.5" />
+              <GitMerge className="w-3.5 h-3.5 text-white" />
               <span>
                 3-Way Conflict View {activeConflictPreview?.conflict_regions.length ? `(${activeConflictPreview.conflict_regions.length})` : ''}
               </span>
@@ -735,10 +735,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <button
               type="button"
               onClick={scrollToFirstConflict}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-red/20 hover:bg-red/30 border border-red/40 text-red font-semibold transition-colors cursor-pointer text-xs shadow-xs"
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-semibold transition-colors cursor-pointer text-xs shadow-xs"
               title="Scroll directly to conflict marker or first conflict change in this file"
             >
-              <ArrowDown className="w-3.5 h-3.5 text-red" />
+              <ArrowDown className="w-3.5 h-3.5 text-white" />
               <span>Jump to Conflict</span>
             </button>
 
@@ -753,10 +753,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                     showToast(`Failed to open in VS Code: ${err}`);
                   }
                 }}
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-surface0 hover:bg-surface1 border border-surface1 text-text font-medium transition-colors cursor-pointer text-xs"
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs"
                 title="Open this file directly in Visual Studio Code to resolve conflict"
               >
-                <Code2 className="w-3.5 h-3.5 text-subtext0" />
+                <Code2 className="w-3.5 h-3.5 text-white" />
                 <span>Resolve in VS Code</span>
               </button>
             )}
@@ -764,10 +764,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <button
               type="button"
               onClick={refreshDiff}
-              className="flex items-center gap-1.5 px-2 py-1 bg-surface0 hover:bg-surface1 border border-surface1 text-text font-medium transition-colors cursor-pointer text-xs"
+              className="flex items-center gap-1.5 px-2 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs"
               title="Re-check diff after resolving conflict in external tool (Ctrl+R)"
             >
-              <RotateCw className="w-3 h-3 text-subtext0" />
+              <RotateCw className="w-3 h-3 text-white" />
               <span>Refresh Diff</span>
             </button>
           </div>

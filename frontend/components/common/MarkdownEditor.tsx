@@ -103,18 +103,18 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       {/* Top Header: Tabs (Write / Preview) & Formatting Toolbar */}
       <div className="flex items-center justify-between border-b border-surface1 bg-base/70 px-2 py-1 gap-2 flex-wrap select-none">
         {/* Write / Preview Tab Switcher */}
-        <div className="flex items-center gap-1 border-r border-surface1 pr-2">
+        <div className="flex items-center gap-1 pr-2">
           <button
             type="button"
             onClick={() => setActiveTab('write')}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium cursor-pointer transition-colors ${
               activeTab === 'write'
-                ? 'bg-surface1 text-text border border-surface2 shadow-xs'
-                : 'text-subtext0 hover:text-text hover:bg-surface0'
+                ? 'bg-surface2 text-white shadow-xs'
+                : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
             }`}
             title="Write"
           >
-            <PenLine className="w-3.5 h-3.5 text-subtext0" />
+            <PenLine className="w-3.5 h-3.5 text-white" />
             <span>Write</span>
           </button>
 
@@ -123,12 +123,12 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             onClick={() => setActiveTab('preview')}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium cursor-pointer transition-colors ${
               activeTab === 'preview'
-                ? 'bg-surface1 text-text border border-surface2 shadow-xs'
-                : 'text-subtext0 hover:text-text hover:bg-surface0'
+                ? 'bg-surface2 text-white shadow-xs'
+                : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
             }`}
             title="Preview Markdown"
           >
-            <Eye className="w-3.5 h-3.5 text-subtext0" />
+            <Eye className="w-3.5 h-3.5 text-white" />
             <span>Preview</span>
           </button>
         </div>
@@ -238,10 +238,10 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 type="button"
                 onClick={onAiGenerate}
                 disabled={disabled}
-                className="flex items-center gap-1.5 px-2 py-0.5 ml-2 text-[11px] font-semibold bg-purple-500/15 hover:bg-purple-500/25 active:bg-purple-500/35 text-purple-300 hover:text-purple-200 border border-purple-500/30 transition-all cursor-pointer shadow-2xs"
+                className="flex items-center gap-1.5 px-2.5 py-0.5 ml-2 text-[11px] font-semibold bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white transition-all cursor-pointer shadow-xs"
                 title="Generate description with AI"
               >
-                <Sparkles className="w-3 h-3 text-purple-400" />
+                <Sparkles className="w-3 h-3 text-white" />
                 <span>AI Generate</span>
               </button>
             )}
@@ -292,7 +292,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 type="button"
                 onClick={onCancel}
                 disabled={isSubmitting}
-                className="px-3 py-1 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs border border-surface1 transition-colors cursor-pointer"
+                className="px-3 py-1 bg-surface1 hover:bg-surface2 active:bg-surface0 text-white text-xs transition-colors cursor-pointer"
               >
                 {cancelLabel}
               </button>
@@ -302,7 +302,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 type="button"
                 onClick={onSubmit}
                 disabled={isSubmitting || !value.trim()}
-                className="px-4 py-1 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs border border-brand transition-colors cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-1 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs transition-colors cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Submitting...' : submitLabel}
               </button>

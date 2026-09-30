@@ -118,10 +118,10 @@ export const VirtualMrBottomBar: React.FC = () => {
             type="button"
             onClick={handleReVerify}
             disabled={isVerifying}
-            className="flex items-center gap-1.5 px-3 py-2 bg-surface0 hover:bg-surface1 active:bg-surface2 text-text border border-surface1 hover:border-surface2 text-xs font-medium transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-2 bg-surface1 hover:bg-surface2 active:bg-surface0 text-white text-xs font-medium transition-colors cursor-pointer shadow-xs disabled:opacity-50"
             title="Trigger AI Auditor re-verification on unresolved discussions"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-accent ${isVerifying ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-white ${isVerifying ? 'animate-spin' : ''}`} />
             <span>Re-verify with AI</span>
           </button>
         )}
@@ -131,20 +131,20 @@ export const VirtualMrBottomBar: React.FC = () => {
           <button
             type="button"
             onClick={handleReopenRequest}
-            className="flex items-center gap-2 px-6 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 active:bg-emerald-500/35 text-emerald-300 hover:text-emerald-200 border border-emerald-500/40 hover:border-emerald-500/60 text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
+            className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
             title="Reopen this Virtual MR request"
           >
-            <RotateCcw className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
+            <RotateCcw className="w-4 h-4 text-white stroke-[2.5]" />
             <span>Reopen request</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={handleCloseRequest}
-            className="flex items-center gap-2 px-6 py-2 bg-red-500/15 hover:bg-red-500/25 active:bg-red-500/35 text-red-300 hover:text-red-200 border border-red-500/40 hover:border-red-500/60 text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
+            className="flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
             title="Close this Virtual MR request"
           >
-            <XCircle className="w-4 h-4 text-red-400 stroke-[2.5]" />
+            <XCircle className="w-4 h-4 text-white stroke-[2.5]" />
             <span>Close request</span>
           </button>
         )}

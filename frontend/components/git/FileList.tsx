@@ -185,30 +185,30 @@ export const FileList: React.FC<FileListProps> = ({
 
           <div className="flex items-center gap-2">
             {/* Flat vs Tree toggle */}
-            <div className="flex items-center bg-surface0 rounded border border-surface0 p-0.5">
+            <div className="flex items-center bg-surface0 rounded p-0.5 gap-0.5">
               <button
                 type="button"
                 onClick={() => setFileListLayout('flat')}
                 className={`p-1 rounded transition-colors ${
                   fileListLayout === 'flat'
-                    ? 'bg-surface1 text-text'
-                    : 'text-subtext1 hover:text-text'
+                    ? 'bg-surface2 text-white'
+                    : 'text-white/70 hover:text-white'
                 }`}
                 title="Flat list view"
               >
-                <List className="w-3.5 h-3.5" />
+                <List className="w-3.5 h-3.5 text-white" />
               </button>
               <button
                 type="button"
                 onClick={() => setFileListLayout('tree')}
                 className={`p-1 rounded transition-colors ${
                   fileListLayout === 'tree'
-                    ? 'bg-surface1 text-text'
-                    : 'text-subtext1 hover:text-text'
+                    ? 'bg-surface2 text-white'
+                    : 'text-white/70 hover:text-white'
                 }`}
                 title="Tree folder view"
               >
-                <FolderTree className="w-3.5 h-3.5" />
+                <FolderTree className="w-3.5 h-3.5 text-white" />
               </button>
             </div>
 
@@ -248,15 +248,15 @@ export const FileList: React.FC<FileListProps> = ({
             onClick={() => setFilterConflictedOnly(!filterConflictedOnly)}
             className={`w-full flex items-center justify-between px-2.5 py-1 text-xs font-semibold transition-colors ${
               filterConflictedOnly
-                ? 'bg-red/20 border border-red/40 text-red'
-                : 'bg-surface0 border border-surface0 text-red hover:bg-surface1'
+                ? 'bg-red-600 text-white'
+                : 'bg-surface1 text-white hover:bg-surface2'
             }`}
           >
             <div className="flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-red shrink-0" />
+              <AlertTriangle className="w-3.5 h-3.5 text-white shrink-0" />
               <span>Show Conflicts Only</span>
             </div>
-            <span className="bg-red/25 text-red px-1.5 py-0.2 rounded-full font-mono text-[10px]">
+            <span className="bg-red-700 text-white px-1.5 py-0.2 rounded-full font-mono text-[10px]">
               {conflictedCount}
             </span>
           </button>
