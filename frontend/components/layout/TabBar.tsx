@@ -249,10 +249,10 @@ export const TabBar: React.FC = () => {
         <button
           type="button"
           onClick={() => openNewMrDraft()}
-          className="w-7 h-7 flex items-center justify-center rounded text-subtext0 hover:text-text hover:bg-surface0/60 transition-colors shrink-0 cursor-pointer"
+          className="w-7 h-7 flex items-center justify-center rounded bg-surface1 hover:bg-surface2 text-white transition-colors shrink-0 cursor-pointer shadow-xs"
           title="New Virtual MR (Ctrl+T)"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 text-white" />
         </button>
       </div>
     </div>

@@ -179,17 +179,17 @@ export const TopBar: React.FC = () => {
                 </span>
               )}
 
-              <div className="flex items-center bg-surface0 border border-surface0 p-0.5 gap-0.5">
+              <div className="flex items-center bg-surface0 p-0.5 gap-0.5">
                 {/* FETCH BUTTON */}
                 <button
                   type="button"
                   disabled={isSyncing}
                   onClick={() => runSync('fetch')}
-                  className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-white hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
                   title="git fetch --all --prune (Ctrl+Shift+F)"
                 >
                   <RefreshCw
-                    className={`w-3 h-3 ${isSyncing ? 'animate-spin text-blue' : ''}`}
+                    className={`w-3 h-3 text-white ${isSyncing ? 'animate-spin' : ''}`}
                   />
                   <span>Fetch</span>
                 </button>
@@ -201,10 +201,10 @@ export const TopBar: React.FC = () => {
                       type="button"
                       disabled={isSyncing}
                       onClick={() => runSync('pull')}
-                      className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
+                      className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-white hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
                       title="Pull (Ctrl+Shift+P)"
                     >
-                      <Download className="w-3 h-3" />
+                      <Download className="w-3 h-3 text-white" />
                       <span>Pull</span>
                     </button>
                     <button
@@ -214,10 +214,10 @@ export const TopBar: React.FC = () => {
                         setIsPullMenuOpen((v) => !v);
                         setIsRebaseMenuOpen(false);
                       }}
-                      className="flex items-center justify-center px-1.5 text-subtext1 hover:text-text hover:bg-surface1 border-l border-surface1 transition-colors cursor-pointer"
+                      className="flex items-center justify-center px-1.5 text-white/80 hover:text-white hover:bg-surface1 transition-colors cursor-pointer"
                       title="Pull options (Ctrl+Alt+P)"
                     >
-                      <ChevronDown className="w-2.5 h-2.5" />
+                      <ChevronDown className="w-2.5 h-2.5 text-white" />
                     </button>
                   </div>
 
@@ -266,10 +266,10 @@ export const TopBar: React.FC = () => {
                       type="button"
                       disabled={isSyncing}
                       onClick={() => runSync('rebase')}
-                      className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
+                      className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-white hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
                       title="Rebase (Ctrl+Shift+R)"
                     >
-                      <GitMerge className="w-3 h-3" />
+                      <GitMerge className="w-3 h-3 text-white" />
                       <span>Rebase</span>
                     </button>
                     <button
@@ -279,10 +279,10 @@ export const TopBar: React.FC = () => {
                         setIsRebaseMenuOpen((v) => !v);
                         setIsPullMenuOpen(false);
                       }}
-                      className="flex items-center justify-center px-1.5 text-subtext1 hover:text-text hover:bg-surface1 border-l border-surface1 transition-colors cursor-pointer"
+                      className="flex items-center justify-center px-1.5 text-white/80 hover:text-white hover:bg-surface1 transition-colors cursor-pointer"
                       title="Rebase options (Ctrl+Alt+R)"
                     >
-                      <ChevronDown className="w-2.5 h-2.5" />
+                      <ChevronDown className="w-2.5 h-2.5 text-white" />
                     </button>
                   </div>
 
@@ -379,10 +379,10 @@ export const TopBar: React.FC = () => {
               <button
                 type="button"
                 onClick={refreshDiff}
-                className="p-1.5 rounded bg-surface0 border border-surface0 hover:bg-surface1 text-subtext1 hover:text-text transition-colors cursor-pointer"
+                className="p-1.5 rounded bg-surface1 hover:bg-surface2 text-white transition-colors cursor-pointer shadow-xs"
                 title="Refresh MR diff & conflict simulation (Ctrl+R)"
               >
-                <RotateCw className="w-3.5 h-3.5" />
+                <RotateCw className="w-3.5 h-3.5 text-white" />
               </button>
             </>
           )}

@@ -137,10 +137,10 @@ export const NewVirtualMrView: React.FC = () => {
           <button
             type="button"
             onClick={closeNewMrDraft}
-            className="p-1.5 rounded-md hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+            className="p-1.5 rounded-md bg-surface1 hover:bg-surface2 text-white transition-colors cursor-pointer"
             title="Cancel & close comparison (Ctrl+W)"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 text-white" />
           </button>
         </div>
 
@@ -165,10 +165,10 @@ export const NewVirtualMrView: React.FC = () => {
             <button
               type="button"
               onClick={handleSwapBranches}
-              className="p-2 rounded-lg bg-base border border-surface1 text-subtext0 hover:text-brand hover:border-brand/40 transition-all cursor-pointer shadow-xs active:scale-95"
+              className="p-2 rounded-lg bg-surface1 hover:bg-surface2 text-white transition-all cursor-pointer shadow-xs active:scale-95"
               title="Swap Base and Compare branches"
             >
-              <ArrowLeftRight className="w-4 h-4 text-brand" />
+              <ArrowLeftRight className="w-4 h-4 text-white" />
             </button>
 
             {/* Compare Branch */}
@@ -274,14 +274,14 @@ export const NewVirtualMrView: React.FC = () => {
                             key={bot.id}
                             type="button"
                             onClick={() => handleToggleBot(bot.id)}
-                            className={`w-full flex items-center justify-between px-2.5 py-1 text-xs transition-colors cursor-pointer border text-left ${
+                            className={`w-full flex items-center justify-between px-2.5 py-1 text-xs transition-colors cursor-pointer text-left ${
                               isAssigned
-                                ? 'bg-brand/10 border-brand/40 text-brand font-medium'
-                                : 'bg-surface0/40 border-surface0 hover:bg-surface0 text-subtext0 hover:text-text'
+                                ? 'bg-surface2 text-white font-medium'
+                                : 'bg-surface0 hover:bg-surface1 text-white/80 hover:text-white'
                             }`}
                           >
                             <span className="truncate">{bot.name}</span>
-                            {isAssigned && <CheckCircle2 className="w-3.5 h-3.5 text-brand shrink-0 ml-1" />}
+                            {isAssigned && <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0 ml-1" />}
                           </button>
                         );
                       })}
@@ -303,10 +303,10 @@ export const NewVirtualMrView: React.FC = () => {
                               key={lbl.id}
                               type="button"
                               onClick={() => handleToggleLabel(lbl.id)}
-                              className={`px-2 py-0.5 text-[10px] font-mono transition-all cursor-pointer border ${
+                              className={`px-2 py-0.5 text-[10px] font-mono transition-all cursor-pointer ${
                                 isSelected
-                                  ? 'bg-surface2 text-text border-brand font-semibold shadow-xs'
-                                  : 'bg-surface0/60 text-subtext0 border-surface1/60 hover:text-text hover:bg-surface1'
+                                  ? 'bg-surface2 text-white font-semibold shadow-xs'
+                                  : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
                               }`}
                             >
                               {lbl.name}
@@ -336,7 +336,7 @@ export const NewVirtualMrView: React.FC = () => {
                     <button
                       type="button"
                       onClick={closeNewMrDraft}
-                      className="px-3 py-2 border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                      className="px-3 py-2 bg-surface1 hover:bg-surface2 active:bg-surface0 text-white text-xs font-medium transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -355,13 +355,13 @@ export const NewVirtualMrView: React.FC = () => {
                     onClick={() => setPreviewTab('commits')}
                     className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                       previewTab === 'commits'
-                        ? 'bg-surface1 text-text'
-                        : 'text-subtext0 hover:text-text hover:bg-surface0'
+                        ? 'bg-surface2 text-white'
+                        : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
                     }`}
                   >
-                    <GitCommit className="w-3.5 h-3.5 text-brand" />
+                    <GitCommit className="w-3.5 h-3.5 text-white" />
                     <span>Commits</span>
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-surface0 text-subtext1">
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-surface1 text-white">
                       {draftMr.commits.length}
                     </span>
                   </button>
@@ -371,13 +371,13 @@ export const NewVirtualMrView: React.FC = () => {
                     onClick={() => setPreviewTab('diff')}
                     className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                       previewTab === 'diff'
-                        ? 'bg-surface1 text-text'
-                        : 'text-subtext0 hover:text-text hover:bg-surface0'
+                        ? 'bg-surface2 text-white'
+                        : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
                     }`}
                   >
-                    <FileCode className="w-3.5 h-3.5 text-teal" />
+                    <FileCode className="w-3.5 h-3.5 text-white" />
                     <span>Files changed</span>
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-surface0 text-subtext1">
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-surface1 text-white">
                       {diffPayload?.files.length || 0}
                     </span>
                   </button>

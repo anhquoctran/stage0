@@ -215,10 +215,10 @@ export const VirtualMrHub: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsEditingTitle(false)}
-                className="p-1 rounded bg-surface0 cursor-pointer"
+                className="p-1 rounded bg-surface1 hover:bg-surface2 text-white cursor-pointer"
                 title="Cancel"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 text-white" />
               </button>
             </div>
           ) : (
@@ -227,10 +227,10 @@ export const VirtualMrHub: React.FC = () => {
               <button
                 type="button"
                 onClick={handleStartEditTitle}
-                className="p-1 rounded hover:bg-surface0 text-subtext0 hover:text-text cursor-pointer"
+                className="p-1 rounded bg-surface1 hover:bg-surface2 text-white cursor-pointer"
                 title="Edit title"
               >
-                <Edit2 className="w-3.5 h-3.5" />
+                <Edit2 className="w-3.5 h-3.5 text-white" />
               </button>
             </div>
           )}
@@ -248,9 +248,9 @@ export const VirtualMrHub: React.FC = () => {
               type="button"
               onClick={() => handleSwapBranches(session.id, session.baseBranch, session.compareBranch)}
               title="Swap Compare and Base branches"
-              className="p-1 rounded hover:bg-surface1 text-subtext1 hover:text-brand transition-colors cursor-pointer"
+              className="p-1 rounded bg-surface1 hover:bg-surface2 text-white transition-colors cursor-pointer"
             >
-              <ArrowRight className="w-3.5 h-3.5 text-subtext0 hover:text-brand" />
+              <ArrowRight className="w-3.5 h-3.5 text-white" />
             </button>
             <TabBranchSelector
               roleType="target"
@@ -311,10 +311,10 @@ export const VirtualMrHub: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowReviewerDropdown(!showReviewerDropdown)}
-                className="p-1 rounded bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text cursor-pointer"
+                className="p-1 rounded bg-surface1 hover:bg-surface2 text-white cursor-pointer"
                 title="Add AI Reviewer Bot"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-3 h-3 text-white" />
               </button>
             </div>
 
@@ -368,10 +368,10 @@ export const VirtualMrHub: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowLabelDropdown(!showLabelDropdown)}
-                className="p-1 rounded bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text cursor-pointer"
+                className="p-1 rounded bg-surface1 hover:bg-surface2 text-white cursor-pointer"
                 title="Manage Labels"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-3 h-3 text-white" />
               </button>
             </div>
 
@@ -418,35 +418,35 @@ export const VirtualMrHub: React.FC = () => {
         </div>
 
         {/* SUB-TABS NAVIGATION */}
-        <div className="flex items-center gap-1 bg-crust p-0.5 border border-surface0 shrink-0">
+        <div className="flex items-center gap-1 bg-crust p-0.5 shrink-0">
           <button
             type="button"
             onClick={() => setActiveMrTab('overview')}
             className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
-              activeMrTab === 'overview' ? 'bg-surface0 text-brand font-medium shadow-2xs border border-brand/40' : 'text-subtext0 hover:text-text'
+              activeMrTab === 'overview' ? 'bg-surface2 text-white font-medium shadow-2xs' : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
             }`}
           >
-            <MessageSquare className="w-3 h-3 text-amber-400" />
+            <MessageSquare className="w-3 h-3 text-white" />
             <span>Overview ({session.discussions.length})</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveMrTab('commits')}
             className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
-              activeMrTab === 'commits' ? 'bg-surface0 text-brand font-medium shadow-2xs border border-brand/40' : 'text-subtext0 hover:text-text'
+              activeMrTab === 'commits' ? 'bg-surface2 text-white font-medium shadow-2xs' : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
             }`}
           >
-            <GitCommit className="w-3 h-3 text-purple-400" />
+            <GitCommit className="w-3 h-3 text-white" />
             <span>Commits ({session.commits.length})</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveMrTab('diff')}
             className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
-              activeMrTab === 'diff' ? 'bg-surface0 text-brand font-medium shadow-2xs border border-brand/40' : 'text-subtext0 hover:text-text'
+              activeMrTab === 'diff' ? 'bg-surface2 text-white font-medium shadow-2xs' : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
             }`}
           >
-            <FileCode className="w-3 h-3 text-brand" />
+            <FileCode className="w-3 h-3 text-white" />
             <span>Files Changed ({diffPayload?.files.length || 0})</span>
           </button>
         </div>
