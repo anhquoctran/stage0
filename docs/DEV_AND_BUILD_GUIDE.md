@@ -1,18 +1,18 @@
-# Stage0 - Hướng dẫn Development Hot Reload & Build Production Đa Môi Trường
+# Stage0 - Cross-Platform Development Hot Reload & Production Build Guide
 
-Tài liệu này cung cấp hướng dẫn đầy đủ về cách chạy **Dev Server với Hot Reload** và **Đóng gói ứng dụng (Build + Optimized Production)** cho cả 3 nền tảng: **Windows**, **macOS**, và **Linux**.
+This document provides a comprehensive guide on running the **Development Server with Hot Reload** and packaging the application with **Optimized Production Builds** across **Windows**, **macOS**, and **Linux**.
 
 ---
 
-## 1. Yêu cầu Tiên quyết (Prerequisites) theo Môi trường
+## 1. Prerequisites by Platform
 
-| Môi trường | Node.js | Rust & Cargo | Công cụ Hệ thống Bổ sung |
+| Platform | Node.js | Rust & Cargo | Additional System Tools |
 | :--- | :--- | :--- | :--- |
-| **Windows 10/11** | Node.js >= 18 LTS | Rust >= 1.77 (`rustup`) | Visual Studio C++ Build Tools, Microsoft Edge WebView2 (có sẵn trên Win 10/11) |
+| **Windows 10/11** | Node.js >= 18 LTS | Rust >= 1.77 (`rustup`) | Visual Studio C++ Build Tools, Microsoft Edge WebView2 (pre-installed on Win 10/11) |
 | **macOS** (Apple Silicon & Intel) | Node.js >= 18 LTS | Rust >= 1.77 (`rustup`) | Xcode Command Line Tools (`xcode-select --install`) |
 | **Linux** (Ubuntu / Debian / Fedora / Arch) | Node.js >= 18 LTS | Rust >= 1.77 (`rustup`) | `libwebkit2gtk-4.1-dev`, `libssl-dev`, `libsecret-1-dev`, `build-essential`, `pkg-config` |
 
-### Cài đặt nhanh dependencies trên Linux:
+### Quick dependency installation for Linux:
 ```bash
 # Ubuntu / Debian / Pop!_OS
 sudo apt update && sudo apt install -y build-essential pkg-config libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libsecret-1-dev
@@ -26,34 +26,34 @@ sudo pacman -S webkit2gtk-4.1 openssl libsecret base-devel
 
 ---
 
-## 2. Chạy Development với Hot Reload
+## 2. Running Development with Hot Reload
 
-Hệ thống hỗ trợ 2 chế độ dev linh hoạt:
-1. **Web Dev Mode (`--web`)**: Chạy Vite frontend trên trình duyệt thông thường với mock engine. Cực nhanh cho việc phát triển giao diện UI, Tailwind CSS và components.
-2. **Desktop App Mode (`--app`)**: Khởi động cửa sổ ứng dụng Tauri native với Hot Reload đồng thời cho cả Frontend (Vite HMR) và Backend (Rust auto-recompile).
+The project supports two flexible development modes:
+1. **Web Dev Mode (`--web`)**: Runs the Vite frontend in standard web browsers with the mock sandbox engine. Extremely fast for developing UI, Tailwind CSS, and React components without requiring a native Rust build.
+2. **Desktop App Mode (`--app`)**: Launches the native Tauri desktop window with synchronized Hot Reload for both Frontend (Vite HMR) and Backend (Rust recompilation via Cargo).
 
-### Cách 1: Sử dụng lệnh npm chuẩn (Khuyên dùng - Đa môi trường)
+### Method 1: Standard npm Scripts (Recommended & Cross-Platform)
 ```bash
-# 1. Chạy Web Browser Hot Reload (nhanh nhất)
+# 1. Run Web Browser Hot Reload (Fastest for UI development)
 npm run dev
-# hoặc
+# or
 npm run dev:web
 
-# 2. Chạy Full Native Desktop App với Rust backend
+# 2. Run Native Desktop App with Rust backend hot reload
 npm run dev:app
-# hoặc
+# or
 npm run dev:desktop
 ```
 
-### Cách 2: Sử dụng Script Node.js trực tiếp (`scripts/dev.mjs`)
-Script Node.js tự động nhận diện OS, kiểm tra các dependency hệ thống và kiểm tra port 1420:
+### Method 2: Direct Node.js Script (`scripts/dev.mjs`)
+The cross-platform Node.js script automatically detects the host OS, checks system prerequisites, and verifies port 1420 availability:
 ```bash
 node scripts/dev.mjs --web
 node scripts/dev.mjs --app
 node scripts/dev.mjs --port 3000
 ```
 
-### Cách 3: Sử dụng Shell Script / PowerShell tương ứng từng OS
+### Method 3: OS-Specific Shell / PowerShell Scripts
 - **Windows (PowerShell)**:
   ```powershell
   .\scripts\dev.ps1 -Mode App
@@ -73,37 +73,37 @@ node scripts/dev.mjs --port 3000
 
 ---
 
-## 3. Đóng gói Production Đã Tối Ưu (Build + Optimized Production)
+## 3. Optimized Production Packaging (Build + Release)
 
-Quá trình build tự động áp dụng các tối ưu hóa chuyên sâu:
-1. **TypeScript Strict Verification**: Tự động chạy `tsc --noEmit` ngăn chặn các lỗi kiểu dữ liệu trước khi build.
-2. **Vite Frontend Minification & Tree-shaking**: Nén mã nguồn JavaScript/CSS, tối ưu Tailwind v4 chunks.
-3. **Rust Compiler Profile Release**:
-   - `opt-level = 3`: Tối đa hóa hiệu năng và tốc độ xử lý CPU.
-   - `lto = true`: Link-Time Optimization xuyên suốt các thư viện.
-   - `codegen-units = 1`: Tối ưu hóa binary toàn cục.
-   - `panic = "abort"`: Loại bỏ unwinding tables, giảm 20-30% dung lượng file thực thi.
-   - `strip = true`: Loại bỏ toàn bộ debug symbols thừa trong binary.
-4. **Tự động tính mã băm SHA-256**: Hiển thị bảng tổng hợp kích thước file và mã băm kiểm tra tính toàn vẹn.
+The production build pipeline automatically applies deep optimizations:
+1. **TypeScript Strict Verification**: Runs `tsc --noEmit` automatically to prevent any type errors before bundling.
+2. **Vite Frontend Minification & Tree-shaking**: Compresses JavaScript/CSS bundles and optimizes Tailwind v4 chunks.
+3. **Rust Compiler Release Profile**:
+   - `opt-level = 3`: Maximizes CPU runtime execution performance.
+   - `lto = true`: Link-Time Optimization across all dependency crates.
+   - `codegen-units = 1`: Performs global whole-program optimization for smaller binary sizes.
+   - `panic = "abort"`: Removes stack unwinding tables, reducing binary footprint by 20–30%.
+   - `strip = true`: Strips debug symbols and symbol tables from the final executable.
+4. **Automated SHA-256 Checksums**: Generates a summary table displaying package file sizes and integrity hashes.
 
-### Cách 1: Chạy qua lệnh npm
+### Method 1: Standard npm Scripts
 ```bash
-# Đóng gói Desktop App Production cho hệ điều hành hiện tại
+# Package production desktop installers for the current OS
 npm run build:prod
-# hoặc
+# or
 npm run build:app
 
-# Chỉ build gói Web tĩnh (dist/)
+# Build static web distribution only (dist/)
 npm run build:web
 ```
 
-### Cách 2: Chạy qua Script Cross-Platform (`scripts/build.mjs`)
+### Method 2: Cross-Platform Node.js Script (`scripts/build.mjs`)
 ```bash
 node scripts/build.mjs
 node scripts/build.mjs --web-only
 ```
 
-### Cách 3: Chạy script chuyên dụng từng hệ điều hành
+### Method 3: OS-Specific Scripts
 - **Windows (PowerShell)**:
   ```powershell
   .\scripts\build.ps1
@@ -120,34 +120,34 @@ node scripts/build.mjs --web-only
 
 ---
 
-## 4. Định dạng và Vị trí File Cài đặt Sau khi Build
+## 4. Output Formats and Artifact Locations
 
-Tất cả các gói cài đặt production được lưu tại:
+All production installer artifacts are stored in:
 `backend/target/release/bundle/`
 
-| Hệ điều hành | Định dạng Installer | Đường dẫn chi tiết |
+| Platform | Installer Format | Detailed Output Path |
 | :--- | :--- | :--- |
 | **Windows** | `.exe` (NSIS Installer) | `backend/target/release/bundle/nsis/Stage0_0.1.0_x64-setup.exe` |
 | **Windows** | `.msi` (Windows Installer) | `backend/target/release/bundle/msi/Stage0_0.1.0_x64_en-US.msi` |
 | **macOS** | `.dmg` (Apple Disk Image) | `backend/target/release/bundle/dmg/Stage0_0.1.0_aarch64.dmg` |
-| **macOS** | `.app` (Standalone Application) | `backend/target/release/bundle/macos/Stage0.app` |
-| **Linux** | `.AppImage` (Portable binary) | `backend/target/release/bundle/appimage/stage0_0.1.0_amd64.AppImage` |
-| **Linux** | `.deb` (Debian/Ubuntu package) | `backend/target/release/bundle/deb/stage0_0.1.0_amd64.deb` |
+| **macOS** | `.app` (Application Bundle) | `backend/target/release/bundle/macos/Stage0.app` |
+| **Linux** | `.AppImage` (Portable Binary) | `backend/target/release/bundle/appimage/stage0_0.1.0_amd64.AppImage` |
+| **Linux** | `.deb` (Debian/Ubuntu Package) | `backend/target/release/bundle/deb/stage0_0.1.0_amd64.deb` |
 
 ---
 
-## 5. Xử lý Sự cố Thường gặp (Troubleshooting)
+## 5. Troubleshooting
 
-### Port 1420 bị chiếm dụng:
-Nếu thông báo port `1420` đang được dùng bởi tiến trình khác:
-- **Windows**: `netstat -ano | findstr :1420` rồi `taskkill /PID <PID> /F`
-- **macOS/Linux**: `lsof -i :1420` rồi `kill -9 <PID>`
+### Port 1420 is already in use:
+If port `1420` is occupied by another process:
+- **Windows**: Run `netstat -ano | findstr :1420` then `taskkill /PID <PID> /F`
+- **macOS/Linux**: Run `lsof -i :1420` then `kill -9 <PID>`
 
-### Lỗi thiếu WebView2 trên Windows:
-- Windows 10/11 hiện đại đã cài sẵn WebView2 Runtime. Nếu thiếu, tải từ trang chính thức của Microsoft: [WebView2 Runtime Evergreen Bootstrapper](https://go.microsoft.com/fwlink/p/?LinkId=2124703).
+### Missing WebView2 on Windows:
+- Windows 10/11 comes with WebView2 Runtime pre-installed. If missing, download it from Microsoft's official portal: [WebView2 Runtime Evergreen Bootstrapper](https://go.microsoft.com/fwlink/p/?LinkId=2124703).
 
-### Quyền thực thi trên macOS/Linux:
-Nếu gặp lỗi `Permission denied`:
+### Execution Permissions on macOS/Linux:
+If you encounter a `Permission denied` error:
 ```bash
 chmod +x scripts/*.sh scripts/*.mjs
 ```
