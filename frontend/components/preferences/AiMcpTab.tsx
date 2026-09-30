@@ -451,7 +451,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               </div>
             ) : (
               <div className="p-2.5 bg-base/60 border border-surface0 flex items-center gap-2 text-xs text-subtext0">
-                <ShieldCheck className="w-4 h-4 text-green shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-subtext0 shrink-0" />
                 <span>
                   Ollama runs offline on your local machine. No API key is required. Ensure the Ollama
                   service is started (`ollama serve`).
@@ -570,8 +570,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               <div
                 className={`p-3 border flex items-start justify-between text-xs animate-in fade-in duration-100 ${
                   aiTestResult.success
-                    ? 'bg-green/10 border-green/30 text-green'
-                    : 'bg-red/10 border-red/30 text-red'
+                    ? 'bg-surface1 border-surface2 text-text'
+                    : 'bg-surface1 border-surface2 text-subtext0'
                 }`}
               >
                 <div className="flex items-start gap-2">
@@ -886,9 +886,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs border border-surface2 flex items-center gap-1.5"
+                  className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
                 >
-                  <Check className="w-3.5 h-3.5 text-text" />
+                  <Check className="w-3.5 h-3.5 text-[#11111b]" />
                   <span>{editingServerId ? 'Save Changes' : 'Register Server'}</span>
                 </button>
               </div>
@@ -956,8 +956,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                             )}
 
                             {server.testStatus === 'success' && (
-                              <span className="text-[10px] px-1.5 py-0.2 bg-green/10 text-green border border-green/20 font-mono flex items-center gap-1">
-                                <Check className="w-3 h-3" />
+                              <span className="text-[10px] px-1.5 py-0.2 bg-surface1 text-text border border-surface2 font-mono flex items-center gap-1">
+                                <Check className="w-3 h-3 text-text" />
                                 <span>Verified</span>
                               </span>
                             )}
@@ -1127,7 +1127,7 @@ Provide clear CVSS impact assessment and secure remediations.`,
                 }
                 className="p-3 bg-surface0/30 hover:bg-surface0 border border-surface0 hover:border-surface1 text-left rounded-xl transition-all cursor-pointer group"
               >
-                <div className="text-xs font-bold text-text group-hover:text-red">
+                <div className="text-xs font-bold text-text group-hover:text-brand">
                   🔒 Security & Vulnerability Auditor
                 </div>
                 <div className="text-[10px] text-subtext0 mt-1">
@@ -1149,7 +1149,7 @@ Review git diffs for:
                 }
                 className="p-3 bg-surface0/30 hover:bg-surface0 border border-surface0 hover:border-surface1 text-left rounded-xl transition-all cursor-pointer group"
               >
-                <div className="text-xs font-bold text-text group-hover:text-blue">
+                <div className="text-xs font-bold text-text group-hover:text-brand">
                   🏛️ Senior Software Architect
                 </div>
                 <div className="text-[10px] text-subtext0 mt-1">
@@ -1171,7 +1171,7 @@ Keep response under 200 words.`,
                 }
                 className="p-3 bg-surface0/30 hover:bg-surface0 border border-surface0 hover:border-surface1 text-left rounded-xl transition-all cursor-pointer group"
               >
-                <div className="text-xs font-bold text-text group-hover:text-green">
+                <div className="text-xs font-bold text-text group-hover:text-brand">
                   ⚡ Concise PR Summarizer
                 </div>
                 <div className="text-[10px] text-subtext0 mt-1">
@@ -1185,10 +1185,13 @@ Keep response under 200 words.`,
 
       {/* MODAL: IMPORT / EXPORT MCP CONFIG JSON */}
       {isJsonModalOpen && (
-        <div className="fixed inset-0 z-60 bg-crust/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-crust/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-mantle border border-surface0 w-full max-w-2xl shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-2 border-b border-surface0">
-              <div className="flex items-center gap-2">
+            <div
+              data-tauri-drag-region
+              className="flex items-center justify-between pb-2 border-b border-surface0 cursor-default"
+            >
+              <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
                 <FileJson className="w-4 h-4 text-subtext0" />
                 <h4 className="text-sm font-bold text-text">MCP JSON Configuration</h4>
               </div>
@@ -1250,8 +1253,8 @@ Keep response under 200 words.`,
                   >
                     {copiedJson ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-green" />
-                        <span className="text-green">Copied to Clipboard!</span>
+                        <Check className="w-3.5 h-3.5 text-text" />
+                        <span className="text-text">Copied to Clipboard!</span>
                       </>
                     ) : (
                       <>
@@ -1280,8 +1283,8 @@ Keep response under 200 words.`,
                   <div
                     className={`p-2.5 border text-xs flex items-center gap-2 ${
                       jsonFeedback.success
-                        ? 'bg-green/10 border-green/30 text-green'
-                        : 'bg-red/10 border-red/30 text-red'
+                        ? 'bg-surface1 border-surface2 text-text'
+                        : 'bg-surface1 border-surface2 text-subtext0'
                     }`}
                   >
                     {jsonFeedback.success ? (

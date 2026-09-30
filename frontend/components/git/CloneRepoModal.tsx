@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import {
   Download,
   X,
@@ -8,8 +9,11 @@ import {
   Terminal,
   AlertCircle,
   Loader2,
+  Check,
 } from 'lucide-react';
 import { useGitStore } from '../../store/useGitStore';
+
+type UrlValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid';
 
 export const CloneRepoModal: React.FC = () => {
   const {
@@ -30,6 +34,10 @@ export const CloneRepoModal: React.FC = () => {
   const [repoName, setRepoName] = useState('');
   const [isCloning, setIsCloning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // URL Validation State
+  const [urlStatus, setUrlStatus] = useState<UrlValidationStatus>('idle');
+  const [urlMessage, setUrlMessage] = useState<string | null>(null);
 
   // Auto-extract repo name from remote URL
   const extractRepoName = (url: string): string => {
@@ -52,6 +60,44 @@ export const CloneRepoModal: React.FC = () => {
       setRepoName(inferred);
     }
   };
+
+  // Debounce 1s then validate URL format and remote availability
+  useEffect(() => {
+    const trimmed = remoteUrl.trim();
+    if (!trimmed) {
+      setUrlStatus('idle');
+      setUrlMessage(null);
+      return;
+    }
+
+    const isBasicFormat =
+      trimmed.startsWith('https://') ||
+      trimmed.startsWith('http://') ||
+      trimmed.startsWith('git@') ||
+      trimmed.startsWith('ssh://');
+
+    if (!isBasicFormat) {
+      setUrlStatus('invalid');
+      setUrlMessage('Invalid URL format (must start with https://, git@ or ssh://)');
+      return;
+    }
+
+    setUrlStatus('validating');
+    setUrlMessage('Checking connection to repository...');
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await invoke<string>('check_remote_repo_url', { url: trimmed });
+        setUrlStatus('valid');
+        setUrlMessage(res || 'Repository is valid and ready to clone.');
+      } catch (err: unknown) {
+        setUrlStatus('invalid');
+        setUrlMessage(typeof err === 'string' ? err : 'Repository does not exist or is inaccessible.');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [remoteUrl]);
 
   // Close on Escape
   useEffect(() => {
@@ -92,12 +138,18 @@ export const CloneRepoModal: React.FC = () => {
     if (isCloning) return;
     setIsCloneModalOpen(false);
     setErrorMessage(null);
+    setUrlStatus('idle');
+    setUrlMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!remoteUrl.trim()) {
       setErrorMessage('Please enter a valid repository URL.');
+      return;
+    }
+    if (urlStatus === 'invalid') {
+      setErrorMessage(urlMessage || 'Repository URL is invalid or inaccessible.');
       return;
     }
     if (!destinationPath.trim()) {
@@ -113,6 +165,8 @@ export const CloneRepoModal: React.FC = () => {
       setIsCloneModalOpen(false);
       setRemoteUrl('');
       setRepoName('');
+      setUrlStatus('idle');
+      setUrlMessage(null);
     } catch (err: unknown) {
       setErrorMessage(String(err) || 'Failed to clone repository.');
     } finally {
@@ -126,13 +180,16 @@ export const CloneRepoModal: React.FC = () => {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-crust/80 backdrop-blur-xs p-4 select-none animate-in fade-in duration-150"
+      className="fixed inset-x-0 bottom-0 top-8.5 z-50 flex items-center justify-center bg-crust/80 backdrop-blur-xs p-4 select-none animate-in fade-in duration-150"
     >
-      <div className="bg-mantle border border-surface1 rounded-xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col">
+      <div className="bg-mantle border border-surface1 shadow-2xl w-full max-w-xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-surface0 flex items-center justify-between bg-base/50">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-blue/10 text-blue border border-blue/20">
+        <div
+          data-tauri-drag-region
+          className="px-5 py-4 border-b border-surface0 flex items-center justify-between bg-base/50 cursor-default"
+        >
+          <div data-tauri-drag-region className="flex items-center gap-2.5 pointer-events-none">
+            <div className="p-2 bg-blue/10 text-blue border border-blue/20">
               <Download className="w-4 h-4" />
             </div>
             <div>
@@ -146,7 +203,7 @@ export const CloneRepoModal: React.FC = () => {
             type="button"
             disabled={isCloning}
             onClick={handleClose}
-            className="p-1.5 rounded-md hover:bg-surface0 text-subtext0 hover:text-text transition-colors disabled:opacity-40 cursor-pointer"
+            className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors disabled:opacity-40 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -156,7 +213,7 @@ export const CloneRepoModal: React.FC = () => {
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {/* Error Banner */}
           {errorMessage && (
-            <div className="p-3 bg-red/10 border border-red/30 rounded-lg flex items-start gap-2.5 text-red text-xs animate-in fade-in duration-150">
+            <div className="p-3 bg-red/10 border border-red/30 flex items-start gap-2.5 text-red text-xs animate-in fade-in duration-150">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <div className="flex-1 break-words font-mono text-[11px] leading-relaxed">
                 {errorMessage}
@@ -166,11 +223,27 @@ export const CloneRepoModal: React.FC = () => {
 
           {/* Remote URL Field */}
           <div>
-            <label className="block text-xs font-medium text-text mb-1.5">
-              Repository URL <span className="text-red">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-medium text-text">
+                Repository URL <span className="text-red">*</span>
+              </label>
+              {urlStatus === 'validating' && (
+                <span className="text-[11px] text-blue flex items-center gap-1 font-normal animate-pulse">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Checking...
+                </span>
+              )}
+            </div>
             <div className="relative">
-              <Globe className="w-4 h-4 text-subtext0 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Globe
+                className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
+                  urlStatus === 'invalid'
+                    ? 'text-red'
+                    : urlStatus === 'valid'
+                    ? 'text-green'
+                    : 'text-subtext0'
+                }`}
+              />
               <input
                 type="text"
                 autoFocus
@@ -178,12 +251,51 @@ export const CloneRepoModal: React.FC = () => {
                 value={remoteUrl}
                 onChange={handleUrlChange}
                 placeholder="https://github.com/owner/repository.git or git@github.com:owner/repo.git"
-                className="w-full pl-9 pr-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue rounded-lg text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60"
+                className={`w-full pl-9 pr-9 py-2 bg-surface0 border text-xs placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 ${
+                  urlStatus === 'invalid'
+                    ? 'border-red text-red focus:border-red focus:ring-1 focus:ring-red'
+                    : urlStatus === 'valid'
+                    ? 'border-green text-text focus:border-green focus:ring-1 focus:ring-green'
+                    : 'border-surface1 text-text focus:border-blue focus:ring-1 focus:ring-blue'
+                }`}
               />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                {urlStatus === 'validating' && (
+                  <Loader2 className="w-4 h-4 text-blue animate-spin" />
+                )}
+                {urlStatus === 'valid' && (
+                  <Check className="w-4 h-4 text-green" />
+                )}
+                {urlStatus === 'invalid' && (
+                  <AlertCircle className="w-4 h-4 text-red" />
+                )}
+              </div>
             </div>
-            <p className="text-[10px] text-subtext0 mt-1">
-              Supports HTTPS and SSH URLs from GitHub, GitLab, Bitbucket, or self-hosted Git
-            </p>
+
+            {/* Validation Message Below Input */}
+            {urlStatus === 'invalid' && (
+              <p className="text-[11px] text-red mt-1.5 flex items-start gap-1.5 animate-in fade-in duration-150">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-red" />
+                <span className="leading-tight font-mono">{urlMessage}</span>
+              </p>
+            )}
+            {urlStatus === 'valid' && (
+              <p className="text-[11px] text-green mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
+                <Check className="w-3.5 h-3.5 shrink-0 text-green" />
+                <span className="leading-tight">{urlMessage}</span>
+              </p>
+            )}
+            {urlStatus === 'validating' && (
+              <p className="text-[11px] text-subtext0 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
+                <Loader2 className="w-3 h-3 shrink-0 animate-spin text-blue" />
+                <span className="leading-tight">{urlMessage}</span>
+              </p>
+            )}
+            {urlStatus === 'idle' && (
+              <p className="text-[10px] text-subtext0 mt-1">
+                Supports HTTPS and SSH URLs from GitHub, GitLab, Bitbucket, or self-hosted Git
+              </p>
+            )}
           </div>
 
           {/* Local Destination Folder */}
@@ -200,14 +312,14 @@ export const CloneRepoModal: React.FC = () => {
                   value={parentDir}
                   onChange={(e) => setParentDir(e.target.value)}
                   placeholder="Select parent folder on disk..."
-                  className="w-full pl-9 pr-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue rounded-lg text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60"
+                  className="w-full pl-9 pr-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60"
                 />
               </div>
               <button
                 type="button"
                 disabled={isCloning}
                 onClick={handleBrowseFolder}
-                className="px-3.5 py-2 bg-surface1 hover:bg-surface2 text-text border border-surface2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
+                className="px-3.5 py-2 bg-surface1 hover:bg-surface2 text-text border border-surface2 text-xs font-medium transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
               >
                 <FolderOpen className="w-3.5 h-3.5 text-blue" />
                 <span>Browse...</span>
@@ -226,13 +338,13 @@ export const CloneRepoModal: React.FC = () => {
               value={repoName}
               onChange={(e) => setRepoName(e.target.value)}
               placeholder="e.g. my-project"
-              className="w-full px-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue rounded-lg text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60"
+              className="w-full px-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60"
             />
           </div>
 
           {/* Resolved Path Preview */}
           {destinationPath && (
-            <div className="bg-surface0/60 border border-surface1/60 rounded-lg p-3 text-[11px]">
+            <div className="bg-surface0/60 border border-surface1/60 p-3 text-[11px]">
               <span className="text-subtext0 block mb-0.5">Cloning into:</span>
               <code className="text-blue font-mono font-medium break-all select-all">
                 {destinationPath}
@@ -241,7 +353,7 @@ export const CloneRepoModal: React.FC = () => {
           )}
 
           {/* Command Preview Box */}
-          <div className="bg-surface0/40 border border-surface1/40 rounded-lg p-2.5 flex items-center gap-2 text-[11px] text-subtext0 font-mono overflow-x-auto">
+          <div className="bg-surface0/40 border border-surface1/40 p-2.5 flex items-center gap-2 text-[11px] text-subtext0 font-mono overflow-x-auto">
             <Terminal className="w-3.5 h-3.5 text-peach shrink-0" />
             <span className="truncate">
               git clone --progress {remoteUrl.trim() || '&lt;url&gt;'}{' '}
@@ -252,13 +364,11 @@ export const CloneRepoModal: React.FC = () => {
           {/* Footer Actions */}
           <div className="pt-2 border-t border-surface0 flex items-center justify-between">
             <div className="text-[11px] text-subtext0">
-              {isCloning ? (
+              {isCloning && (
                 <span className="flex items-center gap-1.5 text-blue">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   Cloning repository, please wait...
                 </span>
-              ) : (
-                <span>Zero disk writes bypassed for initial clone</span>
               )}
             </div>
 
@@ -267,14 +377,20 @@ export const CloneRepoModal: React.FC = () => {
                 type="button"
                 disabled={isCloning}
                 onClick={handleClose}
-                className="px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-subtext1 hover:text-text rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
+                className="px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-subtext1 hover:text-text text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={isCloning || !remoteUrl.trim() || !destinationPath.trim()}
-                className="flex items-center gap-2 px-4 py-1.5 bg-blue hover:bg-blue/90 text-crust font-semibold rounded-lg text-xs shadow-md shadow-blue/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                disabled={
+                  isCloning ||
+                  urlStatus === 'validating' ||
+                  urlStatus === 'invalid' ||
+                  !remoteUrl.trim() ||
+                  !destinationPath.trim()
+                }
+                className="flex items-center gap-2 px-4 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs shadow-md shadow-brand/20 border border-brand transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 {isCloning ? (
                   <>

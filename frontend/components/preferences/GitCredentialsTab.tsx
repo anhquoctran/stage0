@@ -352,16 +352,16 @@ export const GitCredentialsTab: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs border border-surface2 flex items-center gap-1.5"
+              className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
             >
               {isLoading ? (
                 <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#11111b]" />
                   <span>Saving to {keyringName}...</span>
                 </>
               ) : (
                 <>
-                  <ShieldCheck className="w-3.5 h-3.5 text-green" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#11111b]" />
                   <span>Save to {keyringName}</span>
                 </>
               )}
@@ -430,11 +430,7 @@ export const GitCredentialsTab: React.FC = () => {
                 <div className="flex items-center gap-1.5">
                   {/* Keyring status pill */}
                   <div
-                    className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium border ${
-                      cred.is_in_keyring
-                        ? 'bg-green/10 text-green border-green/20'
-                        : 'bg-red/10 text-red border-red/20'
-                    }`}
+                    className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium border bg-surface1 text-subtext0 border-surface2"
                     title={
                       cred.is_in_keyring
                         ? 'Verified in OS Credential Manager'
@@ -443,12 +439,12 @@ export const GitCredentialsTab: React.FC = () => {
                   >
                     {cred.is_in_keyring ? (
                       <>
-                        <ShieldCheck className="w-3 h-3 text-green" />
-                        <span>In OS Keyring</span>
+                        <ShieldCheck className="w-3 h-3 text-text" />
+                        <span className="text-text">In OS Keyring</span>
                       </>
                     ) : (
                       <>
-                        <ShieldAlert className="w-3 h-3 text-red" />
+                        <ShieldAlert className="w-3 h-3 text-subtext0" />
                         <span>Keyring Missing</span>
                       </>
                     )}
@@ -516,8 +512,8 @@ export const GitCredentialsTab: React.FC = () => {
                 >
                   {copiedId === cred.id ? (
                     <>
-                      <Check className="w-3 h-3 text-green" />
-                      <span className="text-green">Copied</span>
+                      <Check className="w-3 h-3 text-text" />
+                      <span className="text-text">Copied</span>
                     </>
                   ) : (
                     <>

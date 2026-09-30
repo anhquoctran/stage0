@@ -5,7 +5,7 @@
   "identifier": "com.localmr.app",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://127.0.0.1:1420",
     "beforeBuildCommand": "npx vite build",
     "frontendDist": "../dist"
   },
@@ -22,7 +22,8 @@
         "shadow": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
-        "backgroundColor": "#11111b"
+        "backgroundColor": "#11111b",
+        "visible": true
       }
     ],
     "security": {

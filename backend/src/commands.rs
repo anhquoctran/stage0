@@ -1,10 +1,18 @@
 use std::path::Path;
 use tauri::{AppHandle, Manager, Window};
 use tauri_plugin_dialog::DialogExt;
-use crate::db::Database;
+use crate::db::{
+    Database, RepoSettingsDb, RepoLabelDb, VirtualMrSessionDb, VirtualMrDiscussionDb, VirtualMrCommentDb,
+};
 use crate::git::{
     branches::list_branches,
-    ops::{git_sync, list_remotes, get_remote_url, is_rebase_in_progress, GitSyncOptions},
+    ops::{
+        git_sync, list_remotes, get_remote_url, is_rebase_in_progress, GitSyncOptions,
+        list_remotes_detailed, add_remote, remove_remote, set_remote_url, test_remote_connection,
+        GitRemoteDetail, list_tags_detailed, create_tag, delete_tag, GitTagInfo,
+        create_branch, delete_branch, rename_branch, get_commits_between, get_git_user_identity,
+        GitCommitItem,
+    },
     blame::get_file_blame as calc_file_blame,
     BranchList, ConflictReport, ConflictFilePreview, MrDiffPayload, RepoInfo, FileBlamePayload,
 };
@@ -505,13 +513,22 @@ pub async fn open_repo_in(
 }
 
 #[tauri::command]
-pub async fn open_file_in_editor(repo_path: String, file_path: String) -> Result<(), String> {
+pub async fn open_file_in_editor(
+    repo_path: String,
+    file_path: String,
+    line_number: Option<i64>,
+) -> Result<(), String> {
     let full_path = std::path::Path::new(&repo_path).join(&file_path);
     #[cfg(target_os = "windows")]
     {
         let win_path = full_path.to_string_lossy().to_string().replace('/', "\\");
+        let target_str = match line_number {
+            Some(line) => format!("{}:{}", win_path, line),
+            None => win_path,
+        };
+
         let res = std::process::Command::new("cmd")
-            .args(&["/c", "code", "-g", &win_path])
+            .args(&["/c", "code", "-g", &target_str])
             .spawn();
 
         if res.is_err() {
@@ -526,7 +543,7 @@ pub async fn open_file_in_editor(repo_path: String, file_path: String) -> Result
 
             for cand in candidates.into_iter().flatten() {
                 if cand.exists() {
-                    if std::process::Command::new(&cand).arg("-g").arg(&win_path).spawn().is_ok() {
+                    if std::process::Command::new(&cand).arg("-g").arg(&target_str).spawn().is_ok() {
                         found = true;
                         break;
                     }
@@ -541,13 +558,19 @@ pub async fn open_file_in_editor(repo_path: String, file_path: String) -> Result
     }
     #[cfg(target_os = "macos")]
     {
+        let base_str = full_path.to_str().unwrap_or(&file_path);
+        let target_str = match line_number {
+            Some(line) => format!("{}:{}", base_str, line),
+            None => base_str.to_string(),
+        };
+
         let res = std::process::Command::new("code")
             .arg("-g")
-            .arg(full_path.to_str().unwrap_or(&file_path))
+            .arg(&target_str)
             .spawn();
         if res.is_err() {
             std::process::Command::new("open")
-                .args(&["-a", "Visual Studio Code", full_path.to_str().unwrap_or(&file_path)])
+                .args(&["-a", "Visual Studio Code", base_str])
                 .spawn()
                 .map_err(|e| format!("Failed to open VS Code: {}", e))?;
         }
@@ -555,9 +578,14 @@ pub async fn open_file_in_editor(repo_path: String, file_path: String) -> Result
     }
     #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     {
+        let base_str = full_path.to_str().unwrap_or(&file_path);
+        let target_str = match line_number {
+            Some(line) => format!("{}:{}", base_str, line),
+            None => base_str.to_string(),
+        };
         std::process::Command::new("code")
             .arg("-g")
-            .arg(full_path.to_str().unwrap_or(&file_path))
+            .arg(&target_str)
             .spawn()
             .map_err(|e| format!("Failed to open VS Code: {}", e))?;
         Ok(())
@@ -589,6 +617,13 @@ pub async fn window_close(window: Window) -> Result<(), String> {
 #[tauri::command]
 pub async fn window_is_maximized(window: Window) -> Result<bool, String> {
     window.is_maximized().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn window_show(window: Window) -> Result<(), String> {
+    window.show().map_err(|e| e.to_string())?;
+    let _ = window.set_focus();
+    Ok(())
 }
 
 #[tauri::command]
@@ -754,6 +789,11 @@ pub async fn pick_folder(app: AppHandle) -> Result<Option<String>, String> {
 }
 
 #[tauri::command]
+pub async fn check_remote_repo_url(url: String) -> Result<String, String> {
+    crate::git::ops::check_git_remote_url(&url)
+}
+
+#[tauri::command]
 pub async fn clone_repository(
     app: AppHandle,
     url: String,
@@ -837,6 +877,214 @@ pub async fn clone_repository(
         name,
         local_path: trimmed_target.to_string(),
     })
+}
+
+// ===========================================================================
+// Repo Settings & Labels Commands
+// ===========================================================================
+
+#[tauri::command]
+pub async fn get_repo_settings(app: AppHandle, repo_id: String) -> Result<Option<RepoSettingsDb>, String> {
+    let db = app.state::<Database>();
+    db.get_repo_settings(&repo_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn save_repo_settings(app: AppHandle, settings: RepoSettingsDb) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.save_repo_settings(&settings).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn list_repo_labels(app: AppHandle, repo_id: String) -> Result<Vec<RepoLabelDb>, String> {
+    let db = app.state::<Database>();
+    db.list_repo_labels(&repo_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn create_repo_label(app: AppHandle, label: RepoLabelDb) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.create_repo_label(&label).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn update_repo_label(app: AppHandle, label: RepoLabelDb) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.update_repo_label(&label).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn delete_repo_label(app: AppHandle, id: String) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.delete_repo_label(&id).map_err(|e| e.to_string())
+}
+
+// ===========================================================================
+// Git Remotes Detailed & Connectivity Commands
+// ===========================================================================
+
+#[tauri::command]
+pub async fn list_git_remotes_detailed(repo_path: String) -> Result<Vec<GitRemoteDetail>, String> {
+    list_remotes_detailed(&repo_path)
+}
+
+#[tauri::command]
+pub async fn add_git_remote(repo_path: String, name: String, url: String) -> Result<(), String> {
+    add_remote(&repo_path, &name, &url)
+}
+
+#[tauri::command]
+pub async fn remove_git_remote(repo_path: String, name: String) -> Result<(), String> {
+    remove_remote(&repo_path, &name)
+}
+
+#[tauri::command]
+pub async fn set_git_remote_url(repo_path: String, name: String, url: String) -> Result<(), String> {
+    set_remote_url(&repo_path, &name, &url)
+}
+
+#[tauri::command]
+pub async fn test_git_remote(repo_path: String, remote_or_url: String) -> Result<String, String> {
+    test_remote_connection(&repo_path, &remote_or_url)
+}
+
+// ===========================================================================
+// Git Branches & Tags Commands
+// ===========================================================================
+
+#[tauri::command]
+pub async fn list_git_tags(repo_path: String) -> Result<Vec<GitTagInfo>, String> {
+    list_tags_detailed(&repo_path)
+}
+
+#[tauri::command]
+pub async fn create_git_tag(
+    repo_path: String,
+    tag_name: String,
+    commit_ref: Option<String>,
+    message: Option<String>,
+) -> Result<(), String> {
+    create_tag(&repo_path, &tag_name, commit_ref.as_deref(), message.as_deref())
+}
+
+#[tauri::command]
+pub async fn delete_git_tag(repo_path: String, tag_name: String) -> Result<(), String> {
+    delete_tag(&repo_path, &tag_name)
+}
+
+#[tauri::command]
+pub async fn create_git_branch(
+    repo_path: String,
+    branch_name: String,
+    start_point: Option<String>,
+) -> Result<(), String> {
+    create_branch(&repo_path, &branch_name, start_point.as_deref())
+}
+
+#[tauri::command]
+pub async fn delete_git_branch(
+    repo_path: String,
+    branch_name: String,
+    force: bool,
+) -> Result<(), String> {
+    delete_branch(&repo_path, &branch_name, force)
+}
+
+#[tauri::command]
+pub async fn rename_git_branch(
+    repo_path: String,
+    old_name: String,
+    new_name: String,
+) -> Result<(), String> {
+    rename_branch(&repo_path, &old_name, &new_name)
+}
+
+// ===========================================================================
+// Virtual MR Sessions, Commits & Identity Commands
+// ===========================================================================
+
+#[tauri::command]
+pub async fn list_virtual_mr_sessions(app: AppHandle, repo_id: String) -> Result<Vec<VirtualMrSessionDb>, String> {
+    let db = app.state::<Database>();
+    db.list_virtual_mr_sessions(&repo_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn save_virtual_mr_session(app: AppHandle, session: VirtualMrSessionDb) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.save_virtual_mr_session(&session).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn delete_virtual_mr_session(app: AppHandle, session_id: String) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.delete_virtual_mr_session(&session_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_commits_between_refs(
+    repo_path: String,
+    base: String,
+    compare: String,
+) -> Result<Vec<GitCommitItem>, String> {
+    get_commits_between(&repo_path, &base, &compare)
+}
+
+#[tauri::command]
+pub async fn get_git_user_identity_cmd(repo_path: String) -> Result<(String, String), String> {
+    get_git_user_identity(&repo_path)
+}
+
+// ===========================================================================
+// Discussions & Comments Commands
+// ===========================================================================
+
+#[tauri::command]
+pub async fn list_mr_discussions(app: AppHandle, session_id: String) -> Result<Vec<VirtualMrDiscussionDb>, String> {
+    let db = app.state::<Database>();
+    db.list_discussions(&session_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn create_mr_discussion(
+    app: AppHandle,
+    discussion: VirtualMrDiscussionDb,
+    first_comment: VirtualMrCommentDb,
+) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.create_discussion(&discussion, &first_comment).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn add_mr_comment(app: AppHandle, comment: VirtualMrCommentDb) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.add_comment(&comment).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn resolve_mr_discussion(
+    app: AppHandle,
+    discussion_id: String,
+    is_resolved: bool,
+    resolve_type: String,
+    resolved_by: Option<String>,
+) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.resolve_discussion(&discussion_id, is_resolved, &resolve_type, resolved_by.as_deref())
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn verify_mr_discussion(
+    app: AppHandle,
+    discussion_id: String,
+    verification_status: String,
+    verified_by_bot: String,
+    pass: bool,
+) -> Result<(), String> {
+    let db = app.state::<Database>();
+    db.verify_discussion(&discussion_id, &verification_status, &verified_by_bot, pass)
+        .map_err(|e| e.to_string())
 }
 
 

@@ -503,14 +503,17 @@ export const BlameViewer: React.FC = () => {
 
       {/* Commit Detail Modal / Popover */}
       {selectedCommit && (
-        <div className="fixed inset-0 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div
             ref={commitModalRef}
             className="bg-mantle border border-surface0 rounded-lg w-full max-w-lg shadow-2xl p-4 animate-in zoom-in-95 duration-100 flex flex-col space-y-3.5 select-none"
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-2.5 border-b border-surface0">
-              <div className="flex items-center gap-2">
+            <div
+              data-tauri-drag-region
+              className="flex items-center justify-between pb-2.5 border-b border-surface0 cursor-default"
+            >
+              <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
                 <GitCommit className="w-4 h-4 text-subtext0" />
                 <h4 className="text-sm font-bold text-text">Commit Details</h4>
               </div>

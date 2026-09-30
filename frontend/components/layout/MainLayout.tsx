@@ -10,8 +10,15 @@ import { RebaseFromModal } from '../git/RebaseFromModal';
 import { RemoteUrlFromModal } from '../git/RemoteUrlFromModal';
 import { CloneRepoModal } from '../git/CloneRepoModal';
 import { WelcomeScreen } from './WelcomeScreen';
+import { TabBar } from './TabBar';
+import { VirtualMrHub } from '../git/VirtualMrHub';
+import { EmptyVirtualMrWorkspace } from './EmptyVirtualMrWorkspace';
+import { VirtualMrBottomBar } from './VirtualMrBottomBar';
+import { NewVirtualMrView } from '../mr/NewVirtualMrView';
+import { RepositorySettingsModal } from '../repository/RepositorySettingsModal';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
+import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { X, AlertCircle, Check } from 'lucide-react';
 import {
   revealInOs,
@@ -50,6 +57,8 @@ export const MainLayout: React.FC = () => {
     setIsCloneModalOpen,
     remoteUrl,
     compareBranch,
+    baseBranch,
+    branches,
     toastMessage,
     showToast,
     setIsRemoteUrlFromOpen,
@@ -58,6 +67,29 @@ export const MainLayout: React.FC = () => {
 
   const { setIsPreferencesOpen, showInlineBlame, toggleInlineBlame } =
     usePreferencesStore();
+
+  const {
+    isRepoSettingsOpen,
+    closeRepoSettings,
+    repoSettingsActiveTab,
+    sessions,
+    draftMr,
+    isDraftActive,
+    openNewMrDraft,
+    repoSettings,
+  } = useVirtualMrStore();
+
+  // Load Virtual MR data when repo changes
+  useEffect(() => {
+    if (currentRepo) {
+      useVirtualMrStore.getState().loadRepoData(
+        currentRepo.id,
+        currentRepo.local_path,
+        branches?.local || ['main'],
+        baseBranch
+      );
+    }
+  }, [currentRepo?.id, currentRepo?.local_path]);
 
   const fileManagerName = getOsFileManagerName();
 
@@ -320,6 +352,19 @@ export const MainLayout: React.FC = () => {
       {/* Top Application Bar with Menu Bar & Action Toolbar */}
       <TopBar />
 
+      {/* Multi-Session Virtual MR TabBar */}
+      {currentRepo && <TabBar />}
+
+      {/* Virtual MR Details Hub (Only rendered for established MR sessions, not during initial branch comparison) */}
+      {currentRepo && !isDraftActive && sessions.length > 0 && <VirtualMrHub />}
+
+      {/* Repository Settings Dialog */}
+      <RepositorySettingsModal
+        isOpen={isRepoSettingsOpen}
+        onClose={closeRepoSettings}
+        initialTab={repoSettingsActiveTab}
+      />
+
       {/* Preferences Modal Dialog */}
       <PreferencesModal />
 
@@ -361,46 +406,59 @@ export const MainLayout: React.FC = () => {
       {/* Central Review Workspace */}
       <main className="flex-1 flex overflow-hidden relative">
         {currentRepo ? (
-          <>
-            <FileList
-              files={diffPayload?.files || []}
-              selectedFile={selectedFile}
-              onSelectFile={selectFile}
-              isLoading={isDiffLoading}
-              width={sidebarWidth}
-            />
-
-            {/* Draggable Resizer Splitter between Sidebar and DiffViewer */}
-            <div
-              role="separator"
-              aria-orientation="vertical"
-              title="Drag to resize sidebar (double-click to reset)"
-              onMouseDown={startResizing}
-              onDoubleClick={resetSidebarWidth}
-              className={`w-1.5 -ml-1 relative z-20 cursor-col-resize hover:bg-blue/40 transition-colors flex items-center justify-center select-none group ${
-                isResizing ? 'bg-blue' : 'bg-transparent'
-              }`}
-            >
-              <div
-                className={`w-0.5 h-7 rounded-full transition-colors ${
-                  isResizing ? 'bg-crust' : 'bg-surface2 group-hover:bg-blue'
-                }`}
+          draftMr && isDraftActive ? (
+            <NewVirtualMrView />
+          ) : sessions.length > 0 ? (
+            <>
+              <FileList
+                files={diffPayload?.files || []}
+                selectedFile={selectedFile}
+                onSelectFile={selectFile}
+                isLoading={isDiffLoading}
+                width={sidebarWidth}
               />
-            </div>
 
-            <DiffViewer
-              selectedFile={selectedFile}
-              diffPayload={diffPayload}
-              viewMode={viewMode}
-              onToggleViewMode={setViewMode}
-              isLoading={isDiffLoading}
-              onOpenRepo={openRepoDialog}
+              {/* Draggable Resizer Splitter between Sidebar and DiffViewer */}
+              <div
+                role="separator"
+                aria-orientation="vertical"
+                title="Drag to resize sidebar (double-click to reset)"
+                onMouseDown={startResizing}
+                onDoubleClick={resetSidebarWidth}
+                className={`w-1.5 -ml-1 relative z-20 cursor-col-resize hover:bg-blue/40 transition-colors flex items-center justify-center select-none group ${
+                  isResizing ? 'bg-blue' : 'bg-transparent'
+                }`}
+              >
+                <div
+                  className={`w-0.5 h-7 rounded-full transition-colors ${
+                    isResizing ? 'bg-crust' : 'bg-surface2 group-hover:bg-blue'
+                  }`}
+                />
+              </div>
+
+              <DiffViewer
+                selectedFile={selectedFile}
+                diffPayload={diffPayload}
+                viewMode={viewMode}
+                onToggleViewMode={setViewMode}
+                isLoading={isDiffLoading}
+                onOpenRepo={openRepoDialog}
+              />
+            </>
+          ) : (
+            <EmptyVirtualMrWorkspace
+              onNewMr={() => openNewMrDraft()}
+              repoName={currentRepo.name}
+              defaultBaseBranch={repoSettings?.defaultBaseBranch || 'main'}
             />
-          </>
+          )
         ) : (
           <WelcomeScreen />
         )}
       </main>
+
+      {/* Bottom Action Bar for Active Virtual MR Tab */}
+      {currentRepo && !isDraftActive && sessions.length > 0 && <VirtualMrBottomBar />}
 
       {/* Bottom Status Bar */}
       <StatusBar />

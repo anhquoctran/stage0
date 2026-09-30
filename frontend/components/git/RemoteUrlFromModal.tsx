@@ -113,11 +113,14 @@ export const RemoteUrlFromModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-mantle border border-surface0 w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-150 overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-surface0 bg-base">
-          <div className="flex items-center gap-2">
+        <div
+          data-tauri-drag-region
+          className="flex items-center justify-between px-4 py-3 border-b border-surface0 bg-base cursor-default"
+        >
+          <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
             <Globe className="w-4 h-4 text-subtext0" />
             <h3 className="text-sm font-bold text-text">Copy Remote File URL from...</h3>
           </div>

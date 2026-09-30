@@ -2,94 +2,42 @@ import React, { useState, useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { invoke } from '@tauri-apps/api/core';
 import {
-  FolderOpen,
-  Folder,
-  Code2,
-  Terminal,
-  ArrowLeft,
-  ArrowLeftRight,
   RefreshCw,
   Download,
   GitMerge,
   ChevronDown,
-  ChevronRight,
-  ExternalLink,
   FolderGit2,
-  Clock,
   RotateCw,
-  CheckCircle2,
-  Trash2,
   Sliders,
   Play,
   SkipForward,
   XCircle,
 } from 'lucide-react';
-import { BranchSelector } from '../git/BranchSelector';
 import { WindowControls } from './WindowControls';
 import { MenuBar } from './MenuBar';
 import { AppLogo } from '../common/AppLogo';
 import { useGitStore } from '../../store/useGitStore';
-import {
-  openRepoInExplorer,
-  openRepoInVsCode,
-  openRepoInTerminal,
-  getOsFileManagerName,
-} from '../../utils/fileActions';
 
 export const TopBar: React.FC = () => {
   const {
     currentRepo,
-    recentRepos,
-    branches,
     baseBranch,
     compareBranch,
     diffPayload,
     isSyncing,
     syncStatus,
-    openRepoDialog,
-    setIsCloneModalOpen,
-    selectRepo,
-    removeRecentRepo,
-    clearRecentRepos,
-    setBaseBranch,
-    setCompareBranch,
-    swapBranches,
     refreshDiff,
     runSync,
     setIsPullFromOpen,
     setIsRebaseFromOpen,
     isRebasing,
-    showToast,
   } = useGitStore();
 
-  const [isRecentOpen, setIsRecentOpen] = useState(false);
-  const [showOpenInSubmenu, setShowOpenInSubmenu] = useState(false);
   const [isPullMenuOpen, setIsPullMenuOpen] = useState(false);
   const [isRebaseMenuOpen, setIsRebaseMenuOpen] = useState(false);
 
-  const fileManagerName = getOsFileManagerName();
-
-  const recentDropdownRef = useRef<HTMLDivElement>(null);
   const pullMenuRef = useRef<HTMLDivElement>(null);
   const rebaseMenuRef = useRef<HTMLDivElement>(null);
-
-  const handleOpenRepoIn = async (target: 'explorer' | 'vscode' | 'terminal') => {
-    if (!currentRepo) return;
-    try {
-      if (target === 'explorer') {
-        await openRepoInExplorer(currentRepo.local_path);
-        showToast(`Opened repository in ${fileManagerName}`);
-      } else if (target === 'vscode') {
-        await openRepoInVsCode(currentRepo.local_path);
-        showToast('Opened repository in VS Code');
-      } else if (target === 'terminal') {
-        await openRepoInTerminal(currentRepo.local_path);
-        showToast('Opened repository in Terminal');
-      }
-    } catch (err) {
-      showToast(`Failed to open: ${err}`);
-    }
-  };
 
   const isMac =
     typeof navigator !== 'undefined' &&
@@ -98,13 +46,6 @@ export const TopBar: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (
-        recentDropdownRef.current &&
-        !recentDropdownRef.current.contains(target)
-      ) {
-        setIsRecentOpen(false);
-        setShowOpenInSubmenu(false);
-      }
       if (
         pullMenuRef.current &&
         !pullMenuRef.current.contains(target)
@@ -131,13 +72,13 @@ export const TopBar: React.FC = () => {
   };
 
   return (
-    <header className="flex flex-col shrink-0 select-none z-30">
+    <header className="flex flex-col shrink-0 select-none">
       {/* ROW 1: VSCode Style Window Titlebar & Menu Bar */}
       <div
         data-tauri-drag-region
         onDoubleClick={handleDoubleClick}
         className={clsx(
-          'h-8.5 bg-crust border-b border-surface0/70 flex items-center justify-between shrink-0 select-none transition-all',
+          'h-8.5 bg-crust border-b border-surface0/70 flex items-center justify-between shrink-0 select-none transition-all relative z-[100]',
           isMac ? 'pl-[76px] pr-2' : 'pl-2.5 pr-0'
         )}
       >
@@ -176,267 +117,52 @@ export const TopBar: React.FC = () => {
       </div>
 
       {/* ROW 2: Git Workspace Action Toolbar */}
-      <div className="h-14 bg-mantle border-b border-surface0 px-3 flex items-center justify-between shrink-0 select-none z-20">
-        {/* Left: Repository Dropdown Pill (GitHub Desktop / Fork style) */}
+      <div className="h-14 bg-mantle border-b border-surface0 px-3 flex items-center justify-between shrink-0 select-none relative z-20">
+        {/* Left: Active Repository Indicator */}
         <div className="flex items-center gap-3">
-          <div className="relative" ref={recentDropdownRef}>
-            <div className="flex items-stretch rounded-md border border-surface0 bg-surface0 overflow-hidden hover:border-surface2 transition-colors shadow-xs">
-              <button
-                type="button"
-                onClick={openRepoDialog}
-                className="flex items-center gap-2 px-2.5 py-1 text-xs text-text hover:bg-surface1 transition-colors cursor-pointer"
-                title={currentRepo?.local_path || 'Open Local Git Repository'}
-              >
-                <FolderGit2 className="w-3.5 h-3.5 text-subtext1 shrink-0" />
-                <div className="text-left max-w-[170px]">
-                  <span className="block font-semibold text-text truncate leading-tight text-xs">
-                    {currentRepo ? currentRepo.name : 'Open Repository...'}
-                  </span>
-                  {currentRepo ? (
-                    <span className="block text-[9px] text-subtext1 truncate leading-tight font-mono">
-                      {currentRepo.local_path}
-                    </span>
-                  ) : (
-                    <span className="block text-[9px] text-subtext0 leading-tight">
-                      Click to select folder
-                    </span>
-                  )}
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsRecentOpen(!isRecentOpen)}
-                className="flex items-center justify-center px-2 border-l border-surface0 text-subtext1 hover:text-text hover:bg-surface1 transition-colors cursor-pointer"
-                title="Recent repositories"
-              >
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {isRecentOpen && (
-              <div className="absolute left-0 mt-1.5 w-80 rounded-md shadow-2xl bg-mantle border border-surface0 z-50 py-1 animate-in fade-in duration-100">
-                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext1 flex items-center justify-between bg-base border-b border-surface0">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-3 h-3" />
-                    <span>Recent Repositories</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-subtext0 font-mono">
-                      {recentRepos.length}
-                    </span>
-                    {recentRepos.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          clearRecentRepos();
-                        }}
-                        className="text-[10px] text-subtext0 hover:text-red transition-colors cursor-pointer"
-                        title="Clear all recent repositories"
-                      >
-                        clear
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="max-h-56 overflow-y-auto divide-y divide-surface0">
-                  {recentRepos.length === 0 ? (
-                    <div className="px-3 py-4 text-center text-xs text-subtext0">
-                      No recent repositories
-                    </div>
-                  ) : (
-                    recentRepos.map((repo) => (
-                      <div
-                        key={repo.id}
-                        onClick={() => {
-                          selectRepo(repo);
-                          setIsRecentOpen(false);
-                        }}
-                        className="group flex items-center justify-between px-3 py-2 text-xs hover:bg-surface0 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <div className="font-semibold text-text truncate">
-                              {repo.name}
-                            </div>
-                            <div className="text-[10px] text-subtext1 truncate font-mono">
-                              {repo.local_path}
-                            </div>
-                          </div>
-                          {currentRepo?.id === repo.id && (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-subtext0 shrink-0 ml-1" />
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeRecentRepo(repo.id);
-                          }}
-                          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface1 text-subtext0 hover:text-text transition-all shrink-0 ml-1.5 cursor-pointer"
-                          title="Remove from recents"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <div className="p-1 border-t border-surface0 bg-base space-y-0.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsRecentOpen(false);
-                      openRepoDialog();
-                    }}
-                    className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center gap-2 font-medium cursor-pointer"
-                  >
-                    <FolderOpen className="w-3.5 h-3.5 text-subtext1" />
-                    <span>Open from Disk...</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsRecentOpen(false);
-                      setIsCloneModalOpen(true);
-                    }}
-                    className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center gap-2 font-medium cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5 text-subtext1" />
-                    <span>Clone Repository...</span>
-                  </button>
-                </div>
-
-                {currentRepo && (
-                  <div className="p-1 border-t border-surface0 bg-base">
-                    <div
-                      className="relative"
-                      onMouseEnter={() => setShowOpenInSubmenu(true)}
-                      onMouseLeave={() => setShowOpenInSubmenu(false)}
-                    >
-                      <button
-                        type="button"
-                        className="w-full text-left px-2.5 py-1.5 text-xs text-text hover:bg-surface0 rounded flex items-center justify-between font-medium cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text transition-colors" />
-                          <span>Open in</span>
-                        </div>
-                        <ChevronRight className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                      </button>
-
-                      {showOpenInSubmenu && (
-                        <div className="absolute left-full top-0 ml-1 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1 z-50 text-xs">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsRecentOpen(false);
-                              setShowOpenInSubmenu(false);
-                              handleOpenRepoIn('terminal');
-                            }}
-                            className="w-full text-left px-3 py-1.5 text-xs text-text hover:bg-surface0 flex items-center justify-between font-medium cursor-pointer group"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Terminal className="w-3.5 h-3.5 text-subtext1 group-hover:text-text transition-colors" />
-                              <span>Terminal</span>
-                            </div>
-                            <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+T</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsRecentOpen(false);
-                              setShowOpenInSubmenu(false);
-                              handleOpenRepoIn('vscode');
-                            }}
-                            className="w-full text-left px-3 py-1.5 text-xs text-text hover:bg-surface0 flex items-center justify-between font-medium cursor-pointer group"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Code2 className="w-3.5 h-3.5 text-subtext1 group-hover:text-text transition-colors" />
-                              <span>Visual Studio Code</span>
-                            </div>
-                            <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+V</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsRecentOpen(false);
-                              setShowOpenInSubmenu(false);
-                              handleOpenRepoIn('explorer');
-                            }}
-                            className="w-full text-left px-3 py-1.5 text-xs text-text hover:bg-surface0 flex items-center justify-between font-medium cursor-pointer group"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Folder className="w-3.5 h-3.5 text-subtext1 group-hover:text-text transition-colors" />
-                              <span>{fileManagerName}</span>
-                            </div>
-                            <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+E</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+          {currentRepo ? (
+            <div
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-md border border-surface0 bg-surface0/60 max-w-[260px] shadow-xs select-none"
+              title={currentRepo.local_path}
+            >
+              <FolderGit2 className="w-4 h-4 text-primary shrink-0" />
+              <div className="text-left min-w-0">
+                <span className="block font-semibold text-text truncate leading-tight text-xs">
+                  {currentRepo.name}
+                </span>
+                <span className="block text-[10px] text-subtext1 truncate leading-tight font-mono">
+                  {currentRepo.local_path}
+                </span>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-dashed border-surface1 bg-surface0/30 text-subtext0 text-xs select-none">
+              <FolderGit2 className="w-3.5 h-3.5 text-subtext0 shrink-0" />
+              <span>No Repository Opened</span>
+            </div>
+          )}
         </div>
 
-        {/* Center: Branch Merge Sandbox Comparison */}
+        {/* Center: Repository status / Commit info */}
         {currentRepo ? (
-          <div className="flex items-center gap-1.5 p-1 shadow-inner shrink-0">
-            <BranchSelector
-              label="Base (Target)"
-              value={baseBranch}
-              branches={branches}
-              onChange={setBaseBranch}
-            />
-
-            <div className="flex items-center gap-1 px-1">
-              <span title="Compare branch will merge into Base" className="text-subtext1">
-                <ArrowLeft className="w-3.5 h-3.5 text-blue" />
-              </span>
-              <button
-                type="button"
-                onClick={swapBranches}
-                title="Swap Base and Compare branches"
-                className="p-1.5 rounded-md bg-surface0 border border-surface0 hover:bg-surface1 text-subtext1 hover:text-blue transition-all hover:rotate-180 duration-200 cursor-pointer"
+          diffPayload && (
+            <div className="hidden 2xl:flex items-center gap-1.5 text-[10px] font-mono text-subtext1 px-2.5 py-1 bg-surface0/40 rounded border border-surface0/60">
+              <span className="text-subtext0 text-[9px] uppercase font-bold tracking-wider font-sans">Sandbox:</span>
+              <span
+                className="px-1.5 py-0.5 bg-surface0 rounded border border-surface1 text-text"
+                title={`Base commit: ${diffPayload.base_commit}`}
               >
-                <ArrowLeftRight className="w-3 h-3" />
-              </button>
+                {diffPayload.base_commit.substring(0, 7)}
+              </span>
+              <span className="text-subtext0">...</span>
+              <span
+                className="px-1.5 py-0.5 bg-surface0 rounded border border-surface1 text-brand font-semibold"
+                title={`Compare commit: ${diffPayload.compare_commit}`}
+              >
+                {diffPayload.compare_commit.substring(0, 7)}
+              </span>
             </div>
-
-            <BranchSelector
-              label="Compare (Source)"
-              value={compareBranch}
-              branches={branches}
-              onChange={setCompareBranch}
-            />
-
-            {diffPayload && (
-              <div className="hidden xl:flex items-center gap-1.5 text-[10px] font-mono text-subtext1 px-2 border-l border-surface0">
-                <span
-                  className="px-1.5 py-0.5 bg-surface0 rounded border border-surface0 text-text"
-                  title={`Base commit: ${diffPayload.base_commit}`}
-                >
-                  {diffPayload.base_commit.substring(0, 7)}
-                </span>
-                <span className="text-subtext0">...</span>
-                <span
-                  className="px-1.5 py-0.5 bg-surface0 rounded border border-surface0 text-blue font-semibold"
-                  title={`Compare commit: ${diffPayload.compare_commit}`}
-                >
-                  {diffPayload.compare_commit.substring(0, 7)}
-                </span>
-              </div>
-            )}
-          </div>
+          )
         ) : (
           <div className="text-xs text-subtext0 italic">
             Select or open a repository to start virtual 3-dot branch comparison
@@ -453,13 +179,13 @@ export const TopBar: React.FC = () => {
                 </span>
               )}
 
-              <div className="flex items-center bg-surface0 rounded-md border border-surface0 p-0.5 gap-0.5">
+              <div className="flex items-center bg-surface0 border border-surface0 p-0.5 gap-0.5">
                 {/* FETCH BUTTON */}
                 <button
                   type="button"
                   disabled={isSyncing}
                   onClick={() => runSync('fetch')}
-                  className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:bg-surface1 rounded transition-colors disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-text hover:bg-surface1 transition-colors disabled:opacity-50 cursor-pointer"
                   title="git fetch --all --prune (Ctrl+Shift+F)"
                 >
                   <RefreshCw
@@ -470,7 +196,7 @@ export const TopBar: React.FC = () => {
 
                 {/* PULL SPLIT BUTTON */}
                 <div className="relative flex items-center" ref={pullMenuRef}>
-                  <div className="flex items-stretch rounded overflow-hidden">
+                  <div className="flex items-stretch overflow-hidden">
                     <button
                       type="button"
                       disabled={isSyncing}
@@ -535,7 +261,7 @@ export const TopBar: React.FC = () => {
 
                 {/* REBASE SPLIT BUTTON */}
                 <div className="relative flex items-center" ref={rebaseMenuRef}>
-                  <div className="flex items-stretch rounded overflow-hidden">
+                  <div className="flex items-stretch overflow-hidden">
                     <button
                       type="button"
                       disabled={isSyncing}
@@ -653,7 +379,7 @@ export const TopBar: React.FC = () => {
               <button
                 type="button"
                 onClick={refreshDiff}
-                className="p-1.5 rounded-md bg-surface0 border border-surface0 hover:bg-surface1 text-subtext1 hover:text-text transition-colors cursor-pointer"
+                className="p-1.5 rounded bg-surface0 border border-surface0 hover:bg-surface1 text-subtext1 hover:text-text transition-colors cursor-pointer"
                 title="Refresh MR diff & conflict simulation (Ctrl+R)"
               >
                 <RotateCw className="w-3.5 h-3.5" />

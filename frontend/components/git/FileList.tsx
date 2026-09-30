@@ -246,7 +246,7 @@ export const FileList: React.FC<FileListProps> = ({
           <button
             type="button"
             onClick={() => setFilterConflictedOnly(!filterConflictedOnly)}
-            className={`w-full flex items-center justify-between px-2.5 py-1 rounded text-xs font-semibold transition-colors ${
+            className={`w-full flex items-center justify-between px-2.5 py-1 text-xs font-semibold transition-colors ${
               filterConflictedOnly
                 ? 'bg-red/20 border border-red/40 text-red'
                 : 'bg-surface0 border border-surface0 text-red hover:bg-surface1'

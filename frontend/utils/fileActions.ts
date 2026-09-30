@@ -114,10 +114,18 @@ export async function openRepoInTerminal(repoPath: string): Promise<void> {
 }
 
 /**
- * Opens specific file in Visual Studio Code
+ * Opens specific file in Visual Studio Code, optionally jumping to a specific line number.
  */
-export async function openFileInEditor(repoPath: string, filePath: string): Promise<void> {
-  await invoke('open_file_in_editor', { repoPath, filePath });
+export async function openFileInEditor(
+  repoPath: string,
+  filePath: string,
+  lineNumber?: number
+): Promise<void> {
+  await invoke('open_file_in_editor', {
+    repoPath,
+    filePath,
+    lineNumber: lineNumber || null,
+  });
 }
 
 /**
