@@ -39,7 +39,7 @@ import {
   FolderCog,
   Trash2,
   GitPullRequest,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import {
   revealInOs,
   getAbsoluteFilePath,
@@ -56,6 +56,7 @@ import { useThemeStore } from '../../store/useThemeStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { AppLogo } from '../common/AppLogo';
+import { formatShortcutText } from '../../utils/shortcuts';
 
 export interface MenuBarProps {
   hidden?: boolean;
@@ -111,6 +112,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
   const isMac =
     typeof navigator !== 'undefined' &&
     /Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  const shortcut = (value: string) => formatShortcutText(value, isMac);
 
   const menuBarRef = useRef<HTMLDivElement>(null);
 
@@ -134,20 +136,31 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
         (e.key === ',' || (e.shiftKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT')))
       ) {
         e.preventDefault();
-        setActiveMenu(null);
-        setShowRecentSubmenu(false);
-        setShowOpenInSubmenu(false);
-        setIsPreferencesOpen(true);
+        // The native macOS menu owns Cmd+,; keep the custom Shift+T alias here.
+        if (!(isMac && e.key === ',')) {
+          setActiveMenu(null);
+          setShowRecentSubmenu(false);
+          setShowOpenInSubmenu(false);
+          setIsPreferencesOpen(true);
+        }
       } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'o') {
         e.preventDefault();
-        openRepoDialog();
+        if (!isMac) openRepoDialog();
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key.toLowerCase() === 'n' || e.code === 'KeyN')
+      ) {
+        e.preventDefault();
+        // macOS routes this accelerator through the native application menu.
+        if (!isMac) void invoke('create_new_window');
       } else if (
         (e.ctrlKey || e.metaKey) &&
         e.shiftKey &&
         (e.key.toLowerCase() === 'o' || e.code === 'KeyO')
       ) {
         e.preventDefault();
-        setIsCloneModalOpen(true);
+        if (!isMac) setIsCloneModalOpen(true);
       }
     };
 
@@ -157,15 +170,35 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
       document.removeEventListener('mousedown', handleClickOutside);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [openRepoDialog, setIsPreferencesOpen, setIsCloneModalOpen]);
+  }, [isMac, openRepoDialog, setIsPreferencesOpen, setIsCloneModalOpen]);
 
   // Listen to native macOS menu events from Tauri
   useEffect(() => {
     let unlistenFn: (() => void) | undefined;
     listen<string>('menu-action', (event) => {
+      if (event.payload.startsWith('recent_repo_')) {
+        const repositoryId = event.payload.slice('recent_repo_'.length);
+        const repository = useGitStore
+          .getState()
+          .recentRepos.find((repo) => repo.id === repositoryId);
+        if (repository) {
+          void useGitStore.getState().selectRepo(repository);
+        }
+        return;
+      }
+
       switch (event.payload) {
         case 'open_repo':
           openRepoDialog();
+          break;
+        case 'open_repo_new_window':
+          openRepoDialog(true);
+          break;
+        case 'new_window':
+          void invoke('create_new_window');
+          break;
+        case 'close_window':
+          void invoke('window_close');
           break;
         case 'clone_repo':
           setIsCloneModalOpen(true);
@@ -174,7 +207,6 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
           closeRepo();
           break;
         case 'preferences':
-        case 'preferences_file':
           setIsPreferencesOpen(true);
           break;
         case 'new_mr':
@@ -297,6 +329,20 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 type="button"
                 onClick={() => {
                   closeMenus();
+                  void invoke('create_new_window');
+                }}
+                onMouseEnter={() => setShowRecentSubmenu(false)}
+                className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+              >
+                <Columns2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                <span>New Window</span>
+                <span className="ml-auto text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+N')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenus();
                   openRepoDialog();
                 }}
                 onMouseEnter={() => {
@@ -306,9 +352,24 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
               >
                 <div className="flex items-center gap-2">
                   <FolderOpen className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Open Repository...</span>
+                  <span>Open...</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+O</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+O')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenus();
+                  openRepoDialog(true);
+                }}
+                onMouseEnter={() => setShowRecentSubmenu(false)}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <FolderOpen className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Open in New Window...</span>
+                </div>
               </button>
 
               <button
@@ -324,10 +385,10 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
               >
                 <div className="flex items-center gap-2">
                   <FolderDown className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Clone Repository...</span>
+                  <span>Clone...</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">
-                  {isMac ? '⌘⇧O' : 'Ctrl+Shift+O'}
+                  {shortcut('Ctrl+Shift+O')}
                 </span>
               </button>
 
@@ -345,7 +406,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 >
                   <div className="flex items-center gap-2">
                     <Clock className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                    <span>Recent Repositories</span>
+                    <span>Recents</span>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                 </button>
@@ -452,7 +513,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <span>Preferences...</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">
-                  {isMac ? '⌘,' : 'Ctrl+,'}
+                  {shortcut('Ctrl+,')}
                 </span>
               </button>
 
@@ -470,7 +531,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <Power className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Exit</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Alt+F4</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Alt+F4')}</span>
               </button>
             </div>
           )}
@@ -513,7 +574,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <FolderOpen className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Open in {fileManagerName}</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+R</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Shift+Alt+R')}</span>
               </button>
 
               <button
@@ -532,7 +593,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <History className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>View Git Blame</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Alt+B</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Alt+B')}</span>
               </button>
 
               <div className="my-1 border-t border-surface0" />
@@ -553,7 +614,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <Copy className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Copy Relative Path</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+C</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+C')}</span>
               </button>
 
               <button
@@ -573,7 +634,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <FileText className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Copy Absolute Path</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Shift+Alt+C</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Shift+Alt+C')}</span>
               </button>
 
               <div className="my-1 border-t border-surface0" />
@@ -601,7 +662,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <Globe className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Copy Remote File URL</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+U</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+U')}</span>
               </button>
 
               <button
@@ -620,7 +681,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <ExternalLink className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Copy Remote File URL from...</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+U</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+U')}</span>
               </button>
 
               <div className="my-1 border-t border-surface0" />
@@ -728,7 +789,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <span>File Git Blame</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-subtext0 font-mono">Alt+B</span>
+                  <span className="text-[10px] text-subtext0 font-mono">{shortcut('Alt+B')}</span>
                   {fileViewTab === 'blame' && <Check className="w-3.5 h-3.5 text-text" />}
                 </div>
               </button>
@@ -746,7 +807,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <span>Inline Git Blame</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+B</span>
+                  <span className="text-[10px] text-subtext0 font-mono">{shortcut('Alt+Shift+B')}</span>
                   {showInlineBlame && <Check className="w-3.5 h-3.5 text-text" />}
                 </div>
               </button>
@@ -837,7 +898,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <GitPullRequest className="w-3.5 h-3.5 text-brand group-hover:text-brand transition-colors" />
                   <span>New Virtual MR...</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+T</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+T')}</span>
               </button>
 
               <div className="my-1 border-t border-surface0" />
@@ -856,7 +917,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <RefreshCw className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Fetch (All &amp; Prune)</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+F</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+F')}</span>
               </button>
 
               <div className="my-1 border-t border-surface0" />
@@ -874,7 +935,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <Download className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Pull</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+P</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+P')}</span>
               </button>
 
               <button
@@ -890,7 +951,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <DownloadCloud className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Pull from...</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+P</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+P')}</span>
               </button>
 
               <div className="my-1 border-t border-surface0" />
@@ -908,7 +969,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <GitMerge className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Rebase</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Shift+R</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+R')}</span>
               </button>
 
               <button
@@ -924,7 +985,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <GitBranch className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Rebase from...</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+R</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+R')}</span>
               </button>
 
               <div className="my-1 border-t border-surface0" />
@@ -1004,7 +1065,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <GitCompare className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Refresh Diff &amp; Conflicts</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+R</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+R')}</span>
               </button>
 
               <div className="my-1 border-t border-surface0" />
@@ -1046,7 +1107,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                         <Terminal className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                         <span>Terminal</span>
                       </div>
-                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+T</span>
+                      <span className="text-[10px] text-subtext0 font-mono">{shortcut('Alt+Shift+T')}</span>
                     </button>
 
                     <button
@@ -1066,7 +1127,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                         <Code2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                         <span>Visual Studio Code</span>
                       </div>
-                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+V</span>
+                      <span className="text-[10px] text-subtext0 font-mono">{shortcut('Alt+Shift+V')}</span>
                     </button>
 
                     <button
@@ -1086,7 +1147,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                         <Folder className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                         <span>{fileManagerName}</span>
                       </div>
-                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+E</span>
+                      <span className="text-[10px] text-subtext0 font-mono">{shortcut('Alt+Shift+E')}</span>
                     </button>
                   </div>
                 )}
@@ -1107,7 +1168,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <FolderCog className="w-3.5 h-3.5 text-accent group-hover:text-text transition-colors" />
                   <span className="font-medium text-accent">Repository Settings...</span>
                 </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+S</span>
+                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+S')}</span>
               </button>
             </div>
           )}
@@ -1189,71 +1250,71 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
             <div className="py-4 space-y-2 text-xs max-h-80 overflow-y-auto pr-1">
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Open Repository</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+O</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+O')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Preferences</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{isMac ? '⌘,' : 'Ctrl+,'}</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+,')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Refresh Virtual Diff</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+R</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+R')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Fetch (All &amp; Prune)</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+F</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+Shift+F')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Pull</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+P</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+Shift+P')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Pull from... (Advanced)</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Alt+P</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+Alt+P')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Rebase</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+R</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+Shift+R')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Rebase from... (Advanced)</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Alt+R</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+Alt+R')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Open Repo in Terminal</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Alt+Shift+T</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Alt+Shift+T')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Open Repo in VS Code</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Alt+Shift+V</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Alt+Shift+V')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Open Repo in {fileManagerName}</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Alt+Shift+E</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Alt+Shift+E')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Open File in {fileManagerName}</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Shift+Alt+R</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Shift+Alt+R')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Copy Relative Path</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+C</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+Shift+C')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Copy Absolute Path</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Shift+Alt+C</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Shift+Alt+C')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Copy Remote File URL</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Shift+U</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+Shift+U')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Toggle Git Blame View</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Alt+B</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Alt+B')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Copy Remote File URL from...</span>
-                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">Ctrl+Alt+U</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-surface0 text-text font-mono text-[11px] border border-surface1">{shortcut('Ctrl+Alt+U')}</kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-subtext1">Select Next File</span>
@@ -1294,7 +1355,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
             className="bg-mantle border border-surface0 rounded-xl p-5 max-w-sm w-full shadow-2xl text-center animate-in zoom-in-95 duration-150 cursor-default"
           >
             <AppLogo size="md" className="mx-auto mb-3 pointer-events-none" />
-            <h3 data-tauri-drag-region className="text-base font-bold text-text pointer-events-none">Stage0</h3>
+            <h3 data-tauri-drag-region className="text-[1rem] font-bold text-text pointer-events-none">Stage0</h3>
             <p data-tauri-drag-region className="text-xs font-mono text-subtext1 mb-2 pointer-events-none">v0.1.0 • Local-First Virtual MR Sandbox</p>
             <p className="text-xs text-subtext1 mb-4 leading-relaxed">
               Stage0 simulates 3-dot branch comparisons and merge conflict predictions completely in memory via <code className="text-text bg-surface0 px-1 py-0.5 rounded border border-surface1 font-mono">git merge-tree</code> with zero disk modifications.

@@ -13,7 +13,7 @@ import {
   ChevronUp,
   Copy,
   AlertCircle,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useBotReviewersStore } from '../../store/useBotReviewersStore';
 import { BOT_CATEGORIES } from '../../constants/botPresets';
 import { BotReviewer, BotCategory } from '../../types/virtualMr';

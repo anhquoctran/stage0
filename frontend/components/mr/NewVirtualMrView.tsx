@@ -14,7 +14,7 @@ import {
   Loader2,
   Plus,
   Check,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
 import { useBotReviewersStore } from '../../store/useBotReviewersStore';
@@ -23,6 +23,7 @@ import { TabBranchSelector } from '../git/TabBranchSelector';
 import { MarkdownEditor } from '../common/MarkdownEditor';
 import { FileList } from '../git/FileList';
 import { DiffViewer } from '../git/DiffViewer';
+import { formatShortcutText } from '../../utils/shortcuts';
 
 export const NewVirtualMrView: React.FC = () => {
   const {
@@ -40,6 +41,8 @@ export const NewVirtualMrView: React.FC = () => {
     currentRepo,
     branches,
     diffPayload,
+    diffError,
+    conflictCheckError,
     conflictReport,
     isDiffLoading,
     selectedFile,
@@ -47,6 +50,7 @@ export const NewVirtualMrView: React.FC = () => {
     viewMode,
     setViewMode,
     openRepoDialog,
+    refreshDiff,
   } = useGitStore();
 
   const { getEffectiveReviewers } = useBotReviewersStore();
@@ -78,8 +82,23 @@ export const NewVirtualMrView: React.FC = () => {
 
   if (!draftMr) return null;
 
-  const isIdentical = draftMr.baseBranch === draftMr.compareBranch;
-  const hasConflicts = Boolean(conflictReport?.has_conflicts && !isIdentical);
+  const sameBranch = draftMr.baseBranch === draftMr.compareBranch;
+  const sameCommit = Boolean(
+    diffPayload?.base_commit && diffPayload.base_commit === diffPayload.compare_commit
+  );
+  const isIdentical = sameBranch || sameCommit;
+  const noFileChanges = Boolean(
+    !isDiffLoading && !diffError && diffPayload && diffPayload.files.length === 0
+  );
+  const canCreateVirtualMr = Boolean(
+    !isDiffLoading
+      && !diffError
+      && !draftMr.isCommitsLoading
+      && !draftMr.commitsError
+      && diffPayload
+      && diffPayload.files.length > 0
+  );
+  const hasConflicts = Boolean(conflictReport?.has_conflicts && !noFileChanges);
   const conflictCount = conflictReport?.conflicted_files.length || 0;
 
   const handleBaseChange = (newBase: string) => {
@@ -145,7 +164,7 @@ export const NewVirtualMrView: React.FC = () => {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (isIdentical || isSubmitting) return;
+    if (!canCreateVirtualMr || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
@@ -203,7 +222,7 @@ export const NewVirtualMrView: React.FC = () => {
             type="button"
             onClick={closeNewMrDraft}
             className="p-1.5 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
-            title="Cancel & close comparison (Esc / Ctrl+W)"
+            title={formatShortcutText('Cancel & close comparison (Esc / Ctrl+W)')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -254,10 +273,25 @@ export const NewVirtualMrView: React.FC = () => {
 
           {/* Mergeability Status Indicator (Matches Stage0 Status Palette) */}
           <div className="flex items-center gap-2">
-            {isIdentical ? (
+            {diffError ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red bg-red/10 border border-red/25">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>Comparison failed</span>
+              </div>
+            ) : isDiffLoading ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext1 bg-surface0/40 border border-surface0">
+                <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                <span>Comparing branches…</span>
+              </div>
+            ) : conflictCheckError ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-text bg-yellow/10 border border-yellow/25" title={conflictCheckError}>
+                <AlertTriangle className="w-3.5 h-3.5 text-yellow shrink-0" />
+                <span>Mergeability check unavailable</span>
+              </div>
+            ) : noFileChanges ? (
               <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext0 bg-surface0/60 border border-surface0">
                 <Info className="w-3.5 h-3.5 text-subtext0 shrink-0" />
-                <span>Identical branches (no changes)</span>
+                <span>{isIdentical ? 'Same commit · no changes' : 'No file changes'}</span>
               </div>
             ) : hasConflicts ? (
               <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red bg-red/10 border border-red/20">
@@ -266,10 +300,15 @@ export const NewVirtualMrView: React.FC = () => {
                   Can't automatically merge ({conflictCount} {conflictCount === 1 ? 'conflict' : 'conflicts'})
                 </span>
               </div>
-            ) : (
+            ) : conflictReport ? (
               <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-green bg-green/10 border border-green/20">
                 <CheckCircle2 className="w-3.5 h-3.5 text-green shrink-0" />
                 <span>Able to merge. These branches can be automatically merged.</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext0 bg-surface0/40 border border-surface0">
+                <Info className="w-3.5 h-3.5 shrink-0" />
+                <span>Mergeability not checked</span>
               </div>
             )}
           </div>
@@ -278,7 +317,35 @@ export const NewVirtualMrView: React.FC = () => {
 
       {/* 2. MAIN BODY */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {isIdentical ? (
+        {diffError ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none">
+            <div className="w-12 h-12 bg-red/10 border border-red/30 flex items-center justify-center text-red mb-4">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <h2 className="text-sm font-semibold text-text mb-1.5">Couldn't compare these branches</h2>
+            <p className="text-xs text-subtext1 max-w-lg leading-relaxed mb-4">
+              Check that both refs still exist and that the repository is available. Select valid branches, then retry.
+            </p>
+            <details className="max-w-xl w-full text-left text-xs text-subtext0 mb-4">
+              <summary className="cursor-pointer hover:text-text">Git error details</summary>
+              <pre className="mt-2 p-3 bg-crust border border-surface0 whitespace-pre-wrap break-words select-text">{diffError}</pre>
+            </details>
+            <button
+              type="button"
+              onClick={() => void refreshDiff()}
+              className="flex items-center gap-2 px-3 py-1.5 bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs transition-colors cursor-pointer"
+            >
+              <GitBranch className="w-3.5 h-3.5" />
+              Retry comparison
+            </button>
+          </div>
+        ) : isDiffLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-subtext1">
+            <Loader2 className="w-7 h-7 animate-spin text-brand mb-3" />
+            <span className="text-sm font-medium text-text">Comparing branches…</span>
+            <span className="text-xs text-subtext0 mt-1">Loading file changes and mergeability</span>
+          </div>
+        ) : noFileChanges ? (
           /* IDENTICAL BRANCHES EMPTY STATE */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none">
             <div className="max-w-md flex flex-col items-center animate-in fade-in zoom-in-95 duration-150">
@@ -296,7 +363,9 @@ export const NewVirtualMrView: React.FC = () => {
                 <code className="px-1.5 py-0.5 bg-surface0 text-brand font-mono font-medium border border-surface1/60">
                   {draftMr.compareBranch}
                 </code>{' '}
-                are completely identical. Please choose a different compare branch to see changes and open a Virtual MR.
+                {isIdentical
+                  ? 'point to the same commit. Choose a different compare branch to review changes.'
+                  : 'have no file differences from the merge base. Choose another compare branch with changes to open a Virtual MR.'}
               </p>
             </div>
           </div>
@@ -403,7 +472,7 @@ export const NewVirtualMrView: React.FC = () => {
                                 }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0 pr-2">
-                                  <span className="text-base shrink-0">{bot.avatarEmoji}</span>
+                                  <span className="text-[1rem] shrink-0">{bot.avatarEmoji}</span>
                                   <div className="truncate">
                                     <div className="text-xs font-medium truncate">{bot.name}</div>
                                     <div className="text-[10px] text-subtext0 truncate">{bot.tagline}</div>
@@ -579,7 +648,7 @@ export const NewVirtualMrView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleSubmit()}
-                      disabled={isSubmitting || isIdentical}
+                      disabled={isSubmitting || !canCreateVirtualMr}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-brand hover:bg-brand/90 active:scale-[0.98] text-[#11111b] font-bold text-xs shadow-md shadow-brand/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? (
@@ -663,9 +732,25 @@ export const NewVirtualMrView: React.FC = () => {
                         <Loader2 className="w-4 h-4 animate-spin text-brand" />
                         <span>Loading commits between branches...</span>
                       </div>
+                    ) : draftMr.commitsError ? (
+                      <div className="p-6 flex flex-col items-center gap-2 text-center text-xs">
+                        <AlertTriangle className="w-4 h-4 text-yellow" />
+                        <span className="text-text">Couldn't load commits for this comparison.</span>
+                        <details className="max-w-xl text-left text-subtext0">
+                          <summary className="cursor-pointer hover:text-text">Git error details</summary>
+                          <pre className="mt-2 p-3 bg-base border border-surface0 whitespace-pre-wrap break-words select-text">{draftMr.commitsError}</pre>
+                        </details>
+                        <button
+                          type="button"
+                          onClick={() => void changeDraftBranches(draftMr.baseBranch, draftMr.compareBranch)}
+                          className="mt-1 px-3 py-1.5 bg-surface0 hover:bg-surface1 border border-surface1 text-text transition-colors cursor-pointer"
+                        >
+                          Retry loading commits
+                        </button>
+                      </div>
                     ) : draftMr.commits.length === 0 ? (
                       <div className="p-8 text-center text-subtext0 text-xs italic">
-                        No commits found between {draftMr.compareBranch} and {draftMr.baseBranch}.
+                        No commits unique to {draftMr.compareBranch} relative to {draftMr.baseBranch}.
                       </div>
                     ) : (
                       draftMr.commits.map((c) => (

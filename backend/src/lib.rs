@@ -5,18 +5,36 @@ pub mod git;
 pub mod menu;
 pub mod sandbox;
 pub mod watcher;
+pub mod window_manager;
 
 use db::Database;
 use sandbox::SandboxManager;
 use watcher::WatcherState;
-use tauri::Manager;
+use window_manager::{destroy_window, focus_window, focused_window, open_repo_path, WindowManagerState};
+use std::path::{Path, PathBuf};
+use tauri::{Manager, WindowEvent};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .on_window_event(|window, event| {
+            if matches!(event, WindowEvent::Destroyed) {
+                destroy_window(&window.app_handle(), window.label());
+            }
+        })
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            if let Some(repo_path) = find_repo_argument(&args, Path::new(&cwd)) {
+                if let Err(error) = open_repo_path(app, &repo_path, None, false) {
+                    eprintln!("Could not route repository from second app launch: {error}");
+                }
+            } else if let Some(window) = focused_window(app) {
+                let _ = focus_window(&window);
+            }
+        }))
         .plugin(tauri_plugin_dialog::init())
         .manage(WatcherState::new())
         .manage(SandboxManager::new())
+        .manage(WindowManagerState::default())
         .setup(|app| {
             let handle = app.handle();
             let db = Database::init(handle)
@@ -32,18 +50,32 @@ pub fn run() {
             app.manage(db);
 
             if let Some(window) = app.get_webview_window("main") {
-                let _ = window.set_min_size(Some(tauri::Size::Logical(tauri::LogicalSize {
+                app.state::<WindowManagerState>().register_welcome_window("main", true);
+                #[cfg(target_os = "macos")]
+                let min_size = tauri::LogicalSize {
+                    width: 640.0,
+                    height: 500.0,
+                };
+                #[cfg(not(target_os = "macos"))]
+                let min_size = tauri::LogicalSize {
                     width: 1024.0,
                     height: 680.0,
-                })));
+                };
+                let _ = window.set_min_size(Some(tauri::Size::Logical(min_size)));
                 let _ = window.maximize();
+            }
+
+            if let Ok(cwd) = std::env::current_dir() {
+                let args = std::env::args().collect::<Vec<_>>();
+                if let Some(repo_path) = find_repo_argument(&args, &cwd) {
+                    if let Err(error) = open_repo_path(app.handle(), &repo_path, Some("main"), false) {
+                        eprintln!("Could not open repository passed on startup: {error}");
+                    }
+                }
             }
 
             #[cfg(target_os = "macos")]
             {
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.set_decorations(false);
-                }
                 if let Ok(m) = menu::create_macos_menu(handle) {
                     let _ = handle.set_menu(m);
                 }
@@ -59,10 +91,14 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::open_repo_dialog,
             commands::open_repo_by_path,
+            commands::get_window_startup_context,
+            commands::create_new_window,
+            commands::close_repository_window,
             commands::get_recent_repos,
             commands::validate_repo,
             commands::delete_recent_repo,
             commands::clear_recent_repos,
+            menu::update_recent_repositories_menu,
             commands::get_branches,
             commands::get_mr_diff,
             commands::check_merge_conflicts,
@@ -79,6 +115,7 @@ pub fn run() {
             commands::window_toggle_maximize,
             commands::window_close,
             commands::window_is_maximized,
+            commands::window_is_fullscreen,
             commands::window_show,
             commands::list_git_credentials,
             commands::save_git_credential,
@@ -137,4 +174,34 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+fn find_repo_argument(args: &[String], cwd: &Path) -> Option<String> {
+    let mut explicit_next = false;
+    for argument in args {
+        if explicit_next {
+            explicit_next = false;
+            let candidate = PathBuf::from(argument);
+            let candidate = if candidate.is_absolute() { candidate } else { cwd.join(candidate) };
+            if candidate.is_dir() && candidate.join(".git").exists() {
+                return Some(candidate.to_string_lossy().into_owned());
+            }
+            continue;
+        }
+
+        if argument == "--open-repo" {
+            explicit_next = true;
+            continue;
+        }
+        if argument.starts_with('-') {
+            continue;
+        }
+
+        let candidate = PathBuf::from(argument);
+        let candidate = if candidate.is_absolute() { candidate } else { cwd.join(candidate) };
+        if candidate.is_dir() && candidate.join(".git").exists() {
+            return Some(candidate.to_string_lossy().into_owned());
+        }
+    }
+    None
 }

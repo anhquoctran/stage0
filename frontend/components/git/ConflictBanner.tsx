@@ -11,7 +11,7 @@ import {
   Check,
   RotateCw,
   AlertTriangle,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { ConflictReport } from '../../types/git';
 import { useGitStore } from '../../store/useGitStore';
 import {
@@ -21,6 +21,7 @@ import {
   revealInOs,
   getOsFileManagerName,
 } from '../../utils/fileActions';
+import { formatShortcutText } from '../../utils/shortcuts';
 
 interface ConflictBannerProps {
   conflictReport: ConflictReport | null;
@@ -100,7 +101,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                   }
                 }}
                 className="text-[11px] px-2 py-0.5 rounded-full bg-red/25 hover:bg-red/35 text-red font-mono font-bold border border-red/40 conflict-pulse cursor-pointer transition-colors"
-                title="Click to jump directly to first conflicted file (Alt+C)"
+                title={formatShortcutText('Click to jump directly to first conflicted file (Alt+C)')}
               >
                 {conflictedCount > 0 ? `${conflictedCount} file(s) in conflict` : 'In-memory conflict'}
               </button>
@@ -130,7 +131,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                   }
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-                title="Open repository in Visual Studio Code (Alt+Shift+V)"
+                title={formatShortcutText('Open repository in Visual Studio Code (Alt+Shift+V)')}
               >
                 <Code2 className="w-3.5 h-3.5 text-subtext0" />
                 <span>Open in VS Code</span>
@@ -147,7 +148,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                   }
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-                title="Open repository in Default Terminal (Alt+Shift+T)"
+                title={formatShortcutText('Open repository in Default Terminal (Alt+Shift+T)')}
               >
                 <Terminal className="w-3.5 h-3.5 text-subtext0" />
                 <span>Terminal</span>
@@ -159,7 +160,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
             type="button"
             onClick={refreshDiff}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-            title="Refresh virtual diff and re-check conflicts (Ctrl+R)"
+            title={formatShortcutText('Refresh virtual diff and re-check conflicts (Ctrl+R)')}
           >
             <RotateCw className="w-3.5 h-3.5 text-subtext0" />
             <span>Re-check</span>

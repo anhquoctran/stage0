@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GitBranch, ChevronDown, Search, Check, Globe } from 'lucide-react';
+import { GitBranch, ChevronDown, Search, Check, Globe } from '@/components/common/icons';
 
 interface TabBranchSelectorProps {
   value: string;

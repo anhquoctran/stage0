@@ -1,0 +1,21 @@
+{
+  "app": {
+    "windows": [
+      {
+        "title": "Stage0",
+        "label": "main",
+        "width": 1360,
+        "height": 840,
+        "minWidth": 640,
+        "minHeight": 500,
+        "decorations": true,
+        "shadow": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "backgroundColor": "#11111b",
+        "visible": true,
+        "maximized": true
+      }
+    ]
+  }
+}

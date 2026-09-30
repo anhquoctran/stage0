@@ -1,270 +1,132 @@
-# Kiến trúc Kỹ thuật: Hệ thống Đa Cửa Sổ (Multi-Window Architecture)
+# Kiến trúc đa cửa sổ
 
-> **Trạng thái:** Bản thảo kỹ thuật (Technical Specification / RFC)  
-> **Phiên bản:** v1.0.0  
-> **Áp dụng cho:** Stage0 Desktop Engine (Tauri v2 + React 19)  
+> Trạng thái: Đã triển khai baseline trong Tauri v2 và React. Tài liệu này mô tả hành vi hiện tại, các giới hạn có chủ đích và những điểm cần kiểm thử khi mở rộng.
 
----
+## Mục tiêu và bất biến
 
-## 1. Mục tiêu & Nguyên tắc Bất biến (Core Invariants)
+Stage0 cho phép mở nhiều cửa sổ để làm việc với nhiều working tree đồng thời. Mỗi cửa sổ có WebView, DOM, JavaScript runtime và Zustand store riêng; các cửa sổ vẫn thuộc cùng một tiến trình Tauri và dùng chung Rust application state, SQLite, menu hệ thống và sandbox manager.
 
-### 1.1. Mục tiêu
-Cho phép người dùng mở đồng thời nhiều cửa sổ ứng dụng Stage0 độc lập, phục vụ việc đối chiếu, so sánh và kiểm tra merge conflict trên nhiều repository khác nhau trên máy tính cùng một lúc.
+Các bất biến:
 
-### 1.2. Nguyên tắc Bất biến: 1 Repo Duy nhất trên mỗi Cửa sổ
-Hệ thống tuân thủ nghiêm ngặt nguyên tắc:
-$$\forall \text{ Window } W_i, W_j \ (i \neq j): \quad \text{PhysicalPath}(W_i) \neq \text{PhysicalPath}(W_j)$$
+1. Một working tree vật lý chỉ được gán cho tối đa một cửa sổ trong tiến trình ứng dụng.
+2. Mở lại working tree đang có sẽ focus và đưa cửa sổ tương ứng ra trước, không tạo bản thứ hai.
+3. Cửa sổ Welcome có thể nhận working tree đầu tiên. Nếu cửa sổ hiện tại đã có repository, yêu cầu mở repository khác sẽ tạo cửa sổ mới.
+4. `Open in New Window` yêu cầu cửa sổ mới, nhưng không phá vỡ bất biến duy nhất: nếu repository đã mở, Stage0 focus cửa sổ hiện tại của repository đó.
+5. Đóng repository chỉ gỡ repository khỏi cửa sổ hiện tại; đóng cửa sổ không ảnh hưởng các cửa sổ còn lại.
 
-1. **Tính duy nhất theo Physical Path (Đường dẫn vật lý trên đĩa)**:
-   - Một repository trên đĩa chỉ được phép mở tại **tối đa một cửa sổ** tại một thời điểm.
-   - Tránh hiện tượng 2 cửa sổ cùng thao tác, cùng lock file hoặc xung đột watcher trên cùng 1 cây thư mục `.git`.
-2. **Cơ chế Chuyển tiếp Tiêu điểm (Focus Redirection)**:
-   - Nếu người dùng cố gắng mở một repository đã được mở trong một cửa sổ khác (từ Menu, Recent Projects, Welcome Screen, hoặc CLI/Explorer) &rarr; Stage0 **không mở cửa sổ mới**, mà tự động **mang cửa sổ đang chứa repo đó lên đầu (Bring to Front), Unminimize và kích hoạt Focus**.
-3. **Cửa sổ Khởi tạo (Empty / Welcome Window)**:
-   - Cửa sổ chưa mở repo nào (đang ở Welcome Screen) có thể tiếp nhận repo mới ngay tại cửa sổ đó, hoặc người dùng có thể yêu cầu mở trong cửa sổ mới (*"Open in New Window"*).
+“Repository” trong các bất biến này là working tree trên đĩa. Hai Git worktree riêng biệt có đường dẫn vật lý khác nhau được xem là hai working tree khác nhau, dù Git có thể chia sẻ common directory và refs giữa chúng.
 
----
+## Định danh và chuẩn hóa working tree
 
-## 2. Chuẩn hoá Đường dẫn Vật lý (Physical Path Canonicalization)
+Mọi đường dẫn được kiểm tra trong `window_manager::resolve_repository` trước khi lưu, so khớp hoặc gắn watcher:
 
-Hệ thống tập tin (đặc biệt trên Windows và macOS) tiềm ẩn nhiều vấn đề về đường dẫn trùng lặp logic:
-- **Case-insensitivity**: `D:\Stage0` vs `d:\stage0` vs `D:/stage0`.
-- **Dấu phân cách**: `/` vs `\`.
-- **Symlinks & Junction points**: Thư mục symbolic link trỏ đến thư mục gốc.
-- **Đường dẫn rút gọn (8.3 filenames)**: `C:\PROGRA~1` vs `C:\Program Files`.
+- Đường dẫn phải tồn tại, trỏ tới thư mục và có `.git` (thư mục hoặc file, để hỗ trợ linked worktree).
+- `dunce::canonicalize` loại bỏ alias đường dẫn như symlink và chuẩn hóa đường dẫn hệ điều hành.
+- Trên Unix, định danh ưu tiên cặp device/inode của thư mục; trên Windows ưu tiên volume serial/file index. Nếu hệ điều hành không cung cấp file identity, dùng canonical path làm dự phòng.
+- Database lưu canonical path. Upsert theo path trả về bản ghi thực tế đã lưu để không tạo ID frontend khác ID persisted khi path đã tồn tại.
+- Kiểm tra `.git` hiện là kiểm tra cấu trúc tối thiểu (`exists`), không chạy `git rev-parse`; metadata hỏng vẫn có thể khiến thao tác Git sau đó thất bại và phải được hiển thị như lỗi thao tác.
 
-### Giải pháp kỹ thuật (Rust Backend):
-Mọi đường dẫn repo nhận vào **bắt buộc** phải đi qua hàm chuẩn hoá trước khi so khớp hoặc gán vào cửa sổ:
+Không tự lowercase đường dẫn: quy tắc phân biệt hoa/thường phụ thuộc filesystem. File identity sau canonicalization là khóa chống mở trùng trong tiến trình.
 
-```rust
-use std::path::{Path, PathBuf};
-use dunce::canonicalize; // dunce loại bỏ tiền tố '\\?\' rườm rà trên Windows
+## Điều phối cửa sổ ở backend
 
-pub fn canonicalize_repo_path<P: AsRef<Path>>(path: P) -> Result<PathBuf, String> {
-    let p = path.as_ref();
-    if !p.exists() {
-        return Err("Repository path does not exist on disk".to_string());
-    }
-    
-    // Chuẩn hoá symlink, junction, chữ hoa/thường
-    let canonical = dunce::canonicalize(p)
-        .map_err(|e| format!("Failed to canonicalize path {:?}: {}", p, e))?;
+`WindowManagerState` là registry có mutex, gồm:
 
-    // Đảm bảo là thư mục và có chứa .git
-    if !canonical.is_dir() {
-        return Err("Path is not a directory".to_string());
-    }
-    if !canonical.join(".git").exists() {
-        return Err("Directory does not contain a valid .git folder".to_string());
-    }
+- `window label -> WindowRecord`: repository hiện tại, chính sách khôi phục gần nhất và trạng thái đang mở.
+- `RepoIdentity -> window label`: cửa sổ sở hữu working tree.
 
-    Ok(canonical)
-}
-```
+Quyết định định tuyến và đặt chỗ repository diễn ra trong cùng critical section. Điều này ngăn hai lệnh IPC đồng thời cùng tạo cửa sổ cho một repository. Các kết quả `OpenRepoOutcome` được serialize thành `opened_here`, `focused_existing` hoặc `opened_new_window` để frontend chỉ cập nhật đúng cửa sổ.
 
----
+Khi tạo cửa sổ, backend đặt reservation trước, tạo `WebviewWindow`, hoàn tất reservation rồi gắn watcher. Nếu tạo cửa sổ thất bại, reservation và mapping được dọn. Khi repository đóng hoặc cửa sổ bị hủy, registry và watcher theo label được gỡ. Các cửa sổ repository mang title `Stage0 — <tên repo>`; cửa sổ rỗng dùng `Stage0 — Virtual MR Sandbox`. Cửa sổ động dùng lại cấu hình custom frame, shadow và kích thước tối thiểu theo nền tảng; cửa sổ chính và cửa sổ mới dùng cùng giao diện `index.html`.
 
-## 3. Kiến trúc Quản lý Cửa sổ ở Backend (Tauri v2 Core)
+Registry chỉ có phạm vi một tiến trình. `tauri-plugin-single-instance` chuyển lần khởi chạy thứ hai về tiến trình đang chạy; nếu đối số là đường dẫn working tree hoặc theo dạng `--open-repo <path>`, tiến trình hiện hữu sẽ mở hoặc focus repository đó. Chưa cấu hình file association của Finder/Explorer, do đó việc double-click thư mục trong OS không được đảm bảo gọi Stage0.
 
-### 3.1. Trạng thái Quản lý Tập trung (`WindowManagerState`)
+## Khởi tạo frontend và định tuyến repository
 
-Tạo một state thread-safe quản lý vòng đời và ánh xạ giữa đường dẫn vật lý và cửa sổ:
+Không truyền repository qua query parameter. Query parameter vừa yêu cầu encode/decode, vừa có nguy cơ bị xử lý hai lần. Frontend truy vấn `get_window_startup_context`, lấy repository/policy từ registry backend và sau đó khởi tạo store:
 
-```rust
-use std::collections::HashMap;
-use std::path::PathBuf;
-use std::sync::Mutex;
-use tauri::{AppHandle, Manager, WebviewWindow};
+- Cửa sổ `main` rỗng được phép khôi phục repository gần nhất còn hợp lệ.
+- Cửa sổ Welcome mới bắt đầu rỗng, không tự mở lại repository ở cửa sổ khác.
+- Cửa sổ được tạo cho repository nhận repository từ startup context.
+- Nếu một tiến trình khác yêu cầu mở repository vào cửa sổ Welcome đã chạy, backend gửi `repo-open-request`; frontend cũng lấy startup context sau khi đăng ký listener để tránh phụ thuộc vào thời điểm event.
 
-pub struct WindowRecord {
-    pub window_label: String,
-    pub canonical_path: Option<PathBuf>, // None nếu là Empty/Welcome Window
-}
+Các thao tác mở từ dialog, Recents và Clone đều đi qua cùng API định tuyến. Chỉ `opened_here` mới gắn repository vào Zustand store hiện tại. Kết quả mở/focus ở cửa sổ khác không làm thay đổi trạng thái của cửa sổ đang gọi.
 
-pub struct WindowManagerState {
-    // Mapping: canonical_path -> window_label
-    pub repo_to_window: Mutex<HashMap<PathBuf, String>>,
-    // Mapping: window_label -> Option<canonical_path>
-    pub window_to_repo: Mutex<HashMap<String, Option<PathBuf>>>,
-}
-```
+### Hợp đồng IPC
 
-### 3.2. Đặt nhãn Cửa sổ (Window Labeling Strategy)
-Để đảm bảo nhãn cửa sổ (window label) duy nhất và hợp lệ theo chuẩn Tauri (chỉ chứa ký tự chữ, số, gạch ngang, gạch dưới):
-- **Cửa sổ mặc định/trống**: `main`, `win_welcome_<uuid>`.
-- **Cửa sổ gắn với repo**: `win_repo_<sha256(canonical_path)[0..16]>` hoặc `win_<uuid>`.
+Tên tham số phía frontend dùng camelCase theo quy ước invoke của Tauri; dữ liệu serialize trả về dùng snake_case theo struct Rust.
 
-### 3.3. Luồng Xử lý Mở Repo (Open Repository Flow)
+| Command | Tham số | Kết quả / ý nghĩa |
+| --- | --- | --- |
+| `get_window_startup_context` | Không có | `{ repo, restore_recent }` của cửa sổ gọi lệnh. |
+| `open_repo_dialog` | `forceNewWindow?: boolean` | `null` nếu hủy picker; nếu chọn repo, trả `OpenRepoOutcome`. |
+| `open_repo_by_path` | `repoPath: string`, `forceNewWindow?: boolean` | Chuẩn hóa, ghi Recents rồi định tuyến; trả `OpenRepoOutcome`. |
+| `create_new_window` | Không có | Tạo Welcome window rỗng, không restore Recents; trả window label. |
+| `close_repository_window` | Không có | Gỡ repo và watcher của cửa sổ gọi, giữ cửa sổ ở Welcome. |
 
-```text
-User yêu cầu mở repo: path P
-             │
-             ▼
-   canonical_path = canonicalize(P)
-             │
-      Đã tồn tại trong
-   repo_to_window mapping?
-     ┌───────┴───────┐
-    YES              NO
-     │               │
-     ▼               ▼
- Lấy window_label   Có cửa sổ hiện tại nào đang rỗng
- và tìm WebviewWindow  (đang ở Welcome Screen) không?
-     │                     ┌──────────┴──────────┐
-     ▼                    YES                    NO
- - unminimize()            │                     │
- - show()                  ▼                     ▼
- - set_focus()       Tái sử dụng         Tạo WebviewWindow mới
- (Redirect focus)    cửa sổ hiện tại     (WebviewWindowBuilder)
-                           │                     │
-                           └──────────┬──────────┘
-                                      ▼
-                        - Lưu mapping vào WindowManagerState
-                        - Gán Watcher cho canonical_path
-                        - Điều hướng Webview tới URL kèm repo context
-```
+`OpenRepoOutcome` là union có discriminator `action`: `opened_here` có `repo`; `focused_existing` có `window_label` và `repo`; `opened_new_window` có `window_label` và `repo`. Frontend chỉ gọi `attachRepoToCurrentWindow` trong trường hợp `opened_here`. Không dựa vào event để khởi tạo một cửa sổ mới: `get_window_startup_context` là nguồn trạng thái chuẩn trong vòng đời tiến trình hiện tại; `repo-open-request` chỉ giúp cập nhật Welcome window đã chạy.
 
-### 3.4. Triển khai Lệnh IPC trong Rust
+Quy tắc định tuyến tương ứng:
 
-```rust
-#[tauri::command]
-pub async fn open_or_focus_repo(
-    app: AppHandle,
-    repo_path: String,
-    force_new_window: Option<bool>,
-) -> Result<String, String> {
-    let canonical = canonicalize_repo_path(&repo_path)?;
-    let win_state = app.state::<WindowManagerState>();
+| Tình huống | Hành vi |
+| --- | --- |
+| Repo đã mở ở cửa sổ gọi lệnh | Focus cửa sổ đó; trả `opened_here`. |
+| Repo đã mở ở cửa sổ khác | Unminimize/show/focus cửa sổ đang sở hữu repo; trả `focused_existing`. |
+| Repo mới, cửa sổ gọi rỗng và `forceNewWindow` tắt | Gắn repo vào cửa sổ gọi; trả `opened_here`. |
+| Repo mới, cửa sổ gọi đã có repo hoặc `forceNewWindow` bật | Tạo repo window mới; trả `opened_new_window`. |
+| Repo mới từ single-instance handoff | Tái sử dụng Welcome window đang chạy nếu có; nếu không thì tạo repo window. |
 
-    // 1. Kiểm tra xem repo đã được mở ở cửa sổ nào chưa
-    {
-        let map = win_state.repo_to_window.lock().unwrap();
-        if let Some(existing_label) = map.get(&canonical) {
-            if let Some(window) = app.get_webview_window(existing_label) {
-                // Focus và mang cửa sổ hiện có lên trước
-                let _ = window.unminimize();
-                let _ = window.show();
-                let _ = window.set_focus();
-                return Ok(format!("Focused existing window: {}", existing_label));
-            }
-        }
-    }
+Nếu một yêu cầu đồng thời gặp reservation đang mở, backend chờ tối đa khoảng 2 giây lấy window handle. Nếu không thấy handle, lệnh trả lỗi có thể thử lại; reservation của cửa sổ tạo repo được xóa nếu build thất bại.
 
-    // 2. Quyết định mở ở cửa sổ mới hay cửa sổ hiện tại
-    let new_label = format!("win_repo_{}", uuid::Uuid::new_v4().to_string().replace('-', ""));
-    let encoded_path = urlencoding::encode(&canonical.to_string_lossy());
-    let url = format!("/index.html?repo={}", encoded_path);
+## Watcher và sự kiện
 
-    let window = tauri::WebviewWindowBuilder::new(
-        &app,
-        &new_label,
-        tauri::WebviewUrl::App(url.parse().unwrap()),
-    )
-    .title(format!("Stage0 - {}", canonical.file_name().unwrap().to_string_lossy()))
-    .inner_size(1360.0, 840.0)
-    .min_inner_size(1024.0, 680.0)
-    .decorations(false)
-    .build()
-    .map_err(|e| format!("Failed to create window: {}", e))?;
+`WatcherState` giữ một debouncer theo window label. Khi repository có thay đổi liên quan, Rust phát `repo-fs-changed` bằng `emit_to` tới cửa sổ sở hữu watcher; payload mang canonical `repo_path`. Frontend xác minh payload trùng repository hiện tại trước khi refresh diff. Vì vậy event của cửa sổ khác không làm tải lại dữ liệu nhầm.
 
-    // 3. Cập nhật state quản lý cửa sổ
-    {
-        let mut repo_map = win_state.repo_to_window.lock().unwrap();
-        let mut win_map = win_state.window_to_repo.lock().unwrap();
-        repo_map.insert(canonical.clone(), new_label.clone());
-        win_map.insert(new_label.clone(), Some(canonical));
-    }
+Watcher được gỡ khi đóng repository hoặc khi cửa sổ bị hủy. Các file sinh trong `node_modules`, `target`, `bin`, `obj` và một số thư mục Git nội bộ được bỏ qua để hạn chế refresh không cần thiết.
 
-    Ok(new_label)
-}
-```
+## Menu và vòng đời
 
-### 3.5. Dọn dẹp Tài nguyên khi Đóng Cửa sổ (Window Close Event)
-Khi một cửa sổ bị đóng (`tauri::WindowEvent::Destroyed` hoặc `CloseRequested`):
-1. Xoá nhãn cửa sổ khỏi `window_to_repo`.
-2. Xoá `canonical_path` khỏi `repo_to_window`.
-3. Huỷ đăng ký theo dõi thư mục trong `WatcherState` nếu không còn cửa sổ nào khác sử dụng repo đó.
+Menu hệ thống trên macOS là tài nguyên cấp ứng dụng, không thuộc riêng một WebView. Hành động của menu được gửi đến cửa sổ đang focus; `Zoom` cũng thao tác trên cửa sổ đó thay vì label cố định `main`. Menu hỗ trợ Open, Open in New Window, Clone, Recents, New Window (`Cmd/Ctrl + Shift + N`), Close Repository và Close Window (`Cmd + W` trên macOS, `Ctrl + W` trên các nền tảng khác).
 
----
+Recents và SQLite được dùng chung giữa các cửa sổ. “Close Repository” giữ cửa sổ và đưa nó về màn hình Welcome; “Close Window” chỉ hủy cửa sổ hiện tại. Khi cửa sổ bị hủy, handler vòng đời backend xóa mapping và watcher tương ứng.
 
-## 4. Kiến trúc Frontend (React 19 + Zustand)
+Các hành động menu macOS không broadcast toàn app: backend gửi `menu-action` tới WebView đang focus. `New Window` và `Close Window` được xử lý trực tiếp ở backend; các hành động còn lại được frontend của cửa sổ đích dispatch. Trên macOS, accelerator native đã sở hữu các phím Open/Clone/New Window để tránh frontend thực thi trùng lần thứ hai.
 
-### 4.1. Khởi tạo Trạng thái Độc lập theo Cửa sổ
-Mỗi `WebviewWindow` trong Tauri là một tiến trình WebView độc lập, sở hữu:
-- Một vùng nhớ JavaScript / DOM riêng biệt.
-- Một instance Zustand store `useGitStore` độc lập.
-- Không chia sẻ biến global trong RAM &rarr; **tránh 100% tình trạng leak state giữa các repo**.
+## SQLite và trạng thái chia sẻ
 
-### 4.2. Khởi động Cửa sổ từ Query Parameter
+Các cửa sổ dùng chung một `Database` trong tiến trình, với một `rusqlite::Connection` được bảo vệ bằng mutex. WAL cho phép nhiều reader cùng đọc và giảm chặn giữa reader/writer; SQLite vẫn chỉ có một writer tại một thời điểm. `busy_timeout` giúp chờ lock ngắn, không phải cam kết không bao giờ có lock. Các thao tác database tiếp tục phải dùng prepared statement/parameter binding.
 
-Khi một cửa sổ được tạo ra với URL `/index.html?repo=D%3A%2Fmy-project`:
+`SandboxManager` hiện cũng là application-scoped: loại sandbox đang hoạt động và danh sách instance được chia sẻ giữa các cửa sổ. Đây là cấu hình cấp ứng dụng có chủ đích trong baseline hiện tại, không phải trạng thái riêng từng cửa sổ. Nếu sản phẩm cần chọn engine độc lập theo repository/cửa sổ, cần chuyển khóa trạng thái sang repo identity hoặc window label và bổ sung migration/test riêng.
 
-```typescript
-// frontend/App.tsx hoặc store/useGitStore.ts
-export const initWindowContext = async () => {
-  const params = new URLSearchParams(window.location.search);
-  const repoParam = params.get('repo');
+`localStorage` cùng origin cũng được chia sẻ giữa các WebView. Chỉ nên dùng nó cho preferences cấp ứng dụng; trạng thái workspace/repository phải ở store theo WebView hoặc được khóa bằng repo/window identity.
 
-  if (repoParam) {
-    const decodedPath = decodeURIComponent(repoParam);
-    console.log(`[Stage0] Initializing window with dedicated repo: ${decodedPath}`);
-    // Tự động mở và nạp repo chuyên biệt cho cửa sổ này
-    await useGitStore.getState().openRepoByPathDirect(decodedPath);
-  } else {
-    // Cửa sổ khởi tạo bình thường (Welcome Screen)
-    await useGitStore.getState().initApp();
-  }
-};
-```
+## Lỗi và khôi phục
 
----
+- Đường dẫn không tồn tại, không phải thư mục, không có `.git`, hoặc không canonicalize được: từ chối mở với lỗi cụ thể.
+- Repository đã có cửa sổ: focus cửa sổ đó; nếu cửa sổ đang được tạo, chờ ngắn để lấy handle, nếu không lấy được trả lỗi để người dùng thử lại.
+- Tạo cửa sổ thất bại: xóa reservation và mapping để lần thử tiếp theo không bị kẹt.
+- Watcher không khởi tạo được: ghi cảnh báo, vẫn cho phép mở repository; người dùng vẫn có thể refresh thủ công.
+- Repository bị xóa sau khi vào Recents: validation loại repository đó khỏi luồng khôi phục tự động; mở thủ công sẽ hiển thị lỗi.
+- Nếu frontend không lấy được startup context, khởi tạo fallback theo luồng Welcome hiện hành thay vì để cửa sổ trắng.
 
-## 5. Trải nghiệm Người dùng & Menu Tương tác (UX Design)
+## Phạm vi kiểm thử cần duy trì
 
-### 5.1. Phím tắt & Thao tác Menu
-- **`Ctrl + Shift + N`** (`Cmd + Shift + N` trên macOS):
-  - Mở một cửa sổ mới trống (New Window).
-- **File Menu**:
-  - `New Window` &rarr; Mở cửa sổ Welcome mới.
-  - `Open Repository in New Window...` &rarr; Mở hộp thoại chọn thư mục và mở repo trong cửa sổ mới.
-  - `Close Window` (`Ctrl + Shift + W`): Đóng cửa sổ hiện tại mà không làm tắt các cửa sổ repo khác.
-- **Recent Projects**:
-  - Khi click vào bất kỳ repo nào trong danh sách Recent:
-    - Nếu repo đó đang được mở tại cửa sổ X &rarr; tự động chuyển focus sang cửa sổ X.
-    - Nếu repo đó chưa mở &rarr; mở ngay tại cửa sổ hiện tại (nếu đang ở Welcome Screen) hoặc mở cửa sổ mới.
+1. Upsert lặp lại cùng canonical path giữ nguyên repository ID.
+2. Symlink tới cùng working tree tạo cùng `RepoIdentity`; thư mục không phải Git bị từ chối.
+3. Hai yêu cầu mở đồng thời cùng repository chỉ tạo một cửa sổ; yêu cầu sau focus cửa sổ đó.
+4. Mở repository thứ hai từ cửa sổ đang có repository tạo cửa sổ mới; mở từ Welcome dùng lại Welcome.
+5. Close Repository gỡ watcher/mapping nhưng giữ cửa sổ; Close Window chỉ dọn trạng thái cửa sổ đó.
+6. Watcher và menu action chỉ ảnh hưởng đúng cửa sổ mục tiêu.
+7. Startup restore chỉ chạy ở cửa sổ được đánh dấu; cửa sổ mới không chiếm repository đã mở.
+8. Kiểm tra dynamic window trên macOS/Windows/Linux để xác nhận custom frame, min-size, maximize/fullscreen và focus.
 
-### 5.2. Titlebar & Taskbar
-- Mỗi cửa sổ có tiêu đề tài liệu rõ ràng:
-  - Cửa sổ repo: `Stage0 — <repo-name> [compare → base]`
-  - Cửa sổ rỗng: `Stage0 — Virtual MR Sandbox`
-- Trên Taskbar của hệ điều hành:
-  - Mỗi cửa sổ hiển thị thumbnail riêng, click vào thumbnail nào chuyển ngay đến repo đó.
+## Bản đồ mã nguồn và quy trình xác minh
 
----
+- `backend/src/window_manager.rs`: chuẩn hóa path, file identity, registry, định tuyến, build/focus window và cleanup.
+- `backend/src/commands.rs`: IPC cho Open, startup context, New Window và Close Repository.
+- `backend/src/lib.rs`: khởi tạo state, single-instance handoff, startup args và destroyed-window cleanup.
+- `backend/src/watcher/mod.rs`: một watcher/debouncer theo window label, event gửi đích danh.
+- `backend/src/menu.rs`: menu macOS cấp app và chuyển action tới cửa sổ focus.
+- `frontend/App.tsx`, `frontend/store/useGitStore.ts`, `frontend/types/git.ts`: bootstrap theo cửa sổ, định tuyến state và kiểu IPC.
 
-## 6. Xử lý Đồng thời & An toàn Dữ liệu (Concurrency & Data Safety)
-
-1. **SQLite Concurrent Access (WAL Mode)**:
-   - Tất cả các cửa sổ cùng ghi dữ liệu vào một file SQLite duy nhất (`local_mr.db`).
-   - SQLite được cấu hình chế độ **WAL (Write-Ahead Logging)**:
-     - Hỗ trợ không giới hạn số lượng luồng đọc đồng thời (*Concurrent Readers*).
-     - Không bao giờ bị khoá bảng khi có cửa sổ đang đọc lịch sử diff hoặc credentials.
-2. **File System Watcher**:
-   - `WatcherState` ở backend Rust duy trì danh sách kênh theo dõi.
-   - Khi file thay đổi, sự kiện `repo-fs-changed` phát ra có kèm payload `repo_path`.
-   - Mỗi cửa sổ frontend chỉ lắng nghe và reload nếu `payload.repo_path === currentRepo.local_path`.
-
----
-
-## 7. Lộ trình Triển khai Kỹ thuật (Implementation Milestones)
-
-| Giai đoạn | Nội dung công việc | Kết quả đầu ra |
-| :--- | :--- | :--- |
-| **Giai đoạn 1** | Chuẩn hoá `canonicalize_repo_path` và xây dựng `WindowManagerState` trong Rust | Kiểm soát chặt chẽ mapping `PathBuf` &harr; `WindowLabel`, chống trùng lặp |
-| **Giai đoạn 2** | Triển khai lệnh IPC `open_or_focus_repo` và `open_new_window` | Hỗ trợ mở cửa sổ mới và tự động focus cửa sổ cũ khi bấm trùng repo |
-| **Giai đoạn 3** | Cập nhật Frontend `App.tsx` nạp repo theo URL param `?repo=` | Cửa sổ mới nạp thẳng repo vào trạng thái làm việc |
-| **Giai đoạn 4** | Tích hợp menu `File > New Window` (`Ctrl+Shift+N`) và cập nhật danh sách Recents | Hoàn thiện phím tắt và thao tác UX |
-
----
-
-*Tài liệu được quản lý tập trung trong kho lưu trữ mã nguồn Stage0.*
+Trước khi thay đổi luồng này, chạy `cargo check --lib`, `cargo test --lib`, `npm run typecheck`, `npm run build` và `git diff --check`. Unit tests hiện xác nhận symlink alias dùng cùng identity, path không phải Git bị từ chối và upsert cùng path giữ nguyên ID. Các race giữa nhiều cửa sổ, native focus/menu và custom frame vẫn cần kiểm thử thủ công trên desktop; build/typecheck không thay thế được kiểm thử GUI đó.

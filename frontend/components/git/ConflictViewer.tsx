@@ -12,10 +12,11 @@ import {
   FileCode,
   RotateCw,
   GitMerge,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { openFileInEditor, revealInOs, getOsFileManagerName } from '../../utils/fileActions';
+import { formatShortcutText } from '../../utils/shortcuts';
 
 interface ConflictViewerProps {
   onSwitchToDiff?: () => void;
@@ -147,7 +148,7 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
                 refreshDiff();
               }}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-              title="Refresh virtual conflict analysis (Ctrl+R)"
+              title={formatShortcutText('Refresh virtual conflict analysis (Ctrl+R)')}
             >
               <RotateCw className="w-3.5 h-3.5 text-subtext0" />
               <span>Re-check</span>

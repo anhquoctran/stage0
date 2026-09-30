@@ -22,8 +22,9 @@ import {
   Box,
   ShieldCheck,
   GitBranch,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { SUPPORTED_FONTS } from '../../constants/fonts';
+import { formatShortcutText } from '../../utils/shortcuts';
 import {
   usePreferencesStore,
   checkFontLigaturesSupport,
@@ -899,7 +900,7 @@ export const PreferencesModal: React.FC = () => {
                             ? 'bg-surface1 border-surface2 text-text font-bold shadow-xs'
                             : 'bg-surface0/40 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
                         }`}
-                        title="Bold (Ctrl+B)"
+                        title={formatShortcutText('Bold (Ctrl+B)')}
                       >
                         <Bold className="w-3.5 h-3.5" />
                         <span>Bold</span>
@@ -914,7 +915,7 @@ export const PreferencesModal: React.FC = () => {
                             ? 'bg-surface1 border-surface2 text-text font-bold italic shadow-xs'
                             : 'bg-surface0/40 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
                         }`}
-                        title="Italic (Ctrl+I)"
+                        title={formatShortcutText('Italic (Ctrl+I)')}
                       >
                         <Italic className="w-3.5 h-3.5" />
                         <span>Italic</span>
@@ -929,7 +930,7 @@ export const PreferencesModal: React.FC = () => {
                             ? 'bg-surface1 border-surface2 text-text font-bold underline shadow-xs'
                             : 'bg-surface0/40 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
                         }`}
-                        title="Underline (Ctrl+U)"
+                        title={formatShortcutText('Underline (Ctrl+U)')}
                       >
                         <Underline className="w-3.5 h-3.5" />
                         <span>Underline</span>
@@ -1010,7 +1011,7 @@ export const PreferencesModal: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-[11px] text-subtext0 leading-relaxed">
-                      Show commit author, relative time, and summary annotation at the end of the active line in diff view (Alt+Shift+B).
+                      {formatShortcutText('Show commit author, relative time, and summary annotation at the end of the active line in diff view (Alt+Shift+B).')}
                     </p>
                   </div>
 
@@ -1132,7 +1133,7 @@ export const PreferencesModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowResetConfirm(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
               title="Reset all settings to application defaults"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -1153,7 +1154,7 @@ export const PreferencesModal: React.FC = () => {
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium"
+              className="px-4 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium"
               title="Close without saving"
             >
               Cancel
@@ -1164,7 +1165,7 @@ export const PreferencesModal: React.FC = () => {
               type="button"
               onClick={handleApply}
               disabled={!hasUnsavedChanges && !isApplied}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
                 isApplied
                   ? 'bg-surface2 text-text border-surface1'
                   : hasUnsavedChanges

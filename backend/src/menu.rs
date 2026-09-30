@@ -1,12 +1,70 @@
 use tauri::{
-    menu::{Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder},
-    AppHandle, Emitter, Manager, Wry,
+    menu::{Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder},
+    AppHandle, Emitter, Wry,
 };
+use crate::git::RepoInfo;
+use crate::window_manager::{create_welcome_window, focused_window};
+
+#[tauri::command]
+pub fn update_recent_repositories_menu(
+    app: AppHandle,
+    repositories: Vec<RepoInfo>,
+) -> Result<(), String> {
+    let Some(app_menu) = app.menu() else {
+        return Ok(());
+    };
+    let Some(file_menu) = app_menu
+        .get("file_menu")
+        .and_then(|item| item.as_submenu().cloned())
+    else {
+        return Ok(());
+    };
+    let Some(recent_menu) = file_menu
+        .get("open_recent")
+        .and_then(|item| item.as_submenu().cloned())
+    else {
+        return Ok(());
+    };
+
+    let existing_items = recent_menu.items().map_err(|error| error.to_string())?;
+    for item in existing_items {
+        let id = item.id().as_ref();
+        if id == "no_recent_repos" || id.starts_with("recent_repo_") {
+            recent_menu
+                .remove(&item)
+                .map_err(|error| error.to_string())?;
+        }
+    }
+
+    if repositories.is_empty() {
+        let item = MenuItemBuilder::with_id("no_recent_repos", "No Recent Repositories")
+            .enabled(false)
+            .build(&app)
+            .map_err(|error| error.to_string())?;
+        recent_menu
+            .append(&item)
+            .map_err(|error| error.to_string())?;
+    } else {
+        for repository in repositories {
+            let item = MenuItemBuilder::with_id(
+                format!("recent_repo_{}", repository.id),
+                repository.name,
+            )
+            .build(&app)
+            .map_err(|error| error.to_string())?;
+            recent_menu
+                .append(&item)
+                .map_err(|error| error.to_string())?;
+        }
+    }
+
+    Ok(())
+}
 
 pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::error::Error>> {
     // 1. Application Menu (App name "Stage0" in bold on macOS)
     let app_submenu = SubmenuBuilder::new(app, "Stage0")
-        .item(&PredefinedMenuItem::about(app, Some("About Stage0"), None)?)
+        .item(&MenuItemBuilder::with_id("about", "About Stage0").build(app)?)
         .separator()
         .item(&MenuItemBuilder::with_id("preferences", "Preferences...").accelerator("CmdOrCtrl+,").build(app)?)
         .separator()
@@ -20,13 +78,15 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .build()?;
 
     // 2. File Menu
-    let file_submenu = SubmenuBuilder::new(app, "File")
-        .item(&MenuItemBuilder::with_id("open_repo", "Open Repository...").accelerator("CmdOrCtrl+O").build(app)?)
-        .item(&MenuItemBuilder::with_id("clone_repo", "Clone Repository...").accelerator("CmdOrCtrl+Shift+O").build(app)?)
+    let file_submenu = SubmenuBuilder::with_id(app, "file_menu", "File")
+        .item(&MenuItemBuilder::with_id("open_repo", "Open...").accelerator("CmdOrCtrl+O").build(app)?)
+        .item(&MenuItemBuilder::with_id("open_repo_new_window", "Open in New Window...").build(app)?)
+        .item(&MenuItemBuilder::with_id("clone_repo", "Clone...").accelerator("CmdOrCtrl+Shift+O").build(app)?)
+        .item(&recent_repositories_submenu(app)?)
         .separator()
-        .item(&MenuItemBuilder::with_id("close_repo", "Close Repository").accelerator("CmdOrCtrl+W").build(app)?)
-        .separator()
-        .item(&MenuItemBuilder::with_id("preferences_file", "Preferences...").accelerator("CmdOrCtrl+,").build(app)?)
+        .item(&MenuItemBuilder::with_id("new_window", "New Window").accelerator("CmdOrCtrl+Shift+N").build(app)?)
+        .item(&MenuItemBuilder::with_id("close_repo", "Close Repository").build(app)?)
+        .item(&MenuItemBuilder::with_id("close_window", "Close Window").accelerator("CmdOrCtrl+W").build(app)?)
         .build()?;
 
     // 3. Edit Menu
@@ -95,11 +155,20 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
     Ok(menu)
 }
 
+fn recent_repositories_submenu(app: &AppHandle) -> Result<Submenu<Wry>, Box<dyn std::error::Error>> {
+    let submenu = Submenu::with_id(app, "open_recent", "Recents", true)?;
+    let placeholder = MenuItemBuilder::with_id("no_recent_repos", "No Recent Repositories")
+        .enabled(false)
+        .build(app)?;
+    submenu.append(&placeholder)?;
+    Ok(submenu)
+}
+
 pub fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
     let id = event.id().as_ref();
     match id {
         "zoom" => {
-            if let Some(window) = app.get_webview_window("main") {
+            if let Some(window) = focused_window(app) {
                 if let Ok(is_max) = window.is_maximized() {
                     if is_max {
                         let _ = window.unmaximize();
@@ -109,8 +178,20 @@ pub fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
                 }
             }
         }
+        "new_window" => {
+            if let Err(error) = create_welcome_window(app) {
+                eprintln!("Could not create a new window: {error}");
+            }
+        }
+        "close_window" => {
+            if let Some(window) = focused_window(app) {
+                let _ = window.close();
+            }
+        }
         action => {
-            let _ = app.emit("menu-action", action);
+            if let Some(window) = focused_window(app) {
+                let _ = window.emit("menu-action", action.to_string());
+            }
         }
     }
 }

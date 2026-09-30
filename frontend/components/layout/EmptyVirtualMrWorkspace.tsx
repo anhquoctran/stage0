@@ -1,5 +1,6 @@
 import React from 'react';
-import { GitPullRequest, Plus, Sparkles, FolderGit2 } from 'lucide-react';
+import { GitPullRequest, Plus, Sparkles, FolderGit2 } from '@/components/common/icons';
+import { formatShortcutText } from '../../utils/shortcuts';
 
 interface Props {
   onNewMr: () => void;
@@ -49,7 +50,7 @@ export const EmptyVirtualMrWorkspace: React.FC<Props> = ({
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Create Virtual MR</span>
           <kbd className="ml-1.5 px-1.5 py-0.5 text-[10px] font-mono bg-black/15 rounded text-[#11111b]/80 border border-black/10">
-            Ctrl+T
+            {formatShortcutText('Ctrl+T')}
           </kbd>
         </button>
 

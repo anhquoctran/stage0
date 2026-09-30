@@ -18,7 +18,7 @@ import {
   ExternalLink,
   RotateCcw,
   ShieldCheck,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
 import { useBotReviewersStore } from '../../store/useBotReviewersStore';
@@ -461,18 +461,19 @@ export const RepositorySettingsModal: React.FC<Props> = ({
             {/* TAB 1: REMOTES */}
             {activeTab === 'remotes' && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-base font-medium">Git Remotes</h3>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[1rem] text-text font-medium">Git Remotes</h3>
                     <p className="text-xs text-subtext0 mt-0.5">
                       Manage remote servers for code synchronization (origin, upstream, forks)
                     </p>
                   </div>
                   <button
+                    type="button"
                     onClick={() => setIsAddingRemote(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40"
+                    className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3.5 h-3.5 shrink-0" />
                     <span>Add Remote</span>
                   </button>
                 </div>
@@ -659,7 +660,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
             {activeTab === 'branches' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-base font-medium">Branches &amp; Tags</h3>
+                  <h3 className="text-[1rem] text-text font-medium">Branches &amp; Tags</h3>
                   <p className="text-xs text-subtext0 mt-0.5">
                     Manage default branch configuration, create new branches, and manage tags
                   </p>
@@ -867,21 +868,23 @@ export const RepositorySettingsModal: React.FC<Props> = ({
             {/* TAB 3: LABELS */}
             {activeTab === 'labels' && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-base font-medium">Repository Labels</h3>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[1rem] text-text font-medium">Repository Labels</h3>
                     <p className="text-xs text-subtext0 mt-0.5">
                       Label taxonomy scoped specifically to this repository (separate from App Preferences)
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <button
+                      type="button"
                       onClick={loadPresetLabels}
-                      className="px-2.5 py-1.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer border border-surface1"
+                      className="shrink-0 whitespace-nowrap px-2.5 py-1.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer border border-surface1"
                     >
                       Load Presets
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setEditingLabelId(null);
                         setLabelFormName('');
@@ -889,9 +892,9 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                         setLabelFormColor('#3b82f6');
                         setIsAddingLabel(true);
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40"
+                      className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-3.5 h-3.5 shrink-0" />
                       <span>New Label</span>
                     </button>
                   </div>
@@ -988,49 +991,92 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                   </form>
                 )}
 
-                {/* LABELS LIST */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  {repoLabels.map((lbl) => (
-                    <div
-                      key={lbl.id}
-                      className="p-3 bg-crust border border-surface0 flex items-center justify-between gap-3 group"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <span
-                          className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium text-white shadow-xs"
-                          style={{ backgroundColor: lbl.color }}
-                        >
-                          {lbl.name}
-                        </span>
-                        {lbl.description && (
-                          <p className="text-[11px] text-subtext0 truncate mt-1">{lbl.description}</p>
+                {/* LABELS TABLE */}
+                <section aria-label="Repository labels list" className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-medium text-text">Labels</h4>
+                    <span className="text-[11px] text-subtext0">
+                      {repoLabels.length} {repoLabels.length === 1 ? 'label' : 'labels'}
+                    </span>
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto border border-surface0 bg-crust">
+                    <table className="w-full table-fixed text-left">
+                      <caption className="sr-only">Repository labels</caption>
+                      <colgroup>
+                        <col className="w-[34%]" />
+                        <col className="w-[48%]" />
+                        <col className="w-[18%]" />
+                      </colgroup>
+                      <thead className="sticky top-0 z-10 bg-base">
+                        <tr className="border-b border-surface0 text-[10px] uppercase tracking-wide text-subtext0">
+                          <th scope="col" className="px-3 py-2 font-medium">Label</th>
+                          <th scope="col" className="px-3 py-2 font-medium">Description</th>
+                          <th scope="col" className="px-2 py-2 text-right font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-surface0">
+                        {repoLabels.length === 0 ? (
+                          <tr>
+                            <td colSpan={3} className="px-4 py-8 text-center text-xs text-subtext0">
+                              No repository labels yet. Create a label or load presets to get started.
+                            </td>
+                          </tr>
+                        ) : (
+                          repoLabels.map((lbl) => (
+                            <tr key={lbl.id} className="hover:bg-surface0/40">
+                              <td className="px-3 py-2.5">
+                                <div className="flex min-w-0 items-center gap-2">
+                                  <span
+                                    aria-hidden="true"
+                                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                    style={{ backgroundColor: lbl.color }}
+                                  />
+                                  <span className="truncate text-xs font-medium text-text" title={lbl.name}>
+                                    {lbl.name}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-3 py-2.5">
+                                <span className="block truncate text-[11px] text-subtext0" title={lbl.description || ''}>
+                                  {lbl.description || '—'}
+                                </span>
+                              </td>
+                              <td className="px-2 py-2">
+                                <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingLabelId(lbl.id);
+                                      setLabelFormName(lbl.name);
+                                      setLabelFormColor(lbl.color);
+                                      setLabelFormDesc(lbl.description || '');
+                                      setIsAddingLabel(false);
+                                    }}
+                                    className="p-1.5 text-subtext0 hover:bg-surface1 hover:text-text cursor-pointer"
+                                    title={`Edit ${lbl.name}`}
+                                    aria-label={`Edit ${lbl.name}`}
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteRepoLabel(lbl.id)}
+                                    className="p-1.5 text-subtext0 hover:bg-red-500/20 hover:text-red-400 cursor-pointer"
+                                    title={`Delete ${lbl.name}`}
+                                    aria-label={`Delete ${lbl.name}`}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
                         )}
-                      </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingLabelId(lbl.id);
-                            setLabelFormName(lbl.name);
-                            setLabelFormColor(lbl.color);
-                            setLabelFormDesc(lbl.description || '');
-                            setIsAddingLabel(false);
-                          }}
-                          className="p-1 rounded hover:bg-surface1 text-subtext0 hover:text-text cursor-pointer"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteRepoLabel(lbl.id)}
-                          className="p-1 rounded hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
               </div>
             )}
 
@@ -1038,7 +1084,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
             {activeTab === 'agents' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-base font-medium flex items-center gap-2">
+                  <h3 className="text-[1rem] text-text font-medium flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-brand" />
                     <span>Repository Bot Reviewers</span>
                   </h3>
@@ -1208,7 +1254,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                             maxLength={4}
                             value={repoBotEmoji}
                             onChange={(e) => setRepoBotEmoji(e.target.value)}
-                            className="w-12 h-8 text-center text-base bg-surface0 border border-surface1 rounded text-text"
+                            className="w-12 h-8 text-center text-[1rem] bg-surface0 border border-surface1 rounded text-text"
                           />
                         </div>
                         <div className="col-span-3">

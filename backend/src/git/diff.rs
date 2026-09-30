@@ -33,14 +33,15 @@ pub fn get_mr_diff(
         }
     });
 
-    let mut numstats: HashMap<String, (u32, u32)> = HashMap::new();
+    let mut numstats: HashMap<String, (u32, u32, bool)> = HashMap::new();
     for line in numstat_output.lines() {
         let parts: Vec<&str> = line.split('\t').collect();
         if parts.len() >= 3 {
+            let is_binary = parts[0] == "-" && parts[1] == "-";
             let adds = parts[0].parse::<u32>().unwrap_or(0);
             let dels = parts[1].parse::<u32>().unwrap_or(0);
             let file_key = parts[2].trim().to_string();
-            numstats.insert(file_key, (adds, dels));
+            numstats.insert(file_key, (adds, dels, is_binary));
         }
     }
 
@@ -74,18 +75,13 @@ pub fn get_mr_diff(
             continue;
         }
 
-        let (additions, deletions) = if let Some(stats) = numstats.get(&path) {
-            *stats
-        } else {
-            let mut found = (0, 0);
-            for (k, v) in &numstats {
-                if k.ends_with(&path) {
-                    found = *v;
-                    break;
-                }
-            }
-            found
-        };
+        let stats = numstats.get(&path).or_else(|| {
+            numstats
+                .iter()
+                .find(|(key, _)| key.ends_with(&path))
+                .map(|(_, stats)| stats)
+        });
+        let (additions, deletions, is_binary) = stats.copied().unwrap_or((0, 0, false));
 
         let is_conflicted = conflict_report.conflicted_files.iter().any(|cf| cf == &path || old_path.as_deref() == Some(cf));
 
@@ -95,6 +91,7 @@ pub fn get_mr_diff(
             status,
             additions,
             deletions,
+            is_binary,
             is_conflicted,
         });
     }

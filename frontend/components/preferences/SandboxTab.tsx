@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   RotateCw,
   Trash2,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 import { SandboxType } from '../../types/git';
 

@@ -20,6 +20,18 @@ import {
   NewMrDraft,
 } from '../types/virtualMr';
 
+let draftBranchRequestVersion = 0;
+
+const getErrorMessage = (error: unknown): string => {
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error) || String(error);
+  } catch {
+    return String(error);
+  }
+};
+
 interface VirtualMrState {
   // Repository-scoped State
   currentRepoId: string | null;
@@ -423,8 +435,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
 
     // Sync with gitStore so diff immediately loads for this MR
     try {
-      await gitStore.setBaseBranch(base);
-      await gitStore.setCompareBranch(compare);
+      await gitStore.setBranchComparison(base, compare);
     } catch (err) {
       console.warn('Failed to sync branches with gitStore:', err);
     }
@@ -459,6 +470,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   },
 
   openNewMrDraft: async (initialBase, initialCompare) => {
+    const requestVersion = ++draftBranchRequestVersion;
     let { currentRepoId, currentRepoPath, repoSettings } = get();
 
     if (!currentRepoId || !currentRepoPath) {
@@ -499,15 +511,23 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       selectedLabels: [],
       commits: [],
       isCommitsLoading: true,
+      commitsError: null,
     };
 
     set({ draftMr: newDraft, isDraftActive: true, activeSessionId: null });
 
     // Sync with gitStore so diff immediately loads
     try {
-      await gitStore.setBaseBranch(base);
-      await gitStore.setCompareBranch(compare);
+      await gitStore.setBranchComparison(base, compare);
     } catch {}
+
+    const isCurrentDraftRequest = () => {
+      const currentDraft = get().draftMr;
+      return requestVersion === draftBranchRequestVersion
+        && currentDraft?.baseBranch === base
+        && currentDraft.compareBranch === compare;
+    };
+    if (!isCurrentDraftRequest()) return;
 
     // Load commits
     try {
@@ -526,8 +546,9 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
         authoredDate: c.authored_date,
       }));
 
+      if (!isCurrentDraftRequest()) return;
       set((state) => {
-        if (!state.draftMr) return {};
+        if (!state.draftMr || state.draftMr.baseBranch !== base || state.draftMr.compareBranch !== compare) return {};
         const title = commits.length > 0 && commits[0].subject ? commits[0].subject : `${compare} → ${base}`;
         return {
           draftMr: {
@@ -538,8 +559,15 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
           },
         };
       });
-    } catch {
-      set((state) => (state.draftMr ? { draftMr: { ...state.draftMr, isCommitsLoading: false } } : {}));
+    } catch (error: unknown) {
+      if (!isCurrentDraftRequest()) return;
+      set((state) => (state.draftMr ? {
+        draftMr: {
+          ...state.draftMr,
+          isCommitsLoading: false,
+          commitsError: getErrorMessage(error),
+        },
+      } : {}));
     }
   },
 
@@ -550,6 +578,14 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   changeDraftBranches: async (base, compare) => {
     const { currentRepoPath, draftMr } = get();
     if (!draftMr || !currentRepoPath) return;
+    const requestVersion = ++draftBranchRequestVersion;
+    const hadDefaultTitle = draftMr.title === `${draftMr.compareBranch} → ${draftMr.baseBranch}`;
+    const isCurrentDraftRequest = () => {
+      const currentDraft = get().draftMr;
+      return requestVersion === draftBranchRequestVersion
+        && currentDraft?.baseBranch === base
+        && currentDraft.compareBranch === compare;
+    };
 
     set((state) => ({
       draftMr: state.draftMr
@@ -557,16 +593,18 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
             ...state.draftMr,
             baseBranch: base,
             compareBranch: compare,
+            commits: [],
             isCommitsLoading: true,
+            commitsError: null,
           }
         : null,
     }));
 
     const gitStore = useGitStore.getState();
     try {
-      await gitStore.setBaseBranch(base);
-      await gitStore.setCompareBranch(compare);
+      await gitStore.setBranchComparison(base, compare);
     } catch {}
+    if (!isCurrentDraftRequest()) return;
 
     try {
       const raw = await invoke<any[]>('get_commits_between_refs', {
@@ -584,35 +622,41 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
         authoredDate: c.authored_date,
       }));
 
+      if (!isCurrentDraftRequest()) return;
       set((state) => {
-        if (!state.draftMr) return {};
+        if (!state.draftMr || state.draftMr.baseBranch !== base || state.draftMr.compareBranch !== compare) return {};
         const defaultTitle = commits.length > 0 && commits[0].subject ? commits[0].subject : `${compare} → ${base}`;
         return {
           draftMr: {
             ...state.draftMr,
             commits,
-            title:
-              state.draftMr.title && state.draftMr.title !== `${state.draftMr.compareBranch} → ${state.draftMr.baseBranch}`
-                ? state.draftMr.title
-                : defaultTitle,
+            title: hadDefaultTitle ? defaultTitle : state.draftMr.title,
             isCommitsLoading: false,
+            commitsError: null,
           },
         };
       });
-    } catch {
-      set((state) => (state.draftMr ? { draftMr: { ...state.draftMr, isCommitsLoading: false } } : {}));
+    } catch (error: unknown) {
+      if (!isCurrentDraftRequest()) return;
+      set((state) => (state.draftMr ? {
+        draftMr: {
+          ...state.draftMr,
+          isCommitsLoading: false,
+          commitsError: getErrorMessage(error),
+        },
+      } : {}));
     }
   },
 
   closeNewMrDraft: () => {
+    draftBranchRequestVersion += 1;
     const { sessions } = get();
     set({ draftMr: null, isDraftActive: false });
     if (sessions.length > 0) {
       const target = sessions[0];
       set({ activeSessionId: target.id });
       const gitStore = useGitStore.getState();
-      gitStore.setBaseBranch(target.baseBranch);
-      gitStore.setCompareBranch(target.compareBranch);
+      gitStore.setBranchComparison(target.baseBranch, target.compareBranch);
     }
   },
 
@@ -621,8 +665,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     set({ isDraftActive: true, activeSessionId: null });
     if (draftMr) {
       const gitStore = useGitStore.getState();
-      gitStore.setBaseBranch(draftMr.baseBranch);
-      gitStore.setCompareBranch(draftMr.compareBranch);
+      gitStore.setBranchComparison(draftMr.baseBranch, draftMr.compareBranch);
     }
   },
 
@@ -732,8 +775,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     } else if (nextActive) {
       const nextSession = updated.find((s) => s.id === nextActive);
       if (nextSession) {
-        useGitStore.getState().setBaseBranch(nextSession.baseBranch);
-        useGitStore.getState().setCompareBranch(nextSession.compareBranch);
+        useGitStore.getState().setBranchComparison(nextSession.baseBranch, nextSession.compareBranch);
       }
     }
 

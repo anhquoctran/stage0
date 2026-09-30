@@ -17,7 +17,7 @@ import {
   Lock,
   X,
   ShieldAlert,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useGitCredentialsStore } from '../../store/useGitCredentialsStore';
 import {
   GitCredentialProvider,

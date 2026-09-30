@@ -134,6 +134,10 @@ Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the deve
 
 Please do not report security vulnerabilities in public issues. Follow the private reporting instructions in [SECURITY.md](./SECURITY.md).
 
+## Third-party attributions
+
+Stage0 uses icons from Font Awesome Free 7 by Fonticons, Inc. The icon artwork is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the Font Awesome code packages are MIT licensed. See the [Font Awesome Free license](https://fontawesome.com/license/free).
+
 ## License
 
 Stage0 is distributed under the [MIT License](./LICENSE).

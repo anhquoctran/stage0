@@ -4,10 +4,11 @@ import {
   Download,
   Cog,
   X,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { AppLogo } from '../common/AppLogo';
+import { formatShortcutText } from '../../utils/shortcuts';
 
 interface WelcomeScreenProps {
   onOpenRepo?: () => void;
@@ -32,7 +33,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   const isMac =
     typeof navigator !== 'undefined' &&
     /Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
-  const modKey = isMac ? 'Cmd-' : 'Ctrl-';
+  const displayedShortcut = (macShortcut: string, otherShortcut: string) =>
+    isMac ? formatShortcutText(macShortcut, true) : otherShortcut;
 
   const handleOpenLocal = () => {
     if (onOpenRepo) {
@@ -136,8 +138,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   Open local repository
                 </span>
               </div>
-              <span className="text-[11px] font-mono text-subtext0/70 group-hover:text-subtext0 transition-colors shrink-0">
-                {modKey}O
+              <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors shrink-0">
+                {displayedShortcut('Ctrl+O', 'Ctrl-O')}
               </span>
             </div>
 
@@ -155,8 +157,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   Clone repository
                 </span>
               </div>
-              <span className="text-[11px] font-mono text-subtext0/70 group-hover:text-subtext0 transition-colors shrink-0">
-                {modKey}Shift-O
+              <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors shrink-0">
+                {displayedShortcut('Ctrl+Shift+O', 'Ctrl-Shift-O')}
               </span>
             </div>
 
@@ -174,8 +176,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   Open Preferences
                 </span>
               </div>
-              <span className="text-[11px] font-mono text-subtext0/70 group-hover:text-subtext0 transition-colors shrink-0">
-                {modKey},
+              <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors shrink-0">
+                {displayedShortcut('Ctrl+,', 'Ctrl-,')}
               </span>
             </div>
           </div>
@@ -235,8 +237,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                     >
                       <X className="w-3 h-3" />
                     </button>
-                    <span className="text-[11px] font-mono text-subtext0/70 group-hover:text-subtext0 transition-colors">
-                      {modKey}{idx + 1}
+                    <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors">
+                      {displayedShortcut(`Ctrl+${idx + 1}`, `Ctrl-${idx + 1}`)}
                     </span>
                   </div>
                 </div>

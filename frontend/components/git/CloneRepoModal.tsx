@@ -10,7 +10,7 @@ import {
   AlertCircle,
   Loader2,
   Check,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 
 type UrlValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid';

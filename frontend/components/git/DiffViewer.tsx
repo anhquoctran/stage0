@@ -11,6 +11,7 @@ import {
   Check,
   FileCode,
   FileText,
+  FileWarning,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
@@ -19,15 +20,17 @@ import {
   History,
   GitCommit,
   Code2,
+  GitBranch,
   RotateCw,
   ArrowDown,
   GitMerge,
   ShieldAlert,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { invoke } from '@tauri-apps/api/core';
 import { ChangedFile, MrDiffPayload, ViewMode, FileBlamePayload } from '../../types/git';
 import { extractFileHunks, inferLanguage } from '../../utils/diffParser';
 import { openFileInEditor } from '../../utils/fileActions';
+import { formatShortcutText } from '../../utils/shortcuts';
 import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
@@ -71,6 +74,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     showToast,
     currentRepo,
     conflictReport,
+    diffError,
     activeConflictPreview,
     refreshDiff,
   } = useGitStore();
@@ -111,7 +115,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
   // Prefetch git blame for current file in background (for compare revision & base revision)
   useEffect(() => {
-    if (selectedFile && currentRepo) {
+    if (selectedFile && currentRepo && !selectedFile.is_binary) {
       fetchFileBlame(selectedFile.path, compareBranch || 'HEAD');
       if (baseBranch) {
         const oldPath = selectedFile.old_path || selectedFile.path;
@@ -124,10 +128,13 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           .then((payload) => setOldBlamePayload(payload))
           .catch(() => setOldBlamePayload(null));
       }
+    } else if (selectedFile?.is_binary) {
+      setOldBlamePayload(null);
     }
   }, [
     selectedFile?.path,
     selectedFile?.old_path,
+    selectedFile?.is_binary,
     compareBranch,
     baseBranch,
     currentRepo?.local_path,
@@ -356,7 +363,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   }, [diffPayload, selectedFile]);
 
   const conflictedFiles = useMemo(
-    () => diffPayload?.files.filter((f) => f.is_conflicted) || [],
+    () => diffPayload?.files.filter((f) => f.is_conflicted && !f.is_binary) || [],
     [diffPayload]
   );
 
@@ -408,6 +415,32 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     return <WelcomeScreen onOpenRepo={onOpenRepo} />;
   }
 
+  if (diffError) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-base p-8 text-center select-none">
+        <div className="w-12 h-12 bg-red/10 border border-red/30 flex items-center justify-center text-red mb-4">
+          <AlertTriangle className="w-6 h-6" />
+        </div>
+        <h3 className="text-sm font-semibold text-text mb-1">Couldn't compare these branches</h3>
+        <p className="text-xs text-subtext1 max-w-lg leading-relaxed mb-4">
+          Check that both branches still exist and that the repository is available, then retry the comparison.
+        </p>
+        <details className="max-w-xl w-full text-left text-xs text-subtext0 mb-4">
+          <summary className="cursor-pointer hover:text-text">Git error details</summary>
+          <pre className="mt-2 p-3 bg-crust border border-surface0 whitespace-pre-wrap break-words select-text">{diffError}</pre>
+        </details>
+        <button
+          type="button"
+          onClick={() => void refreshDiff()}
+          className="flex items-center gap-2 px-3 py-1.5 bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs transition-colors cursor-pointer"
+        >
+          <RotateCw className="w-3.5 h-3.5" />
+          Retry comparison
+        </button>
+      </div>
+    );
+  }
+
   // Fallback when repository is loaded but diff is not yet computed
   if (!diffPayload) {
     return (
@@ -415,7 +448,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         <div className="w-16 h-16 rounded-xl bg-mantle border border-surface0 flex items-center justify-center text-blue mb-4 shadow-md">
           <GitPullRequest className="w-8 h-8" />
         </div>
-        <h3 className="text-base font-bold text-text mb-1">
+        <h3 className="text-[1rem] font-bold text-text mb-1">
           {currentRepo.name}
         </h3>
         <p className="text-xs text-subtext1 max-w-sm mb-4 leading-relaxed font-mono">
@@ -431,15 +464,38 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   // Overview screen when repo is open but no file selected
   if (!selectedFile) {
     const totalFiles = diffPayload.files.length;
+    const totalBinaryFiles = diffPayload.files.filter((file) => file.is_binary).length;
     const totalAdditions = diffPayload.files.reduce((acc, f) => acc + f.additions, 0);
     const totalDeletions = diffPayload.files.reduce((acc, f) => acc + f.deletions, 0);
+
+    if (totalFiles === 0) {
+      const sameCommit = diffPayload.base_commit === diffPayload.compare_commit;
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center bg-base p-8 text-center select-none">
+          <div className="w-14 h-14 bg-surface0/60 border border-surface1 flex items-center justify-center text-subtext1 mb-4">
+            <GitBranch className="w-6 h-6" />
+          </div>
+          <h3 className="text-sm font-semibold text-text mb-1.5">
+            {sameCommit ? 'These branches point to the same commit' : 'No file changes to review'}
+          </h3>
+          <p className="text-xs text-subtext1 max-w-lg leading-relaxed">
+            {sameCommit ? (
+              <>Both <code className="font-mono text-text">{baseBranch}</code> and <code className="font-mono text-text">{compareBranch}</code> resolve to the same commit.</>
+            ) : (
+              <>The compare branch <code className="font-mono text-text">{compareBranch}</code> has no file changes relative to the merge base with <code className="font-mono text-text">{baseBranch}</code>.</>
+            )}
+          </p>
+          <p className="text-xs text-subtext0 mt-2">Choose different branches or refresh the comparison if you expected changes.</p>
+        </div>
+      );
+    }
 
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-base p-8 text-center select-none">
         <div className="w-16 h-16 rounded-xl bg-mantle border border-surface0 flex items-center justify-center text-subtext1 mb-4 shadow-md">
           <FileText className="w-8 h-8 text-blue" />
         </div>
-        <h3 className="text-base font-bold text-text mb-1">
+        <h3 className="text-[1rem] font-bold text-text mb-1">
           Branch Comparison Ready
         </h3>
         <p className="text-xs text-subtext1 max-w-sm mb-6 leading-relaxed">
@@ -447,7 +503,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         </p>
 
         {/* Quick Summary Pill Cards */}
-        <div className="grid grid-cols-3 gap-3 max-w-md w-full mb-6">
+        <div className={`grid ${totalBinaryFiles > 0 ? 'grid-cols-4 max-w-xl' : 'grid-cols-3 max-w-md'} gap-3 w-full mb-6`}>
           <div className="bg-mantle border border-surface0 rounded-lg p-3 text-center">
             <div className="text-[10px] uppercase font-bold text-subtext1">Files</div>
             <div className="text-lg font-mono font-bold text-text">{totalFiles}</div>
@@ -460,6 +516,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <div className="text-[10px] uppercase font-bold text-subtext1">Deletions</div>
             <div className="text-lg font-mono font-bold text-red">-{totalDeletions}</div>
           </div>
+          {totalBinaryFiles > 0 && (
+            <div className="bg-mantle border border-surface0 rounded-lg p-3 text-center">
+              <div className="text-[10px] uppercase font-bold text-subtext1">Binary</div>
+              <div className="text-lg font-mono font-bold text-amber-400">{totalBinaryFiles}</div>
+            </div>
+          )}
         </div>
 
         <p className="text-xs text-subtext0">
@@ -500,7 +562,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           <button
             type="button"
             onClick={handleCopyPath}
-            title="Copy relative file path (Ctrl+Shift+C)"
+            title={formatShortcutText('Copy relative file path (Ctrl+Shift+C)')}
             className="p-1 text-subtext1 hover:text-text rounded hover:bg-surface1 transition-colors cursor-pointer"
           >
             {copied ? (
@@ -520,11 +582,17 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           )}
 
           <div className="flex items-center gap-1.5 font-mono text-xs ml-1 font-semibold">
-            {selectedFile.additions > 0 && (
-              <span className="text-green">+{selectedFile.additions}</span>
-            )}
-            {selectedFile.deletions > 0 && (
-              <span className="text-red">-{selectedFile.deletions}</span>
+            {selectedFile.is_binary ? (
+              <span className="text-amber-400">Binary · preview unavailable</span>
+            ) : (
+              <>
+                {selectedFile.additions > 0 && (
+                  <span className="text-green">+{selectedFile.additions}</span>
+                )}
+                {selectedFile.deletions > 0 && (
+                  <span className="text-red">-{selectedFile.deletions}</span>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -572,17 +640,17 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 type="button"
                 onClick={selectNextConflictFile}
                 className="text-[11px] font-mono font-bold text-red hover:underline px-0.5 cursor-pointer"
-                title="Jump to next conflict file (Alt+C)"
+                title={formatShortcutText('Jump to next conflict file (Alt+C)')}
               >
                 {selectedFile?.is_conflicted && currentConflictIndex !== -1
                   ? `Conflict ${currentConflictIndex + 1}/${conflictedFiles.length}`
-                  : `${conflictedFiles.length} Conflict${conflictedFiles.length > 1 ? 's' : ''} (Alt+C)`}
+                  : formatShortcutText(`${conflictedFiles.length} Conflict${conflictedFiles.length > 1 ? 's' : ''} (Alt+C)`)}
               </button>
               <button
                 type="button"
                 onClick={selectNextConflictFile}
                 className="p-0.5 text-red hover:bg-red/20 rounded transition-colors cursor-pointer"
-                title="Next conflict file (Alt+C)"
+                title={formatShortcutText('Next conflict file (Alt+C)')}
               >
                 <ChevronRight className="w-3 h-3" />
               </button>
@@ -594,7 +662,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         <div className="flex items-center gap-2">
           {/* Diff / Blame / Conflict Tab Switcher */}
           <div className="flex items-center bg-surface0 p-0.5 gap-0.5">
-            {selectedFile?.is_conflicted && (
+            {selectedFile?.is_conflicted && !selectedFile.is_binary && (
               <button
                 type="button"
                 onClick={() => setFileViewTab('conflicts')}
@@ -623,19 +691,21 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               <FileCode className="w-3.5 h-3.5 text-white" />
               <span>Diff</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setFileViewTab('blame')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
-                fileViewTab === 'blame'
-                  ? 'bg-surface2 text-white shadow-xs'
-                  : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
-              }`}
-              title="Inspect line-by-line git blame (Alt+B)"
-            >
-              <History className="w-3.5 h-3.5 text-white" />
-              <span>Blame</span>
-            </button>
+            {!selectedFile.is_binary && (
+              <button
+                type="button"
+                onClick={() => setFileViewTab('blame')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
+                  fileViewTab === 'blame'
+                    ? 'bg-surface2 text-white shadow-xs'
+                    : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
+                }`}
+                title={formatShortcutText('Inspect line-by-line git blame (Alt+B)')}
+              >
+                <History className="w-3.5 h-3.5 text-white" />
+                <span>Blame</span>
+              </button>
+            )}
           </div>
 
           {/* Split / Unified Segmented Control (only when in Diff mode) */}
@@ -680,7 +750,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                   ? 'bg-surface2 text-white shadow-xs'
                   : 'bg-surface1 text-white/80 hover:text-white hover:bg-surface2'
               }`}
-              title={`Toggle inline git blame on active line (Alt+Shift+B) - ${showInlineBlame ? 'Active' : 'Disabled'}`}
+              title={formatShortcutText(`Toggle inline git blame on active line (Alt+Shift+B) - ${showInlineBlame ? 'Active' : 'Disabled'}`)}
             >
               <GitCommit className="w-3.5 h-3.5 text-white" />
               <span>Inline Blame</span>
@@ -720,27 +790,31 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => setFileViewTab('conflicts')}
-              className="flex items-center gap-1.5 px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold transition-colors cursor-pointer text-xs shadow-xs"
-              title="Inspect 3-way collision blocks side-by-side"
-            >
-              <GitMerge className="w-3.5 h-3.5 text-white" />
-              <span>
-                3-Way Conflict View {activeConflictPreview?.conflict_regions.length ? `(${activeConflictPreview.conflict_regions.length})` : ''}
-              </span>
-            </button>
+            {!selectedFile.is_binary && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setFileViewTab('conflicts')}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold transition-colors cursor-pointer text-xs shadow-xs"
+                  title="Inspect 3-way collision blocks side-by-side"
+                >
+                  <GitMerge className="w-3.5 h-3.5 text-white" />
+                  <span>
+                    3-Way Conflict View {activeConflictPreview?.conflict_regions.length ? `(${activeConflictPreview.conflict_regions.length})` : ''}
+                  </span>
+                </button>
 
-            <button
-              type="button"
-              onClick={scrollToFirstConflict}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-semibold transition-colors cursor-pointer text-xs shadow-xs"
-              title="Scroll directly to conflict marker or first conflict change in this file"
-            >
-              <ArrowDown className="w-3.5 h-3.5 text-white" />
-              <span>Jump to Conflict</span>
-            </button>
+                <button
+                  type="button"
+                  onClick={scrollToFirstConflict}
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-semibold transition-colors cursor-pointer text-xs shadow-xs"
+                  title="Scroll directly to conflict marker or first conflict change in this file"
+                >
+                  <ArrowDown className="w-3.5 h-3.5 text-white" />
+                  <span>Jump to Conflict</span>
+                </button>
+              </>
+            )}
 
             {currentRepo && (
               <button
@@ -765,7 +839,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               type="button"
               onClick={refreshDiff}
               className="flex items-center gap-1.5 px-2 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs"
-              title="Re-check diff after resolving conflict in external tool (Ctrl+R)"
+              title={formatShortcutText('Re-check diff after resolving conflict in external tool (Ctrl+R)')}
             >
               <RotateCw className="w-3 h-3 text-white" />
               <span>Refresh Diff</span>
@@ -775,9 +849,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       )}
 
       {/* Main Area: Conflict View, Blame View, or Visual Diff */}
-      {fileViewTab === 'conflicts' && selectedFile?.is_conflicted ? (
+      {fileViewTab === 'conflicts' && selectedFile?.is_conflicted && !selectedFile.is_binary ? (
         <ConflictViewer onSwitchToDiff={() => setFileViewTab('diff')} />
-      ) : fileViewTab === 'blame' ? (
+      ) : fileViewTab === 'blame' && !selectedFile.is_binary ? (
         <BlameViewer />
       ) : (
         <div
@@ -786,7 +860,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           className="flex-1 overflow-auto bg-base p-2 relative"
         >
           {/* Conflict Alert & Quick Summary Card inside Diff View */}
-          {selectedFile.is_conflicted && activeConflictPreview && activeConflictPreview.conflict_regions.length > 0 && (
+          {!selectedFile.is_binary && selectedFile.is_conflicted && activeConflictPreview && activeConflictPreview.conflict_regions.length > 0 && (
             <div className="mb-3 border border-red/40 bg-gradient-to-r from-red/15 via-red/10 to-red/5 rounded-lg p-3 shadow-xs">
               <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
                 <div className="flex items-center gap-2">
@@ -828,7 +902,20 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           {/* Line-level & File-level Virtual MR Discussions */}
           <DiffDiscussionsBanner selectedFile={selectedFile} />
 
-          {diffData && hunks.length > 0 ? (
+          {selectedFile.is_binary ? (
+            <div className="flex min-h-64 h-full flex-col items-center justify-center px-6 text-center">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center border border-amber-400/30 bg-amber-400/10 text-amber-400">
+                <FileWarning className="h-6 w-6" />
+              </div>
+              <h3 className="mb-1 text-sm font-semibold text-text">Binary file — diff preview not supported</h3>
+              <p className="max-w-md text-xs leading-relaxed text-subtext1">
+                Git detected binary content in this file. Stage0 can track the file change, but cannot render a text diff for it.
+              </p>
+              <p className="mt-2 text-[11px] text-subtext0">
+                Use the file actions above to reveal it and inspect it with an external application.
+              </p>
+            </div>
+          ) : diffData && hunks.length > 0 ? (
             <div className="border border-surface0 rounded-lg overflow-hidden bg-base shadow-sm">
               <DiffView
                 key={`${selectedFile.path}-${viewMode}-${theme}-${fontFamily}-${fontSize}-${lineSpacing}-${enableLigatures}-${isBold}-${isItalic}-${isUnderline}`}
@@ -848,13 +935,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               <CheckCircle2 className="w-8 h-8 text-green mb-2" />
               <p className="font-semibold text-text">No textual difference</p>
               <span className="text-[11px] text-subtext0">
-                File status: {selectedFile.status} (Binary, empty, or mode change)
+                File status: {selectedFile.status} (empty or mode change)
               </span>
             </div>
           )}
 
           {/* Inline Blame React Portal mounted inside active line TD */}
           {showInlineBlame &&
+            !selectedFile.is_binary &&
             portalMount &&
             activeBlameCommit &&
             activeLine &&

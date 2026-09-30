@@ -20,7 +20,7 @@ import {
   X,
   ShieldCheck,
   Edit3,
-} from 'lucide-react';
+} from '@/components/common/icons';
 import { useAiMcpStore } from '../../store/useAiMcpStore';
 import {
   AI_PROVIDERS,

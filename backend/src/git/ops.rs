@@ -320,22 +320,19 @@ pub fn get_commits_between(
     base: &str,
     compare: &str,
 ) -> Result<Vec<GitCommitItem>, String> {
-    let (_, effective_base) = resolve_ref(repo_path, base).unwrap_or((String::new(), base.to_string()));
-    let (_, effective_compare) = resolve_ref(repo_path, compare).unwrap_or((String::new(), compare.to_string()));
+    let (_, effective_base) = resolve_ref(repo_path, base)?;
+    let (_, effective_compare) = resolve_ref(repo_path, compare)?;
     let range = format!("{}..{}", effective_base, effective_compare);
     // Use %x1f as field separator and %x1e as record separator
     let format = "%H%x1f%h%x1f%s%x1f%b%x1f%an%x1f%ae%x1f%aI%x1e";
-    let res = run_git(
+    let format_arg = format!("--format={}", format);
+    let output = run_git_strict(
         repo_path,
-        &["log", &range, &format!("--format={}", format), "--no-merges"],
+        &["log", &range, &format_arg, "--no-merges"],
     )?;
 
-    if !res.success {
-        return Ok(Vec::new());
-    }
-
     let mut commits = Vec::new();
-    for record in res.stdout.split('\x1e') {
+    for record in output.split('\x1e') {
         let trimmed = record.trim();
         if trimmed.is_empty() {
             continue;

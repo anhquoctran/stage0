@@ -92,6 +92,7 @@ export interface NewMrDraft {
   selectedLabels: string[];
   commits: VirtualMrCommit[];
   isCommitsLoading: boolean;
+  commitsError: string | null;
 }
 
 export type BotCategory =
