@@ -136,6 +136,7 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
     // 7. Help Menu
     let help_submenu = SubmenuBuilder::new(app, "Help")
         .item(&MenuItemBuilder::with_id("shortcuts", "Keyboard Shortcuts").accelerator("CmdOrCtrl+/").build(app)?)
+        .item(&MenuItemBuilder::with_id("open_webview_devtools", "Developer Tools").build(app)?)
         .separator()
         .item(&MenuItemBuilder::with_id("about", "About Stage0").build(app)?)
         .build()?;

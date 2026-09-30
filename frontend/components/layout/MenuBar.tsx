@@ -239,6 +239,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
         case 'shortcuts':
           setShowShortcutsModal(true);
           break;
+        case 'open_webview_devtools':
+          void invoke('open_webview_devtools');
+          break;
         case 'about':
           setShowAboutModal(true);
           break;
@@ -1202,6 +1205,20 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 <div className="flex items-center gap-2">
                   <Keyboard className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Keyboard Shortcuts</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenus();
+                  void invoke('open_webview_devtools');
+                }}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Code2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <span>Developer Tools</span>
                 </div>
               </button>
 

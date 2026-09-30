@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread;
 use std::time::Duration;
 
 use serde::Serialize;
+use tauri::webview::PageLoadEvent;
 #[cfg(target_os = "macos")]
 use tauri::TitleBarStyle;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
@@ -376,14 +378,30 @@ pub fn create_welcome_window(app: &AppHandle) -> Result<String, String> {
 }
 
 fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWindow, String> {
+    let focus_after_initial_load = Arc::new(AtomicBool::new(true));
+    let focus_after_initial_load_callback = Arc::clone(&focus_after_initial_load);
     let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
         .title(title)
         .inner_size(1360.0, 840.0)
         .decorations(false)
-        .shadow(true);
+        .shadow(true)
+        .on_page_load(move |window, payload| {
+            if matches!(payload.event(), PageLoadEvent::Finished)
+                && focus_after_initial_load_callback.swap(false, Ordering::AcqRel)
+            {
+                // Re-assert focus after the new WebView is ready. On some platforms,
+                // focusing immediately after build can happen before native window
+                // activation completes, leaving the first window in front.
+                let _ = focus_window(&window);
+            }
+        });
 
     #[cfg(target_os = "macos")]
     let builder = builder
+        // Keep the native macOS title bar controls (traffic lights) on dynamically
+        // created windows, matching the main window configuration. The title bar
+        // remains overlaid so the app can keep its custom title-bar content.
+        .decorations(true)
         .min_inner_size(640.0, 500.0)
         .title_bar_style(TitleBarStyle::Overlay)
         .hidden_title(true);
