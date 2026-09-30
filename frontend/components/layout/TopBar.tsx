@@ -44,7 +44,8 @@ export const TopBar: React.FC = () => {
 
   const isMac =
     typeof navigator !== 'undefined' &&
-    /Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    (/Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ||
+      (typeof window !== 'undefined' && window.location.search.includes('platform=mac')));
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -76,47 +77,79 @@ export const TopBar: React.FC = () => {
 
   return (
     <header className="flex flex-col shrink-0 select-none">
-      {/* ROW 1: VSCode Style Window Titlebar & Menu Bar */}
+      {/* ROW 1: Window Titlebar & Controls */}
       <div
         data-tauri-drag-region
         onDoubleClick={handleDoubleClick}
         className={clsx(
           'h-8.5 bg-crust border-b border-surface0/70 flex items-center justify-between shrink-0 select-none transition-all relative z-[100]',
-          isMac ? 'pl-[76px] pr-2' : 'pl-2.5 pr-0'
+          isMac ? 'px-3' : 'pl-2.5 pr-0'
         )}
       >
-        {/* Left: Brand Icon + Stage0 + VSCode Menu Bar */}
-        <div className="flex items-center gap-2 h-full">
-          <div
-            data-tauri-drag-region
-            className="flex items-center gap-1.5 pr-2.5 border-r border-surface0/80 cursor-default"
-          >
-            <AppLogo size="sm" />
-            <span className="text-xs font-bold tracking-tight text-text">Stage0</span>
-          </div>
+        {isMac ? (
+          <>
+            {/* Mounted for shortcuts & macOS native system menu events */}
+            <MenuBar hidden />
 
-          <MenuBar />
-        </div>
+            {/* Left: macOS Traffic Lights Window Controls */}
+            <div data-tauri-drag-region className="flex items-center h-full pl-1 pr-3 shrink-0">
+              <WindowControls style="mac" />
+            </div>
 
-        {/* Center: Draggable Window Document Title */}
-        <div
-          data-tauri-drag-region
-          className="flex-1 h-full flex items-center justify-center min-w-8 overflow-hidden px-4"
-        >
-          <span
-            data-tauri-drag-region
-            className="text-[11px] font-mono text-subtext0/70 truncate pointer-events-none"
-          >
-            {currentRepo
-              ? `${currentRepo.name} — [${compareBranch || '...'} → ${baseBranch || '...'}]`
-              : 'Stage0 — Virtual MR Sandbox'}
-          </span>
-        </div>
+            {/* Center: Draggable Window Document Title */}
+            <div
+              data-tauri-drag-region
+              className="flex-1 h-full flex items-center justify-center min-w-8 overflow-hidden px-4"
+            >
+              <span
+                data-tauri-drag-region
+                className="text-[11px] font-mono text-subtext0/70 truncate pointer-events-none"
+              >
+                {currentRepo
+                  ? `${currentRepo.name} — [${compareBranch || '...'} → ${baseBranch || '...'}]`
+                  : 'Stage0 — Virtual MR Sandbox'}
+              </span>
+            </div>
 
-        {/* Right: Window Controls */}
-        <div className="flex items-center h-full shrink-0">
-          <WindowControls />
-        </div>
+            {/* Right: Drag region spacer to balance left controls and keep title centered */}
+            <div data-tauri-drag-region className="w-16 h-full shrink-0 pointer-events-none" />
+          </>
+        ) : (
+          <>
+            {/* Left: Brand Icon + Stage0 + VSCode Menu Bar */}
+            <div className="flex items-center gap-2 h-full">
+              <div
+                data-tauri-drag-region
+                className="flex items-center gap-1.5 pr-2.5 border-r border-surface0/80 cursor-default"
+              >
+                <AppLogo size="sm" />
+                <span className="text-xs font-bold tracking-tight text-text">Stage0</span>
+              </div>
+
+              <MenuBar />
+            </div>
+
+            {/* Center: Draggable Window Document Title */}
+            <div
+              data-tauri-drag-region
+              className="flex-1 h-full flex items-center justify-center min-w-8 overflow-hidden px-4"
+            >
+              <span
+                data-tauri-drag-region
+                className="text-[11px] font-mono text-subtext0/70 truncate pointer-events-none"
+              >
+                {currentRepo
+                  ? `${currentRepo.name} — [${compareBranch || '...'} → ${baseBranch || '...'}]`
+                  : 'Stage0 — Virtual MR Sandbox'}
+              </span>
+            </div>
+
+            {/* Right: Window Controls */}
+            <div className="flex items-center h-full shrink-0">
+              <WindowControls style="windows" />
+            </div>
+          </>
+        )}
       </div>
 
       {/* ROW 2: Git Workspace Action Toolbar */}

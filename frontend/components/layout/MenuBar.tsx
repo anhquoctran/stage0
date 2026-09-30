@@ -50,13 +50,18 @@ import {
   getOsFileManagerName,
 } from '../../utils/fileActions';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { AppLogo } from '../common/AppLogo';
 
-export const MenuBar: React.FC = () => {
+export interface MenuBarProps {
+  hidden?: boolean;
+}
+
+export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
   const { openRepoSettings, openNewMrDraft } = useVirtualMrStore();
   const {
     currentRepo,
@@ -154,6 +159,80 @@ export const MenuBar: React.FC = () => {
     };
   }, [openRepoDialog, setIsPreferencesOpen, setIsCloneModalOpen]);
 
+  // Listen to native macOS menu events from Tauri
+  useEffect(() => {
+    let unlistenFn: (() => void) | undefined;
+    listen<string>('menu-action', (event) => {
+      switch (event.payload) {
+        case 'open_repo':
+          openRepoDialog();
+          break;
+        case 'clone_repo':
+          setIsCloneModalOpen(true);
+          break;
+        case 'close_repo':
+          closeRepo();
+          break;
+        case 'preferences':
+        case 'preferences_file':
+          setIsPreferencesOpen(true);
+          break;
+        case 'new_mr':
+          openNewMrDraft();
+          break;
+        case 'fetch':
+          runSync('fetch');
+          break;
+        case 'pull':
+          runSync('pull');
+          break;
+        case 'rebase':
+          runSync('rebase');
+          break;
+        case 'repo_settings':
+          openRepoSettings('remotes');
+          break;
+        case 'view_split':
+          setViewMode('split');
+          break;
+        case 'view_unified':
+          setViewMode('unified');
+          break;
+        case 'toggle_blame':
+          toggleFileBlame();
+          break;
+        case 'toggle_inline_blame':
+          toggleInlineBlame();
+          break;
+        case 'shortcuts':
+          setShowShortcutsModal(true);
+          break;
+        case 'about':
+          setShowAboutModal(true);
+          break;
+        default:
+          break;
+      }
+    }).then((unlisten) => {
+      unlistenFn = unlisten;
+    }).catch(() => {});
+
+    return () => {
+      if (unlistenFn) unlistenFn();
+    };
+  }, [
+    openRepoDialog,
+    setIsCloneModalOpen,
+    closeRepo,
+    setIsPreferencesOpen,
+    openNewMrDraft,
+    runSync,
+    openRepoSettings,
+    setViewMode,
+    toggleFileBlame,
+    toggleInlineBlame,
+  ]);
+
   const handleMenuClick = (menuName: string) => {
     if (activeMenu === menuName) {
       setActiveMenu(null);
@@ -191,11 +270,12 @@ export const MenuBar: React.FC = () => {
 
   return (
     <>
-      <nav
-        ref={menuBarRef}
-        aria-label="Application menu"
-        className="flex items-center h-full select-none text-xs"
-      >
+      {!hidden && (
+        <nav
+          ref={menuBarRef}
+          aria-label="Application menu"
+          className="flex items-center h-full select-none text-xs"
+        >
         {/* FILE MENU */}
         <div className="relative h-full flex items-center">
           <button
@@ -1083,6 +1163,7 @@ export const MenuBar: React.FC = () => {
           )}
         </div>
       </nav>
+      )}
 
       {/* Keyboard Shortcuts Modal */}
       {showShortcutsModal && (
