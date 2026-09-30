@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   GitPullRequest,
   GitBranch,
@@ -17,7 +17,8 @@ import {
 } from 'lucide-react';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
-import { AVAILABLE_AI_BOTS } from '../../types/virtualMr';
+import { useBotReviewersStore } from '../../store/useBotReviewersStore';
+import { BotReviewer } from '../../types/virtualMr';
 import { TabBranchSelector } from '../git/TabBranchSelector';
 import { MarkdownEditor } from '../common/MarkdownEditor';
 import { FileList } from '../git/FileList';
@@ -32,9 +33,11 @@ export const NewVirtualMrView: React.FC = () => {
     submitNewMrDraft,
     repoLabels,
     createRepoLabel,
+    repoSettings,
   } = useVirtualMrStore();
 
   const {
+    currentRepo,
     branches,
     diffPayload,
     conflictReport,
@@ -45,6 +48,11 @@ export const NewVirtualMrView: React.FC = () => {
     setViewMode,
     openRepoDialog,
   } = useGitStore();
+
+  const { getEffectiveReviewers } = useBotReviewersStore();
+  const { reviewers: effectiveReviewers } = useMemo(() => {
+    return getEffectiveReviewers(currentRepo?.id, repoSettings?.inheritGlobalAgents);
+  }, [currentRepo?.id, repoSettings?.inheritGlobalAgents, getEffectiveReviewers]);
 
   const [previewTab, setPreviewTab] = useState<'commits' | 'diff'>('commits');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -346,7 +354,7 @@ export const NewVirtualMrView: React.FC = () => {
                     ) : (
                       <div className="flex flex-wrap gap-1.5 pt-0.5">
                         {draftMr.selectedBots.map((botId) => {
-                          const bot = AVAILABLE_AI_BOTS.find((b) => b.id === botId);
+                          const bot = effectiveReviewers.find((b: BotReviewer) => b.id === botId);
                           if (!bot) return null;
                           return (
                             <div
@@ -383,7 +391,7 @@ export const NewVirtualMrView: React.FC = () => {
                           </button>
                         </div>
                         <div className="max-h-56 overflow-y-auto divide-y divide-surface0/60">
-                          {AVAILABLE_AI_BOTS.map((bot) => {
+                          {effectiveReviewers.map((bot: BotReviewer) => {
                             const isAssigned = draftMr.selectedBots.includes(bot.id);
                             return (
                               <button

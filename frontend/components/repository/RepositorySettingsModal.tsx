@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
   Globe,
@@ -15,10 +15,16 @@ import {
   Shield,
   Sparkles,
   FolderCog,
+  ExternalLink,
+  RotateCcw,
+  ShieldCheck,
 } from 'lucide-react';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
-import { AVAILABLE_AI_BOTS } from '../../types/virtualMr';
+import { useBotReviewersStore } from '../../store/useBotReviewersStore';
+import { usePreferencesStore } from '../../store/usePreferencesStore';
+import { BOT_CATEGORIES } from '../../constants/botPresets';
+import { BotCategory } from '../../types/virtualMr';
 
 interface Props {
   isOpen: boolean;
@@ -57,6 +63,17 @@ export const RepositorySettingsModal: React.FC<Props> = ({
     deleteRepoLabel,
     loadPresetLabels,
   } = useVirtualMrStore();
+
+  const { setIsPreferencesOpen } = usePreferencesStore();
+  const {
+    globalReviewers,
+    repoActiveBotIds,
+    repoCustomReviewers,
+    toggleRepoActiveBotId,
+    addRepoCustomReviewer,
+    deleteRepoCustomReviewer,
+    resetRepoToGlobal,
+  } = useBotReviewersStore();
 
   const [activeTab, setActiveTab] = useState<'remotes' | 'branches' | 'labels' | 'agents'>(
     initialTab
@@ -100,10 +117,65 @@ export const RepositorySettingsModal: React.FC<Props> = ({
   const [labelFormColor, setLabelFormColor] = useState('#3b82f6');
   const [labelFormDesc, setLabelFormDesc] = useState('');
 
-  // AI Rules
+  // AI Rules & Bot Reviewers State
   const [customRules, setCustomRules] = useState(repoSettings?.customAgentRules || '');
   const [inheritAgents, setInheritAgents] = useState(repoSettings?.inheritGlobalAgents ?? true);
   const [defaultBaseBranch, setDefaultBaseBranch] = useState(repoSettings?.defaultBaseBranch || 'main');
+
+  // Repo Custom Bot Creation State
+  const [isAddingRepoBot, setIsAddingRepoBot] = useState(false);
+  const [repoBotName, setRepoBotName] = useState('');
+  const [repoBotTagline, setRepoBotTagline] = useState('');
+  const [repoBotDesc, setRepoBotDesc] = useState('');
+  const [repoBotCategory, setRepoBotCategory] = useState<BotCategory>('custom');
+  const [repoBotEmoji, setRepoBotEmoji] = useState('🤖');
+  const [repoBotPrompt, setRepoBotPrompt] = useState('');
+
+  const currentRepoId = currentRepo?.id || '';
+
+  const activeBotSet = useMemo(() => {
+    const list = repoActiveBotIds[currentRepoId] ?? globalReviewers.filter((b) => b.enabled).map((b) => b.id);
+    return new Set(list);
+  }, [repoActiveBotIds, currentRepoId, globalReviewers]);
+
+  const repoExclusiveBots = repoCustomReviewers[currentRepoId] || [];
+
+  const RULE_SNIPPETS = [
+    { label: 'Strict TypeScript', text: 'Enforce strict TypeScript: reject "any", require return types, verify exhaustive union checks.' },
+    { label: 'Security & OWASP', text: 'Sanitize external inputs against SQLi/XSS, verify auth tokens on mutation endpoints, no secrets in logs.' },
+    { label: 'Performance', text: 'Flag potential N+1 database queries, verify pagination on large listings, check for redundant re-renders.' },
+    { label: 'Clean Architecture', text: 'Enforce SOLID principles, keep business domain decoupled from transport/DB, no circular imports.' },
+    { label: 'Unit Test Coverage', text: 'Ensure every new feature or bug fix includes corresponding automated tests with edge assertions.' },
+  ];
+
+  const handleAppendSnippet = (text: string) => {
+    setCustomRules((prev) => (prev.trim() ? `${prev.trim()}\n\n- ${text}` : `- ${text}`));
+  };
+
+  const handleSaveRepoCustomBot = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!repoBotName.trim() || !repoBotPrompt.trim() || !currentRepoId) return;
+
+    addRepoCustomReviewer(currentRepoId, {
+      name: repoBotName.trim(),
+      tagline: repoBotTagline.trim(),
+      description: repoBotDesc.trim(),
+      category: repoBotCategory,
+      avatarEmoji: repoBotEmoji,
+      systemPrompt: repoBotPrompt.trim(),
+      enabled: true,
+      isBuiltin: false,
+    });
+
+    setIsAddingRepoBot(false);
+    setRepoBotName('');
+    setRepoBotTagline('');
+    setRepoBotDesc('');
+    setRepoBotCategory('custom');
+    setRepoBotEmoji('🤖');
+    setRepoBotPrompt('');
+    showToast(`Added repo reviewer: ${repoBotName.trim()}`);
+  };
 
   useEffect(() => {
     if (repoSettings) {
@@ -962,86 +1034,417 @@ export const RepositorySettingsModal: React.FC<Props> = ({
               </div>
             )}
 
-            {/* TAB 4: AI REVIEWERS */}
+            {/* TAB 4: AI REVIEWERS (REPO SCOPE) */}
             {activeTab === 'agents' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-base font-medium">AI Agent Reviewers Policy</h3>
+                  <h3 className="text-base font-medium flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-brand" />
+                    <span>Repository Bot Reviewers</span>
+                  </h3>
                   <p className="text-xs text-subtext0 mt-0.5">
-                    Permissions and configuration for AI Reviewer Bots participating in this repository
+                    Configure which AI Reviewer bots analyze Virtual MRs, catch security vulnerabilities, and inspect code for this repository.
                   </p>
                 </div>
 
-                {/* INHERITANCE TOGGLE */}
-                <div className="p-4 bg-crust border border-surface0 flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    id="inherit-toggle"
-                    checked={inheritAgents}
-                    onChange={(e) => setInheritAgents(e.target.checked)}
-                    className="mt-0.5 rounded border-surface1 text-accent focus:ring-0 cursor-pointer"
-                  />
-                  <div>
-                    <label htmlFor="inherit-toggle" className="font-medium text-xs text-text cursor-pointer">
-                      Inherit AI Bots &amp; API Keys from App Preferences (Default)
-                    </label>
-                    <p className="text-xs text-subtext0 mt-0.5">
-                      Inherits all configured AI Providers (OpenAI, Claude, Gemini, Ollama) and API Keys registered in App Preferences.
-                    </p>
+                {/* INHERITANCE MODE SELECTOR CARDS */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Option 1: Inherit Global (Default) */}
+                  <div
+                    onClick={() => setInheritAgents(true)}
+                    className={`p-3.5 border cursor-pointer transition-all flex flex-col justify-between ${
+                      inheritAgents
+                        ? 'bg-brand/5 border-brand/60 shadow-xs'
+                        : 'bg-crust border-surface0 hover:border-surface1 opacity-80'
+                    }`}
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="reviewer-inheritance"
+                            checked={inheritAgents}
+                            onChange={() => setInheritAgents(true)}
+                            className="text-brand focus:ring-0 cursor-pointer"
+                          />
+                          <span className="font-semibold text-xs text-text">
+                            Inherit Global Preferences
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-brand/20 text-brand border border-brand/30">
+                          Default
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-subtext0 leading-relaxed pl-5">
+                        Automatically inherits all active Bot Reviewers and AI model settings configured in App Preferences.
+                      </p>
+                    </div>
+
+                    <div className="pt-2 mt-2 border-t border-surface0/60 pl-5 flex items-center justify-between">
+                      <span className="text-[11px] text-brand font-medium">
+                        {globalReviewers.filter((b) => b.enabled).length} global bots active
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onClose();
+                          setIsPreferencesOpen(true);
+                        }}
+                        className="text-[11px] text-subtext0 hover:text-text flex items-center gap-1 cursor-pointer hover:underline"
+                        title="Open App Preferences modal"
+                      >
+                        <span>Open Preferences</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Option 2: Custom for this Repo */}
+                  <div
+                    onClick={() => setInheritAgents(false)}
+                    className={`p-3.5 border cursor-pointer transition-all flex flex-col justify-between ${
+                      !inheritAgents
+                        ? 'bg-accent/5 border-accent/60 shadow-xs'
+                        : 'bg-crust border-surface0 hover:border-surface1 opacity-80'
+                    }`}
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="reviewer-inheritance"
+                            checked={!inheritAgents}
+                            onChange={() => setInheritAgents(false)}
+                            className="text-accent focus:ring-0 cursor-pointer"
+                          />
+                          <span className="font-semibold text-xs text-text">
+                            Custom for this Repository
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-surface1 text-subtext0 border border-surface2">
+                          Isolated
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-subtext0 leading-relaxed pl-5">
+                        Override active bots independently for this repository, or add repository-exclusive custom reviewer bots.
+                      </p>
+                    </div>
+
+                    <div className="pt-2 mt-2 border-t border-surface0/60 pl-5 flex items-center justify-between">
+                      <span className="text-[11px] text-accent font-medium">
+                        {activeBotSet.size} bots enabled for repo
+                      </span>
+                      {!inheritAgents && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            resetRepoToGlobal(currentRepoId);
+                            showToast('Reset bot selections to global defaults');
+                          }}
+                          className="text-[11px] text-subtext0 hover:text-text flex items-center gap-1 cursor-pointer"
+                          title="Reset to global active selection"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Reset</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* BOT ROSTER */}
+                {/* BOT ROSTER DISPLAY */}
                 <div className="space-y-3">
-                  <span className="font-semibold text-xs text-text flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5 text-subtext0" />
-                    <span>Available AI Reviewer Bots</span>
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-xs text-text flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5 text-subtext0" />
+                      <span>
+                        {inheritAgents
+                          ? 'Inherited Reviewer Bots (Read-only)'
+                          : 'Repository Reviewer Selection (Custom)'}
+                      </span>
+                    </span>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    {AVAILABLE_AI_BOTS.map((bot) => (
-                      <div
-                        key={bot.id}
-                        className="p-3.5 bg-crust border border-surface0 space-y-2 flex flex-col justify-between"
+                    {!inheritAgents && (
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingRepoBot(true)}
+                        className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs rounded transition-colors cursor-pointer border border-surface2/40"
                       >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{bot.avatarEmoji}</span>
-                            <div>
-                              <span className="font-medium text-xs block leading-tight">{bot.name}</span>
-                              <span className="text-[10px] text-subtext0 font-mono">{bot.tagline}</span>
-                            </div>
-                          </div>
-                          <p className="text-[11px] text-subtext0 line-clamp-2 mt-1">{bot.description}</p>
+                        <Plus className="w-3 h-3" />
+                        <span>Add Repo Bot</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* FORM TO ADD REPO-EXCLUSIVE CUSTOM BOT */}
+                  {isAddingRepoBot && !inheritAgents && (
+                    <form
+                      onSubmit={handleSaveRepoCustomBot}
+                      className="p-4 bg-crust border border-accent/40 rounded space-y-3 animate-in fade-in duration-150"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-xs text-text flex items-center gap-1.5">
+                          <Bot className="w-4 h-4 text-accent" />
+                          <span>Create Repo-Exclusive Reviewer Bot</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingRepoBot(false)}
+                          className="text-subtext0 hover:text-text cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-3">
+                        <div className="col-span-1">
+                          <label className="block text-[10px] text-subtext0 mb-1">Emoji</label>
+                          <input
+                            type="text"
+                            maxLength={4}
+                            value={repoBotEmoji}
+                            onChange={(e) => setRepoBotEmoji(e.target.value)}
+                            className="w-12 h-8 text-center text-base bg-surface0 border border-surface1 rounded text-text"
+                          />
                         </div>
-                        <div className="pt-2 border-t border-surface0/60 flex items-center justify-between text-[11px]">
-                          <span className="text-subtext0 flex items-center gap-1 font-mono">
-                            <Check className="w-3 h-3 text-subtext0" /> Enabled
-                          </span>
-                          <span className="text-subtext1 capitalize font-mono">{bot.category}</span>
+                        <div className="col-span-3">
+                          <label className="block text-[10px] text-subtext0 mb-1">Bot Name *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Migration Linter"
+                            value={repoBotName}
+                            onChange={(e) => setRepoBotName(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text"
+                          />
                         </div>
                       </div>
-                    ))}
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] text-subtext0 mb-1">Tagline</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Database schema backwards compatibility"
+                            value={repoBotTagline}
+                            onChange={(e) => setRepoBotTagline(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-subtext0 mb-1">Category</label>
+                          <select
+                            value={repoBotCategory}
+                            onChange={(e) => setRepoBotCategory(e.target.value as BotCategory)}
+                            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text cursor-pointer"
+                          >
+                            {BOT_CATEGORIES.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-subtext0 mb-1">System Prompt *</label>
+                        <textarea
+                          rows={3}
+                          required
+                          value={repoBotPrompt}
+                          onChange={(e) => setRepoBotPrompt(e.target.value)}
+                          placeholder="Specialized instructions for this repository..."
+                          className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 rounded text-xs font-mono text-text"
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingRepoBot(false)}
+                          className="px-3 py-1 bg-surface0 text-xs rounded cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-1 bg-accent text-[#11111b] font-semibold text-xs rounded cursor-pointer shadow-xs"
+                        >
+                          Save Bot
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* CARDS GRID */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* INHERITED MODE: Show all enabled global bots */}
+                    {inheritAgents &&
+                      globalReviewers
+                        .filter((b) => b.enabled)
+                        .map((bot) => (
+                          <div
+                            key={bot.id}
+                            className="p-3 bg-crust border border-surface0 space-y-2 flex flex-col justify-between hover:border-surface1 transition-colors"
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl p-1 bg-surface0 rounded">{bot.avatarEmoji}</span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-semibold text-xs text-text truncate">
+                                      {bot.name}
+                                    </span>
+                                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-brand/10 text-brand border border-brand/20">
+                                      Global
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-subtext0 font-mono truncate block">
+                                    {bot.tagline}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-[11px] text-subtext0 line-clamp-2 mt-1">
+                                {bot.description}
+                              </p>
+                            </div>
+                            <div className="pt-2 border-t border-surface0/60 flex items-center justify-between text-[11px]">
+                              <span className="text-brand flex items-center gap-1 font-mono font-medium">
+                                <Check className="w-3 h-3 text-brand" /> Active in MRs
+                              </span>
+                              <span className="text-subtext1 capitalize font-mono text-[10px]">
+                                {bot.category}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+
+                    {/* CUSTOM MODE: Show global + repo custom bots with checkbox toggles */}
+                    {!inheritAgents &&
+                      [...globalReviewers, ...repoExclusiveBots].map((bot) => {
+                        const isChecked = activeBotSet.has(bot.id);
+                        const isRepoExclusive = repoExclusiveBots.some((b) => b.id === bot.id);
+
+                        return (
+                          <div
+                            key={bot.id}
+                            onClick={() => toggleRepoActiveBotId(currentRepoId, bot.id)}
+                            className={`p-3 border space-y-2 flex flex-col justify-between cursor-pointer transition-all ${
+                              isChecked
+                                ? 'bg-surface0/30 border-surface1 shadow-xs'
+                                : 'bg-crust border-surface0/50 opacity-60'
+                            }`}
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => toggleRepoActiveBotId(currentRepoId, bot.id)}
+                                  className="rounded border-surface1 text-accent focus:ring-0 cursor-pointer"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                <span className="text-xl p-1 bg-surface0 rounded">{bot.avatarEmoji}</span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-semibold text-xs text-text truncate">
+                                      {bot.name}
+                                    </span>
+                                    {isRepoExclusive ? (
+                                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-accent/20 text-accent border border-accent/30">
+                                        Repo Custom
+                                      </span>
+                                    ) : (
+                                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-surface1 text-subtext0">
+                                        Global
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-subtext0 font-mono truncate block">
+                                    {bot.tagline}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-[11px] text-subtext0 line-clamp-2 mt-1">
+                                {bot.description}
+                              </p>
+                            </div>
+
+                            <div className="pt-2 border-t border-surface0/60 flex items-center justify-between text-[11px]">
+                              <span
+                                className={`flex items-center gap-1 font-mono text-[10px] ${
+                                  isChecked ? 'text-accent font-medium' : 'text-subtext0'
+                                }`}
+                              >
+                                {isChecked ? '✓ Enabled for repo' : 'Disabled for repo'}
+                              </span>
+                              {isRepoExclusive && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteRepoCustomReviewer(currentRepoId, bot.id);
+                                  }}
+                                  className="text-subtext0 hover:text-red-400 p-0.5 cursor-pointer"
+                                  title="Delete repo-exclusive bot"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
 
                 {/* CUSTOM RULES FOR THIS REPOSITORY */}
-                <div className="p-4 bg-crust border border-surface0 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-subtext0" />
-                    <span className="font-medium text-xs text-text">
-                      Custom Repository Rules / Instructions for AI Bots
+                <div className="p-4 bg-crust border border-surface0 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-brand" />
+                      <span className="font-semibold text-xs text-text">
+                        Custom Repository Instructions &amp; Rules
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-subtext0 font-mono">
+                      Appended to bot reviewer prompts for this repo
                     </span>
                   </div>
+
                   <p className="text-xs text-subtext0">
-                    Add repository-specific instructions (e.g. coding standards, framework versions, security guidelines).
+                    Add project-specific coding standards, architecture constraints, or framework conventions. These directives apply to all active reviewers when evaluating Virtual MRs in this repository.
                   </p>
+
+                  {/* QUICK SNIPPETS PILLS */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                    <span className="text-[10px] uppercase font-bold text-subtext0/70 mr-1">
+                      Quick Snippets:
+                    </span>
+                    {RULE_SNIPPETS.map((snip) => (
+                      <button
+                        key={snip.label}
+                        type="button"
+                        onClick={() => handleAppendSnippet(snip.text)}
+                        className="px-2 py-0.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-[11px] rounded transition-colors cursor-pointer border border-surface1"
+                        title={snip.text}
+                      >
+                        + {snip.label}
+                      </button>
+                    ))}
+                  </div>
+
                   <textarea
                     rows={4}
                     value={customRules}
                     onChange={(e) => setCustomRules(e.target.value)}
-                    placeholder="e.g. This project requires strict TypeScript, no any; all API errors must be handled..."
-                    className="w-full px-3 py-2 rounded bg-surface0 border border-surface1 text-text text-xs font-mono focus:outline-none focus:border-accent"
+                    placeholder="e.g. This project requires strict TypeScript without 'any'; verify Prisma query transactions; all exported APIs must include JSDoc comments..."
+                    className="w-full px-3 py-2 rounded bg-surface0 border border-surface1 text-text text-xs font-mono focus:outline-none focus:border-brand leading-relaxed"
                   />
                 </div>
               </div>

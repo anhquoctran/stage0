@@ -94,12 +94,37 @@ export interface NewMrDraft {
   isCommitsLoading: boolean;
 }
 
+export type BotCategory =
+  | 'security'
+  | 'performance'
+  | 'architecture'
+  | 'style'
+  | 'test'
+  | 'documentation'
+  | 'custom';
+
+export interface BotReviewer {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  category: BotCategory;
+  avatarEmoji: string;
+  systemPrompt: string;
+  provider?: string;
+  model?: string;
+  temperature?: number;
+  enabled: boolean;
+  isBuiltin?: boolean;
+}
+
 export interface RepoSettings {
   repoId: string;
   defaultBaseBranch: string;
   inheritGlobalAgents: boolean;
   customAgentRules?: string;
   activeAgentIds: string[];
+  customReviewers?: BotReviewer[];
 }
 
 export interface GitRemoteDetail {
@@ -119,13 +144,54 @@ export interface AiReviewerBotMeta {
   id: string;
   name: string;
   tagline?: string;
-  category?: 'security' | 'performance' | 'style' | 'architecture' | 'custom';
+  category?: BotCategory;
   avatarEmoji?: string;
   description?: string;
   defaultRules?: string;
 }
 
-export const AVAILABLE_AI_BOTS: AiReviewerBotMeta[] = [];
+export const AVAILABLE_AI_BOTS: AiReviewerBotMeta[] = [
+  {
+    id: 'security-sentinel',
+    name: 'Security Sentinel',
+    tagline: 'OWASP, Secrets & Vulnerability Scanner',
+    description: 'Scans for hardcoded credentials, injection attacks, XSS, and unvalidated inputs.',
+    category: 'security',
+    avatarEmoji: '🛡️',
+  },
+  {
+    id: 'performance-optimizer',
+    name: 'Performance Optimizer',
+    tagline: 'Complexity, Memory & Query Analyzer',
+    description: 'Detects N+1 queries, memory leaks, and inefficient algorithms.',
+    category: 'performance',
+    avatarEmoji: '⚡',
+  },
+  {
+    id: 'architecture-sentinel',
+    name: 'Clean Architecture Guide',
+    tagline: 'SOLID, Modularity & Design Patterns',
+    description: 'Evaluates separation of concerns, DRY principles, and architectural scalability.',
+    category: 'architecture',
+    avatarEmoji: '🏗️',
+  },
+  {
+    id: 'bug-hunter',
+    name: 'Bug Hunter',
+    tagline: 'Edge Cases, Race Conditions & Nullability',
+    description: 'Hunts down off-by-one errors, race conditions, and type safety loopholes.',
+    category: 'test',
+    avatarEmoji: '🐛',
+  },
+  {
+    id: 'documentation-spec',
+    name: 'API & Documentation Guide',
+    tagline: 'Public Contracts, Docstrings & SemVer',
+    description: 'Validates clear code comments, parameter documentation, and breaking changes.',
+    category: 'documentation',
+    avatarEmoji: '📝',
+  },
+];
 
 export const PRESET_REPO_LABELS: Omit<RepoLabel, 'id' | 'repoId'>[] = [
   { name: 'feature', color: '#3b82f6', description: 'New feature or enhancement' },

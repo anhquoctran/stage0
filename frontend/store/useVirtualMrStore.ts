@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
 import { useGitStore } from './useGitStore';
+import { useBotReviewersStore } from './useBotReviewersStore';
 import {
   VirtualMrSession,
   VirtualMrStatus,
@@ -287,10 +288,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
                   name: ds.assignee_name || userName,
                   email: ds.assignee_email || userEmail,
                 },
-                reviewers: [
-                  { agentId: 'security-bot', agentName: 'Security Auditor Bot', reviewStatus: 'pending', assignedAt: ds.created_at },
-                  { agentId: 'codestyle-bot', agentName: 'Code Style & Quality Bot', reviewStatus: 'pending', assignedAt: ds.created_at },
-                ],
+                reviewers: [],
                 labels: attachedLabels,
                 discussions,
                 commits,
@@ -411,11 +409,8 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       compareBranch: compare,
       status: 'open',
       assignee: sessions[0]?.assignee || { name: 'Local User', email: 'user@local.stage0' },
-      reviewers: [
-        { agentId: 'security-bot', agentName: 'Security Auditor Bot', reviewStatus: 'pending', assignedAt: new Date().toISOString() },
-        { agentId: 'codestyle-bot', agentName: 'Code Style & Quality Bot', reviewStatus: 'pending', assignedAt: new Date().toISOString() },
-      ],
-      labels: (repoLabels || []).slice(0, 1),
+      reviewers: [],
+      labels: [],
       discussions: [],
       commits,
       isPinned: false,
@@ -647,12 +642,22 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       compareBranch: draftMr.compareBranch,
       status: 'open',
       assignee: sessions[0]?.assignee || { name: 'Local User', email: 'user@local.stage0' },
-      reviewers: AVAILABLE_AI_BOTS.filter((b) => draftMr.selectedBots.includes(b.id)).map((bot) => ({
-        agentId: bot.id,
-        agentName: bot.name,
-        reviewStatus: 'pending',
-        assignedAt: new Date().toISOString(),
-      })),
+      reviewers: (() => {
+        const repoId = currentRepoId;
+        const allBots = [
+          ...useBotReviewersStore.getState().globalReviewers,
+          ...(repoId ? useBotReviewersStore.getState().repoCustomReviewers[repoId] || [] : []),
+        ];
+        return draftMr.selectedBots.map((botId) => {
+          const bot = allBots.find((b) => b.id === botId) || AVAILABLE_AI_BOTS.find((b) => b.id === botId);
+          return {
+            agentId: botId,
+            agentName: bot?.name || botId,
+            reviewStatus: 'pending' as const,
+            assignedAt: new Date().toISOString(),
+          };
+        });
+      })(),
       labels: (repoLabels || []).filter((l) => draftMr.selectedLabels.includes(l.id)),
       discussions: [],
       commits: draftMr.commits,
@@ -869,7 +874,12 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   },
 
   assignReviewerBot: async (sessionId, botId) => {
-    const bot = AVAILABLE_AI_BOTS.find((b) => b.id === botId);
+    const { currentRepoId } = get();
+    const allBots = [
+      ...useBotReviewersStore.getState().globalReviewers,
+      ...(currentRepoId ? useBotReviewersStore.getState().repoCustomReviewers[currentRepoId] || [] : []),
+    ];
+    const bot = allBots.find((b) => b.id === botId) || AVAILABLE_AI_BOTS.find((b) => b.id === botId);
     if (!bot) return;
 
     const { sessions } = get();
@@ -1246,10 +1256,14 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     }
   },
 
-  reverifyDiscussionFix: async (discussionId, agentId = 'security-bot') => {
-    const { sessions } = get();
+  reverifyDiscussionFix: async (discussionId, agentId = 'security-sentinel') => {
+    const { sessions, currentRepoId } = get();
+    const allBots = [
+      ...useBotReviewersStore.getState().globalReviewers,
+      ...(currentRepoId ? useBotReviewersStore.getState().repoCustomReviewers[currentRepoId] || [] : []),
+    ];
     // Simulate smart verification flow based on current file/lines
-    const bot = AVAILABLE_AI_BOTS.find((b) => b.id === agentId) || AVAILABLE_AI_BOTS[0];
+    const bot = allBots.find((b) => b.id === agentId) || AVAILABLE_AI_BOTS.find((b) => b.id === agentId) || AVAILABLE_AI_BOTS[0];
 
     // 1. Mark as verifying
     set({
