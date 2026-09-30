@@ -191,7 +191,7 @@ export const TopBar: React.FC = () => {
                   type="button"
                   disabled={isSyncing}
                   onClick={() => runSync('fetch')}
-                  className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center rounded hover:bg-surface0 text-white hover:text-primary transition-colors disabled:opacity-40 cursor-pointer group"
+                  className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
                   title="git fetch --all --prune (Ctrl+Shift+F)"
                 >
                   <RefreshCw
@@ -207,7 +207,7 @@ export const TopBar: React.FC = () => {
                   className={`relative flex items-stretch rounded transition-colors cursor-pointer ${
                     isPullMenuOpen
                       ? 'bg-surface0 text-primary'
-                      : 'text-white hover:bg-surface0 hover:text-primary'
+                      : 'text-subtext1 hover:bg-surface0 hover:text-text'
                   }`}
                   ref={pullMenuRef}
                 >
@@ -280,7 +280,7 @@ export const TopBar: React.FC = () => {
                   className={`relative flex items-stretch rounded transition-colors cursor-pointer ${
                     isRebaseMenuOpen
                       ? 'bg-surface0 text-primary'
-                      : 'text-white hover:bg-surface0 hover:text-primary'
+                      : 'text-subtext1 hover:bg-surface0 hover:text-text'
                   }`}
                   ref={rebaseMenuRef}
                 >
@@ -404,7 +404,7 @@ export const TopBar: React.FC = () => {
                   type="button"
                   disabled={isSyncing}
                   onClick={refreshDiff}
-                  className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center rounded hover:bg-surface0 text-white hover:text-primary transition-colors disabled:opacity-40 cursor-pointer group"
+                  className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
                   title="Refresh MR diff & conflict simulation (Ctrl+R)"
                 >
                   <RotateCw className="w-5 h-5 text-current shrink-0 transition-colors" />
@@ -418,7 +418,7 @@ export const TopBar: React.FC = () => {
                   type="button"
                   disabled={!currentRepo}
                   onClick={() => openRepoSettings('remotes')}
-                  className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center rounded hover:bg-surface0 text-white hover:text-primary transition-colors disabled:opacity-40 cursor-pointer group"
+                  className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
                   title="Repository Settings (Ctrl+Alt+S)"
                 >
                   <FolderCog className="w-5 h-5 text-current shrink-0 transition-colors" />
