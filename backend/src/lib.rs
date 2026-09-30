@@ -2,6 +2,7 @@ pub mod commands;
 pub mod credentials;
 pub mod db;
 pub mod git;
+pub mod menu;
 pub mod sandbox;
 pub mod watcher;
 
@@ -33,9 +34,17 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             {
                 if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.set_decorations(true);
+                    let _ = window.set_decorations(false);
+                }
+                if let Ok(m) = menu::create_macos_menu(handle) {
+                    let _ = handle.set_menu(m);
                 }
             }
+
+            let app_handle = app.handle().clone();
+            app.on_menu_event(move |_app, event| {
+                menu::handle_menu_event(&app_handle, event);
+            });
 
             Ok(())
         })
