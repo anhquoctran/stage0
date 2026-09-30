@@ -12,11 +12,11 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .separator()
         .item(&PredefinedMenuItem::services(app, None)?)
         .separator()
-        .item(&PredefinedMenuItem::hide(app, Some("Hide Stage0"), None)?)
-        .item(&PredefinedMenuItem::hide_others(app, Some("Hide Others"), None)?)
-        .item(&PredefinedMenuItem::show_all(app, None)?)
+        .item(&PredefinedMenuItem::hide(app, Some("Hide Stage0"))?)
+        .item(&PredefinedMenuItem::hide_others(app, Some("Hide Others"))?)
+        .item(&PredefinedMenuItem::show_all(app, Some("Show All"))?)
         .separator()
-        .item(&PredefinedMenuItem::quit(app, Some("Quit Stage0"), None)?)
+        .item(&PredefinedMenuItem::quit(app, Some("Quit Stage0"))?)
         .build()?;
 
     // 2. File Menu
@@ -100,7 +100,13 @@ pub fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
     match id {
         "zoom" => {
             if let Some(window) = app.get_webview_window("main") {
-                let _ = window.toggle_maximize();
+                if let Ok(is_max) = window.is_maximized() {
+                    if is_max {
+                        let _ = window.unmaximize();
+                    } else {
+                        let _ = window.maximize();
+                    }
+                }
             }
         }
         action => {
