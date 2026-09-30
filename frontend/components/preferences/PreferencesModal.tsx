@@ -20,6 +20,7 @@ import {
   Key,
   Bot,
   Box,
+  ShieldCheck,
 } from 'lucide-react';
 import { SUPPORTED_FONTS } from '../../constants/fonts';
 import {
@@ -37,6 +38,7 @@ import {
 } from '../../store/useThemeStore';
 import { GitCredentialsTab } from './GitCredentialsTab';
 import { AiMcpTab } from './AiMcpTab';
+import { BotReviewersTab } from './BotReviewersTab';
 import { SandboxTab } from './SandboxTab';
 import { useGitStore } from '../../store/useGitStore';
 import { useAiMcpStore } from '../../store/useAiMcpStore';
@@ -44,7 +46,7 @@ import { DEFAULT_AI_CONFIG } from '../../constants/aiPresets';
 import { AiConfig } from '../../types/ai';
 import { SandboxType } from '../../types/git';
 
-type PreferenceTab = 'appearance' | 'fonts' | 'credentials' | 'ai' | 'sandbox';
+type PreferenceTab = 'appearance' | 'fonts' | 'credentials' | 'ai' | 'reviewers' | 'sandbox';
 
 interface PreferencesBaseline {
   themeMode: ThemeMode;
@@ -435,6 +437,12 @@ export const PreferencesModal: React.FC = () => {
       sublabel: 'Models, Agents & Tools',
       icon: <Bot className="w-4 h-4" />,
       unsavedCount: unsavedBreakdown.ai,
+    },
+    {
+      id: 'reviewers',
+      label: 'Bot Reviewers',
+      sublabel: 'Global Review Agents',
+      icon: <ShieldCheck className="w-4 h-4" />,
     },
     {
       id: 'sandbox',
@@ -1001,7 +1009,14 @@ export const PreferencesModal: React.FC = () => {
               </div>
             )}
 
-            {/* TAB 5: SANDBOX ENGINE */}
+            {/* TAB 5: BOT REVIEWERS (GLOBAL SCOPE) */}
+            {activeTab === 'reviewers' && (
+              <div className="animate-in fade-in duration-100">
+                <BotReviewersTab />
+              </div>
+            )}
+
+            {/* TAB 6: SANDBOX ENGINE */}
             {activeTab === 'sandbox' && (
               <div className="animate-in fade-in duration-100">
                 <SandboxTab

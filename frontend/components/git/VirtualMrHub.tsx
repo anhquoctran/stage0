@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   CheckCircle2,
   XCircle,
@@ -16,7 +16,8 @@ import {
 } from 'lucide-react';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
-import { AVAILABLE_AI_BOTS } from '../../types/virtualMr';
+import { useBotReviewersStore } from '../../store/useBotReviewersStore';
+import { BotReviewer } from '../../types/virtualMr';
 import { MarkdownEditor } from '../common/MarkdownEditor';
 import { MarkdownPreview } from '../common/MarkdownPreview';
 import { TabBranchSelector } from '../git/TabBranchSelector';
@@ -36,7 +37,13 @@ export const VirtualMrHub: React.FC = () => {
     createDiscussion,
     triggerIncrementalReReview,
     openRepoSettings,
+    repoSettings,
   } = useVirtualMrStore();
+
+  const { getEffectiveReviewers } = useBotReviewersStore();
+  const { reviewers: effectiveReviewers } = useMemo(() => {
+    return getEffectiveReviewers(currentRepo?.id, repoSettings?.inheritGlobalAgents);
+  }, [currentRepo?.id, repoSettings?.inheritGlobalAgents, getEffectiveReviewers]);
 
   const session = getActiveSession();
 
@@ -324,7 +331,7 @@ export const VirtualMrHub: React.FC = () => {
                 <div className="px-3 py-1.5 text-[11px] font-semibold text-subtext0 uppercase tracking-wider">
                   Select AI Reviewer Bot
                 </div>
-                {AVAILABLE_AI_BOTS.map((bot) => {
+                {effectiveReviewers.map((bot: BotReviewer) => {
                   const isAssigned = session.reviewers.some((r) => r.agentId === bot.id);
                   return (
                     <button
