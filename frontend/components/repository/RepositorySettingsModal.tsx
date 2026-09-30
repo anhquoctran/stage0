@@ -11,8 +11,10 @@ import {
   Edit2,
   RefreshCw,
   Check,
+  AlertCircle,
   Shield,
   Sparkles,
+  FolderCog,
 } from 'lucide-react';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
@@ -68,7 +70,9 @@ export const RepositorySettingsModal: React.FC<Props> = ({
 
   // Form states
   const [testingRemoteName, setTestingRemoteName] = useState<string | null>(null);
-  const [remoteTestResult, setRemoteTestResult] = useState<{ [name: string]: string }>({});
+  const [remoteTestResult, setRemoteTestResult] = useState<{
+    [name: string]: { success: boolean; message: string };
+  }>({});
 
   // Add Remote
   const [isAddingRemote, setIsAddingRemote] = useState(false);
@@ -120,10 +124,25 @@ export const RepositorySettingsModal: React.FC<Props> = ({
     setTestingRemoteName(name);
     try {
       const res = await testRemote(name);
-      setRemoteTestResult((prev) => ({ ...prev, [name]: res }));
-      showToast(`Test ${name}: Connection successful`);
+      if (res.toLowerCase().includes('no repo open') || res.toLowerCase().includes('fail') || res.toLowerCase().includes('error')) {
+        setRemoteTestResult((prev) => ({
+          ...prev,
+          [name]: { success: false, message: res },
+        }));
+        showToast(`Test ${name}: Connection failed`);
+      } else {
+        setRemoteTestResult((prev) => ({
+          ...prev,
+          [name]: { success: true, message: res },
+        }));
+        showToast(`Test ${name}: Connection successful`);
+      }
     } catch (err: any) {
-      setRemoteTestResult((prev) => ({ ...prev, [name]: `Error: ${err}` }));
+      const errMsg = typeof err === 'string' ? err : err?.message || JSON.stringify(err);
+      setRemoteTestResult((prev) => ({
+        ...prev,
+        [name]: { success: false, message: errMsg.startsWith('Error:') ? errMsg : `Error: ${errMsg}` },
+      }));
       showToast(`Test ${name}: Connection failed`);
     } finally {
       setTestingRemoteName(null);
@@ -227,84 +246,142 @@ export const RepositorySettingsModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="bg-mantle border border-surface0 w-full max-w-4xl h-[640px] rounded-xl shadow-2xl flex flex-col overflow-hidden text-text text-sm">
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
+      <div className="bg-mantle border border-surface0 w-full max-w-4xl h-[640px] shadow-2xl flex flex-col overflow-hidden text-text text-sm animate-in zoom-in-95 duration-150">
         {/* HEADER */}
         <div
           data-tauri-drag-region
-          className="px-6 py-4 border-b border-surface0 flex items-center justify-between bg-crust/50 cursor-default"
+          className="px-6 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60 cursor-default"
         >
-          <div data-tauri-drag-region className="flex items-center gap-3 pointer-events-none">
-            <div className="w-8 h-8 rounded-lg bg-surface0 flex items-center justify-center text-text">
-              <GitBranch className="w-4 h-4 text-subtext0" />
+          <div data-tauri-drag-region className="flex items-center gap-2.5 pointer-events-none">
+            <div className="w-7 h-7 bg-surface0 border border-surface1 flex items-center justify-center text-text shadow-xs">
+              <FolderCog className="w-4 h-4 text-subtext0" />
             </div>
             <div>
-              <h2 className="font-semibold text-base leading-tight">Repository Settings</h2>
-              <p className="text-xs text-subtext0 font-mono mt-0.5">{currentRepo.name} ({currentRepo.local_path})</p>
+              <h2 className="text-sm font-bold text-text">Repository Settings</h2>
+              <p className="text-[11px] text-subtext0 font-mono mt-0.5">{currentRepo.name} ({currentRepo.local_path})</p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+            className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+            title="Close (Esc)"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* BODY */}
         <div className="flex-1 flex overflow-hidden">
-          {/* SIDEBAR TABS */}
-          <div className="w-56 border-r border-surface0 bg-crust/30 p-2.5 space-y-1">
-            <button
-              onClick={() => setActiveTab('remotes')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer border-l-2 ${
-                activeTab === 'remotes'
-                  ? 'bg-brand/10 text-brand font-medium shadow-xs border-brand'
-                  : 'border-transparent text-subtext0 hover:text-text hover:bg-surface0/50'
-              }`}
-            >
-              <Globe className="w-4 h-4 text-subtext0" />
-              <span>Remotes</span>
-            </button>
+          {/* SIDEBAR TABS (Left) */}
+          <div className="w-60 bg-base/40 border-r border-surface0 flex flex-col shrink-0 select-none">
+            <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-subtext0/70 border-b border-surface0/40">
+              Repository
+            </div>
 
-            <button
-              onClick={() => setActiveTab('branches')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer border-l-2 ${
-                activeTab === 'branches'
-                  ? 'bg-brand/10 text-brand font-medium shadow-xs border-brand'
-                  : 'border-transparent text-subtext0 hover:text-text hover:bg-surface0/50'
-              }`}
-            >
-              <GitBranch className="w-4 h-4 text-subtext0" />
-              <span>Branches & Tags</span>
-            </button>
+            <div className="flex flex-col">
+              <button
+                type="button"
+                onClick={() => setActiveTab('remotes')}
+                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all cursor-pointer border-l-2 ${
+                  activeTab === 'remotes'
+                    ? 'bg-brand/10 text-brand font-semibold border-l-brand'
+                    : 'border-l-transparent text-subtext0 hover:bg-surface0/50 hover:text-text'
+                }`}
+              >
+                <div
+                  className={`mt-0.5 shrink-0 transition-colors ${
+                    activeTab === 'remotes' ? 'text-brand' : 'text-subtext0'
+                  }`}
+                >
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs leading-tight font-medium">Remotes</div>
+                  <div className="text-[10px] text-subtext0 truncate mt-0.5">
+                    Origin &amp; upstream URLs
+                  </div>
+                </div>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('labels')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer border-l-2 ${
-                activeTab === 'labels'
-                  ? 'bg-brand/10 text-brand font-medium shadow-xs border-brand'
-                  : 'border-transparent text-subtext0 hover:text-text hover:bg-surface0/50'
-              }`}
-            >
-              <Bookmark className="w-4 h-4 text-subtext0" />
-              <span>Labels</span>
-              <span className="ml-auto text-[11px] px-1.5 py-0.5 rounded-full bg-surface1 font-mono">
-                {repoLabels.length}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('branches')}
+                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all cursor-pointer border-l-2 ${
+                  activeTab === 'branches'
+                    ? 'bg-brand/10 text-brand font-semibold border-l-brand'
+                    : 'border-l-transparent text-subtext0 hover:bg-surface0/50 hover:text-text'
+                }`}
+              >
+                <div
+                  className={`mt-0.5 shrink-0 transition-colors ${
+                    activeTab === 'branches' ? 'text-brand' : 'text-subtext0'
+                  }`}
+                >
+                  <GitBranch className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs leading-tight font-medium">Branches &amp; Tags</div>
+                  <div className="text-[10px] text-subtext0 truncate mt-0.5">
+                    Default base, tags &amp; branches
+                  </div>
+                </div>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('agents')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors cursor-pointer border-l-2 ${
-                activeTab === 'agents'
-                  ? 'bg-brand/10 text-brand font-medium shadow-xs border-brand'
-                  : 'border-transparent text-subtext0 hover:text-text hover:bg-surface0/50'
-              }`}
-            >
-              <Bot className="w-4 h-4 text-subtext0" />
-              <span>AI Reviewers</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('labels')}
+                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all cursor-pointer border-l-2 ${
+                  activeTab === 'labels'
+                    ? 'bg-brand/10 text-brand font-semibold border-l-brand'
+                    : 'border-l-transparent text-subtext0 hover:bg-surface0/50 hover:text-text'
+                }`}
+              >
+                <div
+                  className={`mt-0.5 shrink-0 transition-colors ${
+                    activeTab === 'labels' ? 'text-brand' : 'text-subtext0'
+                  }`}
+                >
+                  <Bookmark className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs leading-tight font-medium flex items-center justify-between">
+                    <span>Labels</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-surface1 font-mono text-subtext1">
+                      {repoLabels.length}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-subtext0 truncate mt-0.5">
+                    Virtual MR classification
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('agents')}
+                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all cursor-pointer border-l-2 ${
+                  activeTab === 'agents'
+                    ? 'bg-brand/10 text-brand font-semibold border-l-brand'
+                    : 'border-l-transparent text-subtext0 hover:bg-surface0/50 hover:text-text'
+                }`}
+              >
+                <div
+                  className={`mt-0.5 shrink-0 transition-colors ${
+                    activeTab === 'agents' ? 'text-brand' : 'text-subtext0'
+                  }`}
+                >
+                  <Bot className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs leading-tight font-medium">AI Reviewers</div>
+                  <div className="text-[10px] text-subtext0 truncate mt-0.5">
+                    Bots &amp; prompt directives
+                  </div>
+                </div>
+              </button>
+            </div>
           </div>
 
           {/* CONTENT AREA */}
@@ -321,7 +398,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                   </div>
                   <button
                     onClick={() => setIsAddingRemote(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add Remote</span>
@@ -332,7 +409,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                 {isAddingRemote && (
                   <form
                     onSubmit={handleAddRemote}
-                    className="p-4 rounded-lg bg-crust border border-surface0 space-y-3"
+                    className="p-4 bg-crust border border-surface0 space-y-3"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-xs text-text">Add New Remote</span>
@@ -389,14 +466,14 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                 {/* REMOTES LIST */}
                 <div className="space-y-3">
                   {remotesDetailed.length === 0 ? (
-                    <div className="p-8 text-center border border-dashed border-surface0 rounded-lg text-subtext0 text-xs">
+                    <div className="p-8 text-center border border-dashed border-surface0 text-subtext0 text-xs">
                       No remotes configured for this repository yet.
                     </div>
                   ) : (
                     remotesDetailed.map((rem) => (
                       <div
                         key={rem.name}
-                        className="p-4 rounded-lg bg-crust border border-surface0 space-y-2.5"
+                        className="p-4 bg-crust border border-surface0 space-y-2.5"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -449,19 +526,19 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                               type="text"
                               value={editingRemoteUrl}
                               onChange={(e) => setEditingRemoteUrl(e.target.value)}
-                              className="flex-1 px-3 py-1 rounded bg-surface0 border border-surface1 text-xs font-mono text-text focus:outline-none"
+                              className="flex-1 px-3 py-1 bg-surface0 border border-surface1 text-xs font-mono text-text focus:outline-none"
                             />
                             <button
                               type="button"
                               onClick={() => handleSaveRemoteUrl(rem.name)}
-                              className="px-3 py-1 rounded bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs cursor-pointer shadow-xs"
+                              className="px-3 py-1 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs cursor-pointer shadow-xs"
                             >
                               Save
                             </button>
                             <button
                               type="button"
                               onClick={() => setEditingRemoteName(null)}
-                              className="px-2 py-1 rounded bg-surface0 text-xs cursor-pointer"
+                              className="px-2 py-1 bg-surface0 text-xs cursor-pointer"
                             >
                               Cancel
                             </button>
@@ -482,9 +559,21 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                         )}
 
                         {remoteTestResult[rem.name] && (
-                          <div className="p-2 rounded bg-surface0/60 border border-surface1 text-[11px] font-mono text-subtext0 flex items-center gap-2">
-                            <Check className="w-3.5 h-3.5 text-subtext0 shrink-0" />
-                            <span>{remoteTestResult[rem.name]}</span>
+                          <div
+                            className={`p-2 text-[11px] font-mono flex items-center gap-2 ${
+                              remoteTestResult[rem.name].success
+                                ? 'bg-green-700 text-white'
+                                : 'bg-[#8b0000] text-white'
+                            }`}
+                          >
+                            {remoteTestResult[rem.name].success ? (
+                              <Check className="w-3.5 h-3.5 text-white shrink-0" />
+                            ) : (
+                              <AlertCircle className="w-3.5 h-3.5 text-white shrink-0" />
+                            )}
+                            <span className="text-white font-medium">
+                              {remoteTestResult[rem.name].message}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -505,7 +594,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                 </div>
 
                 {/* DEFAULT BASE BRANCH */}
-                <div className="p-4 rounded-lg bg-crust border border-surface0 space-y-2">
+                <div className="p-4 bg-crust border border-surface0 space-y-2">
                   <label className="block text-xs font-medium text-text">Default Base Branch for Virtual MR</label>
                   <p className="text-xs text-subtext0">
                     The default target branch automatically selected when opening a new Virtual MR in this repository.
@@ -513,9 +602,9 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                   <select
                     value={defaultBaseBranch}
                     onChange={(e) => setDefaultBaseBranch(e.target.value)}
-                    className="mt-1 px-3 py-1.5 rounded-lg bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent w-64"
+                    className="mt-1 px-3 py-1.5 rounded bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent w-64"
                   >
-                    {(branches?.local || ['main', 'master']).map((b) => (
+                    {Array.from(new Set([...(branches?.local || []), ...(branches?.remote || [])])).map((b) => (
                       <option key={b} value={b}>
                         {b}
                       </option>
@@ -542,7 +631,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                   {isAddingBranch && (
                     <form
                       onSubmit={handleCreateBranch}
-                      className="p-3 rounded-lg bg-crust border border-surface0 flex items-center gap-2 text-xs"
+                      className="p-3 bg-crust border border-surface0 flex items-center gap-2 text-xs"
                     >
                       <input
                         type="text"
@@ -580,7 +669,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                     </form>
                   )}
 
-                  <div className="max-h-40 overflow-y-auto divide-y divide-surface0 rounded-lg border border-surface0 bg-crust/50">
+                  <div className="max-h-40 overflow-y-auto divide-y divide-surface0 border border-surface0 bg-crust/50">
                     {(branches?.local || []).map((b) => (
                       <div key={b} className="px-3 py-2 flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
@@ -635,7 +724,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                   {isAddingTag && (
                     <form
                       onSubmit={handleCreateTag}
-                      className="p-3 rounded-lg bg-crust border border-surface0 space-y-2 text-xs"
+                      className="p-3 bg-crust border border-surface0 space-y-2 text-xs"
                     >
                       <div className="grid grid-cols-2 gap-2">
                         <input
@@ -672,7 +761,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                     </form>
                   )}
 
-                  <div className="max-h-40 overflow-y-auto divide-y divide-surface0 rounded-lg border border-surface0 bg-crust/50">
+                  <div className="max-h-40 overflow-y-auto divide-y divide-surface0 border border-surface0 bg-crust/50">
                     {tags.length === 0 ? (
                       <div className="p-4 text-center text-subtext0 text-xs">No tags found</div>
                     ) : (
@@ -716,7 +805,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={loadPresetLabels}
-                      className="px-2.5 py-1.5 rounded-lg bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                      className="px-2.5 py-1.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer border border-surface1"
                     >
                       Load Presets
                     </button>
@@ -728,7 +817,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                         setLabelFormColor('#3b82f6');
                         setIsAddingLabel(true);
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>New Label</span>
@@ -740,7 +829,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                 {(isAddingLabel || editingLabelId) && (
                   <form
                     onSubmit={handleSaveLabel}
-                    className="p-4 rounded-lg bg-crust border border-surface0 space-y-3"
+                    className="p-4 bg-crust border border-surface0 space-y-3"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-xs text-text">
@@ -832,7 +921,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                   {repoLabels.map((lbl) => (
                     <div
                       key={lbl.id}
-                      className="p-3 rounded-lg bg-crust border border-surface0 flex items-center justify-between gap-3 group"
+                      className="p-3 bg-crust border border-surface0 flex items-center justify-between gap-3 group"
                     >
                       <div className="min-w-0 flex-1">
                         <span
@@ -884,7 +973,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                 </div>
 
                 {/* INHERITANCE TOGGLE */}
-                <div className="p-4 rounded-lg bg-crust border border-surface0 flex items-start gap-3">
+                <div className="p-4 bg-crust border border-surface0 flex items-start gap-3">
                   <input
                     type="checkbox"
                     id="inherit-toggle"
@@ -913,7 +1002,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                     {AVAILABLE_AI_BOTS.map((bot) => (
                       <div
                         key={bot.id}
-                        className="p-3.5 rounded-lg bg-crust border border-surface0 space-y-2 flex flex-col justify-between"
+                        className="p-3.5 bg-crust border border-surface0 space-y-2 flex flex-col justify-between"
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
@@ -937,7 +1026,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                 </div>
 
                 {/* CUSTOM RULES FOR THIS REPOSITORY */}
-                <div className="p-4 rounded-lg bg-crust border border-surface0 space-y-2">
+                <div className="p-4 bg-crust border border-surface0 space-y-2">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-subtext0" />
                     <span className="font-medium text-xs text-text">
@@ -961,22 +1050,19 @@ export const RepositorySettingsModal: React.FC<Props> = ({
         </div>
 
         {/* FOOTER */}
-        <div className="px-6 py-3.5 border-t border-surface0 flex items-center justify-between bg-crust/50">
-          <span className="text-xs text-subtext0">
-            Settings are persisted to Stage0's local SQLite database.
-          </span>
+        <div className="px-6 py-3.5 border-t border-surface0 flex items-center justify-end bg-base/60">
           <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 rounded-lg bg-surface0 hover:bg-surface1 text-xs transition-colors cursor-pointer"
+              className="px-4 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs transition-colors cursor-pointer border border-surface1"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveSettings}
-              className="px-4 py-1.5 rounded-lg bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs shadow-md shadow-brand/20 transition-all cursor-pointer"
+              className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand"
             >
               Save Settings
             </button>

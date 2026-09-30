@@ -11,6 +11,9 @@ interface TabBranchSelectorProps {
   } | null;
   onChange: (branch: string) => void;
   disabled?: boolean;
+  className?: string;
+  maxWidthClass?: string;
+  buttonClassName?: string;
 }
 
 export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
@@ -19,6 +22,9 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
   branches,
   onChange,
   disabled = false,
+  className,
+  maxWidthClass,
+  buttonClassName,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,7 +77,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
 
   return (
     <div
-      className="relative inline-flex items-center"
+      className={`relative inline-flex items-center ${className || ''}`}
       ref={dropdownRef}
       onClick={(e) => e.stopPropagation()}
     >
@@ -80,40 +86,40 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
         disabled={disabled || !branches}
         onClick={() => setIsOpen(!isOpen)}
         title={`${roleLabel}: ${value || 'Select branch'}`}
-        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-left transition-all max-w-[145px] ${
+        className={`inline-flex items-center gap-2 px-2.5 py-1 text-left transition-colors min-w-[110px] border ${
+          maxWidthClass || 'max-w-[360px]'
+        } ${
           disabled || !branches
-            ? 'bg-mantle/50 border-surface0/50 text-subtext0 cursor-not-allowed'
-            : isSource
-            ? 'bg-surface0/90 hover:bg-surface1 border-surface1 hover:border-brand/60 text-text cursor-pointer shadow-xs'
-            : 'bg-surface0/90 hover:bg-surface1 border-surface1 hover:border-brand/60 text-text cursor-pointer shadow-xs'
-        }`}
+            ? 'bg-surface0/40 border-surface0/60 text-subtext0/50 cursor-not-allowed'
+            : 'bg-base/70 hover:bg-surface0 border-surface0 hover:border-surface1 text-text cursor-pointer'
+        } ${buttonClassName || ''}`}
       >
-        <GitBranch className={`w-3 h-3 shrink-0 ${isSource ? 'text-brand' : 'text-subtext1'}`} />
-        <span className="truncate font-mono text-[11px] font-semibold text-text leading-tight">
+        <GitBranch className="w-3.5 h-3.5 shrink-0 text-brand" />
+        <span className="truncate font-mono text-xs font-medium text-text leading-tight">
           {value || (isSource ? 'compare...' : 'base...')}
         </span>
-        <ChevronDown className="w-2.5 h-2.5 text-subtext1 shrink-0 ml-0.5 opacity-70" />
+        <ChevronDown className="w-3 h-3 text-subtext0 shrink-0 ml-auto opacity-75" />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-64 rounded-md shadow-2xl bg-mantle border border-surface0 z-[120] overflow-hidden py-1 animate-in fade-in duration-100 text-left">
+        <div className="absolute left-0 top-full mt-1 min-w-[280px] w-max max-w-sm shadow-2xl bg-mantle border border-surface0 z-[120] overflow-hidden py-1 animate-in fade-in duration-100 text-left">
           {/* Header indicator */}
-          <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext1 border-b border-surface0/70 bg-base flex items-center justify-between">
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between">
             <span>{roleLabel}</span>
             <span className="font-mono text-[9px] text-brand lowercase">MR branch</span>
           </div>
 
           {/* Search box */}
-          <div className="p-2 border-b border-surface0 bg-base">
+          <div className="p-2 bg-base/40 border-b border-surface0/60">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-subtext1" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-subtext0" />
               <input
                 ref={inputRef}
                 type="text"
                 placeholder="Filter branches..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-2.5 py-1 bg-mantle border border-surface0 rounded text-xs text-text placeholder-subtext0 focus:outline-none focus:border-brand/60 font-mono"
+                className="w-full pl-8 pr-2.5 py-1 bg-mantle border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-none focus:border-brand font-mono"
               />
             </div>
           </div>
@@ -121,7 +127,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
           <div className="max-h-56 overflow-y-auto divide-y divide-surface0/60">
             {/* Local Branches */}
             <div className="py-1">
-              <div className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-subtext1 bg-mantle/80 flex items-center gap-1.5">
+              <div className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-subtext0 bg-mantle flex items-center gap-1.5">
                 <GitBranch className="w-3 h-3 text-brand" />
                 <span>Local Branches ({localBranches.length})</span>
               </div>
@@ -141,14 +147,14 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-mono transition-colors text-left cursor-pointer ${
                         isSelected
-                          ? 'bg-brand/15 text-brand font-semibold'
+                          ? 'bg-brand/10 text-brand font-medium'
                           : 'hover:bg-surface0 text-text'
                       }`}
                     >
                       <div className="flex items-center gap-1.5 truncate pr-2">
                         <span className="truncate">{branch}</span>
                         {isCurrent && (
-                          <span className="text-[9px] px-1 rounded bg-surface1 text-subtext1 font-sans">
+                          <span className="text-[9px] px-1 bg-surface0 border border-surface1/60 text-subtext0 font-sans">
                             HEAD
                           </span>
                         )}
@@ -163,8 +169,8 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
             {/* Remote Branches */}
             {remoteBranches.length > 0 && (
               <div className="py-1">
-                <div className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-subtext1 bg-mantle/80 flex items-center gap-1.5">
-                  <Globe className="w-3 h-3 text-subtext1" />
+                <div className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-subtext0 bg-mantle flex items-center gap-1.5">
+                  <Globe className="w-3 h-3 text-subtext0" />
                   <span>Remote Branches ({remoteBranches.length})</span>
                 </div>
                 {remoteBranches.map((branch) => {
@@ -179,7 +185,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-mono transition-colors text-left cursor-pointer ${
                         isSelected
-                          ? 'bg-brand/15 text-brand font-semibold'
+                          ? 'bg-brand/10 text-brand font-medium'
                           : 'hover:bg-surface0 text-text'
                       }`}
                     >

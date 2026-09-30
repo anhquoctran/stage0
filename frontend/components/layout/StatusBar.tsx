@@ -29,7 +29,7 @@ export const StatusBar: React.FC = () => {
     : 0;
 
   return (
-    <footer className="h-7 bg-mantle border-t border-surface0 px-3 flex items-center justify-between text-[11px] text-subtext1 shrink-0 select-none z-10">
+    <footer className="h-7 bg-mantle border-t border-surface0 pl-3 pr-3.5 flex items-center justify-between text-[11px] text-subtext1 shrink-0 select-none z-10">
       {/* Left: Repo & Active Branch */}
       <div className="flex items-center gap-3">
         {currentRepo ? (

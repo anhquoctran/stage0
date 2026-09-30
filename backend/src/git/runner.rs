@@ -48,3 +48,61 @@ pub fn run_git_strict(repo_path: &str, args: &[&str]) -> Result<String, String> 
     }
     Ok(res.stdout)
 }
+
+pub fn resolve_ref(repo_path: &str, r: &str) -> Result<(String, String), String> {
+    let trimmed = r.trim();
+    if trimmed.is_empty() {
+        return Err("Cannot resolve empty reference".to_string());
+    }
+
+    // 1. Try exact ref first (e.g. "feat/x", "HEAD", "origin/main", commit hash)
+    if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", trimmed]) {
+        return Ok((out.trim().to_string(), trimmed.to_string()));
+    }
+
+    // 2. If ref does not start with origin/ or refs/, try origin/<ref>
+    if !trimmed.starts_with("origin/") && !trimmed.starts_with("refs/") {
+        let origin_ref = format!("origin/{}", trimmed);
+        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", &origin_ref]) {
+            return Ok((out.trim().to_string(), origin_ref));
+        }
+
+        let remotes_ref = format!("remotes/origin/{}", trimmed);
+        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", &remotes_ref]) {
+            return Ok((out.trim().to_string(), remotes_ref));
+        }
+    }
+
+    // 3. If ref starts with origin/, try stripped local ref
+    if let Some(stripped) = trimmed.strip_prefix("origin/") {
+        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", stripped]) {
+            return Ok((out.trim().to_string(), stripped.to_string()));
+        }
+    }
+
+    // 4. If ref was "main" or "master", try fallback to the other
+    if trimmed == "main" || trimmed == "origin/main" {
+        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "master"]) {
+            return Ok((out.trim().to_string(), "master".to_string()));
+        }
+        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "origin/master"]) {
+            return Ok((out.trim().to_string(), "origin/master".to_string()));
+        }
+    } else if trimmed == "master" || trimmed == "origin/master" {
+        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "main"]) {
+            return Ok((out.trim().to_string(), "main".to_string()));
+        }
+        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "origin/main"]) {
+            return Ok((out.trim().to_string(), "origin/main".to_string()));
+        }
+    }
+
+    // 5. Try HEAD as ultimate fallback
+    if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "HEAD"]) {
+        return Ok((out.trim().to_string(), "HEAD".to_string()));
+    }
+
+    // 6. Fail with original error message from git
+    let out = run_git_strict(repo_path, &["rev-parse", "--short", trimmed])?;
+    Ok((out.trim().to_string(), trimmed.to_string()))
+}

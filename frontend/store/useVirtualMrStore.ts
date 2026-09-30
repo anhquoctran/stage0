@@ -70,7 +70,7 @@ interface VirtualMrState {
   toggleSessionLabel: (sessionId: string, labelId: string) => Promise<void>;
 
   // Labels CRUD
-  createRepoLabel: (name: string, color: string, description?: string) => Promise<void>;
+  createRepoLabel: (name: string, color: string, description?: string) => Promise<RepoLabel | void>;
   updateRepoLabel: (label: RepoLabel) => Promise<void>;
   deleteRepoLabel: (labelId: string) => Promise<void>;
   loadPresetLabels: () => Promise<void>;
@@ -164,9 +164,17 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       }
 
       if (!settings) {
+        const smartBase =
+          defaultBase ||
+          (availableBranches.includes('main') ? 'main' : undefined) ||
+          (availableBranches.includes('origin/main') ? 'origin/main' : undefined) ||
+          (availableBranches.includes('master') ? 'master' : undefined) ||
+          (availableBranches.includes('origin/master') ? 'origin/master' : undefined) ||
+          availableBranches[0] ||
+          'HEAD';
         settings = {
           repoId,
-          defaultBaseBranch: defaultBase || 'main',
+          defaultBaseBranch: smartBase,
           inheritGlobalAgents: true,
           customAgentRules: '',
           activeAgentIds: AVAILABLE_AI_BOTS.map((b) => b.id),
@@ -186,27 +194,6 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
         }));
       } catch (err) {
         console.warn('Failed to load repo labels:', err);
-      }
-
-      // Auto-load preset labels in parallel if empty
-      if (labels.length === 0) {
-        await Promise.allSettled(
-          PRESET_REPO_LABELS.map(async (p) => {
-            const id = `label-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-            try {
-              await invoke('create_repo_label', {
-                label: {
-                  id,
-                  repo_id: repoId,
-                  name: p.name,
-                  color: p.color,
-                  description: p.description,
-                },
-              });
-              labels.push({ id, repoId, ...p });
-            } catch {}
-          })
-        );
       }
 
       // 3. Load User Identity
@@ -342,9 +329,16 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
 
       // If no session exists in DB, automatically open draft creation tab
       if (sessions.length === 0) {
-        const base = settings?.defaultBaseBranch || availableBranches[0] || 'main';
-        const compare = availableBranches.find((b) => b !== base) || base;
-        await get().openNewMrDraft(base, compare);
+        const smartBase =
+          settings?.defaultBaseBranch ||
+          (availableBranches.includes('main') ? 'main' : undefined) ||
+          (availableBranches.includes('origin/main') ? 'origin/main' : undefined) ||
+          (availableBranches.includes('master') ? 'master' : undefined) ||
+          (availableBranches.includes('origin/master') ? 'origin/master' : undefined) ||
+          availableBranches[0] ||
+          'HEAD';
+        const compare = availableBranches.find((b) => b !== smartBase) || smartBase;
+        await get().openNewMrDraft(smartBase, compare);
       }
     } catch (err) {
       console.error('loadRepoData error:', err);
@@ -372,8 +366,18 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     }
 
     const gitStore = useGitStore.getState();
-    const availableBranches = gitStore.branches?.local || ['main'];
-    const base = baseBranch || repoSettings?.defaultBaseBranch || gitStore.baseBranch || availableBranches[0] || 'main';
+    const availableBranches = [
+      ...(gitStore.branches?.local || []),
+      ...(gitStore.branches?.remote || []),
+    ];
+    const smartFallback =
+      (availableBranches.includes('main') ? 'main' : undefined) ||
+      (availableBranches.includes('origin/main') ? 'origin/main' : undefined) ||
+      (availableBranches.includes('master') ? 'master' : undefined) ||
+      (availableBranches.includes('origin/master') ? 'origin/master' : undefined) ||
+      availableBranches[0] ||
+      'HEAD';
+    const base = baseBranch || repoSettings?.defaultBaseBranch || gitStore.baseBranch || smartFallback;
     const compare = compareBranch || gitStore.compareBranch || availableBranches.find((b: string) => b !== base) || base;
     const title = customTitle || `${compare} → ${base}`;
     const newId = `vmr-${Date.now()}`;
@@ -460,7 +464,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   },
 
   openNewMrDraft: async (initialBase, initialCompare) => {
-    let { currentRepoId, currentRepoPath, repoSettings, repoLabels } = get();
+    let { currentRepoId, currentRepoPath, repoSettings } = get();
 
     if (!currentRepoId || !currentRepoPath) {
       const gitStore = useGitStore.getState();
@@ -477,8 +481,18 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     }
 
     const gitStore = useGitStore.getState();
-    const availableBranches = gitStore.branches?.local || ['main'];
-    const base = initialBase || repoSettings?.defaultBaseBranch || gitStore.baseBranch || availableBranches[0] || 'main';
+    const availableBranches = [
+      ...(gitStore.branches?.local || []),
+      ...(gitStore.branches?.remote || []),
+    ];
+    const smartFallback =
+      (availableBranches.includes('main') ? 'main' : undefined) ||
+      (availableBranches.includes('origin/main') ? 'origin/main' : undefined) ||
+      (availableBranches.includes('master') ? 'master' : undefined) ||
+      (availableBranches.includes('origin/master') ? 'origin/master' : undefined) ||
+      availableBranches[0] ||
+      'HEAD';
+    const base = initialBase || repoSettings?.defaultBaseBranch || gitStore.baseBranch || smartFallback;
     const compare = initialCompare || gitStore.compareBranch || availableBranches.find((b: string) => b !== base) || base;
 
     const newDraft: NewMrDraft = {
@@ -486,8 +500,8 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       compareBranch: compare,
       title: `${compare} → ${base}`,
       description: '',
-      selectedBots: ['security-bot', 'codestyle-bot'],
-      selectedLabels: (repoLabels || []).slice(0, 1).map((l) => l.id),
+      selectedBots: [],
+      selectedLabels: [],
       commits: [],
       isCommitsLoading: true,
     };
@@ -908,6 +922,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
         label: { id, repo_id: currentRepoId, name, color, description: description || null },
       });
       set({ repoLabels: [...repoLabels, newLabel] });
+      return newLabel;
     } catch (e) {
       console.error('Failed to create repo label:', e);
       throw e;

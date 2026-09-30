@@ -97,6 +97,7 @@
 @theme {
   --color-brand: #b87ff4;
   --color-accent: #b87ff4;
+  --color-primary: #b87ff4;
   --color-rosewater: var(--ctp-rosewater);
   --color-flamingo: var(--ctp-flamingo);
   --color-pink: var(--ctp-pink);

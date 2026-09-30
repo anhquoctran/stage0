@@ -248,9 +248,9 @@ export const VirtualMrHub: React.FC = () => {
               type="button"
               onClick={() => handleSwapBranches(session.id, session.baseBranch, session.compareBranch)}
               title="Swap Compare and Base branches"
-              className="p-1 rounded bg-surface1 hover:bg-surface2 text-white transition-colors cursor-pointer"
+              className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 border border-transparent hover:border-surface0 transition-colors cursor-pointer"
             >
-              <ArrowRight className="w-3.5 h-3.5 text-white" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
             <TabBranchSelector
               roleType="target"

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import {
   Folder,
   Download,
-  Sliders,
+  Cog,
   X,
 } from 'lucide-react';
 import { useGitStore } from '../../store/useGitStore';
@@ -169,7 +169,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-md hover:bg-surface0/60 transition-colors cursor-pointer text-xs"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <Sliders className="w-4 h-4 text-subtext0 group-hover:text-text transition-colors shrink-0" />
+                <Cog className="w-4 h-4 text-subtext0 group-hover:text-text transition-colors shrink-0" />
                 <span className="text-subtext1 group-hover:text-text transition-colors truncate">
                   Open Preferences
                 </span>

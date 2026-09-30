@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   FolderOpen,
-  XCircle,
   Copy,
   ArrowUp,
   ArrowDown,
@@ -12,18 +11,21 @@ import {
   SunMoon,
   RefreshCw,
   Download,
+  DownloadCloud,
   GitMerge,
+  GitBranch,
   ArrowLeftRight,
-  RotateCw,
+  GitCompare,
   Keyboard,
   Info,
   Power,
   Clock,
   Check,
   ChevronRight,
-  Sliders,
+  Cog,
   Play,
   SkipForward,
+  Undo2,
   FileText,
   Globe,
   ExternalLink,
@@ -32,8 +34,10 @@ import {
   Terminal,
   Code2,
   Folder,
+  FolderDown,
+  FolderX,
+  FolderCog,
   Trash2,
-  FolderGit2,
   GitPullRequest,
 } from 'lucide-react';
 import {
@@ -209,43 +213,6 @@ export const MenuBar: React.FC = () => {
 
           {activeMenu === 'file' && (
             <div className="absolute left-0 top-full mt-0.5 w-64 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
-              {/* Active Repository Info */}
-              {currentRepo && (
-                <div className="px-3 py-2 bg-surface0/40 border-b border-surface0 mb-1.5">
-                  <div className="text-[10px] uppercase font-bold tracking-wider text-subtext1 flex items-center gap-1.5 mb-1">
-                    <FolderGit2 className="w-3 h-3 text-primary" />
-                    <span>Active Repository</span>
-                  </div>
-                  <div className="font-semibold text-text truncate text-xs">
-                    {currentRepo.name}
-                  </div>
-                  <div className="text-[10px] text-subtext0 truncate font-mono" title={currentRepo.local_path}>
-                    {currentRepo.local_path}
-                  </div>
-                </div>
-              )}
-
-              {/* New Virtual MR */}
-              <button
-                type="button"
-                disabled={!currentRepo}
-                onClick={() => {
-                  closeMenus();
-                  openNewMrDraft();
-                }}
-                onMouseEnter={() => {
-                  setShowRecentSubmenu(false);
-                  setShowOpenInSubmenu(false);
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <GitPullRequest className="w-3.5 h-3.5 text-brand group-hover:text-brand transition-colors" />
-                  <span>New Virtual MR...</span>
-                </div>
-                <span className="text-[10px] text-subtext0 font-mono">Ctrl+T</span>
-              </button>
-
               <button
                 type="button"
                 onClick={() => {
@@ -254,7 +221,6 @@ export const MenuBar: React.FC = () => {
                 }}
                 onMouseEnter={() => {
                   setShowRecentSubmenu(false);
-                  setShowOpenInSubmenu(false);
                 }}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
@@ -273,12 +239,11 @@ export const MenuBar: React.FC = () => {
                 }}
                 onMouseEnter={() => {
                   setShowRecentSubmenu(false);
-                  setShowOpenInSubmenu(false);
                 }}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Download className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <FolderDown className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Clone Repository...</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">
@@ -286,98 +251,11 @@ export const MenuBar: React.FC = () => {
                 </span>
               </button>
 
-              {/* Open in Submenu Trigger */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  setShowOpenInSubmenu(true);
-                  setShowRecentSubmenu(false);
-                }}
-                onMouseLeave={() => setShowOpenInSubmenu(false)}
-              >
-                <button
-                  type="button"
-                  disabled={!currentRepo}
-                  className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <ExternalLink className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                    <span>Open in</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                </button>
-
-                {showOpenInSubmenu && currentRepo && (
-                  <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        closeMenus();
-                        try {
-                          await openRepoInTerminal(currentRepo.local_path);
-                          showToast('Opened repository in terminal');
-                        } catch (err) {
-                          showToast(`Failed to open terminal: ${err}`);
-                        }
-                      }}
-                      className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Terminal className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                        <span>Terminal</span>
-                      </div>
-                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+T</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        closeMenus();
-                        try {
-                          await openRepoInVsCode(currentRepo.local_path);
-                          showToast('Opened repository in VS Code');
-                        } catch (err) {
-                          showToast(`Failed to open VS Code: ${err}`);
-                        }
-                      }}
-                      className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Code2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                        <span>Visual Studio Code</span>
-                      </div>
-                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+V</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        closeMenus();
-                        try {
-                          await openRepoInExplorer(currentRepo.local_path);
-                          showToast(`Opened repository in ${fileManagerName}`);
-                        } catch (err) {
-                          showToast(`Failed to open ${fileManagerName}: ${err}`);
-                        }
-                      }}
-                      className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Folder className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                        <span>{fileManagerName}</span>
-                      </div>
-                      <span className="text-[10px] text-subtext0 font-mono">Alt+Shift+E</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-
               {/* Recent Repos Submenu Trigger */}
               <div
                 className="relative"
                 onMouseEnter={() => {
                   setShowRecentSubmenu(true);
-                  setShowOpenInSubmenu(false);
                 }}
                 onMouseLeave={() => setShowRecentSubmenu(false)}
               >
@@ -467,12 +345,11 @@ export const MenuBar: React.FC = () => {
                 }}
                 onMouseEnter={() => {
                   setShowRecentSubmenu(false);
-                  setShowOpenInSubmenu(false);
                 }}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <XCircle className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <FolderX className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Close Repository</span>
                 </div>
               </button>
@@ -487,12 +364,11 @@ export const MenuBar: React.FC = () => {
                 }}
                 onMouseEnter={() => {
                   setShowRecentSubmenu(false);
-                  setShowOpenInSubmenu(false);
                 }}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Sliders className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <Cog className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Preferences...</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">
@@ -507,7 +383,6 @@ export const MenuBar: React.FC = () => {
                 onClick={handleExitApp}
                 onMouseEnter={() => {
                   setShowRecentSubmenu(false);
-                  setShowOpenInSubmenu(false);
                 }}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
@@ -867,6 +742,26 @@ export const MenuBar: React.FC = () => {
 
           {activeMenu === 'repository' && (
             <div className="absolute left-0 top-full mt-0.5 w-68 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+              {/* New Virtual MR */}
+              <button
+                type="button"
+                disabled={!currentRepo}
+                onClick={() => {
+                  closeMenus();
+                  openNewMrDraft();
+                }}
+                onMouseEnter={() => setShowOpenInSubmenu(false)}
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <GitPullRequest className="w-3.5 h-3.5 text-brand group-hover:text-brand transition-colors" />
+                  <span>New Virtual MR...</span>
+                </div>
+                <span className="text-[10px] text-subtext0 font-mono">Ctrl+T</span>
+              </button>
+
+              <div className="my-1 border-t border-surface0" />
+
               <button
                 type="button"
                 disabled={!currentRepo || isSyncing}
@@ -874,6 +769,7 @@ export const MenuBar: React.FC = () => {
                   runSync('fetch');
                   closeMenus();
                 }}
+                onMouseEnter={() => setShowOpenInSubmenu(false)}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
@@ -911,7 +807,7 @@ export const MenuBar: React.FC = () => {
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Sliders className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <DownloadCloud className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Pull from...</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+P</span>
@@ -945,7 +841,7 @@ export const MenuBar: React.FC = () => {
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Sliders className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <GitBranch className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Rebase from...</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+R</span>
@@ -993,7 +889,7 @@ export const MenuBar: React.FC = () => {
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <XCircle className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <Undo2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Rebase: Abort</span>
                 </div>
               </button>
@@ -1025,7 +921,7 @@ export const MenuBar: React.FC = () => {
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <RotateCw className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <GitCompare className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Refresh Diff &amp; Conflicts</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Ctrl+R</span>
@@ -1128,7 +1024,7 @@ export const MenuBar: React.FC = () => {
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Sliders className="w-3.5 h-3.5 text-accent group-hover:text-text transition-colors" />
+                  <FolderCog className="w-3.5 h-3.5 text-accent group-hover:text-text transition-colors" />
                   <span className="font-medium text-accent">Repository Settings...</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">Ctrl+Alt+S</span>

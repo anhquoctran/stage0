@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use super::runner::run_git_strict;
+use super::runner::{run_git_strict, resolve_ref};
 use super::{ChangedFile, MrDiffPayload};
 use super::conflict::check_conflicts;
 
@@ -8,14 +8,10 @@ pub fn get_mr_diff(
     base: &str,
     compare: &str,
 ) -> Result<MrDiffPayload, String> {
-    let base_commit = run_git_strict(repo_path, &["rev-parse", "--short", base])?
-        .trim()
-        .to_string();
-    let compare_commit = run_git_strict(repo_path, &["rev-parse", "--short", compare])?
-        .trim()
-        .to_string();
+    let (base_commit, effective_base) = resolve_ref(repo_path, base)?;
+    let (compare_commit, effective_compare) = resolve_ref(repo_path, compare)?;
 
-    let three_dot = format!("{}...{}", base, compare);
+    let three_dot = format!("{}...{}", effective_base, effective_compare);
 
     // 1. Get raw diff
     let raw_diff = run_git_strict(repo_path, &["diff", "-U3", &three_dot])?;
@@ -27,7 +23,7 @@ pub fn get_mr_diff(
     let numstat_output = run_git_strict(repo_path, &["diff", "--numstat", &three_dot])?;
 
     // 4. Check conflicts to mark is_conflicted
-    let conflict_report = check_conflicts(repo_path, base, compare).unwrap_or_else(|_| {
+    let conflict_report = check_conflicts(repo_path, &effective_base, &effective_compare).unwrap_or_else(|_| {
         super::ConflictReport {
             has_conflicts: false,
             conflicted_files: Vec::new(),

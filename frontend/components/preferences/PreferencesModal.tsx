@@ -8,7 +8,7 @@ import {
   Sparkles,
   RotateCcw,
   Check,
-  Sliders,
+  Cog,
   AlertCircle,
   AlertTriangle,
   ChevronDown,
@@ -455,7 +455,7 @@ export const PreferencesModal: React.FC = () => {
         >
           <div data-tauri-drag-region className="flex items-center gap-2.5 pointer-events-none">
             <div className="w-7 h-7 bg-surface0 border border-surface1 flex items-center justify-center text-text shadow-xs">
-              <Sliders className="w-4 h-4 text-subtext0" />
+              <Cog className="w-4 h-4 text-subtext0" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-text">Preferences</h2>
