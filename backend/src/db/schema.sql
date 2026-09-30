@@ -142,3 +142,11 @@ CREATE INDEX IF NOT EXISTS idx_discussions_session_created ON virtual_mr_discuss
 CREATE INDEX IF NOT EXISTS idx_discussions_session_file ON virtual_mr_discussions(session_id, file_path, line_number);
 CREATE INDEX IF NOT EXISTS idx_comments_discussion ON virtual_mr_comments(discussion_id);
 CREATE INDEX IF NOT EXISTS idx_comments_disc_created ON virtual_mr_comments(discussion_id, created_at ASC);
+
+-- Global App Settings (Git executable binary, etc.)
+CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+

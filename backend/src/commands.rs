@@ -1087,5 +1087,109 @@ pub async fn verify_mr_discussion(
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub async fn scan_git_binaries(
+    app: AppHandle,
+) -> Result<Vec<crate::git::GitBinaryInfo>, String> {
+    let db = app.state::<Database>();
+    let active_path = db.get_setting("git_binary_path").ok().flatten();
+    let active_id = db.get_setting("git_binary_id").ok().flatten();
+
+    let binaries = crate::git::scan_system_git_binaries(
+        active_path.as_deref(),
+        active_id.as_deref(),
+    );
+    Ok(binaries)
+}
+
+#[tauri::command]
+pub async fn get_active_git_binary(
+    app: AppHandle,
+) -> Result<crate::git::GitBinaryInfo, String> {
+    let db = app.state::<Database>();
+    let active_path = db.get_setting("git_binary_path").ok().flatten();
+    let active_id = db.get_setting("git_binary_id").ok().flatten();
+
+    let binaries = crate::git::scan_system_git_binaries(
+        active_path.as_deref(),
+        active_id.as_deref(),
+    );
+
+    if let Some(active) = binaries.into_iter().find(|b| b.is_active) {
+        Ok(active)
+    } else {
+        Err("No active Git binary detected".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn set_active_git_binary(
+    app: AppHandle,
+    id: String,
+    path: String,
+) -> Result<crate::git::GitBinaryInfo, String> {
+    let version = crate::git::test_git_version(&path)
+        .map_err(|e| format!("Cannot select invalid Git binary at '{}': {}", path, e))?;
+
+    let db = app.state::<Database>();
+    let _ = db.set_setting("git_binary_id", &id);
+    let _ = db.set_setting("git_binary_path", &path);
+
+    crate::git::runner::set_active_git_path(Some(path.clone()));
+
+    let name = if id == "system" {
+        "System Git (PATH Default)".to_string()
+    } else if id == "bundled" {
+        "Stage0 Bundled Git".to_string()
+    } else {
+        format!("Custom Git ({})", path)
+    };
+
+    Ok(crate::git::GitBinaryInfo {
+        id,
+        name,
+        path,
+        version,
+        source: "selected".to_string(),
+        is_valid: true,
+        is_active: true,
+    })
+}
+
+#[tauri::command]
+pub async fn validate_custom_git_binary(
+    path: String,
+) -> Result<crate::git::GitBinaryInfo, String> {
+    let version = crate::git::test_git_version(&path)
+        .map_err(|e| format!("Failed to validate Git executable: {}", e))?;
+
+    Ok(crate::git::GitBinaryInfo {
+        id: "custom-candidate".to_string(),
+        name: format!("Custom Git ({})", path),
+        path,
+        version,
+        source: "custom".to_string(),
+        is_valid: true,
+        is_active: false,
+    })
+}
+
+#[tauri::command]
+pub async fn pick_git_executable(app: AppHandle) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let file_opt = app.dialog().file().blocking_pick_file();
+    Ok(file_opt.map(|f| f.to_string()))
+}
+
+#[tauri::command]
+pub async fn restart_app(app: AppHandle) -> Result<(), String> {
+    if let Ok(exe) = std::env::current_exe() {
+        let _ = std::process::Command::new(exe).spawn();
+    }
+    app.exit(0);
+    Ok(())
+}
+
+
 
 

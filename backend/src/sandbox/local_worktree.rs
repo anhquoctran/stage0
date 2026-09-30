@@ -43,7 +43,8 @@ impl LocalWorktreeSandboxAdapter {
     }
 
     fn check_worktree_support(&self) -> (bool, Option<String>, String) {
-        let mut cmd = Command::new("git");
+        let git_bin = crate::git::runner::get_active_git_path();
+        let mut cmd = Command::new(&git_bin);
         cmd.args(["worktree", "list"]);
         #[cfg(windows)]
         cmd.creation_flags(CREATE_NO_WINDOW);

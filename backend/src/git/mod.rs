@@ -6,8 +6,10 @@ pub mod diff;
 pub mod conflict;
 pub mod ops;
 pub mod blame;
+pub mod binary;
 
 pub use blame::{BlameAuthorStat, BlameCommit, BlameLine, FileBlamePayload};
+pub use binary::{GitBinaryInfo, scan_system_git_binaries, test_git_version};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RepoInfo {

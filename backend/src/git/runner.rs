@@ -1,10 +1,31 @@
 use std::process::{Command, Output};
+use std::sync::RwLock;
 
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+static ACTIVE_GIT_PATH: RwLock<Option<String>> = RwLock::new(None);
+
+pub fn set_active_git_path(path: Option<String>) {
+    if let Ok(mut lock) = ACTIVE_GIT_PATH.write() {
+        *lock = path;
+    }
+}
+
+pub fn get_active_git_path() -> String {
+    if let Ok(lock) = ACTIVE_GIT_PATH.read() {
+        if let Some(ref p) = *lock {
+            let trimmed = p.trim();
+            if !trimmed.is_empty() && trimmed != "system" {
+                return trimmed.to_string();
+            }
+        }
+    }
+    "git".to_string()
+}
 
 pub struct CmdResult {
     pub stdout: String,
@@ -14,7 +35,8 @@ pub struct CmdResult {
 }
 
 pub fn run_git(repo_path: &str, args: &[&str]) -> Result<CmdResult, String> {
-    let mut cmd = Command::new("git");
+    let git_bin = get_active_git_path();
+    let mut cmd = Command::new(&git_bin);
     cmd.current_dir(repo_path);
     cmd.args(args);
 
