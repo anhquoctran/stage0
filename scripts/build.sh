@@ -31,8 +31,9 @@ echo -e "${CYAN}======================================================${RESET}"
 echo -e "${DIM}Platform:${RESET} ${BOLD}${OS_NAME}${RESET} (${ARCH_NAME})"
 echo -e "${CYAN}------------------------------------------------------${RESET}\n"
 
-# 0. Synchronize software about metadata
-echo -e "${BOLD}[0/4] Synchronizing software about and release metadata...${RESET}"
+# 0. Increment PATCH version and synchronize software about metadata
+echo -e "${BOLD}[0/4] Bumping PATCH version and synchronizing release metadata...${RESET}"
+node scripts/bump-version.mjs
 node scripts/generate-about-info.mjs
 echo -e ""
 

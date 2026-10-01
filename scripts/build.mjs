@@ -20,6 +20,7 @@ import crypto from 'crypto';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { syncAllMetadata } from './generate-about-info.mjs';
+import { bumpProjectPatchVersion } from './bump-version.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,6 +70,8 @@ ${BOLD}Output Artifacts:${RESET}
   process.exit(0);
 }
 
+const versionBump = bumpProjectPatchVersion(ROOT_DIR);
+console.log(`Project version bumped: ${versionBump.previousVersion} -> ${versionBump.version}`);
 const releaseInfo = syncAllMetadata({ arch: ARCH });
 
 console.log(`\n${CYAN}======================================================${RESET}`);
