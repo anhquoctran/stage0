@@ -12,6 +12,23 @@
       onload="this.media='all'"
     />
     <title>Stage0 - Virtual MR Sandbox</title>
+    <script>
+      // Global fallback for React Fast Refresh preamble to prevent fatal startup crashes
+      if (typeof window !== 'undefined') {
+        window.$RefreshReg$ = window.$RefreshReg$ || function () {};
+        window.$RefreshSig$ = window.$RefreshSig$ || function () { return function (type) { return type; }; };
+      }
+      window.addEventListener('error', function (e) {
+        var statusEl = document.querySelector('#startup-splash .splash-status');
+        if (statusEl) {
+          statusEl.style.color = '#f38ba8';
+          statusEl.textContent = 'Startup error: ' + (e.message || 'Script execution error');
+        }
+      });
+      window.addEventListener('securitypolicyviolation', function (e) {
+        console.warn('[CSP Blocked]', e.blockedURI, e.violatedDirective);
+      });
+    </script>
     <style>
       #startup-splash {
         position: fixed;
@@ -203,5 +220,17 @@
       </div>
     </div>
     <script type="module" src="/frontend/main.tsx"></script>
+    <script>
+      // Defensive failsafe: automatically dismiss startup splash screen after 2.5s to prevent black screen lock
+      setTimeout(function () {
+        var splash = document.getElementById('startup-splash');
+        if (splash && !splash.classList.contains('is-hidden')) {
+          splash.classList.add('is-hidden');
+          setTimeout(function () {
+            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 350);
+        }
+      }, 2500);
+    </script>
   </body>
 </html>

@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { AiConfig, McpServerConfig, McpConfigFileFormat } from '../types/ai';
 import {
+  GuardrailMode,
+  GuardrailPolicy,
+  GuardrailAuditEvent,
+  GuardrailEvaluationResult,
+  DEFAULT_GUARDRAIL_POLICY,
+} from '../types/guardrails';
+import {
   DEFAULT_AI_CONFIG,
   DEFAULT_MCP_SERVERS,
   AI_PROVIDERS,
@@ -12,8 +19,8 @@ interface AiMcpState {
   mcpServers: McpServerConfig[];
   isTestingAi: boolean;
   aiTestResult: { success: boolean; message: string; timestamp: number } | null;
-  activeSubTab: 'ai' | 'mcp' | 'prompts';
-  setActiveSubTab: (tab: 'ai' | 'mcp' | 'prompts') => void;
+  activeSubTab: 'ai' | 'mcp' | 'guardrails' | 'prompts';
+  setActiveSubTab: (tab: 'ai' | 'mcp' | 'guardrails' | 'prompts') => void;
 
   // AI Configuration Actions
   updateAiConfig: (partial: Partial<AiConfig>) => void;
@@ -31,13 +38,32 @@ interface AiMcpState {
   testMcpServer: (id: string) => Promise<{ success: boolean; message: string }>;
   importMcpConfigFile: (jsonStr: string) => { success: boolean; count: number; error?: string };
   exportMcpConfigFile: () => string;
+
+  // AI & MCP Security Guardrails Actions
+  guardrailPolicy: GuardrailPolicy;
+  guardrailAuditLog: GuardrailAuditEvent[];
+  isGuardrailLoading: boolean;
+  loadGuardrailPolicy: () => Promise<void>;
+  updateGuardrailPolicy: (partial: Partial<GuardrailPolicy>) => Promise<void>;
+  resetGuardrailPolicy: (mode: GuardrailMode) => Promise<void>;
+  loadGuardrailAuditLog: (limit?: number) => Promise<void>;
+  clearGuardrailAuditLog: () => Promise<void>;
+  simulateGuardrailCheck: (toolName: string, args: Record<string, unknown>) => Promise<GuardrailEvaluationResult>;
 }
 
 const STORAGE_KEY = 'stage0_ai_mcp_config';
 
-function loadPersistedState(): { aiConfig: AiConfig; mcpServers: McpServerConfig[] } {
+function loadPersistedState(): {
+  aiConfig: AiConfig;
+  mcpServers: McpServerConfig[];
+  guardrailPolicy: GuardrailPolicy;
+} {
   if (typeof window === 'undefined') {
-    return { aiConfig: DEFAULT_AI_CONFIG, mcpServers: DEFAULT_MCP_SERVERS };
+    return {
+      aiConfig: DEFAULT_AI_CONFIG,
+      mcpServers: DEFAULT_MCP_SERVERS,
+      guardrailPolicy: DEFAULT_GUARDRAIL_POLICY,
+    };
   }
 
   try {
@@ -51,6 +77,11 @@ function loadPersistedState(): { aiConfig: AiConfig; mcpServers: McpServerConfig
         apiKey: '', // Never trust or retain plaintext apiKey from localStorage
       };
 
+      const loadedGuardrailPolicy: GuardrailPolicy = {
+        ...DEFAULT_GUARDRAIL_POLICY,
+        ...(parsed.guardrailPolicy || {}),
+      };
+
       // Securely migrate any legacy plaintext key found in localStorage into the OS Keyring
       if (typeof legacyKey === 'string' && legacyKey.trim().length > 0 && isTauri()) {
         const providerToMigrate = loadedAiConfig.provider || 'anthropic';
@@ -59,7 +90,11 @@ function loadPersistedState(): { aiConfig: AiConfig; mcpServers: McpServerConfig
           apiKey: legacyKey.trim(),
         }).then(() => {
           // Immediately wipe plaintext secret from localStorage
-          persistState(loadedAiConfig, Array.isArray(parsed.mcpServers) ? parsed.mcpServers : DEFAULT_MCP_SERVERS);
+          persistState(
+            loadedAiConfig,
+            Array.isArray(parsed.mcpServers) ? parsed.mcpServers : DEFAULT_MCP_SERVERS,
+            loadedGuardrailPolicy
+          );
         }).catch((err) => {
           console.warn('Failed to migrate legacy API key to OS Keyring:', err);
         });
@@ -68,21 +103,37 @@ function loadPersistedState(): { aiConfig: AiConfig; mcpServers: McpServerConfig
       return {
         aiConfig: loadedAiConfig,
         mcpServers: Array.isArray(parsed.mcpServers) ? parsed.mcpServers : DEFAULT_MCP_SERVERS,
+        guardrailPolicy: loadedGuardrailPolicy,
       };
     }
   } catch (err) {
     console.warn('Failed to load persisted AI & MCP settings:', err);
   }
 
-  return { aiConfig: DEFAULT_AI_CONFIG, mcpServers: DEFAULT_MCP_SERVERS };
+  return {
+    aiConfig: DEFAULT_AI_CONFIG,
+    mcpServers: DEFAULT_MCP_SERVERS,
+    guardrailPolicy: DEFAULT_GUARDRAIL_POLICY,
+  };
 }
 
-function persistState(aiConfig: AiConfig, mcpServers: McpServerConfig[]) {
+function persistState(
+  aiConfig: AiConfig,
+  mcpServers: McpServerConfig[],
+  guardrailPolicy?: GuardrailPolicy
+) {
   if (typeof window === 'undefined') return;
   try {
     // Strip apiKey before saving to localStorage to prevent plaintext secret leakage
     const sanitizedAiConfig: AiConfig = { ...aiConfig, apiKey: '' };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ aiConfig: sanitizedAiConfig, mcpServers }));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        aiConfig: sanitizedAiConfig,
+        mcpServers,
+        guardrailPolicy: guardrailPolicy || DEFAULT_GUARDRAIL_POLICY,
+      })
+    );
   } catch (err) {
     console.error('Failed to save AI & MCP settings:', err);
   }
@@ -93,6 +144,9 @@ const initialState = loadPersistedState();
 export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   aiConfig: initialState.aiConfig,
   mcpServers: initialState.mcpServers,
+  guardrailPolicy: initialState.guardrailPolicy,
+  guardrailAuditLog: [],
+  isGuardrailLoading: false,
   isTestingAi: false,
   aiTestResult: null,
   activeSubTab: 'ai',
@@ -102,7 +156,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   updateAiConfig: (partial) => {
     const nextConfig = { ...get().aiConfig, ...partial };
     set({ aiConfig: nextConfig, aiTestResult: null });
-    persistState(nextConfig, get().mcpServers);
+    persistState(nextConfig, get().mcpServers, get().guardrailPolicy);
 
     // If an API key is updated, persist it to the secure OS Keyring
     if (partial.apiKey !== undefined && isTauri()) {
@@ -406,9 +460,103 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
 
     return JSON.stringify(exportObj, null, 2);
   },
+
+  // Guardrails Implementation
+  loadGuardrailPolicy: async () => {
+    if (!isTauri()) return;
+    try {
+      set({ isGuardrailLoading: true });
+      const backendPolicy = await invoke<GuardrailPolicy>('get_guardrail_policy');
+      if (backendPolicy) {
+        set({ guardrailPolicy: backendPolicy });
+        persistState(get().aiConfig, get().mcpServers, backendPolicy);
+      }
+    } catch (err) {
+      console.warn('Failed to load guardrail policy from backend:', err);
+    } finally {
+      set({ isGuardrailLoading: false });
+    }
+  },
+
+  updateGuardrailPolicy: async (partial) => {
+    const nextPolicy: GuardrailPolicy = { ...get().guardrailPolicy, ...partial };
+    set({ guardrailPolicy: nextPolicy });
+    persistState(get().aiConfig, get().mcpServers, nextPolicy);
+    if (isTauri()) {
+      try {
+        await invoke('update_guardrail_policy', { policy: nextPolicy });
+      } catch (err) {
+        console.error('Failed to sync guardrail policy to backend:', err);
+      }
+    }
+  },
+
+  resetGuardrailPolicy: async (mode) => {
+    if (isTauri()) {
+      try {
+        const resetPolicy = await invoke<GuardrailPolicy>('reset_guardrail_policy', { mode });
+        set({ guardrailPolicy: resetPolicy });
+        persistState(get().aiConfig, get().mcpServers, resetPolicy);
+        return;
+      } catch (err) {
+        console.warn('Failed to reset guardrail policy on backend:', err);
+      }
+    }
+    const fallbackPolicy: GuardrailPolicy = { ...DEFAULT_GUARDRAIL_POLICY, mode };
+    set({ guardrailPolicy: fallbackPolicy });
+    persistState(get().aiConfig, get().mcpServers, fallbackPolicy);
+  },
+
+  loadGuardrailAuditLog: async (limit = 50) => {
+    if (!isTauri()) return;
+    try {
+      const logs = await invoke<GuardrailAuditEvent[]>('get_guardrail_audit_log', { limit });
+      set({ guardrailAuditLog: logs || [] });
+    } catch (err) {
+      console.warn('Failed to load guardrail audit log:', err);
+    }
+  },
+
+  clearGuardrailAuditLog: async () => {
+    if (isTauri()) {
+      try {
+        await invoke('clear_guardrail_audit_log');
+      } catch (err) {
+        console.warn('Failed to clear audit log:', err);
+      }
+    }
+    set({ guardrailAuditLog: [] });
+  },
+
+  simulateGuardrailCheck: async (toolName, args) => {
+    if (isTauri()) {
+      try {
+        const res = await invoke<GuardrailEvaluationResult>('simulate_guardrail_check', {
+          toolName,
+          arguments: args,
+        });
+        return res;
+      } catch (err) {
+        console.error('Failed to simulate guardrail check:', err);
+      }
+    }
+    return {
+      allowed: true,
+      risk_score: 10,
+      violations: [],
+      requires_confirmation: false,
+    };
+  },
 }));
 
-if (typeof window !== 'undefined' && isTauri()) {
-  void useAiMcpStore.getState().loadApiKeyForProvider(initialState.aiConfig.provider);
+// Safely defer background hydration to avoid blocking module evaluation on startup
+if (typeof window !== 'undefined') {
+  window.setTimeout(() => {
+    if (isTauri()) {
+      void useAiMcpStore.getState().loadApiKeyForProvider(initialState.aiConfig.provider);
+      void useAiMcpStore.getState().loadGuardrailPolicy();
+      void useAiMcpStore.getState().loadGuardrailAuditLog();
+    }
+  }, 150);
 }
 

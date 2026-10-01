@@ -36,6 +36,12 @@ pub fn run() {
                       }
                       event.preventDefault();
                     }, true);
+
+                    // Ensure $RefreshReg$ and $RefreshSig$ are globally safe fallbacks so Vite preamble never crashes
+                    if (typeof window !== 'undefined') {
+                      if (!window.$RefreshReg$) window.$RefreshReg$ = () => {};
+                      if (!window.$RefreshSig$) window.$RefreshSig$ = () => (type) => type;
+                    }
                     "#,
                 )
                 .build(),
@@ -195,6 +201,13 @@ pub fn run() {
             commands::sync_active_sandbox,
             commands::get_sandbox_tool_schemas,
             commands::dispatch_sandbox_tool,
+            // AI & MCP Security Guardrails
+            commands::get_guardrail_policy,
+            commands::update_guardrail_policy,
+            commands::reset_guardrail_policy,
+            commands::get_guardrail_audit_log,
+            commands::clear_guardrail_audit_log,
+            commands::simulate_guardrail_check,
             // Git Binary Management & App Lifecycle
             commands::scan_git_binaries,
             commands::get_active_git_binary,

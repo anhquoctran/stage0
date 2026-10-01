@@ -21,6 +21,7 @@ use crate::window_manager::{
     resolve_repository, WindowManagerState, WindowStartupContext,
 };
 use crate::sandbox::{
+    GuardrailAuditEvent, GuardrailEvaluationResult, GuardrailMode, GuardrailPolicy,
     SandboxAdapterInfo, SandboxExecutionResult, SandboxInstanceInfo, SandboxManager, SandboxType,
 };
 
@@ -1214,6 +1215,67 @@ pub async fn dispatch_sandbox_tool(
     })
     .await
     .map_err(|e| format!("Task execution failed: {}", e))?
+}
+
+#[tauri::command]
+pub async fn get_guardrail_policy(
+    app: AppHandle,
+) -> Result<GuardrailPolicy, String> {
+    let manager = app.state::<SandboxManager>();
+    Ok(manager.get_guardrail_policy())
+}
+
+#[tauri::command]
+pub async fn update_guardrail_policy(
+    app: AppHandle,
+    policy: GuardrailPolicy,
+) -> Result<(), String> {
+    let manager = app.state::<SandboxManager>();
+    manager.update_guardrail_policy(policy);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn reset_guardrail_policy(
+    app: AppHandle,
+    mode: String,
+) -> Result<GuardrailPolicy, String> {
+    let manager = app.state::<SandboxManager>();
+    let parsed_mode = match mode.to_lowercase().as_str() {
+        "strict" => GuardrailMode::Strict,
+        "permissive" => GuardrailMode::Permissive,
+        _ => GuardrailMode::Balanced,
+    };
+    manager.reset_guardrail_policy(parsed_mode);
+    Ok(manager.get_guardrail_policy())
+}
+
+#[tauri::command]
+pub async fn get_guardrail_audit_log(
+    app: AppHandle,
+    limit: Option<usize>,
+) -> Result<Vec<GuardrailAuditEvent>, String> {
+    let manager = app.state::<SandboxManager>();
+    Ok(manager.get_guardrail_audit_log(limit))
+}
+
+#[tauri::command]
+pub async fn clear_guardrail_audit_log(
+    app: AppHandle,
+) -> Result<(), String> {
+    let manager = app.state::<SandboxManager>();
+    manager.clear_guardrail_audit_log();
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn simulate_guardrail_check(
+    app: AppHandle,
+    tool_name: String,
+    arguments: serde_json::Value,
+) -> Result<GuardrailEvaluationResult, String> {
+    let manager = app.state::<SandboxManager>();
+    Ok(manager.simulate_guardrail_check(&tool_name, arguments))
 }
 
 #[tauri::command]

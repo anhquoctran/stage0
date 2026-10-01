@@ -14,6 +14,7 @@ pub struct SandboxManager {
     docker: Arc<DockerSandboxAdapter>,
     active_type: Mutex<SandboxType>,
     instances: Mutex<HashMap<String, SandboxInstanceInfo>>,
+    guardrails: Arc<super::guardrails::GuardrailsEngine>,
 }
 
 impl SandboxManager {
@@ -24,6 +25,7 @@ impl SandboxManager {
             docker: Arc::new(DockerSandboxAdapter::new()),
             active_type: Mutex::new(SandboxType::InMemory),
             instances: Mutex::new(HashMap::new()),
+            guardrails: Arc::new(super::guardrails::GuardrailsEngine::new()),
         }
     }
 
@@ -167,6 +169,38 @@ impl SandboxManager {
             format!("Sandbox instance not found: {}", instance_id)
         })?;
         super::tool_bridge::dispatch_tool_call(self, &instance, tool_name, arguments)
+    }
+
+    pub fn guardrails(&self) -> &Arc<super::guardrails::GuardrailsEngine> {
+        &self.guardrails
+    }
+
+    pub fn get_guardrail_policy(&self) -> super::guardrails::GuardrailPolicy {
+        self.guardrails.get_policy()
+    }
+
+    pub fn update_guardrail_policy(&self, policy: super::guardrails::GuardrailPolicy) {
+        self.guardrails.update_policy(policy);
+    }
+
+    pub fn reset_guardrail_policy(&self, mode: super::guardrails::GuardrailMode) {
+        self.guardrails.reset_policy(mode);
+    }
+
+    pub fn get_guardrail_audit_log(&self, limit: Option<usize>) -> Vec<super::guardrails::GuardrailAuditEvent> {
+        self.guardrails.get_audit_log(limit)
+    }
+
+    pub fn clear_guardrail_audit_log(&self) {
+        self.guardrails.clear_audit_log();
+    }
+
+    pub fn simulate_guardrail_check(
+        &self,
+        tool_name: &str,
+        arguments: serde_json::Value,
+    ) -> super::guardrails::GuardrailEvaluationResult {
+        self.guardrails.simulate_check(tool_name, arguments)
     }
 
     pub fn cleanup_all(&self) {
