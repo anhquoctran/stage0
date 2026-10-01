@@ -56,7 +56,9 @@ fi
 echo -e "${BOLD}[4/4] Building optimized native desktop application with Tauri v2...${RESET}"
 echo -e "${DIM}   Optimizations: LTO=true, Opt-level=3, Codegen-units=1, Strip=true${RESET}\n"
 
-export RUSTFLAGS="-C target-cpu=native"
+if [ -z "$RUSTFLAGS" ]; then
+  export RUSTFLAGS=""
+fi
 npx tauri build
 
 # 5. Summary and Checksums
