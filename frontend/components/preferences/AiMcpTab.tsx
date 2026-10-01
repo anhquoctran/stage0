@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Cable,
   Plus,
   Trash2,
   Check,
+  ChevronLeft,
   Copy,
   RefreshCw,
   AlertCircle,
@@ -35,12 +36,16 @@ interface AiMcpTabProps {
   draftAiConfig?: AiConfig;
   onUpdateAiConfig?: (partial: Partial<AiConfig>) => void;
   onNavigateToGuardrails?: () => void;
+  activeView?: 'providers' | 'mcp' | 'prompts';
+  onBackToOverview?: () => void;
 }
 
 export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   draftAiConfig,
   onUpdateAiConfig,
   onNavigateToGuardrails,
+  activeView,
+  onBackToOverview,
 }) => {
   const {
     aiConfig: storeAiConfig,
@@ -250,8 +255,29 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (activeView === 'providers') {
+      setActiveSubTab('ai');
+    } else if (activeView === 'mcp') {
+      setActiveSubTab('mcp');
+    } else if (activeView === 'prompts') {
+      setActiveSubTab('prompts');
+    }
+  }, [activeView, setActiveSubTab]);
+
   return (
     <div className="space-y-5">
+      {onBackToOverview && (
+        <button
+          type="button"
+          onClick={onBackToOverview}
+          className="inline-flex items-center gap-1.5 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group"
+        >
+          <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <span>Back to AI overview</span>
+        </button>
+      )}
+
       {/* Top Header & Sub-Navigation */}
       <div className="flex flex-col gap-3 pb-3 border-b border-surface0">
         <div className="flex items-center justify-between">
