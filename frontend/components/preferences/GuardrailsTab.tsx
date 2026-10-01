@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ShieldAlert,
-  ShieldCheck,
   AlertCircle,
   Check,
   CheckCircle2,
   Trash2,
   Plus,
   RefreshCw,
-  Terminal,
-  FileCode,
-  Lock,
   X,
-  Zap,
 } from '@/components/common/icons';
 import { useAiMcpStore } from '../../store/useAiMcpStore';
 import {
@@ -171,10 +165,17 @@ export const GuardrailsTab: React.FC = () => {
       <div className="p-4 bg-surface0/60 border border-surface1 rounded-md space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <div>
               <h4 className="text-sm font-bold text-text">AI Security Guardrails & Policy Enforcement</h4>
-              <span className="text-[10px] font-mono px-2 py-0.5 bg-surface1 text-text border border-surface2 rounded">
+              <span
+                className={`inline-block mt-1 text-[10px] font-mono px-2 py-0.5 font-semibold text-white rounded uppercase ${
+                  activeMode === 'balanced'
+                    ? 'bg-[#238636]'
+                    : activeMode === 'strict'
+                    ? 'bg-[#da3633]'
+                    : 'bg-[#bb8009]'
+                }`}
+              >
                 Active: {activeMode.toUpperCase()}
               </span>
             </div>
@@ -204,27 +205,26 @@ export const GuardrailsTab: React.FC = () => {
           <button
             type="button"
             onClick={() => handlePresetSelect('strict')}
-            className={`p-3 text-left border rounded-md transition-all cursor-pointer flex flex-col justify-between ${
+            className={`p-3 text-left rounded-md transition-all cursor-pointer flex flex-col justify-between ${
               activeMode === 'strict'
-                ? 'bg-rose-950/20 border-rose-500/60 ring-1 ring-rose-500/30'
-                : 'bg-surface0 border-surface1 hover:border-surface2'
+                ? 'bg-[#da3633] text-white shadow-sm'
+                : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
             }`}
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-text flex items-center gap-1.5">
-                  <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                <span className={`text-xs font-bold ${activeMode === 'strict' ? 'text-white' : 'text-text'}`}>
                   Strict (Zero Trust)
                 </span>
                 {activeMode === 'strict' && (
-                  <Check className="w-3.5 h-3.5 text-rose-400" />
+                  <Check className="w-3.5 h-3.5 text-white" />
                 )}
               </div>
-              <p className="text-[11px] text-subtext0 mt-1.5 leading-relaxed">
+              <p className={`text-[11px] mt-1.5 leading-relaxed ${activeMode === 'strict' ? 'text-white/90' : 'text-subtext0'}`}>
                 Requires human approval for all terminal operations. Strictly limits file reads to 1,000 lines. Max timeout 15s.
               </p>
             </div>
-            <div className="mt-3 text-[10px] text-rose-400/90 font-mono">
+            <div className={`mt-3 text-[10px] font-mono ${activeMode === 'strict' ? 'text-white/80' : 'text-subtext0'}`}>
               High-security repositories
             </div>
           </button>
@@ -233,27 +233,26 @@ export const GuardrailsTab: React.FC = () => {
           <button
             type="button"
             onClick={() => handlePresetSelect('balanced')}
-            className={`p-3 text-left border rounded-md transition-all cursor-pointer flex flex-col justify-between ${
+            className={`p-3 text-left rounded-md transition-all cursor-pointer flex flex-col justify-between ${
               activeMode === 'balanced'
-                ? 'bg-emerald-950/20 border-emerald-500/60 ring-1 ring-emerald-500/30'
-                : 'bg-surface0 border-surface1 hover:border-surface2'
+                ? 'bg-[#238636] text-white shadow-sm'
+                : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
             }`}
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-text flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className={`text-xs font-bold ${activeMode === 'balanced' ? 'text-white' : 'text-text'}`}>
                   Balanced (Standard)
                 </span>
                 {activeMode === 'balanced' && (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <Check className="w-3.5 h-3.5 text-white" />
                 )}
               </div>
-              <p className="text-[11px] text-subtext0 mt-1.5 leading-relaxed">
+              <p className={`text-[11px] mt-1.5 leading-relaxed ${activeMode === 'balanced' ? 'text-white/90' : 'text-subtext0'}`}>
                 Auto-executes safe toolchains (cargo, npm, pytest). Blocks destructive commands and credential leakage.
               </p>
             </div>
-            <div className="mt-3 text-[10px] text-emerald-400/90 font-mono">
+            <div className={`mt-3 text-[10px] font-mono ${activeMode === 'balanced' ? 'text-white/80' : 'text-subtext0'}`}>
               Recommended for development
             </div>
           </button>
@@ -262,27 +261,26 @@ export const GuardrailsTab: React.FC = () => {
           <button
             type="button"
             onClick={() => handlePresetSelect('permissive')}
-            className={`p-3 text-left border rounded-md transition-all cursor-pointer flex flex-col justify-between ${
+            className={`p-3 text-left rounded-md transition-all cursor-pointer flex flex-col justify-between ${
               activeMode === 'permissive'
-                ? 'bg-amber-950/20 border-amber-500/60 ring-1 ring-amber-500/30'
-                : 'bg-surface0 border-surface1 hover:border-surface2'
+                ? 'bg-[#bb8009] text-white shadow-sm'
+                : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
             }`}
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-text flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span className={`text-xs font-bold ${activeMode === 'permissive' ? 'text-white' : 'text-text'}`}>
                   Autonomous (Sandbox)
                 </span>
                 {activeMode === 'permissive' && (
-                  <Check className="w-3.5 h-3.5 text-amber-400" />
+                  <Check className="w-3.5 h-3.5 text-white" />
                 )}
               </div>
-              <p className="text-[11px] text-subtext0 mt-1.5 leading-relaxed">
+              <p className={`text-[11px] mt-1.5 leading-relaxed ${activeMode === 'permissive' ? 'text-white/90' : 'text-subtext0'}`}>
                 Permits broader shell toolchain in Docker/Worktree containers with basic boundary and credential shields.
               </p>
             </div>
-            <div className="mt-3 text-[10px] text-amber-400/90 font-mono">
+            <div className={`mt-3 text-[10px] font-mono ${activeMode === 'permissive' ? 'text-white/80' : 'text-subtext0'}`}>
               Automated CI/CD agents
             </div>
           </button>
@@ -291,8 +289,7 @@ export const GuardrailsTab: React.FC = () => {
 
       {/* 2. Command Safety Policies & Whitelists */}
       <div className="p-4 bg-surface0/60 border border-surface1 rounded-md space-y-4">
-        <h4 className="text-xs font-bold text-text flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-subtext0" />
+        <h4 className="text-xs font-bold text-text">
           Terminal Command Execution Guardrails
         </h4>
 
@@ -305,13 +302,13 @@ export const GuardrailsTab: React.FC = () => {
             {allowedCommands.map((cmd) => (
               <span
                 key={cmd}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-emerald-950/30 text-emerald-300 border border-emerald-500/40 rounded font-mono"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-[#238636] text-white rounded font-mono font-medium"
               >
                 <span>{cmd}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveAllowedCmd(cmd)}
-                  className="hover:text-rose-400 cursor-pointer"
+                  className="text-white/80 hover:text-white cursor-pointer"
                   title="Remove"
                 >
                   <X className="w-3 h-3" />
@@ -348,13 +345,13 @@ export const GuardrailsTab: React.FC = () => {
             {blockedCommands.map((cmd) => (
               <span
                 key={cmd}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-rose-950/30 text-rose-300 border border-rose-500/40 rounded font-mono"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-[#da3633] text-white rounded font-mono font-medium"
               >
                 <span>{cmd}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveBlockedCmd(cmd)}
-                  className="hover:text-rose-100 cursor-pointer"
+                  className="text-white/80 hover:text-white cursor-pointer"
                   title="Remove"
                 >
                   <X className="w-3 h-3" />
@@ -391,13 +388,13 @@ export const GuardrailsTab: React.FC = () => {
             {blockedPatterns.map((pat) => (
               <span
                 key={pat}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-amber-950/30 text-amber-300 border border-amber-500/40 rounded font-mono"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-[#bb8009] text-white rounded font-mono font-medium"
               >
                 <span>{pat}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveBlockedPattern(pat)}
-                  className="hover:text-amber-100 cursor-pointer"
+                  className="text-white/80 hover:text-white cursor-pointer"
                   title="Remove"
                 >
                   <X className="w-3 h-3" />
@@ -476,8 +473,7 @@ export const GuardrailsTab: React.FC = () => {
 
       {/* 3. Sensitive Data & File Reading Protection */}
       <div className="p-4 bg-surface0/60 border border-surface1 rounded-md space-y-4">
-        <h4 className="text-xs font-bold text-text flex items-center gap-2">
-          <Lock className="w-4 h-4 text-subtext0" />
+        <h4 className="text-xs font-bold text-text">
           Workspace & Sensitive File Shield
         </h4>
 
@@ -489,13 +485,13 @@ export const GuardrailsTab: React.FC = () => {
             {sensitivePatterns.map((pat) => (
               <span
                 key={pat}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-indigo-950/30 text-indigo-300 border border-indigo-500/40 rounded font-mono"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-[#8250df] text-white rounded font-mono font-medium"
               >
                 <span>{pat}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveSensitivePattern(pat)}
-                  className="hover:text-indigo-100 cursor-pointer"
+                  className="text-white/80 hover:text-white cursor-pointer"
                   title="Remove"
                 >
                   <X className="w-3 h-3" />
@@ -557,8 +553,7 @@ export const GuardrailsTab: React.FC = () => {
       {/* 4. Live Policy Simulator */}
       <div className="p-4 bg-surface0/60 border border-surface1 rounded-md space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-400" />
+          <div>
             <h4 className="text-xs font-bold text-text">Live Policy Simulator & Dry-Run</h4>
           </div>
           <span className="text-[10px] text-subtext0">Test tool arguments against current guardrails</span>
@@ -569,35 +564,35 @@ export const GuardrailsTab: React.FC = () => {
           <button
             type="button"
             onClick={() => setSampleScenario('safe_test')}
-            className="px-2.5 py-1 text-[11px] bg-surface1 hover:bg-surface2 border border-surface2 text-emerald-300 rounded cursor-pointer transition font-mono"
+            className="px-2.5 py-1 text-[11px] bg-[#238636] hover:bg-[#2ea043] text-white rounded cursor-pointer transition font-mono font-medium"
           >
             Safe: `cargo test`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('dangerous_rm')}
-            className="px-2.5 py-1 text-[11px] bg-surface1 hover:bg-surface2 border border-surface2 text-rose-300 rounded cursor-pointer transition font-mono"
+            className="px-2.5 py-1 text-[11px] bg-[#da3633] hover:bg-[#f85149] text-white rounded cursor-pointer transition font-mono font-medium"
           >
             Dangerous: `rm -rf /`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('sensitive_env')}
-            className="px-2.5 py-1 text-[11px] bg-surface1 hover:bg-surface2 border border-surface2 text-indigo-300 rounded cursor-pointer transition font-mono"
+            className="px-2.5 py-1 text-[11px] bg-[#8250df] hover:bg-[#a371f7] text-white rounded cursor-pointer transition font-mono font-medium"
           >
             Sensitive: `.env.production`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('pipe_injection')}
-            className="px-2.5 py-1 text-[11px] bg-surface1 hover:bg-surface2 border border-surface2 text-amber-300 rounded cursor-pointer transition font-mono"
+            className="px-2.5 py-1 text-[11px] bg-[#bb8009] hover:bg-[#d29922] text-white rounded cursor-pointer transition font-mono font-medium"
           >
             Injection: `npm test | sh`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('large_read')}
-            className="px-2.5 py-1 text-[11px] bg-surface1 hover:bg-surface2 border border-surface2 text-subtext0 rounded cursor-pointer transition font-mono"
+            className="px-2.5 py-1 text-[11px] bg-surface2 hover:bg-surface2/80 text-white rounded cursor-pointer transition font-mono font-medium"
           >
             Exceeded: 8,000 Lines
           </button>
@@ -634,9 +629,8 @@ export const GuardrailsTab: React.FC = () => {
               type="button"
               onClick={runSimulation}
               disabled={isSimulating}
-              className="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded cursor-pointer transition flex items-center gap-1.5 shadow-sm"
+              className="px-3.5 py-1.5 text-xs font-semibold bg-[#238636] hover:bg-[#2ea043] text-white rounded cursor-pointer transition shadow-sm"
             >
-              <Zap className="w-3.5 h-3.5" />
               <span>{isSimulating ? 'Evaluating...' : 'Simulate Policy Check'}</span>
             </button>
           </div>
@@ -653,19 +647,19 @@ export const GuardrailsTab: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {simResult.allowed ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-emerald-950/40 text-emerald-300 border border-emerald-500/40 rounded">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-[#238636] text-white rounded">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                           ALLOWED
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-rose-950/40 text-rose-300 border border-rose-500/40 rounded">
-                          <AlertCircle className="w-3.5 h-3.5" />
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-[#da3633] text-white rounded">
+                          <AlertCircle className="w-3.5 h-3.5 text-white" />
                           BLOCKED
                         </span>
                       )}
 
                       {simResult.requires_confirmation && (
-                        <span className="px-2 py-0.5 text-[10px] bg-amber-950/40 text-amber-300 border border-amber-500/40 rounded font-semibold">
+                        <span className="px-2 py-0.5 text-[10px] bg-[#bb8009] text-white rounded font-semibold">
                           CONFIRMATION REQUIRED
                         </span>
                       )}
@@ -712,7 +706,6 @@ export const GuardrailsTab: React.FC = () => {
       <div className="p-4 bg-surface0/60 border border-surface1 rounded-md space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FileCode className="w-4 h-4 text-subtext0" />
             <h4 className="text-xs font-bold text-text">Guardrails Audit Trail (Recent Activity)</h4>
             <span className="text-[10px] font-mono text-subtext0">({auditLogs.length} events)</span>
           </div>
@@ -740,11 +733,11 @@ export const GuardrailsTab: React.FC = () => {
                 <div key={event.id} className="p-2.5 hover:bg-surface1/30 transition flex flex-col md:flex-row md:items-center justify-between gap-2">
                   <div className="flex items-start md:items-center gap-2.5">
                     {event.allowed ? (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-950/40 text-emerald-400 border border-emerald-500/30 rounded font-mono">
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#238636] text-white rounded font-mono">
                         PASS
                       </span>
                     ) : (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-rose-950/40 text-rose-400 border border-rose-500/30 rounded font-mono">
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#da3633] text-white rounded font-mono">
                         BLOCK
                       </span>
                     )}

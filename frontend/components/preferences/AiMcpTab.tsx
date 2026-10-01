@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Bot,
-  Sparkles,
   Cable,
   Plus,
   Trash2,
@@ -32,16 +30,17 @@ import {
   McpServerConfig,
   McpServerType,
 } from '../../types/ai';
-import { GuardrailsTab } from './GuardrailsTab';
 
 interface AiMcpTabProps {
   draftAiConfig?: AiConfig;
   onUpdateAiConfig?: (partial: Partial<AiConfig>) => void;
+  onNavigateToGuardrails?: () => void;
 }
 
 export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   draftAiConfig,
   onUpdateAiConfig,
+  onNavigateToGuardrails,
 }) => {
   const {
     aiConfig: storeAiConfig,
@@ -257,8 +256,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       <div className="flex flex-col gap-3 pb-3 border-b border-surface0">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-text flex items-center gap-2">
-              <Bot className="w-4 h-4 text-subtext0" />
+            <h3 className="text-sm font-bold text-text">
               AI & Model Context Protocol (MCP)
             </h3>
             <p className="text-[11px] text-subtext0 mt-0.5">
@@ -284,7 +282,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
             }`}
           >
-            <Bot className="w-3.5 h-3.5" />
             <span>AI Model & Security Policies</span>
           </button>
 
@@ -297,7 +294,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
             }`}
           >
-            <Cable className="w-3.5 h-3.5" />
             <span>MCP Servers</span>
             <span className="text-[10px] px-1.5 py-0.2 bg-base border border-surface2 font-mono">
               {enabledMcpCount}/{mcpServers.length}
@@ -313,7 +309,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5" />
             <span>Reviewer Persona & Prompts</span>
           </button>
         </div>
@@ -616,18 +611,33 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     <span>Testing Connection...</span>
                   </>
                 ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5 text-text" />
-                    <span>Test AI Connection</span>
-                  </>
+                  <span>Test AI Connection</span>
                 )}
               </button>
             </div>
           </div>
 
-          {/* AI Security Guardrails & Tool Execution Policies */}
+          {/* AI Security Guardrails Link Notice */}
           <div className="pt-2">
-            <GuardrailsTab />
+            <div className="p-3.5 bg-surface0/30 border border-surface0/60 rounded flex items-center justify-between gap-4">
+              <div>
+                <span className="text-xs font-semibold text-text block">
+                  AI Security Guardrails &amp; Tool Execution Policies
+                </span>
+                <span className="text-[11px] text-subtext0 block mt-0.5">
+                  Command whitelist, security isolation policies, simulator, and audit logs are available in the dedicated Security Guardrails tab.
+                </span>
+              </div>
+              {onNavigateToGuardrails && (
+                <button
+                  type="button"
+                  onClick={onNavigateToGuardrails}
+                  className="px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs rounded border border-surface2 transition-colors cursor-pointer shrink-0 font-medium"
+                >
+                  Open Guardrails
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

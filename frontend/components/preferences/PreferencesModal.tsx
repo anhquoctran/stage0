@@ -1,27 +1,19 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   X,
-  Type,
-  Bold,
-  Italic,
-  Underline,
-  Sparkles,
   RotateCcw,
   Check,
-  Cog,
-  AlertCircle,
-  AlertTriangle,
   ChevronDown,
+  ChevronRight,
   Search,
   Monitor,
   Moon,
   Sun,
-  Palette,
-  Key,
-  Bot,
-  Box,
-  ShieldCheck,
-  GitBranch,
+  AlertCircle,
+  AlertTriangle,
+  Bold,
+  Italic,
+  Underline,
 } from '@/components/common/icons';
 import { SUPPORTED_FONTS } from '../../constants/fonts';
 import { formatShortcutText } from '../../utils/shortcuts';
@@ -43,6 +35,7 @@ import { AiMcpTab } from './AiMcpTab';
 import { BotReviewersTab } from './BotReviewersTab';
 import { SandboxTab } from './SandboxTab';
 import { GitBinaryTab } from './GitBinaryTab';
+import { GuardrailsTab } from './GuardrailsTab';
 import { useGitStore } from '../../store/useGitStore';
 import { useAiMcpStore } from '../../store/useAiMcpStore';
 import { useGitBinaryStore } from '../../store/useGitBinaryStore';
@@ -50,7 +43,16 @@ import { DEFAULT_AI_CONFIG } from '../../constants/aiPresets';
 import { AiConfig } from '../../types/ai';
 import { SandboxType } from '../../types/git';
 
-type PreferenceTab = 'appearance' | 'fonts' | 'credentials' | 'ai' | 'reviewers' | 'sandbox' | 'git';
+export type PreferenceTab =
+  | 'general'
+  | 'appearance'
+  | 'fonts'
+  | 'git'
+  | 'credentials'
+  | 'sandbox'
+  | 'ai'
+  | 'reviewers'
+  | 'guardrails';
 
 interface PreferencesBaseline {
   themeMode: ThemeMode;
@@ -67,6 +69,82 @@ interface PreferencesBaseline {
   gitBinaryId: string;
   gitBinaryPath: string;
 }
+
+interface PreferenceCategory {
+  id: PreferenceTab;
+  label: string;
+  title: string;
+  description: string;
+  keywords: string[];
+  unsavedCount?: number;
+}
+
+// Zed-inspired sleek toggle switch
+interface ZedSwitchProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  id?: string;
+}
+
+const ZedSwitch: React.FC<ZedSwitchProps> = ({ checked, onChange, disabled, id }) => {
+  return (
+    <button
+      id={id}
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => !disabled && onChange(!checked)}
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
+        disabled
+          ? 'opacity-40 cursor-not-allowed bg-surface1'
+          : checked
+          ? 'bg-[#238636]'
+          : 'bg-surface2 hover:bg-surface3'
+      }`}
+    >
+      <span
+        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+          checked ? 'translate-x-4.5' : 'translate-x-0.75'
+        }`}
+      />
+    </button>
+  );
+};
+
+// Zed-inspired setting row
+interface SettingRowProps {
+  title: string;
+  description?: React.ReactNode;
+  children: React.ReactNode;
+  borderBottom?: boolean;
+}
+
+const SettingRow: React.FC<SettingRowProps> = ({
+  title,
+  description,
+  children,
+  borderBottom = true,
+}) => {
+  return (
+    <div
+      className={`py-3.5 flex items-center justify-between gap-6 ${
+        borderBottom ? 'border-b border-[#313244]/40' : ''
+      }`}
+    >
+      <div className="min-w-0 flex-1 pr-2">
+        <div className="text-xs font-semibold text-text">{title}</div>
+        {description && (
+          <div className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">
+            {description}
+          </div>
+        )}
+      </div>
+      <div className="shrink-0 flex items-center">{children}</div>
+    </div>
+  );
+};
 
 export const PreferencesModal: React.FC = () => {
   const {
@@ -103,7 +181,9 @@ export const PreferencesModal: React.FC = () => {
     restartApp,
   } = useGitBinaryStore();
 
-  const [activeTab, setActiveTab] = useState<PreferenceTab>('appearance');
+  const [activeTab, setActiveTab] = useState<PreferenceTab>('general');
+  const [searchQuery, setSearchQuery] = useState('');
+  const sidebarSearchInputRef = useRef<HTMLInputElement>(null);
 
   // Draft State (for PreferenceTransaction)
   const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
@@ -208,6 +288,11 @@ export const PreferencesModal: React.FC = () => {
 
   // Track unsaved changes per domain and in total
   const unsavedBreakdown = useMemo(() => {
+    let general = 0;
+    if (draftShowInlineBlame !== savedBaseline.showInlineBlame) general++;
+    if (draftAiConfig.streamResponse !== savedBaseline.aiConfig.streamResponse) general++;
+    if (draftAiConfig.enableCodeReviewAssist !== savedBaseline.aiConfig.enableCodeReviewAssist) general++;
+
     let appearance = 0;
     if (draftThemeMode !== savedBaseline.themeMode) appearance++;
 
@@ -219,7 +304,6 @@ export const PreferencesModal: React.FC = () => {
     if (draftIsUnderline !== savedBaseline.isUnderline) fonts++;
     if (draftLineSpacing !== savedBaseline.lineSpacing) fonts++;
     if (draftEnableLigatures !== savedBaseline.enableLigatures) fonts++;
-    if (draftShowInlineBlame !== savedBaseline.showInlineBlame) fonts++;
 
     let sandbox = 0;
     if (draftSandboxType !== savedBaseline.sandboxType) sandbox++;
@@ -231,15 +315,18 @@ export const PreferencesModal: React.FC = () => {
     if (draftAiConfig.baseUrl !== savedBaseline.aiConfig.baseUrl) ai++;
     if (draftAiConfig.temperature !== savedBaseline.aiConfig.temperature) ai++;
     if (draftAiConfig.maxTokens !== savedBaseline.aiConfig.maxTokens) ai++;
-    if (draftAiConfig.streamResponse !== savedBaseline.aiConfig.streamResponse) ai++;
-    if (draftAiConfig.enableCodeReviewAssist !== savedBaseline.aiConfig.enableCodeReviewAssist) ai++;
     if (draftAiConfig.systemPrompt !== savedBaseline.aiConfig.systemPrompt) ai++;
 
     let git = 0;
-    if (draftGitBinaryId !== savedBaseline.gitBinaryId || draftGitBinaryPath !== savedBaseline.gitBinaryPath) git++;
+    if (
+      draftGitBinaryId !== savedBaseline.gitBinaryId ||
+      draftGitBinaryPath !== savedBaseline.gitBinaryPath
+    ) {
+      git++;
+    }
 
-    const total = appearance + fonts + sandbox + ai + git;
-    return { appearance, fonts, sandbox, ai, git, total };
+    const total = general + appearance + fonts + sandbox + ai + git;
+    return { general, appearance, fonts, sandbox, ai, git, total };
   }, [
     draftThemeMode,
     draftFontFamily,
@@ -285,7 +372,7 @@ export const PreferencesModal: React.FC = () => {
     };
   }, [isFontDropdownOpen]);
 
-  // Focus search input when dropdown opens
+  // Focus search input when font dropdown opens
   useEffect(() => {
     if (isFontDropdownOpen) {
       setTimeout(() => {
@@ -312,12 +399,10 @@ export const PreferencesModal: React.FC = () => {
 
   // Reset to default action with immediate commit
   const handleConfirmResetToDefault = async () => {
-    // 1. Commit Theme default
     setThemeMode('system');
     applyThemeToDocument(resolveTheme('system'));
     setDraftThemeMode('system');
 
-    // 2. Commit Font defaults
     updateViewerFontSettings(DEFAULT_VIEWER_FONT_SETTINGS);
     applyViewerFontToDocument(DEFAULT_VIEWER_FONT_SETTINGS);
     setDraftFontFamily(DEFAULT_VIEWER_FONT_SETTINGS.fontFamily);
@@ -328,24 +413,19 @@ export const PreferencesModal: React.FC = () => {
     setDraftLineSpacing(DEFAULT_VIEWER_FONT_SETTINGS.lineSpacing);
     setDraftEnableLigatures(DEFAULT_VIEWER_FONT_SETTINGS.enableLigatures);
 
-    // 3. Commit Blame default
     setShowInlineBlame(true);
     setDraftShowInlineBlame(true);
 
-    // 4. Commit Sandbox default
     await setActiveSandbox('in_memory');
     setDraftSandboxType('in_memory');
 
-    // 5. Commit AI default
     resetAiConfig();
     setDraftAiConfig({ ...DEFAULT_AI_CONFIG });
 
-    // 6. Commit Git binary default
     setDraftGitBinaryId('system-default');
     setDraftGitBinaryPath('git');
     await setActiveBinary('system-default', 'git');
 
-    // 7. Update savedBaseline to defaults immediately (unsavedCount becomes 0, no badge)
     setSavedBaseline({
       themeMode: 'system',
       ...DEFAULT_VIEWER_FONT_SETTINGS,
@@ -372,7 +452,6 @@ export const PreferencesModal: React.FC = () => {
       enableLigatures: draftEnableLigatures,
     };
 
-    // Commit to stores & persistent storage
     updateViewerFontSettings(committedFontSettings);
     applyViewerFontToDocument(committedFontSettings);
 
@@ -380,15 +459,12 @@ export const PreferencesModal: React.FC = () => {
     applyThemeToDocument(resolveTheme(draftThemeMode));
     setShowInlineBlame(draftShowInlineBlame);
 
-    // Commit sandbox engine if changed
     if (draftSandboxType !== savedBaseline.sandboxType) {
       await setActiveSandbox(draftSandboxType);
     }
 
-    // Commit AI configuration
     updateAiConfig(draftAiConfig);
 
-    // Commit Git binary if changed
     let gitChanged = false;
     if (
       draftGitBinaryId !== savedBaseline.gitBinaryId ||
@@ -398,7 +474,6 @@ export const PreferencesModal: React.FC = () => {
       gitChanged = true;
     }
 
-    // Update baseline to match committed drafts
     setSavedBaseline({
       themeMode: draftThemeMode,
       ...committedFontSettings,
@@ -432,16 +507,13 @@ export const PreferencesModal: React.FC = () => {
 
   // Cancel (close without saving, rollback safely)
   const handleCancel = () => {
-    // Rollback any live previews to baseline
     applyThemeToDocument(resolveTheme(savedBaseline.themeMode));
     applyViewerFontToDocument(savedBaseline);
 
-    // Rollback stores
     setThemeMode(savedBaseline.themeMode);
     updateViewerFontSettings(savedBaseline);
     setShowInlineBlame(savedBaseline.showInlineBlame);
 
-    // Rollback draft states to baseline
     setDraftThemeMode(savedBaseline.themeMode);
     setDraftFontFamily(savedBaseline.fontFamily);
     setDraftFontSize(savedBaseline.fontSize);
@@ -460,583 +532,617 @@ export const PreferencesModal: React.FC = () => {
     setIsPreferencesOpen(false);
   };
 
-  // Keyboard navigation & Esc listener
+  // Keyboard navigation, Esc listener, and Ctrl+S to save
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isPreferencesOpen && !isFontDropdownOpen && !showRestartPrompt) {
+      if (!isPreferencesOpen) return;
+
+      if (e.key === 'Escape' && !isFontDropdownOpen && !showRestartPrompt && !showResetConfirm) {
         handleCancel();
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        void handleApply();
+      }
+
+      if ((e.ctrlKey || e.metaKey) && (e.shiftKey && e.key.toLowerCase() === 'e' || e.key.toLowerCase() === 'f')) {
+        e.preventDefault();
+        sidebarSearchInputRef.current?.focus();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPreferencesOpen, isFontDropdownOpen, showRestartPrompt, savedBaseline]);
+  }, [isPreferencesOpen, isFontDropdownOpen, showRestartPrompt, showResetConfirm, savedBaseline, draftThemeMode, draftFontFamily, draftFontSize, draftIsBold, draftIsItalic, draftIsUnderline, draftLineSpacing, draftEnableLigatures, draftShowInlineBlame, draftSandboxType, draftAiConfig, draftGitBinaryId, draftGitBinaryPath]);
 
-  if (!isPreferencesOpen) return null;
-
-  const currentFontSupportsLigatures = checkFontLigaturesSupport(draftFontFamily);
-  const selectedFontObj = SUPPORTED_FONTS.find(
-    (f) => f.fontFamilyName.toLowerCase() === draftFontFamily.toLowerCase()
-  ) || { fontFamilyName: draftFontFamily, ligaturesSupport: currentFontSupportsLigatures };
-
-  const tabs: {
-    id: PreferenceTab;
-    label: string;
-    sublabel: string;
-    icon: React.ReactNode;
-    unsavedCount?: number;
-  }[] = [
+  // Categories definition
+  const categories: PreferenceCategory[] = useMemo(() => [
+    {
+      id: 'general',
+      label: 'General',
+      title: 'General',
+      description: 'General editor settings, inline blame, and AI assistance',
+      keywords: ['general', 'blame', 'stream', 'review', 'assist', 'accessible'],
+      unsavedCount: unsavedBreakdown.general,
+    },
     {
       id: 'appearance',
       label: 'Appearance',
-      sublabel: 'Theme & Colors',
-      icon: <Palette className="w-4 h-4" />,
+      title: 'Appearance',
+      description: 'User interface themes, dark mode, and color scheme',
+      keywords: ['appearance', 'theme', 'dark', 'light', 'system', 'color'],
       unsavedCount: unsavedBreakdown.appearance,
     },
     {
       id: 'fonts',
-      label: 'Viewer Fonts',
-      sublabel: 'Diff & Raw Typography',
-      icon: <Type className="w-4 h-4" />,
+      label: 'Editor & Fonts',
+      title: 'Editor & Fonts',
+      description: 'Typography, font family, ligatures, and line spacing for diffs and code viewer',
+      keywords: ['fonts', 'editor', 'typography', 'size', 'monospace', 'ligature', 'line spacing', 'preview'],
       unsavedCount: unsavedBreakdown.fonts,
     },
     {
       id: 'git',
-      label: 'Git Executable',
-      sublabel: 'Bundled / System Binaries',
-      icon: <GitBranch className="w-4 h-4" />,
+      label: 'Version Control',
+      title: 'Version Control',
+      description: 'Git executable binary configuration and active path',
+      keywords: ['git', 'version control', 'executable', 'binary', 'path', 'system', 'bundled'],
       unsavedCount: unsavedBreakdown.git,
     },
     {
       id: 'credentials',
       label: 'Git Credentials',
-      sublabel: 'OS Keyring & Tokens',
-      icon: <Key className="w-4 h-4" />,
+      title: 'Git Credentials',
+      description: 'OS Keychain, credential helpers, and personal access tokens',
+      keywords: ['credentials', 'git', 'token', 'pat', 'auth', 'keyring', 'github', 'gitlab'],
+    },
+    {
+      id: 'sandbox',
+      label: 'Sandbox Engine',
+      title: 'Sandbox Engine',
+      description: 'Worktree isolation, In-Memory staging, and Docker containers',
+      keywords: ['sandbox', 'worktree', 'docker', 'container', 'in_memory', 'isolation'],
+      unsavedCount: unsavedBreakdown.sandbox,
     },
     {
       id: 'ai',
       label: 'AI & MCP',
-      sublabel: 'Models, Agents & Tools',
-      icon: <Bot className="w-4 h-4" />,
+      title: 'AI & MCP',
+      description: 'LLM providers, API keys, models, and Model Context Protocol servers',
+      keywords: ['ai', 'mcp', 'models', 'providers', 'openai', 'anthropic', 'gemini', 'ollama', 'servers'],
       unsavedCount: unsavedBreakdown.ai,
     },
     {
       id: 'reviewers',
       label: 'Bot Reviewers',
-      sublabel: 'Global Review Agents',
-      icon: <ShieldCheck className="w-4 h-4" />,
+      title: 'Bot Reviewers',
+      description: 'Global AI reviewer agents, prompts, and personas',
+      keywords: ['bot', 'reviewers', 'agents', 'personas', 'prompts'],
     },
     {
-      id: 'sandbox',
-      label: 'Sandbox Engine',
-      sublabel: 'InMemory / Worktree / Docker',
-      icon: <Box className="w-4 h-4" />,
-      unsavedCount: unsavedBreakdown.sandbox,
+      id: 'guardrails',
+      label: 'Security Guardrails',
+      title: 'Security Guardrails',
+      description: 'Tool execution policies, command whitelist, audit log, and sandbox simulator',
+      keywords: ['guardrails', 'security', 'whitelist', 'simulator', 'blocked', 'audit', 'commands'],
     },
-  ];
+  ], [unsavedBreakdown]);
+
+  // Filtered categories based on search input
+  const filteredCategories = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return categories;
+    return categories.filter(
+      (cat) =>
+        cat.label.toLowerCase().includes(q) ||
+        cat.title.toLowerCase().includes(q) ||
+        cat.description.toLowerCase().includes(q) ||
+        cat.keywords.some((k) => k.toLowerCase().includes(q))
+    );
+  }, [searchQuery, categories]);
+
+  if (!isPreferencesOpen) return null;
+
+  const currentCategory = categories.find((c) => c.id === activeTab) || categories[0];
+  const currentFontSupportsLigatures = checkFontLigaturesSupport(draftFontFamily);
+  const selectedFontObj = SUPPORTED_FONTS.find(
+    (f) => f.fontFamilyName.toLowerCase() === draftFontFamily.toLowerCase()
+  ) || { fontFamilyName: draftFontFamily, ligaturesSupport: currentFontSupportsLigatures };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
-      <div className="bg-mantle border border-surface0 w-full max-w-5xl xl:max-w-6xl shadow-2xl overflow-hidden flex flex-col h-[760px] max-h-[92vh] min-h-[580px] animate-in zoom-in-95 duration-150">
-        {/* Header with Title and Unsaved Badge */}
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 select-none animate-in fade-in duration-150">
+      <div className="bg-[#181825] border border-[#313244] w-full max-w-[1240px] shadow-2xl rounded-lg overflow-hidden flex flex-col h-[88vh] min-h-[620px] max-h-[96vh] animate-in zoom-in-95 duration-150">
+        
+        {/* Header Bar */}
         <div
           data-tauri-drag-region
-          className="px-6 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60 cursor-default"
+          className="px-4 py-2.5 border-b border-[#313244]/60 flex items-center justify-between bg-[#11111b]/80 shrink-0 select-none"
         >
-          <div data-tauri-drag-region className="flex items-center gap-2.5 pointer-events-none">
-            <div className="w-7 h-7 bg-surface0 border border-surface1 flex items-center justify-center text-text shadow-xs">
-              <Cog className="w-4 h-4 text-subtext0" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-text">Preferences</h2>
-              <p className="text-[11px] text-subtext0">
-                Configure Appearance, Viewer Typography, Sandbox Engine, and AI
-              </p>
-            </div>
+          <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
+            <span className="text-xs font-semibold text-text tracking-wide">Settings</span>
           </div>
 
           <button
             type="button"
             onClick={handleCancel}
-            className="p-1.5 rounded-lg hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
-            title="Cancel and close (Esc)"
+            className="p-1 rounded hover:bg-[#313244]/50 text-subtext0 hover:text-text transition-colors cursor-pointer"
+            title="Close (Esc)"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Modal Body: Vertical Tabbed Layout */}
+        {/* Modal Body: Zed Split Layout */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Vertical Sidebar Tabs (Left) */}
-          <div className="w-60 bg-base/40 border-r border-surface0 flex flex-col shrink-0 select-none">
-            <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-subtext0/70 border-b border-surface0/40">
-              Settings
+          
+          {/* Zed Sidebar (Left) */}
+          <div className="w-64 bg-[#11111b]/90 border-r border-[#313244]/60 flex flex-col shrink-0 select-none">
+            {/* Search Input */}
+            <div className="p-3 border-b border-[#313244]/60">
+              <div className="relative flex items-center">
+                <Search className="w-3.5 h-3.5 text-subtext0 absolute left-2.5 pointer-events-none" />
+                <input
+                  ref={sidebarSearchInputRef}
+                  type="text"
+                  placeholder="Search settings..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#181825] border border-[#313244] rounded px-2.5 pl-8 pr-7 py-1.5 text-xs text-text placeholder:text-subtext0/60 focus:outline-none focus:border-[#45475a] transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 text-subtext0 hover:text-text cursor-pointer p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="flex flex-col">
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all cursor-pointer border-l-2 ${
-                      isActive
-                        ? 'bg-brand/10 text-brand font-semibold border-l-brand'
-                        : 'border-l-transparent text-subtext0 hover:bg-surface0/50 hover:text-text'
-                    }`}
-                  >
-                    <div
-                      className={`mt-0.5 shrink-0 ${
-                        isActive ? 'text-brand' : 'text-subtext0'
+            {/* Categories Navigation */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+              {filteredCategories.length === 0 ? (
+                <div className="px-3 py-6 text-center text-xs text-subtext0 italic">
+                  No settings matching &quot;{searchQuery}&quot;
+                </div>
+              ) : (
+                filteredCategories.map((cat) => {
+                  const isActive = activeTab === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setActiveTab(cat.id)}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded transition-colors cursor-pointer text-left ${
+                        isActive
+                          ? 'bg-[#313244]/80 text-text font-medium'
+                          : 'text-subtext0 hover:text-text hover:bg-[#313244]/30'
                       }`}
                     >
-                      {tab.icon}
-                    </div>
-                    <div className="min-w-0 flex-1 pr-1">
-                      <div className="text-xs font-semibold leading-tight truncate">
-                        {tab.label}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <ChevronRight
+                          className={`w-2.5 h-2.5 shrink-0 transition-transform duration-150 ${
+                            isActive ? 'rotate-90 text-text' : 'text-subtext0/70'
+                          }`}
+                        />
+                        <span className="truncate">{cat.label}</span>
                       </div>
-                      <div className="text-[10px] text-subtext0/80 leading-normal truncate mt-0.5">
-                        {tab.sublabel}
-                      </div>
-                    </div>
-                    {Boolean(tab.unsavedCount && tab.unsavedCount > 0) && (
-                      <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded-full bg-surface2 text-text border border-surface1 shrink-0">
-                        {tab.unsavedCount}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+                      {Boolean(cat.unsavedCount && cat.unsavedCount > 0) && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-surface2 text-text border border-surface1 shrink-0">
+                          {cat.unsavedCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Keyboard Shortcut Hints at Bottom */}
+            <div className="p-3 border-t border-[#313244]/60 text-[11px] text-subtext0/80 font-mono flex items-center justify-between select-none">
+              <span>Ctrl-Shift-E Focus Navbar</span>
+              <span>Esc Close</span>
             </div>
           </div>
 
-          {/* Tab Content Panel (Right) */}
-          <div className="flex-1 overflow-y-auto p-6 bg-mantle">
-            {/* TAB 1: APPEARANCE & THEME */}
-            {activeTab === 'appearance' && (
-              <div className="space-y-5 animate-in fade-in duration-100">
-                <div className="pb-3 border-b border-surface0">
-                  <h3 className="text-sm font-bold text-text flex items-center gap-2">
-                    <Palette className="w-4 h-4 text-subtext0" />
-                    Color Theme
-                  </h3>
-                  <p className="text-[11px] text-subtext0 mt-0.5">
-                    Select your preferred interface theme mode
-                  </p>
-                </div>
+          {/* Zed Content Area (Right) */}
+          <div className="flex-1 overflow-y-auto p-8 bg-[#181825] flex flex-col">
+            {/* Top Scope & Action Row (Zed style) */}
+            <div className="flex items-center justify-between mb-4">
+              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-[#313244]/60 text-subtext1 border border-[#45475a]/50 select-none">
+                User
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(true)}
+                className="text-[11px] text-subtext0 hover:text-text transition-colors cursor-pointer hover:underline"
+              >
+                Reset all to defaults
+              </button>
+            </div>
 
-                <div className="p-4 bg-surface0/30 border border-surface0 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-semibold text-text block">Interface Theme</span>
-                      <span className="text-[11px] text-subtext0 block mt-0.5">
-                        {draftThemeMode === 'system'
-                          ? 'Synchronized with your operating system color scheme'
-                          : draftThemeMode === 'dark'
-                          ? 'Catppuccin Mocha aesthetic dark theme'
-                          : 'Catppuccin Latte clean light theme'}
-                      </span>
-                    </div>
+            {/* Category Header */}
+            <div className="mb-5 pb-3 border-b border-[#313244]/60">
+              <h2 className="text-base font-semibold text-text">{currentCategory.title}</h2>
+              <p className="text-[11px] text-subtext0 mt-0.5">{currentCategory.description}</p>
+            </div>
 
-                    {/* 3-Step Compact Button Group */}
-                    <div className="inline-flex items-center p-0.5 bg-base border border-surface1 gap-0.5 shadow-inner">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectTheme('system')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
-                          draftThemeMode === 'system'
-                            ? 'bg-surface2 text-text font-semibold shadow-xs'
-                            : 'text-subtext0 hover:text-text hover:bg-surface0'
-                        }`}
-                        title="Sync with Operating System theme"
-                      >
-                        <Monitor className="w-3.5 h-3.5" />
-                        <span>System</span>
-                      </button>
+            {/* TAB: GENERAL */}
+            {activeTab === 'general' && (
+              <div className="space-y-1">
+                <SettingRow
+                  title="Inline Git Blame"
+                  description={formatShortcutText(
+                    'Show commit author, relative time, and summary annotation at the end of the active line in diff view (Alt+Shift+B).'
+                  )}
+                >
+                  <ZedSwitch
+                    checked={draftShowInlineBlame}
+                    onChange={setDraftShowInlineBlame}
+                  />
+                </SettingRow>
 
-                      <button
-                        type="button"
-                        onClick={() => handleSelectTheme('dark')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
-                          draftThemeMode === 'dark'
-                            ? 'bg-surface2 text-text font-semibold shadow-xs'
-                            : 'text-subtext0 hover:text-text hover:bg-surface0'
-                        }`}
-                        title="Catppuccin Mocha dark theme"
-                      >
-                        <Moon className="w-3.5 h-3.5" />
-                        <span>Dark</span>
-                      </button>
+                <SettingRow
+                  title="Stream AI Responses"
+                  description="Stream token-by-token completion for real-time responsiveness when generating summaries and reviews."
+                >
+                  <ZedSwitch
+                    checked={draftAiConfig.streamResponse}
+                    onChange={(val) =>
+                      setDraftAiConfig((prev) => ({ ...prev, streamResponse: val }))
+                    }
+                  />
+                </SettingRow>
 
-                      <button
-                        type="button"
-                        onClick={() => handleSelectTheme('light')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
-                          draftThemeMode === 'light'
-                            ? 'bg-surface2 text-text font-semibold shadow-xs'
-                            : 'text-subtext0 hover:text-text hover:bg-surface0'
-                        }`}
-                        title="Catppuccin Latte light theme"
-                      >
-                        <Sun className="w-3.5 h-3.5" />
-                        <span>Light</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <SettingRow
+                  title="AI Code Review Assistance"
+                  description="Enable proactive code review suggestions, inline risk detection, and automated MR annotations."
+                >
+                  <ZedSwitch
+                    checked={draftAiConfig.enableCodeReviewAssist}
+                    onChange={(val) =>
+                      setDraftAiConfig((prev) => ({
+                        ...prev,
+                        enableCodeReviewAssist: val,
+                      }))
+                    }
+                  />
+                </SettingRow>
+
+                <SettingRow
+                  title="Accessible Mode"
+                  description="Optimize interface contrast, outline focus rings, and enhance keyboard navigation for assistive technologies."
+                >
+                  <ZedSwitch
+                    checked={false}
+                    onChange={() => {
+                      showToast(
+                        'Accessible Mode is currently following system high-contrast profile'
+                      );
+                    }}
+                  />
+                </SettingRow>
               </div>
             )}
 
-            {/* TAB 2: VIEWER FONTS & TYPOGRAPHY */}
+            {/* TAB: APPEARANCE */}
+            {activeTab === 'appearance' && (
+              <div className="space-y-1">
+                <SettingRow
+                  title="Interface Theme"
+                  description={
+                    draftThemeMode === 'system'
+                      ? 'Synchronized with your operating system color scheme'
+                      : draftThemeMode === 'dark'
+                      ? 'Catppuccin Mocha aesthetic dark theme'
+                      : 'Catppuccin Latte clean light theme'
+                  }
+                >
+                  <div className="inline-flex items-center p-0.5 bg-[#11111b] border border-[#313244] gap-0.5 rounded shadow-inner">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectTheme('system')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
+                        draftThemeMode === 'system'
+                          ? 'bg-[#313244] text-text font-semibold shadow-xs'
+                          : 'text-subtext0 hover:text-text hover:bg-[#313244]/40'
+                      }`}
+                      title="Sync with Operating System theme"
+                    >
+                      <Monitor className="w-3.5 h-3.5" />
+                      <span>System</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectTheme('dark')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
+                        draftThemeMode === 'dark'
+                          ? 'bg-[#313244] text-text font-semibold shadow-xs'
+                          : 'text-subtext0 hover:text-text hover:bg-[#313244]/40'
+                      }`}
+                      title="Catppuccin Mocha dark theme"
+                    >
+                      <Moon className="w-3.5 h-3.5" />
+                      <span>Dark</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectTheme('light')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
+                        draftThemeMode === 'light'
+                          ? 'bg-[#313244] text-text font-semibold shadow-xs'
+                          : 'text-subtext0 hover:text-text hover:bg-[#313244]/40'
+                      }`}
+                      title="Catppuccin Latte light theme"
+                    >
+                      <Sun className="w-3.5 h-3.5" />
+                      <span>Light</span>
+                    </button>
+                  </div>
+                </SettingRow>
+              </div>
+            )}
+
+            {/* TAB: EDITOR & FONTS */}
             {activeTab === 'fonts' && (
-              <div className="space-y-4 animate-in fade-in duration-100">
-                <div className="pb-3 border-b border-surface0">
-                  <h3 className="text-sm font-bold text-text flex items-center gap-2">
-                    <Type className="w-4 h-4 text-subtext0" />
-                    Viewer Fonts &amp; Typography
-                  </h3>
-                  <p className="text-[11px] text-subtext0 mt-0.5">
-                    Customize code font family, styles, line spacing, and ligatures for Diff &amp; Raw viewers
-                  </p>
-                </div>
-
-                {/* Custom Font Family Dropdown */}
-                <div className="relative" ref={fontDropdownRef}>
-                  <label
-                    htmlFor="preferences-font-family-trigger"
-                    className="block text-xs font-medium text-text mb-1.5"
-                  >
-                    Font Family
-                  </label>
-
-                  {/* Dropdown Trigger Button */}
-                  <button
-                    id="preferences-font-family-trigger"
-                    type="button"
-                    onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
-                      isFontDropdownOpen
-                        ? 'bg-surface1 border-surface2 text-text ring-1 ring-surface2'
-                        : 'bg-surface0/60 border-surface0 hover:bg-surface0 text-text'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
+              <div className="space-y-4">
+                {/* Font Family Row */}
+                <SettingRow
+                  title="Monospace Font Family"
+                  description="Primary typography for code diffs, raw file viewer, and terminal views."
+                >
+                  <div className="relative w-64" ref={fontDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
+                      className="w-full flex items-center justify-between px-3 py-1.5 rounded border border-[#313244] bg-[#11111b] hover:bg-[#1e1e2e] text-text text-xs transition-colors cursor-pointer"
+                    >
                       <span
-                        className="text-sm font-semibold truncate"
+                        className="truncate font-semibold"
                         style={{ fontFamily: selectedFontObj.fontFamilyName }}
                       >
                         {selectedFontObj.fontFamilyName}
                       </span>
-                      <span className="text-[10px] px-2 py-0.5 bg-surface1 text-subtext0 border border-surface2 font-mono">
-                        {selectedFontObj.ligaturesSupport
-                          ? 'Ligatures supported'
-                          : 'Standard monospace'}
-                      </span>
-                    </div>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 text-subtext0 transition-transform duration-200 shrink-0 ml-2 ${
+                          isFontDropdownOpen ? 'rotate-180 text-text' : ''
+                        }`}
+                      />
+                    </button>
 
-                    <ChevronDown
-                      className={`w-4 h-4 text-subtext0 transition-transform duration-200 shrink-0 ${
-                        isFontDropdownOpen ? 'rotate-180 text-text' : ''
-                      }`}
-                    />
-                  </button>
+                    {isFontDropdownOpen && (
+                      <div className="absolute right-0 top-full mt-1.5 w-72 bg-[#181825] border border-[#313244] rounded shadow-2xl z-50 overflow-hidden flex flex-col max-h-72">
+                        <div className="p-2 border-b border-[#313244] bg-[#11111b] sticky top-0 z-10 flex items-center gap-2">
+                          <Search className="w-3 h-3 text-subtext0 shrink-0 ml-1" />
+                          <input
+                            ref={fontSearchInputRef}
+                            type="text"
+                            placeholder="Filter fonts..."
+                            value={fontSearchQuery}
+                            onChange={(e) => setFontSearchQuery(e.target.value)}
+                            className="w-full bg-transparent text-xs text-text placeholder:text-subtext0 focus:outline-none py-0.5"
+                          />
+                          {fontSearchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setFontSearchQuery('')}
+                              className="p-0.5 text-subtext0 hover:text-text rounded"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
 
-                  {/* Custom Dropdown Menu Popover */}
-                  {isFontDropdownOpen && (
-                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-mantle border border-surface0 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100 flex flex-col max-h-72">
-                      {/* Search Input Filter */}
-                      <div className="p-2 border-b border-surface0 bg-base/60 sticky top-0 z-10 flex items-center gap-2">
-                        <Search className="w-3.5 h-3.5 text-subtext0 shrink-0 ml-1.5" />
-                        <input
-                          ref={fontSearchInputRef}
-                          type="text"
-                          placeholder="Filter fonts..."
-                          value={fontSearchQuery}
-                          onChange={(e) => setFontSearchQuery(e.target.value)}
-                          className="w-full bg-transparent text-xs text-text placeholder:text-subtext0 focus:outline-none py-1"
-                        />
-                        {fontSearchQuery && (
-                          <button
-                            type="button"
-                            onClick={() => setFontSearchQuery('')}
-                            className="p-1 text-subtext0 hover:text-text rounded"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
+                        <div className="overflow-y-auto divide-y divide-[#313244]/40 p-1">
+                          {filteredFonts.length === 0 ? (
+                            <div className="px-3 py-4 text-center text-xs text-subtext0 italic">
+                              No matching font
+                            </div>
+                          ) : (
+                            filteredFonts.map((font) => {
+                              const isSelected =
+                                draftFontFamily.toLowerCase() ===
+                                font.fontFamilyName.toLowerCase();
 
-                      {/* Font Items List */}
-                      <div className="overflow-y-auto divide-y divide-surface0/40 p-1">
-                        {filteredFonts.length === 0 ? (
-                          <div className="px-3 py-4 text-center text-xs text-subtext0 italic">
-                            No matching font found
-                          </div>
-                        ) : (
-                          filteredFonts.map((font) => {
-                            const isSelected =
-                              draftFontFamily.toLowerCase() === font.fontFamilyName.toLowerCase();
-
-                            return (
-                              <div
-                                key={font.fontFamilyName}
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => {
-                                  setDraftFontFamily(font.fontFamilyName);
-                                  setDraftEnableLigatures(font.ligaturesSupport);
-                                  setIsFontDropdownOpen(false);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
+                              return (
+                                <button
+                                  key={font.fontFamilyName}
+                                  type="button"
+                                  onClick={() => {
                                     setDraftFontFamily(font.fontFamilyName);
                                     setDraftEnableLigatures(font.ligaturesSupport);
                                     setIsFontDropdownOpen(false);
-                                  }
-                                }}
-                                className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer group ${
-                                  isSelected
-                                    ? 'bg-surface1 text-text font-semibold'
-                                    : 'hover:bg-surface0/80 text-subtext1 hover:text-text'
-                                }`}
-                              >
-                                <div className="flex flex-col min-w-0 pr-2">
-                                  <span
-                                    className="text-xs truncate"
-                                    style={{ fontFamily: font.fontFamilyName }}
-                                  >
-                                    {font.fontFamilyName}
-                                  </span>
-                                  <span
-                                    className="text-[10px] text-subtext0 truncate opacity-70 group-hover:opacity-100"
-                                    style={{ fontFamily: font.fontFamilyName }}
-                                  >
-                                    const code = (a != b) =&gt; a &amp;&amp; b;
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  {font.ligaturesSupport ? (
-                                    <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 bg-surface0 text-subtext0 border border-surface1">
-                                      <Sparkles className="w-2.5 h-2.5 text-text" />
-                                      Ligatures
+                                  }}
+                                  className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-[#313244] text-text font-semibold'
+                                      : 'hover:bg-[#1e1e2e] text-subtext1 hover:text-text'
+                                  }`}
+                                >
+                                  <div className="flex flex-col min-w-0 pr-2">
+                                    <span
+                                      className="text-xs truncate"
+                                      style={{ fontFamily: font.fontFamilyName }}
+                                    >
+                                      {font.fontFamilyName}
                                     </span>
-                                  ) : (
-                                    <span className="text-[9px] px-1.5 py-0.5 bg-surface0 text-subtext0/70 border border-surface1">
-                                      Mono
+                                    <span
+                                      className="text-[10px] text-subtext0 truncate opacity-70"
+                                      style={{ fontFamily: font.fontFamilyName }}
+                                    >
+                                      const code = (a != b) =&gt; a &amp;&amp; b;
                                     </span>
-                                  )}
-                                  {isSelected && <Check className="w-3.5 h-3.5 text-text ml-1" />}
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                                  </div>
 
-                {/* Font Size & BIU Formatting */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Font Size */}
-                  <div>
-                    <label
-                      htmlFor="preferences-font-size-input"
-                      className="block text-xs font-medium text-text mb-1.5"
-                    >
-                      Font Size (px)
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        id="preferences-font-size-input"
-                        type="number"
-                        min="10"
-                        max="24"
-                        value={draftFontSize}
-                        onChange={(e) =>
-                          setDraftFontSize(
-                            Math.max(10, Math.min(24, parseInt(e.target.value) || 13))
-                          )
-                        }
-                        className="w-20 px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 font-mono"
-                      />
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setDraftFontSize((prev) => Math.max(10, prev - 1))}
-                          className="px-2.5 py-2 rounded-lg border border-surface0 hover:bg-surface0 text-text text-xs cursor-pointer font-bold"
-                          title="Decrease font size"
-                        >
-                          -
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDraftFontSize((prev) => Math.min(24, prev + 1))}
-                          className="px-2.5 py-2 rounded-lg border border-surface0 hover:bg-surface0 text-text text-xs cursor-pointer font-bold"
-                          title="Increase font size"
-                        >
-                          +
-                        </button>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    {font.ligaturesSupport ? (
+                                      <span className="text-[9px] px-1.5 py-0.5 bg-[#11111b] text-subtext0 border border-[#313244] font-mono rounded">
+                                        Ligatures
+                                      </span>
+                                    ) : (
+                                      <span className="text-[9px] px-1.5 py-0.5 bg-[#11111b] text-subtext0/70 border border-[#313244] rounded">
+                                        Mono
+                                      </span>
+                                    )}
+                                    {isSelected && <Check className="w-3.5 h-3.5 text-text ml-1" />}
+                                  </div>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
+                </SettingRow>
 
-                  {/* BIU Formatting Buttons */}
-                  <div>
-                    <span className="block text-xs font-medium text-text mb-1.5">
-                      Font Styling (BIU)
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      {/* Bold */}
+                {/* Font Size Row */}
+                <SettingRow
+                  title="Editor Font Size"
+                  description="Font size in pixels for diff lines and editor panes (range: 10px – 24px)."
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="10"
+                      max="24"
+                      value={draftFontSize}
+                      onChange={(e) =>
+                        setDraftFontSize(
+                          Math.max(10, Math.min(24, parseInt(e.target.value) || 13))
+                        )
+                      }
+                      className="w-16 px-2.5 py-1.5 bg-[#11111b] border border-[#313244] text-xs text-text focus:outline-none focus:border-[#45475a] font-mono rounded text-center"
+                    />
+                    <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => setDraftIsBold(!draftIsBold)}
-                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs transition-all cursor-pointer ${
-                          draftIsBold
-                            ? 'bg-surface1 border-surface2 text-text font-bold shadow-xs'
-                            : 'bg-surface0/40 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
-                        }`}
-                        title={formatShortcutText('Bold (Ctrl+B)')}
+                        onClick={() => setDraftFontSize((prev) => Math.max(10, prev - 1))}
+                        className="px-2 py-1 rounded border border-[#313244] hover:bg-[#313244]/50 text-text text-xs cursor-pointer font-bold"
+                        title="Decrease font size"
                       >
-                        <Bold className="w-3.5 h-3.5" />
-                        <span>Bold</span>
+                        -
                       </button>
-
-                      {/* Italic */}
                       <button
                         type="button"
-                        onClick={() => setDraftIsItalic(!draftIsItalic)}
-                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs transition-all cursor-pointer ${
-                          draftIsItalic
-                            ? 'bg-surface1 border-surface2 text-text font-bold italic shadow-xs'
-                            : 'bg-surface0/40 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
-                        }`}
-                        title={formatShortcutText('Italic (Ctrl+I)')}
+                        onClick={() => setDraftFontSize((prev) => Math.min(24, prev + 1))}
+                        className="px-2 py-1 rounded border border-[#313244] hover:bg-[#313244]/50 text-text text-xs cursor-pointer font-bold"
+                        title="Increase font size"
                       >
-                        <Italic className="w-3.5 h-3.5" />
-                        <span>Italic</span>
-                      </button>
-
-                      {/* Underline */}
-                      <button
-                        type="button"
-                        onClick={() => setDraftIsUnderline(!draftIsUnderline)}
-                        className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs transition-all cursor-pointer ${
-                          draftIsUnderline
-                            ? 'bg-surface1 border-surface2 text-text font-bold underline shadow-xs'
-                            : 'bg-surface0/40 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
-                        }`}
-                        title={formatShortcutText('Underline (Ctrl+U)')}
-                      >
-                        <Underline className="w-3.5 h-3.5" />
-                        <span>Underline</span>
+                        +
                       </button>
                     </div>
                   </div>
-                </div>
+                </SettingRow>
 
-                {/* Line Spacing Slider */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label
-                      htmlFor="preferences-line-spacing-range"
-                      className="text-xs font-medium text-text"
+                {/* Font Styling Row */}
+                <SettingRow
+                  title="Font Weight & Emphasis"
+                  description="Apply Bold, Italic, or Underline formatting to diff text."
+                >
+                  <div className="flex items-center gap-1 bg-[#11111b] p-0.5 rounded border border-[#313244]">
+                    <button
+                      type="button"
+                      onClick={() => setDraftIsBold(!draftIsBold)}
+                      className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${
+                        draftIsBold
+                          ? 'bg-[#313244] text-text font-bold shadow-xs'
+                          : 'text-subtext0 hover:bg-[#313244]/40 hover:text-text'
+                      }`}
+                      title={formatShortcutText('Bold (Ctrl+B)')}
                     >
-                      Line Spacing (Line Height)
-                    </label>
-                    <span className="text-xs font-mono font-bold text-text px-1.5 py-0.5 bg-surface1">
+                      <Bold className="w-3 h-3" />
+                      <span>Bold</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDraftIsItalic(!draftIsItalic)}
+                      className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${
+                        draftIsItalic
+                          ? 'bg-[#313244] text-text font-bold italic shadow-xs'
+                          : 'text-subtext0 hover:bg-[#313244]/40 hover:text-text'
+                      }`}
+                      title={formatShortcutText('Italic (Ctrl+I)')}
+                    >
+                      <Italic className="w-3 h-3" />
+                      <span>Italic</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDraftIsUnderline(!draftIsUnderline)}
+                      className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${
+                        draftIsUnderline
+                          ? 'bg-[#313244] text-text font-bold underline shadow-xs'
+                          : 'text-subtext0 hover:bg-[#313244]/40 hover:text-text'
+                      }`}
+                      title={formatShortcutText('Underline (Ctrl+U)')}
+                    >
+                      <Underline className="w-3 h-3" />
+                      <span>Underline</span>
+                    </button>
+                  </div>
+                </SettingRow>
+
+                {/* Line Spacing Row */}
+                <SettingRow
+                  title="Line Spacing"
+                  description="Vertical line height multiplier for comfortable code reading (1.1x – 2.2x)."
+                >
+                  <div className="flex items-center gap-3 w-56">
+                    <input
+                      type="range"
+                      min="1.1"
+                      max="2.2"
+                      step="0.1"
+                      value={draftLineSpacing}
+                      onChange={(e) => setDraftLineSpacing(parseFloat(e.target.value))}
+                      className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-[#238636] rounded"
+                    />
+                    <span className="text-xs font-mono font-bold text-text px-1.5 py-0.5 bg-[#11111b] border border-[#313244] rounded shrink-0">
                       {draftLineSpacing}x
                     </span>
                   </div>
-                  <input
-                    id="preferences-line-spacing-range"
-                    type="range"
-                    min="1.1"
-                    max="2.2"
-                    step="0.1"
-                    value={draftLineSpacing}
-                    onChange={(e) => setDraftLineSpacing(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-text"
-                  />
-                  <div className="flex justify-between text-[10px] text-subtext0 mt-1 font-mono">
-                    <span>1.1x</span>
-                    <span>1.5x</span>
-                    <span>2.2x</span>
-                  </div>
-                </div>
+                </SettingRow>
 
-                {/* Ligatures Toggle */}
-                <div className="bg-surface0/40 p-3.5 border border-surface0/80 flex items-center justify-between">
-                  <div className="space-y-0.5 pr-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-text">
-                        Enable Font Ligatures
-                      </span>
+                {/* Ligatures Row */}
+                <SettingRow
+                  title="Font Ligatures"
+                  description={
+                    <span className="flex items-center gap-2">
+                      <span>Renders coding ligatures such as =&gt;, !==, &lt;=, &gt;=, &amp;&amp;.</span>
                       {!currentFontSupportsLigatures && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-subtext0 bg-surface1 px-2 py-0.5 border border-surface2">
-                          <AlertCircle className="w-3 h-3 text-subtext0" />
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-subtext0 bg-[#11111b] px-1.5 py-0.5 rounded border border-[#313244]">
+                          <AlertCircle className="w-2.5 h-2.5" />
                           Unsupported by {draftFontFamily}
                         </span>
                       )}
-                    </div>
-                    <p className="text-[11px] text-subtext0 leading-relaxed">
-                      Renders coding ligatures such as <code className="font-mono">=&gt;</code>,{' '}
-                      <code className="font-mono">!==</code>, <code className="font-mono">&lt;=</code>,{' '}
-                      <code className="font-mono">&gt;=</code>, <code className="font-mono">&amp;&amp;</code>
-                    </p>
-                  </div>
+                    </span>
+                  }
+                >
+                  <ZedSwitch
+                    checked={draftEnableLigatures && currentFontSupportsLigatures}
+                    disabled={!currentFontSupportsLigatures}
+                    onChange={(val) => setDraftEnableLigatures(val)}
+                  />
+                </SettingRow>
 
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      disabled={!currentFontSupportsLigatures}
-                      checked={draftEnableLigatures && currentFontSupportsLigatures}
-                      onChange={(e) => setDraftEnableLigatures(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-10 h-5 bg-surface1 peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text after:h-4 after:w-4 after:transition-all peer-checked:bg-surface2 peer-disabled:opacity-40 peer-disabled:cursor-not-allowed"></div>
-                  </label>
-                </div>
-
-                {/* Inline Git Blame Toggle */}
-                <div className="bg-surface0/40 p-3.5 border border-surface0/80 flex items-center justify-between">
-                  <div className="space-y-0.5 pr-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-text">
-                        Inline Git Blame (VSCode Style)
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-subtext0 leading-relaxed">
-                      {formatShortcutText('Show commit author, relative time, and summary annotation at the end of the active line in diff view (Alt+Shift+B).')}
-                    </p>
-                  </div>
-
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={draftShowInlineBlame}
-                      onChange={(e) => setDraftShowInlineBlame(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-10 h-5 bg-surface1 peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text after:h-4 after:w-4 after:transition-all peer-checked:bg-surface2"></div>
-                  </label>
-                </div>
-
-                {/* Live Interactive Preview Box */}
-                <div className="space-y-1.5 pt-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-text">Live Preview</span>
-                    <span className="text-[10px] text-subtext0 font-mono">
+                {/* Live Preview Panel */}
+                <div className="pt-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-text">Code Preview</span>
+                    <span className="text-[11px] text-subtext0 font-mono">
                       {draftFontFamily} • {draftFontSize}px • {draftLineSpacing}x
                     </span>
                   </div>
 
                   <div
-                    className="p-3.5 bg-crust border border-surface0/80 overflow-x-auto select-text shadow-inner"
+                    className="p-4 bg-[#11111b] border border-[#313244] rounded overflow-x-auto select-text shadow-inner"
                     style={{
                       fontFamily: `"${draftFontFamily}", monospace`,
                       fontSize: `${draftFontSize}px`,
@@ -1052,8 +1158,8 @@ export const PreferencesModal: React.FC = () => {
                           : '"liga" 0, "calt" 0',
                     }}
                   >
-                    <div className="text-subtext0 text-[11px] mb-1 font-sans select-none">
-                      // Sample Code &amp; Ligature Testing
+                    <div className="text-subtext0/70 text-[11px] mb-1 font-sans select-none">
+                      // Stage0 Code Viewer Ligature Preview
                     </div>
                     <div className="text-text">
                       <span className="text-subtext0">const</span> isSimulated = (base !== compare) =&gt; &#123;
@@ -1071,7 +1177,7 @@ export const PreferencesModal: React.FC = () => {
               </div>
             )}
 
-            {/* TAB 3: GIT EXECUTABLE BINARY */}
+            {/* TAB: VERSION CONTROL */}
             {activeTab === 'git' && (
               <div className="animate-in fade-in duration-100">
                 <GitBinaryTab
@@ -1087,33 +1193,14 @@ export const PreferencesModal: React.FC = () => {
               </div>
             )}
 
-            {/* TAB 4: GIT CREDENTIALS */}
+            {/* TAB: GIT CREDENTIALS */}
             {activeTab === 'credentials' && (
               <div className="animate-in fade-in duration-100">
                 <GitCredentialsTab />
               </div>
             )}
 
-            {/* TAB 4: AI & MCP */}
-            {activeTab === 'ai' && (
-              <div className="animate-in fade-in duration-100">
-                <AiMcpTab
-                  draftAiConfig={draftAiConfig}
-                  onUpdateAiConfig={(partial) =>
-                    setDraftAiConfig((prev) => ({ ...prev, ...partial }))
-                  }
-                />
-              </div>
-            )}
-
-            {/* TAB 5: BOT REVIEWERS (GLOBAL SCOPE) */}
-            {activeTab === 'reviewers' && (
-              <div className="animate-in fade-in duration-100">
-                <BotReviewersTab />
-              </div>
-            )}
-
-            {/* TAB 6: SANDBOX ENGINE */}
+            {/* TAB: SANDBOX ENGINE */}
             {activeTab === 'sandbox' && (
               <div className="animate-in fade-in duration-100">
                 <SandboxTab
@@ -1123,20 +1210,47 @@ export const PreferencesModal: React.FC = () => {
                 />
               </div>
             )}
+
+            {/* TAB: AI & MCP */}
+            {activeTab === 'ai' && (
+              <div className="animate-in fade-in duration-100">
+                <AiMcpTab
+                  draftAiConfig={draftAiConfig}
+                  onUpdateAiConfig={(partial) =>
+                    setDraftAiConfig((prev) => ({ ...prev, ...partial }))
+                  }
+                  onNavigateToGuardrails={() => setActiveTab('guardrails')}
+                />
+              </div>
+            )}
+
+            {/* TAB: BOT REVIEWERS */}
+            {activeTab === 'reviewers' && (
+              <div className="animate-in fade-in duration-100">
+                <BotReviewersTab />
+              </div>
+            )}
+
+            {/* TAB: SECURITY GUARDRAILS */}
+            {activeTab === 'guardrails' && (
+              <div className="animate-in fade-in duration-100">
+                <GuardrailsTab />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Footer: Reset to default on the left, Cancel, Apply, OK on the right */}
-        <div className="px-6 py-3 border-t border-surface0 flex items-center justify-between bg-base/60 select-none">
-          {/* Left: Reset to default & Transaction Indicator */}
+        {/* Footer: Reset on left, Cancel, Apply, OK on right */}
+        <div className="px-6 py-3 border-t border-[#313244]/60 flex items-center justify-between bg-[#11111b]/80 select-none shrink-0">
+          {/* Left: Reset to defaults & Unsaved Indicator */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setShowResetConfirm(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-[#313244] hover:bg-[#313244]/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded"
               title="Reset all settings to application defaults"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw className="w-3 h-3" />
               <span>Reset to default</span>
             </button>
 
@@ -1150,33 +1264,31 @@ export const PreferencesModal: React.FC = () => {
 
           {/* Right: Cancel, Apply, OK */}
           <div className="flex items-center gap-2">
-            {/* Cancel (close without saving) */}
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium"
-              title="Close without saving"
+              className="px-4 py-1.5 border border-[#313244] hover:bg-[#313244]/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium rounded"
+              title="Close without saving (Esc)"
             >
               Cancel
             </button>
 
-            {/* Apply (save only) */}
             <button
               type="button"
               onClick={handleApply}
               disabled={!hasUnsavedChanges && !isApplied}
-              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
+              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer rounded border ${
                 isApplied
                   ? 'bg-surface2 text-text border-surface1'
                   : hasUnsavedChanges
                   ? 'bg-surface1 hover:bg-surface2 text-text border-surface2 shadow-xs'
-                  : 'bg-surface0/40 text-subtext0/50 border-surface0 cursor-not-allowed'
+                  : 'bg-surface0/30 text-subtext0/40 border-surface0/50 cursor-not-allowed'
               }`}
-              title="Save changes and keep window open"
+              title="Save changes and keep window open (Ctrl+S)"
             >
               {isApplied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-text" />
+                  <Check className="w-3 h-3 text-text" />
                   <span>Applied</span>
                 </>
               ) : (
@@ -1184,11 +1296,10 @@ export const PreferencesModal: React.FC = () => {
               )}
             </button>
 
-            {/* OK (save then close) */}
             <button
               type="button"
               onClick={handleOk}
-              className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand"
+              className="px-5 py-1.5 bg-[#238636] hover:bg-[#238636]/90 text-white font-semibold text-xs transition-colors cursor-pointer rounded"
               title="Save changes and close window"
             >
               OK
@@ -1199,10 +1310,10 @@ export const PreferencesModal: React.FC = () => {
 
       {/* Confirmation Dialog for Reset to Defaults */}
       {showResetConfirm && (
-        <div className="fixed inset-x-0 bottom-0 top-8.5 z-[60] bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-100">
-          <div className="bg-mantle border border-surface0 max-w-md w-full p-5 rounded-xl shadow-2xl space-y-4 animate-in zoom-in-95 duration-100">
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-[60] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-100">
+          <div className="bg-[#181825] border border-[#313244] max-w-md w-full p-5 rounded-lg shadow-2xl space-y-4 animate-in zoom-in-95 duration-100">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-surface0 border border-surface1 text-subtext0 shrink-0">
+              <div className="p-2 rounded bg-[#11111b] border border-[#313244] text-subtext0 shrink-0">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
@@ -1213,18 +1324,18 @@ export const PreferencesModal: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface0/60">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#313244]/60">
               <button
                 type="button"
                 onClick={() => setShowResetConfirm(false)}
-                className="px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded border border-[#313244] hover:bg-[#313244]/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmResetToDefault}
-                className="px-3.5 py-1.5 rounded-lg bg-red text-white text-xs font-semibold hover:bg-red/90 transition-colors cursor-pointer shadow-xs"
+                className="px-3.5 py-1.5 rounded bg-[#da3633] text-white text-xs font-semibold hover:bg-[#da3633]/90 transition-colors cursor-pointer shadow-xs"
               >
                 Reset to Defaults
               </button>
@@ -1235,10 +1346,10 @@ export const PreferencesModal: React.FC = () => {
 
       {/* Confirmation Dialog for Restart to Apply Git Binary */}
       {showRestartPrompt && (
-        <div className="fixed inset-x-0 bottom-0 top-8.5 z-[70] bg-crust/80 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-100">
-          <div className="bg-mantle border border-surface0 max-w-md w-full p-5 rounded-xl shadow-2xl space-y-4 animate-in zoom-in-95 duration-100">
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-100">
+          <div className="bg-[#181825] border border-[#313244] max-w-md w-full p-5 rounded-lg shadow-2xl space-y-4 animate-in zoom-in-95 duration-100">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-lg bg-peach/15 border border-peach/30 text-peach shrink-0">
+              <div className="p-2.5 rounded bg-peach/15 border border-peach/30 text-peach shrink-0">
                 <RotateCcw className="w-5 h-5" />
               </div>
               <div className="min-w-0 flex-1">
@@ -1246,7 +1357,7 @@ export const PreferencesModal: React.FC = () => {
                 <p className="text-xs text-subtext0 mt-1 leading-relaxed">
                   The active Git binary has been switched to:
                 </p>
-                <div className="mt-1.5 p-2 rounded-lg bg-surface0 border border-surface1 font-mono text-[11px] text-text break-all">
+                <div className="mt-1.5 p-2 rounded bg-[#11111b] border border-[#313244] font-mono text-[11px] text-text break-all">
                   {draftGitBinaryPath}
                 </div>
                 <p className="text-xs text-subtext0 mt-2 leading-relaxed">
@@ -1255,14 +1366,14 @@ export const PreferencesModal: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface0/60">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#313244]/60">
               <button
                 type="button"
                 onClick={() => {
                   setShowRestartPrompt(false);
                   setIsPreferencesOpen(false);
                 }}
-                className="px-3.5 py-1.5 rounded-lg border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                className="px-3.5 py-1.5 rounded border border-[#313244] hover:bg-[#313244]/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
               >
                 Restart Later
               </button>
@@ -1271,7 +1382,7 @@ export const PreferencesModal: React.FC = () => {
                 onClick={async () => {
                   await restartApp();
                 }}
-                className="px-4 py-1.5 rounded-lg bg-brand text-[#11111b] text-xs font-semibold hover:bg-brand/90 transition-colors cursor-pointer shadow-xs"
+                className="px-4 py-1.5 rounded bg-[#238636] text-white text-xs font-semibold hover:bg-[#238636]/90 transition-colors cursor-pointer shadow-xs"
               >
                 Restart Now
               </button>
