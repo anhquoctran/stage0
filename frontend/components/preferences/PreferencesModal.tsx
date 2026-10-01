@@ -5,6 +5,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   Search,
   Monitor,
   Moon,
@@ -14,6 +15,8 @@ import {
   Bold,
   Italic,
   Underline,
+  Copy,
+  Code,
 } from '@/components/common/icons';
 import { SUPPORTED_FONTS } from '../../constants/fonts';
 import { formatShortcutText } from '../../utils/shortcuts';
@@ -45,12 +48,26 @@ import { SandboxType } from '../../types/git';
 
 export type PreferenceTab =
   | 'general'
+  | 'general-settings'
+  | 'general-guardrails'
+  | 'general-privacy'
   | 'appearance'
-  | 'fonts'
+  | 'appearance-theme'
+  | 'appearance-fonts'
+  | 'editor'
+  | 'editor-diff'
+  | 'ai'
+  | 'ai-overview'
+  | 'ai-providers'
+  | 'ai-mcp'
+  | 'ai-reviewers'
+  | 'ai-sandbox'
   | 'git'
+  | 'git-binary'
+  | 'git-credentials'
+  | 'fonts'
   | 'credentials'
   | 'sandbox'
-  | 'ai'
   | 'reviewers'
   | 'guardrails';
 
@@ -70,14 +87,175 @@ interface PreferencesBaseline {
   gitBinaryPath: string;
 }
 
-interface PreferenceCategory {
+interface TreeChildItem {
   id: PreferenceTab;
   label: string;
   title: string;
   description: string;
   keywords: string[];
-  unsavedCount?: number;
 }
+
+interface TreeCategory {
+  id: string;
+  label: string;
+  children: TreeChildItem[];
+}
+
+// Tree view hierarchy matching Zed's structure
+const SETTINGS_TREE: TreeCategory[] = [
+  {
+    id: 'general',
+    label: 'General',
+    children: [
+      {
+        id: 'general-settings',
+        label: 'General Settings',
+        title: 'General Settings',
+        description: 'Configure inline annotations, streaming, and workspace behaviors.',
+        keywords: ['blame', 'stream', 'accessible', 'general', 'notifications'],
+      },
+      {
+        id: 'general-guardrails',
+        label: 'Security & Guardrails',
+        title: 'Security & Guardrails',
+        description: 'Path restrictions, destructive command blocking, and approval thresholds.',
+        keywords: ['guardrails', 'security', 'sandbox', 'policy', 'safety', 'destructive', 'permission', 'tokens'],
+      },
+      {
+        id: 'general-privacy',
+        label: 'Privacy & Telemetry',
+        title: 'Privacy & Telemetry',
+        description: 'Zero telemetry policy, isolated working trees, and local secret management.',
+        keywords: ['privacy', 'telemetry', 'offline', 'security', 'analytics'],
+      },
+    ],
+  },
+  {
+    id: 'appearance',
+    label: 'Appearance',
+    children: [
+      {
+        id: 'appearance-theme',
+        label: 'Theme',
+        title: 'Theme & Interface Mode',
+        description: 'Choose whether to use the selected light or dark theme or follow your OS appearance.',
+        keywords: ['theme', 'dark', 'light', 'mocha', 'latte', 'color', 'mode', 'appearance', 'palette'],
+      },
+      {
+        id: 'appearance-fonts',
+        label: 'Buffer Font',
+        title: 'Buffer Font & Typography',
+        description: 'Font family, font size, weight, line height, and ligature rendering for editor panes.',
+        keywords: ['font', 'family', 'size', 'ligatures', 'bold', 'italic', 'underline', 'spacing', 'typography'],
+      },
+    ],
+  },
+  {
+    id: 'editor',
+    label: 'Editor & Diff',
+    children: [
+      {
+        id: 'editor-diff',
+        label: 'Diff Viewer',
+        title: 'Diff Viewer & Code Navigation',
+        description: 'Configure split/unified diff visualization, whitespace sensitivity, and inline blame.',
+        keywords: ['diff', 'split', 'unified', 'whitespace', 'viewer', 'blame'],
+      },
+    ],
+  },
+  {
+    id: 'ai',
+    label: 'AI',
+    children: [
+      {
+        id: 'ai-overview',
+        label: 'General',
+        title: 'AI',
+        description: 'Whether opening a virtual MR or repository automatically enables AI assistant context.',
+        keywords: ['ai', 'overview', 'llm', 'providers', 'mcp', 'agents', 'reviewers', 'skills', 'sandbox'],
+      },
+      {
+        id: 'ai-providers',
+        label: 'LLM Providers',
+        title: 'LLM Providers',
+        description: 'Configure natively-included model providers (OpenAI, Anthropic, DeepSeek, Ollama, etc.).',
+        keywords: ['openai', 'anthropic', 'deepseek', 'ollama', 'model', 'api key', 'provider', 'groq'],
+      },
+      {
+        id: 'ai-mcp',
+        label: 'MCP Servers',
+        title: 'MCP Servers',
+        description: 'View, add, configure, and remove Model Context Protocol servers.',
+        keywords: ['mcp', 'protocol', 'servers', 'stdio', 'sse', 'tools'],
+      },
+      {
+        id: 'ai-reviewers',
+        label: 'External Agents',
+        title: 'External Agents & Reviewer Bots',
+        description: 'View, add, and remove bots and agents connected for automated pull/virtual MR reviews.',
+        keywords: ['agents', 'reviewers', 'bots', 'code review', 'persona'],
+      },
+      {
+        id: 'ai-sandbox',
+        label: 'Sandbox',
+        title: 'Sandbox & Tool Permissions',
+        description: 'Review and change the elevated virtual sandbox permissions (In-Memory, Docker, Host).',
+        keywords: ['sandbox', 'docker', 'container', 'in_memory', 'isolation', 'terminal', 'permissions'],
+      },
+    ],
+  },
+  {
+    id: 'git',
+    label: 'Version Control',
+    children: [
+      {
+        id: 'git-binary',
+        label: 'Git Executable',
+        title: 'Git Executable',
+        description: 'Select system Git binary or embedded isolated runner for zero-leak operations.',
+        keywords: ['git', 'binary', 'executable', 'path', 'runner'],
+      },
+      {
+        id: 'git-credentials',
+        label: 'Git Credentials',
+        title: 'Git Credentials & Remotes',
+        description: 'Manage personal access tokens (PAT) for GitLab, GitHub, and custom Git servers.',
+        keywords: ['credentials', 'token', 'pat', 'github', 'gitlab', 'auth'],
+      },
+    ],
+  },
+];
+
+// Helper to normalize legacy tab strings
+const normalizeTab = (tab?: string): PreferenceTab => {
+  if (!tab) return 'ai-overview';
+  switch (tab) {
+    case 'general':
+      return 'general-settings';
+    case 'guardrails':
+      return 'general-guardrails';
+    case 'appearance':
+      return 'appearance-theme';
+    case 'fonts':
+      return 'appearance-fonts';
+    case 'editor':
+      return 'editor-diff';
+    case 'ai':
+      return 'ai-overview';
+    case 'mcp':
+      return 'ai-mcp';
+    case 'reviewers':
+      return 'ai-reviewers';
+    case 'sandbox':
+      return 'ai-sandbox';
+    case 'git':
+      return 'git-binary';
+    case 'credentials':
+      return 'git-credentials';
+    default:
+      return tab as PreferenceTab;
+  }
+};
 
 // Zed-inspired sleek toggle switch
 interface ZedSwitchProps {
@@ -98,15 +276,16 @@ const ZedSwitch: React.FC<ZedSwitchProps> = ({ checked, onChange, disabled, id }
       onClick={() => !disabled && onChange(!checked)}
       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
         disabled
-          ? 'opacity-40 cursor-not-allowed bg-surface1'
+          ? 'opacity-40 cursor-not-allowed bg-[#313244]'
           : checked
-          ? 'bg-[#238636]'
-          : 'bg-surface2 hover:bg-surface3'
+          ? 'bg-[#cba6f7]'
+          : 'bg-[#313244]'
       }`}
     >
       <span
-        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
-          checked ? 'translate-x-4.5' : 'translate-x-0.75'
+        aria-hidden="true"
+        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-[#11111b] shadow-xs ring-0 transition duration-200 ease-in-out ${
+          checked ? 'translate-x-4.5 bg-[#11111b]' : 'translate-x-0.5 bg-[#a6adc8]'
         }`}
       />
     </button>
@@ -129,7 +308,7 @@ const SettingRow: React.FC<SettingRowProps> = ({
 }) => {
   return (
     <div
-      className={`py-3.5 flex items-center justify-between gap-6 ${
+      className={`py-3 flex items-center justify-between gap-6 ${
         borderBottom ? 'border-b border-[#313244]/40' : ''
       }`}
     >
@@ -158,34 +337,43 @@ export const PreferencesModal: React.FC = () => {
     lineSpacing: storedLineSpacing,
     enableLigatures: storedEnableLigatures,
     updateViewerFontSettings,
+    resetViewerFontSettings,
     showInlineBlame: storedShowInlineBlame,
-    setShowInlineBlame,
+    setShowInlineBlame: storeSetShowInlineBlame,
   } = usePreferencesStore();
 
-  const { themeMode: storedThemeMode, setThemeMode } = useThemeStore();
-  const {
-    activeSandboxType: storedSandboxType,
-    setActiveSandbox,
-    showToast,
-  } = useGitStore();
-  const {
-    aiConfig: storedAiConfig,
-    updateAiConfig,
-    resetAiConfig,
-  } = useAiMcpStore();
+  const { themeMode: storedThemeMode, setThemeMode: storeSetThemeMode } = useThemeStore();
+  const { activeSandboxType: storedSandboxType, setActiveSandbox: storeSetActiveSandbox, showToast } = useGitStore();
+  const { aiConfig: storedAiConfig, updateAiConfig: storeUpdateAiConfig } = useAiMcpStore();
   const {
     activeBinaryId: storedGitBinaryId,
     activeBinaryPath: storedGitBinaryPath,
+    setActiveBinary: storeSetActiveBinary,
     fetchActiveBinary,
-    setActiveBinary,
-    restartApp,
   } = useGitBinaryStore();
 
-  const [activeTab, setActiveTab] = useState<PreferenceTab>('general');
+  const [activeTab, setActiveTab] = useState<PreferenceTab>('ai-overview');
   const [searchQuery, setSearchQuery] = useState('');
-  const sidebarSearchInputRef = useRef<HTMLInputElement>(null);
+  const [showJsonModal, setShowJsonModal] = useState(false);
+  const [copiedJson, setCopiedJson] = useState(false);
 
-  // Draft State (for PreferenceTransaction)
+  // Expanded parent categories in tree
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    general: true,
+    appearance: true,
+    editor: true,
+    ai: true,
+    git: true,
+  });
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }));
+  };
+
+  // Draft States
   const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
   const [draftFontFamily, setDraftFontFamily] = useState(storedFontFamily);
   const [draftFontSize, setDraftFontSize] = useState(storedFontSize);
@@ -224,6 +412,7 @@ export const PreferencesModal: React.FC = () => {
   // Synchronize draft states and baseline whenever modal is opened
   useEffect(() => {
     if (isPreferencesOpen) {
+
       setDraftThemeMode(storedThemeMode);
       setDraftFontFamily(storedFontFamily);
       setDraftFontSize(storedFontSize);
@@ -254,7 +443,6 @@ export const PreferencesModal: React.FC = () => {
         gitBinaryPath: storedGitBinaryPath,
       });
 
-      // Also ensure latest active git binary is fetched from backend
       fetchActiveBinary().then((res) => {
         setDraftGitBinaryId(res.id);
         setDraftGitBinaryPath(res.path);
@@ -284,49 +472,150 @@ export const PreferencesModal: React.FC = () => {
     storedAiConfig,
     storedGitBinaryId,
     storedGitBinaryPath,
+    fetchActiveBinary,
   ]);
 
-  // Track unsaved changes per domain and in total
-  const unsavedBreakdown = useMemo(() => {
-    let general = 0;
-    if (draftShowInlineBlame !== savedBaseline.showInlineBlame) general++;
-    if (draftAiConfig.streamResponse !== savedBaseline.aiConfig.streamResponse) general++;
-    if (draftAiConfig.enableCodeReviewAssist !== savedBaseline.aiConfig.enableCodeReviewAssist) general++;
+  // Unsaved count calculation
+  const totalUnsaved = useMemo(() => {
+    let count = 0;
+    if (draftShowInlineBlame !== savedBaseline.showInlineBlame) count++;
+    if (draftAiConfig.streamResponse !== savedBaseline.aiConfig.streamResponse) count++;
+    if (draftAiConfig.enableCodeReviewAssist !== savedBaseline.aiConfig.enableCodeReviewAssist) count++;
+    if (draftThemeMode !== savedBaseline.themeMode) count++;
+    if (draftFontFamily !== savedBaseline.fontFamily) count++;
+    if (draftFontSize !== savedBaseline.fontSize) count++;
+    if (draftIsBold !== savedBaseline.isBold) count++;
+    if (draftIsItalic !== savedBaseline.isItalic) count++;
+    if (draftIsUnderline !== savedBaseline.isUnderline) count++;
+    if (draftLineSpacing !== savedBaseline.lineSpacing) count++;
+    if (draftEnableLigatures !== savedBaseline.enableLigatures) count++;
+    if (draftSandboxType !== savedBaseline.sandboxType) count++;
+    if (draftGitBinaryId !== savedBaseline.gitBinaryId) count++;
+    return count;
+  }, [
+    draftShowInlineBlame,
+    draftAiConfig,
+    draftThemeMode,
+    draftFontFamily,
+    draftFontSize,
+    draftIsBold,
+    draftIsItalic,
+    draftIsUnderline,
+    draftLineSpacing,
+    draftEnableLigatures,
+    draftSandboxType,
+    draftGitBinaryId,
+    savedBaseline,
+  ]);
 
-    let appearance = 0;
-    if (draftThemeMode !== savedBaseline.themeMode) appearance++;
+  const hasUnsavedChanges = totalUnsaved > 0;
 
-    let fonts = 0;
-    if (draftFontFamily !== savedBaseline.fontFamily) fonts++;
-    if (draftFontSize !== savedBaseline.fontSize) fonts++;
-    if (draftIsBold !== savedBaseline.isBold) fonts++;
-    if (draftIsItalic !== savedBaseline.isItalic) fonts++;
-    if (draftIsUnderline !== savedBaseline.isUnderline) fonts++;
-    if (draftLineSpacing !== savedBaseline.lineSpacing) fonts++;
-    if (draftEnableLigatures !== savedBaseline.enableLigatures) fonts++;
+  // Filter tree categories based on search
+  const filteredTree = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return SETTINGS_TREE;
 
-    let sandbox = 0;
-    if (draftSandboxType !== savedBaseline.sandboxType) sandbox++;
+    return SETTINGS_TREE.map((group) => {
+      const groupMatches = group.label.toLowerCase().includes(q);
+      const matchingChildren = group.children.filter((child) => {
+        return (
+          groupMatches ||
+          child.label.toLowerCase().includes(q) ||
+          child.title.toLowerCase().includes(q) ||
+          child.description.toLowerCase().includes(q) ||
+          child.keywords.some((k) => k.toLowerCase().includes(q))
+        );
+      });
 
-    let ai = 0;
-    if (draftAiConfig.provider !== savedBaseline.aiConfig.provider) ai++;
-    if (draftAiConfig.model !== savedBaseline.aiConfig.model) ai++;
-    if (draftAiConfig.apiKey !== savedBaseline.aiConfig.apiKey) ai++;
-    if (draftAiConfig.baseUrl !== savedBaseline.aiConfig.baseUrl) ai++;
-    if (draftAiConfig.temperature !== savedBaseline.aiConfig.temperature) ai++;
-    if (draftAiConfig.maxTokens !== savedBaseline.aiConfig.maxTokens) ai++;
-    if (draftAiConfig.systemPrompt !== savedBaseline.aiConfig.systemPrompt) ai++;
+      return {
+        ...group,
+        children: matchingChildren,
+      };
+    }).filter((group) => group.children.length > 0);
+  }, [searchQuery]);
 
-    let git = 0;
-    if (
-      draftGitBinaryId !== savedBaseline.gitBinaryId ||
-      draftGitBinaryPath !== savedBaseline.gitBinaryPath
-    ) {
-      git++;
+  // Auto-expand groups when searching
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const allOpen: Record<string, boolean> = {};
+      filteredTree.forEach((g) => {
+        allOpen[g.id] = true;
+      });
+      setExpandedGroups(allOpen);
     }
+  }, [searchQuery, filteredTree]);
 
-    const total = general + appearance + fonts + sandbox + ai + git;
-    return { general, appearance, fonts, sandbox, ai, git, total };
+  // Current active child metadata
+  const currentChildItem = useMemo(() => {
+    const norm = normalizeTab(activeTab);
+    for (const group of SETTINGS_TREE) {
+      for (const child of group.children) {
+        if (child.id === norm) return child;
+      }
+    }
+    return SETTINGS_TREE[3].children[0]; // fallback to ai-overview
+  }, [activeTab]);
+
+  // Theme preview handlers
+  const handleSelectTheme = (mode: ThemeMode) => {
+    setDraftThemeMode(mode);
+    const resolved = resolveTheme(mode);
+    applyThemeToDocument(resolved);
+  };
+
+  // Font Selection State
+  const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
+  const [fontSearchQuery, setFontSearchQuery] = useState('');
+  const fontSearchInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredFonts = useMemo(() => {
+    const q = fontSearchQuery.trim().toLowerCase();
+    if (!q) return SUPPORTED_FONTS;
+    return SUPPORTED_FONTS.filter((f) =>
+      f.fontFamilyName.toLowerCase().includes(q)
+    );
+  }, [fontSearchQuery]);
+
+  const selectedFontObj = useMemo(() => {
+    return (
+      SUPPORTED_FONTS.find(
+        (f) => f.fontFamilyName.toLowerCase() === draftFontFamily.toLowerCase()
+      ) || SUPPORTED_FONTS[0]
+    );
+  }, [draftFontFamily]);
+
+  // Settings.json representation
+  const settingsJsonString = useMemo(() => {
+    return JSON.stringify(
+      {
+        theme: draftThemeMode,
+        buffer_font: {
+          family: draftFontFamily,
+          size: draftFontSize,
+          bold: draftIsBold,
+          italic: draftIsItalic,
+          underline: draftIsUnderline,
+          line_spacing: draftLineSpacing,
+          ligatures: draftEnableLigatures,
+        },
+        git: {
+          inline_blame: draftShowInlineBlame,
+          git_binary_id: draftGitBinaryId,
+          git_binary_path: draftGitBinaryPath,
+        },
+        ai: {
+          provider: draftAiConfig.provider,
+          model: draftAiConfig.model,
+          stream_response: draftAiConfig.streamResponse,
+          single_file_review: draftAiConfig.enableCodeReviewAssist,
+        },
+        sandbox: {
+          type: draftSandboxType,
+        },
+      },
+      null,
+      2
+    );
   }, [
     draftThemeMode,
     draftFontFamily,
@@ -337,112 +626,25 @@ export const PreferencesModal: React.FC = () => {
     draftLineSpacing,
     draftEnableLigatures,
     draftShowInlineBlame,
-    draftSandboxType,
-    draftAiConfig,
     draftGitBinaryId,
     draftGitBinaryPath,
-    savedBaseline,
+    draftAiConfig,
+    draftSandboxType,
   ]);
 
-  const totalUnsaved = unsavedBreakdown.total;
-  const hasUnsavedChanges = totalUnsaved > 0;
-
-  // Custom Font Dropdown State
-  const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
-  const [fontSearchQuery, setFontSearchQuery] = useState('');
-  const fontDropdownRef = useRef<HTMLDivElement>(null);
-  const fontSearchInputRef = useRef<HTMLInputElement>(null);
-
-  // Close font dropdown on click outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        fontDropdownRef.current &&
-        !fontDropdownRef.current.contains(e.target as Node)
-      ) {
-        setIsFontDropdownOpen(false);
-      }
-    };
-
-    if (isFontDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isFontDropdownOpen]);
-
-  // Focus search input when font dropdown opens
-  useEffect(() => {
-    if (isFontDropdownOpen) {
-      setTimeout(() => {
-        fontSearchInputRef.current?.focus();
-      }, 50);
-    } else {
-      setFontSearchQuery('');
-    }
-  }, [isFontDropdownOpen]);
-
-  // Filter fonts by search query
-  const filteredFonts = useMemo(() => {
-    if (!fontSearchQuery.trim()) return SUPPORTED_FONTS;
-    return SUPPORTED_FONTS.filter((f) =>
-      f.fontFamilyName.toLowerCase().includes(fontSearchQuery.toLowerCase().trim())
-    );
-  }, [fontSearchQuery]);
-
-  // Theme selection handler with instant preview
-  const handleSelectTheme = (mode: ThemeMode) => {
-    setDraftThemeMode(mode);
-    applyThemeToDocument(resolveTheme(mode));
+  const handleCopyJson = () => {
+    navigator.clipboard.writeText(settingsJsonString);
+    setCopiedJson(true);
+    setTimeout(() => setCopiedJson(false), 2000);
   };
 
-  // Reset to default action with immediate commit
-  const handleConfirmResetToDefault = async () => {
-    setThemeMode('system');
-    applyThemeToDocument(resolveTheme('system'));
-    setDraftThemeMode('system');
-
-    updateViewerFontSettings(DEFAULT_VIEWER_FONT_SETTINGS);
-    applyViewerFontToDocument(DEFAULT_VIEWER_FONT_SETTINGS);
-    setDraftFontFamily(DEFAULT_VIEWER_FONT_SETTINGS.fontFamily);
-    setDraftFontSize(DEFAULT_VIEWER_FONT_SETTINGS.fontSize);
-    setDraftIsBold(DEFAULT_VIEWER_FONT_SETTINGS.isBold);
-    setDraftIsItalic(DEFAULT_VIEWER_FONT_SETTINGS.isItalic);
-    setDraftIsUnderline(DEFAULT_VIEWER_FONT_SETTINGS.isUnderline);
-    setDraftLineSpacing(DEFAULT_VIEWER_FONT_SETTINGS.lineSpacing);
-    setDraftEnableLigatures(DEFAULT_VIEWER_FONT_SETTINGS.enableLigatures);
-
-    setShowInlineBlame(true);
-    setDraftShowInlineBlame(true);
-
-    await setActiveSandbox('in_memory');
-    setDraftSandboxType('in_memory');
-
-    resetAiConfig();
-    setDraftAiConfig({ ...DEFAULT_AI_CONFIG });
-
-    setDraftGitBinaryId('system-default');
-    setDraftGitBinaryPath('git');
-    await setActiveBinary('system-default', 'git');
-
-    setSavedBaseline({
-      themeMode: 'system',
-      ...DEFAULT_VIEWER_FONT_SETTINGS,
-      showInlineBlame: true,
-      sandboxType: 'in_memory',
-      aiConfig: { ...DEFAULT_AI_CONFIG },
-      gitBinaryId: 'system-default',
-      gitBinaryPath: 'git',
-    });
-
-    setShowResetConfirm(false);
-    showToast('All preferences have been reset to defaults and committed');
-  };
-
-  // Apply (commit all transaction changes)
+  // Commit changes
   const handleApply = async () => {
-    const committedFontSettings: ViewerFontSettings = {
+    storeSetThemeMode(draftThemeMode);
+    const resolvedTheme = resolveTheme(draftThemeMode);
+    applyThemeToDocument(resolvedTheme);
+
+    const fontSettings: ViewerFontSettings = {
       fontFamily: draftFontFamily,
       fontSize: draftFontSize,
       isBold: draftIsBold,
@@ -451,32 +653,28 @@ export const PreferencesModal: React.FC = () => {
       lineSpacing: draftLineSpacing,
       enableLigatures: draftEnableLigatures,
     };
+    updateViewerFontSettings(fontSettings);
+    applyViewerFontToDocument(fontSettings);
 
-    updateViewerFontSettings(committedFontSettings);
-    applyViewerFontToDocument(committedFontSettings);
+    storeSetShowInlineBlame(draftShowInlineBlame);
+    await storeSetActiveSandbox(draftSandboxType);
+    storeUpdateAiConfig(draftAiConfig);
 
-    setThemeMode(draftThemeMode);
-    applyThemeToDocument(resolveTheme(draftThemeMode));
-    setShowInlineBlame(draftShowInlineBlame);
-
-    if (draftSandboxType !== savedBaseline.sandboxType) {
-      await setActiveSandbox(draftSandboxType);
-    }
-
-    updateAiConfig(draftAiConfig);
-
-    let gitChanged = false;
-    if (
-      draftGitBinaryId !== savedBaseline.gitBinaryId ||
-      draftGitBinaryPath !== savedBaseline.gitBinaryPath
-    ) {
-      await setActiveBinary(draftGitBinaryId, draftGitBinaryPath);
-      gitChanged = true;
+    let needsRestart = false;
+    if (draftGitBinaryId !== savedBaseline.gitBinaryId) {
+      await storeSetActiveBinary(draftGitBinaryId, draftGitBinaryPath);
+      needsRestart = true;
     }
 
     setSavedBaseline({
       themeMode: draftThemeMode,
-      ...committedFontSettings,
+      fontFamily: draftFontFamily,
+      fontSize: draftFontSize,
+      isBold: draftIsBold,
+      isItalic: draftIsItalic,
+      isUnderline: draftIsUnderline,
+      lineSpacing: draftLineSpacing,
+      enableLigatures: draftEnableLigatures,
       showInlineBlame: draftShowInlineBlame,
       sandboxType: draftSandboxType,
       aiConfig: { ...draftAiConfig },
@@ -485,198 +683,116 @@ export const PreferencesModal: React.FC = () => {
     });
 
     setIsApplied(true);
-    setTimeout(() => setIsApplied(false), 1500);
+    setTimeout(() => setIsApplied(false), 2000);
+    showToast('Preferences applied successfully');
 
-    if (gitChanged) {
+    if (needsRestart) {
       setShowRestartPrompt(true);
     }
   };
 
-  // OK (commit all transaction changes then close or prompt restart)
   const handleOk = async () => {
-    const gitChanged =
-      draftGitBinaryId !== savedBaseline.gitBinaryId ||
-      draftGitBinaryPath !== savedBaseline.gitBinaryPath;
-    await handleApply();
-    if (gitChanged) {
-      setShowRestartPrompt(true);
-    } else {
-      setIsPreferencesOpen(false);
+    if (hasUnsavedChanges) {
+      await handleApply();
     }
+    setIsPreferencesOpen(false);
   };
 
-  // Cancel (close without saving, rollback safely)
   const handleCancel = () => {
-    applyThemeToDocument(resolveTheme(savedBaseline.themeMode));
-    applyViewerFontToDocument(savedBaseline);
+    const resolvedTheme = resolveTheme(savedBaseline.themeMode);
+    applyThemeToDocument(resolvedTheme);
 
-    setThemeMode(savedBaseline.themeMode);
-    updateViewerFontSettings(savedBaseline);
-    setShowInlineBlame(savedBaseline.showInlineBlame);
-
-    setDraftThemeMode(savedBaseline.themeMode);
-    setDraftFontFamily(savedBaseline.fontFamily);
-    setDraftFontSize(savedBaseline.fontSize);
-    setDraftIsBold(savedBaseline.isBold);
-    setDraftIsItalic(savedBaseline.isItalic);
-    setDraftIsUnderline(savedBaseline.isUnderline);
-    setDraftLineSpacing(savedBaseline.lineSpacing);
-    setDraftEnableLigatures(savedBaseline.enableLigatures);
-    setDraftShowInlineBlame(savedBaseline.showInlineBlame);
-    setDraftSandboxType(savedBaseline.sandboxType);
-    setDraftAiConfig({ ...savedBaseline.aiConfig });
-    setDraftGitBinaryId(savedBaseline.gitBinaryId);
-    setDraftGitBinaryPath(savedBaseline.gitBinaryPath);
-    setShowRestartPrompt(false);
+    const fontSettings: ViewerFontSettings = {
+      fontFamily: savedBaseline.fontFamily,
+      fontSize: savedBaseline.fontSize,
+      isBold: savedBaseline.isBold,
+      isItalic: savedBaseline.isItalic,
+      isUnderline: savedBaseline.isUnderline,
+      lineSpacing: savedBaseline.lineSpacing,
+      enableLigatures: savedBaseline.enableLigatures,
+    };
+    applyViewerFontToDocument(fontSettings);
 
     setIsPreferencesOpen(false);
   };
 
-  // Keyboard navigation, Esc listener, and Ctrl+S to save
+  const handleResetDefaults = () => {
+    setDraftThemeMode('system');
+    applyThemeToDocument(resolveTheme('system'));
+
+    resetViewerFontSettings();
+    applyViewerFontToDocument(DEFAULT_VIEWER_FONT_SETTINGS);
+
+    setDraftShowInlineBlame(true);
+    setDraftSandboxType('in_memory');
+    setDraftAiConfig({ ...DEFAULT_AI_CONFIG });
+
+    setShowResetConfirm(false);
+    showToast('Reset all draft settings to defaults (click Apply to save)');
+  };
+
+  // Keyboard navigation
+  const sidebarSearchInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
+    if (!isPreferencesOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isPreferencesOpen) return;
-
-      if (e.key === 'Escape' && !isFontDropdownOpen && !showRestartPrompt && !showResetConfirm) {
+      if (e.key === 'Escape') {
+        if (showJsonModal) {
+          setShowJsonModal(false);
+          return;
+        }
+        if (isFontDropdownOpen) {
+          setIsFontDropdownOpen(false);
+          return;
+        }
+        if (showResetConfirm) {
+          setShowResetConfirm(false);
+          return;
+        }
         handleCancel();
-      }
-
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        void handleApply();
-      }
-
-      if ((e.ctrlKey || e.metaKey) && (e.shiftKey && e.key.toLowerCase() === 'e' || e.key.toLowerCase() === 'f')) {
+      } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'e') {
         e.preventDefault();
         sidebarSearchInputRef.current?.focus();
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPreferencesOpen, isFontDropdownOpen, showRestartPrompt, showResetConfirm, savedBaseline, draftThemeMode, draftFontFamily, draftFontSize, draftIsBold, draftIsItalic, draftIsUnderline, draftLineSpacing, draftEnableLigatures, draftShowInlineBlame, draftSandboxType, draftAiConfig, draftGitBinaryId, draftGitBinaryPath]);
-
-  // Categories definition
-  const categories: PreferenceCategory[] = useMemo(() => [
-    {
-      id: 'general',
-      label: 'General',
-      title: 'General',
-      description: 'General editor settings, inline blame, and AI assistance',
-      keywords: ['general', 'blame', 'stream', 'review', 'assist', 'accessible'],
-      unsavedCount: unsavedBreakdown.general,
-    },
-    {
-      id: 'appearance',
-      label: 'Appearance',
-      title: 'Appearance',
-      description: 'User interface themes, dark mode, and color scheme',
-      keywords: ['appearance', 'theme', 'dark', 'light', 'system', 'color'],
-      unsavedCount: unsavedBreakdown.appearance,
-    },
-    {
-      id: 'fonts',
-      label: 'Editor & Fonts',
-      title: 'Editor & Fonts',
-      description: 'Typography, font family, ligatures, and line spacing for diffs and code viewer',
-      keywords: ['fonts', 'editor', 'typography', 'size', 'monospace', 'ligature', 'line spacing', 'preview'],
-      unsavedCount: unsavedBreakdown.fonts,
-    },
-    {
-      id: 'git',
-      label: 'Version Control',
-      title: 'Version Control',
-      description: 'Git executable binary configuration and active path',
-      keywords: ['git', 'version control', 'executable', 'binary', 'path', 'system', 'bundled'],
-      unsavedCount: unsavedBreakdown.git,
-    },
-    {
-      id: 'credentials',
-      label: 'Git Credentials',
-      title: 'Git Credentials',
-      description: 'OS Keychain, credential helpers, and personal access tokens',
-      keywords: ['credentials', 'git', 'token', 'pat', 'auth', 'keyring', 'github', 'gitlab'],
-    },
-    {
-      id: 'sandbox',
-      label: 'Sandbox Engine',
-      title: 'Sandbox Engine',
-      description: 'Worktree isolation, In-Memory staging, and Docker containers',
-      keywords: ['sandbox', 'worktree', 'docker', 'container', 'in_memory', 'isolation'],
-      unsavedCount: unsavedBreakdown.sandbox,
-    },
-    {
-      id: 'ai',
-      label: 'AI & MCP',
-      title: 'AI & MCP',
-      description: 'LLM providers, API keys, models, and Model Context Protocol servers',
-      keywords: ['ai', 'mcp', 'models', 'providers', 'openai', 'anthropic', 'gemini', 'ollama', 'servers'],
-      unsavedCount: unsavedBreakdown.ai,
-    },
-    {
-      id: 'reviewers',
-      label: 'Bot Reviewers',
-      title: 'Bot Reviewers',
-      description: 'Global AI reviewer agents, prompts, and personas',
-      keywords: ['bot', 'reviewers', 'agents', 'personas', 'prompts'],
-    },
-    {
-      id: 'guardrails',
-      label: 'Security Guardrails',
-      title: 'Security Guardrails',
-      description: 'Tool execution policies, command whitelist, audit log, and sandbox simulator',
-      keywords: ['guardrails', 'security', 'whitelist', 'simulator', 'blocked', 'audit', 'commands'],
-    },
-  ], [unsavedBreakdown]);
-
-  // Filtered categories based on search input
-  const filteredCategories = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return categories;
-    return categories.filter(
-      (cat) =>
-        cat.label.toLowerCase().includes(q) ||
-        cat.title.toLowerCase().includes(q) ||
-        cat.description.toLowerCase().includes(q) ||
-        cat.keywords.some((k) => k.toLowerCase().includes(q))
-    );
-  }, [searchQuery, categories]);
+  }, [isPreferencesOpen, isFontDropdownOpen, showResetConfirm, showJsonModal, handleCancel]);
 
   if (!isPreferencesOpen) return null;
 
-  const currentCategory = categories.find((c) => c.id === activeTab) || categories[0];
-  const currentFontSupportsLigatures = checkFontLigaturesSupport(draftFontFamily);
-  const selectedFontObj = SUPPORTED_FONTS.find(
-    (f) => f.fontFamilyName.toLowerCase() === draftFontFamily.toLowerCase()
-  ) || { fontFamilyName: draftFontFamily, ligaturesSupport: currentFontSupportsLigatures };
+  const currentTabId = normalizeTab(activeTab);
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 select-none animate-in fade-in duration-150">
-      <div className="bg-[#181825] border border-[#313244] w-full max-w-[1240px] shadow-2xl rounded-lg overflow-hidden flex flex-col h-[88vh] min-h-[620px] max-h-[96vh] animate-in zoom-in-95 duration-150">
-        
-        {/* Header Bar */}
-        <div
-          data-tauri-drag-region
-          className="px-4 py-2.5 border-b border-[#313244]/60 flex items-center justify-between bg-[#11111b]/80 shrink-0 select-none"
-        >
-          <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
-            <span className="text-xs font-semibold text-text tracking-wide">Settings</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 select-none">
+      <div
+        className="relative w-full max-w-4xl h-[680px] max-h-[90vh] bg-[#181825] border border-[#313244] shadow-2xl flex flex-col overflow-hidden text-text rounded-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Top Window Bar */}
+        <div className="h-9 px-4 bg-[#11111b] border-b border-[#313244]/80 flex items-center justify-between shrink-0 select-none">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold tracking-tight text-text">Preferences</span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="p-1 rounded hover:bg-[#313244]/50 text-subtext0 hover:text-text transition-colors cursor-pointer"
-            title="Close (Esc)"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="p-1 rounded text-subtext0 hover:text-text hover:bg-[#313244]/50 transition-colors cursor-pointer"
+              title="Close (Esc)"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
-        {/* Modal Body: Zed Split Layout */}
+        {/* Modal Main Body (Tree Sidebar + Content Pane) */}
         <div className="flex-1 flex overflow-hidden">
-          
-          {/* Zed Sidebar (Left) */}
-          <div className="w-64 bg-[#11111b]/90 border-r border-[#313244]/60 flex flex-col shrink-0 select-none">
+          {/* Left Column: Collapsible Tree Navigation */}
+          <div className="w-64 bg-[#11111b] border-r border-[#313244]/80 flex flex-col shrink-0 overflow-hidden">
             {/* Search Input */}
             <div className="p-3 border-b border-[#313244]/60">
               <div className="relative flex items-center">
@@ -701,76 +817,97 @@ export const PreferencesModal: React.FC = () => {
               </div>
             </div>
 
-            {/* Categories Navigation */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-              {filteredCategories.length === 0 ? (
+            {/* Tree Items List */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {filteredTree.length === 0 ? (
                 <div className="px-3 py-6 text-center text-xs text-subtext0 italic">
                   No settings matching &quot;{searchQuery}&quot;
                 </div>
               ) : (
-                filteredCategories.map((cat) => {
-                  const isActive = activeTab === cat.id;
+                filteredTree.map((group) => {
+                  const isExpanded = expandedGroups[group.id] ?? true;
+                  const hasActiveChild = group.children.some((c) => c.id === currentTabId);
+
                   return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setActiveTab(cat.id)}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded transition-colors cursor-pointer text-left ${
-                        isActive
-                          ? 'bg-[#313244]/80 text-text font-medium'
-                          : 'text-subtext0 hover:text-text hover:bg-[#313244]/30'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <ChevronRight
-                          className={`w-2.5 h-2.5 shrink-0 transition-transform duration-150 ${
-                            isActive ? 'rotate-90 text-text' : 'text-subtext0/70'
-                          }`}
-                        />
-                        <span className="truncate">{cat.label}</span>
-                      </div>
-                      {Boolean(cat.unsavedCount && cat.unsavedCount > 0) && (
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-surface2 text-text border border-surface1 shrink-0">
-                          {cat.unsavedCount}
-                        </span>
+                    <div key={group.id} className="space-y-0.5">
+                      {/* Category Parent Header */}
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.id)}
+                        className={`w-full flex items-center justify-between px-2 py-1.5 text-xs rounded transition-colors cursor-pointer select-none text-left group ${
+                          hasActiveChild ? 'text-text font-semibold' : 'text-subtext1 hover:text-text hover:bg-[#313244]/20'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <ChevronRight
+                            className={`w-3 h-3 text-subtext0 shrink-0 transition-transform duration-150 ${
+                              isExpanded ? 'rotate-90 text-text' : 'group-hover:text-text'
+                            }`}
+                          />
+                          <span className="truncate">{group.label}</span>
+                        </div>
+                      </button>
+
+                      {/* Collapsible Children */}
+                      {isExpanded && (
+                        <div className="space-y-0.5 pl-3">
+                          {group.children.map((child) => {
+                            const isActive = currentTabId === child.id;
+                            return (
+                              <button
+                                key={child.id}
+                                type="button"
+                                onClick={() => setActiveTab(child.id)}
+                                className={`w-full flex items-center justify-between pl-5 pr-2 py-1.5 text-xs rounded transition-colors cursor-pointer text-left ${
+                                  isActive
+                                    ? 'bg-[#313244]/90 text-text font-medium shadow-xs'
+                                    : 'text-subtext0 hover:text-text hover:bg-[#313244]/30'
+                                }`}
+                              >
+                                <span className="truncate">{child.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       )}
-                    </button>
+                    </div>
                   );
                 })
               )}
             </div>
 
-            {/* Keyboard Shortcut Hints at Bottom */}
+            {/* Bottom Keyboard Shortcut Hint */}
             <div className="p-3 border-t border-[#313244]/60 text-[11px] text-subtext0/80 font-mono flex items-center justify-between select-none">
-              <span>Ctrl-Shift-E Focus Navbar</span>
+              <span>Ctrl-Shift-E Focus Content</span>
               <span>Esc Close</span>
             </div>
           </div>
 
-          {/* Zed Content Area (Right) */}
+          {/* Right Column: Settings Content Area */}
           <div className="flex-1 overflow-y-auto p-8 bg-[#181825] flex flex-col">
             {/* Top Scope & Action Row (Zed style) */}
             <div className="flex items-center justify-between mb-4">
-              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-[#313244]/60 text-subtext1 border border-[#45475a]/50 select-none">
+              <span className="px-2.5 py-0.5 rounded text-[11px] font-mono bg-[#313244]/80 text-subtext1 border border-[#45475a]/50 select-none">
                 User
               </span>
               <button
                 type="button"
-                onClick={() => setShowResetConfirm(true)}
-                className="text-[11px] text-subtext0 hover:text-text transition-colors cursor-pointer hover:underline"
+                onClick={() => setShowJsonModal(true)}
+                className="text-xs text-subtext0 hover:text-text transition-colors cursor-pointer hover:underline flex items-center gap-1.5"
               >
-                Reset all to defaults
+                <Code className="w-3.5 h-3.5" />
+                <span>Edit in settings.json</span>
               </button>
             </div>
 
             {/* Category Header */}
             <div className="mb-5 pb-3 border-b border-[#313244]/60">
-              <h2 className="text-base font-semibold text-text">{currentCategory.title}</h2>
-              <p className="text-[11px] text-subtext0 mt-0.5">{currentCategory.description}</p>
+              <h2 className="text-base font-semibold text-text">{currentChildItem.title}</h2>
+              <p className="text-[11px] text-subtext0 mt-0.5">{currentChildItem.description}</p>
             </div>
 
-            {/* TAB: GENERAL */}
-            {activeTab === 'general' && (
+            {/* VIEW: GENERAL SETTINGS */}
+            {currentTabId === 'general-settings' && (
               <div className="space-y-1">
                 <SettingRow
                   title="Inline Git Blame"
@@ -827,18 +964,51 @@ export const PreferencesModal: React.FC = () => {
               </div>
             )}
 
-            {/* TAB: APPEARANCE */}
-            {activeTab === 'appearance' && (
+            {/* VIEW: SECURITY GUARDRAILS */}
+            {currentTabId === 'general-guardrails' && (
+              <div className="animate-in fade-in duration-100">
+                <GuardrailsTab />
+              </div>
+            )}
+
+            {/* VIEW: PRIVACY & TELEMETRY */}
+            {currentTabId === 'general-privacy' && (
+              <div className="space-y-4">
+                <SettingRow
+                  title="Telemetry & Diagnostics"
+                  description="Stage0 enforces a 100% Zero-Telemetry policy. No metrics, usage events, or file contents are ever transmitted to external telemetry servers."
+                >
+                  <span className="px-2.5 py-1 rounded text-xs bg-emerald-950 text-emerald-300 font-mono border border-emerald-800">
+                    Disabled (Zero Telemetry)
+                  </span>
+                </SettingRow>
+
+                <SettingRow
+                  title="Local Secret Management"
+                  description="API keys, personal access tokens (PAT), and Git credentials are encrypted in local SQLite app storage and never uploaded."
+                >
+                  <span className="px-2.5 py-1 rounded text-xs bg-surface1 text-text font-mono border border-surface2">
+                    Encrypted Local Storage
+                  </span>
+                </SettingRow>
+
+                <SettingRow
+                  title="Isolated Virtual Tree"
+                  description="Git operations run with in-memory merge-trees to guarantee zero dirty state or writes to your local working branch."
+                >
+                  <span className="px-2.5 py-1 rounded text-xs bg-surface1 text-text font-mono border border-surface2">
+                    100% In-Memory Sandbox
+                  </span>
+                </SettingRow>
+              </div>
+            )}
+
+            {/* VIEW: THEME */}
+            {currentTabId === 'appearance-theme' && (
               <div className="space-y-1">
                 <SettingRow
-                  title="Interface Theme"
-                  description={
-                    draftThemeMode === 'system'
-                      ? 'Synchronized with your operating system color scheme'
-                      : draftThemeMode === 'dark'
-                      ? 'Catppuccin Mocha aesthetic dark theme'
-                      : 'Catppuccin Latte clean light theme'
-                  }
+                  title="Theme Mode"
+                  description="Choose whether to use the selected light or dark theme or to follow your OS appearance configuration."
                 >
                   <div className="inline-flex items-center p-0.5 bg-[#11111b] border border-[#313244] gap-0.5 rounded shadow-inner">
                     <button
@@ -884,18 +1054,36 @@ export const PreferencesModal: React.FC = () => {
                     </button>
                   </div>
                 </SettingRow>
+
+                <SettingRow
+                  title="Dark Palette"
+                  description="Color theme applied when theme mode is set to dark or follows dark OS scheme."
+                >
+                  <span className="px-3 py-1.5 rounded bg-[#11111b] border border-[#313244] text-xs font-mono text-text">
+                    Catppuccin Mocha
+                  </span>
+                </SettingRow>
+
+                <SettingRow
+                  title="Light Palette"
+                  description="Color theme applied when theme mode is set to light."
+                >
+                  <span className="px-3 py-1.5 rounded bg-[#11111b] border border-[#313244] text-xs font-mono text-text">
+                    Catppuccin Latte
+                  </span>
+                </SettingRow>
               </div>
             )}
 
-            {/* TAB: EDITOR & FONTS */}
-            {activeTab === 'fonts' && (
-              <div className="space-y-4">
+            {/* VIEW: FONTS */}
+            {currentTabId === 'appearance-fonts' && (
+              <div className="space-y-1">
                 {/* Font Family Row */}
                 <SettingRow
-                  title="Monospace Font Family"
-                  description="Primary typography for code diffs, raw file viewer, and terminal views."
+                  title="Font Family"
+                  description="Monospace font family used across diff viewers, commit logs, and terminal panels."
                 >
-                  <div className="relative w-64" ref={fontDropdownRef}>
+                  <div className="relative w-64">
                     <button
                       type="button"
                       onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
@@ -1002,7 +1190,7 @@ export const PreferencesModal: React.FC = () => {
 
                 {/* Font Size Row */}
                 <SettingRow
-                  title="Editor Font Size"
+                  title="Font Size"
                   description="Font size in pixels for diff lines and editor panes (range: 10px – 24px)."
                 >
                   <div className="flex items-center gap-2">
@@ -1099,86 +1287,239 @@ export const PreferencesModal: React.FC = () => {
                       type="range"
                       min="1.1"
                       max="2.2"
-                      step="0.1"
+                      step="0.05"
                       value={draftLineSpacing}
                       onChange={(e) => setDraftLineSpacing(parseFloat(e.target.value))}
-                      className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-[#238636] rounded"
+                      className="w-full accent-[#cba6f7] cursor-pointer"
                     />
-                    <span className="text-xs font-mono font-bold text-text px-1.5 py-0.5 bg-[#11111b] border border-[#313244] rounded shrink-0">
-                      {draftLineSpacing}x
+                    <span className="text-xs font-mono text-text shrink-0 w-10 text-right">
+                      {draftLineSpacing.toFixed(2)}x
                     </span>
                   </div>
                 </SettingRow>
 
                 {/* Ligatures Row */}
                 <SettingRow
-                  title="Font Ligatures"
-                  description={
-                    <span className="flex items-center gap-2">
-                      <span>Renders coding ligatures such as =&gt;, !==, &lt;=, &gt;=, &amp;&amp;.</span>
-                      {!currentFontSupportsLigatures && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-subtext0 bg-[#11111b] px-1.5 py-0.5 rounded border border-[#313244]">
-                          <AlertCircle className="w-2.5 h-2.5" />
-                          Unsupported by {draftFontFamily}
-                        </span>
-                      )}
-                    </span>
-                  }
+                  title="Programming Ligatures"
+                  description="Render modern programming ligatures (e.g. !=, ===, =&gt;) if supported by the active font."
                 >
                   <ZedSwitch
-                    checked={draftEnableLigatures && currentFontSupportsLigatures}
-                    disabled={!currentFontSupportsLigatures}
-                    onChange={(val) => setDraftEnableLigatures(val)}
+                    checked={draftEnableLigatures}
+                    disabled={!checkFontLigaturesSupport(draftFontFamily)}
+                    onChange={setDraftEnableLigatures}
                   />
                 </SettingRow>
-
-                {/* Live Preview Panel */}
-                <div className="pt-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-text">Code Preview</span>
-                    <span className="text-[11px] text-subtext0 font-mono">
-                      {draftFontFamily} • {draftFontSize}px • {draftLineSpacing}x
-                    </span>
-                  </div>
-
-                  <div
-                    className="p-4 bg-[#11111b] border border-[#313244] rounded overflow-x-auto select-text shadow-inner"
-                    style={{
-                      fontFamily: `"${draftFontFamily}", monospace`,
-                      fontSize: `${draftFontSize}px`,
-                      fontWeight: draftIsBold ? 700 : 400,
-                      fontStyle: draftIsItalic ? 'italic' : 'normal',
-                      textDecoration: draftIsUnderline ? 'underline' : 'none',
-                      lineHeight: draftLineSpacing,
-                      fontVariantLigatures:
-                        draftEnableLigatures && currentFontSupportsLigatures ? 'normal' : 'none',
-                      fontFeatureSettings:
-                        draftEnableLigatures && currentFontSupportsLigatures
-                          ? '"liga" 1, "calt" 1'
-                          : '"liga" 0, "calt" 0',
-                    }}
-                  >
-                    <div className="text-subtext0/70 text-[11px] mb-1 font-sans select-none">
-                      // Stage0 Code Viewer Ligature Preview
-                    </div>
-                    <div className="text-text">
-                      <span className="text-subtext0">const</span> isSimulated = (base !== compare) =&gt; &#123;
-                    </div>
-                    <div className="text-text pl-4">
-                      <span className="text-subtext0">if</span> (target.status === <span className="text-subtext1">"CONFLICT"</span> &amp;&amp; count &gt;= 1) &#123;
-                    </div>
-                    <div className="text-text pl-8">
-                      <span className="text-subtext0">return</span> base.version &lt;= 2.0 ? <span className="text-subtext1">"REBASE_REQUIRED"</span> : <span className="text-subtext1">"MERGE_CLEAN"</span>;
-                    </div>
-                    <div className="text-text pl-4">&#125;</div>
-                    <div className="text-text">&#125;;</div>
-                  </div>
-                </div>
               </div>
             )}
 
-            {/* TAB: VERSION CONTROL */}
-            {activeTab === 'git' && (
+            {/* VIEW: DIFF VIEWER */}
+            {currentTabId === 'editor-diff' && (
+              <div className="space-y-1">
+                <SettingRow
+                  title="Inline Blame Annotations"
+                  description="Show commit author, relative time, and summary annotation at the end of the active line in diff view."
+                >
+                  <ZedSwitch
+                    checked={draftShowInlineBlame}
+                    onChange={setDraftShowInlineBlame}
+                  />
+                </SettingRow>
+
+                <SettingRow
+                  title="Diff View Mode"
+                  description="Choose side-by-side split view or unified inline diff representation."
+                >
+                  <span className="px-3 py-1.5 rounded bg-[#11111b] border border-[#313244] text-xs font-mono text-text">
+                    Split / Unified Toggleable
+                  </span>
+                </SettingRow>
+              </div>
+            )}
+
+            {/* VIEW: AI OVERVIEW (Clean Zed inspired layout - Screenshot 2) */}
+            {currentTabId === 'ai-overview' && (
+              <div className="space-y-3">
+                <SettingRow
+                  title="LLM Providers"
+                  description="Configure natively-included model providers."
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ai-providers')}
+                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                  >
+                    <span>Configure</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </SettingRow>
+
+                <SettingRow
+                  title="External Agents"
+                  description="View, add, and remove agents connected through the Agent Client Protocol."
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ai-reviewers')}
+                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                  >
+                    <span>Configure</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </SettingRow>
+
+                <SettingRow
+                  title="MCP Servers"
+                  description="View, add, configure, and remove Model Context Protocol servers."
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ai-mcp')}
+                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                  >
+                    <span>Configure</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </SettingRow>
+
+                {/* Subheader: Agent Configuration */}
+                <div className="pt-4 pb-1">
+                  <div className="text-xs font-semibold text-subtext1">Agent Configuration</div>
+                </div>
+
+                <SettingRow
+                  title="Skills"
+                  description="View and manage agent skills installed globally or in project worktrees."
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ai-mcp')}
+                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                  >
+                    <span>Configure</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </SettingRow>
+
+                <SettingRow
+                  title="Sandbox"
+                  description="Review and change the elevated terminal sandbox permissions that are always allowed without prompting."
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ai-sandbox')}
+                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                  >
+                    <span>Configure</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </SettingRow>
+
+                <SettingRow
+                  title="Tool Permissions"
+                  description="Set up regex patterns to auto-allow, auto-deny, or always request confirmation, for specific tool inputs."
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('general-guardrails')}
+                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                  >
+                    <span>Configure</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </SettingRow>
+
+                <SettingRow
+                  title="Single File Review"
+                  description="When enabled, agent edits will also be displayed in single-file buffers for review."
+                >
+                  <ZedSwitch
+                    checked={draftAiConfig.enableCodeReviewAssist}
+                    onChange={(val) =>
+                      setDraftAiConfig((prev) => ({
+                        ...prev,
+                        enableCodeReviewAssist: val,
+                      }))
+                    }
+                  />
+                </SettingRow>
+
+                <SettingRow
+                  title="Stream AI Responses"
+                  description="Stream token-by-token completion for real-time responsiveness when generating summaries."
+                >
+                  <ZedSwitch
+                    checked={draftAiConfig.streamResponse}
+                    onChange={(val) =>
+                      setDraftAiConfig((prev) => ({ ...prev, streamResponse: val }))
+                    }
+                  />
+                </SettingRow>
+              </div>
+            )}
+
+            {/* VIEW: LLM PROVIDERS */}
+            {currentTabId === 'ai-providers' && (
+              <div className="animate-in fade-in duration-100">
+                <AiMcpTab
+                  draftAiConfig={draftAiConfig}
+                  onUpdateAiConfig={(partial) =>
+                    setDraftAiConfig((prev) => ({ ...prev, ...partial }))
+                  }
+                  activeView="providers"
+                  onBackToOverview={() => setActiveTab('ai-overview')}
+                />
+              </div>
+            )}
+
+            {/* VIEW: MCP SERVERS */}
+            {currentTabId === 'ai-mcp' && (
+              <div className="animate-in fade-in duration-100">
+                <AiMcpTab
+                  draftAiConfig={draftAiConfig}
+                  onUpdateAiConfig={(partial) =>
+                    setDraftAiConfig((prev) => ({ ...prev, ...partial }))
+                  }
+                  activeView="mcp"
+                  onBackToOverview={() => setActiveTab('ai-overview')}
+                />
+              </div>
+            )}
+
+            {/* VIEW: EXTERNAL AGENTS / BOT REVIEWERS */}
+            {currentTabId === 'ai-reviewers' && (
+              <div className="animate-in fade-in duration-100 space-y-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ai-overview')}
+                  className="inline-flex items-center gap-1.5 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+                  <span>Back to AI overview</span>
+                </button>
+                <BotReviewersTab />
+              </div>
+            )}
+
+            {/* VIEW: SANDBOX */}
+            {currentTabId === 'ai-sandbox' && (
+              <div className="animate-in fade-in duration-100 space-y-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ai-overview')}
+                  className="inline-flex items-center gap-1.5 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+                  <span>Back to AI overview</span>
+                </button>
+                <SandboxTab
+                  draftSandboxType={draftSandboxType}
+                  onSelectAdapter={setDraftSandboxType}
+                />
+              </div>
+            )}
+
+            {/* VIEW: GIT EXECUTABLE */}
+            {currentTabId === 'git-binary' && (
               <div className="animate-in fade-in duration-100">
                 <GitBinaryTab
                   draftBinaryId={draftGitBinaryId}
@@ -1193,48 +1534,10 @@ export const PreferencesModal: React.FC = () => {
               </div>
             )}
 
-            {/* TAB: GIT CREDENTIALS */}
-            {activeTab === 'credentials' && (
+            {/* VIEW: GIT CREDENTIALS */}
+            {currentTabId === 'git-credentials' && (
               <div className="animate-in fade-in duration-100">
                 <GitCredentialsTab />
-              </div>
-            )}
-
-            {/* TAB: SANDBOX ENGINE */}
-            {activeTab === 'sandbox' && (
-              <div className="animate-in fade-in duration-100">
-                <SandboxTab
-                  draftSandboxType={draftSandboxType}
-                  onSelectAdapter={setDraftSandboxType}
-                  isPendingCommit={draftSandboxType !== savedBaseline.sandboxType}
-                />
-              </div>
-            )}
-
-            {/* TAB: AI & MCP */}
-            {activeTab === 'ai' && (
-              <div className="animate-in fade-in duration-100">
-                <AiMcpTab
-                  draftAiConfig={draftAiConfig}
-                  onUpdateAiConfig={(partial) =>
-                    setDraftAiConfig((prev) => ({ ...prev, ...partial }))
-                  }
-                  onNavigateToGuardrails={() => setActiveTab('guardrails')}
-                />
-              </div>
-            )}
-
-            {/* TAB: BOT REVIEWERS */}
-            {activeTab === 'reviewers' && (
-              <div className="animate-in fade-in duration-100">
-                <BotReviewersTab />
-              </div>
-            )}
-
-            {/* TAB: SECURITY GUARDRAILS */}
-            {activeTab === 'guardrails' && (
-              <div className="animate-in fade-in duration-100">
-                <GuardrailsTab />
               </div>
             )}
           </div>
@@ -1242,7 +1545,6 @@ export const PreferencesModal: React.FC = () => {
 
         {/* Footer: Reset on left, Cancel, Apply, OK on right */}
         <div className="px-6 py-3 border-t border-[#313244]/60 flex items-center justify-between bg-[#11111b]/80 select-none shrink-0">
-          {/* Left: Reset to defaults & Unsaved Indicator */}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -1262,7 +1564,6 @@ export const PreferencesModal: React.FC = () => {
             )}
           </div>
 
-          {/* Right: Cancel, Apply, OK */}
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -1279,16 +1580,15 @@ export const PreferencesModal: React.FC = () => {
               disabled={!hasUnsavedChanges && !isApplied}
               className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer rounded border ${
                 isApplied
-                  ? 'bg-surface2 text-text border-surface1'
+                  ? 'bg-emerald-950 border-emerald-800 text-emerald-300'
                   : hasUnsavedChanges
-                  ? 'bg-surface1 hover:bg-surface2 text-text border-surface2 shadow-xs'
-                  : 'bg-surface0/30 text-subtext0/40 border-surface0/50 cursor-not-allowed'
+                  ? 'bg-[#313244] hover:bg-[#45475a] border-[#45475a] text-text shadow-xs'
+                  : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'
               }`}
-              title="Save changes and keep window open (Ctrl+S)"
             >
               {isApplied ? (
                 <>
-                  <Check className="w-3 h-3 text-text" />
+                  <Check className="w-3.5 h-3.5" />
                   <span>Applied</span>
                 </>
               ) : (
@@ -1299,8 +1599,7 @@ export const PreferencesModal: React.FC = () => {
             <button
               type="button"
               onClick={handleOk}
-              className="px-5 py-1.5 bg-[#238636] hover:bg-[#238636]/90 text-white font-semibold text-xs transition-colors cursor-pointer rounded"
-              title="Save changes and close window"
+              className="px-4 py-1.5 bg-[#313244] hover:bg-[#45475a] border border-[#45475a] text-text text-xs font-semibold transition-colors cursor-pointer rounded shadow-xs"
             >
               OK
             </button>
@@ -1308,34 +1607,94 @@ export const PreferencesModal: React.FC = () => {
         </div>
       </div>
 
-      {/* Confirmation Dialog for Reset to Defaults */}
-      {showResetConfirm && (
-        <div className="fixed inset-x-0 bottom-0 top-8.5 z-[60] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-100">
-          <div className="bg-[#181825] border border-[#313244] max-w-md w-full p-5 rounded-lg shadow-2xl space-y-4 animate-in zoom-in-95 duration-100">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded bg-[#11111b] border border-[#313244] text-subtext0 shrink-0">
-                <AlertTriangle className="w-5 h-5" />
+      {/* Settings.json Modal */}
+      {showJsonModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-100">
+          <div
+            className="w-full max-w-xl bg-[#181825] border border-[#313244] rounded-xl shadow-2xl p-5 flex flex-col max-h-[85vh] text-text"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[#313244]">
+              <div className="flex items-center gap-2">
+                <Code className="w-4 h-4 text-subtext0" />
+                <h3 className="text-sm font-bold text-text">settings.json</h3>
+                <span className="text-[10px] px-2 py-0.5 bg-[#11111b] border border-[#313244] text-subtext0 font-mono rounded">
+                  User Settings Snapshot
+                </span>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-text">Reset all preferences to default?</h3>
-                <p className="text-xs text-subtext0 mt-1 leading-relaxed">
-                  This will immediately reset all settings (Theme, Viewer Fonts, Inline Blame, Sandbox Engine, and AI Configuration) to application defaults and commit them.
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowJsonModal(false)}
+                className="p-1 rounded text-subtext0 hover:text-text hover:bg-[#313244]/50 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#313244]/60">
+            <div className="flex-1 overflow-auto my-4 bg-[#11111b] p-3.5 rounded border border-[#313244]">
+              <pre className="text-xs font-mono text-[#cdd6f4] leading-relaxed whitespace-pre overflow-x-auto">
+                {settingsJsonString}
+              </pre>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={handleCopyJson}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#313244] hover:bg-[#45475a] text-xs text-text border border-[#45475a] transition-colors cursor-pointer font-medium"
+              >
+                {copiedJson ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-subtext0" />
+                    <span>Copy JSON</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowJsonModal(false)}
+                className="px-4 py-1.5 rounded bg-[#313244] hover:bg-[#45475a] text-xs text-text border border-[#45475a] font-medium transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Confirmation Dialog */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-100">
+          <div
+            className="w-full max-w-md bg-[#181825] border border-[#313244] rounded-xl shadow-2xl p-5 flex flex-col gap-3 text-text"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2.5 text-text">
+              <AlertCircle className="w-5 h-5 text-subtext0 shrink-0" />
+              <h3 className="text-sm font-bold">Reset All Preferences?</h3>
+            </div>
+            <p className="text-xs text-subtext0 leading-relaxed">
+              This will restore all theme, font typography, inline blame, and AI configurations
+              back to default values.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowResetConfirm(false)}
-                className="px-3 py-1.5 rounded border border-[#313244] hover:bg-[#313244]/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs text-subtext0 hover:text-text hover:bg-[#313244]/50 border border-[#313244] rounded transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={handleConfirmResetToDefault}
-                className="px-3.5 py-1.5 rounded bg-[#da3633] text-white text-xs font-semibold hover:bg-[#da3633]/90 transition-colors cursor-pointer shadow-xs"
+                onClick={handleResetDefaults}
+                className="px-3.5 py-1.5 text-xs bg-[#313244] hover:bg-[#45475a] text-text border border-[#45475a] font-semibold rounded transition-colors cursor-pointer"
               >
                 Reset to Defaults
               </button>
@@ -1344,47 +1703,28 @@ export const PreferencesModal: React.FC = () => {
         </div>
       )}
 
-      {/* Confirmation Dialog for Restart to Apply Git Binary */}
+      {/* Restart Prompt for Git Binary */}
       {showRestartPrompt && (
-        <div className="fixed inset-x-0 bottom-0 top-8.5 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-100">
-          <div className="bg-[#181825] border border-[#313244] max-w-md w-full p-5 rounded-lg shadow-2xl space-y-4 animate-in zoom-in-95 duration-100">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded bg-peach/15 border border-peach/30 text-peach shrink-0">
-                <RotateCcw className="w-5 h-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-bold text-text">Restart Required to Apply Git Binary</h3>
-                <p className="text-xs text-subtext0 mt-1 leading-relaxed">
-                  The active Git binary has been switched to:
-                </p>
-                <div className="mt-1.5 p-2 rounded bg-[#11111b] border border-[#313244] font-mono text-[11px] text-text break-all">
-                  {draftGitBinaryPath}
-                </div>
-                <p className="text-xs text-subtext0 mt-2 leading-relaxed">
-                  A restart of Stage0 is required to apply this Git executable across all background watchers, diff comparisons, and sandbox worktrees cleanly.
-                </p>
-              </div>
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-100">
+          <div
+            className="w-full max-w-md bg-[#181825] border border-[#313244] rounded-xl shadow-2xl p-5 flex flex-col gap-3 text-text"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2.5 text-text">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+              <h3 className="text-sm font-bold">Restart Required</h3>
             </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#313244]/60">
+            <p className="text-xs text-subtext0 leading-relaxed">
+              The Git executable binary was changed. Please restart the Stage0 application to apply
+              the new Git runtime across all sandboxes and active repositories.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => {
-                  setShowRestartPrompt(false);
-                  setIsPreferencesOpen(false);
-                }}
-                className="px-3.5 py-1.5 rounded border border-[#313244] hover:bg-[#313244]/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                onClick={() => setShowRestartPrompt(false)}
+                className="px-4 py-1.5 text-xs bg-[#313244] hover:bg-[#45475a] text-text border border-[#45475a] font-semibold rounded transition-colors cursor-pointer"
               >
-                Restart Later
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  await restartApp();
-                }}
-                className="px-4 py-1.5 rounded bg-[#238636] text-white text-xs font-semibold hover:bg-[#238636]/90 transition-colors cursor-pointer shadow-xs"
-              >
-                Restart Now
+                OK
               </button>
             </div>
           </div>
