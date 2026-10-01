@@ -96,6 +96,12 @@ pub fn dispatch_tool_call(
                 return Err("start_line must be >= 1 and <= end_line".to_string());
             }
 
+            // 🛡️ Guardrails: Evaluate path safety, sensitive file protection, line count limit
+            manager
+                .guardrails()
+                .evaluate_read_file(&args.file_path, args.start_line, args.end_line)
+                .map_err(|v| format!("🛡️ Guardrail Policy Blocked: {}", v.message))?;
+
             let content = match instance.adapter_type {
                 SandboxType::InMemory => {
                     let safe_path = crate::git::resolve_safe_repo_path(&instance.repo_path, &args.file_path)?;
@@ -146,6 +152,13 @@ pub fn dispatch_tool_call(
             }))
         }
         "get_diff" => {
+            // 🛡️ Guardrails: Record diff read audit
+            manager.guardrails().record_diff_audit(
+                &instance.repo_path,
+                &instance.base_branch,
+                &instance.compare_branch,
+            );
+
             let diff_payload = manager.get_mr_diff(
                 &instance.repo_path,
                 &instance.base_branch,
@@ -154,14 +167,27 @@ pub fn dispatch_tool_call(
             serde_json::to_value(diff_payload).map_err(|e| e.to_string())
         }
         "execute_terminal_cmd" => {
-            if instance.adapter_type == SandboxType::InMemory {
-                return Err("execute_terminal_cmd is strictly disabled in InMemory sandbox mode.".to_string());
-            }
-
             let args: ExecuteTerminalCmdArgs = serde_json::from_value(arguments)
                 .map_err(|e| format!("Invalid arguments for execute_terminal_cmd: {}", e))?;
 
-            let res = manager.execute_command(&instance.id, &args.command, &args.args)?;
+            // 🛡️ Guardrails: Evaluate command safety, whitelist, blacklist, patterns, isolation
+            let _eval = manager
+                .guardrails()
+                .evaluate_command(&args.command, &args.args, &instance.adapter_type)
+                .map_err(|v| format!("🛡️ Guardrail Policy Blocked: {}", v.message))?;
+
+            let mut res = manager.execute_command(&instance.id, &args.command, &args.args)?;
+
+            // 🛡️ Guardrails: Truncate oversized terminal output buffers
+            let (trunc_stdout, s_out_truncated) = manager.guardrails().truncate_output_if_needed(&res.stdout);
+            let (trunc_stderr, s_err_truncated) = manager.guardrails().truncate_output_if_needed(&res.stderr);
+            if s_out_truncated {
+                res.stdout = trunc_stdout.into_owned();
+            }
+            if s_err_truncated {
+                res.stderr = trunc_stderr.into_owned();
+            }
+
             serde_json::to_value(res).map_err(|e| e.to_string())
         }
         unknown => Err(format!("Unknown sandbox tool '{}'", unknown)),

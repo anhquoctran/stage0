@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use crate::git::{ConflictFilePreview, ConflictReport, MrDiffPayload};
 
+pub mod guardrails;
 pub mod in_memory;
 pub mod local_worktree;
 pub mod docker;
@@ -8,6 +9,10 @@ pub mod manager;
 pub mod sync;
 pub mod tool_bridge;
 
+pub use guardrails::{
+    GuardrailAuditEvent, GuardrailEvaluationResult, GuardrailMode, GuardrailPolicy,
+    GuardrailSeverity, GuardrailViolation, GuardrailsEngine,
+};
 pub use in_memory::InMemorySandboxAdapter;
 pub use local_worktree::LocalWorktreeSandboxAdapter;
 pub use docker::DockerSandboxAdapter;

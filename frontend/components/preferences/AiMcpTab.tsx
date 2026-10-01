@@ -32,6 +32,7 @@ import {
   McpServerConfig,
   McpServerType,
 } from '../../types/ai';
+import { GuardrailsTab } from './GuardrailsTab';
 
 interface AiMcpTabProps {
   draftAiConfig?: AiConfig;
@@ -278,13 +279,13 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
             type="button"
             onClick={() => setActiveSubTab('ai')}
             className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
-              activeSubTab === 'ai'
+              activeSubTab === 'ai' || activeSubTab === 'guardrails'
                 ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
                 : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
             }`}
           >
             <Bot className="w-3.5 h-3.5" />
-            <span>AI Model & Provider</span>
+            <span>AI Model & Security Policies</span>
           </button>
 
           <button
@@ -318,8 +319,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         </div>
       </div>
 
-      {/* SUB-TAB 1: AI MODEL & PROVIDER */}
-      {activeSubTab === 'ai' && (
+      {/* SUB-TAB 1: AI MODEL, ENGINE & SECURITY POLICIES */}
+      {(activeSubTab === 'ai' || activeSubTab === 'guardrails') && (
         <div className="space-y-5 animate-in fade-in duration-100">
           {/* Provider Selection Grid */}
           <div>
@@ -622,6 +623,11 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 )}
               </button>
             </div>
+          </div>
+
+          {/* AI Security Guardrails & Tool Execution Policies */}
+          <div className="pt-2">
+            <GuardrailsTab />
           </div>
         </div>
       )}
