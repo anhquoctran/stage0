@@ -54,15 +54,20 @@ fn map_keyring_error(action: &str, err: keyring::Error) -> String {
             }
         }
         keyring::Error::PlatformFailure(ref inner) => {
-            format!("OS Credential Manager platform error while attempting to {}: {}", action, inner)
+            format!(
+                "OS Credential Manager platform error while attempting to {}: {}",
+                action, inner
+            )
         }
         keyring::Error::NoEntry => {
-            format!("No matching credential entry found while attempting to {}.", action)
+            format!(
+                "No matching credential entry found while attempting to {}.",
+                action
+            )
         }
         other => format!("Failed to {} in OS Credential Manager: {}", action, other),
     }
 }
-
 
 pub fn get_os_keyring_info() -> OsKeyringInfo {
     #[cfg(target_os = "windows")]
@@ -119,8 +124,10 @@ pub fn retrieve_secret(token_ref: &str) -> Result<String, String> {
 pub fn delete_secret(token_ref: &str) -> Result<(), String> {
     let entry = keyring::Entry::new(KEYRING_SERVICE, token_ref)
         .map_err(|e| map_keyring_error("initialize", e))?;
-    let _ = entry.delete_credential();
-    Ok(())
+    match entry.delete_credential() {
+        Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+        Err(error) => Err(map_keyring_error("delete secret", error)),
+    }
 }
 
 pub fn exists_in_keyring(token_ref: &str) -> bool {
@@ -141,19 +148,21 @@ pub fn store_ai_key(provider: &str, api_key: &str) -> Result<(), String> {
     Ok(())
 }
 
-pub fn retrieve_ai_key(provider: &str) -> Result<Option<String>, String> {
+pub fn ai_key_exists(provider: &str) -> Result<bool, String> {
     let entry = keyring::Entry::new(AI_KEYRING_SERVICE, provider)
         .map_err(|e| map_keyring_error("initialize AI secret", e))?;
     match entry.get_password() {
-        Ok(p) => Ok(Some(p)),
-        Err(keyring::Error::NoEntry) => Ok(None),
-        Err(e) => Err(map_keyring_error("retrieve AI secret", e)),
+        Ok(_) => Ok(true),
+        Err(keyring::Error::NoEntry) => Ok(false),
+        Err(error) => Err(map_keyring_error("check AI secret", error)),
     }
 }
 
 pub fn delete_ai_key(provider: &str) -> Result<(), String> {
     let entry = keyring::Entry::new(AI_KEYRING_SERVICE, provider)
         .map_err(|e| map_keyring_error("initialize AI secret", e))?;
-    let _ = entry.delete_credential();
-    Ok(())
+    match entry.delete_credential() {
+        Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+        Err(error) => Err(map_keyring_error("delete AI secret", error)),
+    }
 }

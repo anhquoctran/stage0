@@ -107,8 +107,8 @@ if (Test-Path $BundleDir) {
         Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkGray
         foreach ($item in $Installers) {
             $SizeMB = [math]::Round($item.Length / 1MB, 2)
-            $Hash = (Get-FileHash -Path $item.FullName -Algorithm SHA256).Hash.Substring(0, 16)
-            Write-Host "  * $($item.Name) ($SizeMB MB) - SHA256: $Hash..." -ForegroundColor Green
+            $Hash = (Get-FileHash -Path $item.FullName -Algorithm SHA256).Hash
+            Write-Host "  * $($item.Name) ($SizeMB MB) - SHA256: $Hash" -ForegroundColor Green
             Write-Host "    Path: $($item.FullName)" -ForegroundColor DarkGray
         }
         Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkGray

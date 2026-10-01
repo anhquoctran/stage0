@@ -59,6 +59,8 @@ pub fn list_branches(repo_path: &str) -> Result<BranchList, String> {
 }
 
 pub fn get_merge_base(repo_path: &str, base: &str, compare: &str) -> Result<String, String> {
-    let out = run_git_strict(repo_path, &["merge-base", base, compare])?;
+    let (_, base) = super::runner::resolve_ref(repo_path, base)?;
+    let (_, compare) = super::runner::resolve_ref(repo_path, compare)?;
+    let out = run_git_strict(repo_path, &["merge-base", &base, &compare])?;
     Ok(out.trim().to_string())
 }

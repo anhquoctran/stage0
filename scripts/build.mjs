@@ -96,8 +96,17 @@ function formatBytes(bytes) {
 // Compute SHA-256 Checksum
 function computeSha256(filePath) {
   const hash = crypto.createHash('sha256');
-  const fileBuffer = fs.readFileSync(filePath);
-  hash.update(fileBuffer);
+  const fileDescriptor = fs.openSync(filePath, 'r');
+  const chunk = Buffer.allocUnsafe(1024 * 1024);
+  try {
+    let bytesRead;
+    do {
+      bytesRead = fs.readSync(fileDescriptor, chunk, 0, chunk.length, null);
+      if (bytesRead > 0) hash.update(chunk.subarray(0, bytesRead));
+    } while (bytesRead > 0);
+  } finally {
+    fs.closeSync(fileDescriptor);
+  }
   return hash.digest('hex');
 }
 
@@ -177,10 +186,6 @@ console.log(`${DIM}   Compiler Profile: LTO=true, Opt-Level=3, Strip=true, Panic
 const tauriBuildResult = spawnSync(npxCmd, ['tauri', 'build'], {
   cwd: ROOT_DIR,
   stdio: 'inherit',
-  env: {
-    ...process.env,
-    RUSTFLAGS: '-C target-cpu=native',
-  },
   shell: isWin,
 });
 
@@ -200,7 +205,7 @@ const generatedInstallers = findBundleFiles(BUNDLE_DIR);
 if (generatedInstallers.length > 0) {
   console.log(`\n${BOLD}Generated Packages & Checksums:${RESET}\n`);
   console.log(`${DIM}--------------------------------------------------------------------------------${RESET}`);
-  console.log(`${BOLD}${'Package File'.padEnd(35)} ${'Size'.padStart(10)}   ${'SHA-256 Checksum'.padEnd(20)}${RESET}`);
+  console.log(`${BOLD}${'Package File'.padEnd(35)} ${'Size'.padStart(10)}   ${'SHA-256 Checksum'.padEnd(64)}${RESET}`);
   console.log(`${DIM}--------------------------------------------------------------------------------${RESET}`);
 
   for (const item of generatedInstallers) {
@@ -214,7 +219,7 @@ if (generatedInstallers.length > 0) {
       hashStr = 'N/A (App Bundle)';
     } else {
       sizeStr = formatBytes(stats.size);
-      hashStr = computeSha256(item).substring(0, 16) + '...';
+      hashStr = computeSha256(item);
     }
 
     console.log(`${fileName.padEnd(35)} ${sizeStr.padStart(10)}   ${hashStr}`);

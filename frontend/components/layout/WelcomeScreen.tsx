@@ -252,11 +252,11 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         </div>
 
         {/* Footer info: Version and Copyright */}
-        <div className="mt-8 pt-4 border-t border-surface0/60 flex items-center justify-between text-[11px] text-subtext0 select-none">
+        <div className="mt-8 pt-4 border-t border-surface0/60 flex flex-col items-center gap-2 text-[11px] text-subtext0 text-center select-none">
           <button
             type="button"
             onClick={() => setShowAboutModal(true)}
-            className="hover:text-text transition-colors cursor-pointer flex items-center gap-1.5 group"
+            className="hover:text-text transition-colors cursor-pointer flex items-center justify-center gap-1.5 group"
             title="View About Stage0"
           >
             <span className="font-semibold text-text">{about.name}</span>
@@ -264,7 +264,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               v{about.version}
             </span>
           </button>
-          <span className="text-[10px] text-subtext0 truncate max-w-[280px]">
+          <span className="w-full text-[10px] text-subtext0 text-center leading-relaxed">
             {about.copyright}
           </span>
         </div>

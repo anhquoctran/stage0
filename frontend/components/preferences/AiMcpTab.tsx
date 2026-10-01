@@ -49,6 +49,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 }) => {
   const {
     aiConfig: storeAiConfig,
+    apiKeysConfigured,
     mcpServers,
     isTestingAi,
     aiTestResult,
@@ -57,6 +58,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     updateAiConfig: storeUpdateAiConfig,
     resetAiConfig: storeResetAiConfig,
     setProvider: storeSetProvider,
+    loadApiKeyForProvider,
     testAiConnection,
     clearAiTestResult,
     addMcpServer,
@@ -77,6 +79,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         provider: providerId,
         model: preset.defaultModel,
         baseUrl: preset.defaultBaseUrl,
+        apiKey: '',
       });
     } else {
       storeSetProvider(providerId);
@@ -92,6 +95,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   };
 
   const [showApiKey, setShowApiKey] = useState(false);
+  const [apiKeyDraft, setApiKeyDraft] = useState(draftAiConfig?.apiKey || '');
   const [testingServerId, setTestingServerId] = useState<string | null>(null);
   const [deletingServerId, setDeletingServerId] = useState<string | null>(null);
 
@@ -116,6 +120,15 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 
   const activeProviderPreset =
     AI_PROVIDERS.find((p) => p.id === aiConfig.provider) || AI_PROVIDERS[0];
+  const hasSavedApiKey = !!apiKeysConfigured[aiConfig.provider];
+
+  useEffect(() => {
+    setApiKeyDraft(draftAiConfig?.apiKey || '');
+  }, [aiConfig.provider, draftAiConfig?.apiKey]);
+
+  useEffect(() => {
+    void loadApiKeyForProvider(aiConfig.provider);
+  }, [aiConfig.provider, loadApiKeyForProvider]);
 
   const enabledMcpCount = mcpServers.filter((s) => s.enabled).length;
 
@@ -450,15 +463,25 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     API Secret Key <span className="text-red">*</span>
                   </label>
                   <span className="text-[10px] text-subtext0/70 font-mono">
-                    Stored securely in application configuration
+                    {hasSavedApiKey ? 'Saved in the OS credential store' : 'Stored only in the OS credential store'}
                   </span>
                 </div>
                 <div className="relative flex items-center">
                   <input
                     type={showApiKey ? 'text' : 'password'}
-                    value={aiConfig.apiKey}
-                    onChange={(e) => updateAiConfig({ apiKey: e.target.value })}
-                    placeholder="sk-..., gsk_..., or your API token"
+                    value={apiKeyDraft}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setApiKeyDraft(value);
+                      if (onUpdateAiConfig) onUpdateAiConfig({ apiKey: value });
+                    }}
+                    onBlur={() => {
+                      if (!onUpdateAiConfig && apiKeyDraft.trim()) {
+                        storeUpdateAiConfig({ apiKey: apiKeyDraft });
+                        setApiKeyDraft('');
+                      }
+                    }}
+                    placeholder={hasSavedApiKey ? 'Key saved securely. Enter a new key to replace it.' : 'sk-..., gsk_..., or your API token'}
                     className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
                   />
                   <button
@@ -502,6 +525,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 placeholder="https://api.openai.com/v1"
                 className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
               />
+              <p className="text-[10px] text-subtext0 mt-1">
+                Do not embed credentials in this URL. Cloud connection tests are simulated and do not contact this endpoint.
+              </p>
             </div>
 
             {/* Hyperparameters: Temperature & Max Tokens */}
@@ -627,7 +653,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 
               <button
                 type="button"
-                onClick={testAiConnection}
+                onClick={() => void testAiConnection(aiConfig, hasSavedApiKey || !!apiKeyDraft.trim())}
                 disabled={isTestingAi}
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs border border-surface2"
               >
@@ -871,6 +897,10 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     <span>Add Variable</span>
                   </button>
                 </div>
+
+                <p className="text-[10px] text-subtext0 mb-2">
+                  Server URLs and values are saved in local app preferences and included in configuration exports; do not embed credentials or enter passwords, API keys, or other secrets here.
+                </p>
 
                 {serverEnvPairs.length > 0 ? (
                   <div className="space-y-1.5">

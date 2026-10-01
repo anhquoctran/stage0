@@ -38,11 +38,13 @@ Sandbox adapters have different scopes:
 
 | Adapter | Behavior | Limitations |
 | --- | --- | --- |
-| In-memory | Supports diff and conflict inspection. | Does not run commands. |
-| Local worktree | Creates a detached worktree at the compare ref and runs commands in it. | It does not create the predicted merge result. Commands run on the host with the current user's permissions; a worktree is not operating-system-level isolation. |
-| Docker | Runs commands in a container with the repository mounted read-only. | It does not create the predicted merge result. The container's network access is not disabled by Stage0. |
+| In-memory | Supports diff and conflict inspection without checking out a branch or changing the working tree or index. | Git may write result tree/blob objects to the repository object database. Does not run commands. |
+| Local worktree | Creates a detached worktree at the compare ref and runs commands in it. | It does not create the predicted merge result. Commands run on the host with the current user's permissions and can access files outside the worktree; a worktree is not operating-system isolation. |
+| Docker | Copies the selected source tree into a writable container and runs commands there. No host directory is mounted by Stage0. | It does not create the predicted merge result. Network access is enabled; Stage0 does not set CPU, memory, or process limits. Container isolation also depends on the installed Docker runtime and host configuration. |
 
-AI and MCP preferences are currently configuration UI rather than complete integrations. Cloud AI and MCP connection checks are simulated, bot re-verification does not inspect source code, and assigned reviewers are not persisted across application restarts. Saved Git credentials are stored in the OS credential store but are not currently injected into Git operations.
+AI and MCP preferences are currently configuration UI rather than complete provider/server integrations. Cloud AI and MCP connection checks are simulated; the Ollama check makes a request only to a localhost endpoint. API keys are stored in the OS credential store, but are not currently sent to AI providers. Stage0's saved Git credentials are not injected into Git commands; Git itself may still use credential helpers configured by the user or operating system. New remote URLs must use HTTP(S) or SSH and may not embed credentials or query-string secrets. Git subprocesses block external helper protocols such as `ext::` and local `file://` remotes.
+
+MCP environment values are saved in ordinary local preferences and included in configuration exports, so do not put secrets in those fields. The AI/MCP tool bridge exposes terminal execution only for Docker, never for the host-backed Local Worktree. Terminal commands that require confirmation are refused because Stage0 does not yet have an approval dialog; write confirmation is enabled by default, so terminal tools are unavailable until that policy is explicitly disabled. Markdown previews block remote images to avoid contacting third parties just by opening a review. Viewer-font choices may request stylesheets from Google Fonts (`fonts.googleapis.com`) and font files from `fonts.gstatic.com`; local/system fallbacks are used if these requests fail. Bot re-verification does not inspect source code, and assigned reviewers are not persisted across application restarts.
 
 ## Requirements
 

@@ -1,14 +1,17 @@
+use crate::git::RepoInfo;
+use rusqlite::{params, Connection};
 use std::collections::HashMap;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
-use rusqlite::{params, Connection};
+use std::time::Duration;
 use tauri::{AppHandle, Manager};
-use crate::git::RepoInfo;
 
 pub struct Database(pub Mutex<Connection>);
 
 const SCHEMA_SQL: &str = include_str!("schema.sql");
+const DATABASE_FILE_NAME: &str = "stage0.db";
+const LEGACY_DATABASE_FILE_NAME: &str = "local_mr.db";
 
 fn create_app_data_dir(path: &Path) -> io::Result<()> {
     #[cfg(unix)]
@@ -67,29 +70,118 @@ fn secure_database_file(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+fn sqlite_sidecar_path(database_path: &Path, suffix: &str) -> PathBuf {
+    let mut path = database_path.as_os_str().to_os_string();
+    path.push(suffix);
+    PathBuf::from(path)
+}
+
+fn migrate_legacy_database(
+    legacy_path: &Path,
+    database_path: &Path,
+) -> Result<(), Box<dyn std::error::Error>> {
+    reject_symlink(database_path)?;
+    reject_symlink(legacy_path)?;
+
+    if database_path.exists() || !legacy_path.exists() {
+        return Ok(());
+    }
+
+    let wal_path = sqlite_sidecar_path(legacy_path, "-wal");
+    let shm_path = sqlite_sidecar_path(legacy_path, "-shm");
+    let journal_path = sqlite_sidecar_path(legacy_path, "-journal");
+    for sidecar in [&wal_path, &shm_path, &journal_path] {
+        reject_symlink(sidecar)?;
+    }
+
+    // Checkpoint before moving the database so committed WAL contents are
+    // incorporated into the main file. If another process still holds a
+    // conflicting SQLite lock, fail safely and leave the legacy DB untouched.
+    let connection = Connection::open(legacy_path)?;
+    connection.busy_timeout(Duration::from_secs(5))?;
+    let (busy, _, _): (i64, i64, i64) =
+        connection.query_row("PRAGMA wal_checkpoint(TRUNCATE);", [], |row| {
+            Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+        })?;
+    if busy != 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::WouldBlock,
+            "Cannot rename the Stage0 database while another process is using it",
+        )
+        .into());
+    }
+    drop(connection);
+
+    // SQLite sidecars are transient. A non-empty WAL or journal after a
+    // successful checkpoint/close is unexpected; do not risk discarding it.
+    if wal_path.exists() && std::fs::metadata(&wal_path)?.len() != 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::WouldBlock,
+            "Cannot safely rename the Stage0 database while its WAL still contains data",
+        )
+        .into());
+    }
+    if journal_path.exists() && std::fs::metadata(&journal_path)?.len() != 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::WouldBlock,
+            "Cannot safely rename the Stage0 database while its journal is still present",
+        )
+        .into());
+    }
+
+    for sidecar in [&wal_path, &shm_path, &journal_path] {
+        match std::fs::remove_file(sidecar) {
+            Ok(()) => {}
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.into()),
+        }
+    }
+
+    std::fs::rename(legacy_path, database_path)?;
+    secure_database_file(database_path)?;
+    Ok(())
+}
+
+fn fallback_app_data_dir(
+    user_profile: Option<PathBuf>,
+    home: Option<PathBuf>,
+) -> io::Result<PathBuf> {
+    let user_dir = user_profile
+        .filter(|path| path.is_absolute())
+        .or_else(|| home.filter(|path| path.is_absolute()))
+        .ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::NotFound,
+                "Unable to locate an absolute per-user data directory for the application database",
+            )
+        })?;
+    Ok(user_dir.join(".local-virtual-mr"))
+}
+
 impl Database {
     pub fn init(app: &AppHandle) -> Result<Self, Box<dyn std::error::Error>> {
         let app_dir: PathBuf = match app.path().app_data_dir() {
             Ok(dir) => dir,
-            Err(_) => {
-                let user_dir = std::env::var("USERPROFILE")
-                    .or_else(|_| std::env::var("HOME"))
-                    .unwrap_or_else(|_| ".".to_string());
-                PathBuf::from(user_dir).join(".local-virtual-mr")
-            }
+            Err(_) => fallback_app_data_dir(
+                std::env::var_os("USERPROFILE").map(PathBuf::from),
+                std::env::var_os("HOME").map(PathBuf::from),
+            )?,
         };
 
         create_app_data_dir(&app_dir)?;
         reject_symlink(&app_dir)?;
         secure_app_data_dir(&app_dir)?;
 
-        let db_path = app_dir.join("local_mr.db");
+        let db_path = app_dir.join(DATABASE_FILE_NAME);
+        let legacy_db_path = app_dir.join(LEGACY_DATABASE_FILE_NAME);
         reject_symlink(&db_path)?;
+        migrate_legacy_database(&legacy_db_path, &db_path)?;
         let conn = Connection::open(&db_path)?;
         secure_database_file(&db_path)?;
 
         // High Performance SQLite Pragmas
-        conn.execute_batch("
+        conn.execute_batch(
+            "
             PRAGMA trusted_schema = OFF;
             PRAGMA secure_delete = ON;
             PRAGMA journal_mode = WAL;
@@ -99,7 +191,8 @@ impl Database {
             PRAGMA cache_size = -64000;
             PRAGMA temp_store = MEMORY;
             PRAGMA mmap_size = 268435456;
-        ")?;
+        ",
+        )?;
 
         conn.execute_batch(SCHEMA_SQL)?;
         Self::migrate_discussions_fingerprint(&conn)?;
@@ -111,24 +204,35 @@ impl Database {
         let mut stmt = conn.prepare("PRAGMA table_info(virtual_mr_discussions);")?;
         let columns: Vec<String> = stmt
             .query_map([], |row| row.get::<_, String>(1))?
-            .filter_map(Result::ok)
-            .collect();
+            .collect::<Result<_, _>>()?;
+        drop(stmt);
 
         if !columns.iter().any(|c| c == "content_hash") {
-            let _ = conn.execute("ALTER TABLE virtual_mr_discussions ADD COLUMN content_hash TEXT;", []);
+            conn.execute(
+                "ALTER TABLE virtual_mr_discussions ADD COLUMN content_hash TEXT;",
+                [],
+            )?;
         }
         if !columns.iter().any(|c| c == "context_before") {
-            let _ = conn.execute("ALTER TABLE virtual_mr_discussions ADD COLUMN context_before TEXT;", []);
+            conn.execute(
+                "ALTER TABLE virtual_mr_discussions ADD COLUMN context_before TEXT;",
+                [],
+            )?;
         }
         if !columns.iter().any(|c| c == "context_after") {
-            let _ = conn.execute("ALTER TABLE virtual_mr_discussions ADD COLUMN context_after TEXT;", []);
+            conn.execute(
+                "ALTER TABLE virtual_mr_discussions ADD COLUMN context_after TEXT;",
+                [],
+            )?;
         }
         Ok(())
     }
 
     #[inline]
     fn conn(&self) -> std::sync::MutexGuard<'_, Connection> {
-        self.0.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+        self.0
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     pub fn upsert_repository(
@@ -214,11 +318,21 @@ impl Database {
             "INSERT INTO git_credentials (id, provider, server_url, account_name, token_ref, token_type, label, created_at, updated_at)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);",
         )?;
-        stmt.execute(params![id, provider, server_url, account_name, token_ref, token_type, label])?;
+        stmt.execute(params![
+            id,
+            provider,
+            server_url,
+            account_name,
+            token_ref,
+            token_type,
+            label
+        ])?;
         Ok(())
     }
 
-    pub fn get_all_git_credentials(&self) -> Result<Vec<crate::credentials::GitCredentialMeta>, rusqlite::Error> {
+    pub fn get_all_git_credentials(
+        &self,
+    ) -> Result<Vec<crate::credentials::GitCredentialMeta>, rusqlite::Error> {
         let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT id, provider, server_url, account_name, token_ref, token_type, label, created_at, updated_at
@@ -251,39 +365,51 @@ impl Database {
     }
 
     pub fn delete_git_credential(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
-        let conn = self.conn();
-        let token_ref: Option<String> = conn
-            .query_row(
-                "SELECT token_ref FROM git_credentials WHERE id = ?1;",
-                params![id],
-                |row| row.get(0),
-            )
-            .ok();
+        let mut conn = self.conn();
+        let token_ref: Option<String> = match conn.query_row(
+            "SELECT token_ref FROM git_credentials WHERE id = ?1;",
+            params![id],
+            |row| row.get(0),
+        ) {
+            Ok(token_ref) => Some(token_ref),
+            Err(rusqlite::Error::QueryReturnedNoRows) => None,
+            Err(error) => return Err(error),
+        };
 
-        if token_ref.is_some() {
-            let mut stmt = conn.prepare_cached("DELETE FROM git_credentials WHERE id = ?1;")?;
-            stmt.execute(params![id])?;
+        if let Some(token_ref) = token_ref {
+            let tx = conn.transaction()?;
+            tx.execute("DELETE FROM git_credentials WHERE id = ?1;", params![id])?;
+            tx.commit()?;
+            Ok(Some(token_ref))
+        } else {
+            Ok(None)
         }
-        Ok(token_ref)
     }
 
-    pub fn get_git_credential_token_ref(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
+    pub fn get_git_credential_token_ref(
+        &self,
+        id: &str,
+    ) -> Result<Option<String>, rusqlite::Error> {
         let conn = self.conn();
-        let token_ref: Option<String> = conn
-            .query_row(
-                "SELECT token_ref FROM git_credentials WHERE id = ?1;",
-                params![id],
-                |row| row.get(0),
-            )
-            .ok();
-        Ok(token_ref)
+        match conn.query_row(
+            "SELECT token_ref FROM git_credentials WHERE id = ?1;",
+            params![id],
+            |row| row.get(0),
+        ) {
+            Ok(token_ref) => Ok(Some(token_ref)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(error),
+        }
     }
 
     // =======================================================================
     // Repo Settings & Labels
     // =======================================================================
 
-    pub fn get_repo_settings(&self, repo_id: &str) -> Result<Option<RepoSettingsDb>, rusqlite::Error> {
+    pub fn get_repo_settings(
+        &self,
+        repo_id: &str,
+    ) -> Result<Option<RepoSettingsDb>, rusqlite::Error> {
         let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT repo_id, default_base_branch, inherit_global_agents, custom_agent_rules
@@ -314,7 +440,12 @@ impl Database {
                 custom_agent_rules = excluded.custom_agent_rules,
                 updated_at = CURRENT_TIMESTAMP;",
         )?;
-        stmt.execute(params![s.repo_id, s.default_base_branch, s.inherit_global_agents, s.custom_agent_rules])?;
+        stmt.execute(params![
+            s.repo_id,
+            s.default_base_branch,
+            s.inherit_global_agents,
+            s.custom_agent_rules
+        ])?;
         Ok(())
     }
 
@@ -374,7 +505,10 @@ impl Database {
     // Virtual MR Sessions
     // =======================================================================
 
-    pub fn list_virtual_mr_sessions(&self, repo_id: &str) -> Result<Vec<VirtualMrSessionDb>, rusqlite::Error> {
+    pub fn list_virtual_mr_sessions(
+        &self,
+        repo_id: &str,
+    ) -> Result<Vec<VirtualMrSessionDb>, rusqlite::Error> {
         let conn = self.conn();
 
         // 1. Single batch query for all attached label mappings of sessions in this repo (eliminates N+1)
@@ -424,7 +558,22 @@ impl Database {
 
         let mut sessions = Vec::new();
         for r in session_rows {
-            let (id, repo_id, title, desc, base, comp, status, aname, aemail, pinned, s_type, s_inst, cat, uat) = r?;
+            let (
+                id,
+                repo_id,
+                title,
+                desc,
+                base,
+                comp,
+                status,
+                aname,
+                aemail,
+                pinned,
+                s_type,
+                s_inst,
+                cat,
+                uat,
+            ) = r?;
             let label_ids = label_map.remove(&id).unwrap_or_default();
 
             sessions.push(VirtualMrSessionDb {
@@ -479,7 +628,10 @@ impl Database {
         )?;
 
         // Update labels atomically
-        tx.execute("DELETE FROM virtual_mr_session_labels WHERE session_id = ?1;", params![s.id])?;
+        tx.execute(
+            "DELETE FROM virtual_mr_session_labels WHERE session_id = ?1;",
+            params![s.id],
+        )?;
         for lid in &s.label_ids {
             tx.execute(
                 "INSERT OR IGNORE INTO virtual_mr_session_labels (session_id, label_id) VALUES (?1, ?2);",
@@ -502,7 +654,10 @@ impl Database {
     // Discussions & Comments
     // =======================================================================
 
-    pub fn list_discussions(&self, session_id: &str) -> Result<Vec<VirtualMrDiscussionDb>, rusqlite::Error> {
+    pub fn list_discussions(
+        &self,
+        session_id: &str,
+    ) -> Result<Vec<VirtualMrDiscussionDb>, rusqlite::Error> {
         let conn = self.conn();
 
         // 1. Single batch query for all comments belonging to discussions in this session (eliminates N+1)
@@ -533,7 +688,10 @@ impl Database {
 
             for c in c_rows {
                 let comment = c?;
-                comments_map.entry(comment.discussion_id.clone()).or_default().push(comment);
+                comments_map
+                    .entry(comment.discussion_id.clone())
+                    .or_default()
+                    .push(comment);
             }
         }
 
@@ -570,7 +728,25 @@ impl Database {
 
         let mut discussions = Vec::new();
         for d in disc_rows {
-            let (id, s_id, fpath, side, lnum, cid, chash, cbefore, cafter, resolved, rtype, rby, rat, vstatus, vbot, vat, cat) = d?;
+            let (
+                id,
+                s_id,
+                fpath,
+                side,
+                lnum,
+                cid,
+                chash,
+                cbefore,
+                cafter,
+                resolved,
+                rtype,
+                rby,
+                rat,
+                vstatus,
+                vbot,
+                vat,
+                cat,
+            ) = d?;
             let comments = comments_map.remove(&id).unwrap_or_default();
 
             discussions.push(VirtualMrDiscussionDb {
@@ -598,7 +774,10 @@ impl Database {
         Ok(discussions)
     }
 
-    pub fn get_repo_path_for_session(&self, session_id: &str) -> Result<Option<String>, rusqlite::Error> {
+    pub fn get_repo_path_for_session(
+        &self,
+        session_id: &str,
+    ) -> Result<Option<String>, rusqlite::Error> {
         let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT r.local_path
@@ -614,19 +793,30 @@ impl Database {
         }
     }
 
-    pub fn update_discussion_anchor(
+    pub fn update_discussion_anchors(
         &self,
-        discussion_id: &str,
-        new_line_number: Option<i64>,
-        verification_status: &str,
+        discussions: &[VirtualMrDiscussionDb],
     ) -> Result<(), rusqlite::Error> {
-        let conn = self.conn();
-        let mut stmt = conn.prepare_cached(
-            "UPDATE virtual_mr_discussions
-             SET line_number = ?1, verification_status = ?2
-             WHERE id = ?3;",
-        )?;
-        stmt.execute(params![new_line_number, verification_status, discussion_id])?;
+        if discussions.is_empty() {
+            return Ok(());
+        }
+        let mut conn = self.conn();
+        let tx = conn.transaction()?;
+        {
+            let mut stmt = tx.prepare_cached(
+                "UPDATE virtual_mr_discussions
+                 SET line_number = ?1, verification_status = ?2
+                 WHERE id = ?3;",
+            )?;
+            for discussion in discussions {
+                stmt.execute(params![
+                    discussion.line_number,
+                    discussion.verification_status,
+                    discussion.id,
+                ])?;
+            }
+        }
+        tx.commit()?;
         Ok(())
     }
 
@@ -676,8 +866,14 @@ impl Database {
              ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);",
         )?;
         stmt.execute(params![
-            c.id, c.discussion_id, c.author_type, c.author_id, c.author_name, c.author_avatar,
-            c.body, c.review_action
+            c.id,
+            c.discussion_id,
+            c.author_type,
+            c.author_id,
+            c.author_name,
+            c.author_avatar,
+            c.body,
+            c.review_action
         ])?;
         Ok(())
     }
@@ -756,6 +952,22 @@ impl Database {
              ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP;",
             params![key, value],
         )?;
+        Ok(())
+    }
+
+    pub fn set_settings_atomic(&self, values: &[(&str, &str)]) -> Result<(), rusqlite::Error> {
+        let mut conn = self.conn();
+        let tx = conn.transaction()?;
+        {
+            let mut stmt = tx.prepare_cached(
+                "INSERT INTO app_settings (key, value, updated_at) VALUES (?1, ?2, CURRENT_TIMESTAMP)
+                 ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP;",
+            )?;
+            for (key, value) in values {
+                stmt.execute(params![key, value])?;
+            }
+        }
+        tx.commit()?;
         Ok(())
     }
 }
@@ -864,6 +1076,43 @@ mod tests {
     }
 
     #[test]
+    fn discussion_fingerprint_migration_adds_missing_columns() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("CREATE TABLE virtual_mr_discussions (id TEXT PRIMARY KEY);")
+            .unwrap();
+        Database::migrate_discussions_fingerprint(&conn).unwrap();
+
+        let mut stmt = conn
+            .prepare("PRAGMA table_info(virtual_mr_discussions);")
+            .unwrap();
+        let columns: Vec<String> = stmt
+            .query_map([], |row| row.get(1))
+            .unwrap()
+            .collect::<Result<_, _>>()
+            .unwrap();
+        assert!(columns.iter().any(|column| column == "content_hash"));
+        assert!(columns.iter().any(|column| column == "context_before"));
+        assert!(columns.iter().any(|column| column == "context_after"));
+    }
+
+    #[test]
+    fn atomic_settings_writes_roll_back_together_on_failure() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA_SQL).unwrap();
+        conn.execute_batch(
+            "CREATE TRIGGER reject_setting BEFORE INSERT ON app_settings
+             WHEN NEW.key = 'fail' BEGIN SELECT RAISE(ABORT, 'test failure'); END;",
+        )
+        .unwrap();
+        let db = Database(Mutex::new(conn));
+
+        assert!(db
+            .set_settings_atomic(&[("first", "1"), ("fail", "2")])
+            .is_err());
+        assert_eq!(db.get_setting("first").unwrap(), None);
+    }
+
+    #[test]
     fn repository_upsert_returns_the_persisted_id_for_an_existing_path() {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch(SCHEMA_SQL).unwrap();
@@ -886,14 +1135,12 @@ mod tests {
     fn app_database_storage_permissions_are_private() {
         use std::os::unix::fs::PermissionsExt;
 
-        let dir = std::env::temp_dir().join(format!(
-            "stage0_db_permissions_{}",
-            uuid::Uuid::new_v4()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("stage0_db_permissions_{}", uuid::Uuid::new_v4()));
         create_app_data_dir(&dir).unwrap();
         secure_app_data_dir(&dir).unwrap();
 
-        let db_path = dir.join("local_mr.db");
+        let db_path = dir.join(DATABASE_FILE_NAME);
         std::fs::write(&db_path, b"").unwrap();
         secure_database_file(&db_path).unwrap();
 
@@ -907,5 +1154,90 @@ mod tests {
         );
 
         std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn legacy_database_is_renamed_to_stage0_without_losing_settings() {
+        let dir = std::env::temp_dir().join(format!("stage0_db_rename_{}", uuid::Uuid::new_v4()));
+        create_app_data_dir(&dir).unwrap();
+        let legacy_path = dir.join(LEGACY_DATABASE_FILE_NAME);
+        let database_path = dir.join(DATABASE_FILE_NAME);
+
+        let legacy = Connection::open(&legacy_path).unwrap();
+        legacy.execute_batch(SCHEMA_SQL).unwrap();
+        legacy
+            .execute(
+                "INSERT INTO app_settings (key, value) VALUES (?1, ?2);",
+                params!["theme", "mocha"],
+            )
+            .unwrap();
+        drop(legacy);
+
+        migrate_legacy_database(&legacy_path, &database_path).unwrap();
+
+        assert!(!legacy_path.exists());
+        assert!(database_path.is_file());
+        let migrated = Connection::open(&database_path).unwrap();
+        let value: String = migrated
+            .query_row(
+                "SELECT value FROM app_settings WHERE key = ?1;",
+                params!["theme"],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(value, "mocha");
+
+        drop(migrated);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn existing_stage0_database_is_never_overwritten_by_legacy_database() {
+        let dir = std::env::temp_dir().join(format!(
+            "stage0_db_rename_existing_{}",
+            uuid::Uuid::new_v4()
+        ));
+        create_app_data_dir(&dir).unwrap();
+        let legacy_path = dir.join(LEGACY_DATABASE_FILE_NAME);
+        let database_path = dir.join(DATABASE_FILE_NAME);
+
+        for (path, value) in [(&legacy_path, "legacy"), (&database_path, "current")] {
+            let connection = Connection::open(path).unwrap();
+            connection.execute_batch(SCHEMA_SQL).unwrap();
+            connection
+                .execute(
+                    "INSERT INTO app_settings (key, value) VALUES (?1, ?2);",
+                    params!["source", value],
+                )
+                .unwrap();
+        }
+
+        migrate_legacy_database(&legacy_path, &database_path).unwrap();
+        assert!(legacy_path.is_file());
+        let current = Connection::open(&database_path).unwrap();
+        let value: String = current
+            .query_row(
+                "SELECT value FROM app_settings WHERE key = ?1;",
+                params!["source"],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(value, "current");
+
+        drop(current);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn database_fallback_requires_an_absolute_user_directory() {
+        assert!(fallback_app_data_dir(Some(PathBuf::new()), None).is_err());
+        assert_eq!(
+            fallback_app_data_dir(
+                Some(PathBuf::from("relative-user")),
+                Some(PathBuf::from("/users/stage0")),
+            )
+            .unwrap(),
+            PathBuf::from("/users/stage0/.local-virtual-mr")
+        );
     }
 }

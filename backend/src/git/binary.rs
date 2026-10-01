@@ -1,9 +1,9 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::path::Path;
 #[cfg(windows)]
 use std::path::PathBuf;
 use std::process::Command;
-use serde::{Deserialize, Serialize};
 
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
@@ -28,9 +28,21 @@ pub fn test_git_version(path: &str) -> Result<String, String> {
         cmd.creation_flags(CREATE_NO_WINDOW);
     }
 
-    let output = cmd.output().map_err(|e| format!("Failed to run {}: {}", path, e))?;
+    let output = crate::process::run_bounded_command(
+        &mut cmd,
+        64 * 1024,
+        64 * 1024,
+        std::time::Duration::from_secs(5),
+    )
+    .map_err(|error| format!("Failed to run Git executable: {}", error))?;
+    if output.output_truncated {
+        return Err("Git executable produced too much output".to_string());
+    }
     if !output.status.success() {
-        return Err(format!("Command exited with error code {:?}", output.status.code()));
+        return Err(format!(
+            "Command exited with error code {:?}",
+            output.status.code()
+        ));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -41,7 +53,10 @@ pub fn test_git_version(path: &str) -> Result<String, String> {
     }
 }
 
-pub fn scan_system_git_binaries(active_path: Option<&str>, active_id: Option<&str>) -> Vec<GitBinaryInfo> {
+pub fn scan_system_git_binaries(
+    active_path: Option<&str>,
+    active_id: Option<&str>,
+) -> Vec<GitBinaryInfo> {
     let mut candidates: Vec<(String, String)> = Vec::new(); // (path, source_hint)
     let mut seen_paths: HashSet<String> = HashSet::new();
 
@@ -55,8 +70,13 @@ pub fn scan_system_git_binaries(active_path: Option<&str>, active_id: Option<&st
         cmd.arg("git");
         use std::os::windows::process::CommandExt;
         cmd.creation_flags(CREATE_NO_WINDOW);
-        if let Ok(out) = cmd.output() {
-            if out.status.success() {
+        if let Ok(out) = crate::process::run_bounded_command(
+            &mut cmd,
+            1024 * 1024,
+            64 * 1024,
+            std::time::Duration::from_secs(5),
+        ) {
+            if out.status.success() && !out.output_truncated {
                 let text = String::from_utf8_lossy(&out.stdout);
                 for line in text.lines() {
                     let trimmed = line.trim();
@@ -70,8 +90,15 @@ pub fn scan_system_git_binaries(active_path: Option<&str>, active_id: Option<&st
 
     #[cfg(not(windows))]
     {
-        if let Ok(out) = Command::new("which").args(&["-a", "git"]).output() {
-            if out.status.success() {
+        let mut cmd = Command::new("which");
+        cmd.args(["-a", "git"]);
+        if let Ok(out) = crate::process::run_bounded_command(
+            &mut cmd,
+            1024 * 1024,
+            64 * 1024,
+            std::time::Duration::from_secs(5),
+        ) {
+            if out.status.success() && !out.output_truncated {
                 let text = String::from_utf8_lossy(&out.stdout);
                 for line in text.lines() {
                     let trimmed = line.trim();
@@ -117,7 +144,10 @@ pub fn scan_system_git_binaries(active_path: Option<&str>, active_id: Option<&st
                     for entry in entries.flatten() {
                         let sub_p = entry.path().join("resources\\app\\git\\cmd\\git.exe");
                         if sub_p.exists() {
-                            candidates.push((sub_p.to_string_lossy().to_string(), "github_desktop".to_string()));
+                            candidates.push((
+                                sub_p.to_string_lossy().to_string(),
+                                "github_desktop".to_string(),
+                            ));
                         }
                     }
                 }
@@ -132,7 +162,10 @@ pub fn scan_system_git_binaries(active_path: Option<&str>, active_id: Option<&st
             }
             let scoop_shim = user_path.join("scoop\\shims\\git.exe");
             if scoop_shim.exists() {
-                candidates.push((scoop_shim.to_string_lossy().to_string(), "scoop".to_string()));
+                candidates.push((
+                    scoop_shim.to_string_lossy().to_string(),
+                    "scoop".to_string(),
+                ));
             }
         }
     }
@@ -144,8 +177,14 @@ pub fn scan_system_git_binaries(active_path: Option<&str>, active_id: Option<&st
             ("/opt/homebrew/bin/git", "homebrew"),
             ("/usr/local/bin/git", "homebrew"),
             ("/Library/Developer/CommandLineTools/usr/bin/git", "xcode"),
-            ("/Applications/Xcode.app/Contents/Developer/usr/bin/git", "xcode"),
-            ("/Applications/GitHub Desktop.app/Contents/Resources/app/git/bin/git", "github_desktop"),
+            (
+                "/Applications/Xcode.app/Contents/Developer/usr/bin/git",
+                "xcode",
+            ),
+            (
+                "/Applications/GitHub Desktop.app/Contents/Resources/app/git/bin/git",
+                "github_desktop",
+            ),
         ];
         for (p, src) in standard_mac_paths {
             if Path::new(p).exists() {
@@ -241,7 +280,13 @@ pub fn scan_system_git_binaries(active_path: Option<&str>, active_id: Option<&st
                 };
 
                 let name = match source.as_str() {
-                    "system" => if raw_path == "git" { "System Git (PATH Default)".to_string() } else { format!("System Git ({})", raw_path) },
+                    "system" => {
+                        if raw_path == "git" {
+                            "System Git (PATH Default)".to_string()
+                        } else {
+                            format!("System Git ({})", raw_path)
+                        }
+                    }
                     "bundled" => "Stage0 Bundled Git".to_string(),
                     "homebrew" => format!("Homebrew Git ({})", raw_path),
                     "xcode" => format!("Apple Xcode Git ({})", raw_path),

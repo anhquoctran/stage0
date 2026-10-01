@@ -467,6 +467,9 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                     <p className="text-xs text-subtext0 mt-0.5">
                       Manage remote servers for code synchronization (origin, upstream, forks)
                     </p>
+                    <p className="text-[10px] text-subtext0 mt-1">
+                      Embedded URL credentials are masked here. Use Git's credential helper; editing a masked URL requires re-entering any removed credentials.
+                    </p>
                   </div>
                   <button
                     type="button"

@@ -37,7 +37,7 @@ const args = process.argv.slice(2);
 const isWebOnly = args.includes('--web') || args.includes('-w');
 const isHelp = args.includes('--help') || args.includes('-h');
 const portArgIndex = args.indexOf('--port');
-const DESIRED_PORT = portArgIndex !== -1 ? parseInt(args[portArgIndex + 1], 10) : 1420;
+const DESIRED_PORT = portArgIndex !== -1 ? Number(args[portArgIndex + 1]) : 1420;
 
 if (isHelp) {
   console.log(`
@@ -51,7 +51,7 @@ ${BOLD}Usage:${RESET}
 ${BOLD}Options:${RESET}
   -w, --web            Launch Vite frontend in browser (Fast Mock sandbox mode)
   -a, --app            Launch full Tauri desktop window with native Rust backend
-  --port <number>      Custom local dev server port (default: 1420)
+  --port <number>      Custom Vite port in web mode only (default: 1420; Tauri uses 1420)
   -h, --help           Show this help message
 
 ${BOLD}Supported Platforms:${RESET}
@@ -60,6 +60,11 @@ ${BOLD}Supported Platforms:${RESET}
   • Linux (Ubuntu, Debian, Fedora, Arch)
 `);
   process.exit(0);
+}
+
+if (!Number.isInteger(DESIRED_PORT) || DESIRED_PORT < 1 || DESIRED_PORT > 65535) {
+  console.error(`${RED}Invalid port: expected an integer from 1 to 65535.${RESET}`);
+  process.exit(2);
 }
 
 // OS Banner & Sync Metadata
@@ -76,24 +81,26 @@ console.log(`${DIM}Copyright   :${RESET} ${DIM}${releaseInfo.copyright}${RESET}`
 console.log(`${DIM}OS Platform :${RESET} ${BOLD}${PLATFORM}${RESET} (${ARCH})`);
 console.log(`${DIM}Node Version:${RESET} ${process.version}`);
 console.log(`${DIM}Workspace   :${RESET} ${ROOT_DIR}`);
-console.log(`${DIM}Target Port :${RESET} ${DESIRED_PORT}`);
+console.log(`${DIM}Target Port :${RESET} ${isWebOnly ? DESIRED_PORT : 1420}${isWebOnly ? '' : ' (Tauri devUrl)'}`);
 console.log(`${DIM}Active Mode :${RESET} ${isWebOnly ? `${GREEN}Web Browser (Mock Sandbox)${RESET}` : `${CYAN}Native Desktop App (Tauri 2)${RESET}`}`);
+if (!isWebOnly && portArgIndex !== -1 && DESIRED_PORT !== 1420) {
+  console.warn(`${YELLOW}⚠️  --port applies only to web mode; Tauri's devUrl remains on port 1420.${RESET}`);
+}
 console.log(`${CYAN}------------------------------------------------------${RESET}\n`);
 
 // Check if port is in use
 function checkPortAvailable(port) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const server = net.createServer();
     server.once('error', (err) => {
       if (err.code === 'EADDRINUSE') {
         resolve(false);
       } else {
-        resolve(true);
+        reject(err);
       }
     });
     server.once('listening', () => {
-      server.close();
-      resolve(true);
+      server.close((err) => (err ? reject(err) : resolve(true)));
     });
     server.listen(port, '127.0.0.1');
   });
@@ -133,10 +140,14 @@ async function runDiagnostics() {
     }
   }
 
-  const portFree = await checkPortAvailable(DESIRED_PORT);
+  const targetPort = isWebOnly || !hasCargo || !hasRustc ? DESIRED_PORT : 1420;
+  const portFree = await checkPortAvailable(targetPort);
   if (!portFree) {
-    console.warn(`${YELLOW}⚠️  Port ${DESIRED_PORT} is currently in use.${RESET}`);
-    console.warn(`   Vite will automatically attempt next available port or use active instance.\n`);
+    if (!isWebOnly && hasCargo && hasRustc) {
+      throw new Error(`Port ${targetPort} is required by Tauri's configured devUrl and is already in use. Stop that process or change backend/tauri.conf.json.`);
+    }
+    console.warn(`${YELLOW}⚠️  Port ${targetPort} is currently in use.${RESET}`);
+    console.warn(`   Vite is configured with strictPort and will not select another port. Choose a free port with --port.\n`);
   }
 
   return true;
@@ -148,13 +159,13 @@ async function main() {
   const launchApp = !isWebOnly && rustAvailable;
 
   const isWin = PLATFORM === 'win32';
-  const npmCmd = isWin ? 'npm.cmd' : 'npm';
   const npxCmd = isWin ? 'npx.cmd' : 'npx';
+  const effectivePort = launchApp ? 1420 : DESIRED_PORT;
 
   let child;
   if (launchApp) {
     console.log(`${GREEN}🚀 Starting Tauri Native Desktop App with Hot Reload...${RESET}`);
-    console.log(`${DIM}   Frontend: Vite HMR at http://127.0.0.1:${DESIRED_PORT}${RESET}`);
+    console.log(`${DIM}   Frontend: Vite HMR at http://127.0.0.1:${effectivePort}${RESET}`);
     console.log(`${DIM}   Backend : Cargo watch for backend/src/*.rs changes${RESET}\n`);
 
     child = spawn(npxCmd, ['tauri', 'dev'], {
@@ -162,21 +173,26 @@ async function main() {
       stdio: 'inherit',
       env: { ...process.env, FORCE_COLOR: '1' },
       shell: isWin,
+      detached: !isWin,
     });
   } else {
     console.log(`${GREEN}🌐 Starting Vite Web Server with Hot Reload...${RESET}`);
-    console.log(`${DIM}   URL: http://127.0.0.1:${DESIRED_PORT}/?mock${RESET}\n`);
+    console.log(`${DIM}   URL: http://127.0.0.1:${effectivePort}/?mock${RESET}\n`);
 
     child = spawn(npxCmd, ['vite', '--host', '127.0.0.1', '--port', String(DESIRED_PORT)], {
       cwd: ROOT_DIR,
       stdio: 'inherit',
       env: { ...process.env, FORCE_COLOR: '1' },
       shell: isWin,
+      detached: !isWin,
     });
   }
 
   // Graceful shutdown handling
+  let shuttingDown = false;
   const handleExit = (signal) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     console.log(`\n${YELLOW}[stage0-dev] Shutting down (${signal})...${RESET}`);
     if (child && !child.killed) {
       if (isWin) {
@@ -184,10 +200,19 @@ async function main() {
           execSync(`taskkill /pid ${child.pid} /T /F`, { stdio: 'ignore' });
         } catch {}
       } else {
-        child.kill('SIGINT');
+        try {
+          process.kill(-child.pid, signal);
+        } catch {
+          child.kill(signal);
+        }
+        const forceStopTimer = setTimeout(() => {
+          try {
+            process.kill(-child.pid, 'SIGKILL');
+          } catch {}
+        }, 10000);
+        forceStopTimer.unref();
       }
     }
-    process.exit(0);
   };
 
   process.on('SIGINT', () => handleExit('SIGINT'));

@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
 use super::runner::run_git;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BlameCommit {
@@ -50,19 +50,29 @@ pub fn get_file_blame(
     revision: Option<&str>,
     ignore_whitespace: Option<bool>,
 ) -> Result<FileBlamePayload, String> {
-    let mut args: Vec<String> = vec!["blame".to_string(), "--line-porcelain".to_string()];
+    let clean_path = file_path.replace('\\', "/");
+    super::resolve_safe_repo_path(repo_path, &clean_path)?;
+
+    let mut args: Vec<String> = vec![
+        "--literal-pathspecs".to_string(),
+        "blame".to_string(),
+        "--line-porcelain".to_string(),
+    ];
 
     if ignore_whitespace.unwrap_or(false) {
         args.push("-w".to_string());
     }
 
-    let effective_rev = revision.filter(|r| !r.trim().is_empty());
-    if let Some(rev) = effective_rev {
+    let effective_rev = revision
+        .filter(|r| !r.trim().is_empty())
+        .map(|rev| super::runner::resolve_ref(repo_path, rev).map(|(commit, _)| commit))
+        .transpose()?;
+    if let Some(rev) = effective_rev.as_deref() {
         args.push(rev.to_string());
     }
 
     args.push("--".to_string());
-    args.push(file_path.to_string());
+    args.push(clean_path.clone());
 
     let str_args: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
     let res = run_git(repo_path, &str_args)?;
@@ -73,7 +83,10 @@ pub fn get_file_blame(
         } else {
             res.stdout.trim()
         };
-        return Err(format!("git blame failed: {}", err));
+        return Err(format!(
+            "Git blame failed: {}",
+            super::runner::redact_sensitive_text(err)
+        ));
     }
 
     let current_user_name = run_git(repo_path, &["config", "user.name"])
@@ -90,8 +103,8 @@ pub fn get_file_blame(
 
     let mut payload = parse_blame_porcelain(
         &res.stdout,
-        file_path,
-        effective_rev.unwrap_or("HEAD"),
+        &clean_path,
+        effective_rev.as_deref().unwrap_or("HEAD"),
     );
     payload.current_user_name = current_user_name;
     payload.current_user_email = current_user_email;
@@ -99,11 +112,7 @@ pub fn get_file_blame(
     Ok(payload)
 }
 
-pub fn parse_blame_porcelain(
-    output: &str,
-    file_path: &str,
-    revision: &str,
-) -> FileBlamePayload {
+pub fn parse_blame_porcelain(output: &str, file_path: &str, revision: &str) -> FileBlamePayload {
     let mut commits: HashMap<String, BlameCommit> = HashMap::new();
     let mut lines: Vec<BlameLine> = Vec::new();
 
@@ -129,14 +138,22 @@ pub fn parse_blame_porcelain(
                     current_sha.clone(),
                     BlameCommit {
                         commit_id: current_sha.clone(),
-                        author: if cur_author.is_empty() { "Unknown".to_string() } else { cur_author.clone() },
+                        author: if cur_author.is_empty() {
+                            "Unknown".to_string()
+                        } else {
+                            cur_author.clone()
+                        },
                         author_mail: cur_author_mail.clone(),
                         author_time: cur_author_time,
                         author_tz: cur_author_tz.clone(),
                         committer: cur_committer.clone(),
                         committer_mail: cur_committer_mail.clone(),
                         committer_time: cur_committer_time,
-                        summary: if cur_summary.is_empty() { "(no commit message)".to_string() } else { cur_summary.clone() },
+                        summary: if cur_summary.is_empty() {
+                            "(no commit message)".to_string()
+                        } else {
+                            cur_summary.clone()
+                        },
                         previous_commit: cur_previous.take(),
                     },
                 );
@@ -174,7 +191,10 @@ pub fn parse_blame_porcelain(
         } else {
             // Header: <sha> <orig_line> <final_line> ...
             let tokens: Vec<&str> = line.split_whitespace().collect();
-            if tokens.len() >= 3 && tokens[0].len() == 40 && tokens[0].chars().all(|c| c.is_ascii_hexdigit()) {
+            if tokens.len() >= 3
+                && tokens[0].len() == 40
+                && tokens[0].chars().all(|c| c.is_ascii_hexdigit())
+            {
                 current_sha = tokens[0].to_string();
                 current_orig_line = tokens[1].parse::<usize>().unwrap_or(0);
                 current_final_line = tokens[2].parse::<usize>().unwrap_or(0);
@@ -261,7 +281,10 @@ filename sample.rs\n\
         assert_eq!(result.lines[0].content, "fn main() {");
         assert_eq!(result.lines[1].content, "}");
         assert_eq!(result.commits.len(), 1);
-        let commit = result.commits.get("f73c4a735009aea92f8a4d5f3efa61b89087c4d8").unwrap();
+        let commit = result
+            .commits
+            .get("f73c4a735009aea92f8a4d5f3efa61b89087c4d8")
+            .unwrap();
         assert_eq!(commit.author, "Alice Bob");
         assert_eq!(commit.author_mail, "alice@example.com");
         assert_eq!(commit.summary, "Initial commit");

@@ -1,17 +1,17 @@
 use serde::{Deserialize, Serialize};
 
-pub mod runner;
-pub mod branches;
-pub mod diff;
-pub mod conflict;
-pub mod ops;
-pub mod blame;
-pub mod binary;
 pub mod anchor;
+pub mod binary;
+pub mod blame;
+pub mod branches;
+pub mod conflict;
+pub mod diff;
+pub mod ops;
+pub mod runner;
 
-pub use blame::{BlameAuthorStat, BlameCommit, BlameLine, FileBlamePayload};
-pub use binary::{GitBinaryInfo, scan_system_git_binaries, test_git_version};
 pub use anchor::{compute_line_hash, extract_line_fingerprint, reanchor_discussions};
+pub use binary::{scan_system_git_binaries, test_git_version, GitBinaryInfo};
+pub use blame::{BlameAuthorStat, BlameCommit, BlameLine, FileBlamePayload};
 
 use std::path::{Path, PathBuf};
 
@@ -26,9 +26,9 @@ pub fn resolve_safe_repo_path(repo_root: &str, relative_path: &str) -> Result<Pa
     }
 
     let repo_path = Path::new(repo_root);
-    let canonical_repo = repo_path.canonicalize().map_err(|e| {
-        format!("Invalid repository root path '{}': {}", repo_root, e)
-    })?;
+    let canonical_repo = repo_path
+        .canonicalize()
+        .map_err(|e| format!("Invalid repository root path '{}': {}", repo_root, e))?;
 
     // Check components depth to prevent parent traversal
     let mut depth: i32 = 0;
@@ -47,27 +47,66 @@ pub fn resolve_safe_repo_path(repo_root: &str, relative_path: &str) -> Result<Pa
                 depth += 1;
             }
             std::path::Component::RootDir | std::path::Component::Prefix(_) => {
-                return Err("Drive prefix or root directory is not permitted in relative path".to_string());
+                return Err(
+                    "Drive prefix or root directory is not permitted in relative path".to_string(),
+                );
             }
             _ => {}
         }
     }
 
     let combined = canonical_repo.join(rel_path);
-    if combined.exists() {
-        let canonical_target = combined.canonicalize().map_err(|e| {
-            format!("Failed to canonicalize path '{}': {}", combined.display(), e)
-        })?;
-        if !canonical_target.starts_with(&canonical_repo) {
-            return Err(format!(
-                "Path traversal detected: '{}' resolves outside repository root",
-                relative_path
-            ));
+
+    // Canonicalize the nearest existing ancestor even when the requested leaf
+    // does not exist yet. A plain `exists()` check follows symlinks, so it used
+    // to miss `repo/link-to-outside/new-file` and return that escaped path.
+    let mut ancestor = combined.as_path();
+    let mut missing_components = Vec::new();
+    loop {
+        match std::fs::symlink_metadata(ancestor) {
+            Ok(_) => break,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                let name = ancestor.file_name().ok_or_else(|| {
+                    format!(
+                        "Unable to resolve repository path '{}': no existing ancestor",
+                        relative_path
+                    )
+                })?;
+                missing_components.push(name.to_os_string());
+                ancestor = ancestor.parent().ok_or_else(|| {
+                    format!(
+                        "Unable to resolve repository path '{}': no existing ancestor",
+                        relative_path
+                    )
+                })?;
+            }
+            Err(error) => {
+                return Err(format!(
+                    "Unable to inspect repository path '{}': {}",
+                    relative_path, error
+                ));
+            }
         }
-        Ok(canonical_target)
-    } else {
-        Ok(combined)
     }
+
+    let mut canonical_target = ancestor.canonicalize().map_err(|e| {
+        format!(
+            "Failed to canonicalize path '{}': {}",
+            ancestor.display(),
+            e
+        )
+    })?;
+    if !canonical_target.starts_with(&canonical_repo) {
+        return Err(format!(
+            "Path traversal detected: '{}' resolves outside repository root",
+            relative_path
+        ));
+    }
+
+    for component in missing_components.iter().rev() {
+        canonical_target.push(component);
+    }
+    Ok(canonical_target)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -149,13 +188,13 @@ pub struct RepoChangedEvent {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-    use std::process::Command;
     use super::branches::list_branches;
     use super::conflict::check_conflicts;
     use super::diff::get_mr_diff;
     use super::ops::get_commits_between;
     use super::resolve_safe_repo_path;
+    use std::fs;
+    use std::process::Command;
 
     fn run_git(dir: &str, args: &[&str]) {
         let status = Command::new("git")
@@ -189,7 +228,10 @@ mod tests {
         let same_branch_diff = get_mr_diff(dir_str, "main", "main").unwrap();
         assert!(same_branch_diff.files.is_empty());
         assert!(same_branch_diff.raw_diff.is_empty());
-        assert_eq!(same_branch_diff.base_commit, same_branch_diff.compare_commit);
+        assert_eq!(
+            same_branch_diff.base_commit,
+            same_branch_diff.compare_commit
+        );
 
         let same_tip_diff = get_mr_diff(dir_str, "main", "same-tip").unwrap();
         assert!(same_tip_diff.files.is_empty());
@@ -203,11 +245,17 @@ mod tests {
         assert!(same_tip_conflicts.conflicted_files.is_empty());
 
         assert!(get_mr_diff(dir_str, "missing-branch", "main").is_err());
+        assert!(check_conflicts(dir_str, "missing-branch", "main").is_err());
         assert!(get_commits_between(dir_str, "missing-branch", "main").is_err());
+        assert!(get_mr_diff(dir_str, "main...same-tip", "main").is_err());
 
         // 3. Create feature branch and add non-conflicting change
         run_git(dir_str, &["checkout", "-b", "feature-x"]);
-        fs::write(&file_path, "Line 1: Header\nLine 2: Content\nLine 3: From feature\n").unwrap();
+        fs::write(
+            &file_path,
+            "Line 1: Header\nLine 2: Content\nLine 3: From feature\n",
+        )
+        .unwrap();
         run_git(dir_str, &["commit", "-am", "Add line 3 on feature-x"]);
 
         // 4. Test branch enumeration
@@ -230,31 +278,46 @@ mod tests {
         // 6. Test in-memory conflict detection:
         // Checkout main, make conflicting edit on line 3, commit
         run_git(dir_str, &["checkout", "main"]);
-        fs::write(&file_path, "Line 1: Header\nLine 2: Content\nLine 3: From main conflicting\n").unwrap();
+        fs::write(
+            &file_path,
+            "Line 1: Header\nLine 2: Content\nLine 3: From main conflicting\n",
+        )
+        .unwrap();
         run_git(dir_str, &["commit", "-am", "Conflicting change on main"]);
 
         // Run check_conflicts
-        let report = check_conflicts(dir_str, "main", "feature-x").expect("Failed to check conflicts");
-        assert!(report.has_conflicts, "Conflict must be detected between main and feature-x");
+        let report =
+            check_conflicts(dir_str, "main", "feature-x").expect("Failed to check conflicts");
         assert!(
-            report.conflicted_files.iter().any(|f| f.contains("sample.txt")),
+            report.has_conflicts,
+            "Conflict must be detected between main and feature-x"
+        );
+        assert!(
+            report
+                .conflicted_files
+                .iter()
+                .any(|f| f.contains("sample.txt")),
             "sample.txt must be reported as conflicted"
         );
 
         // Verify working tree is NOT modified (no merge conflict markers like <<<<<<<)
         let disk_content = fs::read_to_string(&file_path).unwrap();
-        assert!(!disk_content.contains("<<<<<<<"), "Working tree must remain untouched by git merge-tree");
-        assert_eq!(disk_content, "Line 1: Header\nLine 2: Content\nLine 3: From main conflicting\n");
+        assert!(
+            !disk_content.contains("<<<<<<<"),
+            "Working tree must remain untouched by git merge-tree"
+        );
+        assert_eq!(
+            disk_content,
+            "Line 1: Header\nLine 2: Content\nLine 3: From main conflicting\n"
+        );
 
         let _ = fs::remove_dir_all(&temp_dir);
     }
 
     #[test]
     fn detects_binary_files_in_branch_diff() {
-        let temp_dir = std::env::temp_dir().join(format!(
-            "binary_diff_test_{}",
-            uuid::Uuid::new_v4()
-        ));
+        let temp_dir =
+            std::env::temp_dir().join(format!("binary_diff_test_{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&temp_dir).unwrap();
         let dir_str = temp_dir.to_str().unwrap();
 
@@ -295,6 +358,45 @@ mod tests {
         assert!(resolve_safe_repo_path(dir_str, "../outside.txt").is_err());
         assert!(resolve_safe_repo_path(dir_str, "src/../../outside.txt").is_err());
         assert!(resolve_safe_repo_path(dir_str, "/etc/passwd").is_err());
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+            let outside =
+                temp_dir.with_file_name(format!("path_test_outside_{}", uuid::Uuid::new_v4()));
+            fs::create_dir_all(&outside).unwrap();
+            symlink(&outside, temp_dir.join("outside-link")).unwrap();
+            assert!(resolve_safe_repo_path(dir_str, "outside-link/not-created.txt").is_err());
+            let _ = fs::remove_dir_all(outside);
+        }
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn large_diff_is_capped_without_panicking_on_utf8_boundary() {
+        const MAX_DIFF: usize = 5 * 1024 * 1024;
+        let temp_dir =
+            std::env::temp_dir().join(format!("large_diff_test_{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&temp_dir).unwrap();
+        let dir_str = temp_dir.to_str().unwrap();
+
+        run_git(dir_str, &["init", "-b", "main"]);
+        run_git(dir_str, &["config", "user.name", "Test User"]);
+        run_git(dir_str, &["config", "user.email", "test@test.com"]);
+        let file_path = temp_dir.join("large.txt");
+        fs::write(&file_path, "small\n").unwrap();
+        run_git(dir_str, &["add", "."]);
+        run_git(dir_str, &["commit", "-m", "Initial"]);
+        run_git(dir_str, &["checkout", "-b", "large-change"]);
+        fs::write(&file_path, format!("{}\n", "界".repeat(2_000_000))).unwrap();
+        run_git(dir_str, &["commit", "-am", "Large UTF-8 diff"]);
+
+        let diff = get_mr_diff(dir_str, "main", "large-change").unwrap();
+        assert!(diff.raw_diff.len() <= MAX_DIFF);
+        assert!(diff.raw_diff.ends_with(
+            "[Diff payload truncated at the 5MB IPC ceiling. File diffs are available on demand.]"
+        ));
 
         let _ = fs::remove_dir_all(&temp_dir);
     }

@@ -50,8 +50,10 @@ The cross-platform Node.js script automatically detects the host OS, checks syst
 ```bash
 node scripts/dev.mjs --web
 node scripts/dev.mjs --app
-node scripts/dev.mjs --port 3000
+node scripts/dev.mjs --web --port 3000
 ```
+
+The custom `--port` option applies only to web mode. Tauri desktop development uses the fixed `devUrl` on port 1420 from `backend/tauri.conf.json`; if it is occupied, the runner reports the conflict instead of killing the process or silently selecting another port.
 
 ### Method 3: OS-Specific Shell / PowerShell Scripts
 - **Windows (PowerShell)**:
@@ -145,6 +147,10 @@ If port `1420` is occupied by another process:
 
 ### Missing WebView2 on Windows:
 - Windows 10/11 comes with WebView2 Runtime pre-installed. If missing, download it from Microsoft's official portal: [WebView2 Runtime Evergreen Bootstrapper](https://go.microsoft.com/fwlink/p/?LinkId=2124703).
+
+### Blank or stuck startup screen on Windows:
+- Check the WebView2 DevTools console for CSP violations before changing the policy. Production and development use separate CSPs in `backend/tauri.conf.json`; production startup scripts are same-origin assets, while the splash styles are inline CSS.
+- A successful macOS/Linux web build does not verify Windows WebView2 startup. After changing CSP or startup assets, package and launch the Windows app at least once, then verify the splash clears and the first repository view loads. Avoid adding `unsafe-inline` to `script-src` as a blanket workaround; diagnose which resource was blocked first.
 
 ### Execution Permissions on macOS/Linux:
 If you encounter a `Permission denied` error:

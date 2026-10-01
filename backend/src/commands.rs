@@ -1,29 +1,30 @@
-use std::path::Path;
-use tauri::{AppHandle, Manager, WebviewWindow, Window};
-use tauri_plugin_dialog::DialogExt;
 use crate::db::{
-    Database, RepoSettingsDb, RepoLabelDb, VirtualMrSessionDb, VirtualMrDiscussionDb, VirtualMrCommentDb,
+    Database, RepoLabelDb, RepoSettingsDb, VirtualMrCommentDb, VirtualMrDiscussionDb,
+    VirtualMrSessionDb,
 };
 use crate::git::{
+    blame::get_file_blame as calc_file_blame,
     branches::list_branches,
     ops::{
-        git_sync, list_remotes, get_remote_url, is_rebase_in_progress, GitSyncOptions,
-        list_remotes_detailed, add_remote, remove_remote, set_remote_url, test_remote_connection,
-        GitRemoteDetail, list_tags_detailed, create_tag, delete_tag, GitTagInfo,
-        create_branch, delete_branch, rename_branch, get_commits_between, get_git_user_identity,
-        GitCommitItem,
+        add_remote, create_branch, create_tag, delete_branch, delete_tag, get_commits_between,
+        get_git_user_identity, get_remote_url, git_sync, is_rebase_in_progress, list_remotes,
+        list_remotes_detailed, list_tags_detailed, remove_remote, rename_branch, set_remote_url,
+        test_remote_connection, GitCommitItem, GitRemoteDetail, GitSyncOptions, GitTagInfo,
     },
-    blame::get_file_blame as calc_file_blame,
-    BranchList, ConflictReport, ConflictFilePreview, MrDiffPayload, RepoInfo, FileBlamePayload,
-};
-use crate::window_manager::{
-    close_repo_for_window, create_welcome_window, open_repo_path, OpenRepoOutcome,
-    resolve_repository, WindowManagerState, WindowStartupContext,
+    BranchList, ConflictFilePreview, ConflictReport, FileBlamePayload, MrDiffPayload, RepoInfo,
 };
 use crate::sandbox::{
     GuardrailAuditEvent, GuardrailEvaluationResult, GuardrailMode, GuardrailPolicy,
     SandboxAdapterInfo, SandboxExecutionResult, SandboxInstanceInfo, SandboxManager, SandboxType,
 };
+use crate::window_manager::{
+    close_repo_for_window, create_welcome_window, open_repo_path, resolve_repository,
+    OpenRepoOutcome, WindowManagerState, WindowStartupContext,
+};
+use std::io::Read;
+use std::path::Path;
+use tauri::{AppHandle, Manager, WebviewWindow, Window};
+use tauri_plugin_dialog::DialogExt;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct RepoValidation {
@@ -261,9 +262,7 @@ pub async fn run_git_sync(
 }
 
 #[tauri::command]
-pub async fn list_git_remotes(
-    repo_path: String,
-) -> Result<Vec<String>, String> {
+pub async fn list_git_remotes(repo_path: String) -> Result<Vec<String>, String> {
     tauri::async_runtime::spawn_blocking(move || list_remotes(&repo_path))
         .await
         .map_err(|e| format!("Task execution failed: {}", e))?
@@ -280,9 +279,7 @@ pub async fn get_git_remote_url(
 }
 
 #[tauri::command]
-pub async fn check_rebase_status(
-    repo_path: String,
-) -> Result<bool, String> {
+pub async fn check_rebase_status(repo_path: String) -> Result<bool, String> {
     tauri::async_runtime::spawn_blocking(move || Ok(is_rebase_in_progress(&repo_path)))
         .await
         .map_err(|e| format!("Task execution failed: {}", e))?
@@ -308,10 +305,7 @@ pub async fn get_file_blame(
 }
 
 #[tauri::command]
-pub async fn reveal_file_in_os(
-    repo_path: String,
-    file_path: String,
-) -> Result<(), String> {
+pub async fn reveal_file_in_os(repo_path: String, file_path: String) -> Result<(), String> {
     let full_path = crate::git::resolve_safe_repo_path(&repo_path, &file_path)?;
     #[cfg(target_os = "windows")]
     {
@@ -363,9 +357,9 @@ pub async fn open_repo_in(
     if !path.exists() {
         return Err(format!("Repository path does not exist: {}", repo_path));
     }
-    let canonical_repo = path.canonicalize().map_err(|e| {
-        format!("Invalid repository path '{}': {}", repo_path, e)
-    })?;
+    let canonical_repo = path
+        .canonicalize()
+        .map_err(|e| format!("Invalid repository path '{}': {}", repo_path, e))?;
 
     match target.as_str() {
         "explorer" => {
@@ -403,32 +397,45 @@ pub async fn open_repo_in(
 
                 let mut candidates = Vec::new();
                 if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
-                    candidates.push(std::path::PathBuf::from(local_appdata).join("Programs\\Microsoft VS Code\\Code.exe"));
+                    candidates.push(
+                        std::path::PathBuf::from(local_appdata)
+                            .join("Programs\\Microsoft VS Code\\Code.exe"),
+                    );
                 }
                 if let Ok(prog_files) = std::env::var("PROGRAMFILES") {
-                    candidates.push(std::path::PathBuf::from(prog_files).join("Microsoft VS Code\\Code.exe"));
+                    candidates.push(
+                        std::path::PathBuf::from(prog_files).join("Microsoft VS Code\\Code.exe"),
+                    );
                 }
                 if let Ok(prog_x86) = std::env::var("ProgramFiles(x86)") {
-                    candidates.push(std::path::PathBuf::from(prog_x86).join("Microsoft VS Code\\Code.exe"));
+                    candidates.push(
+                        std::path::PathBuf::from(prog_x86).join("Microsoft VS Code\\Code.exe"),
+                    );
                 }
 
                 for cand in candidates {
-                    if cand.exists() && std::process::Command::new(&cand).arg(&win_path).spawn().is_ok() {
+                    if cand.exists()
+                        && std::process::Command::new(&cand)
+                            .arg(&win_path)
+                            .spawn()
+                            .is_ok()
+                    {
                         launched = true;
                         break;
                     }
                 }
 
-                if !launched && std::process::Command::new("code.cmd").arg(&win_path).spawn().is_ok() {
-                    launched = true;
-                }
-
-                if !launched && std::process::Command::new("code").arg(&win_path).spawn().is_ok() {
+                if !launched
+                    && std::process::Command::new("code.exe")
+                        .arg(&win_path)
+                        .spawn()
+                        .is_ok()
+                {
                     launched = true;
                 }
 
                 if !launched {
-                    return Err("Failed to launch Visual Studio Code. Please ensure 'code' command is in your PATH or VS Code is installed.".to_string());
+                    return Err("Failed to launch Visual Studio Code. Please ensure 'Code.exe' is in your PATH or VS Code is installed.".to_string());
                 }
                 Ok(())
             }
@@ -463,21 +470,38 @@ pub async fn open_repo_in(
 
                 // 1. Try Windows Terminal directly via wt.exe in LOCALAPPDATA
                 if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
-                    let wt_path = std::path::PathBuf::from(local_appdata).join("Microsoft\\WindowsApps\\wt.exe");
-                    if wt_path.exists() && std::process::Command::new(&wt_path).args(["-d", &win_path]).spawn().is_ok() {
+                    let wt_path = std::path::PathBuf::from(local_appdata)
+                        .join("Microsoft\\WindowsApps\\wt.exe");
+                    if wt_path.exists()
+                        && std::process::Command::new(&wt_path)
+                            .args(["-d", &win_path])
+                            .spawn()
+                            .is_ok()
+                    {
                         launched = true;
                     }
                 }
 
                 // 2. Try wt command directly
-                if !launched && std::process::Command::new("wt.exe").args(["-d", &win_path]).spawn().is_ok() {
+                if !launched
+                    && std::process::Command::new("wt.exe")
+                        .args(["-d", &win_path])
+                        .spawn()
+                        .is_ok()
+                {
                     launched = true;
                 }
 
-                // 3. Fallback: PowerShell directly with separate args (no cmd.exe wrapper, no string interpolation)
+                // 3. Fallback: pass the path through the environment so a
+                // directory name cannot become PowerShell source code.
                 if !launched {
                     std::process::Command::new("powershell.exe")
-                        .args(["-NoExit", "-Command", "Set-Location", "-LiteralPath", &win_path])
+                        .args([
+                            "-NoExit",
+                            "-Command",
+                            "Set-Location -LiteralPath $env:STAGE0_REPO_PATH",
+                        ])
+                        .env("STAGE0_REPO_PATH", &win_path)
                         .spawn()
                         .map_err(|e| format!("Failed to launch terminal: {}", e))?;
                 }
@@ -494,7 +518,15 @@ pub async fn open_repo_in(
             }
             #[cfg(not(any(target_os = "windows", target_os = "macos")))]
             {
-                let terminals = ["x-terminal-emulator", "gnome-terminal", "konsole", "xfce4-terminal", "alacritty", "kitty", "xterm"];
+                let terminals = [
+                    "x-terminal-emulator",
+                    "gnome-terminal",
+                    "konsole",
+                    "xfce4-terminal",
+                    "alacritty",
+                    "kitty",
+                    "xterm",
+                ];
                 let mut launched = false;
                 for term in terminals {
                     if std::process::Command::new(term)
@@ -534,32 +566,47 @@ pub async fn open_file_in_editor(
         let mut launched = false;
         let mut candidates = Vec::new();
         if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
-            candidates.push(std::path::PathBuf::from(local_appdata).join("Programs\\Microsoft VS Code\\Code.exe"));
+            candidates.push(
+                std::path::PathBuf::from(local_appdata)
+                    .join("Programs\\Microsoft VS Code\\Code.exe"),
+            );
         }
         if let Ok(prog_files) = std::env::var("PROGRAMFILES") {
-            candidates.push(std::path::PathBuf::from(prog_files).join("Microsoft VS Code\\Code.exe"));
+            candidates
+                .push(std::path::PathBuf::from(prog_files).join("Microsoft VS Code\\Code.exe"));
         }
         if let Ok(prog_x86) = std::env::var("ProgramFiles(x86)") {
             candidates.push(std::path::PathBuf::from(prog_x86).join("Microsoft VS Code\\Code.exe"));
         }
 
         for cand in candidates {
-            if cand.exists() && std::process::Command::new(&cand).arg("-g").arg(&target_str).spawn().is_ok() {
+            if cand.exists()
+                && std::process::Command::new(&cand)
+                    .arg("-g")
+                    .arg(&target_str)
+                    .spawn()
+                    .is_ok()
+            {
                 launched = true;
                 break;
             }
         }
 
-        if !launched && std::process::Command::new("code.cmd").arg("-g").arg(&target_str).spawn().is_ok() {
-            launched = true;
-        }
-
-        if !launched && std::process::Command::new("code").arg("-g").arg(&target_str).spawn().is_ok() {
+        if !launched
+            && std::process::Command::new("code.exe")
+                .arg("-g")
+                .arg(&target_str)
+                .spawn()
+                .is_ok()
+        {
             launched = true;
         }
 
         if !launched {
-            return Err("Failed to launch Visual Studio Code. Please ensure 'code' command is in your PATH.".to_string());
+            return Err(
+                "Failed to launch Visual Studio Code. Please ensure 'Code.exe' is in your PATH."
+                    .to_string(),
+            );
         }
         Ok(())
     }
@@ -645,7 +692,9 @@ pub async fn window_show(window: Window) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn list_git_credentials(app: AppHandle) -> Result<Vec<crate::credentials::GitCredentialMeta>, String> {
+pub async fn list_git_credentials(
+    app: AppHandle,
+) -> Result<Vec<crate::credentials::GitCredentialMeta>, String> {
     let db = app.state::<Database>();
     db.get_all_git_credentials()
         .map_err(|e| format!("Failed to load git credentials: {}", e))
@@ -702,12 +751,15 @@ pub async fn save_git_credential(
 #[tauri::command]
 pub async fn delete_git_credential(app: AppHandle, id: String) -> Result<(), String> {
     let db = app.state::<Database>();
-    let token_ref_opt = db
-        .delete_git_credential(&id)
-        .map_err(|e| format!("Failed to delete credential: {}", e))?;
-
-    if let Some(token_ref) = token_ref_opt {
-        let _ = crate::credentials::delete_secret(&token_ref);
+    let token_ref = db
+        .get_git_credential_token_ref(&id)
+        .map_err(|e| format!("Failed to query credential: {}", e))?;
+    if let Some(token_ref) = token_ref {
+        // Remove the secret first so a database failure can leave only stale
+        // metadata, never an orphaned credential that the user thought deleted.
+        crate::credentials::delete_secret(&token_ref)?;
+        db.delete_git_credential(&id)
+            .map_err(|e| format!("Failed to delete credential metadata: {}", e))?;
     }
     Ok(())
 }
@@ -745,12 +797,12 @@ pub async fn store_ai_api_key(provider: String, api_key: String) -> Result<(), S
 }
 
 #[tauri::command]
-pub async fn get_ai_api_key(provider: String) -> Result<Option<String>, String> {
+pub async fn has_ai_api_key(provider: String) -> Result<bool, String> {
     let p = provider.trim();
     if p.is_empty() {
-        return Ok(None);
+        return Ok(false);
     }
-    crate::credentials::retrieve_ai_key(p)
+    crate::credentials::ai_key_exists(p)
 }
 
 #[tauri::command]
@@ -767,17 +819,17 @@ pub async fn delete_ai_api_key(provider: String) -> Result<(), String> {
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
-pub async fn get_available_sandboxes(
-    app: AppHandle,
-) -> Result<Vec<SandboxAdapterInfo>, String> {
-    let manager = app.state::<SandboxManager>();
-    Ok(manager.list_available_adapters())
+pub async fn get_available_sandboxes(app: AppHandle) -> Result<Vec<SandboxAdapterInfo>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let manager = app.state::<SandboxManager>();
+        Ok(manager.list_available_adapters())
+    })
+    .await
+    .map_err(|error| format!("Task execution failed: {}", error))?
 }
 
 #[tauri::command]
-pub async fn get_active_sandbox(
-    app: AppHandle,
-) -> Result<SandboxType, String> {
+pub async fn get_active_sandbox(app: AppHandle) -> Result<SandboxType, String> {
     let manager = app.state::<SandboxManager>();
     Ok(manager.get_active_type())
 }
@@ -799,23 +851,26 @@ pub async fn create_sandbox_instance(
     base: String,
     compare: String,
 ) -> Result<SandboxInstanceInfo, String> {
-    let manager = app.state::<SandboxManager>();
-    manager.create_instance(&repo_path, &base, &compare)
+    tauri::async_runtime::spawn_blocking(move || {
+        let manager = app.state::<SandboxManager>();
+        manager.create_instance(&repo_path, &base, &compare)
+    })
+    .await
+    .map_err(|error| format!("Task execution failed: {}", error))?
 }
 
 #[tauri::command]
-pub async fn destroy_sandbox_instance(
-    app: AppHandle,
-    instance_id: String,
-) -> Result<(), String> {
-    let manager = app.state::<SandboxManager>();
-    manager.destroy_instance(&instance_id)
+pub async fn destroy_sandbox_instance(app: AppHandle, instance_id: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let manager = app.state::<SandboxManager>();
+        manager.destroy_instance(&instance_id)
+    })
+    .await
+    .map_err(|error| format!("Task execution failed: {}", error))?
 }
 
 #[tauri::command]
-pub async fn list_sandbox_instances(
-    app: AppHandle,
-) -> Result<Vec<SandboxInstanceInfo>, String> {
+pub async fn list_sandbox_instances(app: AppHandle) -> Result<Vec<SandboxInstanceInfo>, String> {
     let manager = app.state::<SandboxManager>();
     Ok(manager.list_active_instances())
 }
@@ -829,7 +884,44 @@ pub async fn execute_sandbox_command(
 ) -> Result<SandboxExecutionResult, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let manager = app.state::<SandboxManager>();
-        manager.execute_command(&instance_id, &command, &args)
+        let instance = manager
+            .get_instance(&instance_id)
+            .ok_or_else(|| format!("Sandbox instance not found: {}", instance_id))?;
+        let evaluation = manager
+            .guardrails()
+            .evaluate_command(&command, &args, &instance.adapter_type)
+            .map_err(|violation| format!("🛡️ Guardrail Policy Blocked: {}", violation.message))?;
+        if evaluation.requires_confirmation {
+            manager.guardrails().record_policy_denial(
+                "execute_terminal_cmd",
+                &command,
+                crate::sandbox::GuardrailViolation {
+                    rule: "HUMAN_CONFIRMATION_REQUIRED".to_string(),
+                    severity: crate::sandbox::GuardrailSeverity::High,
+                    message: "The command requires human confirmation. Stage0 has no approval dialog for tool calls, so it was not executed.".to_string(),
+                },
+            );
+            return Err(
+                "Guardrail policy requires human confirmation; Stage0 has no approval dialog for tool calls, so the command was not executed."
+                    .to_string(),
+            );
+        }
+
+        let mut result = manager.execute_command(&instance_id, &command, &args)?;
+        let (stdout, stdout_truncated) = manager
+            .guardrails()
+            .truncate_output_if_needed(&result.stdout);
+        let (stderr, stderr_truncated) = manager
+            .guardrails()
+            .truncate_output_if_needed(&result.stderr);
+        if stdout_truncated {
+            result.stdout = stdout.into_owned();
+        }
+        if stderr_truncated {
+            result.stderr = stderr.into_owned();
+        }
+        result.output_truncated |= stdout_truncated || stderr_truncated;
+        Ok(result)
     })
     .await
     .map_err(|e| format!("Sandbox task join error: {}", e))?
@@ -843,7 +935,9 @@ pub async fn pick_folder(app: AppHandle) -> Result<Option<String>, String> {
 
 #[tauri::command]
 pub async fn check_remote_repo_url(url: String) -> Result<String, String> {
-    crate::git::ops::check_git_remote_url(&url)
+    tauri::async_runtime::spawn_blocking(move || crate::git::ops::check_git_remote_url(&url))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -857,6 +951,7 @@ pub async fn clone_repository(
         if trimmed_url.is_empty() {
             return Err("Repository URL cannot be empty".to_string());
         }
+        crate::git::ops::validate_remote_url(trimmed_url)?;
 
         let trimmed_target = target_path.trim();
         if trimmed_target.is_empty() {
@@ -881,22 +976,30 @@ pub async fn clone_repository(
 
         let git_bin = crate::git::runner::get_active_git_path();
         let mut cmd = std::process::Command::new(&git_bin);
-        cmd.args(&["clone", trimmed_url, trimmed_target]);
+        cmd.args(["clone", "--", trimmed_url, trimmed_target]);
+        cmd.env("GIT_ALLOW_PROTOCOL", "git:http:https:ssh");
+        cmd.env("GIT_TERMINAL_PROMPT", "0");
 
-        #[cfg(windows)]
-        {
-            use std::os::windows::process::CommandExt;
-            const CREATE_NO_WINDOW: u32 = 0x08000000;
-            cmd.creation_flags(CREATE_NO_WINDOW);
+        let output = crate::process::run_bounded_command(
+            &mut cmd,
+            4 * 1024 * 1024,
+            4 * 1024 * 1024,
+            std::time::Duration::from_secs(300),
+        )
+        .map_err(|e| format!("Git clone failed: {}", e))?;
+
+        if output.output_truncated {
+            return Err(
+                "Git clone produced more than the configured output limit and was stopped."
+                    .to_string(),
+            );
         }
 
-        let output = cmd
-            .output()
-            .map_err(|e| format!("Failed to execute git clone: {}", e))?;
-
         if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            let stderr =
+                crate::git::runner::redact_sensitive_text(&String::from_utf8_lossy(&output.stderr));
+            let stdout =
+                crate::git::runner::redact_sensitive_text(&String::from_utf8_lossy(&output.stdout));
             let err_msg = if !stderr.trim().is_empty() {
                 stderr
             } else if !stdout.trim().is_empty() {
@@ -925,7 +1028,10 @@ pub async fn clone_repository(
 // ===========================================================================
 
 #[tauri::command]
-pub async fn get_repo_settings(app: AppHandle, repo_id: String) -> Result<Option<RepoSettingsDb>, String> {
+pub async fn get_repo_settings(
+    app: AppHandle,
+    repo_id: String,
+) -> Result<Option<RepoSettingsDb>, String> {
     let db = app.state::<Database>();
     db.get_repo_settings(&repo_id).map_err(|e| e.to_string())
 }
@@ -966,27 +1072,41 @@ pub async fn delete_repo_label(app: AppHandle, id: String) -> Result<(), String>
 
 #[tauri::command]
 pub async fn list_git_remotes_detailed(repo_path: String) -> Result<Vec<GitRemoteDetail>, String> {
-    list_remotes_detailed(&repo_path)
+    tauri::async_runtime::spawn_blocking(move || list_remotes_detailed(&repo_path))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
 pub async fn add_git_remote(repo_path: String, name: String, url: String) -> Result<(), String> {
-    add_remote(&repo_path, &name, &url)
+    tauri::async_runtime::spawn_blocking(move || add_remote(&repo_path, &name, &url))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
 pub async fn remove_git_remote(repo_path: String, name: String) -> Result<(), String> {
-    remove_remote(&repo_path, &name)
+    tauri::async_runtime::spawn_blocking(move || remove_remote(&repo_path, &name))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
-pub async fn set_git_remote_url(repo_path: String, name: String, url: String) -> Result<(), String> {
-    set_remote_url(&repo_path, &name, &url)
+pub async fn set_git_remote_url(
+    repo_path: String,
+    name: String,
+    url: String,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || set_remote_url(&repo_path, &name, &url))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
 pub async fn test_git_remote(repo_path: String, remote_or_url: String) -> Result<String, String> {
-    test_remote_connection(&repo_path, &remote_or_url)
+    tauri::async_runtime::spawn_blocking(move || test_remote_connection(&repo_path, &remote_or_url))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 // ===========================================================================
@@ -995,7 +1115,9 @@ pub async fn test_git_remote(repo_path: String, remote_or_url: String) -> Result
 
 #[tauri::command]
 pub async fn list_git_tags(repo_path: String) -> Result<Vec<GitTagInfo>, String> {
-    list_tags_detailed(&repo_path)
+    tauri::async_runtime::spawn_blocking(move || list_tags_detailed(&repo_path))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -1005,12 +1127,23 @@ pub async fn create_git_tag(
     commit_ref: Option<String>,
     message: Option<String>,
 ) -> Result<(), String> {
-    create_tag(&repo_path, &tag_name, commit_ref.as_deref(), message.as_deref())
+    tauri::async_runtime::spawn_blocking(move || {
+        create_tag(
+            &repo_path,
+            &tag_name,
+            commit_ref.as_deref(),
+            message.as_deref(),
+        )
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
 pub async fn delete_git_tag(repo_path: String, tag_name: String) -> Result<(), String> {
-    delete_tag(&repo_path, &tag_name)
+    tauri::async_runtime::spawn_blocking(move || delete_tag(&repo_path, &tag_name))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -1019,7 +1152,11 @@ pub async fn create_git_branch(
     branch_name: String,
     start_point: Option<String>,
 ) -> Result<(), String> {
-    create_branch(&repo_path, &branch_name, start_point.as_deref())
+    tauri::async_runtime::spawn_blocking(move || {
+        create_branch(&repo_path, &branch_name, start_point.as_deref())
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -1028,7 +1165,9 @@ pub async fn delete_git_branch(
     branch_name: String,
     force: bool,
 ) -> Result<(), String> {
-    delete_branch(&repo_path, &branch_name, force)
+    tauri::async_runtime::spawn_blocking(move || delete_branch(&repo_path, &branch_name, force))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -1037,7 +1176,9 @@ pub async fn rename_git_branch(
     old_name: String,
     new_name: String,
 ) -> Result<(), String> {
-    rename_branch(&repo_path, &old_name, &new_name)
+    tauri::async_runtime::spawn_blocking(move || rename_branch(&repo_path, &old_name, &new_name))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 // ===========================================================================
@@ -1045,21 +1186,30 @@ pub async fn rename_git_branch(
 // ===========================================================================
 
 #[tauri::command]
-pub async fn list_virtual_mr_sessions(app: AppHandle, repo_id: String) -> Result<Vec<VirtualMrSessionDb>, String> {
+pub async fn list_virtual_mr_sessions(
+    app: AppHandle,
+    repo_id: String,
+) -> Result<Vec<VirtualMrSessionDb>, String> {
     let db = app.state::<Database>();
-    db.list_virtual_mr_sessions(&repo_id).map_err(|e| e.to_string())
+    db.list_virtual_mr_sessions(&repo_id)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub async fn save_virtual_mr_session(app: AppHandle, session: VirtualMrSessionDb) -> Result<(), String> {
+pub async fn save_virtual_mr_session(
+    app: AppHandle,
+    session: VirtualMrSessionDb,
+) -> Result<(), String> {
     let db = app.state::<Database>();
-    db.save_virtual_mr_session(&session).map_err(|e| e.to_string())
+    db.save_virtual_mr_session(&session)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub async fn delete_virtual_mr_session(app: AppHandle, session_id: String) -> Result<(), String> {
     let db = app.state::<Database>();
-    db.delete_virtual_mr_session(&session_id).map_err(|e| e.to_string())
+    db.delete_virtual_mr_session(&session_id)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -1068,20 +1218,49 @@ pub async fn get_commits_between_refs(
     base: String,
     compare: String,
 ) -> Result<Vec<GitCommitItem>, String> {
-    get_commits_between(&repo_path, &base, &compare)
+    tauri::async_runtime::spawn_blocking(move || get_commits_between(&repo_path, &base, &compare))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
 pub async fn get_git_user_identity_cmd(repo_path: String) -> Result<(String, String), String> {
-    get_git_user_identity(&repo_path)
+    tauri::async_runtime::spawn_blocking(move || get_git_user_identity(&repo_path))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 // ===========================================================================
 // Discussions & Comments Commands
 // ===========================================================================
 
+const MAX_DISCUSSION_SOURCE_BYTES: u64 = 16 * 1024 * 1024;
+
+fn read_regular_text_file_capped(path: &Path, max_bytes: u64) -> Result<String, String> {
+    let metadata = std::fs::symlink_metadata(path)
+        .map_err(|error| format!("Unable to inspect source file: {}", error))?;
+    if !metadata.file_type().is_file() {
+        return Err("Source path is not a regular file".to_string());
+    }
+    if metadata.len() > max_bytes {
+        return Err("Source file exceeds the 16 MiB discussion analysis limit".to_string());
+    }
+
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
+    std::fs::File::open(path)
+        .and_then(|file| file.take(max_bytes + 1).read_to_end(&mut bytes))
+        .map_err(|error| format!("Unable to read source file: {}", error))?;
+    if bytes.len() as u64 > max_bytes {
+        return Err("Source file exceeds the 16 MiB discussion analysis limit".to_string());
+    }
+    String::from_utf8(bytes).map_err(|_| "Source file is not valid UTF-8 text".to_string())
+}
+
 #[tauri::command]
-pub async fn list_mr_discussions(app: AppHandle, session_id: String) -> Result<Vec<VirtualMrDiscussionDb>, String> {
+pub async fn list_mr_discussions(
+    app: AppHandle,
+    session_id: String,
+) -> Result<Vec<VirtualMrDiscussionDb>, String> {
     let db = app.state::<Database>();
     db.list_discussions(&session_id).map_err(|e| e.to_string())
 }
@@ -1092,29 +1271,47 @@ pub async fn create_mr_discussion(
     mut discussion: VirtualMrDiscussionDb,
     first_comment: VirtualMrCommentDb,
 ) -> Result<(), String> {
-    let db = app.state::<Database>();
+    tauri::async_runtime::spawn_blocking(move || {
+        let db = app.state::<Database>();
 
-    // Automatically extract line fingerprint from source file if not provided
-    if discussion.content_hash.is_none() {
-        if let (Some(ref file_path), Some(line_num)) = (&discussion.file_path, discussion.line_number) {
-            if line_num > 0 {
-                if let Ok(Some(repo_path)) = db.get_repo_path_for_session(&discussion.session_id) {
-                    if let Ok(safe_path) = crate::git::resolve_safe_repo_path(&repo_path, file_path) {
-                        if let Ok(content) = std::fs::read_to_string(&safe_path) {
-                            let (hash, before, after) = crate::git::anchor::extract_line_fingerprint(&content, line_num as usize);
-                            if !hash.is_empty() {
-                                discussion.content_hash = Some(hash);
-                                discussion.context_before = before;
-                                discussion.context_after = after;
+        // Automatically extract line fingerprint from source file if not provided.
+        if discussion.content_hash.is_none() {
+            if let (Some(ref file_path), Some(line_num)) =
+                (&discussion.file_path, discussion.line_number)
+            {
+                if line_num > 0 {
+                    if let Ok(Some(repo_path)) =
+                        db.get_repo_path_for_session(&discussion.session_id)
+                    {
+                        if let Ok(safe_path) =
+                            crate::git::resolve_safe_repo_path(&repo_path, file_path)
+                        {
+                            if let Ok(content) = read_regular_text_file_capped(
+                                &safe_path,
+                                MAX_DISCUSSION_SOURCE_BYTES,
+                            ) {
+                                let (hash, before, after) =
+                                    crate::git::anchor::extract_line_fingerprint(
+                                        &content,
+                                        line_num as usize,
+                                    );
+                                if !hash.is_empty() {
+                                    discussion.content_hash = Some(hash);
+                                    discussion.context_before = before;
+                                    discussion.context_after = after;
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
 
-    db.create_discussion(&discussion, &first_comment).map_err(|e| e.to_string())
+        db.create_discussion(&discussion, &first_comment)
+            .map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|error| format!("Task execution failed: {}", error))?
 }
 
 #[tauri::command]
@@ -1132,8 +1329,13 @@ pub async fn resolve_mr_discussion(
     resolved_by: Option<String>,
 ) -> Result<(), String> {
     let db = app.state::<Database>();
-    db.resolve_discussion(&discussion_id, is_resolved, &resolve_type, resolved_by.as_deref())
-        .map_err(|e| e.to_string())
+    db.resolve_discussion(
+        &discussion_id,
+        is_resolved,
+        &resolve_type,
+        resolved_by.as_deref(),
+    )
+    .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -1157,21 +1359,36 @@ pub async fn reanchor_file_discussions(
 ) -> Result<Vec<VirtualMrDiscussionDb>, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let db = app.state::<Database>();
-        let discussions = db.list_discussions(&session_id).map_err(|e| e.to_string())?;
-        let repo_path = db.get_repo_path_for_session(&session_id)
+        let discussions = db
+            .list_discussions(&session_id)
+            .map_err(|e| e.to_string())?;
+        let repo_path = db
+            .get_repo_path_for_session(&session_id)
             .map_err(|e| e.to_string())?
             .ok_or_else(|| "Session not associated with a repository".to_string())?;
 
-        let safe_path = crate::git::resolve_safe_repo_path(&repo_path, &file_path)?;
-        let content = std::fs::read_to_string(&safe_path)
-            .map_err(|e| format!("Failed to read file for re-anchoring: {}", e))?;
+        let target_discussions: Vec<_> = discussions
+            .into_iter()
+            .filter(|discussion| discussion.file_path.as_deref() == Some(file_path.as_str()))
+            .collect();
+        if target_discussions.is_empty() {
+            return Ok(Vec::new());
+        }
 
-        let reanchored = crate::git::anchor::reanchor_discussions(&repo_path, &file_path, &discussions, &content);
+        let safe_path = crate::git::resolve_safe_repo_path(&repo_path, &file_path)?;
+        let content = read_regular_text_file_capped(&safe_path, MAX_DISCUSSION_SOURCE_BYTES)
+            .map_err(|error| format!("Failed to read file for re-anchoring: {}", error))?;
+
+        let reanchored = crate::git::anchor::reanchor_discussions(
+            &repo_path,
+            &file_path,
+            &target_discussions,
+            &content,
+        );
 
         // Persist any updated line numbers or outdated status
-        for disc in &reanchored {
-            let _ = db.update_discussion_anchor(&disc.id, disc.line_number, &disc.verification_status);
-        }
+        db.update_discussion_anchors(&reanchored)
+            .map_err(|error| format!("Failed to persist discussion anchors: {}", error))?;
 
         Ok(reanchored)
     })
@@ -1194,12 +1411,13 @@ pub async fn sync_active_sandbox(
 }
 
 #[tauri::command]
-pub async fn get_sandbox_tool_schemas(
-    app: AppHandle,
-) -> Result<serde_json::Value, String> {
+pub async fn get_sandbox_tool_schemas(app: AppHandle) -> Result<serde_json::Value, String> {
     let manager = app.state::<SandboxManager>();
     let active_type = manager.get_active_type();
-    Ok(crate::sandbox::get_tool_schemas(&active_type))
+    Ok(crate::sandbox::get_tool_schemas(
+        &active_type,
+        &manager.get_guardrail_policy(),
+    ))
 }
 
 #[tauri::command]
@@ -1218,9 +1436,7 @@ pub async fn dispatch_sandbox_tool(
 }
 
 #[tauri::command]
-pub async fn get_guardrail_policy(
-    app: AppHandle,
-) -> Result<GuardrailPolicy, String> {
+pub async fn get_guardrail_policy(app: AppHandle) -> Result<GuardrailPolicy, String> {
     let manager = app.state::<SandboxManager>();
     Ok(manager.get_guardrail_policy())
 }
@@ -1260,9 +1476,7 @@ pub async fn get_guardrail_audit_log(
 }
 
 #[tauri::command]
-pub async fn clear_guardrail_audit_log(
-    app: AppHandle,
-) -> Result<(), String> {
+pub async fn clear_guardrail_audit_log(app: AppHandle) -> Result<(), String> {
     let manager = app.state::<SandboxManager>();
     manager.clear_guardrail_audit_log();
     Ok(())
@@ -1279,38 +1493,36 @@ pub async fn simulate_guardrail_check(
 }
 
 #[tauri::command]
-pub async fn scan_git_binaries(
-    app: AppHandle,
-) -> Result<Vec<crate::git::GitBinaryInfo>, String> {
+pub async fn scan_git_binaries(app: AppHandle) -> Result<Vec<crate::git::GitBinaryInfo>, String> {
     let db = app.state::<Database>();
     let active_path = db.get_setting("git_binary_path").ok().flatten();
     let active_id = db.get_setting("git_binary_id").ok().flatten();
-
-    let binaries = crate::git::scan_system_git_binaries(
-        active_path.as_deref(),
-        active_id.as_deref(),
-    );
-    Ok(binaries)
+    tauri::async_runtime::spawn_blocking(move || {
+        Ok(crate::git::scan_system_git_binaries(
+            active_path.as_deref(),
+            active_id.as_deref(),
+        ))
+    })
+    .await
+    .map_err(|error| format!("Task execution failed: {}", error))?
 }
 
 #[tauri::command]
-pub async fn get_active_git_binary(
-    app: AppHandle,
-) -> Result<crate::git::GitBinaryInfo, String> {
+pub async fn get_active_git_binary(app: AppHandle) -> Result<crate::git::GitBinaryInfo, String> {
     let db = app.state::<Database>();
     let active_path = db.get_setting("git_binary_path").ok().flatten();
     let active_id = db.get_setting("git_binary_id").ok().flatten();
+    tauri::async_runtime::spawn_blocking(move || {
+        let binaries =
+            crate::git::scan_system_git_binaries(active_path.as_deref(), active_id.as_deref());
 
-    let binaries = crate::git::scan_system_git_binaries(
-        active_path.as_deref(),
-        active_id.as_deref(),
-    );
-
-    if let Some(active) = binaries.into_iter().find(|b| b.is_active) {
-        Ok(active)
-    } else {
-        Err("No active Git binary detected".to_string())
-    }
+        binaries
+            .into_iter()
+            .find(|binary| binary.is_active)
+            .ok_or_else(|| "No active Git binary detected".to_string())
+    })
+    .await
+    .map_err(|error| format!("Task execution failed: {}", error))?
 }
 
 #[tauri::command]
@@ -1319,50 +1531,56 @@ pub async fn set_active_git_binary(
     id: String,
     path: String,
 ) -> Result<crate::git::GitBinaryInfo, String> {
-    let version = crate::git::test_git_version(&path)
-        .map_err(|e| format!("Cannot select invalid Git binary at '{}': {}", path, e))?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let version = crate::git::test_git_version(&path)
+            .map_err(|error| format!("Cannot select invalid Git binary: {}", error))?;
 
-    let db = app.state::<Database>();
-    let _ = db.set_setting("git_binary_id", &id);
-    let _ = db.set_setting("git_binary_path", &path);
+        let db = app.state::<Database>();
+        db.set_settings_atomic(&[("git_binary_id", &id), ("git_binary_path", &path)])
+            .map_err(|error| format!("Failed to persist selected Git binary: {}", error))?;
 
-    crate::git::runner::set_active_git_path(Some(path.clone()));
+        crate::git::runner::set_active_git_path(Some(path.clone()));
 
-    let name = if id == "system" {
-        "System Git (PATH Default)".to_string()
-    } else if id == "bundled" {
-        "Stage0 Bundled Git".to_string()
-    } else {
-        format!("Custom Git ({})", path)
-    };
+        let name = if id == "system" {
+            "System Git (PATH Default)".to_string()
+        } else if id == "bundled" {
+            "Stage0 Bundled Git".to_string()
+        } else {
+            format!("Custom Git ({})", path)
+        };
 
-    Ok(crate::git::GitBinaryInfo {
-        id,
-        name,
-        path,
-        version,
-        source: "selected".to_string(),
-        is_valid: true,
-        is_active: true,
+        Ok(crate::git::GitBinaryInfo {
+            id,
+            name,
+            path,
+            version,
+            source: "selected".to_string(),
+            is_valid: true,
+            is_active: true,
+        })
     })
+    .await
+    .map_err(|error| format!("Task execution failed: {}", error))?
 }
 
 #[tauri::command]
-pub async fn validate_custom_git_binary(
-    path: String,
-) -> Result<crate::git::GitBinaryInfo, String> {
-    let version = crate::git::test_git_version(&path)
-        .map_err(|e| format!("Failed to validate Git executable: {}", e))?;
+pub async fn validate_custom_git_binary(path: String) -> Result<crate::git::GitBinaryInfo, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let version = crate::git::test_git_version(&path)
+            .map_err(|error| format!("Failed to validate Git executable: {}", error))?;
 
-    Ok(crate::git::GitBinaryInfo {
-        id: "custom-candidate".to_string(),
-        name: format!("Custom Git ({})", path),
-        path,
-        version,
-        source: "custom".to_string(),
-        is_valid: true,
-        is_active: false,
+        Ok(crate::git::GitBinaryInfo {
+            id: "custom-candidate".to_string(),
+            name: format!("Custom Git ({})", path),
+            path,
+            version,
+            source: "custom".to_string(),
+            is_valid: true,
+            is_active: false,
+        })
     })
+    .await
+    .map_err(|error| format!("Task execution failed: {}", error))?
 }
 
 #[tauri::command]
@@ -1426,4 +1644,27 @@ pub fn get_app_info() -> Result<SoftwareAboutInfo, String> {
         .map_err(|e| format!("Failed to parse embedded about metadata: {e}"))?;
     info.os = std::env::consts::OS.to_string();
     Ok(info)
+}
+
+#[cfg(test)]
+mod discussion_file_tests {
+    use super::read_regular_text_file_capped;
+
+    #[test]
+    fn discussion_source_reads_are_regular_and_bounded() {
+        let directory =
+            std::env::temp_dir().join(format!("stage0_discussion_file_{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let file = directory.join("source.txt");
+        std::fs::write(&file, "safe text").unwrap();
+
+        assert_eq!(
+            read_regular_text_file_capped(&file, 16).unwrap(),
+            "safe text"
+        );
+        assert!(read_regular_text_file_capped(&file, 4).is_err());
+        assert!(read_regular_text_file_capped(&directory, 16).is_err());
+
+        std::fs::remove_dir_all(directory).unwrap();
+    }
 }

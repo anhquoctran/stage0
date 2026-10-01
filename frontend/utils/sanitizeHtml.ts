@@ -22,14 +22,23 @@ const ALLOWED_ATTRIBUTES: Record<string, Set<string>> = {
 };
 
 const SAFE_URL_PATTERN = /^(?:(?:https?|mailto):|\/|#)/i;
-const SAFE_DATA_IMAGE_PATTERN = /^data:image\/(?:png|jpeg|gif|webp|svg\+xml);base64,/i;
+const SAFE_DATA_IMAGE_PATTERN = /^data:image\/(?:png|jpeg|gif|webp);base64,/i;
 
 function isSafeUrl(url: string, isImage = false): boolean {
   const trimmed = url.trim();
-  if (SAFE_URL_PATTERN.test(trimmed)) {
-    return true;
+  if (isImage) {
+    // Markdown is user-controlled. Remote images create silent third-party
+    // requests whenever a review/comment is opened, so only allow local paths
+    // and raster data images in previews.
+    if (SAFE_DATA_IMAGE_PATTERN.test(trimmed)) return true;
+    if (trimmed.startsWith('//') || trimmed.startsWith('\\')) return false;
+    if (trimmed.startsWith('/') && !trimmed.includes('\\')) return true;
+    return !trimmed.includes(':') && !trimmed.includes('\\');
   }
-  if (isImage && SAFE_DATA_IMAGE_PATTERN.test(trimmed)) {
+  if (SAFE_URL_PATTERN.test(trimmed)) {
+    if (trimmed.startsWith('/') && (trimmed.startsWith('//') || trimmed.includes('\\'))) {
+      return false;
+    }
     return true;
   }
   return false;

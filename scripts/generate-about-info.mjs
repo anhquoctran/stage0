@@ -3,7 +3,7 @@
  * Computes dynamic release information:
  *   - Name: Stage0
  *   - Author: Anh Quoc Tran
- *   - Version: <current_package_version>__[partial_sha1_commit]_[arch_name]
+ *   - Version: <current_package_version>+[partial_sha1_commit].[arch_name]
  *   - Release date: Build date in yyyy-MM-dd
  *   - Copyright: Copyright @ <current_year> <Author name>. Licensed under the MIT license.
  * 
@@ -45,8 +45,10 @@ export function computeAboutInfo(options = {}) {
       stdio: ['ignore', 'pipe', 'ignore'],
     }).toString().trim();
   } catch {
-    gitCommit = process.env.GIT_COMMIT ? process.env.GIT_COMMIT.substring(0, 7) : '30991a1';
+    gitCommit = process.env.GIT_COMMIT || '30991a1';
   }
+  // Keep CI-provided values safe for use as a SemVer build identifier.
+  gitCommit = gitCommit.trim().toLowerCase().replace(/[^0-9a-z-]/g, '').slice(0, 7) || 'dev0000';
 
   // 2. Target Architecture
   const rawArch = options.arch || process.env.TARGET_ARCH || process.arch || 'x64';
@@ -59,8 +61,8 @@ export function computeAboutInfo(options = {}) {
     arch = 'x64';
   }
 
-  // 3. Version format: <current_package_version>__[partial_sha1_commit]_[arch_name]
-  const version = `${packageVersion}__${gitCommit}_${arch}`;
+  // 3. SemVer with build metadata: <package_version>+<commit>.<architecture>
+  const version = `${packageVersion}+${gitCommit}.${arch}`;
 
   // 4. Release date in yyyy-MM-dd
   const now = new Date();
@@ -74,7 +76,7 @@ export function computeAboutInfo(options = {}) {
   const license = 'MIT';
   const tagline = 'Local-First Virtual MR / PR Sandbox';
   const description =
-    'Stage0 simulates 3-dot branch comparisons and merge conflict predictions completely in memory via git merge-tree with zero disk modifications.';
+    "Stage0 reviews branch comparisons and predicts merge conflicts without checking out or merging into the user's working tree or index. Git may still write objects to the repository's object database.";
   const website = 'https://github.com/anhquoctran/stage0';
 
   return {

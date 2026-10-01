@@ -16,6 +16,7 @@ import {
 
 interface AiMcpState {
   aiConfig: AiConfig;
+  apiKeysConfigured: Partial<Record<AiConfig['provider'], boolean>>;
   mcpServers: McpServerConfig[];
   isTestingAi: boolean;
   aiTestResult: { success: boolean; message: string; timestamp: number } | null;
@@ -27,7 +28,7 @@ interface AiMcpState {
   resetAiConfig: () => void;
   setProvider: (providerId: AiConfig['provider']) => void;
   loadApiKeyForProvider: (providerId: AiConfig['provider']) => Promise<void>;
-  testAiConnection: () => Promise<{ success: boolean; message: string }>;
+  testAiConnection: (configOverride?: AiConfig, apiKeyIsPresent?: boolean) => Promise<{ success: boolean; message: string }>;
   clearAiTestResult: () => void;
 
   // MCP Server Actions
@@ -82,27 +83,39 @@ function loadPersistedState(): {
         ...(parsed.guardrailPolicy || {}),
       };
 
-      // Securely migrate any legacy plaintext key found in localStorage into the OS Keyring
-      if (typeof legacyKey === 'string' && legacyKey.trim().length > 0 && isTauri()) {
-        const providerToMigrate = loadedAiConfig.provider || 'anthropic';
-        void invoke('store_ai_api_key', {
-          provider: providerToMigrate,
-          apiKey: legacyKey.trim(),
-        }).then(() => {
-          // Immediately wipe plaintext secret from localStorage
-          persistState(
-            loadedAiConfig,
-            Array.isArray(parsed.mcpServers) ? parsed.mcpServers : DEFAULT_MCP_SERVERS,
-            loadedGuardrailPolicy
-          );
-        }).catch((err) => {
-          console.warn('Failed to migrate legacy API key to OS Keyring:', err);
-        });
+      const loadedMcpServers = Array.isArray(parsed.mcpServers)
+        ? parsed.mcpServers
+        : DEFAULT_MCP_SERVERS;
+      // Erase legacy plaintext before starting asynchronous keychain I/O. If
+      // the OS keychain is unavailable, the user must re-enter the key rather
+      // than silently leaving a plaintext credential behind.
+      if (typeof legacyKey === 'string' && legacyKey.trim().length > 0) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            aiConfig: loadedAiConfig,
+            mcpServers: loadedMcpServers,
+            guardrailPolicy: loadedGuardrailPolicy,
+          }));
+        } catch {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+
+        if (isTauri()) {
+          const providerToMigrate = loadedAiConfig.provider || 'anthropic';
+          void invoke('store_ai_api_key', {
+            provider: providerToMigrate,
+            apiKey: legacyKey.trim(),
+          }).catch(() => {
+            console.warn('A previously saved API key could not be moved to the OS credential store. Please enter it again.');
+          });
+        } else {
+          console.warn('A legacy plaintext API key was removed from browser storage. Please enter it again in the desktop app.');
+        }
       }
 
       return {
         aiConfig: loadedAiConfig,
-        mcpServers: Array.isArray(parsed.mcpServers) ? parsed.mcpServers : DEFAULT_MCP_SERVERS,
+        mcpServers: loadedMcpServers,
         guardrailPolicy: loadedGuardrailPolicy,
       };
     }
@@ -143,6 +156,7 @@ const initialState = loadPersistedState();
 
 export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   aiConfig: initialState.aiConfig,
+  apiKeysConfigured: {},
   mcpServers: initialState.mcpServers,
   guardrailPolicy: initialState.guardrailPolicy,
   guardrailAuditLog: [],
@@ -154,15 +168,26 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   setActiveSubTab: (tab) => set({ activeSubTab: tab }),
 
   updateAiConfig: (partial) => {
-    const nextConfig = { ...get().aiConfig, ...partial };
+    const { apiKey, ...safePartial } = partial;
+    const nextConfig: AiConfig = {
+      ...get().aiConfig,
+      ...safePartial,
+      apiKey: '',
+    };
+    const keyToSave = typeof apiKey === 'string' ? apiKey.trim() : '';
     set({ aiConfig: nextConfig, aiTestResult: null });
     persistState(nextConfig, get().mcpServers, get().guardrailPolicy);
 
-    // If an API key is updated, persist it to the secure OS Keyring
-    if (partial.apiKey !== undefined && isTauri()) {
+    // Plaintext is sent only to the OS keyring and never retained in Zustand.
+    if (keyToSave && isTauri()) {
+      const provider = nextConfig.provider;
       void invoke('store_ai_api_key', {
-        provider: nextConfig.provider,
-        apiKey: partial.apiKey,
+        provider,
+        apiKey: keyToSave,
+      }).then(() => {
+        set((state) => ({
+          apiKeysConfigured: { ...state.apiKeysConfigured, [provider]: true },
+        }));
       }).catch((err) => {
         console.error('Failed to store API key in OS Keyring:', err);
       });
@@ -171,7 +196,11 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
 
   resetAiConfig: () => {
     const currentProvider = get().aiConfig.provider;
-    set({ aiConfig: DEFAULT_AI_CONFIG, aiTestResult: null });
+    set({
+      aiConfig: DEFAULT_AI_CONFIG,
+      aiTestResult: null,
+      apiKeysConfigured: { ...get().apiKeysConfigured, [currentProvider]: false },
+    });
     persistState(DEFAULT_AI_CONFIG, get().mcpServers);
     if (isTauri()) {
       void invoke('delete_ai_api_key', { provider: currentProvider }).catch(() => {});
@@ -181,14 +210,12 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   loadApiKeyForProvider: async (providerId) => {
     if (!isTauri()) return;
     try {
-      const secureKey = await invoke<string | null>('get_ai_api_key', { provider: providerId });
-      if (get().aiConfig.provider === providerId) {
-        set((state) => ({
-          aiConfig: { ...state.aiConfig, apiKey: secureKey || '' },
-        }));
-      }
+      const configured = await invoke<boolean>('has_ai_api_key', { provider: providerId });
+      set((state) => ({
+        apiKeysConfigured: { ...state.apiKeysConfigured, [providerId]: configured },
+      }));
     } catch (err) {
-      console.warn(`Failed to retrieve API key for ${providerId} from OS Keyring:`, err);
+      console.warn(`Failed to check API key status for ${providerId} in OS Keyring:`, err);
     }
   },
 
@@ -201,7 +228,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       provider: providerId,
       baseUrl: providerPreset.defaultBaseUrl,
       model: providerPreset.defaultModel,
-      apiKey: '', // Temporarily clear while loading from OS Keyring
+      apiKey: '',
     };
     set({ aiConfig: nextConfig, aiTestResult: null });
     persistState(nextConfig, get().mcpServers);
@@ -210,15 +237,20 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     void get().loadApiKeyForProvider(providerId);
   },
 
-  testAiConnection: async () => {
-    const { aiConfig } = get();
+  testAiConnection: async (configOverride, apiKeyIsPresent = false) => {
+    const aiConfig = configOverride || get().aiConfig;
     set({ isTestingAi: true, aiTestResult: null });
 
     const startTime = Date.now();
 
     try {
       // 1. Validation for providers requiring API Key
-      if (aiConfig.provider !== 'ollama' && !aiConfig.apiKey.trim()) {
+      if (
+        aiConfig.provider !== 'ollama' &&
+        !aiConfig.apiKey.trim() &&
+        !apiKeyIsPresent &&
+        !get().apiKeysConfigured[aiConfig.provider]
+      ) {
         const res = {
           success: false,
           message: `API Key is required for ${aiConfig.provider.toUpperCase()}. Please enter a valid key.`,
@@ -230,12 +262,21 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
 
       // 2. Real or simulated connectivity check depending on environment
       if (aiConfig.provider === 'ollama') {
-        const url = aiConfig.baseUrl.replace(/\/+$/, '') + '/api/tags';
+        const endpoint = getLocalOllamaEndpoint(aiConfig.baseUrl);
+        if (!endpoint) {
+          const res = {
+            success: false,
+            message: 'Ollama checks are limited to localhost. Use an http(s) URL on localhost, 127.0.0.1, or ::1 without embedded credentials.',
+            timestamp: Date.now(),
+          };
+          set({ isTestingAi: false, aiTestResult: res });
+          return res;
+        }
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-          const response = await fetch(url, {
+          const response = await fetch(endpoint, {
             method: 'GET',
             signal: controller.signal,
           });
@@ -259,8 +300,8 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
           const latency = Date.now() - startTime;
           const msg =
             fetchErr instanceof Error && fetchErr.name === 'AbortError'
-              ? `Ollama daemon connection timed out at ${aiConfig.baseUrl}`
-              : `Unable to connect to Ollama at ${aiConfig.baseUrl}. Is the Ollama service running?`;
+              ? 'Ollama daemon connection timed out.'
+              : 'Unable to connect to Ollama. Is the local Ollama service running?';
           const res = {
             success: false,
             message: `${msg} (${latency}ms)`,
@@ -281,7 +322,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
 
       const res = {
         success: true,
-        message: `Successfully verified configuration for ${providerName} (${aiConfig.model}) in ${latency}ms. Endpoint: ${aiConfig.baseUrl}.`,
+        message: `Configuration checks passed for ${providerName} (${aiConfig.model}) in ${latency}ms. Cloud provider connectivity is not tested yet.`,
         timestamp: Date.now(),
       };
 
@@ -549,6 +590,26 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   },
 }));
 
+function getLocalOllamaEndpoint(baseUrl: string): string | null {
+  try {
+    const url = new URL(baseUrl);
+    const localHosts = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
+    if (
+      !['http:', 'https:'].includes(url.protocol) ||
+      !localHosts.has(url.hostname.toLowerCase()) ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash
+    ) {
+      return null;
+    }
+    return `${url.toString().replace(/\/+$/, '')}/api/tags`;
+  } catch {
+    return null;
+  }
+}
+
 // Safely defer background hydration to avoid blocking module evaluation on startup
 if (typeof window !== 'undefined') {
   window.setTimeout(() => {
@@ -559,4 +620,3 @@ if (typeof window !== 'undefined') {
     }
   }, 150);
 }
-

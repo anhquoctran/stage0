@@ -7,7 +7,7 @@
     'App' (default) to run full Tauri desktop app with native backend.
     'Web' to run fast browser-based mock environment.
 .PARAMETER Port
-    Local dev port (default: 1420).
+    Local web-mode dev port (default: 1420). Tauri app mode uses port 1420.
 .EXAMPLE
     .\scripts\dev.ps1
     .\scripts\dev.ps1 -Mode Web
@@ -17,6 +17,7 @@
 param(
     [ValidateSet("App", "Web")]
     [string]$Mode = "App",
+    [ValidateRange(1, 65535)]
     [int]$Port = 1420
 )
 
@@ -31,7 +32,11 @@ Write-Host "  * Stage0 Virtual MR Sandbox - Dev Runner (Windows)" -ForegroundCol
 Write-Host "======================================================" -ForegroundColor Cyan
 Write-Host "Platform : Windows ($([System.Environment]::GetEnvironmentVariable('PROCESSOR_ARCHITECTURE')))" -ForegroundColor DarkGray
 Write-Host "Mode     : $Mode" -ForegroundColor White
-Write-Host "Port     : $Port" -ForegroundColor DarkGray
+if ($Mode -eq "App" -and $Port -ne 1420) {
+    Write-Host "[WARN] -Port applies only to Web mode; Tauri desktop uses port 1420." -ForegroundColor Yellow
+}
+$TargetPort = if ($Mode -eq "App") { 1420 } else { $Port }
+Write-Host "Port     : $TargetPort" -ForegroundColor DarkGray
 Write-Host "------------------------------------------------------" -ForegroundColor Cyan
 Write-Host ""
 
@@ -65,21 +70,34 @@ if (-not (Test-Path "$RootDir\node_modules")) {
     npm install
 }
 
+# Check the exact port the selected mode will use. Never kill an unrelated
+# application automatically to make a development port available.
+$Listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $TargetPort)
+$PortAvailable = $true
+try {
+    $Listener.Start()
+} catch {
+    $PortAvailable = $false
+} finally {
+    $Listener.Stop()
+}
+if (-not $PortAvailable) {
+    Write-Host "[ERROR] Port $TargetPort is already in use. Close the owning process or choose another Web-mode port." -ForegroundColor Red
+    exit 1
+}
+
 # 4. Launch Hot Reload
 if ($Mode -eq "App") {
-    # Terminate any dangling processes or port holders
-    & "$ScriptDir\kill_port.ps1"
-
     Write-Host ""
     Write-Host "[INFO] Starting Tauri Native Desktop App with Hot Reload..." -ForegroundColor Green
-    Write-Host "       Frontend: http://127.0.0.1:$Port" -ForegroundColor DarkGray
+    Write-Host "       Frontend: http://127.0.0.1:$TargetPort" -ForegroundColor DarkGray
     Write-Host "       Backend : Watching backend/src/*.rs for recompilation" -ForegroundColor DarkGray
     Write-Host ""
     npx tauri dev
 } else {
     Write-Host ""
     Write-Host "[INFO] Starting Vite Web Server with Hot Reload..." -ForegroundColor Green
-    Write-Host "       URL: http://127.0.0.1:$($Port)/?mock" -ForegroundColor DarkGray
+    Write-Host "       URL: http://127.0.0.1:$($TargetPort)/?mock" -ForegroundColor DarkGray
     Write-Host ""
-    npx vite --host 127.0.0.1 --port $Port
+    npx vite --host 127.0.0.1 --port $TargetPort --strictPort
 }
