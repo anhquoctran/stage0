@@ -1305,7 +1305,8 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       ...(currentRepoId ? useBotReviewersStore.getState().repoCustomReviewers[currentRepoId] || [] : []),
     ];
     // Simulate smart verification flow based on current file/lines
-    const bot = allBots.find((b) => b.id === agentId) || AVAILABLE_AI_BOTS.find((b) => b.id === agentId) || AVAILABLE_AI_BOTS[0];
+    const bot = allBots.find((b) => b.id === agentId) || AVAILABLE_AI_BOTS.find((b) => b.id === agentId);
+    const botName = bot?.name || agentId || 'AI Reviewer';
 
     // 1. Mark as verifying
     set({
@@ -1327,10 +1328,10 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     // Add verification reply from bot
     await get().replyToDiscussion(
       discussionId,
-      `✅ **[Re-verification Passed]** ${bot.name} has re-scanned the source code after developer fixes. Code conforms to standards and previous warnings have been resolved.`,
+      `✅ **[Re-verification Passed]** ${botName} has re-scanned the source code after developer fixes. Code conforms to standards and previous warnings have been resolved.`,
       'approve',
       'ai_agent',
-      bot.name
+      botName
     );
 
     // Update status in db
@@ -1338,7 +1339,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       await invoke('verify_mr_discussion', {
         discussionId,
         verificationStatus: pass ? 'pass' : 'fail',
-        verifiedByBot: bot.name,
+        verifiedByBot: botName,
         pass,
       });
     } catch {}

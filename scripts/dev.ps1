@@ -67,6 +67,9 @@ if (-not (Test-Path "$RootDir\node_modules")) {
 
 # 4. Launch Hot Reload
 if ($Mode -eq "App") {
+    # Terminate any dangling processes or port holders
+    & "$ScriptDir\kill_port.ps1"
+
     Write-Host ""
     Write-Host "[INFO] Starting Tauri Native Desktop App with Hot Reload..." -ForegroundColor Green
     Write-Host "       Frontend: http://127.0.0.1:$Port" -ForegroundColor DarkGray
