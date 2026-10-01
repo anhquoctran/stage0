@@ -3,16 +3,19 @@ pub mod credentials;
 pub mod db;
 pub mod git;
 pub mod menu;
+pub mod process;
 pub mod sandbox;
 pub mod watcher;
 pub mod window_manager;
 
 use db::Database;
 use sandbox::SandboxManager;
-use watcher::WatcherState;
-use window_manager::{destroy_window, focus_window, focused_window, open_repo_path, WindowManagerState};
 use std::path::{Path, PathBuf};
 use tauri::{Manager, WindowEvent};
+use watcher::WatcherState;
+use window_manager::{
+    destroy_window, focus_window, focused_window, open_repo_path, WindowManagerState,
+};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -152,7 +155,7 @@ pub fn run() {
             commands::verify_git_credential,
             commands::get_keyring_info,
             commands::store_ai_api_key,
-            commands::get_ai_api_key,
+            commands::has_ai_api_key,
             commands::delete_ai_api_key,
             commands::get_available_sandboxes,
             commands::get_active_sandbox,
@@ -217,8 +220,15 @@ pub fn run() {
             commands::restart_app,
             commands::get_app_info,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if matches!(event, tauri::RunEvent::Exit) {
+                for error in app.state::<SandboxManager>().cleanup_all() {
+                    eprintln!("{error}");
+                }
+            }
+        });
 }
 
 fn find_repo_argument(args: &[String], cwd: &Path) -> Option<String> {
@@ -227,7 +237,11 @@ fn find_repo_argument(args: &[String], cwd: &Path) -> Option<String> {
         if explicit_next {
             explicit_next = false;
             let candidate = PathBuf::from(argument);
-            let candidate = if candidate.is_absolute() { candidate } else { cwd.join(candidate) };
+            let candidate = if candidate.is_absolute() {
+                candidate
+            } else {
+                cwd.join(candidate)
+            };
             if candidate.is_dir() && candidate.join(".git").exists() {
                 return Some(candidate.to_string_lossy().into_owned());
             }
@@ -243,7 +257,11 @@ fn find_repo_argument(args: &[String], cwd: &Path) -> Option<String> {
         }
 
         let candidate = PathBuf::from(argument);
-        let candidate = if candidate.is_absolute() { candidate } else { cwd.join(candidate) };
+        let candidate = if candidate.is_absolute() {
+            candidate
+        } else {
+            cwd.join(candidate)
+        };
         if candidate.is_dir() && candidate.join(".git").exists() {
             return Some(candidate.to_string_lossy().into_owned());
         }

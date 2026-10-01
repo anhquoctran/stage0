@@ -15,7 +15,6 @@ import {
   Bold,
   Italic,
   Underline,
-  Copy,
   Code,
 } from '@/components/common/icons';
 import { SUPPORTED_FONTS } from '../../constants/fonts';
@@ -213,14 +212,14 @@ const SETTINGS_TREE: TreeCategory[] = [
         id: 'git-binary',
         label: 'Git Executable',
         title: 'Git Executable',
-        description: 'Select system Git binary or embedded isolated runner for zero-leak operations.',
+        description: 'Select the Git executable used for repository operations. Saved Git credentials are not currently injected into Git commands.',
         keywords: ['git', 'binary', 'executable', 'path', 'runner'],
       },
       {
         id: 'git-credentials',
         label: 'Git Credentials',
         title: 'Git Credentials & Remotes',
-        description: 'Manage personal access tokens (PAT) for GitLab, GitHub, and custom Git servers.',
+        description: 'Store Git credential metadata and secrets locally. Stage0 does not currently inject saved credentials into Git commands.',
         keywords: ['credentials', 'token', 'pat', 'github', 'gitlab', 'auth'],
       },
     ],
@@ -452,6 +451,8 @@ export const PreferencesModal: React.FC = () => {
       setIsApplied(false);
       setShowResetConfirm(false);
       setShowRestartPrompt(false);
+    } else {
+      setDraftAiConfig((current) => ({ ...current, apiKey: '' }));
     }
   }, [
     isPreferencesOpen,
@@ -604,7 +605,9 @@ export const PreferencesModal: React.FC = () => {
 
     storeSetShowInlineBlame(draftShowInlineBlame);
     await storeSetActiveSandbox(draftSandboxType);
+    const safeDraftAiConfig = { ...draftAiConfig, apiKey: '' };
     storeUpdateAiConfig(draftAiConfig);
+    setDraftAiConfig(safeDraftAiConfig);
 
     let needsRestart = false;
     if (draftGitBinaryId !== savedBaseline.gitBinaryId) {
@@ -623,7 +626,7 @@ export const PreferencesModal: React.FC = () => {
       enableLigatures: draftEnableLigatures,
       showInlineBlame: draftShowInlineBlame,
       sandboxType: draftSandboxType,
-      aiConfig: { ...draftAiConfig },
+      aiConfig: safeDraftAiConfig,
       gitBinaryId: draftGitBinaryId,
       gitBinaryPath: draftGitBinaryPath,
     });
@@ -918,16 +921,16 @@ export const PreferencesModal: React.FC = () => {
 
                 <SettingRow
                   title="Local Secret Management"
-                  description="API keys, personal access tokens (PAT), and Git credentials are encrypted in local SQLite app storage and never uploaded."
+                  description="API keys and Git credential secrets are stored in the operating system credential store; metadata is kept locally by Stage0. Secrets are not injected into AI or Git operations."
                 >
                   <span className="px-2.5 py-1 rounded text-xs bg-surface1 text-text font-mono border border-surface2">
-                    Encrypted Local Storage
+                    OS Credential Store
                   </span>
                 </SettingRow>
 
                 <SettingRow
                   title="Isolated Virtual Tree"
-                  description="Git operations run with in-memory merge-trees to guarantee zero dirty state or writes to your local working branch."
+                  description="Diff and conflict checks do not check out branches or modify the working tree or index. Git may write tree or blob objects to the repository object database."
                 >
                   <span className="px-2.5 py-1 rounded text-xs bg-surface1 text-text font-mono border border-surface2">
                     100% In-Memory Sandbox

@@ -1,5 +1,7 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use super::{
     docker::DockerSandboxAdapter, in_memory::InMemorySandboxAdapter,
@@ -14,17 +16,29 @@ pub struct SandboxManager {
     docker: Arc<DockerSandboxAdapter>,
     active_type: Mutex<SandboxType>,
     instances: Mutex<HashMap<String, SandboxInstanceInfo>>,
+    creation_lock: Mutex<()>,
     guardrails: Arc<super::guardrails::GuardrailsEngine>,
 }
 
+const MAX_ACTIVE_SANDBOX_INSTANCES: usize = 8;
+
 impl SandboxManager {
     pub fn new() -> Self {
+        Self::with_local_worktree(LocalWorktreeSandboxAdapter::new())
+    }
+
+    pub fn new_with_worktree_dir(path: PathBuf) -> Self {
+        Self::with_local_worktree(LocalWorktreeSandboxAdapter::with_custom_dir(path))
+    }
+
+    fn with_local_worktree(local_worktree: LocalWorktreeSandboxAdapter) -> Self {
         Self {
             in_memory: Arc::new(InMemorySandboxAdapter::new()),
-            local_worktree: Arc::new(LocalWorktreeSandboxAdapter::new()),
+            local_worktree: Arc::new(local_worktree),
             docker: Arc::new(DockerSandboxAdapter::new()),
             active_type: Mutex::new(SandboxType::InMemory),
             instances: Mutex::new(HashMap::new()),
+            creation_lock: Mutex::new(()),
             guardrails: Arc::new(super::guardrails::GuardrailsEngine::new()),
         }
     }
@@ -35,7 +49,9 @@ impl SandboxManager {
     }
 
     #[inline]
-    fn instances_lock(&self) -> std::sync::MutexGuard<'_, std::collections::HashMap<String, SandboxInstanceInfo>> {
+    fn instances_lock(
+        &self,
+    ) -> std::sync::MutexGuard<'_, std::collections::HashMap<String, SandboxInstanceInfo>> {
         self.instances.lock().unwrap_or_else(|p| p.into_inner())
     }
 
@@ -84,7 +100,8 @@ impl SandboxManager {
         base: &str,
         compare: &str,
     ) -> Result<ConflictReport, String> {
-        self.get_active_adapter().check_conflicts(repo_path, base, compare)
+        self.get_active_adapter()
+            .check_conflicts(repo_path, base, compare)
     }
 
     pub fn get_conflict_preview(
@@ -94,7 +111,8 @@ impl SandboxManager {
         compare: &str,
         file_path: &str,
     ) -> Result<ConflictFilePreview, String> {
-        self.get_active_adapter().get_conflict_preview(repo_path, base, compare, file_path)
+        self.get_active_adapter()
+            .get_conflict_preview(repo_path, base, compare, file_path)
     }
 
     pub fn create_instance(
@@ -103,6 +121,16 @@ impl SandboxManager {
         base: &str,
         compare: &str,
     ) -> Result<SandboxInstanceInfo, String> {
+        let _creation_guard = self
+            .creation_lock
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if self.instances_lock().len() >= MAX_ACTIVE_SANDBOX_INSTANCES {
+            return Err(format!(
+                "At most {} sandbox instances can be active at once",
+                MAX_ACTIVE_SANDBOX_INSTANCES
+            ));
+        }
         let adapter = self.get_active_adapter();
         let instance = adapter.create_instance(repo_path, base, compare)?;
 
@@ -114,13 +142,14 @@ impl SandboxManager {
 
     pub fn destroy_instance(&self, instance_id: &str) -> Result<(), String> {
         let instance = {
-            let mut map = self.instances_lock();
-            map.remove(instance_id)
+            let map = self.instances_lock();
+            map.get(instance_id).cloned()
         };
 
         if let Some(inst) = instance {
             let adapter = self.get_adapter(&inst.adapter_type);
             adapter.destroy_instance(&inst)?;
+            self.instances_lock().remove(instance_id);
         }
         Ok(())
     }
@@ -144,7 +173,12 @@ impl SandboxManager {
         };
 
         let adapter = self.get_adapter(&instance.adapter_type);
-        adapter.execute_command(&instance, command, args)
+        let timeout_secs = self
+            .guardrails
+            .get_policy()
+            .max_execution_timeout_secs
+            .clamp(1, 120);
+        adapter.execute_command(&instance, command, args, Duration::from_secs(timeout_secs))
     }
 
     pub fn get_instance(&self, instance_id: &str) -> Option<SandboxInstanceInfo> {
@@ -153,9 +187,9 @@ impl SandboxManager {
     }
 
     pub fn sync_instance(&self, instance_id: &str, repo_path: &str) -> Result<(), String> {
-        let instance = self.get_instance(instance_id).ok_or_else(|| {
-            format!("Sandbox instance not found: {}", instance_id)
-        })?;
+        let instance = self
+            .get_instance(instance_id)
+            .ok_or_else(|| format!("Sandbox instance not found: {}", instance_id))?;
         super::sync::sync_changes_to_sandbox(&instance, repo_path)
     }
 
@@ -165,9 +199,9 @@ impl SandboxManager {
         tool_name: &str,
         arguments: serde_json::Value,
     ) -> Result<serde_json::Value, String> {
-        let instance = self.get_instance(instance_id).ok_or_else(|| {
-            format!("Sandbox instance not found: {}", instance_id)
-        })?;
+        let instance = self
+            .get_instance(instance_id)
+            .ok_or_else(|| format!("Sandbox instance not found: {}", instance_id))?;
         super::tool_bridge::dispatch_tool_call(self, &instance, tool_name, arguments)
     }
 
@@ -187,7 +221,10 @@ impl SandboxManager {
         self.guardrails.reset_policy(mode);
     }
 
-    pub fn get_guardrail_audit_log(&self, limit: Option<usize>) -> Vec<super::guardrails::GuardrailAuditEvent> {
+    pub fn get_guardrail_audit_log(
+        &self,
+        limit: Option<usize>,
+    ) -> Vec<super::guardrails::GuardrailAuditEvent> {
         self.guardrails.get_audit_log(limit)
     }
 
@@ -203,12 +240,38 @@ impl SandboxManager {
         self.guardrails.simulate_check(tool_name, arguments)
     }
 
-    pub fn cleanup_all(&self) {
-        let mut map = self.instances_lock();
-        for (_, instance) in map.drain() {
-            let adapter = self.get_adapter(&instance.adapter_type);
-            let _ = adapter.destroy_instance(&instance);
+    pub fn cleanup_all(&self) -> Vec<String> {
+        let instances = self.instances_lock().values().cloned().collect::<Vec<_>>();
+        let mut errors = Vec::new();
+        let outcomes = std::thread::scope(|scope| {
+            instances
+                .iter()
+                .map(|instance| {
+                    let adapter = self.get_adapter(&instance.adapter_type);
+                    scope.spawn(move || (instance.id.clone(), adapter.destroy_instance(instance)))
+                })
+                .collect::<Vec<_>>()
+                .into_iter()
+                .map(|task| task.join())
+                .collect::<Vec<_>>()
+        });
+        for outcome in outcomes {
+            match outcome {
+                Ok((id, Ok(()))) => {
+                    self.instances_lock().remove(&id);
+                }
+                Ok((id, Err(error))) => {
+                    errors.push(format!("Sandbox {} cleanup failed: {}", id, error))
+                }
+                Err(_) => {
+                    errors.push("A sandbox cleanup task panicked during shutdown".to_string())
+                }
+            }
         }
+        if let Err(error) = self.local_worktree.remove_empty_base_dir() {
+            errors.push(error);
+        }
+        errors
     }
 }
 

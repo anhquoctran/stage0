@@ -2,7 +2,9 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { TopBar } from './TopBar';
 import { StatusBar } from './StatusBar';
 import { FileList } from '../git/FileList';
-import { DiffViewer } from '../git/DiffViewer';
+const DiffViewer = React.lazy(() =>
+  import('../git/DiffViewer').then(({ DiffViewer }) => ({ default: DiffViewer }))
+);
 import { ConflictBanner } from '../git/ConflictBanner';
 import { PreferencesModal } from '../preferences/PreferencesModal';
 import { PullFromModal } from '../git/PullFromModal';
@@ -439,14 +441,16 @@ export const MainLayout: React.FC = () => {
                 />
               </div>
 
-              <DiffViewer
-                selectedFile={selectedFile}
-                diffPayload={diffPayload}
-                viewMode={viewMode}
-                onToggleViewMode={setViewMode}
-                isLoading={isDiffLoading}
-                onOpenRepo={openRepoDialog}
-              />
+              <React.Suspense fallback={<div className="flex-1 grid place-items-center text-subtext0 text-xs">Loading diff viewer…</div>}>
+                <DiffViewer
+                  selectedFile={selectedFile}
+                  diffPayload={diffPayload}
+                  viewMode={viewMode}
+                  onToggleViewMode={setViewMode}
+                  isLoading={isDiffLoading}
+                  onOpenRepo={openRepoDialog}
+                />
+              </React.Suspense>
             </>
           ) : (
             <EmptyVirtualMrWorkspace

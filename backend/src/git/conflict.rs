@@ -1,75 +1,116 @@
-use std::path::Path;
 use super::runner::run_git;
 use super::{ConflictFilePreview, ConflictRegion, ConflictReport, ConflictedFileInfo};
+use std::io::Read;
+
+const MAX_CONFLICT_FILE_BYTES: u64 = 8 * 1024 * 1024;
+const MAX_TOTAL_CONFLICT_SCAN_BYTES: usize = 64 * 1024 * 1024;
 
 pub fn check_conflicts(
     repo_path: &str,
     base: &str,
     compare: &str,
 ) -> Result<ConflictReport, String> {
-    let (_, effective_base) = super::runner::resolve_ref(repo_path, base).unwrap_or((String::new(), base.to_string()));
-    let (_, effective_compare) = super::runner::resolve_ref(repo_path, compare).unwrap_or((String::new(), compare.to_string()));
+    let (_, effective_base) = super::runner::resolve_ref(repo_path, base)?;
+    let (_, effective_compare) = super::runner::resolve_ref(repo_path, compare)?;
 
-    let res = run_git(repo_path, &["merge-tree", "--write-tree", &effective_base, &effective_compare])?;
+    let res = run_git(
+        repo_path,
+        &[
+            "merge-tree",
+            "--write-tree",
+            "--name-only",
+            "-z",
+            "--messages",
+            &effective_base,
+            &effective_compare,
+        ],
+    )?;
+    if res.output_truncated {
+        return Err("Git merge-tree output exceeded the configured safety limit".to_string());
+    }
 
-    let combined = format!("{}\n{}", res.stdout, res.stderr);
+    // `merge-tree --write-tree` uses status 1 to mean a merge conflict. Other
+    // non-zero statuses are invocation/repository errors, not conflicts.
+    if res.code != Some(0) && res.code != Some(1) {
+        let detail = if res.stderr.trim().is_empty() {
+            res.stdout.trim()
+        } else {
+            res.stderr.trim()
+        };
+        return Err(format!(
+            "Git merge-tree failed: {}",
+            super::runner::redact_sensitive_text(detail)
+        ));
+    }
+
+    let combined = res.stdout;
     let mut conflicted_files = Vec::new();
     let mut details: Vec<ConflictedFileInfo> = Vec::new();
 
-    let mut has_conflicts = !res.success || combined.contains("CONFLICT");
+    let has_conflicts = res.code == Some(1);
+    let mut sections = combined.split('\0');
+    // First field is the result tree object id. The conflicted-file section is
+    // NUL-delimited and ends at the empty field that starts informational
+    // messages; never parse filenames from Git's human-readable diagnostics.
+    let _tree_oid = sections.next();
+    let mut message_fields = Vec::new();
+    let mut in_messages = false;
+    for field in sections {
+        if in_messages {
+            message_fields.push(field);
+        } else if field.is_empty() {
+            in_messages = true;
+        } else {
+            conflicted_files.push(field.to_string());
+        }
+    }
 
-    for line in combined.lines() {
-        let line = line.trim();
-        if line.starts_with("CONFLICT") {
-            has_conflicts = true;
-            let mut conflict_type = "content".to_string();
-            if let Some(open_paren) = line.find('(') {
-                if let Some(close_paren) = line.find(')') {
-                    if open_paren < close_paren {
-                        conflict_type = line[open_paren + 1..close_paren].to_string();
-                    }
-                }
-            }
-
-            let mut matched_path: Option<String> = None;
-            if let Some(idx) = line.find("Merge conflict in ") {
-                let path = line[idx + "Merge conflict in ".len()..].trim();
-                let clean_path = path.trim_matches(|c| c == '\'' || c == '"');
-                if !clean_path.is_empty() {
-                    matched_path = Some(clean_path.to_string());
-                }
-            } else if let Some(idx) = line.find("): ") {
-                let rest = &line[idx + 3..];
-                let words: Vec<&str> = rest.split_whitespace().collect();
-                if let Some(first) = words.first() {
-                    let clean_path = first.trim_matches(|c| c == '\'' || c == '"');
-                    if !clean_path.is_empty() {
-                        matched_path = Some(clean_path.to_string());
-                    }
-                }
-            }
-
-            if let Some(path) = matched_path {
-                let on_disk_path = Path::new(repo_path).join(&path);
-                let mut conflict_markers_count = 0;
-                if on_disk_path.exists() {
-                    if let Ok(content) = std::fs::read_to_string(&on_disk_path) {
-                        conflict_markers_count = content.lines().filter(|l| l.starts_with("<<<<<<<")).count();
-                    }
-                }
-
-                if !conflicted_files.contains(&path) {
-                    conflicted_files.push(path.clone());
-                }
-
-                details.push(ConflictedFileInfo {
-                    path,
-                    conflict_type,
-                    message: line.to_string(),
-                    conflict_markers_count,
-                });
+    let mut typed_messages = std::collections::HashMap::<String, (String, String)>::new();
+    let mut index = 0;
+    while index < message_fields.len() {
+        let Some(path_count) = message_fields[index].parse::<usize>().ok() else {
+            break;
+        };
+        index += 1;
+        if index + path_count + 1 >= message_fields.len() {
+            break;
+        }
+        let paths = &message_fields[index..index + path_count];
+        index += path_count;
+        let message_type = message_fields[index].to_string();
+        let message = message_fields[index + 1].to_string();
+        index += 2;
+        if message_type.starts_with("CONFLICT") {
+            for path in paths {
+                typed_messages.insert(path.to_string(), (message_type.clone(), message.clone()));
             }
         }
+    }
+
+    let mut scanned_conflict_bytes = 0usize;
+    for path in &conflicted_files {
+        let conflict_markers_count = if scanned_conflict_bytes < MAX_TOTAL_CONFLICT_SCAN_BYTES {
+            super::resolve_safe_repo_path(repo_path, path)
+                .map(|path| {
+                    let remaining = MAX_TOTAL_CONFLICT_SCAN_BYTES - scanned_conflict_bytes;
+                    let (count, bytes_read) = count_on_disk_conflict_markers(&path, remaining);
+                    scanned_conflict_bytes += bytes_read;
+                    count
+                })
+                .unwrap_or(0)
+        } else {
+            0
+        };
+        let (conflict_type, message) = typed_messages
+            .get(path)
+            .cloned()
+            .unwrap_or_else(|| ("merge".to_string(), format!("Merge conflict in {}", path)));
+        details.push(ConflictedFileInfo {
+            path: path.clone(),
+            conflict_type,
+            message,
+            conflict_markers_count,
+        });
     }
 
     Ok(ConflictReport {
@@ -87,8 +128,8 @@ pub fn get_conflicted_file_preview(
     compare: &str,
     file_path: &str,
 ) -> Result<ConflictFilePreview, String> {
-    let (_, effective_base) = super::runner::resolve_ref(repo_path, base).unwrap_or((String::new(), base.to_string()));
-    let (_, effective_compare) = super::runner::resolve_ref(repo_path, compare).unwrap_or((String::new(), compare.to_string()));
+    let (_, effective_base) = super::runner::resolve_ref(repo_path, base)?;
+    let (_, effective_compare) = super::runner::resolve_ref(repo_path, compare)?;
 
     let clean_path = file_path.replace('\\', "/");
     let on_disk_path = match super::resolve_safe_repo_path(repo_path, &clean_path) {
@@ -98,11 +139,28 @@ pub fn get_conflicted_file_preview(
     let mut on_disk_markers_count = 0;
     let mut on_disk_content: Option<String> = None;
 
-    if on_disk_path.exists() {
-        if let Ok(c) = std::fs::read_to_string(&on_disk_path) {
-            on_disk_markers_count = c.lines().filter(|l| l.starts_with("<<<<<<<")).count();
-            if on_disk_markers_count > 0 {
-                on_disk_content = Some(c);
+    if let Ok(metadata) = std::fs::symlink_metadata(&on_disk_path) {
+        if metadata.file_type().is_file() && metadata.len() > MAX_CONFLICT_FILE_BYTES {
+            return Err("Conflict preview is limited to files up to 8 MiB".to_string());
+        }
+        if metadata.file_type().is_file() {
+            let file = std::fs::File::open(&on_disk_path)
+                .map_err(|error| format!("Failed to open conflict preview file: {}", error))?;
+            let mut bytes = Vec::with_capacity(metadata.len() as usize);
+            file.take(MAX_CONFLICT_FILE_BYTES + 1)
+                .read_to_end(&mut bytes)
+                .map_err(|error| format!("Failed to read conflict preview file: {}", error))?;
+            if bytes.len() as u64 > MAX_CONFLICT_FILE_BYTES {
+                return Err("Conflict preview is limited to files up to 8 MiB".to_string());
+            }
+            if let Ok(content) = String::from_utf8(bytes) {
+                on_disk_markers_count = content
+                    .lines()
+                    .filter(|line| line.starts_with("<<<<<<<"))
+                    .count();
+                if on_disk_markers_count > 0 {
+                    on_disk_content = Some(content);
+                }
             }
         }
     }
@@ -111,13 +169,29 @@ pub fn get_conflicted_file_preview(
     let base_spec = format!("{}:{}", effective_base, clean_path);
     let compare_spec = format!("{}:{}", effective_compare, clean_path);
 
-    let base_content = run_git(repo_path, &["show", &base_spec]).ok().map(|r| r.stdout);
-    let compare_content = run_git(repo_path, &["show", &compare_spec]).ok().map(|r| r.stdout);
+    let base_content = run_git(repo_path, &["show", &base_spec])
+        .ok()
+        .map(|r| r.stdout);
+    let compare_content = run_git(repo_path, &["show", &compare_spec])
+        .ok()
+        .map(|r| r.stdout);
+    if base_content
+        .as_deref()
+        .is_some_and(|content| content.contains('\0'))
+        || compare_content
+            .as_deref()
+            .is_some_and(|content| content.contains('\0'))
+    {
+        return Err("Binary conflict previews are not supported".to_string());
+    }
 
     // 2. Find common ancestor
-    let merge_base = run_git(repo_path, &["merge-base", &effective_base, &effective_compare])
-        .map(|r| r.stdout.trim().to_string())
-        .unwrap_or_default();
+    let merge_base = run_git(
+        repo_path,
+        &["merge-base", &effective_base, &effective_compare],
+    )
+    .map(|r| r.stdout.trim().to_string())
+    .unwrap_or_default();
 
     let mut merged_content = String::new();
     let mut conflict_markers_count = on_disk_markers_count;
@@ -242,4 +316,26 @@ pub fn get_conflicted_file_preview(
         compare_content,
         conflict_regions,
     })
+}
+
+fn count_on_disk_conflict_markers(path: &std::path::Path, byte_budget: usize) -> (usize, usize) {
+    let Ok(metadata) = std::fs::symlink_metadata(path) else {
+        return (0, 0);
+    };
+    if !metadata.file_type().is_file() || metadata.len() > MAX_CONFLICT_FILE_BYTES {
+        return (0, 0);
+    }
+    let Ok(file) = std::fs::File::open(path) else {
+        return (0, 0);
+    };
+    let to_read = (metadata.len() as usize).min(byte_budget);
+    let mut bytes = Vec::with_capacity(to_read);
+    let Ok(bytes_read) = file.take(to_read as u64).read_to_end(&mut bytes) else {
+        return (0, 0);
+    };
+    let count = bytes
+        .split(|byte| *byte == b'\n')
+        .filter(|line| line.starts_with(b"<<<<<<<"))
+        .count();
+    (count, bytes_read)
 }

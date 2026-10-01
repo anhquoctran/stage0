@@ -24,13 +24,13 @@ export const SOFTWARE_ABOUT: SoftwareAboutInfo = {
   "packageVersion": "0.1.0",
   "gitCommit": "88a6195",
   "arch": "x64",
-  "version": "0.1.0__88a6195_x64",
+  "version": "0.1.0+88a6195.x64",
   "releaseDate": "2026-10-01",
   "currentYear": "2026",
   "copyright": "Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",
   "license": "MIT",
   "tagline": "Local-First Virtual MR / PR Sandbox",
-  "description": "Stage0 simulates 3-dot branch comparisons and merge conflict predictions completely in memory via git merge-tree with zero disk modifications.",
+  "description": "Stage0 reviews branch comparisons and predicts merge conflicts without checking out or merging into the user's working tree or index. Git may still write objects to the repository's object database.",
   "website": "https://github.com/anhquoctran/stage0",
   "os": "windows"
 };

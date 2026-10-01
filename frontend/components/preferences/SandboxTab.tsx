@@ -38,6 +38,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
     stderr: string;
     exitCode: number;
     durationMs: number;
+    outputTruncated: boolean;
   } | null>(null);
 
   const dockerInfo = availableSandboxes.find((s) => s.adapter_type === 'docker');
@@ -80,6 +81,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
           stderr: res.stderr,
           exitCode: res.exit_code,
           durationMs: res.duration_ms,
+          outputTruncated: res.output_truncated,
         });
       }
     } finally {
@@ -111,22 +113,22 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
       title: 'In-Memory Sandbox',
       defaultBadge: true,
       description:
-        'Evaluates branch differences and detects merge conflicts in memory using Git object trees. No files or worktrees are written to disk.',
-      specs: 'RAM only • Zero disk writes • git merge-tree',
+        'Evaluates branch differences and conflicts without checking out branches or changing the working tree or index. Git may write result objects to the repository object database.',
+      specs: 'No command execution • No worktree or index changes • Fastest',
     },
     {
       id: 'local_worktree',
       title: 'Local Worktree Sandbox',
       description:
-        'Allocates an isolated detached Git worktree in the system temp directory to execute test suites, linters, and build commands.',
-      specs: 'Filesystem isolated • Runs test commands • Auto-pruned',
+        'Allocates a detached Git worktree in the system temp directory. Commands run on the host as the current user and can access files outside the worktree.',
+      specs: 'Separate worktree • Host permissions • Auto-pruned',
     },
     {
       id: 'docker',
       title: 'Docker Container Sandbox',
       description:
-        'Mounts the repository inside an isolated Docker container for reproducible CI verification and process-level isolation.',
-      specs: 'Container isolated • Docker daemon • alpine:latest',
+        'Copies the selected source tree into a writable Docker container without mounting host folders. Networking is enabled; Stage0 does not set CPU, memory, or process limits.',
+      specs: 'Writable container • Network enabled • Docker daemon',
       extraBadge: dockerInfo?.is_available ? 'Daemon ready' : 'Daemon offline',
     },
   ];
@@ -387,6 +389,11 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                     <span>Exit code: {cmdOutput.exitCode}</span>
                     <span>{cmdOutput.durationMs}ms</span>
                   </div>
+                  {cmdOutput.outputTruncated && (
+                    <div className="text-yellow text-[10px]">
+                      Output limit reached; the process was stopped. Recreate the Docker sandbox if it was active.
+                    </div>
+                  )}
                   {cmdOutput.stdout && (
                     <pre className="text-text whitespace-pre-wrap max-h-48 overflow-y-auto">
                       {cmdOutput.stdout}

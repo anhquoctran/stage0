@@ -431,7 +431,7 @@ export const GuardrailsTab: React.FC = () => {
             <input
               type="range"
               min={10}
-              max={180}
+              max={120}
               step={5}
               value={policy.max_execution_timeout_secs || 45}
               onChange={(e) => void updateGuardrailPolicy({ max_execution_timeout_secs: Number(e.target.value) })}
@@ -527,7 +527,7 @@ export const GuardrailsTab: React.FC = () => {
             <input
               type="range"
               min={500}
-              max={10000}
+              max={5000}
               step={250}
               value={policy.max_file_read_lines || 2500}
               onChange={(e) => void updateGuardrailPolicy({ max_file_read_lines: Number(e.target.value) })}
@@ -546,6 +546,23 @@ export const GuardrailsTab: React.FC = () => {
             <label htmlFor="confirm-commands-chk" className="text-xs text-text cursor-pointer select-none">
               Require confirmation for all terminal commands
             </label>
+          </div>
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="confirm-writes-chk"
+              checked={!!policy.require_human_confirmation_for_writes}
+              onChange={(e) => void updateGuardrailPolicy({ require_human_confirmation_for_writes: e.target.checked })}
+              className="mt-0.5 rounded border-surface2 text-emerald-500 focus:ring-0 cursor-pointer"
+            />
+            <div>
+              <label htmlFor="confirm-writes-chk" className="text-xs text-text cursor-pointer select-none">
+                Require confirmation for terminal tools that may write files
+              </label>
+              <p className="mt-1 text-[10px] text-subtext0">
+                No approval dialog is available yet, so commands requiring confirmation are blocked rather than paused.
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -22,7 +22,9 @@ import { BotReviewer } from '../../types/virtualMr';
 import { TabBranchSelector } from '../git/TabBranchSelector';
 import { MarkdownEditor } from '../common/MarkdownEditor';
 import { FileList } from '../git/FileList';
-import { DiffViewer } from '../git/DiffViewer';
+const DiffViewer = React.lazy(() =>
+  import('../git/DiffViewer').then(({ DiffViewer }) => ({ default: DiffViewer }))
+);
 import { formatShortcutText } from '../../utils/shortcuts';
 
 export const NewVirtualMrView: React.FC = () => {
@@ -831,14 +833,16 @@ export const NewVirtualMrView: React.FC = () => {
                       isLoading={isDiffLoading}
                       width={280}
                     />
-                    <DiffViewer
-                      selectedFile={selectedFile}
-                      diffPayload={diffPayload}
-                      viewMode={viewMode}
-                      onToggleViewMode={setViewMode}
-                      isLoading={isDiffLoading}
-                      onOpenRepo={openRepoDialog}
-                    />
+                    <React.Suspense fallback={<div className="flex-1 grid place-items-center text-subtext0 text-xs">Loading diff viewer…</div>}>
+                      <DiffViewer
+                        selectedFile={selectedFile}
+                        diffPayload={diffPayload}
+                        viewMode={viewMode}
+                        onToggleViewMode={setViewMode}
+                        isLoading={isDiffLoading}
+                        onOpenRepo={openRepoDialog}
+                      />
+                    </React.Suspense>
                   </div>
                 )}
               </div>

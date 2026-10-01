@@ -32,7 +32,7 @@ impl SandboxAdapter for InMemorySandboxAdapter {
     }
 
     fn description(&self) -> &str {
-        "Pure in-memory virtual merge request evaluation using Git tree and blob objects. Zero disk footprint and 100% non-destructive."
+        "Evaluates diffs and merge conflicts without checking out branches or changing the working tree or index. Git may write result objects to the repository object database; terminal commands are disabled."
     }
 
     fn capabilities(&self) -> SandboxCapabilities {
@@ -104,10 +104,7 @@ impl SandboxAdapter for InMemorySandboxAdapter {
         })
     }
 
-    fn destroy_instance(
-        &self,
-        _instance: &SandboxInstanceInfo,
-    ) -> Result<(), String> {
+    fn destroy_instance(&self, _instance: &SandboxInstanceInfo) -> Result<(), String> {
         // In-memory instances require no physical cleanup
         Ok(())
     }
@@ -117,9 +114,10 @@ impl SandboxAdapter for InMemorySandboxAdapter {
         _instance: &SandboxInstanceInfo,
         _command: &str,
         _args: &[String],
+        _timeout: std::time::Duration,
     ) -> Result<SandboxExecutionResult, String> {
         Err(
-            "InMemorySandbox operates purely in memory with zero disk modifications and does not execute system commands. Switch to LocalWorktreeSandbox or DockerSandbox in Preferences > Sandbox to run commands."
+            "The In-Memory sandbox does not execute system commands. Git may still write tree or blob objects while evaluating conflicts. Switch to Local Worktree or Docker to run commands."
                 .to_string(),
         )
     }

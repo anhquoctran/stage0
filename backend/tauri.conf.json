@@ -27,9 +27,9 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' ipc: tauri: asset: http://127.0.0.1:* http://localhost:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' http://127.0.0.1:* http://localhost:* blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: asset: https:; connect-src 'self' ipc: tauri: http: https: ws: wss: http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; object-src 'none'; base-uri 'self';",
-      "devCsp": null,
-      "dangerousDisableAssetCspModification": true
+      "csp": "default-src 'self' ipc: tauri: asset:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: asset: http://asset.localhost; connect-src 'self' ipc: tauri: http://ipc.localhost http://127.0.0.1:* http://localhost:* http://[::1]:* https://127.0.0.1:* https://localhost:* https://[::1]:*; object-src 'none'; base-uri 'self'; frame-ancestors 'none';",
+      "devCsp": "default-src 'self' ipc: tauri: asset: http://127.0.0.1:* http://localhost:*; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' http://127.0.0.1:* http://localhost:* blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: asset: http://asset.localhost http://127.0.0.1:* http://localhost:*; connect-src 'self' ipc: tauri: http://ipc.localhost http://127.0.0.1:* https://127.0.0.1:* ws://127.0.0.1:* http://localhost:* https://localhost:* ws://localhost:* http://[::1]:* https://[::1]:* ws://[::1]:*; object-src 'none'; base-uri 'self';",
+      "dangerousDisableAssetCspModification": false
     }
   },
   "bundle": {
@@ -44,7 +44,7 @@
     ],
     "licenseFile": "../LICENSE",
     "shortDescription": "Stage0 - Local-First Virtual MR / PR Sandbox",
-    "longDescription": "Stage0 - Stage0 simulates 3-dot branch comparisons and merge conflict predictions completely in memory via git merge-tree with zero disk modifications. Author: Anh Quoc Tran. Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",
+    "longDescription": "Stage0 - Stage0 reviews branch comparisons and predicts merge conflicts without checking out or merging into the user's working tree or index. Git may still write objects to the repository's object database. Author: Anh Quoc Tran. Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",
     "windows": {
       "nsis": {
         "installerHooks": "hooks.nsh"

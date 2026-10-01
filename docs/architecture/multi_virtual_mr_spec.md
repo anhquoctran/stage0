@@ -29,7 +29,7 @@ Một **Virtual MR/PR** trong Stage0 là một phiên giả lập quy trình Pul
 
 ### 1.3. Mục tiêu kỹ thuật cốt lõi
 - **Không giới hạn số lượng Virtual MR song song** trên cùng 1 repository đang mở.
-- **Zero Disk Writes**: Toàn bộ phiên so sánh, review và ghi chú chỉ chạy trên RAM, SQLite cục bộ và Git object store, bảo vệ tuyệt đối working tree thật của người dùng.
+- **Không thay đổi working tree/index khi review**: Các phép so sánh và dự đoán xung đột không checkout hoặc merge vào working tree/index. Git có thể ghi object vào object database; metadata review được lưu trong SQLite cục bộ, còn sandbox worktree/Docker có thể tạo dữ liệu riêng theo cấu hình.
 - **Hot-Switching (<50ms)**: Cache diff, conflict status, file selection và discussions riêng biệt cho từng phiên để chuyển tab ngay lập tức.
 - **Trải nghiệm Review chuẩn mực (GitLab/GitHub Parity)**: Hỗ trợ Title, Markdown Description, Assignee, Reviewer AI Agents, Discussions (Review, Comment, Approve/Request Changes, Resolve threads), Commits list, và Labels.
 - **Seamless IDE Hand-off**: Cung cấp các thao tác chuyển tiếp nhanh (Deep Links) từ dòng comment của AI Bot sang IDE ngoài của developer để fix code.
@@ -564,9 +564,9 @@ interface VirtualMrState {
 
 ## 6. Tích hợp Backend Engine, Sandbox & AI Agent Orchestration
 
-### 6.1. In-Memory Git Engine (Zero Disk Writes)
-- Toàn bộ phép tính diff, commits range và kiểm tra xung đột giữa `compareBranch` và `baseBranch` được thực thi thông qua lệnh `git merge-tree --write-tree` và `git log/git diff` trên Backend Rust.
-- **Hoàn toàn Stateless & Thread-safe**: Không cần khóa (lock) `.git/index`, hỗ trợ tính toán đồng thời hàng chục Virtual MR song song trên các thread pool của `tokio::task`.
+### 6.1. Git Review Engine (No Working-Tree/Index Changes)
+- Phép tính diff, commits range và kiểm tra xung đột giữa `compareBranch` và `baseBranch` được thực thi qua các lệnh Git trên Backend Rust. Conflict prediction có thể dùng `git merge-tree --write-tree`; Git có thể ghi tree/blob objects vào object database, nhưng luồng review này không checkout hoặc merge vào working tree/index của người dùng.
+- Luồng này không chủ động sửa `.git/index`. Khả năng chạy đồng thời và giới hạn hiệu năng phụ thuộc vào từng command, kích thước repository và giới hạn subprocess; không cam kết số lượng phiên đồng thời cố định hoặc hoàn toàn stateless.
 
 ### 6.2. Cơ chế Điều phối AI Agent Bots (AI Agent Orchestration)
 

@@ -79,9 +79,9 @@ if [ -d "$BUNDLE_DIR" ]; then
     FNAME=$(basename "$file")
     FSIZE=$(du -h "$file" | cut -f1)
     if command -v shasum >/dev/null 2>&1; then
-      FHASH=$(shasum -a 256 "$file" | cut -d' ' -f1 | cut -c1-16)
+      FHASH=$(shasum -a 256 "$file" | cut -d' ' -f1)
     else
-      FHASH=$(sha256sum "$file" | cut -d' ' -f1 | cut -c1-16)
+      FHASH=$(sha256sum "$file" | cut -d' ' -f1)
     fi
     echo -e "  • ${BOLD}${FNAME}${RESET} (${FSIZE}) - SHA256: ${FHASH}..."
     echo -e "    ${DIM}Path: ${file}${RESET}"

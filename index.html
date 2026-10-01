@@ -2,36 +2,17 @@
 <html lang="en" data-theme="mocha" class="mocha dark">
   <head>
     <meta charset="UTF-8" />
+    <script src="/startup.js"></script>
     <link rel="icon" type="image/svg+xml" href="/app-icon.svg" />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link
+      id="viewer-font-stylesheet"
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Source+Code+Pro:ital,wght@0,400;0,700;1,400;1,700&family=Victor+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       media="print"
-      onload="this.media='all'"
     />
     <title>Stage0 - Virtual MR Sandbox</title>
-    <script>
-      // Global fallback for React Fast Refresh preamble to prevent fatal startup crashes
-      if (typeof window !== 'undefined') {
-        window.$RefreshReg$ = window.$RefreshReg$ || function () {};
-        window.$RefreshSig$ = window.$RefreshSig$ || function () { return function (type) { return type; }; };
-        window.__stage0_has_error__ = false;
-      }
-      window.addEventListener('error', function (e) {
-        window.__stage0_has_error__ = true;
-        var statusEl = document.querySelector('#startup-splash .splash-status');
-        if (statusEl) {
-          statusEl.style.color = '#f38ba8';
-          statusEl.style.fontWeight = 'bold';
-          statusEl.textContent = 'Startup error: ' + (e.message || 'Script execution error');
-        }
-      });
-      window.addEventListener('securitypolicyviolation', function (e) {
-        console.warn('[CSP Blocked]', e.blockedURI, e.violatedDirective);
-      });
-    </script>
     <style>
       #startup-splash {
         position: fixed;
@@ -214,35 +195,14 @@
         </div>
         <div class="splash-status">Initializing Stage0 runtime...</div>
         <div class="splash-highlights" aria-hidden="true">
-          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#fab387"></span>Zero Disk Writes</span>
+          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#fab387"></span>No Checkout</span>
           <span>·</span>
           <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#94e2d5"></span>git merge-tree</span>
           <span>·</span>
-          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#a6e3a1"></span>100% Isolated</span>
+          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#a6e3a1"></span>Sandbox Adapters</span>
         </div>
       </div>
     </div>
     <script type="module" src="/frontend/main.tsx"></script>
-    <script>
-      // Defensive failsafe: only auto-dismiss splash if React root has actually mounted
-      setTimeout(function () {
-        var splash = document.getElementById('startup-splash');
-        if (!splash) return;
-        var root = document.getElementById('root');
-        var hasContent = root && root.children && root.children.length > 0;
-        if (hasContent && !window.__stage0_has_error__) {
-          splash.classList.add('is-hidden');
-          setTimeout(function () {
-            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
-          }, 350);
-        } else if (!hasContent) {
-          var statusEl = document.querySelector('#startup-splash .splash-status');
-          if (statusEl && !window.__stage0_has_error__) {
-            statusEl.style.color = '#fab387';
-            statusEl.textContent = 'Connecting to Stage0 runtime...';
-          }
-        }
-      }, 3500);
-    </script>
   </body>
 </html>

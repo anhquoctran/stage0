@@ -1,7 +1,7 @@
-use std::io::Write;
-use std::process::{Command, Stdio};
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
+use std::process::Command;
+use std::time::Duration;
 
 use super::{SandboxInstanceInfo, SandboxType};
 
@@ -20,91 +20,119 @@ pub fn sync_changes_to_sandbox(
     instance: &SandboxInstanceInfo,
     repo_path: &str,
 ) -> Result<(), String> {
+    if matches!(instance.adapter_type, SandboxType::InMemory) {
+        return Ok(());
+    }
+
     let git_bin = crate::git::runner::get_active_git_path();
 
     // 1. Generate unified diff from host repo (both staged and unstaged tracked changes)
     let mut diff_cmd = Command::new(&git_bin);
     diff_cmd.current_dir(repo_path);
-    diff_cmd.args(["diff", "--binary", "-U3", "--end-of-options", "HEAD"]);
+    diff_cmd.args([
+        "diff",
+        "--binary",
+        "--no-ext-diff",
+        "--no-textconv",
+        "-U3",
+        "--end-of-options",
+        "HEAD",
+    ]);
     #[cfg(windows)]
     diff_cmd.creation_flags(CREATE_NO_WINDOW);
 
-    let output = diff_cmd.output().map_err(|e| {
-        format!("Failed to generate git diff from host repo: {}", e)
-    })?;
-
-    let patch = String::from_utf8_lossy(&output.stdout).to_string();
+    const MAX_PATCH_BYTES: usize = 64 * 1024 * 1024;
+    let output = crate::process::run_bounded_command(
+        &mut diff_cmd,
+        MAX_PATCH_BYTES,
+        1024 * 1024,
+        Duration::from_secs(120),
+    )
+    .map_err(|error| format!("Failed to generate git diff from host repo: {}", error))?;
+    if !output.status.success() || output.output_truncated {
+        let detail = String::from_utf8_lossy(&output.stderr);
+        let detail = crate::git::runner::redact_sensitive_text(detail.trim());
+        return Err(if output.output_truncated {
+            format!("Host repository patch exceeded the 64 MiB sandbox sync limit")
+        } else if detail.is_empty() {
+            "Failed to generate git diff from host repo".to_string()
+        } else {
+            format!("Failed to generate git diff from host repo: {}", detail)
+        });
+    }
+    let patch = output.stdout;
 
     match instance.adapter_type {
         SandboxType::InMemory => {
-            // InMemory evaluates Git tree and blob objects in RAM on demand
-            Ok(())
+            unreachable!("in-memory sandboxes return before generating a patch")
         }
         SandboxType::LocalWorktree => {
             let worktree_dir = instance.worktree_path.as_deref().ok_or_else(|| {
                 "Worktree directory path missing for LocalWorktree instance".to_string()
             })?;
 
-            if patch.trim().is_empty() {
+            if patch.is_empty() {
                 // Working tree is clean: reset worktree to commit state
                 let mut reset_cmd = Command::new(&git_bin);
                 reset_cmd.current_dir(worktree_dir);
                 reset_cmd.args(["reset", "--hard", "HEAD"]);
                 #[cfg(windows)]
                 reset_cmd.creation_flags(CREATE_NO_WINDOW);
-                let _ = reset_cmd.output();
+                run_maintenance_command(&mut reset_cmd, "Failed to reset sandbox worktree")?;
 
                 let mut clean_cmd = Command::new(&git_bin);
                 clean_cmd.current_dir(worktree_dir);
                 clean_cmd.args(["clean", "-fd"]);
                 #[cfg(windows)]
                 clean_cmd.creation_flags(CREATE_NO_WINDOW);
-                let _ = clean_cmd.output();
+                run_maintenance_command(&mut clean_cmd, "Failed to clean sandbox worktree")?;
             } else {
-                // Revert any previous uncommitted worktree changes before applying fresh patch
-                let mut checkout_cmd = Command::new(&git_bin);
-                checkout_cmd.current_dir(worktree_dir);
-                checkout_cmd.args(["checkout", "--", "."]);
+                // Clear both the worktree and index before applying the host
+                // snapshot; `checkout -- .` alone leaves staged edits behind.
+                let mut reset_cmd = Command::new(&git_bin);
+                reset_cmd.current_dir(worktree_dir);
+                reset_cmd.args(["reset", "--hard", "HEAD"]);
                 #[cfg(windows)]
-                checkout_cmd.creation_flags(CREATE_NO_WINDOW);
-                let _ = checkout_cmd.output();
+                reset_cmd.creation_flags(CREATE_NO_WINDOW);
+                run_maintenance_command(&mut reset_cmd, "Failed to reset sandbox worktree edits")?;
+
+                let mut clean_cmd = Command::new(&git_bin);
+                clean_cmd.current_dir(worktree_dir);
+                clean_cmd.args(["clean", "-fd"]);
+                #[cfg(windows)]
+                clean_cmd.creation_flags(CREATE_NO_WINDOW);
+                run_maintenance_command(&mut clean_cmd, "Failed to clean sandbox worktree edits")?;
 
                 let mut apply_cmd = Command::new(&git_bin);
                 apply_cmd.current_dir(worktree_dir);
                 apply_cmd.args(["apply", "--whitespace=nowarn"]);
-                apply_cmd.stdin(Stdio::piped());
-                apply_cmd.stdout(Stdio::piped());
-                apply_cmd.stderr(Stdio::piped());
                 #[cfg(windows)]
                 apply_cmd.creation_flags(CREATE_NO_WINDOW);
 
-                let mut child = apply_cmd.spawn().map_err(|e| {
-                    format!("Failed to spawn git apply in worktree: {}", e)
-                })?;
-
-                if let Some(mut stdin) = child.stdin.take() {
-                    stdin.write_all(patch.as_bytes()).map_err(|e| {
-                        format!("Failed to pipe patch to git apply stdin: {}", e)
-                    })?;
-                }
-
-                let apply_out = child.wait_with_output().map_err(|e| {
-                    format!("git apply failed in worktree: {}", e)
-                })?;
-
-                if !apply_out.status.success() {
-                    let err = String::from_utf8_lossy(&apply_out.stderr).to_string();
-                    return Err(format!("git apply in worktree rejected patch: {}", err.trim()));
+                let apply_out = crate::process::run_bounded_command_with_input(
+                    &mut apply_cmd,
+                    patch,
+                    64 * 1024,
+                    256 * 1024,
+                    Duration::from_secs(120),
+                )?;
+                if !apply_out.status.success() || apply_out.output_truncated {
+                    let err = String::from_utf8_lossy(&apply_out.stderr);
+                    return Err(format!(
+                        "git apply in worktree failed: {}",
+                        crate::git::runner::redact_sensitive_text(err.trim())
+                    ));
                 }
             }
             Ok(())
         }
         SandboxType::Docker => {
-            let container_id = instance.container_id.as_deref().ok_or_else(|| {
-                "Container ID missing for Docker sandbox instance".to_string()
-            })?;
+            let container_id = instance
+                .container_id
+                .as_deref()
+                .ok_or_else(|| "Container ID missing for Docker sandbox instance".to_string())?;
 
-            if patch.trim().is_empty() {
+            if patch.is_empty() {
                 // Working tree is clean: reset container workspace
                 let mut reset_cmd = Command::new("docker");
                 reset_cmd.args([
@@ -112,11 +140,11 @@ pub fn sync_changes_to_sandbox(
                     container_id,
                     "sh",
                     "-c",
-                    "cd /workspace && (git reset --hard HEAD 2>/dev/null || true) && (git clean -fd 2>/dev/null || true)",
+                    "cd /workspace && git reset --hard HEAD && git clean -fd",
                 ]);
                 #[cfg(windows)]
                 reset_cmd.creation_flags(CREATE_NO_WINDOW);
-                let _ = reset_cmd.output();
+                run_maintenance_command(&mut reset_cmd, "Failed to reset Docker sandbox")?;
             } else {
                 // Pipe patch to docker exec git apply
                 let mut apply_cmd = Command::new("docker");
@@ -126,34 +154,48 @@ pub fn sync_changes_to_sandbox(
                     container_id,
                     "sh",
                     "-c",
-                    "cd /workspace && (git checkout -- . 2>/dev/null || true) && git apply --whitespace=nowarn",
+                    "cd /workspace && git reset --hard HEAD && git clean -fd && git apply --whitespace=nowarn",
                 ]);
-                apply_cmd.stdin(Stdio::piped());
-                apply_cmd.stdout(Stdio::piped());
-                apply_cmd.stderr(Stdio::piped());
                 #[cfg(windows)]
                 apply_cmd.creation_flags(CREATE_NO_WINDOW);
 
-                let mut child = apply_cmd.spawn().map_err(|e| {
-                    format!("Failed to spawn docker exec git apply: {}", e)
-                })?;
-
-                if let Some(mut stdin) = child.stdin.take() {
-                    stdin.write_all(patch.as_bytes()).map_err(|e| {
-                        format!("Failed to pipe patch to Docker container stdin: {}", e)
-                    })?;
-                }
-
-                let apply_out = child.wait_with_output().map_err(|e| {
-                    format!("docker exec git apply failed: {}", e)
-                })?;
-
-                if !apply_out.status.success() {
-                    let err = String::from_utf8_lossy(&apply_out.stderr).to_string();
-                    return Err(format!("Docker sandbox failed to apply host patch: {}", err.trim()));
+                let apply_out = crate::process::run_bounded_command_with_input(
+                    &mut apply_cmd,
+                    patch,
+                    64 * 1024,
+                    256 * 1024,
+                    Duration::from_secs(120),
+                )?;
+                if !apply_out.status.success() || apply_out.output_truncated {
+                    let err = String::from_utf8_lossy(&apply_out.stderr);
+                    return Err(format!(
+                        "Docker sandbox failed to apply host patch: {}",
+                        crate::git::runner::redact_sensitive_text(err.trim())
+                    ));
                 }
             }
             Ok(())
         }
+    }
+}
+
+fn run_maintenance_command(command: &mut Command, context: &str) -> Result<(), String> {
+    let output = crate::process::run_bounded_command(
+        command,
+        64 * 1024,
+        256 * 1024,
+        Duration::from_secs(120),
+    )?;
+    if output.status.success() && !output.output_truncated {
+        return Ok(());
+    }
+    let detail = String::from_utf8_lossy(&output.stderr);
+    let detail = crate::git::runner::redact_sensitive_text(detail.trim());
+    if output.output_truncated {
+        Err(format!("{} (subprocess output limit exceeded)", context))
+    } else if detail.is_empty() {
+        Err(context.to_string())
+    } else {
+        Err(format!("{}: {}", context, detail))
     }
 }
