@@ -1,7 +1,5 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Stage0",
-  "version": "0.1.0",
   "identifier": "com.localmr.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -43,7 +41,30 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "licenseFile": "../LICENSE",
+    "shortDescription": "Stage0 - Local-First Virtual MR / PR Sandbox",
+    "longDescription": "Stage0 - Stage0 simulates 3-dot branch comparisons and merge conflict predictions completely in memory via git merge-tree with zero disk modifications. Author: Anh Quoc Tran. Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",
+    "windows": {
+      "nsis": {
+        "installerHooks": "hooks.nsh"
+      }
+    },
+    "macOS": {
+      "infoPlist": "Info.plist"
+    },
+    "linux": {
+      "deb": {
+        "section": "devel",
+        "priority": "optional"
+      }
+    },
+    "publisher": "Anh Quoc Tran",
+    "copyright": "Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",
+    "license": "MIT",
+    "homepage": "https://github.com/anhquoctran/stage0"
   },
-  "plugins": {}
+  "plugins": {},
+  "productName": "Stage0",
+  "version": "0.1.0"
 }

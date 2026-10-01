@@ -2,6 +2,8 @@
 name = "stage0"
 version = "0.1.0"
 description = "Stage0 - Local Virtual MR / PR Sandbox"
+authors = ["Anh Quoc Tran"]
+license = "MIT"
 edition = "2021"
 
 [lib]

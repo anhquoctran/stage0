@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Folder,
   Download,
@@ -8,6 +8,8 @@ import {
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { AppLogo } from '../common/AppLogo';
+import { AboutModal } from '../common/AboutModal';
+import { useAboutInfo } from '../../hooks/useAboutInfo';
 import { formatShortcutText } from '../../utils/shortcuts';
 
 interface WelcomeScreenProps {
@@ -29,6 +31,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   } = useGitStore();
 
   const { setIsPreferencesOpen } = usePreferencesStore();
+  const about = useAboutInfo();
+  const [showAboutModal, setShowAboutModal] = useState(false);
 
   const isMac =
     typeof navigator !== 'undefined' &&
@@ -246,7 +250,30 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             )}
           </div>
         </div>
+
+        {/* Footer info: Version and Copyright */}
+        <div className="mt-8 pt-4 border-t border-surface0/60 flex items-center justify-between text-[11px] text-subtext0 select-none">
+          <button
+            type="button"
+            onClick={() => setShowAboutModal(true)}
+            className="hover:text-text transition-colors cursor-pointer flex items-center gap-1.5 group"
+            title="View About Stage0"
+          >
+            <span className="font-semibold text-text">{about.name}</span>
+            <span className="font-mono text-[#89b4fa] bg-surface0 px-1.5 py-0.5 rounded text-[10px] group-hover:bg-surface1 transition-colors">
+              v{about.version}
+            </span>
+          </button>
+          <span className="text-[10px] text-subtext0 truncate max-w-[280px]">
+            {about.copyright}
+          </span>
+        </div>
       </div>
+
+      <AboutModal
+        isOpen={showAboutModal}
+        onClose={() => setShowAboutModal(false)}
+      />
     </div>
   );
 };

@@ -46,6 +46,7 @@ import { DEFAULT_AI_CONFIG } from '../../constants/aiPresets';
 import { AiConfig } from '../../types/ai';
 import { SandboxType } from '../../types/git';
 
+
 export type PreferenceTab =
   | 'general'
   | 'general-settings'
@@ -230,6 +231,7 @@ const SETTINGS_TREE: TreeCategory[] = [
 const normalizeTab = (tab?: string): PreferenceTab => {
   if (!tab) return 'ai-overview';
   switch (tab) {
+    case 'about':
     case 'general':
       return 'general-settings';
     case 'guardrails':
@@ -349,19 +351,13 @@ export const PreferencesModal: React.FC = () => {
     fetchActiveBinary,
   } = useGitBinaryStore();
 
-  const [activeTab, setActiveTab] = useState<PreferenceTab>('ai-overview');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showJsonModal, setShowJsonModal] = useState(false);
-  const [copiedJson, setCopiedJson] = useState(false);
 
-  // Expanded parent categories in tree
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    general: true,
-    appearance: true,
-    editor: true,
-    ai: true,
-    git: true,
-  });
+
+  const [activeTab, setActiveTab] = useState<PreferenceTab | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Expanded parent categories in tree (all collapsed by default)
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => ({
@@ -450,6 +446,9 @@ export const PreferencesModal: React.FC = () => {
         }));
       });
 
+      setActiveTab(null);
+      setExpandedGroups({});
+      setSearchQuery('');
       setIsApplied(false);
       setShowResetConfirm(false);
       setShowRestartPrompt(false);
@@ -544,13 +543,14 @@ export const PreferencesModal: React.FC = () => {
 
   // Current active child metadata
   const currentChildItem = useMemo(() => {
+    if (!activeTab) return null;
     const norm = normalizeTab(activeTab);
     for (const group of SETTINGS_TREE) {
       for (const child of group.children) {
         if (child.id === norm) return child;
       }
     }
-    return SETTINGS_TREE[3].children[0]; // fallback to ai-overview
+    return null;
   }, [activeTab]);
 
   // Theme preview handlers
@@ -582,58 +582,7 @@ export const PreferencesModal: React.FC = () => {
   }, [draftFontFamily]);
 
   // Settings.json representation
-  const settingsJsonString = useMemo(() => {
-    return JSON.stringify(
-      {
-        theme: draftThemeMode,
-        buffer_font: {
-          family: draftFontFamily,
-          size: draftFontSize,
-          bold: draftIsBold,
-          italic: draftIsItalic,
-          underline: draftIsUnderline,
-          line_spacing: draftLineSpacing,
-          ligatures: draftEnableLigatures,
-        },
-        git: {
-          inline_blame: draftShowInlineBlame,
-          git_binary_id: draftGitBinaryId,
-          git_binary_path: draftGitBinaryPath,
-        },
-        ai: {
-          provider: draftAiConfig.provider,
-          model: draftAiConfig.model,
-          stream_response: draftAiConfig.streamResponse,
-          single_file_review: draftAiConfig.enableCodeReviewAssist,
-        },
-        sandbox: {
-          type: draftSandboxType,
-        },
-      },
-      null,
-      2
-    );
-  }, [
-    draftThemeMode,
-    draftFontFamily,
-    draftFontSize,
-    draftIsBold,
-    draftIsItalic,
-    draftIsUnderline,
-    draftLineSpacing,
-    draftEnableLigatures,
-    draftShowInlineBlame,
-    draftGitBinaryId,
-    draftGitBinaryPath,
-    draftAiConfig,
-    draftSandboxType,
-  ]);
 
-  const handleCopyJson = () => {
-    navigator.clipboard.writeText(settingsJsonString);
-    setCopiedJson(true);
-    setTimeout(() => setCopiedJson(false), 2000);
-  };
 
   // Commit changes
   const handleApply = async () => {
@@ -735,10 +684,6 @@ export const PreferencesModal: React.FC = () => {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (showJsonModal) {
-          setShowJsonModal(false);
-          return;
-        }
         if (isFontDropdownOpen) {
           setIsFontDropdownOpen(false);
           return;
@@ -756,11 +701,11 @@ export const PreferencesModal: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPreferencesOpen, isFontDropdownOpen, showResetConfirm, showJsonModal, handleCancel]);
+  }, [isPreferencesOpen, isFontDropdownOpen, showResetConfirm, handleCancel]);
 
   if (!isPreferencesOpen) return null;
 
-  const currentTabId = normalizeTab(activeTab);
+  const currentTabId = activeTab ? normalizeTab(activeTab) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 select-none">
@@ -822,7 +767,7 @@ export const PreferencesModal: React.FC = () => {
                 </div>
               ) : (
                 filteredTree.map((group) => {
-                  const isExpanded = expandedGroups[group.id] ?? true;
+                  const isExpanded = expandedGroups[group.id] ?? false;
                   const hasActiveChild = group.children.some((c) => c.id === currentTabId);
 
                   return (
@@ -869,36 +814,30 @@ export const PreferencesModal: React.FC = () => {
                 })
               )}
             </div>
-
-            {/* Bottom Keyboard Shortcut Hint */}
-            <div className="p-3 border-t border-[#313244]/60 text-[11px] text-subtext0/80 font-mono flex items-center justify-between select-none">
-              <span>Ctrl-Shift-E Focus Content</span>
-              <span>Esc Close</span>
-            </div>
           </div>
 
           {/* Right Column: Settings Content Area */}
           <div className="flex-1 overflow-y-auto p-8 bg-[#181825] flex flex-col">
-            {/* Top Scope & Action Row (Zed style) */}
-            <div className="flex items-center justify-between mb-4">
-              <span className="px-2.5 py-0.5 rounded text-[11px] font-mono bg-[#313244]/80 text-subtext1 border border-[#45475a]/50 select-none">
-                User
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowJsonModal(true)}
-                className="text-xs text-subtext0 hover:text-text transition-colors cursor-pointer hover:underline flex items-center gap-1.5"
-              >
-                <Code className="w-3.5 h-3.5" />
-                <span>Edit in settings.json</span>
-              </button>
-            </div>
+
+            {/* Placeholder when no item selected */}
+            {!currentChildItem && (
+              <div className="flex-1 flex flex-col items-center justify-center text-center select-none">
+                <div className="w-12 h-12 mb-4 flex items-center justify-center bg-[#313244]/40 border border-[#313244]/60">
+                  <Code className="w-5 h-5 text-subtext0" />
+                </div>
+                <p className="text-sm text-subtext1 font-medium">Select a setting</p>
+                <p className="text-xs text-subtext0 mt-1 max-w-[260px] leading-relaxed">Choose a category from the sidebar to view and modify its settings.</p>
+              </div>
+            )}
 
             {/* Category Header */}
-            <div className="mb-5 pb-3 border-b border-[#313244]/60">
-              <h2 className="text-base font-semibold text-text">{currentChildItem.title}</h2>
-              <p className="text-[11px] text-subtext0 mt-0.5">{currentChildItem.description}</p>
-            </div>
+            {currentChildItem && (
+              <div className="mb-5 pb-3 border-b border-[#313244]/60">
+                <h2 className="text-base font-semibold text-text">{currentChildItem.title}</h2>
+                <p className="text-[11px] text-subtext0 mt-0.5">{currentChildItem.description}</p>
+              </div>
+            )}
+
 
             {/* VIEW: GENERAL SETTINGS */}
             {currentTabId === 'general-settings' && (
@@ -1592,66 +1531,7 @@ export const PreferencesModal: React.FC = () => {
         </div>
       </div>
 
-      {/* Settings.json Modal */}
-      {showJsonModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-100">
-          <div
-            className="w-full max-w-xl bg-[#181825] border border-[#313244] rounded-xl shadow-2xl p-5 flex flex-col max-h-[85vh] text-text"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-[#313244]">
-              <div className="flex items-center gap-2">
-                <Code className="w-4 h-4 text-subtext0" />
-                <h3 className="text-sm font-bold text-text">settings.json</h3>
-                <span className="text-[10px] px-2 py-0.5 bg-[#11111b] border border-[#313244] text-subtext0 font-mono rounded">
-                  User Settings Snapshot
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowJsonModal(false)}
-                className="p-1 rounded text-subtext0 hover:text-text hover:bg-[#313244]/50 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
 
-            <div className="flex-1 overflow-auto my-4 bg-[#11111b] p-3.5 rounded border border-[#313244]">
-              <pre className="text-xs font-mono text-[#cdd6f4] leading-relaxed whitespace-pre overflow-x-auto">
-                {settingsJsonString}
-              </pre>
-            </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <button
-                type="button"
-                onClick={handleCopyJson}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#313244] hover:bg-[#45475a] text-xs text-text border border-[#45475a] transition-colors cursor-pointer font-medium"
-              >
-                {copiedJson ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 text-subtext0" />
-                    <span>Copy JSON</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowJsonModal(false)}
-                className="px-4 py-1.5 rounded bg-[#313244] hover:bg-[#45475a] text-xs text-text border border-[#45475a] font-medium transition-colors cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Reset Confirmation Dialog */}
       {showResetConfirm && (
