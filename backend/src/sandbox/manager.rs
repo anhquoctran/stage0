@@ -145,6 +145,30 @@ impl SandboxManager {
         adapter.execute_command(&instance, command, args)
     }
 
+    pub fn get_instance(&self, instance_id: &str) -> Option<SandboxInstanceInfo> {
+        let map = self.instances_lock();
+        map.get(instance_id).cloned()
+    }
+
+    pub fn sync_instance(&self, instance_id: &str, repo_path: &str) -> Result<(), String> {
+        let instance = self.get_instance(instance_id).ok_or_else(|| {
+            format!("Sandbox instance not found: {}", instance_id)
+        })?;
+        super::sync::sync_changes_to_sandbox(&instance, repo_path)
+    }
+
+    pub fn dispatch_tool(
+        &self,
+        instance_id: &str,
+        tool_name: &str,
+        arguments: serde_json::Value,
+    ) -> Result<serde_json::Value, String> {
+        let instance = self.get_instance(instance_id).ok_or_else(|| {
+            format!("Sandbox instance not found: {}", instance_id)
+        })?;
+        super::tool_bridge::dispatch_tool_call(self, &instance, tool_name, arguments)
+    }
+
     pub fn cleanup_all(&self) {
         let mut map = self.instances_lock();
         for (_, instance) in map.drain() {

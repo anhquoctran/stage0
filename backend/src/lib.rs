@@ -190,6 +190,11 @@ pub fn run() {
             commands::add_mr_comment,
             commands::resolve_mr_discussion,
             commands::verify_mr_discussion,
+            commands::reanchor_file_discussions,
+            // Sandbox Synchronization & Tool Bridge
+            commands::sync_active_sandbox,
+            commands::get_sandbox_tool_schemas,
+            commands::dispatch_sandbox_tool,
             // Git Binary Management & App Lifecycle
             commands::scan_git_binaries,
             commands::get_active_git_binary,

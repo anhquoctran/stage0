@@ -7,9 +7,11 @@ pub mod conflict;
 pub mod ops;
 pub mod blame;
 pub mod binary;
+pub mod anchor;
 
 pub use blame::{BlameAuthorStat, BlameCommit, BlameLine, FileBlamePayload};
 pub use binary::{GitBinaryInfo, scan_system_git_binaries, test_git_version};
+pub use anchor::{compute_line_hash, extract_line_fingerprint, reanchor_discussions};
 
 use std::path::{Path, PathBuf};
 
