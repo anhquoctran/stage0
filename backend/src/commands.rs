@@ -197,7 +197,9 @@ pub async fn clear_recent_repos(app: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn get_branches(repo_path: String) -> Result<BranchList, String> {
-    list_branches(&repo_path)
+    tauri::async_runtime::spawn_blocking(move || list_branches(&repo_path))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -207,8 +209,12 @@ pub async fn get_mr_diff(
     base: String,
     compare: String,
 ) -> Result<MrDiffPayload, String> {
-    let manager = app.state::<SandboxManager>();
-    manager.get_mr_diff(&repo_path, &base, &compare)
+    tauri::async_runtime::spawn_blocking(move || {
+        let manager = app.state::<SandboxManager>();
+        manager.get_mr_diff(&repo_path, &base, &compare)
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -218,8 +224,12 @@ pub async fn check_merge_conflicts(
     base: String,
     compare: String,
 ) -> Result<ConflictReport, String> {
-    let manager = app.state::<SandboxManager>();
-    manager.check_conflicts(&repo_path, &base, &compare)
+    tauri::async_runtime::spawn_blocking(move || {
+        let manager = app.state::<SandboxManager>();
+        manager.check_conflicts(&repo_path, &base, &compare)
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -230,8 +240,12 @@ pub async fn get_conflicted_file_preview(
     compare: String,
     file_path: String,
 ) -> Result<ConflictFilePreview, String> {
-    let manager = app.state::<SandboxManager>();
-    manager.get_conflict_preview(&repo_path, &base, &compare, &file_path)
+    tauri::async_runtime::spawn_blocking(move || {
+        let manager = app.state::<SandboxManager>();
+        manager.get_conflict_preview(&repo_path, &base, &compare, &file_path)
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -240,14 +254,18 @@ pub async fn run_git_sync(
     operation: String,
     options: Option<GitSyncOptions>,
 ) -> Result<String, String> {
-    git_sync(&repo_path, &operation, options)
+    tauri::async_runtime::spawn_blocking(move || git_sync(&repo_path, &operation, options))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
 pub async fn list_git_remotes(
     repo_path: String,
 ) -> Result<Vec<String>, String> {
-    list_remotes(&repo_path)
+    tauri::async_runtime::spawn_blocking(move || list_remotes(&repo_path))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -255,14 +273,18 @@ pub async fn get_git_remote_url(
     repo_path: String,
     remote: Option<String>,
 ) -> Result<String, String> {
-    get_remote_url(&repo_path, remote.as_deref())
+    tauri::async_runtime::spawn_blocking(move || get_remote_url(&repo_path, remote.as_deref()))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
 pub async fn check_rebase_status(
     repo_path: String,
 ) -> Result<bool, String> {
-    Ok(is_rebase_in_progress(&repo_path))
+    tauri::async_runtime::spawn_blocking(move || Ok(is_rebase_in_progress(&repo_path)))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -272,12 +294,16 @@ pub async fn get_file_blame(
     revision: Option<String>,
     ignore_whitespace: Option<bool>,
 ) -> Result<FileBlamePayload, String> {
-    calc_file_blame(
-        &repo_path,
-        &file_path,
-        revision.as_deref(),
-        ignore_whitespace,
-    )
+    tauri::async_runtime::spawn_blocking(move || {
+        calc_file_blame(
+            &repo_path,
+            &file_path,
+            revision.as_deref(),
+            ignore_whitespace,
+        )
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -285,7 +311,7 @@ pub async fn reveal_file_in_os(
     repo_path: String,
     file_path: String,
 ) -> Result<(), String> {
-    let full_path = std::path::Path::new(&repo_path).join(&file_path);
+    let full_path = crate::git::resolve_safe_repo_path(&repo_path, &file_path)?;
     #[cfg(target_os = "windows")]
     {
         let win_path = full_path.to_string_lossy().replace('/', "\\");
@@ -336,12 +362,15 @@ pub async fn open_repo_in(
     if !path.exists() {
         return Err(format!("Repository path does not exist: {}", repo_path));
     }
+    let canonical_repo = path.canonicalize().map_err(|e| {
+        format!("Invalid repository path '{}': {}", repo_path, e)
+    })?;
 
     match target.as_str() {
         "explorer" => {
             #[cfg(target_os = "windows")]
             {
-                let win_path = repo_path.replace('/', "\\");
+                let win_path = canonical_repo.to_string_lossy().replace('/', "\\");
                 std::process::Command::new("explorer")
                     .arg(&win_path)
                     .spawn()
@@ -351,7 +380,7 @@ pub async fn open_repo_in(
             #[cfg(target_os = "macos")]
             {
                 std::process::Command::new("open")
-                    .arg(&repo_path)
+                    .arg(&canonical_repo)
                     .spawn()
                     .map_err(|e| format!("Failed to open in Finder: {}", e))?;
                 Ok(())
@@ -359,7 +388,7 @@ pub async fn open_repo_in(
             #[cfg(not(any(target_os = "windows", target_os = "macos")))]
             {
                 std::process::Command::new("xdg-open")
-                    .arg(&repo_path)
+                    .arg(&canonical_repo)
                     .spawn()
                     .map_err(|e| format!("Failed to open file manager: {}", e))?;
                 Ok(())
@@ -368,44 +397,49 @@ pub async fn open_repo_in(
         "vscode" => {
             #[cfg(target_os = "windows")]
             {
-                let win_path = repo_path.replace('/', "\\");
-                let res = std::process::Command::new("cmd")
-                    .args(&["/c", "code", &win_path])
-                    .spawn();
+                let win_path = canonical_repo.to_string_lossy().replace('/', "\\");
+                let mut launched = false;
 
-                if res.is_err() {
-                    let mut found = false;
-                    let local_appdata = std::env::var("LOCALAPPDATA").ok();
-                    let prog_files = std::env::var("PROGRAMFILES").ok();
+                let mut candidates = Vec::new();
+                if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
+                    candidates.push(std::path::PathBuf::from(local_appdata).join("Programs\\Microsoft VS Code\\Code.exe"));
+                }
+                if let Ok(prog_files) = std::env::var("PROGRAMFILES") {
+                    candidates.push(std::path::PathBuf::from(prog_files).join("Microsoft VS Code\\Code.exe"));
+                }
+                if let Ok(prog_x86) = std::env::var("ProgramFiles(x86)") {
+                    candidates.push(std::path::PathBuf::from(prog_x86).join("Microsoft VS Code\\Code.exe"));
+                }
 
-                    let candidates = [
-                        local_appdata.as_ref().map(|p| std::path::PathBuf::from(p).join("Programs\\Microsoft VS Code\\Code.exe")),
-                        prog_files.as_ref().map(|p| std::path::PathBuf::from(p).join("Microsoft VS Code\\Code.exe")),
-                    ];
-
-                    for cand in candidates.into_iter().flatten() {
-                        if cand.exists() {
-                            if std::process::Command::new(&cand).arg(&win_path).spawn().is_ok() {
-                                found = true;
-                                break;
-                            }
-                        }
+                for cand in candidates {
+                    if cand.exists() && std::process::Command::new(&cand).arg(&win_path).spawn().is_ok() {
+                        launched = true;
+                        break;
                     }
+                }
 
-                    if !found {
-                        return Err("Failed to launch Visual Studio Code. Please ensure 'code' command is in your PATH or VS Code is installed.".to_string());
-                    }
+                if !launched && std::process::Command::new("code.cmd").arg(&win_path).spawn().is_ok() {
+                    launched = true;
+                }
+
+                if !launched && std::process::Command::new("code").arg(&win_path).spawn().is_ok() {
+                    launched = true;
+                }
+
+                if !launched {
+                    return Err("Failed to launch Visual Studio Code. Please ensure 'code' command is in your PATH or VS Code is installed.".to_string());
                 }
                 Ok(())
             }
             #[cfg(target_os = "macos")]
             {
                 let res = std::process::Command::new("code")
-                    .arg(&repo_path)
+                    .arg(&canonical_repo)
                     .spawn();
                 if res.is_err() {
                     std::process::Command::new("open")
-                        .args(&["-a", "Visual Studio Code", &repo_path])
+                        .args(&["-a", "Visual Studio Code"])
+                        .arg(&canonical_repo)
                         .spawn()
                         .map_err(|e| format!("Failed to open VS Code: {}", e))?;
                 }
@@ -414,7 +448,7 @@ pub async fn open_repo_in(
             #[cfg(not(any(target_os = "windows", target_os = "macos")))]
             {
                 std::process::Command::new("code")
-                    .arg(&repo_path)
+                    .arg(&canonical_repo)
                     .spawn()
                     .map_err(|e| format!("Failed to open VS Code: {}", e))?;
                 Ok(())
@@ -423,45 +457,26 @@ pub async fn open_repo_in(
         "terminal" => {
             #[cfg(target_os = "windows")]
             {
-                let win_path = repo_path.replace('/', "\\");
+                let win_path = canonical_repo.to_string_lossy().replace('/', "\\");
                 let mut launched = false;
 
-                // 1. Try Windows Terminal via wt.exe in LOCALAPPDATA
+                // 1. Try Windows Terminal directly via wt.exe in LOCALAPPDATA
                 if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
                     let wt_path = std::path::PathBuf::from(local_appdata).join("Microsoft\\WindowsApps\\wt.exe");
-                    if wt_path.exists() {
-                        if std::process::Command::new("cmd")
-                            .args(&["/c", "start", "", wt_path.to_str().unwrap(), "-d", &win_path])
-                            .spawn()
-                            .is_ok()
-                        {
-                            launched = true;
-                        }
-                    }
-                }
-
-                // 2. Try wt command directly
-                if !launched {
-                    if std::process::Command::new("cmd")
-                        .args(&["/c", "start", "wt", "-d", &win_path])
-                        .spawn()
-                        .is_ok()
-                    {
+                    if wt_path.exists() && std::process::Command::new(&wt_path).args(["-d", &win_path]).spawn().is_ok() {
                         launched = true;
                     }
                 }
 
-                // 3. Fallback to PowerShell in the repo directory
+                // 2. Try wt command directly
+                if !launched && std::process::Command::new("wt.exe").args(["-d", &win_path]).spawn().is_ok() {
+                    launched = true;
+                }
+
+                // 3. Fallback: PowerShell directly with separate args (no cmd.exe wrapper, no string interpolation)
                 if !launched {
-                    std::process::Command::new("cmd")
-                        .args(&[
-                            "/c",
-                            "start",
-                            "powershell",
-                            "-NoExit",
-                            "-Command",
-                            &format!("Set-Location -LiteralPath '{}'", win_path.replace('\'', "''")),
-                        ])
+                    std::process::Command::new("powershell.exe")
+                        .args(["-NoExit", "-Command", "Set-Location", "-LiteralPath", &win_path])
                         .spawn()
                         .map_err(|e| format!("Failed to launch terminal: {}", e))?;
                 }
@@ -470,7 +485,8 @@ pub async fn open_repo_in(
             #[cfg(target_os = "macos")]
             {
                 std::process::Command::new("open")
-                    .args(&["-a", "Terminal", &repo_path])
+                    .args(&["-a", "Terminal"])
+                    .arg(&canonical_repo)
                     .spawn()
                     .map_err(|e| format!("Failed to open Terminal: {}", e))?;
                 Ok(())
@@ -481,7 +497,7 @@ pub async fn open_repo_in(
                 let mut launched = false;
                 for term in terminals {
                     if std::process::Command::new(term)
-                        .current_dir(&repo_path)
+                        .current_dir(&canonical_repo)
                         .spawn()
                         .is_ok()
                     {
@@ -505,7 +521,7 @@ pub async fn open_file_in_editor(
     file_path: String,
     line_number: Option<i64>,
 ) -> Result<(), String> {
-    let full_path = std::path::Path::new(&repo_path).join(&file_path);
+    let full_path = crate::git::resolve_safe_repo_path(&repo_path, &file_path)?;
     #[cfg(target_os = "windows")]
     {
         let win_path = full_path.to_string_lossy().to_string().replace('/', "\\");
@@ -514,32 +530,35 @@ pub async fn open_file_in_editor(
             None => win_path,
         };
 
-        let res = std::process::Command::new("cmd")
-            .args(&["/c", "code", "-g", &target_str])
-            .spawn();
+        let mut launched = false;
+        let mut candidates = Vec::new();
+        if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
+            candidates.push(std::path::PathBuf::from(local_appdata).join("Programs\\Microsoft VS Code\\Code.exe"));
+        }
+        if let Ok(prog_files) = std::env::var("PROGRAMFILES") {
+            candidates.push(std::path::PathBuf::from(prog_files).join("Microsoft VS Code\\Code.exe"));
+        }
+        if let Ok(prog_x86) = std::env::var("ProgramFiles(x86)") {
+            candidates.push(std::path::PathBuf::from(prog_x86).join("Microsoft VS Code\\Code.exe"));
+        }
 
-        if res.is_err() {
-            let mut found = false;
-            let local_appdata = std::env::var("LOCALAPPDATA").ok();
-            let prog_files = std::env::var("PROGRAMFILES").ok();
-
-            let candidates = [
-                local_appdata.as_ref().map(|p| std::path::PathBuf::from(p).join("Programs\\Microsoft VS Code\\Code.exe")),
-                prog_files.as_ref().map(|p| std::path::PathBuf::from(p).join("Microsoft VS Code\\Code.exe")),
-            ];
-
-            for cand in candidates.into_iter().flatten() {
-                if cand.exists() {
-                    if std::process::Command::new(&cand).arg("-g").arg(&target_str).spawn().is_ok() {
-                        found = true;
-                        break;
-                    }
-                }
+        for cand in candidates {
+            if cand.exists() && std::process::Command::new(&cand).arg("-g").arg(&target_str).spawn().is_ok() {
+                launched = true;
+                break;
             }
+        }
 
-            if !found {
-                return Err("Failed to launch Visual Studio Code. Please ensure 'code' command is in your PATH.".to_string());
-            }
+        if !launched && std::process::Command::new("code.cmd").arg("-g").arg(&target_str).spawn().is_ok() {
+            launched = true;
+        }
+
+        if !launched && std::process::Command::new("code").arg("-g").arg(&target_str).spawn().is_ok() {
+            launched = true;
+        }
+
+        if !launched {
+            return Err("Failed to launch Visual Studio Code. Please ensure 'code' command is in your PATH.".to_string());
         }
         Ok(())
     }
@@ -711,6 +730,37 @@ pub fn get_keyring_info() -> crate::credentials::OsKeyringInfo {
     crate::credentials::get_os_keyring_info()
 }
 
+#[tauri::command]
+pub async fn store_ai_api_key(provider: String, api_key: String) -> Result<(), String> {
+    let p = provider.trim();
+    let k = api_key.trim();
+    if p.is_empty() {
+        return Err("AI provider cannot be empty".to_string());
+    }
+    if k.is_empty() {
+        return crate::credentials::delete_ai_key(p);
+    }
+    crate::credentials::store_ai_key(p, k)
+}
+
+#[tauri::command]
+pub async fn get_ai_api_key(provider: String) -> Result<Option<String>, String> {
+    let p = provider.trim();
+    if p.is_empty() {
+        return Ok(None);
+    }
+    crate::credentials::retrieve_ai_key(p)
+}
+
+#[tauri::command]
+pub async fn delete_ai_api_key(provider: String) -> Result<(), String> {
+    let p = provider.trim();
+    if p.is_empty() {
+        return Ok(());
+    }
+    crate::credentials::delete_ai_key(p)
+}
+
 // ---------------------------------------------------------------------------
 // Sandbox Adapter Management Commands
 // ---------------------------------------------------------------------------
@@ -776,8 +826,12 @@ pub async fn execute_sandbox_command(
     command: String,
     args: Vec<String>,
 ) -> Result<SandboxExecutionResult, String> {
-    let manager = app.state::<SandboxManager>();
-    manager.execute_command(&instance_id, &command, &args)
+    tauri::async_runtime::spawn_blocking(move || {
+        let manager = app.state::<SandboxManager>();
+        manager.execute_command(&instance_id, &command, &args)
+    })
+    .await
+    .map_err(|e| format!("Sandbox task join error: {}", e))?
 }
 
 #[tauri::command]
@@ -797,68 +851,72 @@ pub async fn clone_repository(
     url: String,
     target_path: String,
 ) -> Result<RepoInfo, String> {
-    let trimmed_url = url.trim();
-    if trimmed_url.is_empty() {
-        return Err("Repository URL cannot be empty".to_string());
-    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let trimmed_url = url.trim();
+        if trimmed_url.is_empty() {
+            return Err("Repository URL cannot be empty".to_string());
+        }
 
-    let trimmed_target = target_path.trim();
-    if trimmed_target.is_empty() {
-        return Err("Destination path cannot be empty".to_string());
-    }
+        let trimmed_target = target_path.trim();
+        if trimmed_target.is_empty() {
+            return Err("Destination path cannot be empty".to_string());
+        }
 
-    let dest = Path::new(trimmed_target);
-    if dest.exists() {
-        if let Ok(entries) = std::fs::read_dir(dest) {
-            if entries.count() > 0 {
-                return Err(format!(
-                    "Destination directory '{}' already exists and is not empty",
-                    trimmed_target
-                ));
+        let dest = Path::new(trimmed_target);
+        if dest.exists() {
+            if let Ok(entries) = std::fs::read_dir(dest) {
+                if entries.count() > 0 {
+                    return Err(format!(
+                        "Destination directory '{}' already exists and is not empty",
+                        trimmed_target
+                    ));
+                }
+            }
+        } else if let Some(parent) = dest.parent() {
+            if !parent.exists() {
+                let _ = std::fs::create_dir_all(parent);
             }
         }
-    } else if let Some(parent) = dest.parent() {
-        if !parent.exists() {
-            let _ = std::fs::create_dir_all(parent);
+
+        let git_bin = crate::git::runner::get_active_git_path();
+        let mut cmd = std::process::Command::new(&git_bin);
+        cmd.args(&["clone", trimmed_url, trimmed_target]);
+
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            const CREATE_NO_WINDOW: u32 = 0x08000000;
+            cmd.creation_flags(CREATE_NO_WINDOW);
         }
-    }
 
-    let git_bin = crate::git::runner::get_active_git_path();
-    let mut cmd = std::process::Command::new(&git_bin);
-    cmd.args(&["clone", trimmed_url, trimmed_target]);
+        let output = cmd
+            .output()
+            .map_err(|e| format!("Failed to execute git clone: {}", e))?;
 
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-        cmd.creation_flags(CREATE_NO_WINDOW);
-    }
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            let err_msg = if !stderr.trim().is_empty() {
+                stderr
+            } else if !stdout.trim().is_empty() {
+                stdout
+            } else {
+                "Git clone command failed with unknown error".to_string()
+            };
+            return Err(err_msg.trim().to_string());
+        }
 
-    let output = cmd
-        .output()
-        .map_err(|e| format!("Failed to execute git clone: {}", e))?;
+        if !dest.join(".git").exists() {
+            return Err("Cloned directory is missing .git metadata".to_string());
+        }
 
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-        let err_msg = if !stderr.trim().is_empty() {
-            stderr
-        } else if !stdout.trim().is_empty() {
-            stdout
-        } else {
-            "Git clone command failed with unknown error".to_string()
-        };
-        return Err(err_msg.trim().to_string());
-    }
-
-    if !dest.join(".git").exists() {
-        return Err("Cloned directory is missing .git metadata".to_string());
-    }
-
-    let (canonical_path, _, name) = resolve_repository(trimmed_target)?;
-    let db = app.state::<Database>();
-    db.upsert_repository("", &name, &canonical_path.to_string_lossy())
-        .map_err(|e| format!("Failed to save repository to database: {}", e))
+        let (canonical_path, _, name) = resolve_repository(trimmed_target)?;
+        let db = app.state::<Database>();
+        db.upsert_repository("", &name, &canonical_path.to_string_lossy())
+            .map_err(|e| format!("Failed to save repository to database: {}", e))
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 // ===========================================================================

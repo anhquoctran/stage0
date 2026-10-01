@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 import { AiConfig, McpServerConfig, McpConfigFileFormat } from '../types/ai';
 import {
   DEFAULT_AI_CONFIG,
@@ -18,6 +19,7 @@ interface AiMcpState {
   updateAiConfig: (partial: Partial<AiConfig>) => void;
   resetAiConfig: () => void;
   setProvider: (providerId: AiConfig['provider']) => void;
+  loadApiKeyForProvider: (providerId: AiConfig['provider']) => Promise<void>;
   testAiConnection: () => Promise<{ success: boolean; message: string }>;
   clearAiTestResult: () => void;
 
@@ -42,8 +44,29 @@ function loadPersistedState(): { aiConfig: AiConfig; mcpServers: McpServerConfig
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
+      const legacyKey = parsed.aiConfig?.apiKey;
+      const loadedAiConfig: AiConfig = {
+        ...DEFAULT_AI_CONFIG,
+        ...(parsed.aiConfig || {}),
+        apiKey: '', // Never trust or retain plaintext apiKey from localStorage
+      };
+
+      // Securely migrate any legacy plaintext key found in localStorage into the OS Keyring
+      if (typeof legacyKey === 'string' && legacyKey.trim().length > 0 && isTauri()) {
+        const providerToMigrate = loadedAiConfig.provider || 'anthropic';
+        void invoke('store_ai_api_key', {
+          provider: providerToMigrate,
+          apiKey: legacyKey.trim(),
+        }).then(() => {
+          // Immediately wipe plaintext secret from localStorage
+          persistState(loadedAiConfig, Array.isArray(parsed.mcpServers) ? parsed.mcpServers : DEFAULT_MCP_SERVERS);
+        }).catch((err) => {
+          console.warn('Failed to migrate legacy API key to OS Keyring:', err);
+        });
+      }
+
       return {
-        aiConfig: { ...DEFAULT_AI_CONFIG, ...(parsed.aiConfig || {}) },
+        aiConfig: loadedAiConfig,
         mcpServers: Array.isArray(parsed.mcpServers) ? parsed.mcpServers : DEFAULT_MCP_SERVERS,
       };
     }
@@ -57,7 +80,9 @@ function loadPersistedState(): { aiConfig: AiConfig; mcpServers: McpServerConfig
 function persistState(aiConfig: AiConfig, mcpServers: McpServerConfig[]) {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ aiConfig, mcpServers }));
+    // Strip apiKey before saving to localStorage to prevent plaintext secret leakage
+    const sanitizedAiConfig: AiConfig = { ...aiConfig, apiKey: '' };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ aiConfig: sanitizedAiConfig, mcpServers }));
   } catch (err) {
     console.error('Failed to save AI & MCP settings:', err);
   }
@@ -78,11 +103,39 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     const nextConfig = { ...get().aiConfig, ...partial };
     set({ aiConfig: nextConfig, aiTestResult: null });
     persistState(nextConfig, get().mcpServers);
+
+    // If an API key is updated, persist it to the secure OS Keyring
+    if (partial.apiKey !== undefined && isTauri()) {
+      void invoke('store_ai_api_key', {
+        provider: nextConfig.provider,
+        apiKey: partial.apiKey,
+      }).catch((err) => {
+        console.error('Failed to store API key in OS Keyring:', err);
+      });
+    }
   },
 
   resetAiConfig: () => {
+    const currentProvider = get().aiConfig.provider;
     set({ aiConfig: DEFAULT_AI_CONFIG, aiTestResult: null });
     persistState(DEFAULT_AI_CONFIG, get().mcpServers);
+    if (isTauri()) {
+      void invoke('delete_ai_api_key', { provider: currentProvider }).catch(() => {});
+    }
+  },
+
+  loadApiKeyForProvider: async (providerId) => {
+    if (!isTauri()) return;
+    try {
+      const secureKey = await invoke<string | null>('get_ai_api_key', { provider: providerId });
+      if (get().aiConfig.provider === providerId) {
+        set((state) => ({
+          aiConfig: { ...state.aiConfig, apiKey: secureKey || '' },
+        }));
+      }
+    } catch (err) {
+      console.warn(`Failed to retrieve API key for ${providerId} from OS Keyring:`, err);
+    }
   },
 
   setProvider: (providerId) => {
@@ -94,9 +147,13 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       provider: providerId,
       baseUrl: providerPreset.defaultBaseUrl,
       model: providerPreset.defaultModel,
+      apiKey: '', // Temporarily clear while loading from OS Keyring
     };
     set({ aiConfig: nextConfig, aiTestResult: null });
     persistState(nextConfig, get().mcpServers);
+
+    // Asynchronously load the key for this newly selected provider from the OS Keyring
+    void get().loadApiKeyForProvider(providerId);
   },
 
   testAiConnection: async () => {
@@ -350,3 +407,8 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     return JSON.stringify(exportObj, null, 2);
   },
 }));
+
+if (typeof window !== 'undefined' && isTauri()) {
+  void useAiMcpStore.getState().loadApiKeyForProvider(initialState.aiConfig.provider);
+}
+

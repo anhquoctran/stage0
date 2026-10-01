@@ -464,6 +464,7 @@ pub fn destroy_window(app: &AppHandle, label: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[cfg(unix)]
     #[test]

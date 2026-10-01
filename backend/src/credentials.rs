@@ -129,3 +129,31 @@ pub fn exists_in_keyring(token_ref: &str) -> bool {
         Err(_) => false,
     }
 }
+
+pub const AI_KEYRING_SERVICE: &str = "stage0.ai.credentials";
+
+pub fn store_ai_key(provider: &str, api_key: &str) -> Result<(), String> {
+    let entry = keyring::Entry::new(AI_KEYRING_SERVICE, provider)
+        .map_err(|e| map_keyring_error("initialize AI secret", e))?;
+    entry
+        .set_password(api_key)
+        .map_err(|e| map_keyring_error("store AI secret", e))?;
+    Ok(())
+}
+
+pub fn retrieve_ai_key(provider: &str) -> Result<Option<String>, String> {
+    let entry = keyring::Entry::new(AI_KEYRING_SERVICE, provider)
+        .map_err(|e| map_keyring_error("initialize AI secret", e))?;
+    match entry.get_password() {
+        Ok(p) => Ok(Some(p)),
+        Err(keyring::Error::NoEntry) => Ok(None),
+        Err(e) => Err(map_keyring_error("retrieve AI secret", e)),
+    }
+}
+
+pub fn delete_ai_key(provider: &str) -> Result<(), String> {
+    let entry = keyring::Entry::new(AI_KEYRING_SERVICE, provider)
+        .map_err(|e| map_keyring_error("initialize AI secret", e))?;
+    let _ = entry.delete_credential();
+    Ok(())
+}

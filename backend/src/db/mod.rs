@@ -106,13 +106,18 @@ impl Database {
         Ok(Database(Mutex::new(conn)))
     }
 
+    #[inline]
+    fn conn(&self) -> std::sync::MutexGuard<'_, Connection> {
+        self.0.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
     pub fn upsert_repository(
         &self,
         id: &str,
         name: &str,
         local_path: &str,
     ) -> Result<RepoInfo, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let id = if id.is_empty() {
             uuid::Uuid::new_v4().to_string()
         } else {
@@ -140,7 +145,7 @@ impl Database {
     }
 
     pub fn get_recent_repositories(&self) -> Result<Vec<RepoInfo>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT id, name, local_path FROM repositories ORDER BY last_opened_at DESC LIMIT 20;",
         )?;
@@ -162,14 +167,14 @@ impl Database {
     }
 
     pub fn delete_repository(&self, id: &str) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached("DELETE FROM repositories WHERE id = ?1;")?;
         stmt.execute(params![id])?;
         Ok(())
     }
 
     pub fn clear_all_repositories(&self) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         conn.execute("DELETE FROM repositories;", [])?;
         Ok(())
     }
@@ -184,7 +189,7 @@ impl Database {
         token_type: &str,
         label: Option<&str>,
     ) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "INSERT INTO git_credentials (id, provider, server_url, account_name, token_ref, token_type, label, created_at, updated_at)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);",
@@ -194,7 +199,7 @@ impl Database {
     }
 
     pub fn get_all_git_credentials(&self) -> Result<Vec<crate::credentials::GitCredentialMeta>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT id, provider, server_url, account_name, token_ref, token_type, label, created_at, updated_at
              FROM git_credentials
@@ -226,7 +231,7 @@ impl Database {
     }
 
     pub fn delete_git_credential(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let token_ref: Option<String> = conn
             .query_row(
                 "SELECT token_ref FROM git_credentials WHERE id = ?1;",
@@ -243,7 +248,7 @@ impl Database {
     }
 
     pub fn get_git_credential_token_ref(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let token_ref: Option<String> = conn
             .query_row(
                 "SELECT token_ref FROM git_credentials WHERE id = ?1;",
@@ -259,7 +264,7 @@ impl Database {
     // =======================================================================
 
     pub fn get_repo_settings(&self, repo_id: &str) -> Result<Option<RepoSettingsDb>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT repo_id, default_base_branch, inherit_global_agents, custom_agent_rules
              FROM repo_settings WHERE repo_id = ?1;",
@@ -279,7 +284,7 @@ impl Database {
     }
 
     pub fn save_repo_settings(&self, s: &RepoSettingsDb) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "INSERT INTO repo_settings (repo_id, default_base_branch, inherit_global_agents, custom_agent_rules, updated_at)
              VALUES (?1, ?2, ?3, ?4, CURRENT_TIMESTAMP)
@@ -294,7 +299,7 @@ impl Database {
     }
 
     pub fn list_repo_labels(&self, repo_id: &str) -> Result<Vec<RepoLabelDb>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT id, repo_id, name, color, description FROM repo_labels WHERE repo_id = ?1 ORDER BY name ASC;",
         )?;
@@ -317,7 +322,7 @@ impl Database {
     }
 
     pub fn create_repo_label(&self, l: &RepoLabelDb) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "INSERT INTO repo_labels (id, repo_id, name, color, description, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5, CURRENT_TIMESTAMP)
@@ -330,7 +335,7 @@ impl Database {
     }
 
     pub fn update_repo_label(&self, l: &RepoLabelDb) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "UPDATE repo_labels SET name = ?1, color = ?2, description = ?3 WHERE id = ?4;",
         )?;
@@ -339,7 +344,7 @@ impl Database {
     }
 
     pub fn delete_repo_label(&self, id: &str) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached("DELETE FROM repo_labels WHERE id = ?1;")?;
         stmt.execute(params![id])?;
         Ok(())
@@ -350,7 +355,7 @@ impl Database {
     // =======================================================================
 
     pub fn list_virtual_mr_sessions(&self, repo_id: &str) -> Result<Vec<VirtualMrSessionDb>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
 
         // 1. Single batch query for all attached label mappings of sessions in this repo (eliminates N+1)
         let mut label_map: HashMap<String, Vec<String>> = HashMap::new();
@@ -425,7 +430,7 @@ impl Database {
     }
 
     pub fn save_virtual_mr_session(&self, s: &VirtualMrSessionDb) -> Result<(), rusqlite::Error> {
-        let mut conn = self.0.lock().unwrap();
+        let mut conn = self.conn();
         let tx = conn.transaction()?;
 
         // Atomic session upsert within transaction
@@ -467,7 +472,7 @@ impl Database {
     }
 
     pub fn delete_virtual_mr_session(&self, session_id: &str) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached("DELETE FROM virtual_mr_sessions WHERE id = ?1;")?;
         stmt.execute(params![session_id])?;
         Ok(())
@@ -478,7 +483,7 @@ impl Database {
     // =======================================================================
 
     pub fn list_discussions(&self, session_id: &str) -> Result<Vec<VirtualMrDiscussionDb>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
 
         // 1. Single batch query for all comments belonging to discussions in this session (eliminates N+1)
         let mut comments_map: HashMap<String, Vec<VirtualMrCommentDb>> = HashMap::new();
@@ -570,7 +575,7 @@ impl Database {
         d: &VirtualMrDiscussionDb,
         first_comment: &VirtualMrCommentDb,
     ) -> Result<(), rusqlite::Error> {
-        let mut conn = self.0.lock().unwrap();
+        let mut conn = self.conn();
         let tx = conn.transaction()?;
 
         tx.execute(
@@ -600,7 +605,7 @@ impl Database {
     }
 
     pub fn add_comment(&self, c: &VirtualMrCommentDb) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "INSERT INTO virtual_mr_comments (
                 id, discussion_id, author_type, author_id, author_name, author_avatar, body, review_action, created_at, updated_at
@@ -620,7 +625,7 @@ impl Database {
         resolve_type: &str,
         resolved_by: Option<&str>,
     ) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         if is_resolved {
             let mut stmt = conn.prepare_cached(
                 "UPDATE virtual_mr_discussions SET is_resolved = 1, resolve_type = ?1, resolved_by = ?2, resolved_at = CURRENT_TIMESTAMP WHERE id = ?3;",
@@ -642,7 +647,7 @@ impl Database {
         verified_by_bot: &str,
         pass: bool,
     ) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         if pass {
             let mut stmt = conn.prepare_cached(
                 "UPDATE virtual_mr_discussions SET
@@ -670,7 +675,7 @@ impl Database {
     }
 
     pub fn get_setting(&self, key: &str) -> Result<Option<String>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached("SELECT value FROM app_settings WHERE key = ?1;")?;
         let mut rows = stmt.query(params![key])?;
         if let Some(row) = rows.next()? {
@@ -681,7 +686,7 @@ impl Database {
     }
 
     pub fn set_setting(&self, key: &str, value: &str) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         conn.execute(
             "INSERT INTO app_settings (key, value, updated_at) VALUES (?1, ?2, CURRENT_TIMESTAMP)
              ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP;",
