@@ -215,6 +215,7 @@ pub fn run() {
             commands::validate_custom_git_binary,
             commands::pick_git_executable,
             commands::restart_app,
+            commands::get_app_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

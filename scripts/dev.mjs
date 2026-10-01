@@ -13,6 +13,7 @@ import os from 'os';
 import net from 'net';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { syncAllMetadata } from './generate-about-info.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,10 +62,17 @@ ${BOLD}Supported Platforms:${RESET}
   process.exit(0);
 }
 
-// OS Banner
+// OS Banner & Sync Metadata
+const releaseInfo = syncAllMetadata({ arch: ARCH });
+
 console.log(`\n${CYAN}======================================================${RESET}`);
 console.log(`${BOLD}${MAGENTA}  ✦ Stage0 Virtual MR Sandbox - Dev Hot Reload${RESET}`);
 console.log(`${CYAN}======================================================${RESET}`);
+console.log(`${DIM}App Name    :${RESET} ${BOLD}${releaseInfo.name}${RESET}`);
+console.log(`${DIM}Author      :${RESET} ${BOLD}${releaseInfo.author}${RESET}`);
+console.log(`${DIM}Version     :${RESET} ${BOLD}${CYAN}${releaseInfo.version}${RESET}`);
+console.log(`${DIM}Release Date:${RESET} ${BOLD}${YELLOW}${releaseInfo.releaseDate}${RESET}`);
+console.log(`${DIM}Copyright   :${RESET} ${DIM}${releaseInfo.copyright}${RESET}`);
 console.log(`${DIM}OS Platform :${RESET} ${BOLD}${PLATFORM}${RESET} (${ARCH})`);
 console.log(`${DIM}Node Version:${RESET} ${process.version}`);
 console.log(`${DIM}Workspace   :${RESET} ${ROOT_DIR}`);

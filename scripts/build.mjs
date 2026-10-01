@@ -19,6 +19,7 @@ import path from 'path';
 import crypto from 'crypto';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import { syncAllMetadata } from './generate-about-info.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -68,9 +69,16 @@ ${BOLD}Output Artifacts:${RESET}
   process.exit(0);
 }
 
+const releaseInfo = syncAllMetadata({ arch: ARCH });
+
 console.log(`\n${CYAN}======================================================${RESET}`);
 console.log(`${BOLD}${MAGENTA}  ✦ Stage0 Virtual MR Sandbox - Production Build${RESET}`);
 console.log(`${CYAN}======================================================${RESET}`);
+console.log(`${DIM}App Name    :${RESET} ${BOLD}${releaseInfo.name}${RESET}`);
+console.log(`${DIM}Author      :${RESET} ${BOLD}${releaseInfo.author}${RESET}`);
+console.log(`${DIM}Version     :${RESET} ${BOLD}${CYAN}${releaseInfo.version}${RESET}`);
+console.log(`${DIM}Release Date:${RESET} ${BOLD}${YELLOW}${releaseInfo.releaseDate}${RESET}`);
+console.log(`${DIM}Copyright   :${RESET} ${DIM}${releaseInfo.copyright}${RESET}`);
 console.log(`${DIM}Target OS   :${RESET} ${BOLD}${PLATFORM}${RESET} (${ARCH})`);
 console.log(`${DIM}Node Version:${RESET} ${process.version}`);
 console.log(`${DIM}Build Mode  :${RESET} ${isWebOnly ? `${GREEN}Web Static Distribution${RESET}` : `${CYAN}Full Desktop Native Release${RESET}`}`);
