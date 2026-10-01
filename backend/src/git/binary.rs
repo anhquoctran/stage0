@@ -169,15 +169,37 @@ pub fn scan_system_git_binaries(active_path: Option<&str>, active_id: Option<&st
         }
     }
 
-    // 4. Bundled Git check
+    // 4. Bundled Git check (both working directory and next to current_exe)
+    let mut bundled_candidates = Vec::new();
     if let Ok(current_dir) = std::env::current_dir() {
         #[cfg(windows)]
-        let bundled_path = current_dir.join("resources\\git\\cmd\\git.exe");
+        bundled_candidates.push(current_dir.join("resources\\git\\cmd\\git.exe"));
         #[cfg(not(windows))]
-        let bundled_path = current_dir.join("resources/git/bin/git");
+        bundled_candidates.push(current_dir.join("resources/git/bin/git"));
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(exe_dir) = exe.parent() {
+            #[cfg(windows)]
+            {
+                bundled_candidates.push(exe_dir.join("resources\\git\\cmd\\git.exe"));
+                bundled_candidates.push(exe_dir.join("git\\cmd\\git.exe"));
+            }
+            #[cfg(target_os = "macos")]
+            {
+                bundled_candidates.push(exe_dir.join("../Resources/git/bin/git"));
+                bundled_candidates.push(exe_dir.join("resources/git/bin/git"));
+            }
+            #[cfg(all(not(windows), not(target_os = "macos")))]
+            {
+                bundled_candidates.push(exe_dir.join("resources/git/bin/git"));
+                bundled_candidates.push(exe_dir.join("../lib/stage0/git/bin/git"));
+            }
+        }
+    }
 
-        if bundled_path.exists() {
-            candidates.push((bundled_path.to_string_lossy().to_string(), "bundled".to_string()));
+    for bp in bundled_candidates {
+        if bp.exists() {
+            candidates.push((bp.to_string_lossy().to_string(), "bundled".to_string()));
         }
     }
 
@@ -197,7 +219,7 @@ pub fn scan_system_git_binaries(active_path: Option<&str>, active_id: Option<&st
         let norm_key = if raw_path == "git" {
             "git".to_string()
         } else {
-            match std::fs::canonicalize(&raw_path) {
+            match dunce::canonicalize(&raw_path) {
                 Ok(c) => c.to_string_lossy().to_lowercase(),
                 Err(_) => raw_path.to_lowercase(),
             }

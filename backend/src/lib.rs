@@ -70,6 +70,10 @@ pub fn run() {
             if let Some(window) = app.get_webview_window("main") {
                 app.state::<WindowManagerState>().register_welcome_window("main", true);
                 #[cfg(target_os = "macos")]
+                {
+                    let _ = window.set_decorations(true);
+                }
+                #[cfg(target_os = "macos")]
                 let min_size = tauri::LogicalSize {
                     width: 640.0,
                     height: 500.0,

@@ -823,7 +823,8 @@ pub async fn clone_repository(
         }
     }
 
-    let mut cmd = std::process::Command::new("git");
+    let git_bin = crate::git::runner::get_active_git_path();
+    let mut cmd = std::process::Command::new(&git_bin);
     cmd.args(&["clone", trimmed_url, trimmed_target]);
 
     #[cfg(windows)]
@@ -1164,9 +1165,28 @@ pub async fn pick_git_executable(app: AppHandle) -> Result<Option<String>, Strin
 
 #[tauri::command]
 pub async fn restart_app(app: AppHandle) -> Result<(), String> {
-    if let Ok(exe) = std::env::current_exe() {
-        let _ = std::process::Command::new(exe).spawn();
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(exe) = std::env::current_exe() {
+            let path_str = exe.to_string_lossy();
+            if let Some(app_idx) = path_str.find(".app/Contents/MacOS") {
+                let bundle_path = &path_str[..app_idx + 4];
+                let _ = std::process::Command::new("open")
+                    .args(&["-n", bundle_path])
+                    .spawn();
+            } else {
+                let _ = std::process::Command::new(exe).spawn();
+            }
+        }
     }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        if let Ok(exe) = std::env::current_exe() {
+            let _ = std::process::Command::new(exe).spawn();
+        }
+    }
+
     app.exit(0);
     Ok(())
 }

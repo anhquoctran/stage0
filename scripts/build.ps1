@@ -74,7 +74,9 @@ Write-Host "[4/4] Compiling release binary and packaging Windows installers (.ex
 Write-Host "      Optimizations: LTO=true, Opt-level=3, Strip=true, Codegen-units=1" -ForegroundColor DarkGray
 Write-Host ""
 
-$env:RUSTFLAGS = "-C target-cpu=native"
+if (-not $env:RUSTFLAGS) {
+    # Keep standard target CPU architecture compatibility
+}
 npx tauri build
 
 if ($LASTEXITCODE -ne 0) {
