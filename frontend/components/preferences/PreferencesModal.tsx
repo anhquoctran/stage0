@@ -274,19 +274,17 @@ const ZedSwitch: React.FC<ZedSwitchProps> = ({ checked, onChange, disabled, id }
       aria-checked={checked}
       disabled={disabled}
       onClick={() => !disabled && onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
-        disabled
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${disabled
           ? 'opacity-40 cursor-not-allowed bg-[#313244]'
           : checked
-          ? 'bg-[#cba6f7]'
-          : 'bg-[#313244]'
-      }`}
+            ? 'bg-[#cba6f7]'
+            : 'bg-[#313244]'
+        }`}
     >
       <span
         aria-hidden="true"
-        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-[#11111b] shadow-xs ring-0 transition duration-200 ease-in-out ${
-          checked ? 'translate-x-4.5 bg-[#11111b]' : 'translate-x-0.5 bg-[#a6adc8]'
-        }`}
+        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-[#11111b] shadow-xs ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-4.5 bg-[#11111b]' : 'translate-x-0.5 bg-[#a6adc8]'
+          }`}
       />
     </button>
   );
@@ -308,9 +306,8 @@ const SettingRow: React.FC<SettingRowProps> = ({
 }) => {
   return (
     <div
-      className={`py-3 flex items-center justify-between gap-6 ${
-        borderBottom ? 'border-b border-[#313244]/40' : ''
-      }`}
+      className={`py-3 flex items-center justify-between gap-6 ${borderBottom ? 'border-b border-[#313244]/40' : ''
+        }`}
     >
       <div className="min-w-0 flex-1 pr-2">
         <div className="text-xs font-semibold text-text">{title}</div>
@@ -768,7 +765,7 @@ export const PreferencesModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 select-none">
       <div
-        className="relative w-full max-w-4xl h-[680px] max-h-[90vh] bg-[#181825] border border-[#313244] shadow-2xl flex flex-col overflow-hidden text-text rounded-xl"
+        className="relative w-full max-w-4xl h-[680px] max-h-[90vh] bg-[#181825] border border-[#313244] shadow-2xl flex flex-col overflow-hidden text-text"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Window Bar */}
@@ -834,15 +831,13 @@ export const PreferencesModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => toggleGroup(group.id)}
-                        className={`w-full flex items-center justify-between px-2 py-1.5 text-xs rounded transition-colors cursor-pointer select-none text-left group ${
-                          hasActiveChild ? 'text-text font-semibold' : 'text-subtext1 hover:text-text hover:bg-[#313244]/20'
-                        }`}
+                        className={`w-full flex items-center justify-between px-2 py-1.5 text-xs rounded transition-colors cursor-pointer select-none text-left group ${hasActiveChild ? 'text-text font-semibold' : 'text-subtext1 hover:text-text hover:bg-[#313244]/20'
+                          }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <ChevronRight
-                            className={`w-3 h-3 text-subtext0 shrink-0 transition-transform duration-150 ${
-                              isExpanded ? 'rotate-90 text-text' : 'group-hover:text-text'
-                            }`}
+                            className={`w-3 h-3 text-subtext0 shrink-0 transition-transform duration-150 ${isExpanded ? 'rotate-90 text-text' : 'group-hover:text-text'
+                              }`}
                           />
                           <span className="truncate">{group.label}</span>
                         </div>
@@ -858,11 +853,10 @@ export const PreferencesModal: React.FC = () => {
                                 key={child.id}
                                 type="button"
                                 onClick={() => setActiveTab(child.id)}
-                                className={`w-full flex items-center justify-between pl-5 pr-2 py-1.5 text-xs rounded transition-colors cursor-pointer text-left ${
-                                  isActive
+                                className={`w-full flex items-center justify-between pl-5 pr-2 py-1.5 text-xs rounded transition-colors cursor-pointer text-left ${isActive
                                     ? 'bg-[#313244]/90 text-text font-medium shadow-xs'
                                     : 'text-subtext0 hover:text-text hover:bg-[#313244]/30'
-                                }`}
+                                  }`}
                               >
                                 <span className="truncate">{child.label}</span>
                               </button>
@@ -1014,11 +1008,10 @@ export const PreferencesModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleSelectTheme('system')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
-                        draftThemeMode === 'system'
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${draftThemeMode === 'system'
                           ? 'bg-[#313244] text-text font-semibold shadow-xs'
                           : 'text-subtext0 hover:text-text hover:bg-[#313244]/40'
-                      }`}
+                        }`}
                       title="Sync with Operating System theme"
                     >
                       <Monitor className="w-3.5 h-3.5" />
@@ -1028,11 +1021,10 @@ export const PreferencesModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleSelectTheme('dark')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
-                        draftThemeMode === 'dark'
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${draftThemeMode === 'dark'
                           ? 'bg-[#313244] text-text font-semibold shadow-xs'
                           : 'text-subtext0 hover:text-text hover:bg-[#313244]/40'
-                      }`}
+                        }`}
                       title="Catppuccin Mocha dark theme"
                     >
                       <Moon className="w-3.5 h-3.5" />
@@ -1042,11 +1034,10 @@ export const PreferencesModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleSelectTheme('light')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
-                        draftThemeMode === 'light'
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${draftThemeMode === 'light'
                           ? 'bg-[#313244] text-text font-semibold shadow-xs'
                           : 'text-subtext0 hover:text-text hover:bg-[#313244]/40'
-                      }`}
+                        }`}
                       title="Catppuccin Latte light theme"
                     >
                       <Sun className="w-3.5 h-3.5" />
@@ -1096,9 +1087,8 @@ export const PreferencesModal: React.FC = () => {
                         {selectedFontObj.fontFamilyName}
                       </span>
                       <ChevronDown
-                        className={`w-3.5 h-3.5 text-subtext0 transition-transform duration-200 shrink-0 ml-2 ${
-                          isFontDropdownOpen ? 'rotate-180 text-text' : ''
-                        }`}
+                        className={`w-3.5 h-3.5 text-subtext0 transition-transform duration-200 shrink-0 ml-2 ${isFontDropdownOpen ? 'rotate-180 text-text' : ''
+                          }`}
                       />
                     </button>
 
@@ -1145,11 +1135,10 @@ export const PreferencesModal: React.FC = () => {
                                     setDraftEnableLigatures(font.ligaturesSupport);
                                     setIsFontDropdownOpen(false);
                                   }}
-                                  className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer ${
-                                    isSelected
+                                  className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer ${isSelected
                                       ? 'bg-[#313244] text-text font-semibold'
                                       : 'hover:bg-[#1e1e2e] text-subtext1 hover:text-text'
-                                  }`}
+                                    }`}
                                 >
                                   <div className="flex flex-col min-w-0 pr-2">
                                     <span
@@ -1236,11 +1225,10 @@ export const PreferencesModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setDraftIsBold(!draftIsBold)}
-                      className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${
-                        draftIsBold
+                      className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${draftIsBold
                           ? 'bg-[#313244] text-text font-bold shadow-xs'
                           : 'text-subtext0 hover:bg-[#313244]/40 hover:text-text'
-                      }`}
+                        }`}
                       title={formatShortcutText('Bold (Ctrl+B)')}
                     >
                       <Bold className="w-3 h-3" />
@@ -1250,11 +1238,10 @@ export const PreferencesModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setDraftIsItalic(!draftIsItalic)}
-                      className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${
-                        draftIsItalic
+                      className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${draftIsItalic
                           ? 'bg-[#313244] text-text font-bold italic shadow-xs'
                           : 'text-subtext0 hover:bg-[#313244]/40 hover:text-text'
-                      }`}
+                        }`}
                       title={formatShortcutText('Italic (Ctrl+I)')}
                     >
                       <Italic className="w-3 h-3" />
@@ -1264,11 +1251,10 @@ export const PreferencesModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setDraftIsUnderline(!draftIsUnderline)}
-                      className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${
-                        draftIsUnderline
+                      className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${draftIsUnderline
                           ? 'bg-[#313244] text-text font-bold underline shadow-xs'
                           : 'text-subtext0 hover:bg-[#313244]/40 hover:text-text'
-                      }`}
+                        }`}
                       title={formatShortcutText('Underline (Ctrl+U)')}
                     >
                       <Underline className="w-3 h-3" />
@@ -1578,13 +1564,12 @@ export const PreferencesModal: React.FC = () => {
               type="button"
               onClick={handleApply}
               disabled={!hasUnsavedChanges && !isApplied}
-              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer rounded border ${
-                isApplied
+              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer rounded border ${isApplied
                   ? 'bg-emerald-950 border-emerald-800 text-emerald-300'
                   : hasUnsavedChanges
-                  ? 'bg-[#313244] hover:bg-[#45475a] border-[#45475a] text-text shadow-xs'
-                  : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'
-              }`}
+                    ? 'bg-[#313244] hover:bg-[#45475a] border-[#45475a] text-text shadow-xs'
+                    : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'
+                }`}
             >
               {isApplied ? (
                 <>
