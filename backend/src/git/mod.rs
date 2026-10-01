@@ -11,6 +11,63 @@ pub mod binary;
 pub use blame::{BlameAuthorStat, BlameCommit, BlameLine, FileBlamePayload};
 pub use binary::{GitBinaryInfo, scan_system_git_binaries, test_git_version};
 
+use std::path::{Path, PathBuf};
+
+/// Safely resolves a relative path within a repository root.
+/// Returns an error if the path attempts to escape the repository root boundary.
+pub fn resolve_safe_repo_path(repo_root: &str, relative_path: &str) -> Result<PathBuf, String> {
+    let clean_rel = relative_path.replace('\\', "/");
+    let rel_path = Path::new(&clean_rel);
+
+    if rel_path.is_absolute() {
+        return Err("Absolute file paths are not permitted in repository operations".to_string());
+    }
+
+    let repo_path = Path::new(repo_root);
+    let canonical_repo = repo_path.canonicalize().map_err(|e| {
+        format!("Invalid repository root path '{}': {}", repo_root, e)
+    })?;
+
+    // Check components depth to prevent parent traversal
+    let mut depth: i32 = 0;
+    for component in rel_path.components() {
+        match component {
+            std::path::Component::ParentDir => {
+                depth -= 1;
+                if depth < 0 {
+                    return Err(format!(
+                        "Path traversal attempt detected: '{}' escapes repository root",
+                        relative_path
+                    ));
+                }
+            }
+            std::path::Component::Normal(_) => {
+                depth += 1;
+            }
+            std::path::Component::RootDir | std::path::Component::Prefix(_) => {
+                return Err("Drive prefix or root directory is not permitted in relative path".to_string());
+            }
+            _ => {}
+        }
+    }
+
+    let combined = canonical_repo.join(rel_path);
+    if combined.exists() {
+        let canonical_target = combined.canonicalize().map_err(|e| {
+            format!("Failed to canonicalize path '{}': {}", combined.display(), e)
+        })?;
+        if !canonical_target.starts_with(&canonical_repo) {
+            return Err(format!(
+                "Path traversal detected: '{}' resolves outside repository root",
+                relative_path
+            ));
+        }
+        Ok(canonical_target)
+    } else {
+        Ok(combined)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RepoInfo {
     pub id: String,
@@ -96,6 +153,7 @@ mod tests {
     use super::conflict::check_conflicts;
     use super::diff::get_mr_diff;
     use super::ops::get_commits_between;
+    use super::resolve_safe_repo_path;
 
     fn run_git(dir: &str, args: &[&str]) {
         let status = Command::new("git")
@@ -217,6 +275,24 @@ mod tests {
         assert!(diff.files[0].is_binary);
         assert_eq!(diff.files[0].additions, 0);
         assert_eq!(diff.files[0].deletions, 0);
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_resolve_safe_repo_path_prevents_traversal() {
+        let temp_dir = std::env::temp_dir().join(format!("path_test_{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&temp_dir).unwrap();
+        let dir_str = temp_dir.to_str().unwrap();
+
+        // Valid relative path inside repo
+        let valid = resolve_safe_repo_path(dir_str, "src/main.rs").unwrap();
+        assert!(valid.to_string_lossy().contains("src"));
+
+        // Path traversal attempts must be rejected
+        assert!(resolve_safe_repo_path(dir_str, "../outside.txt").is_err());
+        assert!(resolve_safe_repo_path(dir_str, "src/../../outside.txt").is_err());
+        assert!(resolve_safe_repo_path(dir_str, "/etc/passwd").is_err());
 
         let _ = fs::remove_dir_all(&temp_dir);
     }

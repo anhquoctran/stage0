@@ -174,8 +174,12 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
 
   // Listen to native macOS menu events from Tauri
   useEffect(() => {
+    let isDisposed = false;
     let unlistenFn: (() => void) | undefined;
+
     listen<string>('menu-action', (event) => {
+      if (isDisposed) return;
+
       if (event.payload.startsWith('recent_repo_')) {
         const repositoryId = event.payload.slice('recent_repo_'.length);
         const repository = useGitStore
@@ -249,10 +253,15 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
           break;
       }
     }).then((unlisten) => {
-      unlistenFn = unlisten;
+      if (isDisposed) {
+        unlisten();
+      } else {
+        unlistenFn = unlisten;
+      }
     }).catch(() => {});
 
     return () => {
+      isDisposed = true;
       if (unlistenFn) unlistenFn();
     };
   }, [

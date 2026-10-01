@@ -27,6 +27,16 @@ impl SandboxManager {
         }
     }
 
+    #[inline]
+    fn active_type_lock(&self) -> std::sync::MutexGuard<'_, SandboxType> {
+        self.active_type.lock().unwrap_or_else(|p| p.into_inner())
+    }
+
+    #[inline]
+    fn instances_lock(&self) -> std::sync::MutexGuard<'_, std::collections::HashMap<String, SandboxInstanceInfo>> {
+        self.instances.lock().unwrap_or_else(|p| p.into_inner())
+    }
+
     pub fn get_adapter(&self, adapter_type: &SandboxType) -> Arc<dyn SandboxAdapter> {
         match adapter_type {
             SandboxType::InMemory => self.in_memory.clone(),
@@ -36,16 +46,16 @@ impl SandboxManager {
     }
 
     pub fn get_active_adapter(&self) -> Arc<dyn SandboxAdapter> {
-        let active = self.active_type.lock().unwrap().clone();
+        let active = self.active_type_lock().clone();
         self.get_adapter(&active)
     }
 
     pub fn get_active_type(&self) -> SandboxType {
-        self.active_type.lock().unwrap().clone()
+        self.active_type_lock().clone()
     }
 
     pub fn set_active_type(&self, adapter_type: SandboxType) {
-        let mut active = self.active_type.lock().unwrap();
+        let mut active = self.active_type_lock();
         *active = adapter_type;
     }
 
@@ -94,7 +104,7 @@ impl SandboxManager {
         let adapter = self.get_active_adapter();
         let instance = adapter.create_instance(repo_path, base, compare)?;
 
-        let mut map = self.instances.lock().unwrap();
+        let mut map = self.instances_lock();
         map.insert(instance.id.clone(), instance.clone());
 
         Ok(instance)
@@ -102,7 +112,7 @@ impl SandboxManager {
 
     pub fn destroy_instance(&self, instance_id: &str) -> Result<(), String> {
         let instance = {
-            let mut map = self.instances.lock().unwrap();
+            let mut map = self.instances_lock();
             map.remove(instance_id)
         };
 
@@ -114,7 +124,7 @@ impl SandboxManager {
     }
 
     pub fn list_active_instances(&self) -> Vec<SandboxInstanceInfo> {
-        let map = self.instances.lock().unwrap();
+        let map = self.instances_lock();
         map.values().cloned().collect()
     }
 
@@ -125,7 +135,7 @@ impl SandboxManager {
         args: &[String],
     ) -> Result<SandboxExecutionResult, String> {
         let instance = {
-            let map = self.instances.lock().unwrap();
+            let map = self.instances_lock();
             map.get(instance_id)
                 .cloned()
                 .ok_or_else(|| format!("Sandbox instance not found: {}", instance_id))?
@@ -136,7 +146,7 @@ impl SandboxManager {
     }
 
     pub fn cleanup_all(&self) {
-        let mut map = self.instances.lock().unwrap();
+        let mut map = self.instances_lock();
         for (_, instance) in map.drain() {
             let adapter = self.get_adapter(&instance.adapter_type);
             let _ = adapter.destroy_instance(&instance);
