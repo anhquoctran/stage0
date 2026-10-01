@@ -102,6 +102,8 @@ npm run build:app
 
 The desktop build runs the TypeScript check and writes Tauri bundle artifacts under `backend/target/release/bundle/`.
 
+Every project build command increments the SemVer PATCH version once before building and synchronizes the package, Cargo, Tauri, and About metadata. This also applies to web-only builds; if a build fails, its version increment is retained.
+
 ## Architecture
 
 ```mermaid

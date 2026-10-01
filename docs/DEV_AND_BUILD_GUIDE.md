@@ -77,6 +77,8 @@ The custom `--port` option applies only to web mode. Tauri desktop development u
 
 ## 3. Optimized Production Packaging (Build + Release)
 
+Every project build entry point (`scripts/build.mjs`, `build.ps1`, `build.sh`, `build.cmd`, `npm run build`, `npm run build:web`, `npm run build:app`, and `npm run build:prod`) increments the SemVer PATCH component once before building and synchronizes npm, Cargo, Tauri, and About metadata. Web-only builds also increment PATCH. A failed build attempt keeps the incremented version; fix the issue and run another build to get the next PATCH version.
+
 The production build pipeline automatically applies deep optimizations:
 1. **TypeScript Strict Verification**: Runs `tsc --noEmit` automatically to prevent any type errors before bundling.
 2. **Vite Frontend Minification & Tree-shaking**: Compresses JavaScript/CSS bundles and optimizes Tailwind v4 chunks.

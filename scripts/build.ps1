@@ -34,7 +34,13 @@ Write-Host "Mode     : $(if ($WebOnly) { 'Web Only' } else { 'Full Windows Deskt
 Write-Host "------------------------------------------------------" -ForegroundColor Cyan
 Write-Host ""
 
-# 0. Synchronize Software About & Release Information
+# 0. Increment PATCH version and synchronize release metadata
+node scripts/bump-version.mjs
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Failed to bump project version." -ForegroundColor Red
+    exit 1
+}
+
 node scripts/generate-about-info.mjs
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Failed to synchronize release metadata." -ForegroundColor Red
