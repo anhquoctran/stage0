@@ -33,11 +33,14 @@ export interface VirtualMrDiscussion {
   diffSide?: 'left' | 'right' | null;
   lineNumber?: number | null;
   commitId?: string | null;
+  contentHash?: string | null;
+  contextBefore?: string | null;
+  contextAfter?: string | null;
   isResolved: boolean;
   resolveType?: ResolveType;
   resolvedBy?: string | null;
   resolvedAt?: string | null;
-  verificationStatus?: VerificationStatus;
+  verificationStatus?: VerificationStatus | 'outdated';
   verifiedByBot?: string | null;
   verifiedAt?: string | null;
   comments: VirtualMrComment[];

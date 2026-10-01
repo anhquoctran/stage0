@@ -1088,10 +1088,31 @@ pub async fn list_mr_discussions(app: AppHandle, session_id: String) -> Result<V
 #[tauri::command]
 pub async fn create_mr_discussion(
     app: AppHandle,
-    discussion: VirtualMrDiscussionDb,
+    mut discussion: VirtualMrDiscussionDb,
     first_comment: VirtualMrCommentDb,
 ) -> Result<(), String> {
     let db = app.state::<Database>();
+
+    // Automatically extract line fingerprint from source file if not provided
+    if discussion.content_hash.is_none() {
+        if let (Some(ref file_path), Some(line_num)) = (&discussion.file_path, discussion.line_number) {
+            if line_num > 0 {
+                if let Ok(Some(repo_path)) = db.get_repo_path_for_session(&discussion.session_id) {
+                    if let Ok(safe_path) = crate::git::resolve_safe_repo_path(&repo_path, file_path) {
+                        if let Ok(content) = std::fs::read_to_string(&safe_path) {
+                            let (hash, before, after) = crate::git::anchor::extract_line_fingerprint(&content, line_num as usize);
+                            if !hash.is_empty() {
+                                discussion.content_hash = Some(hash);
+                                discussion.context_before = before;
+                                discussion.context_after = after;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     db.create_discussion(&discussion, &first_comment).map_err(|e| e.to_string())
 }
 
@@ -1125,6 +1146,74 @@ pub async fn verify_mr_discussion(
     let db = app.state::<Database>();
     db.verify_discussion(&discussion_id, &verification_status, &verified_by_bot, pass)
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn reanchor_file_discussions(
+    app: AppHandle,
+    session_id: String,
+    file_path: String,
+) -> Result<Vec<VirtualMrDiscussionDb>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let db = app.state::<Database>();
+        let discussions = db.list_discussions(&session_id).map_err(|e| e.to_string())?;
+        let repo_path = db.get_repo_path_for_session(&session_id)
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| "Session not associated with a repository".to_string())?;
+
+        let safe_path = crate::git::resolve_safe_repo_path(&repo_path, &file_path)?;
+        let content = std::fs::read_to_string(&safe_path)
+            .map_err(|e| format!("Failed to read file for re-anchoring: {}", e))?;
+
+        let reanchored = crate::git::anchor::reanchor_discussions(&repo_path, &file_path, &discussions, &content);
+
+        // Persist any updated line numbers or outdated status
+        for disc in &reanchored {
+            let _ = db.update_discussion_anchor(&disc.id, disc.line_number, &disc.verification_status);
+        }
+
+        Ok(reanchored)
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
+}
+
+#[tauri::command]
+pub async fn sync_active_sandbox(
+    app: AppHandle,
+    instance_id: String,
+    repo_path: String,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let manager = app.state::<SandboxManager>();
+        manager.sync_instance(&instance_id, &repo_path)
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
+}
+
+#[tauri::command]
+pub async fn get_sandbox_tool_schemas(
+    app: AppHandle,
+) -> Result<serde_json::Value, String> {
+    let manager = app.state::<SandboxManager>();
+    let active_type = manager.get_active_type();
+    Ok(crate::sandbox::get_tool_schemas(&active_type))
+}
+
+#[tauri::command]
+pub async fn dispatch_sandbox_tool(
+    app: AppHandle,
+    instance_id: String,
+    tool_name: String,
+    arguments: serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let manager = app.state::<SandboxManager>();
+        manager.dispatch_tool(&instance_id, &tool_name, arguments)
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
