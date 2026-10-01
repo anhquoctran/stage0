@@ -91,7 +91,10 @@ pub fn get_conflicted_file_preview(
     let (_, effective_compare) = super::runner::resolve_ref(repo_path, compare).unwrap_or((String::new(), compare.to_string()));
 
     let clean_path = file_path.replace('\\', "/");
-    let on_disk_path = Path::new(repo_path).join(&clean_path);
+    let on_disk_path = match super::resolve_safe_repo_path(repo_path, &clean_path) {
+        Ok(safe_p) => safe_p,
+        Err(e) => return Err(format!("Invalid file path for conflict preview: {}", e)),
+    };
     let mut on_disk_markers_count = 0;
     let mut on_disk_content: Option<String> = None;
 

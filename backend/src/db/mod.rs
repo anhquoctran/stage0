@@ -102,8 +102,33 @@ impl Database {
         ")?;
 
         conn.execute_batch(SCHEMA_SQL)?;
+        Self::migrate_discussions_fingerprint(&conn)?;
 
         Ok(Database(Mutex::new(conn)))
+    }
+
+    fn migrate_discussions_fingerprint(conn: &Connection) -> Result<(), rusqlite::Error> {
+        let mut stmt = conn.prepare("PRAGMA table_info(virtual_mr_discussions);")?;
+        let columns: Vec<String> = stmt
+            .query_map([], |row| row.get::<_, String>(1))?
+            .filter_map(Result::ok)
+            .collect();
+
+        if !columns.iter().any(|c| c == "content_hash") {
+            let _ = conn.execute("ALTER TABLE virtual_mr_discussions ADD COLUMN content_hash TEXT;", []);
+        }
+        if !columns.iter().any(|c| c == "context_before") {
+            let _ = conn.execute("ALTER TABLE virtual_mr_discussions ADD COLUMN context_before TEXT;", []);
+        }
+        if !columns.iter().any(|c| c == "context_after") {
+            let _ = conn.execute("ALTER TABLE virtual_mr_discussions ADD COLUMN context_after TEXT;", []);
+        }
+        Ok(())
+    }
+
+    #[inline]
+    fn conn(&self) -> std::sync::MutexGuard<'_, Connection> {
+        self.0.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     pub fn upsert_repository(
@@ -112,7 +137,7 @@ impl Database {
         name: &str,
         local_path: &str,
     ) -> Result<RepoInfo, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let id = if id.is_empty() {
             uuid::Uuid::new_v4().to_string()
         } else {
@@ -140,7 +165,7 @@ impl Database {
     }
 
     pub fn get_recent_repositories(&self) -> Result<Vec<RepoInfo>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT id, name, local_path FROM repositories ORDER BY last_opened_at DESC LIMIT 20;",
         )?;
@@ -162,14 +187,14 @@ impl Database {
     }
 
     pub fn delete_repository(&self, id: &str) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached("DELETE FROM repositories WHERE id = ?1;")?;
         stmt.execute(params![id])?;
         Ok(())
     }
 
     pub fn clear_all_repositories(&self) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         conn.execute("DELETE FROM repositories;", [])?;
         Ok(())
     }
@@ -184,7 +209,7 @@ impl Database {
         token_type: &str,
         label: Option<&str>,
     ) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "INSERT INTO git_credentials (id, provider, server_url, account_name, token_ref, token_type, label, created_at, updated_at)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);",
@@ -194,7 +219,7 @@ impl Database {
     }
 
     pub fn get_all_git_credentials(&self) -> Result<Vec<crate::credentials::GitCredentialMeta>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT id, provider, server_url, account_name, token_ref, token_type, label, created_at, updated_at
              FROM git_credentials
@@ -226,7 +251,7 @@ impl Database {
     }
 
     pub fn delete_git_credential(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let token_ref: Option<String> = conn
             .query_row(
                 "SELECT token_ref FROM git_credentials WHERE id = ?1;",
@@ -243,7 +268,7 @@ impl Database {
     }
 
     pub fn get_git_credential_token_ref(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let token_ref: Option<String> = conn
             .query_row(
                 "SELECT token_ref FROM git_credentials WHERE id = ?1;",
@@ -259,7 +284,7 @@ impl Database {
     // =======================================================================
 
     pub fn get_repo_settings(&self, repo_id: &str) -> Result<Option<RepoSettingsDb>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT repo_id, default_base_branch, inherit_global_agents, custom_agent_rules
              FROM repo_settings WHERE repo_id = ?1;",
@@ -279,7 +304,7 @@ impl Database {
     }
 
     pub fn save_repo_settings(&self, s: &RepoSettingsDb) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "INSERT INTO repo_settings (repo_id, default_base_branch, inherit_global_agents, custom_agent_rules, updated_at)
              VALUES (?1, ?2, ?3, ?4, CURRENT_TIMESTAMP)
@@ -294,7 +319,7 @@ impl Database {
     }
 
     pub fn list_repo_labels(&self, repo_id: &str) -> Result<Vec<RepoLabelDb>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "SELECT id, repo_id, name, color, description FROM repo_labels WHERE repo_id = ?1 ORDER BY name ASC;",
         )?;
@@ -317,7 +342,7 @@ impl Database {
     }
 
     pub fn create_repo_label(&self, l: &RepoLabelDb) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "INSERT INTO repo_labels (id, repo_id, name, color, description, created_at)
              VALUES (?1, ?2, ?3, ?4, ?5, CURRENT_TIMESTAMP)
@@ -330,7 +355,7 @@ impl Database {
     }
 
     pub fn update_repo_label(&self, l: &RepoLabelDb) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "UPDATE repo_labels SET name = ?1, color = ?2, description = ?3 WHERE id = ?4;",
         )?;
@@ -339,7 +364,7 @@ impl Database {
     }
 
     pub fn delete_repo_label(&self, id: &str) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached("DELETE FROM repo_labels WHERE id = ?1;")?;
         stmt.execute(params![id])?;
         Ok(())
@@ -350,7 +375,7 @@ impl Database {
     // =======================================================================
 
     pub fn list_virtual_mr_sessions(&self, repo_id: &str) -> Result<Vec<VirtualMrSessionDb>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
 
         // 1. Single batch query for all attached label mappings of sessions in this repo (eliminates N+1)
         let mut label_map: HashMap<String, Vec<String>> = HashMap::new();
@@ -425,7 +450,7 @@ impl Database {
     }
 
     pub fn save_virtual_mr_session(&self, s: &VirtualMrSessionDb) -> Result<(), rusqlite::Error> {
-        let mut conn = self.0.lock().unwrap();
+        let mut conn = self.conn();
         let tx = conn.transaction()?;
 
         // Atomic session upsert within transaction
@@ -467,7 +492,7 @@ impl Database {
     }
 
     pub fn delete_virtual_mr_session(&self, session_id: &str) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached("DELETE FROM virtual_mr_sessions WHERE id = ?1;")?;
         stmt.execute(params![session_id])?;
         Ok(())
@@ -478,7 +503,7 @@ impl Database {
     // =======================================================================
 
     pub fn list_discussions(&self, session_id: &str) -> Result<Vec<VirtualMrDiscussionDb>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
 
         // 1. Single batch query for all comments belonging to discussions in this session (eliminates N+1)
         let mut comments_map: HashMap<String, Vec<VirtualMrCommentDb>> = HashMap::new();
@@ -514,8 +539,10 @@ impl Database {
 
         // 2. Fetch discussions in a single cached query
         let mut stmt = conn.prepare_cached(
-            "SELECT id, session_id, file_path, diff_side, line_number, commit_id, is_resolved,
-                    resolve_type, resolved_by, resolved_at, verification_status, verified_by_bot, verified_at, created_at
+            "SELECT id, session_id, file_path, diff_side, line_number, commit_id,
+                    content_hash, context_before, context_after,
+                    is_resolved, resolve_type, resolved_by, resolved_at,
+                    verification_status, verified_by_bot, verified_at, created_at
              FROM virtual_mr_discussions WHERE session_id = ?1 ORDER BY created_at ASC;",
         )?;
 
@@ -527,20 +554,23 @@ impl Database {
                 row.get::<_, Option<String>>(3)?,
                 row.get::<_, Option<i64>>(4)?,
                 row.get::<_, Option<String>>(5)?,
-                row.get::<_, bool>(6)?,
-                row.get::<_, String>(7)?,
+                row.get::<_, Option<String>>(6)?,
+                row.get::<_, Option<String>>(7)?,
                 row.get::<_, Option<String>>(8)?,
-                row.get::<_, Option<String>>(9)?,
+                row.get::<_, bool>(9)?,
                 row.get::<_, String>(10)?,
                 row.get::<_, Option<String>>(11)?,
                 row.get::<_, Option<String>>(12)?,
                 row.get::<_, String>(13)?,
+                row.get::<_, Option<String>>(14)?,
+                row.get::<_, Option<String>>(15)?,
+                row.get::<_, String>(16)?,
             ))
         })?;
 
         let mut discussions = Vec::new();
         for d in disc_rows {
-            let (id, s_id, fpath, side, lnum, cid, resolved, rtype, rby, rat, vstatus, vbot, vat, cat) = d?;
+            let (id, s_id, fpath, side, lnum, cid, chash, cbefore, cafter, resolved, rtype, rby, rat, vstatus, vbot, vat, cat) = d?;
             let comments = comments_map.remove(&id).unwrap_or_default();
 
             discussions.push(VirtualMrDiscussionDb {
@@ -550,6 +580,9 @@ impl Database {
                 diff_side: side,
                 line_number: lnum,
                 commit_id: cid,
+                content_hash: chash,
+                context_before: cbefore,
+                context_after: cafter,
                 is_resolved: resolved,
                 resolve_type: rtype,
                 resolved_by: rby,
@@ -565,22 +598,58 @@ impl Database {
         Ok(discussions)
     }
 
+    pub fn get_repo_path_for_session(&self, session_id: &str) -> Result<Option<String>, rusqlite::Error> {
+        let conn = self.conn();
+        let mut stmt = conn.prepare_cached(
+            "SELECT r.local_path
+             FROM virtual_mr_sessions s
+             JOIN repositories r ON s.repo_id = r.id
+             WHERE s.id = ?1;",
+        )?;
+        let mut rows = stmt.query(params![session_id])?;
+        if let Some(row) = rows.next()? {
+            Ok(Some(row.get(0)?))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn update_discussion_anchor(
+        &self,
+        discussion_id: &str,
+        new_line_number: Option<i64>,
+        verification_status: &str,
+    ) -> Result<(), rusqlite::Error> {
+        let conn = self.conn();
+        let mut stmt = conn.prepare_cached(
+            "UPDATE virtual_mr_discussions
+             SET line_number = ?1, verification_status = ?2
+             WHERE id = ?3;",
+        )?;
+        stmt.execute(params![new_line_number, verification_status, discussion_id])?;
+        Ok(())
+    }
+
     pub fn create_discussion(
         &self,
         d: &VirtualMrDiscussionDb,
         first_comment: &VirtualMrCommentDb,
     ) -> Result<(), rusqlite::Error> {
-        let mut conn = self.0.lock().unwrap();
+        let mut conn = self.conn();
         let tx = conn.transaction()?;
 
         tx.execute(
             "INSERT INTO virtual_mr_discussions (
-                id, session_id, file_path, diff_side, line_number, commit_id, is_resolved,
-                resolve_type, resolved_by, resolved_at, verification_status, verified_by_bot, verified_at, created_at
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, CURRENT_TIMESTAMP);",
+                id, session_id, file_path, diff_side, line_number, commit_id,
+                content_hash, context_before, context_after,
+                is_resolved, resolve_type, resolved_by, resolved_at,
+                verification_status, verified_by_bot, verified_at, created_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, CURRENT_TIMESTAMP);",
             params![
-                d.id, d.session_id, d.file_path, d.diff_side, d.line_number, d.commit_id, d.is_resolved,
-                d.resolve_type, d.resolved_by, d.resolved_at, d.verification_status, d.verified_by_bot, d.verified_at
+                d.id, d.session_id, d.file_path, d.diff_side, d.line_number, d.commit_id,
+                d.content_hash, d.context_before, d.context_after,
+                d.is_resolved, d.resolve_type, d.resolved_by, d.resolved_at,
+                d.verification_status, d.verified_by_bot, d.verified_at
             ],
         )?;
 
@@ -600,7 +669,7 @@ impl Database {
     }
 
     pub fn add_comment(&self, c: &VirtualMrCommentDb) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached(
             "INSERT INTO virtual_mr_comments (
                 id, discussion_id, author_type, author_id, author_name, author_avatar, body, review_action, created_at, updated_at
@@ -620,7 +689,7 @@ impl Database {
         resolve_type: &str,
         resolved_by: Option<&str>,
     ) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         if is_resolved {
             let mut stmt = conn.prepare_cached(
                 "UPDATE virtual_mr_discussions SET is_resolved = 1, resolve_type = ?1, resolved_by = ?2, resolved_at = CURRENT_TIMESTAMP WHERE id = ?3;",
@@ -642,7 +711,7 @@ impl Database {
         verified_by_bot: &str,
         pass: bool,
     ) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         if pass {
             let mut stmt = conn.prepare_cached(
                 "UPDATE virtual_mr_discussions SET
@@ -670,7 +739,7 @@ impl Database {
     }
 
     pub fn get_setting(&self, key: &str) -> Result<Option<String>, rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare_cached("SELECT value FROM app_settings WHERE key = ?1;")?;
         let mut rows = stmt.query(params![key])?;
         if let Some(row) = rows.next()? {
@@ -681,7 +750,7 @@ impl Database {
     }
 
     pub fn set_setting(&self, key: &str, value: &str) -> Result<(), rusqlite::Error> {
-        let conn = self.0.lock().unwrap();
+        let conn = self.conn();
         conn.execute(
             "INSERT INTO app_settings (key, value, updated_at) VALUES (?1, ?2, CURRENT_TIMESTAMP)
              ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP;",
@@ -749,6 +818,12 @@ pub struct VirtualMrDiscussionDb {
     pub diff_side: Option<String>,
     pub line_number: Option<i64>,
     pub commit_id: Option<String>,
+    #[serde(default)]
+    pub content_hash: Option<String>,
+    #[serde(default)]
+    pub context_before: Option<String>,
+    #[serde(default)]
+    pub context_after: Option<String>,
     pub is_resolved: bool,
     pub resolve_type: String,
     pub resolved_by: Option<String>,
@@ -757,6 +832,7 @@ pub struct VirtualMrDiscussionDb {
     pub verified_by_bot: Option<String>,
     pub verified_at: Option<String>,
     pub created_at: String,
+    #[serde(default)]
     pub comments: Vec<VirtualMrCommentDb>,
 }
 

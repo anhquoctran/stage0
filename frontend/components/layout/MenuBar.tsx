@@ -55,7 +55,7 @@ import { useGitStore } from '../../store/useGitStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
-import { AppLogo } from '../common/AppLogo';
+import { AboutModal } from '../common/AboutModal';
 import { formatShortcutText } from '../../utils/shortcuts';
 
 export interface MenuBarProps {
@@ -174,8 +174,12 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
 
   // Listen to native macOS menu events from Tauri
   useEffect(() => {
+    let isDisposed = false;
     let unlistenFn: (() => void) | undefined;
+
     listen<string>('menu-action', (event) => {
+      if (isDisposed) return;
+
       if (event.payload.startsWith('recent_repo_')) {
         const repositoryId = event.payload.slice('recent_repo_'.length);
         const repository = useGitStore
@@ -249,10 +253,15 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
           break;
       }
     }).then((unlisten) => {
-      unlistenFn = unlisten;
+      if (isDisposed) {
+        unlisten();
+      } else {
+        unlistenFn = unlisten;
+      }
     }).catch(() => {});
 
     return () => {
+      isDisposed = true;
       if (unlistenFn) unlistenFn();
     };
   }, [
@@ -1365,28 +1374,10 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
       )}
 
       {/* About Modal */}
-      {showAboutModal && (
-        <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div
-            data-tauri-drag-region
-            className="bg-mantle border border-surface0 rounded-xl p-5 max-w-sm w-full shadow-2xl text-center animate-in zoom-in-95 duration-150 cursor-default"
-          >
-            <AppLogo size="md" className="mx-auto mb-3 pointer-events-none" />
-            <h3 data-tauri-drag-region className="text-[1rem] font-bold text-text pointer-events-none">Stage0</h3>
-            <p data-tauri-drag-region className="text-xs font-mono text-subtext1 mb-2 pointer-events-none">v0.1.0 • Local-First Virtual MR Sandbox</p>
-            <p className="text-xs text-subtext1 mb-4 leading-relaxed">
-              Stage0 simulates 3-dot branch comparisons and merge conflict predictions completely in memory via <code className="text-text bg-surface0 px-1 py-0.5 rounded border border-surface1 font-mono">git merge-tree</code> with zero disk modifications.
-            </p>
-            <button
-              type="button"
-              onClick={() => setShowAboutModal(false)}
-              className="px-5 py-1.5 bg-surface1 hover:bg-surface2 text-text font-medium rounded-lg text-xs transition-colors cursor-pointer"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      <AboutModal
+        isOpen={showAboutModal}
+        onClose={() => setShowAboutModal(false)}
+      />
     </>
   );
 };

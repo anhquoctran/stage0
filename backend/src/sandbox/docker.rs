@@ -152,20 +152,18 @@ impl SandboxAdapter for DockerSandboxAdapter {
         let instance_id = format!("stage0-{}", uuid::Uuid::new_v4());
         let container_name = format!("stage0-box-{}", &instance_id[7..15]);
 
-        let mount_vol = format!("{}:/workspace:ro", repo_path);
+        // 1. Launch isolated container WITHOUT mounting host filesystem
         let mut cmd = Command::new("docker");
         cmd.args([
             "run",
             "-d",
             "--name",
             &container_name,
-            "-v",
-            &mount_vol,
             "-w",
             "/workspace",
             &self.default_image,
             "sleep",
-            "3600",
+            "86400",
         ]);
 
         #[cfg(windows)]
@@ -181,6 +179,79 @@ impl SandboxAdapter for DockerSandboxAdapter {
         }
 
         let container_id = String::from_utf8_lossy(&output.stdout).trim().to_string();
+
+        // 2. Ensure /workspace directory exists inside container
+        let mut mkdir_cmd = Command::new("docker");
+        mkdir_cmd.args(["exec", &container_id, "mkdir", "-p", "/workspace"]);
+        #[cfg(windows)]
+        mkdir_cmd.creation_flags(CREATE_NO_WINDOW);
+        let _ = mkdir_cmd.output();
+
+        // 3. Export clean source tree from host repository via git archive directly into container
+        let target_ref = if !compare.trim().is_empty() {
+            crate::git::runner::resolve_ref(repo_path, compare)
+                .map(|(commit, _)| commit)
+                .unwrap_or_else(|_| compare.to_string())
+        } else {
+            "HEAD".to_string()
+        };
+
+        let git_bin = crate::git::runner::get_active_git_path();
+        let mut git_cmd = Command::new(&git_bin);
+        git_cmd.current_dir(repo_path);
+        git_cmd.args(["archive", "--format=tar", &target_ref]);
+        #[cfg(windows)]
+        git_cmd.creation_flags(CREATE_NO_WINDOW);
+        git_cmd.stdout(std::process::Stdio::piped());
+
+        let mut tar_cmd = Command::new("docker");
+        tar_cmd.args(["exec", "-i", &container_id, "tar", "-x", "-C", "/workspace"]);
+        #[cfg(windows)]
+        tar_cmd.creation_flags(CREATE_NO_WINDOW);
+        tar_cmd.stdin(std::process::Stdio::piped());
+        tar_cmd.stdout(std::process::Stdio::piped());
+        tar_cmd.stderr(std::process::Stdio::piped());
+
+        let mut git_child = git_cmd.spawn().map_err(|e| {
+            let _ = Command::new("docker").args(["rm", "-f", &container_id]).output();
+            format!("Failed to spawn git archive on host: {}", e)
+        })?;
+
+        let mut tar_child = tar_cmd.spawn().map_err(|e| {
+            let _ = Command::new("docker").args(["rm", "-f", &container_id]).output();
+            format!("Failed to spawn docker tar extraction: {}", e)
+        })?;
+
+        if let (Some(mut git_out), Some(mut tar_in)) = (git_child.stdout.take(), tar_child.stdin.take()) {
+            let _ = std::io::copy(&mut git_out, &mut tar_in);
+        }
+
+        let _ = git_child.wait();
+        let tar_out = tar_child.wait_with_output().map_err(|e| {
+            let _ = Command::new("docker").args(["rm", "-f", &container_id]).output();
+            format!("Docker tar extraction error: {}", e)
+        })?;
+
+        if !tar_out.status.success() {
+            let err = String::from_utf8_lossy(&tar_out.stderr).to_string();
+            let _ = Command::new("docker").args(["rm", "-f", &container_id]).output();
+            return Err(format!("Failed to unpack source into Docker container: {}", err.trim()));
+        }
+
+        // 4. Initialize an isolated git repository inside the container so internal git ops and sync work
+        let init_script = "which git >/dev/null 2>&1 || (which apk >/dev/null 2>&1 && apk add --no-cache git >/dev/null 2>&1) || true; \
+                           cd /workspace && if which git >/dev/null 2>&1; then \
+                             git init >/dev/null 2>&1 && \
+                             git config user.name 'Stage0 Sandbox' && \
+                             git config user.email 'sandbox@stage0.local' && \
+                             git add -A >/dev/null 2>&1 && \
+                             git commit -m 'Initial sandbox state' >/dev/null 2>&1; \
+                           fi";
+        let mut setup_cmd = Command::new("docker");
+        setup_cmd.args(["exec", &container_id, "sh", "-c", init_script]);
+        #[cfg(windows)]
+        setup_cmd.creation_flags(CREATE_NO_WINDOW);
+        let _ = setup_cmd.output();
 
         Ok(SandboxInstanceInfo {
             id: instance_id,

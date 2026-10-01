@@ -51,6 +51,7 @@ export const NewVirtualMrView: React.FC = () => {
     setViewMode,
     openRepoDialog,
     refreshDiff,
+    showToast,
   } = useGitStore();
 
   const { getEffectiveReviewers } = useBotReviewersStore();
@@ -159,6 +160,36 @@ export const NewVirtualMrView: React.FC = () => {
       setLabelSearch('');
     } catch (err) {
       console.error('Failed to create label:', err);
+    }
+  };
+
+  const handleAiGenerateDescription = () => {
+    if (!draftMr) return;
+
+    const commitList =
+      draftMr.commits && draftMr.commits.length > 0
+        ? draftMr.commits.map((c) => `- ${c.subject} (\`${c.shortHash}\`)`).join('\n')
+        : (diffPayload?.files && diffPayload.files.length > 0
+            ? diffPayload.files.slice(0, 8).map((f) => `- Modified \`${f.path}\``).join('\n')
+            : '- Ongoing branch changes');
+
+    const fileList =
+      diffPayload?.files && diffPayload.files.length > 0
+        ? diffPayload.files.slice(0, 10).map((f) => `- \`${f.path}\` (${(f.status || 'MODIFIED').toLowerCase()})`).join('\n')
+        : '';
+    const totalFiles = diffPayload?.files?.length || 0;
+    const moreFiles = totalFiles > 10 ? `\n- ...and ${totalFiles - 10} more files` : '';
+
+    const draft = `## Summary\nAutomated virtual merge request for \`${draftMr.compareBranch}\` into \`${draftMr.baseBranch}\`.\n\n### Key Changes\n${commitList}${fileList ? `\n\n### Changed Files (${totalFiles})\n${fileList}${moreFiles}` : ''}\n\n### Testing & Verification\n- [ ] Virtual mergeability verified\n- [ ] Local build & tests pass\n- [ ] AI bot reviews completed\n`;
+
+    if (draftMr.description.trim() && draftMr.description.trim() !== draft.trim()) {
+      if (window.confirm('Replace current description with AI generated draft?')) {
+        updateDraftMr({ description: draft });
+        showToast('Generated description with AI draft');
+      }
+    } else {
+      updateDraftMr({ description: draft });
+      showToast('Generated description with AI draft');
     }
   };
 
@@ -301,8 +332,8 @@ export const NewVirtualMrView: React.FC = () => {
                 </span>
               </div>
             ) : conflictReport ? (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-green bg-green/10 border border-green/20">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green shrink-0" />
+              <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-white bg-[#238636]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0" />
                 <span>Able to merge. These branches can be automatically merged.</span>
               </div>
             ) : (
@@ -390,8 +421,9 @@ export const NewVirtualMrView: React.FC = () => {
                     <MarkdownEditor
                       value={draftMr.description}
                       onChange={(description) => updateDraftMr({ description })}
-                      placeholder="Write your description or notes here (supports Markdown)..."
+                      placeholder="Write your description or notes here..."
                       minHeight="110px"
+                      onAiGenerate={handleAiGenerateDescription}
                     />
                   </div>
                 </div>
@@ -460,28 +492,34 @@ export const NewVirtualMrView: React.FC = () => {
                           </button>
                         </div>
                         <div className="max-h-56 overflow-y-auto divide-y divide-surface0/60">
-                          {effectiveReviewers.map((bot: BotReviewer) => {
-                            const isAssigned = draftMr.selectedBots.includes(bot.id);
-                            return (
-                              <button
-                                key={bot.id}
-                                type="button"
-                                onClick={() => handleToggleBot(bot.id)}
-                                className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors cursor-pointer ${
-                                  isAssigned ? 'bg-brand/10 text-brand' : 'hover:bg-surface0 text-text'
-                                }`}
-                              >
-                                <div className="flex items-center gap-2 min-w-0 pr-2">
-                                  <span className="text-[1rem] shrink-0">{bot.avatarEmoji}</span>
-                                  <div className="truncate">
-                                    <div className="text-xs font-medium truncate">{bot.name}</div>
-                                    <div className="text-[10px] text-subtext0 truncate">{bot.tagline}</div>
+                          {effectiveReviewers.length === 0 ? (
+                            <div className="px-3 py-6 text-center text-xs text-subtext0/70 italic">
+                              No AI reviewers available
+                            </div>
+                          ) : (
+                            effectiveReviewers.map((bot: BotReviewer) => {
+                              const isAssigned = draftMr.selectedBots.includes(bot.id);
+                              return (
+                                <button
+                                  key={bot.id}
+                                  type="button"
+                                  onClick={() => handleToggleBot(bot.id)}
+                                  className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors cursor-pointer ${
+                                    isAssigned ? 'bg-brand/10 text-brand' : 'hover:bg-surface0 text-text'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 min-w-0 pr-2">
+                                    <span className="text-[1rem] shrink-0">{bot.avatarEmoji}</span>
+                                    <div className="truncate">
+                                      <div className="text-xs font-medium truncate">{bot.name}</div>
+                                      <div className="text-[10px] text-subtext0 truncate">{bot.tagline}</div>
+                                    </div>
                                   </div>
-                                </div>
-                                {isAssigned && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
-                              </button>
-                            );
-                          })}
+                                  {isAssigned && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
+                                </button>
+                              );
+                            })
+                          )}
                         </div>
                       </div>
                     )}

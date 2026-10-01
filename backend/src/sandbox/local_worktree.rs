@@ -18,6 +18,48 @@ use crate::git::{
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
+const ALLOWED_COMMANDS: &[&str] = &[
+    "git", "cargo", "rustc", "npm", "npx", "pnpm", "yarn", "bun",
+    "node", "deno", "go", "python", "python3", "pytest", "mvn", "gradle",
+    "make", "cmake", "dotnet",
+];
+
+fn validate_sandbox_command(command: &str, args: &[String]) -> Result<String, String> {
+    let trimmed_cmd = command.trim();
+    if trimmed_cmd.is_empty() {
+        return Err("Command cannot be empty".to_string());
+    }
+
+    if trimmed_cmd.contains('/') || trimmed_cmd.contains('\\') || trimmed_cmd.contains(':') {
+        return Err(format!(
+            "Command path traversal prohibited: '{}'. Only whitelisted toolchain commands are allowed.",
+            trimmed_cmd
+        ));
+    }
+
+    let base_name = trimmed_cmd
+        .strip_suffix(".exe")
+        .or_else(|| trimmed_cmd.strip_suffix(".cmd"))
+        .or_else(|| trimmed_cmd.strip_suffix(".bat"))
+        .unwrap_or(trimmed_cmd)
+        .to_lowercase();
+
+    if !ALLOWED_COMMANDS.contains(&base_name.as_str()) {
+        return Err(format!(
+            "Execution of '{}' is not permitted in sandbox. Permitted binaries: {:?}",
+            trimmed_cmd, ALLOWED_COMMANDS
+        ));
+    }
+
+    for arg in args {
+        if arg.contains('\0') {
+            return Err("Argument contains invalid null byte".to_string());
+        }
+    }
+
+    Ok(trimmed_cmd.to_string())
+}
+
 pub struct LocalWorktreeSandboxAdapter {
     base_worktree_dir: PathBuf,
 }
@@ -211,27 +253,33 @@ impl SandboxAdapter for LocalWorktreeSandboxAdapter {
         command: &str,
         args: &[String],
     ) -> Result<SandboxExecutionResult, String> {
+        let valid_cmd = validate_sandbox_command(command, args)?;
+
         let worktree_dir = instance.worktree_path.as_deref().ok_or_else(|| {
             "Instance does not have an active worktree path".to_string()
         })?;
 
-        if !Path::new(worktree_dir).exists() {
+        let canonical_worktree = Path::new(worktree_dir).canonicalize().map_err(|e| {
+            format!("Invalid worktree path '{}': {}", worktree_dir, e)
+        })?;
+
+        if !canonical_worktree.exists() {
             return Err(format!(
                 "Worktree path does not exist on disk: {}",
-                worktree_dir
+                canonical_worktree.display()
             ));
         }
 
         let start = Instant::now();
-        let mut cmd = Command::new(command);
-        cmd.current_dir(worktree_dir);
+        let mut cmd = Command::new(&valid_cmd);
+        cmd.current_dir(&canonical_worktree);
         cmd.args(args);
 
         #[cfg(windows)]
         cmd.creation_flags(CREATE_NO_WINDOW);
 
         let output = cmd.output().map_err(|e| {
-            format!("Failed to execute '{}' in worktree: {}", command, e)
+            format!("Failed to execute '{}' in worktree: {}", valid_cmd, e)
         })?;
 
         let duration_ms = start.elapsed().as_millis() as u64;
@@ -240,7 +288,7 @@ impl SandboxAdapter for LocalWorktreeSandboxAdapter {
         let exit_code = output.status.code().unwrap_or(-1);
 
         Ok(SandboxExecutionResult {
-            command: format!("{} {}", command, args.join(" ")),
+            command: format!("{} {}", valid_cmd, args.join(" ")),
             stdout,
             stderr,
             exit_code,

@@ -41,22 +41,28 @@ const GLOBAL_STORAGE_KEY = 'stage0_global_bot_reviewers';
 const REPO_ACTIVE_STORAGE_KEY = 'stage0_repo_active_bots';
 const REPO_CUSTOM_STORAGE_KEY = 'stage0_repo_custom_bots';
 
+const LEGACY_MOCK_IDS = new Set([
+  'security-sentinel',
+  'performance-optimizer',
+  'architecture-sentinel',
+  'bug-hunter',
+  'documentation-spec',
+]);
+
 function loadPersistedGlobalReviewers(): BotReviewer[] {
   if (typeof window === 'undefined') return DEFAULT_BOT_REVIEWERS;
   try {
     const raw = localStorage.getItem(GLOBAL_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        // Ensure new preset bots exist if any were added to code
-        const existingIds = new Set(parsed.map((b: BotReviewer) => b.id));
-        const merged = [...parsed];
-        for (const def of DEFAULT_BOT_REVIEWERS) {
-          if (!existingIds.has(def.id)) {
-            merged.push(def);
-          }
+      if (Array.isArray(parsed)) {
+        const filtered = parsed.filter(
+          (b: BotReviewer) => !LEGACY_MOCK_IDS.has(b.id) && !b.isBuiltin
+        );
+        if (filtered.length !== parsed.length) {
+          persistGlobalReviewers(filtered);
         }
-        return merged;
+        return filtered;
       }
     }
   } catch (err) {
@@ -69,7 +75,19 @@ function loadPersistedRepoActiveBots(): Record<string, string[]> {
   if (typeof window === 'undefined') return {};
   try {
     const raw = localStorage.getItem(REPO_ACTIVE_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      let changed = false;
+      const cleaned: Record<string, string[]> = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        if (Array.isArray(v)) {
+          cleaned[k] = v.filter((id) => !LEGACY_MOCK_IDS.has(id));
+          if (cleaned[k].length !== v.length) changed = true;
+        }
+      }
+      if (changed) persistRepoActiveBots(cleaned);
+      return cleaned;
+    }
   } catch {}
   return {};
 }

@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+#[cfg(unix)]
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -251,11 +252,10 @@ pub fn resolve_repository(
         return Err("Directory is not a Git working tree (missing .git)".to_string());
     }
 
-    let metadata = fs::metadata(&canonical)
-        .map_err(|error| format!("Could not inspect repository directory: {error}"))?;
-
     #[cfg(unix)]
     let identity = {
+        let metadata = fs::metadata(&canonical)
+            .map_err(|error| format!("Could not inspect repository directory: {error}"))?;
         use std::os::unix::fs::MetadataExt;
         RepoIdentity::File {
             volume: metadata.dev(),
@@ -265,14 +265,11 @@ pub fn resolve_repository(
 
     #[cfg(windows)]
     let identity = {
-        use std::os::windows::fs::MetadataExt;
-        match (metadata.volume_serial_number(), metadata.file_index()) {
-            (Some(volume), Some(file_index)) => RepoIdentity::File {
-                volume: u64::from(volume),
-                file_index,
-            },
-            _ => RepoIdentity::Path(canonical.clone()),
-        }
+        let normalized = canonical
+            .to_str()
+            .map(|s| PathBuf::from(s.to_lowercase()))
+            .unwrap_or_else(|| canonical.clone());
+        RepoIdentity::Path(normalized)
     };
 
     #[cfg(not(any(unix, windows)))]
@@ -467,6 +464,7 @@ pub fn destroy_window(app: &AppHandle, label: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[cfg(unix)]
     #[test]

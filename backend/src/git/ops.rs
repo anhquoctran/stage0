@@ -391,7 +391,8 @@ pub fn check_git_remote_url(url: &str) -> Result<String, String> {
         return Err("Định dạng URL không hợp lệ (cần bắt đầu bằng https://, git@ hoặc ssh://)".to_string());
     }
 
-    let mut cmd = std::process::Command::new("git");
+    let git_bin = crate::git::runner::get_active_git_path();
+    let mut cmd = std::process::Command::new(&git_bin);
     cmd.args(&["ls-remote", "--exit-code", "-h", trimmed]);
     cmd.env("GIT_TERMINAL_PROMPT", "0");
     cmd.env("GIT_ASKPASS", "echo");

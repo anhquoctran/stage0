@@ -40,7 +40,7 @@ export interface MarkdownEditorProps {
 export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   value,
   onChange,
-  placeholder = 'Enter markdown content...',
+  placeholder = '',
   rows = 4,
   minHeight = '100px',
   maxHeight = '320px',
@@ -233,19 +233,6 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             >
               <Link className="w-3.5 h-3.5" />
             </button>
-
-            {onAiGenerate && (
-              <button
-                type="button"
-                onClick={onAiGenerate}
-                disabled={disabled}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 ml-2 text-[11px] font-semibold bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white transition-all cursor-pointer shadow-xs"
-                title="Generate description with AI"
-              >
-                <Sparkles className="w-3 h-3 text-white" />
-                <span>AI Generate</span>
-              </button>
-            )}
           </div>
         ) : (
           <span className="text-[11px] text-subtext0 font-mono italic">
@@ -279,16 +266,34 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         )}
       </div>
 
-      {/* Optional Action Bar */}
-      {showActions && (
-        <div className="flex items-center justify-between px-3 py-2 border-t border-surface1 bg-base/50">
-          <span className="text-[10px] text-subtext0 font-mono">
-            Tip: Press <kbd className="px-1 py-0.5 bg-surface0 border border-surface1">Ctrl</kbd> + <kbd className="px-1 py-0.5 bg-surface0 border border-surface1">Enter</kbd> to submit
-          </span>
+      {/* Action Bar / Bottom Bar */}
+      {(showActions || onAiGenerate) && (
+        <div className="flex items-center justify-between px-3 py-1.5 border-t border-surface1 bg-base/50 gap-2 select-none">
+          <div className="flex items-center gap-2 text-[10px] text-subtext0 font-mono">
+            {showActions && (
+              <span>
+                Tip: Press <kbd className="px-1 py-0.5 bg-surface0 border border-surface1">Ctrl</kbd> + <kbd className="px-1 py-0.5 bg-surface0 border border-surface1">Enter</kbd> to submit
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
+            {onAiGenerate && (
+              <button
+                type="button"
+                onClick={onAiGenerate}
+                disabled={disabled || isSubmitting}
+                className="p-1 rounded text-subtext0 hover:text-purple-300 hover:bg-surface1 active:bg-surface2 transition-colors cursor-pointer disabled:opacity-40"
+                title="Generate with AI"
+                aria-label="Generate with AI"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+              </button>
+            )}
+
             {extraActions}
-            {onCancel && (
+
+            {showActions && onCancel && (
               <button
                 type="button"
                 onClick={onCancel}
@@ -298,7 +303,8 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 {cancelLabel}
               </button>
             )}
-            {onSubmit && (
+
+            {showActions && onSubmit && (
               <button
                 type="button"
                 onClick={onSubmit}

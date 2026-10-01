@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import {
   Shield,
   Bot,
-  Sparkles,
   Plus,
   Trash2,
   Edit2,
@@ -239,7 +238,7 @@ Analyze incoming code diffs and discussions:
             <div className="text-lg font-bold text-accent mt-0.5">{customCount}</div>
           </div>
           <div className="w-8 h-8 rounded-lg bg-surface0 flex items-center justify-center text-subtext0">
-            <Sparkles className="w-4 h-4" />
+            <Bot className="w-4 h-4" />
           </div>
         </div>
       </div>
@@ -696,7 +695,7 @@ Analyze incoming code diffs and discussions:
               <h4 className="text-sm font-bold text-text">Reset Default Bot Reviewers?</h4>
             </div>
             <p className="text-xs text-subtext0 leading-relaxed">
-              This will restore the 5 built-in Reviewer bots (Security Sentinel, Performance Optimizer, Clean Architecture, Bug Hunter, Documentation Guide) to their original prompt definitions and remove custom bots.
+              This will reset the reviewer bots list to defaults and remove any custom configured bots.
             </p>
             <div className="flex justify-end gap-2 pt-2">
               <button

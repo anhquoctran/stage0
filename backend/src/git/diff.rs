@@ -3,6 +3,8 @@ use super::runner::{run_git_strict, resolve_ref};
 use super::{ChangedFile, MrDiffPayload};
 use super::conflict::check_conflicts;
 
+const MAX_RAW_DIFF_BYTES: usize = 5 * 1024 * 1024; // 5MB IPC ceiling
+
 pub fn get_mr_diff(
     repo_path: &str,
     base: &str,
@@ -13,14 +15,21 @@ pub fn get_mr_diff(
 
     let three_dot = format!("{}...{}", effective_base, effective_compare);
 
-    // 1. Get raw diff
-    let raw_diff = run_git_strict(repo_path, &["diff", "-U3", &three_dot])?;
+    // 1. Get raw diff with IPC safety ceiling
+    let raw_diff_str = run_git_strict(repo_path, &["diff", "-U3", "--end-of-options", &three_dot])?;
+    let raw_diff = if raw_diff_str.len() > MAX_RAW_DIFF_BYTES {
+        let mut truncated = raw_diff_str[..MAX_RAW_DIFF_BYTES].to_string();
+        truncated.push_str("\n\n[Diff payload truncated: exceeded 5MB IPC ceiling. File diffs available on demand.]");
+        truncated
+    } else {
+        raw_diff_str
+    };
 
     // 2. Get name-status
-    let name_status_output = run_git_strict(repo_path, &["diff", "--name-status", &three_dot])?;
+    let name_status_output = run_git_strict(repo_path, &["diff", "--name-status", "--end-of-options", &three_dot])?;
 
     // 3. Get numstat
-    let numstat_output = run_git_strict(repo_path, &["diff", "--numstat", &three_dot])?;
+    let numstat_output = run_git_strict(repo_path, &["diff", "--numstat", "--end-of-options", &three_dot])?;
 
     // 4. Check conflicts to mark is_conflicted
     let conflict_report = check_conflicts(repo_path, &effective_base, &effective_compare).unwrap_or_else(|_| {

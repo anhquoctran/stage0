@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.mjs --web",
+    "dev": "vite",
     "dev:web": "node scripts/dev.mjs --web",
     "dev:app": "node scripts/dev.mjs --app",
     "dev:desktop": "node scripts/dev.mjs --app",
@@ -45,5 +45,7 @@
   },
   "allowScripts": {
     "esbuild@0.25.12": true
-  }
+  },
+  "author": "Anh Quoc Tran",
+  "license": "MIT"
 }
