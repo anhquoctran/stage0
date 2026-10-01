@@ -31,6 +31,11 @@ echo -e "${CYAN}======================================================${RESET}"
 echo -e "${DIM}Platform:${RESET} ${BOLD}${OS_NAME}${RESET} (${ARCH_NAME})"
 echo -e "${CYAN}------------------------------------------------------${RESET}\n"
 
+# 0. Synchronize software about metadata
+echo -e "${BOLD}[0/4] Synchronizing software about and release metadata...${RESET}"
+node scripts/generate-about-info.mjs
+echo -e ""
+
 # 1. Strict TypeScript verification
 echo -e "${BOLD}[1/4] Running TypeScript verification (tsc --noEmit)...${RESET}"
 npx tsc --noEmit
@@ -56,7 +61,9 @@ fi
 echo -e "${BOLD}[4/4] Building optimized native desktop application with Tauri v2...${RESET}"
 echo -e "${DIM}   Optimizations: LTO=true, Opt-level=3, Codegen-units=1, Strip=true${RESET}\n"
 
-export RUSTFLAGS="-C target-cpu=native"
+if [ -z "$RUSTFLAGS" ]; then
+  export RUSTFLAGS=""
+fi
 npx tauri build
 
 # 5. Summary and Checksums

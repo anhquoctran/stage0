@@ -14,6 +14,7 @@ pub struct SandboxManager {
     docker: Arc<DockerSandboxAdapter>,
     active_type: Mutex<SandboxType>,
     instances: Mutex<HashMap<String, SandboxInstanceInfo>>,
+    guardrails: Arc<super::guardrails::GuardrailsEngine>,
 }
 
 impl SandboxManager {
@@ -24,7 +25,18 @@ impl SandboxManager {
             docker: Arc::new(DockerSandboxAdapter::new()),
             active_type: Mutex::new(SandboxType::InMemory),
             instances: Mutex::new(HashMap::new()),
+            guardrails: Arc::new(super::guardrails::GuardrailsEngine::new()),
         }
+    }
+
+    #[inline]
+    fn active_type_lock(&self) -> std::sync::MutexGuard<'_, SandboxType> {
+        self.active_type.lock().unwrap_or_else(|p| p.into_inner())
+    }
+
+    #[inline]
+    fn instances_lock(&self) -> std::sync::MutexGuard<'_, std::collections::HashMap<String, SandboxInstanceInfo>> {
+        self.instances.lock().unwrap_or_else(|p| p.into_inner())
     }
 
     pub fn get_adapter(&self, adapter_type: &SandboxType) -> Arc<dyn SandboxAdapter> {
@@ -36,16 +48,16 @@ impl SandboxManager {
     }
 
     pub fn get_active_adapter(&self) -> Arc<dyn SandboxAdapter> {
-        let active = self.active_type.lock().unwrap().clone();
+        let active = self.active_type_lock().clone();
         self.get_adapter(&active)
     }
 
     pub fn get_active_type(&self) -> SandboxType {
-        self.active_type.lock().unwrap().clone()
+        self.active_type_lock().clone()
     }
 
     pub fn set_active_type(&self, adapter_type: SandboxType) {
-        let mut active = self.active_type.lock().unwrap();
+        let mut active = self.active_type_lock();
         *active = adapter_type;
     }
 
@@ -94,7 +106,7 @@ impl SandboxManager {
         let adapter = self.get_active_adapter();
         let instance = adapter.create_instance(repo_path, base, compare)?;
 
-        let mut map = self.instances.lock().unwrap();
+        let mut map = self.instances_lock();
         map.insert(instance.id.clone(), instance.clone());
 
         Ok(instance)
@@ -102,7 +114,7 @@ impl SandboxManager {
 
     pub fn destroy_instance(&self, instance_id: &str) -> Result<(), String> {
         let instance = {
-            let mut map = self.instances.lock().unwrap();
+            let mut map = self.instances_lock();
             map.remove(instance_id)
         };
 
@@ -114,7 +126,7 @@ impl SandboxManager {
     }
 
     pub fn list_active_instances(&self) -> Vec<SandboxInstanceInfo> {
-        let map = self.instances.lock().unwrap();
+        let map = self.instances_lock();
         map.values().cloned().collect()
     }
 
@@ -125,7 +137,7 @@ impl SandboxManager {
         args: &[String],
     ) -> Result<SandboxExecutionResult, String> {
         let instance = {
-            let map = self.instances.lock().unwrap();
+            let map = self.instances_lock();
             map.get(instance_id)
                 .cloned()
                 .ok_or_else(|| format!("Sandbox instance not found: {}", instance_id))?
@@ -135,8 +147,64 @@ impl SandboxManager {
         adapter.execute_command(&instance, command, args)
     }
 
+    pub fn get_instance(&self, instance_id: &str) -> Option<SandboxInstanceInfo> {
+        let map = self.instances_lock();
+        map.get(instance_id).cloned()
+    }
+
+    pub fn sync_instance(&self, instance_id: &str, repo_path: &str) -> Result<(), String> {
+        let instance = self.get_instance(instance_id).ok_or_else(|| {
+            format!("Sandbox instance not found: {}", instance_id)
+        })?;
+        super::sync::sync_changes_to_sandbox(&instance, repo_path)
+    }
+
+    pub fn dispatch_tool(
+        &self,
+        instance_id: &str,
+        tool_name: &str,
+        arguments: serde_json::Value,
+    ) -> Result<serde_json::Value, String> {
+        let instance = self.get_instance(instance_id).ok_or_else(|| {
+            format!("Sandbox instance not found: {}", instance_id)
+        })?;
+        super::tool_bridge::dispatch_tool_call(self, &instance, tool_name, arguments)
+    }
+
+    pub fn guardrails(&self) -> &Arc<super::guardrails::GuardrailsEngine> {
+        &self.guardrails
+    }
+
+    pub fn get_guardrail_policy(&self) -> super::guardrails::GuardrailPolicy {
+        self.guardrails.get_policy()
+    }
+
+    pub fn update_guardrail_policy(&self, policy: super::guardrails::GuardrailPolicy) {
+        self.guardrails.update_policy(policy);
+    }
+
+    pub fn reset_guardrail_policy(&self, mode: super::guardrails::GuardrailMode) {
+        self.guardrails.reset_policy(mode);
+    }
+
+    pub fn get_guardrail_audit_log(&self, limit: Option<usize>) -> Vec<super::guardrails::GuardrailAuditEvent> {
+        self.guardrails.get_audit_log(limit)
+    }
+
+    pub fn clear_guardrail_audit_log(&self) {
+        self.guardrails.clear_audit_log();
+    }
+
+    pub fn simulate_guardrail_check(
+        &self,
+        tool_name: &str,
+        arguments: serde_json::Value,
+    ) -> super::guardrails::GuardrailEvaluationResult {
+        self.guardrails.simulate_check(tool_name, arguments)
+    }
+
     pub fn cleanup_all(&self) {
-        let mut map = self.instances.lock().unwrap();
+        let mut map = self.instances_lock();
         for (_, instance) in map.drain() {
             let adapter = self.get_adapter(&instance.adapter_type);
             let _ = adapter.destroy_instance(&instance);

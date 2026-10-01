@@ -1,15 +1,24 @@
 use serde::{Deserialize, Serialize};
 use crate::git::{ConflictFilePreview, ConflictReport, MrDiffPayload};
 
+pub mod guardrails;
 pub mod in_memory;
 pub mod local_worktree;
 pub mod docker;
 pub mod manager;
+pub mod sync;
+pub mod tool_bridge;
 
+pub use guardrails::{
+    GuardrailAuditEvent, GuardrailEvaluationResult, GuardrailMode, GuardrailPolicy,
+    GuardrailSeverity, GuardrailViolation, GuardrailsEngine,
+};
 pub use in_memory::InMemorySandboxAdapter;
 pub use local_worktree::LocalWorktreeSandboxAdapter;
 pub use docker::DockerSandboxAdapter;
 pub use manager::SandboxManager;
+pub use sync::sync_changes_to_sandbox;
+pub use tool_bridge::{get_tool_schemas, dispatch_tool_call};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

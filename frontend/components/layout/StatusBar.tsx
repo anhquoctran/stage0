@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   FolderGit2,
   GitBranch,
@@ -11,6 +12,7 @@ import {
   Box,
   Check,
   RefreshCw,
+  FileText,
 } from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
@@ -25,6 +27,7 @@ export const StatusBar: React.FC = () => {
     conflictReport,
     selectedFile,
     viewMode,
+    setViewMode,
     activeSandboxType,
     isSyncing,
     syncStatus,
@@ -38,20 +41,23 @@ export const StatusBar: React.FC = () => {
     : 0;
 
   return (
-    <footer className="h-7 bg-mantle border-t border-surface0 pl-3 pr-3.5 flex items-center justify-between text-[11px] text-subtext1 shrink-0 select-none z-10">
-      {/* Left: Repo & Active Branch */}
-      <div className="flex items-center gap-3 flex-1 min-w-0">
+    <footer className="h-7 bg-mantle border-t border-surface0/80 px-3 flex items-center justify-between text-[11px] text-subtext1 shrink-0 select-none z-10">
+      {/* Left: Repository info & Active branch & Sync */}
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
         {currentRepo ? (
           <>
-            <div className="flex items-center gap-1.5 hover:text-text transition-colors" title={currentRepo.local_path}>
+            <div
+              className="flex items-center gap-1.5 text-subtext1 hover:text-text transition-colors truncate cursor-default"
+              title={currentRepo.local_path}
+            >
               <FolderGit2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span className="font-semibold text-text">{currentRepo.name}</span>
+              <span className="font-semibold text-text truncate">{currentRepo.name}</span>
             </div>
 
             {branches?.current && (
-              <div className="flex items-center gap-1.5 pl-2 border-l border-surface0">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-surface0/50 border border-surface1/50 text-text font-mono text-[11px] shrink-0">
                 <GitBranch className="w-3 h-3 text-blue shrink-0" />
-                <span className="font-mono text-text">{branches.current}</span>
+                <span className="truncate max-w-[200px]">{branches.current}</span>
               </div>
             )}
           </>
@@ -64,91 +70,129 @@ export const StatusBar: React.FC = () => {
 
         {syncStatus && (
           <div
-            className="flex items-center gap-1.5 pl-2 border-l border-surface0 min-w-0 max-w-[34vw] text-[10px] text-subtext0"
+            className="flex items-center gap-1.5 pl-1.5 text-[10px] text-subtext0 min-w-0 max-w-[30vw] truncate"
             title={syncStatus}
           >
+            <div className="h-3 w-px bg-surface1 shrink-0 mr-1" />
             {isSyncing ? (
               <RefreshCw className="w-3 h-3 text-blue animate-spin shrink-0" />
             ) : (
-              <Check className="w-3 h-3 text-green shrink-0" />
+              <Check className="w-3 h-3 text-emerald-400 shrink-0" />
             )}
             <span className="truncate">{syncStatus}</span>
           </div>
         )}
       </div>
 
-      {/* Center: Sandbox Engine & Conflict Status */}
-      {currentRepo && (
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => setIsPreferencesOpen(true)}
-            className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface0 hover:bg-surface1 border border-surface1 hover:border-surface2 text-text transition-colors cursor-pointer"
-            title="Configure Sandbox Engine in Preferences"
-          >
-            <Box className="w-3 h-3 text-subtext0" />
-            <span className="font-medium">
-              Sandbox: {activeSandboxType === 'in_memory' ? 'In-Memory' : activeSandboxType === 'local_worktree' ? 'Worktree' : 'Docker'}
-            </span>
-          </button>
+      {/* Right: Engine, Merge Status, File Counter, View Mode & Shortcuts */}
+      <div className="flex items-center gap-2 shrink-0 ml-auto">
+        {currentRepo && (
+          <>
+            {/* Sandbox Engine Picker */}
+            <button
+              type="button"
+              onClick={() => setIsPreferencesOpen(true)}
+              className="h-5.5 px-2 rounded-md bg-surface0/70 hover:bg-surface1 border border-surface1 hover:border-surface2 text-subtext0 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              title="Configure Sandbox Engine in Preferences"
+            >
+              <Box className="w-3 h-3 text-subtext0" />
+              <span className="font-normal text-subtext0">Sandbox:</span>
+              <span className="font-medium text-text">
+                {activeSandboxType === 'in_memory'
+                  ? 'In-Memory'
+                  : activeSandboxType === 'local_worktree'
+                  ? 'Worktree'
+                  : 'Docker'}
+              </span>
+            </button>
 
-          {diffError ? (
-            <div className="flex items-center gap-1.5 text-red font-medium px-2 py-0.5 bg-red/10 border border-red/20" title={diffError}>
-              <AlertTriangle className="w-3 h-3 text-red" />
-              <span>Compare Failed</span>
-            </div>
-          ) : isDiffLoading ? (
-            <div className="flex items-center gap-1.5 text-subtext0 font-medium px-2 py-0.5 bg-surface0/40 border border-surface0">
-              <Loader2 className="w-3 h-3 animate-spin" />
-              <span>Comparing</span>
-            </div>
-          ) : conflictCheckError ? (
-            <div className="flex items-center gap-1.5 text-text font-medium px-2 py-0.5 bg-yellow/10 border border-yellow/20" title={conflictCheckError}>
-              <AlertTriangle className="w-3 h-3 text-yellow" />
-              <span>Merge Check Unavailable</span>
-            </div>
-          ) : diffPayload && diffPayload.files.length === 0 ? (
-            <div className="flex items-center gap-1.5 text-subtext1 font-medium px-2 py-0.5 bg-surface0/50 border border-surface0">
-              <Info className="w-3 h-3" />
-              <span>No Changes</span>
-            </div>
-          ) : conflictReport?.has_conflicts ? (
-            <div className="flex items-center gap-1.5 text-red font-medium px-2 py-0.5 rounded bg-red/10 border border-red/20">
-              <AlertTriangle className="w-3 h-3 text-red" />
-              <span>Conflicts Detected</span>
-            </div>
-          ) : conflictReport ? (
-            <div className="flex items-center gap-1.5 text-green font-medium px-2 py-0.5 rounded bg-green/10 border border-green/20">
-              <ShieldCheck className="w-3 h-3 text-green" />
-              <span>Clean Merge</span>
-            </div>
-          ) : null}
-        </div>
-      )}
+            {/* Merge Conflict Status Badge */}
+            {diffError ? (
+              <div
+                className="h-5.5 px-2 rounded-md bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs"
+                title={diffError}
+              >
+                <AlertTriangle className="w-3 h-3 text-red shrink-0" />
+                <span>Compare Failed</span>
+              </div>
+            ) : isDiffLoading ? (
+              <div className="h-5.5 px-2 rounded-md bg-surface0/60 border border-surface1/60 text-subtext0 flex items-center gap-1.5 font-medium shadow-xs">
+                <Loader2 className="w-3 h-3 animate-spin text-blue shrink-0" />
+                <span>Comparing...</span>
+              </div>
+            ) : conflictCheckError ? (
+              <div
+                className="h-5.5 px-2 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1.5 font-medium shadow-xs"
+                title={conflictCheckError}
+              >
+                <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
+                <span>Merge Check Unavailable</span>
+              </div>
+            ) : diffPayload && diffPayload.files.length === 0 ? (
+              <div className="h-5.5 px-2 rounded-md bg-surface0/50 border border-surface1/50 text-subtext1 flex items-center gap-1.5 font-medium shadow-xs">
+                <Info className="w-3 h-3 text-subtext0 shrink-0" />
+                <span>No Changes</span>
+              </div>
+            ) : conflictReport?.has_conflicts ? (
+              <div className="h-5.5 px-2 rounded-md bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs">
+                <AlertTriangle className="w-3 h-3 text-red shrink-0" />
+                <span>Conflicts Detected</span>
+              </div>
+            ) : conflictReport ? (
+              <div className="h-5.5 px-2 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5 font-medium shadow-xs">
+                <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>Clean Merge</span>
+              </div>
+            ) : null}
 
-      {/* Right: File Review Index, View Mode & Key Hints */}
-      <div className="flex items-center gap-3 shrink-0">
-        {totalFiles > 0 && (
-          <div className="flex items-center gap-1 text-text">
-            <span>File</span>
-            <span className="font-mono font-semibold text-text">
-              {currentFileIndex > 0 ? `${currentFileIndex} of ${totalFiles}` : `${totalFiles} total`}
-            </span>
-          </div>
+            {/* File Review Progress Badge */}
+            {totalFiles > 0 && (
+              <div
+                className="h-5.5 px-2 rounded-md bg-surface0/50 border border-surface1/60 text-subtext0 flex items-center gap-1.5 text-[11px] shadow-xs"
+                title={selectedFile ? `Active file: ${selectedFile.path}` : `${totalFiles} total files`}
+              >
+                <FileText className="w-3 h-3 text-subtext0 shrink-0" />
+                <span className="flex items-center gap-1">
+                  <span>File</span>
+                  <span className="font-mono font-semibold text-text">
+                    {currentFileIndex > 0 ? currentFileIndex : '–'}
+                  </span>
+                  <span className="text-subtext0/60 font-light">of</span>
+                  <span className="font-mono font-semibold text-text">{totalFiles}</span>
+                </span>
+              </div>
+            )}
+
+            <div className="h-3.5 w-px bg-surface1/80 mx-0.5" />
+          </>
         )}
 
-        <div className="flex items-center gap-1 pl-2 border-l border-surface0 text-subtext1">
+        {/* View Mode Switcher */}
+        <button
+          type="button"
+          onClick={() => setViewMode(viewMode === 'split' ? 'unified' : 'split')}
+          className="h-5.5 px-2 rounded-md bg-surface0/40 hover:bg-surface1/70 border border-surface1/40 hover:border-surface2 text-subtext1 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+          title={`Click to switch to ${viewMode === 'split' ? 'Unified' : 'Split'} view`}
+        >
           {viewMode === 'split' ? (
-            <Columns2 className="w-3 h-3 text-blue" />
+            <Columns2 className="w-3 h-3 text-blue shrink-0" />
           ) : (
-            <Rows2 className="w-3 h-3 text-blue" />
+            <Rows2 className="w-3 h-3 text-blue shrink-0" />
           )}
           <span className="capitalize">{viewMode} View</span>
-        </div>
+        </button>
 
-        <div className="hidden lg:flex items-center gap-1.5 pl-2 border-l border-surface0 text-[10px] text-subtext0">
-          <Keyboard className="w-3 h-3" />
-          <span>[↑/↓] Files • [S/U] View</span>
+        {/* Keyboard Shortcuts Hint */}
+        <div className="hidden xl:flex items-center gap-1.5 pl-1.5 text-[10px] text-subtext0/80">
+          <div className="h-3 w-px bg-surface1/80 mr-1" />
+          <Keyboard className="w-3 h-3 text-subtext0/60 shrink-0" />
+          <span>
+            <kbd className="font-mono bg-surface0/60 px-1 py-0.2 rounded border border-surface1/40 text-subtext1">↑/↓</kbd> Files
+          </span>
+          <span className="text-surface2">•</span>
+          <span>
+            <kbd className="font-mono bg-surface0/60 px-1 py-0.2 rounded border border-surface1/40 text-subtext1">S/U</kbd> View
+          </span>
         </div>
       </div>
     </footer>

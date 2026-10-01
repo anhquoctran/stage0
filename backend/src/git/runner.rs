@@ -77,27 +77,35 @@ pub fn resolve_ref(repo_path: &str, r: &str) -> Result<(String, String), String>
         return Err("Cannot resolve empty reference".to_string());
     }
 
+    if trimmed.starts_with('-') {
+        return Err(format!("Invalid git reference '{}': cannot start with '-'", trimmed));
+    }
+
+    if trimmed.chars().any(|c| c.is_control() || c == ' ') {
+        return Err(format!("Invalid git reference '{}': contains whitespace or control characters", trimmed));
+    }
+
     // 1. Try exact ref first (e.g. "feat/x", "HEAD", "origin/main", commit hash)
-    if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", trimmed]) {
+    if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "--end-of-options", trimmed]) {
         return Ok((out.trim().to_string(), trimmed.to_string()));
     }
 
     // 2. If ref does not start with origin/ or refs/, try origin/<ref>
     if !trimmed.starts_with("origin/") && !trimmed.starts_with("refs/") {
         let origin_ref = format!("origin/{}", trimmed);
-        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", &origin_ref]) {
+        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "--end-of-options", &origin_ref]) {
             return Ok((out.trim().to_string(), origin_ref));
         }
 
         let remotes_ref = format!("remotes/origin/{}", trimmed);
-        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", &remotes_ref]) {
+        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "--end-of-options", &remotes_ref]) {
             return Ok((out.trim().to_string(), remotes_ref));
         }
     }
 
     // 3. If ref starts with origin/, try stripped local ref
     if let Some(stripped) = trimmed.strip_prefix("origin/") {
-        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", stripped]) {
+        if let Ok(out) = run_git_strict(repo_path, &["rev-parse", "--short", "--end-of-options", stripped]) {
             return Ok((out.trim().to_string(), stripped.to_string()));
         }
     }
@@ -105,6 +113,6 @@ pub fn resolve_ref(repo_path: &str, r: &str) -> Result<(String, String), String>
     // Never silently substitute another branch or HEAD: comparisons must use
     // the refs the user selected, otherwise a deleted ref can show a false diff.
     // Fail with the original Git error when none of the expected aliases exist.
-    let out = run_git_strict(repo_path, &["rev-parse", "--short", trimmed])?;
+    let out = run_git_strict(repo_path, &["rev-parse", "--short", "--end-of-options", trimmed])?;
     Ok((out.trim().to_string(), trimmed.to_string()))
 }

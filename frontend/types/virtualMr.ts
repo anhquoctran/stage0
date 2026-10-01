@@ -33,11 +33,14 @@ export interface VirtualMrDiscussion {
   diffSide?: 'left' | 'right' | null;
   lineNumber?: number | null;
   commitId?: string | null;
+  contentHash?: string | null;
+  contextBefore?: string | null;
+  contextAfter?: string | null;
   isResolved: boolean;
   resolveType?: ResolveType;
   resolvedBy?: string | null;
   resolvedAt?: string | null;
-  verificationStatus?: VerificationStatus;
+  verificationStatus?: VerificationStatus | 'outdated';
   verifiedByBot?: string | null;
   verifiedAt?: string | null;
   comments: VirtualMrComment[];
@@ -151,48 +154,7 @@ export interface AiReviewerBotMeta {
   defaultRules?: string;
 }
 
-export const AVAILABLE_AI_BOTS: AiReviewerBotMeta[] = [
-  {
-    id: 'security-sentinel',
-    name: 'Security Sentinel',
-    tagline: 'OWASP, Secrets & Vulnerability Scanner',
-    description: 'Scans for hardcoded credentials, injection attacks, XSS, and unvalidated inputs.',
-    category: 'security',
-    avatarEmoji: '🛡️',
-  },
-  {
-    id: 'performance-optimizer',
-    name: 'Performance Optimizer',
-    tagline: 'Complexity, Memory & Query Analyzer',
-    description: 'Detects N+1 queries, memory leaks, and inefficient algorithms.',
-    category: 'performance',
-    avatarEmoji: '⚡',
-  },
-  {
-    id: 'architecture-sentinel',
-    name: 'Clean Architecture Guide',
-    tagline: 'SOLID, Modularity & Design Patterns',
-    description: 'Evaluates separation of concerns, DRY principles, and architectural scalability.',
-    category: 'architecture',
-    avatarEmoji: '🏗️',
-  },
-  {
-    id: 'bug-hunter',
-    name: 'Bug Hunter',
-    tagline: 'Edge Cases, Race Conditions & Nullability',
-    description: 'Hunts down off-by-one errors, race conditions, and type safety loopholes.',
-    category: 'test',
-    avatarEmoji: '🐛',
-  },
-  {
-    id: 'documentation-spec',
-    name: 'API & Documentation Guide',
-    tagline: 'Public Contracts, Docstrings & SemVer',
-    description: 'Validates clear code comments, parameter documentation, and breaking changes.',
-    category: 'documentation',
-    avatarEmoji: '📝',
-  },
-];
+export const AVAILABLE_AI_BOTS: AiReviewerBotMeta[] = [];
 
 export const PRESET_REPO_LABELS: Omit<RepoLabel, 'id' | 'repoId'>[] = [
   { name: 'feature', color: '#3b82f6', description: 'New feature or enhancement' },

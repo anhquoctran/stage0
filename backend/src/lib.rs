@@ -36,6 +36,12 @@ pub fn run() {
                       }
                       event.preventDefault();
                     }, true);
+
+                    // Ensure $RefreshReg$ and $RefreshSig$ are globally safe fallbacks so Vite preamble never crashes
+                    if (typeof window !== 'undefined') {
+                      if (!window.$RefreshReg$) window.$RefreshReg$ = () => {};
+                      if (!window.$RefreshSig$) window.$RefreshSig$ = () => (type) => type;
+                    }
                     "#,
                 )
                 .build(),
@@ -69,6 +75,10 @@ pub fn run() {
 
             if let Some(window) = app.get_webview_window("main") {
                 app.state::<WindowManagerState>().register_welcome_window("main", true);
+                #[cfg(target_os = "macos")]
+                {
+                    let _ = window.set_decorations(true);
+                }
                 #[cfg(target_os = "macos")]
                 let min_size = tauri::LogicalSize {
                     width: 640.0,
@@ -141,6 +151,9 @@ pub fn run() {
             commands::delete_git_credential,
             commands::verify_git_credential,
             commands::get_keyring_info,
+            commands::store_ai_api_key,
+            commands::get_ai_api_key,
+            commands::delete_ai_api_key,
             commands::get_available_sandboxes,
             commands::get_active_sandbox,
             commands::set_active_sandbox,
@@ -183,6 +196,18 @@ pub fn run() {
             commands::add_mr_comment,
             commands::resolve_mr_discussion,
             commands::verify_mr_discussion,
+            commands::reanchor_file_discussions,
+            // Sandbox Synchronization & Tool Bridge
+            commands::sync_active_sandbox,
+            commands::get_sandbox_tool_schemas,
+            commands::dispatch_sandbox_tool,
+            // AI & MCP Security Guardrails
+            commands::get_guardrail_policy,
+            commands::update_guardrail_policy,
+            commands::reset_guardrail_policy,
+            commands::get_guardrail_audit_log,
+            commands::clear_guardrail_audit_log,
+            commands::simulate_guardrail_check,
             // Git Binary Management & App Lifecycle
             commands::scan_git_binaries,
             commands::get_active_git_binary,
@@ -190,6 +215,7 @@ pub fn run() {
             commands::validate_custom_git_binary,
             commands::pick_git_executable,
             commands::restart_app,
+            commands::get_app_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

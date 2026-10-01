@@ -34,6 +34,13 @@ Write-Host "Mode     : $(if ($WebOnly) { 'Web Only' } else { 'Full Windows Deskt
 Write-Host "------------------------------------------------------" -ForegroundColor Cyan
 Write-Host ""
 
+# 0. Synchronize Software About & Release Information
+node scripts/generate-about-info.mjs
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Failed to synchronize release metadata." -ForegroundColor Red
+    exit 1
+}
+
 # 1. TypeScript Verification
 if (-not $SkipTypeCheck) {
     Write-Host "[1/4] Running TypeScript strict type checking..." -ForegroundColor Cyan
@@ -74,7 +81,9 @@ Write-Host "[4/4] Compiling release binary and packaging Windows installers (.ex
 Write-Host "      Optimizations: LTO=true, Opt-level=3, Strip=true, Codegen-units=1" -ForegroundColor DarkGray
 Write-Host ""
 
-$env:RUSTFLAGS = "-C target-cpu=native"
+if (-not $env:RUSTFLAGS) {
+    # Keep standard target CPU architecture compatibility
+}
 npx tauri build
 
 if ($LASTEXITCODE -ne 0) {
