@@ -125,8 +125,8 @@ export const App: React.FC = () => {
         hideCustomFrame
           ? 'border-0 rounded-none'
           : usesNativeMacFrame
-            ? 'border border-primary rounded-[12px]'
-            : 'border border-primary rounded-[8px]'
+            ? 'border border-[#313244] rounded-[12px]'
+            : 'border border-[#313244] rounded-[8px]'
       )}
     >
       <MainLayout />
