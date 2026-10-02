@@ -95,7 +95,9 @@ pub fn run() {
                     height: 680.0,
                 };
                 let _ = window.set_min_size(Some(tauri::Size::Logical(min_size)));
-                let _ = window.maximize();
+                let _ = window.set_size(tauri::Size::Logical(min_size));
+                let _ = window.unmaximize();
+                let _ = window.center();
             }
 
             if let Ok(cwd) = std::env::current_dir() {
@@ -147,6 +149,8 @@ pub fn run() {
             commands::window_minimize,
             commands::open_webview_devtools,
             commands::window_toggle_maximize,
+            commands::window_maximize,
+            commands::window_set_min_size,
             commands::window_close,
             commands::window_is_maximized,
             commands::window_is_fullscreen,

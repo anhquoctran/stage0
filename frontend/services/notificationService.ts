@@ -104,7 +104,24 @@ export const notificationService = {
    * - Stores in notification history
    */
   async notify(options: NotifyOptions): Promise<AppNotification> {
+    const settings = useNotificationStore.getState().settings;
+
+    // Check if channel is disabled
+    if (options.channel && settings.channels[options.channel] === false) {
+      return {
+        id: `notif_skipped`,
+        title: options.title,
+        body: options.body,
+        level: options.level || 'info',
+        timestamp: Date.now(),
+        isRead: true,
+        channel: options.channel,
+      };
+    }
+
     const id = `notif_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const duration = options.autoDismissMs !== undefined ? options.autoDismissMs : settings.toastDurationMs;
+
     const notification: AppNotification = {
       id,
       title: options.title,
@@ -112,15 +129,16 @@ export const notificationService = {
       level: options.level || 'info',
       timestamp: Date.now(),
       isRead: false,
+      channel: options.channel,
       actions: options.actions,
-      autoDismissMs: options.autoDismissMs ?? 6000,
+      autoDismissMs: duration,
     };
 
-    // 1. In-app toast and persistent history
+    // 1. In-app toast and persistent history (handled in useNotificationStore)
     useNotificationStore.getState().addNotification(notification);
 
-    // 2. Cross-platform OS Native Desktop Notification (unless silent)
-    if (!options.silent) {
+    // 2. Cross-platform OS Native Desktop Notification (if enabled and not silent)
+    if (!options.silent && settings.enableDesktopNotifications) {
       if (isTauri()) {
         try {
           await invoke('send_push_notification', {

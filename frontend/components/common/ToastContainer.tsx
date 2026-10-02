@@ -27,50 +27,28 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
     return () => clearTimeout(timer);
   }, [toast.id, toast.autoDismissMs, onDismiss]);
 
-  const getLevelDetails = () => {
+  const getLevelIcon = () => {
     switch (toast.level) {
       case 'success':
-        return {
-          icon: <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />,
-          borderColor: 'border-emerald-500/40',
-          badgeBg: 'bg-emerald-950/20',
-        };
+        return <CheckCircle2 className="w-4 h-4 text-subtext0 shrink-0 mt-0.5" />;
       case 'warning':
-        return {
-          icon: <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />,
-          borderColor: 'border-amber-500/40',
-          badgeBg: 'bg-amber-950/20',
-        };
+        return <AlertTriangle className="w-4 h-4 text-subtext0 shrink-0 mt-0.5" />;
       case 'error':
-        return {
-          icon: <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />,
-          borderColor: 'border-red-500/40',
-          badgeBg: 'bg-red-950/20',
-        };
+        return <AlertCircle className="w-4 h-4 text-subtext0 shrink-0 mt-0.5" />;
       case 'update':
-        return {
-          icon: <Sparkles className="w-4 h-4 text-[#89b4fa] shrink-0 mt-0.5" />,
-          borderColor: 'border-[#89b4fa]/50',
-          badgeBg: 'bg-[#181825]',
-        };
+        return <Sparkles className="w-4 h-4 text-subtext0 shrink-0 mt-0.5" />;
       case 'info':
       default:
-        return {
-          icon: <Info className="w-4 h-4 text-[#89b4fa] shrink-0 mt-0.5" />,
-          borderColor: 'border-[#313244]',
-          badgeBg: 'bg-[#181825]',
-        };
+        return <Info className="w-4 h-4 text-subtext0 shrink-0 mt-0.5" />;
     }
   };
-
-  const { icon, borderColor, badgeBg } = getLevelDetails();
 
   return (
     <div
       role="alert"
-      className={`pointer-events-auto w-84 bg-[#181825] border ${borderColor} ${badgeBg} rounded-lg shadow-2xl p-3 flex items-start gap-2.5 transition-all animate-in slide-in-from-bottom-2 duration-200`}
+      className="pointer-events-auto w-84 bg-[#181825] border border-[#313244] rounded shadow-2xl p-3 flex items-start gap-2.5 transition-all animate-in slide-in-from-bottom-2 duration-200"
     >
-      {icon}
+      {getLevelIcon()}
 
       <div className="flex-1 min-w-0 pr-1">
         <div className="flex items-center justify-between gap-2">
@@ -88,7 +66,7 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
                 key={act.label}
                 type="button"
                 onClick={() => notificationService.handleAction(act, toast.id)}
-                className="px-2.5 py-1 text-[10px] font-semibold rounded bg-[#313244]/80 hover:bg-[#89b4fa] text-text hover:text-[#11111b] border border-[#45475a]/50 transition-colors cursor-pointer"
+                className="px-2.5 py-1 text-[10px] font-medium rounded bg-[#313244] hover:bg-[#45475a] text-text border border-[#45475a]/50 transition-colors cursor-pointer"
               >
                 {act.label}
               </button>

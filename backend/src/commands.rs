@@ -685,6 +685,31 @@ pub async fn window_is_fullscreen(window: Window) -> Result<bool, String> {
 }
 
 #[tauri::command]
+pub async fn window_maximize(window: Window) -> Result<(), String> {
+    window.maximize().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn window_set_min_size(window: Window) -> Result<(), String> {
+    let _ = window.unmaximize();
+    #[cfg(target_os = "macos")]
+    let min_size = tauri::LogicalSize {
+        width: 640.0,
+        height: 500.0,
+    };
+    #[cfg(not(target_os = "macos"))]
+    let min_size = tauri::LogicalSize {
+        width: 1024.0,
+        height: 680.0,
+    };
+    window
+        .set_size(tauri::Size::Logical(min_size))
+        .map_err(|e| e.to_string())?;
+    let _ = window.center();
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn window_show(window: Window) -> Result<(), String> {
     window.show().map_err(|e| e.to_string())?;
     let _ = window.set_focus();

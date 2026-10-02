@@ -1,5 +1,20 @@
 export type NotificationLevel = 'info' | 'success' | 'warning' | 'error' | 'update';
 
+export type NotificationChannel = 'softwareUpdates' | 'aiReview' | 'gitSync' | 'guardrails';
+
+export interface NotificationSettings {
+  enableDesktopNotifications: boolean;
+  enableInAppToasts: boolean;
+  playAlertSound: boolean;
+  toastDurationMs: number; // 3000 | 5000 | 10000 | 0 (0 = persistent)
+  channels: {
+    softwareUpdates: boolean;
+    aiReview: boolean;
+    gitSync: boolean;
+    guardrails: boolean;
+  };
+}
+
 export interface AppNotificationAction {
   label: string;
   actionType: string;
@@ -13,6 +28,7 @@ export interface AppNotification {
   level: NotificationLevel;
   timestamp: number;
   isRead: boolean;
+  channel?: NotificationChannel;
   actions?: AppNotificationAction[];
   autoDismissMs?: number;
 }
@@ -21,6 +37,7 @@ export interface NotifyOptions {
   title: string;
   body: string;
   level?: NotificationLevel;
+  channel?: NotificationChannel;
   actions?: AppNotificationAction[];
   autoDismissMs?: number;
   silent?: boolean;

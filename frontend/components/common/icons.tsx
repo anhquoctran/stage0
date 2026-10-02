@@ -74,6 +74,7 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import {
+  faBell,
   faBookmark,
   faCircleCheck,
   faCircleXmark,
@@ -107,6 +108,7 @@ const createIcon = (icon: IconDefinition): AppIconComponent => {
 export const AlertCircle = createIcon(faCircleExclamation);
 export const AlertTriangle = createIcon(faTriangleExclamation);
 export const ArrowDown = createIcon(faArrowDown);
+export const Bell = createIcon(faBell);
 export const ArrowLeftRight = createIcon(faArrowsLeftRight);
 export const ArrowRight = createIcon(faArrowRight);
 export const ArrowUp = createIcon(faArrowUp);
