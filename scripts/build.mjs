@@ -72,7 +72,10 @@ ${BOLD}Output Artifacts:${RESET}
 
 const versionBump = bumpProjectPatchVersion(ROOT_DIR);
 console.log(`Project version bumped: ${versionBump.previousVersion} -> ${versionBump.version}`);
-const releaseInfo = syncAllMetadata({ arch: ARCH });
+const releaseInfo = syncAllMetadata({
+  arch: ARCH,
+  os: PLATFORM === 'win32' ? 'windows' : PLATFORM === 'darwin' ? 'macos' : 'linux',
+});
 
 console.log(`\n${CYAN}======================================================${RESET}`);
 console.log(`${BOLD}${MAGENTA}  ✦ Stage0 Virtual MR Sandbox - Production Build${RESET}`);

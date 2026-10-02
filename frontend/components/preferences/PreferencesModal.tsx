@@ -38,6 +38,7 @@ import { BotReviewersTab } from './BotReviewersTab';
 import { SandboxTab } from './SandboxTab';
 import { GitBinaryTab } from './GitBinaryTab';
 import { GuardrailsTab } from './GuardrailsTab';
+import { UpdatesTab } from './UpdatesTab';
 import { useGitStore } from '../../store/useGitStore';
 import { useAiMcpStore } from '../../store/useAiMcpStore';
 import { useGitBinaryStore } from '../../store/useGitBinaryStore';
@@ -69,7 +70,9 @@ export type PreferenceTab =
   | 'credentials'
   | 'sandbox'
   | 'reviewers'
-  | 'guardrails';
+  | 'guardrails'
+  | 'updates'
+  | 'updates-check';
 
 interface PreferencesBaseline {
   themeMode: ThemeMode;
@@ -224,6 +227,19 @@ const SETTINGS_TREE: TreeCategory[] = [
       },
     ],
   },
+  {
+    id: 'updates',
+    label: 'Software Updates',
+    children: [
+      {
+        id: 'updates-check',
+        label: 'Updates & Version',
+        title: 'Software Updates',
+        description: 'Check for application updates, inspect release notes, and configure automated version verification.',
+        keywords: ['update', 'version', 'upgrade', 'patch', 'check', 'download', 'release', 'install', 'channel'],
+      },
+    ],
+  },
 ];
 
 // Helper to normalize legacy tab strings
@@ -253,6 +269,9 @@ const normalizeTab = (tab?: string): PreferenceTab => {
       return 'git-binary';
     case 'credentials':
       return 'git-credentials';
+    case 'updates':
+    case 'updates-check':
+      return 'updates-check';
     default:
       return tab as PreferenceTab;
   }
@@ -327,6 +346,8 @@ export const PreferencesModal: React.FC = () => {
   const {
     isPreferencesOpen,
     setIsPreferencesOpen,
+    initialPreferencesTab,
+    setInitialPreferencesTab,
     fontFamily: storedFontFamily,
     fontSize: storedFontSize,
     isBold: storedIsBold,
@@ -401,58 +422,65 @@ export const PreferencesModal: React.FC = () => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRestartPrompt, setShowRestartPrompt] = useState(false);
 
+  const wasOpenRef = useRef(false);
+
   // Synchronize draft states and baseline whenever modal is opened
   useEffect(() => {
     if (isPreferencesOpen) {
+      if (!wasOpenRef.current) {
+        wasOpenRef.current = true;
+        setDraftThemeMode(storedThemeMode);
+        setDraftFontFamily(storedFontFamily);
+        setDraftFontSize(storedFontSize);
+        setDraftIsBold(storedIsBold);
+        setDraftIsItalic(storedIsItalic);
+        setDraftIsUnderline(storedIsUnderline);
+        setDraftLineSpacing(storedLineSpacing);
+        setDraftEnableLigatures(storedEnableLigatures);
+        setDraftShowInlineBlame(storedShowInlineBlame);
+        setDraftSandboxType(storedSandboxType);
+        setDraftAiConfig({ ...storedAiConfig });
+        setDraftGitBinaryId(storedGitBinaryId);
+        setDraftGitBinaryPath(storedGitBinaryPath);
 
-      setDraftThemeMode(storedThemeMode);
-      setDraftFontFamily(storedFontFamily);
-      setDraftFontSize(storedFontSize);
-      setDraftIsBold(storedIsBold);
-      setDraftIsItalic(storedIsItalic);
-      setDraftIsUnderline(storedIsUnderline);
-      setDraftLineSpacing(storedLineSpacing);
-      setDraftEnableLigatures(storedEnableLigatures);
-      setDraftShowInlineBlame(storedShowInlineBlame);
-      setDraftSandboxType(storedSandboxType);
-      setDraftAiConfig({ ...storedAiConfig });
-      setDraftGitBinaryId(storedGitBinaryId);
-      setDraftGitBinaryPath(storedGitBinaryPath);
+        setSavedBaseline({
+          themeMode: storedThemeMode,
+          fontFamily: storedFontFamily,
+          fontSize: storedFontSize,
+          isBold: storedIsBold,
+          isItalic: storedIsItalic,
+          isUnderline: storedIsUnderline,
+          lineSpacing: storedLineSpacing,
+          enableLigatures: storedEnableLigatures,
+          showInlineBlame: storedShowInlineBlame,
+          sandboxType: storedSandboxType,
+          aiConfig: { ...storedAiConfig },
+          gitBinaryId: storedGitBinaryId,
+          gitBinaryPath: storedGitBinaryPath,
+        });
 
-      setSavedBaseline({
-        themeMode: storedThemeMode,
-        fontFamily: storedFontFamily,
-        fontSize: storedFontSize,
-        isBold: storedIsBold,
-        isItalic: storedIsItalic,
-        isUnderline: storedIsUnderline,
-        lineSpacing: storedLineSpacing,
-        enableLigatures: storedEnableLigatures,
-        showInlineBlame: storedShowInlineBlame,
-        sandboxType: storedSandboxType,
-        aiConfig: { ...storedAiConfig },
-        gitBinaryId: storedGitBinaryId,
-        gitBinaryPath: storedGitBinaryPath,
-      });
+        fetchActiveBinary().then((res) => {
+          setDraftGitBinaryId(res.id);
+          setDraftGitBinaryPath(res.path);
+          setSavedBaseline((prev) => ({
+            ...prev,
+            gitBinaryId: res.id,
+            gitBinaryPath: res.path,
+          }));
+        });
 
-      fetchActiveBinary().then((res) => {
-        setDraftGitBinaryId(res.id);
-        setDraftGitBinaryPath(res.path);
-        setSavedBaseline((prev) => ({
-          ...prev,
-          gitBinaryId: res.id,
-          gitBinaryPath: res.path,
-        }));
-      });
-
-      setActiveTab(null);
-      setExpandedGroups({});
-      setSearchQuery('');
-      setIsApplied(false);
-      setShowResetConfirm(false);
-      setShowRestartPrompt(false);
+        setSearchQuery('');
+        setIsApplied(false);
+        setShowResetConfirm(false);
+        setShowRestartPrompt(false);
+      }
     } else {
-      setDraftAiConfig((current) => ({ ...current, apiKey: '' }));
+      if (wasOpenRef.current) {
+        wasOpenRef.current = false;
+        setActiveTab(null);
+        setExpandedGroups({});
+        setDraftAiConfig((current) => ({ ...current, apiKey: '' }));
+      }
     }
   }, [
     isPreferencesOpen,
@@ -471,6 +499,23 @@ export const PreferencesModal: React.FC = () => {
     storedGitBinaryPath,
     fetchActiveBinary,
   ]);
+
+  // Navigate to initial target tab whenever initialPreferencesTab is requested
+  useEffect(() => {
+    if (isPreferencesOpen && initialPreferencesTab) {
+      const target = normalizeTab(initialPreferencesTab);
+      setActiveTab(target);
+      const openGroups: Record<string, boolean> = {};
+      for (const group of SETTINGS_TREE) {
+        if (group.children.some((c) => c.id === target)) {
+          openGroups[group.id] = true;
+          break;
+        }
+      }
+      setExpandedGroups((prev) => ({ ...prev, ...openGroups }));
+      setInitialPreferencesTab(null);
+    }
+  }, [isPreferencesOpen, initialPreferencesTab, setInitialPreferencesTab]);
 
   // Unsaved count calculation
   const totalUnsaved = useMemo(() => {
@@ -778,7 +823,12 @@ export const PreferencesModal: React.FC = () => {
                       {/* Category Parent Header */}
                       <button
                         type="button"
-                        onClick={() => toggleGroup(group.id)}
+                        onClick={() => {
+                          toggleGroup(group.id);
+                          if (group.children.length === 1) {
+                            setActiveTab(group.children[0].id);
+                          }
+                        }}
                         className={`w-full flex items-center justify-between px-2 py-1.5 text-xs rounded transition-colors cursor-pointer select-none text-left group ${hasActiveChild ? 'text-text font-semibold' : 'text-subtext1 hover:text-text hover:bg-[#313244]/20'
                           }`}
                       >
@@ -1466,6 +1516,13 @@ export const PreferencesModal: React.FC = () => {
             {currentTabId === 'git-credentials' && (
               <div className="animate-in fade-in duration-100">
                 <GitCredentialsTab />
+              </div>
+            )}
+
+            {/* VIEW: SOFTWARE UPDATES */}
+            {currentTabId === 'updates-check' && (
+              <div className="animate-in fade-in duration-100">
+                <UpdatesTab />
               </div>
             )}
           </div>

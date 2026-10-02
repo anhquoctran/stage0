@@ -14,6 +14,9 @@ export interface ViewerFontSettings {
 interface PreferencesState extends ViewerFontSettings {
   isPreferencesOpen: boolean;
   setIsPreferencesOpen: (open: boolean) => void;
+  initialPreferencesTab: string | null;
+  setInitialPreferencesTab: (tab: string | null) => void;
+  openPreferences: (tab?: string) => void;
   updateViewerFontSettings: (settings: Partial<ViewerFontSettings>) => void;
   resetViewerFontSettings: () => void;
   showInlineBlame: boolean;
@@ -105,9 +108,23 @@ function getInitialInlineBlame(): boolean {
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   ...initialSettings,
   isPreferencesOpen: false,
+  initialPreferencesTab: null,
   showInlineBlame: getInitialInlineBlame(),
 
-  setIsPreferencesOpen: (open: boolean) => set({ isPreferencesOpen: open }),
+  setIsPreferencesOpen: (open: boolean) =>
+    set({
+      isPreferencesOpen: open,
+      initialPreferencesTab: open ? get().initialPreferencesTab : null,
+    }),
+
+  setInitialPreferencesTab: (tab: string | null) =>
+    set({ initialPreferencesTab: tab }),
+
+  openPreferences: (tab?: string) =>
+    set({
+      isPreferencesOpen: true,
+      initialPreferencesTab: tab ?? null,
+    }),
 
   setShowInlineBlame: (show: boolean) => {
     try {

@@ -13,9 +13,13 @@ import {
   Check,
   RefreshCw,
   FileText,
+  DownloadCloud,
+  CheckCircle2,
+  Sparkles,
 } from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
+import { useUpdateStore } from '../../store/useUpdateStore';
 
 export const StatusBar: React.FC = () => {
   const {
@@ -33,7 +37,13 @@ export const StatusBar: React.FC = () => {
     syncStatus,
     isDiffLoading,
   } = useGitStore();
-  const { setIsPreferencesOpen } = usePreferencesStore();
+  const { setIsPreferencesOpen, openPreferences } = usePreferencesStore();
+  const {
+    status: updateStatus,
+    updatePayload,
+    downloadProgress,
+    downloadedText,
+  } = useUpdateStore();
 
   const totalFiles = diffPayload?.files.length || 0;
   const currentFileIndex = selectedFile && diffPayload
@@ -42,7 +52,7 @@ export const StatusBar: React.FC = () => {
 
   return (
     <footer className="h-7 bg-mantle border-t border-surface0/80 px-3 flex items-center justify-between text-[11px] text-subtext1 shrink-0 select-none z-10">
-      {/* Left: Repository info & Active branch & Sync */}
+      {/* Left: Repository info & Active branch & Sync & Updates */}
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         {currentRepo ? (
           <>
@@ -81,6 +91,57 @@ export const StatusBar: React.FC = () => {
             )}
             <span className="truncate">{syncStatus}</span>
           </div>
+        )}
+
+        {/* Background Update Activity Indicator */}
+        {updateStatus === 'checking' && (
+          <button
+            type="button"
+            onClick={() => openPreferences('updates')}
+            className="h-5 px-2 rounded-md bg-[#89b4fa]/10 hover:bg-[#89b4fa]/20 border border-[#89b4fa]/30 text-[#89b4fa] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
+            title="Stage0 is checking for software updates in the background. Click to open Updates preferences."
+          >
+            <RefreshCw className="w-2.5 h-2.5 text-[#89b4fa] animate-spin shrink-0" />
+            <span>Checking updates...</span>
+          </button>
+        )}
+
+        {updateStatus === 'downloading' && (
+          <button
+            type="button"
+            onClick={() => openPreferences('updates')}
+            className="h-5 px-2 rounded-md bg-[#89b4fa]/15 hover:bg-[#89b4fa]/25 border border-[#89b4fa]/40 text-[#89b4fa] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
+            title={`Downloading Stage0 update (${downloadProgress}% - ${downloadedText}). Click to view progress.`}
+          >
+            <DownloadCloud className="w-3 h-3 text-[#89b4fa] animate-bounce shrink-0" />
+            <span>
+              Downloading update: <strong className="font-mono text-text font-bold">{downloadProgress}%</strong>
+            </span>
+          </button>
+        )}
+
+        {updateStatus === 'ready' && (
+          <button
+            type="button"
+            onClick={() => openPreferences('updates')}
+            className="h-5 px-2.5 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] font-semibold shadow-xs shrink-0 animate-in fade-in duration-200"
+            title={`Stage0 v${updatePayload?.latestVersion || ''} is ready to install! Click to restart and update.`}
+          >
+            <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+            <span>Update Ready • Restart</span>
+          </button>
+        )}
+
+        {updateStatus === 'available' && (
+          <button
+            type="button"
+            onClick={() => openPreferences('updates')}
+            className="h-5 px-2 rounded-md bg-[#89b4fa]/15 hover:bg-[#89b4fa]/25 border border-[#89b4fa]/40 text-[#89b4fa] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
+            title={`Stage0 v${updatePayload?.latestVersion || ''} is available. Click to review.`}
+          >
+            <Sparkles className="w-3 h-3 text-[#89b4fa] shrink-0" />
+            <span>v{updatePayload?.latestVersion} Available</span>
+          </button>
         )}
       </div>
 

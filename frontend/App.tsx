@@ -4,6 +4,7 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { MainLayout } from './components/layout/MainLayout';
 import { useGitStore } from './store/useGitStore';
+import { useUpdateStore } from './store/useUpdateStore';
 import type { RepoInfo, WindowStartupContext } from './types/git';
 
 export const App: React.FC = () => {
@@ -38,6 +39,7 @@ export const App: React.FC = () => {
     let disposed = false;
     let unlistenFs: (() => void) | undefined;
     let unlistenOpen: (() => void) | undefined;
+    let startupCheckTimer: number | undefined;
 
     const initializeWindow = async () => {
       try {
@@ -67,10 +69,26 @@ export const App: React.FC = () => {
       } catch (error) {
         console.warn('Failed to initialize window context:', error);
         await initApp();
+      } finally {
+        if (!disposed) {
+          // Graceful startup delay (5s) per industry standard to avoid boot I/O & CPU contention
+          startupCheckTimer = window.setTimeout(() => {
+            if (!disposed) {
+              void useUpdateStore.getState().checkIfUpdateDueAndRun();
+            }
+          }, 5000);
+        }
       }
     };
 
     void initializeWindow();
+
+    // Periodically evaluate update frequency during long-running app sessions (every 1 hour)
+    const updateCheckInterval = window.setInterval(() => {
+      if (!disposed) {
+        void useUpdateStore.getState().checkIfUpdateDueAndRun();
+      }
+    }, 60 * 60 * 1000);
 
     const checkWindowState = async () => {
       try {
@@ -90,6 +108,8 @@ export const App: React.FC = () => {
       disposed = true;
       unlistenFs?.();
       unlistenOpen?.();
+      if (startupCheckTimer !== undefined) window.clearTimeout(startupCheckTimer);
+      window.clearInterval(updateCheckInterval);
       window.removeEventListener('resize', checkWindowState);
     };
   }, [initApp, attachRepoToCurrentWindow, refreshDiff]);
