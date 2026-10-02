@@ -16,10 +16,12 @@ import {
   DownloadCloud,
   CheckCircle2,
   Sparkles,
+  Bell,
 } from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { useUpdateStore } from '../../store/useUpdateStore';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 export const StatusBar: React.FC = () => {
   const {
@@ -38,6 +40,7 @@ export const StatusBar: React.FC = () => {
     isDiffLoading,
   } = useGitStore();
   const { setIsPreferencesOpen, openPreferences } = usePreferencesStore();
+  const { unreadCount, isHistoryDrawerOpen, toggleHistoryDrawer } = useNotificationStore();
   const {
     status: updateStatus,
     updatePayload,
@@ -255,6 +258,27 @@ export const StatusBar: React.FC = () => {
             <kbd className="font-mono bg-surface0/60 px-1 py-0.2 rounded border border-surface1/40 text-subtext1">S/U</kbd> View
           </span>
         </div>
+
+        <button
+          type="button"
+          onClick={toggleHistoryDrawer}
+          aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+          aria-expanded={isHistoryDrawerOpen}
+          className={`relative grid h-6 w-7 place-items-center rounded transition-colors cursor-pointer ${
+            isHistoryDrawerOpen
+              ? 'bg-surface1 text-text'
+              : 'text-subtext0 hover:bg-surface0 hover:text-text'
+          }`}
+          title={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications'}
+        >
+          <Bell className="w-3.5 h-3.5" />
+          {unreadCount > 0 && (
+            <span
+              aria-hidden="true"
+              className="absolute right-1 top-0.5 h-1.5 w-1.5 rounded-full bg-red ring-1 ring-mantle"
+            />
+          )}
+        </button>
       </div>
     </footer>
   );

@@ -6,15 +6,16 @@
         "label": "main",
         "width": 1280,
         "height": 800,
-        "minWidth": 640,
-        "minHeight": 500,
-        "decorations": true,
+        "minWidth": 1024,
+        "minHeight": 680,
+        "decorations": false,
         "shadow": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
         "backgroundColor": "#11111b",
         "visible": true,
-        "maximized": false
+        "maximized": false,
+        "devtools": true
       }
     ]
   }

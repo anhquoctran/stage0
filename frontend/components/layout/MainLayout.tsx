@@ -16,6 +16,7 @@ import { TabBar } from './TabBar';
 import { VirtualMrHub } from '../git/VirtualMrHub';
 import { EmptyVirtualMrWorkspace } from './EmptyVirtualMrWorkspace';
 import { VirtualMrBottomBar } from './VirtualMrBottomBar';
+import { NotificationDrawer } from './NotificationDrawer';
 import { NewVirtualMrView } from '../mr/NewVirtualMrView';
 import { RepositorySettingsModal } from '../repository/RepositorySettingsModal';
 import { useGitStore } from '../../store/useGitStore';
@@ -353,7 +354,7 @@ export const MainLayout: React.FC = () => {
   ]);
 
   return (
-    <div className="flex flex-col h-full w-full flex-1 overflow-hidden bg-crust text-text font-sans">
+    <div className="relative flex flex-col h-full w-full flex-1 overflow-hidden bg-crust text-text font-sans">
       {/* Top Application Bar with Menu Bar & Action Toolbar */}
       <TopBar />
 
@@ -469,6 +470,7 @@ export const MainLayout: React.FC = () => {
 
       {/* Bottom Status Bar */}
       <StatusBar />
+      <NotificationDrawer />
 
       {/* Global Feedback Toast */}
       {toastMessage && (

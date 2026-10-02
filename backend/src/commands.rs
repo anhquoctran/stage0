@@ -18,8 +18,8 @@ use crate::sandbox::{
     SandboxAdapterInfo, SandboxExecutionResult, SandboxInstanceInfo, SandboxManager, SandboxType,
 };
 use crate::window_manager::{
-    close_repo_for_window, create_welcome_window, open_repo_path, resolve_repository,
-    OpenRepoOutcome, WindowManagerState, WindowStartupContext,
+    close_repo_for_window, create_welcome_window, default_window_size, minimum_window_size,
+    open_repo_path, resolve_repository, OpenRepoOutcome, WindowManagerState, WindowStartupContext,
 };
 use std::io::Read;
 use std::path::Path;
@@ -690,20 +690,19 @@ pub async fn window_maximize(window: Window) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn window_set_min_size(window: Window) -> Result<(), String> {
+pub async fn window_reset_size(window: Window) -> Result<(), String> {
     let _ = window.unmaximize();
-    #[cfg(target_os = "macos")]
+    let (min_width, min_height) = minimum_window_size();
     let min_size = tauri::LogicalSize {
-        width: 640.0,
-        height: 500.0,
+        width: min_width,
+        height: min_height,
     };
-    #[cfg(not(target_os = "macos"))]
-    let min_size = tauri::LogicalSize {
-        width: 1024.0,
-        height: 680.0,
-    };
+    let (width, height) = default_window_size();
     window
-        .set_size(tauri::Size::Logical(min_size))
+        .set_min_size(Some(tauri::Size::Logical(min_size)))
+        .map_err(|e| e.to_string())?;
+    window
+        .set_size(tauri::Size::Logical(tauri::LogicalSize { width, height }))
         .map_err(|e| e.to_string())?;
     let _ = window.center();
     Ok(())

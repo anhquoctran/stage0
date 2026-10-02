@@ -3,11 +3,11 @@ pub mod credentials;
 pub mod db;
 pub mod git;
 pub mod menu;
+pub mod notifications;
 pub mod process;
 pub mod sandbox;
 pub mod watcher;
 pub mod window_manager;
-pub mod notifications;
 
 use db::Database;
 use sandbox::SandboxManager;
@@ -15,7 +15,8 @@ use std::path::{Path, PathBuf};
 use tauri::{Manager, WindowEvent};
 use watcher::WatcherState;
 use window_manager::{
-    destroy_window, focus_window, focused_window, open_repo_path, WindowManagerState,
+    default_window_size, destroy_window, focus_window, focused_window, minimum_window_size,
+    open_repo_path, WindowManagerState,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -60,7 +61,6 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_notification::init())
         .manage(WatcherState::new())
         .manage(SandboxManager::new())
         .manage(WindowManagerState::default())
@@ -84,18 +84,17 @@ pub fn run() {
                 {
                     let _ = window.set_decorations(true);
                 }
-                #[cfg(target_os = "macos")]
+                let (min_width, min_height) = minimum_window_size();
                 let min_size = tauri::LogicalSize {
-                    width: 640.0,
-                    height: 500.0,
-                };
-                #[cfg(not(target_os = "macos"))]
-                let min_size = tauri::LogicalSize {
-                    width: 1024.0,
-                    height: 680.0,
+                    width: min_width,
+                    height: min_height,
                 };
                 let _ = window.set_min_size(Some(tauri::Size::Logical(min_size)));
-                let _ = window.set_size(tauri::Size::Logical(min_size));
+                let (width, height) = default_window_size();
+                let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize {
+                    width,
+                    height,
+                }));
                 let _ = window.unmaximize();
                 let _ = window.center();
             }
@@ -150,7 +149,7 @@ pub fn run() {
             commands::open_webview_devtools,
             commands::window_toggle_maximize,
             commands::window_maximize,
-            commands::window_set_min_size,
+            commands::window_reset_size,
             commands::window_close,
             commands::window_is_maximized,
             commands::window_is_fullscreen,
@@ -227,7 +226,7 @@ pub fn run() {
             commands::get_app_info,
             // Cross-platform Push Notifications
             notifications::send_push_notification,
-            notifications::is_notification_permission_granted,
+            notifications::get_notification_permission_state,
             notifications::request_notification_permission,
         ])
         .build(tauri::generate_context!())

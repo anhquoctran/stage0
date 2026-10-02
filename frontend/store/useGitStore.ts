@@ -260,10 +260,10 @@ export const useGitStore = create<GitState>((set, get) => ({
         }
       }
 
-      // If no last repository was opened on launch, set window size to min size
+      // Keep the welcome window at the platform's default size when no repo opens.
       if (!openedAny && !get().currentRepo) {
         try {
-          await invoke('window_set_min_size');
+          await invoke('window_reset_size');
         } catch {}
       }
     } catch (err: unknown) {

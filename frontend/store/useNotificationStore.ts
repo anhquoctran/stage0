@@ -131,6 +131,12 @@ export const useNotificationStore = create<NotificationState>((set) => ({
 
   addNotification: (notification: AppNotification) => {
     set((state) => {
+      // The sender records locally and also emits the same notification to every
+      // window. De-duplicate by stable ID so a window never stores it twice.
+      if (state.notifications.some((existing) => existing.id === notification.id)) {
+        return state;
+      }
+
       const updated = [notification, ...state.notifications].slice(0, MAX_STORED_NOTIFICATIONS);
       persistNotifications(updated);
 

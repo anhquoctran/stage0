@@ -2,7 +2,12 @@ export type NotificationLevel = 'info' | 'success' | 'warning' | 'error' | 'upda
 
 export type NotificationChannel = 'softwareUpdates' | 'aiReview' | 'gitSync' | 'guardrails';
 
-export type NotificationPermissionState = 'granted' | 'denied' | 'default' | 'unsupported';
+export type NotificationPermissionState =
+  | 'granted'
+  | 'denied'
+  | 'default'
+  | 'not_required'
+  | 'unsupported';
 
 export interface NotificationSettings {
   enableDesktopNotifications: boolean;
@@ -33,6 +38,14 @@ export interface AppNotification {
   channel?: NotificationChannel;
   actions?: AppNotificationAction[];
   autoDismissMs?: number;
+}
+
+export type NotificationDeliveryState = 'sent' | 'not_requested' | 'unsupported' | 'failed';
+
+export interface NotificationDispatchResult {
+  notification: AppNotification;
+  delivery: NotificationDeliveryState;
+  error?: string;
 }
 
 export interface NotifyOptions {
