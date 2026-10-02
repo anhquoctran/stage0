@@ -1,7 +1,7 @@
 {
   "name": "stage0",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -29,6 +29,7 @@
     "@tauri-apps/api": "^2.2.0",
     "@tauri-apps/plugin-dialog": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
+    "@tauri-apps/plugin-notification": "^2.5.1",
     "clsx": "^2.1.1",
     "marked": "^18.0.14",
     "react": "^19.0.0",

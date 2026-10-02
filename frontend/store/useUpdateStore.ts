@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
 import { SOFTWARE_ABOUT } from '../config/about';
-import { useGitStore } from './useGitStore';
 import {
   UpdatePayload,
   UpdateStatus,
@@ -14,6 +13,7 @@ import {
   fetchUpdateCheck,
   simulateDownloadPayload,
 } from '../services/updateApi';
+import { notificationService } from '../services/notificationService';
 
 const POLICY_STORAGE_KEY = 'stage0_update_policy';
 const FREQUENCY_STORAGE_KEY = 'stage0_update_frequency';
@@ -148,9 +148,23 @@ export const useUpdateStore = create<UpdateStoreState>((set, get) => ({
         if (!manualTrigger) {
           const latest = response.data.latestVersion;
           if (get().updateCheckPolicy === 'notify_only') {
-            useGitStore.getState().showToast(`Stage0 v${latest} is available! Open Preferences to update.`);
+            void notificationService.notify({
+              title: 'Stage0 Update Available',
+              body: `Stage0 v${latest} is now available. Click to review release notes and update.`,
+              level: 'update',
+              actions: [
+                {
+                  label: 'View Update',
+                  actionType: 'open_preferences_updates',
+                },
+              ],
+            });
           } else if (get().updateCheckPolicy === 'auto_install') {
-            useGitStore.getState().showToast(`Stage0 v${latest} is downloading automatically.`);
+            void notificationService.notify({
+              title: 'Stage0 Auto-Downloading Update',
+              body: `Downloading Stage0 v${latest} automatically in the background.`,
+              level: 'update',
+            });
             get().startDownload();
           }
         }
@@ -254,7 +268,17 @@ export const useUpdateStore = create<UpdateStoreState>((set, get) => ({
           downloadSpeed: 'Completed',
         });
         if (get().updateCheckPolicy === 'auto_install') {
-          useGitStore.getState().showToast('Stage0 update is ready to install! Restart when convenient.');
+          void notificationService.notify({
+            title: 'Stage0 Update Ready',
+            body: `Stage0 v${get().updatePayload?.latestVersion || ''} has been downloaded. Restart to complete the update.`,
+            level: 'success',
+            actions: [
+              {
+                label: 'Restart & Update',
+                actionType: 'open_preferences_updates',
+              },
+            ],
+          });
         }
       },
       (errorMsg) => {
