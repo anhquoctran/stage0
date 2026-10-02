@@ -3,6 +3,8 @@ import { clsx } from 'clsx';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { MainLayout } from './components/layout/MainLayout';
+import { ToastContainer } from './components/common/ToastContainer';
+import { notificationService } from './services/notificationService';
 import { useGitStore } from './store/useGitStore';
 import { useUpdateStore } from './store/useUpdateStore';
 import type { RepoInfo, WindowStartupContext } from './types/git';
@@ -82,6 +84,7 @@ export const App: React.FC = () => {
     };
 
     void initializeWindow();
+    void notificationService.init();
 
     // Periodically evaluate update frequency during long-running app sessions (every 1 hour)
     const updateCheckInterval = window.setInterval(() => {
@@ -108,6 +111,7 @@ export const App: React.FC = () => {
       disposed = true;
       unlistenFs?.();
       unlistenOpen?.();
+      notificationService.destroy();
       if (startupCheckTimer !== undefined) window.clearTimeout(startupCheckTimer);
       window.clearInterval(updateCheckInterval);
       window.removeEventListener('resize', checkWindowState);
@@ -126,6 +130,7 @@ export const App: React.FC = () => {
       )}
     >
       <MainLayout />
+      <ToastContainer />
     </div>
   );
 };

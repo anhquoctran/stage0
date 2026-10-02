@@ -7,6 +7,7 @@ pub mod process;
 pub mod sandbox;
 pub mod watcher;
 pub mod window_manager;
+pub mod notifications;
 
 use db::Database;
 use sandbox::SandboxManager;
@@ -59,6 +60,7 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .manage(WatcherState::new())
         .manage(SandboxManager::new())
         .manage(WindowManagerState::default())
@@ -219,6 +221,10 @@ pub fn run() {
             commands::pick_git_executable,
             commands::restart_app,
             commands::get_app_info,
+            // Cross-platform Push Notifications
+            notifications::send_push_notification,
+            notifications::is_notification_permission_granted,
+            notifications::request_notification_permission,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
