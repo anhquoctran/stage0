@@ -98,10 +98,10 @@ export const StatusBar: React.FC = () => {
           <button
             type="button"
             onClick={() => openPreferences('updates')}
-            className="h-5 px-2 rounded-md bg-[#89b4fa]/10 hover:bg-[#89b4fa]/20 border border-[#89b4fa]/30 text-[#89b4fa] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
+            className="h-5 px-2 rounded-md bg-[#cba6f7]/10 hover:bg-[#cba6f7]/20 border border-[#cba6f7]/30 text-[#cba6f7] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
             title="Stage0 is checking for software updates in the background. Click to open Updates preferences."
           >
-            <RefreshCw className="w-2.5 h-2.5 text-[#89b4fa] animate-spin shrink-0" />
+            <RefreshCw className="w-2.5 h-2.5 text-[#cba6f7] animate-spin shrink-0" />
             <span>Checking updates...</span>
           </button>
         )}
@@ -110,10 +110,10 @@ export const StatusBar: React.FC = () => {
           <button
             type="button"
             onClick={() => openPreferences('updates')}
-            className="h-5 px-2 rounded-md bg-[#89b4fa]/15 hover:bg-[#89b4fa]/25 border border-[#89b4fa]/40 text-[#89b4fa] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
+            className="h-5 px-2 rounded-md bg-[#cba6f7]/15 hover:bg-[#cba6f7]/25 border border-[#cba6f7]/40 text-[#cba6f7] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
             title={`Downloading Stage0 update (${downloadProgress}% - ${downloadedText}). Click to view progress.`}
           >
-            <DownloadCloud className="w-3 h-3 text-[#89b4fa] animate-bounce shrink-0" />
+            <DownloadCloud className="w-3 h-3 text-[#cba6f7] animate-bounce shrink-0" />
             <span>
               Downloading update: <strong className="font-mono text-text font-bold">{downloadProgress}%</strong>
             </span>
@@ -136,10 +136,10 @@ export const StatusBar: React.FC = () => {
           <button
             type="button"
             onClick={() => openPreferences('updates')}
-            className="h-5 px-2 rounded-md bg-[#89b4fa]/15 hover:bg-[#89b4fa]/25 border border-[#89b4fa]/40 text-[#89b4fa] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
+            className="h-5 px-2 rounded-md bg-[#cba6f7]/15 hover:bg-[#cba6f7]/25 border border-[#cba6f7]/40 text-[#cba6f7] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
             title={`Stage0 v${updatePayload?.latestVersion || ''} is available. Click to review.`}
           >
-            <Sparkles className="w-3 h-3 text-[#89b4fa] shrink-0" />
+            <Sparkles className="w-3 h-3 text-[#cba6f7] shrink-0" />
             <span>v{updatePayload?.latestVersion} Available</span>
           </button>
         )}

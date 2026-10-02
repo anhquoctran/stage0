@@ -133,11 +133,11 @@ export function CustomSelect<T extends string>({
         aria-expanded={isOpen}
         aria-label={ariaLabel || selectedOption?.label || placeholder}
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
-        className={`flex items-center justify-between gap-2.5 px-3 py-1.5 rounded border text-xs transition-colors cursor-pointer select-none focus:outline-none focus:border-[#89b4fa]/70 focus:ring-1 focus:ring-[#89b4fa]/30 ${
+        className={`flex items-center justify-between gap-2.5 px-3 py-1.5 rounded border text-xs transition-colors cursor-pointer select-none focus:outline-none focus:border-[#cba6f7]/70 focus:ring-1 focus:ring-[#cba6f7]/30 ${
           disabled
             ? 'bg-[#11111b]/50 border-[#313244]/50 text-subtext0 cursor-not-allowed opacity-60'
             : isOpen
-            ? 'bg-[#1e1e2e] border-[#89b4fa]/60 text-text'
+            ? 'bg-[#1e1e2e] border-[#cba6f7]/60 text-text'
             : 'bg-[#11111b] border-[#313244] hover:border-[#45475a] text-text'
         } ${buttonClassName}`}
       >
@@ -188,7 +188,7 @@ export function CustomSelect<T extends string>({
                       {option.label}
                     </span>
                     {option.badge && (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded font-mono font-normal bg-[#89b4fa]/15 text-[#89b4fa] border border-[#89b4fa]/30">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded font-mono font-normal bg-[#cba6f7]/15 text-[#cba6f7] border border-[#cba6f7]/30">
                         {option.badge}
                       </span>
                     )}
@@ -201,7 +201,7 @@ export function CustomSelect<T extends string>({
                 </div>
 
                 {isSelected ? (
-                  <Check className="w-3.5 h-3.5 text-[#89b4fa] shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-[#cba6f7] shrink-0" />
                 ) : (
                   <span className="w-3.5 shrink-0" />
                 )}

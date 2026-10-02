@@ -39,6 +39,7 @@ import { SandboxTab } from './SandboxTab';
 import { GitBinaryTab } from './GitBinaryTab';
 import { GuardrailsTab } from './GuardrailsTab';
 import { UpdatesTab } from './UpdatesTab';
+import { NotificationsTab } from './NotificationsTab';
 import { useGitStore } from '../../store/useGitStore';
 import { useAiMcpStore } from '../../store/useAiMcpStore';
 import { useGitBinaryStore } from '../../store/useGitBinaryStore';
@@ -71,6 +72,8 @@ export type PreferenceTab =
   | 'sandbox'
   | 'reviewers'
   | 'guardrails'
+  | 'notifications'
+  | 'notifications-settings'
   | 'updates'
   | 'updates-check';
 
@@ -228,6 +231,19 @@ const SETTINGS_TREE: TreeCategory[] = [
     ],
   },
   {
+    id: 'notifications',
+    label: 'Notifications',
+    children: [
+      {
+        id: 'notifications-settings',
+        label: 'Push & Alerts',
+        title: 'Notifications & Push Alerts',
+        description: 'Configure desktop push notifications, in-app toast alerts, and event triggers.',
+        keywords: ['notifications', 'push', 'toast', 'alerts', 'sound', 'desktop', 'native', 'winrt', 'system', 'events'],
+      },
+    ],
+  },
+  {
     id: 'updates',
     label: 'Software Updates',
     children: [
@@ -269,6 +285,9 @@ const normalizeTab = (tab?: string): PreferenceTab => {
       return 'git-binary';
     case 'credentials':
       return 'git-credentials';
+    case 'notifications':
+    case 'notifications-settings':
+      return 'notifications-settings';
     case 'updates':
     case 'updates-check':
       return 'updates-check';
@@ -1516,6 +1535,13 @@ export const PreferencesModal: React.FC = () => {
             {currentTabId === 'git-credentials' && (
               <div className="animate-in fade-in duration-100">
                 <GitCredentialsTab />
+              </div>
+            )}
+
+            {/* VIEW: NOTIFICATIONS */}
+            {currentTabId === 'notifications-settings' && (
+              <div className="animate-in fade-in duration-100">
+                <NotificationsTab />
               </div>
             )}
 

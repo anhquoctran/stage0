@@ -194,7 +194,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-1.5 bg-[#89b4fa] hover:bg-[#74a8f7] text-[#11111b] font-semibold text-xs transition-all shadow-md cursor-pointer"
+            className="px-5 py-1.5 bg-[#cba6f7] hover:brightness-110 text-[#11111b] font-semibold text-xs transition-all shadow-md cursor-pointer rounded"
           >
             Close
           </button>

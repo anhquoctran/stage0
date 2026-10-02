@@ -309,6 +309,7 @@ pub fn open_repo_path(
                         .to_string(),
                 );
             };
+            let _ = window.maximize();
             focus_window(&window)?;
             if caller_label == Some(label.as_str()) {
                 Ok(OpenRepoOutcome::OpenedHere { repo })
@@ -322,6 +323,7 @@ pub fn open_repo_path(
         OpenPlan::AssignedHere(label) => {
             if let Some(window) = app.get_webview_window(&label) {
                 let _ = window.set_title(&format!("Stage0 — {}", repo.name));
+                let _ = window.maximize();
             }
             start_watcher(app, &label, &canonical_path);
             Ok(OpenRepoOutcome::OpenedHere { repo })
@@ -330,6 +332,7 @@ pub fn open_repo_path(
             start_watcher(app, &label, &canonical_path);
             if let Some(window) = app.get_webview_window(&label) {
                 let _ = window.set_title(&format!("Stage0 — {}", repo.name));
+                let _ = window.maximize();
                 let _ = window.emit("repo-open-request", repo.clone());
                 focus_window(&window)?;
             }
@@ -368,7 +371,19 @@ pub fn create_welcome_window(app: &AppHandle) -> Result<String, String> {
         return Err(error);
     }
     if let Some(window) = app.get_webview_window(&label) {
-        let _ = window.maximize();
+        #[cfg(target_os = "macos")]
+        let min_size = tauri::LogicalSize {
+            width: 640.0,
+            height: 500.0,
+        };
+        #[cfg(not(target_os = "macos"))]
+        let min_size = tauri::LogicalSize {
+            width: 1024.0,
+            height: 680.0,
+        };
+        let _ = window.unmaximize();
+        let _ = window.set_size(tauri::Size::Logical(min_size));
+        let _ = window.center();
         focus_window(&window)?;
     }
     Ok(label)

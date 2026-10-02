@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "identifier": "com.localmr.app",
+  "identifier": "com.stage0.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://127.0.0.1:1420",
@@ -12,8 +12,8 @@
       {
         "title": "Stage0",
         "label": "main",
-        "width": 1360,
-        "height": 840,
+        "width": 1024,
+        "height": 680,
         "minWidth": 1024,
         "minHeight": 680,
         "decorations": false,
@@ -22,7 +22,7 @@
         "hiddenTitle": true,
         "backgroundColor": "#11111b",
         "visible": true,
-        "maximized": true,
+        "maximized": false,
         "devtools": true
       }
     ],

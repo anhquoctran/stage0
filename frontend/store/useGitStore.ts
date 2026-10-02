@@ -228,6 +228,7 @@ export const useGitStore = create<GitState>((set, get) => ({
       set({ recentRepos: repos });
       await syncRecentRepositoriesMenu(repos);
 
+      let openedAny = false;
       // Only the original welcome window restores the last repository. New windows
       // start empty so opening another window cannot silently duplicate a repo.
       if (restoreRecent && repos.length > 0) {
@@ -242,6 +243,7 @@ export const useGitStore = create<GitState>((set, get) => ({
                 `[Stage0] Auto-opening last valid repository: ${candidate.name} (${candidate.local_path})`
               );
               await get().selectRepo(candidate);
+              openedAny = true;
               break;
             } else {
               console.warn(
@@ -256,6 +258,13 @@ export const useGitStore = create<GitState>((set, get) => ({
             );
           }
         }
+      }
+
+      // If no last repository was opened on launch, set window size to min size
+      if (!openedAny && !get().currentRepo) {
+        try {
+          await invoke('window_set_min_size');
+        } catch {}
       }
     } catch (err: unknown) {
       console.warn('Failed to initialize app repositories:', err);
@@ -275,6 +284,9 @@ export const useGitStore = create<GitState>((set, get) => ({
   },
 
   attachRepoToCurrentWindow: async (repo: RepoInfo) => {
+    try {
+      await invoke('window_maximize');
+    } catch {}
     if (get().currentRepo?.local_path === repo.local_path) return;
     diffRequestVersion += 1;
     set({

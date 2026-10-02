@@ -7,7 +7,7 @@
 !macro NSIS_HOOK_POSTINSTALL
   ; Set custom DisplayVersion in Windows Registry (Control Panel & Settings > Apps)
   WriteRegStr SHCTX "${UNINSTKEY}" "DisplayName" "Stage0"
-  WriteRegStr SHCTX "${UNINSTKEY}" "DisplayVersion" "0.1.2+cb2414d.windows.amd64"
+  WriteRegStr SHCTX "${UNINSTKEY}" "DisplayVersion" "0.1.2+84b281c.windows.amd64"
   WriteRegStr SHCTX "${UNINSTKEY}" "Publisher" "Anh Quoc Tran"
   WriteRegStr SHCTX "${UNINSTKEY}" "Comments" "Stage0 - Local-First Virtual MR / PR Sandbox. Author: Anh Quoc Tran. Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license."
   WriteRegStr SHCTX "${UNINSTKEY}" "Contact" "Anh Quoc Tran"

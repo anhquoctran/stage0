@@ -87,7 +87,7 @@ export const UpdatesTab: React.FC = () => {
               <span className="px-2 py-0.5 text-xs font-mono font-semibold bg-[#313244]/80 text-text border border-[#45475a]/60 rounded">
                 v{currentVersion}
               </span>
-              <span className="px-2 py-0.5 text-[10px] font-mono uppercase bg-[#89b4fa]/15 text-[#89b4fa] border border-[#89b4fa]/30 rounded">
+              <span className="px-2 py-0.5 text-[10px] font-mono uppercase bg-[#cba6f7]/15 text-[#cba6f7] border border-[#cba6f7]/30 rounded">
                 {selectedChannel === 'stable' ? 'Stable Track' : 'Beta Preview'}
               </span>
             </div>
@@ -113,7 +113,7 @@ export const UpdatesTab: React.FC = () => {
               type="button"
               disabled={status === 'checking' || status === 'downloading'}
               onClick={() => void checkForUpdates(false)}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-[#11111b] bg-[#89b4fa] hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer shadow-sm rounded"
+              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-[#11111b] bg-[#cba6f7] hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer shadow-sm rounded"
             >
               {status === 'checking' ? (
                 <>
@@ -134,7 +134,7 @@ export const UpdatesTab: React.FC = () => {
       {/* 2. DYNAMIC UPDATE STATUS BANNER */}
       {status === 'checking' && (
         <div className="p-4 bg-[#11111b]/80 border border-[#313244] rounded flex flex-col items-center justify-center py-6 text-center space-y-3">
-          <Loader2 className="w-8 h-8 text-[#89b4fa] animate-spin" />
+          <Loader2 className="w-8 h-8 text-[#cba6f7] animate-spin" />
           <div className="space-y-1">
             <h4 className="text-sm font-semibold text-text">Checking for Updates...</h4>
             <p className="text-xs text-subtext0">
@@ -163,11 +163,11 @@ export const UpdatesTab: React.FC = () => {
       )}
 
       {status === 'available' && updatePayload && (
-        <div className="p-4.5 bg-[#11111b] border border-[#89b4fa]/40 rounded space-y-4">
+        <div className="p-4.5 bg-[#11111b] border border-[#cba6f7]/40 rounded space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 bg-[#89b4fa]/15 text-[#89b4fa] border border-[#89b4fa]/30 text-[10px] font-mono font-semibold uppercase rounded">
+                <span className="px-2 py-0.5 bg-[#cba6f7]/15 text-[#cba6f7] border border-[#cba6f7]/30 text-[10px] font-mono font-semibold uppercase rounded">
                   New Release Available
                 </span>
                 <h4 className="text-sm font-bold text-text">
@@ -182,7 +182,7 @@ export const UpdatesTab: React.FC = () => {
             <button
               type="button"
               onClick={startDownload}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#11111b] bg-[#89b4fa] hover:brightness-110 transition-all cursor-pointer shadow-sm shrink-0 rounded"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#11111b] bg-[#cba6f7] hover:brightness-110 transition-all cursor-pointer shadow-sm shrink-0 rounded"
             >
               <DownloadCloud className="w-3.5 h-3.5" />
               <span>Download &amp; Install</span>
@@ -192,7 +192,7 @@ export const UpdatesTab: React.FC = () => {
           {/* Release Notes */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-text">
-              <Sparkles className="w-3.5 h-3.5 text-[#89b4fa]" />
+              <Sparkles className="w-3.5 h-3.5 text-[#cba6f7]" />
               <span>What&apos;s New in this Release:</span>
             </div>
             <div className="bg-[#181825] border border-[#313244] p-3 max-h-36 overflow-y-auto text-xs text-subtext0 leading-relaxed whitespace-pre-line rounded">
@@ -208,12 +208,12 @@ export const UpdatesTab: React.FC = () => {
             <span className="font-semibold text-text">
               Downloading Stage0 v{updatePayload?.latestVersion || 'Update'}...
             </span>
-            <span className="font-mono text-[#89b4fa] font-bold">{downloadProgress}%</span>
+            <span className="font-mono text-[#cba6f7] font-bold">{downloadProgress}%</span>
           </div>
 
           <div className="w-full bg-[#181825] border border-[#313244] h-2.5 rounded overflow-hidden">
             <div
-              className="bg-[#89b4fa] h-full transition-all duration-200 ease-out"
+              className="bg-[#cba6f7] h-full transition-all duration-200 ease-out"
               style={{ width: `${downloadProgress}%` }}
             />
           </div>
@@ -308,7 +308,7 @@ export const UpdatesTab: React.FC = () => {
             <div
               className={`flex items-start gap-3 p-3 border rounded cursor-pointer transition-colors ${
                 updateCheckPolicy === 'disabled'
-                  ? 'bg-[#89b4fa]/10 border-[#89b4fa]/50 text-text'
+                  ? 'bg-[#cba6f7]/10 border-[#cba6f7]/50 text-text'
                   : 'bg-[#11111b] border-[#313244] hover:border-[#45475a] text-subtext0'
               }`}
               onClick={() => setUpdateCheckPolicy('disabled')}
@@ -318,7 +318,7 @@ export const UpdatesTab: React.FC = () => {
                 name="updateCheckPolicy"
                 checked={updateCheckPolicy === 'disabled'}
                 onChange={() => setUpdateCheckPolicy('disabled')}
-                className="mt-0.5 text-[#89b4fa] focus:ring-0 cursor-pointer"
+                className="mt-0.5 text-[#cba6f7] focus:ring-0 cursor-pointer"
               />
               <div className="space-y-0.5">
                 <div className="text-xs font-semibold text-text">Disabled</div>
@@ -332,7 +332,7 @@ export const UpdatesTab: React.FC = () => {
             <div
               className={`flex items-start gap-3 p-3 border rounded cursor-pointer transition-colors ${
                 updateCheckPolicy === 'notify_only'
-                  ? 'bg-[#89b4fa]/10 border-[#89b4fa]/50 text-text'
+                  ? 'bg-[#cba6f7]/10 border-[#cba6f7]/50 text-text'
                   : 'bg-[#11111b] border-[#313244] hover:border-[#45475a] text-subtext0'
               }`}
               onClick={() => setUpdateCheckPolicy('notify_only')}
@@ -342,7 +342,7 @@ export const UpdatesTab: React.FC = () => {
                 name="updateCheckPolicy"
                 checked={updateCheckPolicy === 'notify_only'}
                 onChange={() => setUpdateCheckPolicy('notify_only')}
-                className="mt-0.5 text-[#89b4fa] focus:ring-0 cursor-pointer"
+                className="mt-0.5 text-[#cba6f7] focus:ring-0 cursor-pointer"
               />
               <div className="space-y-0.5">
                 <div className="text-xs font-semibold text-text">
@@ -358,7 +358,7 @@ export const UpdatesTab: React.FC = () => {
             <div
               className={`flex items-start gap-3 p-3 border rounded cursor-pointer transition-colors ${
                 updateCheckPolicy === 'auto_install'
-                  ? 'bg-[#89b4fa]/10 border-[#89b4fa]/50 text-text'
+                  ? 'bg-[#cba6f7]/10 border-[#cba6f7]/50 text-text'
                   : 'bg-[#11111b] border-[#313244] hover:border-[#45475a] text-subtext0'
               }`}
               onClick={() => setUpdateCheckPolicy('auto_install')}
@@ -368,7 +368,7 @@ export const UpdatesTab: React.FC = () => {
                 name="updateCheckPolicy"
                 checked={updateCheckPolicy === 'auto_install'}
                 onChange={() => setUpdateCheckPolicy('auto_install')}
-                className="mt-0.5 text-[#89b4fa] focus:ring-0 cursor-pointer"
+                className="mt-0.5 text-[#cba6f7] focus:ring-0 cursor-pointer"
               />
               <div className="space-y-0.5">
                 <div className="text-xs font-semibold text-text">
