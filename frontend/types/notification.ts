@@ -2,11 +2,13 @@ export type NotificationLevel = 'info' | 'success' | 'warning' | 'error' | 'upda
 
 export type NotificationChannel = 'softwareUpdates' | 'aiReview' | 'gitSync' | 'guardrails';
 
+export type NotificationPermissionState = 'granted' | 'denied' | 'default' | 'unsupported';
+
 export interface NotificationSettings {
   enableDesktopNotifications: boolean;
-  enableInAppToasts: boolean;
-  playAlertSound: boolean;
-  toastDurationMs: number; // 3000 | 5000 | 10000 | 0 (0 = persistent)
+  enableInAppToasts?: boolean;
+  playAlertSound?: boolean;
+  toastDurationMs?: number;
   channels: {
     softwareUpdates: boolean;
     aiReview: boolean;
@@ -41,4 +43,5 @@ export interface NotifyOptions {
   actions?: AppNotificationAction[];
   autoDismissMs?: number;
   silent?: boolean;
+  forceDesktop?: boolean;
 }

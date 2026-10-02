@@ -11,30 +11,7 @@ import {
 } from '@/components/common/icons';
 import { useNotificationStore } from '../../store/useNotificationStore';
 import { notificationService } from '../../services/notificationService';
-import { CustomSelect, type CustomSelectOption } from '@/components/common/CustomSelect';
-
-const TOAST_DURATION_OPTIONS: CustomSelectOption<string>[] = [
-  {
-    value: '3000',
-    label: '3 Seconds',
-    description: 'Fast auto-dismiss for quick notices',
-  },
-  {
-    value: '5000',
-    label: '5 Seconds (Default)',
-    description: 'Standard duration recommended for general use',
-  },
-  {
-    value: '10000',
-    label: '10 Seconds',
-    description: 'Extended visibility for longer messages',
-  },
-  {
-    value: '0',
-    label: 'Persistent',
-    description: 'Requires clicking dismiss button manually',
-  },
-];
+import type { NotificationPermissionState } from '../../types/notification';
 
 const ToggleSwitch: React.FC<{
   checked: boolean;
@@ -74,14 +51,15 @@ export const NotificationsTab: React.FC = () => {
     clearAll,
   } = useNotificationStore();
 
-  const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
+  const [permissionState, setPermissionState] = useState<NotificationPermissionState | 'checking'>('checking');
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
-  const [testSentMessage, setTestSentMessage] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    void notificationService.isPermissionGranted().then((granted) => {
-      if (mounted) setPermissionGranted(granted);
+    void notificationService.getPermissionState().then((state) => {
+      if (mounted) setPermissionState(state);
     });
     return () => {
       mounted = false;
@@ -89,31 +67,67 @@ export const NotificationsTab: React.FC = () => {
   }, []);
 
   const handleRequestPermission = async () => {
-    const granted = await notificationService.requestPermission();
-    setPermissionGranted(granted);
+    setIsRequestingPermission(true);
+    setStatusMessage(null);
+    try {
+      const granted = await notificationService.requestPermission();
+      const updatedState = await notificationService.getPermissionState();
+      setPermissionState(updatedState);
+      if (granted) {
+        setStatusMessage('Permission granted');
+      } else if (updatedState === 'denied') {
+        setStatusMessage('Permission denied by user');
+      } else {
+        setStatusMessage('Permission not granted');
+      }
+    } catch (err) {
+      console.warn('[NotificationsTab] Request permission error:', err);
+      setStatusMessage('Unable to request permission');
+    } finally {
+      setIsRequestingPermission(false);
+      setTimeout(() => setStatusMessage(null), 4500);
+    }
   };
 
   const handleSendTestNotification = async () => {
     setIsSendingTest(true);
-    setTestSentMessage(null);
+    setStatusMessage(null);
 
     try {
+      if (permissionState === 'default') {
+        const granted = await notificationService.requestPermission();
+        const updatedState = await notificationService.getPermissionState();
+        setPermissionState(updatedState);
+        if (!granted) {
+          setStatusMessage('Notification permission is required to send alerts');
+          setTimeout(() => setStatusMessage(null), 4500);
+          return;
+        }
+      } else if (permissionState === 'denied') {
+        setStatusMessage('Notifications are blocked by system or browser settings');
+        setTimeout(() => setStatusMessage(null), 4500);
+        return;
+      }
+
       await notificationService.notify({
-        title: 'Stage0 Push Notification Test',
-        body: 'Native desktop push and in-app alerts are active and working properly.',
+        title: 'Stage0 Desktop Notification Test',
+        body: 'Native OS notification is working properly.',
         level: 'info',
+        forceDesktop: true,
         actions: [
           {
-            label: 'Open Updates',
-            actionType: 'open_preferences_updates',
+            label: 'Open Preferences',
+            actionType: 'open_preferences',
+            payload: 'notifications',
           },
         ],
       });
-      setTestSentMessage('Test notification sent');
-      setTimeout(() => setTestSentMessage(null), 4000);
-    } catch {
-      setTestSentMessage('Failed to send test notification');
-      setTimeout(() => setTestSentMessage(null), 4000);
+      setStatusMessage('Test notification dispatched');
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err) {
+      console.warn('[NotificationsTab] Send test notification error:', err);
+      setStatusMessage('Failed to send test notification');
+      setTimeout(() => setStatusMessage(null), 4000);
     } finally {
       setIsSendingTest(false);
     }
@@ -130,9 +144,9 @@ export const NotificationsTab: React.FC = () => {
         {/* Row 1: OS Desktop Push Notifications */}
         <div className="py-3 flex items-center justify-between gap-6 border-b border-[#313244]/40">
           <div className="min-w-0 flex-1 pr-2">
-            <div className="text-xs font-semibold text-text">OS Desktop Push Notifications</div>
+            <div className="text-xs font-semibold text-text">OS Desktop Notifications</div>
             <div className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">
-              Dispatch native push alerts to your desktop when Stage0 is in the background or minimized.
+              Dispatch native OS notifications (Windows Toast, macOS Notification Center, Linux Freedesktop D-Bus) when Stage0 events occur.
             </div>
           </div>
           <div className="shrink-0">
@@ -143,85 +157,78 @@ export const NotificationsTab: React.FC = () => {
           </div>
         </div>
 
-        {/* Row 2: In-App Toast Alerts */}
+        {/* Row 2: OS Permission Status & Request */}
         <div className="py-3 flex items-center justify-between gap-6 border-b border-[#313244]/40">
           <div className="min-w-0 flex-1 pr-2">
-            <div className="text-xs font-semibold text-text">In-App Floating Toast Alerts</div>
-            <div className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">
-              Display animated floating notification banners in the window corner for instant feedback and quick action triggers.
-            </div>
-          </div>
-          <div className="shrink-0">
-            <ToggleSwitch
-              checked={settings.enableInAppToasts}
-              onChange={(val) => updateSettings({ enableInAppToasts: val })}
-            />
-          </div>
-        </div>
-
-        {/* Row 3: Toast Duration Dropdown */}
-        <div
-          className={`py-3 flex items-center justify-between gap-6 border-b border-[#313244]/40 transition-opacity duration-150 ${
-            !settings.enableInAppToasts ? 'opacity-50' : 'opacity-100'
-          }`}
-        >
-          <div className="min-w-0 flex-1 pr-2">
-            <div className="text-xs font-semibold text-text flex items-center gap-2">
-              <span>Toast Auto-Dismiss Duration</span>
-              {!settings.enableInAppToasts && (
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#313244]/60 text-subtext0 border border-[#45475a]/40">
-                  Disabled
+            <div className="text-xs font-semibold text-text">OS Notification Permission</div>
+            <div className="text-[11px] text-subtext0 mt-0.5 flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span>Status:</span>
+                {permissionState === 'granted' && (
+                  <span className="inline-flex items-center gap-1 text-green text-[11px] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green" /> Granted
+                  </span>
+                )}
+                {permissionState === 'denied' && (
+                  <span className="inline-flex items-center gap-1 text-red text-[11px] font-medium">
+                    <AlertCircle className="w-3.5 h-3.5 text-red" /> Denied by User / System
+                  </span>
+                )}
+                {permissionState === 'default' && (
+                  <span className="inline-flex items-center gap-1 text-yellow text-[11px] font-medium">
+                    <AlertTriangle className="w-3.5 h-3.5 text-yellow" /> Not Granted Yet
+                  </span>
+                )}
+                {permissionState === 'unsupported' && (
+                  <span className="text-subtext0 text-[11px]">Not supported on this environment</span>
+                )}
+                {permissionState === 'checking' && (
+                  <span className="text-subtext0 text-[11px]">Checking...</span>
+                )}
+                {statusMessage && (
+                  <span className="text-subtext1 font-medium">• {statusMessage}</span>
+                )}
+              </div>
+              {permissionState === 'denied' && (
+                <span className="text-[10px] text-subtext0 leading-tight">
+                  Desktop notifications are blocked. To receive alerts, please allow notification permissions in your OS or browser site settings.
                 </span>
               )}
             </div>
-            <div className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">
-              {settings.enableInAppToasts
-                ? 'How long floating toast alerts remain on screen before automatically disappearing.'
-                : 'In-app toasts are disabled above.'}
-            </div>
           </div>
           <div className="shrink-0">
-            <CustomSelect
-              value={String(settings.toastDurationMs)}
-              options={TOAST_DURATION_OPTIONS}
-              onChange={(val) => updateSettings({ toastDurationMs: parseInt(val, 10) })}
-              disabled={!settings.enableInAppToasts}
-              buttonClassName="min-w-[160px]"
-              dropdownWidth="w-64"
-              align="right"
-              aria-label="Toast Auto-Dismiss Duration"
-            />
+            {permissionState === 'default' && (
+              <button
+                type="button"
+                disabled={isRequestingPermission}
+                onClick={handleRequestPermission}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text bg-[#313244] hover:bg-[#45475a] border border-[#45475a]/50 rounded transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isRequestingPermission ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-subtext0" />
+                    <span>Requesting...</span>
+                  </>
+                ) : (
+                  <span>Request Permission</span>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Row 4: Single test button & 1 line of status text (per user request) */}
+        {/* Row 3: Single test button */}
         <div className="py-3 flex items-center justify-between gap-6 border-b border-[#313244]/40">
           <div className="min-w-0 flex-1 pr-2">
             <div className="text-xs font-semibold text-text">Test Desktop Notification</div>
-            <div className="text-[11px] text-subtext0 mt-0.5 flex items-center gap-2">
-              <span>OS Permission:</span>
-              {permissionGranted ? (
-                <span className="text-text font-medium">Granted</span>
-              ) : permissionGranted === false ? (
-                <button
-                  type="button"
-                  onClick={handleRequestPermission}
-                  className="text-subtext0 hover:text-text underline cursor-pointer"
-                >
-                  Not Granted (Click to Request)
-                </button>
-              ) : (
-                <span>Checking...</span>
-              )}
-              {testSentMessage && (
-                <span className="text-subtext1 font-medium">• {testSentMessage}</span>
-              )}
+            <div className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">
+              Send a test native OS notification to verify desktop delivery on your operating system.
             </div>
           </div>
           <div className="shrink-0">
             <button
               type="button"
-              disabled={isSendingTest}
+              disabled={isSendingTest || !settings.enableDesktopNotifications}
               onClick={handleSendTestNotification}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text bg-[#313244] hover:bg-[#45475a] border border-[#45475a]/50 rounded transition-colors cursor-pointer disabled:opacity-50"
             >
