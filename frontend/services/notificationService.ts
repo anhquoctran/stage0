@@ -4,7 +4,12 @@ import {
   isPermissionGranted as tauriIsPermissionGranted,
   requestPermission as tauriRequestPermission,
 } from '@tauri-apps/plugin-notification';
-import { AppNotification, AppNotificationAction, NotifyOptions } from '../types/notification';
+import {
+  AppNotification,
+  AppNotificationAction,
+  NotificationPermissionState,
+  NotifyOptions,
+} from '../types/notification';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 
@@ -35,6 +40,7 @@ export const notificationService = {
           autoDismissMs: typeof payload.auto_dismiss_ms === 'number' ? payload.auto_dismiss_ms : 6000,
         };
 
+        // Record history only - no in-app floating banner
         useNotificationStore.getState().addNotification(notification);
       });
     } catch (err) {
@@ -54,54 +60,126 @@ export const notificationService = {
   },
 
   /**
-   * Checks if notification permission is granted on Windows, macOS, Linux, or Web.
+   * Checks if notification permission is currently granted on Windows, macOS, Linux, or Web.
+   * Guaranteed never to throw an unhandled exception.
    */
   async isPermissionGranted(): Promise<boolean> {
-    if (isTauri()) {
-      try {
-        return await tauriIsPermissionGranted();
-      } catch {
-        return await invoke<boolean>('is_notification_permission_granted').catch(() => false);
-      }
-    }
+    try {
+      if (isTauri()) {
+        try {
+          const res = await invoke<boolean>('is_notification_permission_granted');
+          if (typeof res === 'boolean') return res;
+        } catch {}
 
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      return Notification.permission === 'granted';
+        try {
+          return await tauriIsPermissionGranted();
+        } catch {
+          return false;
+        }
+      }
+
+      if (typeof window !== 'undefined' && 'Notification' in window && window.Notification) {
+        return window.Notification.permission === 'granted';
+      }
+    } catch (err) {
+      console.warn('[NotificationService] isPermissionGranted check failed:', err);
     }
 
     return false;
+  },
+
+  /**
+   * Returns fine-grained OS notification permission state:
+   * 'granted' | 'denied' | 'default' | 'unsupported'
+   */
+  async getPermissionState(): Promise<NotificationPermissionState> {
+    try {
+      if (isTauri()) {
+        try {
+          const granted = await invoke<boolean>('is_notification_permission_granted');
+          return granted ? 'granted' : 'default';
+        } catch {
+          return 'default';
+        }
+      }
+
+      if (typeof window !== 'undefined' && 'Notification' in window && window.Notification) {
+        const perm = window.Notification.permission;
+        if (perm === 'granted' || perm === 'denied' || perm === 'default') {
+          return perm;
+        }
+      }
+
+      return 'unsupported';
+    } catch (err) {
+      console.warn('[NotificationService] getPermissionState error:', err);
+      return 'unsupported';
+    }
   },
 
   /**
    * Requests OS desktop notification permission from user.
+   * Handles user grant, user rejection ('denied'), dismissal ('default'),
+   * or system policy blocks without throwing exceptions.
    */
   async requestPermission(): Promise<boolean> {
-    if (isTauri()) {
-      try {
-        const res = await tauriRequestPermission();
-        return res === 'granted';
-      } catch {
-        return await invoke<boolean>('request_notification_permission').catch(() => false);
-      }
-    }
+    try {
+      if (isTauri()) {
+        try {
+          const res = await invoke<boolean>('request_notification_permission');
+          if (typeof res === 'boolean') return res;
+        } catch (err) {
+          console.warn('[NotificationService] Backend request_notification_permission failed:', err);
+        }
 
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      try {
-        const res = await Notification.requestPermission();
-        return res === 'granted';
-      } catch {
-        return false;
+        try {
+          const res = await tauriRequestPermission();
+          return res === 'granted';
+        } catch {
+          return false;
+        }
       }
+
+      if (typeof window !== 'undefined' && 'Notification' in window && window.Notification) {
+        if (window.Notification.permission === 'denied') {
+          // If already blocked by user, do not throw or re-prompt
+          return false;
+        }
+
+        try {
+          let res: NotificationPermission;
+          const req = window.Notification.requestPermission();
+          if (req && typeof req.then === 'function') {
+            res = await req;
+          } else {
+            // Older browser callback compatibility
+            res = await new Promise<NotificationPermission>((resolve) => {
+              try {
+                window.Notification.requestPermission((status) => resolve(status));
+              } catch {
+                resolve('denied');
+              }
+            });
+          }
+          return res === 'granted';
+        } catch (err) {
+          console.warn('[NotificationService] Notification.requestPermission() threw:', err);
+          return false;
+        }
+      }
+    } catch (err) {
+      console.warn('[NotificationService] Uncaught error in requestPermission:', err);
     }
 
     return false;
   },
 
   /**
-   * Unified dispatch function for push notifications.
-   * - Shows native OS notification (Windows Toast, macOS Notification Center, Linux Freedesktop DBus)
-   * - Renders in-app toast floating banner
-   * - Stores in notification history
+   * Unified dispatch function for native push notifications:
+   * - Shows native OS notification (Windows WinRT / PowerShell Toast, macOS Notification Center, Linux Freedesktop DBus, or Web browser Notification)
+   * - Stores event in notification history for auditing
+   * - Does NOT show in-app toasts
+   * - Guaranteed never to throw an unhandled exception
    */
   async notify(options: NotifyOptions): Promise<AppNotification> {
     const settings = useNotificationStore.getState().settings;
@@ -120,7 +198,6 @@ export const notificationService = {
     }
 
     const id = `notif_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    const duration = options.autoDismissMs !== undefined ? options.autoDismissMs : settings.toastDurationMs;
 
     const notification: AppNotification = {
       id,
@@ -131,16 +208,21 @@ export const notificationService = {
       isRead: false,
       channel: options.channel,
       actions: options.actions,
-      autoDismissMs: duration,
+      autoDismissMs: options.autoDismissMs,
     };
 
-    // 1. In-app toast and persistent history (handled in useNotificationStore)
-    useNotificationStore.getState().addNotification(notification);
+    // 1. Record in history
+    try {
+      useNotificationStore.getState().addNotification(notification);
+    } catch (err) {
+      console.warn('[NotificationService] Failed to record notification history:', err);
+    }
 
-    // 2. Cross-platform OS Native Desktop Notification (if enabled and not silent)
-    if (!options.silent && settings.enableDesktopNotifications) {
-      if (isTauri()) {
-        try {
+    // 2. Cross-platform OS Native Desktop Notification (if enabled and not silent, or forceDesktop requested)
+    const shouldDispatchDesktop = options.forceDesktop || (!options.silent && settings.enableDesktopNotifications);
+    if (shouldDispatchDesktop) {
+      try {
+        if (isTauri()) {
           await invoke('send_push_notification', {
             payload: {
               id: notification.id,
@@ -150,19 +232,32 @@ export const notificationService = {
               actions: notification.actions,
               auto_dismiss_ms: notification.autoDismissMs,
             },
+          }).catch((err) => {
+            console.debug('[NotificationService] Native push notification failed:', err);
           });
-        } catch (err) {
-          console.debug('[NotificationService] Native push notification failed:', err);
+        } else if (typeof window !== 'undefined' && 'Notification' in window && window.Notification) {
+          if (window.Notification.permission === 'granted') {
+            try {
+              const nativeNotif = new window.Notification(options.title, {
+                body: options.body,
+                icon: '/app-icon.svg',
+              });
+
+              if (options.actions && options.actions.length > 0) {
+                nativeNotif.onclick = () => {
+                  try {
+                    window.focus();
+                    notificationService.handleAction(options.actions![0], notification.id);
+                  } catch {}
+                };
+              }
+            } catch (err) {
+              console.debug('[NotificationService] Native web Notification failed:', err);
+            }
+          }
         }
-      } else if (typeof window !== 'undefined' && 'Notification' in window) {
-        if (Notification.permission === 'granted') {
-          try {
-            new Notification(options.title, {
-              body: options.body,
-              icon: '/icons/128x128.png',
-            });
-          } catch {}
-        }
+      } catch (err) {
+        console.warn('[NotificationService] OS native push notification dispatch error:', err);
       }
     }
 

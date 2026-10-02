@@ -3,7 +3,6 @@ import { clsx } from 'clsx';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { MainLayout } from './components/layout/MainLayout';
-import { ToastContainer } from './components/common/ToastContainer';
 import { notificationService } from './services/notificationService';
 import { useGitStore } from './store/useGitStore';
 import { useUpdateStore } from './store/useUpdateStore';
@@ -130,7 +129,6 @@ export const App: React.FC = () => {
       )}
     >
       <MainLayout />
-      <ToastContainer />
     </div>
   );
 };

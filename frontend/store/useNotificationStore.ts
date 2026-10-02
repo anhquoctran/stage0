@@ -3,9 +3,9 @@ import { AppNotification, NotificationSettings } from '../types/notification';
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enableDesktopNotifications: true,
-  enableInAppToasts: true,
-  playAlertSound: true,
-  toastDurationMs: 5000,
+  enableInAppToasts: false,
+  playAlertSound: false,
+  toastDurationMs: 0,
   channels: {
     softwareUpdates: true,
     aiReview: true,
@@ -134,17 +134,11 @@ export const useNotificationStore = create<NotificationState>((set) => ({
       const updated = [notification, ...state.notifications].slice(0, MAX_STORED_NOTIFICATIONS);
       persistNotifications(updated);
 
-      // Only enqueue toast if in-app toasts are enabled
-      let activeToasts = state.activeToasts;
-      if (state.settings.enableInAppToasts) {
-        activeToasts = [...state.activeToasts, notification];
-      }
-
       const unreadCount = state.unreadCount + (notification.isRead ? 0 : 1);
 
       return {
         notifications: updated,
-        activeToasts,
+        activeToasts: [],
         unreadCount,
       };
     });
