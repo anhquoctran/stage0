@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { AppLogo } from './AppLogo';
-import { Check, Copy, X } from './icons';
+import { Check, Copy, DownloadCloud, X } from './icons';
 import { useAboutInfo } from '../../hooks/useAboutInfo';
+import { usePreferencesStore } from '../../store/usePreferencesStore';
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -94,7 +95,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           {/* Primary Version Badge */}
           <div className="mt-3 flex items-center gap-1.5 bg-[#11111b] border border-[#313244] px-2.5 py-1">
             <span className="text-[10px] text-subtext0 uppercase font-mono tracking-wider">Version</span>
-            <code className="text-xs font-mono font-semibold text-[#89b4fa] px-1">
+            <code className="text-xs font-mono font-medium text-subtext0 px-1">
               {about.version}
             </code>
             <button
@@ -156,24 +157,39 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
         {/* Footer Actions */}
         <div className="flex items-center justify-between gap-3 pt-2 border-t border-[#313244]/60">
-          <button
-            type="button"
-            onClick={handleCopyDiagnosticInfo}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-subtext1 hover:text-text text-xs transition-colors cursor-pointer"
-            title="Copy system and version information"
-          >
-            {copiedAll ? (
-              <>
-                <Check className="w-3 h-3 text-green" />
-                <span className="text-green font-medium">Copied Info</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3 h-3" />
-                <span>Copy Info</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCopyDiagnosticInfo}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-subtext1 hover:text-text text-xs transition-colors cursor-pointer"
+              title="Copy system and version information"
+            >
+              {copiedAll ? (
+                <>
+                  <Check className="w-3 h-3 text-green" />
+                  <span className="text-green font-medium">Copied Info</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3" />
+                  <span>Copy Info</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                usePreferencesStore.getState().openPreferences('updates-check');
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-subtext1 hover:text-text text-xs transition-colors cursor-pointer"
+              title="Check for software updates in Preferences"
+            >
+              <DownloadCloud className="w-3.5 h-3.5 text-blue" />
+              <span>Check for Updates</span>
+            </button>
+          </div>
 
           <button
             type="button"

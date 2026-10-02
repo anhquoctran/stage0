@@ -260,7 +260,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             title="View About Stage0"
           >
             <span className="font-semibold text-text">{about.name}</span>
-            <span className="font-mono text-[#89b4fa] bg-surface0 px-1.5 py-0.5 rounded text-[10px] group-hover:bg-surface1 transition-colors">
+            <span className="font-mono text-subtext0 bg-surface0 px-1.5 py-0.5 rounded text-[10px] group-hover:bg-surface1 group-hover:text-text transition-colors">
               v{about.version}
             </span>
           </button>

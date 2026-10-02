@@ -1,0 +1,443 @@
+import React, { useState } from 'react';
+import { useUpdateStore } from '../../store/useUpdateStore';
+import { SOFTWARE_ABOUT } from '../../config/about';
+import {
+  DownloadCloud,
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw,
+  Loader2,
+  Sparkles,
+  Clock,
+} from '@/components/common/icons';
+import { CustomSelect, type CustomSelectOption } from '@/components/common/CustomSelect';
+
+const FREQUENCY_OPTIONS: CustomSelectOption<'daily' | 'weekly' | 'monthly'>[] = [
+  {
+    value: 'daily',
+    label: 'Daily',
+    description: 'Check for updates every 24 hours',
+  },
+  {
+    value: 'weekly',
+    label: 'Weekly',
+    description: 'Check for updates every 7 days',
+  },
+  {
+    value: 'monthly',
+    label: 'Monthly',
+    description: 'Check for updates every 30 days',
+  },
+];
+
+const CHANNEL_OPTIONS: CustomSelectOption<'stable' | 'beta'>[] = [
+  {
+    value: 'stable',
+    label: 'Stable',
+    description: 'Official production builds (recommended)',
+    badge: 'Recommended',
+  },
+  {
+    value: 'beta',
+    label: 'Beta / Preview',
+    description: 'Early access builds with experimental features',
+    badge: 'Preview',
+  },
+];
+
+export const UpdatesTab: React.FC = () => {
+  const {
+    status,
+    updatePayload,
+    downloadProgress,
+    downloadSpeed,
+    downloadedText,
+    errorMessage,
+    lastCheckedTime,
+    updateCheckPolicy,
+    updateCheckFrequency,
+    setUpdateCheckPolicy,
+    setUpdateCheckFrequency,
+    checkForUpdates,
+    startDownload,
+    cancelDownload,
+    applyUpdateAndRestart,
+  } = useUpdateStore();
+
+  const [selectedChannel, setSelectedChannel] = useState<'stable' | 'beta'>('stable');
+
+  const currentVersion = SOFTWARE_ABOUT.packageVersion || '0.1.0';
+  const osName = (SOFTWARE_ABOUT.os || 'windows').toLowerCase();
+  const archName = (SOFTWARE_ABOUT.arch || 'amd64').toLowerCase();
+
+  React.useEffect(() => {
+    if (status === 'idle') {
+      void checkForUpdates(false);
+    }
+  }, [status, checkForUpdates]);
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-100 select-none pb-4">
+      {/* 1. CURRENT VERSION & SYSTEM PROFILE CARD */}
+      <div className="bg-[#11111b] border border-[#313244] p-4.5 rounded">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-text tracking-tight">Stage0</span>
+              <span className="px-2 py-0.5 text-xs font-mono font-semibold bg-[#313244]/80 text-text border border-[#45475a]/60 rounded">
+                v{currentVersion}
+              </span>
+              <span className="px-2 py-0.5 text-[10px] font-mono uppercase bg-[#89b4fa]/15 text-[#89b4fa] border border-[#89b4fa]/30 rounded">
+                {selectedChannel === 'stable' ? 'Stable Track' : 'Beta Preview'}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-xs text-subtext0 font-mono">
+              <span>Platform: <strong className="text-subtext1 capitalize">{osName}</strong> ({archName})</span>
+              <span>•</span>
+              <span>Commit: <strong className="text-subtext1">{SOFTWARE_ABOUT.gitCommit || 'latest'}</strong></span>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-[11px] text-subtext0 pt-0.5">
+              <Clock className="w-3 h-3 text-subtext0/70" />
+              <span>
+                {lastCheckedTime
+                  ? `Last verified: Today at ${lastCheckedTime}`
+                  : 'Update status not checked yet in this session.'}
+              </span>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex items-center gap-2">
+            <button
+              type="button"
+              disabled={status === 'checking' || status === 'downloading'}
+              onClick={() => void checkForUpdates(false)}
+              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-[#11111b] bg-[#89b4fa] hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer shadow-sm rounded"
+            >
+              {status === 'checking' ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Checking...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Check for Updates</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. DYNAMIC UPDATE STATUS BANNER */}
+      {status === 'checking' && (
+        <div className="p-4 bg-[#11111b]/80 border border-[#313244] rounded flex flex-col items-center justify-center py-6 text-center space-y-3">
+          <Loader2 className="w-8 h-8 text-[#89b4fa] animate-spin" />
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold text-text">Checking for Updates...</h4>
+            <p className="text-xs text-subtext0">
+              Querying central version management backend for {osName} ({archName})
+            </p>
+          </div>
+          <div className="bg-[#181825] border border-[#313244] px-3 py-1 text-[11px] font-mono text-subtext1 rounded">
+            current_version={currentVersion}&amp;os_name={osName}&amp;arch_name={archName}
+          </div>
+        </div>
+      )}
+
+      {status === 'up-to-date' && (
+        <div className="p-4 bg-emerald-950/20 border border-emerald-800/40 rounded flex items-start gap-3.5">
+          <div className="w-8 h-8 bg-emerald-900/30 border border-emerald-700/50 flex items-center justify-center text-emerald-400 shrink-0 rounded">
+            <CheckCircle2 className="w-4.5 h-4.5 text-emerald-400" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-xs font-bold text-text">You&apos;re running the latest version!</h4>
+            <p className="text-xs text-subtext0 leading-relaxed">
+              Stage0 <span className="font-mono text-text font-medium">v{currentVersion}</span> is currently up to date on the {selectedChannel} channel for{' '}
+              <span className="capitalize">{osName}</span> ({archName}). No updates are required.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {status === 'available' && updatePayload && (
+        <div className="p-4.5 bg-[#11111b] border border-[#89b4fa]/40 rounded space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 bg-[#89b4fa]/15 text-[#89b4fa] border border-[#89b4fa]/30 text-[10px] font-mono font-semibold uppercase rounded">
+                  New Release Available
+                </span>
+                <h4 className="text-sm font-bold text-text">
+                  Stage0 v{updatePayload.latestVersion}
+                </h4>
+              </div>
+              <p className="text-xs text-subtext0">
+                Released on {updatePayload.releaseDate} • Download size: {updatePayload.fileSize || '48.6 MB'}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={startDownload}
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#11111b] bg-[#89b4fa] hover:brightness-110 transition-all cursor-pointer shadow-sm shrink-0 rounded"
+            >
+              <DownloadCloud className="w-3.5 h-3.5" />
+              <span>Download &amp; Install</span>
+            </button>
+          </div>
+
+          {/* Release Notes */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-text">
+              <Sparkles className="w-3.5 h-3.5 text-[#89b4fa]" />
+              <span>What&apos;s New in this Release:</span>
+            </div>
+            <div className="bg-[#181825] border border-[#313244] p-3 max-h-36 overflow-y-auto text-xs text-subtext0 leading-relaxed whitespace-pre-line rounded">
+              {updatePayload.releaseNotes || 'Bug fixes, performance improvements, and stability enhancements.'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {status === 'downloading' && (
+        <div className="p-4.5 bg-[#11111b] border border-[#313244] rounded space-y-3.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-text">
+              Downloading Stage0 v{updatePayload?.latestVersion || 'Update'}...
+            </span>
+            <span className="font-mono text-[#89b4fa] font-bold">{downloadProgress}%</span>
+          </div>
+
+          <div className="w-full bg-[#181825] border border-[#313244] h-2.5 rounded overflow-hidden">
+            <div
+              className="bg-[#89b4fa] h-full transition-all duration-200 ease-out"
+              style={{ width: `${downloadProgress}%` }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-subtext0 font-mono">
+            <span>{downloadedText}</span>
+            <span>{downloadSpeed}</span>
+          </div>
+
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-[11px] text-subtext0">
+              Please do not close Stage0 while the update payload is being transferred.
+            </span>
+            <button
+              type="button"
+              onClick={cancelDownload}
+              className="px-3 py-1 text-xs text-subtext0 hover:text-text bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/50 rounded cursor-pointer transition-colors"
+            >
+              Cancel Download
+            </button>
+          </div>
+        </div>
+      )}
+
+      {status === 'ready' && (
+        <div className="p-4.5 bg-emerald-950/20 border border-emerald-700/60 rounded space-y-3.5">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 bg-emerald-900/40 border border-emerald-600/60 flex items-center justify-center text-emerald-400 shrink-0 rounded">
+              <CheckCircle2 className="w-4.5 h-4.5 text-emerald-400" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold text-text">Update Ready to Install</h4>
+              <p className="text-xs text-subtext0 leading-relaxed">
+                Stage0 has downloaded version <strong className="font-mono text-text">v{updatePayload?.latestVersion}</strong>.
+                Click below to restart Stage0 and complete the automated update process.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-1 border-t border-emerald-900/40">
+            <button
+              type="button"
+              onClick={() => void applyUpdateAndRestart()}
+              className="flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-[#11111b] bg-emerald-400 hover:brightness-110 transition-all cursor-pointer shadow-sm rounded"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Restart &amp; Update Now</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {status === 'error' && (
+        <div className="p-4 bg-red-950/20 border border-red-800/40 rounded flex items-start gap-3">
+          <div className="w-8 h-8 bg-red-900/30 border border-red-700/50 flex items-center justify-center text-red-400 shrink-0 rounded">
+            <AlertTriangle className="w-4.5 h-4.5 text-red-400" />
+          </div>
+          <div className="space-y-1 flex-1">
+            <h4 className="text-xs font-bold text-text">Update Check Failed</h4>
+            <p className="text-xs text-red-300/90 leading-relaxed">
+              {errorMessage || 'Unable to connect to the version management server. Please check your network connection.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void checkForUpdates(false)}
+            className="flex items-center gap-1 px-3 py-1.5 text-xs text-text bg-[#313244]/80 hover:bg-[#313244] border border-[#45475a]/60 rounded cursor-pointer transition-colors shrink-0"
+          >
+            <RefreshCw className="w-3 h-3" />
+            <span>Retry</span>
+          </button>
+        </div>
+      )}
+
+      {/* 3. UPDATE PREFERENCES & SETTINGS */}
+      <div className="space-y-1 pt-1">
+        <h3 className="text-xs font-bold text-text tracking-tight uppercase font-mono pb-1 border-b border-[#313244]/50">
+          Update Configuration
+        </h3>
+
+        {/* Automatic Software Update Policy */}
+        <div className="py-3 border-b border-[#313244]/40 space-y-3">
+          <div>
+            <div className="text-xs font-semibold text-text">Automatic Software Updates</div>
+            <div className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">
+              Configure how Stage0 detects, downloads, and prepares version updates.
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2">
+            {/* Option 1: Disabled */}
+            <div
+              className={`flex items-start gap-3 p-3 border rounded cursor-pointer transition-colors ${
+                updateCheckPolicy === 'disabled'
+                  ? 'bg-[#89b4fa]/10 border-[#89b4fa]/50 text-text'
+                  : 'bg-[#11111b] border-[#313244] hover:border-[#45475a] text-subtext0'
+              }`}
+              onClick={() => setUpdateCheckPolicy('disabled')}
+            >
+              <input
+                type="radio"
+                name="updateCheckPolicy"
+                checked={updateCheckPolicy === 'disabled'}
+                onChange={() => setUpdateCheckPolicy('disabled')}
+                className="mt-0.5 text-[#89b4fa] focus:ring-0 cursor-pointer"
+              />
+              <div className="space-y-0.5">
+                <div className="text-xs font-semibold text-text">Disabled</div>
+                <div className="text-[11px] text-subtext0 leading-relaxed">
+                  Do not check for updates automatically. You can check manually at any time.
+                </div>
+              </div>
+            </div>
+
+            {/* Option 2: Check only, notify manually */}
+            <div
+              className={`flex items-start gap-3 p-3 border rounded cursor-pointer transition-colors ${
+                updateCheckPolicy === 'notify_only'
+                  ? 'bg-[#89b4fa]/10 border-[#89b4fa]/50 text-text'
+                  : 'bg-[#11111b] border-[#313244] hover:border-[#45475a] text-subtext0'
+              }`}
+              onClick={() => setUpdateCheckPolicy('notify_only')}
+            >
+              <input
+                type="radio"
+                name="updateCheckPolicy"
+                checked={updateCheckPolicy === 'notify_only'}
+                onChange={() => setUpdateCheckPolicy('notify_only')}
+                className="mt-0.5 text-[#89b4fa] focus:ring-0 cursor-pointer"
+              />
+              <div className="space-y-0.5">
+                <div className="text-xs font-semibold text-text">
+                  Check for updates only (Notify)
+                </div>
+                <div className="text-[11px] text-subtext0 leading-relaxed">
+                  Automatically check for updates on schedule and notify you when available, but do not download or install without your confirmation.
+                </div>
+              </div>
+            </div>
+
+            {/* Option 3: Check and automatically download & install */}
+            <div
+              className={`flex items-start gap-3 p-3 border rounded cursor-pointer transition-colors ${
+                updateCheckPolicy === 'auto_install'
+                  ? 'bg-[#89b4fa]/10 border-[#89b4fa]/50 text-text'
+                  : 'bg-[#11111b] border-[#313244] hover:border-[#45475a] text-subtext0'
+              }`}
+              onClick={() => setUpdateCheckPolicy('auto_install')}
+            >
+              <input
+                type="radio"
+                name="updateCheckPolicy"
+                checked={updateCheckPolicy === 'auto_install'}
+                onChange={() => setUpdateCheckPolicy('auto_install')}
+                className="mt-0.5 text-[#89b4fa] focus:ring-0 cursor-pointer"
+              />
+              <div className="space-y-0.5">
+                <div className="text-xs font-semibold text-text">
+                  Check for updates and automatically download &amp; install
+                </div>
+                <div className="text-[11px] text-subtext0 leading-relaxed">
+                  Check for updates on schedule and automatically download new versions in the background, ready for you to restart.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Check Frequency (Disabled when updateCheckPolicy is 'disabled') */}
+        <div
+          className={`py-3 flex items-center justify-between gap-6 border-b border-[#313244]/40 transition-opacity duration-150 ${
+            updateCheckPolicy === 'disabled' ? 'opacity-60' : 'opacity-100'
+          }`}
+        >
+          <div className="min-w-0 flex-1 pr-2">
+            <div className="text-xs font-semibold text-text flex items-center gap-2">
+              <span>Check Frequency</span>
+              {updateCheckPolicy === 'disabled' && (
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#313244]/60 text-subtext0 border border-[#45475a]/40">
+                  Disabled
+                </span>
+              )}
+            </div>
+            <div className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">
+              {updateCheckPolicy === 'disabled'
+                ? 'Automatic update checks are disabled. Select an automated policy above to enable scheduling.'
+                : 'How often Stage0 queries the version management backend in the background.'}
+            </div>
+          </div>
+          <div className="shrink-0">
+            <CustomSelect
+              value={updateCheckFrequency}
+              options={FREQUENCY_OPTIONS}
+              onChange={setUpdateCheckFrequency}
+              disabled={updateCheckPolicy === 'disabled'}
+              buttonClassName="min-w-[140px] sm:min-w-[160px]"
+              dropdownWidth="w-64"
+              align="right"
+              aria-label="Check Frequency"
+            />
+          </div>
+        </div>
+
+        {/* Update Channel */}
+        <div className="py-3 flex items-center justify-between gap-6">
+          <div className="min-w-0 flex-1 pr-2">
+            <div className="text-xs font-semibold text-text">Release Channel</div>
+            <div className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">
+              Select which release channel to subscribe to for software updates.
+            </div>
+          </div>
+          <div className="shrink-0">
+            <CustomSelect
+              value={selectedChannel}
+              options={CHANNEL_OPTIONS}
+              onChange={setSelectedChannel}
+              buttonClassName="min-w-[140px] sm:min-w-[160px]"
+              dropdownWidth="w-64"
+              align="right"
+              aria-label="Release Channel"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

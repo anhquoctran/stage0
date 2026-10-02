@@ -3,7 +3,7 @@
  * Computes dynamic release information:
  *   - Name: Stage0
  *   - Author: Anh Quoc Tran
- *   - Version: <current_package_version>+[partial_sha1_commit].[arch_name]
+ *   - Version: <current_package_version>+[partial_sha1_commit].[os_name].[arch_name]
  *   - Release date: Build date in yyyy-MM-dd
  *   - Copyright: Copyright @ <current_year> <Author name>. Licensed under the MIT license.
  * 
@@ -50,19 +50,40 @@ export function computeAboutInfo(options = {}) {
   // Keep CI-provided values safe for use as a SemVer build identifier.
   gitCommit = gitCommit.trim().toLowerCase().replace(/[^0-9a-z-]/g, '').slice(0, 7) || 'dev0000';
 
-  // 2. Target Architecture
-  const rawArch = options.arch || process.env.TARGET_ARCH || process.arch || 'x64';
-  let arch = 'x64';
-  if (rawArch === 'arm64' || rawArch === 'aarch64') {
-    arch = 'arm64';
-  } else if (rawArch === 'x86' || rawArch === 'ia32') {
-    arch = 'x86';
+  // 2. Target OS & Architecture
+  const rawOs =
+    options.os ||
+    process.env.TARGET_OS ||
+    (process.platform === 'win32' ? 'windows' : process.platform === 'darwin' ? 'macos' : 'linux');
+  let osName = 'windows';
+  if (rawOs === 'win32' || rawOs === 'windows') {
+    osName = 'windows';
+  } else if (rawOs === 'darwin' || rawOs === 'macos' || rawOs === 'mac') {
+    osName = 'macos';
+  } else if (rawOs === 'linux') {
+    osName = 'linux';
   } else {
-    arch = 'x64';
+    osName = String(rawOs).toLowerCase().replace(/[^0-9a-z-]/g, '') || 'windows';
   }
 
-  // 3. SemVer with build metadata: <package_version>+<commit>.<architecture>
-  const version = `${packageVersion}+${gitCommit}.${arch}`;
+  const rawArch = String(options.arch || process.env.TARGET_ARCH || process.arch || 'amd64')
+    .toLowerCase()
+    .trim();
+  let arch = 'amd64';
+  if (rawArch === 'arm64' || rawArch === 'aarch64') {
+    arch = 'aarch64';
+  } else if (rawArch === 'arm' || rawArch === 'armhf' || rawArch.startsWith('armv')) {
+    arch = 'arm';
+  } else if (rawArch === 'x86' || rawArch === 'ia32' || rawArch === 'i386' || rawArch === 'i686') {
+    arch = 'i386';
+  } else if (rawArch === 'x64' || rawArch === 'amd64' || rawArch === 'x86_64' || rawArch === 'x86-64') {
+    arch = 'amd64';
+  } else {
+    arch = rawArch.replace(/[^0-9a-z-]/g, '') || 'amd64';
+  }
+
+  // 3. SemVer with build metadata: <package_version>+<commit>.<os>.<architecture>
+  const version = `${packageVersion}+${gitCommit}.${osName}.${arch}`;
 
   // 4. Release date in yyyy-MM-dd
   const now = new Date();
@@ -93,7 +114,7 @@ export function computeAboutInfo(options = {}) {
     tagline,
     description,
     website,
-    os: process.platform === 'win32' ? 'windows' : process.platform === 'darwin' ? 'macos' : 'linux',
+    os: osName,
   };
 }
 

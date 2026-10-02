@@ -68,7 +68,10 @@ if (!Number.isInteger(DESIRED_PORT) || DESIRED_PORT < 1 || DESIRED_PORT > 65535)
 }
 
 // OS Banner & Sync Metadata
-const releaseInfo = syncAllMetadata({ arch: ARCH });
+const releaseInfo = syncAllMetadata({
+  arch: ARCH,
+  os: PLATFORM === 'win32' ? 'windows' : PLATFORM === 'darwin' ? 'macos' : 'linux',
+});
 
 console.log(`\n${CYAN}======================================================${RESET}`);
 console.log(`${BOLD}${MAGENTA}  ✦ Stage0 Virtual MR Sandbox - Dev Hot Reload${RESET}`);
