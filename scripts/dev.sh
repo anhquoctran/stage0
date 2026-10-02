@@ -79,7 +79,11 @@ if [ "$MODE" == "app" ]; then
   echo -e "\n${GREEN}🚀 Starting Tauri Native Desktop App with Hot Reload...${RESET}"
   echo -e "${DIM}   Frontend: http://127.0.0.1:1420${RESET}"
   echo -e "${DIM}   Backend : Watching backend/src/ for Rust recompiles${RESET}\n"
-  npx tauri dev
+  if [ "$OS_NAME" = "Darwin" ]; then
+    npx tauri dev --runner "$SCRIPT_DIR/macos-cargo-runner.sh"
+  else
+    npx tauri dev
+  fi
 else
   echo -e "\n${GREEN}🌐 Starting Vite Web Server with Hot Reload...${RESET}"
   echo -e "${DIM}   URL: http://127.0.0.1:1420/?mock${RESET}\n"

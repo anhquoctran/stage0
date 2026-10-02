@@ -171,10 +171,19 @@ async function main() {
     console.log(`${DIM}   Frontend: Vite HMR at http://127.0.0.1:${effectivePort}${RESET}`);
     console.log(`${DIM}   Backend : Cargo watch for backend/src/*.rs changes${RESET}\n`);
 
-    child = spawn(npxCmd, ['tauri', 'dev'], {
+    const tauriEnv = { ...process.env, FORCE_COLOR: '1' };
+    const tauriArgs = ['tauri', 'dev'];
+    if (PLATFORM === 'darwin') {
+      // Tauri invokes this wrapper as Cargo; it configures Cargo's executable
+      // runner to launch the compiled application inside a macOS .app bundle.
+      const macosCargoRunner = path.join(ROOT_DIR, 'scripts', 'macos-cargo-runner.sh');
+      tauriArgs.push('--runner', macosCargoRunner);
+    }
+
+    child = spawn(npxCmd, tauriArgs, {
       cwd: ROOT_DIR,
       stdio: 'inherit',
-      env: { ...process.env, FORCE_COLOR: '1' },
+      env: tauriEnv,
       shell: isWin,
       detached: !isWin,
     });

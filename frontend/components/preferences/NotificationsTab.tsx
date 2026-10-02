@@ -5,13 +5,15 @@ import {
   AlertTriangle,
   AlertCircle,
   Sparkles,
-  Info,
   RefreshCw,
-  Trash2,
 } from '@/components/common/icons';
 import { useNotificationStore } from '../../store/useNotificationStore';
 import { notificationService } from '../../services/notificationService';
 import type { NotificationPermissionState } from '../../types/notification';
+
+function notificationErrorMessage(error: unknown, fallback: string): string {
+  return typeof error === 'string' ? error : error instanceof Error ? error.message : fallback;
+}
 
 const ToggleSwitch: React.FC<{
   checked: boolean;
@@ -43,12 +45,8 @@ const ToggleSwitch: React.FC<{
 export const NotificationsTab: React.FC = () => {
   const {
     settings,
-    notifications,
-    unreadCount,
     updateSettings,
     updateChannel,
-    markAllAsRead,
-    clearAll,
   } = useNotificationStore();
 
   const [permissionState, setPermissionState] = useState<NotificationPermissionState | 'checking'>('checking');
@@ -70,19 +68,20 @@ export const NotificationsTab: React.FC = () => {
     setIsRequestingPermission(true);
     setStatusMessage(null);
     try {
-      const granted = await notificationService.requestPermission();
-      const updatedState = await notificationService.getPermissionState();
+      const updatedState = await notificationService.requestPermission();
       setPermissionState(updatedState);
-      if (granted) {
+      if (updatedState === 'granted' || updatedState === 'not_required') {
         setStatusMessage('Permission granted');
       } else if (updatedState === 'denied') {
-        setStatusMessage('Permission denied by user');
+        setStatusMessage('Notifications are blocked in system settings');
+      } else if (updatedState === 'unsupported') {
+        setStatusMessage('Native notifications are unavailable in this environment');
       } else {
         setStatusMessage('Permission not granted');
       }
     } catch (err) {
       console.warn('[NotificationsTab] Request permission error:', err);
-      setStatusMessage('Unable to request permission');
+      setStatusMessage(notificationErrorMessage(err, 'Unable to request permission'));
     } finally {
       setIsRequestingPermission(false);
       setTimeout(() => setStatusMessage(null), 4500);
@@ -94,22 +93,34 @@ export const NotificationsTab: React.FC = () => {
     setStatusMessage(null);
 
     try {
-      if (permissionState === 'default') {
-        const granted = await notificationService.requestPermission();
-        const updatedState = await notificationService.getPermissionState();
-        setPermissionState(updatedState);
-        if (!granted) {
-          setStatusMessage('Notification permission is required to send alerts');
+      let currentPermissionState = await notificationService.getPermissionState();
+      setPermissionState(currentPermissionState);
+
+      if (currentPermissionState === 'default') {
+        currentPermissionState = await notificationService.requestPermission();
+        setPermissionState(currentPermissionState);
+        if (currentPermissionState !== 'granted' && currentPermissionState !== 'not_required') {
+          setStatusMessage(
+            currentPermissionState === 'denied'
+              ? 'Notifications are blocked in system settings'
+              : currentPermissionState === 'unsupported'
+                ? 'Native notifications are unavailable in this environment'
+                : 'Notification permission was not granted',
+          );
           setTimeout(() => setStatusMessage(null), 4500);
           return;
         }
-      } else if (permissionState === 'denied') {
-        setStatusMessage('Notifications are blocked by system or browser settings');
+      } else if (currentPermissionState === 'denied') {
+        setStatusMessage('Notifications are blocked in system settings');
+        setTimeout(() => setStatusMessage(null), 4500);
+        return;
+      } else if (currentPermissionState === 'unsupported') {
+        setStatusMessage('Native notifications are unavailable in this environment');
         setTimeout(() => setStatusMessage(null), 4500);
         return;
       }
 
-      await notificationService.notify({
+      const result = await notificationService.notify({
         title: 'Stage0 Desktop Notification Test',
         body: 'Native OS notification is working properly.',
         level: 'info',
@@ -122,11 +133,17 @@ export const NotificationsTab: React.FC = () => {
           },
         ],
       });
-      setStatusMessage('Test notification dispatched');
+      setStatusMessage(
+        result.delivery === 'sent'
+          ? 'Native OS notification sent'
+          : result.delivery === 'unsupported'
+            ? 'Native notifications are unavailable in this environment'
+            : result.error || 'Native OS notification could not be sent',
+      );
       setTimeout(() => setStatusMessage(null), 4000);
     } catch (err) {
       console.warn('[NotificationsTab] Send test notification error:', err);
-      setStatusMessage('Failed to send test notification');
+      setStatusMessage(notificationErrorMessage(err, 'Failed to send test notification'));
       setTimeout(() => setStatusMessage(null), 4000);
     } finally {
       setIsSendingTest(false);
@@ -182,6 +199,11 @@ export const NotificationsTab: React.FC = () => {
                 {permissionState === 'unsupported' && (
                   <span className="text-subtext0 text-[11px]">Not supported on this environment</span>
                 )}
+                {permissionState === 'not_required' && (
+                  <span className="text-subtext0 text-[11px]">
+                    No separate permission prompt on this platform
+                  </span>
+                )}
                 {permissionState === 'checking' && (
                   <span className="text-subtext0 text-[11px]">Checking...</span>
                 )}
@@ -191,7 +213,7 @@ export const NotificationsTab: React.FC = () => {
               </div>
               {permissionState === 'denied' && (
                 <span className="text-[10px] text-subtext0 leading-tight">
-                  Desktop notifications are blocked. To receive alerts, please allow notification permissions in your OS or browser site settings.
+                  Desktop notifications are blocked. Allow Stage0 in your operating system notification settings.
                 </span>
               )}
             </div>
@@ -228,7 +250,7 @@ export const NotificationsTab: React.FC = () => {
           <div className="shrink-0">
             <button
               type="button"
-              disabled={isSendingTest || !settings.enableDesktopNotifications}
+              disabled={isSendingTest || permissionState === 'checking' || !settings.enableDesktopNotifications}
               onClick={handleSendTestNotification}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text bg-[#313244] hover:bg-[#45475a] border border-[#45475a]/50 rounded transition-colors cursor-pointer disabled:opacity-50"
             >
@@ -254,7 +276,7 @@ export const NotificationsTab: React.FC = () => {
           Event Notification Channels
         </h3>
         <p className="text-[11px] text-subtext0 pb-1 leading-relaxed">
-          Fine-tune which application subsystems are permitted to deliver push and toast notifications.
+          Fine-tune which application subsystems are permitted to deliver native OS notifications.
         </p>
 
         {/* Channel 1: Software Updates */}
@@ -332,104 +354,6 @@ export const NotificationsTab: React.FC = () => {
             />
           </div>
         </div>
-      </div>
-
-      {/* 3. NOTIFICATION HISTORY */}
-      <div className="space-y-3 pt-2">
-        <div className="flex items-center justify-between pb-1 border-b border-[#313244]/50">
-          <div className="flex items-center gap-2">
-            <h3 className="text-xs font-bold text-text tracking-tight uppercase font-mono">
-              Notification History
-            </h3>
-            <span className="px-1.5 py-0.2 text-[10px] font-mono rounded bg-[#313244]/80 text-subtext0">
-              {notifications.length} stored {unreadCount > 0 && `• ${unreadCount} unread`}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={markAllAsRead}
-                className="px-2 py-1 text-[11px] text-subtext0 hover:text-text bg-[#313244]/50 hover:bg-[#313244] border border-[#45475a]/40 rounded transition-colors cursor-pointer"
-              >
-                Mark all read
-              </button>
-            )}
-            {notifications.length > 0 && (
-              <button
-                type="button"
-                onClick={clearAll}
-                className="px-2 py-1 text-[11px] text-subtext0 hover:text-text bg-[#313244]/50 hover:bg-[#313244] border border-[#45475a]/40 rounded transition-colors cursor-pointer flex items-center gap-1"
-              >
-                <Trash2 className="w-3 h-3" />
-                <span>Clear</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {notifications.length === 0 ? (
-          <div className="p-8 text-center bg-[#11111b] border border-[#313244] rounded space-y-2">
-            <Bell className="w-6 h-6 text-subtext0/40 mx-auto" />
-            <div className="text-xs font-semibold text-text">No notifications recorded</div>
-            <p className="text-[11px] text-subtext0 max-w-sm mx-auto leading-relaxed">
-              When background processes, software updates, or AI reviewers generate alerts, they will appear here.
-            </p>
-          </div>
-        ) : (
-          <div className="max-h-72 overflow-y-auto space-y-2 pr-1 divide-y divide-[#313244]/30">
-            {notifications.map((notif) => {
-              const dateStr = new Date(notif.timestamp).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              });
-
-              return (
-                <div
-                  key={notif.id}
-                  className={`pt-2 flex items-start gap-3 p-2.5 rounded transition-colors ${
-                    notif.isRead
-                      ? 'bg-[#11111b]/60 border border-transparent'
-                      : 'bg-[#181825] border border-[#313244]'
-                  }`}
-                >
-                  <div className="mt-0.5 shrink-0">
-                    {notif.level === 'success' && <CheckCircle2 className="w-3.5 h-3.5 text-subtext0" />}
-                    {notif.level === 'warning' && <AlertTriangle className="w-3.5 h-3.5 text-subtext0" />}
-                    {notif.level === 'error' && <AlertCircle className="w-3.5 h-3.5 text-subtext0" />}
-                    {notif.level === 'update' && <Sparkles className="w-3.5 h-3.5 text-subtext0" />}
-                    {notif.level === 'info' && <Info className="w-3.5 h-3.5 text-subtext0" />}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-text truncate">{notif.title}</span>
-                      <span className="text-[10px] text-subtext0 font-mono shrink-0">{dateStr}</span>
-                    </div>
-                    <p className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">{notif.body}</p>
-
-                    {notif.actions && notif.actions.length > 0 && (
-                      <div className="flex items-center gap-2 mt-2">
-                        {notif.actions.map((act) => (
-                          <button
-                            key={act.label}
-                            type="button"
-                            onClick={() => notificationService.handleAction(act, notif.id)}
-                            className="px-2 py-0.5 text-[10px] font-medium rounded bg-[#313244] hover:bg-[#45475a] text-text border border-[#45475a]/50 transition-colors cursor-pointer"
-                          >
-                            {act.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
     </div>
   );

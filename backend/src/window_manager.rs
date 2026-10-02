@@ -17,6 +17,28 @@ use crate::db::Database;
 use crate::git::RepoInfo;
 use crate::watcher::WatcherState;
 
+pub const fn default_window_size() -> (f64, f64) {
+    #[cfg(target_os = "windows")]
+    {
+        (1024.0, 680.0)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        (1280.0, 800.0)
+    }
+}
+
+pub const fn minimum_window_size() -> (f64, f64) {
+    #[cfg(target_os = "macos")]
+    {
+        (640.0, 500.0)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        (1024.0, 680.0)
+    }
+}
+
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum RepoIdentity {
     File { volume: u64, file_index: u64 },
@@ -371,18 +393,15 @@ pub fn create_welcome_window(app: &AppHandle) -> Result<String, String> {
         return Err(error);
     }
     if let Some(window) = app.get_webview_window(&label) {
-        #[cfg(target_os = "macos")]
+        let (min_width, min_height) = minimum_window_size();
         let min_size = tauri::LogicalSize {
-            width: 640.0,
-            height: 500.0,
+            width: min_width,
+            height: min_height,
         };
-        #[cfg(not(target_os = "macos"))]
-        let min_size = tauri::LogicalSize {
-            width: 1024.0,
-            height: 680.0,
-        };
+        let (width, height) = default_window_size();
         let _ = window.unmaximize();
-        let _ = window.set_size(tauri::Size::Logical(min_size));
+        let _ = window.set_min_size(Some(tauri::Size::Logical(min_size)));
+        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width, height }));
         let _ = window.center();
         focus_window(&window)?;
     }
@@ -414,12 +433,11 @@ fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWind
         // created windows, matching the main window configuration. The title bar
         // remains overlaid so the app can keep its custom title-bar content.
         .decorations(true)
-        .min_inner_size(640.0, 500.0)
         .title_bar_style(TitleBarStyle::Overlay)
         .hidden_title(true);
 
-    #[cfg(not(target_os = "macos"))]
-    let builder = builder.min_inner_size(1024.0, 680.0);
+    let (min_width, min_height) = minimum_window_size();
+    let builder = builder.min_inner_size(min_width, min_height);
 
     let window = builder
         .build()

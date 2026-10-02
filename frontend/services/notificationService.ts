@@ -1,12 +1,9 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import {
-  isPermissionGranted as tauriIsPermissionGranted,
-  requestPermission as tauriRequestPermission,
-} from '@tauri-apps/plugin-notification';
-import {
   AppNotification,
   AppNotificationAction,
+  NotificationDispatchResult,
   NotificationPermissionState,
   NotifyOptions,
 } from '../types/notification';
@@ -60,57 +57,22 @@ export const notificationService = {
   },
 
   /**
-   * Checks if notification permission is currently granted on Windows, macOS, Linux, or Web.
-   * Guaranteed never to throw an unhandled exception.
+   * On macOS this reflects Notification Center authorization. Windows and Linux
+   * do not expose an equivalent per-app permission prompt through this backend.
    */
   async isPermissionGranted(): Promise<boolean> {
-    try {
-      if (isTauri()) {
-        try {
-          const res = await invoke<boolean>('is_notification_permission_granted');
-          if (typeof res === 'boolean') return res;
-        } catch {}
-
-        try {
-          return await tauriIsPermissionGranted();
-        } catch {
-          return false;
-        }
-      }
-
-      if (typeof window !== 'undefined' && 'Notification' in window && window.Notification) {
-        return window.Notification.permission === 'granted';
-      }
-    } catch (err) {
-      console.warn('[NotificationService] isPermissionGranted check failed:', err);
-    }
-
-    return false;
+    const state = await this.getPermissionState();
+    return state === 'granted' || state === 'not_required';
   },
 
   /**
-   * Returns fine-grained OS notification permission state:
-   * 'granted' | 'denied' | 'default' | 'unsupported'
+   * Returns the OS notification permission state. Never consults browser
+   * notification APIs: Stage0 dispatches native notifications only.
    */
   async getPermissionState(): Promise<NotificationPermissionState> {
+    if (!isTauri()) return 'unsupported';
     try {
-      if (isTauri()) {
-        try {
-          const granted = await invoke<boolean>('is_notification_permission_granted');
-          return granted ? 'granted' : 'default';
-        } catch {
-          return 'default';
-        }
-      }
-
-      if (typeof window !== 'undefined' && 'Notification' in window && window.Notification) {
-        const perm = window.Notification.permission;
-        if (perm === 'granted' || perm === 'denied' || perm === 'default') {
-          return perm;
-        }
-      }
-
-      return 'unsupported';
+      return await invoke<NotificationPermissionState>('get_notification_permission_state');
     } catch (err) {
       console.warn('[NotificationService] getPermissionState error:', err);
       return 'unsupported';
@@ -118,82 +80,37 @@ export const notificationService = {
   },
 
   /**
-   * Requests OS desktop notification permission from user.
-   * Handles user grant, user rejection ('denied'), dismissal ('default'),
-   * or system policy blocks without throwing exceptions.
+   * Requests OS-native notification authorization when the platform requires it.
    */
-  async requestPermission(): Promise<boolean> {
-    try {
-      if (isTauri()) {
-        try {
-          const res = await invoke<boolean>('request_notification_permission');
-          if (typeof res === 'boolean') return res;
-        } catch (err) {
-          console.warn('[NotificationService] Backend request_notification_permission failed:', err);
-        }
-
-        try {
-          const res = await tauriRequestPermission();
-          return res === 'granted';
-        } catch {
-          return false;
-        }
-      }
-
-      if (typeof window !== 'undefined' && 'Notification' in window && window.Notification) {
-        if (window.Notification.permission === 'denied') {
-          // If already blocked by user, do not throw or re-prompt
-          return false;
-        }
-
-        try {
-          let res: NotificationPermission;
-          const req = window.Notification.requestPermission();
-          if (req && typeof req.then === 'function') {
-            res = await req;
-          } else {
-            // Older browser callback compatibility
-            res = await new Promise<NotificationPermission>((resolve) => {
-              try {
-                window.Notification.requestPermission((status) => resolve(status));
-              } catch {
-                resolve('denied');
-              }
-            });
-          }
-          return res === 'granted';
-        } catch (err) {
-          console.warn('[NotificationService] Notification.requestPermission() threw:', err);
-          return false;
-        }
-      }
-    } catch (err) {
-      console.warn('[NotificationService] Uncaught error in requestPermission:', err);
-    }
-
-    return false;
+  async requestPermission(): Promise<NotificationPermissionState> {
+    if (!isTauri()) return 'unsupported';
+    // Native failures must reach the UI; they are not a user denial of consent.
+    return invoke<NotificationPermissionState>('request_notification_permission');
   },
 
   /**
    * Unified dispatch function for native push notifications:
-   * - Shows native OS notification (Windows WinRT / PowerShell Toast, macOS Notification Center, Linux Freedesktop DBus, or Web browser Notification)
+   * - Shows native OS notification (Windows Toast, macOS Notification Center, Linux Freedesktop D-Bus)
    * - Stores event in notification history for auditing
    * - Does NOT show in-app toasts
    * - Guaranteed never to throw an unhandled exception
    */
-  async notify(options: NotifyOptions): Promise<AppNotification> {
+  async notify(options: NotifyOptions): Promise<NotificationDispatchResult> {
     const settings = useNotificationStore.getState().settings;
 
     // Check if channel is disabled
     if (options.channel && settings.channels[options.channel] === false) {
       return {
-        id: `notif_skipped`,
-        title: options.title,
-        body: options.body,
-        level: options.level || 'info',
-        timestamp: Date.now(),
-        isRead: true,
-        channel: options.channel,
+        notification: {
+          id: `notif_skipped_${Date.now()}`,
+          title: options.title,
+          body: options.body,
+          level: options.level || 'info',
+          timestamp: Date.now(),
+          isRead: true,
+          channel: options.channel,
+        },
+        delivery: 'not_requested',
       };
     }
 
@@ -218,11 +135,15 @@ export const notificationService = {
       console.warn('[NotificationService] Failed to record notification history:', err);
     }
 
-    // 2. Cross-platform OS Native Desktop Notification (if enabled and not silent, or forceDesktop requested)
+    // 2. Native desktop notification (if enabled and not silent, or forceDesktop requested).
     const shouldDispatchDesktop = options.forceDesktop || (!options.silent && settings.enableDesktopNotifications);
+    let delivery: NotificationDispatchResult['delivery'] = 'not_requested';
+    let deliveryError: string | undefined;
     if (shouldDispatchDesktop) {
-      try {
-        if (isTauri()) {
+      if (!isTauri()) {
+        delivery = 'unsupported';
+      } else {
+        try {
           await invoke('send_push_notification', {
             payload: {
               id: notification.id,
@@ -232,36 +153,17 @@ export const notificationService = {
               actions: notification.actions,
               auto_dismiss_ms: notification.autoDismissMs,
             },
-          }).catch((err) => {
-            console.debug('[NotificationService] Native push notification failed:', err);
           });
-        } else if (typeof window !== 'undefined' && 'Notification' in window && window.Notification) {
-          if (window.Notification.permission === 'granted') {
-            try {
-              const nativeNotif = new window.Notification(options.title, {
-                body: options.body,
-                icon: '/app-icon.svg',
-              });
-
-              if (options.actions && options.actions.length > 0) {
-                nativeNotif.onclick = () => {
-                  try {
-                    window.focus();
-                    notificationService.handleAction(options.actions![0], notification.id);
-                  } catch {}
-                };
-              }
-            } catch (err) {
-              console.debug('[NotificationService] Native web Notification failed:', err);
-            }
-          }
+          delivery = 'sent';
+        } catch (err) {
+          delivery = 'failed';
+          deliveryError = 'Native OS notification delivery failed.';
+          console.warn('[NotificationService] Native OS notification delivery failed:', err);
         }
-      } catch (err) {
-        console.warn('[NotificationService] OS native push notification dispatch error:', err);
       }
     }
 
-    return notification;
+    return { notification, delivery, error: deliveryError };
   },
 
   /**
