@@ -1,5 +1,5 @@
 use tauri::{
-    menu::{Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder},
+    menu::{IconMenuItemBuilder, Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder},
     AppHandle, Emitter, Wry,
 };
 use crate::git::RepoInfo;
@@ -103,6 +103,17 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .item(&MenuItemBuilder::with_id("copy_rel_path", "Copy Relative Path").accelerator("CmdOrCtrl+Shift+C").build(app)?)
         .build()?;
 
+    let performance_item = IconMenuItemBuilder::with_id(
+        "toggle_perf_monitor",
+        "Display Perf Monitor",
+    )
+    .icon(performance_menu_icon())
+    .accelerator("CmdOrCtrl+Shift+F12")
+    .build(app)?;
+    let performance_submenu = SubmenuBuilder::new(app, "Performance")
+        .item(&performance_item)
+        .build()?;
+
     // 4. View Menu
     let view_submenu = SubmenuBuilder::new(app, "View")
         .item(&MenuItemBuilder::with_id("view_split", "Side-by-side (Split)").accelerator("CmdOrCtrl+1").build(app)?)
@@ -110,6 +121,8 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .separator()
         .item(&MenuItemBuilder::with_id("toggle_blame", "Toggle File Blame").build(app)?)
         .item(&MenuItemBuilder::with_id("toggle_inline_blame", "Toggle Inline Blame").accelerator("Alt+Shift+B").build(app)?)
+        .separator()
+        .item(&performance_submenu)
         .separator()
         .item(&PredefinedMenuItem::fullscreen(app, None)?)
         .build()?;
@@ -154,6 +167,52 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .build()?;
 
     Ok(menu)
+}
+
+fn performance_menu_icon() -> tauri::image::Image<'static> {
+    const SIZE: usize = 20;
+    const PURPLE: [u8; 4] = [190, 140, 255, 255];
+    let points = [(1_i32, 10_i32), (5, 10), (7, 6), (10, 14), (13, 7), (15, 10), (18, 10)];
+    let mut rgba = vec![0_u8; SIZE * SIZE * 4];
+
+    for pair in points.windows(2) {
+        let (mut x, mut y) = pair[0];
+        let (end_x, end_y) = pair[1];
+        let dx = (end_x - x).abs();
+        let sx = if x < end_x { 1 } else { -1 };
+        let dy = -(end_y - y).abs();
+        let sy = if y < end_y { 1 } else { -1 };
+        let mut error = dx + dy;
+        loop {
+            for offset_y in -1_i32..=1 {
+                for offset_x in -1_i32..=1 {
+                    if offset_x.abs() + offset_y.abs() > 1 {
+                        continue;
+                    }
+                    let px = x + offset_x;
+                    let py = y + offset_y;
+                    if px >= 0 && py >= 0 && px < SIZE as i32 && py < SIZE as i32 {
+                        let index = (py as usize * SIZE + px as usize) * 4;
+                        rgba[index..index + 4].copy_from_slice(&PURPLE);
+                    }
+                }
+            }
+            if x == end_x && y == end_y {
+                break;
+            }
+            let doubled_error = 2 * error;
+            if doubled_error >= dy {
+                error += dy;
+                x += sx;
+            }
+            if doubled_error <= dx {
+                error += dx;
+                y += sy;
+            }
+        }
+    }
+
+    tauri::image::Image::new_owned(rgba, SIZE as u32, SIZE as u32)
 }
 
 fn recent_repositories_submenu(app: &AppHandle) -> Result<Submenu<Wry>, Box<dyn std::error::Error>> {

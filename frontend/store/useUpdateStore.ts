@@ -1,331 +1,321 @@
 import { create } from 'zustand';
-import { invoke } from '@tauri-apps/api/core';
-import { SOFTWARE_ABOUT } from '../config/about';
-import {
-  UpdatePayload,
-  UpdateStatus,
-  MockScenario,
-  UpdateCheckParams,
-  UpdateCheckPolicy,
+import type {
+  LatestRelease,
+  UpdateChannel,
   UpdateCheckFrequency,
+  UpdateCheckPolicy,
+  UpdateDownloadProgress,
+  UpdateStatus,
 } from '../types/update';
 import {
-  fetchUpdateCheck,
-  simulateDownloadPayload,
+  cancelUpdateDownload,
+  checkForUpdate,
+  downloadUpdate,
+  installUpdate,
 } from '../services/updateApi';
 import { notificationService } from '../services/notificationService';
 
 const POLICY_STORAGE_KEY = 'stage0_update_policy';
 const FREQUENCY_STORAGE_KEY = 'stage0_update_frequency';
+const CHANNEL_STORAGE_KEY = 'stage0_update_channel';
+const LAST_CHECK_STORAGE_KEY = 'stage0_update_last_check_ts';
+let updateCheckGeneration = 0;
 
 function getInitialPolicy(): UpdateCheckPolicy {
   if (typeof window === 'undefined') return 'notify_only';
-  const val = localStorage.getItem(POLICY_STORAGE_KEY);
-  if (val === 'disabled' || val === 'notify_only' || val === 'auto_install') {
-    return val;
-  }
-  return 'notify_only';
+  const value = localStorage.getItem(POLICY_STORAGE_KEY);
+  return value === 'disabled' || value === 'notify_only' || value === 'auto_install'
+    ? value
+    : 'notify_only';
 }
 
 function getInitialFrequency(): UpdateCheckFrequency {
   if (typeof window === 'undefined') return 'daily';
-  const val = localStorage.getItem(FREQUENCY_STORAGE_KEY);
-  if (val === 'daily' || val === 'weekly' || val === 'monthly') {
-    return val;
+  const value = localStorage.getItem(FREQUENCY_STORAGE_KEY);
+  return value === 'daily' || value === 'weekly' || value === 'monthly' ? value : 'daily';
+}
+
+function getInitialChannel(): UpdateChannel {
+  if (typeof window === 'undefined') return 'stable';
+  const value = localStorage.getItem(CHANNEL_STORAGE_KEY);
+  return value === 'dev' || value === 'staging' || value === 'beta' || value === 'stable'
+    ? value
+    : 'stable';
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  if (typeof error === 'string' && error.trim()) return error;
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}
+
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  let value = bytes / 1024;
+  let unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
   }
-  return 'daily';
+  return `${value.toFixed(1)} ${units[unitIndex]}`;
+}
+
+function formatProgress(progress: UpdateDownloadProgress): string {
+  return progress.totalBytes == null
+    ? formatBytes(progress.downloadedBytes)
+    : `${formatBytes(progress.downloadedBytes)} / ${formatBytes(progress.totalBytes)}`;
+}
+
+function storeSuccessfulCheckTime(): string {
+  const now = new Date();
+  try {
+    localStorage.setItem(LAST_CHECK_STORAGE_KEY, String(now.getTime()));
+  } catch {
+    // The update workflow still works when browser storage is unavailable.
+  }
+  return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 interface UpdateStoreState {
   status: UpdateStatus;
   isModalOpen: boolean;
-  updatePayload: UpdatePayload | null;
-  downloadProgress: number;
+  updatePayload: LatestRelease | null;
+  downloadedArtifactPath: string | null;
+  downloadProgress: number | null;
   downloadSpeed: string;
   downloadedText: string;
   errorMessage: string | null;
-  mockScenario: MockScenario;
   lastCheckedTime: string | null;
   updateCheckPolicy: UpdateCheckPolicy;
   updateCheckFrequency: UpdateCheckFrequency;
+  updateChannel: UpdateChannel;
 
-  // Actions
-  setMockScenario: (scenario: MockScenario) => void;
   setUpdateCheckPolicy: (policy: UpdateCheckPolicy) => void;
   setUpdateCheckFrequency: (frequency: UpdateCheckFrequency) => void;
+  setUpdateChannel: (channel: UpdateChannel) => void;
   openModal: () => void;
   closeModal: () => void;
   checkForUpdates: (manualTrigger?: boolean) => Promise<void>;
   checkIfUpdateDueAndRun: () => Promise<void>;
-  startDownload: () => void;
-  cancelDownload: () => void;
-  applyUpdateAndRestart: () => Promise<void>;
+  startDownload: () => Promise<void>;
+  cancelDownload: () => Promise<void>;
+  installDownloadedUpdate: () => Promise<void>;
   reset: () => void;
 }
-
-let activeDownloadCancel: (() => void) | null = null;
 
 export const useUpdateStore = create<UpdateStoreState>((set, get) => ({
   status: 'idle',
   isModalOpen: false,
   updatePayload: null,
-  downloadProgress: 0,
+  downloadedArtifactPath: null,
+  downloadProgress: null,
   downloadSpeed: '',
   downloadedText: '',
   errorMessage: null,
-  mockScenario: 'available',
   lastCheckedTime: null,
   updateCheckPolicy: getInitialPolicy(),
   updateCheckFrequency: getInitialFrequency(),
-
-  setMockScenario: (scenario) => {
-    set({ mockScenario: scenario });
-  },
+  updateChannel: getInitialChannel(),
 
   setUpdateCheckPolicy: (policy) => {
     try {
       localStorage.setItem(POLICY_STORAGE_KEY, policy);
-    } catch {}
+    } catch {
+      // Keep the in-memory preference even if storage is unavailable.
+    }
     set({ updateCheckPolicy: policy });
   },
 
   setUpdateCheckFrequency: (frequency) => {
     try {
       localStorage.setItem(FREQUENCY_STORAGE_KEY, frequency);
-    } catch {}
+    } catch {
+      // Keep the in-memory preference even if storage is unavailable.
+    }
     set({ updateCheckFrequency: frequency });
+  },
+
+  setUpdateChannel: (channel) => {
+    if (get().status === 'downloading' || get().status === 'cancelling') return;
+    updateCheckGeneration += 1;
+    try {
+      localStorage.setItem(CHANNEL_STORAGE_KEY, channel);
+    } catch {
+      // Keep the in-memory preference even if storage is unavailable.
+    }
+    set({
+      updateChannel: channel,
+      status: 'idle',
+      updatePayload: null,
+      downloadedArtifactPath: null,
+      errorMessage: null,
+    });
   },
 
   openModal: () => {
     set({ isModalOpen: true });
-    // If opening when idle, automatically initiate check
-    if (get().status === 'idle') {
-      void get().checkForUpdates(true);
-    }
+    if (get().status === 'idle') void get().checkForUpdates(true);
   },
 
-  closeModal: () => {
-    // If downloading, don't abruptly kill unless user cancels
-    set({ isModalOpen: false });
-  },
+  closeModal: () => set({ isModalOpen: false }),
 
   checkForUpdates: async (manualTrigger = true) => {
-    if (manualTrigger) {
-      set({ isModalOpen: true });
+    if (get().status === 'checking' || get().status === 'downloading' || get().status === 'cancelling') {
+      return;
     }
 
     set({
       status: 'checking',
       errorMessage: null,
-      downloadProgress: 0,
+      downloadProgress: null,
       downloadSpeed: '',
       downloadedText: '',
+      downloadedArtifactPath: null,
     });
+    const requestGeneration = ++updateCheckGeneration;
 
     try {
-      const params: UpdateCheckParams = {
-        current_version: SOFTWARE_ABOUT.packageVersion || '0.1.0',
-        os_name: (SOFTWARE_ABOUT.os || 'windows').toLowerCase(),
-        arch_name: (SOFTWARE_ABOUT.arch || 'amd64').toLowerCase(),
-      };
+      const release = await checkForUpdate(get().updateChannel);
+      if (requestGeneration !== updateCheckGeneration) return;
+      const lastCheckedTime = storeSuccessfulCheckTime();
 
-      const response = await fetchUpdateCheck(params, get().mockScenario);
-
-      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-      if (response.code === 'UPDATE_AVAILABLE' && response.data?.downloadUrl) {
-        try {
-          localStorage.setItem('stage0_update_last_check_ts', String(Date.now()));
-        } catch {}
-
-        set({
-          status: 'available',
-          updatePayload: response.data,
-          lastCheckedTime: now,
-        });
-
-        // Background auto check actions
+      if (release?.hasUpdate) {
+        set({ status: 'available', updatePayload: release, lastCheckedTime });
         if (!manualTrigger) {
-          const latest = response.data.latestVersion;
           if (get().updateCheckPolicy === 'notify_only') {
             void notificationService.notify({
-              title: 'Stage0 Update Available',
-              body: `Stage0 v${latest} is now available. Click to review release notes and update.`,
+              title: 'Stage0 update available',
+              body: `Stage0 ${release.version} is available on the ${release.channel} channel.`,
               level: 'update',
-              actions: [
-                {
-                  label: 'View Update',
-                  actionType: 'open_preferences_updates',
-                },
-              ],
+              actions: [{ label: 'View Update', actionType: 'open_preferences_updates' }],
             });
           } else if (get().updateCheckPolicy === 'auto_install') {
-            void notificationService.notify({
-              title: 'Stage0 Auto-Downloading Update',
-              body: `Downloading Stage0 v${latest} automatically in the background.`,
-              level: 'update',
-            });
-            get().startDownload();
+            void get().startDownload();
           }
         }
-      } else if (response.code === 'UP_TO_DATE') {
-        try {
-          localStorage.setItem('stage0_update_last_check_ts', String(Date.now()));
-        } catch {}
-
-        set({
-          status: 'up-to-date',
-          updatePayload: response.data || null,
-          lastCheckedTime: now,
-        });
       } else {
-        if (manualTrigger) {
-          set({
-            status: 'error',
-            errorMessage: response.message || 'Unable to retrieve updates at this time.',
-            lastCheckedTime: now,
-          });
-        } else {
-          // Industry standard (VS Code / Sparkle): background check fails silently
-          console.debug('[UpdateService] Background check failed silently:', response.message);
-          set({ status: 'idle' });
-        }
+        set({ status: 'up-to-date', updatePayload: null, lastCheckedTime });
       }
-    } catch (err) {
+    } catch (error) {
+      if (requestGeneration !== updateCheckGeneration) return;
+      const message = errorMessage(error, 'Unable to check for Stage0 updates.');
       if (manualTrigger) {
-        set({
-          status: 'error',
-          errorMessage: err instanceof Error ? err.message : 'Unknown network error occurred while checking for updates.',
-        });
+        set({ status: 'error', errorMessage: message });
       } else {
-        // Industry standard: background network errors fail silently without disturbing the user
-        console.debug('[UpdateService] Background check network error:', err);
-        set({ status: 'idle' });
+        set({ status: 'idle', errorMessage: null });
       }
     }
   },
 
   checkIfUpdateDueAndRun: async () => {
-    const policy = get().updateCheckPolicy;
-    if (policy === 'disabled') return;
+    const { updateCheckPolicy, updateCheckFrequency, status } = get();
+    if (updateCheckPolicy === 'disabled') return;
+    if (status === 'checking' || status === 'downloading' || status === 'cancelling' || status === 'ready') return;
 
-    // Do not interrupt an active check or download
-    if (get().status === 'checking' || get().status === 'downloading' || get().status === 'ready') {
-      return;
-    }
-
-    const frequency = get().updateCheckFrequency;
     const intervalMap: Record<UpdateCheckFrequency, number> = {
       daily: 24 * 60 * 60 * 1000,
       weekly: 7 * 24 * 60 * 60 * 1000,
       monthly: 30 * 24 * 60 * 60 * 1000,
     };
-
-    const interval = intervalMap[frequency] || intervalMap.daily;
     let lastCheck = 0;
     try {
-      const lastCheckStr = localStorage.getItem('stage0_update_last_check_ts');
-      lastCheck = lastCheckStr ? parseInt(lastCheckStr, 10) : 0;
-    } catch {}
-
-    const now = Date.now();
-    // If it has never run before (lastCheck === 0) or the interval has elapsed
-    if (lastCheck === 0 || now - lastCheck >= interval) {
-      void get().checkForUpdates(false);
+      lastCheck = Number(localStorage.getItem(LAST_CHECK_STORAGE_KEY) || 0);
+    } catch {
+      // No stored check timestamp means the first scheduled check is due.
+    }
+    if (!Number.isFinite(lastCheck)) lastCheck = 0;
+    if (!lastCheck || Date.now() - lastCheck >= intervalMap[updateCheckFrequency]) {
+      await get().checkForUpdates(false);
     }
   },
 
-  startDownload: () => {
-    const { updatePayload } = get();
-    if (!updatePayload) return;
-
-    if (activeDownloadCancel) {
-      activeDownloadCancel();
-      activeDownloadCancel = null;
-    }
+  startDownload: async () => {
+    const release = get().updatePayload;
+    if (!release || get().status === 'downloading' || get().status === 'cancelling') return;
 
     set({
       status: 'downloading',
       downloadProgress: 0,
-      downloadSpeed: 'Calculating...',
-      downloadedText: '0 MB / 48.6 MB',
+      downloadSpeed: 'Starting…',
+      downloadedText: release.sizeBytes == null ? '0 B' : `0 B / ${formatBytes(release.sizeBytes)}`,
       errorMessage: null,
+      downloadedArtifactPath: null,
     });
 
-    activeDownloadCancel = simulateDownloadPayload(
-      (percent, speed, downloadedBytes) => {
-        set({
-          downloadProgress: percent,
-          downloadSpeed: speed,
-          downloadedText: downloadedBytes,
-        });
-      },
-      () => {
-        activeDownloadCancel = null;
-        set({
-          status: 'ready',
-          downloadProgress: 100,
-          downloadSpeed: 'Completed',
-        });
-        if (get().updateCheckPolicy === 'auto_install') {
-          void notificationService.notify({
-            title: 'Stage0 Update Ready',
-            body: `Stage0 v${get().updatePayload?.latestVersion || ''} has been downloaded. Restart to complete the update.`,
-            level: 'success',
-            actions: [
-              {
-                label: 'Restart & Update',
-                actionType: 'open_preferences_updates',
-              },
-            ],
-          });
-        }
-      },
-      (errorMsg) => {
-        activeDownloadCancel = null;
-        set({
-          status: 'error',
-          errorMessage: errorMsg,
-        });
-      }
-    );
-  },
-
-  cancelDownload: () => {
-    if (activeDownloadCancel) {
-      activeDownloadCancel();
-      activeDownloadCancel = null;
-    }
-    set({
-      status: 'available',
-      downloadProgress: 0,
-      downloadSpeed: '',
-      downloadedText: '',
-    });
-  },
-
-  applyUpdateAndRestart: async () => {
     try {
-      console.log('[UpdateStore] Applying update and initiating restart...');
-      // Try invoking native desktop restart command
-      await invoke('restart_app');
-    } catch {
-      // In web browser or mock environment, reload window
-      if (typeof window !== 'undefined') {
-        window.location.reload();
+      const artifactPath = await downloadUpdate(get().updateChannel, release.version, (progress) => {
+        set({
+          downloadProgress: progress.percent,
+          downloadSpeed: progress.bytesPerSecond > 0
+            ? `${formatBytes(progress.bytesPerSecond)}/s`
+            : 'Receiving…',
+          downloadedText: formatProgress(progress),
+        });
+      });
+      set({
+        status: 'ready',
+        downloadedArtifactPath: artifactPath,
+        downloadProgress: 100,
+        downloadSpeed: 'Verified',
+      });
+
+      if (get().updateCheckPolicy === 'auto_install') {
+        await get().installDownloadedUpdate();
       }
+    } catch (error) {
+      const message = errorMessage(error, 'The update download failed.');
+      const cancelled = message.toLowerCase().includes('cancelled');
+      set({
+        status: cancelled ? 'available' : 'error',
+        errorMessage: cancelled ? null : message,
+        downloadProgress: 0,
+        downloadSpeed: '',
+        downloadedText: '',
+      });
+    }
+  },
+
+  cancelDownload: async () => {
+    if (get().status !== 'downloading' && get().status !== 'cancelling') return;
+    set({ status: 'cancelling' });
+    try {
+      await cancelUpdateDownload();
+      set({
+        status: 'available',
+        downloadProgress: null,
+        downloadSpeed: '',
+        downloadedText: '',
+      });
+    } catch (error) {
+      set({ status: 'error', errorMessage: errorMessage(error, 'Could not cancel the update download.') });
+    }
+  },
+
+  installDownloadedUpdate: async () => {
+    const artifactPath = get().downloadedArtifactPath;
+    if (!artifactPath) {
+      set({ status: 'error', errorMessage: 'There is no verified update package ready to install.' });
+      return;
+    }
+    try {
+      await installUpdate(artifactPath);
+    } catch (error) {
+      set({ status: 'error', errorMessage: errorMessage(error, 'Could not launch the operating-system installer.') });
     }
   },
 
   reset: () => {
-    if (activeDownloadCancel) {
-      activeDownloadCancel();
-      activeDownloadCancel = null;
+    updateCheckGeneration += 1;
+    if (get().status === 'downloading' || get().status === 'cancelling') {
+      void cancelUpdateDownload();
     }
     set({
       status: 'idle',
       updatePayload: null,
-      downloadProgress: 0,
+      downloadedArtifactPath: null,
+      downloadProgress: null,
       downloadSpeed: '',
       downloadedText: '',
       errorMessage: null,

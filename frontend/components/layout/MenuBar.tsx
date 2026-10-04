@@ -39,6 +39,7 @@ import {
   FolderCog,
   Trash2,
   GitPullRequest,
+  HeartPulse,
   X,
 } from '@/components/common/icons';
 import {
@@ -58,6 +59,7 @@ import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { AboutModal } from '../common/AboutModal';
 import { formatShortcutText } from '../../utils/shortcuts';
+import { usePerformanceMonitorStore } from '../../store/usePerformanceMonitorStore';
 
 export interface MenuBarProps {
   hidden?: boolean;
@@ -101,10 +103,12 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
 
   const { themeMode, toggleTheme } = useThemeStore();
   const { setIsPreferencesOpen, showInlineBlame, toggleInlineBlame } = usePreferencesStore();
+  const { isEnabled: isPerformanceMonitorEnabled, toggle: togglePerformanceMonitor } = usePerformanceMonitorStore();
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [showRecentSubmenu, setShowRecentSubmenu] = useState(false);
   const [showOpenInSubmenu, setShowOpenInSubmenu] = useState(false);
+  const [showPerformanceSubmenu, setShowPerformanceSubmenu] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
 
@@ -124,6 +128,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
         setActiveMenu(null);
         setShowRecentSubmenu(false);
         setShowOpenInSubmenu(false);
+        setShowPerformanceSubmenu(false);
       }
     };
 
@@ -132,6 +137,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
         setActiveMenu(null);
         setShowRecentSubmenu(false);
         setShowOpenInSubmenu(false);
+        setShowPerformanceSubmenu(false);
         setShowShortcutsModal(false);
       } else if (
         (e.ctrlKey || e.metaKey) &&
@@ -242,6 +248,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
         case 'toggle_inline_blame':
           toggleInlineBlame();
           break;
+        case 'toggle_perf_monitor':
+          togglePerformanceMonitor();
+          break;
         case 'shortcuts':
           setShowShortcutsModal(true);
           break;
@@ -280,6 +289,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
     setViewMode,
     toggleFileBlame,
     toggleInlineBlame,
+    togglePerformanceMonitor,
   ]);
 
   const handleMenuClick = (menuName: string) => {
@@ -287,10 +297,12 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
       setActiveMenu(null);
       setShowRecentSubmenu(false);
       setShowOpenInSubmenu(false);
+      setShowPerformanceSubmenu(false);
     } else {
       setActiveMenu(menuName);
       setShowRecentSubmenu(false);
       setShowOpenInSubmenu(false);
+      setShowPerformanceSubmenu(false);
     }
   };
 
@@ -299,6 +311,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
       setActiveMenu(menuName);
       setShowRecentSubmenu(false);
       setShowOpenInSubmenu(false);
+      setShowPerformanceSubmenu(false);
     }
   };
 
@@ -306,6 +319,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
     setActiveMenu(null);
     setShowRecentSubmenu(false);
     setShowOpenInSubmenu(false);
+    setShowPerformanceSubmenu(false);
   };
 
   const handleExitApp = async () => {
@@ -879,6 +893,52 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   {themeMode}
                 </span>
               </button>
+
+              <div className="my-1 border-t border-surface0" />
+
+              <div
+                className="relative"
+                onMouseEnter={() => setShowPerformanceSubmenu(true)}
+                onMouseLeave={() => setShowPerformanceSubmenu(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowPerformanceSubmenu((isOpen) => !isOpen)}
+                  className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                  aria-haspopup="menu"
+                  aria-expanded={showPerformanceSubmenu}
+                >
+                  <div className="flex items-center gap-2">
+                    <HeartPulse className="w-3.5 h-3.5 text-primary group-hover:text-primary transition-colors" />
+                    <span>Performance</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-subtext0" />
+                </button>
+
+                {showPerformanceSubmenu && (
+                  <div className="absolute left-full top-0 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                    <button
+                      type="button"
+                      role="menuitemcheckbox"
+                      aria-checked={isPerformanceMonitorEnabled}
+                      onClick={() => {
+                        togglePerformanceMonitor();
+                        closeMenus();
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <HeartPulse className="w-3.5 h-3.5 text-primary group-hover:text-primary transition-colors" />
+                        <span>Display Perf Monitor</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+F12')}</span>
+                        {isPerformanceMonitorEnabled && <Check className="w-3.5 h-3.5 text-text" />}
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -1298,6 +1358,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
               { label: 'Side-by-side Split Diff', keys: 'S' },
               { label: 'Inline Unified Diff', keys: 'U' },
               { label: 'Toggle Git Blame View', keys: shortcut('Alt+B') },
+              { label: 'Display Performance Monitor', keys: shortcut('Ctrl+Shift+F12') },
             ],
           },
           {

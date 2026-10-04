@@ -38,6 +38,7 @@ import {
   faForwardStep,
   faGear,
   faGlobe,
+  faHeartPulse,
   faHeading,
   faItalic,
   faKey,
@@ -154,6 +155,7 @@ export const GitCompare = createIcon(faCodeCompare);
 export const GitMerge = createIcon(faCodeMerge);
 export const GitPullRequest = createIcon(faCodePullRequest);
 export const Globe = createIcon(faGlobe);
+export const HeartPulse = createIcon(faHeartPulse);
 export const HardDrive = createIcon(faHardDrive);
 export const Heading = createIcon(faHeading);
 export const History = createIcon(faClockRotateLeft);

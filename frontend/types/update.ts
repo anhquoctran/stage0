@@ -1,35 +1,23 @@
-/**
- * Software Update Types & Contract Definitions
- * 100% English - Stage0 Auto-Update Architecture
- */
+export type UpdateChannel = 'dev' | 'staging' | 'beta' | 'stable';
 
-export interface UpdateCheckParams {
-  current_version: string;
-  os_name: string;
-  arch_name: string;
+export interface LatestRelease {
+  version: string;
+  codename: string | null;
+  changelog: string | null;
+  platform: string;
+  arch: string;
+  channel: UpdateChannel;
+  fileName: string;
+  sizeBytes: number | null;
+  checksum: string | null;
+  hasUpdate: boolean;
 }
 
-export type UpdateResponseCode =
-  | 'UPDATE_AVAILABLE'
-  | 'UP_TO_DATE'
-  | 'PLATFORM_NOT_SUPPORTED'
-  | 'CHECK_ERROR';
-
-export interface UpdatePayload {
-  latestVersion: string;
-  packageVersion: string;
-  releaseDate: string;
-  downloadUrl: string;
-  sha256?: string;
-  fileSize?: string;
-  releaseNotes?: string;
-  mandatory?: boolean;
-}
-
-export interface UpdateCheckResponse {
-  code: UpdateResponseCode;
-  message: string;
-  data?: UpdatePayload | null;
+export interface UpdateDownloadProgress {
+  downloadedBytes: number;
+  totalBytes: number | null;
+  percent: number | null;
+  bytesPerSecond: number;
 }
 
 export type UpdateStatus =
@@ -38,17 +26,10 @@ export type UpdateStatus =
   | 'up-to-date'
   | 'available'
   | 'downloading'
+  | 'cancelling'
   | 'ready'
   | 'error';
 
-export type MockScenario = 'available' | 'up_to_date' | 'error';
+export type UpdateCheckPolicy = 'disabled' | 'notify_only' | 'auto_install';
 
-export type UpdateCheckPolicy =
-  | 'disabled'
-  | 'notify_only'
-  | 'auto_install';
-
-export type UpdateCheckFrequency =
-  | 'daily'
-  | 'weekly'
-  | 'monthly';
+export type UpdateCheckFrequency = 'daily' | 'weekly' | 'monthly';
