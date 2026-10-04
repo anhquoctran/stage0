@@ -11,7 +11,6 @@ import {
   Sparkles,
   Clock,
 } from './icons';
-import { MockScenario } from '../../types/update';
 
 export const UpdateModal: React.FC = () => {
   const {
@@ -21,15 +20,15 @@ export const UpdateModal: React.FC = () => {
     downloadProgress,
     downloadSpeed,
     downloadedText,
+    downloadedArtifactPath,
     errorMessage,
-    mockScenario,
     lastCheckedTime,
-    setMockScenario,
+    updateChannel,
     closeModal,
     checkForUpdates,
     startDownload,
     cancelDownload,
-    applyUpdateAndRestart,
+    installDownloadedUpdate,
   } = useUpdateStore();
 
   useEffect(() => {
@@ -47,14 +46,16 @@ export const UpdateModal: React.FC = () => {
 
   if (!isModalOpen) return null;
 
-  const currentVersion = SOFTWARE_ABOUT.packageVersion || '0.1.0';
-  const osName = (SOFTWARE_ABOUT.os || 'windows').toLowerCase();
-  const archName = (SOFTWARE_ABOUT.arch || 'amd64').toLowerCase();
-
-  const handleScenarioChange = (scenario: MockScenario) => {
-    setMockScenario(scenario);
-    void checkForUpdates(false);
-  };
+  const currentVersion = SOFTWARE_ABOUT.packageVersion;
+  const osName = SOFTWARE_ABOUT.os?.toLowerCase() || 'unknown';
+  const rawArchName = SOFTWARE_ABOUT.arch.toLowerCase();
+  const archName = ({
+    aarch64: 'arm64',
+    amd64: 'x64',
+    x86_64: 'x64',
+    i386: 'x86',
+    i686: 'x86',
+  } as Record<string, string>)[rawArchName] || rawArchName;
 
   return (
     <div
@@ -95,11 +96,11 @@ export const UpdateModal: React.FC = () => {
               <div className="space-y-1">
                 <h4 className="text-sm font-semibold text-text">Checking for Updates...</h4>
                 <p className="text-xs text-subtext0">
-                  Querying version management API for {osName} ({archName})
+                  Checking the Stage0 update service for {osName} ({archName})
                 </p>
               </div>
               <div className="bg-surface0/40 border border-surface0 px-3 py-1 text-[11px] font-mono text-subtext1">
-                current_version={currentVersion}&amp;os_name={osName}&amp;arch_name={archName}
+                currentVersion={currentVersion}&amp;platform={osName}&amp;arch={archName}&amp;channel={updateChannel}
               </div>
             </div>
           )}
@@ -136,11 +137,12 @@ export const UpdateModal: React.FC = () => {
                       New Release
                     </span>
                     <h4 className="text-base font-bold text-text">
-                      Stage0 v{updatePayload.latestVersion}
+                      Stage0 v{updatePayload.version}
                     </h4>
                   </div>
                   <p className="text-xs text-subtext0">
-                    Released on {updatePayload.releaseDate} • {updatePayload.fileSize || '48.6 MB'}
+                    {updatePayload.sizeBytes == null ? 'Package size not provided' : `Download size: ${(updatePayload.sizeBytes / (1024 * 1024)).toFixed(1)} MB`}
+                    {updatePayload.codename ? ` • ${updatePayload.codename}` : ''}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
@@ -156,25 +158,27 @@ export const UpdateModal: React.FC = () => {
                   <span>What's New in this Version:</span>
                 </div>
                 <div className="bg-surface0/30 border border-surface0 p-3 max-h-40 overflow-y-auto text-xs text-subtext1 font-sans leading-relaxed whitespace-pre-line select-text">
-                  {updatePayload.releaseNotes || 'No release notes provided.'}
+                  {updatePayload.changelog || 'No release notes were provided for this release.'}
                 </div>
               </div>
             </div>
           )}
 
           {/* 4. DOWNLOADING STATUS */}
-          {status === 'downloading' && (
+          {(status === 'downloading' || status === 'cancelling') && (
             <div className="py-4 space-y-4">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-text">Downloading Stage0 v{updatePayload?.latestVersion}...</span>
-                <span className="font-mono text-blue font-bold">{downloadProgress}%</span>
+                <span className="font-semibold text-text">
+                  {status === 'cancelling' ? 'Cancelling update download…' : `Downloading Stage0 v${updatePayload?.version}…`}
+                </span>
+                <span className="font-mono text-blue font-bold">{downloadProgress == null ? '—' : `${downloadProgress}%`}</span>
               </div>
 
               {/* Progress Bar Container */}
               <div className="w-full bg-surface0 border border-surface1/60 h-2.5 overflow-hidden">
                 <div
-                  className="bg-blue h-full transition-all duration-200 ease-out"
-                  style={{ width: `${downloadProgress}%` }}
+                  className={`bg-blue h-full transition-all duration-200 ease-out ${downloadProgress == null ? 'animate-pulse' : ''}`}
+                  style={{ width: downloadProgress == null ? '35%' : `${downloadProgress}%` }}
                 />
               </div>
 
@@ -198,8 +202,8 @@ export const UpdateModal: React.FC = () => {
               <div className="space-y-1">
                 <h4 className="text-base font-bold text-text">Update Ready to Install</h4>
                 <p className="text-xs text-subtext1 max-w-md mx-auto leading-relaxed">
-                  Stage0 has finished downloading version <span className="font-mono text-text font-semibold">v{updatePayload?.latestVersion}</span>.
-                  Would you like to close Stage0 and restart now with the new version?
+                  Stage0 v<span className="font-mono text-text font-semibold">{updatePayload?.version}</span> has been downloaded and SHA-256 verified.
+                  The operating system&apos;s installer will open; completing installation may require confirmation or manual steps.
                 </p>
               </div>
             </div>
@@ -212,7 +216,7 @@ export const UpdateModal: React.FC = () => {
                 <AlertTriangle className="w-6 h-6 text-red" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-base font-bold text-text">Update Check Failed</h4>
+                <h4 className="text-base font-bold text-text">Update Process Failed</h4>
                 <p className="text-xs text-red/90 max-w-sm leading-relaxed">
                   {errorMessage || 'An error occurred while connecting to the version management server.'}
                 </p>
@@ -223,46 +227,7 @@ export const UpdateModal: React.FC = () => {
 
         {/* Footer Actions */}
         <div className="px-5 py-3 border-t border-surface0 flex items-center justify-between bg-surface0/10">
-          {/* Left Side: Mock Scenario Tester Switcher */}
-          <div className="flex items-center gap-2 text-[11px] text-subtext0">
-            <span className="font-mono text-[10px] text-subtext0 uppercase">Mock API:</span>
-            <button
-              type="button"
-              onClick={() => handleScenarioChange('available')}
-              className={`px-2 py-0.5 text-[10px] font-mono border transition-colors cursor-pointer rounded-none ${
-                mockScenario === 'available'
-                  ? 'bg-blue/15 text-blue border-blue/40 font-semibold'
-                  : 'bg-surface0 text-subtext0 border-surface1 hover:text-text'
-              }`}
-              title="Simulate API returning a newer version available"
-            >
-              Available
-            </button>
-            <button
-              type="button"
-              onClick={() => handleScenarioChange('up_to_date')}
-              className={`px-2 py-0.5 text-[10px] font-mono border transition-colors cursor-pointer rounded-none ${
-                mockScenario === 'up_to_date'
-                  ? 'bg-green/15 text-green border-green/40 font-semibold'
-                  : 'bg-surface0 text-subtext0 border-surface1 hover:text-text'
-              }`}
-              title="Simulate API returning app is already up to date"
-            >
-              Up to Date
-            </button>
-            <button
-              type="button"
-              onClick={() => handleScenarioChange('error')}
-              className={`px-2 py-0.5 text-[10px] font-mono border transition-colors cursor-pointer rounded-none ${
-                mockScenario === 'error'
-                  ? 'bg-red/15 text-red border-red/40 font-semibold'
-                  : 'bg-surface0 text-subtext0 border-surface1 hover:text-text'
-              }`}
-              title="Simulate API connection failure"
-            >
-              Error
-            </button>
-          </div>
+          <span className="text-[11px] text-subtext0">Channel: {updateChannel}</span>
 
           {/* Right Side: Primary and Secondary Action Buttons */}
           <div className="flex items-center gap-2">
@@ -280,7 +245,7 @@ export const UpdateModal: React.FC = () => {
               <>
                 <button
                   type="button"
-                  onClick={() => void checkForUpdates(false)}
+                  onClick={() => void (downloadedArtifactPath ? installDownloadedUpdate() : checkForUpdates(true))}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-subtext1 hover:text-text bg-surface0 hover:bg-surface1 transition-colors cursor-pointer border border-surface1 rounded-none"
                 >
                   <RefreshCw className="w-3 h-3" />
@@ -307,7 +272,7 @@ export const UpdateModal: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={startDownload}
+                  onClick={() => void startDownload()}
                   className="flex items-center gap-1.5 px-5 py-1.5 text-xs font-semibold text-[#11111b] bg-blue hover:brightness-110 transition-all cursor-pointer shadow-sm rounded-none"
                 >
                   <DownloadCloud className="w-3.5 h-3.5" />
@@ -316,10 +281,11 @@ export const UpdateModal: React.FC = () => {
               </>
             )}
 
-            {status === 'downloading' && (
+            {(status === 'downloading' || status === 'cancelling') && (
               <button
                 type="button"
-                onClick={cancelDownload}
+                onClick={() => void cancelDownload()}
+                disabled={status === 'cancelling'}
                 className="px-4 py-1.5 text-xs text-subtext1 hover:text-text bg-surface1 hover:bg-surface2 transition-colors cursor-pointer border border-surface1 rounded-none"
               >
                 Cancel Download
@@ -337,11 +303,11 @@ export const UpdateModal: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => void applyUpdateAndRestart()}
+                  onClick={() => void installDownloadedUpdate()}
                   className="flex items-center gap-1.5 px-5 py-1.5 text-xs font-semibold text-[#11111b] bg-green hover:brightness-110 transition-all cursor-pointer shadow-sm rounded-none"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Restart &amp; Update Now</span>
+                  <span>Open Installer</span>
                 </button>
               </>
             )}
@@ -357,11 +323,11 @@ export const UpdateModal: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => void checkForUpdates(false)}
+                  onClick={() => void checkForUpdates(true)}
                   className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-text bg-surface1 hover:bg-surface2 transition-colors cursor-pointer border border-surface1 rounded-none"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Retry</span>
+                  <span>{downloadedArtifactPath ? 'Try Installer Again' : 'Retry'}</span>
                 </button>
               </>
             )}

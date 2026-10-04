@@ -22,6 +22,7 @@ import { RepositorySettingsModal } from '../repository/RepositorySettingsModal';
 import { useGitStore } from '../../store/useGitStore';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
+import { usePerformanceMonitorStore } from '../../store/usePerformanceMonitorStore';
 import { X, AlertCircle, Check } from '@/components/common/icons';
 import {
   revealInOs,
@@ -32,6 +33,7 @@ import {
   openRepoInExplorer,
   getOsFileManagerName,
 } from '../../utils/fileActions';
+import { isMacOS } from '../../utils/shortcuts';
 
 const DEFAULT_SIDEBAR_WIDTH = 320;
 const MIN_SIDEBAR_WIDTH = 220;
@@ -185,6 +187,19 @@ export const MainLayout: React.FC = () => {
   // Global Keyboard Shortcuts (Like GitKraken / Sublime Merge / Fork)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // macOS routes this accelerator through the native View > Performance menu.
+      if (
+        !isMacOS() &&
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        !e.altKey &&
+        (e.key === 'F12' || e.code === 'F12')
+      ) {
+        e.preventDefault();
+        usePerformanceMonitorStore.getState().toggle();
+        return;
+      }
+
       // Don't intercept if user is typing in an input
       if (
         e.target instanceof HTMLInputElement ||

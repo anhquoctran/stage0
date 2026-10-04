@@ -46,6 +46,14 @@ AI and MCP preferences are currently configuration UI rather than complete provi
 
 MCP environment values are saved in ordinary local preferences and included in configuration exports, so do not put secrets in those fields. The AI/MCP tool bridge exposes terminal execution only for Docker, never for the host-backed Local Worktree. Terminal commands that require confirmation are refused because Stage0 does not yet have an approval dialog; write confirmation is enabled by default, so terminal tools are unavailable until that policy is explicitly disabled. Markdown previews block remote images to avoid contacting third parties just by opening a review. Viewer-font choices may request stylesheets from Google Fonts (`fonts.googleapis.com`) and font files from `fonts.gstatic.com`; local/system fallbacks are used if these requests fail. Bot re-verification does not inspect source code, and assigned reviewers are not persisted across application restarts.
 
+## Software updates
+
+The desktop client checks the default software release through `https://downloadcenter.quoctran.space/api/latest`, using the app's compiled version, native platform and architecture, and the selected release channel. Update requests run in the Rust backend rather than the WebView; any short-lived download URL remains backend-only and is not sent over IPC. The service must be online for checks and downloads to work.
+
+Downloads are streamed to the user's `Downloads/Stage0 Updates` folder, capped at 2 GiB, and rejected unless their byte count and SHA-256 match the release metadata. The release is fetched again immediately before downloading, and the package hash is checked again before the installer is launched. Windows EXE/MSI packages are launched directly; macOS DMG/PKG packages are opened with the system installer workflow; Linux DEB/RPM packages are handed to the system's default installer, while AppImage updates replace the running image with a rollback copy retained until the new image starts.
+
+The API currently supplies checksums but no signed updater manifest or publisher-signature metadata. SHA-256 detects transfer corruption; by itself it does not protect against a compromised update service or a compromised release account. Installer behavior is platform-specific and may require confirmation or manual steps (for example, copying Stage0 from a mounted DMG). Stage0 does not silently patch its running executable.
+
 ## Requirements
 
 - Git 2.38 or later is recommended for `git merge-tree --write-tree`.

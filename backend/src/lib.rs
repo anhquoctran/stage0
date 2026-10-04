@@ -4,8 +4,10 @@ pub mod db;
 pub mod git;
 pub mod menu;
 pub mod notifications;
+pub mod performance;
 pub mod process;
 pub mod sandbox;
+pub mod updates;
 pub mod watcher;
 pub mod window_manager;
 
@@ -228,6 +230,11 @@ pub fn run() {
             notifications::send_push_notification,
             notifications::get_notification_permission_state,
             notifications::request_notification_permission,
+            performance::get_performance_metrics,
+            updates::check_for_update,
+            updates::download_update,
+            updates::cancel_update_download,
+            updates::install_update,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
