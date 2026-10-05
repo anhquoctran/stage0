@@ -45,8 +45,8 @@ ${BOLD}${CYAN}Stage0 - Multi-Platform Dev Runner${RESET}
 
 ${BOLD}Usage:${RESET}
   node scripts/dev.mjs [options]
-  npm run dev          ${DIM}(Runs web mode with hot reload)${RESET}
-  npm run dev:app      ${DIM}(Runs desktop native app with hot reload)${RESET}
+  pnpm dev             ${DIM}(Runs web mode with hot reload)${RESET}
+  pnpm dev:app         ${DIM}(Runs desktop native app with hot reload)${RESET}
 
 ${BOLD}Options:${RESET}
   -w, --web            Launch Vite frontend in browser (Fast Mock sandbox mode)

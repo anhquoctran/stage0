@@ -40,15 +40,39 @@ Write-Host "Port     : $TargetPort" -ForegroundColor DarkGray
 Write-Host "------------------------------------------------------" -ForegroundColor Cyan
 Write-Host ""
 
-# 1. Verify Node.js
+# 1. Verify Node.js & nvm/nvm-windows support
+if (Test-Path "$RootDir\.nvmrc") {
+    $TargetNodeVer = (Get-Content "$RootDir\.nvmrc" -Raw).Trim()
+    if (Get-Command "nvm" -ErrorAction SilentlyContinue) {
+        $CurrentNode = if (Get-Command "node" -ErrorAction SilentlyContinue) { (node -v).TrimStart('v') } else { "" }
+        if ($CurrentNode -ne $TargetNodeVer -and -not $CurrentNode.StartsWith($TargetNodeVer.Split('.')[0])) {
+            Write-Host "[INFO] nvm detected. Switching to Node $TargetNodeVer from .nvmrc..." -ForegroundColor Cyan
+            try {
+                nvm use $TargetNodeVer | Out-Null
+            } catch {
+                Write-Host "[WARN] Could not automatically switch Node version with nvm. You can run: nvm use $TargetNodeVer" -ForegroundColor Yellow
+            }
+        }
+    }
+}
+
 if (-not (Get-Command "node" -ErrorAction SilentlyContinue)) {
     Write-Host "[ERROR] Node.js is not found in PATH." -ForegroundColor Red
-    Write-Host "Please install Node.js >= 18 from https://nodejs.org or via 'winget install OpenJS.NodeJS.LTS'"
+    Write-Host "Please install Node.js >= 20 via nvm ('nvm install 24.18.0') or from https://nodejs.org"
     exit 1
 }
 
 $NodeVer = node --version
 Write-Host "[OK] Node.js detected: $NodeVer" -ForegroundColor Green
+
+# Verify pnpm
+if (-not (Get-Command "pnpm" -ErrorAction SilentlyContinue)) {
+    Write-Host "[ERROR] pnpm is not found in PATH. Stage0 enforces pnpm." -ForegroundColor Red
+    Write-Host "Install pnpm via: corepack enable  OR  npm install -g pnpm" -ForegroundColor Yellow
+    exit 1
+}
+$PnpmVer = pnpm --version
+Write-Host "[OK] pnpm detected   : v$PnpmVer" -ForegroundColor Green
 
 # 2. Verify Rust & Cargo for native desktop mode
 if ($Mode -eq "App") {
@@ -63,11 +87,11 @@ if ($Mode -eq "App") {
     }
 }
 
-# 3. Check npm dependencies
+# 3. Check pnpm dependencies
 if (-not (Test-Path "$RootDir\node_modules")) {
     Write-Host ""
-    Write-Host "[INFO] Installing npm packages..." -ForegroundColor Yellow
-    npm install
+    Write-Host "[INFO] Installing dependencies via pnpm..." -ForegroundColor Yellow
+    pnpm install
 }
 
 # Check the exact port the selected mode will use. Never kill an unrelated

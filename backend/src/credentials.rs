@@ -166,3 +166,12 @@ pub fn delete_ai_key(provider: &str) -> Result<(), String> {
         Err(error) => Err(map_keyring_error("delete AI secret", error)),
     }
 }
+
+pub fn get_ai_key(provider: &str) -> Result<String, String> {
+    let entry = keyring::Entry::new(AI_KEYRING_SERVICE, provider)
+        .map_err(|e| map_keyring_error("initialize AI secret", e))?;
+    entry
+        .get_password()
+        .map_err(|e| map_keyring_error("read AI secret", e))
+}
+

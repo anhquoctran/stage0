@@ -37,15 +37,29 @@ echo -e "${DIM}Platform:${RESET} ${BOLD}${OS_NAME}${RESET} (${ARCH_NAME})"
 echo -e "${DIM}Mode    :${RESET} ${BOLD}${MODE}${RESET}"
 echo -e "${CYAN}------------------------------------------------------${RESET}\n"
 
-# 1. Check Node.js
+# 1. Check Node.js and nvm
+if [ -f ".nvmrc" ] && command -v nvm >/dev/null 2>&1; then
+  echo -e "${CYAN}✦ Reading .nvmrc and switching Node version...${RESET}"
+  nvm use >/dev/null 2>&1 || true
+fi
+
 if ! command -v node >/dev/null 2>&1; then
   echo -e "${RED}❌ Error: Node.js is not installed.${RESET}"
-  echo "Please install Node.js >= 18 from https://nodejs.org or via your package manager."
+  echo "Please install Node.js >= 20 from https://nodejs.org or via nvm ('nvm install 24.18.0')."
   exit 1
 fi
 
 NODE_VERSION=$(node -v)
 echo -e "${GREEN}✓ Node.js detected:${RESET} ${NODE_VERSION}"
+
+# Check pnpm
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo -e "${RED}❌ Error: pnpm is required but not installed.${RESET}"
+  echo "Stage0 enforces pnpm. Install via: corepack enable  OR  npm install -g pnpm"
+  exit 1
+fi
+PNPM_VERSION=$(pnpm -v)
+echo -e "${GREEN}✓ pnpm detected:${RESET} v${PNPM_VERSION}"
 
 # 2. Check Rust/Cargo if running desktop app
 if [ "$MODE" == "app" ]; then
@@ -68,10 +82,10 @@ if [ "$MODE" == "app" ]; then
   fi
 fi
 
-# 3. Check npm dependencies
+# 3. Check pnpm dependencies
 if [ ! -d "node_modules" ]; then
-  echo -e "\n${YELLOW}📦 Installing npm dependencies...${RESET}"
-  npm install
+  echo -e "\n${YELLOW}📦 Installing dependencies with pnpm...${RESET}"
+  pnpm install
 fi
 
 # 4. Launch with Hot Reload
@@ -80,9 +94,9 @@ if [ "$MODE" == "app" ]; then
   echo -e "${DIM}   Frontend: http://127.0.0.1:1420${RESET}"
   echo -e "${DIM}   Backend : Watching backend/src/ for Rust recompiles${RESET}\n"
   if [ "$OS_NAME" = "Darwin" ]; then
-    npx tauri dev --runner "$SCRIPT_DIR/macos-cargo-runner.sh"
+    pnpm tauri dev --runner "$SCRIPT_DIR/macos-cargo-runner.sh"
   else
-    npx tauri dev
+    pnpm tauri dev
   fi
 else
   echo -e "\n${GREEN}🌐 Starting Vite Web Server with Hot Reload...${RESET}"

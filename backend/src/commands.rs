@@ -839,6 +839,74 @@ pub async fn delete_ai_api_key(provider: String) -> Result<(), String> {
 }
 
 // ---------------------------------------------------------------------------
+// AI Cloud Subscription & CLI Bridge Commands (Phases 1, 2, 3)
+// ---------------------------------------------------------------------------
+
+#[tauri::command]
+pub async fn ai_detect_cli(cli_type: String) -> Result<crate::ai::cli_bridge::CliDetectionResult, String> {
+    Ok(crate::ai::cli_bridge::detect_cli(&cli_type).await)
+}
+
+#[tauri::command]
+pub async fn ai_execute_cli(
+    cli_type: String,
+    prompt: String,
+    repo_path: Option<String>,
+) -> Result<crate::ai::cli_bridge::CliExecutionResult, String> {
+    crate::ai::cli_bridge::execute_cli(&cli_type, &prompt, repo_path.as_deref()).await
+}
+
+#[tauri::command]
+pub async fn copilot_start_device_flow(
+    client_id: Option<String>,
+) -> Result<crate::ai::copilot::CopilotDeviceCodeResponse, String> {
+    crate::ai::copilot::start_copilot_device_flow(client_id).await
+}
+
+#[tauri::command]
+pub async fn copilot_poll_token(
+    device_code: String,
+    client_id: Option<String>,
+) -> Result<crate::ai::copilot::CopilotPollResponse, String> {
+    crate::ai::copilot::poll_copilot_token(&device_code, client_id).await
+}
+
+#[tauri::command]
+pub async fn copilot_check_status() -> Result<crate::ai::copilot::CopilotAuthStatus, String> {
+    Ok(crate::ai::copilot::check_copilot_auth_status().await)
+}
+
+#[tauri::command]
+pub async fn copilot_disconnect() -> Result<(), String> {
+    crate::ai::copilot::disconnect_copilot()
+}
+
+#[tauri::command]
+pub async fn google_oauth_start(
+    client_id: Option<String>,
+) -> Result<crate::ai::google_oauth::GoogleOAuthStartResult, String> {
+    crate::ai::google_oauth::start_google_oauth(client_id).await
+}
+
+#[tauri::command]
+pub async fn google_oauth_check_status() -> Result<crate::ai::google_oauth::GoogleAuthStatus, String> {
+    Ok(crate::ai::google_oauth::check_google_auth_status().await)
+}
+
+#[tauri::command]
+pub async fn google_oauth_disconnect() -> Result<(), String> {
+    crate::ai::google_oauth::disconnect_google()
+}
+
+#[tauri::command]
+pub async fn ai_chat_dispatch(
+    req: crate::ai::UnifiedAiChatRequest,
+) -> Result<crate::ai::UnifiedAiChatResponse, String> {
+    crate::ai::dispatch_ai_chat(req).await
+}
+
+
+// ---------------------------------------------------------------------------
 // Sandbox Adapter Management Commands
 // ---------------------------------------------------------------------------
 

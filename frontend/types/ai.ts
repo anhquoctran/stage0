@@ -1,4 +1,12 @@
-export type AiProviderId = 'openai' | 'anthropic' | 'gemini' | 'ollama' | 'custom';
+export type AiProviderId =
+  | 'openai'
+  | 'anthropic'
+  | 'gemini'
+  | 'github_copilot'
+  | 'ollama'
+  | 'custom';
+
+export type AiAuthMode = 'api_key' | 'subscription_oauth' | 'cli_bridge';
 
 export interface AiModelPreset {
   id: string;
@@ -15,10 +23,13 @@ export interface AiProviderPreset {
   models: AiModelPreset[];
   requiresApiKey: boolean;
   docUrl: string;
+  supportedAuthModes?: AiAuthMode[];
 }
 
 export interface AiConfig {
   provider: AiProviderId;
+  authMode?: AiAuthMode;
+  cliType?: 'claude' | 'gh_copilot' | 'gcloud';
   model: string;
   apiKey: string;
   baseUrl: string;
@@ -27,6 +38,48 @@ export interface AiConfig {
   systemPrompt: string;
   streamResponse: boolean;
   enableCodeReviewAssist: boolean;
+}
+
+export interface CliDetectionResult {
+  cli_type: string;
+  available: boolean;
+  version?: string;
+  logged_in: boolean;
+  auth_info?: string;
+  executable_path?: string;
+  error?: string;
+}
+
+export interface CopilotDeviceCodeResponse {
+  device_code: string;
+  user_code: string;
+  verification_uri: string;
+  expires_in: number;
+  interval: number;
+}
+
+export interface CopilotAuthStatus {
+  connected: boolean;
+  username?: string;
+  avatar_url?: string;
+  has_subscription: boolean;
+  expires_at?: number;
+  error?: string;
+}
+
+export interface GoogleAuthStatus {
+  connected: boolean;
+  account_email?: string;
+  auth_method: string;
+  error?: string;
+}
+
+export interface UnifiedAiChatResponse {
+  success: boolean;
+  content: string;
+  duration_ms: number;
+  provider_used: string;
+  error?: string;
 }
 
 export type McpServerType = 'stdio' | 'sse';

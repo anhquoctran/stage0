@@ -54,8 +54,8 @@ ${BOLD}${CYAN}Stage0 - Multi-Platform Production Builder${RESET}
 
 ${BOLD}Usage:${RESET}
   node scripts/build.mjs [options]
-  npm run build:prod   ${DIM}(Builds optimized production desktop installer)${RESET}
-  npm run build:web    ${DIM}(Builds frontend web dist only)${RESET}
+  pnpm build:prod      ${DIM}(Builds optimized production desktop installer)${RESET}
+  pnpm build:web       ${DIM}(Builds frontend web dist only)${RESET}
 
 ${BOLD}Options:${RESET}
   -w, --web-only       Build web production assets only (skips native desktop installer)

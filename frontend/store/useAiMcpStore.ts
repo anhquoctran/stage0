@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { invoke, isTauri } from '@tauri-apps/api/core';
-import { AiConfig, McpServerConfig, McpConfigFileFormat } from '../types/ai';
+import {
+  AiConfig,
+  McpServerConfig,
+  McpConfigFileFormat,
+  CliDetectionResult,
+  CopilotDeviceCodeResponse,
+  CopilotAuthStatus,
+  GoogleAuthStatus,
+  UnifiedAiChatResponse,
+} from '../types/ai';
 import {
   GuardrailMode,
   GuardrailPolicy,
@@ -22,6 +31,26 @@ interface AiMcpState {
   aiTestResult: { success: boolean; message: string; timestamp: number } | null;
   activeSubTab: 'ai' | 'mcp' | 'guardrails' | 'prompts';
   setActiveSubTab: (tab: 'ai' | 'mcp' | 'guardrails' | 'prompts') => void;
+
+  // Cloud Subscription & CLI Bridge State
+  copilotStatus: CopilotAuthStatus | null;
+  googleAuthStatus: GoogleAuthStatus | null;
+  cliStatus: Record<string, CliDetectionResult | null>;
+  isDetectingCli: boolean;
+  isConnectingSubscription: boolean;
+  copilotDeviceCode: CopilotDeviceCodeResponse | null;
+
+  // Cloud Subscription & CLI Bridge Actions
+  detectCli: (cliType: string) => Promise<CliDetectionResult | null>;
+  executeCliTest: (cliType: string, prompt?: string) => Promise<{ success: boolean; output: string }>;
+  startCopilotFlow: () => Promise<CopilotDeviceCodeResponse | null>;
+  pollCopilotToken: (deviceCode: string) => Promise<{ status: string; error?: string }>;
+  checkCopilotStatus: () => Promise<CopilotAuthStatus>;
+  disconnectCopilot: () => Promise<void>;
+  startGoogleOAuth: () => Promise<void>;
+  checkGoogleAuthStatus: () => Promise<GoogleAuthStatus>;
+  disconnectGoogleOAuth: () => Promise<void>;
+  clearCopilotDeviceCode: () => void;
 
   // AI Configuration Actions
   updateAiConfig: (partial: Partial<AiConfig>) => void;
@@ -165,6 +194,14 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   aiTestResult: null,
   activeSubTab: 'ai',
 
+  // Cloud Subscription & CLI Bridge State
+  copilotStatus: null,
+  googleAuthStatus: null,
+  cliStatus: {},
+  isDetectingCli: false,
+  isConnectingSubscription: false,
+  copilotDeviceCode: null,
+
   setActiveSubTab: (tab) => set({ activeSubTab: tab }),
 
   updateAiConfig: (partial) => {
@@ -244,7 +281,81 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     const startTime = Date.now();
 
     try {
-      // 1. Validation for providers requiring API Key
+      // 1. Subscription & CLI Bridge checks
+      if (aiConfig.authMode === 'cli_bridge') {
+        const cliType =
+          aiConfig.cliType ||
+          (aiConfig.provider === 'github_copilot'
+            ? 'gh_copilot'
+            : aiConfig.provider === 'gemini'
+            ? 'gcloud'
+            : 'claude');
+        if (isTauri()) {
+          const res = await invoke<{
+            success: boolean;
+            output: string;
+            duration_ms: number;
+            error?: string;
+          }>('ai_execute_cli', {
+            cliType,
+            prompt: 'Explain what Stage0 Virtual MR is in one concise sentence.',
+            repoPath: null,
+          });
+          const latency = res.duration_ms || (Date.now() - startTime);
+          if (res.success) {
+            const successRes = {
+              success: true,
+              message: `CLI Bridge connected (${cliType}, ${latency}ms). Output: "${res.output.trim().slice(0, 140)}"`,
+              timestamp: Date.now(),
+            };
+            set({ isTestingAi: false, aiTestResult: successRes });
+            return successRes;
+          } else {
+            const errRes = {
+              success: false,
+              message: res.error || 'CLI execution failed',
+              timestamp: Date.now(),
+            };
+            set({ isTestingAi: false, aiTestResult: errRes });
+            return errRes;
+          }
+        }
+      }
+
+      if (aiConfig.authMode === 'subscription_oauth') {
+        if (isTauri()) {
+          const res = await invoke<UnifiedAiChatResponse>('ai_chat_dispatch', {
+            req: {
+              provider: aiConfig.provider,
+              auth_mode: 'subscription_oauth',
+              model: aiConfig.model,
+              prompt: 'Verify AI connection for Stage0 Virtual MR review.',
+              system_prompt: 'Respond with a short one-sentence confirmation.',
+              repo_path: null,
+            },
+          });
+          const latency = res.duration_ms || (Date.now() - startTime);
+          if (res.success) {
+            const successRes = {
+              success: true,
+              message: `Verified subscription connection (${res.provider_used}, ${latency}ms): "${res.content.trim().slice(0, 140)}"`,
+              timestamp: Date.now(),
+            };
+            set({ isTestingAi: false, aiTestResult: successRes });
+            return successRes;
+          } else {
+            const errRes = {
+              success: false,
+              message: res.error || 'Subscription check failed',
+              timestamp: Date.now(),
+            };
+            set({ isTestingAi: false, aiTestResult: errRes });
+            return errRes;
+          }
+        }
+      }
+
+      // 2. Validation for providers requiring API Key
       if (
         aiConfig.provider !== 'ollama' &&
         !aiConfig.apiKey.trim() &&
@@ -341,6 +452,155 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   },
 
   clearAiTestResult: () => set({ aiTestResult: null }),
+
+  detectCli: async (cliType: string) => {
+    set({ isDetectingCli: true });
+    try {
+      if (isTauri()) {
+        const res = await invoke<CliDetectionResult>('ai_detect_cli', { cliType });
+        set((state) => ({
+          cliStatus: { ...state.cliStatus, [cliType]: res },
+          isDetectingCli: false,
+        }));
+        return res;
+      }
+      return null;
+    } catch (e) {
+      console.warn(`Failed to detect CLI ${cliType}:`, e);
+      set({ isDetectingCli: false });
+      return null;
+    }
+  },
+
+  executeCliTest: async (cliType: string, prompt?: string) => {
+    try {
+      if (isTauri()) {
+        const res = await invoke<{ success: boolean; output: string; error?: string }>('ai_execute_cli', {
+          cliType,
+          prompt: prompt || 'Explain what Stage0 Virtual MR is in one concise sentence.',
+          repoPath: null,
+        });
+        return { success: res.success, output: res.success ? res.output : (res.error || 'Failed') };
+      }
+      return { success: false, output: 'Tauri environment not available' };
+    } catch (e) {
+      return { success: false, output: String(e) };
+    }
+  },
+
+  startCopilotFlow: async () => {
+    set({ isConnectingSubscription: true });
+    try {
+      if (isTauri()) {
+        const res = await invoke<CopilotDeviceCodeResponse>('copilot_start_device_flow', { clientId: null });
+        set({ copilotDeviceCode: res, isConnectingSubscription: false });
+        return res;
+      }
+      return null;
+    } catch (e) {
+      console.error('Failed to start Copilot device flow:', e);
+      set({ isConnectingSubscription: false });
+      return null;
+    }
+  },
+
+  pollCopilotToken: async (deviceCode: string) => {
+    try {
+      if (isTauri()) {
+        const res = await invoke<{ status: string; access_token?: string; error_message?: string }>('copilot_poll_token', {
+          deviceCode,
+          clientId: null,
+        });
+        if (res.status === 'authorized') {
+          set({ copilotDeviceCode: null });
+          await get().checkCopilotStatus();
+        }
+        return { status: res.status, error: res.error_message };
+      }
+      return { status: 'error', error: 'Tauri environment not available' };
+    } catch (e) {
+      return { status: 'error', error: String(e) };
+    }
+  },
+
+  checkCopilotStatus: async () => {
+    try {
+      if (isTauri()) {
+        const status = await invoke<CopilotAuthStatus>('copilot_check_status');
+        set({ copilotStatus: status });
+        return status;
+      }
+      const mock: CopilotAuthStatus = { connected: false, has_subscription: false };
+      return mock;
+    } catch (e) {
+      const errStatus: CopilotAuthStatus = { connected: false, has_subscription: false, error: String(e) };
+      set({ copilotStatus: errStatus });
+      return errStatus;
+    }
+  },
+
+  disconnectCopilot: async () => {
+    try {
+      if (isTauri()) {
+        await invoke('copilot_disconnect');
+        set({ copilotStatus: { connected: false, has_subscription: false } });
+      }
+    } catch (e) {
+      console.error('Failed to disconnect Copilot:', e);
+    }
+  },
+
+  startGoogleOAuth: async () => {
+    set({ isConnectingSubscription: true });
+    try {
+      if (isTauri()) {
+        const res = await invoke<{ auth_url: string; state: string; port: number }>('google_oauth_start', {
+          clientId: null,
+        });
+        window.open(res.auth_url, '_blank');
+        for (let i = 0; i < 24; i++) {
+          await new Promise((r) => setTimeout(r, 2500));
+          const status = await get().checkGoogleAuthStatus();
+          if (status.connected) {
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to start Google OAuth:', e);
+    } finally {
+      set({ isConnectingSubscription: false });
+    }
+  },
+
+  checkGoogleAuthStatus: async () => {
+    try {
+      if (isTauri()) {
+        const status = await invoke<GoogleAuthStatus>('google_oauth_check_status');
+        set({ googleAuthStatus: status });
+        return status;
+      }
+      const mock: GoogleAuthStatus = { connected: false, auth_method: 'none' };
+      return mock;
+    } catch (e) {
+      const errStatus: GoogleAuthStatus = { connected: false, auth_method: 'none', error: String(e) };
+      set({ googleAuthStatus: errStatus });
+      return errStatus;
+    }
+  },
+
+  disconnectGoogleOAuth: async () => {
+    try {
+      if (isTauri()) {
+        await invoke('google_oauth_disconnect');
+        set({ googleAuthStatus: { connected: false, auth_method: 'none' } });
+      }
+    } catch (e) {
+      console.error('Failed to disconnect Google OAuth:', e);
+    }
+  },
+
+  clearCopilotDeviceCode: () => set({ copilotDeviceCode: null }),
 
   addMcpServer: (serverData) => {
     const id = `mcp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -617,6 +877,10 @@ if (typeof window !== 'undefined') {
       void useAiMcpStore.getState().loadApiKeyForProvider(initialState.aiConfig.provider);
       void useAiMcpStore.getState().loadGuardrailPolicy();
       void useAiMcpStore.getState().loadGuardrailAuditLog();
+      void useAiMcpStore.getState().checkCopilotStatus();
+      void useAiMcpStore.getState().checkGoogleAuthStatus();
+      void useAiMcpStore.getState().detectCli('claude');
+      void useAiMcpStore.getState().detectCli('gh_copilot');
     }
   }, 150);
 }
