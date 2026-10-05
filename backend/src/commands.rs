@@ -899,10 +899,46 @@ pub async fn google_oauth_disconnect() -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn chatgpt_oauth_start(
+    client_id: Option<String>,
+) -> Result<crate::ai::chatgpt_oauth::ChatGptOAuthStartResult, String> {
+    crate::ai::chatgpt_oauth::start_chatgpt_oauth(client_id).await
+}
+
+#[tauri::command]
+pub async fn chatgpt_oauth_check_status() -> Result<crate::ai::chatgpt_oauth::ChatGptAuthStatus, String> {
+    Ok(crate::ai::chatgpt_oauth::check_chatgpt_auth_status().await)
+}
+
+#[tauri::command]
+pub async fn chatgpt_oauth_disconnect() -> Result<(), String> {
+    crate::ai::chatgpt_oauth::disconnect_chatgpt_subscription()
+}
+
+#[tauri::command]
+pub async fn open_external_url(url: String) -> Result<(), String> {
+    crate::ai::open_system_browser(&url)
+}
+
+#[tauri::command]
 pub async fn ai_chat_dispatch(
     req: crate::ai::UnifiedAiChatRequest,
 ) -> Result<crate::ai::UnifiedAiChatResponse, String> {
     crate::ai::dispatch_ai_chat(req).await
+}
+
+#[tauri::command]
+pub async fn fetch_ai_models(
+    provider: String,
+    api_key: Option<String>,
+    base_url: Option<String>,
+) -> Result<Vec<crate::ai::dynamic_models::DynamicModelInfo>, String> {
+    crate::ai::dynamic_models::fetch_provider_models(
+        &provider,
+        api_key.as_deref(),
+        base_url.as_deref(),
+    )
+    .await
 }
 
 

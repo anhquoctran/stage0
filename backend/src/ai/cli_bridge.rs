@@ -91,6 +91,7 @@ pub async fn detect_cli(cli_type: &str) -> CliDetectionResult {
         "claude" => detect_claude_cli().await,
         "gh_copilot" => detect_gh_copilot_cli().await,
         "gcloud" => detect_gcloud_cli().await,
+        "grok" | "xai_grok" => detect_grok_cli().await,
         other => CliDetectionResult {
             cli_type: other.to_string(),
             available: false,
@@ -412,6 +413,132 @@ pub async fn execute_cli(
                 Err(_) => Err(format!("gh copilot timed out after {} seconds", timeout_secs)),
             }
         }
+        "grok" | "xai_grok" => {
+            let mut cmd = make_cli_command("grok", &["build", "--prompt", prompt]);
+
+            if let Some(dir) = repo_path {
+                let p = PathBuf::from(dir);
+                if p.is_dir() {
+                    cmd.current_dir(p);
+                }
+            }
+
+            let timeout_secs = 120;
+            match tokio::time::timeout(Duration::from_secs(timeout_secs), cmd.output()).await {
+                Ok(Ok(output)) => {
+                    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+                    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+                    let duration_ms = start_time.elapsed().as_millis() as u64;
+
+                    if output.status.success() {
+                        Ok(CliExecutionResult {
+                            success: true,
+                            output: if stdout.trim().is_empty() { stderr } else { stdout },
+                            error: None,
+                            duration_ms,
+                        })
+                    } else {
+                        Ok(CliExecutionResult {
+                            success: false,
+                            output: stdout,
+                            error: Some(format!(
+                                "Grok CLI exited with code {:?}. Error: {}",
+                                output.status.code(),
+                                stderr.trim()
+                            )),
+                            duration_ms,
+                        })
+                    }
+                }
+                Ok(Err(e)) => Err(format!("Failed to execute Grok CLI: {}", e)),
+                Err(_) => Err(format!("Grok CLI timed out after {} seconds", timeout_secs)),
+            }
+        }
         other => Err(format!("CLI execution for '{}' is not supported", other)),
+    }
+}
+
+/// Detect xAI Grok / GrokBuild CLI (`grok`)
+async fn detect_grok_cli() -> CliDetectionResult {
+    let mut path = locate_executable("grok").await;
+
+    // Check default install directory if not in PATH
+    if path.is_none() {
+        if let Some(home) = get_home_dir() {
+            let grok_bin = home.join(".grok").join("bin").join(if cfg!(target_os = "windows") { "grok.cmd" } else { "grok" });
+            if grok_bin.exists() {
+                path = Some(grok_bin.to_string_lossy().to_string());
+            }
+        }
+    }
+
+    let mut cmd = make_cli_command("grok", &["--version"]);
+    let version_output = match tokio::time::timeout(Duration::from_secs(5), cmd.output()).await {
+        Ok(Ok(out)) if out.status.success() => {
+            Some(String::from_utf8_lossy(&out.stdout).trim().to_string())
+        }
+        _ => None,
+    };
+
+    if version_output.is_none() && path.is_none() {
+        return CliDetectionResult {
+            cli_type: "grok".to_string(),
+            available: false,
+            version: None,
+            logged_in: false,
+            auth_info: None,
+            executable_path: None,
+            error: Some("xAI Grok CLI ('grok') not found. Install via: irm https://x.ai/cli/install.ps1 | iex (Windows) or curl -fsSL https://x.ai/cli/install.sh | bash (Unix)".to_string()),
+        };
+    }
+
+    // Check login status: probe ~/.grok/auth.json or ~/.grok/credentials.json or grok inspect
+    let mut logged_in = false;
+    let mut auth_info = None;
+
+    if let Some(home) = get_home_dir() {
+        let auth_paths = [
+            home.join(".grok").join("auth.json"),
+            home.join(".grok").join("credentials.json"),
+            home.join(".config").join("grok").join("auth.json"),
+        ];
+        for ap in &auth_paths {
+            if ap.exists() {
+                if let Ok(content) = std::fs::read_to_string(ap) {
+                    if content.contains("token") || content.contains("access_token") || content.contains("api_key") || content.contains("user") {
+                        logged_in = true;
+                        auth_info = Some("Authenticated with SuperGrok / X Premium+ account".to_string());
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if !logged_in {
+        let mut probe = make_cli_command("grok", &["inspect"]);
+        if let Ok(Ok(out)) = tokio::time::timeout(Duration::from_secs(4), probe.output()).await {
+            let combined = format!("{}\n{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+            if out.status.success() || combined.to_lowercase().contains("logged in") || combined.to_lowercase().contains("account") {
+                logged_in = true;
+                auth_info = Some("Active GrokBuild Subscription".to_string());
+            }
+        }
+    }
+
+    CliDetectionResult {
+        cli_type: "grok".to_string(),
+        available: true,
+        version: version_output,
+        logged_in,
+        auth_info: auth_info.or_else(|| {
+            if logged_in {
+                Some("Active SuperGrok / X Premium+ Subscription".to_string())
+            } else {
+                Some("Run 'grok login' in terminal to authenticate your SuperGrok or X Premium+ account".to_string())
+            }
+        }),
+        executable_path: path,
+        error: None,
     }
 }

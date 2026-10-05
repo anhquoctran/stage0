@@ -1,6 +1,8 @@
 pub mod cli_bridge;
 pub mod copilot;
 pub mod google_oauth;
+pub mod chatgpt_oauth;
+pub mod dynamic_models;
 
 use serde::{Deserialize, Serialize};
 
@@ -51,6 +53,32 @@ pub async fn dispatch_ai_chat(req: UnifiedAiChatRequest) -> Result<UnifiedAiChat
                 error: res.error,
             })
         }
+        ("grok", "cli_bridge") | ("xai_grok", "cli_bridge") | ("grok", "subscription_oauth") | ("xai_grok", "subscription_oauth") => {
+            let res = cli_bridge::execute_cli("grok", &req.prompt, req.repo_path.as_deref()).await?;
+            Ok(UnifiedAiChatResponse {
+                success: res.success,
+                content: res.output,
+                duration_ms: res.duration_ms,
+                provider_used: "SuperGrok CLI".to_string(),
+                error: res.error,
+            })
+        }
+        ("openai", "subscription_oauth") | ("chatgpt", "subscription_oauth") => {
+            let content = chatgpt_oauth::chat_chatgpt_subscription(
+                &req.prompt,
+                req.system_prompt.as_deref(),
+                req.model.as_deref(),
+            )
+            .await?;
+            let duration_ms = start_time.elapsed().as_millis() as u64;
+            Ok(UnifiedAiChatResponse {
+                success: true,
+                content,
+                duration_ms,
+                provider_used: "ChatGPT Subscription".to_string(),
+                error: None,
+            })
+        }
 
         // Phase 2: Native GitHub Copilot Device Authorization (RFC 8628)
         ("github_copilot", _) | ("copilot", _) | (_, "subscription_oauth") if provider == "github_copilot" => {
@@ -95,3 +123,40 @@ pub async fn dispatch_ai_chat(req: UnifiedAiChatRequest) -> Result<UnifiedAiChat
         )),
     }
 }
+
+/// Open URL in the operating system's default web browser
+pub fn open_system_browser(url: &str) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        let mut cmd = std::process::Command::new("powershell");
+        cmd.args([
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            &format!("Start-Process '{}'", url.replace('\'', "''")),
+        ]);
+        cmd.creation_flags(CREATE_NO_WINDOW);
+        cmd.spawn()
+            .map_err(|e| format!("Failed to launch system browser on Windows: {}", e))?;
+        Ok(())
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(url)
+            .spawn()
+            .map_err(|e| format!("Failed to launch system browser on macOS: {}", e))?;
+        Ok(())
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(url)
+            .spawn()
+            .map_err(|e| format!("Failed to launch system browser on Linux: {}", e))?;
+        Ok(())
+    }
+}
+

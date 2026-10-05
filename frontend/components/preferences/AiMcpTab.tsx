@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 import {
   Cable,
   Plus,
@@ -19,6 +20,12 @@ import {
   X,
   ShieldCheck,
   Edit3,
+  Bot,
+  Sparkles,
+  Code2,
+  Zap,
+  HardDrive,
+  Cog,
 } from '@/components/common/icons';
 import { useAiMcpStore } from '../../store/useAiMcpStore';
 import {
@@ -28,9 +35,42 @@ import {
 } from '../../constants/aiPresets';
 import {
   AiConfig,
+  AiProviderId,
   McpServerConfig,
   McpServerType,
 } from '../../types/ai';
+
+const getProviderIcon = (providerId: string) => {
+  switch (providerId) {
+    case 'openai':
+      return Sparkles;
+    case 'anthropic':
+      return Bot;
+    case 'github_copilot':
+      return Code2;
+    case 'gemini':
+      return Globe;
+    case 'xai_grok':
+      return Zap;
+    case 'ollama':
+      return HardDrive;
+    case 'custom':
+    default:
+      return Cog;
+  }
+};
+
+const openUrlInBrowser = async (url: string) => {
+  if (isTauri()) {
+    try {
+      await invoke('open_external_url', { url });
+      return;
+    } catch {
+      // fallback
+    }
+  }
+  window.open(url, '_blank');
+};
 
 interface AiMcpTabProps {
   draftAiConfig?: AiConfig;
@@ -77,6 +117,12 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     checkGoogleAuthStatus,
     disconnectGoogleOAuth,
     clearCopilotDeviceCode,
+    dynamicModels,
+    fetchDynamicModels,
+    chatgptAuthStatus,
+    startChatGptOAuth,
+    checkChatGptAuthStatus,
+    disconnectChatGptOAuth,
     addMcpServer,
     updateMcpServer,
     deleteMcpServer,
@@ -93,7 +139,11 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     const defaultAuthMode: AiConfig['authMode'] =
       providerId === 'github_copilot'
         ? 'subscription_oauth'
+        : providerId === 'openai' && chatgptAuthStatus?.connected
+        ? 'subscription_oauth'
         : providerId === 'anthropic' && cliStatus.claude?.available
+        ? 'cli_bridge'
+        : providerId === 'xai_grok' && cliStatus.grok?.available
         ? 'cli_bridge'
         : 'api_key';
 
@@ -143,8 +193,14 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   useEffect(() => {
     void checkCopilotStatus();
     void checkGoogleAuthStatus();
+    void checkChatGptAuthStatus();
     void detectCli('claude');
-  }, [checkCopilotStatus, checkGoogleAuthStatus, detectCli]);
+    void detectCli('grok');
+  }, [checkCopilotStatus, checkGoogleAuthStatus, checkChatGptAuthStatus, detectCli]);
+
+  useEffect(() => {
+    void fetchDynamicModels(aiConfig.provider);
+  }, [aiConfig.provider, fetchDynamicModels]);
 
   // Add / Edit Server Form State
   const [isServerFormOpen, setIsServerFormOpen] = useState(false);
@@ -325,139 +381,194 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     }
   }, [activeView, setActiveSubTab]);
 
+  const isSubscriptionMode =
+    aiConfig.authMode === 'subscription_oauth' || aiConfig.authMode === 'cli_bridge';
+
+  const defaultSubMode = activeProviderPreset.supportedAuthModes?.includes('subscription_oauth')
+    ? 'subscription_oauth'
+    : 'cli_bridge';
+
+  const isProviderConfigured = (id: string) => {
+    if (id === 'openai') {
+      return chatgptAuthStatus?.connected || !!apiKeysConfigured['openai'];
+    }
+    if (id === 'github_copilot') {
+      return !!copilotStatus?.connected;
+    }
+    if (id === 'gemini') {
+      return googleAuthStatus?.connected || !!apiKeysConfigured['gemini'];
+    }
+    if (id === 'anthropic') {
+      return (aiConfig.authMode === 'cli_bridge' && !!cliStatus.claude?.available) || !!apiKeysConfigured['anthropic'];
+    }
+    if (id === 'xai_grok') {
+      return (aiConfig.authMode === 'cli_bridge' && !!cliStatus.grok?.available) || !!apiKeysConfigured['xai_grok'];
+    }
+    if (id === 'ollama') {
+      return true;
+    }
+    return !!apiKeysConfigured[id as AiProviderId];
+  };
+
+  const getProviderDisplayName = (id: string) => {
+    switch (id) {
+      case 'openai': return 'OpenAI / ChatGPT';
+      case 'anthropic': return 'Anthropic Claude';
+      case 'github_copilot': return 'GitHub Copilot';
+      case 'gemini': return 'Google Gemini';
+      case 'xai_grok': return 'SuperGrok';
+      case 'ollama': return 'Ollama (Local)';
+      case 'custom': return 'Custom Endpoint';
+      default: return id;
+    }
+  };
+
+  const ActiveProviderIcon = getProviderIcon(activeProviderPreset.id);
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {onBackToOverview && (
-        <button
-          type="button"
-          onClick={onBackToOverview}
-          className="inline-flex items-center gap-1.5 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group"
-        >
-          <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-          <span>Back to AI overview</span>
-        </button>
+        <div className="flex items-center gap-2 pb-1 border-b border-surface0/40">
+          <button
+            type="button"
+            onClick={onBackToOverview}
+            className="inline-flex items-center gap-1 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group"
+          >
+            <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+            <span>AI Overview</span>
+          </button>
+          <span className="text-xs text-surface2 font-mono">/</span>
+          <span className="text-xs font-semibold text-text">
+            {activeView === 'mcp' ? 'MCP Servers' : 'LLM Providers'}
+          </span>
+        </div>
       )}
 
-      {/* Top Header & Sub-Navigation */}
-      <div className="flex flex-col gap-3 pb-3 border-b border-surface0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-text">
-              AI & Model Context Protocol (MCP)
-            </h3>
-            <p className="text-[11px] text-subtext0 mt-0.5">
-              Configure LLM intelligence, automated diff reviewer, and Model Context Protocol servers
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
+      {/* Standalone Header & Sub-Navigation (only when not embedded inside a specific view) */}
+      {!activeView && (
+        <div className="flex flex-col gap-3 pb-3 border-b border-surface0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-text">
+                AI & Model Context Protocol (MCP)
+              </h3>
+              <p className="text-[11px] text-subtext0 mt-0.5">
+                Configure LLM intelligence, automated diff reviewer, and Model Context Protocol servers
+              </p>
+            </div>
             <span className="text-[10px] text-subtext0 font-mono px-2 py-0.5 bg-surface0 border border-surface1">
               Active: {activeProviderPreset.name} • {aiConfig.model}
             </span>
           </div>
+
+          <div className="flex items-center gap-1.5 pt-1 border-t border-surface0/60">
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('ai')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
+                activeSubTab === 'ai' || activeSubTab === 'guardrails'
+                  ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
+                  : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
+              }`}
+            >
+              <span>AI Model & Security Policies</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('mcp')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
+                activeSubTab === 'mcp'
+                  ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
+                  : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
+              }`}
+            >
+              <span>MCP Servers</span>
+              <span className="text-[10px] px-1.5 py-0.2 bg-base border border-surface2 font-mono">
+                {enabledMcpCount}/{mcpServers.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('prompts')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
+                activeSubTab === 'prompts'
+                  ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
+                  : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
+              }`}
+            >
+              <span>Reviewer Persona & Prompts</span>
+            </button>
+          </div>
         </div>
+      )}
 
-        {/* Sub-Tab Navigation Bar */}
-        <div className="flex items-center gap-1.5 pt-1 border-t border-surface0/60">
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('ai')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
-              activeSubTab === 'ai' || activeSubTab === 'guardrails'
-                ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
-                : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
-            }`}
-          >
-            <span>AI Model & Security Policies</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('mcp')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
-              activeSubTab === 'mcp'
-                ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
-                : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
-            }`}
-          >
-            <span>MCP Servers</span>
-            <span className="text-[10px] px-1.5 py-0.2 bg-base border border-surface2 font-mono">
-              {enabledMcpCount}/{mcpServers.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('prompts')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
-              activeSubTab === 'prompts'
-                ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
-                : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
-            }`}
-          >
-            <span>Reviewer Persona & Prompts</span>
-          </button>
-        </div>
-      </div>
-
-      {/* SUB-TAB 1: AI MODEL, ENGINE & SECURITY POLICIES */}
-      {(activeSubTab === 'ai' || activeSubTab === 'guardrails') && (
-        <div className="space-y-5 animate-in fade-in duration-100">
-          {/* Provider Selection Grid */}
+      {/* VIEW: AI MODEL & PROVIDER CONFIGURATION */}
+      {(activeView === 'providers' || (!activeView && (activeSubTab === 'ai' || activeSubTab === 'guardrails'))) && (
+        <div className="space-y-4 animate-in fade-in duration-100">
+          {/* Provider Selector: Flex wrap pills with full names */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-semibold text-text">
-                Select AI Engine / Provider
-              </label>
-              <span className="text-[10px] text-subtext0">
-                Supports Cloud Subscriptions (Copilot, Claude, Gemini) & API Keys
+              <span className="text-[11px] font-bold text-text uppercase tracking-wider">
+                Select Provider
+              </span>
+              <span className="text-[10px] text-subtext0 font-mono">
+                {activeProviderPreset.name} active
               </span>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+
+            <div className="flex flex-wrap gap-2 p-1.5 bg-base/70 border border-surface1 rounded-xl">
               {AI_PROVIDERS.map((p) => {
                 const isSelected = aiConfig.provider === p.id;
+                const ProviderIcon = getProviderIcon(p.id);
+                const connected = isProviderConfigured(p.id);
+
                 return (
                   <button
                     key={p.id}
                     type="button"
                     onClick={() => setProvider(p.id)}
-                    className={`flex flex-col items-center text-center p-3 rounded-xl border transition-all cursor-pointer relative ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer select-none whitespace-nowrap ${
                       isSelected
-                        ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2 font-semibold'
-                        : 'bg-surface0/40 border-surface0/80 text-subtext0 hover:bg-surface0 hover:text-text'
+                        ? 'bg-surface1 text-text font-bold shadow-xs border border-surface2 ring-1 ring-surface2'
+                        : 'text-subtext0 hover:text-text hover:bg-surface0/60 border border-transparent'
                     }`}
                   >
-                    {isSelected && (
-                      <span className="absolute top-2 right-2">
-                        <Check className="w-3 h-3 text-text" />
-                      </span>
+                    <ProviderIcon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-accent' : 'text-subtext0'}`} />
+                    <span className="whitespace-nowrap">{getProviderDisplayName(p.id)}</span>
+                    {connected ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Connected / Configured" />
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-surface2 shrink-0 opacity-30" />
                     )}
-                    <span className="text-xs font-bold text-text mb-0.5">{p.name}</span>
-                    <span className="text-[10px] text-subtext0 line-clamp-2 leading-tight">
-                      {p.description}
-                    </span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Provider Settings Container */}
-          <div className="p-4 bg-surface0/30 border border-surface0 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-surface0/80">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-text">
-                  {activeProviderPreset.name} Configuration
-                </span>
-                <span className="text-[10px] px-2 py-0.5 bg-surface1 text-subtext0 border border-surface2 font-mono">
-                  {aiConfig.provider === 'ollama'
-                    ? 'Offline Local Daemon'
-                    : aiConfig.authMode === 'cli_bridge'
-                    ? 'CLI Subprocess Bridge'
-                    : aiConfig.authMode === 'subscription_oauth' || aiConfig.provider === 'github_copilot'
-                    ? 'Cloud Subscription'
-                    : 'Direct API Key'}
-                </span>
+          {/* Unified Settings Card for Active Provider */}
+          <div className="p-4 bg-surface0/30 border border-surface1 rounded-xl space-y-4">
+            {/* Header: Active Provider Info & Docs */}
+            <div className="flex items-center justify-between pb-3 border-b border-surface1/60">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-surface1 border border-surface2 flex items-center justify-center text-accent shrink-0">
+                  <ActiveProviderIcon className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs font-bold text-text">{activeProviderPreset.name}</h4>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-surface1 text-subtext0 border border-surface2 font-mono shrink-0">
+                      {aiConfig.provider === 'ollama'
+                        ? 'Offline Local'
+                        : isSubscriptionMode
+                        ? 'Subscription / CLI'
+                        : 'API Key'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-subtext0 mt-0.5">{activeProviderPreset.description}</p>
+                </div>
               </div>
 
               {activeProviderPreset.docUrl && (
@@ -465,7 +576,13 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   href={activeProviderPreset.docUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 text-[11px] text-subtext0 hover:text-text underline cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (activeProviderPreset.docUrl) {
+                      void openUrlInBrowser(activeProviderPreset.docUrl);
+                    }
+                  }}
+                  className="flex items-center gap-1 text-[11px] text-subtext0 hover:text-text underline cursor-pointer shrink-0 ml-3"
                 >
                   <span>Documentation</span>
                   <ExternalLink className="w-3 h-3" />
@@ -473,300 +590,182 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               )}
             </div>
 
-            {/* Auth Method Toggle (when provider supports both Cloud Subscription/CLI and API Key) */}
-            {activeProviderPreset.supportedAuthModes && activeProviderPreset.supportedAuthModes.length > 1 && (
-              <div className="p-3 bg-base/60 border border-surface1 rounded-lg space-y-2">
-                <div className="text-[11px] font-semibold text-text flex items-center justify-between">
-                  <span>Connection Option</span>
-                  <span className="text-[10px] text-subtext0">
-                    {aiConfig.authMode === 'subscription_oauth' || aiConfig.authMode === 'cli_bridge'
-                      ? '✓ Included in your monthly subscription (No per-token bills)'
-                      : 'Pay-per-token API billing'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const mode = activeProviderPreset.supportedAuthModes?.includes('subscription_oauth')
-                        ? 'subscription_oauth'
-                        : 'cli_bridge';
-                      updateAiConfig({ authMode: mode });
-                    }}
-                    className={`px-3 py-2 rounded-lg border text-left text-xs transition-all cursor-pointer flex items-center gap-2.5 ${
-                      aiConfig.authMode === 'subscription_oauth' || aiConfig.authMode === 'cli_bridge'
-                        ? 'bg-surface1 border-surface2 text-text font-semibold shadow-xs ring-1 ring-surface2'
-                        : 'bg-surface0/50 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
-                    }`}
-                  >
-                    <div className="p-1.5 rounded-md bg-accent/15 text-accent shrink-0">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
+            {/* SECTION 1: AUTHENTICATION / ACCESS */}
+            <div className="space-y-2.5">
+              {/* Connection Option Switch (when provider supports both Subscription and API Key) */}
+              {activeProviderPreset.supportedAuthModes && activeProviderPreset.supportedAuthModes.length > 1 && (
+                <div className="flex items-center justify-between p-2.5 bg-base/50 border border-surface1 rounded-lg">
+                  <div>
+                    <div className="text-xs font-semibold text-text">Connection Option</div>
+                    <div className="text-[10px] text-subtext0">
+                      {isSubscriptionMode
+                        ? 'Included in your subscription plan (No token charges)'
+                        : 'Standard pay-per-token developer API key'}
                     </div>
-                    <div>
-                      <div className="font-bold text-text">Cloud Subscription</div>
-                      <div className="text-[10px] text-subtext0">
-                        {aiConfig.provider === 'github_copilot'
-                          ? 'GitHub Copilot Device Flow'
-                          : aiConfig.provider === 'anthropic'
-                          ? 'Claude Code CLI (claude)'
-                          : 'Google AI Pro (OAuth/ADC)'}
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => updateAiConfig({ authMode: 'api_key' })}
-                    className={`px-3 py-2 rounded-lg border text-left text-xs transition-all cursor-pointer flex items-center gap-2.5 ${
-                      aiConfig.authMode === 'api_key' || !aiConfig.authMode
-                        ? 'bg-surface1 border-surface2 text-text font-semibold shadow-xs ring-1 ring-surface2'
-                        : 'bg-surface0/50 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
-                    }`}
-                  >
-                    <div className="p-1.5 rounded-md bg-surface2/60 text-subtext0 shrink-0">
-                      <Terminal className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-text">Developer API Key</div>
-                      <div className="text-[10px] text-subtext0">Standard pay-per-token API key</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Model Name and Quick Pickers */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-text">Model Identifier</label>
-                <span className="text-[10px] text-subtext0">
-                  Select recommended or type any custom model ID
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={aiConfig.model}
-                  onChange={(e) => updateAiConfig({ model: e.target.value })}
-                  placeholder="e.g. claude-3-7-sonnet-20250219, gpt-4o, deepseek-r1:latest"
-                  className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                />
-
-                {/* Model Recommendation Chips */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] text-subtext0 font-medium">Quick Pick:</span>
-                  {activeProviderPreset.models.map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => updateAiConfig({ model: m.id })}
-                      className={`px-2 py-0.5 rounded text-[11px] font-mono border transition-all cursor-pointer ${
-                        aiConfig.model === m.id
-                          ? 'bg-surface2 border-surface2 text-text font-bold shadow-xs'
-                          : 'bg-surface0 border-surface1 text-subtext0 hover:bg-surface1 hover:text-text'
-                      }`}
-                      title={m.recommendedFor ? `Recommended for: ${m.recommendedFor}` : undefined}
-                    >
-                      {m.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* AUTH SECTION: Cloud Subscription, CLI Bridge, or API Key */}
-            {aiConfig.provider === 'github_copilot' ? (
-              /* Phase 2: GitHub Copilot Device Authorization Panel */
-              <div className="p-3.5 bg-surface0/60 border border-surface1 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">🐙</span>
-                    <span className="text-xs font-bold text-text">GitHub Copilot Subscription (Device Flow)</span>
                   </div>
-                  {copilotStatus?.connected && (
+                  <div className="flex items-center gap-1 p-0.5 bg-surface0 border border-surface1 rounded-md shrink-0">
                     <button
                       type="button"
-                      onClick={() => disconnectCopilot()}
-                      className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-[11px] text-red-400 border border-red-500/30 transition-colors cursor-pointer"
+                      onClick={() => updateAiConfig({ authMode: defaultSubMode })}
+                      className={`px-3 py-1 rounded text-xs transition-all cursor-pointer font-medium ${
+                        isSubscriptionMode ? 'bg-surface2 text-text font-semibold shadow-xs' : 'text-subtext0 hover:text-text'
+                      }`}
                     >
-                      Sign Out
+                      Subscription / CLI
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => updateAiConfig({ authMode: 'api_key' })}
+                      className={`px-3 py-1 rounded text-xs transition-all cursor-pointer font-medium ${
+                        !isSubscriptionMode ? 'bg-surface2 text-text font-semibold shadow-xs' : 'text-subtext0 hover:text-text'
+                      }`}
+                    >
+                      API Key
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-panels for Auth Modes */}
+              {aiConfig.provider === 'openai' && isSubscriptionMode ? (
+                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                  {chatgptAuthStatus?.connected ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-text">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>Signed in as <strong className="font-mono text-text">{chatgptAuthStatus.account_email || 'ChatGPT Subscriber'}</strong></span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                          ChatGPT Plus / Pro
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void disconnectChatGptOAuth()}
+                        className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-[11px] text-red-400 border border-red-500/30 transition-colors cursor-pointer"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-[11px] text-subtext0">
+                        Connect your ChatGPT Plus or Pro subscription via secure OAuth 2.0 PKCE.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => void startChatGptOAuth()}
+                        disabled={isConnectingSubscription}
+                        className="px-3 py-1.5 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 font-medium cursor-pointer shrink-0 disabled:opacity-50"
+                      >
+                        {isConnectingSubscription ? 'Connecting...' : 'Sign In with ChatGPT'}
+                      </button>
+                    </div>
                   )}
                 </div>
-
-                {copilotStatus?.connected ? (
-                  <div className="p-3 bg-base border border-surface0 rounded-lg space-y-2">
+              ) : aiConfig.provider === 'github_copilot' ? (
+                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                  {copilotStatus?.connected ? (
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        {copilotStatus.avatar_url ? (
-                          <img
-                            src={copilotStatus.avatar_url}
-                            alt="GitHub avatar"
-                            className="w-7 h-7 rounded-full border border-surface2"
-                          />
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center font-bold text-xs text-text">
-                            GH
-                          </div>
-                        )}
-                        <div>
-                          <div className="font-bold text-xs text-text">
-                            {copilotStatus.username || 'GitHub User'}
-                          </div>
-                          <div className="text-[10px] text-green-400 flex items-center gap-1 font-medium">
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>Copilot Subscription Active (Included in your GitHub plan)</span>
-                          </div>
-                        </div>
-                      </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-surface1 text-subtext0 border border-surface2 font-mono">
-                        {aiConfig.model}
-                      </span>
-                    </div>
-                  </div>
-                ) : copilotDeviceCode ? (
-                  <div className="p-3.5 bg-base border border-accent/40 rounded-lg space-y-3 animate-in fade-in">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs font-semibold text-text">GitHub Device Verification Required</div>
-                      <button
-                        type="button"
-                        onClick={() => clearCopilotDeviceCode()}
-                        className="text-subtext0 hover:text-text cursor-pointer"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <p className="text-[11px] text-subtext0">
-                      Enter this code at GitHub to authorize your Copilot subscription:
-                    </p>
-                    <div className="flex items-center justify-between p-2.5 bg-surface0 border border-surface2 rounded">
-                      <span className="text-lg font-mono font-bold tracking-widest text-accent">
-                        {copilotDeviceCode.user_code}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void navigator.clipboard.writeText(copilotDeviceCode.user_code);
-                          window.open(copilotDeviceCode.verification_uri, '_blank');
-                        }}
-                        className="px-3 py-1.5 rounded bg-accent hover:bg-accent/90 text-surface0 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy Code & Open GitHub</span>
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] text-subtext0 font-mono">
-                      <RefreshCw className="w-3 h-3 animate-spin text-accent" />
-                      <span>Waiting for approval on github.com/login/device...</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => startCopilotFlow()}
-                      disabled={isConnectingSubscription}
-                      className="w-full py-2 px-3 rounded-lg bg-accent/20 hover:bg-accent/30 border border-accent/50 text-accent font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-xs"
-                    >
-                      {isConnectingSubscription ? (
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                      )}
-                      <span>Sign In with GitHub Copilot (Device Flow)</span>
-                    </button>
-                    <p className="text-[10px] text-subtext0 text-center">
-                      Uses your existing GitHub Copilot $10/mo or Business subscription. No API keys or extra token bills.
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : aiConfig.provider === 'anthropic' && aiConfig.authMode === 'cli_bridge' ? (
-              /* Phase 1: Claude Code CLI Bridge Panel */
-              <div className="p-3.5 bg-surface0/60 border border-surface1 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Terminal className="w-4 h-4 text-accent" />
-                    <span className="text-xs font-bold text-text">Claude Code CLI Subprocess Bridge</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => detectCli('claude')}
-                    disabled={isDetectingCli}
-                    className="px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-[11px] text-text border border-surface2 transition-colors flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${isDetectingCli ? 'animate-spin' : ''}`} />
-                    <span>Scan CLI</span>
-                  </button>
-                </div>
-
-                {cliStatus.claude?.available ? (
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2.5 bg-base border border-surface0 rounded flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="font-mono text-text">
-                          {cliStatus.claude.version || 'Claude CLI Detected'}
-                        </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface1 text-subtext0 border border-surface2 font-mono">
-                          {cliStatus.claude.logged_in ? 'Subscription Authenticated' : 'Session Ready'}
+                      <div className="flex items-center gap-2 text-xs text-text">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>GitHub User: <strong className="font-mono text-text">{copilotStatus.username || 'Subscriber'}</strong></span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                          Copilot Active
                         </span>
                       </div>
-                      {cliStatus.claude.executable_path && (
-                        <span
-                          className="text-[10px] text-subtext0 font-mono truncate max-w-[200px]"
-                          title={cliStatus.claude.executable_path}
+                      <button
+                        type="button"
+                        onClick={() => disconnectCopilot()}
+                        className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-[11px] text-red-400 border border-red-500/30 transition-colors cursor-pointer"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  ) : copilotDeviceCode ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-semibold text-text">
+                        <span>Device Authorization</span>
+                        <button type="button" onClick={() => clearCopilotDeviceCode()} className="text-subtext0 hover:text-text cursor-pointer">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-surface0 border border-surface2 rounded">
+                        <span className="text-base font-mono font-bold tracking-widest text-accent">{copilotDeviceCode.user_code}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void navigator.clipboard.writeText(copilotDeviceCode.user_code);
+                            void openUrlInBrowser(copilotDeviceCode.verification_uri);
+                          }}
+                          className="px-2.5 py-1 rounded bg-accent hover:bg-accent/90 text-surface0 font-bold text-xs flex items-center gap-1 cursor-pointer"
                         >
-                          {cliStatus.claude.executable_path}
-                        </span>
-                      )}
+                          <Copy className="w-3 h-3" />
+                          <span>Copy &amp; Open GitHub</span>
+                        </button>
+                      </div>
                     </div>
-
-                    {cliStatus.claude.auth_info && (
+                  ) : (
+                    <div className="flex items-center justify-between gap-4">
                       <p className="text-[11px] text-subtext0">
-                        {cliStatus.claude.auth_info}
+                        Authorize your GitHub Copilot subscription via device code flow.
                       </p>
-                    )}
-
-                    <div className="flex items-center gap-2 pt-1">
                       <button
                         type="button"
-                        onClick={async () => {
-                          setTestingCliType('claude');
-                          const res = await executeCliTest('claude');
-                          setCliTestOutput((prev) => ({ ...prev, claude: res.output }));
-                          setTestingCliType(null);
-                        }}
-                        disabled={testingCliType === 'claude'}
-                        className="px-3 py-1.5 bg-accent/20 hover:bg-accent/30 text-accent border border-accent/40 rounded text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5"
+                        onClick={() => startCopilotFlow()}
+                        disabled={isConnectingSubscription}
+                        className="px-3 py-1.5 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 font-medium cursor-pointer shrink-0 disabled:opacity-50"
                       >
-                        {testingCliType === 'claude' && <RefreshCw className="w-3 h-3 animate-spin" />}
-                        <span>Test Review Prompt via Claude CLI</span>
+                        {isConnectingSubscription ? 'Connecting...' : 'Sign In with GitHub Copilot'}
                       </button>
                     </div>
-
-                    {cliTestOutput.claude && (
-                      <div className="mt-2 p-2.5 bg-base border border-surface1 rounded font-mono text-[11px] text-subtext1 max-h-36 overflow-y-auto whitespace-pre-wrap">
-                        {cliTestOutput.claude}
+                  )}
+                </div>
+              ) : aiConfig.provider === 'anthropic' && isSubscriptionMode ? (
+                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                  {cliStatus.claude?.available ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-text">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span className="font-mono text-text">Claude Code CLI ({cliStatus.claude.version || 'Ready'})</span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                          Session Ready
+                        </span>
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-3 bg-base border border-surface1 rounded-lg space-y-2 text-xs">
-                    <div className="flex items-center gap-2 text-yellow-400">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span className="font-semibold">Claude Code CLI not found in PATH</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setTestingCliType('claude');
+                            const res = await executeCliTest('claude');
+                            setCliTestOutput((prev) => ({ ...prev, claude: res.output }));
+                            setTestingCliType(null);
+                          }}
+                          disabled={testingCliType === 'claude'}
+                          className="px-2.5 py-1 rounded bg-accent/20 hover:bg-accent/30 text-[11px] text-accent border border-accent/40 cursor-pointer"
+                        >
+                          {testingCliType === 'claude' ? 'Testing...' : 'Test CLI'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => detectCli('claude')}
+                          disabled={isDetectingCli}
+                          className="px-2 py-1 rounded bg-surface1 hover:bg-surface2 text-[11px] text-subtext0 hover:text-text border border-surface2 cursor-pointer"
+                        >
+                          Re-scan
+                        </button>
+                      </div>
+                      {cliTestOutput.claude && (
+                        <div className="mt-2 p-2 bg-surface0 border border-surface1 rounded font-mono text-[10px] text-subtext1 max-h-24 overflow-y-auto whitespace-pre-wrap">
+                          {cliTestOutput.claude}
+                        </div>
+                      )}
                     </div>
-                    <p className="text-subtext0 text-[11px]">
-                      Install Claude Code CLI globally, then run{' '}
-                      <code className="px-1.5 py-0.5 bg-surface1 text-text rounded font-mono text-[10px]">
-                        claude login
-                      </code>{' '}
-                      to link your Claude Pro/Team subscription:
-                    </p>
-                    <div className="flex items-center justify-between p-2 bg-surface0 border border-surface1 rounded font-mono text-[11px] text-text">
-                      <span>npm install -g @anthropic-ai/claude-code</span>
+                  ) : (
+                    <div className="flex items-center justify-between gap-3 text-xs">
+                      <div>
+                        <span className="text-yellow-400 font-semibold">Claude Code CLI not found in PATH.</span>
+                        <span className="text-subtext0 block text-[11px]">Run: <code className="font-mono text-text">npm i -g @anthropic-ai/claude-code</code> then <code className="font-mono text-text">claude login</code></span>
+                      </div>
                       <button
                         type="button"
                         onClick={() => {
@@ -774,320 +773,348 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           setCopiedCode(true);
                           setTimeout(() => setCopiedCode(false), 2000);
                         }}
-                        className="text-subtext0 hover:text-text cursor-pointer"
-                        title="Copy command"
+                        className="px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 cursor-pointer shrink-0"
                       >
-                        {copiedCode ? (
-                          <Check className="w-3.5 h-3.5 text-green-400" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
+                        {copiedCode ? 'Copied!' : 'Copy Install Command'}
                       </button>
                     </div>
-                  </div>
-                )}
-              </div>
-            ) : aiConfig.provider === 'gemini' && aiConfig.authMode === 'subscription_oauth' ? (
-              /* Phase 3: Google AI Pro / Gemini Advanced OAuth Panel */
-              <div className="p-3.5 bg-surface0/60 border border-surface1 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">✨</span>
-                    <span className="text-xs font-bold text-text">Google AI Pro (OAuth 2.0 PKCE / ADC)</span>
-                  </div>
-                  {googleAuthStatus?.connected && (
-                    <button
-                      type="button"
-                      onClick={() => disconnectGoogleOAuth()}
-                      className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-[11px] text-red-400 border border-red-500/30 transition-colors cursor-pointer"
-                    >
-                      Sign Out
-                    </button>
                   )}
                 </div>
-
-                {googleAuthStatus?.connected ? (
-                  <div className="p-3 bg-base border border-surface0 rounded-lg space-y-2">
+              ) : aiConfig.provider === 'gemini' && isSubscriptionMode ? (
+                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                  {googleAuthStatus?.connected ? (
                     <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-bold text-xs text-text">
-                          {googleAuthStatus.account_email || 'Google Account Connected'}
-                        </div>
-                        <div className="text-[10px] text-green-400 flex items-center gap-1 font-medium">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>
-                            {googleAuthStatus.auth_method === 'gcloud_adc'
-                              ? 'Connected via Application Default Credentials (gcloud ADC)'
-                              : 'Google One AI Premium / Gemini Advanced Active'}
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-2 text-xs text-text">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>Google Account: <strong className="font-mono text-text">{googleAuthStatus.account_email || 'Connected'}</strong></span>
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-surface1 text-subtext0 border border-surface2 font-mono">
-                        {aiConfig.model}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => disconnectGoogleOAuth()}
+                        className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-[11px] text-red-400 border border-red-500/30 cursor-pointer"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-[11px] text-subtext0">
+                        Sign in with Google One AI Premium / Gemini Advanced via secure OAuth.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => startGoogleOAuth()}
+                        disabled={isConnectingSubscription}
+                        className="px-3 py-1.5 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 font-medium cursor-pointer shrink-0 disabled:opacity-50"
+                      >
+                        {isConnectingSubscription ? 'Connecting...' : 'Sign In with Google'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : aiConfig.provider === 'xai_grok' && isSubscriptionMode ? (
+                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                  {cliStatus.grok?.available ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs text-text">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span className="font-mono text-text">SuperGrok CLI ({cliStatus.grok.version || 'Ready'})</span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                          SuperGrok
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setTestingCliType('grok');
+                            const res = await executeCliTest('grok', 'Explain what Stage0 is in one sentence.');
+                            setCliTestOutput((prev) => ({ ...prev, grok: res.output }));
+                            setTestingCliType(null);
+                          }}
+                          disabled={testingCliType === 'grok'}
+                          className="px-2.5 py-1 rounded bg-accent/20 hover:bg-accent/30 text-[11px] text-accent border border-accent/40 cursor-pointer"
+                        >
+                          {testingCliType === 'grok' ? 'Testing...' : 'Test CLI'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void detectCli('grok')}
+                          disabled={isDetectingCli}
+                          className="px-2 py-1 rounded bg-surface1 hover:bg-surface2 text-[11px] text-subtext0 hover:text-text border border-surface2 cursor-pointer"
+                        >
+                          Re-scan
+                        </button>
+                      </div>
+                      {cliTestOutput.grok && (
+                        <div className="mt-2 p-2 bg-surface0 border border-surface1 rounded font-mono text-[10px] text-subtext1 max-h-24 overflow-y-auto whitespace-pre-wrap">
+                          {cliTestOutput.grok}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-3 text-xs">
+                      <div>
+                        <span className="text-yellow-400 font-semibold">SuperGrok / GrokBuild CLI not detected.</span>
+                        <span className="text-subtext0 block text-[11px]">Install SuperGrok CLI to use SuperGrok / X Premium+ subscription.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText('irm https://x.ai/cli/install.ps1 | iex');
+                          setCopiedCode(true);
+                          setTimeout(() => setCopiedCode(false), 2000);
+                        }}
+                        className="px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 cursor-pointer shrink-0"
+                      >
+                        {copiedCode ? 'Copied!' : 'Copy Install Command'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : activeProviderPreset.requiresApiKey ? (
+                /* Standard Developer API Key Field */
+                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-text">
+                      API Secret Key <span className="text-red-400">*</span>
+                    </label>
+                    <span className="text-[10px] text-emerald-400/90 font-mono">
+                      {hasSavedApiKey ? '✓ Stored securely in OS Keyring' : 'Saved in encrypted OS Keyring'}
+                    </span>
+                  </div>
+                  <div className="relative flex items-center">
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={apiKeyDraft}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setApiKeyDraft(value);
+                        if (onUpdateAiConfig) onUpdateAiConfig({ apiKey: value });
+                      }}
+                      onBlur={() => {
+                        if (!onUpdateAiConfig && apiKeyDraft.trim()) {
+                          storeUpdateAiConfig({ apiKey: apiKeyDraft });
+                          setApiKeyDraft('');
+                        }
+                      }}
+                      placeholder={
+                        hasSavedApiKey
+                          ? 'Key saved securely. Enter a new key to replace it.'
+                          : 'sk-..., gsk_..., or developer token'
+                      }
+                      className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-2.5 p-1 text-subtext0 hover:text-text cursor-pointer"
+                      title={showApiKey ? 'Hide secret key' : 'Show secret key'}
+                    >
+                      {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Ollama Local Informational Box */
+                <div className="p-3 bg-base/60 border border-surface1 rounded-lg flex items-center gap-2.5 text-xs text-subtext0">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>
+                    Ollama runs offline on your local machine (http://localhost:11434). No API key or cloud subscription required.
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* SECTION 2: MODEL SELECTION & INFERENCE PARAMETERS */}
+            {(() => {
+              const currentDynamic = dynamicModels[aiConfig.provider];
+              const modelsList = currentDynamic && currentDynamic.length > 0 ? currentDynamic : activeProviderPreset.models;
+              const selectedModelInfo = modelsList.find((m) => m.id === aiConfig.model);
+
+              return (
+                <div className="space-y-3 pt-3 border-t border-surface1/60">
+                  <div>
+                    <label className="block text-xs font-semibold text-text mb-1.5">Model</label>
+                    <select
+                      value={aiConfig.model}
+                      onChange={(e) => updateAiConfig({ model: e.target.value })}
+                      className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 cursor-pointer font-mono rounded"
+                    >
+                      {aiConfig.model && !modelsList.some((m) => m.id === aiConfig.model) && (
+                        <option value={aiConfig.model}>{aiConfig.model} (Custom / Active)</option>
+                      )}
+                      {modelsList.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name || m.id}{m.recommendedFor ? ` — ${m.recommendedFor}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedModelInfo?.recommendedFor && (
+                      <div className="text-[10px] text-subtext0 italic px-1 mt-1">
+                        Recommended: {selectedModelInfo.recommendedFor}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-1">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-medium text-text">
+                          Temperature: <span className="font-mono text-text">{aiConfig.temperature}</span>
+                        </label>
+                        <span className="text-[10px] text-subtext0 font-mono">
+                          {aiConfig.temperature <= 0.2 ? 'Deterministic' : 'Balanced'}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={aiConfig.temperature}
+                        onChange={(e) => updateAiConfig({ temperature: parseFloat(e.target.value) })}
+                        className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-text rounded"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-medium text-text">Max Output Tokens</label>
+                        <span className="text-[10px] text-subtext0 font-mono">{aiConfig.maxTokens} tokens</span>
+                      </div>
+                      <select
+                        value={aiConfig.maxTokens}
+                        onChange={(e) => updateAiConfig({ maxTokens: parseInt(e.target.value, 10) })}
+                        className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 cursor-pointer font-mono rounded"
+                      >
+                        <option value="1024">1,024 Tokens (Compact)</option>
+                        <option value="2048">2,048 Tokens (Standard)</option>
+                        <option value="4096">4,096 Tokens (Recommended for Diffs)</option>
+                        <option value="8192">8,192 Tokens (Large MR Review)</option>
+                        <option value="16384">16,384 Tokens (Deep Reasoning / Extended)</option>
+                      </select>
                     </div>
                   </div>
-                ) : (
-                  <div className="space-y-2">
+                </div>
+              );
+            })()}
+
+            {/* SECTION 3: NETWORK ENDPOINT & BEHAVIOR OPTIONS */}
+            <div className="space-y-3 pt-3 border-t border-surface1/60">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-text">API Base URL / Endpoint</label>
+                  {aiConfig.baseUrl !== activeProviderPreset.defaultBaseUrl && (
                     <button
                       type="button"
-                      onClick={() => startGoogleOAuth()}
-                      disabled={isConnectingSubscription}
-                      className="w-full py-2 px-3 rounded-lg bg-accent/20 hover:bg-accent/30 border border-accent/50 text-accent font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-xs"
+                      onClick={() => updateAiConfig({ baseUrl: activeProviderPreset.defaultBaseUrl })}
+                      className="text-[10px] text-subtext0 hover:text-text underline cursor-pointer"
                     >
-                      {isConnectingSubscription ? (
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                      )}
-                      <span>Sign In with Google Account (Gemini Advanced)</span>
+                      Reset default ({activeProviderPreset.defaultBaseUrl})
                     </button>
-                    <p className="text-[10px] text-subtext0 text-center">
-                      Opens your browser to verify Google One AI Premium subscription via secure local loopback OAuth. Also auto-detects `gcloud auth application-default login`.
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : activeProviderPreset.requiresApiKey ? (
-              /* Standard API Key field */
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-text">
-                    API Secret Key <span className="text-red">*</span>
-                  </label>
-                  <span className="text-[10px] text-subtext0/70 font-mono">
-                    {hasSavedApiKey ? 'Saved in the OS credential store' : 'Stored only in the OS credential store'}
-                  </span>
-                </div>
-                <div className="relative flex items-center">
-                  <input
-                    type={showApiKey ? 'text' : 'password'}
-                    value={apiKeyDraft}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setApiKeyDraft(value);
-                      if (onUpdateAiConfig) onUpdateAiConfig({ apiKey: value });
-                    }}
-                    onBlur={() => {
-                      if (!onUpdateAiConfig && apiKeyDraft.trim()) {
-                        storeUpdateAiConfig({ apiKey: apiKeyDraft });
-                        setApiKeyDraft('');
-                      }
-                    }}
-                    placeholder={
-                      hasSavedApiKey
-                        ? 'Key saved securely. Enter a new key to replace it.'
-                        : 'sk-..., gsk_..., or your API token'
-                    }
-                    className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-2.5 p-1 text-subtext0 hover:text-text cursor-pointer"
-                    title={showApiKey ? 'Hide secret key' : 'Show secret key'}
-                  >
-                    {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="p-2.5 bg-base/60 border border-surface0 flex items-center gap-2 text-xs text-subtext0">
-                <ShieldCheck className="w-4 h-4 text-subtext0 shrink-0" />
-                <span>
-                  Ollama runs offline on your local machine. No API key is required. Ensure the Ollama
-                  service is started (`ollama serve`).
-                </span>
-              </div>
-            )}
-
-            {/* Endpoint / Base URL */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-text">API Base URL / Endpoint</label>
-                {aiConfig.baseUrl !== activeProviderPreset.defaultBaseUrl && (
-                  <button
-                    type="button"
-                    onClick={() => updateAiConfig({ baseUrl: activeProviderPreset.defaultBaseUrl })}
-                    className="text-[10px] text-subtext0 hover:text-text underline cursor-pointer"
-                  >
-                    Reset to default ({activeProviderPreset.defaultBaseUrl})
-                  </button>
-                )}
-              </div>
-              <input
-                type="text"
-                value={aiConfig.baseUrl}
-                onChange={(e) => updateAiConfig({ baseUrl: e.target.value })}
-                placeholder="https://api.openai.com/v1"
-                className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-              />
-              <p className="text-[10px] text-subtext0 mt-1">
-                Do not embed credentials in this URL. Cloud connection tests are simulated and do not contact this endpoint.
-              </p>
-            </div>
-
-            {/* Hyperparameters: Temperature & Max Tokens */}
-            <div className="grid grid-cols-2 gap-4 pt-1">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-text">
-                    Temperature: <span className="font-mono text-text">{aiConfig.temperature}</span>
-                  </label>
-                  <span className="text-[10px] text-subtext0 font-mono">
-                    {aiConfig.temperature <= 0.2 ? 'Deterministic (Code Review)' : 'Balanced'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={aiConfig.temperature}
-                  onChange={(e) => updateAiConfig({ temperature: parseFloat(e.target.value) })}
-                  className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-text"
-                />
-                <div className="flex justify-between text-[10px] text-subtext0 mt-1 font-mono">
-                  <span>0.0 (Strict)</span>
-                  <span>0.5</span>
-                  <span>1.0 (Creative)</span>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-text">Max Output Tokens</label>
-                  <span className="text-[10px] text-subtext0 font-mono">{aiConfig.maxTokens} tokens</span>
-                </div>
-                <select
-                  value={aiConfig.maxTokens}
-                  onChange={(e) => updateAiConfig({ maxTokens: parseInt(e.target.value, 10) })}
-                  className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 cursor-pointer font-mono"
-                >
-                  <option value="1024">1,024 Tokens (Compact)</option>
-                  <option value="2048">2,048 Tokens (Standard)</option>
-                  <option value="4096">4,096 Tokens (Recommended for Diffs)</option>
-                  <option value="8192">8,192 Tokens (Large MR Review)</option>
-                  <option value="16384">16,384 Tokens (Deep Reasoning / Extended)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Options Toggles */}
-            <div className="space-y-2 pt-2 border-t border-surface0/80">
-              <label className="flex items-center justify-between cursor-pointer py-1">
-                <div>
-                  <span className="text-xs font-semibold text-text block">
-                    Stream AI Generation in Real-Time
-                  </span>
-                  <span className="text-[10px] text-subtext0 block">
-                    Render code review feedback tokens incrementally as they are generated
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={aiConfig.streamResponse}
-                  onChange={(e) => updateAiConfig({ streamResponse: e.target.checked })}
-                  className="w-4 h-4 accent-text cursor-pointer"
-                />
-              </label>
-
-              <label className="flex items-center justify-between cursor-pointer py-1">
-                <div>
-                  <span className="text-xs font-semibold text-text block">
-                    Enable Automated Diff Summarization
-                  </span>
-                  <span className="text-[10px] text-subtext0 block">
-                    Automatically generate AI explanations when selecting Git commits or changed files
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={aiConfig.enableCodeReviewAssist}
-                  onChange={(e) => updateAiConfig({ enableCodeReviewAssist: e.target.checked })}
-                  className="w-4 h-4 accent-text cursor-pointer"
-                />
-              </label>
-            </div>
-
-            {/* Test Connection Result Status */}
-            {aiTestResult && (
-              <div
-                className={`p-3 border flex items-start justify-between text-xs animate-in fade-in duration-100 ${
-                  aiTestResult.success
-                    ? 'bg-surface1 border-surface2 text-text'
-                    : 'bg-surface1 border-surface2 text-subtext0'
-                }`}
-              >
-                <div className="flex items-start gap-2">
-                  {aiTestResult.success ? (
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   )}
-                  <span className="leading-relaxed">{aiTestResult.message}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={clearAiTestResult}
-                  className="p-1 hover:bg-surface1/20 rounded cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                <input
+                  type="text"
+                  value={aiConfig.baseUrl}
+                  onChange={(e) => updateAiConfig({ baseUrl: e.target.value })}
+                  placeholder="https://api.openai.com/v1"
+                  className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded"
+                />
               </div>
-            )}
 
-            {/* Test Connection Action Button */}
-            <div className="flex items-center justify-between pt-2 border-t border-surface0/80">
-              <button
-                type="button"
-                onClick={resetAiConfig}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Defaults</span>
-              </button>
+              <div className="flex items-center justify-between gap-6 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-text select-none">
+                  <input
+                    type="checkbox"
+                    checked={aiConfig.streamResponse}
+                    onChange={(e) => updateAiConfig({ streamResponse: e.target.checked })}
+                    className="w-4 h-4 accent-text cursor-pointer rounded"
+                  />
+                  <span>Stream responses in real-time</span>
+                </label>
 
-              <button
-                type="button"
-                onClick={() => void testAiConnection(aiConfig, hasSavedApiKey || !!apiKeyDraft.trim())}
-                disabled={isTestingAi}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs border border-surface2"
-              >
-                {isTestingAi ? (
-                  <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Testing Connection...</span>
-                  </>
-                ) : (
-                  <span>Test AI Connection</span>
-                )}
-              </button>
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-text select-none">
+                  <input
+                    type="checkbox"
+                    checked={aiConfig.enableCodeReviewAssist}
+                    onChange={(e) => updateAiConfig({ enableCodeReviewAssist: e.target.checked })}
+                    className="w-4 h-4 accent-text cursor-pointer rounded"
+                  />
+                  <span>Auto-summarize Git commits &amp; diffs</span>
+                </label>
+              </div>
             </div>
-          </div>
 
-          {/* AI Security Guardrails Link Notice */}
-          <div className="pt-2">
-            <div className="p-3.5 bg-surface0/30 border border-surface0/60 rounded flex items-center justify-between gap-4">
-              <div>
-                <span className="text-xs font-semibold text-text block">
-                  AI Security Guardrails &amp; Tool Execution Policies
-                </span>
-                <span className="text-[11px] text-subtext0 block mt-0.5">
-                  Command whitelist, security isolation policies, simulator, and audit logs are available in the dedicated Security Guardrails tab.
-                </span>
-              </div>
-              {onNavigateToGuardrails && (
+            {/* SECTION 4: HEALTH CHECK & ACTION FOOTER */}
+            <div className="pt-3 border-t border-surface1/60 flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={onNavigateToGuardrails}
-                  className="px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs rounded border border-surface2 transition-colors cursor-pointer shrink-0 font-medium"
+                  onClick={() => void testAiConnection(aiConfig, hasSavedApiKey || !!apiKeyDraft.trim())}
+                  disabled={isTestingAi}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded transition-colors cursor-pointer border border-surface2 shadow-xs"
                 >
-                  Open Guardrails
+                  {isTestingAi ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Testing...</span>
+                    </>
+                  ) : (
+                    <span>Test Connection</span>
+                  )}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={resetAiConfig}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs text-subtext0 hover:text-text hover:bg-surface1/40 rounded transition-colors cursor-pointer"
+                  title="Reset provider settings to defaults"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset</span>
+                </button>
+              </div>
+
+              {/* Inline Test Result */}
+              {aiTestResult && (
+                <div
+                  className={`flex items-center gap-2 px-2.5 py-1 rounded text-xs animate-in fade-in ${
+                    aiTestResult.success
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                  }`}
+                >
+                  {aiTestResult.success ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  )}
+                  <span className="truncate max-w-[280px]">{aiTestResult.message}</span>
+                  <button
+                    type="button"
+                    onClick={clearAiTestResult}
+                    className="text-subtext0 hover:text-text cursor-pointer ml-1"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               )}
             </div>
           </div>
+
+          {onNavigateToGuardrails && (
+            <div className="pt-1 text-right">
+              <button
+                type="button"
+                onClick={onNavigateToGuardrails}
+                className="text-xs text-subtext0 hover:text-text underline cursor-pointer"
+              >
+                Configure AI Security Guardrails &amp; Execution Policies →
+              </button>
+            </div>
+          )}
         </div>
       )}
 
