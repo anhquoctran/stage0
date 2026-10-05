@@ -2,12 +2,14 @@ import { create } from 'zustand';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import {
   AiConfig,
+  AiModelPreset,
   McpServerConfig,
   McpConfigFileFormat,
   CliDetectionResult,
   CopilotDeviceCodeResponse,
   CopilotAuthStatus,
   GoogleAuthStatus,
+  ChatGptAuthStatus,
   UnifiedAiChatResponse,
 } from '../types/ai';
 import {
@@ -32,9 +34,16 @@ interface AiMcpState {
   activeSubTab: 'ai' | 'mcp' | 'guardrails' | 'prompts';
   setActiveSubTab: (tab: 'ai' | 'mcp' | 'guardrails' | 'prompts') => void;
 
+  // Dynamic Live Models State
+  dynamicModels: Partial<Record<AiConfig['provider'], AiModelPreset[]>>;
+  isFetchingDynamicModels: boolean;
+  dynamicModelError: string | null;
+  fetchDynamicModels: (providerOverride?: AiConfig['provider']) => Promise<{ success: boolean; count: number; error?: string }>;
+
   // Cloud Subscription & CLI Bridge State
   copilotStatus: CopilotAuthStatus | null;
   googleAuthStatus: GoogleAuthStatus | null;
+  chatgptAuthStatus: ChatGptAuthStatus | null;
   cliStatus: Record<string, CliDetectionResult | null>;
   isDetectingCli: boolean;
   isConnectingSubscription: boolean;
@@ -50,6 +59,9 @@ interface AiMcpState {
   startGoogleOAuth: () => Promise<void>;
   checkGoogleAuthStatus: () => Promise<GoogleAuthStatus>;
   disconnectGoogleOAuth: () => Promise<void>;
+  startChatGptOAuth: () => Promise<void>;
+  checkChatGptAuthStatus: () => Promise<ChatGptAuthStatus>;
+  disconnectChatGptOAuth: () => Promise<void>;
   clearCopilotDeviceCode: () => void;
 
   // AI Configuration Actions
@@ -142,6 +154,16 @@ function loadPersistedState(): {
         }
       }
 
+      // Automatically upgrade legacy default Claude 3.7 Sonnet model to Claude Opus 5.5
+      if (loadedAiConfig.provider === 'anthropic' && (!loadedAiConfig.model || loadedAiConfig.model === 'claude-3-7-sonnet-20250219')) {
+        loadedAiConfig.model = 'claude-opus-5-5';
+      }
+
+      // Automatically upgrade legacy default OpenAI model gpt-4o to gpt-6.1-sol
+      if (loadedAiConfig.provider === 'openai' && (!loadedAiConfig.model || loadedAiConfig.model === 'gpt-4o')) {
+        loadedAiConfig.model = 'gpt-6.1-sol';
+      }
+
       return {
         aiConfig: loadedAiConfig,
         mcpServers: loadedMcpServers,
@@ -194,9 +216,15 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   aiTestResult: null,
   activeSubTab: 'ai',
 
+  // Dynamic Live Models State
+  dynamicModels: {},
+  isFetchingDynamicModels: false,
+  dynamicModelError: null,
+
   // Cloud Subscription & CLI Bridge State
   copilotStatus: null,
   googleAuthStatus: null,
+  chatgptAuthStatus: null,
   cliStatus: {},
   isDetectingCli: false,
   isConnectingSubscription: false,
@@ -225,6 +253,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
         set((state) => ({
           apiKeysConfigured: { ...state.apiKeysConfigured, [provider]: true },
         }));
+        void get().fetchDynamicModels(provider);
       }).catch((err) => {
         console.error('Failed to store API key in OS Keyring:', err);
       });
@@ -251,6 +280,9 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       set((state) => ({
         apiKeysConfigured: { ...state.apiKeysConfigured, [providerId]: configured },
       }));
+      if (configured) {
+        void get().fetchDynamicModels(providerId);
+      }
     } catch (err) {
       console.warn(`Failed to check API key status for ${providerId} in OS Keyring:`, err);
     }
@@ -272,6 +304,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
 
     // Asynchronously load the key for this newly selected provider from the OS Keyring
     void get().loadApiKeyForProvider(providerId);
+    void get().fetchDynamicModels(providerId);
   },
 
   testAiConnection: async (configOverride, apiKeyIsPresent = false) => {
@@ -289,6 +322,8 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
             ? 'gh_copilot'
             : aiConfig.provider === 'gemini'
             ? 'gcloud'
+            : aiConfig.provider === 'xai_grok'
+            ? 'grok'
             : 'claude');
         if (isTauri()) {
           const res = await invoke<{
@@ -495,8 +530,11 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
         const res = await invoke<CopilotDeviceCodeResponse>('copilot_start_device_flow', { clientId: null });
         set({ copilotDeviceCode: res, isConnectingSubscription: false });
         return res;
+      } else {
+        alert('Xác thực GitHub Copilot yêu cầu chạy trong ứng dụng Desktop Stage0 (Tauri) để lưu trữ session token vào OS Keyring.');
+        set({ isConnectingSubscription: false });
+        return null;
       }
-      return null;
     } catch (e) {
       console.error('Failed to start Copilot device flow:', e);
       set({ isConnectingSubscription: false });
@@ -557,7 +595,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
         const res = await invoke<{ auth_url: string; state: string; port: number }>('google_oauth_start', {
           clientId: null,
         });
-        window.open(res.auth_url, '_blank');
+        await invoke('open_external_url', { url: res.auth_url }).catch(() => {});
         for (let i = 0; i < 24; i++) {
           await new Promise((r) => setTimeout(r, 2500));
           const status = await get().checkGoogleAuthStatus();
@@ -565,6 +603,8 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
             break;
           }
         }
+      } else {
+        alert('Đăng nhập Google AI Studio OAuth yêu cầu chạy trong ứng dụng Desktop Stage0 (Tauri).');
       }
     } catch (e) {
       console.error('Failed to start Google OAuth:', e);
@@ -600,7 +640,106 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     }
   },
 
+  startChatGptOAuth: async () => {
+    set({ isConnectingSubscription: true });
+    try {
+      if (isTauri()) {
+        const res = await invoke<{ auth_url: string; state: string; port: number }>('chatgpt_oauth_start', {
+          clientId: null,
+        });
+        await invoke('open_external_url', { url: res.auth_url }).catch(() => {});
+        for (let i = 0; i < 24; i++) {
+          await new Promise((r) => setTimeout(r, 2500));
+          const status = await get().checkChatGptAuthStatus();
+          if (status.connected) {
+            void get().fetchDynamicModels('openai');
+            break;
+          }
+        }
+      } else {
+        alert('Đăng nhập ChatGPT Plus/Pro OAuth yêu cầu chạy trong ứng dụng Desktop Stage0 (Tauri) để mở local TCP loopback server và lưu token vào OS Keyring.');
+      }
+    } catch (e) {
+      console.error('Failed to start ChatGPT OAuth:', e);
+    } finally {
+      set({ isConnectingSubscription: false });
+    }
+  },
+
+  checkChatGptAuthStatus: async () => {
+    try {
+      if (isTauri()) {
+        const status = await invoke<ChatGptAuthStatus>('chatgpt_oauth_check_status');
+        set({ chatgptAuthStatus: status });
+        return status;
+      }
+      const mock: ChatGptAuthStatus = { connected: false };
+      return mock;
+    } catch (e) {
+      const errStatus: ChatGptAuthStatus = { connected: false, error: String(e) };
+      set({ chatgptAuthStatus: errStatus });
+      return errStatus;
+    }
+  },
+
+  disconnectChatGptOAuth: async () => {
+    try {
+      if (isTauri()) {
+        await invoke('chatgpt_oauth_disconnect');
+        set({ chatgptAuthStatus: { connected: false } });
+      }
+    } catch (e) {
+      console.error('Failed to disconnect ChatGPT OAuth:', e);
+    }
+  },
+
   clearCopilotDeviceCode: () => set({ copilotDeviceCode: null }),
+
+  fetchDynamicModels: async (providerOverride) => {
+    const provider = providerOverride || get().aiConfig.provider;
+    set({ isFetchingDynamicModels: true, dynamicModelError: null });
+
+    try {
+      if (isTauri()) {
+        const models = await invoke<Array<{ id: string; name: string; description?: string }>>('fetch_ai_models', {
+          provider,
+          apiKey: get().aiConfig.apiKey || null,
+          baseUrl: get().aiConfig.baseUrl || null,
+        });
+
+        const presets: AiModelPreset[] = models.map((m) => ({
+          id: m.id,
+          name: m.name,
+          recommendedFor: m.description,
+        }));
+
+        set((state) => ({
+          dynamicModels: {
+            ...state.dynamicModels,
+            [provider]: presets,
+          },
+          isFetchingDynamicModels: false,
+        }));
+
+        return { success: true, count: presets.length };
+      } else {
+        const defaultPreset = AI_PROVIDERS.find((p) => p.id === provider);
+        const fallback = defaultPreset?.models || [];
+        set((state) => ({
+          dynamicModels: {
+            ...state.dynamicModels,
+            [provider]: fallback,
+          },
+          isFetchingDynamicModels: false,
+        }));
+        return { success: true, count: fallback.length };
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      set({ isFetchingDynamicModels: false, dynamicModelError: errMsg });
+      return { success: false, count: 0, error: errMsg };
+    }
+  },
 
   addMcpServer: (serverData) => {
     const id = `mcp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;

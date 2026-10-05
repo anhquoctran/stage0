@@ -2,11 +2,18 @@ export type AiProviderId =
   | 'openai'
   | 'anthropic'
   | 'gemini'
+  | 'xai_grok'
   | 'github_copilot'
   | 'ollama'
   | 'custom';
 
 export type AiAuthMode = 'api_key' | 'subscription_oauth' | 'cli_bridge';
+
+export interface DynamicModelInfo {
+  id: string;
+  name: string;
+  description?: string;
+}
 
 export interface AiModelPreset {
   id: string;
@@ -29,7 +36,7 @@ export interface AiProviderPreset {
 export interface AiConfig {
   provider: AiProviderId;
   authMode?: AiAuthMode;
-  cliType?: 'claude' | 'gh_copilot' | 'gcloud';
+  cliType?: 'claude' | 'gh_copilot' | 'gcloud' | 'grok';
   model: string;
   apiKey: string;
   baseUrl: string;
@@ -71,6 +78,12 @@ export interface GoogleAuthStatus {
   connected: boolean;
   account_email?: string;
   auth_method: string;
+  error?: string;
+}
+
+export interface ChatGptAuthStatus {
+  connected: boolean;
+  account_email?: string;
   error?: string;
 }
 

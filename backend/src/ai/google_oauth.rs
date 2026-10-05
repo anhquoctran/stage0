@@ -133,6 +133,11 @@ pub async fn start_google_oauth(
         handle_loopback_callback(listener, state_clone, redirect_uri, cid_clone).await;
     });
 
+    // Automatically open default system browser
+    if let Err(e) = crate::ai::open_system_browser(&auth_url) {
+        eprintln!("[OAuth] Failed to open system browser: {}", e);
+    }
+
     Ok(GoogleOAuthStartResult {
         auth_url,
         state,
