@@ -20,10 +20,11 @@ export const AI_PROVIDERS: AiProviderPreset[] = [
   {
     id: 'anthropic',
     name: 'Anthropic Claude',
-    description: 'Claude 3.7 Sonnet & 3.5 series',
+    description: 'Claude 3.7 Sonnet & 3.5 series (API key or Claude Code CLI)',
     defaultBaseUrl: 'https://api.anthropic.com/v1',
     defaultModel: 'claude-3-7-sonnet-20250219',
     requiresApiKey: true,
+    supportedAuthModes: ['cli_bridge', 'api_key'],
     docUrl: 'https://console.anthropic.com/settings/keys',
     models: [
       { id: 'claude-3-7-sonnet-20250219', name: 'Claude 3.7 Sonnet', recommendedFor: 'Hybrid Reasoning & Coding' },
@@ -33,12 +34,29 @@ export const AI_PROVIDERS: AiProviderPreset[] = [
     ],
   },
   {
+    id: 'github_copilot',
+    name: 'GitHub Copilot',
+    description: 'Native subscription or gh-copilot CLI (No API key needed)',
+    defaultBaseUrl: 'https://api.individual.githubcopilot.com',
+    defaultModel: 'gpt-4o',
+    requiresApiKey: false,
+    supportedAuthModes: ['subscription_oauth', 'cli_bridge'],
+    docUrl: 'https://github.com/features/copilot',
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o (Copilot)', recommendedFor: 'Smart Review & Analysis' },
+      { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet (Copilot)', recommendedFor: 'Deep Code Reasoning' },
+      { id: 'o3-mini', name: 'o3-mini (Copilot)', recommendedFor: 'Complex Problem Solving' },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Copilot)', recommendedFor: 'Ultra-fast & Efficient' },
+    ],
+  },
+  {
     id: 'gemini',
     name: 'Google Gemini',
-    description: 'Gemini 2.0 Flash & 1.5 Pro',
+    description: 'Gemini 2.0 Flash & 1.5 Pro (API Key or Google AI Pro OAuth)',
     defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     defaultModel: 'gemini-2.0-flash',
     requiresApiKey: true,
+    supportedAuthModes: ['subscription_oauth', 'api_key'],
     docUrl: 'https://aistudio.google.com/app/apikey',
     models: [
       { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', recommendedFor: 'Next-Gen Ultra Fast' },

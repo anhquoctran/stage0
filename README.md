@@ -57,7 +57,8 @@ The API currently supplies checksums but no signed updater manifest or publisher
 ## Requirements
 
 - Git 2.38 or later is recommended for `git merge-tree --write-tree`.
-- Node.js 18 or later and npm.
+- Node.js >= 20 (Node 24 LTS recommended, configured via `.nvmrc` and `.node-version`).
+- pnpm >= 9 (pnpm 11+ supported and pinned via `packageManager`). Note: `npm` and `yarn` are blocked by a preinstall check.
 - A stable Rust toolchain.
 - Native build tools for your platform:
   - Windows: Microsoft C++ Build Tools and WebView2 Runtime.
@@ -71,26 +72,31 @@ The API currently supplies checksums but no signed updater manifest or publisher
 
 ## Development
 
-Clone the repository and install frontend dependencies:
+Clone the repository and install frontend dependencies using **pnpm**:
 
 ```bash
 git clone https://github.com/anhquoctran/stage0.git
 cd stage0
-npm install
+
+# Switch to matching Node.js version using nvm (macOS/Linux) or nvm-windows
+nvm use # or on Windows: nvm use 24.18.0
+
+# Install dependencies (only pnpm is allowed)
+pnpm install
 ```
 
 Run the native desktop application with frontend and Rust hot reload:
 
 ```bash
-npm run dev:app
+pnpm run dev:app
 ```
 
-The web development server can be started with `npm run dev:web`, but most repository features require the Tauri backend and are not available in a regular browser.
+The web development server can be started with `pnpm run dev:web`, but most repository features require the Tauri backend and are not available in a regular browser.
 
 Run the available static checks:
 
 ```bash
-npm run typecheck
+pnpm run typecheck
 cd backend && cargo check
 ```
 
@@ -99,13 +105,13 @@ cd backend && cargo check
 Build the frontend assets only:
 
 ```bash
-npm run build:web
+pnpm run build:web
 ```
 
 Build and package the native desktop application for the current platform:
 
 ```bash
-npm run build:app
+pnpm run build:app
 ```
 
 The desktop build runs the TypeScript check and writes Tauri bundle artifacts under `backend/target/release/bundle/`.

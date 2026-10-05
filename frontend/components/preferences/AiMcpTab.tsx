@@ -61,6 +61,22 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     loadApiKeyForProvider,
     testAiConnection,
     clearAiTestResult,
+    copilotStatus,
+    googleAuthStatus,
+    cliStatus,
+    isDetectingCli,
+    isConnectingSubscription,
+    copilotDeviceCode,
+    detectCli,
+    executeCliTest,
+    startCopilotFlow,
+    pollCopilotToken,
+    checkCopilotStatus,
+    disconnectCopilot,
+    startGoogleOAuth,
+    checkGoogleAuthStatus,
+    disconnectGoogleOAuth,
+    clearCopilotDeviceCode,
     addMcpServer,
     updateMcpServer,
     deleteMcpServer,
@@ -73,16 +89,25 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   const aiConfig = draftAiConfig || storeAiConfig;
   const updateAiConfig = onUpdateAiConfig || storeUpdateAiConfig;
   const setProvider = (providerId: AiConfig['provider']) => {
+    const preset = AI_PROVIDERS.find((p) => p.id === providerId) || AI_PROVIDERS[0];
+    const defaultAuthMode: AiConfig['authMode'] =
+      providerId === 'github_copilot'
+        ? 'subscription_oauth'
+        : providerId === 'anthropic' && cliStatus.claude?.available
+        ? 'cli_bridge'
+        : 'api_key';
+
     if (onUpdateAiConfig) {
-      const preset = AI_PROVIDERS.find((p) => p.id === providerId) || AI_PROVIDERS[0];
       onUpdateAiConfig({
         provider: providerId,
+        authMode: defaultAuthMode,
         model: preset.defaultModel,
         baseUrl: preset.defaultBaseUrl,
         apiKey: '',
       });
     } else {
       storeSetProvider(providerId);
+      storeUpdateAiConfig({ authMode: defaultAuthMode });
     }
   };
 
@@ -98,6 +123,28 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   const [apiKeyDraft, setApiKeyDraft] = useState(draftAiConfig?.apiKey || '');
   const [testingServerId, setTestingServerId] = useState<string | null>(null);
   const [deletingServerId, setDeletingServerId] = useState<string | null>(null);
+
+  // Cloud Subscription & CLI Bridge UI State
+  const [testingCliType, setTestingCliType] = useState<string | null>(null);
+  const [cliTestOutput, setCliTestOutput] = useState<{ [key: string]: string }>({});
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  useEffect(() => {
+    if (!copilotDeviceCode) return;
+    const interval = setInterval(async () => {
+      const res = await pollCopilotToken(copilotDeviceCode.device_code);
+      if (res.status === 'authorized' || res.status === 'expired' || res.status === 'denied') {
+        clearInterval(interval);
+      }
+    }, (copilotDeviceCode.interval || 5) * 1000);
+    return () => clearInterval(interval);
+  }, [copilotDeviceCode, pollCopilotToken]);
+
+  useEffect(() => {
+    void checkCopilotStatus();
+    void checkGoogleAuthStatus();
+    void detectCli('claude');
+  }, [checkCopilotStatus, checkGoogleAuthStatus, detectCli]);
 
   // Add / Edit Server Form State
   const [isServerFormOpen, setIsServerFormOpen] = useState(false);
@@ -358,10 +405,15 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         <div className="space-y-5 animate-in fade-in duration-100">
           {/* Provider Selection Grid */}
           <div>
-            <label className="block text-xs font-semibold text-text mb-2">
-              Select AI Engine / Provider
-            </label>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-semibold text-text">
+                Select AI Engine / Provider
+              </label>
+              <span className="text-[10px] text-subtext0">
+                Supports Cloud Subscriptions (Copilot, Claude, Gemini) & API Keys
+              </span>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
               {AI_PROVIDERS.map((p) => {
                 const isSelected = aiConfig.provider === p.id;
                 return (
@@ -398,7 +450,13 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   {activeProviderPreset.name} Configuration
                 </span>
                 <span className="text-[10px] px-2 py-0.5 bg-surface1 text-subtext0 border border-surface2 font-mono">
-                  {aiConfig.provider === 'ollama' ? 'Offline Local Daemon' : 'Cloud REST API'}
+                  {aiConfig.provider === 'ollama'
+                    ? 'Offline Local Daemon'
+                    : aiConfig.authMode === 'cli_bridge'
+                    ? 'CLI Subprocess Bridge'
+                    : aiConfig.authMode === 'subscription_oauth' || aiConfig.provider === 'github_copilot'
+                    ? 'Cloud Subscription'
+                    : 'Direct API Key'}
                 </span>
               </div>
 
@@ -409,11 +467,73 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   rel="noreferrer"
                   className="flex items-center gap-1 text-[11px] text-subtext0 hover:text-text underline cursor-pointer"
                 >
-                  <span>API Documentation</span>
+                  <span>Documentation</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}
             </div>
+
+            {/* Auth Method Toggle (when provider supports both Cloud Subscription/CLI and API Key) */}
+            {activeProviderPreset.supportedAuthModes && activeProviderPreset.supportedAuthModes.length > 1 && (
+              <div className="p-3 bg-base/60 border border-surface1 rounded-lg space-y-2">
+                <div className="text-[11px] font-semibold text-text flex items-center justify-between">
+                  <span>Connection Option</span>
+                  <span className="text-[10px] text-subtext0">
+                    {aiConfig.authMode === 'subscription_oauth' || aiConfig.authMode === 'cli_bridge'
+                      ? '✓ Included in your monthly subscription (No per-token bills)'
+                      : 'Pay-per-token API billing'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const mode = activeProviderPreset.supportedAuthModes?.includes('subscription_oauth')
+                        ? 'subscription_oauth'
+                        : 'cli_bridge';
+                      updateAiConfig({ authMode: mode });
+                    }}
+                    className={`px-3 py-2 rounded-lg border text-left text-xs transition-all cursor-pointer flex items-center gap-2.5 ${
+                      aiConfig.authMode === 'subscription_oauth' || aiConfig.authMode === 'cli_bridge'
+                        ? 'bg-surface1 border-surface2 text-text font-semibold shadow-xs ring-1 ring-surface2'
+                        : 'bg-surface0/50 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
+                    }`}
+                  >
+                    <div className="p-1.5 rounded-md bg-accent/15 text-accent shrink-0">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-text">Cloud Subscription</div>
+                      <div className="text-[10px] text-subtext0">
+                        {aiConfig.provider === 'github_copilot'
+                          ? 'GitHub Copilot Device Flow'
+                          : aiConfig.provider === 'anthropic'
+                          ? 'Claude Code CLI (claude)'
+                          : 'Google AI Pro (OAuth/ADC)'}
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => updateAiConfig({ authMode: 'api_key' })}
+                    className={`px-3 py-2 rounded-lg border text-left text-xs transition-all cursor-pointer flex items-center gap-2.5 ${
+                      aiConfig.authMode === 'api_key' || !aiConfig.authMode
+                        ? 'bg-surface1 border-surface2 text-text font-semibold shadow-xs ring-1 ring-surface2'
+                        : 'bg-surface0/50 border-surface0 text-subtext0 hover:bg-surface0 hover:text-text'
+                    }`}
+                  >
+                    <div className="p-1.5 rounded-md bg-surface2/60 text-subtext0 shrink-0">
+                      <Terminal className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-text">Developer API Key</div>
+                      <div className="text-[10px] text-subtext0">Standard pay-per-token API key</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Model Name and Quick Pickers */}
             <div>
@@ -455,8 +575,281 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               </div>
             </div>
 
-            {/* API Key Field (if required) */}
-            {activeProviderPreset.requiresApiKey ? (
+            {/* AUTH SECTION: Cloud Subscription, CLI Bridge, or API Key */}
+            {aiConfig.provider === 'github_copilot' ? (
+              /* Phase 2: GitHub Copilot Device Authorization Panel */
+              <div className="p-3.5 bg-surface0/60 border border-surface1 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🐙</span>
+                    <span className="text-xs font-bold text-text">GitHub Copilot Subscription (Device Flow)</span>
+                  </div>
+                  {copilotStatus?.connected && (
+                    <button
+                      type="button"
+                      onClick={() => disconnectCopilot()}
+                      className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-[11px] text-red-400 border border-red-500/30 transition-colors cursor-pointer"
+                    >
+                      Sign Out
+                    </button>
+                  )}
+                </div>
+
+                {copilotStatus?.connected ? (
+                  <div className="p-3 bg-base border border-surface0 rounded-lg space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        {copilotStatus.avatar_url ? (
+                          <img
+                            src={copilotStatus.avatar_url}
+                            alt="GitHub avatar"
+                            className="w-7 h-7 rounded-full border border-surface2"
+                          />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-surface2 flex items-center justify-center font-bold text-xs text-text">
+                            GH
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-bold text-xs text-text">
+                            {copilotStatus.username || 'GitHub User'}
+                          </div>
+                          <div className="text-[10px] text-green-400 flex items-center gap-1 font-medium">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Copilot Subscription Active (Included in your GitHub plan)</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-surface1 text-subtext0 border border-surface2 font-mono">
+                        {aiConfig.model}
+                      </span>
+                    </div>
+                  </div>
+                ) : copilotDeviceCode ? (
+                  <div className="p-3.5 bg-base border border-accent/40 rounded-lg space-y-3 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-semibold text-text">GitHub Device Verification Required</div>
+                      <button
+                        type="button"
+                        onClick={() => clearCopilotDeviceCode()}
+                        className="text-subtext0 hover:text-text cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-subtext0">
+                      Enter this code at GitHub to authorize your Copilot subscription:
+                    </p>
+                    <div className="flex items-center justify-between p-2.5 bg-surface0 border border-surface2 rounded">
+                      <span className="text-lg font-mono font-bold tracking-widest text-accent">
+                        {copilotDeviceCode.user_code}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(copilotDeviceCode.user_code);
+                          window.open(copilotDeviceCode.verification_uri, '_blank');
+                        }}
+                        className="px-3 py-1.5 rounded bg-accent hover:bg-accent/90 text-surface0 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy Code & Open GitHub</span>
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-subtext0 font-mono">
+                      <RefreshCw className="w-3 h-3 animate-spin text-accent" />
+                      <span>Waiting for approval on github.com/login/device...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => startCopilotFlow()}
+                      disabled={isConnectingSubscription}
+                      className="w-full py-2 px-3 rounded-lg bg-accent/20 hover:bg-accent/30 border border-accent/50 text-accent font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-xs"
+                    >
+                      {isConnectingSubscription ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      )}
+                      <span>Sign In with GitHub Copilot (Device Flow)</span>
+                    </button>
+                    <p className="text-[10px] text-subtext0 text-center">
+                      Uses your existing GitHub Copilot $10/mo or Business subscription. No API keys or extra token bills.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : aiConfig.provider === 'anthropic' && aiConfig.authMode === 'cli_bridge' ? (
+              /* Phase 1: Claude Code CLI Bridge Panel */
+              <div className="p-3.5 bg-surface0/60 border border-surface1 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="w-4 h-4 text-accent" />
+                    <span className="text-xs font-bold text-text">Claude Code CLI Subprocess Bridge</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => detectCli('claude')}
+                    disabled={isDetectingCli}
+                    className="px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-[11px] text-text border border-surface2 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isDetectingCli ? 'animate-spin' : ''}`} />
+                    <span>Scan CLI</span>
+                  </button>
+                </div>
+
+                {cliStatus.claude?.available ? (
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2.5 bg-base border border-surface0 rounded flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="font-mono text-text">
+                          {cliStatus.claude.version || 'Claude CLI Detected'}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface1 text-subtext0 border border-surface2 font-mono">
+                          {cliStatus.claude.logged_in ? 'Subscription Authenticated' : 'Session Ready'}
+                        </span>
+                      </div>
+                      {cliStatus.claude.executable_path && (
+                        <span
+                          className="text-[10px] text-subtext0 font-mono truncate max-w-[200px]"
+                          title={cliStatus.claude.executable_path}
+                        >
+                          {cliStatus.claude.executable_path}
+                        </span>
+                      )}
+                    </div>
+
+                    {cliStatus.claude.auth_info && (
+                      <p className="text-[11px] text-subtext0">
+                        {cliStatus.claude.auth_info}
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setTestingCliType('claude');
+                          const res = await executeCliTest('claude');
+                          setCliTestOutput((prev) => ({ ...prev, claude: res.output }));
+                          setTestingCliType(null);
+                        }}
+                        disabled={testingCliType === 'claude'}
+                        className="px-3 py-1.5 bg-accent/20 hover:bg-accent/30 text-accent border border-accent/40 rounded text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5"
+                      >
+                        {testingCliType === 'claude' && <RefreshCw className="w-3 h-3 animate-spin" />}
+                        <span>Test Review Prompt via Claude CLI</span>
+                      </button>
+                    </div>
+
+                    {cliTestOutput.claude && (
+                      <div className="mt-2 p-2.5 bg-base border border-surface1 rounded font-mono text-[11px] text-subtext1 max-h-36 overflow-y-auto whitespace-pre-wrap">
+                        {cliTestOutput.claude}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-base border border-surface1 rounded-lg space-y-2 text-xs">
+                    <div className="flex items-center gap-2 text-yellow-400">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span className="font-semibold">Claude Code CLI not found in PATH</span>
+                    </div>
+                    <p className="text-subtext0 text-[11px]">
+                      Install Claude Code CLI globally, then run{' '}
+                      <code className="px-1.5 py-0.5 bg-surface1 text-text rounded font-mono text-[10px]">
+                        claude login
+                      </code>{' '}
+                      to link your Claude Pro/Team subscription:
+                    </p>
+                    <div className="flex items-center justify-between p-2 bg-surface0 border border-surface1 rounded font-mono text-[11px] text-text">
+                      <span>npm install -g @anthropic-ai/claude-code</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText('npm install -g @anthropic-ai/claude-code');
+                          setCopiedCode(true);
+                          setTimeout(() => setCopiedCode(false), 2000);
+                        }}
+                        className="text-subtext0 hover:text-text cursor-pointer"
+                        title="Copy command"
+                      >
+                        {copiedCode ? (
+                          <Check className="w-3.5 h-3.5 text-green-400" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : aiConfig.provider === 'gemini' && aiConfig.authMode === 'subscription_oauth' ? (
+              /* Phase 3: Google AI Pro / Gemini Advanced OAuth Panel */
+              <div className="p-3.5 bg-surface0/60 border border-surface1 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">✨</span>
+                    <span className="text-xs font-bold text-text">Google AI Pro (OAuth 2.0 PKCE / ADC)</span>
+                  </div>
+                  {googleAuthStatus?.connected && (
+                    <button
+                      type="button"
+                      onClick={() => disconnectGoogleOAuth()}
+                      className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-[11px] text-red-400 border border-red-500/30 transition-colors cursor-pointer"
+                    >
+                      Sign Out
+                    </button>
+                  )}
+                </div>
+
+                {googleAuthStatus?.connected ? (
+                  <div className="p-3 bg-base border border-surface0 rounded-lg space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-xs text-text">
+                          {googleAuthStatus.account_email || 'Google Account Connected'}
+                        </div>
+                        <div className="text-[10px] text-green-400 flex items-center gap-1 font-medium">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>
+                            {googleAuthStatus.auth_method === 'gcloud_adc'
+                              ? 'Connected via Application Default Credentials (gcloud ADC)'
+                              : 'Google One AI Premium / Gemini Advanced Active'}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-surface1 text-subtext0 border border-surface2 font-mono">
+                        {aiConfig.model}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => startGoogleOAuth()}
+                      disabled={isConnectingSubscription}
+                      className="w-full py-2 px-3 rounded-lg bg-accent/20 hover:bg-accent/30 border border-accent/50 text-accent font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-xs"
+                    >
+                      {isConnectingSubscription ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      )}
+                      <span>Sign In with Google Account (Gemini Advanced)</span>
+                    </button>
+                    <p className="text-[10px] text-subtext0 text-center">
+                      Opens your browser to verify Google One AI Premium subscription via secure local loopback OAuth. Also auto-detects `gcloud auth application-default login`.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : activeProviderPreset.requiresApiKey ? (
+              /* Standard API Key field */
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium text-text">
@@ -481,7 +874,11 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         setApiKeyDraft('');
                       }
                     }}
-                    placeholder={hasSavedApiKey ? 'Key saved securely. Enter a new key to replace it.' : 'sk-..., gsk_..., or your API token'}
+                    placeholder={
+                      hasSavedApiKey
+                        ? 'Key saved securely. Enter a new key to replace it.'
+                        : 'sk-..., gsk_..., or your API token'
+                    }
                     className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
                   />
                   <button

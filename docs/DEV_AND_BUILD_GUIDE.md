@@ -6,11 +6,11 @@ This document provides a comprehensive guide on running the **Development Server
 
 ## 1. Prerequisites by Platform
 
-| Platform | Node.js | Rust & Cargo | Additional System Tools |
+| Platform | Node.js & Package Manager | Rust & Cargo | Additional System Tools |
 | :--- | :--- | :--- | :--- |
-| **Windows 10/11** | Node.js >= 18 LTS | Rust >= 1.77 (`rustup`) | Visual Studio C++ Build Tools, Microsoft Edge WebView2 (pre-installed on Win 10/11) |
-| **macOS** (Apple Silicon & Intel) | Node.js >= 18 LTS | Rust >= 1.77 (`rustup`) | Xcode Command Line Tools (`xcode-select --install`) |
-| **Linux** (Ubuntu / Debian / Fedora / Arch) | Node.js >= 18 LTS | Rust >= 1.77 (`rustup`) | `libwebkit2gtk-4.1-dev`, `libssl-dev`, `libsecret-1-dev`, `build-essential`, `pkg-config` |
+| **Windows 10/11** | Node.js >= 20 LTS (`nvm-windows`), pnpm >= 9 | Rust >= 1.77 (`rustup`) | Visual Studio C++ Build Tools, Microsoft Edge WebView2 (pre-installed on Win 10/11) |
+| **macOS** (Apple Silicon & Intel) | Node.js >= 20 LTS (`nvm`), pnpm >= 9 | Rust >= 1.77 (`rustup`) | Xcode Command Line Tools (`xcode-select --install`) |
+| **Linux** (Ubuntu / Debian / Fedora / Arch) | Node.js >= 20 LTS (`nvm`), pnpm >= 9 | Rust >= 1.77 (`rustup`) | `libwebkit2gtk-4.1-dev`, `libssl-dev`, `libsecret-1-dev`, `build-essential`, `pkg-config` |
 
 ### Quick dependency installation for Linux:
 ```bash
@@ -32,20 +32,20 @@ The project supports two flexible development modes:
 1. **Web Dev Mode (`--web`)**: Runs the Vite frontend in standard web browsers with the mock sandbox engine. Extremely fast for developing UI, Tailwind CSS, and React components without requiring a native Rust build.
 2. **Desktop App Mode (`--app`)**: Launches the native Tauri desktop window with synchronized Hot Reload for both Frontend (Vite HMR) and Backend (Rust recompilation via Cargo).
 
-### Method 1: Standard npm Scripts (Recommended & Cross-Platform)
+### Method 1: Standard pnpm Scripts (Recommended & Cross-Platform)
 ```bash
 # 1. Run Web Browser Hot Reload (Fastest for UI development)
-npm run dev
+pnpm run dev
 # or
-npm run dev:web
+pnpm run dev:web
 
 # 2. Run Native Desktop App with Rust backend hot reload
-npm run dev:app
+pnpm run dev:app
 # or
-npm run dev:desktop
+pnpm run dev:desktop
 ```
 
-On macOS, the dev scripts pass a Cargo wrapper to Tauri's `--runner` option. The wrapper configures Cargo's executable runner to create a temporary `.app` bundle under the Cargo target directory, sign it ad-hoc with the app's bundle identifier, and launch the compiled app inside it. The signature binds Info.plist and resources to the same identity that UserNotifications uses for permission requests. No Apple developer certificate is needed for this local dev signature. The runner copies/clones the executable before signing so Cargo's binary is unchanged, and preserves console logs. When Tauri stops Cargo on a Rust reload, the executable runner stops its app too, allowing the replacement to start without being blocked by the old single instance. Running the backend executable directly from `backend/target/debug` does not support macOS notifications. Browser-only development (`npm run dev` or `dev:web`) has no native notification permissions.
+On macOS, the dev scripts pass a Cargo wrapper to Tauri's `--runner` option. The wrapper configures Cargo's executable runner to create a temporary `.app` bundle under the Cargo target directory, sign it ad-hoc with the app's bundle identifier, and launch the compiled app inside it. The signature binds Info.plist and resources to the same identity that UserNotifications uses for permission requests. No Apple developer certificate is needed for this local dev signature. The runner copies/clones the executable before signing so Cargo's binary is unchanged, and preserves console logs. When Tauri stops Cargo on a Rust reload, the executable runner stops its app too, allowing the replacement to start without being blocked by the old single instance. Running the backend executable directly from `backend/target/debug` does not support macOS notifications. Browser-only development (`pnpm run dev` or `dev:web`) has no native notification permissions.
 
 ### Method 2: Direct Node.js Script (`scripts/dev.mjs`)
 The cross-platform Node.js script automatically detects the host OS, checks system prerequisites, and verifies port 1420 availability:
@@ -79,7 +79,7 @@ The custom `--port` option applies only to web mode. Tauri desktop development u
 
 ## 3. Optimized Production Packaging (Build + Release)
 
-Every project build entry point (`scripts/build.mjs`, `build.ps1`, `build.sh`, `build.cmd`, `npm run build`, `npm run build:web`, `npm run build:app`, and `npm run build:prod`) increments the SemVer PATCH component once before building and synchronizes npm, Cargo, Tauri, and About metadata. Web-only builds also increment PATCH. A failed build attempt keeps the incremented version; fix the issue and run another build to get the next PATCH version.
+Every project build entry point (`scripts/build.mjs`, `build.ps1`, `build.sh`, `build.cmd`, `pnpm run build`, `pnpm run build:web`, `pnpm run build:app`, and `pnpm run build:prod`) increments the SemVer PATCH component once before building and synchronizes npm, Cargo, Tauri, and About metadata. Web-only builds also increment PATCH. A failed build attempt keeps the incremented version; fix the issue and run another build to get the next PATCH version.
 
 The production build pipeline automatically applies deep optimizations:
 1. **TypeScript Strict Verification**: Runs `tsc --noEmit` automatically to prevent any type errors before bundling.
@@ -92,15 +92,15 @@ The production build pipeline automatically applies deep optimizations:
    - `strip = true`: Strips debug symbols and symbol tables from the final executable.
 4. **Automated SHA-256 Checksums**: Generates a summary table displaying package file sizes and integrity hashes.
 
-### Method 1: Standard npm Scripts
+### Method 1: Standard pnpm Scripts
 ```bash
 # Package production desktop installers for the current OS
-npm run build:prod
+pnpm run build:prod
 # or
-npm run build:app
+pnpm run build:app
 
 # Build static web distribution only (dist/)
-npm run build:web
+pnpm run build:web
 ```
 
 ### Method 2: Cross-Platform Node.js Script (`scripts/build.mjs`)

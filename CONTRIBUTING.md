@@ -35,12 +35,12 @@ To work on Stage0 locally, you will need:
 
 2. **Install frontend dependencies:**
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Start the local development environment:**
    ```bash
-   npm run dev:app
+   pnpm run dev:app
    ```
    *This starts the Vite dev server and opens the native Tauri application with live reload enabled.*
 
@@ -97,7 +97,7 @@ Before submitting your changes, ensure that all static checks pass:
 
 1. **Typecheck Frontend:**
    ```bash
-   npm run typecheck
+   pnpm run typecheck
    ```
 
 2. **Check Rust Backend:**
@@ -107,7 +107,7 @@ Before submitting your changes, ensure that all static checks pass:
 
 3. **Build Bundle:**
    ```bash
-   npm run build
+   pnpm run build
    ```
 
 ---

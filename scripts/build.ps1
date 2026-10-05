@@ -47,10 +47,32 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Verify Node.js & nvm/nvm-windows support
+if (Test-Path "$RootDir\.nvmrc") {
+    $TargetNodeVer = (Get-Content "$RootDir\.nvmrc" -Raw).Trim()
+    if (Get-Command "nvm" -ErrorAction SilentlyContinue) {
+        $CurrentNode = if (Get-Command "node" -ErrorAction SilentlyContinue) { (node -v).TrimStart('v') } else { "" }
+        if ($CurrentNode -ne $TargetNodeVer -and -not $CurrentNode.StartsWith($TargetNodeVer.Split('.')[0])) {
+            Write-Host "[INFO] nvm detected. Switching to Node $TargetNodeVer from .nvmrc..." -ForegroundColor Cyan
+            try {
+                nvm use $TargetNodeVer | Out-Null
+            } catch {
+                Write-Host "[WARN] Could not automatically switch Node version with nvm. You can run: nvm use $TargetNodeVer" -ForegroundColor Yellow
+            }
+        }
+    }
+}
+
+if (-not (Get-Command "pnpm" -ErrorAction SilentlyContinue)) {
+    Write-Host "[ERROR] pnpm is not found in PATH. Stage0 enforces pnpm." -ForegroundColor Red
+    Write-Host "Install pnpm via: corepack enable  OR  npm install -g pnpm" -ForegroundColor Yellow
+    exit 1
+}
+
 # 1. TypeScript Verification
 if (-not $SkipTypeCheck) {
     Write-Host "[1/4] Running TypeScript strict type checking..." -ForegroundColor Cyan
-    npx tsc --noEmit
+    pnpm run typecheck
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] TypeScript validation failed." -ForegroundColor Red
         exit 1
@@ -69,7 +91,7 @@ Write-Host ""
 
 # 3. Compile Frontend with Vite
 Write-Host "[3/4] Compiling optimized frontend bundle with Vite..." -ForegroundColor Cyan
-npx vite build
+pnpm vite build
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Vite build failed." -ForegroundColor Red
     exit 1
@@ -90,7 +112,7 @@ Write-Host ""
 if (-not $env:RUSTFLAGS) {
     # Keep standard target CPU architecture compatibility
 }
-npx tauri build
+pnpm tauri build
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Tauri build failed." -ForegroundColor Red

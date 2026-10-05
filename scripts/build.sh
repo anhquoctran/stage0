@@ -31,6 +31,18 @@ echo -e "${CYAN}======================================================${RESET}"
 echo -e "${DIM}Platform:${RESET} ${BOLD}${OS_NAME}${RESET} (${ARCH_NAME})"
 echo -e "${CYAN}------------------------------------------------------${RESET}\n"
 
+# Check .nvmrc and nvm
+if [ -f ".nvmrc" ] && command -v nvm >/dev/null 2>&1; then
+  echo -e "${CYAN}✦ Reading .nvmrc and switching Node version...${RESET}"
+  nvm use >/dev/null 2>&1 || true
+fi
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo -e "${RED}❌ Error: pnpm is required but not installed.${RESET}"
+  echo "Stage0 enforces pnpm. Install via: corepack enable  OR  npm install -g pnpm"
+  exit 1
+fi
+
 # 0. Increment PATCH version and synchronize software about metadata
 echo -e "${BOLD}[0/4] Bumping PATCH version and synchronizing release metadata...${RESET}"
 node scripts/bump-version.mjs
@@ -38,8 +50,8 @@ node scripts/generate-about-info.mjs
 echo -e ""
 
 # 1. Strict TypeScript verification
-echo -e "${BOLD}[1/4] Running TypeScript verification (tsc --noEmit)...${RESET}"
-npx tsc --noEmit
+echo -e "${BOLD}[1/4] Running TypeScript verification (pnpm run typecheck)...${RESET}"
+pnpm run typecheck
 echo -e "${GREEN}✓ TypeScript verification passed.${RESET}\n"
 
 # 2. Clean previous artifacts
@@ -49,7 +61,7 @@ echo -e "${GREEN}✓ Cleaned dist/ directory.${RESET}\n"
 
 # 3. Build optimized frontend with Vite
 echo -e "${BOLD}[3/4] Compiling frontend bundle with Vite...${RESET}"
-npx vite build
+pnpm vite build
 echo -e "${GREEN}✓ Frontend production bundle created.${RESET}\n"
 
 # Check if web-only flag was passed
@@ -65,7 +77,7 @@ echo -e "${DIM}   Optimizations: LTO=true, Opt-level=3, Codegen-units=1, Strip=t
 if [ -z "$RUSTFLAGS" ]; then
   export RUSTFLAGS=""
 fi
-npx tauri build
+pnpm tauri build
 
 # 5. Summary and Checksums
 echo -e "\n${CYAN}======================================================${RESET}"

@@ -1,3 +1,4 @@
+pub mod ai;
 pub mod commands;
 pub mod credentials;
 pub mod db;
@@ -164,6 +165,16 @@ pub fn run() {
             commands::store_ai_api_key,
             commands::has_ai_api_key,
             commands::delete_ai_api_key,
+            commands::ai_detect_cli,
+            commands::ai_execute_cli,
+            commands::copilot_start_device_flow,
+            commands::copilot_poll_token,
+            commands::copilot_check_status,
+            commands::copilot_disconnect,
+            commands::google_oauth_start,
+            commands::google_oauth_check_status,
+            commands::google_oauth_disconnect,
+            commands::ai_chat_dispatch,
             commands::get_available_sandboxes,
             commands::get_active_sandbox,
             commands::set_active_sandbox,
