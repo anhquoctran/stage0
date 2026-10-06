@@ -169,7 +169,7 @@ Analyze incoming code diffs and discussions:
       BOT_CATEGORIES.find((c) => c.id === cat) || {
         id: cat,
         label: cat,
-        color: '#64748b',
+        color: 'var(--ctp-subtext0)',
         bg: 'bg-surface1 text-subtext0 border-surface2',
       }
     );
@@ -202,7 +202,7 @@ Analyze incoming code diffs and discussions:
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="px-3 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New Reviewer</span>
@@ -235,7 +235,7 @@ Analyze incoming code diffs and discussions:
         <div className="p-3 bg-surface0/30 border border-surface0 flex items-center justify-between">
           <div>
             <span className="text-[10px] uppercase font-bold text-subtext0 tracking-wider">Custom Bots</span>
-            <div className="text-lg font-bold text-accent mt-0.5">{customCount}</div>
+            <div className="text-lg font-bold text-brand mt-0.5">{customCount}</div>
           </div>
           <div className="w-8 h-8 rounded-lg bg-surface0 flex items-center justify-center text-subtext0">
             <Bot className="w-4 h-4" />
@@ -351,7 +351,7 @@ Analyze incoming code diffs and discussions:
                             Built-in
                           </span>
                         ) : (
-                          <span className="px-1.5 py-0.2 text-[9px] font-mono bg-accent/10 text-accent rounded border border-accent/20">
+                          <span className="px-1.5 py-0.2 text-[9px] font-mono bg-brand/10 text-brand rounded border border-brand/20">
                             Custom
                           </span>
                         )}
@@ -376,7 +376,7 @@ Analyze incoming code diffs and discussions:
                       title={bot.enabled ? 'Click to disable globally' : 'Click to enable globally'}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-[#11111b] shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-base shadow-lg ring-0 transition duration-200 ease-in-out ${
                           bot.enabled ? 'translate-x-4' : 'translate-x-0'
                         }`}
                       />
@@ -446,7 +446,7 @@ Analyze incoming code diffs and discussions:
                       <button
                         type="button"
                         onClick={() => deleteGlobalReviewer(bot.id)}
-                        className="p-1.5 hover:bg-red-500/20 rounded text-subtext0 hover:text-red-400 transition-colors cursor-pointer"
+                        className="p-1.5 hover:bg-red/20 rounded text-subtext0 hover:text-red transition-colors cursor-pointer"
                         title="Delete custom bot"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -475,7 +475,7 @@ Analyze incoming code diffs and discussions:
 
       {/* CREATE / EDIT BOT MODAL */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 bg-crust/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-mantle border border-surface0 w-full max-w-2xl shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-surface0 pb-3">
               <h4 className="text-sm font-bold text-text flex items-center gap-2">
@@ -492,7 +492,7 @@ Analyze incoming code diffs and discussions:
             </div>
 
             {formError && (
-              <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded flex items-center gap-2">
+              <div className="p-2.5 bg-red/10 border border-red/20 text-red text-xs rounded flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{formError}</span>
               </div>
@@ -676,7 +676,7 @@ Analyze incoming code diffs and discussions:
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs rounded transition-colors cursor-pointer shadow-xs"
+                  className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs rounded transition-colors cursor-pointer shadow-xs"
                 >
                   {editingBotId ? 'Update Bot' : 'Create Bot'}
                 </button>
@@ -688,9 +688,9 @@ Analyze incoming code diffs and discussions:
 
       {/* RESET CONFIRMATION MODAL */}
       {showResetConfirm && (
-        <div className="fixed inset-0 z-50 bg-crust/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-mantle border border-surface0 w-full max-w-md shadow-2xl p-5 space-y-4">
-            <div className="flex items-center gap-3 text-amber-400">
+            <div className="flex items-center gap-3 text-yellow">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <h4 className="text-sm font-bold text-text">Reset Default Bot Reviewers?</h4>
             </div>
@@ -711,7 +711,7 @@ Analyze incoming code diffs and discussions:
                   resetGlobalReviewers();
                   setShowResetConfirm(false);
                 }}
-                className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-[#11111b] font-semibold text-xs rounded cursor-pointer shadow-xs"
+                className="px-4 py-1.5 bg-yellow hover:brightness-95 text-on-accent font-semibold text-xs rounded cursor-pointer shadow-xs"
               >
                 Reset to Defaults
               </button>

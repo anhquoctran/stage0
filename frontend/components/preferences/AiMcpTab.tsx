@@ -535,10 +535,10 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         : 'text-subtext0 hover:text-text hover:bg-surface0/60 border border-transparent'
                     }`}
                   >
-                    <ProviderIcon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-accent' : 'text-subtext0'}`} />
+                    <ProviderIcon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-brand' : 'text-subtext0'}`} />
                     <span className="whitespace-nowrap">{getProviderDisplayName(p.id)}</span>
                     {connected ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Connected / Configured" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-green shrink-0" title="Connected / Configured" />
                     ) : (
                       <span className="w-1.5 h-1.5 rounded-full bg-surface2 shrink-0 opacity-30" />
                     )}
@@ -553,7 +553,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
             {/* Header: Active Provider Info & Docs */}
             <div className="flex items-center justify-between pb-3 border-b border-surface1/60">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-surface1 border border-surface2 flex items-center justify-center text-accent shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-surface1 border border-surface2 flex items-center justify-center text-brand shrink-0">
                   <ActiveProviderIcon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
@@ -632,16 +632,16 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   {chatgptAuthStatus?.connected ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-text">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
                         <span>Signed in as <strong className="font-mono text-text">{chatgptAuthStatus.account_email || 'ChatGPT Subscriber'}</strong></span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-green/10 text-green border border-green/20 font-mono">
                           ChatGPT Plus / Pro
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => void disconnectChatGptOAuth()}
-                        className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-[11px] text-red-400 border border-red-500/30 transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded bg-red/10 hover:bg-red/20 text-[11px] text-red border border-red/30 transition-colors cursor-pointer"
                       >
                         Sign Out
                       </button>
@@ -667,16 +667,16 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   {copilotStatus?.connected ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-text">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
                         <span>GitHub User: <strong className="font-mono text-text">{copilotStatus.username || 'Subscriber'}</strong></span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-green/10 text-green border border-green/20 font-mono">
                           Copilot Active
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => disconnectCopilot()}
-                        className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-[11px] text-red-400 border border-red-500/30 transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded bg-red/10 hover:bg-red/20 text-[11px] text-red border border-red/30 transition-colors cursor-pointer"
                       >
                         Sign Out
                       </button>
@@ -690,14 +690,14 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         </button>
                       </div>
                       <div className="flex items-center justify-between p-2 bg-surface0 border border-surface2 rounded">
-                        <span className="text-base font-mono font-bold tracking-widest text-accent">{copilotDeviceCode.user_code}</span>
+                        <span className="text-base font-mono font-bold tracking-widest text-brand">{copilotDeviceCode.user_code}</span>
                         <button
                           type="button"
                           onClick={() => {
                             void navigator.clipboard.writeText(copilotDeviceCode.user_code);
                             void openUrlInBrowser(copilotDeviceCode.verification_uri);
                           }}
-                          className="px-2.5 py-1 rounded bg-accent hover:bg-accent/90 text-surface0 font-bold text-xs flex items-center gap-1 cursor-pointer"
+                          className="px-2.5 py-1 rounded bg-brand hover:bg-brand/90 text-on-accent font-bold text-xs flex items-center gap-1 cursor-pointer"
                         >
                           <Copy className="w-3 h-3" />
                           <span>Copy &amp; Open GitHub</span>
@@ -725,9 +725,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   {cliStatus.claude?.available ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-text">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
                         <span className="font-mono text-text">Claude Code CLI ({cliStatus.claude.version || 'Ready'})</span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-green/10 text-green border border-green/20 font-mono">
                           Session Ready
                         </span>
                       </div>
@@ -741,7 +741,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                             setTestingCliType(null);
                           }}
                           disabled={testingCliType === 'claude'}
-                          className="px-2.5 py-1 rounded bg-accent/20 hover:bg-accent/30 text-[11px] text-accent border border-accent/40 cursor-pointer"
+                          className="px-2.5 py-1 rounded bg-brand/15 hover:bg-brand/25 text-[11px] text-brand border border-brand/40 cursor-pointer"
                         >
                           {testingCliType === 'claude' ? 'Testing...' : 'Test CLI'}
                         </button>
@@ -763,7 +763,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   ) : (
                     <div className="flex items-center justify-between gap-3 text-xs">
                       <div>
-                        <span className="text-yellow-400 font-semibold">Claude Code CLI not found in PATH.</span>
+                        <span className="text-yellow font-semibold">Claude Code CLI not found in PATH.</span>
                         <span className="text-subtext0 block text-[11px]">Run: <code className="font-mono text-text">npm i -g @anthropic-ai/claude-code</code> then <code className="font-mono text-text">claude login</code></span>
                       </div>
                       <button
@@ -785,13 +785,13 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   {googleAuthStatus?.connected ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-text">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
                         <span>Google Account: <strong className="font-mono text-text">{googleAuthStatus.account_email || 'Connected'}</strong></span>
                       </div>
                       <button
                         type="button"
                         onClick={() => disconnectGoogleOAuth()}
-                        className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-[11px] text-red-400 border border-red-500/30 cursor-pointer"
+                        className="px-2.5 py-1 rounded bg-red/10 hover:bg-red/20 text-[11px] text-red border border-red/30 cursor-pointer"
                       >
                         Sign Out
                       </button>
@@ -817,9 +817,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   {cliStatus.grok?.available ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-text">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
                         <span className="font-mono text-text">SuperGrok CLI ({cliStatus.grok.version || 'Ready'})</span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-green/10 text-green border border-green/20 font-mono">
                           SuperGrok
                         </span>
                       </div>
@@ -833,7 +833,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                             setTestingCliType(null);
                           }}
                           disabled={testingCliType === 'grok'}
-                          className="px-2.5 py-1 rounded bg-accent/20 hover:bg-accent/30 text-[11px] text-accent border border-accent/40 cursor-pointer"
+                          className="px-2.5 py-1 rounded bg-brand/15 hover:bg-brand/25 text-[11px] text-brand border border-brand/40 cursor-pointer"
                         >
                           {testingCliType === 'grok' ? 'Testing...' : 'Test CLI'}
                         </button>
@@ -855,7 +855,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   ) : (
                     <div className="flex items-center justify-between gap-3 text-xs">
                       <div>
-                        <span className="text-yellow-400 font-semibold">SuperGrok / GrokBuild CLI not detected.</span>
+                        <span className="text-yellow font-semibold">SuperGrok / GrokBuild CLI not detected.</span>
                         <span className="text-subtext0 block text-[11px]">Install SuperGrok CLI to use SuperGrok / X Premium+ subscription.</span>
                       </div>
                       <button
@@ -877,9 +877,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-semibold text-text">
-                      API Secret Key <span className="text-red-400">*</span>
+                      API Secret Key <span className="text-red">*</span>
                     </label>
-                    <span className="text-[10px] text-emerald-400/90 font-mono">
+                    <span className="text-[10px] text-green/90 font-mono">
                       {hasSavedApiKey ? '✓ Stored securely in OS Keyring' : 'Saved in encrypted OS Keyring'}
                     </span>
                   </div>
@@ -918,7 +918,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               ) : (
                 /* Ollama Local Informational Box */
                 <div className="p-3 bg-base/60 border border-surface1 rounded-lg flex items-center gap-2.5 text-xs text-subtext0">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-green shrink-0" />
                   <span>
                     Ollama runs offline on your local machine (http://localhost:11434). No API key or cloud subscription required.
                   </span>
@@ -1082,8 +1082,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 <div
                   className={`flex items-center gap-2 px-2.5 py-1 rounded text-xs animate-in fade-in ${
                     aiTestResult.success
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                      : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                      ? 'bg-green/10 text-green border border-green/20'
+                      : 'bg-red/10 text-red border border-red/20'
                   }`}
                 >
                   {aiTestResult.success ? (
@@ -1382,9 +1382,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
+                  className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
                 >
-                  <Check className="w-3.5 h-3.5 text-[#11111b]" />
+                  <Check className="w-3.5 h-3.5 text-on-accent" />
                   <span>{editingServerId ? 'Save Changes' : 'Register Server'}</span>
                 </button>
               </div>
@@ -1681,7 +1681,7 @@ Keep response under 200 words.`,
 
       {/* MODAL: IMPORT / EXPORT MCP CONFIG JSON */}
       {isJsonModalOpen && (
-        <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-crust/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-mantle border border-surface0 w-full max-w-2xl shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150">
             <div
               data-tauri-drag-region

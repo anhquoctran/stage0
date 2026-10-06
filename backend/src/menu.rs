@@ -1,9 +1,52 @@
 use tauri::{
     menu::{IconMenuItemBuilder, Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder},
-    AppHandle, Emitter, Wry,
+    AppHandle, Emitter, Manager, Wry,
 };
 use crate::git::RepoInfo;
-use crate::window_manager::{create_welcome_window, focused_window};
+use crate::window_manager::{create_welcome_window, focused_window, WindowManagerState};
+
+pub fn sync_repo_dependent_menus_for_window(app: &AppHandle, window_label: &str) {
+    let enabled = app
+        .try_state::<WindowManagerState>()
+        .is_some_and(|manager| manager.has_repository(window_label));
+
+    let Some(app_menu) = app.menu() else {
+        return;
+    };
+    if let Some(repository_menu) = app_menu
+        .get("repository_menu")
+        .and_then(|item| item.as_submenu().cloned())
+    {
+        let _ = repository_menu.set_enabled(enabled);
+    }
+
+    if let Some(view_menu) = app_menu
+        .get("view_menu")
+        .and_then(|item| item.as_submenu().cloned())
+    {
+        for item_id in [
+            "view_split",
+            "view_unified",
+            "toggle_blame",
+            "toggle_inline_blame",
+        ] {
+            if let Some(item) = view_menu.get(item_id).and_then(|item| item.as_menuitem().cloned()) {
+                let _ = item.set_enabled(enabled);
+            }
+        }
+    }
+
+    if let Some(edit_menu) = app_menu
+        .get("edit_menu")
+        .and_then(|item| item.as_submenu().cloned())
+    {
+        for item_id in ["view_blame", "copy_rel_path"] {
+            if let Some(item) = edit_menu.get(item_id).and_then(|item| item.as_menuitem().cloned()) {
+                let _ = item.set_enabled(enabled);
+            }
+        }
+    }
+}
 
 #[tauri::command]
 pub fn update_recent_repositories_menu(
@@ -62,6 +105,11 @@ pub fn update_recent_repositories_menu(
 }
 
 pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::error::Error>> {
+    let repository_menu_enabled = focused_window(app).is_some_and(|window| {
+        app.state::<WindowManagerState>()
+            .has_repository(window.label())
+    });
+
     // 1. Application Menu (App name "Stage0" in bold on macOS)
     let app_submenu = SubmenuBuilder::new(app, "Stage0")
         .item(&MenuItemBuilder::with_id("about", "About Stage0").build(app)?)
@@ -90,7 +138,7 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .build()?;
 
     // 3. Edit Menu
-    let edit_submenu = SubmenuBuilder::new(app, "Edit")
+    let edit_submenu = SubmenuBuilder::with_id(app, "edit_menu", "Edit")
         .undo()
         .redo()
         .separator()
@@ -99,8 +147,8 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .paste()
         .select_all()
         .separator()
-        .item(&MenuItemBuilder::with_id("view_blame", "View Git Blame").accelerator("Alt+B").build(app)?)
-        .item(&MenuItemBuilder::with_id("copy_rel_path", "Copy Relative Path").accelerator("CmdOrCtrl+Shift+C").build(app)?)
+        .item(&MenuItemBuilder::with_id("view_blame", "View Git Blame").accelerator("Alt+B").enabled(repository_menu_enabled).build(app)?)
+        .item(&MenuItemBuilder::with_id("copy_rel_path", "Copy Relative Path").accelerator("CmdOrCtrl+Shift+C").enabled(repository_menu_enabled).build(app)?)
         .build()?;
 
     let performance_item = IconMenuItemBuilder::with_id(
@@ -115,12 +163,12 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .build()?;
 
     // 4. View Menu
-    let view_submenu = SubmenuBuilder::new(app, "View")
-        .item(&MenuItemBuilder::with_id("view_split", "Side-by-side (Split)").accelerator("CmdOrCtrl+1").build(app)?)
-        .item(&MenuItemBuilder::with_id("view_unified", "Inline (Unified)").accelerator("CmdOrCtrl+2").build(app)?)
+    let view_submenu = SubmenuBuilder::with_id(app, "view_menu", "View")
+        .item(&MenuItemBuilder::with_id("view_split", "Side-by-side (Split)").accelerator("CmdOrCtrl+1").enabled(repository_menu_enabled).build(app)?)
+        .item(&MenuItemBuilder::with_id("view_unified", "Inline (Unified)").accelerator("CmdOrCtrl+2").enabled(repository_menu_enabled).build(app)?)
         .separator()
-        .item(&MenuItemBuilder::with_id("toggle_blame", "Toggle File Blame").build(app)?)
-        .item(&MenuItemBuilder::with_id("toggle_inline_blame", "Toggle Inline Blame").accelerator("Alt+Shift+B").build(app)?)
+        .item(&MenuItemBuilder::with_id("toggle_blame", "Toggle File Blame").enabled(repository_menu_enabled).build(app)?)
+        .item(&MenuItemBuilder::with_id("toggle_inline_blame", "Toggle Inline Blame").accelerator("Alt+Shift+B").enabled(repository_menu_enabled).build(app)?)
         .separator()
         .item(&performance_submenu)
         .separator()
@@ -128,7 +176,8 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .build()?;
 
     // 5. Repository Menu
-    let repo_submenu = SubmenuBuilder::new(app, "Repository")
+    let repo_submenu = SubmenuBuilder::with_id(app, "repository_menu", "Repository")
+        .enabled(repository_menu_enabled)
         .item(&MenuItemBuilder::with_id("new_mr", "New Virtual MR...").accelerator("CmdOrCtrl+T").build(app)?)
         .separator()
         .item(&MenuItemBuilder::with_id("fetch", "Fetch (All & Prune)").accelerator("CmdOrCtrl+Shift+F").build(app)?)

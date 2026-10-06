@@ -559,7 +559,7 @@ export const CloneRepoModal: React.FC = () => {
                   !remoteUrl.trim() ||
                   !destinationPath.trim()
                 }
-                className="flex items-center gap-2 px-4 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs shadow-md shadow-brand/20 border border-brand transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="flex items-center gap-2 px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs shadow-md shadow-brand/20 border border-brand transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 {isCloning ? (
                   <>

@@ -14,6 +14,60 @@
     />
     <title>Stage0 - Virtual MR Sandbox</title>
     <style>
+      :root,
+      [data-theme="mocha"],
+      [data-theme="dark"] {
+        --splash-bg: #11111b;
+        --splash-text: #cdd6f4;
+        --splash-subtext: #bac2de;
+        --splash-status: #a6adc8;
+        --splash-muted: #7f849c;
+        --splash-brand: #b87ff4;
+        --splash-title-accent: #89b4fa;
+        --splash-logo-border: rgba(184, 127, 244, 0.4);
+        --splash-logo-bg: linear-gradient(135deg, rgba(184, 127, 244, 0.2), rgba(184, 127, 244, 0.1) 55%, #313244);
+        --splash-logo-shadow: 0 12px 30px rgba(184, 127, 244, 0.12);
+        --splash-track-border: rgba(49, 50, 68, 0.4);
+        --splash-track-bg: rgba(49, 50, 68, 0.6);
+        --splash-glow-blue: rgba(137, 180, 250, 0.1);
+        --splash-glow-purple: rgba(203, 166, 247, 0.1);
+        --splash-peach: #fab387;
+        --splash-teal: #94e2d5;
+        --splash-green: #a6e3a1;
+        --splash-error: #f38ba8;
+        --splash-warning: #fab387;
+      }
+
+      [data-theme="mocha-light"],
+      [data-theme="latte"],
+      [data-theme="light"] {
+        --splash-bg: #dce0e8;
+        --splash-text: #3b3e53;
+        --splash-subtext: #4b5066;
+        --splash-status: #5b6075;
+        --splash-muted: #666c80;
+        --splash-brand: #8839ef;
+        --splash-title-accent: #1e66f5;
+        --splash-logo-border: rgba(136, 57, 239, 0.38);
+        --splash-logo-bg: linear-gradient(135deg, rgba(136, 57, 239, 0.16), rgba(136, 57, 239, 0.07) 55%, #bec4d0);
+        --splash-logo-shadow: 0 12px 30px rgba(76, 79, 105, 0.16);
+        --splash-track-border: rgba(150, 158, 174, 0.72);
+        --splash-track-bg: rgba(190, 196, 208, 0.72);
+        --splash-glow-blue: rgba(30, 102, 245, 0.12);
+        --splash-glow-purple: rgba(136, 57, 239, 0.1);
+        --splash-peach: #fe640b;
+        --splash-teal: #179299;
+        --splash-green: #40a02b;
+        --splash-error: #c62845;
+        --splash-warning: #9a5b00;
+      }
+
+      html,
+      body {
+        background-color: var(--splash-bg);
+        color: var(--splash-text);
+      }
+
       #startup-splash {
         position: fixed;
         inset: 0;
@@ -23,8 +77,8 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background: #11111b;
-        color: #cdd6f4;
+        background: var(--splash-bg);
+        color: var(--splash-text);
         font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         user-select: none;
         opacity: 1;
@@ -50,13 +104,13 @@
       #startup-splash .splash-glow-top {
         top: 25%;
         left: -80px;
-        background: rgba(137, 180, 250, 0.1);
+        background: var(--splash-glow-blue);
       }
 
       #startup-splash .splash-glow-bottom {
         right: -80px;
         bottom: 25%;
-        background: rgba(203, 166, 247, 0.1);
+        background: var(--splash-glow-purple);
       }
 
       #startup-splash .splash-content {
@@ -79,11 +133,11 @@
         justify-content: center;
         gap: 6px;
         margin-bottom: 24px;
-        border: 1px solid rgba(184, 127, 244, 0.4);
+        border: 1px solid var(--splash-logo-border);
         border-radius: 16px;
-        background: linear-gradient(135deg, rgba(184, 127, 244, 0.2), rgba(184, 127, 244, 0.1) 55%, #313244);
-        box-shadow: 0 12px 30px rgba(184, 127, 244, 0.12);
-        color: #b87ff4;
+        background: var(--splash-logo-bg);
+        box-shadow: var(--splash-logo-shadow);
+        color: var(--splash-brand);
       }
 
       #startup-splash .splash-logo svg {
@@ -92,7 +146,7 @@
       }
 
       #startup-splash .splash-logo-label {
-        color: #b87ff4;
+        color: var(--splash-brand);
         font-family: 'Fira Code', 'SFMono-Regular', Consolas, monospace;
         font-size: 10px;
         font-weight: 700;
@@ -101,19 +155,19 @@
 
       #startup-splash .splash-title {
         margin: 0 0 6px;
-        color: #cdd6f4;
+        color: var(--splash-text);
         font-size: 24px;
         font-weight: 800;
         letter-spacing: -0.02em;
       }
 
       #startup-splash .splash-title-accent {
-        color: #89b4fa;
+        color: var(--splash-title-accent);
       }
 
       #startup-splash .splash-tagline {
         margin: 0 0 24px;
-        color: #bac2de;
+        color: var(--splash-subtext);
         font-size: 12px;
         line-height: 1.5;
       }
@@ -123,22 +177,22 @@
         height: 6px;
         margin-bottom: 14px;
         overflow: hidden;
-        border: 1px solid rgba(49, 50, 68, 0.4);
+        border: 1px solid var(--splash-track-border);
         border-radius: 999px;
-        background: rgba(49, 50, 68, 0.6);
+        background: var(--splash-track-bg);
       }
 
       #startup-splash .splash-progress {
         width: 66.666%;
         height: 100%;
         border-radius: 999px;
-        background: #b87ff4;
+        background: var(--splash-brand);
         animation: startup-splash-progress 1.6s ease-in-out infinite;
       }
 
       #startup-splash .splash-status {
         min-height: 20px;
-        color: #a6adc8;
+        color: var(--splash-status);
         font-family: 'Fira Code', 'SFMono-Regular', Consolas, monospace;
         font-size: 11px;
       }
@@ -148,7 +202,7 @@
         align-items: center;
         gap: 12px;
         margin-top: 32px;
-        color: #7f849c;
+        color: var(--splash-muted);
         font-size: 10px;
         font-weight: 500;
       }
@@ -173,7 +227,7 @@
       }
     </style>
   </head>
-  <body class="bg-crust text-text antialiased h-screen overflow-hidden select-none" style="background-color: #11111b; margin: 0;">
+  <body class="bg-crust text-text antialiased h-screen overflow-hidden select-none" style="background-color: var(--splash-bg); margin: 0;">
     <div id="root" class="h-full w-full"></div>
     <div id="startup-splash" role="status" aria-live="polite">
       <div class="splash-glow splash-glow-top"></div>
@@ -195,11 +249,11 @@
         </div>
         <div class="splash-status">Initializing Stage0 runtime...</div>
         <div class="splash-highlights" aria-hidden="true">
-          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#fab387"></span>No Checkout</span>
+          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:var(--splash-peach)"></span>No Checkout</span>
           <span>·</span>
-          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#94e2d5"></span>git merge-tree</span>
+          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:var(--splash-teal)"></span>git merge-tree</span>
           <span>·</span>
-          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:#a6e3a1"></span>Sandbox Adapters</span>
+          <span class="splash-highlight"><span class="splash-highlight-dot" style="background:var(--splash-green)"></span>Sandbox Adapters</span>
         </div>
       </div>
     </div>

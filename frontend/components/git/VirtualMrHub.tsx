@@ -213,7 +213,7 @@ export const VirtualMrHub: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSaveTitle}
-                className="p-1 rounded bg-brand hover:bg-brand/90 text-[#11111b] cursor-pointer shadow-xs"
+                className="p-1 rounded bg-brand hover:bg-brand/90 text-on-accent cursor-pointer shadow-xs"
                 title="Save"
               >
                 <Check className="w-4 h-4" />

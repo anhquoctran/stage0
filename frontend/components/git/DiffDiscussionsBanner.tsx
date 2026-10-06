@@ -129,7 +129,7 @@ export const DiffDiscussionsBanner: React.FC<Props> = ({ selectedFile }) => {
             <button
               type="button"
               onClick={() => setIsAddingComment(!isAddingComment)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-[11px] transition-colors cursor-pointer shadow-xs"
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-brand hover:bg-brand/90 text-on-accent font-semibold text-[11px] transition-colors cursor-pointer shadow-xs"
             >
               <Plus className="w-3 h-3" />
               <span>Add Comment</span>

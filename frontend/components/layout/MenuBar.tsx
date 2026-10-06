@@ -121,6 +121,13 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
 
   const menuBarRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (currentRepo) return;
+
+    setActiveMenu((menu) => (menu === 'repository' || menu === 'edit' ? null : menu));
+    setShowOpenInSubmenu(false);
+  }, [currentRepo]);
+
   // Close menus when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -572,18 +579,21 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
         <div className="relative h-full flex items-center">
           <button
             type="button"
+            disabled={!currentRepo}
             onClick={() => handleMenuClick('edit')}
-            onMouseEnter={() => handleMenuHover('edit')}
-            className={`px-2.5 py-1 rounded text-xs font-normal transition-colors cursor-pointer ${
-              activeMenu === 'edit'
-                ? 'bg-surface1 text-text'
-                : 'text-subtext1 hover:text-text hover:bg-surface0'
+            onMouseEnter={() => currentRepo && handleMenuHover('edit')}
+            className={`px-2.5 py-1 rounded text-xs font-normal transition-colors ${
+              !currentRepo
+                ? 'text-subtext0/50 cursor-not-allowed'
+                : activeMenu === 'edit'
+                  ? 'bg-surface1 text-text cursor-pointer'
+                  : 'text-subtext1 hover:text-text hover:bg-surface0 cursor-pointer'
             }`}
           >
             Edit
           </button>
 
-          {activeMenu === 'edit' && (
+          {currentRepo && activeMenu === 'edit' && (
             <div className="absolute left-0 top-full mt-0.5 w-68 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
               <button
                 type="button"
@@ -769,7 +779,8 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
 
           {activeMenu === 'view' && (
             <div className="absolute left-0 top-full mt-0.5 w-64 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
-              <button
+              {currentRepo && <>
+                <button
                 type="button"
                 onClick={() => {
                   setViewMode('split');
@@ -785,9 +796,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <span className="text-[10px] text-subtext0 font-mono">S</span>
                   {viewMode === 'split' && <Check className="w-3.5 h-3.5 text-text" />}
                 </div>
-              </button>
+                </button>
 
-              <button
+                <button
                 type="button"
                 onClick={() => {
                   setViewMode('unified');
@@ -803,11 +814,11 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <span className="text-[10px] text-subtext0 font-mono">U</span>
                   {viewMode === 'unified' && <Check className="w-3.5 h-3.5 text-text" />}
                 </div>
-              </button>
+                </button>
 
-              <div className="my-1 border-t border-surface0" />
+                <div className="my-1 border-t border-surface0" />
 
-              <button
+                <button
                 type="button"
                 onClick={() => {
                   toggleFileBlame();
@@ -823,9 +834,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <span className="text-[10px] text-subtext0 font-mono">{shortcut('Alt+B')}</span>
                   {fileViewTab === 'blame' && <Check className="w-3.5 h-3.5 text-text" />}
                 </div>
-              </button>
+                </button>
 
-              <button
+                <button
                 type="button"
                 onClick={() => {
                   toggleInlineBlame();
@@ -841,11 +852,11 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <span className="text-[10px] text-subtext0 font-mono">{shortcut('Alt+Shift+B')}</span>
                   {showInlineBlame && <Check className="w-3.5 h-3.5 text-text" />}
                 </div>
-              </button>
+                </button>
 
-              <div className="my-1 border-t border-surface0" />
+                <div className="my-1 border-t border-surface0" />
 
-              <button
+                <button
                 type="button"
                 onClick={() => {
                   setFileListLayout('flat');
@@ -858,9 +869,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <span>File List: Flat Layout</span>
                 </div>
                 {fileListLayout === 'flat' && <Check className="w-3.5 h-3.5 text-text" />}
-              </button>
+                </button>
 
-              <button
+                <button
                 type="button"
                 onClick={() => {
                   setFileListLayout('tree');
@@ -873,9 +884,10 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <span>File List: Tree Layout</span>
                 </div>
                 {fileListLayout === 'tree' && <Check className="w-3.5 h-3.5 text-text" />}
-              </button>
+                </button>
 
-              <div className="my-1 border-t border-surface0" />
+                <div className="my-1 border-t border-surface0" />
+              </>}
 
               <button
                 type="button"
@@ -947,18 +959,21 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
         <div className="relative h-full flex items-center">
           <button
             type="button"
+            disabled={!currentRepo}
             onClick={() => handleMenuClick('repository')}
-            onMouseEnter={() => handleMenuHover('repository')}
-            className={`px-2.5 py-1 rounded text-xs font-normal transition-colors cursor-pointer ${
-              activeMenu === 'repository'
-                ? 'bg-surface1 text-text'
-                : 'text-subtext1 hover:text-text hover:bg-surface0'
+            onMouseEnter={() => currentRepo && handleMenuHover('repository')}
+            className={`px-2.5 py-1 rounded text-xs font-normal transition-colors ${
+              !currentRepo
+                ? 'text-subtext0/50 cursor-not-allowed'
+                : activeMenu === 'repository'
+                  ? 'bg-surface1 text-text cursor-pointer'
+                  : 'text-subtext1 hover:text-text hover:bg-surface0 cursor-pointer'
             }`}
           >
             Repository
           </button>
 
-          {activeMenu === 'repository' && (
+          {currentRepo && activeMenu === 'repository' && (
             <div className="absolute left-0 top-full mt-0.5 w-68 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
               {/* New Virtual MR */}
               <button

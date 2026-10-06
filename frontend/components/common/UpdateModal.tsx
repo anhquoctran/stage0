@@ -273,7 +273,7 @@ export const UpdateModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => void startDownload()}
-                  className="flex items-center gap-1.5 px-5 py-1.5 text-xs font-semibold text-[#11111b] bg-blue hover:brightness-110 transition-all cursor-pointer shadow-sm rounded-none"
+                  className="flex items-center gap-1.5 px-5 py-1.5 text-xs font-semibold text-on-accent bg-blue hover:brightness-110 transition-all cursor-pointer shadow-sm rounded-none"
                 >
                   <DownloadCloud className="w-3.5 h-3.5" />
                   <span>Download &amp; Install</span>
@@ -304,7 +304,7 @@ export const UpdateModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => void installDownloadedUpdate()}
-                  className="flex items-center gap-1.5 px-5 py-1.5 text-xs font-semibold text-[#11111b] bg-green hover:brightness-110 transition-all cursor-pointer shadow-sm rounded-none"
+                  className="flex items-center gap-1.5 px-5 py-1.5 text-xs font-semibold text-on-accent bg-green hover:brightness-110 transition-all cursor-pointer shadow-sm rounded-none"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Open Installer</span>

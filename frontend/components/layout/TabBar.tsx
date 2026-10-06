@@ -90,12 +90,12 @@ export const TabBar: React.FC = () => {
         <button
           type="button"
           onClick={() => openNewMrDraft()}
-          className="flex items-center gap-1.5 px-2.5 py-1 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs cursor-pointer shadow-xs transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs transition-colors"
           title={formatShortcutText('Create new Virtual MR (Ctrl+T)')}
         >
           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
           <span>New Virtual MR</span>
-          <kbd className="ml-1 px-1 py-0.2 text-[9px] font-mono bg-black/15 text-[#11111b] border border-black/10">{formatShortcutText('Ctrl+T')}</kbd>
+          <kbd className="ml-1 px-1 py-0.2 text-[9px] font-mono bg-black/15 text-on-accent border border-black/10">{formatShortcutText('Ctrl+T')}</kbd>
         </button>
       </div>
     );

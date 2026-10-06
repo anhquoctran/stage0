@@ -208,6 +208,27 @@ export const MainLayout: React.FC = () => {
         return;
       }
 
+      const isPreferencesShortcut =
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === ',' || (e.shiftKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT')));
+      if (isPreferencesShortcut) {
+        e.preventDefault();
+        setIsPreferencesOpen(true);
+        return;
+      }
+
+      const isCloneShortcut =
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key.toLowerCase() === 'o' || e.code === 'KeyO');
+      if (isCloneShortcut) {
+        e.preventDefault();
+        setIsCloneModalOpen(true);
+        return;
+      }
+
+      if (!currentRepo) return;
+
       if (e.altKey && !e.ctrlKey && !e.shiftKey && (e.key.toLowerCase() === 'c' || e.code === 'KeyC')) {
         e.preventDefault();
         selectNextConflictFile();
@@ -217,19 +238,6 @@ export const MainLayout: React.FC = () => {
       } else if (e.key === 'ArrowUp' || e.key === 'k') {
         e.preventDefault();
         selectPrevFile();
-      } else if (
-        (e.ctrlKey || e.metaKey) &&
-        (e.key === ',' || (e.shiftKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT')))
-      ) {
-        e.preventDefault();
-        setIsPreferencesOpen(true);
-      } else if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        (e.key.toLowerCase() === 'o' || e.code === 'KeyO')
-      ) {
-        e.preventDefault();
-        setIsCloneModalOpen(true);
       } else if (
         (e.ctrlKey || e.metaKey) &&
         e.shiftKey &&
@@ -357,6 +365,7 @@ export const MainLayout: React.FC = () => {
     setViewMode,
     refreshDiff,
     setIsPreferencesOpen,
+    setIsCloneModalOpen,
     runSync,
     setIsPullFromOpen,
     setIsRebaseFromOpen,

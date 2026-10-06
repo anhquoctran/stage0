@@ -445,7 +445,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
                 type="button"
                 onClick={handleValidateAndAddCustom}
                 disabled={isValidatingCustom || !customPath.trim()}
-                className="flex items-center gap-1 px-3.5 py-1.5 bg-brand text-[#11111b] text-xs font-semibold hover:bg-brand/90 transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                className="flex items-center gap-1 px-3.5 py-1.5 bg-brand text-on-accent text-xs font-semibold hover:bg-brand/90 transition-colors cursor-pointer shrink-0 disabled:opacity-50"
               >
                 {isValidatingCustom ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />

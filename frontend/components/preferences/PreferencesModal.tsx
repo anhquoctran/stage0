@@ -51,8 +51,6 @@ import { SandboxType } from '../../types/git';
 export type PreferenceTab =
   | 'general'
   | 'general-settings'
-  | 'general-guardrails'
-  | 'general-privacy'
   | 'appearance'
   | 'appearance-theme'
   | 'appearance-fonts'
@@ -64,6 +62,7 @@ export type PreferenceTab =
   | 'ai-mcp'
   | 'ai-reviewers'
   | 'ai-sandbox'
+  | 'ai-guardrails'
   | 'git'
   | 'git-binary'
   | 'git-credentials'
@@ -119,20 +118,6 @@ const SETTINGS_TREE: TreeCategory[] = [
         title: 'General Settings',
         description: 'Configure inline annotations, streaming, and workspace behaviors.',
         keywords: ['blame', 'stream', 'accessible', 'general', 'notifications'],
-      },
-      {
-        id: 'general-guardrails',
-        label: 'Security & Guardrails',
-        title: 'Security & Guardrails',
-        description: 'Path restrictions, destructive command blocking, and approval thresholds.',
-        keywords: ['guardrails', 'security', 'sandbox', 'policy', 'safety', 'destructive', 'permission', 'tokens'],
-      },
-      {
-        id: 'general-privacy',
-        label: 'Privacy & Telemetry',
-        title: 'Privacy & Telemetry',
-        description: 'Zero telemetry policy, isolated working trees, and local secret management.',
-        keywords: ['privacy', 'telemetry', 'offline', 'security', 'analytics'],
       },
     ],
   },
@@ -208,6 +193,13 @@ const SETTINGS_TREE: TreeCategory[] = [
         description: 'Review and change the elevated virtual sandbox permissions (In-Memory, Docker, Host).',
         keywords: ['sandbox', 'docker', 'container', 'in_memory', 'isolation', 'terminal', 'permissions'],
       },
+      {
+        id: 'ai-guardrails',
+        label: 'Security & Guardrails',
+        title: 'Security & Guardrails',
+        description: 'Path restrictions, destructive command blocking, and approval thresholds.',
+        keywords: ['guardrails', 'security', 'sandbox', 'policy', 'safety', 'destructive', 'permission', 'tokens'],
+      },
     ],
   },
   {
@@ -266,7 +258,7 @@ const normalizeTab = (tab?: string): PreferenceTab => {
     case 'general':
       return 'general-settings';
     case 'guardrails':
-      return 'general-guardrails';
+      return 'ai-guardrails';
     case 'appearance':
       return 'appearance-theme';
     case 'fonts':
@@ -314,15 +306,15 @@ const ZedSwitch: React.FC<ZedSwitchProps> = ({ checked, onChange, disabled, id }
       disabled={disabled}
       onClick={() => !disabled && onChange(!checked)}
       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${disabled
-          ? 'opacity-40 cursor-not-allowed bg-[#313244]'
+          ? 'opacity-40 cursor-not-allowed bg-surface0'
           : checked
-            ? 'bg-[#cba6f7]'
-            : 'bg-[#313244]'
+            ? 'bg-brand'
+            : 'bg-surface0'
         }`}
     >
       <span
         aria-hidden="true"
-        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-[#11111b] shadow-xs ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-4.5 bg-[#11111b]' : 'translate-x-0.5 bg-[#a6adc8]'
+        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-crust shadow-xs ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-4.5 bg-crust' : 'translate-x-0.5 bg-subtext0'
           }`}
       />
     </button>
@@ -345,7 +337,7 @@ const SettingRow: React.FC<SettingRowProps> = ({
 }) => {
   return (
     <div
-      className={`py-3 flex items-center justify-between gap-6 ${borderBottom ? 'border-b border-[#313244]/40' : ''
+      className={`py-3 flex items-center justify-between gap-6 ${borderBottom ? 'border-b border-surface0/40' : ''
         }`}
     >
       <div className="min-w-0 flex-1 pr-2">
@@ -570,6 +562,7 @@ export const PreferencesModal: React.FC = () => {
   ]);
 
   const hasUnsavedChanges = totalUnsaved > 0;
+  const canCommitPreferences = hasUnsavedChanges || isApplied;
 
   // Filter tree categories based on search
   const filteredTree = useMemo(() => {
@@ -775,25 +768,26 @@ export const PreferencesModal: React.FC = () => {
   const currentTabId = activeTab ? normalizeTab(activeTab) : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--backdrop-modal)] backdrop-blur-xs animate-in fade-in duration-150 select-none">
       <div
-        className="relative w-full max-w-4xl h-[680px] max-h-[90vh] bg-[#181825] border border-[#313244] shadow-2xl flex flex-col overflow-hidden text-text"
+        className="relative w-full max-w-4xl h-[680px] max-h-[90vh] bg-mantle border border-surface0 shadow-2xl flex flex-col overflow-hidden text-text"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Window Bar */}
-        <div className="h-9 px-4 bg-[#11111b] border-b border-[#313244]/80 flex items-center justify-between shrink-0 select-none">
+        <div className="h-10 pl-4 pr-0 bg-crust border-b border-surface0/80 flex items-center justify-between shrink-0 select-none">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold tracking-tight text-text">Preferences</span>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex h-full items-center">
             <button
               type="button"
               onClick={handleCancel}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-[#313244]/50 transition-colors cursor-pointer"
+              className="flex h-full w-11 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0/70 transition-colors cursor-pointer"
               title="Close (Esc)"
+              aria-label="Close Preferences"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -801,9 +795,9 @@ export const PreferencesModal: React.FC = () => {
         {/* Modal Main Body (Tree Sidebar + Content Pane) */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Column: Collapsible Tree Navigation */}
-          <div className="w-64 bg-[#11111b] border-r border-[#313244]/80 flex flex-col shrink-0 overflow-hidden">
+          <div className="w-64 bg-crust border-r border-surface0/80 flex flex-col shrink-0 overflow-hidden">
             {/* Search Input */}
-            <div className="p-3 border-b border-[#313244]/60">
+            <div className="p-3 border-b border-surface0/60">
               <div className="relative flex items-center">
                 <Search className="w-3.5 h-3.5 text-subtext0 absolute left-2.5 pointer-events-none" />
                 <input
@@ -812,7 +806,7 @@ export const PreferencesModal: React.FC = () => {
                   placeholder="Search settings..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#181825] border border-[#313244] rounded px-2.5 pl-8 pr-7 py-1.5 text-xs text-text placeholder:text-subtext0/60 focus:outline-none focus:border-[#45475a] transition-colors"
+                  className="w-full bg-mantle border border-surface0 rounded px-2.5 pl-8 pr-7 py-1.5 text-xs text-text placeholder:text-subtext0/60 focus:outline-none focus:border-surface1 transition-colors"
                 />
                 {searchQuery && (
                   <button
@@ -848,7 +842,7 @@ export const PreferencesModal: React.FC = () => {
                             setActiveTab(group.children[0].id);
                           }
                         }}
-                        className={`w-full flex items-center justify-between px-2 py-1.5 text-xs rounded transition-colors cursor-pointer select-none text-left group ${hasActiveChild ? 'text-text font-semibold' : 'text-subtext1 hover:text-text hover:bg-[#313244]/20'
+                        className={`w-full flex items-center justify-between px-2 py-1.5 text-xs rounded transition-colors cursor-pointer select-none text-left group ${hasActiveChild ? 'text-text font-semibold' : 'text-subtext1 hover:text-text hover:bg-surface0/30'
                           }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
@@ -871,8 +865,8 @@ export const PreferencesModal: React.FC = () => {
                                 type="button"
                                 onClick={() => setActiveTab(child.id)}
                                 className={`w-full flex items-center justify-between pl-5 pr-2 py-1.5 text-xs rounded transition-colors cursor-pointer text-left ${isActive
-                                    ? 'bg-[#313244]/90 text-text font-medium shadow-xs'
-                                    : 'text-subtext0 hover:text-text hover:bg-[#313244]/30'
+                                    ? 'bg-surface0/90 text-text font-medium shadow-xs'
+                                    : 'text-subtext0 hover:text-text hover:bg-surface0/50'
                                   }`}
                               >
                                 <span className="truncate">{child.label}</span>
@@ -889,12 +883,12 @@ export const PreferencesModal: React.FC = () => {
           </div>
 
           {/* Right Column: Settings Content Area */}
-          <div className="flex-1 overflow-y-auto p-8 bg-[#181825] flex flex-col">
+          <div className="flex-1 overflow-y-auto p-8 bg-base flex flex-col">
 
             {/* Placeholder when no item selected */}
             {!currentChildItem && (
               <div className="flex-1 flex flex-col items-center justify-center text-center select-none">
-                <div className="w-12 h-12 mb-4 flex items-center justify-center bg-[#313244]/40 border border-[#313244]/60">
+                <div className="w-12 h-12 mb-4 flex items-center justify-center bg-surface0/40 border border-surface0/60">
                   <Code className="w-5 h-5 text-subtext0" />
                 </div>
                 <p className="text-sm text-subtext1 font-medium">Select a setting</p>
@@ -904,7 +898,7 @@ export const PreferencesModal: React.FC = () => {
 
             {/* Category Header */}
             {currentChildItem && (
-              <div className="mb-5 pb-3 border-b border-[#313244]/60">
+              <div className="mb-5 pb-3 border-b border-surface0/60">
                 <h2 className="text-base font-semibold text-text">{currentChildItem.title}</h2>
                 <p className="text-[11px] text-subtext0 mt-0.5">{currentChildItem.description}</p>
               </div>
@@ -970,41 +964,9 @@ export const PreferencesModal: React.FC = () => {
             )}
 
             {/* VIEW: SECURITY GUARDRAILS */}
-            {currentTabId === 'general-guardrails' && (
+            {currentTabId === 'ai-guardrails' && (
               <div className="animate-in fade-in duration-100">
                 <GuardrailsTab />
-              </div>
-            )}
-
-            {/* VIEW: PRIVACY & TELEMETRY */}
-            {currentTabId === 'general-privacy' && (
-              <div className="space-y-4">
-                <SettingRow
-                  title="Telemetry & Diagnostics"
-                  description="Stage0 enforces a 100% Zero-Telemetry policy. No metrics, usage events, or file contents are ever transmitted to external telemetry servers."
-                >
-                  <span className="px-2.5 py-1 rounded text-xs bg-emerald-950 text-emerald-300 font-mono border border-emerald-800">
-                    Disabled (Zero Telemetry)
-                  </span>
-                </SettingRow>
-
-                <SettingRow
-                  title="Local Secret Management"
-                  description="API keys and Git credential secrets are stored in the operating system credential store; metadata is kept locally by Stage0. Secrets are not injected into AI or Git operations."
-                >
-                  <span className="px-2.5 py-1 rounded text-xs bg-surface1 text-text font-mono border border-surface2">
-                    OS Credential Store
-                  </span>
-                </SettingRow>
-
-                <SettingRow
-                  title="Isolated Virtual Tree"
-                  description="Diff and conflict checks do not check out branches or modify the working tree or index. Git may write tree or blob objects to the repository object database."
-                >
-                  <span className="px-2.5 py-1 rounded text-xs bg-surface1 text-text font-mono border border-surface2">
-                    100% In-Memory Sandbox
-                  </span>
-                </SettingRow>
               </div>
             )}
 
@@ -1015,13 +977,13 @@ export const PreferencesModal: React.FC = () => {
                   title="Theme Mode"
                   description="Choose whether to use the selected light or dark theme or to follow your OS appearance configuration."
                 >
-                  <div className="inline-flex items-center p-0.5 bg-[#11111b] border border-[#313244] gap-0.5 rounded shadow-inner">
+                  <div className="inline-flex items-center p-0.5 bg-crust border border-surface0 gap-0.5 rounded shadow-inner">
                     <button
                       type="button"
                       onClick={() => handleSelectTheme('system')}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${draftThemeMode === 'system'
-                          ? 'bg-[#313244] text-text font-semibold shadow-xs'
-                          : 'text-subtext0 hover:text-text hover:bg-[#313244]/40'
+                          ? 'bg-surface0 text-text font-semibold shadow-xs'
+                          : 'text-subtext0 hover:text-text hover:bg-surface0/40'
                         }`}
                       title="Sync with Operating System theme"
                     >
@@ -1033,8 +995,8 @@ export const PreferencesModal: React.FC = () => {
                       type="button"
                       onClick={() => handleSelectTheme('dark')}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${draftThemeMode === 'dark'
-                          ? 'bg-[#313244] text-text font-semibold shadow-xs'
-                          : 'text-subtext0 hover:text-text hover:bg-[#313244]/40'
+                          ? 'bg-surface0 text-text font-semibold shadow-xs'
+                          : 'text-subtext0 hover:text-text hover:bg-surface0/40'
                         }`}
                       title="Catppuccin Mocha dark theme"
                     >
@@ -1046,8 +1008,8 @@ export const PreferencesModal: React.FC = () => {
                       type="button"
                       onClick={() => handleSelectTheme('light')}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${draftThemeMode === 'light'
-                          ? 'bg-[#313244] text-text font-semibold shadow-xs'
-                          : 'text-subtext0 hover:text-text hover:bg-[#313244]/40'
+                          ? 'bg-surface0 text-text font-semibold shadow-xs'
+                          : 'text-subtext0 hover:text-text hover:bg-surface0/40'
                         }`}
                       title="Catppuccin Latte light theme"
                     >
@@ -1061,7 +1023,7 @@ export const PreferencesModal: React.FC = () => {
                   title="Dark Palette"
                   description="Color theme applied when theme mode is set to dark or follows dark OS scheme."
                 >
-                  <span className="px-3 py-1.5 rounded bg-[#11111b] border border-[#313244] text-xs font-mono text-text">
+                  <span className="px-3 py-1.5 rounded bg-crust border border-surface0 text-xs font-mono text-text">
                     Catppuccin Mocha
                   </span>
                 </SettingRow>
@@ -1070,7 +1032,7 @@ export const PreferencesModal: React.FC = () => {
                   title="Light Palette"
                   description="Color theme applied when theme mode is set to light."
                 >
-                  <span className="px-3 py-1.5 rounded bg-[#11111b] border border-[#313244] text-xs font-mono text-text">
+                  <span className="px-3 py-1.5 rounded bg-crust border border-surface0 text-xs font-mono text-text">
                     Catppuccin Latte
                   </span>
                 </SettingRow>
@@ -1089,7 +1051,7 @@ export const PreferencesModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
-                      className="w-full flex items-center justify-between px-3 py-1.5 rounded border border-[#313244] bg-[#11111b] hover:bg-[#1e1e2e] text-text text-xs transition-colors cursor-pointer"
+                      className="w-full flex items-center justify-between px-3 py-1.5 rounded border border-surface0 bg-crust hover:bg-base text-text text-xs transition-colors cursor-pointer"
                     >
                       <span
                         className="truncate font-semibold"
@@ -1104,8 +1066,8 @@ export const PreferencesModal: React.FC = () => {
                     </button>
 
                     {isFontDropdownOpen && (
-                      <div className="absolute right-0 top-full mt-1.5 w-72 bg-[#181825] border border-[#313244] rounded shadow-2xl z-50 overflow-hidden flex flex-col max-h-72">
-                        <div className="p-2 border-b border-[#313244] bg-[#11111b] sticky top-0 z-10 flex items-center gap-2">
+                      <div className="absolute right-0 top-full mt-1.5 w-72 bg-mantle border border-surface0 rounded shadow-2xl z-50 overflow-hidden flex flex-col max-h-72">
+                        <div className="p-2 border-b border-surface0 bg-crust sticky top-0 z-10 flex items-center gap-2">
                           <Search className="w-3 h-3 text-subtext0 shrink-0 ml-1" />
                           <input
                             ref={fontSearchInputRef}
@@ -1126,7 +1088,7 @@ export const PreferencesModal: React.FC = () => {
                           )}
                         </div>
 
-                        <div className="overflow-y-auto divide-y divide-[#313244]/40 p-1">
+                        <div className="overflow-y-auto divide-y divide-surface0/40 p-1">
                           {filteredFonts.length === 0 ? (
                             <div className="px-3 py-4 text-center text-xs text-subtext0 italic">
                               No matching font
@@ -1147,8 +1109,8 @@ export const PreferencesModal: React.FC = () => {
                                     setIsFontDropdownOpen(false);
                                   }}
                                   className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer ${isSelected
-                                      ? 'bg-[#313244] text-text font-semibold'
-                                      : 'hover:bg-[#1e1e2e] text-subtext1 hover:text-text'
+                                      ? 'bg-surface0 text-text font-semibold'
+                                      : 'hover:bg-base text-subtext1 hover:text-text'
                                     }`}
                                 >
                                   <div className="flex flex-col min-w-0 pr-2">
@@ -1168,11 +1130,11 @@ export const PreferencesModal: React.FC = () => {
 
                                   <div className="flex items-center gap-1.5 shrink-0">
                                     {font.ligaturesSupport ? (
-                                      <span className="text-[9px] px-1.5 py-0.5 bg-[#11111b] text-subtext0 border border-[#313244] font-mono rounded">
+                                      <span className="text-[9px] px-1.5 py-0.5 bg-crust text-subtext0 border border-surface0 font-mono rounded">
                                         Ligatures
                                       </span>
                                     ) : (
-                                      <span className="text-[9px] px-1.5 py-0.5 bg-[#11111b] text-subtext0/70 border border-[#313244] rounded">
+                                      <span className="text-[9px] px-1.5 py-0.5 bg-crust text-subtext0/70 border border-surface0 rounded">
                                         Mono
                                       </span>
                                     )}
@@ -1204,13 +1166,13 @@ export const PreferencesModal: React.FC = () => {
                           Math.max(10, Math.min(24, parseInt(e.target.value) || 13))
                         )
                       }
-                      className="w-16 px-2.5 py-1.5 bg-[#11111b] border border-[#313244] text-xs text-text focus:outline-none focus:border-[#45475a] font-mono rounded text-center"
+                      className="w-16 px-2.5 py-1.5 bg-crust border border-surface0 text-xs text-text focus:outline-none focus:border-surface1 font-mono rounded text-center"
                     />
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => setDraftFontSize((prev) => Math.max(10, prev - 1))}
-                        className="px-2 py-1 rounded border border-[#313244] hover:bg-[#313244]/50 text-text text-xs cursor-pointer font-bold"
+                        className="px-2 py-1 rounded border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold"
                         title="Decrease font size"
                       >
                         -
@@ -1218,7 +1180,7 @@ export const PreferencesModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setDraftFontSize((prev) => Math.min(24, prev + 1))}
-                        className="px-2 py-1 rounded border border-[#313244] hover:bg-[#313244]/50 text-text text-xs cursor-pointer font-bold"
+                        className="px-2 py-1 rounded border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold"
                         title="Increase font size"
                       >
                         +
@@ -1232,13 +1194,13 @@ export const PreferencesModal: React.FC = () => {
                   title="Font Weight & Emphasis"
                   description="Apply Bold, Italic, or Underline formatting to diff text."
                 >
-                  <div className="flex items-center gap-1 bg-[#11111b] p-0.5 rounded border border-[#313244]">
+                  <div className="flex items-center gap-1 bg-crust p-0.5 rounded border border-surface0">
                     <button
                       type="button"
                       onClick={() => setDraftIsBold(!draftIsBold)}
                       className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${draftIsBold
-                          ? 'bg-[#313244] text-text font-bold shadow-xs'
-                          : 'text-subtext0 hover:bg-[#313244]/40 hover:text-text'
+                          ? 'bg-surface0 text-text font-bold shadow-xs'
+                          : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
                         }`}
                       title={formatShortcutText('Bold (Ctrl+B)')}
                     >
@@ -1250,8 +1212,8 @@ export const PreferencesModal: React.FC = () => {
                       type="button"
                       onClick={() => setDraftIsItalic(!draftIsItalic)}
                       className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${draftIsItalic
-                          ? 'bg-[#313244] text-text font-bold italic shadow-xs'
-                          : 'text-subtext0 hover:bg-[#313244]/40 hover:text-text'
+                          ? 'bg-surface0 text-text font-bold italic shadow-xs'
+                          : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
                         }`}
                       title={formatShortcutText('Italic (Ctrl+I)')}
                     >
@@ -1263,8 +1225,8 @@ export const PreferencesModal: React.FC = () => {
                       type="button"
                       onClick={() => setDraftIsUnderline(!draftIsUnderline)}
                       className={`flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors cursor-pointer ${draftIsUnderline
-                          ? 'bg-[#313244] text-text font-bold underline shadow-xs'
-                          : 'text-subtext0 hover:bg-[#313244]/40 hover:text-text'
+                          ? 'bg-surface0 text-text font-bold underline shadow-xs'
+                          : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
                         }`}
                       title={formatShortcutText('Underline (Ctrl+U)')}
                     >
@@ -1287,7 +1249,7 @@ export const PreferencesModal: React.FC = () => {
                       step="0.05"
                       value={draftLineSpacing}
                       onChange={(e) => setDraftLineSpacing(parseFloat(e.target.value))}
-                      className="w-full accent-[#cba6f7] cursor-pointer"
+                      className="w-full accent-brand cursor-pointer"
                     />
                     <span className="text-xs font-mono text-text shrink-0 w-10 text-right">
                       {draftLineSpacing.toFixed(2)}x
@@ -1326,7 +1288,7 @@ export const PreferencesModal: React.FC = () => {
                   title="Diff View Mode"
                   description="Choose side-by-side split view or unified inline diff representation."
                 >
-                  <span className="px-3 py-1.5 rounded bg-[#11111b] border border-[#313244] text-xs font-mono text-text">
+                  <span className="px-3 py-1.5 rounded bg-crust border border-surface0 text-xs font-mono text-text">
                     Split / Unified Toggleable
                   </span>
                 </SettingRow>
@@ -1343,7 +1305,7 @@ export const PreferencesModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('ai-providers')}
-                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                    className="px-3 py-1.5 rounded bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
                   >
                     <span>Configure</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -1357,7 +1319,7 @@ export const PreferencesModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('ai-reviewers')}
-                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                    className="px-3 py-1.5 rounded bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
                   >
                     <span>Configure</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -1371,7 +1333,7 @@ export const PreferencesModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('ai-mcp')}
-                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                    className="px-3 py-1.5 rounded bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
                   >
                     <span>Configure</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -1390,7 +1352,7 @@ export const PreferencesModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('ai-mcp')}
-                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                    className="px-3 py-1.5 rounded bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
                   >
                     <span>Configure</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -1404,7 +1366,7 @@ export const PreferencesModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('ai-sandbox')}
-                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                    className="px-3 py-1.5 rounded bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
                   >
                     <span>Configure</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -1417,8 +1379,8 @@ export const PreferencesModal: React.FC = () => {
                 >
                   <button
                     type="button"
-                    onClick={() => setActiveTab('general-guardrails')}
-                    className="px-3 py-1.5 rounded bg-[#313244]/60 hover:bg-[#313244] border border-[#45475a]/40 hover:border-[#585b70] text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                    onClick={() => setActiveTab('ai-guardrails')}
+                    className="px-3 py-1.5 rounded bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
                   >
                     <span>Configure</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -1555,12 +1517,12 @@ export const PreferencesModal: React.FC = () => {
         </div>
 
         {/* Footer: Reset on left, Cancel, Apply, OK on right */}
-        <div className="px-6 py-3 border-t border-[#313244]/60 flex items-center justify-between bg-[#11111b]/80 select-none shrink-0">
+        <div className="px-6 py-3 border-t border-surface0/60 flex items-center justify-between bg-crust/80 select-none shrink-0">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setShowResetConfirm(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-[#313244] hover:bg-[#313244]/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-surface0 hover:bg-surface0/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded"
               title="Reset all settings to application defaults"
             >
               <RotateCcw className="w-3 h-3" />
@@ -1579,7 +1541,7 @@ export const PreferencesModal: React.FC = () => {
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-1.5 border border-[#313244] hover:bg-[#313244]/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium rounded"
+              className="px-4 py-1.5 border border-surface0 hover:bg-surface0/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium rounded"
               title="Close without saving (Esc)"
             >
               Cancel
@@ -1588,11 +1550,11 @@ export const PreferencesModal: React.FC = () => {
             <button
               type="button"
               onClick={handleApply}
-              disabled={!hasUnsavedChanges && !isApplied}
-              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer rounded border ${isApplied
-                  ? 'bg-emerald-950 border-emerald-800 text-emerald-300'
-                  : hasUnsavedChanges
-                    ? 'bg-[#313244] hover:bg-[#45475a] border-[#45475a] text-text shadow-xs'
+              disabled={!canCommitPreferences}
+              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all rounded border ${isApplied
+                  ? 'bg-green/10 border-green/30 text-green'
+                  : canCommitPreferences
+                    ? 'bg-surface0 hover:bg-surface1 border-surface1 text-text shadow-xs cursor-pointer'
                     : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'
                 }`}
             >
@@ -1609,7 +1571,11 @@ export const PreferencesModal: React.FC = () => {
             <button
               type="button"
               onClick={handleOk}
-              className="px-4 py-1.5 bg-[#313244] hover:bg-[#45475a] border border-[#45475a] text-text text-xs font-semibold transition-colors cursor-pointer rounded shadow-xs"
+              disabled={!canCommitPreferences}
+              className={`px-4 py-1.5 text-xs font-semibold transition-colors rounded border ${canCommitPreferences
+                  ? 'bg-surface0 hover:bg-surface1 border-surface1 text-text cursor-pointer shadow-xs'
+                  : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'
+                }`}
             >
               OK
             </button>
@@ -1621,9 +1587,9 @@ export const PreferencesModal: React.FC = () => {
 
       {/* Reset Confirmation Dialog */}
       {showResetConfirm && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-100">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-[var(--backdrop-modal)] backdrop-blur-xs animate-in fade-in duration-100">
           <div
-            className="w-full max-w-md bg-[#181825] border border-[#313244] rounded-xl shadow-2xl p-5 flex flex-col gap-3 text-text"
+            className="w-full max-w-md bg-mantle border border-surface0 rounded-xl shadow-2xl p-5 flex flex-col gap-3 text-text"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2.5 text-text">
@@ -1638,14 +1604,14 @@ export const PreferencesModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowResetConfirm(false)}
-                className="px-3 py-1.5 text-xs text-subtext0 hover:text-text hover:bg-[#313244]/50 border border-[#313244] rounded transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs text-subtext0 hover:text-text hover:bg-surface0/50 border border-surface0 rounded transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleResetDefaults}
-                className="px-3.5 py-1.5 text-xs bg-[#313244] hover:bg-[#45475a] text-text border border-[#45475a] font-semibold rounded transition-colors cursor-pointer"
+                className="px-3.5 py-1.5 text-xs bg-surface0 hover:bg-surface1 text-text border border-surface1 font-semibold rounded transition-colors cursor-pointer"
               >
                 Reset to Defaults
               </button>
@@ -1656,13 +1622,13 @@ export const PreferencesModal: React.FC = () => {
 
       {/* Restart Prompt for Git Binary */}
       {showRestartPrompt && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-100">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-[var(--backdrop-modal)] backdrop-blur-xs animate-in fade-in duration-100">
           <div
-            className="w-full max-w-md bg-[#181825] border border-[#313244] rounded-xl shadow-2xl p-5 flex flex-col gap-3 text-text"
+            className="w-full max-w-md bg-mantle border border-surface0 rounded-xl shadow-2xl p-5 flex flex-col gap-3 text-text"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2.5 text-text">
-              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-yellow shrink-0" />
               <h3 className="text-sm font-bold">Restart Required</h3>
             </div>
             <p className="text-xs text-subtext0 leading-relaxed">
@@ -1673,7 +1639,7 @@ export const PreferencesModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowRestartPrompt(false)}
-                className="px-4 py-1.5 text-xs bg-[#313244] hover:bg-[#45475a] text-text border border-[#45475a] font-semibold rounded transition-colors cursor-pointer"
+                className="px-4 py-1.5 text-xs bg-surface0 hover:bg-surface1 text-text border border-surface1 font-semibold rounded transition-colors cursor-pointer"
               >
                 OK
               </button>

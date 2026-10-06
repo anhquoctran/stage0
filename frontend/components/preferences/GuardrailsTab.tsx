@@ -168,12 +168,12 @@ export const GuardrailsTab: React.FC = () => {
             <div>
               <h4 className="text-sm font-bold text-text">AI Security Guardrails & Policy Enforcement</h4>
               <span
-                className={`inline-block mt-1 text-[10px] font-mono px-2 py-0.5 font-semibold text-white rounded uppercase ${
+                className={`inline-block mt-1 text-[10px] font-mono px-2 py-0.5 font-semibold border rounded uppercase ${
                   activeMode === 'balanced'
-                    ? 'bg-[#238636]'
+                    ? 'bg-green/10 text-green border-green/30'
                     : activeMode === 'strict'
-                    ? 'bg-[#da3633]'
-                    : 'bg-[#bb8009]'
+                    ? 'bg-red/10 text-red border-red/30'
+                    : 'bg-yellow/10 text-yellow border-yellow/30'
                 }`}
               >
                 Active: {activeMode.toUpperCase()}
@@ -207,24 +207,24 @@ export const GuardrailsTab: React.FC = () => {
             onClick={() => handlePresetSelect('strict')}
             className={`p-3 text-left rounded-md transition-all cursor-pointer flex flex-col justify-between ${
               activeMode === 'strict'
-                ? 'bg-[#da3633] text-white shadow-sm'
+                ? 'bg-red/10 border border-red/40 text-text shadow-sm'
                 : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
             }`}
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold ${activeMode === 'strict' ? 'text-white' : 'text-text'}`}>
+                <span className="text-xs font-bold text-text">
                   Strict (Zero Trust)
                 </span>
                 {activeMode === 'strict' && (
-                  <Check className="w-3.5 h-3.5 text-white" />
+                  <Check className="w-3.5 h-3.5 text-red" />
                 )}
               </div>
-              <p className={`text-[11px] mt-1.5 leading-relaxed ${activeMode === 'strict' ? 'text-white/90' : 'text-subtext0'}`}>
+              <p className="text-[11px] mt-1.5 leading-relaxed text-subtext0">
                 Requires human approval for all terminal operations. Strictly limits file reads to 1,000 lines. Max timeout 15s.
               </p>
             </div>
-            <div className={`mt-3 text-[10px] font-mono ${activeMode === 'strict' ? 'text-white/80' : 'text-subtext0'}`}>
+            <div className="mt-3 text-[10px] font-mono text-subtext0">
               High-security repositories
             </div>
           </button>
@@ -235,24 +235,24 @@ export const GuardrailsTab: React.FC = () => {
             onClick={() => handlePresetSelect('balanced')}
             className={`p-3 text-left rounded-md transition-all cursor-pointer flex flex-col justify-between ${
               activeMode === 'balanced'
-                ? 'bg-[#238636] text-white shadow-sm'
+                ? 'bg-green/10 border border-green/40 text-text shadow-sm'
                 : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
             }`}
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold ${activeMode === 'balanced' ? 'text-white' : 'text-text'}`}>
+                <span className="text-xs font-bold text-text">
                   Balanced (Standard)
                 </span>
                 {activeMode === 'balanced' && (
-                  <Check className="w-3.5 h-3.5 text-white" />
+                  <Check className="w-3.5 h-3.5 text-green" />
                 )}
               </div>
-              <p className={`text-[11px] mt-1.5 leading-relaxed ${activeMode === 'balanced' ? 'text-white/90' : 'text-subtext0'}`}>
+              <p className="text-[11px] mt-1.5 leading-relaxed text-subtext0">
                 Auto-executes safe toolchains (cargo, npm, pytest). Blocks destructive commands and credential leakage.
               </p>
             </div>
-            <div className={`mt-3 text-[10px] font-mono ${activeMode === 'balanced' ? 'text-white/80' : 'text-subtext0'}`}>
+            <div className="mt-3 text-[10px] font-mono text-subtext0">
               Recommended for development
             </div>
           </button>
@@ -263,24 +263,24 @@ export const GuardrailsTab: React.FC = () => {
             onClick={() => handlePresetSelect('permissive')}
             className={`p-3 text-left rounded-md transition-all cursor-pointer flex flex-col justify-between ${
               activeMode === 'permissive'
-                ? 'bg-[#bb8009] text-white shadow-sm'
+                ? 'bg-yellow/10 border border-yellow/40 text-text shadow-sm'
                 : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
             }`}
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold ${activeMode === 'permissive' ? 'text-white' : 'text-text'}`}>
+                <span className="text-xs font-bold text-text">
                   Autonomous (Sandbox)
                 </span>
                 {activeMode === 'permissive' && (
-                  <Check className="w-3.5 h-3.5 text-white" />
+                  <Check className="w-3.5 h-3.5 text-yellow" />
                 )}
               </div>
-              <p className={`text-[11px] mt-1.5 leading-relaxed ${activeMode === 'permissive' ? 'text-white/90' : 'text-subtext0'}`}>
+              <p className="text-[11px] mt-1.5 leading-relaxed text-subtext0">
                 Permits broader shell toolchain in Docker/Worktree containers with basic boundary and credential shields.
               </p>
             </div>
-            <div className={`mt-3 text-[10px] font-mono ${activeMode === 'permissive' ? 'text-white/80' : 'text-subtext0'}`}>
+            <div className="mt-3 text-[10px] font-mono text-subtext0">
               Automated CI/CD agents
             </div>
           </button>
@@ -302,13 +302,13 @@ export const GuardrailsTab: React.FC = () => {
             {allowedCommands.map((cmd) => (
               <span
                 key={cmd}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-[#238636] text-white rounded font-mono font-medium"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-green/10 text-green border border-green/30 rounded font-mono font-medium"
               >
                 <span>{cmd}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveAllowedCmd(cmd)}
-                  className="text-white/80 hover:text-white cursor-pointer"
+                  className="opacity-70 hover:opacity-100 cursor-pointer"
                   title="Remove"
                 >
                   <X className="w-3 h-3" />
@@ -338,20 +338,20 @@ export const GuardrailsTab: React.FC = () => {
 
         {/* Explicitly Blocked Commands */}
         <div className="space-y-2 pt-2 border-t border-surface1">
-          <label className="text-[11px] font-medium text-rose-300">
+          <label className="text-[11px] font-medium text-red">
             Explicitly Blocked Destructive Commands (Hard Deny)
           </label>
           <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 rounded-md min-h-[42px] items-center">
             {blockedCommands.map((cmd) => (
               <span
                 key={cmd}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-[#da3633] text-white rounded font-mono font-medium"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-red/10 text-red border border-red/30 rounded font-mono font-medium"
               >
                 <span>{cmd}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveBlockedCmd(cmd)}
-                  className="text-white/80 hover:text-white cursor-pointer"
+                  className="opacity-70 hover:opacity-100 cursor-pointer"
                   title="Remove"
                 >
                   <X className="w-3 h-3" />
@@ -381,20 +381,20 @@ export const GuardrailsTab: React.FC = () => {
 
         {/* Blocked Dangerous Shell Patterns */}
         <div className="space-y-2 pt-2 border-t border-surface1">
-          <label className="text-[11px] font-medium text-amber-300">
+          <label className="text-[11px] font-medium text-yellow">
             Blocked Shell Injection & Malicious Patterns
           </label>
           <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 rounded-md min-h-[42px] items-center">
             {blockedPatterns.map((pat) => (
               <span
                 key={pat}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-[#bb8009] text-white rounded font-mono font-medium"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-yellow/10 text-yellow border border-yellow/30 rounded font-mono font-medium"
               >
                 <span>{pat}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveBlockedPattern(pat)}
-                  className="text-white/80 hover:text-white cursor-pointer"
+                  className="opacity-70 hover:opacity-100 cursor-pointer"
                   title="Remove"
                 >
                   <X className="w-3 h-3" />
@@ -485,13 +485,13 @@ export const GuardrailsTab: React.FC = () => {
             {sensitivePatterns.map((pat) => (
               <span
                 key={pat}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-[#8250df] text-white rounded font-mono font-medium"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-mauve/10 text-mauve border border-mauve/30 rounded font-mono font-medium"
               >
                 <span>{pat}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveSensitivePattern(pat)}
-                  className="text-white/80 hover:text-white cursor-pointer"
+                  className="opacity-70 hover:opacity-100 cursor-pointer"
                   title="Remove"
                 >
                   <X className="w-3 h-3" />
@@ -541,7 +541,7 @@ export const GuardrailsTab: React.FC = () => {
               id="confirm-commands-chk"
               checked={!!policy.require_human_confirmation_for_commands}
               onChange={(e) => void updateGuardrailPolicy({ require_human_confirmation_for_commands: e.target.checked })}
-              className="rounded border-surface2 text-emerald-500 focus:ring-0 cursor-pointer"
+              className="rounded border-surface2 text-green focus:ring-0 cursor-pointer"
             />
             <label htmlFor="confirm-commands-chk" className="text-xs text-text cursor-pointer select-none">
               Require confirmation for all terminal commands
@@ -553,7 +553,7 @@ export const GuardrailsTab: React.FC = () => {
               id="confirm-writes-chk"
               checked={!!policy.require_human_confirmation_for_writes}
               onChange={(e) => void updateGuardrailPolicy({ require_human_confirmation_for_writes: e.target.checked })}
-              className="mt-0.5 rounded border-surface2 text-emerald-500 focus:ring-0 cursor-pointer"
+              className="mt-0.5 rounded border-surface2 text-green focus:ring-0 cursor-pointer"
             />
             <div>
               <label htmlFor="confirm-writes-chk" className="text-xs text-text cursor-pointer select-none">
@@ -581,35 +581,35 @@ export const GuardrailsTab: React.FC = () => {
           <button
             type="button"
             onClick={() => setSampleScenario('safe_test')}
-            className="px-2.5 py-1 text-[11px] bg-[#238636] hover:bg-[#2ea043] text-white rounded cursor-pointer transition font-mono font-medium"
+            className="px-2.5 py-1 text-[11px] bg-green/10 hover:bg-green/20 text-green border border-green/30 rounded cursor-pointer transition font-mono font-medium"
           >
             Safe: `cargo test`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('dangerous_rm')}
-            className="px-2.5 py-1 text-[11px] bg-[#da3633] hover:bg-[#f85149] text-white rounded cursor-pointer transition font-mono font-medium"
+            className="px-2.5 py-1 text-[11px] bg-red/10 hover:bg-red/20 text-red border border-red/30 rounded cursor-pointer transition font-mono font-medium"
           >
             Dangerous: `rm -rf /`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('sensitive_env')}
-            className="px-2.5 py-1 text-[11px] bg-[#8250df] hover:bg-[#a371f7] text-white rounded cursor-pointer transition font-mono font-medium"
+            className="px-2.5 py-1 text-[11px] bg-mauve/10 hover:bg-mauve/20 text-mauve border border-mauve/30 rounded cursor-pointer transition font-mono font-medium"
           >
             Sensitive: `.env.production`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('pipe_injection')}
-            className="px-2.5 py-1 text-[11px] bg-[#bb8009] hover:bg-[#d29922] text-white rounded cursor-pointer transition font-mono font-medium"
+            className="px-2.5 py-1 text-[11px] bg-yellow/10 hover:bg-yellow/20 text-yellow border border-yellow/30 rounded cursor-pointer transition font-mono font-medium"
           >
             Injection: `npm test | sh`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('large_read')}
-            className="px-2.5 py-1 text-[11px] bg-surface2 hover:bg-surface2/80 text-white rounded cursor-pointer transition font-mono font-medium"
+            className="px-2.5 py-1 text-[11px] bg-surface0 hover:bg-surface1 text-text border border-surface1 rounded cursor-pointer transition font-mono font-medium"
           >
             Exceeded: 8,000 Lines
           </button>
@@ -639,14 +639,14 @@ export const GuardrailsTab: React.FC = () => {
             />
 
             {simError && (
-              <p className="text-[11px] text-rose-400 font-mono">{simError}</p>
+              <p className="text-[11px] text-red font-mono">{simError}</p>
             )}
 
             <button
               type="button"
               onClick={runSimulation}
               disabled={isSimulating}
-              className="px-3.5 py-1.5 text-xs font-semibold bg-[#238636] hover:bg-[#2ea043] text-white rounded cursor-pointer transition shadow-sm"
+              className="px-3.5 py-1.5 text-xs font-semibold bg-green/15 hover:bg-green/25 text-green border border-green/30 rounded cursor-pointer transition shadow-sm"
             >
               <span>{isSimulating ? 'Evaluating...' : 'Simulate Policy Check'}</span>
             </button>
@@ -664,26 +664,26 @@ export const GuardrailsTab: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {simResult.allowed ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-[#238636] text-white rounded">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-green/10 text-green border border-green/30 rounded">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
                           ALLOWED
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-[#da3633] text-white rounded">
-                          <AlertCircle className="w-3.5 h-3.5 text-white" />
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-red/10 text-red border border-red/30 rounded">
+                          <AlertCircle className="w-3.5 h-3.5" />
                           BLOCKED
                         </span>
                       )}
 
                       {simResult.requires_confirmation && (
-                        <span className="px-2 py-0.5 text-[10px] bg-[#bb8009] text-white rounded font-semibold">
+                        <span className="px-2 py-0.5 text-[10px] bg-yellow/10 text-yellow border border-yellow/30 rounded font-semibold">
                           CONFIRMATION REQUIRED
                         </span>
                       )}
                     </div>
 
                     <div className="text-xs font-mono">
-                      Risk Score: <span className={simResult.risk_score > 50 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>{simResult.risk_score}/100</span>
+                      Risk Score: <span className={simResult.risk_score > 50 ? 'text-red font-bold' : 'text-green'}>{simResult.risk_score}/100</span>
                     </div>
                   </div>
 
@@ -696,7 +696,7 @@ export const GuardrailsTab: React.FC = () => {
                           className="p-2 text-[11px] bg-surface0 border border-surface1 rounded space-y-0.5"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-mono font-bold text-rose-400">{v.rule}</span>
+                            <span className="font-mono font-bold text-red">{v.rule}</span>
                             <span className="text-[10px] uppercase font-mono text-subtext0">{v.severity}</span>
                           </div>
                           <div className="text-subtext0">{v.message}</div>
@@ -704,7 +704,7 @@ export const GuardrailsTab: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[11px] text-emerald-400/90 font-mono">
+                    <p className="text-[11px] text-green/90 font-mono">
                       ✓ No policy violations detected. Execution safe within sandbox.
                     </p>
                   )}
@@ -731,7 +731,7 @@ export const GuardrailsTab: React.FC = () => {
             <button
               type="button"
               onClick={() => void clearGuardrailAuditLog()}
-              className="text-xs text-subtext0 hover:text-rose-400 flex items-center gap-1 cursor-pointer"
+              className="text-xs text-subtext0 hover:text-red flex items-center gap-1 cursor-pointer"
             >
               <Trash2 className="w-3 h-3" />
               <span>Clear Log</span>
@@ -750,11 +750,11 @@ export const GuardrailsTab: React.FC = () => {
                 <div key={event.id} className="p-2.5 hover:bg-surface1/30 transition flex flex-col md:flex-row md:items-center justify-between gap-2">
                   <div className="flex items-start md:items-center gap-2.5">
                     {event.allowed ? (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#238636] text-white rounded font-mono">
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-green/10 text-green border border-green/30 rounded font-mono">
                         PASS
                       </span>
                     ) : (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#da3633] text-white rounded font-mono">
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red/10 text-red border border-red/30 rounded font-mono">
                         BLOCK
                       </span>
                     )}
@@ -765,7 +765,7 @@ export const GuardrailsTab: React.FC = () => {
                         <span className="text-[10px] text-subtext0 font-mono truncate max-w-xs">{event.action_summary}</span>
                       </div>
                       {event.violations.length > 0 && (
-                        <div className="text-[11px] text-rose-400 font-mono mt-0.5">
+                        <div className="text-[11px] text-red font-mono mt-0.5">
                           {event.violations.map((v) => `${v.rule}: ${v.message}`).join(' | ')}
                         </div>
                       )}
@@ -774,7 +774,7 @@ export const GuardrailsTab: React.FC = () => {
 
                   <div className="flex items-center gap-3 text-right">
                     <span className="text-[10px] font-mono text-subtext0">
-                      Risk: <span className={event.risk_score > 50 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>{event.risk_score}</span>
+                      Risk: <span className={event.risk_score > 50 ? 'text-red font-bold' : 'text-green'}>{event.risk_score}</span>
                     </span>
                     <span className="text-[10px] font-mono text-subtext0">
                       {new Date(event.timestamp).toLocaleTimeString()}

@@ -26,14 +26,25 @@ use window_manager::{
 pub fn run() {
     tauri::Builder::default()
         .on_window_event(|window, event| {
-            if matches!(event, WindowEvent::Destroyed) {
-                if window.label() != notifications::NOTIFICATION_HOST_LABEL {
-                    destroy_window(&window.app_handle(), window.label());
-                    notifications::close_notification_host_if_unused(
-                        &window.app_handle(),
-                        window.label(),
-                    );
+            match event {
+                WindowEvent::Focused(true) => {
+                    if window.label() != notifications::NOTIFICATION_HOST_LABEL {
+                        menu::sync_repo_dependent_menus_for_window(
+                            &window.app_handle(),
+                            window.label(),
+                        );
+                    }
                 }
+                WindowEvent::Destroyed => {
+                    if window.label() != notifications::NOTIFICATION_HOST_LABEL {
+                        destroy_window(&window.app_handle(), window.label());
+                        notifications::close_notification_host_if_unused(
+                            &window.app_handle(),
+                            window.label(),
+                        );
+                    }
+                }
+                _ => {}
             }
         })
         .plugin(
@@ -255,6 +266,7 @@ pub fn run() {
             commands::get_app_info,
             // Stage0 toast notifications
             notifications::dispatch_notification,
+            notifications::send_test_notification,
             notifications::notification_host_ready,
             notifications::set_notification_host_visibility,
             notifications::dispatch_notification_action,

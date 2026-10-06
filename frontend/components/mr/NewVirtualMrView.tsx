@@ -689,10 +689,10 @@ export const NewVirtualMrView: React.FC = () => {
                       type="button"
                       onClick={() => handleSubmit()}
                       disabled={isSubmitting || !canCreateVirtualMr}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-brand hover:bg-brand/90 active:scale-[0.98] text-[#11111b] font-bold text-xs shadow-md shadow-brand/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-brand hover:bg-brand/90 active:scale-[0.98] text-on-accent font-bold text-xs shadow-md shadow-brand/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-[#11111b]" />
+                        <Loader2 className="w-4 h-4 animate-spin text-on-accent" />
                       ) : (
                         <GitPullRequest className="w-4 h-4 stroke-[2.5]" />
                       )}

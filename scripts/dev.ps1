@@ -87,11 +87,12 @@ if ($Mode -eq "App") {
     }
 }
 
-# 3. Check pnpm dependencies
-if (-not (Test-Path "$RootDir\node_modules")) {
-    Write-Host ""
-    Write-Host "[INFO] Installing dependencies via pnpm..." -ForegroundColor Yellow
-    pnpm install
+# 3. Refresh pnpm dependencies on every dev launch, including after branch switches.
+Write-Host ""
+Write-Host "[INFO] Refreshing dependencies via pnpm..." -ForegroundColor Yellow
+pnpm install
+if ($LASTEXITCODE -ne 0) {
+    throw "pnpm install failed with exit code $LASTEXITCODE. Fix dependency installation before starting Stage0."
 }
 
 # Check the exact port the selected mode will use. Never kill an unrelated

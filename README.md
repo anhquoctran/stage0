@@ -81,7 +81,7 @@ cd stage0
 # Switch to matching Node.js version using nvm (macOS/Linux) or nvm-windows
 nvm use # or on Windows: nvm use 24.18.0
 
-# Install dependencies (only pnpm is allowed)
+# Install dependencies manually if needed (only pnpm is allowed). Development launchers run this automatically on every start.
 pnpm install
 ```
 
