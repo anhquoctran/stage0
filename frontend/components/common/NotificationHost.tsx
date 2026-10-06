@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { LogicalSize, PhysicalPosition } from '@tauri-apps/api/dpi';
 import { currentMonitor, getCurrentWindow } from '@tauri-apps/api/window';
@@ -8,8 +8,11 @@ import { useNotificationStore } from '../../store/useNotificationStore';
 import { applyThemeToDocument, resolveTheme, useThemeStore } from '../../store/useThemeStore';
 import type { AppNotification, AppNotificationAction } from '../../types/notification';
 
-const HOST_WIDTH = 420;
+const HOST_WIDTH = 400;
 const MIN_HOST_HEIGHT = 84;
+// CSS layout measurements exclude box-shadow. Reserve a small native-window
+// gutter so WebKit cannot crop the toast's border/shadow at the lower edge.
+const HOST_RENDER_GUTTER = 12;
 
 function isMacOS() {
   return /mac/i.test(navigator.userAgent || navigator.platform);
@@ -44,6 +47,12 @@ function notificationFromPayload(payload: Record<string, unknown>): AppNotificat
 export const NotificationHost: React.FC = () => {
   const activeToasts = useNotificationStore((state) => state.activeToasts);
   const position = useMemo(() => (isMacOS() ? 'top-right' : 'bottom-right'), []);
+
+  useLayoutEffect(() => {
+    // index.html includes the startup splash in every WebView. The toast host
+    // does not run MainApp, so its splash would otherwise remain above toasts.
+    document.getElementById('startup-splash')?.remove();
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -95,13 +104,19 @@ export const NotificationHost: React.FC = () => {
       const monitor = await currentMonitor();
       const scale = monitor?.scaleFactor || 1;
       const workArea = monitor?.workArea;
+      const width = workArea
+        ? Math.max(320, Math.min(HOST_WIDTH, Math.floor(workArea.size.width / scale) - 32))
+        : HOST_WIDTH;
       const maxHeight = workArea ? Math.floor(workArea.size.height / scale) - 48 : 640;
-      const height = Math.max(MIN_HOST_HEIGHT, Math.min(contentHeight, maxHeight));
+      const height = Math.max(
+        MIN_HOST_HEIGHT,
+        Math.min(contentHeight + HOST_RENDER_GUTTER, maxHeight),
+      );
 
-      await host.setSize(new LogicalSize(HOST_WIDTH, height));
+      await host.setSize(new LogicalSize(width, height));
       if (monitor && workArea) {
         const margin = Math.round(16 * scale);
-        const x = workArea.position.x + workArea.size.width - Math.round(HOST_WIDTH * scale) - margin;
+        const x = workArea.position.x + workArea.size.width - Math.round(width * scale) - margin;
         const y = isMacOS()
           ? workArea.position.y + margin
           : workArea.position.y + workArea.size.height - Math.round(height * scale) - margin;
@@ -120,4 +135,3 @@ export const NotificationHost: React.FC = () => {
 
   return <ToastContainer position={position} onHeightChange={resizeAndShow} />;
 };
-

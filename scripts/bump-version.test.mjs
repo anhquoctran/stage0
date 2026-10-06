@@ -13,16 +13,15 @@ test('increments only the SemVer PATCH component', () => {
   assert.throws(() => incrementPatch('v1.2.3'), /not valid SemVer/);
 });
 
-test('synchronizes each project manifest once per build invocation', () => {
+test('synchronizes project versions without requiring an npm lockfile', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'stage0-version-test-'));
   const backend = path.join(root, 'backend');
   fs.mkdirSync(backend);
 
   fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ version: '0.1.0' }));
-  fs.writeFileSync(
-    path.join(root, 'package-lock.json'),
-    JSON.stringify({ version: '0.1.0', packages: { '': { version: '0.1.0' } } }),
-  );
+  const pnpmLockPath = path.join(root, 'pnpm-lock.yaml');
+  const pnpmLock = "lockfileVersion: '9.0'\n\nimporters:\n  .:\n    dependencies: {}\n";
+  fs.writeFileSync(pnpmLockPath, pnpmLock);
   fs.writeFileSync(path.join(backend, 'Cargo.toml'), '[package]\nname = "stage0"\nversion = "0.1.0"\n');
   fs.writeFileSync(
     path.join(backend, 'Cargo.lock'),
@@ -41,14 +40,13 @@ test('synchronizes each project manifest once per build invocation', () => {
     });
 
     const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-    const packageLock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8'));
     const tauriConfig = JSON.parse(fs.readFileSync(path.join(backend, 'tauri.conf.json'), 'utf8'));
     const cargoToml = fs.readFileSync(path.join(backend, 'Cargo.toml'), 'utf8');
     const cargoLock = fs.readFileSync(path.join(backend, 'Cargo.lock'), 'utf8');
 
     assert.equal(packageJson.version, '0.1.2');
-    assert.equal(packageLock.version, '0.1.2');
-    assert.equal(packageLock.packages[''].version, '0.1.2');
+    assert.equal(fs.readFileSync(pnpmLockPath, 'utf8'), pnpmLock);
+    assert.equal(fs.existsSync(path.join(root, 'package-lock.json')), false);
     assert.equal(tauriConfig.version, '0.1.2');
     assert.match(cargoToml, /^version = "0\.1\.2"$/m);
     assert.match(cargoLock, /^name = "stage0"\nversion = "0\.1\.2"$/m);

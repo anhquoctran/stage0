@@ -94,6 +94,13 @@ impl WindowManagerState {
         }
     }
 
+    pub fn has_repository(&self, label: &str) -> bool {
+        self.lock()
+            .windows
+            .get(label)
+            .is_some_and(|window| window.repo.is_some())
+    }
+
     fn plan_open(
         &self,
         app: &AppHandle,
@@ -349,6 +356,7 @@ pub fn open_repo_path(
                 let _ = window.maximize();
             }
             start_watcher(app, &label, &canonical_path);
+            crate::menu::sync_repo_dependent_menus_for_window(app, &label);
             Ok(OpenRepoOutcome::OpenedHere { repo })
         }
         OpenPlan::AssignedExternal(label) => {
@@ -489,6 +497,7 @@ pub fn close_repo_for_window(app: &AppHandle, label: &str) {
     if let Some(window) = app.get_webview_window(label) {
         let _ = window.set_title("Stage0 — Virtual MR Sandbox");
     }
+    crate::menu::sync_repo_dependent_menus_for_window(app, label);
 }
 
 pub fn destroy_window(app: &AppHandle, label: &str) {

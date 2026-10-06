@@ -531,7 +531,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                       </button>
                       <button
                         type="submit"
-                        className="px-3 py-1 rounded bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs cursor-pointer shadow-xs"
+                        className="px-3 py-1 rounded bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
                       >
                         Add
                       </button>
@@ -607,7 +607,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                             <button
                               type="button"
                               onClick={() => handleSaveRemoteUrl(rem.name)}
-                              className="px-3 py-1 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs cursor-pointer shadow-xs"
+                              className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
                             >
                               Save
                             </button>
@@ -731,7 +731,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                       </select>
                       <button
                         type="submit"
-                        className="px-3 py-1.5 rounded bg-brand hover:bg-brand/90 text-[#11111b] font-semibold cursor-pointer shadow-xs"
+                        className="px-3 py-1.5 rounded bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
                       >
                         Create
                       </button>
@@ -829,7 +829,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                         </button>
                         <button
                           type="submit"
-                          className="px-3 py-1 rounded bg-brand hover:bg-brand/90 text-[#11111b] font-semibold cursor-pointer shadow-xs"
+                          className="px-3 py-1 rounded bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
                         >
                           Create Tag
                         </button>
@@ -986,7 +986,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                       </button>
                       <button
                         type="submit"
-                        className="px-3 py-1 rounded bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs cursor-pointer shadow-xs"
+                        className="px-3 py-1 rounded bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
                       >
                         Save Label
                       </button>
@@ -1322,7 +1322,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
                         </button>
                         <button
                           type="submit"
-                          className="px-4 py-1 bg-accent text-[#11111b] font-semibold text-xs rounded cursor-pointer shadow-xs"
+                          className="px-4 py-1 bg-accent text-on-accent font-semibold text-xs rounded cursor-pointer shadow-xs"
                         >
                           Save Bot
                         </button>
@@ -1514,7 +1514,7 @@ export const RepositorySettingsModal: React.FC<Props> = ({
             <button
               type="button"
               onClick={handleSaveSettings}
-              className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand"
+              className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand"
             >
               Save Settings
             </button>

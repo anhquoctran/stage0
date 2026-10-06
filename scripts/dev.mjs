@@ -159,6 +159,15 @@ async function runDiagnostics() {
 // Main execution
 async function main() {
   const rustAvailable = await runDiagnostics();
+  console.log(`${CYAN}📦 Refreshing JavaScript dependencies with pnpm...${RESET}`);
+  try {
+    execSync('pnpm install', { cwd: ROOT_DIR, stdio: 'inherit' });
+  } catch (error) {
+    console.error(`${RED}Dependency installation failed. Check that pnpm is installed and try again.${RESET}`);
+    if (error?.message) console.error(error.message);
+    process.exit(typeof error?.status === 'number' ? error.status : 1);
+  }
+
   const launchApp = !isWebOnly && rustAvailable;
 
   const isWin = PLATFORM === 'win32';

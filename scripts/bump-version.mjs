@@ -67,30 +67,22 @@ function writeFileAtomically(filePath, contents) {
 
 export function bumpProjectPatchVersion(rootDir = DEFAULT_ROOT_DIR) {
   const packagePath = path.join(rootDir, 'package.json');
-  const packageLockPath = path.join(rootDir, 'package-lock.json');
   const cargoTomlPath = path.join(rootDir, 'backend', 'Cargo.toml');
   const cargoLockPath = path.join(rootDir, 'backend', 'Cargo.lock');
   const tauriConfigPath = path.join(rootDir, 'backend', 'tauri.conf.json');
 
   const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
   const nextVersion = incrementPatch(packageJson.version);
-  const packageLock = JSON.parse(fs.readFileSync(packageLockPath, 'utf8'));
   const tauriConfig = JSON.parse(fs.readFileSync(tauriConfigPath, 'utf8'));
   const cargoToml = fs.readFileSync(cargoTomlPath, 'utf8');
   const cargoLock = fs.readFileSync(cargoLockPath, 'utf8');
 
   const previousVersion = packageJson.version;
   packageJson.version = nextVersion;
-  packageLock.version = nextVersion;
-  if (!packageLock.packages?.['']) {
-    throw new Error('Could not find the root package entry in package-lock.json');
-  }
-  packageLock.packages[''].version = nextVersion;
   tauriConfig.version = nextVersion;
 
   const updatedFiles = [
     [packagePath, `${JSON.stringify(packageJson, null, 2)}\n`],
-    [packageLockPath, `${JSON.stringify(packageLock, null, 2)}\n`],
     [cargoTomlPath, replaceCargoPackageVersion(cargoToml, nextVersion)],
     [cargoLockPath, replaceCargoLockPackageVersion(cargoLock, nextVersion)],
     [tauriConfigPath, `${JSON.stringify(tauriConfig, null, 2)}\n`],

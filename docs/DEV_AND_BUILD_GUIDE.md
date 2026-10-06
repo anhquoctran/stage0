@@ -45,6 +45,8 @@ pnpm run dev:app
 pnpm run dev:desktop
 ```
 
+Every development launcher runs `pnpm install` before starting, even when `node_modules` already exists. This refreshes dependencies when the manifest or lockfile changed (for example, after switching branches). The Tauri `beforeDevCommand` starts Vite directly so desktop launchers do not run the install step twice.
+
 On macOS, the dev scripts pass a Cargo wrapper to Tauri's `--runner` option. The wrapper configures Cargo's executable runner to create a temporary `.app` bundle under the Cargo target directory, sign it ad-hoc with the app's bundle identifier, and launch the compiled app inside it. The signature binds Info.plist and resources to the same identity that UserNotifications uses for permission requests. No Apple developer certificate is needed for this local dev signature. The runner copies/clones the executable before signing so Cargo's binary is unchanged, and preserves console logs. When Tauri stops Cargo on a Rust reload, the executable runner stops its app too, allowing the replacement to start without being blocked by the old single instance. Running the backend executable directly from `backend/target/debug` does not support macOS notifications. Browser-only development (`pnpm run dev` or `dev:web`) has no native notification permissions.
 
 ### Method 2: Direct Node.js Script (`scripts/dev.mjs`)

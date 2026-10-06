@@ -181,7 +181,7 @@ export const GitCredentialsTab: React.FC = () => {
               clearError();
               setFormError(null);
             }}
-            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] text-xs font-semibold rounded-none transition-colors cursor-pointer shadow-xs border border-brand"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-none transition-colors cursor-pointer shadow-xs border border-brand"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Credential</span>
@@ -374,16 +374,16 @@ export const GitCredentialsTab: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
+              className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
             >
               {isLoading ? (
                 <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#11111b]" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-on-accent" />
                   <span>Saving to {keyringName}...</span>
                 </>
               ) : (
                 <>
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#11111b]" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-on-accent" />
                   <span>Save to {keyringName}</span>
                 </>
               )}
@@ -409,7 +409,7 @@ export const GitCredentialsTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsAdding(true)}
-                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] text-xs font-semibold rounded-none transition-colors cursor-pointer border border-brand shadow-xs mt-1"
+                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-none transition-colors cursor-pointer border border-brand shadow-xs mt-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add First Credential</span>

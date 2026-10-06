@@ -229,7 +229,7 @@ export const RebaseFromModal: React.FC = () => {
             <button
               type="submit"
               disabled={isSyncing || !selectedTargetBranch.trim()}
-              className="flex items-center gap-1.5 px-5 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] text-xs font-semibold transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand disabled:opacity-50"
+              className="flex items-center gap-1.5 px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand disabled:opacity-50"
             >
               {isSyncing ? (
                 <>

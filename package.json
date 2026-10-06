@@ -10,7 +10,7 @@
   },
   "scripts": {
     "preinstall": "node scripts/check-pnpm.mjs",
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs --web",
     "dev:web": "node scripts/dev.mjs --web",
     "dev:app": "node scripts/dev.mjs --app",
     "dev:desktop": "node scripts/dev.mjs --app",

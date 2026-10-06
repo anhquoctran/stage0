@@ -82,11 +82,10 @@ if [ "$MODE" == "app" ]; then
   fi
 fi
 
-# 3. Check pnpm dependencies
-if [ ! -d "node_modules" ]; then
-  echo -e "\n${YELLOW}📦 Installing dependencies with pnpm...${RESET}"
-  pnpm install
-fi
+# 3. Refresh pnpm dependencies on every dev launch. This also picks up lockfile
+# changes after switching branches, even when node_modules already exists.
+echo -e "\n${YELLOW}📦 Refreshing dependencies with pnpm...${RESET}"
+pnpm install
 
 # 4. Launch with Hot Reload
 if [ "$MODE" == "app" ]; then

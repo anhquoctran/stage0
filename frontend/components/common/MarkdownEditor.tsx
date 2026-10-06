@@ -309,7 +309,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 type="button"
                 onClick={onSubmit}
                 disabled={isSubmitting || !value.trim()}
-                className="px-4 py-1 bg-brand hover:bg-brand/90 text-[#11111b] font-semibold text-xs transition-colors cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Submitting...' : submitLabel}
               </button>

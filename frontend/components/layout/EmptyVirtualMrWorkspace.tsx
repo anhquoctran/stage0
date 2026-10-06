@@ -45,11 +45,11 @@ export const EmptyVirtualMrWorkspace: React.FC<Props> = ({
         <button
           type="button"
           onClick={onNewMr}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand hover:bg-brand/90 active:scale-[0.98] text-[#11111b] font-semibold text-xs transition-all shadow-lg shadow-brand/20 cursor-pointer mb-4"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand hover:bg-brand/90 active:scale-[0.98] text-on-accent font-semibold text-xs transition-all shadow-lg shadow-brand/20 cursor-pointer mb-4"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Create Virtual MR</span>
-          <kbd className="ml-1.5 px-1.5 py-0.5 text-[10px] font-mono bg-black/15 rounded text-[#11111b]/80 border border-black/10">
+          <kbd className="ml-1.5 px-1.5 py-0.5 text-[10px] font-mono bg-black/15 rounded text-on-accent/80 border border-black/10">
             {formatShortcutText('Ctrl+T')}
           </kbd>
         </button>

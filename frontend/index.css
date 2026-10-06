@@ -11,6 +11,7 @@
   color-scheme: dark;
   --brand: #b87ff4;
   --ctp-brand: #b87ff4;
+  --ctp-on-accent: #11111b;
   --ctp-rosewater: #f5e0dc;
   --ctp-flamingo: #f2cdcd;
   --ctp-pink: #f5c2e7;
@@ -47,6 +48,15 @@
   --text-primary: var(--ctp-text);
   --text-secondary: var(--ctp-subtext1);
   --text-muted: var(--ctp-subtext0);
+  --backdrop-modal: rgba(0, 0, 0, 0.6);
+  --preferences-card-bg: #11111b;
+  --preferences-card-border: #313244;
+  --preferences-choice-selected-bg: rgba(203, 166, 247, 0.1);
+  --preferences-choice-selected-border: rgba(203, 166, 247, 0.5);
+  --preferences-danger-bg: #b4233c;
+  --preferences-danger-border: #e85d75;
+  --preferences-danger-text: #ffffff;
+  --preferences-danger-icon-bg: rgba(255, 255, 255, 0.14);
 }
 
 [data-theme="mocha-light"],
@@ -58,6 +68,7 @@
   color-scheme: light;
   --brand: #b87ff4;
   --ctp-brand: #b87ff4;
+  --ctp-on-accent: #ffffff;
   --ctp-rosewater: #dc8a78;
   --ctp-flamingo: #dd7878;
   --ctp-pink: #ea76cb;
@@ -94,6 +105,15 @@
   --text-primary: var(--ctp-text);
   --text-secondary: var(--ctp-subtext1);
   --text-muted: var(--ctp-subtext0);
+  --backdrop-modal: rgba(59, 62, 83, 0.28);
+  --preferences-card-bg: #f7f8fb;
+  --preferences-card-border: #c7ccd8;
+  --preferences-choice-selected-bg: rgba(136, 57, 239, 0.07);
+  --preferences-choice-selected-border: rgba(136, 57, 239, 0.42);
+  --preferences-danger-bg: #c62845;
+  --preferences-danger-border: #a91f38;
+  --preferences-danger-text: #ffffff;
+  --preferences-danger-icon-bg: rgba(255, 255, 255, 0.16);
 }
 
 :is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .text-brand {
@@ -132,6 +152,7 @@
   --color-brand: #b87ff4;
   --color-accent: #b87ff4;
   --color-primary: #b87ff4;
+  --color-on-accent: var(--ctp-on-accent);
   --color-rosewater: var(--ctp-rosewater);
   --color-flamingo: var(--ctp-flamingo);
   --color-pink: var(--ctp-pink);
@@ -175,6 +196,46 @@ body {
 
 body.notification-host-window {
   background-color: transparent !important;
+}
+
+.preferences-panel-card {
+  background-color: var(--preferences-card-bg);
+  border-color: var(--preferences-card-border);
+}
+
+.preferences-choice-card {
+  background-color: var(--preferences-card-bg);
+  border-color: var(--preferences-card-border);
+}
+
+.preferences-choice-card-selected {
+  background-color: var(--preferences-choice-selected-bg);
+  border-color: var(--preferences-choice-selected-border);
+}
+
+.preferences-danger-card {
+  background-color: var(--preferences-danger-bg);
+  border-color: var(--preferences-danger-border);
+}
+
+.preferences-danger-icon {
+  background-color: var(--preferences-danger-icon-bg);
+  border-color: var(--preferences-danger-border);
+  color: var(--preferences-danger-text);
+}
+
+.preferences-danger-text {
+  color: var(--preferences-danger-text);
+}
+
+.preferences-danger-action {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #ffffff;
+}
+
+.preferences-danger-action:hover {
+  background-color: rgba(255, 255, 255, 0.22);
 }
 
 button,
