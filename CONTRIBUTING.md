@@ -71,7 +71,7 @@ Common prefixes:
 ## Coding Standards
 
 ### Frontend (React 19, TypeScript, Tailwind CSS v4)
-- **Strict Typing**: Maintain strict TypeScript typing. Avoid `any`; use well-defined interfaces in `frontend/types/`.
+- **Strict Typing**: Maintain strict TypeScript typing. Avoid `any`; keep feature-specific interfaces in `frontend/features/<feature>/types/`.
 - **Monochromatic & Accessible Design**:
   - Adhere to the Catppuccin-inspired monochromatic aesthetic (`text-subtext0`, `text-subtext1`, `text-text`, `bg-mantle`, `bg-surface0`, `bg-surface1`).
   - Avoid ad-hoc saturated accent colors in menus, context actions, or toolbars unless specifically required for git diff semantics (additions in green, deletions in red).

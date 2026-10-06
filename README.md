@@ -132,16 +132,16 @@ flowchart TD
     Watcher -->|repo-fs-changed| UI
 ```
 
-The main source directories are:
+Both sources use a feature-based layout. Entry points remain at `frontend/main.tsx`
+and `backend/src/lib.rs`; see [Feature layout](docs/architecture/feature_layout.md)
+for ownership and import conventions.
 
 | Path | Contents |
 | --- | --- |
-| `frontend/` | React components, Zustand stores, types, and UI utilities. |
-| `backend/src/commands.rs` | Tauri IPC command handlers. |
-| `backend/src/git/` | Git command runner, diff, branch, conflict, blame, and remote operations. |
-| `backend/src/sandbox/` | In-memory, local worktree, and Docker adapters. |
-| `backend/src/db/` | SQLite initialization, schema, and persistence methods. |
-| `backend/src/watcher/` | Debounced repository filesystem watcher. |
+| `frontend/common/`, `backend/src/common/` | Shared UI/utilities and process support. |
+| `frontend/core/`, `backend/src/core/` | App shell, lifecycle, IPC registration, window/menu management, SQLite connection and migrations. |
+| `frontend/features/` | Each feature's components, stores, services, types and constants. |
+| `backend/src/features/` | Each feature's command handlers, domain logic and persistence methods. |
 | `scripts/` | Cross-platform development and build scripts. |
 
 ## Contributing

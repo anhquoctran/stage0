@@ -413,7 +413,7 @@ CREATE INDEX IF NOT EXISTS idx_comments_discussion ON virtual_mr_comments(discus
 CREATE INDEX IF NOT EXISTS idx_labels_repo ON repo_labels(repo_id);
 ```
 
-### 5.2. TypeScript Types Model (`frontend/types/virtualMr.ts`)
+### 5.2. TypeScript Types Model (`frontend/features/virtual-mr/types/virtualMr.ts`)
 
 ```typescript
 export type VirtualMrStatus = 'open' | 'approved' | 'closed';
@@ -513,7 +513,7 @@ export interface RepoSettings {
 }
 ```
 
-### 5.3. Frontend Zustand Store Refactoring (`frontend/store/useVirtualMrStore.ts`)
+### 5.3. Frontend Zustand Store Refactoring (`frontend/features/virtual-mr/store/useVirtualMrStore.ts`)
 
 ```typescript
 interface VirtualMrState {

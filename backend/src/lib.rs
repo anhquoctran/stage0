@@ -1,17 +1,10 @@
-pub mod ai;
-pub mod commands;
-pub mod credentials;
-pub mod db;
-pub mod git;
-pub mod menu;
-pub mod notifications;
-pub mod performance;
-pub mod process;
-pub mod sandbox;
-pub mod updates;
-pub mod watcher;
-pub mod window_manager;
+pub mod common;
+pub mod core;
+pub mod features;
 
+use crate::core::{commands, db, menu, window_manager};
+use crate::features::git::watcher;
+use crate::features::{credentials, notifications, performance, sandbox, updates};
 use db::Database;
 use sandbox::SandboxManager;
 use std::path::{Path, PathBuf};
@@ -94,7 +87,7 @@ pub fn run() {
             // Initialize active Git binary path from persisted settings
             if let Ok(Some(saved_path)) = db.get_setting("git_binary_path") {
                 if !saved_path.trim().is_empty() && saved_path != "system" {
-                    crate::git::runner::set_active_git_path(Some(saved_path));
+                    crate::features::git::runner::set_active_git_path(Some(saved_path));
                 }
             }
 
