@@ -226,7 +226,7 @@ All operations must execute via `std::process::Command` in the target `repo_path
 
 ## 8. Frontend Implementation Guidelines
 
-### 8.1 TypeScript Definitions (`src/types/git.ts`)
+### 8.1 TypeScript Definitions (`frontend/features/git/types/git.ts`)
 
 ```typescript
 export interface RepoInfo {
@@ -315,7 +315,7 @@ export interface ConflictReport {
 - [ ] Implement `run_git_sync` for fetch, pull, and rebase commands.
 
 ### Phase 4: Frontend Development
-- [ ] Setup Zustand store in `src/store/useGitStore.ts`:
+- [ ] Setup Zustand store in `frontend/features/git/store/useGitStore.ts`:
   - State: `currentRepo`, `branches`, `baseBranch`, `compareBranch`, `diffPayload`, `conflictReport`, `selectedFile`, `viewMode`.
 - [ ] Build `TopBar`:
   - Repo selector button (opens native dialog).

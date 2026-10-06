@@ -14,9 +14,9 @@ import '@fontsource/fira-code/500.css';
 import '@fontsource/fira-code/600.css';
 import '@fontsource/fira-code/700.css';
 import '@fortawesome/fontawesome-svg-core/styles.css';
-import App from './App';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
-import './index.css';
+import App from './core/App';
+import { ErrorBoundary } from './common/components/ErrorBoundary';
+import './core/styles/index.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

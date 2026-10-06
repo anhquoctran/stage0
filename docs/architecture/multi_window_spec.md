@@ -122,11 +122,11 @@ Các cửa sổ dùng chung một `Database` trong tiến trình, với một `r
 
 ## Bản đồ mã nguồn và quy trình xác minh
 
-- `backend/src/window_manager.rs`: chuẩn hóa path, file identity, registry, định tuyến, build/focus window và cleanup.
-- `backend/src/commands.rs`: IPC cho Open, startup context, New Window và Close Repository.
+- `backend/src/core/window_manager.rs`: chuẩn hóa path, file identity, registry, định tuyến, build/focus window và cleanup.
+- `backend/src/features/git/commands.rs`, `backend/src/core/commands/window.rs`: IPC cho Open, startup context, New Window và Close Repository.
 - `backend/src/lib.rs`: khởi tạo state, single-instance handoff, startup args và destroyed-window cleanup.
-- `backend/src/watcher/mod.rs`: một watcher/debouncer theo window label, event gửi đích danh.
-- `backend/src/menu.rs`: menu macOS cấp app và chuyển action tới cửa sổ focus.
-- `frontend/App.tsx`, `frontend/store/useGitStore.ts`, `frontend/types/git.ts`: bootstrap theo cửa sổ, định tuyến state và kiểu IPC.
+- `backend/src/features/git/watcher/mod.rs`: một watcher/debouncer theo window label, event gửi đích danh.
+- `backend/src/core/menu.rs`: menu macOS cấp app và chuyển action tới cửa sổ focus.
+- `frontend/core/App.tsx`, `frontend/features/git/store/useGitStore.ts`, `frontend/features/git/types/git.ts`: bootstrap theo cửa sổ, định tuyến state và kiểu IPC.
 
 Trước khi thay đổi luồng này, chạy `cargo check --lib`, `cargo test --lib`, `npm run typecheck`, `npm run build` và `git diff --check`. Unit tests hiện xác nhận symlink alias dùng cùng identity, path không phải Git bị từ chối và upsert cùng path giữ nguyên ID. Các race giữa nhiều cửa sổ, native focus/menu và custom frame vẫn cần kiểm thử thủ công trên desktop; build/typecheck không thay thế được kiểm thử GUI đó.
