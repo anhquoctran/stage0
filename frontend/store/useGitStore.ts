@@ -96,7 +96,7 @@ interface GitState {
   setIsRebaseFromOpen: (open: boolean) => void;
   setIsRemoteUrlFromOpen: (open: boolean) => void;
   setIsCloneModalOpen: (open: boolean) => void;
-  cloneRepo: (url: string, targetPath: string) => Promise<RepoInfo | null>;
+  cloneRepo: (url: string, targetPath: string, credentialId?: string) => Promise<RepoInfo | null>;
   pickCloneFolder: () => Promise<string | null>;
   setTargetFileForUrl: (file: ChangedFile | null) => void;
   fetchRemotes: (repoPath: string) => Promise<void>;
@@ -343,12 +343,13 @@ export const useGitStore = create<GitState>((set, get) => ({
     }
   },
 
-  cloneRepo: async (url: string, targetPath: string) => {
+  cloneRepo: async (url: string, targetPath: string, credentialId?: string) => {
     set({ isLoading: true, error: null });
     try {
       const repo = await invoke<RepoInfo>('clone_repository', {
         url,
         targetPath,
+        credentialId: credentialId ?? null,
       });
       if (repo) {
         const outcome = await invoke<OpenRepoOutcome>('open_repo_by_path', {

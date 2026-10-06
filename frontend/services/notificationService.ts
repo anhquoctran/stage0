@@ -4,43 +4,66 @@ import {
   AppNotification,
   AppNotificationAction,
   NotificationDispatchResult,
-  NotificationPermissionState,
   NotifyOptions,
 } from '../types/notification';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 
 let isListening = false;
-let unlistenFn: UnlistenFn | null = null;
+let unlistenFns: UnlistenFn[] = [];
 
 export const notificationService = {
   /**
-   * Initializes background notification event listener from backend (Tauri event: 'app-notification')
+   * Initializes the shared notification history and action listeners.
    */
   async init(): Promise<void> {
     if (isListening || !isTauri()) return;
     isListening = true;
 
     try {
-      unlistenFn = await listen<Record<string, unknown>>('app-notification', (event) => {
+      const stopNotifications = await listen<Record<string, unknown>>('app-notification', (event) => {
         const payload = event.payload;
+        const level = (payload.level as AppNotification['level']) || 'info';
         const notification: AppNotification = {
           id: (payload.id as string) || `notif_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           title: (payload.title as string) || 'Stage0 Notification',
           body: (payload.body as string) || '',
-          level: (payload.level as AppNotification['level']) || 'info',
+          level,
+          variant: (payload.variant as AppNotification['variant']) || this.variantForLevel(level),
           timestamp: Date.now(),
           isRead: false,
+          channel: (payload.channel as AppNotification['channel']) || undefined,
           actions: Array.isArray(payload.actions)
             ? (payload.actions as AppNotificationAction[])
             : undefined,
-          autoDismissMs: typeof payload.auto_dismiss_ms === 'number' ? payload.auto_dismiss_ms : 6000,
+          clickAction: (payload.clickAction || payload.click_action) as AppNotificationAction | undefined,
+          dismissPolicy: (payload.dismissPolicy || payload.dismiss_policy) as AppNotification['dismissPolicy'] || 'both',
+          autoDismissMs:
+            typeof payload.autoDismissMs === 'number'
+              ? payload.autoDismissMs
+              : typeof payload.auto_dismiss_ms === 'number'
+                ? payload.auto_dismiss_ms
+                : 6000,
         };
 
-        // Record history only - no in-app floating banner
+        // Main windows keep the shared unread history; the notification host
+        // receives a separate event for its transient toast queue.
         useNotificationStore.getState().addNotification(notification);
       });
+      try {
+        const stopActions = await listen<{
+          notificationId?: string;
+          action: AppNotificationAction;
+        }>('notification-action', (event) => {
+          this.handleAction(event.payload.action, event.payload.notificationId);
+        });
+        unlistenFns = [stopNotifications, stopActions];
+      } catch (error) {
+        stopNotifications();
+        throw error;
+      }
     } catch (err) {
+      isListening = false;
       console.warn('[NotificationService] Failed to listen to backend notifications:', err);
     }
   },
@@ -49,50 +72,16 @@ export const notificationService = {
    * Cleans up listeners on app unmount
    */
   destroy(): void {
-    if (unlistenFn) {
-      unlistenFn();
-      unlistenFn = null;
-    }
+    unlistenFns.forEach((unlisten) => unlisten());
+    unlistenFns = [];
     isListening = false;
   },
 
   /**
-   * On macOS this reflects Notification Center authorization. Windows and Linux
-   * do not expose an equivalent per-app permission prompt through this backend.
-   */
-  async isPermissionGranted(): Promise<boolean> {
-    const state = await this.getPermissionState();
-    return state === 'granted' || state === 'not_required';
-  },
-
-  /**
-   * Returns the OS notification permission state. Never consults browser
-   * notification APIs: Stage0 dispatches native notifications only.
-   */
-  async getPermissionState(): Promise<NotificationPermissionState> {
-    if (!isTauri()) return 'unsupported';
-    try {
-      return await invoke<NotificationPermissionState>('get_notification_permission_state');
-    } catch (err) {
-      console.warn('[NotificationService] getPermissionState error:', err);
-      return 'unsupported';
-    }
-  },
-
-  /**
-   * Requests OS-native notification authorization when the platform requires it.
-   */
-  async requestPermission(): Promise<NotificationPermissionState> {
-    if (!isTauri()) return 'unsupported';
-    // Native failures must reach the UI; they are not a user denial of consent.
-    return invoke<NotificationPermissionState>('request_notification_permission');
-  },
-
-  /**
-   * Unified dispatch function for native push notifications:
-   * - Shows native OS notification (Windows Toast, macOS Notification Center, Linux Freedesktop D-Bus)
+   * Dispatches a Stage0 notification using the current platform's presentation:
+   * - Custom Stage0 toast window on Windows and macOS
+   * - Freedesktop notification service on Linux, which chooses placement
    * - Stores event in notification history for auditing
-   * - Does NOT show in-app toasts
    * - Guaranteed never to throw an unhandled exception
    */
   async notify(options: NotifyOptions): Promise<NotificationDispatchResult> {
@@ -125,7 +114,10 @@ export const notificationService = {
       isRead: false,
       channel: options.channel,
       actions: options.actions,
-      autoDismissMs: options.autoDismissMs,
+      clickAction: options.clickAction,
+      variant: options.variant || this.variantForLevel(options.level),
+      dismissPolicy: options.dismissPolicy || 'both',
+      autoDismissMs: options.autoDismissMs && options.autoDismissMs > 0 ? options.autoDismissMs : 6000,
     };
 
     // 1. Record in history
@@ -135,35 +127,65 @@ export const notificationService = {
       console.warn('[NotificationService] Failed to record notification history:', err);
     }
 
-    // 2. Native desktop notification (if enabled and not silent, or forceDesktop requested).
-    const shouldDispatchDesktop = options.forceDesktop || (!options.silent && settings.enableDesktopNotifications);
+    // A category preference is the only end-user delivery control.
+    const shouldDispatch = settings.channels[options.channel];
     let delivery: NotificationDispatchResult['delivery'] = 'not_requested';
     let deliveryError: string | undefined;
-    if (shouldDispatchDesktop) {
+    if (shouldDispatch) {
       if (!isTauri()) {
         delivery = 'unsupported';
       } else {
         try {
-          await invoke('send_push_notification', {
+          await invoke('dispatch_notification', {
             payload: {
               id: notification.id,
               title: notification.title,
               body: notification.body,
               level: notification.level,
+              variant: notification.variant,
+              channel: notification.channel,
               actions: notification.actions,
-              auto_dismiss_ms: notification.autoDismissMs,
+              clickAction: notification.clickAction,
+              dismissPolicy: notification.dismissPolicy,
+              autoDismissMs: notification.autoDismissMs,
             },
           });
           delivery = 'sent';
         } catch (err) {
           delivery = 'failed';
-          deliveryError = 'Native OS notification delivery failed.';
-          console.warn('[NotificationService] Native OS notification delivery failed:', err);
+          deliveryError = 'Stage0 notification delivery failed.';
+          console.warn('[NotificationService] Stage0 notification delivery failed:', err);
         }
       }
     }
 
     return { notification, delivery, error: deliveryError };
+  },
+
+  variantForLevel(level?: AppNotification['level']): NonNullable<AppNotification['variant']> {
+    switch (level) {
+      case 'success':
+        return 'success';
+      case 'warning':
+        return 'warning';
+      case 'danger':
+      case 'error':
+        return 'danger';
+      default:
+        return 'default';
+    }
+  },
+
+  async dispatchAction(action: AppNotificationAction, notificationId?: string): Promise<void> {
+    if (!isTauri()) {
+      this.handleAction(action, notificationId);
+      return;
+    }
+    try {
+      await invoke('dispatch_notification_action', { notificationId, action });
+    } catch (error) {
+      console.warn('[NotificationService] Could not route notification action:', error);
+    }
   },
 
   /**

@@ -9,6 +9,14 @@ use tauri::{AppHandle, Manager};
 
 pub struct Database(pub Mutex<Connection>);
 
+pub struct GitCredentialRecord {
+    pub server_url: String,
+    pub account_name: String,
+    pub token_ref: String,
+    pub token_type: String,
+    pub source: String,
+}
+
 const SCHEMA_SQL: &str = include_str!("schema.sql");
 const DATABASE_FILE_NAME: &str = "stage0.db";
 const LEGACY_DATABASE_FILE_NAME: &str = "local_mr.db";
@@ -196,6 +204,7 @@ impl Database {
 
         conn.execute_batch(SCHEMA_SQL)?;
         Self::migrate_discussions_fingerprint(&conn)?;
+        Self::migrate_git_credentials(&conn)?;
 
         Ok(Database(Mutex::new(conn)))
     }
@@ -222,6 +231,28 @@ impl Database {
         if !columns.iter().any(|c| c == "context_after") {
             conn.execute(
                 "ALTER TABLE virtual_mr_discussions ADD COLUMN context_after TEXT;",
+                [],
+            )?;
+        }
+        Ok(())
+    }
+
+    fn migrate_git_credentials(conn: &Connection) -> Result<(), rusqlite::Error> {
+        let mut stmt = conn.prepare("PRAGMA table_info(git_credentials);")?;
+        let columns: Vec<String> = stmt
+            .query_map([], |row| row.get::<_, String>(1))?
+            .collect::<Result<_, _>>()?;
+        drop(stmt);
+
+        if !columns.iter().any(|column| column == "source") {
+            conn.execute(
+                "ALTER TABLE git_credentials ADD COLUMN source TEXT NOT NULL DEFAULT 'stage0';",
+                [],
+            )?;
+        }
+        if !columns.iter().any(|column| column == "helper_name") {
+            conn.execute(
+                "ALTER TABLE git_credentials ADD COLUMN helper_name TEXT;",
                 [],
             )?;
         }
@@ -290,6 +321,14 @@ impl Database {
         Ok(repos)
     }
 
+    pub fn get_all_repository_paths(&self) -> Result<Vec<String>, rusqlite::Error> {
+        let conn = self.conn();
+        let mut stmt = conn
+            .prepare_cached("SELECT local_path FROM repositories ORDER BY last_opened_at DESC;")?;
+        let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
+        rows.collect()
+    }
+
     pub fn delete_repository(&self, id: &str) -> Result<(), rusqlite::Error> {
         let conn = self.conn();
         let mut stmt = conn.prepare_cached("DELETE FROM repositories WHERE id = ?1;")?;
@@ -335,14 +374,16 @@ impl Database {
     ) -> Result<Vec<crate::credentials::GitCredentialMeta>, rusqlite::Error> {
         let conn = self.conn();
         let mut stmt = conn.prepare_cached(
-            "SELECT id, provider, server_url, account_name, token_ref, token_type, label, created_at, updated_at
+            "SELECT id, provider, server_url, account_name, token_ref, token_type, label, source, helper_name, created_at, updated_at
              FROM git_credentials
              ORDER BY created_at DESC;",
         )?;
 
         let rows = stmt.query_map([], |row| {
             let token_ref: String = row.get(4)?;
-            let is_in_keyring = crate::credentials::exists_in_keyring(&token_ref);
+            let source: String = row.get(7)?;
+            let is_in_keyring =
+                source == "system_global" || crate::credentials::exists_in_keyring(&token_ref);
             Ok(crate::credentials::GitCredentialMeta {
                 id: row.get(0)?,
                 provider: row.get(1)?,
@@ -351,8 +392,10 @@ impl Database {
                 token_ref,
                 token_type: row.get(5)?,
                 label: row.get(6)?,
-                created_at: row.get(7)?,
-                updated_at: row.get(8)?,
+                source,
+                helper_name: row.get(8)?,
+                created_at: row.get(9)?,
+                updated_at: row.get(10)?,
                 is_in_keyring,
             })
         })?;
@@ -362,6 +405,75 @@ impl Database {
             list.push(r?);
         }
         Ok(list)
+    }
+
+    pub fn get_git_credential_for_clone(
+        &self,
+        id: &str,
+    ) -> Result<Option<GitCredentialRecord>, rusqlite::Error> {
+        let conn = self.conn();
+        match conn.query_row(
+            "SELECT server_url, account_name, token_ref, token_type, source
+             FROM git_credentials WHERE id = ?1;",
+            params![id],
+            |row| {
+                Ok(GitCredentialRecord {
+                    server_url: row.get(0)?,
+                    account_name: row.get(1)?,
+                    token_ref: row.get(2)?,
+                    token_type: row.get(3)?,
+                    source: row.get(4)?,
+                })
+            },
+        ) {
+            Ok(credential) => Ok(Some(credential)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+
+    pub fn sync_system_git_credentials(
+        &self,
+        credentials: &[crate::credentials::GitCredentialMeta],
+        scan_complete: bool,
+    ) -> Result<(), rusqlite::Error> {
+        let mut conn = self.conn();
+        let tx = conn.transaction()?;
+        if scan_complete {
+            tx.execute(
+                "DELETE FROM git_credentials WHERE source = 'system_global';",
+                [],
+            )?;
+        }
+        for credential in credentials {
+            tx.execute(
+                "INSERT INTO git_credentials (id, provider, server_url, account_name, token_ref, token_type, label, source, helper_name, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'system_global', ?8, ?9, ?10)
+                 ON CONFLICT(id) DO UPDATE SET
+                    provider = excluded.provider,
+                    server_url = excluded.server_url,
+                    account_name = excluded.account_name,
+                    token_ref = excluded.token_ref,
+                    token_type = excluded.token_type,
+                    label = excluded.label,
+                    source = excluded.source,
+                    helper_name = excluded.helper_name,
+                    updated_at = excluded.updated_at;",
+                params![
+                    credential.id,
+                    credential.provider,
+                    credential.server_url,
+                    credential.account_name,
+                    credential.token_ref,
+                    credential.token_type,
+                    credential.label,
+                    credential.helper_name,
+                    credential.created_at,
+                    credential.updated_at,
+                ],
+            )?;
+        }
+        tx.commit()
     }
 
     pub fn delete_git_credential(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
@@ -397,6 +509,19 @@ impl Database {
             |row| row.get(0),
         ) {
             Ok(token_ref) => Ok(Some(token_ref)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+
+    pub fn get_git_credential_source(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
+        let conn = self.conn();
+        match conn.query_row(
+            "SELECT source FROM git_credentials WHERE id = ?1;",
+            params![id],
+            |row| row.get(0),
+        ) {
+            Ok(source) => Ok(Some(source)),
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
             Err(error) => Err(error),
         }

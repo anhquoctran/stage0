@@ -189,6 +189,10 @@ export const useUpdateStore = create<UpdateStoreState>((set, get) => ({
               title: 'Stage0 update available',
               body: `Stage0 ${release.version} is available on the ${release.channel} channel.`,
               level: 'update',
+              channel: 'softwareUpdates',
+              clickAction: { label: 'View update', actionType: 'open_preferences_updates' },
+              dismissPolicy: 'both',
+              autoDismissMs: 10000,
               actions: [{ label: 'View Update', actionType: 'open_preferences_updates' }],
             });
           } else if (get().updateCheckPolicy === 'auto_install') {

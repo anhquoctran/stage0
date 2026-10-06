@@ -225,7 +225,7 @@ const SETTINGS_TREE: TreeCategory[] = [
         id: 'git-credentials',
         label: 'Git Credentials',
         title: 'Git Credentials & Remotes',
-        description: 'Store Git credential metadata and secrets locally. Stage0 does not currently inject saved credentials into Git commands.',
+        description: 'Manage Stage0 credentials and mappings discovered from system/global Git helpers.',
         keywords: ['credentials', 'token', 'pat', 'github', 'gitlab', 'auth'],
       },
     ],

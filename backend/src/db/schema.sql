@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS git_credentials (
     token_ref TEXT NOT NULL UNIQUE,
     token_type TEXT NOT NULL,
     label TEXT,
+    source TEXT NOT NULL DEFAULT 'stage0',
+    helper_name TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

@@ -3,13 +3,18 @@ import { clsx } from 'clsx';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { MainLayout } from './components/layout/MainLayout';
+import { NotificationHost } from './components/common/NotificationHost';
 import { notificationService } from './services/notificationService';
+import { syncUnreadBadge } from './services/notificationBadgeService';
 import { useGitStore } from './store/useGitStore';
+import { useNotificationStore } from './store/useNotificationStore';
 import { useUpdateStore } from './store/useUpdateStore';
 import type { RepoInfo, WindowStartupContext } from './types/git';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
-export const App: React.FC = () => {
+const MainApp: React.FC = () => {
   const { initApp, attachRepoToCurrentWindow, refreshDiff, isInitializing } = useGitStore();
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
   const [isMaximized, setIsMaximized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const usesNativeMacFrame =
@@ -117,6 +122,10 @@ export const App: React.FC = () => {
     };
   }, [initApp, attachRepoToCurrentWindow, refreshDiff]);
 
+  useEffect(() => {
+    void syncUnreadBadge(unreadCount);
+  }, [unreadCount]);
+
   return (
     <div
       className={clsx(
@@ -131,6 +140,13 @@ export const App: React.FC = () => {
       <MainLayout />
     </div>
   );
+};
+
+export const App: React.FC = () => {
+  if (isTauri() && getCurrentWindow().label === 'notification-host') {
+    return <NotificationHost />;
+  }
+  return <MainApp />;
 };
 
 export default App;

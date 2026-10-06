@@ -2,10 +2,6 @@ import { create } from 'zustand';
 import { AppNotification, NotificationSettings } from '../types/notification';
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
-  enableDesktopNotifications: true,
-  enableInAppToasts: false,
-  playAlertSound: false,
-  toastDurationMs: 0,
   channels: {
     softwareUpdates: true,
     aiReview: true,
@@ -26,6 +22,7 @@ interface NotificationState {
   updateChannel: (channel: keyof NotificationSettings['channels'], enabled: boolean) => void;
   resetSettings: () => void;
   addNotification: (notification: AppNotification) => void;
+  showToast: (notification: AppNotification) => void;
   dismissToast: (id: string) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -45,8 +42,6 @@ function loadStoredSettings(): NotificationSettings {
     if (raw) {
       const parsed = JSON.parse(raw);
       return {
-        ...DEFAULT_NOTIFICATION_SETTINGS,
-        ...parsed,
         channels: {
           ...DEFAULT_NOTIFICATION_SETTINGS.channels,
           ...(parsed.channels || {}),
@@ -144,9 +139,15 @@ export const useNotificationStore = create<NotificationState>((set) => ({
 
       return {
         notifications: updated,
-        activeToasts: [],
         unreadCount,
       };
+    });
+  },
+
+  showToast: (notification: AppNotification) => {
+    set((state) => {
+      if (state.activeToasts.some((toast) => toast.id === notification.id)) return state;
+      return { activeToasts: [...state.activeToasts, notification] };
     });
   },
 
@@ -195,3 +196,41 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     set({ isHistoryDrawerOpen: open });
   },
 }));
+
+// Tauri webviews have separate Zustand instances even though their localStorage
+// is shared. Keep history, category switches, unread count, and the taskbar dot
+// aligned when notifications are read or cleared in another window.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === HISTORY_STORAGE_KEY) {
+      try {
+        const notifications = event.newValue ? JSON.parse(event.newValue) : [];
+        if (!Array.isArray(notifications)) return;
+        const bounded = notifications.slice(0, MAX_STORED_NOTIFICATIONS) as AppNotification[];
+        useNotificationStore.setState({
+          notifications: bounded,
+          unreadCount: bounded.filter((notification) => !notification.isRead).length,
+        });
+      } catch {
+        // Ignore malformed storage written by an older or interrupted app session.
+      }
+      return;
+    }
+
+    if (event.key === SETTINGS_STORAGE_KEY && event.newValue) {
+      try {
+        const parsed = JSON.parse(event.newValue);
+        useNotificationStore.setState({
+          settings: {
+            channels: {
+              ...DEFAULT_NOTIFICATION_SETTINGS.channels,
+              ...(parsed.channels || {}),
+            },
+          },
+        });
+      } catch {
+        // Ignore malformed settings and keep the current in-memory value.
+      }
+    }
+  });
+}

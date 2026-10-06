@@ -27,7 +27,13 @@ pub fn run() {
     tauri::Builder::default()
         .on_window_event(|window, event| {
             if matches!(event, WindowEvent::Destroyed) {
-                destroy_window(&window.app_handle(), window.label());
+                if window.label() != notifications::NOTIFICATION_HOST_LABEL {
+                    destroy_window(&window.app_handle(), window.label());
+                    notifications::close_notification_host_if_unused(
+                        &window.app_handle(),
+                        window.label(),
+                    );
+                }
             }
         })
         .plugin(
@@ -67,6 +73,8 @@ pub fn run() {
         .manage(WatcherState::new())
         .manage(SandboxManager::new())
         .manage(WindowManagerState::default())
+        .manage(credentials::GitCredentialScanCoordinator::default())
+        .manage(notifications::NotificationRuntime::default())
         .setup(|app| {
             let handle = app.handle();
             let db = Database::init(handle)
@@ -80,6 +88,7 @@ pub fn run() {
             }
 
             app.manage(db);
+            credentials::schedule_system_git_credential_rescan(handle);
 
             if let Some(window) = app.get_webview_window("main") {
                 app.state::<WindowManagerState>().register_welcome_window("main", true);
@@ -101,6 +110,8 @@ pub fn run() {
                 let _ = window.unmaximize();
                 let _ = window.center();
             }
+
+            notifications::ensure_notification_host(handle);
 
             if let Ok(cwd) = std::env::current_dir() {
                 let args = std::env::args().collect::<Vec<_>>();
@@ -242,10 +253,11 @@ pub fn run() {
             commands::pick_git_executable,
             commands::restart_app,
             commands::get_app_info,
-            // Cross-platform Push Notifications
-            notifications::send_push_notification,
-            notifications::get_notification_permission_state,
-            notifications::request_notification_permission,
+            // Stage0 toast notifications
+            notifications::dispatch_notification,
+            notifications::notification_host_ready,
+            notifications::set_notification_host_visibility,
+            notifications::dispatch_notification_action,
             performance::get_performance_metrics,
             updates::check_for_update,
             updates::download_update,
@@ -256,6 +268,8 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|app, event| {
             if matches!(event, tauri::RunEvent::Exit) {
+                #[cfg(target_os = "linux")]
+                notifications::close_linux_notifications(app);
                 for error in app.state::<SandboxManager>().cleanup_all() {
                     eprintln!("{error}");
                 }
