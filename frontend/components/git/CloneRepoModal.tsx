@@ -82,6 +82,7 @@ export const CloneRepoModal: React.FC = () => {
     (credential) => credential.id === selectedCredentialId
   );
   const hasSelectedCredential = useSavedCredential && !!selectedCredential && !!remoteOrigin;
+  const isSshRemote = /^git@|^ssh:\/\//i.test(remoteUrl.trim());
 
   useEffect(() => {
     if (!isCloneModalOpen) return;
@@ -108,6 +109,13 @@ export const CloneRepoModal: React.FC = () => {
       setSelectedCredentialId('');
     }
   }, [isCloneModalOpen]);
+
+  useEffect(() => {
+    if (isSshRemote) {
+      setUseSavedCredential(false);
+      setSelectedCredentialId('');
+    }
+  }, [isSshRemote]);
 
   useEffect(() => {
     if (!remoteOrigin || !selectedCredentialId) return;
@@ -410,15 +418,20 @@ export const CloneRepoModal: React.FC = () => {
               <input
                 type="checkbox"
                 checked={useSavedCredential}
-                disabled={isCloning}
+                disabled={isCloning || isSshRemote}
                 onChange={(event) => {
                   setUseSavedCredential(event.target.checked);
                   setErrorMessage(null);
                 }}
                 className="accent-brand"
               />
-              <span>Use a saved Git credential (optional)</span>
+              <span>Use a saved HTTPS credential (optional)</span>
             </label>
+            {isSshRemote && (
+              <p className="pl-5 text-[10px] text-subtext0">
+                SSH cloning uses your existing Git/SSH setup. Stage0 credential selection is HTTPS-only.
+              </p>
+            )}
             {useSavedCredential && (
               <div className="pl-5 space-y-1.5">
                 <select
@@ -445,7 +458,9 @@ export const CloneRepoModal: React.FC = () => {
                     ? credentialOptions.length > 0
                       ? 'Only credentials for this HTTPS host are listed. The secret is used for this clone only.'
                       : 'No saved credential matches this HTTPS host. Add one in Preferences or scan a known remote.'
-                    : 'Saved credentials are available for HTTPS repositories only.'}
+                    : isSshRemote
+                      ? 'SSH cloning uses your existing Git/SSH setup. Stage0 credential selection is HTTPS-only.'
+                      : 'Saved credentials are available for HTTPS repositories only.'}
                 </p>
               </div>
             )}
