@@ -1,5 +1,12 @@
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter};
+use std::sync::Mutex;
+use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
+
+pub const NOTIFICATION_EVENT: &str = "app-notification";
+const TOAST_EVENT: &str = "stage0-toast";
+const ACTION_EVENT: &str = "notification-action";
+pub const NOTIFICATION_HOST_LABEL: &str = "notification-host";
+const MAX_PENDING_TOASTS: usize = 50;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -13,8 +20,26 @@ pub enum NotificationLevel {
 
 impl Default for NotificationLevel {
     fn default() -> Self {
-        NotificationLevel::Info
+        Self::Info
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum NotificationVariant {
+    Default,
+    Success,
+    Warning,
+    Danger,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum NotificationDismissPolicy {
+    Manual,
+    Timeout,
+    #[default]
+    Both,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -27,477 +52,352 @@ pub struct NotificationAction {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct NotificationPayload {
     pub id: Option<String>,
     pub title: String,
     pub body: String,
     #[serde(default)]
     pub level: NotificationLevel,
+    pub variant: Option<NotificationVariant>,
+    pub channel: Option<String>,
     pub actions: Option<Vec<NotificationAction>>,
+    pub click_action: Option<NotificationAction>,
+    #[serde(default)]
+    pub dismiss_policy: NotificationDismissPolicy,
     pub auto_dismiss_ms: Option<u64>,
-    pub sound: Option<String>,
 }
 
-#[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum NotificationPermissionState {
-    Granted,
-    Denied,
-    Default,
-    NotRequired,
-    Unsupported,
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+struct NotificationActionEvent {
+    notification_id: Option<String>,
+    action: NotificationAction,
 }
 
-pub const NOTIFICATION_EVENT: &str = "app-notification";
-
-#[cfg(target_os = "windows")]
-fn base64_encode(bytes: &[u8]) -> String {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut result = String::with_capacity((bytes.len() + 2) / 3 * 4);
-    for chunk in bytes.chunks(3) {
-        let b0 = chunk[0] as u32;
-        let b1 = if chunk.len() > 1 { chunk[1] as u32 } else { 0 };
-        let b2 = if chunk.len() > 2 { chunk[2] as u32 } else { 0 };
-        let triple = (b0 << 16) | (b1 << 8) | b2;
-
-        result.push(CHARSET[((triple >> 18) & 0x3F) as usize] as char);
-        result.push(CHARSET[((triple >> 12) & 0x3F) as usize] as char);
-        if chunk.len() > 1 {
-            result.push(CHARSET[((triple >> 6) & 0x3F) as usize] as char);
-        } else {
-            result.push('=');
-        }
-        if chunk.len() > 2 {
-            result.push(CHARSET[(triple & 0x3F) as usize] as char);
-        } else {
-            result.push('=');
-        }
-    }
-    result
+#[derive(Default)]
+struct RuntimeState {
+    notification_host_ready: bool,
+    pending_toasts: Vec<NotificationPayload>,
+    #[cfg(target_os = "linux")]
+    active_linux_notification_ids: Vec<u32>,
 }
 
-#[cfg(target_os = "windows")]
-fn escape_xml(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&apos;")
-}
+#[derive(Default)]
+pub struct NotificationRuntime(Mutex<RuntimeState>);
 
-#[cfg(target_os = "windows")]
-pub fn show_windows_native_toast(title: &str, body: &str) -> Result<(), String> {
-    use std::os::windows::process::CommandExt;
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
-
-    let escaped_title = escape_xml(&title.replace('\n', " "));
-    let escaped_body = escape_xml(&body.replace('\n', " "));
-
-    let script = format!(
-        "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null;\n\
-         [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null;\n\
-         $ErrorActionPreference = 'Stop';\n\
-         $xml = '<toast><visual><binding template=\"ToastGeneric\"><text>{escaped_title}</text><text>{escaped_body}</text></binding></visual><audio src=\"ms-winsoundevent:Notification.Default\" /></toast>';\n\
-         $doc = [Windows.Data.Xml.Dom.XmlDocument]::new();\n\
-         $doc.LoadXml($xml);\n\
-         $toast = [Windows.UI.Notifications.ToastNotification]::new($doc);\n\
-         $toast.Priority = [Windows.UI.Notifications.ToastNotificationPriority]::High;\n\
-         $shown = $false;\n\
-         try {{\n\
-             $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('com.stage0.app');\n\
-             $notifier.Show($toast);\n\
-             $shown = $true;\n\
-         }} catch {{\n\
-             try {{\n\
-                 $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}}\\WindowsPowerShell\\v1.0\\powershell.exe');\n\
-                 $notifier.Show($toast);\n\
-                 $shown = $true;\n\
-             }} catch {{}}\n\
-         }}\n\
-         if (-not $shown) {{ exit 1 }}"
-    );
-
-    let utf16_bytes: Vec<u8> = script
-        .encode_utf16()
-        .flat_map(|u| u.to_le_bytes())
-        .collect();
-    let encoded = base64_encode(&utf16_bytes);
-
-    use std::time::{Duration, Instant};
-
-    let mut child = std::process::Command::new("powershell")
-        .args([
-            "-NoProfile",
-            "-NonInteractive",
-            "-WindowStyle",
-            "Hidden",
-            "-EncodedCommand",
-            &encoded,
-        ])
-        .creation_flags(CREATE_NO_WINDOW)
-        .spawn()
-        .map_err(|error| format!("Could not start the Windows notification service: {error}"))?;
-    let deadline = Instant::now() + Duration::from_secs(15);
-    let status = loop {
-        match child.try_wait() {
-            Ok(Some(status)) => break status,
-            Ok(None) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(20)),
-            Ok(None) => {
-                let _ = child.kill();
-                let _ = child.wait();
-                return Err("Timed out while sending the native Windows notification".to_string());
-            }
-            Err(error) => {
-                let _ = child.kill();
-                let _ = child.wait();
-                return Err(format!(
-                    "Could not monitor the Windows notification service: {error}"
-                ));
-            }
-        }
-    };
-    if status.success() {
-        Ok(())
-    } else {
-        Err("Windows could not enqueue the native notification".to_string())
-    }
-}
-
-/// Core function to dispatch a push notification cross-platform from Rust backend.
-/// - Fires native OS notifications on Windows (WinRT Toast), macOS (Notification Center), and Linux (Freedesktop D-Bus).
-/// - Emits Tauri event `app-notification` to all webviews so listeners stay synchronized.
-pub fn send_notification(app: &AppHandle, payload: NotificationPayload) -> Result<(), String> {
-    // 1. Emit to in-app frontend listeners
-    let _ = app.emit(NOTIFICATION_EVENT, &payload);
-
-    // 2. Dispatch OS native push notification
-    #[cfg(target_os = "macos")]
+pub fn ensure_notification_host(app: &AppHandle) {
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
     {
-        macos_native::send(&payload)
-    }
+        if app.get_webview_window(NOTIFICATION_HOST_LABEL).is_some() {
+            return;
+        }
 
-    #[cfg(target_os = "windows")]
-    {
-        show_windows_native_toast(&payload.title, &payload.body)
+        let builder = WebviewWindowBuilder::new(
+            app,
+            NOTIFICATION_HOST_LABEL,
+            WebviewUrl::App("index.html".into()),
+        )
+        .title("Stage0 Notifications")
+        .inner_size(420.0, 100.0)
+        .min_inner_size(320.0, 80.0)
+        .decorations(false)
+        .shadow(true)
+        .transparent(true)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .focusable(false)
+        .resizable(false)
+        .visible(false);
+
+        if let Err(error) = builder.build() {
+            eprintln!("Could not create the Stage0 notification host: {error}");
+        }
     }
 
     #[cfg(target_os = "linux")]
-    {
-        let mut notification = notify_rust::Notification::new();
-        notification
-            .appname("Stage0")
-            .summary(&payload.title)
-            .body(&payload.body);
-        notification
-            .show()
-            .map(|_| ())
-            .map_err(|error| format!("Linux native notification delivery failed: {error}"))
+    let _ = app;
+}
+
+pub fn close_notification_host_if_unused(app: &AppHandle, destroyed_label: &str) {
+    let has_other_user_window = app
+        .webview_windows()
+        .keys()
+        .any(|label| label != NOTIFICATION_HOST_LABEL && label.as_str() != destroyed_label);
+    if has_other_user_window {
+        return;
     }
 
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    {
-        let _ = (app, payload);
-        Err("Native OS notifications are not supported on this platform".to_string())
+    if let Some(runtime) = app.try_state::<NotificationRuntime>() {
+        if let Ok(mut state) = runtime.0.lock() {
+            state.notification_host_ready = false;
+            state.pending_toasts.clear();
+        }
+    }
+
+    if let Some(host) = app.get_webview_window(NOTIFICATION_HOST_LABEL) {
+        let _ = host.destroy();
+    }
+}
+
+fn has_user_window(app: &AppHandle) -> bool {
+    app.webview_windows()
+        .keys()
+        .any(|label| label != NOTIFICATION_HOST_LABEL)
+}
+
+fn queue_or_emit_custom_toast(app: &AppHandle, payload: NotificationPayload) -> Result<(), String> {
+    if !has_user_window(app) {
+        return Ok(());
+    }
+    if app.get_webview_window(NOTIFICATION_HOST_LABEL).is_none() {
+        ensure_notification_host(app);
+    }
+    if app.get_webview_window(NOTIFICATION_HOST_LABEL).is_none() {
+        return Err("The Stage0 notification host could not be created".to_string());
+    }
+
+    let Some(runtime) = app.try_state::<NotificationRuntime>() else {
+        return Err("The Stage0 notification runtime is unavailable".to_string());
+    };
+    let ready = match runtime.0.lock() {
+        Ok(mut state) => {
+            if state.notification_host_ready {
+                true
+            } else {
+                if state.pending_toasts.len() == MAX_PENDING_TOASTS {
+                    state.pending_toasts.remove(0);
+                }
+                state.pending_toasts.push(payload.clone());
+                false
+            }
+        }
+        Err(_) => return Err("The Stage0 notification queue is unavailable".to_string()),
+    };
+
+    if ready {
+        app.emit_to(NOTIFICATION_HOST_LABEL, TOAST_EVENT, payload)
+            .map_err(|error| format!("Could not deliver toast to Stage0: {error}"))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn notification_host_ready(app: AppHandle, runtime: State<'_, NotificationRuntime>) {
+    let pending = match runtime.0.lock() {
+        Ok(mut state) => {
+            state.notification_host_ready = true;
+            std::mem::take(&mut state.pending_toasts)
+        }
+        Err(_) => Vec::new(),
+    };
+
+    if !has_user_window(&app) {
+        return;
+    }
+    for payload in pending {
+        let _ = app.emit_to(NOTIFICATION_HOST_LABEL, TOAST_EVENT, payload);
     }
 }
 
 #[tauri::command]
-pub async fn send_push_notification(
+pub fn set_notification_host_visibility(app: AppHandle, visible: bool) {
+    if !has_user_window(&app) {
+        return;
+    }
+    let Some(host) = app.get_webview_window(NOTIFICATION_HOST_LABEL) else {
+        return;
+    };
+    if visible {
+        let _ = host.show();
+    } else {
+        let _ = host.hide();
+    }
+}
+
+fn deliver_action_to_user_window(
+    app: &AppHandle,
+    notification_id: Option<String>,
+    action: NotificationAction,
+) {
+    if !has_user_window(app) {
+        return;
+    }
+
+    let windows = app.webview_windows();
+    let target = windows
+        .values()
+        .filter(|window| window.label() != NOTIFICATION_HOST_LABEL)
+        .find(|window| window.is_focused().unwrap_or(false))
+        .cloned()
+        .or_else(|| windows.get("main").cloned())
+        .or_else(|| {
+            windows
+                .values()
+                .find(|window| window.label() != NOTIFICATION_HOST_LABEL)
+                .cloned()
+        });
+
+    if let Some(target) = target {
+        let _ = target.show();
+        let _ = target.set_focus();
+        let _ = target.emit(
+            ACTION_EVENT,
+            NotificationActionEvent {
+                notification_id,
+                action,
+            },
+        );
+    }
+}
+
+#[tauri::command]
+pub fn dispatch_notification_action(
+    app: AppHandle,
+    notification_id: Option<String>,
+    action: NotificationAction,
+) {
+    deliver_action_to_user_window(&app, notification_id, action);
+}
+
+pub fn send_notification(app: &AppHandle, payload: NotificationPayload) -> Result<(), String> {
+    if !has_user_window(app) {
+        return Ok(());
+    }
+
+    let _ = app.emit(NOTIFICATION_EVENT, &payload);
+
+    #[cfg(target_os = "linux")]
+    {
+        send_linux_notification(app, payload)
+    }
+
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
+    {
+        queue_or_emit_custom_toast(app, payload)
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    {
+        let _ = payload;
+        Err("Stage0 notifications are not supported on this platform".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn dispatch_notification(
     app: AppHandle,
     payload: NotificationPayload,
 ) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || send_notification(&app, payload))
         .await
-        .map_err(|error| format!("Native notification task failed: {error}"))?
+        .map_err(|error| format!("Notification dispatch task failed: {error}"))?
 }
 
-#[tauri::command]
-pub async fn get_notification_permission_state() -> Result<NotificationPermissionState, String> {
-    #[cfg(target_os = "macos")]
-    {
-        tauri::async_runtime::spawn_blocking(macos_native::permission_state)
-            .await
-            .map_err(|error| format!("Could not read macOS notification permission: {error}"))?
-    }
-    #[cfg(any(target_os = "windows", target_os = "linux"))]
-    {
-        Ok(NotificationPermissionState::NotRequired)
-    }
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    {
-        Ok(NotificationPermissionState::Unsupported)
-    }
-}
-
-#[tauri::command]
-pub async fn request_notification_permission() -> Result<NotificationPermissionState, String> {
-    #[cfg(target_os = "macos")]
-    {
-        tauri::async_runtime::spawn_blocking(macos_native::request_permission)
-            .await
-            .map_err(|error| format!("Could not request macOS notification permission: {error}"))?
-    }
-    #[cfg(any(target_os = "windows", target_os = "linux"))]
-    {
-        Ok(NotificationPermissionState::NotRequired)
-    }
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    {
-        Ok(NotificationPermissionState::Unsupported)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{NotificationAction, NotificationPermissionState};
-
-    #[test]
-    fn notification_action_accepts_ipc_and_history_casing() {
-        let action: NotificationAction = serde_json::from_str(
-            r#"{"label":"Open Preferences","actionType":"open_preferences","payload":"notifications"}"#,
-        )
-        .expect("frontend camelCase payload should deserialize");
-        assert_eq!(action.action_type, "open_preferences");
-
-        let legacy_action: NotificationAction = serde_json::from_str(
-            r#"{"label":"Open Preferences","action_type":"open_preferences"}"#,
-        )
-        .expect("legacy snake_case payload should remain accepted");
-        let serialized = serde_json::to_value(legacy_action).unwrap();
-        assert_eq!(serialized["actionType"], "open_preferences");
-    }
-
-    #[test]
-    fn permission_states_match_frontend_contract() {
-        assert_eq!(
-            serde_json::to_string(&NotificationPermissionState::NotRequired).unwrap(),
-            "\"not_required\""
-        );
-    }
-}
-
-#[cfg(target_os = "macos")]
-mod macos_native {
-    use super::{NotificationPayload, NotificationPermissionState};
-    use block2::RcBlock;
-    use objc2::rc::Retained;
-    use objc2::runtime::{Bool, NSObject, ProtocolObject};
-    use objc2::{define_class, msg_send, AnyThread};
-    use objc2_foundation::{NSBundle, NSError, NSObjectProtocol, NSString};
-    use objc2_user_notifications::{
-        UNAuthorizationOptions, UNAuthorizationStatus, UNMutableNotificationContent,
-        UNNotification, UNNotificationPresentationOptions, UNNotificationRequest,
-        UNNotificationSettings, UNNotificationSound, UNUserNotificationCenter,
-        UNUserNotificationCenterDelegate,
-    };
-    use std::ptr::NonNull;
-    use std::sync::mpsc::sync_channel;
-    use std::sync::OnceLock;
+#[cfg(target_os = "linux")]
+fn send_linux_notification(app: &AppHandle, payload: NotificationPayload) -> Result<(), String> {
+    use notify_rust::{Notification, Timeout, Urgency};
     use std::time::Duration;
 
-    const CALLBACK_TIMEOUT: Duration = Duration::from_secs(120);
+    let mut notification = Notification::new();
+    notification
+        .appname("Stage0")
+        .summary(&payload.title)
+        .body(&payload.body)
+        .icon("com.stage0.app");
 
-    fn is_valid_app_bundle(bundle_path: &str, has_bundle_identifier: bool) -> bool {
-        bundle_path.trim_end_matches('/').ends_with(".app") && has_bundle_identifier
+    let urgency = match payload.variant.as_ref() {
+        Some(NotificationVariant::Danger) => Urgency::Critical,
+        Some(NotificationVariant::Warning) => Urgency::Normal,
+        _ => match &payload.level {
+            NotificationLevel::Error => Urgency::Critical,
+            _ => Urgency::Normal,
+        },
+    };
+    notification.urgency(urgency);
+
+    if payload.dismiss_policy == NotificationDismissPolicy::Manual {
+        notification.timeout(Timeout::Never);
+    } else {
+        let timeout_ms = payload
+            .auto_dismiss_ms
+            .unwrap_or(6000)
+            .clamp(1000, i32::MAX as u64);
+        notification.timeout(Duration::from_millis(timeout_ms));
     }
 
-    fn has_app_bundle() -> bool {
-        let bundle = NSBundle::mainBundle();
-        let bundle_path = bundle
-            .bundleURL()
-            .path()
-            .map(|path| path.to_string())
-            .unwrap_or_default();
-        let has_bundle_identifier = bundle
-            .bundleIdentifier()
-            .is_some_and(|identifier| identifier.length() > 0);
-
-        is_valid_app_bundle(&bundle_path, has_bundle_identifier)
+    if payload.click_action.is_some() {
+        notification.action("default", "Open Stage0");
     }
-
-    define_class!(
-        // SAFETY: NSObject has no subclassing requirements. The delegate has no
-        // instance state and is safe to receive callbacks on any thread.
-        #[unsafe(super(NSObject))]
-        #[thread_kind = objc2::AnyThread]
-        struct NativeNotificationDelegate;
-
-        // SAFETY: NSObjectProtocol has no additional safety requirements.
-        unsafe impl NSObjectProtocol for NativeNotificationDelegate {}
-
-        // SAFETY: The optional delegate method signature matches Apple's protocol.
-        unsafe impl UNUserNotificationCenterDelegate for NativeNotificationDelegate {
-            #[unsafe(method(userNotificationCenter:willPresentNotification:withCompletionHandler:))]
-            fn will_present_notification(
-                &self,
-                _center: &UNUserNotificationCenter,
-                _notification: &UNNotification,
-                completion_handler: &block2::DynBlock<dyn Fn(UNNotificationPresentationOptions)>,
-            ) {
-                completion_handler.call((UNNotificationPresentationOptions::Banner
-                    | UNNotificationPresentationOptions::List
-                    | UNNotificationPresentationOptions::Sound,));
-            }
-        }
-    );
-
-    impl NativeNotificationDelegate {
-        fn new() -> Retained<Self> {
-            let this = Self::alloc();
-            // SAFETY: NSObject's init method is valid for this subclass.
-            let this: Retained<Self> = unsafe { msg_send![this, init] };
-            this
+    if let Some(actions) = payload.actions.as_ref() {
+        for (index, action) in actions.iter().enumerate() {
+            notification.action(&format!("action_{index}"), &action.label);
         }
     }
 
-    fn install_foreground_delegate(center: &UNUserNotificationCenter) {
-        static DELEGATE: OnceLock<Retained<NativeNotificationDelegate>> = OnceLock::new();
-        let delegate = DELEGATE.get_or_init(NativeNotificationDelegate::new);
-        center.setDelegate(Some(ProtocolObject::from_ref(&**delegate)));
-    }
-
-    fn native_error_message(operation: &str, error: &NSError) -> String {
-        // Domain/code identify an OS failure without exposing NSError userInfo.
-        format!(
-            "macOS could not {operation} ({} code {})",
-            error.domain(),
-            error.code()
-        )
-    }
-
-    pub fn permission_state() -> Result<NotificationPermissionState, String> {
-        if !has_app_bundle() {
-            return Ok(NotificationPermissionState::Unsupported);
+    let handle = notification
+        .show()
+        .map_err(|error| format!("Linux notification delivery failed: {error}"))?;
+    let notification_id = handle.id();
+    if let Some(runtime) = app.try_state::<NotificationRuntime>() {
+        if let Ok(mut state) = runtime.0.lock() {
+            state.active_linux_notification_ids.push(notification_id);
         }
+    }
 
-        let (sender, receiver) = sync_channel(1);
-        let center = UNUserNotificationCenter::currentNotificationCenter();
-        let callback = RcBlock::new(move |settings: NonNull<UNNotificationSettings>| {
-            // SAFETY: UserNotifications passes a live, non-null settings object to this callback.
-            let status = unsafe { settings.as_ref() }.authorizationStatus();
-            let state = match status {
-                UNAuthorizationStatus::Authorized
-                | UNAuthorizationStatus::Provisional
-                | UNAuthorizationStatus::Ephemeral => NotificationPermissionState::Granted,
-                UNAuthorizationStatus::Denied => NotificationPermissionState::Denied,
-                UNAuthorizationStatus::NotDetermined => NotificationPermissionState::Default,
-                _ => NotificationPermissionState::Unsupported,
-            };
-            let _ = sender.send(state);
+    let has_actions = payload.click_action.is_some()
+        || payload
+            .actions
+            .as_ref()
+            .is_some_and(|actions| !actions.is_empty());
+    if has_actions {
+        let app_handle = app.clone();
+        let payload_id = payload.id.clone();
+        let click_action = payload.click_action.clone();
+        let actions = payload.actions.clone().unwrap_or_default();
+        std::thread::spawn(move || {
+            handle.wait_for_action(|response| {
+                let action = if response == "default" {
+                    click_action.clone()
+                } else {
+                    response
+                        .strip_prefix("action_")
+                        .and_then(|index| index.parse::<usize>().ok())
+                        .and_then(|index| actions.get(index).cloned())
+                };
+                if let Some(action) = action {
+                    deliver_action_to_user_window(&app_handle, payload_id, action);
+                }
+            });
         });
-        center.getNotificationSettingsWithCompletionHandler(&callback);
-        receiver
-            .recv_timeout(CALLBACK_TIMEOUT)
-            .map_err(|_| "Timed out reading macOS notification permission".to_string())
     }
 
-    pub fn request_permission() -> Result<NotificationPermissionState, String> {
-        match permission_state()? {
-            state @ (NotificationPermissionState::Granted
-            | NotificationPermissionState::Denied
-            | NotificationPermissionState::Unsupported) => return Ok(state),
-            NotificationPermissionState::NotRequired => {
-                return Ok(NotificationPermissionState::NotRequired)
-            }
-            NotificationPermissionState::Default => {}
-        }
+    Ok(())
+}
 
-        let (sender, receiver) = sync_channel(1);
-        let center = UNUserNotificationCenter::currentNotificationCenter();
-        let callback = RcBlock::new(move |granted: Bool, error: *mut NSError| {
-            let state = if !error.is_null() {
-                // SAFETY: UserNotifications supplies a live NSError during the callback.
-                Err(native_error_message(
-                    "request notification permission",
-                    unsafe { &*error },
-                ))
-            } else if granted.as_bool() {
-                Ok(NotificationPermissionState::Granted)
-            } else {
-                Ok(NotificationPermissionState::Denied)
-            };
-            let _ = sender.send(state);
-        });
-        center.requestAuthorizationWithOptions_completionHandler(
-            UNAuthorizationOptions::Alert | UNAuthorizationOptions::Sound,
-            &callback,
-        );
-        receiver
-            .recv_timeout(CALLBACK_TIMEOUT)
-            .map_err(|_| "Timed out waiting for macOS notification permission".to_string())?
+#[cfg(target_os = "linux")]
+pub fn close_linux_notifications(app: &AppHandle) {
+    let Some(runtime) = app.try_state::<NotificationRuntime>() else {
+        return;
+    };
+    let ids = match runtime.0.lock() {
+        Ok(mut state) => std::mem::take(&mut state.active_linux_notification_ids),
+        Err(_) => Vec::new(),
+    };
+    if ids.is_empty() {
+        return;
     }
 
-    pub fn send(payload: &NotificationPayload) -> Result<(), String> {
-        match permission_state()? {
-            NotificationPermissionState::Granted => {}
-            NotificationPermissionState::Denied => {
-                return Err("macOS notification permission is denied".to_string())
-            }
-            NotificationPermissionState::Default => {
-                return Err("macOS notification permission has not been requested".to_string())
-            }
-            NotificationPermissionState::NotRequired => {}
-            NotificationPermissionState::Unsupported => {
-                return Err("macOS native notifications are unavailable".to_string())
-            }
-        }
-
-        let identifier = NSString::from_str(
-            payload
-                .id
-                .as_deref()
-                .unwrap_or("stage0-native-notification"),
+    let Ok(connection) = zbus::blocking::Connection::session() else {
+        return;
+    };
+    for id in ids {
+        let _ = connection.call_method(
+            Some("org.freedesktop.Notifications"),
+            "/org/freedesktop/Notifications",
+            Some("org.freedesktop.Notifications"),
+            "CloseNotification",
+            &(id,),
         );
-        let title = NSString::from_str(&payload.title);
-        let body = NSString::from_str(&payload.body);
-        let content = UNMutableNotificationContent::new();
-        content.setTitle(&title);
-        content.setBody(&body);
-        content.setSound(Some(&UNNotificationSound::defaultSound()));
-        let request = UNNotificationRequest::requestWithIdentifier_content_trigger(
-            &identifier,
-            &content,
-            None,
-        );
-
-        let (sender, receiver) = sync_channel(1);
-        let center = UNUserNotificationCenter::currentNotificationCenter();
-        install_foreground_delegate(&center);
-        let callback = RcBlock::new(move |error: *mut NSError| {
-            let result = if error.is_null() {
-                Ok(())
-            } else {
-                // SAFETY: UserNotifications supplies a live NSError during the callback.
-                Err(native_error_message(
-                    "send the native notification",
-                    unsafe { &*error },
-                ))
-            };
-            let _ = sender.send(result);
-        });
-        center.addNotificationRequest_withCompletionHandler(&request, Some(&callback));
-        receiver
-            .recv_timeout(CALLBACK_TIMEOUT)
-            .map_err(|_| "Timed out enqueueing the macOS notification".to_string())?
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::is_valid_app_bundle;
-
-        #[test]
-        fn refuses_unbundled_cargo_executable_path() {
-            assert!(!is_valid_app_bundle(
-                "/Users/test/stage0/backend/target/debug/",
-                true
-            ));
-        }
-
-        #[test]
-        fn accepts_a_proper_app_bundle_with_identifier() {
-            assert!(is_valid_app_bundle("/Applications/Stage0.app", true));
-            assert!(is_valid_app_bundle("/Applications/Stage0.app/", true));
-            assert!(!is_valid_app_bundle("/Applications/Stage0.app", false));
-        }
     }
 }

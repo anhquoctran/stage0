@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import {
   Download,
   X,
@@ -12,6 +13,7 @@ import {
   Check,
 } from '@/components/common/icons';
 import { useGitStore } from '../../store/useGitStore';
+import { useGitCredentialsStore } from '../../store/useGitCredentialsStore';
 
 type UrlValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid';
 
@@ -22,6 +24,9 @@ export const CloneRepoModal: React.FC = () => {
     cloneRepo,
     pickCloneFolder,
   } = useGitStore();
+  const credentials = useGitCredentialsStore((state) => state.credentials);
+  const credentialsLoading = useGitCredentialsStore((state) => state.isLoading);
+  const fetchCredentials = useGitCredentialsStore((state) => state.fetchCredentials);
 
   const [remoteUrl, setRemoteUrl] = useState('');
   const [parentDir, setParentDir] = useState(() => {
@@ -34,10 +39,91 @@ export const CloneRepoModal: React.FC = () => {
   const [repoName, setRepoName] = useState('');
   const [isCloning, setIsCloning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [useSavedCredential, setUseSavedCredential] = useState(false);
+  const [selectedCredentialId, setSelectedCredentialId] = useState('');
 
   // URL Validation State
   const [urlStatus, setUrlStatus] = useState<UrlValidationStatus>('idle');
   const [urlMessage, setUrlMessage] = useState<string | null>(null);
+
+  const remoteOrigin = useMemo(() => {
+    try {
+      const parsed = new URL(remoteUrl.trim());
+      return parsed.protocol === 'https:' && !parsed.username && !parsed.password
+        ? parsed.origin
+        : null;
+    } catch {
+      return null;
+    }
+  }, [remoteUrl]);
+
+  const credentialOptions = useMemo(() => {
+    return credentials.filter((credential) => {
+      if (
+        !credential.is_in_keyring ||
+        credential.token_type === 'ssh_key' ||
+        !['stage0', 'system_global'].includes(credential.source)
+      ) {
+        return false;
+      }
+      try {
+        const credentialUrl = new URL(credential.server_url);
+        return (
+          credentialUrl.protocol === 'https:' &&
+          (!remoteOrigin || credentialUrl.origin === remoteOrigin)
+        );
+      } catch {
+        return false;
+      }
+    });
+  }, [credentials, remoteOrigin]);
+
+  const selectedCredential = credentialOptions.find(
+    (credential) => credential.id === selectedCredentialId
+  );
+  const hasSelectedCredential = useSavedCredential && !!selectedCredential && !!remoteOrigin;
+
+  useEffect(() => {
+    if (!isCloneModalOpen) return;
+    void fetchCredentials();
+    let disposed = false;
+    let unlisten: (() => void) | undefined;
+    void listen('git-credentials-updated', () => {
+      void fetchCredentials();
+    }).then((stopListening) => {
+      if (disposed) stopListening();
+      else unlisten = stopListening;
+    }).catch((error) => {
+      console.warn('[CloneRepoModal] Could not subscribe to credential refresh:', error);
+    });
+    return () => {
+      disposed = true;
+      unlisten?.();
+    };
+  }, [isCloneModalOpen, fetchCredentials]);
+
+  useEffect(() => {
+    if (!isCloneModalOpen) {
+      setUseSavedCredential(false);
+      setSelectedCredentialId('');
+    }
+  }, [isCloneModalOpen]);
+
+  useEffect(() => {
+    if (!remoteOrigin || !selectedCredentialId) return;
+    const credential = credentials.find((item) => item.id === selectedCredentialId);
+    if (!credential) {
+      if (!credentialsLoading) setSelectedCredentialId('');
+      return;
+    }
+    try {
+      if (new URL(credential.server_url).origin !== remoteOrigin) {
+        setSelectedCredentialId('');
+      }
+    } catch {
+      setSelectedCredentialId('');
+    }
+  }, [credentials, credentialsLoading, remoteOrigin, selectedCredentialId]);
 
   // Auto-extract repo name from remote URL
   const extractRepoName = (url: string): string => {
@@ -70,6 +156,12 @@ export const CloneRepoModal: React.FC = () => {
       return;
     }
 
+    if (useSavedCredential && remoteOrigin) {
+      setUrlStatus('idle');
+      setUrlMessage('Repository access will be checked during clone.');
+      return;
+    }
+
     const isBasicFormat =
       trimmed.startsWith('https://') ||
       trimmed.startsWith('http://') ||
@@ -97,7 +189,7 @@ export const CloneRepoModal: React.FC = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [remoteUrl]);
+  }, [remoteUrl, remoteOrigin, useSavedCredential]);
 
   // Close on Escape
   useEffect(() => {
@@ -148,7 +240,15 @@ export const CloneRepoModal: React.FC = () => {
       setErrorMessage('Please enter a valid repository URL.');
       return;
     }
-    if (urlStatus === 'invalid') {
+    if (useSavedCredential && !remoteOrigin) {
+      setErrorMessage('Saved Git credentials can only be used with HTTPS repository URLs.');
+      return;
+    }
+    if (useSavedCredential && !selectedCredential) {
+      setErrorMessage('Select a saved Git credential, or turn off the credential option to clone without one.');
+      return;
+    }
+    if (urlStatus === 'invalid' && !hasSelectedCredential) {
       setErrorMessage(urlMessage || 'Repository URL is invalid or inaccessible.');
       return;
     }
@@ -161,12 +261,18 @@ export const CloneRepoModal: React.FC = () => {
     setErrorMessage(null);
 
     try {
-      await cloneRepo(remoteUrl.trim(), destinationPath.trim());
+      await cloneRepo(
+        remoteUrl.trim(),
+        destinationPath.trim(),
+        useSavedCredential ? selectedCredential?.id : undefined
+      );
       setIsCloneModalOpen(false);
       setRemoteUrl('');
       setRepoName('');
       setUrlStatus('idle');
       setUrlMessage(null);
+      setUseSavedCredential(false);
+      setSelectedCredentialId('');
     } catch (err: unknown) {
       setErrorMessage(String(err) || 'Failed to clone repository.');
     } finally {
@@ -293,8 +399,55 @@ export const CloneRepoModal: React.FC = () => {
             )}
             {urlStatus === 'idle' && (
               <p className="text-[10px] text-subtext0 mt-1">
-                Supports HTTPS and SSH URLs from GitHub, GitLab, Bitbucket, or self-hosted Git
+                {urlMessage || 'Supports HTTPS and SSH URLs from GitHub, GitLab, Bitbucket, or self-hosted Git'}
               </p>
+            )}
+          </div>
+
+          {/* Optional one-time HTTPS credential */}
+          <div className="border border-surface1 bg-surface0/40 p-3 space-y-2.5">
+            <label className="flex items-center gap-2 text-xs font-medium text-text cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useSavedCredential}
+                disabled={isCloning}
+                onChange={(event) => {
+                  setUseSavedCredential(event.target.checked);
+                  setErrorMessage(null);
+                }}
+                className="accent-brand"
+              />
+              <span>Use a saved Git credential (optional)</span>
+            </label>
+            {useSavedCredential && (
+              <div className="pl-5 space-y-1.5">
+                <select
+                  value={selectedCredentialId}
+                  disabled={isCloning || credentialsLoading || credentialOptions.length === 0}
+                  onChange={(event) => {
+                    setSelectedCredentialId(event.target.value);
+                    setErrorMessage(null);
+                  }}
+                  className="w-full px-2.5 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text outline-hidden disabled:opacity-60"
+                >
+                  <option value="">
+                    {credentialsLoading ? 'Loading saved credentials...' : 'Select a credential'}
+                  </option>
+                  {credentialOptions.map((credential) => (
+                    <option key={credential.id} value={credential.id}>
+                      {credential.account_name} · {credential.label || credential.provider}
+                      {credential.source === 'system_global' ? ' · System' : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-subtext0">
+                  {remoteOrigin
+                    ? credentialOptions.length > 0
+                      ? 'Only credentials for this HTTPS host are listed. The secret is used for this clone only.'
+                      : 'No saved credential matches this HTTPS host. Add one in Preferences or scan a known remote.'
+                    : 'Saved credentials are available for HTTPS repositories only.'}
+                </p>
+              </div>
             )}
           </div>
 
@@ -356,7 +509,7 @@ export const CloneRepoModal: React.FC = () => {
           <div className="bg-surface0/40 border border-surface1/40 p-2.5 flex items-center gap-2 text-[11px] text-subtext0 font-mono overflow-x-auto">
             <Terminal className="w-3.5 h-3.5 text-peach shrink-0" />
             <span className="truncate">
-              git clone --progress {remoteUrl.trim() || '&lt;url&gt;'}{' '}
+              git clone --progress {hasSelectedCredential ? '[saved credential] ' : ''}{remoteUrl.trim() || '&lt;url&gt;'}{' '}
               {destinationPath.trim() || '&lt;destination&gt;'}
             </span>
           </div>
@@ -385,8 +538,9 @@ export const CloneRepoModal: React.FC = () => {
                 type="submit"
                 disabled={
                   isCloning ||
-                  urlStatus === 'validating' ||
-                  urlStatus === 'invalid' ||
+                  (urlStatus === 'validating' && !hasSelectedCredential) ||
+                  (urlStatus === 'invalid' && !hasSelectedCredential) ||
+                  (useSavedCredential && (!remoteOrigin || !selectedCredential)) ||
                   !remoteUrl.trim() ||
                   !destinationPath.trim()
                 }

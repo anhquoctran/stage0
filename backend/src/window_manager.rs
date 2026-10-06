@@ -316,6 +316,7 @@ pub fn open_repo_path(
     let repo = db
         .upsert_repository("", &name, &canonical_path.to_string_lossy())
         .map_err(|error| format!("Failed to register repository: {error}"))?;
+    crate::credentials::schedule_system_git_credential_rescan(app);
     let context = RepositoryContext {
         identity,
         info: repo.clone(),
@@ -442,6 +443,7 @@ fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWind
     let window = builder
         .build()
         .map_err(|error| format!("Failed to create window: {error}"))?;
+    crate::notifications::ensure_notification_host(app);
     let _ = window.maximize();
     Ok(window)
 }

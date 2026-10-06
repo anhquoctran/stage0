@@ -173,6 +173,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+body.notification-host-window {
+  background-color: transparent !important;
+}
+
 button,
 input,
 optgroup,

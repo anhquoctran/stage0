@@ -1,19 +1,13 @@
-export type NotificationLevel = 'info' | 'success' | 'warning' | 'error' | 'update';
+export type NotificationVariant = 'default' | 'success' | 'warning' | 'danger';
+
+/** Legacy levels remain accepted while existing call sites migrate to variants. */
+export type NotificationLevel = NotificationVariant | 'info' | 'error' | 'update';
+
+export type NotificationDismissPolicy = 'manual' | 'timeout' | 'both';
 
 export type NotificationChannel = 'softwareUpdates' | 'aiReview' | 'gitSync' | 'guardrails';
 
-export type NotificationPermissionState =
-  | 'granted'
-  | 'denied'
-  | 'default'
-  | 'not_required'
-  | 'unsupported';
-
 export interface NotificationSettings {
-  enableDesktopNotifications: boolean;
-  enableInAppToasts?: boolean;
-  playAlertSound?: boolean;
-  toastDurationMs?: number;
   channels: {
     softwareUpdates: boolean;
     aiReview: boolean;
@@ -33,10 +27,13 @@ export interface AppNotification {
   title: string;
   body: string;
   level: NotificationLevel;
+  variant?: NotificationVariant;
   timestamp: number;
   isRead: boolean;
   channel?: NotificationChannel;
   actions?: AppNotificationAction[];
+  clickAction?: AppNotificationAction;
+  dismissPolicy?: NotificationDismissPolicy;
   autoDismissMs?: number;
 }
 
@@ -52,9 +49,10 @@ export interface NotifyOptions {
   title: string;
   body: string;
   level?: NotificationLevel;
-  channel?: NotificationChannel;
+  variant?: NotificationVariant;
+  channel: NotificationChannel;
   actions?: AppNotificationAction[];
+  clickAction?: AppNotificationAction;
+  dismissPolicy?: NotificationDismissPolicy;
   autoDismissMs?: number;
-  silent?: boolean;
-  forceDesktop?: boolean;
 }

@@ -181,10 +181,12 @@ fn run_bounded_command_inner(
     }
 
     let output_truncated = output_truncated.load(Ordering::Relaxed);
-    let stdout = stdout_bytes
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
-        .clone();
+    let stdout = {
+        let mut captured = stdout_bytes
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        std::mem::take(&mut *captured)
+    };
     let stderr = stderr_bytes
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner())

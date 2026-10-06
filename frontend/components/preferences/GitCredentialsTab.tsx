@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { listen } from '@tauri-apps/api/event';
 import {
   Key,
   ShieldCheck,
@@ -70,6 +71,27 @@ export const GitCredentialsTab: React.FC = () => {
     fetchOsInfo();
   }, [fetchCredentials, fetchOsInfo]);
 
+  useEffect(() => {
+    let disposed = false;
+    let unlisten: (() => void) | undefined;
+    void listen('git-credentials-updated', () => {
+      void fetchCredentials();
+    }).then((stopListening) => {
+      if (disposed) {
+        stopListening();
+      } else {
+        unlisten = stopListening;
+        void fetchCredentials();
+      }
+    }).catch((error) => {
+      console.warn('[GitCredentialsTab] Could not subscribe to credential refresh:', error);
+    });
+    return () => {
+      disposed = true;
+      unlisten?.();
+    };
+  }, [fetchCredentials]);
+
   const keyringName = osInfo?.keyring_name || 'OS Credential Manager';
 
   const handleProviderChange = (newProvider: GitCredentialProvider) => {
@@ -140,14 +162,14 @@ export const GitCredentialsTab: React.FC = () => {
   return (
     <div className="space-y-5">
       {/* Tab Header & Action */}
-      <div className="flex items-center justify-between pb-3 border-b border-surface0">
-        <div>
+      <div className="flex items-center justify-between gap-4 pb-3 border-b border-surface0">
+        <div className="min-w-0">
           <h3 className="text-sm font-bold text-text flex items-center gap-2">
             <Key className="w-4 h-4 text-subtext0" />
             Git Credentials Manager
           </h3>
           <p className="text-[11px] text-subtext0 mt-0.5">
-            Manage authenticated Git accounts with hardware-backed OS Credential Manager
+            Stage0 credentials stay in your OS keychain. You can select one for a single HTTPS clone; it is not embedded in the URL or written to the repository/global Git config. System/global helpers are mapped from known remotes.
           </p>
         </div>
 
@@ -159,7 +181,7 @@ export const GitCredentialsTab: React.FC = () => {
               clearError();
               setFormError(null);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs border border-surface2"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] text-xs font-semibold rounded-none transition-colors cursor-pointer shadow-xs border border-brand"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Credential</span>
@@ -380,15 +402,14 @@ export const GitCredentialsTab: React.FC = () => {
             <div>
               <h4 className="text-xs font-bold text-text">No Git Credentials Configured</h4>
               <p className="text-[11px] text-subtext0 max-w-sm mx-auto mt-0.5">
-                Add your GitHub, GitLab, or Bitbucket tokens to authenticate with private repositories
-                and push/pull without repetitive logins.
+                Stage0 will show credentials discovered through Git helpers for known remotes, alongside credentials added here.
               </p>
             </div>
             {!isAdding && (
               <button
                 type="button"
                 onClick={() => setIsAdding(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer border border-surface2 shadow-xs mt-1"
+                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 bg-brand hover:bg-brand/90 text-[#11111b] text-xs font-semibold rounded-none transition-colors cursor-pointer border border-brand shadow-xs mt-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add First Credential</span>
@@ -417,6 +438,9 @@ export const GitCredentialsTab: React.FC = () => {
                       <span className="text-[10px] px-1.5 py-0.2 bg-surface0 text-subtext1 border border-surface1 font-mono uppercase">
                         {cred.token_type}
                       </span>
+                      <span className="text-[10px] px-1.5 py-0.2 bg-surface0 text-subtext1 border border-surface1 font-mono uppercase">
+                        {cred.source === 'system_global' ? 'System / Global' : 'Stage0'}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-[11px] text-subtext0 mt-0.5">
                       <span>{cred.account_name}</span>
@@ -432,12 +456,19 @@ export const GitCredentialsTab: React.FC = () => {
                   <div
                     className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium border bg-surface1 text-subtext0 border-surface2"
                     title={
-                      cred.is_in_keyring
-                        ? 'Verified in OS Credential Manager'
-                        : 'Secret not found in OS Credential Manager'
+                      cred.source === 'system_global'
+                        ? `Found through ${cred.helper_name || 'a system/global Git credential helper'}`
+                        : cred.is_in_keyring
+                          ? 'Verified in OS Credential Manager'
+                          : 'Secret not found in OS Credential Manager'
                     }
                   >
-                    {cred.is_in_keyring ? (
+                    {cred.source === 'system_global' ? (
+                      <>
+                        <ShieldCheck className="w-3 h-3 text-text" />
+                        <span className="text-text">Git helper</span>
+                      </>
+                    ) : cred.is_in_keyring ? (
                       <>
                         <ShieldCheck className="w-3 h-3 text-text" />
                         <span className="text-text">In OS Keyring</span>
@@ -451,22 +482,24 @@ export const GitCredentialsTab: React.FC = () => {
                   </div>
 
                   {/* Verify button */}
-                  <button
-                    type="button"
-                    onClick={() => handleVerify(cred.id)}
-                    disabled={verifyingId === cred.id}
-                    className="p-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
-                    title="Verify Secret in OS Keyring"
-                  >
-                    <RefreshCw
-                      className={`w-3.5 h-3.5 ${
-                        verifyingId === cred.id ? 'animate-spin text-text' : ''
-                      }`}
-                    />
-                  </button>
+                  {cred.source === 'stage0' && (
+                    <button
+                      type="button"
+                      onClick={() => handleVerify(cred.id)}
+                      disabled={verifyingId === cred.id}
+                      className="p-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
+                      title="Verify Secret in OS Keyring"
+                    >
+                      <RefreshCw
+                        className={`w-3.5 h-3.5 ${
+                          verifyingId === cred.id ? 'animate-spin text-text' : ''
+                        }`}
+                      />
+                    </button>
+                  )}
 
                   {/* Delete button */}
-                  {deletingId === cred.id ? (
+                  {cred.source === 'stage0' && deletingId === cred.id ? (
                     <div className="flex items-center gap-1 bg-surface1 p-0.5 border border-red/40">
                       <button
                         type="button"
@@ -483,16 +516,16 @@ export const GitCredentialsTab: React.FC = () => {
                         Cancel
                       </button>
                     </div>
-                  ) : (
+                  ) : cred.source === 'stage0' ? (
                     <button
                       type="button"
                       onClick={() => setDeletingId(cred.id)}
                       className="p-1.5 rounded-lg border border-surface1 hover:bg-red/10 text-subtext0 hover:text-red transition-colors cursor-pointer"
-                      title="Delete credential and OS Keyring entry"
+                      title="Delete Stage0 credential and OS Keyring entry"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
 

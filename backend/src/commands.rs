@@ -25,6 +25,7 @@ use std::io::Read;
 use std::path::Path;
 use tauri::{AppHandle, Manager, WebviewWindow, Window};
 use tauri_plugin_dialog::DialogExt;
+use zeroize::Zeroizing;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct RepoValidation {
@@ -729,10 +730,20 @@ pub async fn save_git_credential(
     app: AppHandle,
     payload: crate::credentials::SaveGitCredentialPayload,
 ) -> Result<crate::credentials::GitCredentialMeta, String> {
-    if payload.account_name.trim().is_empty() {
+    let crate::credentials::SaveGitCredentialPayload {
+        provider,
+        server_url,
+        account_name,
+        token_type,
+        label,
+        secret,
+    } = payload;
+    let secret = Zeroizing::new(secret);
+
+    if account_name.trim().is_empty() {
         return Err("Account name cannot be empty".to_string());
     }
-    if payload.secret.trim().is_empty() {
+    if secret.trim().is_empty() {
         return Err("Secret / token cannot be empty".to_string());
     }
 
@@ -740,18 +751,18 @@ pub async fn save_git_credential(
     let token_ref = format!("st0_tok_{}", uuid::Uuid::new_v4().simple());
 
     // 1. Store secret in OS Credential Manager
-    crate::credentials::store_secret(&token_ref, payload.secret.trim())?;
+    crate::credentials::store_secret(&token_ref, secret.trim())?;
 
     // 2. Store tokenized record in SQLite
     let db = app.state::<Database>();
     if let Err(e) = db.insert_git_credential(
         &id,
-        &payload.provider,
-        &payload.server_url,
-        payload.account_name.trim(),
+        &provider,
+        &server_url,
+        account_name.trim(),
         &token_ref,
-        &payload.token_type,
-        payload.label.as_deref(),
+        &token_type,
+        label.as_deref(),
     ) {
         // Rollback keyring secret if db fails
         let _ = crate::credentials::delete_secret(&token_ref);
@@ -760,12 +771,14 @@ pub async fn save_git_credential(
 
     Ok(crate::credentials::GitCredentialMeta {
         id,
-        provider: payload.provider,
-        server_url: payload.server_url,
-        account_name: payload.account_name,
+        provider,
+        server_url,
+        account_name,
         token_ref,
-        token_type: payload.token_type,
-        label: payload.label,
+        token_type,
+        label,
+        source: "stage0".to_string(),
+        helper_name: None,
         created_at: chrono::Utc::now().to_rfc3339(),
         updated_at: chrono::Utc::now().to_rfc3339(),
         is_in_keyring: true,
@@ -775,6 +788,15 @@ pub async fn save_git_credential(
 #[tauri::command]
 pub async fn delete_git_credential(app: AppHandle, id: String) -> Result<(), String> {
     let db = app.state::<Database>();
+    let source = db
+        .get_git_credential_source(&id)
+        .map_err(|error| format!("Failed to query credential source: {error}"))?;
+    if source.as_deref() == Some("system_global") {
+        return Err(
+            "This credential is managed by the system/global Git helper and cannot be deleted here."
+                .to_string(),
+        );
+    }
     let token_ref = db
         .get_git_credential_token_ref(&id)
         .map_err(|e| format!("Failed to query credential: {}", e))?;
@@ -941,7 +963,6 @@ pub async fn fetch_ai_models(
     .await
 }
 
-
 // ---------------------------------------------------------------------------
 // Sandbox Adapter Management Commands
 // ---------------------------------------------------------------------------
@@ -1073,6 +1094,7 @@ pub async fn clone_repository(
     app: AppHandle,
     url: String,
     target_path: String,
+    credential_id: Option<String>,
 ) -> Result<RepoInfo, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let trimmed_url = url.trim();
@@ -1104,6 +1126,21 @@ pub async fn clone_repository(
 
         let git_bin = crate::git::runner::get_active_git_path();
         let mut cmd = std::process::Command::new(&git_bin);
+        let credential_lease = match credential_id.as_deref() {
+            Some(id) => {
+                let db = app.state::<Database>();
+                Some(prepare_clone_credential(&db, id, trimmed_url)?)
+            }
+            None => None,
+        };
+        if let Some(credential) = credential_lease.as_ref() {
+            let helper = clone_credential_helper_config(credential)?;
+            cmd.arg("-c").arg("credential.helper=");
+            cmd.arg("-c").arg(format!("credential.helper={helper}"));
+            // Do not let the user's askpass program turn a failed one-time
+            // credential lookup into an unexpected interactive prompt.
+            cmd.env_remove("GIT_ASKPASS").env_remove("SSH_ASKPASS");
+        }
         cmd.args(["clone", "--", trimmed_url, trimmed_target]);
         cmd.env("GIT_ALLOW_PROTOCOL", "git:http:https:ssh");
         cmd.env("GIT_TERMINAL_PROMPT", "0");
@@ -1149,6 +1186,98 @@ pub async fn clone_repository(
     })
     .await
     .map_err(|e| format!("Task execution failed: {}", e))?
+}
+
+struct CloneCredentialLease {
+    token_ref: String,
+    expected_origin: String,
+    username: String,
+    delete_secret_on_drop: bool,
+}
+
+impl Drop for CloneCredentialLease {
+    fn drop(&mut self) {
+        if self.delete_secret_on_drop {
+            let _ = crate::credentials::delete_secret(&self.token_ref);
+        }
+    }
+}
+
+fn prepare_clone_credential(
+    db: &Database,
+    credential_id: &str,
+    remote_url: &str,
+) -> Result<CloneCredentialLease, String> {
+    let target_origin = crate::credentials::https_origin(remote_url)?;
+    let credential = db
+        .get_git_credential_for_clone(credential_id)
+        .map_err(|error| format!("Failed to load Git credentials: {error}"))?
+        .ok_or_else(|| {
+            "The selected Git credential is no longer available. Refresh the list and try again."
+                .to_string()
+        })?;
+
+    if credential.token_type == "ssh_key" {
+        return Err("SSH key credentials cannot be selected for an HTTPS clone.".to_string());
+    }
+    let credential_origin = crate::credentials::https_origin(&credential.server_url)?;
+    if credential_origin != target_origin {
+        return Err("The selected Git credential belongs to a different HTTPS host.".to_string());
+    }
+    if credential.account_name.trim().is_empty()
+        || credential
+            .account_name
+            .bytes()
+            .any(|byte| byte == b'\n' || byte == b'\r' || byte == 0)
+    {
+        return Err("The selected Git credential has an invalid account name.".to_string());
+    }
+
+    let (token_ref, delete_secret_on_drop) = match credential.source.as_str() {
+        "stage0" => {
+            let secret =
+                crate::credentials::retrieve_secret(&credential.token_ref).map_err(|_| {
+                    "The selected credential is missing from the OS credential store.".to_string()
+                })?;
+            drop(Zeroizing::new(secret));
+            (credential.token_ref, false)
+        }
+        "system_global" => {
+            let secret = crate::credentials::retrieve_system_global_credential_for_clone(
+                remote_url,
+                &credential.account_name,
+            )?;
+            let token_ref = format!("st0_clone_{}", uuid::Uuid::new_v4().simple());
+            crate::credentials::store_secret(&token_ref, secret.as_str())?;
+            (token_ref, true)
+        }
+        _ => return Err("The selected Git credential source is unsupported.".to_string()),
+    };
+
+    Ok(CloneCredentialLease {
+        token_ref,
+        expected_origin: target_origin,
+        username: credential.account_name,
+        delete_secret_on_drop,
+    })
+}
+
+fn clone_credential_helper_config(credential: &CloneCredentialLease) -> Result<String, String> {
+    let executable = std::env::current_exe()
+        .map_err(|error| format!("Could not locate the Stage0 executable: {error}"))?
+        .to_string_lossy()
+        .replace('\\', "/");
+    Ok(format!(
+        "!{} --stage0-git-credential-helper {} {} {}",
+        git_shell_quote(&executable),
+        git_shell_quote(&credential.token_ref),
+        git_shell_quote(&credential.expected_origin),
+        git_shell_quote(&credential.username),
+    ))
+}
+
+fn git_shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
 }
 
 // ===========================================================================
