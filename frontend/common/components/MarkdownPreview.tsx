@@ -1,12 +1,7 @@
 import React, { useMemo } from 'react';
 import { marked } from 'marked';
 import { sanitizeHtml } from '../utils/sanitizeHtml';
-
-interface MarkdownPreviewProps {
-  content: string;
-  className?: string;
-  emptyPlaceholder?: string;
-}
+import type { MarkdownPreviewProps } from '../types/MarkdownPreviewProps';
 
 export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   content,

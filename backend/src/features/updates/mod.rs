@@ -1,9 +1,21 @@
+mod latest_release;
+pub use latest_release::LatestRelease;
+mod download_progress;
+pub use download_progress::DownloadProgress;
+mod verified_installer;
+use verified_installer::VerifiedInstaller;
+mod download_active_guard;
+use download_active_guard::DownloadActiveGuard;
+mod install_active_guard;
+use install_active_guard::InstallActiveGuard;
+mod partial_file_guard;
+use partial_file_guard::PartialFileGuard;
+
 use futures_util::StreamExt;
 use semver::Version;
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs;
-use std::io::{ErrorKind, Read};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -22,33 +34,6 @@ static DOWNLOAD_ACTIVE: AtomicBool = AtomicBool::new(false);
 static DOWNLOAD_CANCELLED: AtomicBool = AtomicBool::new(false);
 static INSTALL_ACTIVE: AtomicBool = AtomicBool::new(false);
 static LAST_VERIFIED_INSTALLER: Mutex<Option<VerifiedInstaller>> = Mutex::new(None);
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LatestRelease {
-    pub version: String,
-    pub codename: Option<String>,
-    pub changelog: Option<String>,
-    pub platform: String,
-    pub arch: String,
-    pub channel: String,
-    pub file_name: String,
-    pub size_bytes: Option<u64>,
-    pub checksum: Option<String>,
-    pub has_update: bool,
-    // The API may return a short-lived signed URL; keep it entirely in Rust.
-    #[serde(skip_serializing)]
-    pub download_url: String,
-}
-
-#[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DownloadProgress {
-    pub downloaded_bytes: u64,
-    pub total_bytes: Option<u64>,
-    pub percent: Option<u8>,
-    pub bytes_per_second: u64,
-}
 
 #[tauri::command]
 pub async fn check_for_update(channel: String) -> Result<Option<LatestRelease>, String> {
@@ -739,12 +724,6 @@ fn clear_verified_installer() {
     }
 }
 
-#[derive(Clone, Debug)]
-struct VerifiedInstaller {
-    path: PathBuf,
-    checksum: String,
-}
-
 #[cfg(target_os = "linux")]
 fn install_appimage_and_restart(installer: &Path) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
@@ -808,48 +787,4 @@ fi
             format!("Could not start the AppImage replacement helper: {error}")
         })?;
     Ok(())
-}
-
-struct DownloadActiveGuard;
-
-impl Drop for DownloadActiveGuard {
-    fn drop(&mut self) {
-        DOWNLOAD_CANCELLED.store(false, Ordering::Release);
-        DOWNLOAD_ACTIVE.store(false, Ordering::Release);
-    }
-}
-
-struct InstallActiveGuard(bool);
-
-impl InstallActiveGuard {
-    fn disarm(&mut self) {
-        self.0 = false;
-    }
-}
-
-impl Drop for InstallActiveGuard {
-    fn drop(&mut self) {
-        if self.0 {
-            INSTALL_ACTIVE.store(false, Ordering::Release);
-        }
-    }
-}
-
-struct PartialFileGuard(Option<PathBuf>);
-
-impl PartialFileGuard {
-    fn disarm(&mut self) {
-        self.0 = None;
-    }
-}
-
-impl Drop for PartialFileGuard {
-    fn drop(&mut self) {
-        let Some(path) = self.0.take() else { return };
-        match fs::remove_file(path) {
-            Ok(()) => {}
-            Err(error) if error.kind() == ErrorKind::NotFound => {}
-            Err(_) => {}
-        }
-    }
 }

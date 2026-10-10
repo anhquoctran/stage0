@@ -1,15 +1,14 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import {
-  AppNotification,
-  AppNotificationAction,
-  NotificationDispatchResult,
-  NotifyOptions,
-} from '../types/notification';
+import { type AppNotification } from '../types/AppNotification';
+import { type AppNotificationAction } from '../types/AppNotificationAction';
+import { type NotificationDispatchResult } from '../types/NotificationDispatchResult';
+import { type NotifyOptions } from '../types/NotifyOptions';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
 
 let isListening = false;
+
 let unlistenFns: UnlistenFn[] = [];
 
 export const notificationService = {

@@ -1,27 +1,11 @@
+mod git_graph;
+pub use git_graph::GitGraph;
+mod git_graph_commit;
+pub use git_graph_commit::GitGraphCommit;
+
 use super::runner::{run_git, run_git_strict};
-use serde::Serialize;
 
 const GRAPH_COMMIT_LIMIT: usize = 200;
-
-#[derive(Debug, Serialize, Clone)]
-pub struct GitGraph {
-    pub branch: String,
-    pub is_detached: bool,
-    pub truncated: bool,
-    pub commits: Vec<GitGraphCommit>,
-}
-
-#[derive(Debug, Serialize, Clone)]
-pub struct GitGraphCommit {
-    pub hash: String,
-    pub short_hash: String,
-    pub parents: Vec<String>,
-    pub subject: String,
-    pub author_name: String,
-    pub author_email: String,
-    pub authored_date: String,
-    pub refs: Vec<String>,
-}
 
 /// Returns structured commit ancestry for the repository's checked-out HEAD.
 /// The command only reads repository history and never changes refs or the

@@ -1,24 +1,17 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw } from '@/common/components/icons';
+import { Component, ErrorInfo } from 'react';
+import { AlertTriangle } from './icons/AlertTriangle';
+import { RefreshCw } from './icons/RefreshCw';
+import type { ErrorBoundaryProps } from '../types/ErrorBoundaryProps';
+import type { ErrorBoundaryState } from '../types/ErrorBoundaryState';
 
-interface Props {
-  children: ReactNode;
-}
-
-interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-}
-
-export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = {
     hasError: false,
     error: null,
     errorInfo: null,
   };
 
-  public static getDerivedStateFromError(error: Error): Partial<State> {
+  public static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error };
   }
 

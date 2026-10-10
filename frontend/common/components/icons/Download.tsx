@@ -1,0 +1,4 @@
+import { faDownload } from '@fortawesome/free-solid-svg-icons';
+import { createIcon } from './createIcon';
+
+export const Download = createIcon(faDownload);

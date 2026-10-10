@@ -1,21 +1,20 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Shield,
-  Bot,
-  Plus,
-  Trash2,
-  Edit2,
-  RotateCcw,
-  Check,
-  Search,
-  ChevronDown,
-  ChevronUp,
-  Copy,
-  AlertCircle,
-} from '@/common/components/icons';
+import { Shield } from '../../../common/components/icons/Shield';
+import { Bot } from '../../../common/components/icons/Bot';
+import { Plus } from '../../../common/components/icons/Plus';
+import { Trash2 } from '../../../common/components/icons/Trash2';
+import { Edit2 } from '../../../common/components/icons/Edit2';
+import { RotateCcw } from '../../../common/components/icons/RotateCcw';
+import { Check } from '../../../common/components/icons/Check';
+import { Search } from '../../../common/components/icons/Search';
+import { ChevronDown } from '../../../common/components/icons/ChevronDown';
+import { ChevronUp } from '../../../common/components/icons/ChevronUp';
+import { Copy } from '../../../common/components/icons/Copy';
+import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { useBotReviewersStore } from '../store/useBotReviewersStore';
 import { BOT_CATEGORIES } from '../constants/botPresets';
-import { BotReviewer, BotCategory } from '../../virtual-mr/types/virtualMr';
+import { type BotReviewer } from '../../virtual-mr/types/BotReviewer';
+import { type BotCategory } from '../../virtual-mr/types/BotCategory';
 import { AI_PROVIDERS } from '../constants/aiPresets';
 
 const EMOJI_PRESETS = ['🛡️', '⚡', '🏗️', '🐛', '📝', '🎨', '🔒', '🚀', '🧪', '🔍', '⚙️', '💎'];

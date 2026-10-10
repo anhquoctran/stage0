@@ -1,9 +1,5 @@
 import React from 'react';
-
-interface AppLogoProps {
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-}
+import type { AppLogoProps } from '../types/AppLogoProps';
 
 /**
  * AppLogo Component

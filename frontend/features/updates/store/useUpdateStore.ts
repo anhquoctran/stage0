@@ -1,25 +1,21 @@
 import { create } from 'zustand';
 import { formatTime } from '@/common/utils/dateTime';
-import type {
-  LatestRelease,
-  UpdateChannel,
-  UpdateCheckFrequency,
-  UpdateCheckPolicy,
-  UpdateDownloadProgress,
-  UpdateStatus,
-} from '../types/update';
-import {
-  cancelUpdateDownload,
-  checkForUpdate,
-  downloadUpdate,
-  installUpdate,
-} from '../services/updateApi';
+import { type UpdateChannel } from '../types/UpdateChannel';
+import { type UpdateCheckFrequency } from '../types/UpdateCheckFrequency';
+import { type UpdateCheckPolicy } from '../types/UpdateCheckPolicy';
+import { type UpdateDownloadProgress } from '../types/UpdateDownloadProgress';
+import { cancelUpdateDownload, checkForUpdate, downloadUpdate, installUpdate } from '../services/updateApi';
 import { notificationService } from '../../notifications/services/notificationService';
+import type { UpdateStoreState } from '../types/UpdateStoreState';
 
 const POLICY_STORAGE_KEY = 'stage0_update_policy';
+
 const FREQUENCY_STORAGE_KEY = 'stage0_update_frequency';
+
 const CHANNEL_STORAGE_KEY = 'stage0_update_channel';
+
 const LAST_CHECK_STORAGE_KEY = 'stage0_update_last_check_ts';
+
 let updateCheckGeneration = 0;
 
 function getInitialPolicy(): UpdateCheckPolicy {
@@ -77,33 +73,6 @@ function storeSuccessfulCheckTime(): string {
     // The update workflow still works when browser storage is unavailable.
   }
   return formatTime(now, true);
-}
-
-interface UpdateStoreState {
-  status: UpdateStatus;
-  isModalOpen: boolean;
-  updatePayload: LatestRelease | null;
-  downloadedArtifactPath: string | null;
-  downloadProgress: number | null;
-  downloadSpeed: string;
-  downloadedText: string;
-  errorMessage: string | null;
-  lastCheckedTime: string | null;
-  updateCheckPolicy: UpdateCheckPolicy;
-  updateCheckFrequency: UpdateCheckFrequency;
-  updateChannel: UpdateChannel;
-
-  setUpdateCheckPolicy: (policy: UpdateCheckPolicy) => void;
-  setUpdateCheckFrequency: (frequency: UpdateCheckFrequency) => void;
-  setUpdateChannel: (channel: UpdateChannel) => void;
-  openModal: () => void;
-  closeModal: () => void;
-  checkForUpdates: (manualTrigger?: boolean) => Promise<void>;
-  checkIfUpdateDueAndRun: () => Promise<void>;
-  startDownload: () => Promise<void>;
-  cancelDownload: () => Promise<void>;
-  installDownloadedUpdate: () => Promise<void>;
-  reset: () => void;
 }
 
 export const useUpdateStore = create<UpdateStoreState>((set, get) => ({

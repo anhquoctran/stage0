@@ -1,19 +1,9 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
-import { GitCredential, SaveGitCredentialPayload, OsKeyringInfo } from '../types/credentials';
-
-interface GitCredentialsState {
-  credentials: GitCredential[];
-  osInfo: OsKeyringInfo | null;
-  isLoading: boolean;
-  error: string | null;
-  fetchCredentials: () => Promise<void>;
-  fetchOsInfo: () => Promise<void>;
-  saveCredential: (payload: SaveGitCredentialPayload) => Promise<boolean>;
-  deleteCredential: (id: string) => Promise<boolean>;
-  verifyCredential: (id: string) => Promise<boolean>;
-  clearError: () => void;
-}
+import { type GitCredential } from '../types/GitCredential';
+import { type SaveGitCredentialPayload } from '../types/SaveGitCredentialPayload';
+import { type OsKeyringInfo } from '../types/OsKeyringInfo';
+import type { GitCredentialsState } from '../types/GitCredentialsState';
 
 export const useGitCredentialsStore = create<GitCredentialsState>((set) => ({
   credentials: [],

@@ -1,31 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import {
-  FolderGit2,
-  GitBranch,
-  ShieldCheck,
-  AlertTriangle,
-  Loader2,
-  Info,
-  Columns2,
-  Rows2,
-  Keyboard,
-  Box,
-  Check,
-  RefreshCw,
-  FileText,
-  DownloadCloud,
-  CheckCircle2,
-  Sparkles,
-  Bell,
-  HeartPulse,
-} from '@/common/components/icons';
+import { FolderGit2 } from '../../../common/components/icons/FolderGit2';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
+import { Loader2 } from '../../../common/components/icons/Loader2';
+import { Info } from '../../../common/components/icons/Info';
+import { Columns2 } from '../../../common/components/icons/Columns2';
+import { Rows2 } from '../../../common/components/icons/Rows2';
+import { Keyboard } from '../../../common/components/icons/Keyboard';
+import { Box } from '../../../common/components/icons/Box';
+import { Check } from '../../../common/components/icons/Check';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { FileText } from '../../../common/components/icons/FileText';
+import { DownloadCloud } from '../../../common/components/icons/DownloadCloud';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { Sparkles } from '../../../common/components/icons/Sparkles';
+import { Bell } from '../../../common/components/icons/Bell';
+import { HeartPulse } from '../../../common/components/icons/HeartPulse';
 import { useGitStore } from '../../../features/git/store/useGitStore';
 import { usePreferencesStore } from '../../../features/preferences/store/usePreferencesStore';
 import { useUpdateStore } from '../../../features/updates/store/useUpdateStore';
 import { useNotificationStore } from '../../../features/notifications/store/useNotificationStore';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
 import { usePerformanceMonitorStore } from '../../../features/performance/store/usePerformanceMonitorStore';
-import { getPerformanceMetrics, type PerformanceMetrics } from '../../../features/performance/services/performanceService';
+import { getPerformanceMetrics } from '../../../features/performance/services/performanceService';
+import { type PerformanceMetrics } from '../../../features/performance/types/PerformanceMetrics';
 
 function formatMemory(bytes: number): string {
   const mebibytes = bytes / (1024 * 1024);

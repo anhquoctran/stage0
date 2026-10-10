@@ -1,24 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  CheckCircle2,
-  XCircle,
-  Bot,
-  User,
-  Plus,
-  Edit2,
-  Check,
-  X,
-  FileCode,
-  GitCommit,
-  MessageSquare,
-  RefreshCw,
-  ArrowRight,
-} from '@/common/components/icons';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { XCircle } from '@/common/components/icons';
+import { Bot } from '../../../common/components/icons/Bot';
+import { User } from '../../../common/components/icons/User';
+import { Plus } from '../../../common/components/icons/Plus';
+import { Edit2 } from '../../../common/components/icons/Edit2';
+import { Check } from '../../../common/components/icons/Check';
+import { X } from '../../../common/components/icons/X';
+import { FileCode } from '../../../common/components/icons/FileCode';
+import { GitCommit } from '../../../common/components/icons/GitCommit';
+import { MessageSquare } from '../../../common/components/icons/MessageSquare';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { formatDateTime, formatTime } from '@/common/utils/dateTime';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
-import { BotReviewer } from '../types/virtualMr';
+import { type BotReviewer } from '../types/BotReviewer';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
 import { MarkdownPreview } from '../../../common/components/MarkdownPreview';
 import { TabBranchSelector } from '../../git/components/TabBranchSelector';

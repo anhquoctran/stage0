@@ -1,30 +1,10 @@
 import { create } from 'zustand';
 import { SUPPORTED_FONTS } from '../constants/fonts';
-
-export interface ViewerFontSettings {
-  fontFamily: string;
-  fontSize: number;
-  isBold: boolean;
-  isItalic: boolean;
-  isUnderline: boolean;
-  lineSpacing: number;
-  enableLigatures: boolean;
-}
-
-interface PreferencesState extends ViewerFontSettings {
-  isPreferencesOpen: boolean;
-  setIsPreferencesOpen: (open: boolean) => void;
-  initialPreferencesTab: string | null;
-  setInitialPreferencesTab: (tab: string | null) => void;
-  openPreferences: (tab?: string) => void;
-  updateViewerFontSettings: (settings: Partial<ViewerFontSettings>) => void;
-  resetViewerFontSettings: () => void;
-  showInlineBlame: boolean;
-  setShowInlineBlame: (show: boolean) => void;
-  toggleInlineBlame: () => void;
-}
+import type { ViewerFontSettings } from '../types/ViewerFontSettings';
+import type { PreferencesState } from '../types/PreferencesState';
 
 const STORAGE_KEY = 'stage0_viewer_font_settings';
+
 const INLINE_BLAME_STORAGE_KEY = 'stage0_show_inline_blame';
 
 export const DEFAULT_VIEWER_FONT_SETTINGS: ViewerFontSettings = {
@@ -93,6 +73,7 @@ function getInitialSettings(): ViewerFontSettings {
 }
 
 const initialSettings = getInitialSettings();
+
 applyViewerFontToDocument(initialSettings);
 
 function getInitialInlineBlame(): boolean {
@@ -173,3 +154,5 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     set(DEFAULT_VIEWER_FONT_SETTINGS);
   },
 }));
+
+export type { ViewerFontSettings } from '../types/ViewerFontSettings';

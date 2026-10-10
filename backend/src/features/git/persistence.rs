@@ -1,23 +1,11 @@
+mod repo_settings_db;
+pub use repo_settings_db::RepoSettingsDb;
+mod repo_label_db;
+pub use repo_label_db::RepoLabelDb;
+
 use crate::core::db::Database;
 use crate::features::git::RepoInfo;
 use rusqlite::params;
-
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-pub struct RepoSettingsDb {
-    pub repo_id: String,
-    pub default_base_branch: String,
-    pub inherit_global_agents: bool,
-    pub custom_agent_rules: Option<String>,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-pub struct RepoLabelDb {
-    pub id: String,
-    pub repo_id: String,
-    pub name: String,
-    pub color: String,
-    pub description: Option<String>,
-}
 
 impl Database {
     pub fn upsert_repository(

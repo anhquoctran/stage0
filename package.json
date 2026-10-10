@@ -19,6 +19,7 @@
     "build:app": "node scripts/build.mjs",
     "build:prod": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
+    "check:architecture": "node scripts/check-source-ownership.mjs",
     "test": "node --test scripts/*.test.mjs",
     "test:version": "node --test scripts/bump-version.test.mjs",
     "test:about": "node --test scripts/generate-about-info.test.mjs",

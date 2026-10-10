@@ -1,16 +1,14 @@
 import React, { useEffect } from 'react';
 import { useUpdateStore } from '../store/useUpdateStore';
 import { SOFTWARE_ABOUT } from '../../about/config/about';
-import {
-  DownloadCloud,
-  CheckCircle2,
-  AlertTriangle,
-  RefreshCw,
-  Loader2,
-  X,
-  Sparkles,
-  Clock,
-} from '../../../common/components/icons';
+import { DownloadCloud } from '../../../common/components/icons/DownloadCloud';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { Loader2 } from '../../../common/components/icons/Loader2';
+import { X } from '../../../common/components/icons/X';
+import { Sparkles } from '../../../common/components/icons/Sparkles';
+import { Clock } from '../../../common/components/icons/Clock';
 
 export const UpdateModal: React.FC = () => {
   const {

@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-
-export interface WindowControlsProps {
-  style?: 'windows' | 'mac' | 'auto';
-  className?: string;
-}
+import type { WindowControlsProps } from '../../types/WindowControlsProps';
 
 export const WindowControls: React.FC<WindowControlsProps> = ({
   style = 'auto',
@@ -192,3 +188,5 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
     </div>
   );
 };
+
+export type { WindowControlsProps } from '../../types/WindowControlsProps';

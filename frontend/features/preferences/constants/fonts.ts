@@ -1,7 +1,4 @@
-export interface SupportedFont {
-  fontFamilyName: string;
-  ligaturesSupport: boolean;
-}
+import type { SupportedFont } from '../types/SupportedFont';
 
 export const SUPPORTED_FONTS: SupportedFont[] = [
   {
@@ -45,3 +42,5 @@ export const SUPPORTED_FONTS: SupportedFont[] = [
     ligaturesSupport: false,
   },
 ];
+
+export type { SupportedFont } from '../types/SupportedFont';

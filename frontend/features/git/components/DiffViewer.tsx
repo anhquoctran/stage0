@@ -1,33 +1,28 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  DiffView,
-  DiffModeEnum,
-} from '@git-diff-view/react';
-import {
-  Columns2,
-  Rows2,
-  Copy,
-  Check,
-  FileCode,
-  FileText,
-  FileWarning,
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  GitPullRequest,
-  CheckCircle2,
-  History,
-  GitCommit,
-  Code2,
-  GitBranch,
-  RotateCw,
-  ArrowDown,
-  GitMerge,
-  ShieldAlert,
-} from '@/common/components/icons';
+import { DiffView, DiffModeEnum } from '@git-diff-view/react';
+import { Columns2 } from '../../../common/components/icons/Columns2';
+import { Rows2 } from '../../../common/components/icons/Rows2';
+import { Copy } from '../../../common/components/icons/Copy';
+import { Check } from '../../../common/components/icons/Check';
+import { FileCode } from '../../../common/components/icons/FileCode';
+import { FileText } from '../../../common/components/icons/FileText';
+import { FileWarning } from '../../../common/components/icons/FileWarning';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
+import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
+import { ChevronRight } from '../../../common/components/icons/ChevronRight';
+import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { History } from '../../../common/components/icons/History';
+import { GitCommit } from '../../../common/components/icons/GitCommit';
+import { Code2 } from '../../../common/components/icons/Code2';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { RotateCw } from '../../../common/components/icons/RotateCw';
+import { ArrowDown } from '../../../common/components/icons/ArrowDown';
+import { GitMerge } from '../../../common/components/icons/GitMerge';
+import { ShieldAlert } from '../../../common/components/icons/ShieldAlert';
 import { invoke } from '@tauri-apps/api/core';
-import { ChangedFile, MrDiffPayload, ViewMode, FileBlamePayload } from '../types/git';
+import { type FileBlamePayload } from '../types/FileBlamePayload';
 import { extractFileHunks, inferLanguage } from '../utils/diffParser';
 import { openFileInEditor } from '../utils/fileActions';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
@@ -40,15 +35,7 @@ import { InlineBlame } from './InlineBlame';
 import { ConflictViewer } from './ConflictViewer';
 import { DiffDiscussionsBanner } from './DiffDiscussionsBanner';
 import { WelcomeScreen } from '../../../core/components/layout/WelcomeScreen';
-
-interface DiffViewerProps {
-  selectedFile: ChangedFile | null;
-  diffPayload: MrDiffPayload | null;
-  viewMode: ViewMode;
-  onToggleViewMode: (mode: ViewMode) => void;
-  isLoading?: boolean;
-  onOpenRepo?: () => void;
-}
+import type { DiffViewerProps } from '../types/DiffViewerProps';
 
 export const DiffViewer: React.FC<DiffViewerProps> = ({
   selectedFile,

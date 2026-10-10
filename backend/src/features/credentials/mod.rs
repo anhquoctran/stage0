@@ -1,51 +1,27 @@
-use serde::{Deserialize, Serialize};
+mod os_keyring_info;
+pub use os_keyring_info::OsKeyringInfo;
+mod git_credential_meta;
+pub use git_credential_meta::GitCredentialMeta;
+mod system_git_credential_discovery;
+pub use system_git_credential_discovery::SystemGitCredentialDiscovery;
+mod git_credential_scan_coordinator;
+pub use git_credential_scan_coordinator::GitCredentialScanCoordinator;
+mod git_credential_scan_state;
+use git_credential_scan_state::GitCredentialScanState;
+mod save_git_credential_payload;
+pub use save_git_credential_payload::SaveGitCredentialPayload;
+mod helper_credential_lookup;
+use helper_credential_lookup::HelperCredentialLookup;
+
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
 use std::io::{Read, Write};
 use std::process::Command;
-use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager};
 use zeroize::Zeroize;
 
 pub const KEYRING_SERVICE: &str = "stage0.git.credentials";
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct OsKeyringInfo {
-    pub os: String,
-    pub keyring_name: String,
-    pub is_available: bool,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct GitCredentialMeta {
-    pub id: String,
-    pub provider: String,
-    pub server_url: String,
-    pub account_name: String,
-    pub token_ref: String,
-    pub token_type: String,
-    pub label: Option<String>,
-    pub source: String,
-    pub helper_name: Option<String>,
-    pub created_at: String,
-    pub updated_at: String,
-    pub is_in_keyring: bool,
-}
-
-pub struct SystemGitCredentialDiscovery {
-    pub credentials: Vec<GitCredentialMeta>,
-    pub complete: bool,
-}
-
-#[derive(Default)]
-pub struct GitCredentialScanCoordinator(Mutex<GitCredentialScanState>);
-
-#[derive(Default)]
-struct GitCredentialScanState {
-    running: bool,
-    requested_again: bool,
-}
 
 /// Schedules a background refresh and coalesces repeated requests while a scan
 /// is running. A later request triggers one more pass with the latest repo list.
@@ -119,16 +95,6 @@ pub fn schedule_system_git_credential_rescan(app: &AppHandle) {
             break;
         }
     });
-}
-
-#[derive(Deserialize, Clone, Debug)]
-pub struct SaveGitCredentialPayload {
-    pub provider: String,
-    pub server_url: String,
-    pub account_name: String,
-    pub token_type: String,
-    pub label: Option<String>,
-    pub secret: String,
 }
 
 /// Finds credentials already available to Git for remotes in repositories
@@ -351,11 +317,6 @@ fn system_or_global_helpers(
         }
     }
     Ok(helpers)
-}
-
-struct HelperCredentialLookup {
-    username: Option<String>,
-    complete: bool,
 }
 
 fn read_helper_credential(

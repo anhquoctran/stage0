@@ -1,5 +1,11 @@
+mod google_o_auth_start_result;
+pub use google_o_auth_start_result::GoogleOAuthStartResult;
+mod google_auth_status;
+pub use google_auth_status::GoogleAuthStatus;
+mod google_token_response;
+use google_token_response::GoogleTokenResponse;
+
 use base64::Engine;
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -9,31 +15,6 @@ use tokio::sync::Mutex;
 // Default Desktop OAuth Client ID for Gemini / Generative Language
 pub const DEFAULT_GOOGLE_CLIENT_ID: &str =
     "838848492025-a1s9p5m13k0o4e815n9g3j3r2g5b1a0p.apps.googleusercontent.com";
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GoogleOAuthStartResult {
-    pub auth_url: String,
-    pub state: String,
-    pub port: u16,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GoogleAuthStatus {
-    pub connected: bool,
-    pub account_email: Option<String>,
-    pub auth_method: String, // "oauth_pkce", "gcloud_adc", "none"
-    pub error: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct GoogleTokenResponse {
-    access_token: String,
-    refresh_token: Option<String>,
-    #[allow(dead_code)]
-    expires_in: Option<u64>,
-    #[allow(dead_code)]
-    token_type: Option<String>,
-}
 
 /// Generate cryptographically secure PKCE verifier and S256 challenge
 pub fn generate_pkce() -> (String, String) {

@@ -1,41 +1,20 @@
 import React, { useState, useRef } from 'react';
-import {
-  Bold,
-  Italic,
-  Heading,
-  Code,
-  SquareCode,
-  Quote,
-  List,
-  ListOrdered,
-  CheckSquare,
-  Link,
-  Eye,
-  PenLine,
-  Sparkles,
-} from '@/common/components/icons';
+import { Bold } from './icons/Bold';
+import { Italic } from './icons/Italic';
+import { Heading } from './icons/Heading';
+import { Code } from './icons/Code';
+import { SquareCode } from './icons/SquareCode';
+import { Quote } from './icons/Quote';
+import { List } from './icons/List';
+import { ListOrdered } from './icons/ListOrdered';
+import { CheckSquare } from './icons/CheckSquare';
+import { Link } from './icons/Link';
+import { Eye } from './icons/Eye';
+import { PenLine } from './icons/PenLine';
+import { Sparkles } from './icons/Sparkles';
 import { MarkdownPreview } from './MarkdownPreview';
 import { formatShortcutText } from '../utils/shortcuts';
-
-export interface MarkdownEditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  rows?: number;
-  minHeight?: string;
-  maxHeight?: string;
-  autoFocus?: boolean;
-  disabled?: boolean;
-  className?: string;
-  onSubmit?: () => void;
-  submitLabel?: string;
-  onCancel?: () => void;
-  cancelLabel?: string;
-  showActions?: boolean;
-  isSubmitting?: boolean;
-  onAiGenerate?: () => void;
-  extraActions?: React.ReactNode;
-}
+import type { MarkdownEditorProps } from '../types/MarkdownEditorProps';
 
 export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   value,
@@ -320,3 +299,5 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     </div>
   );
 };
+
+export type { MarkdownEditorProps } from '../types/MarkdownEditorProps';

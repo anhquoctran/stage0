@@ -1,158 +1,5 @@
-export type VirtualMrStatus = 'open' | 'approved' | 'closed';
-export type ReviewActionType = 'comment' | 'approve' | 'request_changes';
-export type ReviewerState = 'pending' | 'reviewing' | 'approved' | 'changes_requested' | 'commented';
-export type AuthorType = 'user' | 'ai_agent';
-export type ResolveType = 'manual' | 'ai_verified';
-export type VerificationStatus = 'none' | 'verifying' | 'pass' | 'fail';
-
-export interface RepoLabel {
-  id: string;
-  repoId: string;
-  name: string;
-  color: string;
-  description?: string;
-}
-
-export interface VirtualMrComment {
-  id: string;
-  discussionId: string;
-  authorType: AuthorType;
-  authorId: string;
-  authorName: string;
-  authorAvatar?: string;
-  body: string; // Markdown format
-  reviewAction?: ReviewActionType;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface VirtualMrDiscussion {
-  id: string;
-  sessionId: string;
-  filePath?: string | null;
-  diffSide?: 'left' | 'right' | null;
-  lineNumber?: number | null;
-  commitId?: string | null;
-  contentHash?: string | null;
-  contextBefore?: string | null;
-  contextAfter?: string | null;
-  isResolved: boolean;
-  resolveType?: ResolveType;
-  resolvedBy?: string | null;
-  resolvedAt?: string | null;
-  verificationStatus?: VerificationStatus | 'outdated';
-  verifiedByBot?: string | null;
-  verifiedAt?: string | null;
-  comments: VirtualMrComment[];
-  createdAt: string;
-}
-
-export interface VirtualMrReviewer {
-  agentId: string;
-  agentName: string;
-  reviewStatus: ReviewerState;
-  assignedAt: string;
-}
-
-export interface VirtualMrCommit {
-  hash: string;
-  shortHash: string;
-  subject: string;
-  body?: string;
-  authorName: string;
-  authorEmail: string;
-  authoredDate: string;
-}
-
-export interface VirtualMrSession {
-  id: string;
-  repoId: string;
-  title: string;
-  description: string; // Markdown description
-  baseBranch: string;
-  compareBranch: string;
-  status: VirtualMrStatus;
-  assignee: {
-    name: string;
-    email: string;
-    avatarUrl?: string;
-  };
-  reviewers: VirtualMrReviewer[];
-  labels: RepoLabel[];
-  discussions: VirtualMrDiscussion[];
-  commits: VirtualMrCommit[];
-  isPinned: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface NewMrDraft {
-  baseBranch: string;
-  compareBranch: string;
-  title: string;
-  description: string;
-  selectedBots: string[];
-  selectedLabels: string[];
-  commits: VirtualMrCommit[];
-  isCommitsLoading: boolean;
-  commitsError: string | null;
-}
-
-export type BotCategory =
-  | 'security'
-  | 'performance'
-  | 'architecture'
-  | 'style'
-  | 'test'
-  | 'documentation'
-  | 'custom';
-
-export interface BotReviewer {
-  id: string;
-  name: string;
-  tagline: string;
-  description: string;
-  category: BotCategory;
-  avatarEmoji: string;
-  systemPrompt: string;
-  provider?: string;
-  model?: string;
-  temperature?: number;
-  enabled: boolean;
-  isBuiltin?: boolean;
-}
-
-export interface RepoSettings {
-  repoId: string;
-  defaultBaseBranch: string;
-  inheritGlobalAgents: boolean;
-  customAgentRules?: string;
-  activeAgentIds: string[];
-  customReviewers?: BotReviewer[];
-}
-
-export interface GitRemoteDetail {
-  name: string;
-  fetch_url: string;
-  push_url: string;
-}
-
-export interface GitTagInfo {
-  name: string;
-  commit_hash: string;
-  message?: string | null;
-  date?: string | null;
-}
-
-export interface AiReviewerBotMeta {
-  id: string;
-  name: string;
-  tagline?: string;
-  category?: BotCategory;
-  avatarEmoji?: string;
-  description?: string;
-  defaultRules?: string;
-}
+import type { AiReviewerBotMeta } from './AiReviewerBotMeta';
+import type { RepoLabel } from './RepoLabel';
 
 export const AVAILABLE_AI_BOTS: AiReviewerBotMeta[] = [];
 
@@ -167,3 +14,23 @@ export const PRESET_REPO_LABELS: Omit<RepoLabel, 'id' | 'repoId'>[] = [
   { name: 'ai-approved', color: '#22c55e', description: 'Approved by AI Reviewer bots' },
   { name: 'changes-requested', color: '#f97316', description: 'Changes requested before merge' },
 ];
+
+export type { VirtualMrStatus } from './VirtualMrStatus';
+export type { ReviewActionType } from './ReviewActionType';
+export type { ReviewerState } from './ReviewerState';
+export type { AuthorType } from './AuthorType';
+export type { ResolveType } from './ResolveType';
+export type { VerificationStatus } from './VerificationStatus';
+export type { RepoLabel } from './RepoLabel';
+export type { VirtualMrComment } from './VirtualMrComment';
+export type { VirtualMrDiscussion } from './VirtualMrDiscussion';
+export type { VirtualMrReviewer } from './VirtualMrReviewer';
+export type { VirtualMrCommit } from './VirtualMrCommit';
+export type { VirtualMrSession } from './VirtualMrSession';
+export type { NewMrDraft } from './NewMrDraft';
+export type { BotCategory } from './BotCategory';
+export type { BotReviewer } from './BotReviewer';
+export type { RepoSettings } from './RepoSettings';
+export type { GitRemoteDetail } from './GitRemoteDetail';
+export type { GitTagInfo } from './GitTagInfo';
+export type { AiReviewerBotMeta } from './AiReviewerBotMeta';

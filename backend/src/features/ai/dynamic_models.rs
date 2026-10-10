@@ -1,68 +1,27 @@
-use serde::{Deserialize, Serialize};
+mod dynamic_model_info;
+pub use dynamic_model_info::DynamicModelInfo;
+mod open_ai_model_item;
+use open_ai_model_item::OpenAiModelItem;
+mod open_ai_model_list_response;
+use open_ai_model_list_response::OpenAiModelListResponse;
+mod anthropic_model_item;
+use anthropic_model_item::AnthropicModelItem;
+mod anthropic_model_list_response;
+use anthropic_model_list_response::AnthropicModelListResponse;
+mod gemini_model_item;
+use gemini_model_item::GeminiModelItem;
+mod gemini_model_list_response;
+use gemini_model_list_response::GeminiModelListResponse;
+mod ollama_tag_item;
+use ollama_tag_item::OllamaTagItem;
+mod ollama_tags_response;
+use ollama_tags_response::OllamaTagsResponse;
+mod copilot_model_item;
+use copilot_model_item::CopilotModelItem;
+mod copilot_model_list_response;
+use copilot_model_list_response::CopilotModelListResponse;
+
 use std::time::Duration;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DynamicModelInfo {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct OpenAiModelItem {
-    id: String,
-}
-
-#[derive(Deserialize)]
-struct OpenAiModelListResponse {
-    data: Option<Vec<OpenAiModelItem>>,
-}
-
-#[derive(Deserialize)]
-struct AnthropicModelItem {
-    id: String,
-    display_name: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct AnthropicModelListResponse {
-    data: Option<Vec<AnthropicModelItem>>,
-}
-
-#[derive(Deserialize)]
-struct GeminiModelItem {
-    name: String,
-    #[serde(rename = "displayName")]
-    display_name: Option<String>,
-    #[serde(rename = "supportedGenerationMethods")]
-    supported_generation_methods: Option<Vec<String>>,
-}
-
-#[derive(Deserialize)]
-struct GeminiModelListResponse {
-    models: Option<Vec<GeminiModelItem>>,
-}
-
-#[derive(Deserialize)]
-struct OllamaTagItem {
-    name: String,
-}
-
-#[derive(Deserialize)]
-struct OllamaTagsResponse {
-    models: Option<Vec<OllamaTagItem>>,
-}
-
-#[derive(Deserialize)]
-struct CopilotModelItem {
-    id: String,
-    name: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct CopilotModelListResponse {
-    data: Option<Vec<CopilotModelItem>>,
-}
 
 /// Fetch real-time available models from AI providers (OpenAI, Anthropic, Google, xAI, Copilot, Ollama)
 pub async fn fetch_provider_models(

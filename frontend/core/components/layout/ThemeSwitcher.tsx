@@ -1,5 +1,6 @@
 import React from 'react';
-import { Moon, Sun } from '@/common/components/icons';
+import { Moon } from '../../../common/components/icons/Moon';
+import { Sun } from '../../../common/components/icons/Sun';
 import { useThemeStore } from '../../store/useThemeStore';
 
 export const ThemeSwitcher: React.FC = () => {

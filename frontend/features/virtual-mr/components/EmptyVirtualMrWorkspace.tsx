@@ -1,14 +1,12 @@
 import React from 'react';
-import { GitPullRequest, Plus, Sparkles, FolderGit2 } from '@/common/components/icons';
+import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
+import { Plus } from '../../../common/components/icons/Plus';
+import { Sparkles } from '../../../common/components/icons/Sparkles';
+import { FolderGit2 } from '../../../common/components/icons/FolderGit2';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
+import type { EmptyVirtualMrWorkspaceProps } from '../types/EmptyVirtualMrWorkspaceProps';
 
-interface Props {
-  onNewMr: () => void;
-  repoName?: string;
-  defaultBaseBranch?: string;
-}
-
-export const EmptyVirtualMrWorkspace: React.FC<Props> = ({
+export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = ({
   onNewMr,
   repoName,
   defaultBaseBranch = 'main',

@@ -1,26 +1,17 @@
 import React, { useState, useMemo } from 'react';
-import {
-  AlertTriangle,
-  Search,
-  X,
-  List,
-  FolderTree,
-  Folder,
-  FolderOpen,
-  ChevronRight,
-  ChevronDown,
-} from '@/common/components/icons';
-import { ChangedFile } from '../types/git';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
+import { Search } from '../../../common/components/icons/Search';
+import { X } from '../../../common/components/icons/X';
+import { List } from '../../../common/components/icons/List';
+import { FolderTree } from '../../../common/components/icons/FolderTree';
+import { Folder } from '../../../common/components/icons/Folder';
+import { FolderOpen } from '../../../common/components/icons/FolderOpen';
+import { ChevronRight } from '../../../common/components/icons/ChevronRight';
+import { ChevronDown } from '../../../common/components/icons/ChevronDown';
+import { type ChangedFile } from '../types/ChangedFile';
 import { useGitStore } from '../store/useGitStore';
-import { FileContextMenu } from './FileActionMenu';
-
-interface FileListProps {
-  files: ChangedFile[];
-  selectedFile: ChangedFile | null;
-  onSelectFile: (file: ChangedFile) => void;
-  isLoading?: boolean;
-  width?: number;
-}
+import { FileContextMenu } from './FileContextMenu';
+import type { FileListProps } from '../types/FileListProps';
 
 export const FileList: React.FC<FileListProps> = ({
   files,

@@ -71,6 +71,7 @@ Common prefixes:
 ## Coding Standards
 
 ### Frontend (React 19, TypeScript, Tailwind CSS v4)
+- **One Source Owner per File**: Declare at most one named component, class, interface, enum, or type alias in each source file. Extract props and state into individually named files in the owning feature's `types/` directory. Helpers may accompany their owner; shared helpers belong in `utils/`. Import directly from the owning file. Re-export-only compatibility barrels are allowed, but must not define additional objects.
 - **Strict Typing**: Maintain strict TypeScript typing. Avoid `any`; keep feature-specific interfaces in `frontend/features/<feature>/types/`.
 - **Monochromatic & Accessible Design**:
   - Adhere to the Catppuccin-inspired monochromatic aesthetic (`text-subtext0`, `text-subtext1`, `text-text`, `bg-mantle`, `bg-surface0`, `bg-surface1`).
@@ -80,6 +81,7 @@ Common prefixes:
   - Follow keyboard shortcut accessibility patterns (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + keys).
 
 ### Backend (Rust, Tauri v2)
+- **One Source Owner per File**: Put each struct, enum, trait, or type alias in its own snake_case module. Keep its inherent and trait `impl` blocks with that owner. Feature persistence modules may retain extension `impl Database` blocks. Use `mod` and explicit re-exports to preserve feature APIs; `mod.rs` and function-only orchestration files may contain no model declarations. Keep private implementation details restricted to their original parent module with `pub(super)` when required.
 - **Safe Subprocess Execution**:
   - Always execute Git commands using `std::process::Command` with sanitized arguments.
   - Do not use shell string interpolation (`sh -c` or `cmd /c`) unless explicitly launching detached terminal applications.
@@ -94,6 +96,10 @@ Common prefixes:
 ## Verification & Testing
 
 Before submitting your changes, ensure that all static checks pass:
+
+Run `pnpm check:architecture` to enforce source ownership across FE and BE. This check also runs as part of `pnpm test`.
+
+This is a project organization convention, not a definition of SOLID. It follows TypeScript's [module boundaries](https://www.typescriptlang.org/docs/handbook/2/modules.html) and Rust's [file-backed modules](https://doc.rust-lang.org/book/ch07-05-separating-modules-into-different-files.html) and [visibility/re-exports](https://doc.rust-lang.org/book/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html).
 
 1. **Typecheck Frontend:**
    ```bash

@@ -1,32 +1,28 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import {
-  GitPullRequest,
-  GitBranch,
-  ArrowLeftRight,
-  CheckCircle2,
-  AlertTriangle,
-  Info,
-  GitCommit,
-  FileCode,
-  Bot,
-  Tag,
-  X,
-  Loader2,
-  Plus,
-  Check,
-} from '@/common/components/icons';
+import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { ArrowLeftRight } from '../../../common/components/icons/ArrowLeftRight';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
+import { Info } from '../../../common/components/icons/Info';
+import { GitCommit } from '../../../common/components/icons/GitCommit';
+import { FileCode } from '../../../common/components/icons/FileCode';
+import { Bot } from '../../../common/components/icons/Bot';
+import { Tag } from '../../../common/components/icons/Tag';
+import { X } from '../../../common/components/icons/X';
+import { Loader2 } from '../../../common/components/icons/Loader2';
+import { Plus } from '../../../common/components/icons/Plus';
+import { Check } from '../../../common/components/icons/Check';
 import { formatRecentTime } from '@/common/utils/dateTime';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
-import { BotReviewer } from '../types/virtualMr';
+import { type BotReviewer } from '../types/BotReviewer';
 import { TabBranchSelector } from '../../git/components/TabBranchSelector';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
 import { FileList } from '../../git/components/FileList';
-const DiffViewer = React.lazy(() =>
-  import('../../git/components/DiffViewer').then(({ DiffViewer }) => ({ default: DiffViewer }))
-);
 import { formatShortcutText } from '../../../common/utils/shortcuts';
+import { NewVirtualMrViewDiffViewer } from './NewVirtualMrViewDiffViewer';
 
 export const NewVirtualMrView: React.FC = () => {
   const {
@@ -815,7 +811,7 @@ export const NewVirtualMrView: React.FC = () => {
                       width={280}
                     />
                     <React.Suspense fallback={<div className="flex-1 grid place-items-center text-subtext0 text-xs">Loading diff viewer…</div>}>
-                      <DiffViewer
+                      <NewVirtualMrViewDiffViewer
                         selectedFile={selectedFile}
                         diffPayload={diffPayload}
                         viewMode={viewMode}

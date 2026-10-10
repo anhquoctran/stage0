@@ -1,21 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { invoke } from '@tauri-apps/api/core';
-import {
-  RefreshCw,
-  Download,
-  DownloadCloud,
-  GitMerge,
-  GitBranch,
-  GitCommit,
-  ChevronDown,
-  FolderGit2,
-  FolderCog,
-  RotateCw,
-  Play,
-  SkipForward,
-  Undo2,
-} from '@/common/components/icons';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { Download } from '../../../common/components/icons/Download';
+import { DownloadCloud } from '../../../common/components/icons/DownloadCloud';
+import { GitMerge } from '../../../common/components/icons/GitMerge';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { GitCommit } from '../../../common/components/icons/GitCommit';
+import { ChevronDown } from '../../../common/components/icons/ChevronDown';
+import { FolderGit2 } from '../../../common/components/icons/FolderGit2';
+import { FolderCog } from '../../../common/components/icons/FolderCog';
+import { RotateCw } from '../../../common/components/icons/RotateCw';
+import { Play } from '../../../common/components/icons/Play';
+import { SkipForward } from '../../../common/components/icons/SkipForward';
+import { Undo2 } from '../../../common/components/icons/Undo2';
 import { WindowControls } from './WindowControls';
 import { MenuBar } from './MenuBar';
 import { AppLogo } from '../../../common/components/AppLogo';

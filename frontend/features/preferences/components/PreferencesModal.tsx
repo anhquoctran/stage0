@@ -1,37 +1,26 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import {
-  X,
-  RotateCcw,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  ChevronLeft,
-  Search,
-  Monitor,
-  Moon,
-  Sun,
-  AlertCircle,
-  AlertTriangle,
-  Bold,
-  Italic,
-  Underline,
-  Code,
-} from '@/common/components/icons';
+import { X } from '../../../common/components/icons/X';
+import { RotateCcw } from '../../../common/components/icons/RotateCcw';
+import { Check } from '../../../common/components/icons/Check';
+import { ChevronDown } from '../../../common/components/icons/ChevronDown';
+import { ChevronRight } from '../../../common/components/icons/ChevronRight';
+import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
+import { Search } from '../../../common/components/icons/Search';
+import { Monitor } from '../../../common/components/icons/Monitor';
+import { Moon } from '../../../common/components/icons/Moon';
+import { Sun } from '../../../common/components/icons/Sun';
+import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
+import { Bold } from '../../../common/components/icons/Bold';
+import { Italic } from '../../../common/components/icons/Italic';
+import { Underline } from '../../../common/components/icons/Underline';
+import { Code } from '../../../common/components/icons/Code';
 import { SUPPORTED_FONTS } from '../constants/fonts';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
-import {
-  usePreferencesStore,
-  checkFontLigaturesSupport,
-  applyViewerFontToDocument,
-  DEFAULT_VIEWER_FONT_SETTINGS,
-  ViewerFontSettings,
-} from '../store/usePreferencesStore';
-import {
-  useThemeStore,
-  ThemeMode,
-  resolveTheme,
-  applyThemeToDocument,
-} from '../../../core/store/useThemeStore';
+import { usePreferencesStore, checkFontLigaturesSupport, applyViewerFontToDocument, DEFAULT_VIEWER_FONT_SETTINGS } from '../store/usePreferencesStore';
+import { type ViewerFontSettings } from '../types/ViewerFontSettings';
+import { useThemeStore, resolveTheme, applyThemeToDocument } from '../../../core/store/useThemeStore';
+import { type ThemeMode } from '../../../core/types/ThemeMode';
 import { GitCredentialsTab } from '../../credentials/components/GitCredentialsTab';
 import { AiMcpTab } from '../../ai/components/AiMcpTab';
 import { BotReviewersTab } from '../../ai/components/BotReviewersTab';
@@ -44,67 +33,13 @@ import { useGitStore } from '../../git/store/useGitStore';
 import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
 import { useGitBinaryStore } from '../../git/store/useGitBinaryStore';
 import { DEFAULT_AI_CONFIG } from '../../ai/constants/aiPresets';
-import { AiConfig } from '../../ai/types/ai';
-import { SandboxType } from '../../git/types/git';
-
-
-export type PreferenceTab =
-  | 'general'
-  | 'general-settings'
-  | 'appearance'
-  | 'appearance-theme'
-  | 'appearance-fonts'
-  | 'editor'
-  | 'editor-diff'
-  | 'ai'
-  | 'ai-overview'
-  | 'ai-providers'
-  | 'ai-mcp'
-  | 'ai-reviewers'
-  | 'ai-sandbox'
-  | 'ai-guardrails'
-  | 'git'
-  | 'git-binary'
-  | 'git-credentials'
-  | 'fonts'
-  | 'credentials'
-  | 'sandbox'
-  | 'reviewers'
-  | 'guardrails'
-  | 'notifications'
-  | 'notifications-settings'
-  | 'updates'
-  | 'updates-check';
-
-interface PreferencesBaseline {
-  themeMode: ThemeMode;
-  fontFamily: string;
-  fontSize: number;
-  isBold: boolean;
-  isItalic: boolean;
-  isUnderline: boolean;
-  lineSpacing: number;
-  enableLigatures: boolean;
-  showInlineBlame: boolean;
-  sandboxType: SandboxType;
-  aiConfig: AiConfig;
-  gitBinaryId: string;
-  gitBinaryPath: string;
-}
-
-interface TreeChildItem {
-  id: PreferenceTab;
-  label: string;
-  title: string;
-  description: string;
-  keywords: string[];
-}
-
-interface TreeCategory {
-  id: string;
-  label: string;
-  children: TreeChildItem[];
-}
+import { type AiConfig } from '../../ai/types/AiConfig';
+import { type SandboxType } from '../../git/types/SandboxType';
+import type { TreeCategory } from '../types/TreeCategory';
+import type { PreferenceTab } from '../types/PreferenceTab';
+import type { PreferencesBaseline } from '../types/PreferencesBaseline';
+import { SettingRow } from './SettingRow';
+import { ZedSwitch } from './ZedSwitch';
 
 // Tree view hierarchy matching Zed's structure
 const SETTINGS_TREE: TreeCategory[] = [
@@ -286,71 +221,6 @@ const normalizeTab = (tab?: string): PreferenceTab => {
     default:
       return tab as PreferenceTab;
   }
-};
-
-// Zed-inspired sleek toggle switch
-interface ZedSwitchProps {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  disabled?: boolean;
-  id?: string;
-}
-
-const ZedSwitch: React.FC<ZedSwitchProps> = ({ checked, onChange, disabled, id }) => {
-  return (
-    <button
-      id={id}
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => !disabled && onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${disabled
-          ? 'opacity-40 cursor-not-allowed bg-surface0'
-          : checked
-            ? 'bg-brand'
-            : 'bg-surface0'
-        }`}
-    >
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-crust shadow-xs ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-4.5 bg-crust' : 'translate-x-0.5 bg-subtext0'
-          }`}
-      />
-    </button>
-  );
-};
-
-// Zed-inspired setting row
-interface SettingRowProps {
-  title: string;
-  description?: React.ReactNode;
-  children: React.ReactNode;
-  borderBottom?: boolean;
-}
-
-const SettingRow: React.FC<SettingRowProps> = ({
-  title,
-  description,
-  children,
-  borderBottom = true,
-}) => {
-  return (
-    <div
-      className={`py-3 flex items-center justify-between gap-6 ${borderBottom ? 'border-b border-surface0/40' : ''
-        }`}
-    >
-      <div className="min-w-0 flex-1 pr-2">
-        <div className="text-xs font-semibold text-text">{title}</div>
-        {description && (
-          <div className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">
-            {description}
-          </div>
-        )}
-      </div>
-      <div className="shrink-0 flex items-center">{children}</div>
-    </div>
-  );
 };
 
 export const PreferencesModal: React.FC = () => {
@@ -1650,3 +1520,5 @@ export const PreferencesModal: React.FC = () => {
     </div>
   );
 };
+
+export type { PreferenceTab } from '../types/PreferenceTab';

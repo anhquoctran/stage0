@@ -1,23 +1,22 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
-import {
-  BranchList,
-  ChangedFile,
-  ConflictReport,
-  ConflictFilePreview,
-  MrDiffPayload,
-  RepoInfo,
-  RepoValidation,
-  ViewMode,
-  GitSyncOperation,
-  GitSyncOptions,
-  FileBlamePayload,
-  SandboxType,
-  SandboxAdapterInfo,
-  SandboxInstanceInfo,
-  SandboxExecutionResult,
-  OpenRepoOutcome,
-} from '../types/git';
+import { type BranchList } from '../types/BranchList';
+import { type ChangedFile } from '../types/ChangedFile';
+import { type ConflictReport } from '../types/ConflictReport';
+import { type ConflictFilePreview } from '../types/ConflictFilePreview';
+import { type MrDiffPayload } from '../types/MrDiffPayload';
+import { type RepoInfo } from '../types/RepoInfo';
+import { type RepoValidation } from '../types/RepoValidation';
+import { type ViewMode } from '../types/ViewMode';
+import { type GitSyncOperation } from '../types/GitSyncOperation';
+import { type GitSyncOptions } from '../types/GitSyncOptions';
+import { type FileBlamePayload } from '../types/FileBlamePayload';
+import { type SandboxType } from '../types/SandboxType';
+import { type SandboxAdapterInfo } from '../types/SandboxAdapterInfo';
+import { type SandboxInstanceInfo } from '../types/SandboxInstanceInfo';
+import { type SandboxExecutionResult } from '../types/SandboxExecutionResult';
+import { type OpenRepoOutcome } from '../types/OpenRepoOutcome';
+import type { GitState } from '../types/GitState';
 
 const syncRecentRepositoriesMenu = async (repositories: RepoInfo[]): Promise<void> => {
   if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) return;
@@ -40,97 +39,6 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 let diffRequestVersion = 0;
-
-interface GitState {
-  currentRepo: RepoInfo | null;
-  recentRepos: RepoInfo[];
-  branches: BranchList | null;
-  baseBranch: string;
-  compareBranch: string;
-  diffPayload: MrDiffPayload | null;
-  conflictReport: ConflictReport | null;
-  diffError: string | null;
-  conflictCheckError: string | null;
-  selectedFile: ChangedFile | null;
-  viewMode: ViewMode;
-  fileListLayout: 'flat' | 'tree';
-  isInitializing: boolean;
-  isLoading: boolean;
-  isDiffLoading: boolean;
-  isSyncing: boolean;
-  syncStatus: string | null;
-  error: string | null;
-
-  initApp: (restoreRecent?: boolean) => Promise<void>;
-  attachRepoToCurrentWindow: (repo: RepoInfo) => Promise<void>;
-  loadRecentRepos: () => Promise<void>;
-  openRepoDialog: (forceNewWindow?: boolean) => Promise<void>;
-  selectRepo: (repo: RepoInfo) => Promise<void>;
-  removeRecentRepo: (id: string) => Promise<void>;
-  clearRecentRepos: () => Promise<void>;
-  fetchBranches: (repoPath: string) => Promise<void>;
-  setBaseBranch: (branch: string) => Promise<void>;
-  setCompareBranch: (branch: string) => Promise<void>;
-  setBranchComparison: (base: string, compare: string) => Promise<void>;
-  swapBranches: () => Promise<void>;
-  loadDiff: () => Promise<void>;
-  refreshDiff: () => Promise<void>;
-  selectFile: (file: ChangedFile | null) => void;
-  selectNextFile: () => void;
-  selectPrevFile: () => void;
-  selectNextConflictFile: () => void;
-  selectPrevConflictFile: () => void;
-  setViewMode: (mode: ViewMode) => void;
-  setFileListLayout: (layout: 'flat' | 'tree') => void;
-  remotes: string[];
-  remoteUrl: string | null;
-  isRebasing: boolean;
-  toastMessage: string | null;
-  showToast: (msg: string) => void;
-  isPullFromOpen: boolean;
-  isRebaseFromOpen: boolean;
-  isRemoteUrlFromOpen: boolean;
-  isCloneModalOpen: boolean;
-  targetFileForUrl: ChangedFile | null;
-  setIsPullFromOpen: (open: boolean) => void;
-  setIsRebaseFromOpen: (open: boolean) => void;
-  setIsRemoteUrlFromOpen: (open: boolean) => void;
-  setIsCloneModalOpen: (open: boolean) => void;
-  cloneRepo: (url: string, targetPath: string, credentialId?: string) => Promise<RepoInfo | null>;
-  pickCloneFolder: () => Promise<string | null>;
-  setTargetFileForUrl: (file: ChangedFile | null) => void;
-  fetchRemotes: (repoPath: string) => Promise<void>;
-  fetchRemoteUrl: (repoPath: string) => Promise<string | null>;
-  checkRebaseStatus: (repoPath?: string) => Promise<boolean>;
-  runSync: (op: GitSyncOperation, options?: GitSyncOptions) => Promise<void>;
-  fileViewTab: 'diff' | 'blame' | 'conflicts';
-  blamePayload: FileBlamePayload | null;
-  isBlameLoading: boolean;
-  blameError: string | null;
-  blameRevision: string;
-  blameIgnoreWhitespace: boolean;
-  activeConflictPreview: ConflictFilePreview | null;
-  isConflictLoading: boolean;
-  conflictPreviewError: string | null;
-  setFileViewTab: (tab: 'diff' | 'blame' | 'conflicts') => void;
-  setBlameRevision: (rev: string) => void;
-  setBlameIgnoreWhitespace: (ignore: boolean) => void;
-  fetchFileBlame: (filePath?: string, revision?: string, ignoreWhitespace?: boolean) => Promise<void>;
-  fetchConflictPreview: (filePath?: string) => Promise<void>;
-  toggleFileBlame: () => void;
-  activeSandboxType: SandboxType;
-  availableSandboxes: SandboxAdapterInfo[];
-  activeSandboxInstances: SandboxInstanceInfo[];
-  isSandboxLoading: boolean;
-  fetchAvailableSandboxes: () => Promise<void>;
-  fetchActiveSandbox: () => Promise<void>;
-  setActiveSandbox: (type: SandboxType) => Promise<void>;
-  createSandboxInstance: () => Promise<SandboxInstanceInfo | null>;
-  destroySandboxInstance: (id: string) => Promise<void>;
-  executeSandboxCommand: (id: string, command: string, args: string[]) => Promise<SandboxExecutionResult | null>;
-  clearError: () => void;
-  closeRepo: () => Promise<void>;
-}
 
 export const useGitStore = create<GitState>((set, get) => ({
   currentRepo: null,

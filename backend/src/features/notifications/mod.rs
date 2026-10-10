@@ -1,5 +1,20 @@
-use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
+mod notification_level;
+pub use notification_level::NotificationLevel;
+mod notification_variant;
+pub use notification_variant::NotificationVariant;
+mod notification_dismiss_policy;
+pub use notification_dismiss_policy::NotificationDismissPolicy;
+mod notification_action;
+pub use notification_action::NotificationAction;
+mod notification_payload;
+pub use notification_payload::NotificationPayload;
+mod notification_action_event;
+use notification_action_event::NotificationActionEvent;
+mod runtime_state;
+use runtime_state::RuntimeState;
+mod notification_runtime;
+pub use notification_runtime::NotificationRuntime;
+
 use tauri::{AppHandle, Emitter, Manager, State, WebviewWindowBuilder};
 
 use crate::core::window_manager::app_webview_url;
@@ -9,84 +24,6 @@ const TOAST_EVENT: &str = "stage0-toast";
 const ACTION_EVENT: &str = "notification-action";
 pub const NOTIFICATION_HOST_LABEL: &str = "notification-host";
 const MAX_PENDING_TOASTS: usize = 50;
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum NotificationLevel {
-    Info,
-    Success,
-    Warning,
-    Error,
-    Update,
-}
-
-impl Default for NotificationLevel {
-    fn default() -> Self {
-        Self::Info
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum NotificationVariant {
-    Default,
-    Success,
-    Warning,
-    Danger,
-}
-
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum NotificationDismissPolicy {
-    Manual,
-    Timeout,
-    #[default]
-    Both,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct NotificationAction {
-    pub label: String,
-    #[serde(alias = "action_type")]
-    pub action_type: String,
-    pub payload: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct NotificationPayload {
-    pub id: Option<String>,
-    pub title: String,
-    pub body: String,
-    #[serde(default)]
-    pub level: NotificationLevel,
-    pub variant: Option<NotificationVariant>,
-    pub channel: Option<String>,
-    pub actions: Option<Vec<NotificationAction>>,
-    pub click_action: Option<NotificationAction>,
-    #[serde(default)]
-    pub dismiss_policy: NotificationDismissPolicy,
-    pub auto_dismiss_ms: Option<u64>,
-}
-
-#[derive(Serialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-struct NotificationActionEvent {
-    notification_id: Option<String>,
-    action: NotificationAction,
-}
-
-#[derive(Default)]
-struct RuntimeState {
-    notification_host_ready: bool,
-    pending_toasts: Vec<NotificationPayload>,
-    #[cfg(target_os = "linux")]
-    active_linux_notification_ids: Vec<u32>,
-}
-
-#[derive(Default)]
-pub struct NotificationRuntime(Mutex<RuntimeState>);
 
 pub fn ensure_notification_host(app: &AppHandle) {
     #[cfg(any(target_os = "windows", target_os = "macos"))]

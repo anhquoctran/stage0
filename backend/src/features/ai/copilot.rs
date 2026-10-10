@@ -1,48 +1,19 @@
-use serde::{Deserialize, Serialize};
+mod copilot_device_code_response;
+pub use copilot_device_code_response::CopilotDeviceCodeResponse;
+mod copilot_poll_response;
+pub use copilot_poll_response::CopilotPollResponse;
+mod copilot_internal_session_token;
+pub use copilot_internal_session_token::CopilotInternalSessionToken;
+mod copilot_endpoints;
+pub use copilot_endpoints::CopilotEndpoints;
+mod copilot_auth_status;
+pub use copilot_auth_status::CopilotAuthStatus;
+
 use std::time::Duration;
 
 pub const DEFAULT_COPILOT_CLIENT_ID: &str = "Iv1.b507a08c87ecfe48";
 const APP_EDITOR_VERSION: &str = "stage0/0.1.2";
 const APP_PLUGIN_VERSION: &str = "stage0-copilot/0.1.2";
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CopilotDeviceCodeResponse {
-    pub device_code: String,
-    pub user_code: String,
-    pub verification_uri: String,
-    pub expires_in: u64,
-    pub interval: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CopilotPollResponse {
-    pub status: String, // "authorized", "pending", "slow_down", "expired", "error"
-    pub access_token: Option<String>,
-    pub error_message: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CopilotInternalSessionToken {
-    pub token: String,
-    pub expires_at: u64,
-    pub endpoints: Option<CopilotEndpoints>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CopilotEndpoints {
-    pub api: Option<String>,
-    pub proxy: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CopilotAuthStatus {
-    pub connected: bool,
-    pub username: Option<String>,
-    pub avatar_url: Option<String>,
-    pub has_subscription: bool,
-    pub expires_at: Option<u64>,
-    pub error: Option<String>,
-}
 
 /// Step 1: Start GitHub Device Code Authorization Flow (RFC 8628)
 pub async fn start_copilot_device_flow(

@@ -1,13 +1,28 @@
-use std::collections::HashMap;
+mod repo_identity;
+pub use repo_identity::RepoIdentity;
+mod repository_context;
+pub use repository_context::RepositoryContext;
+mod window_record;
+use window_record::WindowRecord;
+mod registry;
+use registry::Registry;
+mod window_manager_state;
+pub use window_manager_state::WindowManagerState;
+mod open_repo_outcome;
+pub use open_repo_outcome::OpenRepoOutcome;
+mod window_startup_context;
+pub use window_startup_context::WindowStartupContext;
+mod open_plan;
+use open_plan::OpenPlan;
+
 #[cfg(unix)]
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use serde::Serialize;
 use tauri::webview::PageLoadEvent;
 #[cfg(target_os = "macos")]
 use tauri::TitleBarStyle;
@@ -15,7 +30,6 @@ use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindo
 
 use crate::core::db::Database;
 use crate::features::git::watcher::WatcherState;
-use crate::features::git::RepoInfo;
 
 pub const fn default_window_size() -> (f64, f64) {
     #[cfg(target_os = "windows")]
@@ -59,228 +73,6 @@ pub fn app_webview_url(app: &AppHandle, path: &str) -> WebviewUrl {
     } else {
         WebviewUrl::App(path.into())
     }
-}
-
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum RepoIdentity {
-    File { volume: u64, file_index: u64 },
-    Path(PathBuf),
-}
-
-#[derive(Clone, Debug)]
-pub struct RepositoryContext {
-    pub identity: RepoIdentity,
-    pub info: RepoInfo,
-}
-
-#[derive(Clone, Debug)]
-struct WindowRecord {
-    repo: Option<RepositoryContext>,
-    restore_recent: bool,
-    opening: bool,
-}
-
-#[derive(Default)]
-struct Registry {
-    windows: HashMap<String, WindowRecord>,
-    repo_to_window: HashMap<RepoIdentity, String>,
-}
-
-#[derive(Default)]
-pub struct WindowManagerState(Mutex<Registry>);
-
-impl WindowManagerState {
-    fn lock(&self) -> MutexGuard<'_, Registry> {
-        self.0
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-    }
-
-    pub fn register_welcome_window(&self, label: &str, restore_recent: bool) {
-        self.lock()
-            .windows
-            .entry(label.to_string())
-            .or_insert(WindowRecord {
-                repo: None,
-                restore_recent,
-                opening: false,
-            });
-    }
-
-    pub fn startup_context(&self, label: &str) -> WindowStartupContext {
-        let registry = self.lock();
-        let record = registry.windows.get(label);
-        WindowStartupContext {
-            repo: record.and_then(|window| window.repo.as_ref().map(|repo| repo.info.clone())),
-            restore_recent: record.map(|window| window.restore_recent).unwrap_or(false),
-        }
-    }
-
-    pub fn has_repository(&self, label: &str) -> bool {
-        self.lock()
-            .windows
-            .get(label)
-            .is_some_and(|window| window.repo.is_some())
-    }
-
-    fn plan_open(
-        &self,
-        app: &AppHandle,
-        context: &RepositoryContext,
-        caller_label: Option<&str>,
-        force_new_window: bool,
-    ) -> OpenPlan {
-        let live_windows = app.webview_windows();
-        let focused_labels = live_windows
-            .iter()
-            .filter_map(|(label, window)| {
-                window
-                    .is_focused()
-                    .ok()
-                    .filter(|focused| *focused)
-                    .map(|_| label.clone())
-            })
-            .collect::<Vec<_>>();
-
-        let mut registry = self.lock();
-        if let Some(label) = registry.repo_to_window.get(&context.identity).cloned() {
-            if live_windows.contains_key(&label) {
-                return OpenPlan::Existing(label);
-            }
-
-            let is_opening = registry
-                .windows
-                .get(&label)
-                .map(|record| record.opening)
-                .unwrap_or(false);
-            if is_opening {
-                return OpenPlan::Opening(label);
-            }
-
-            registry.repo_to_window.remove(&context.identity);
-            registry.windows.remove(&label);
-        }
-
-        if !force_new_window {
-            if let Some(label) = caller_label {
-                if registry
-                    .windows
-                    .get(label)
-                    .is_some_and(|record| record.repo.is_none())
-                {
-                    Self::assign_repo(&mut registry, label, context);
-                    return OpenPlan::AssignedHere(label.to_string());
-                }
-            } else {
-                let mut candidates = focused_labels;
-                candidates.push("main".to_string());
-                candidates.extend(registry.windows.keys().cloned());
-                let welcome_label = candidates
-                    .iter()
-                    .find(|label| {
-                        registry
-                            .windows
-                            .get(*label)
-                            .is_some_and(|record| record.repo.is_none())
-                            && live_windows.contains_key(*label)
-                    })
-                    .cloned();
-                if let Some(label) = welcome_label {
-                    Self::assign_repo(&mut registry, &label, context);
-                    return OpenPlan::AssignedExternal(label);
-                }
-            }
-        }
-
-        let label = format!("win_repo_{}", uuid::Uuid::new_v4().simple());
-        registry.windows.insert(
-            label.clone(),
-            WindowRecord {
-                repo: Some(context.clone()),
-                restore_recent: false,
-                opening: true,
-            },
-        );
-        registry
-            .repo_to_window
-            .insert(context.identity.clone(), label.clone());
-        OpenPlan::CreateRepoWindow(label)
-    }
-
-    fn assign_repo(registry: &mut Registry, label: &str, context: &RepositoryContext) {
-        if let Some(record) = registry.windows.get_mut(label) {
-            record.repo = Some(context.clone());
-            record.restore_recent = false;
-            record.opening = false;
-            registry
-                .repo_to_window
-                .insert(context.identity.clone(), label.to_string());
-        }
-    }
-
-    fn finish_open(&self, label: &str) {
-        if let Some(record) = self.lock().windows.get_mut(label) {
-            record.opening = false;
-        }
-    }
-
-    pub fn close_repository(&self, label: &str) -> Option<RepositoryContext> {
-        let mut registry = self.lock();
-        let old_repo = {
-            let record = registry.windows.get_mut(label)?;
-            let old_repo = record.repo.take();
-            record.restore_recent = false;
-            record.opening = false;
-            old_repo
-        };
-        if let Some(repo) = &old_repo {
-            registry.repo_to_window.remove(&repo.identity);
-        }
-        old_repo
-    }
-
-    pub fn unregister_window(&self, label: &str) -> Option<RepositoryContext> {
-        let mut registry = self.lock();
-        let record = registry.windows.remove(label)?;
-        if let Some(repo) = &record.repo {
-            registry.repo_to_window.remove(&repo.identity);
-        }
-        record.repo
-    }
-
-    fn remove_failed_window(&self, label: &str) {
-        let _ = self.unregister_window(label);
-    }
-}
-
-#[derive(Clone, Debug, Serialize)]
-#[serde(tag = "action", rename_all = "snake_case")]
-pub enum OpenRepoOutcome {
-    OpenedHere {
-        repo: RepoInfo,
-    },
-    FocusedExisting {
-        window_label: String,
-        repo: RepoInfo,
-    },
-    OpenedNewWindow {
-        window_label: String,
-        repo: RepoInfo,
-    },
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct WindowStartupContext {
-    pub repo: Option<RepoInfo>,
-    pub restore_recent: bool,
-}
-
-enum OpenPlan {
-    Existing(String),
-    Opening(String),
-    AssignedHere(String),
-    AssignedExternal(String),
-    CreateRepoWindow(String),
 }
 
 pub fn resolve_repository(

@@ -1,15 +1,13 @@
-use super::runner::{resolve_ref, run_git, run_git_strict};
+mod git_sync_options;
+pub use git_sync_options::GitSyncOptions;
+mod git_remote_detail;
+pub use git_remote_detail::GitRemoteDetail;
+mod git_tag_info;
+pub use git_tag_info::GitTagInfo;
+mod git_commit_item;
+pub use git_commit_item::GitCommitItem;
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
-pub struct GitSyncOptions {
-    pub remote: Option<String>,
-    pub branch: Option<String>,
-    pub rebase: Option<bool>,
-    pub autostash: Option<bool>,
-    pub ff_only: Option<bool>,
-    pub no_commit: Option<bool>,
-    pub prune: Option<bool>,
-}
+use super::runner::{resolve_ref, run_git, run_git_strict};
 
 pub fn list_remotes(repo_path: &str) -> Result<Vec<String>, String> {
     let res = run_git_strict(repo_path, &["remote"])?;
@@ -374,13 +372,6 @@ fn validate_ssh_host(host: &str, allow_port: bool) -> Result<(), String> {
     Ok(())
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
-pub struct GitRemoteDetail {
-    pub name: String,
-    pub fetch_url: String,
-    pub push_url: String,
-}
-
 pub fn list_remotes_detailed(repo_path: &str) -> Result<Vec<GitRemoteDetail>, String> {
     let remotes = list_remotes(repo_path)?;
     let mut details = Vec::new();
@@ -445,14 +436,6 @@ pub fn test_remote_connection(repo_path: &str, remote_or_url: &str) -> Result<St
         ));
     }
     Ok("Connection successful! Remote repository is accessible.".to_string())
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
-pub struct GitTagInfo {
-    pub name: String,
-    pub commit_hash: String,
-    pub message: Option<String>,
-    pub date: Option<String>,
 }
 
 pub fn list_tags_detailed(repo_path: &str) -> Result<Vec<GitTagInfo>, String> {
@@ -568,17 +551,6 @@ pub fn rename_branch(repo_path: &str, old_name: &str, new_name: &str) -> Result<
     validate_branch_name(repo_path, new_name)?;
     run_git_strict(repo_path, &["branch", "-m", old_name, new_name])?;
     Ok(())
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
-pub struct GitCommitItem {
-    pub hash: String,
-    pub short_hash: String,
-    pub subject: String,
-    pub body: Option<String>,
-    pub author_name: String,
-    pub author_email: String,
-    pub authored_date: String,
 }
 
 pub fn get_commits_between(

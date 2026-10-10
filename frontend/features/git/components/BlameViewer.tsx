@@ -1,21 +1,20 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import {
-  GitCommit,
-  User,
-  Clock,
-  Copy,
-  Check,
-  Search,
-  X,
-  ExternalLink,
-  RotateCw,
-  GitBranch,
-  ChevronDown,
-  Info,
-  Users,
-} from '@/common/components/icons';
+import { GitCommit } from '../../../common/components/icons/GitCommit';
+import { User } from '../../../common/components/icons/User';
+import { Clock } from '../../../common/components/icons/Clock';
+import { Copy } from '../../../common/components/icons/Copy';
+import { Check } from '../../../common/components/icons/Check';
+import { Search } from '../../../common/components/icons/Search';
+import { X } from '../../../common/components/icons/X';
+import { ExternalLink } from '../../../common/components/icons/ExternalLink';
+import { RotateCw } from '../../../common/components/icons/RotateCw';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { ChevronDown } from '../../../common/components/icons/ChevronDown';
+import { Info } from '../../../common/components/icons/Info';
+import { Users } from '../../../common/components/icons/Users';
 import { formatUnixDateTime, formatUnixRelativeTime } from '@/common/utils/dateTime';
-import { BlameCommit, BlameLine } from '../types/git';
+import { type BlameCommit } from '../types/BlameCommit';
+import { type BlameLine } from '../types/BlameLine';
 import { useGitStore } from '../store/useGitStore';
 import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
 import { buildRemoteCommitUrl } from '../utils/fileActions';

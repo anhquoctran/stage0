@@ -1,10 +1,5 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
-
-export interface PerformanceMetrics {
-  cpuPercent: number | null;
-  memoryBytes: number;
-  processCount: number;
-}
+import type { PerformanceMetrics } from '../types/PerformanceMetrics';
 
 export async function getPerformanceMetrics(): Promise<PerformanceMetrics> {
   if (!isTauri()) {
@@ -12,3 +7,5 @@ export async function getPerformanceMetrics(): Promise<PerformanceMetrics> {
   }
   return invoke<PerformanceMetrics>('get_performance_metrics');
 }
+
+export type { PerformanceMetrics } from '../types/PerformanceMetrics';

@@ -1,5 +1,13 @@
+mod chat_gpt_o_auth_start_result;
+pub use chat_gpt_o_auth_start_result::ChatGptOAuthStartResult;
+mod chat_gpt_auth_status;
+pub use chat_gpt_auth_status::ChatGptAuthStatus;
+mod chat_gpt_token_response;
+use chat_gpt_token_response::ChatGptTokenResponse;
+mod user_info_response;
+use user_info_response::UserInfoResponse;
+
 use base64::Engine;
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -8,37 +16,6 @@ use tokio::sync::Mutex;
 
 // Default client ID for OpenAI Sign in with ChatGPT (Dynamic Agent Client for native apps)
 pub const DEFAULT_CHATGPT_CLIENT_ID: &str = "dynamic_agent_client";
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChatGptOAuthStartResult {
-    pub auth_url: String,
-    pub state: String,
-    pub port: u16,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChatGptAuthStatus {
-    pub connected: bool,
-    pub account_email: Option<String>,
-    pub error: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct ChatGptTokenResponse {
-    access_token: String,
-    refresh_token: Option<String>,
-    id_token: Option<String>,
-    issued_client_id: Option<String>,
-    #[allow(dead_code)]
-    expires_in: Option<u64>,
-}
-
-#[derive(Debug, Deserialize)]
-struct UserInfoResponse {
-    email: Option<String>,
-    preferred_username: Option<String>,
-    name: Option<String>,
-}
 
 /// Generate cryptographically secure PKCE verifier and S256 challenge
 pub fn generate_pkce() -> (String, String) {

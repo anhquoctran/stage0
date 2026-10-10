@@ -1,13 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Globe,
-  X,
-  Copy,
-  Check,
-  ExternalLink,
-  GitBranch,
-  GitCommit,
-} from '@/common/components/icons';
+import { Globe } from '../../../common/components/icons/Globe';
+import { X } from '../../../common/components/icons/X';
+import { Copy } from '../../../common/components/icons/Copy';
+import { Check } from '../../../common/components/icons/Check';
+import { ExternalLink } from '../../../common/components/icons/ExternalLink';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { GitCommit } from '../../../common/components/icons/GitCommit';
 import { useGitStore } from '../store/useGitStore';
 import { buildRemoteFileUrl } from '../utils/fileActions';
 

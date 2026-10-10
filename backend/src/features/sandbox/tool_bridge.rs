@@ -1,4 +1,10 @@
-use serde::{Deserialize, Serialize};
+mod read_file_range_args;
+pub use read_file_range_args::ReadFileRangeArgs;
+mod execute_terminal_cmd_args;
+pub use execute_terminal_cmd_args::ExecuteTerminalCmdArgs;
+mod file_range_result;
+use file_range_result::FileRangeResult;
+
 use serde_json::json;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Cursor};
@@ -7,19 +13,6 @@ use std::time::Duration;
 
 use super::{SandboxInstanceInfo, SandboxManager, SandboxType};
 use crate::common::process::run_bounded_command;
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ReadFileRangeArgs {
-    pub file_path: String,
-    pub start_line: usize,
-    pub end_line: usize,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ExecuteTerminalCmdArgs {
-    pub command: String,
-    pub args: Vec<String>,
-}
 
 const MAX_TOOL_FILE_SCAN_BYTES: usize = 64 * 1024 * 1024;
 const HARD_MAX_TOOL_OUTPUT_BYTES: usize = 1024 * 1024;
@@ -102,13 +95,6 @@ fn read_docker_file_range(
         end_line,
         output_limit,
     )
-}
-
-struct FileRangeResult {
-    content: String,
-    total_lines: Option<usize>,
-    actual_end_line: usize,
-    output_truncated: bool,
 }
 
 /// Reads only the requested line range, retaining at most the configured

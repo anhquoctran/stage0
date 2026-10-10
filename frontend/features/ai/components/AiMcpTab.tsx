@@ -1,44 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { invoke, isTauri } from '@tauri-apps/api/core';
-import {
-  Cable,
-  Plus,
-  Trash2,
-  Check,
-  ChevronLeft,
-  Copy,
-  RefreshCw,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  ExternalLink,
-  FileJson,
-  Terminal,
-  Globe,
-  RotateCcw,
-  CheckCircle2,
-  X,
-  ShieldCheck,
-  Edit3,
-  Bot,
-  Sparkles,
-  Code2,
-  Zap,
-  HardDrive,
-  Cog,
-} from '@/common/components/icons';
+import { Cable } from '../../../common/components/icons/Cable';
+import { Plus } from '../../../common/components/icons/Plus';
+import { Trash2 } from '../../../common/components/icons/Trash2';
+import { Check } from '../../../common/components/icons/Check';
+import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
+import { Copy } from '../../../common/components/icons/Copy';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { Eye } from '../../../common/components/icons/Eye';
+import { EyeOff } from '../../../common/components/icons/EyeOff';
+import { ExternalLink } from '../../../common/components/icons/ExternalLink';
+import { FileJson } from '../../../common/components/icons/FileJson';
+import { Terminal } from '../../../common/components/icons/Terminal';
+import { Globe } from '../../../common/components/icons/Globe';
+import { RotateCcw } from '../../../common/components/icons/RotateCcw';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { X } from '../../../common/components/icons/X';
+import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
+import { Edit3 } from '../../../common/components/icons/Edit3';
+import { Bot } from '../../../common/components/icons/Bot';
+import { Sparkles } from '../../../common/components/icons/Sparkles';
+import { Code2 } from '../../../common/components/icons/Code2';
+import { Zap } from '../../../common/components/icons/Zap';
+import { HardDrive } from '../../../common/components/icons/HardDrive';
+import { Cog } from '../../../common/components/icons/Cog';
 import { useAiMcpStore } from '../store/useAiMcpStore';
-import {
-  AI_PROVIDERS,
-  MCP_PRESET_TEMPLATES,
-  DEFAULT_AI_CONFIG,
-} from '../constants/aiPresets';
-import {
-  AiConfig,
-  AiProviderId,
-  McpServerConfig,
-  McpServerType,
-} from '../types/ai';
+import { AI_PROVIDERS, MCP_PRESET_TEMPLATES, DEFAULT_AI_CONFIG } from '../constants/aiPresets';
+import { type AiConfig } from '../types/AiConfig';
+import { type AiProviderId } from '../types/AiProviderId';
+import { type McpServerConfig } from '../types/McpServerConfig';
+import { type McpServerType } from '../types/McpServerType';
+import type { AiMcpTabProps } from '../types/AiMcpTabProps';
 
 const getProviderIcon = (providerId: string) => {
   switch (providerId) {
@@ -71,14 +64,6 @@ const openUrlInBrowser = async (url: string) => {
   }
   window.open(url, '_blank');
 };
-
-interface AiMcpTabProps {
-  draftAiConfig?: AiConfig;
-  onUpdateAiConfig?: (partial: Partial<AiConfig>) => void;
-  onNavigateToGuardrails?: () => void;
-  activeView?: 'providers' | 'mcp' | 'prompts';
-  onBackToOverview?: () => void;
-}
 
 export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   draftAiConfig,

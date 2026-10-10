@@ -1,18 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  ArrowLeftRight,
-  ArrowRight,
-  CheckCircle2,
-  Code2,
-  GitBranch,
-  GitCompare,
-  GitPullRequest,
-  ShieldCheck,
-  Sparkles,
-  X,
-} from '@/common/components/icons';
+import { ArrowRight } from '../../../common/components/icons/ArrowRight';
+import { Sparkles } from '../../../common/components/icons/Sparkles';
+import { X } from '../../../common/components/icons/X';
 import { AppLogo } from '../../../common/components/AppLogo';
 import { useGitStore } from '../../git/store/useGitStore';
+import { BranchArtwork } from './BranchArtwork';
+import { CompareArtwork } from './CompareArtwork';
+import { ReviewArtwork } from './ReviewArtwork';
+import type { FirstLaunchWelcomeProps } from '../types/FirstLaunchWelcomeProps';
 
 const ONBOARDING_STORAGE_KEY = 'stage0_first_launch_welcome_v1';
 
@@ -22,10 +17,6 @@ export function shouldShowFirstLaunchWelcome(): boolean {
   } catch {
     return true;
   }
-}
-
-interface FirstLaunchWelcomeProps {
-  onComplete: () => void;
 }
 
 const SLIDES = [
@@ -52,106 +43,6 @@ const SLIDES = [
     caption: 'Open or clone a repository to create your first branch comparison.',
   },
 ];
-
-const BranchArtwork: React.FC = () => (
-  <div className="relative w-full max-w-[25rem] aspect-[1.35] border border-surface1 bg-base shadow-xl overflow-hidden">
-    <div className="absolute inset-0 opacity-60" style={{ backgroundImage: 'radial-gradient(var(--ctp-surface1) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-    <svg className="absolute inset-0 h-full w-full" viewBox="0 0 400 296" fill="none" aria-hidden="true">
-      <path d="M75 75H135C162 75 158 128 194 128H327" stroke="var(--ctp-overlay1)" strokeWidth="3" />
-      <path d="M75 220H135C162 220 158 167 194 167H327" stroke="var(--ctp-overlay1)" strokeWidth="3" />
-      <path d="M194 128V167" stroke="var(--ctp-mauve)" strokeWidth="3" strokeDasharray="5 5" />
-      <circle cx="75" cy="75" r="8" fill="var(--ctp-blue)" />
-      <circle cx="75" cy="220" r="8" fill="var(--ctp-green)" />
-      <circle cx="327" cy="128" r="8" fill="var(--ctp-mauve)" />
-    </svg>
-    <div className="absolute left-[10%] top-[18%] border border-surface1 bg-mantle px-3 py-2 text-[11px] font-mono text-text shadow-lg">
-      <span className="mr-2 inline-block h-2 w-2 bg-blue" />main
-    </div>
-    <div className="absolute left-[10%] bottom-[16%] border border-surface1 bg-mantle px-3 py-2 text-[11px] font-mono text-text shadow-lg">
-      <span className="mr-2 inline-block h-2 w-2 bg-green" />feature/login
-    </div>
-    <div className="absolute right-[7%] top-[35%] flex items-center gap-2 border border-primary/40 bg-mantle px-3 py-2 text-[11px] font-semibold text-text shadow-lg">
-      <GitCompare className="h-3.5 w-3.5 text-primary" />
-      Compare
-    </div>
-    <div className="absolute bottom-3 right-3 flex items-center gap-2 border border-surface1 bg-base/95 px-2.5 py-1.5 text-[10px] text-subtext1">
-      <ShieldCheck className="h-3.5 w-3.5 text-green" />
-      Working copy untouched
-    </div>
-  </div>
-);
-
-const CompareArtwork: React.FC = () => (
-  <div className="w-full max-w-[25rem] border border-surface1 bg-base shadow-xl overflow-hidden">
-    <div className="flex items-center justify-between border-b border-surface0 bg-mantle px-4 py-3">
-      <div className="flex items-center gap-2 text-xs font-semibold text-text">
-        <ArrowLeftRight className="h-3.5 w-3.5 text-primary" />
-        Branch comparison
-      </div>
-      <span className="border border-yellow/30 bg-yellow/10 px-2 py-1 text-[10px] font-medium text-yellow">2 conflicts predicted</span>
-    </div>
-    <div className="space-y-2.5 p-4">
-      {[
-        { name: 'src/auth/session.ts', kind: 'Modified', additions: 3, deletions: 1 },
-        { name: 'src/auth/provider.ts', kind: 'Conflict likely', additions: 2, deletions: 2 },
-        { name: 'tests/session.test.ts', kind: 'Added', additions: 8, deletions: 0 },
-      ].map((file) => (
-        <div key={file.name} className="border border-surface0 bg-mantle px-3 py-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-2 text-[11px] font-mono text-text">
-              <Code2 className="h-3 w-3 shrink-0 text-subtext0" />
-              <span className="truncate">{file.name}</span>
-            </div>
-            <span className={`shrink-0 text-[10px] ${file.kind === 'Conflict likely' ? 'text-yellow' : 'text-subtext0'}`}>{file.kind}</span>
-          </div>
-          <div className="mt-2 flex items-center gap-1.5">
-            {Array.from({ length: file.additions }).map((_, index) => <span key={`a-${index}`} className="h-1.5 flex-1 bg-green/70" />)}
-            {Array.from({ length: file.deletions }).map((_, index) => <span key={`d-${index}`} className="h-1.5 flex-1 bg-red/70" />)}
-          </div>
-        </div>
-      ))}
-    </div>
-    <div className="flex items-center gap-2 border-t border-surface0 px-4 py-3 text-[11px] text-subtext1">
-      <Sparkles className="h-3.5 w-3.5 text-primary" />
-      Inspect each change before merging
-    </div>
-  </div>
-);
-
-const ReviewArtwork: React.FC = () => (
-  <div className="w-full max-w-[25rem] border border-surface1 bg-base shadow-xl overflow-hidden">
-    <div className="flex items-center justify-between border-b border-surface0 bg-mantle px-4 py-3">
-      <div className="flex items-center gap-2 text-xs font-semibold text-text">
-        <GitPullRequest className="h-4 w-4 text-primary" />
-        Virtual MR
-      </div>
-      <span className="border border-green/30 bg-green/10 px-2 py-1 text-[10px] text-green">Local draft</span>
-    </div>
-    <div className="space-y-4 p-4">
-      <div>
-        <div className="mb-2 h-2 w-2/3 bg-subtext1/60" />
-        <div className="h-1.5 w-full bg-surface0" />
-        <div className="mt-1.5 h-1.5 w-4/5 bg-surface0" />
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <span className="border border-primary/30 bg-primary/10 px-2 py-1 text-[10px] text-primary">feature</span>
-        <span className="border border-blue/30 bg-blue/10 px-2 py-1 text-[10px] text-blue">ready for review</span>
-      </div>
-      <div className="border border-surface0 bg-mantle p-3">
-        <div className="flex items-center gap-2 text-[11px] font-semibold text-text">
-          <CheckCircle2 className="h-3.5 w-3.5 text-green" />
-          Review notes
-        </div>
-        <div className="mt-2 h-1.5 w-full bg-surface0" />
-        <div className="mt-1.5 h-1.5 w-3/4 bg-surface0" />
-      </div>
-    </div>
-    <div className="flex items-center justify-between border-t border-surface0 px-4 py-3 text-[10px] text-subtext0">
-      <span>Saved on this device</span>
-      <GitBranch className="h-3.5 w-3.5 text-subtext1" />
-    </div>
-  </div>
-);
 
 const ARTWORK = [BranchArtwork, CompareArtwork, ReviewArtwork];
 
