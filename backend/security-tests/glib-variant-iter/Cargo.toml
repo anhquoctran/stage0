@@ -1,0 +1,15 @@
+[package]
+name = "stage0-glib-security-tests"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# An independent test package: GLib is a Linux runtime dependency, not a new
+# runtime dependency on Windows/macOS. Keep its probe out of application builds.
+[workspace]
+
+[dependencies]
+glib = { path = "../../vendor/glib" }
+
+[profile.release]
+opt-level = 3

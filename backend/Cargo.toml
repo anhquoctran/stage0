@@ -46,6 +46,11 @@ keyring = { version = "3", features = ["sync-secret-service", "crypto-rust"] }
 notify-rust = "4.11"
 zbus = "5"
 
+# GTK3 pins glib to 0.18.x. Backport the upstream VariantStrIter safety fix
+# without changing its API/version or substituting an unrelated 0.20 release.
+[patch.crates-io]
+glib = { path = "vendor/glib" }
+
 [profile.release]
 opt-level = 3
 lto = true
