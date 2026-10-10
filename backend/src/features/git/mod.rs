@@ -7,6 +7,7 @@ pub mod branches;
 pub mod commands;
 pub mod conflict;
 pub mod diff;
+pub mod graph;
 pub mod ops;
 pub mod persistence;
 pub mod runner;
@@ -194,6 +195,7 @@ mod tests {
     use super::branches::list_branches;
     use super::conflict::check_conflicts;
     use super::diff::get_mr_diff;
+    use super::graph::{get_commit_message, get_current_branch_graph, search_commit_messages};
     use super::ops::get_commits_between;
     use super::resolve_safe_repo_path;
     use std::fs;
@@ -312,6 +314,125 @@ mod tests {
         assert_eq!(
             disk_content,
             "Line 1: Header\nLine 2: Content\nLine 3: From main conflicting\n"
+        );
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn current_branch_graph_includes_merge_history_without_mutating_worktree() {
+        let temp_dir =
+            std::env::temp_dir().join(format!("git_graph_test_{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&temp_dir).unwrap();
+        let dir_str = temp_dir.to_str().unwrap();
+
+        run_git(dir_str, &["init", "-b", "main"]);
+        run_git(dir_str, &["config", "user.name", "Test User"]);
+        run_git(dir_str, &["config", "user.email", "test@test.com"]);
+
+        fs::write(temp_dir.join("base.txt"), "base\n").unwrap();
+        run_git(dir_str, &["add", "."]);
+        run_git(dir_str, &["commit", "-m", "Initial commit"]);
+
+        run_git(dir_str, &["checkout", "-b", "feature/graph"]);
+        fs::write(temp_dir.join("feature.txt"), "feature\n").unwrap();
+        run_git(dir_str, &["add", "."]);
+        run_git(
+            dir_str,
+            &[
+                "commit",
+                "-m",
+                "Feature graph commit",
+                "-m",
+                "Full commit message details",
+            ],
+        );
+        let feature_commit_hash = std::process::Command::new("git")
+            .current_dir(dir_str)
+            .args(["rev-parse", "HEAD"])
+            .output()
+            .unwrap();
+        assert!(feature_commit_hash.status.success());
+        let feature_commit_hash = String::from_utf8(feature_commit_hash.stdout)
+            .unwrap()
+            .trim()
+            .to_string();
+
+        run_git(dir_str, &["checkout", "main"]);
+        fs::write(temp_dir.join("main.txt"), "main\n").unwrap();
+        run_git(dir_str, &["add", "."]);
+        run_git(dir_str, &["commit", "-m", "Main graph commit"]);
+        run_git(
+            dir_str,
+            &[
+                "merge",
+                "--no-ff",
+                "feature/graph",
+                "-m",
+                "Merge graph feature",
+            ],
+        );
+
+        let graph = get_current_branch_graph(dir_str).expect("Failed to load current branch graph");
+        assert_eq!(graph.branch, "main");
+        assert!(!graph.is_detached);
+        assert!(!graph.truncated);
+        assert!(graph
+            .commits
+            .iter()
+            .any(|commit| commit.subject == "Merge graph feature" && commit.parents.len() == 2));
+        assert_eq!(
+            get_commit_message(dir_str, &feature_commit_hash).unwrap(),
+            "Feature graph commit\n\nFull commit message details"
+        );
+        let graph_hashes = graph
+            .commits
+            .iter()
+            .map(|commit| commit.hash.clone())
+            .collect::<Vec<_>>();
+        assert!(search_commit_messages(
+            dir_str,
+            "Full commit message details",
+            false,
+            &graph_hashes,
+        )
+        .unwrap()
+        .contains(&feature_commit_hash));
+        assert!(search_commit_messages(
+            dir_str,
+            "FULL COMMIT MESSAGE DETAILS",
+            false,
+            &graph_hashes,
+        )
+        .unwrap()
+        .contains(&feature_commit_hash));
+        assert!(!search_commit_messages(
+            dir_str,
+            "FULL COMMIT MESSAGE DETAILS",
+            true,
+            &graph_hashes,
+        )
+        .unwrap()
+        .contains(&feature_commit_hash));
+        assert!(get_commit_message(dir_str, "--exec=bad").is_err());
+        assert!(graph
+            .commits
+            .iter()
+            .any(|commit| commit.subject == "Feature graph commit"));
+        assert!(graph
+            .commits
+            .iter()
+            .any(|commit| commit.subject == "Main graph commit"));
+
+        let status = std::process::Command::new("git")
+            .current_dir(dir_str)
+            .args(["status", "--porcelain"])
+            .output()
+            .unwrap();
+        assert!(status.status.success());
+        assert!(
+            status.stdout.is_empty(),
+            "Graph lookup must not modify the worktree"
         );
 
         let _ = fs::remove_dir_all(&temp_dir);

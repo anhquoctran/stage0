@@ -39,6 +39,28 @@ pub const fn minimum_window_size() -> (f64, f64) {
     }
 }
 
+pub fn app_webview_url(app: &AppHandle, path: &str) -> WebviewUrl {
+    let custom_protocol_url = app
+        .config()
+        .app
+        .windows
+        .iter()
+        .find(|window| window.label == "main")
+        .and_then(|window| match &window.url {
+            WebviewUrl::CustomProtocol(url) => Some(url.clone()),
+            _ => None,
+        });
+
+    if let Some(mut url) = custom_protocol_url {
+        url.set_path(path.trim_start_matches('/'));
+        url.set_query(None);
+        url.set_fragment(None);
+        WebviewUrl::CustomProtocol(url)
+    } else {
+        WebviewUrl::App(path.into())
+    }
+}
+
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum RepoIdentity {
     File { volume: u64, file_index: u64 },
@@ -420,7 +442,7 @@ pub fn create_welcome_window(app: &AppHandle) -> Result<String, String> {
 fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWindow, String> {
     let focus_after_initial_load = Arc::new(AtomicBool::new(true));
     let focus_after_initial_load_callback = Arc::clone(&focus_after_initial_load);
-    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
+    let builder = WebviewWindowBuilder::new(app, label, app_webview_url(app, "index.html"))
         .title(title)
         .inner_size(1360.0, 840.0)
         .decorations(false)

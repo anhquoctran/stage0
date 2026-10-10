@@ -16,9 +16,8 @@ export const EmptyVirtualMrWorkspace: React.FC<Props> = ({
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 bg-crust select-none text-center font-sans">
       <div className="max-w-md flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
-        {/* Glowing Icon Container */}
+        {/* Icon Container */}
         <div className="relative mb-6">
-          <div className="absolute -inset-2 bg-gradient-to-r from-brand/20 via-mauve/15 to-teal/20 rounded-3xl blur-xl" />
           <div className="relative w-16 h-16 rounded-2xl bg-mantle border border-surface1 flex items-center justify-center text-brand shadow-xl">
             <GitPullRequest className="w-8 h-8 text-brand" />
           </div>
@@ -45,7 +44,7 @@ export const EmptyVirtualMrWorkspace: React.FC<Props> = ({
         <button
           type="button"
           onClick={onNewMr}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand hover:bg-brand/90 active:scale-[0.98] text-on-accent font-semibold text-xs transition-all shadow-lg shadow-brand/20 cursor-pointer mb-4"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-none bg-brand hover:bg-brand/90 active:scale-[0.98] text-on-accent font-semibold text-xs transition-all shadow-lg shadow-brand/20 cursor-pointer mb-4"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Create Virtual MR</span>

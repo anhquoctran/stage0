@@ -12,7 +12,7 @@ window.__stage0_has_error__ = false;
 // prevents a dark first frame when the application is configured for light or
 // system-light mode. Keep these storage keys in sync with useThemeStore.ts.
 (function applyStartupTheme() {
-  var mode = 'dark';
+  var mode = 'system';
   try {
     var savedMode = window.localStorage.getItem('stage0_catppuccin_theme_mode');
     if (savedMode === 'system' || savedMode === 'dark' || savedMode === 'light') {
@@ -23,7 +23,7 @@ window.__stage0_has_error__ = false;
       if (legacyTheme === 'mocha') mode = 'dark';
     }
   } catch (_) {
-    // Storage can be unavailable in a restricted WebView; dark is the safe fallback.
+    // Without saved preferences, follow the OS color scheme.
   }
 
   var prefersDark = !window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches;

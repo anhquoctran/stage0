@@ -17,7 +17,63 @@ use window_manager::{
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let context = tauri::generate_context!();
+    #[cfg(not(dev))]
+    let context = {
+        let mut context = context;
+        if let Some(main_window) = context
+            .config_mut()
+            .app
+            .windows
+            .iter_mut()
+            .find(|window| window.label == "main")
+        {
+            main_window.url = tauri::WebviewUrl::CustomProtocol(
+                tauri::Url::parse("stagezero://localhost")
+                    .expect("Stage0's production URI scheme should be a valid URL"),
+            );
+        }
+        context
+    };
+
+    let builder = tauri::Builder::default();
+    #[cfg(not(dev))]
+    let builder = builder.register_uri_scheme_protocol("stagezero", |context, request| {
+        let uri = request.uri();
+        let scheme = uri.scheme_str().unwrap_or("stagezero");
+        let origin = uri
+            .authority()
+            .map(|authority| format!("{scheme}://{authority}"))
+            .unwrap_or_else(|| format!("{scheme}://localhost"));
+        let path = uri.path().to_string();
+        let use_https_scheme = scheme == "https";
+        let response = context
+            .app_handle()
+            .asset_resolver()
+            .get_for_scheme(path, use_https_scheme)
+            .map(|asset| {
+                let mut builder = tauri::http::Response::builder()
+                    .status(tauri::http::StatusCode::OK)
+                    .header("Access-Control-Allow-Origin", &origin)
+                    .header(tauri::http::header::CONTENT_TYPE, asset.mime_type());
+                if let Some(csp) = asset.csp_header() {
+                    builder = builder.header(tauri::http::header::CONTENT_SECURITY_POLICY, csp);
+                }
+                builder
+                    .body(asset.bytes)
+                    .expect("Stage0 asset response should be valid")
+            })
+            .unwrap_or_else(|| {
+                tauri::http::Response::builder()
+                    .status(tauri::http::StatusCode::NOT_FOUND)
+                    .header("Access-Control-Allow-Origin", &origin)
+                    .body(b"Not Found".to_vec())
+                    .expect("Stage0 404 response should be valid")
+            });
+        response
+    });
+
+    builder
         .on_window_event(|window, event| {
             match event {
                 WindowEvent::Focused(true) => {
@@ -152,6 +208,9 @@ pub fn run() {
             commands::clear_recent_repos,
             menu::update_recent_repositories_menu,
             commands::get_branches,
+            commands::get_current_branch_graph,
+            commands::get_git_commit_message,
+            commands::search_git_commit_messages,
             commands::get_mr_diff,
             commands::check_merge_conflicts,
             commands::get_conflicted_file_preview,
@@ -269,7 +328,7 @@ pub fn run() {
             updates::cancel_update_download,
             updates::install_update,
         ])
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while building tauri application")
         .run(|app, event| {
             if matches!(event, tauri::RunEvent::Exit) {

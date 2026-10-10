@@ -1,6 +1,6 @@
 @import "tailwindcss" source(none);
-@source "../index.html";
-@source "./**/*.{js,ts,jsx,tsx}";
+@source "../../../index.html";
+@source "../../**/*.{js,ts,jsx,tsx}";
 @import "@git-diff-view/react/styles/diff-view.css";
 
 :root,
@@ -192,6 +192,27 @@ body {
   overflow: hidden;
   user-select: none;
   -webkit-font-smoothing: antialiased;
+}
+
+@keyframes stage0-onboarding-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.stage0-onboarding-slide {
+  animation: stage0-onboarding-slide-in 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage0-onboarding-slide {
+    animation: none;
+  }
 }
 
 body.notification-host-window {
@@ -471,6 +492,17 @@ textarea:focus-visible,
 select:focus-visible {
   border-color: var(--color-brand) !important;
   box-shadow: 0 0 0 1px var(--color-brand) !important;
+  outline: none !important;
+}
+
+.git-graph-search-input {
+  border: 0;
+  box-shadow: none;
+}
+
+.git-graph-search-input:focus-visible {
+  border: 0 !important;
+  box-shadow: none !important;
   outline: none !important;
 }
 

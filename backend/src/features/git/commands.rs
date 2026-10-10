@@ -7,6 +7,11 @@ use crate::features::git::persistence::{RepoLabelDb, RepoSettingsDb};
 use crate::features::git::{
     blame::get_file_blame as calc_file_blame,
     branches::list_branches,
+    graph::{
+        get_commit_message as load_commit_message,
+        get_current_branch_graph as load_current_branch_graph,
+        search_commit_messages as search_branch_commit_messages,
+    },
     ops::{
         add_remote, create_branch, create_tag, delete_branch, delete_tag, get_remote_url, git_sync,
         is_rebase_in_progress, list_remotes, list_remotes_detailed, list_tags_detailed,
@@ -197,6 +202,39 @@ pub async fn get_branches(repo_path: String) -> Result<BranchList, String> {
     tauri::async_runtime::spawn_blocking(move || list_branches(&repo_path))
         .await
         .map_err(|e| format!("Task execution failed: {}", e))?
+}
+
+#[tauri::command]
+pub async fn get_current_branch_graph(
+    repo_path: String,
+) -> Result<crate::features::git::graph::GitGraph, String> {
+    tauri::async_runtime::spawn_blocking(move || load_current_branch_graph(&repo_path))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
+}
+
+#[tauri::command]
+pub async fn get_git_commit_message(
+    repo_path: String,
+    commit_hash: String,
+) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || load_commit_message(&repo_path, &commit_hash))
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
+}
+
+#[tauri::command]
+pub async fn search_git_commit_messages(
+    repo_path: String,
+    query: String,
+    case_sensitive: bool,
+    commit_hashes: Vec<String>,
+) -> Result<Vec<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        search_branch_commit_messages(&repo_path, &query, case_sensitive, &commit_hashes)
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
