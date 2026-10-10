@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, Manager, State, WebviewWindowBuilder};
+
+use crate::core::window_manager::app_webview_url;
 
 pub const NOTIFICATION_EVENT: &str = "app-notification";
 const TOAST_EVENT: &str = "stage0-toast";
@@ -96,7 +98,7 @@ pub fn ensure_notification_host(app: &AppHandle) {
         let builder = WebviewWindowBuilder::new(
             app,
             NOTIFICATION_HOST_LABEL,
-            WebviewUrl::App("index.html".into()),
+            app_webview_url(app, "index.html"),
         )
         .title("Stage0 Notifications")
         .inner_size(400.0, 120.0)

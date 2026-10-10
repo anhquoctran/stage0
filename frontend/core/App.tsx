@@ -11,10 +11,26 @@ import { useNotificationStore } from '../features/notifications/store/useNotific
 import { useUpdateStore } from '../features/updates/store/useUpdateStore';
 import type { RepoInfo, WindowStartupContext } from '../features/git/types/git';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import {
+  FirstLaunchWelcome,
+  shouldShowFirstLaunchWelcome,
+} from '../features/onboarding/components/FirstLaunchWelcome';
+
+function isPrimaryAppWindow(): boolean {
+  if (!isTauri()) return true;
+  try {
+    return getCurrentWindow().label === 'main';
+  } catch {
+    return false;
+  }
+}
 
 const MainApp: React.FC = () => {
   const { initApp, attachRepoToCurrentWindow, refreshDiff, isInitializing } = useGitStore();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const [isFirstLaunchWelcomeOpen, setFirstLaunchWelcomeOpen] = useState(
+    () => isPrimaryAppWindow() && shouldShowFirstLaunchWelcome()
+  );
   const [isMaximized, setIsMaximized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const usesNativeMacFrame =
@@ -138,6 +154,9 @@ const MainApp: React.FC = () => {
       )}
     >
       <MainLayout />
+      {!isInitializing && isFirstLaunchWelcomeOpen && (
+        <FirstLaunchWelcome onComplete={() => setFirstLaunchWelcomeOpen(false)} />
+      )}
     </div>
   );
 };

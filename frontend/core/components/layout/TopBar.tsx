@@ -7,6 +7,7 @@ import {
   DownloadCloud,
   GitMerge,
   GitBranch,
+  GitCommit,
   ChevronDown,
   FolderGit2,
   FolderCog,
@@ -21,6 +22,7 @@ import { AppLogo } from '../../../common/components/AppLogo';
 import { useGitStore } from '../../../features/git/store/useGitStore';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
+import { GitGraphModal } from '../../../features/git/components/GitGraphModal';
 
 export const TopBar: React.FC = () => {
   const { openRepoSettings } = useVirtualMrStore();
@@ -38,6 +40,7 @@ export const TopBar: React.FC = () => {
 
   const [isPullMenuOpen, setIsPullMenuOpen] = useState(false);
   const [isRebaseMenuOpen, setIsRebaseMenuOpen] = useState(false);
+  const [isGitGraphOpen, setIsGitGraphOpen] = useState(false);
 
   const pullMenuRef = useRef<HTMLDivElement>(null);
   const rebaseMenuRef = useRef<HTMLDivElement>(null);
@@ -234,7 +237,7 @@ export const TopBar: React.FC = () => {
                       setIsPullMenuOpen((v) => !v);
                       setIsRebaseMenuOpen(false);
                     }}
-                    className="flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer"
+                    className="flex items-center justify-center px-1.5 h-12 border-l border-surface1/80 transition-colors cursor-pointer"
                     title={shortcut('Pull options (Ctrl+Alt+P)')}
                   >
                     <ChevronDown className="w-3.5 h-3.5 text-current transition-colors" />
@@ -307,7 +310,7 @@ export const TopBar: React.FC = () => {
                       setIsRebaseMenuOpen((v) => !v);
                       setIsPullMenuOpen(false);
                     }}
-                    className="flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer"
+                    className="flex items-center justify-center px-1.5 h-12 border-l border-surface1/80 transition-colors cursor-pointer"
                     title={shortcut('Rebase options (Ctrl+Alt+R)')}
                   >
                     <ChevronDown className="w-3.5 h-3.5 text-current transition-colors" />
@@ -402,6 +405,19 @@ export const TopBar: React.FC = () => {
                   )}
                 </div>
 
+                {/* CURRENT BRANCH GRAPH */}
+                <button
+                  type="button"
+                  onClick={() => setIsGitGraphOpen(true)}
+                  className="h-12 min-w-[58px] px-1.5 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors cursor-pointer group"
+                  title="Show Git Graph for the checked-out branch"
+                >
+                  <GitCommit className="w-5 h-5 text-current shrink-0 transition-colors" />
+                  <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
+                    Graph
+                  </span>
+                </button>
+
                 {/* REFRESH BUTTON */}
                 <button
                   type="button"
@@ -483,6 +499,11 @@ export const TopBar: React.FC = () => {
           )}
         </div>
       </div>
+      <GitGraphModal
+        isOpen={isGitGraphOpen && Boolean(currentRepo)}
+        repoPath={currentRepo?.local_path || ''}
+        onClose={() => setIsGitGraphOpen(false)}
+      />
     </header>
   );
 };

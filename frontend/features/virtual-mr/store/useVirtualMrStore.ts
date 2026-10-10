@@ -156,7 +156,23 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   },
 
   loadRepoData: async (repoId: string, repoPath: string, availableBranches: string[], defaultBase?: string) => {
-    set({ currentRepoId: repoId, currentRepoPath: repoPath, isLoadingSessions: true });
+    const repoChanged =
+      get().currentRepoId !== repoId || get().currentRepoPath !== repoPath;
+    set({
+      currentRepoId: repoId,
+      currentRepoPath: repoPath,
+      isLoadingSessions: true,
+      ...(repoChanged
+        ? {
+            repoSettings: null,
+            repoLabels: [],
+            sessions: [],
+            activeSessionId: null,
+            draftMr: null,
+            isDraftActive: false,
+          }
+        : {}),
+    });
 
     try {
       // 1. Load Repo Settings
@@ -315,7 +331,6 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
         console.warn('Failed to load sessions from db:', err);
       }
 
-      // If no session exists in DB, open draft tab without auto-saving to DB
       let activeSessionId = get().activeSessionId;
       if (sessions.length > 0) {
         if (!activeSessionId || !sessions.some((s) => s.id === activeSessionId)) {
@@ -337,19 +352,6 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       get().fetchRemotesDetailed();
       get().fetchTags();
 
-      // If no session exists in DB, automatically open draft creation tab
-      if (sessions.length === 0) {
-        const smartBase =
-          settings?.defaultBaseBranch ||
-          (availableBranches.includes('main') ? 'main' : undefined) ||
-          (availableBranches.includes('origin/main') ? 'origin/main' : undefined) ||
-          (availableBranches.includes('master') ? 'master' : undefined) ||
-          (availableBranches.includes('origin/master') ? 'origin/master' : undefined) ||
-          availableBranches[0] ||
-          'HEAD';
-        const compare = availableBranches.find((b) => b !== smartBase) || smartBase;
-        await get().openNewMrDraft(smartBase, compare);
-      }
     } catch (err) {
       console.error('loadRepoData error:', err);
       set({ isLoadingSessions: false });

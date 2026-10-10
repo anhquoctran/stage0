@@ -47,7 +47,7 @@ export function applyThemeToDocument(theme: CatppuccinTheme) {
 }
 
 function getInitialThemeMode(): ThemeMode {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') return 'system';
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved === 'system' || saved === 'dark' || saved === 'light') {
     return saved as ThemeMode;
@@ -56,7 +56,8 @@ function getInitialThemeMode(): ThemeMode {
   const oldTheme = localStorage.getItem('stage0_catppuccin_theme');
   if (oldTheme === 'mocha-light') return 'light';
   if (oldTheme === 'mocha') return 'dark';
-  return 'dark';
+  // Fresh installs follow the operating system until the user chooses a mode.
+  return 'system';
 }
 
 const initialMode = getInitialThemeMode();

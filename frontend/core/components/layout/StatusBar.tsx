@@ -66,7 +66,7 @@ export const StatusBar: React.FC = () => {
       activeSession?.repoId === currentRepo.id
     );
   });
-  const { setIsPreferencesOpen, openPreferences } = usePreferencesStore();
+  const { openPreferences } = usePreferencesStore();
   const { unreadCount, isHistoryDrawerOpen, toggleHistoryDrawer } = useNotificationStore();
   const isPerformanceMonitorEnabled = usePerformanceMonitorStore((state) => state.isEnabled);
   const {
@@ -218,7 +218,7 @@ export const StatusBar: React.FC = () => {
             {/* Sandbox Engine Picker */}
             <button
               type="button"
-              onClick={() => setIsPreferencesOpen(true)}
+              onClick={() => openPreferences('ai-sandbox')}
               className="h-5.5 px-2 rounded-md bg-surface0/70 hover:bg-surface1 border border-surface1 hover:border-surface2 text-subtext0 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               title="Configure Sandbox Engine in Preferences"
             >
@@ -233,44 +233,48 @@ export const StatusBar: React.FC = () => {
               </span>
             </button>
 
-            {/* Merge Conflict Status Badge */}
-            {diffError ? (
-              <div
-                className="h-5.5 px-2 rounded-md bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs"
-                title={diffError}
-              >
-                <AlertTriangle className="w-3 h-3 text-red shrink-0" />
-                <span>Compare Failed</span>
-              </div>
-            ) : isDiffLoading ? (
-              <div className="h-5.5 px-2 rounded-md bg-surface0/60 border border-surface1/60 text-subtext0 flex items-center gap-1.5 font-medium shadow-xs">
-                <Loader2 className="w-3 h-3 animate-spin text-blue shrink-0" />
-                <span>Comparing...</span>
-              </div>
-            ) : conflictCheckError ? (
-              <div
-                className="h-5.5 px-2 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1.5 font-medium shadow-xs"
-                title={conflictCheckError}
-              >
-                <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
-                <span>Merge Check Unavailable</span>
-              </div>
-            ) : diffPayload && diffPayload.files.length === 0 ? (
-              <div className="h-5.5 px-2 rounded-md bg-surface0/50 border border-surface1/50 text-subtext1 flex items-center gap-1.5 font-medium shadow-xs">
-                <Info className="w-3 h-3 text-subtext0 shrink-0" />
-                <span>No Changes</span>
-              </div>
-            ) : conflictReport?.has_conflicts ? (
-              <div className="h-5.5 px-2 rounded-md bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs">
-                <AlertTriangle className="w-3 h-3 text-red shrink-0" />
-                <span>Conflicts Detected</span>
-              </div>
-            ) : conflictReport ? (
-              <div className="h-5.5 px-2 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5 font-medium shadow-xs">
-                <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
-                <span>Clean Merge</span>
-              </div>
-            ) : null}
+            {/* Comparison status only applies while a Virtual MR is open. */}
+            {hasActiveVirtualMr && (
+              <>
+                {diffError ? (
+                  <div
+                    className="h-5.5 px-2 rounded-md bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs"
+                    title={diffError}
+                  >
+                    <AlertTriangle className="w-3 h-3 text-red shrink-0" />
+                    <span>Compare Failed</span>
+                  </div>
+                ) : isDiffLoading ? (
+                  <div className="h-5.5 px-2 rounded-md bg-surface0/60 border border-surface1/60 text-subtext0 flex items-center gap-1.5 font-medium shadow-xs">
+                    <Loader2 className="w-3 h-3 animate-spin text-blue shrink-0" />
+                    <span>Comparing...</span>
+                  </div>
+                ) : conflictCheckError ? (
+                  <div
+                    className="h-5.5 px-2 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1.5 font-medium shadow-xs"
+                    title={conflictCheckError}
+                  >
+                    <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
+                    <span>Merge Check Unavailable</span>
+                  </div>
+                ) : diffPayload && diffPayload.files.length === 0 ? (
+                  <div className="h-5.5 px-2 rounded-md bg-surface0/50 border border-surface1/50 text-subtext1 flex items-center gap-1.5 font-medium shadow-xs">
+                    <Info className="w-3 h-3 text-subtext0 shrink-0" />
+                    <span>No Changes</span>
+                  </div>
+                ) : conflictReport?.has_conflicts ? (
+                  <div className="h-5.5 px-2 rounded-md bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs">
+                    <AlertTriangle className="w-3 h-3 text-red shrink-0" />
+                    <span>Conflicts Detected</span>
+                  </div>
+                ) : conflictReport ? (
+                  <div className="h-5.5 px-2 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5 font-medium shadow-xs">
+                    <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                    <span>Clean Merge</span>
+                  </div>
+                ) : null}
+              </>
+            )}
 
             {/* File Review Progress Badge */}
             {totalFiles > 0 && (
