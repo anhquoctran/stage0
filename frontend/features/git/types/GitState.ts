@@ -60,12 +60,16 @@ export interface GitState {
   toastMessage: string | null;
   showToast: (msg: string) => void;
   isPullFromOpen: boolean;
+  isMergeFromOpen: boolean;
   isRebaseFromOpen: boolean;
+  isGitGraphOpen: boolean;
   isRemoteUrlFromOpen: boolean;
   isCloneModalOpen: boolean;
   targetFileForUrl: ChangedFile | null;
   setIsPullFromOpen: (open: boolean) => void;
+  setIsMergeFromOpen: (open: boolean) => void;
   setIsRebaseFromOpen: (open: boolean) => void;
+  setIsGitGraphOpen: (open: boolean) => void;
   setIsRemoteUrlFromOpen: (open: boolean) => void;
   setIsCloneModalOpen: (open: boolean) => void;
   cloneRepo: (url: string, targetPath: string, credentialId?: string) => Promise<RepoInfo | null>;

@@ -6,6 +6,7 @@ import { ConflictBanner } from '../../../features/git/components/ConflictBanner'
 import { PreferencesModal } from '../../../features/preferences/components/PreferencesModal';
 import { PullFromModal } from '../../../features/git/components/PullFromModal';
 import { RebaseFromModal } from '../../../features/git/components/RebaseFromModal';
+import { MergeFromModal } from '../../../features/git/components/MergeFromModal';
 import { RemoteUrlFromModal } from '../../../features/git/components/RemoteUrlFromModal';
 import { CloneRepoModal } from '../../../features/git/components/CloneRepoModal';
 import { WelcomeScreen } from './WelcomeScreen';
@@ -51,6 +52,7 @@ export const MainLayout: React.FC = () => {
     refreshDiff,
     runSync,
     setIsPullFromOpen,
+    setIsMergeFromOpen,
     setIsRebaseFromOpen,
     openRepoDialog,
     setIsCloneModalOpen,
@@ -256,6 +258,20 @@ export const MainLayout: React.FC = () => {
       } else if (
         (e.ctrlKey || e.metaKey) &&
         e.shiftKey &&
+        (e.key.toLowerCase() === 'm' || e.code === 'KeyM')
+      ) {
+        e.preventDefault();
+        runSync('merge');
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.altKey &&
+        (e.key.toLowerCase() === 'm' || e.code === 'KeyM')
+      ) {
+        e.preventDefault();
+        setIsMergeFromOpen(true);
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
         (e.key.toLowerCase() === 'r' || e.code === 'KeyR')
       ) {
         e.preventDefault();
@@ -362,6 +378,7 @@ export const MainLayout: React.FC = () => {
     setIsCloneModalOpen,
     runSync,
     setIsPullFromOpen,
+    setIsMergeFromOpen,
     setIsRebaseFromOpen,
     selectedFile,
     toggleInlineBlame,
@@ -397,6 +414,9 @@ export const MainLayout: React.FC = () => {
 
       {/* Rebase From Branch Modal Dialog */}
       <RebaseFromModal />
+
+      {/* Merge From Branch Modal Dialog */}
+      <MergeFromModal />
 
       {/* Remote URL From Branch/Commit Modal Dialog */}
       <RemoteUrlFromModal />

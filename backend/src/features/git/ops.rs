@@ -134,6 +134,41 @@ pub fn git_sync(
                 }
             }
         }
+        "merge" => {
+            args.push("merge".to_string());
+            let opts = options.as_ref();
+            let no_ff = opts.and_then(|o| o.no_ff).unwrap_or(false);
+            let ff_only = opts.and_then(|o| o.ff_only).unwrap_or(false);
+            if no_ff && ff_only {
+                return Err(
+                    "Merge options --no-ff and --ff-only cannot be used together".to_string(),
+                );
+            }
+            if no_ff {
+                args.push("--no-ff".to_string());
+            }
+            if ff_only {
+                args.push("--ff-only".to_string());
+            }
+            if opts.and_then(|o| o.no_commit) == Some(true) {
+                args.push("--no-commit".to_string());
+            }
+            if opts.and_then(|o| o.squash) == Some(true) {
+                args.push("--squash".to_string());
+            }
+
+            let branch = opts
+                .and_then(|o| o.branch.as_deref())
+                .unwrap_or("@{upstream}");
+            let (commit, _) = resolve_ref(repo_path, branch).map_err(|error| {
+                if branch == "@{upstream}" {
+                    format!("Could not determine the current branch's upstream: {error}")
+                } else {
+                    error
+                }
+            })?;
+            args.push(commit);
+        }
         "rebase_continue" => {
             args.push("rebase".to_string());
             args.push("--continue".to_string());

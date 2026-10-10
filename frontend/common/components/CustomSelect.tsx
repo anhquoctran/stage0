@@ -9,6 +9,7 @@ export function CustomSelect<T extends string>({
   options,
   onChange,
   disabled = false,
+  autoFocus = false,
   className = '',
   buttonClassName = '',
   menuClassName = '',
@@ -25,6 +26,22 @@ export function CustomSelect<T extends string>({
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
+
+  const findEnabledOptionIndex = useCallback(
+    (startIndex: number, direction: 1 | -1) => {
+      if (options.length === 0) return -1;
+      for (let step = 1; step <= options.length; step += 1) {
+        const index = (startIndex + direction * step + options.length) % options.length;
+        if (!options[index].disabled) return index;
+      }
+      return -1;
+    },
+    [options]
+  );
+
+  useEffect(() => {
+    if (autoFocus) buttonRef.current?.focus();
+  }, [autoFocus]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -43,8 +60,10 @@ export function CustomSelect<T extends string>({
   // Sync highlighted index when opened
   useEffect(() => {
     if (isOpen) {
-      const idx = options.findIndex((opt) => opt.value === value);
-      setHighlightedIndex(idx >= 0 ? idx : 0);
+      const selectedIndex = options.findIndex((opt) => opt.value === value && !opt.disabled);
+      setHighlightedIndex(
+        selectedIndex >= 0 ? selectedIndex : options.findIndex((option) => !option.disabled)
+      );
     } else {
       setHighlightedIndex(-1);
     }
@@ -73,16 +92,20 @@ export function CustomSelect<T extends string>({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightedIndex((prev) => (prev < options.length - 1 ? prev + 1 : 0));
+        setHighlightedIndex((previous) => findEnabledOptionIndex(previous, 1));
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : options.length - 1));
+        setHighlightedIndex((previous) => findEnabledOptionIndex(previous, -1));
         break;
       case 'Enter':
       case ' ':
         e.preventDefault();
-        if (highlightedIndex >= 0 && highlightedIndex < options.length) {
+        if (
+          highlightedIndex >= 0 &&
+          highlightedIndex < options.length &&
+          !options[highlightedIndex].disabled
+        ) {
           handleSelect(options[highlightedIndex].value);
         }
         break;
@@ -144,47 +167,58 @@ export function CustomSelect<T extends string>({
           {options.map((option, idx) => {
             const isSelected = option.value === value;
             const isHighlighted = idx === highlightedIndex;
+            const previousOption = options[idx - 1];
+            const showGroupLabel = option.group && option.group !== previousOption?.group;
 
             return (
-              <div
-                key={option.value}
-                role="option"
-                aria-selected={isSelected}
-                onClick={() => handleSelect(option.value)}
-                onMouseEnter={() => setHighlightedIndex(idx)}
-                className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs transition-colors cursor-pointer select-none ${
-                  isHighlighted
-                    ? 'bg-surface0/60 text-text'
-                    : isSelected
-                    ? 'bg-surface0/30 text-text'
-                    : 'text-subtext1 hover:text-text hover:bg-base'
-                }`}
-              >
-                <div className="flex flex-col min-w-0 pr-2">
-                  <div className="flex items-center gap-1.5">
-                    {option.icon && <span className="shrink-0">{option.icon}</span>}
-                    <span className={`truncate ${isSelected ? 'font-semibold text-text' : ''}`}>
-                      {option.label}
-                    </span>
-                    {option.badge && (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded font-mono font-normal bg-brand/15 text-brand border border-brand/30">
-                        {option.badge}
+              <React.Fragment key={`${option.group ?? ''}:${option.value}`}>
+                {showGroupLabel && (
+                  <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-subtext0 border-t border-surface0 first:border-t-0">
+                    {option.group}
+                  </div>
+                )}
+                <div
+                  role="option"
+                  aria-selected={isSelected}
+                  aria-disabled={option.disabled || undefined}
+                  onClick={() => !option.disabled && handleSelect(option.value)}
+                  onMouseEnter={() => !option.disabled && setHighlightedIndex(idx)}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs transition-colors select-none ${
+                    option.disabled
+                      ? 'text-subtext0/50 cursor-not-allowed'
+                      : isHighlighted
+                      ? 'bg-surface0/60 text-text cursor-pointer'
+                      : isSelected
+                      ? 'bg-surface0/30 text-text cursor-pointer'
+                      : 'text-subtext1 hover:text-text hover:bg-base cursor-pointer'
+                  }`}
+                >
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <div className="flex items-center gap-1.5">
+                      {option.icon && <span className="shrink-0">{option.icon}</span>}
+                      <span className={`truncate ${isSelected ? 'font-semibold text-text' : ''}`}>
+                        {option.label}
+                      </span>
+                      {option.badge && (
+                        <span className="text-[10px] px-1.5 py-0.2 rounded font-mono font-normal bg-brand/15 text-brand border border-brand/30">
+                          {option.badge}
+                        </span>
+                      )}
+                    </div>
+                    {option.description && (
+                      <span className="text-[11px] text-subtext0 leading-normal mt-0.5">
+                        {option.description}
                       </span>
                     )}
                   </div>
-                  {option.description && (
-                    <span className="text-[11px] text-subtext0 leading-normal mt-0.5">
-                      {option.description}
-                    </span>
+
+                  {isSelected ? (
+                    <Check className="w-3.5 h-3.5 text-brand shrink-0" />
+                  ) : (
+                    <span className="w-3.5 shrink-0" />
                   )}
                 </div>
-
-                {isSelected ? (
-                  <Check className="w-3.5 h-3.5 text-brand shrink-0" />
-                ) : (
-                  <span className="w-3.5 shrink-0" />
-                )}
-              </div>
+              </React.Fragment>
             );
           })}
         </div>

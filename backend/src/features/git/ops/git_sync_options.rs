@@ -6,5 +6,7 @@ pub struct GitSyncOptions {
     pub autostash: Option<bool>,
     pub ff_only: Option<bool>,
     pub no_commit: Option<bool>,
+    pub no_ff: Option<bool>,
+    pub squash: Option<bool>,
     pub prune: Option<bool>,
 }

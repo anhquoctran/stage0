@@ -56,7 +56,9 @@ export const useGitStore = create<GitState>((set, get) => ({
     }, 2500);
   },
   isPullFromOpen: false,
+  isMergeFromOpen: false,
   isRebaseFromOpen: false,
+  isGitGraphOpen: false,
   isRemoteUrlFromOpen: false,
   targetFileForUrl: null,
   isRebasing: false,
@@ -74,7 +76,9 @@ export const useGitStore = create<GitState>((set, get) => ({
   activeSandboxInstances: [],
   isSandboxLoading: false,
   setIsPullFromOpen: (open) => set({ isPullFromOpen: open }),
+  setIsMergeFromOpen: (open) => set({ isMergeFromOpen: open }),
   setIsRebaseFromOpen: (open) => set({ isRebaseFromOpen: open }),
+  setIsGitGraphOpen: (open) => set({ isGitGraphOpen: open }),
   setIsRemoteUrlFromOpen: (open) => set({ isRemoteUrlFromOpen: open }),
   isCloneModalOpen: false,
   setIsCloneModalOpen: (open) => set({ isCloneModalOpen: open }),
@@ -107,6 +111,10 @@ export const useGitStore = create<GitState>((set, get) => ({
     diffRequestVersion += 1;
     set({
       currentRepo: null,
+      isPullFromOpen: false,
+      isMergeFromOpen: false,
+      isRebaseFromOpen: false,
+      isGitGraphOpen: false,
       branches: null,
       baseBranch: '',
       compareBranch: '',
@@ -199,6 +207,10 @@ export const useGitStore = create<GitState>((set, get) => ({
     diffRequestVersion += 1;
     set({
       currentRepo: repo,
+      isPullFromOpen: false,
+      isMergeFromOpen: false,
+      isRebaseFromOpen: false,
+      isGitGraphOpen: false,
       isLoading: true,
       isDiffLoading: false,
       diffPayload: null,

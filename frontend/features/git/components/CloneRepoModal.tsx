@@ -10,6 +10,8 @@ import { Terminal } from '../../../common/components/icons/Terminal';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Loader2 } from '../../../common/components/icons/Loader2';
 import { Check } from '../../../common/components/icons/Check';
+import { CustomSelect } from '../../../common/components/CustomSelect';
+import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useGitStore } from '../store/useGitStore';
 import { useGitCredentialsStore } from '../../credentials/store/useGitCredentialsStore';
 import type { UrlValidationStatus } from '../types/UrlValidationStatus';
@@ -287,6 +289,15 @@ export const CloneRepoModal: React.FC = () => {
 
   if (!isCloneModalOpen) return null;
 
+  const credentialSelectOptions: CustomSelectOption<string>[] = credentialOptions.map(
+    (credential) => ({
+      value: credential.id,
+      label: `${credential.account_name} · ${credential.label || credential.provider}${
+        credential.source === 'system_global' ? ' · System' : ''
+      }`,
+    })
+  );
+
   return (
     <div
       role="dialog"
@@ -431,25 +442,21 @@ export const CloneRepoModal: React.FC = () => {
             )}
             {useSavedCredential && (
               <div className="pl-5 space-y-1.5">
-                <select
+                <CustomSelect
                   value={selectedCredentialId}
                   disabled={isCloning || credentialsLoading || credentialOptions.length === 0}
-                  onChange={(event) => {
-                    setSelectedCredentialId(event.target.value);
+                  options={credentialSelectOptions}
+                  onChange={(credentialId) => {
+                    setSelectedCredentialId(credentialId);
                     setErrorMessage(null);
                   }}
-                  className="w-full px-2.5 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text outline-hidden disabled:opacity-60"
-                >
-                  <option value="">
-                    {credentialsLoading ? 'Loading saved credentials...' : 'Select a credential'}
-                  </option>
-                  {credentialOptions.map((credential) => (
-                    <option key={credential.id} value={credential.id}>
-                      {credential.account_name} · {credential.label || credential.provider}
-                      {credential.source === 'system_global' ? ' · System' : ''}
-                    </option>
-                  ))}
-                </select>
+                  className="w-full"
+                  buttonClassName="w-full py-2"
+                  dropdownWidth="w-full"
+                  align="left"
+                  placeholder={credentialsLoading ? 'Loading saved credentials...' : 'Select a credential'}
+                  aria-label="Saved Git credential"
+                />
                 <p className="text-[10px] text-subtext0">
                   {remoteOrigin
                     ? credentialOptions.length > 0

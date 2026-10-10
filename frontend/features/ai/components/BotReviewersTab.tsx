@@ -11,6 +11,8 @@ import { ChevronDown } from '../../../common/components/icons/ChevronDown';
 import { ChevronUp } from '../../../common/components/icons/ChevronUp';
 import { Copy } from '../../../common/components/icons/Copy';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { CustomSelect } from '../../../common/components/CustomSelect';
+import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useBotReviewersStore } from '../store/useBotReviewersStore';
 import { BOT_CATEGORIES } from '../constants/botPresets';
 import { type BotReviewer } from '../../virtual-mr/types/BotReviewer';
@@ -18,6 +20,16 @@ import { type BotCategory } from '../../virtual-mr/types/BotCategory';
 import { AI_PROVIDERS } from '../constants/aiPresets';
 
 const EMOJI_PRESETS = ['🛡️', '⚡', '🏗️', '🐛', '📝', '🎨', '🔒', '🚀', '🧪', '🔍', '⚙️', '💎'];
+
+const BOT_CATEGORY_OPTIONS: CustomSelectOption<BotCategory>[] = BOT_CATEGORIES.map((category) => ({
+  value: category.id,
+  label: category.label,
+}));
+
+const BOT_PROVIDER_OPTIONS: CustomSelectOption<string>[] = [
+  { value: 'global_default', label: 'Global Default (from AI tab)' },
+  ...AI_PROVIDERS.map((provider) => ({ value: provider.id, label: provider.name })),
+];
 
 export const BotReviewersTab: React.FC = () => {
   const {
@@ -559,17 +571,16 @@ Analyze incoming code diffs and discussions:
                   <label className="block text-[11px] font-semibold text-subtext0 mb-1">
                     Category
                   </label>
-                  <select
+                  <CustomSelect
                     value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value as BotCategory)}
-                    className="w-full px-3 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text focus:outline-none focus:border-brand cursor-pointer"
-                  >
-                    {BOT_CATEGORIES.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={BOT_CATEGORY_OPTIONS}
+                    onChange={setFormCategory}
+                    className="w-full"
+                    buttonClassName="w-full"
+                    dropdownWidth="w-full"
+                    align="left"
+                    aria-label="Bot category"
+                  />
                 </div>
               </div>
 
@@ -614,10 +625,10 @@ Analyze incoming code diffs and discussions:
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[10px] text-subtext0 mb-1">Provider</label>
-                    <select
+                    <CustomSelect
                       value={formProvider}
-                      onChange={(e) => {
-                        const p = e.target.value;
+                      options={BOT_PROVIDER_OPTIONS}
+                      onChange={(p) => {
                         setFormProvider(p);
                         if (p === 'global_default') {
                           setFormModel('global_default');
@@ -626,15 +637,12 @@ Analyze incoming code diffs and discussions:
                           if (preset) setFormModel(preset.defaultModel);
                         }
                       }}
-                      className="w-full px-2 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text focus:outline-none cursor-pointer"
-                    >
-                      <option value="global_default">Global Default (from AI tab)</option>
-                      {AI_PROVIDERS.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
+                      className="w-full"
+                      buttonClassName="w-full"
+                      dropdownWidth="w-full"
+                      align="left"
+                      aria-label="Provider override"
+                    />
                   </div>
 
                   <div>

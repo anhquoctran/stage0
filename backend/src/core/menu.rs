@@ -30,6 +30,7 @@ pub fn sync_repo_dependent_menus_for_window(app: &AppHandle, window_label: &str)
         for item_id in [
             "view_split",
             "view_unified",
+            "view_git_graph",
             "toggle_blame",
             "toggle_inline_blame",
         ] {
@@ -216,6 +217,12 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         )
         .separator()
         .item(
+            &MenuItemBuilder::with_id("view_git_graph", "View Git Graph")
+                .enabled(repository_menu_enabled)
+                .build(app)?,
+        )
+        .separator()
+        .item(
             &MenuItemBuilder::with_id("toggle_blame", "Toggle File Blame")
                 .enabled(repository_menu_enabled)
                 .build(app)?,
@@ -232,15 +239,7 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .item(&PredefinedMenuItem::fullscreen(app, None)?)
         .build()?;
 
-    // 5. Repository Menu
-    let repo_submenu = SubmenuBuilder::with_id(app, "repository_menu", "Repository")
-        .enabled(repository_menu_enabled)
-        .item(
-            &MenuItemBuilder::with_id("new_mr", "New Virtual MR...")
-                .accelerator("CmdOrCtrl+T")
-                .build(app)?,
-        )
-        .separator()
+    let sync_submenu = SubmenuBuilder::with_id(app, "repo_sync_menu", "Synchronize")
         .item(
             &MenuItemBuilder::with_id("fetch", "Fetch (All & Prune)")
                 .accelerator("CmdOrCtrl+Shift+F")
@@ -252,10 +251,51 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
                 .build(app)?,
         )
         .item(
+            &MenuItemBuilder::with_id("pull_from", "Pull from...")
+                .accelerator("CmdOrCtrl+Alt+P")
+                .build(app)?,
+        )
+        .build()?;
+
+    let merge_submenu = SubmenuBuilder::with_id(app, "repo_merge_menu", "Merge")
+        .item(
+            &MenuItemBuilder::with_id("merge", "Merge Upstream")
+                .accelerator("CmdOrCtrl+Shift+M")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("merge_from", "Merge from...")
+                .accelerator("CmdOrCtrl+Alt+M")
+                .build(app)?,
+        )
+        .build()?;
+
+    let rebase_submenu = SubmenuBuilder::with_id(app, "repo_rebase_menu", "Rebase")
+        .item(
             &MenuItemBuilder::with_id("rebase", "Rebase")
                 .accelerator("CmdOrCtrl+Shift+R")
                 .build(app)?,
         )
+        .item(
+            &MenuItemBuilder::with_id("rebase_from", "Rebase from...")
+                .accelerator("CmdOrCtrl+Alt+R")
+                .build(app)?,
+        )
+        .build()?;
+
+    // 5. Repository Menu
+    let repo_submenu = SubmenuBuilder::with_id(app, "repository_menu", "Repository")
+        .enabled(repository_menu_enabled)
+        .item(
+            &MenuItemBuilder::with_id("new_mr", "New Virtual MR...")
+                .accelerator("CmdOrCtrl+T")
+                .build(app)?,
+        )
+        .separator()
+        .item(&sync_submenu)
+        .separator()
+        .item(&merge_submenu)
+        .item(&rebase_submenu)
         .separator()
         .item(
             &MenuItemBuilder::with_id("repo_settings", "Repository Settings...")
