@@ -264,6 +264,7 @@ pub fn run() {
             commands::pick_folder,
             commands::clone_repository,
             commands::check_remote_repo_url,
+            commands::get_clone_remote_refs,
             // Repo Settings & Labels
             commands::get_repo_settings,
             commands::save_repo_settings,

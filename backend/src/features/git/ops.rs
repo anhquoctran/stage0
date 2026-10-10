@@ -57,11 +57,21 @@ pub fn git_sync(
     operation: &str,
     options: Option<GitSyncOptions>,
 ) -> Result<String, String> {
+    git_sync_with_progress(repo_path, operation, options, None)
+}
+
+pub fn git_sync_with_progress(
+    repo_path: &str,
+    operation: &str,
+    options: Option<GitSyncOptions>,
+    on_progress: Option<tauri::ipc::Channel<super::progress::GitOperationProgress>>,
+) -> Result<String, String> {
     let mut args: Vec<String> = Vec::new();
 
     match operation {
         "fetch" => {
             args.push("fetch".to_string());
+            args.push("--progress".to_string());
             let prune = options.as_ref().and_then(|o| o.prune).unwrap_or(true);
             if prune {
                 args.push("--prune".to_string());
@@ -86,6 +96,7 @@ pub fn git_sync(
         }
         "pull" => {
             args.push("pull".to_string());
+            args.push("--progress".to_string());
             if let Some(ref opts) = options {
                 if opts.rebase == Some(true) {
                     args.push("--rebase".to_string());
@@ -136,6 +147,7 @@ pub fn git_sync(
         }
         "merge" => {
             args.push("merge".to_string());
+            args.push("--progress".to_string());
             let opts = options.as_ref();
             let no_ff = opts.and_then(|o| o.no_ff).unwrap_or(false);
             let ff_only = opts.and_then(|o| o.ff_only).unwrap_or(false);
@@ -185,7 +197,8 @@ pub fn git_sync(
     }
 
     let str_args: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-    let res = run_git(repo_path, &str_args)?;
+    let reporter = super::progress::GitProgressReporter::new(on_progress);
+    let res = super::runner::run_git_with_progress(repo_path, &str_args, &reporter)?;
 
     if !res.success {
         let err_msg = if !res.stderr.trim().is_empty() {
@@ -649,7 +662,7 @@ pub fn get_git_user_identity(repo_path: &str) -> Result<(String, String), String
 pub fn check_git_remote_url(url: &str) -> Result<String, String> {
     let trimmed = url.trim();
     if trimmed.is_empty() {
-        return Err("Vui lòng nhập repository URL.".to_string());
+        return Err("Please enter a repository URL.".to_string());
     }
     validate_remote_url(trimmed)?;
 
@@ -658,6 +671,7 @@ pub fn check_git_remote_url(url: &str) -> Result<String, String> {
     cmd.env("GIT_TERMINAL_PROMPT", "0");
     cmd.env("GIT_ASKPASS", "echo");
     cmd.env("GIT_ALLOW_PROTOCOL", "git:http:https:ssh");
+    cmd.env("LC_ALL", "C");
 
     #[cfg(windows)]
     {
@@ -672,7 +686,7 @@ pub fn check_git_remote_url(url: &str) -> Result<String, String> {
         1024 * 1024,
         std::time::Duration::from_secs(120),
     )
-    .map_err(|e| format!("Không thể chạy lệnh git: {}", e))?;
+    .map_err(|e| format!("Could not run Git: {}", e))?;
     if output.output_truncated {
         return Err("Git remote check produced too much output and was stopped.".to_string());
     }
@@ -683,22 +697,22 @@ pub fn check_git_remote_url(url: &str) -> Result<String, String> {
         let err_lower = stderr.to_lowercase();
         let message =
             if err_lower.contains("repository not found") || err_lower.contains("not found") {
-                "Repository không tồn tại hoặc ở chế độ riêng tư (404 Not Found)."
+                "Repository not found or private (404 Not Found)."
             } else if err_lower.contains("authentication failed")
                 || err_lower.contains("permission denied")
             {
-                "Bị từ chối truy cập (cần quyền hoặc xác thực tài khoản SSH/Token)."
+                "Access denied. Check your permissions and SSH or token authentication."
             } else if err_lower.contains("could not resolve host") {
-                "Không thể phân giải tên miền host. Vui lòng kiểm tra kết nối mạng."
+                "Could not resolve the host. Please check your network connection."
             } else if !stderr.trim().is_empty() {
                 stderr.trim()
             } else {
-                "Không thể kết nối hoặc repository không khả dụng để clone."
+                "Could not connect, or the repository is unavailable for cloning."
             };
         return Err(message.to_string());
     }
 
-    Ok("Repository hợp lệ và sẵn sàng để clone.".to_string())
+    Ok("Repository is valid and ready to clone.".to_string())
 }
 
 #[cfg(test)]
@@ -778,6 +792,62 @@ mod tests {
         );
         assert!(result.is_err());
         let _ = std::fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn merge_and_rebase_complete_with_the_progress_runner() {
+        let directory =
+            std::env::temp_dir().join(format!("git_task_test_{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let path = directory.to_str().unwrap();
+        run_git_strict(path, &["init", "-q", "-b", "main"]).unwrap();
+        run_git_strict(path, &["config", "user.email", "task-test@example.test"]).unwrap();
+        run_git_strict(path, &["config", "user.name", "Task Test"]).unwrap();
+        run_git_strict(path, &["config", "commit.gpgsign", "false"]).unwrap();
+        run_git_strict(path, &["commit", "--allow-empty", "-m", "Base"]).unwrap();
+        run_git_strict(path, &["checkout", "-b", "feature"]).unwrap();
+        run_git_strict(path, &["commit", "--allow-empty", "-m", "Feature"]).unwrap();
+        run_git_strict(path, &["checkout", "main"]).unwrap();
+        git_sync(
+            path,
+            "merge",
+            Some(GitSyncOptions {
+                branch: Some("feature".to_string()),
+                ff_only: Some(true),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+        assert_eq!(
+            run_git_strict(path, &["rev-parse", "HEAD"]).unwrap(),
+            run_git_strict(path, &["rev-parse", "feature"]).unwrap()
+        );
+        run_git_strict(path, &["checkout", "-b", "local-work"]).unwrap();
+        std::fs::write(directory.join("local.txt"), "local\n").unwrap();
+        run_git_strict(path, &["add", "local.txt"]).unwrap();
+        run_git_strict(path, &["commit", "-m", "Local"]).unwrap();
+        run_git_strict(path, &["checkout", "main"]).unwrap();
+        std::fs::write(directory.join("upstream.txt"), "upstream\n").unwrap();
+        run_git_strict(path, &["add", "upstream.txt"]).unwrap();
+        run_git_strict(path, &["commit", "-m", "Upstream"]).unwrap();
+        run_git_strict(path, &["checkout", "local-work"]).unwrap();
+        git_sync(
+            path,
+            "rebase",
+            Some(GitSyncOptions {
+                branch: Some("main".to_string()),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+        assert!(
+            run_git(path, &["merge-base", "--is-ancestor", "main", "HEAD"])
+                .unwrap()
+                .success
+        );
+        assert!(directory.join("local.txt").exists());
+        assert!(directory.join("upstream.txt").exists());
+        std::fs::remove_dir_all(directory).unwrap();
     }
 
     #[test]

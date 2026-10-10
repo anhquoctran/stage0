@@ -456,7 +456,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
         set({ copilotDeviceCode: res, isConnectingSubscription: false });
         return res;
       } else {
-        alert('Xác thực GitHub Copilot yêu cầu chạy trong ứng dụng Desktop Stage0 (Tauri) để lưu trữ session token vào OS Keyring.');
+        alert('GitHub Copilot authentication requires the Stage0 desktop app (Tauri) to store the session token in the OS keyring.');
         set({ isConnectingSubscription: false });
         return null;
       }
@@ -529,7 +529,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
           }
         }
       } else {
-        alert('Đăng nhập Google AI Studio OAuth yêu cầu chạy trong ứng dụng Desktop Stage0 (Tauri).');
+        alert('Google AI Studio OAuth sign-in requires the Stage0 desktop app (Tauri).');
       }
     } catch (e) {
       console.error('Failed to start Google OAuth:', e);
@@ -582,7 +582,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
           }
         }
       } else {
-        alert('Đăng nhập ChatGPT Plus/Pro OAuth yêu cầu chạy trong ứng dụng Desktop Stage0 (Tauri) để mở local TCP loopback server và lưu token vào OS Keyring.');
+        alert('ChatGPT Plus/Pro OAuth sign-in requires the Stage0 desktop app (Tauri) to start a local TCP loopback server and store the token in the OS keyring.');
       }
     } catch (e) {
       console.error('Failed to start ChatGPT OAuth:', e);

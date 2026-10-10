@@ -18,10 +18,10 @@ use crate::features::git::{
         search_commit_messages as search_branch_commit_messages,
     },
     ops::{
-        add_remote, create_branch, create_tag, delete_branch, delete_tag, get_remote_url, git_sync,
-        is_rebase_in_progress, list_remotes, list_remotes_detailed, list_tags_detailed,
-        remove_remote, rename_branch, set_remote_url, test_remote_connection, GitRemoteDetail,
-        GitSyncOptions, GitTagInfo,
+        add_remote, create_branch, create_tag, delete_branch, delete_tag, get_remote_url,
+        git_sync_with_progress, is_rebase_in_progress, list_remotes, list_remotes_detailed,
+        list_tags_detailed, remove_remote, rename_branch, set_remote_url, test_remote_connection,
+        GitRemoteDetail, GitSyncOptions, GitTagInfo,
     },
     BranchList, ConflictFilePreview, ConflictReport, FileBlamePayload, MrDiffPayload, RepoInfo,
 };
@@ -284,10 +284,14 @@ pub async fn run_git_sync(
     repo_path: String,
     operation: String,
     options: Option<GitSyncOptions>,
+    on_progress: tauri::ipc::Channel<super::progress::GitOperationProgress>,
 ) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(move || git_sync(&repo_path, &operation, options))
-        .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+    tauri::async_runtime::spawn_blocking(move || {
+        let _lease = super::GitOperationLease::acquire(&repo_path)?;
+        git_sync_with_progress(&repo_path, &operation, options, Some(on_progress))
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
 #[tauri::command]
@@ -691,13 +695,54 @@ pub async fn check_remote_repo_url(url: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+pub async fn get_clone_remote_refs(
+    app: AppHandle,
+    url: String,
+    credential_id: Option<String>,
+) -> Result<super::RemoteCloneRefs, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let url = url.trim();
+        if url.is_empty() {
+            return Err("Please enter a repository URL.".into());
+        }
+        super::ops::validate_remote_url(url)?;
+        let mut command = std::process::Command::new(super::runner::get_active_git_path());
+        let credential_lease = match credential_id.as_deref() {
+            Some(id) => Some(prepare_clone_credential(&app.state::<Database>(), id, url)?),
+            None => None,
+        };
+        if let Some(credential) = credential_lease.as_ref() {
+            apply_clone_credential_helper(
+                &mut command,
+                &credential.expected_origin,
+                &clone_credential_helper_config(credential)?,
+            );
+            command.env_remove("GIT_ASKPASS").env_remove("SSH_ASKPASS");
+        } else {
+            command.env("GIT_ASKPASS", "echo");
+        }
+        command
+            .env("GIT_TERMINAL_PROMPT", "0")
+            .env("GIT_ALLOW_PROTOCOL", "git:http:https:ssh")
+            .env("LC_ALL", "C");
+        super::RemoteCloneRefs::read(&mut command, url)
+    })
+    .await
+    .map_err(|error| format!("Task execution failed: {error}"))?
+}
+
+#[tauri::command]
 pub async fn clone_repository(
     app: AppHandle,
     url: String,
     target_path: String,
     credential_id: Option<String>,
+    options: Option<super::CloneOptions>,
+    on_progress: tauri::ipc::Channel<super::progress::GitOperationProgress>,
 ) -> Result<RepoInfo, String> {
     tauri::async_runtime::spawn_blocking(move || {
+        let options = options.unwrap_or_default();
+        let clone_args = options.git_arguments()?;
         let trimmed_url = url.trim();
         if trimmed_url.is_empty() {
             return Err("Repository URL cannot be empty".to_string());
@@ -725,6 +770,8 @@ pub async fn clone_repository(
             }
         }
 
+        let _lease = super::GitOperationLease::acquire(trimmed_target)?;
+        let reporter = super::progress::GitProgressReporter::new(Some(on_progress));
         let git_bin = crate::features::git::runner::get_active_git_path();
         let mut cmd = std::process::Command::new(&git_bin);
         let credential_lease = match credential_id.as_deref() {
@@ -736,21 +783,28 @@ pub async fn clone_repository(
         };
         if let Some(credential) = credential_lease.as_ref() {
             let helper = clone_credential_helper_config(credential)?;
-            cmd.arg("-c").arg("credential.helper=");
-            cmd.arg("-c").arg(format!("credential.helper={helper}"));
+            apply_clone_credential_helper(&mut cmd, &credential.expected_origin, &helper);
             // Do not let the user's askpass program turn a failed one-time
             // credential lookup into an unexpected interactive prompt.
             cmd.env_remove("GIT_ASKPASS").env_remove("SSH_ASKPASS");
         }
-        cmd.args(["clone", "--", trimmed_url, trimmed_target]);
+        // Disable inherited submodule filters unless the user selects them.
+        cmd.args(["-c", "clone.filterSubmodules=false"]);
+        cmd.args(clone_args)
+            .args(["--", trimmed_url, trimmed_target]);
+        if options.skip_lfs {
+            cmd.env("GIT_LFS_SKIP_SMUDGE", "1");
+        }
         cmd.env("GIT_ALLOW_PROTOCOL", "git:http:https:ssh");
         cmd.env("GIT_TERMINAL_PROMPT", "0");
+        cmd.env("LC_ALL", "C");
 
-        let output = crate::common::process::run_bounded_command(
+        let output = crate::common::process::run_bounded_command_with_progress(
             &mut cmd,
+            reporter.observer(),
             4 * 1024 * 1024,
             4 * 1024 * 1024,
-            std::time::Duration::from_secs(300),
+            options.timeout(),
         )
         .map_err(|e| format!("Git clone failed: {}", e))?;
 
@@ -775,7 +829,10 @@ pub async fn clone_repository(
             } else {
                 "Git clone command failed with unknown error".to_string()
             };
-            return Err(err_msg.trim().to_string());
+            return Err(format!(
+                "{}\nThe destination may contain partially cloned data. Inspect it before retrying, or choose a new empty folder.",
+                err_msg.trim()
+            ));
         }
 
         if !dest.join(".git").exists() {
@@ -862,6 +919,49 @@ fn clone_credential_helper_config(credential: &CloneCredentialLease) -> Result<S
         git_shell_quote(&credential.expected_origin),
         git_shell_quote(&credential.username),
     ))
+}
+
+fn apply_clone_credential_helper(command: &mut std::process::Command, origin: &str, helper: &str) {
+    // Reset helpers only for the selected HTTPS origin. Other-host submodules
+    // retain their existing credential setup; the selected secret never leaks
+    // to those hosts and is never written into a cloned repository's config.
+    command.args(["-c", &format!("credential.{origin}.helper=")]);
+    command.args(["-c", &format!("credential.{origin}.helper={helper}")]);
+}
+
+#[cfg(test)]
+mod clone_credentials_tests {
+    #[test]
+    fn selected_clone_helper_is_origin_scoped_and_preserves_other_host_helpers() {
+        for (origin, expected) in [
+            ("https://primary.example.test", "selected-fixture"),
+            ("https://submodule.example.test", "existing-fixture"),
+        ] {
+            let mut command = std::process::Command::new("git");
+            command.args(["-c", "credential.helper="]);
+            command.args(["-c", "credential.helper=!f() { printf 'username=fixture\\npassword=existing-fixture\\n'; }; f"]);
+            super::apply_clone_credential_helper(
+                &mut command,
+                "https://primary.example.test",
+                "!f() { printf 'username=fixture\\npassword=selected-fixture\\n'; }; f",
+            );
+            command
+                .args(["credential", "fill"])
+                .env("GIT_TERMINAL_PROMPT", "0");
+            let output = crate::common::process::run_bounded_command_with_input(
+                &mut command,
+                format!("url={origin}/repo.git\n\n").into_bytes(),
+                4096,
+                4096,
+                std::time::Duration::from_secs(5),
+            )
+            .unwrap();
+            assert!(output.status.success());
+            assert!(
+                String::from_utf8_lossy(&output.stdout).contains(&format!("password={expected}"))
+            );
+        }
+    }
 }
 
 fn git_shell_quote(value: &str) -> String {

@@ -21,7 +21,26 @@ pub fn run_bounded_command(
     stderr_limit: usize,
     timeout: Duration,
 ) -> Result<BoundedOutput, String> {
-    run_bounded_command_inner(command, None, stdout_limit, stderr_limit, timeout)
+    run_bounded_command_inner(command, None, None, stdout_limit, stderr_limit, timeout)
+}
+
+/// Observe stderr as it arrives without changing process lifetime, output caps,
+/// timeout handling or platform-specific process-tree cleanup.
+pub fn run_bounded_command_with_progress(
+    command: &mut Command,
+    observer: Arc<dyn Fn(&[u8]) + Send + Sync>,
+    stdout_limit: usize,
+    stderr_limit: usize,
+    timeout: Duration,
+) -> Result<BoundedOutput, String> {
+    run_bounded_command_inner(
+        command,
+        None,
+        Some(observer),
+        stdout_limit,
+        stderr_limit,
+        timeout,
+    )
 }
 
 pub fn run_bounded_command_with_input(
@@ -31,12 +50,20 @@ pub fn run_bounded_command_with_input(
     stderr_limit: usize,
     timeout: Duration,
 ) -> Result<BoundedOutput, String> {
-    run_bounded_command_inner(command, Some(input), stdout_limit, stderr_limit, timeout)
+    run_bounded_command_inner(
+        command,
+        Some(input),
+        None,
+        stdout_limit,
+        stderr_limit,
+        timeout,
+    )
 }
 
 fn run_bounded_command_inner(
     command: &mut Command,
     input: Option<Vec<u8>>,
+    observer: Option<Arc<dyn Fn(&[u8]) + Send + Sync>>,
     stdout_limit: usize,
     stderr_limit: usize,
     timeout: Duration,
@@ -64,12 +91,14 @@ fn run_bounded_command_inner(
         stdout_bytes.clone(),
         stdout_limit,
         output_truncated.clone(),
+        None,
     );
     let stderr_task = drain_capped_output(
         child.stderr.take().expect("stderr is piped"),
         stderr_bytes.clone(),
         stderr_limit,
         output_truncated.clone(),
+        observer,
     );
     let stdin_task = input.map(|input| {
         let mut stdin = child
@@ -211,6 +240,7 @@ fn drain_capped_output<R: Read + Send + 'static>(
     captured: Arc<Mutex<Vec<u8>>>,
     limit: usize,
     exceeded: Arc<AtomicBool>,
+    observer: Option<Arc<dyn Fn(&[u8]) + Send + Sync>>,
 ) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let mut chunk = [0u8; 8192];
@@ -227,6 +257,10 @@ fn drain_capped_output<R: Read + Send + 'static>(
             output.extend_from_slice(&chunk[..keep]);
             if keep < read {
                 exceeded.store(true, Ordering::Relaxed);
+            }
+            drop(output);
+            if let Some(observer) = &observer {
+                observer(&chunk[..keep]);
             }
         }
     })
@@ -281,6 +315,30 @@ fn kill_process_tree(child: &mut Child) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn observes_progress_before_process_completes() {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let worker = thread::spawn(move || {
+            let mut command = Command::new("sh");
+            command.args(["-c", "printf 'Receiving objects: 50%%\\r' >&2; sleep 1"]);
+            run_bounded_command_with_progress(
+                &mut command,
+                Arc::new(move |bytes| {
+                    let _ = sender.send(bytes.to_vec());
+                }),
+                1024,
+                1024,
+                Duration::from_secs(3),
+            )
+            .unwrap()
+        });
+        let progress = receiver.recv_timeout(Duration::from_millis(750)).unwrap();
+        assert!(String::from_utf8_lossy(&progress).contains("50%"));
+        assert!(!worker.is_finished());
+        assert!(worker.join().unwrap().status.success());
+    }
 
     #[cfg(unix)]
     #[test]

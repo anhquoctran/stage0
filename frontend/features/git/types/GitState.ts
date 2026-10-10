@@ -7,6 +7,7 @@ import { type RepoInfo } from './RepoInfo';
 import { type ViewMode } from './ViewMode';
 import { type GitSyncOperation } from './GitSyncOperation';
 import { type GitSyncOptions } from './GitSyncOptions';
+import type { CloneOptions } from './CloneOptions';
 import { type FileBlamePayload } from './FileBlamePayload';
 import { type SandboxType } from './SandboxType';
 import { type SandboxAdapterInfo } from './SandboxAdapterInfo';
@@ -30,7 +31,6 @@ export interface GitState {
   isLoading: boolean;
   isDiffLoading: boolean;
   isSyncing: boolean;
-  syncStatus: string | null;
   error: string | null;
 
   initApp: (restoreRecent?: boolean) => Promise<void>;
@@ -72,7 +72,7 @@ export interface GitState {
   setIsGitGraphOpen: (open: boolean) => void;
   setIsRemoteUrlFromOpen: (open: boolean) => void;
   setIsCloneModalOpen: (open: boolean) => void;
-  cloneRepo: (url: string, targetPath: string, credentialId?: string) => Promise<RepoInfo | null>;
+  cloneRepo: (url: string, targetPath: string, credentialId?: string, options?: CloneOptions) => Promise<RepoInfo | null>;
   pickCloneFolder: () => Promise<string | null>;
   setTargetFileForUrl: (file: ChangedFile | null) => void;
   fetchRemotes: (repoPath: string) => Promise<void>;

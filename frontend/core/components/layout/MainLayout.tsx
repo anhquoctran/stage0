@@ -9,6 +9,7 @@ import { RebaseFromModal } from '../../../features/git/components/RebaseFromModa
 import { MergeFromModal } from '../../../features/git/components/MergeFromModal';
 import { RemoteUrlFromModal } from '../../../features/git/components/RemoteUrlFromModal';
 import { CloneRepoModal } from '../../../features/git/components/CloneRepoModal';
+import { GitTaskDialog } from '../../../features/git/components/GitTaskDialog';
 import { WelcomeScreen } from './WelcomeScreen';
 import { TabBar } from './TabBar';
 import { VirtualMrHub } from '../../../features/virtual-mr/components/VirtualMrHub';
@@ -423,6 +424,7 @@ export const MainLayout: React.FC = () => {
 
       {/* Clone Remote Repository Modal Dialog */}
       <CloneRepoModal />
+      <GitTaskDialog />
 
       {/* In-Memory Merge Conflict Banner */}
       <ConflictBanner

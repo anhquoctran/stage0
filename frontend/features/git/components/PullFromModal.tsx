@@ -70,8 +70,6 @@ export const PullFromModal: React.FC = () => {
       ff_only: useFfOnly,
       no_commit: useNoCommit,
     });
-
-    setIsPullFromOpen(false);
   };
 
   // Build command preview string

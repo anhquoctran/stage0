@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useId, useMemo } from 'react';
 import { ChevronDown } from './icons/ChevronDown';
 import { Check } from './icons/Check';
 import type { CustomSelectProps } from '../types/CustomSelectProps';
@@ -10,6 +10,8 @@ export function CustomSelect<T extends string>({
   onChange,
   disabled = false,
   autoFocus = false,
+  searchable = false,
+  searchPlaceholder = 'Search options...',
   className = '',
   buttonClassName = '',
   menuClassName = '',
@@ -20,28 +22,48 @@ export function CustomSelect<T extends string>({
 }: CustomSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [search, setSearch] = useState('');
   const generatedId = useId();
   const selectId = customId || generatedId;
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const matchingOptions = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return !searchable || !query ? options : options.filter((option) =>
+      `${option.label} ${option.description ?? ''}`.toLowerCase().includes(query));
+  }, [options, search, searchable]);
+  // Large remote listings remain searchable without mounting thousands of rows.
+  const visibleOptions = useMemo(() => searchable ? matchingOptions.slice(0, 200) : matchingOptions, [matchingOptions, searchable]);
 
   const selectedOption = options.find((opt) => opt.value === value);
 
   const findEnabledOptionIndex = useCallback(
     (startIndex: number, direction: 1 | -1) => {
-      if (options.length === 0) return -1;
-      for (let step = 1; step <= options.length; step += 1) {
-        const index = (startIndex + direction * step + options.length) % options.length;
-        if (!options[index].disabled) return index;
+      if (visibleOptions.length === 0) return -1;
+      for (let step = 1; step <= visibleOptions.length; step += 1) {
+        const index = (startIndex + direction * step + visibleOptions.length) % visibleOptions.length;
+        if (!visibleOptions[index].disabled) return index;
       }
       return -1;
     },
-    [options]
+    [visibleOptions]
   );
 
   useEffect(() => {
     if (autoFocus) buttonRef.current?.focus();
   }, [autoFocus]);
+
+  useEffect(() => {
+    if (isOpen && searchable) searchRef.current?.focus();
+    if (!isOpen) setSearch('');
+  }, [isOpen, searchable]);
+
+  useEffect(() => {
+    listRef.current?.querySelectorAll('[role="option"]')[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+  }, [highlightedIndex]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -60,14 +82,14 @@ export function CustomSelect<T extends string>({
   // Sync highlighted index when opened
   useEffect(() => {
     if (isOpen) {
-      const selectedIndex = options.findIndex((opt) => opt.value === value && !opt.disabled);
+      const selectedIndex = visibleOptions.findIndex((opt) => opt.value === value && !opt.disabled);
       setHighlightedIndex(
-        selectedIndex >= 0 ? selectedIndex : options.findIndex((option) => !option.disabled)
+        selectedIndex >= 0 ? selectedIndex : visibleOptions.findIndex((option) => !option.disabled)
       );
     } else {
       setHighlightedIndex(-1);
     }
-  }, [isOpen, options, value]);
+  }, [isOpen, visibleOptions, value]);
 
   const handleSelect = useCallback(
     (newValue: T) => {
@@ -80,6 +102,7 @@ export function CustomSelect<T extends string>({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (disabled) return;
+    if ((e.target as HTMLElement).tagName === 'INPUT' && e.key === ' ') return;
 
     if (!isOpen) {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
@@ -103,14 +126,15 @@ export function CustomSelect<T extends string>({
         e.preventDefault();
         if (
           highlightedIndex >= 0 &&
-          highlightedIndex < options.length &&
-          !options[highlightedIndex].disabled
+          highlightedIndex < visibleOptions.length &&
+          !visibleOptions[highlightedIndex].disabled
         ) {
-          handleSelect(options[highlightedIndex].value);
+          handleSelect(visibleOptions[highlightedIndex].value);
         }
         break;
       case 'Escape':
         e.preventDefault();
+        e.stopPropagation();
         setIsOpen(false);
         buttonRef.current?.focus();
         break;
@@ -158,16 +182,20 @@ export function CustomSelect<T extends string>({
 
       {isOpen && (
         <div
-          role="listbox"
-          aria-labelledby={selectId}
           className={`absolute ${
             align === 'left' ? 'left-0' : 'right-0'
           } top-full mt-1.5 ${dropdownWidth} bg-mantle border border-surface0 rounded-md shadow-2xl z-50 py-1 overflow-hidden animate-in fade-in duration-100 ${menuClassName}`}
         >
-          {options.map((option, idx) => {
+          {searchable && <div className="px-2 py-1 border-b border-surface0">
+            <input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)}
+              aria-label={searchPlaceholder} placeholder={searchPlaceholder}
+              className="w-full px-2 py-1.5 bg-base border border-surface1 text-xs text-text outline-none focus:border-brand" />
+          </div>}
+          <div ref={listRef} role="listbox" aria-labelledby={selectId} className="max-h-60 overflow-y-auto overscroll-contain">
+          {visibleOptions.map((option, idx) => {
             const isSelected = option.value === value;
             const isHighlighted = idx === highlightedIndex;
-            const previousOption = options[idx - 1];
+            const previousOption = visibleOptions[idx - 1];
             const showGroupLabel = option.group && option.group !== previousOption?.group;
 
             return (
@@ -221,6 +249,9 @@ export function CustomSelect<T extends string>({
               </React.Fragment>
             );
           })}
+          {visibleOptions.length === 0 && <p className="px-3 py-3 text-xs text-subtext0">No matching options.</p>}
+          </div>
+          {matchingOptions.length > visibleOptions.length && <p className="px-3 py-2 border-t border-surface0 text-[10px] text-subtext0">Showing {visibleOptions.length} of {matchingOptions.length}. Search to narrow the list.</p>}
         </div>
       )}
     </div>
