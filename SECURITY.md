@@ -11,6 +11,22 @@ We provide security patches and updates for the following versions of Stage0:
 
 ---
 
+## Dependency Security Backports
+
+The Linux GTK3 dependency chain in Tauri requires GLib 0.18.x. Stage0 applies
+the upstream fix for [RUSTSEC-2024-0429](https://rustsec.org/advisories/RUSTSEC-2024-0429.html)
+through the local `backend/vendor/glib` crates.io patch. Its provenance,
+two-line source change and optimized regression tests are documented in
+[PATCHES.md](backend/vendor/glib/PATCHES.md).
+
+GLib's version remains 0.18.5 for GTK3 compatibility. Version-only scanners may
+therefore continue reporting this advisory even though the affected source has
+been repaired. The alert is not dismissed or ignored. Cargo audit skips local
+path packages, so its exit code cannot establish the safety of this backport;
+the source integrity checks and optimized runtime probe verify it separately.
+Windows and macOS application builds do not include GTK3/GLib. The patch should be
+removed when the upstream dependency chain supports a fixed GLib release.
+
 ## Reporting a Vulnerability
 
 The Stage0 team takes the security and privacy of developer workflows very seriously. Stage0 runs locally and executes Git subprocesses on your machine, so security vulnerabilities (e.g., command injection, arbitrary path traversal, or unescaped subprocess arguments) are treated with the highest priority.
