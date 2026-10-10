@@ -6,11 +6,21 @@ import { Trash2 } from '../../../common/components/icons/Trash2';
 import { Plus } from '../../../common/components/icons/Plus';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { X } from '../../../common/components/icons/X';
+import { CustomSelect } from '../../../common/components/CustomSelect';
+import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { formatTime } from '@/common/utils/dateTime';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import { type GuardrailMode } from '../types/GuardrailMode';
 import { type GuardrailEvaluationResult } from '../types/GuardrailEvaluationResult';
 import { DEFAULT_GUARDRAIL_POLICY } from '../types/guardrails';
+
+const SIMULATOR_TOOL_OPTIONS: CustomSelectOption<
+  'execute_terminal_cmd' | 'read_file_range' | 'get_diff'
+>[] = [
+  { value: 'execute_terminal_cmd', label: 'execute_terminal_cmd' },
+  { value: 'read_file_range', label: 'read_file_range' },
+  { value: 'get_diff', label: 'get_diff' },
+];
 
 export const GuardrailsTab: React.FC = () => {
   const {
@@ -616,15 +626,15 @@ export const GuardrailsTab: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <label className="text-[11px] text-subtext0 font-medium">Tool:</label>
-              <select
+              <CustomSelect
                 value={simTool}
-                onChange={(e) => setSimTool(e.target.value as any)}
-                className="px-2 py-0.5 text-xs bg-base border border-surface1 rounded text-text font-mono focus:outline-none"
-              >
-                <option value="execute_terminal_cmd">execute_terminal_cmd</option>
-                <option value="read_file_range">read_file_range</option>
-                <option value="get_diff">get_diff</option>
-              </select>
+                options={SIMULATOR_TOOL_OPTIONS}
+                onChange={setSimTool}
+                buttonClassName="font-mono"
+                dropdownWidth="w-64"
+                align="left"
+                aria-label="Simulator tool"
+              />
             </div>
 
             <textarea

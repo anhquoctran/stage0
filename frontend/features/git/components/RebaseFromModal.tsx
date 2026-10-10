@@ -8,6 +8,8 @@ import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
 import { Play } from '../../../common/components/icons/Play';
 import { RotateCcw } from '../../../common/components/icons/RotateCcw';
 import { SkipForward } from '../../../common/components/icons/SkipForward';
+import { CustomSelect } from '../../../common/components/CustomSelect';
+import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useGitStore } from '../store/useGitStore';
 
 export const RebaseFromModal: React.FC = () => {
@@ -22,6 +24,19 @@ export const RebaseFromModal: React.FC = () => {
 
   const [selectedTargetBranch, setSelectedTargetBranch] = useState('main');
   const [useAutostash, setUseAutostash] = useState(true);
+  const branchOptions: CustomSelectOption<string>[] = [
+    ...(branches?.local ?? []).map((branch) => ({
+      value: branch,
+      label: branch === branches?.current ? `${branch} (current branch)` : branch,
+      group: 'Local Branches',
+      disabled: branch === branches?.current,
+    })),
+    ...(branches?.remote ?? []).map((branch) => ({
+      value: branch,
+      label: branch,
+      group: 'Remote Branches',
+    })),
+  ];
 
   // Initialize selected target branch
   useEffect(() => {
@@ -112,26 +127,17 @@ export const RebaseFromModal: React.FC = () => {
               <GitBranch className="w-3.5 h-3.5 text-subtext0" />
               <span>Rebase onto Target Branch</span>
             </label>
-            <select
+            <CustomSelect
               value={selectedTargetBranch}
-              onChange={(e) => setSelectedTargetBranch(e.target.value)}
-              className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 cursor-pointer font-mono"
-            >
-              <optgroup label="Local Branches">
-                {branches?.local.map((b) => (
-                  <option key={b} value={b} disabled={b === branches.current}>
-                    {b} {b === branches.current ? '(current branch)' : ''}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Remote Branches">
-                {branches?.remote.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
+              options={branchOptions}
+              onChange={setSelectedTargetBranch}
+              className="w-full"
+              buttonClassName="w-full font-mono"
+              dropdownWidth="w-full"
+              align="left"
+              placeholder="Select a branch…"
+              aria-label="Rebase onto Target Branch"
+            />
           </div>
 
           {/* Advanced Options */}

@@ -5,5 +5,7 @@ export interface GitSyncOptions {
   autostash?: boolean;
   ff_only?: boolean;
   no_commit?: boolean;
+  no_ff?: boolean;
+  squash?: boolean;
   prune?: boolean;
 }

@@ -25,6 +25,8 @@ import { Code2 } from '../../../common/components/icons/Code2';
 import { Zap } from '../../../common/components/icons/Zap';
 import { HardDrive } from '../../../common/components/icons/HardDrive';
 import { Cog } from '../../../common/components/icons/Cog';
+import { CustomSelect } from '../../../common/components/CustomSelect';
+import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import { AI_PROVIDERS, MCP_PRESET_TEMPLATES, DEFAULT_AI_CONFIG } from '../constants/aiPresets';
 import { type AiConfig } from '../types/AiConfig';
@@ -32,6 +34,19 @@ import { type AiProviderId } from '../types/AiProviderId';
 import { type McpServerConfig } from '../types/McpServerConfig';
 import { type McpServerType } from '../types/McpServerType';
 import type { AiMcpTabProps } from '../types/AiMcpTabProps';
+
+const MAX_TOKEN_OPTIONS: CustomSelectOption<string>[] = [
+  { value: '1024', label: '1,024 Tokens (Compact)' },
+  { value: '2048', label: '2,048 Tokens (Standard)' },
+  { value: '4096', label: '4,096 Tokens (Recommended for Diffs)' },
+  { value: '8192', label: '8,192 Tokens (Large MR Review)' },
+  { value: '16384', label: '16,384 Tokens (Deep Reasoning / Extended)' },
+];
+
+const MCP_SERVER_TYPE_OPTIONS: CustomSelectOption<McpServerType>[] = [
+  { value: 'stdio', label: 'stdio (Command / Subprocess)' },
+  { value: 'sse', label: 'sse (HTTP Server-Sent Events)' },
+];
 
 const getProviderIcon = (providerId: string) => {
   switch (providerId) {
@@ -916,25 +931,30 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               const currentDynamic = dynamicModels[aiConfig.provider];
               const modelsList = currentDynamic && currentDynamic.length > 0 ? currentDynamic : activeProviderPreset.models;
               const selectedModelInfo = modelsList.find((m) => m.id === aiConfig.model);
+              const modelOptions: CustomSelectOption<string>[] = [
+                ...(aiConfig.model && !modelsList.some((model) => model.id === aiConfig.model)
+                  ? [{ value: aiConfig.model, label: `${aiConfig.model} (Custom / Active)` }]
+                  : []),
+                ...modelsList.map((model) => ({
+                  value: model.id,
+                  label: `${model.name || model.id}${model.recommendedFor ? ` — ${model.recommendedFor}` : ''}`,
+                })),
+              ];
 
               return (
                 <div className="space-y-3 pt-3 border-t border-surface1/60">
                   <div>
                     <label className="block text-xs font-semibold text-text mb-1.5">Model</label>
-                    <select
+                    <CustomSelect
                       value={aiConfig.model}
-                      onChange={(e) => updateAiConfig({ model: e.target.value })}
-                      className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 cursor-pointer font-mono rounded"
-                    >
-                      {aiConfig.model && !modelsList.some((m) => m.id === aiConfig.model) && (
-                        <option value={aiConfig.model}>{aiConfig.model} (Custom / Active)</option>
-                      )}
-                      {modelsList.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name || m.id}{m.recommendedFor ? ` — ${m.recommendedFor}` : ''}
-                        </option>
-                      ))}
-                    </select>
+                      options={modelOptions}
+                      onChange={(model) => updateAiConfig({ model })}
+                      className="w-full"
+                      buttonClassName="w-full py-2 font-mono"
+                      dropdownWidth="w-full"
+                      align="left"
+                      aria-label="Model"
+                    />
                     {selectedModelInfo?.recommendedFor && (
                       <div className="text-[10px] text-subtext0 italic px-1 mt-1">
                         Recommended: {selectedModelInfo.recommendedFor}
@@ -968,17 +988,16 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         <label className="text-xs font-medium text-text">Max Output Tokens</label>
                         <span className="text-[10px] text-subtext0 font-mono">{aiConfig.maxTokens} tokens</span>
                       </div>
-                      <select
-                        value={aiConfig.maxTokens}
-                        onChange={(e) => updateAiConfig({ maxTokens: parseInt(e.target.value, 10) })}
-                        className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 cursor-pointer font-mono rounded"
-                      >
-                        <option value="1024">1,024 Tokens (Compact)</option>
-                        <option value="2048">2,048 Tokens (Standard)</option>
-                        <option value="4096">4,096 Tokens (Recommended for Diffs)</option>
-                        <option value="8192">8,192 Tokens (Large MR Review)</option>
-                        <option value="16384">16,384 Tokens (Deep Reasoning / Extended)</option>
-                      </select>
+                      <CustomSelect
+                        value={String(aiConfig.maxTokens)}
+                        options={MAX_TOKEN_OPTIONS}
+                        onChange={(tokens) => updateAiConfig({ maxTokens: parseInt(tokens, 10) })}
+                        className="w-full"
+                        buttonClassName="w-full font-mono"
+                        dropdownWidth="w-full"
+                        align="left"
+                        aria-label="Max Output Tokens"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1209,14 +1228,16 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   <label className="block text-[11px] font-medium text-subtext0 mb-1">
                     Transport Protocol
                   </label>
-                  <select
+                  <CustomSelect
                     value={serverType}
-                    onChange={(e) => setServerType(e.target.value as McpServerType)}
-                    className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 cursor-pointer"
-                  >
-                    <option value="stdio">stdio (Command / Subprocess)</option>
-                    <option value="sse">sse (HTTP Server-Sent Events)</option>
-                  </select>
+                    options={MCP_SERVER_TYPE_OPTIONS}
+                    onChange={setServerType}
+                    className="w-full"
+                    buttonClassName="w-full"
+                    dropdownWidth="w-full"
+                    align="left"
+                    aria-label="Transport Protocol"
+                  />
                 </div>
               </div>
 

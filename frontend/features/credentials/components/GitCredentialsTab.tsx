@@ -17,6 +17,8 @@ import { Globe } from '../../../common/components/icons/Globe';
 import { Lock } from '../../../common/components/icons/Lock';
 import { X } from '../../../common/components/icons/X';
 import { ShieldAlert } from '../../../common/components/icons/ShieldAlert';
+import { CustomSelect } from '../../../common/components/CustomSelect';
+import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useGitCredentialsStore } from '../store/useGitCredentialsStore';
 import { type GitCredentialProvider } from '../types/GitCredentialProvider';
 import { type GitCredentialType } from '../types/GitCredentialType';
@@ -33,6 +35,13 @@ const PROVIDER_PRESETS: {
   { id: 'bitbucket', name: 'Bitbucket', defaultUrl: 'https://bitbucket.org', defaultType: 'pat' },
   { id: 'azure_devops', name: 'Azure DevOps', defaultUrl: 'https://dev.azure.com', defaultType: 'pat' },
   { id: 'custom', name: 'Custom Git Host', defaultUrl: 'https://', defaultType: 'pat' },
+];
+
+const CREDENTIAL_TYPE_OPTIONS: CustomSelectOption<GitCredentialType>[] = [
+  { value: 'pat', label: 'Personal Access Token (PAT)' },
+  { value: 'password', label: 'Password / HTTP Basic' },
+  { value: 'oauth', label: 'OAuth Token' },
+  { value: 'ssh_key', label: 'SSH Key Passphrase' },
 ];
 
 export const GitCredentialsTab: React.FC = () => {
@@ -294,16 +303,16 @@ export const GitCredentialsTab: React.FC = () => {
               <label className="block text-[11px] font-medium text-subtext0 mb-1">
                 Credential Type
               </label>
-              <select
+              <CustomSelect
                 value={tokenType}
-                onChange={(e) => setTokenType(e.target.value as GitCredentialType)}
-                className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 cursor-pointer"
-              >
-                <option value="pat">Personal Access Token (PAT)</option>
-                <option value="password">Password / HTTP Basic</option>
-                <option value="oauth">OAuth Token</option>
-                <option value="ssh_key">SSH Key Passphrase</option>
-              </select>
+                options={CREDENTIAL_TYPE_OPTIONS}
+                onChange={setTokenType}
+                className="w-full"
+                buttonClassName="w-full"
+                dropdownWidth="w-full"
+                align="left"
+                aria-label="Credential Type"
+              />
             </div>
 
             {/* Label (Optional) */}

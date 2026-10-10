@@ -32,15 +32,19 @@ export const TopBar: React.FC = () => {
     refreshDiff,
     runSync,
     setIsPullFromOpen,
+    setIsMergeFromOpen,
     setIsRebaseFromOpen,
     isRebasing,
+    isGitGraphOpen,
+    setIsGitGraphOpen,
   } = useGitStore();
 
   const [isPullMenuOpen, setIsPullMenuOpen] = useState(false);
+  const [isMergeMenuOpen, setIsMergeMenuOpen] = useState(false);
   const [isRebaseMenuOpen, setIsRebaseMenuOpen] = useState(false);
-  const [isGitGraphOpen, setIsGitGraphOpen] = useState(false);
 
   const pullMenuRef = useRef<HTMLDivElement>(null);
+  const mergeMenuRef = useRef<HTMLDivElement>(null);
   const rebaseMenuRef = useRef<HTMLDivElement>(null);
 
   const isMac =
@@ -57,6 +61,9 @@ export const TopBar: React.FC = () => {
         !pullMenuRef.current.contains(target)
       ) {
         setIsPullMenuOpen(false);
+      }
+      if (mergeMenuRef.current && !mergeMenuRef.current.contains(target)) {
+        setIsMergeMenuOpen(false);
       }
       if (
         rebaseMenuRef.current &&
@@ -199,7 +206,7 @@ export const TopBar: React.FC = () => {
                   title={shortcut('git fetch --all --prune (Ctrl+Shift+F)')}
                 >
                   <RefreshCw
-                    className={`w-5 h-5 text-current shrink-0 transition-colors ${isSyncing ? 'animate-spin' : ''}`}
+                    className={`w-5 h-5 text-primary shrink-0 transition-colors ${isSyncing ? 'animate-spin' : ''}`}
                   />
                   <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
                     Fetch
@@ -222,7 +229,7 @@ export const TopBar: React.FC = () => {
                     className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[54px]"
                     title={shortcut('Pull (Ctrl+Shift+P)')}
                   >
-                    <Download className="w-5 h-5 text-current shrink-0 transition-colors" />
+                    <Download className="w-5 h-5 text-primary shrink-0 transition-colors" />
                     <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
                       Pull
                     </span>
@@ -233,12 +240,17 @@ export const TopBar: React.FC = () => {
                     disabled={isSyncing}
                     onClick={() => {
                       setIsPullMenuOpen((v) => !v);
+                      setIsMergeMenuOpen(false);
                       setIsRebaseMenuOpen(false);
                     }}
-                    className="flex items-center justify-center px-1.5 h-12 border-l border-surface1/80 transition-colors cursor-pointer"
+                    className="relative flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer"
                     title={shortcut('Pull options (Ctrl+Alt+P)')}
                   >
-                    <ChevronDown className="w-3.5 h-3.5 text-current transition-colors" />
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-0 top-1/2 h-8 w-px -translate-y-1/2 bg-surface1/80"
+                    />
+                    <ChevronDown className="w-2.5 h-2.5 text-current transition-colors" />
                   </button>
 
                   {isPullMenuOpen && (
@@ -279,6 +291,74 @@ export const TopBar: React.FC = () => {
                   )}
                 </div>
 
+                {/* MERGE SPLIT BUTTON */}
+                <div
+                  className={`relative flex items-stretch rounded transition-colors cursor-pointer ${
+                    isMergeMenuOpen
+                      ? 'bg-surface0 text-primary'
+                      : 'text-subtext1 hover:bg-surface0 hover:text-text'
+                  }`}
+                  ref={mergeMenuRef}
+                >
+                  <button
+                    type="button"
+                    disabled={isSyncing}
+                    onClick={() => runSync('merge')}
+                    className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[58px]"
+                    title="Merge the current branch's upstream into this branch"
+                  >
+                    <GitMerge className="w-5 h-5 text-primary shrink-0 transition-colors" />
+                    <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
+                      Merge
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSyncing}
+                    onClick={() => {
+                      setIsMergeMenuOpen((open) => !open);
+                      setIsPullMenuOpen(false);
+                      setIsRebaseMenuOpen(false);
+                    }}
+                    className="relative flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer"
+                    title="Merge options"
+                    aria-label="Merge options"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-0 top-1/2 h-8 w-px -translate-y-1/2 bg-surface1/80"
+                    />
+                    <ChevronDown className="w-2.5 h-2.5 text-current transition-colors" />
+                  </button>
+                  {isMergeMenuOpen && (
+                    <div className="absolute left-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 rounded">
+                      <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0 mb-1">
+                        Merge Options
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMergeMenuOpen(false);
+                          runSync('merge');
+                        }}
+                        className="w-full flex items-center px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-left transition-colors cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2"><GitMerge className="w-3.5 h-3.5" />Merge upstream</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMergeMenuOpen(false);
+                          setIsMergeFromOpen(true);
+                        }}
+                        className="w-full flex items-center px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-left transition-colors cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2"><GitBranch className="w-3.5 h-3.5" />Merge from…</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 {/* REBASE SPLIT BUTTON */}
                 <div
                   className={`relative flex items-stretch rounded transition-colors cursor-pointer ${
@@ -295,7 +375,7 @@ export const TopBar: React.FC = () => {
                     className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[58px]"
                     title={shortcut('Rebase (Ctrl+Shift+R)')}
                   >
-                    <GitMerge className="w-5 h-5 text-current shrink-0 transition-colors" />
+                    <GitBranch className="w-5 h-5 text-primary shrink-0 transition-colors" />
                     <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
                       Rebase
                     </span>
@@ -307,11 +387,16 @@ export const TopBar: React.FC = () => {
                     onClick={() => {
                       setIsRebaseMenuOpen((v) => !v);
                       setIsPullMenuOpen(false);
+                      setIsMergeMenuOpen(false);
                     }}
-                    className="flex items-center justify-center px-1.5 h-12 border-l border-surface1/80 transition-colors cursor-pointer"
+                    className="relative flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer"
                     title={shortcut('Rebase options (Ctrl+Alt+R)')}
                   >
-                    <ChevronDown className="w-3.5 h-3.5 text-current transition-colors" />
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-0 top-1/2 h-8 w-px -translate-y-1/2 bg-surface1/80"
+                    />
+                    <ChevronDown className="w-2.5 h-2.5 text-current transition-colors" />
                   </button>
 
                   {isRebaseMenuOpen && (
@@ -328,7 +413,7 @@ export const TopBar: React.FC = () => {
                         className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-left transition-colors cursor-pointer group"
                       >
                         <div className="flex items-center gap-2">
-                          <GitMerge className="w-3.5 h-3.5 text-current transition-colors" />
+                          <GitBranch className="w-3.5 h-3.5 text-current transition-colors" />
                           <span>Rebase</span>
                         </div>
                         <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+R')}</span>
@@ -410,7 +495,7 @@ export const TopBar: React.FC = () => {
                   className="h-12 min-w-[58px] px-1.5 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors cursor-pointer group"
                   title="Show Git Graph for the checked-out branch"
                 >
-                  <GitCommit className="w-5 h-5 text-current shrink-0 transition-colors" />
+                  <GitCommit className="w-5 h-5 text-primary shrink-0 transition-colors" />
                   <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
                     Graph
                   </span>
@@ -424,7 +509,7 @@ export const TopBar: React.FC = () => {
                   className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
                   title={shortcut('Refresh MR diff & conflict simulation (Ctrl+R)')}
                 >
-                  <RotateCw className="w-5 h-5 text-current shrink-0 transition-colors" />
+                  <RotateCw className="w-5 h-5 text-primary shrink-0 transition-colors" />
                   <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
                     Refresh
                   </span>
@@ -438,7 +523,7 @@ export const TopBar: React.FC = () => {
                   className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
                   title={shortcut('Repository Settings (Ctrl+Alt+S)')}
                 >
-                  <FolderCog className="w-5 h-5 text-current shrink-0 transition-colors" />
+                  <FolderCog className="w-5 h-5 text-primary shrink-0 transition-colors" />
                   <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors whitespace-nowrap">
                     Repo Settings
                   </span>

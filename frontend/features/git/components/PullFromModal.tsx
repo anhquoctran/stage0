@@ -5,6 +5,8 @@ import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { Globe } from '../../../common/components/icons/Globe';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { Terminal } from '../../../common/components/icons/Terminal';
+import { CustomSelect } from '../../../common/components/CustomSelect';
+import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useGitStore } from '../store/useGitStore';
 
 export const PullFromModal: React.FC = () => {
@@ -78,6 +80,14 @@ export const PullFromModal: React.FC = () => {
   }${useAutostash ? ' --autostash' : ''}${useFfOnly ? ' --ff-only' : ''}${
     useNoCommit ? ' --no-commit' : ''
   }`;
+  const remoteOptions: CustomSelectOption<string>[] = (remotes.length > 0
+    ? remotes
+    : ['origin']
+  ).map((remote) => ({ value: remote, label: remote }));
+  const branchOptions: CustomSelectOption<string>[] = availableBranches.map((branch) => ({
+    value: branch,
+    label: branch,
+  }));
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
@@ -121,21 +131,16 @@ export const PullFromModal: React.FC = () => {
                 <Globe className="w-3.5 h-3.5 text-subtext0" />
                 <span>Remote Repository</span>
               </label>
-              <select
+              <CustomSelect
                 value={selectedRemote}
-                onChange={(e) => setSelectedRemote(e.target.value)}
-                className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 cursor-pointer font-mono"
-              >
-                {remotes.length > 0 ? (
-                  remotes.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))
-                ) : (
-                  <option value="origin">origin</option>
-                )}
-              </select>
+                options={remoteOptions}
+                onChange={setSelectedRemote}
+                className="w-full"
+                buttonClassName="w-full font-mono"
+                dropdownWidth="w-full"
+                align="left"
+                aria-label="Remote Repository"
+              />
             </div>
 
             {/* Remote Branch Selector */}
@@ -145,17 +150,16 @@ export const PullFromModal: React.FC = () => {
                 <span>Remote Branch</span>
               </label>
               {availableBranches.length > 0 ? (
-                <select
+                <CustomSelect
                   value={selectedBranch}
-                  onChange={(e) => setSelectedBranch(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 cursor-pointer font-mono"
-                >
-                  {availableBranches.map((b) => (
-                    <option key={b} value={b}>
-                      {b}
-                    </option>
-                  ))}
-                </select>
+                  options={branchOptions}
+                  onChange={setSelectedBranch}
+                  className="w-full"
+                  buttonClassName="w-full font-mono"
+                  dropdownWidth="w-full"
+                  align="left"
+                  aria-label="Remote Branch"
+                />
               ) : (
                 <input
                   type="text"

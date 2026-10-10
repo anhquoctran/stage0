@@ -75,7 +75,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
     runSync,
     isSyncing,
     setIsPullFromOpen,
+    setIsMergeFromOpen,
     setIsRebaseFromOpen,
+    setIsGitGraphOpen,
     remoteUrl,
     compareBranch,
     showToast,
@@ -94,7 +96,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [showRecentSubmenu, setShowRecentSubmenu] = useState(false);
-  const [showOpenInSubmenu, setShowOpenInSubmenu] = useState(false);
+  const [activeRepositorySubmenu, setActiveRepositorySubmenu] = useState<
+    'sync' | 'merge' | 'rebase' | 'open' | null
+  >(null);
   const [showPerformanceSubmenu, setShowPerformanceSubmenu] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
@@ -112,7 +116,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
     if (currentRepo) return;
 
     setActiveMenu((menu) => (menu === 'repository' || menu === 'edit' ? null : menu));
-    setShowOpenInSubmenu(false);
+    setActiveRepositorySubmenu(null);
   }, [currentRepo]);
 
   // Close menus when clicking outside or pressing Escape
@@ -121,7 +125,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
       if (menuBarRef.current && !menuBarRef.current.contains(e.target as Node)) {
         setActiveMenu(null);
         setShowRecentSubmenu(false);
-        setShowOpenInSubmenu(false);
+        setActiveRepositorySubmenu(null);
         setShowPerformanceSubmenu(false);
       }
     };
@@ -130,7 +134,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
       if (e.key === 'Escape') {
         setActiveMenu(null);
         setShowRecentSubmenu(false);
-        setShowOpenInSubmenu(false);
+        setActiveRepositorySubmenu(null);
         setShowPerformanceSubmenu(false);
         setShowShortcutsModal(false);
       } else if (
@@ -142,7 +146,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
         if (!(isMac && e.key === ',')) {
           setActiveMenu(null);
           setShowRecentSubmenu(false);
-          setShowOpenInSubmenu(false);
+          setActiveRepositorySubmenu(null);
           setIsPreferencesOpen(true);
         }
       } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'o') {
@@ -224,8 +228,23 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
         case 'pull':
           runSync('pull');
           break;
+        case 'pull_from':
+          setIsPullFromOpen(true);
+          break;
+        case 'merge':
+          runSync('merge');
+          break;
+        case 'merge_from':
+          setIsMergeFromOpen(true);
+          break;
         case 'rebase':
           runSync('rebase');
+          break;
+        case 'rebase_from':
+          setIsRebaseFromOpen(true);
+          break;
+        case 'view_git_graph':
+          setIsGitGraphOpen(true);
           break;
         case 'repo_settings':
           openRepoSettings('remotes');
@@ -281,6 +300,10 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
     runSync,
     openRepoSettings,
     setViewMode,
+    setIsPullFromOpen,
+    setIsMergeFromOpen,
+    setIsRebaseFromOpen,
+    setIsGitGraphOpen,
     toggleFileBlame,
     toggleInlineBlame,
     togglePerformanceMonitor,
@@ -290,12 +313,12 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
     if (activeMenu === menuName) {
       setActiveMenu(null);
       setShowRecentSubmenu(false);
-      setShowOpenInSubmenu(false);
+      setActiveRepositorySubmenu(null);
       setShowPerformanceSubmenu(false);
     } else {
       setActiveMenu(menuName);
       setShowRecentSubmenu(false);
-      setShowOpenInSubmenu(false);
+      setActiveRepositorySubmenu(null);
       setShowPerformanceSubmenu(false);
     }
   };
@@ -304,7 +327,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
     if (activeMenu !== null && activeMenu !== menuName) {
       setActiveMenu(menuName);
       setShowRecentSubmenu(false);
-      setShowOpenInSubmenu(false);
+      setActiveRepositorySubmenu(null);
       setShowPerformanceSubmenu(false);
     }
   };
@@ -312,7 +335,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
   const closeMenus = () => {
     setActiveMenu(null);
     setShowRecentSubmenu(false);
-    setShowOpenInSubmenu(false);
+    setActiveRepositorySubmenu(null);
     setShowPerformanceSubmenu(false);
   };
 
@@ -844,6 +867,22 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 <div className="my-1 border-t border-surface0" />
 
                 <button
+                  type="button"
+                  onClick={() => {
+                    setIsGitGraphOpen(true);
+                    closeMenus();
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <GitCommit className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                    <span>View Git Graph</span>
+                  </div>
+                </button>
+
+                <div className="my-1 border-t border-surface0" />
+
+                <button
                 type="button"
                 onClick={() => {
                   setFileListLayout('flat');
@@ -970,7 +1009,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   closeMenus();
                   openNewMrDraft();
                 }}
-                onMouseEnter={() => setShowOpenInSubmenu(false)}
+                onMouseEnter={() => setActiveRepositorySubmenu(null)}
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
@@ -982,137 +1021,81 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
 
               <div className="my-1 border-t border-surface0" />
 
-              <button
-                type="button"
-                disabled={!currentRepo || isSyncing}
-                onClick={() => {
-                  runSync('fetch');
-                  closeMenus();
-                }}
-                onMouseEnter={() => setShowOpenInSubmenu(false)}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+              <div
+                className="relative"
+                onMouseEnter={() => setActiveRepositorySubmenu('sync')}
+                onMouseLeave={() => setActiveRepositorySubmenu(null)}
               >
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Fetch (All &amp; Prune)</span>
-                </div>
-                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+F')}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveRepositorySubmenu('sync')}
+                  className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                  aria-haspopup="menu"
+                  aria-expanded={activeRepositorySubmenu === 'sync'}
+                >
+                  <span className="flex items-center gap-2"><RefreshCw className="w-3.5 h-3.5 text-subtext0" />Synchronize</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-subtext0" />
+                </button>
+                {activeRepositorySubmenu === 'sync' && (
+                  <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                    <button type="button" disabled={isSyncing} onClick={() => { runSync('fetch'); closeMenus(); }} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer">
+                      <span className="flex items-center gap-2"><RefreshCw className="w-3.5 h-3.5 text-subtext0" />Fetch (All &amp; Prune)</span>
+                      <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+F')}</span>
+                    </button>
+                    <button type="button" disabled={isSyncing} onClick={() => { runSync('pull'); closeMenus(); }} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer">
+                      <span className="flex items-center gap-2"><Download className="w-3.5 h-3.5 text-subtext0" />Pull</span>
+                      <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+P')}</span>
+                    </button>
+                    <button type="button" disabled={isSyncing} onClick={() => { closeMenus(); setIsPullFromOpen(true); }} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer">
+                      <span className="flex items-center gap-2"><DownloadCloud className="w-3.5 h-3.5 text-subtext0" />Pull from...</span>
+                      <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+P')}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
-              <div className="my-1 border-t border-surface0" />
+              <div className="relative" onMouseEnter={() => setActiveRepositorySubmenu('merge')} onMouseLeave={() => setActiveRepositorySubmenu(null)}>
+                <button type="button" onClick={() => setActiveRepositorySubmenu('merge')} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer" aria-haspopup="menu" aria-expanded={activeRepositorySubmenu === 'merge'}>
+                  <span className="flex items-center gap-2"><GitMerge className="w-3.5 h-3.5 text-subtext0" />Merge</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-subtext0" />
+                </button>
+                {activeRepositorySubmenu === 'merge' && (
+                  <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                    <button type="button" disabled={isSyncing} onClick={() => { runSync('merge'); closeMenus(); }} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer">
+                      <span className="flex items-center gap-2"><GitMerge className="w-3.5 h-3.5 text-subtext0" />Merge Upstream</span>
+                      <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+M')}</span>
+                    </button>
+                    <button type="button" disabled={isSyncing} onClick={() => { closeMenus(); setIsMergeFromOpen(true); }} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer">
+                      <span className="flex items-center gap-2"><GitBranch className="w-3.5 h-3.5 text-subtext0" />Merge from...</span>
+                      <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+M')}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
-              <button
-                type="button"
-                disabled={!currentRepo || isSyncing}
-                onClick={() => {
-                  runSync('pull');
-                  closeMenus();
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <Download className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Pull</span>
-                </div>
-                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+P')}</span>
-              </button>
-
-              <button
-                type="button"
-                disabled={!currentRepo || isSyncing}
-                onClick={() => {
-                  closeMenus();
-                  setIsPullFromOpen(true);
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <DownloadCloud className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Pull from...</span>
-                </div>
-                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+P')}</span>
-              </button>
-
-              <div className="my-1 border-t border-surface0" />
-
-              <button
-                type="button"
-                disabled={!currentRepo || isSyncing}
-                onClick={() => {
-                  runSync('rebase');
-                  closeMenus();
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <GitMerge className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Rebase</span>
-                </div>
-                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+R')}</span>
-              </button>
-
-              <button
-                type="button"
-                disabled={!currentRepo || isSyncing}
-                onClick={() => {
-                  closeMenus();
-                  setIsRebaseFromOpen(true);
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <GitBranch className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Rebase from...</span>
-                </div>
-                <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+R')}</span>
-              </button>
-
-              <div className="my-1 border-t border-surface0" />
-
-              <button
-                type="button"
-                disabled={!currentRepo || isSyncing || !isRebasing}
-                onClick={() => {
-                  runSync('rebase_continue');
-                  closeMenus();
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <Play className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Rebase: Continue</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                disabled={!currentRepo || isSyncing || !isRebasing}
-                onClick={() => {
-                  runSync('rebase_skip');
-                  closeMenus();
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <SkipForward className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Rebase: Skip Commit</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                disabled={!currentRepo || isSyncing || !isRebasing}
-                onClick={() => {
-                  runSync('rebase_abort');
-                  closeMenus();
-                }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <Undo2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
-                  <span>Rebase: Abort</span>
-                </div>
-              </button>
+              <div className="relative" onMouseEnter={() => setActiveRepositorySubmenu('rebase')} onMouseLeave={() => setActiveRepositorySubmenu(null)}>
+                <button type="button" onClick={() => setActiveRepositorySubmenu('rebase')} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer" aria-haspopup="menu" aria-expanded={activeRepositorySubmenu === 'rebase'}>
+                  <span className="flex items-center gap-2"><GitBranch className="w-3.5 h-3.5 text-subtext0" />Rebase</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-subtext0" />
+                </button>
+                {activeRepositorySubmenu === 'rebase' && (
+                  <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                    <button type="button" disabled={isSyncing} onClick={() => { runSync('rebase'); closeMenus(); }} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer">
+                      <span className="flex items-center gap-2"><GitBranch className="w-3.5 h-3.5 text-subtext0" />Rebase</span>
+                      <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+R')}</span>
+                    </button>
+                    <button type="button" disabled={isSyncing} onClick={() => { closeMenus(); setIsRebaseFromOpen(true); }} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer">
+                      <span className="flex items-center gap-2"><GitBranch className="w-3.5 h-3.5 text-subtext0" />Rebase from...</span>
+                      <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+R')}</span>
+                    </button>
+                    <div className="my-1 border-t border-surface0" />
+                    <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-subtext0">In Progress</div>
+                    <button type="button" disabled={isSyncing || !isRebasing} onClick={() => { runSync('rebase_continue'); closeMenus(); }} className="w-full flex items-center px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer"><Play className="w-3.5 h-3.5 mr-2 text-subtext0" />Continue</button>
+                    <button type="button" disabled={isSyncing || !isRebasing} onClick={() => { runSync('rebase_skip'); closeMenus(); }} className="w-full flex items-center px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer"><SkipForward className="w-3.5 h-3.5 mr-2 text-subtext0" />Skip Commit</button>
+                    <button type="button" disabled={isSyncing || !isRebasing} onClick={() => { runSync('rebase_abort'); closeMenus(); }} className="w-full flex items-center px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer"><Undo2 className="w-3.5 h-3.5 mr-2 text-subtext0" />Abort</button>
+                  </div>
+                )}
+              </div>
 
               <div className="my-1 border-t border-surface0" />
 
@@ -1152,8 +1135,8 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
               {/* Open in Submenu Trigger */}
               <div
                 className="relative"
-                onMouseEnter={() => setShowOpenInSubmenu(true)}
-                onMouseLeave={() => setShowOpenInSubmenu(false)}
+                onMouseEnter={() => setActiveRepositorySubmenu('open')}
+                onMouseLeave={() => setActiveRepositorySubmenu(null)}
               >
                 <button
                   type="button"
@@ -1167,7 +1150,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <ChevronRight className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                 </button>
 
-                {showOpenInSubmenu && currentRepo && (
+                {activeRepositorySubmenu === 'open' && currentRepo && (
                   <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
                     <button
                       type="button"
@@ -1339,6 +1322,8 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
               { label: 'Fetch (All & Prune)', keys: shortcut('Ctrl+Shift+F') },
               { label: 'Pull', keys: shortcut('Ctrl+Shift+P') },
               { label: 'Pull from... (Advanced)', keys: shortcut('Ctrl+Alt+P') },
+              { label: 'Merge Upstream', keys: shortcut('Ctrl+Shift+M') },
+              { label: 'Merge from... (Options)', keys: shortcut('Ctrl+Alt+M') },
               { label: 'Rebase', keys: shortcut('Ctrl+Shift+R') },
               { label: 'Rebase from... (Advanced)', keys: shortcut('Ctrl+Alt+R') },
             ],

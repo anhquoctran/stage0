@@ -17,6 +17,8 @@ import { FolderCog } from '../../../common/components/icons/FolderCog';
 import { ExternalLink } from '../../../common/components/icons/ExternalLink';
 import { RotateCcw } from '../../../common/components/icons/RotateCcw';
 import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
+import { CustomSelect } from '../../../common/components/CustomSelect';
+import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../store/useGitStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
@@ -309,6 +311,20 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
       showToast(`Failed to save settings: ${err}`);
     }
   };
+
+  const baseBranchOptions: CustomSelectOption<string>[] = Array.from(
+    new Set([...(branches?.local || []), ...(branches?.remote || [])])
+  ).map((branch) => ({ value: branch, label: branch }));
+  const newBranchBaseOptions: CustomSelectOption<string>[] = [
+    { value: 'HEAD', label: 'From HEAD' },
+    ...(branches?.local || []).map((branch) => ({
+      value: branch,
+      label: `From ${branch}`,
+    })),
+  ];
+  const repoBotCategoryOptions: CustomSelectOption<BotCategory>[] = BOT_CATEGORIES.map(
+    (category) => ({ value: category.id, label: category.label })
+  );
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
@@ -668,17 +684,17 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                   <p className="text-xs text-subtext0">
                     The default target branch automatically selected when opening a new Virtual MR in this repository.
                   </p>
-                  <select
+                  <CustomSelect
                     value={defaultBaseBranch}
-                    onChange={(e) => setDefaultBaseBranch(e.target.value)}
-                    className="mt-1 px-3 py-1.5 rounded bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent w-64"
-                  >
-                    {Array.from(new Set([...(branches?.local || []), ...(branches?.remote || [])])).map((b) => (
-                      <option key={b} value={b}>
-                        {b}
-                      </option>
-                    ))}
-                  </select>
+                    options={baseBranchOptions}
+                    onChange={setDefaultBaseBranch}
+                    className="mt-1 w-64"
+                    buttonClassName="w-full"
+                    dropdownWidth="w-full"
+                    align="left"
+                    placeholder="Select a branch…"
+                    aria-label="Default Base Branch for Virtual MR"
+                  />
                 </div>
 
                 {/* BRANCHES MANAGEMENT */}
@@ -710,18 +726,16 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                         onChange={(e) => setNewBranchName(e.target.value)}
                         className="flex-1 px-3 py-1.5 rounded bg-surface0 border border-surface1 text-text focus:outline-none"
                       />
-                      <select
+                      <CustomSelect
                         value={newBranchBase}
-                        onChange={(e) => setNewBranchBase(e.target.value)}
-                        className="px-2 py-1.5 rounded bg-surface0 border border-surface1 text-text"
-                      >
-                        <option value="HEAD">From HEAD</option>
-                        {(branches?.local || []).map((b) => (
-                          <option key={b} value={b}>
-                            From {b}
-                          </option>
-                        ))}
-                      </select>
+                        options={newBranchBaseOptions}
+                        onChange={setNewBranchBase}
+                        className="shrink-0"
+                        buttonClassName="min-w-36"
+                        dropdownWidth="w-56"
+                        align="left"
+                        aria-label="New branch base"
+                      />
                       <button
                         type="submit"
                         className="px-3 py-1.5 rounded bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
@@ -1279,17 +1293,16 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                         </div>
                         <div>
                           <label className="block text-[10px] text-subtext0 mb-1">Category</label>
-                          <select
+                          <CustomSelect
                             value={repoBotCategory}
-                            onChange={(e) => setRepoBotCategory(e.target.value as BotCategory)}
-                            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text cursor-pointer"
-                          >
-                            {BOT_CATEGORIES.map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.label}
-                              </option>
-                            ))}
-                          </select>
+                            options={repoBotCategoryOptions}
+                            onChange={setRepoBotCategory}
+                            className="w-full"
+                            buttonClassName="w-full"
+                            dropdownWidth="w-full"
+                            align="left"
+                            aria-label="Category"
+                          />
                         </div>
                       </div>
 

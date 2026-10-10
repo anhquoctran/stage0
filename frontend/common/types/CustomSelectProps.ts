@@ -6,6 +6,7 @@ export interface CustomSelectProps<T extends string> {
   options: CustomSelectOption<T>[];
   onChange: (value: T) => void;
   disabled?: boolean;
+  autoFocus?: boolean;
   className?: string;
   buttonClassName?: string;
   menuClassName?: string;
