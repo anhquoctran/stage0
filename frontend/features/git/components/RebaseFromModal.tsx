@@ -64,23 +64,18 @@ export const RebaseFromModal: React.FC = () => {
       branch: selectedTargetBranch.trim(),
       autostash: useAutostash,
     });
-
-    setIsRebaseFromOpen(false);
   };
 
   const handleRebaseContinue = async () => {
     await runSync('rebase_continue');
-    setIsRebaseFromOpen(false);
   };
 
   const handleRebaseAbort = async () => {
     await runSync('rebase_abort');
-    setIsRebaseFromOpen(false);
   };
 
   const handleRebaseSkip = async () => {
     await runSync('rebase_skip');
-    setIsRebaseFromOpen(false);
   };
 
   const commandPreview = `git rebase ${selectedTargetBranch}${useAutostash ? ' --autostash' : ''}`;

@@ -9,7 +9,6 @@ import { Columns2 } from '../../../common/components/icons/Columns2';
 import { Rows2 } from '../../../common/components/icons/Rows2';
 import { Keyboard } from '../../../common/components/icons/Keyboard';
 import { Box } from '../../../common/components/icons/Box';
-import { Check } from '../../../common/components/icons/Check';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { FileText } from '../../../common/components/icons/FileText';
 import { DownloadCloud } from '../../../common/components/icons/DownloadCloud';
@@ -17,6 +16,8 @@ import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { Sparkles } from '../../../common/components/icons/Sparkles';
 import { Bell } from '../../../common/components/icons/Bell';
 import { HeartPulse } from '../../../common/components/icons/HeartPulse';
+import { BackgroundTaskManager } from '../../../features/git/components/BackgroundTaskManager';
+import { useGitTaskStore } from '../../../features/git/store/useGitTaskStore';
 import { useGitStore } from '../../../features/git/store/useGitStore';
 import { usePreferencesStore } from '../../../features/preferences/store/usePreferencesStore';
 import { useUpdateStore } from '../../../features/updates/store/useUpdateStore';
@@ -52,8 +53,6 @@ export const StatusBar: React.FC = () => {
     viewMode,
     setViewMode,
     activeSandboxType,
-    isSyncing,
-    syncStatus,
     isDiffLoading,
   } = useGitStore();
   const hasActiveVirtualMr = useVirtualMrStore((state) => {
@@ -138,21 +137,6 @@ export const StatusBar: React.FC = () => {
           <div className="flex items-center gap-1.5 text-subtext0">
             <FolderGit2 className="w-3.5 h-3.5" />
             <span>No repository open</span>
-          </div>
-        )}
-
-        {syncStatus && (
-          <div
-            className="flex items-center gap-1.5 pl-1.5 text-[10px] text-subtext0 min-w-0 max-w-[30vw] truncate"
-            title={syncStatus}
-          >
-            <div className="h-3 w-px bg-surface1 shrink-0 mr-1" />
-            {isSyncing ? (
-              <RefreshCw className="w-3 h-3 text-blue animate-spin shrink-0" />
-            ) : (
-              <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-            )}
-            <span className="truncate">{syncStatus}</span>
           </div>
         )}
 
@@ -408,9 +392,14 @@ export const StatusBar: React.FC = () => {
           </div>
         )}
 
+        <BackgroundTaskManager />
+
         <button
           type="button"
-          onClick={toggleHistoryDrawer}
+          onClick={() => {
+            useGitTaskStore.getState().setBackgroundManagerOpen(false);
+            toggleHistoryDrawer();
+          }}
           aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
           aria-expanded={isHistoryDrawerOpen}
           className={`relative grid h-6 w-7 place-items-center rounded transition-colors cursor-pointer ${

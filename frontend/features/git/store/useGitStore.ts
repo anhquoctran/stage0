@@ -10,6 +10,7 @@ import { type RepoValidation } from '../types/RepoValidation';
 import { type ViewMode } from '../types/ViewMode';
 import { type GitSyncOperation } from '../types/GitSyncOperation';
 import { type GitSyncOptions } from '../types/GitSyncOptions';
+import type { CloneOptions } from '../types/CloneOptions';
 import { type FileBlamePayload } from '../types/FileBlamePayload';
 import { type SandboxType } from '../types/SandboxType';
 import { type SandboxAdapterInfo } from '../types/SandboxAdapterInfo';
@@ -17,6 +18,8 @@ import { type SandboxInstanceInfo } from '../types/SandboxInstanceInfo';
 import { type SandboxExecutionResult } from '../types/SandboxExecutionResult';
 import { type OpenRepoOutcome } from '../types/OpenRepoOutcome';
 import type { GitState } from '../types/GitState';
+import { useGitTaskStore } from './useGitTaskStore';
+import { createGitProgressChannel } from '../services/createGitProgressChannel';
 
 const syncRecentRepositoriesMenu = async (repositories: RepoInfo[]): Promise<void> => {
   if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) return;
@@ -96,10 +99,9 @@ export const useGitStore = create<GitState>((set, get) => ({
   isLoading: false,
   isDiffLoading: false,
   isSyncing: false,
-  syncStatus: null,
   error: null,
 
-  clearError: () => set({ error: null, syncStatus: null }),
+  clearError: () => set({ error: null }),
 
   closeRepo: async () => {
     try {
@@ -263,32 +265,45 @@ export const useGitStore = create<GitState>((set, get) => ({
     }
   },
 
-  cloneRepo: async (url: string, targetPath: string, credentialId?: string) => {
-    set({ isLoading: true, error: null });
+  cloneRepo: async (url: string, targetPath: string, credentialId?: string, options?: CloneOptions) => {
+    const taskId = useGitTaskStore.getState().startTask('clone', 'Clone repository', targetPath);
+    set({ error: null, isCloneModalOpen: false });
     try {
       const repo = await invoke<RepoInfo>('clone_repository', {
         url,
         targetPath,
         credentialId: credentialId ?? null,
+        options: options ?? null,
+        onProgress: createGitProgressChannel(taskId),
       });
       if (repo) {
-        const outcome = await invoke<OpenRepoOutcome>('open_repo_by_path', {
-          repoPath: repo.local_path,
+        useGitTaskStore.getState().updateTask(taskId, {
+          phase: 'Opening repository', percent: null, message: 'Repository cloned. Opening repository…',
         });
-        if (outcome.action === 'opened_here') {
-          await get().attachRepoToCurrentWindow(outcome.repo);
-        } else {
-          await get().loadRecentRepos();
+        try {
+          // Route through the window manager even after backgrounding or a repo
+          // switch. It preserves the current repo by opening/focusing another window.
+          const outcome = await invoke<OpenRepoOutcome>('open_repo_by_path', {
+            repoPath: repo.local_path,
+          });
+          if (outcome.action === 'opened_here') {
+            await get().attachRepoToCurrentWindow(outcome.repo);
+          } else {
+            await get().loadRecentRepos();
+          }
+        } catch (error) {
+          throw new Error(`Repository was cloned to '${repo.local_path}', but could not be opened automatically: ${getErrorMessage(error)}`);
         }
+        useGitTaskStore.getState().completeTask(taskId, `Cloned repository ${repo.name}`, repo);
+        useGitTaskStore.getState().dismissTask(taskId);
         get().showToast(`Cloned repository ${repo.name}`);
         return repo;
       }
+      useGitTaskStore.getState().failTask(taskId, 'Clone did not return a repository.');
       return null;
     } catch (err: unknown) {
-      set({ error: String(err) });
+      useGitTaskStore.getState().failTask(taskId, getErrorMessage(err));
       throw err;
-    } finally {
-      set({ isLoading: false });
     }
   },
 
@@ -747,23 +762,48 @@ export const useGitStore = create<GitState>((set, get) => ({
   runSync: async (op: GitSyncOperation, options?: GitSyncOptions) => {
     const { currentRepo } = get();
     if (!currentRepo) return;
+    if (get().isSyncing) {
+      const running = useGitTaskStore.getState().tasks.find(
+        (task) => task.status === 'running' && task.operation !== 'clone'
+      );
+      if (running) useGitTaskStore.getState().showTask(running.id);
+      return;
+    }
 
-    const opLabel = op.replace('_', ' ');
-    set({ isSyncing: true, syncStatus: `Running git ${opLabel}...`, error: null });
+    const opLabel = op.replaceAll('_', ' ');
+    let taskId: string;
+    try {
+      taskId = useGitTaskStore.getState().startTask(
+        op, `${opLabel.charAt(0).toUpperCase()}${opLabel.slice(1)}`, currentRepo.local_path
+      );
+    } catch { return; }
+    set({
+      isSyncing: true, error: null,
+      isPullFromOpen: false, isMergeFromOpen: false, isRebaseFromOpen: false,
+    });
     try {
       const result = await invoke<string>('run_git_sync', {
         repoPath: currentRepo.local_path,
         operation: op,
         options: options || null,
+        onProgress: createGitProgressChannel(taskId),
       });
-      set({ syncStatus: result });
-      await get().fetchBranches(currentRepo.local_path);
-      await get().loadDiff();
-      await get().checkRebaseStatus(currentRepo.local_path);
+      useGitTaskStore.getState().updateTask(taskId, {
+        phase: 'Refreshing repository', percent: null, message: 'Git command finished. Refreshing branch state…',
+      });
+      if (get().currentRepo?.local_path === currentRepo.local_path) {
+        await get().fetchBranches(currentRepo.local_path);
+        if (get().currentRepo?.local_path === currentRepo.local_path) {
+          await get().loadDiff();
+        }
+      }
+      useGitTaskStore.getState().completeTask(taskId, result);
     } catch (err: unknown) {
-      set({ error: String(err), syncStatus: null });
+      useGitTaskStore.getState().failTask(taskId, getErrorMessage(err));
     } finally {
-      await get().checkRebaseStatus(currentRepo.local_path);
+      if (get().currentRepo?.local_path === currentRepo.local_path) {
+        await get().checkRebaseStatus(currentRepo.local_path);
+      }
       set({ isSyncing: false });
     }
   },

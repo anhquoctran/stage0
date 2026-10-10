@@ -3,6 +3,19 @@
 @source "../../**/*.{js,ts,jsx,tsx}";
 @import "@git-diff-view/react/styles/diff-view.css";
 
+@keyframes git-task-progress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(340%); }
+}
+
+.git-task-indeterminate {
+  animation: git-task-progress 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .git-task-indeterminate { animation: none; }
+}
+
 :root,
 [data-theme="mocha"],
 [data-theme="dark"],

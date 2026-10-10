@@ -49,6 +49,39 @@ pub fn run_git(repo_path: &str, args: &[&str]) -> Result<CmdResult, String> {
     Ok(result)
 }
 
+pub fn run_git_with_progress(
+    repo_path: &str,
+    args: &[&str],
+    reporter: &std::sync::Arc<super::progress::GitProgressReporter>,
+) -> Result<CmdResult, String> {
+    let mut command = Command::new(get_active_git_path());
+    command.current_dir(repo_path).args(args);
+    command.env("GIT_TERMINAL_PROMPT", "0");
+    command.env("GIT_PAGER", "cat");
+    command.env("GIT_ALLOW_PROTOCOL", "git:http:https:ssh");
+    command.env("GIT_MERGE_AUTOEDIT", "no");
+    command.env("GIT_EDITOR", "true");
+    command.env("LC_ALL", "C");
+    let output = crate::common::process::run_bounded_command_with_progress(
+        &mut command,
+        reporter.observer(),
+        DEFAULT_STDOUT_LIMIT,
+        4 * 1024 * 1024,
+        Duration::from_secs(30 * 60),
+    )
+    .map_err(|error| format!("Git command failed: {error}"))?;
+    if output.output_truncated {
+        return Err("Git command output exceeded the configured safety limit".to_string());
+    }
+    Ok(CmdResult {
+        stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+        stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+        success: output.status.success(),
+        code: output.status.code(),
+        output_truncated: false,
+    })
+}
+
 /// Runs Git while draining both pipes concurrently, with bounded memory and a
 /// wall-clock limit. On output overflow the captured prefix is returned with
 /// `output_truncated` set; callers must not treat it as a complete result.
