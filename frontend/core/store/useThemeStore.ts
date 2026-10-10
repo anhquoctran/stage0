@@ -1,15 +1,7 @@
 import { create } from 'zustand';
-
-export type ThemeMode = 'system' | 'dark' | 'light';
-export type CatppuccinTheme = 'mocha' | 'mocha-light';
-
-interface ThemeState {
-  themeMode: ThemeMode;
-  theme: CatppuccinTheme; // Resolved theme ('mocha' | 'mocha-light')
-  setThemeMode: (mode: ThemeMode) => void;
-  setTheme: (theme: CatppuccinTheme) => void;
-  toggleTheme: () => void;
-}
+import type { CatppuccinTheme } from '../types/CatppuccinTheme';
+import type { ThemeMode } from '../types/ThemeMode';
+import type { ThemeState } from '../types/ThemeState';
 
 const STORAGE_KEY = 'stage0_catppuccin_theme_mode';
 
@@ -61,7 +53,9 @@ function getInitialThemeMode(): ThemeMode {
 }
 
 const initialMode = getInitialThemeMode();
+
 const initialResolved = resolveTheme(initialMode);
+
 applyThemeToDocument(initialResolved);
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
@@ -113,3 +107,6 @@ if (typeof window !== 'undefined' && window.matchMedia) {
     mediaQuery.addListener(handleMediaChange);
   }
 }
+
+export type { ThemeMode } from '../types/ThemeMode';
+export type { CatppuccinTheme } from '../types/CatppuccinTheme';

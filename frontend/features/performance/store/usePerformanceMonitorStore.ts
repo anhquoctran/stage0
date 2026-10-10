@@ -1,9 +1,5 @@
 import { create } from 'zustand';
-
-interface PerformanceMonitorState {
-  isEnabled: boolean;
-  toggle: () => void;
-}
+import type { PerformanceMonitorState } from '../types/PerformanceMonitorState';
 
 const STORAGE_KEY = 'stage0_performance_monitor_enabled';
 

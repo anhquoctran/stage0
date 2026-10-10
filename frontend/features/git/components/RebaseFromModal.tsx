@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import {
-  GitMerge,
-  X,
-  GitBranch,
-  Terminal,
-  RefreshCw,
-  AlertTriangle,
-  Play,
-  RotateCcw,
-  SkipForward,
-} from '@/common/components/icons';
+import { GitMerge } from '../../../common/components/icons/GitMerge';
+import { X } from '../../../common/components/icons/X';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { Terminal } from '../../../common/components/icons/Terminal';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
+import { Play } from '../../../common/components/icons/Play';
+import { RotateCcw } from '../../../common/components/icons/RotateCcw';
+import { SkipForward } from '../../../common/components/icons/SkipForward';
 import { useGitStore } from '../store/useGitStore';
 
 export const RebaseFromModal: React.FC = () => {

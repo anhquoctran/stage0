@@ -1,21 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import {
-  Download,
-  X,
-  Folder,
-  FolderOpen,
-  Globe,
-  Terminal,
-  AlertCircle,
-  Loader2,
-  Check,
-} from '@/common/components/icons';
+import { Download } from '../../../common/components/icons/Download';
+import { X } from '../../../common/components/icons/X';
+import { Folder } from '../../../common/components/icons/Folder';
+import { FolderOpen } from '../../../common/components/icons/FolderOpen';
+import { Globe } from '../../../common/components/icons/Globe';
+import { Terminal } from '../../../common/components/icons/Terminal';
+import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { Loader2 } from '../../../common/components/icons/Loader2';
+import { Check } from '../../../common/components/icons/Check';
 import { useGitStore } from '../store/useGitStore';
 import { useGitCredentialsStore } from '../../credentials/store/useGitCredentialsStore';
-
-type UrlValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid';
+import type { UrlValidationStatus } from '../types/UrlValidationStatus';
 
 export const CloneRepoModal: React.FC = () => {
   const {

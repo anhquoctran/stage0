@@ -1,43 +1,4 @@
-export type GuardrailMode = 'strict' | 'balanced' | 'permissive';
-
-export type GuardrailSeverity = 'low' | 'medium' | 'high' | 'critical';
-
-export interface GuardrailViolation {
-  rule: string;
-  severity: GuardrailSeverity;
-  message: string;
-}
-
-export interface GuardrailPolicy {
-  mode: GuardrailMode;
-  allowed_commands: string[];
-  blocked_commands: string[];
-  blocked_patterns: string[];
-  sensitive_path_patterns: string[];
-  max_execution_timeout_secs: number;
-  max_file_read_lines: number;
-  max_output_bytes: number;
-  rate_limit_per_minute: number;
-  require_human_confirmation_for_commands: boolean;
-  require_human_confirmation_for_writes: boolean;
-}
-
-export interface GuardrailAuditEvent {
-  id: string;
-  timestamp: number;
-  tool_name: string;
-  action_summary: string;
-  allowed: boolean;
-  risk_score: number;
-  violations: GuardrailViolation[];
-}
-
-export interface GuardrailEvaluationResult {
-  allowed: boolean;
-  risk_score: number;
-  violations: GuardrailViolation[];
-  requires_confirmation: boolean;
-}
+import type { GuardrailPolicy } from './GuardrailPolicy';
 
 export const DEFAULT_GUARDRAIL_POLICY: GuardrailPolicy = {
   mode: 'balanced',
@@ -113,3 +74,10 @@ export const DEFAULT_GUARDRAIL_POLICY: GuardrailPolicy = {
   require_human_confirmation_for_commands: false,
   require_human_confirmation_for_writes: true,
 };
+
+export type { GuardrailMode } from './GuardrailMode';
+export type { GuardrailSeverity } from './GuardrailSeverity';
+export type { GuardrailViolation } from './GuardrailViolation';
+export type { GuardrailPolicy } from './GuardrailPolicy';
+export type { GuardrailAuditEvent } from './GuardrailAuditEvent';
+export type { GuardrailEvaluationResult } from './GuardrailEvaluationResult';

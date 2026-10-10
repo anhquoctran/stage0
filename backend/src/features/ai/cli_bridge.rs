@@ -1,26 +1,11 @@
-use serde::{Deserialize, Serialize};
+mod cli_detection_result;
+pub use cli_detection_result::CliDetectionResult;
+mod cli_execution_result;
+pub use cli_execution_result::CliExecutionResult;
+
 use std::path::PathBuf;
 use std::time::Duration;
 use tokio::process::Command;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CliDetectionResult {
-    pub cli_type: String,
-    pub available: bool,
-    pub version: Option<String>,
-    pub logged_in: bool,
-    pub auth_info: Option<String>,
-    pub executable_path: Option<String>,
-    pub error: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CliExecutionResult {
-    pub success: bool,
-    pub output: String,
-    pub error: Option<String>,
-    pub duration_ms: u64,
-}
 
 pub fn get_home_dir() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]

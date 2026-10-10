@@ -1,28 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  GitBranch,
-  RefreshCw,
-  Check,
-  AlertCircle,
-  FolderOpen,
-  Copy,
-  Terminal,
-  Package,
-  HardDrive,
-  Info,
-  ShieldCheck,
-  Plus,
-} from '@/common/components/icons';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { Check } from '../../../common/components/icons/Check';
+import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { FolderOpen } from '../../../common/components/icons/FolderOpen';
+import { Copy } from '../../../common/components/icons/Copy';
+import { Terminal } from '../../../common/components/icons/Terminal';
+import { Package } from '../../../common/components/icons/Package';
+import { HardDrive } from '../../../common/components/icons/HardDrive';
+import { Info } from '../../../common/components/icons/Info';
+import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
+import { Plus } from '../../../common/components/icons/Plus';
 import { useGitBinaryStore } from '../store/useGitBinaryStore';
-import { GitBinaryInfo } from '../types/gitBinary';
-
-interface GitBinaryTabProps {
-  draftBinaryId: string;
-  draftBinaryPath: string;
-  onSelectBinary: (id: string, path: string) => void;
-  committedBinaryId: string;
-  committedBinaryPath: string;
-}
+import type { GitBinaryInfo } from '../types/GitBinaryInfo';
+import type { GitBinaryTabProps } from '../types/GitBinaryTabProps';
 
 export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
   draftBinaryId,

@@ -1,29 +1,13 @@
+mod unified_ai_chat_request;
+pub use unified_ai_chat_request::UnifiedAiChatRequest;
+mod unified_ai_chat_response;
+pub use unified_ai_chat_response::UnifiedAiChatResponse;
+
 pub mod chatgpt_oauth;
 pub mod cli_bridge;
 pub mod copilot;
 pub mod dynamic_models;
 pub mod google_oauth;
-
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UnifiedAiChatRequest {
-    pub provider: String,
-    pub auth_mode: String, // "cli_bridge", "subscription_oauth", "api_key"
-    pub model: Option<String>,
-    pub prompt: String,
-    pub system_prompt: Option<String>,
-    pub repo_path: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UnifiedAiChatResponse {
-    pub success: bool,
-    pub content: String,
-    pub duration_ms: u64,
-    pub provider_used: String,
-    pub error: Option<String>,
-}
 
 /// Unified dispatcher to route prompts to either CLI Bridge, Copilot Device Token, or Google OAuth
 pub async fn dispatch_ai_chat(req: UnifiedAiChatRequest) -> Result<UnifiedAiChatResponse, String> {

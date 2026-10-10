@@ -1,17 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GitBranch, ChevronDown, Search, Check, Globe } from '@/common/components/icons';
-
-interface BranchSelectorProps {
-  label: string;
-  value: string;
-  branches: {
-    current: string;
-    local: string[];
-    remote: string[];
-  } | null;
-  onChange: (branch: string) => void;
-  disabled?: boolean;
-}
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { ChevronDown } from '../../../common/components/icons/ChevronDown';
+import { Search } from '../../../common/components/icons/Search';
+import { Check } from '../../../common/components/icons/Check';
+import { Globe } from '../../../common/components/icons/Globe';
+import type { BranchSelectorProps } from '../types/BranchSelectorProps';
 
 export const BranchSelector: React.FC<BranchSelectorProps> = ({
   label,

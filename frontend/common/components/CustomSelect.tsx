@@ -1,28 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
-import { ChevronDown, Check } from './icons';
-
-export interface CustomSelectOption<T extends string> {
-  value: T;
-  label: string;
-  description?: string;
-  badge?: string;
-  icon?: React.ReactNode;
-}
-
-export interface CustomSelectProps<T extends string> {
-  id?: string;
-  value: T;
-  options: CustomSelectOption<T>[];
-  onChange: (value: T) => void;
-  disabled?: boolean;
-  className?: string;
-  buttonClassName?: string;
-  menuClassName?: string;
-  dropdownWidth?: string;
-  placeholder?: string;
-  align?: 'left' | 'right';
-  'aria-label'?: string;
-}
+import { ChevronDown } from './icons/ChevronDown';
+import { Check } from './icons/Check';
+import type { CustomSelectProps } from '../types/CustomSelectProps';
 
 export function CustomSelect<T extends string>({
   id: customId,
@@ -213,3 +192,6 @@ export function CustomSelect<T extends string>({
     </div>
   );
 }
+
+export type { CustomSelectOption } from '../types/CustomSelectOption';
+export type { CustomSelectProps } from '../types/CustomSelectProps';

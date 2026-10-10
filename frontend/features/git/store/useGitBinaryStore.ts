@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
-import { GitBinaryInfo } from '../types/gitBinary';
+import type { GitBinaryInfo } from '../types/GitBinaryInfo';
+import type { GitBinaryState } from '../types/GitBinaryState';
 
 const isMockMode = (): boolean => {
   if (typeof window === 'undefined') return true;
@@ -45,22 +46,6 @@ const MOCK_BINARIES: GitBinaryInfo[] = [
     is_valid: true,
   },
 ];
-
-interface GitBinaryState {
-  binaries: GitBinaryInfo[];
-  activeBinaryId: string;
-  activeBinaryPath: string;
-  isLoading: boolean;
-  isScanning: boolean;
-  error: string | null;
-  scanBinaries: () => Promise<GitBinaryInfo[]>;
-  fetchActiveBinary: () => Promise<{ id: string; path: string }>;
-  setActiveBinary: (id: string, path: string) => Promise<boolean>;
-  validateCustomBinary: (path: string) => Promise<GitBinaryInfo>;
-  pickGitExecutable: () => Promise<string | null>;
-  restartApp: () => Promise<void>;
-  clearError: () => void;
-}
 
 export const useGitBinaryStore = create<GitBinaryState>((set, get) => ({
   binaries: [],

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { SOFTWARE_ABOUT, SoftwareAboutInfo } from '../config/about';
+import { SOFTWARE_ABOUT } from '../config/about';
+import { type SoftwareAboutInfo } from '../types/SoftwareAboutInfo';
 
 export function useAboutInfo(): SoftwareAboutInfo {
   const [aboutInfo, setAboutInfo] = useState<SoftwareAboutInfo>(SOFTWARE_ABOUT);

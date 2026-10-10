@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Download,
-  X,
-  GitBranch,
-  Globe,
-  RefreshCw,
-  Terminal,
-} from '@/common/components/icons';
+import { Download } from '../../../common/components/icons/Download';
+import { X } from '../../../common/components/icons/X';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { Globe } from '../../../common/components/icons/Globe';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { Terminal } from '../../../common/components/icons/Terminal';
 import { useGitStore } from '../store/useGitStore';
 
 export const PullFromModal: React.FC = () => {

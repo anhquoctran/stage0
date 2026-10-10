@@ -1,32 +1,26 @@
 import React, { useState } from 'react';
-import {
-  MessageSquare,
-  Bot,
-  User,
-  CheckCircle2,
-  ExternalLink,
-  RefreshCw,
-  Plus,
-  Send,
-  X,
-  ChevronDown,
-  ChevronRight,
-  Code2,
-} from '@/common/components/icons';
+import { MessageSquare } from '../../../common/components/icons/MessageSquare';
+import { Bot } from '../../../common/components/icons/Bot';
+import { User } from '../../../common/components/icons/User';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { ExternalLink } from '../../../common/components/icons/ExternalLink';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { Plus } from '../../../common/components/icons/Plus';
+import { Send } from '../../../common/components/icons/Send';
+import { X } from '../../../common/components/icons/X';
+import { ChevronDown } from '../../../common/components/icons/ChevronDown';
+import { ChevronRight } from '../../../common/components/icons/ChevronRight';
+import { Code2 } from '../../../common/components/icons/Code2';
 import { formatTime } from '@/common/utils/dateTime';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../store/useGitStore';
 import { openFileInEditor } from '../utils/fileActions';
-import { ChangedFile } from '../types/git';
-import { ReviewActionType } from '../../virtual-mr/types/virtualMr';
+import { type ReviewActionType } from '../../virtual-mr/types/ReviewActionType';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
 import { MarkdownPreview } from '../../../common/components/MarkdownPreview';
+import type { DiffDiscussionsBannerProps } from '../types/DiffDiscussionsBannerProps';
 
-interface Props {
-  selectedFile: ChangedFile;
-}
-
-export const DiffDiscussionsBanner: React.FC<Props> = ({ selectedFile }) => {
+export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ selectedFile }) => {
   const { currentRepo, showToast } = useGitStore();
   const {
     getActiveSession,

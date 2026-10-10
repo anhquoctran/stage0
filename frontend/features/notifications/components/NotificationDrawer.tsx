@@ -1,24 +1,11 @@
 import React, { useEffect } from 'react';
-import { Bell, Check, CheckCircle2, Trash2, X } from '@/common/components/icons';
+import { Bell } from '../../../common/components/icons/Bell';
+import { Check } from '../../../common/components/icons/Check';
+import { Trash2 } from '../../../common/components/icons/Trash2';
+import { X } from '../../../common/components/icons/X';
 import { formatDateTime } from '@/common/utils/dateTime';
 import { useNotificationStore } from '../store/useNotificationStore';
-import type { AppNotification } from '../types/notification';
-
-function NotificationMarker({ notification }: { notification: AppNotification }) {
-  const className = 'mt-0.5 h-4 w-4 shrink-0';
-  switch (notification.level) {
-    case 'success':
-      return <CheckCircle2 className={`${className} text-green`} />;
-    case 'warning':
-      return <Bell className={`${className} text-yellow`} />;
-    case 'error':
-      return <Bell className={`${className} text-red`} />;
-    case 'update':
-      return <Bell className={`${className} text-blue`} />;
-    default:
-      return <Bell className={`${className} text-subtext0`} />;
-  }
-}
+import { NotificationMarker } from './NotificationMarker';
 
 export const NotificationDrawer: React.FC = () => {
   const {

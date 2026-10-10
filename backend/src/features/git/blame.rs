@@ -1,48 +1,14 @@
+mod blame_commit;
+pub use blame_commit::BlameCommit;
+mod blame_line;
+pub use blame_line::BlameLine;
+mod blame_author_stat;
+pub use blame_author_stat::BlameAuthorStat;
+mod file_blame_payload;
+pub use file_blame_payload::FileBlamePayload;
+
 use super::runner::run_git;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BlameCommit {
-    pub commit_id: String,
-    pub author: String,
-    pub author_mail: String,
-    pub author_time: i64,
-    pub author_tz: String,
-    pub committer: String,
-    pub committer_mail: String,
-    pub committer_time: i64,
-    pub summary: String,
-    pub previous_commit: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BlameLine {
-    pub line_no: usize,
-    pub orig_line_no: usize,
-    pub commit_id: String,
-    pub content: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BlameAuthorStat {
-    pub name: String,
-    pub email: String,
-    pub line_count: usize,
-    pub percentage: f32,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct FileBlamePayload {
-    pub file_path: String,
-    pub revision: String,
-    pub commits: HashMap<String, BlameCommit>,
-    pub lines: Vec<BlameLine>,
-    pub author_stats: Vec<BlameAuthorStat>,
-    pub total_lines: usize,
-    pub current_user_name: Option<String>,
-    pub current_user_email: Option<String>,
-}
 
 pub fn get_file_blame(
     repo_path: &str,

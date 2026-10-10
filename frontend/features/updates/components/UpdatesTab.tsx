@@ -1,17 +1,16 @@
 import React from 'react';
 import { useUpdateStore } from '../store/useUpdateStore';
 import { SOFTWARE_ABOUT } from '../../about/config/about';
-import type { UpdateChannel } from '../types/update';
-import {
-  DownloadCloud,
-  CheckCircle2,
-  AlertTriangle,
-  RefreshCw,
-  Loader2,
-  Sparkles,
-  Clock,
-} from '@/common/components/icons';
-import { CustomSelect, type CustomSelectOption } from '@/common/components/CustomSelect';
+import { type UpdateChannel } from '../types/UpdateChannel';
+import { DownloadCloud } from '../../../common/components/icons/DownloadCloud';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { Loader2 } from '../../../common/components/icons/Loader2';
+import { Sparkles } from '../../../common/components/icons/Sparkles';
+import { Clock } from '../../../common/components/icons/Clock';
+import { CustomSelect } from '@/common/components/CustomSelect';
+import { type CustomSelectOption } from '../../../common/types/CustomSelectOption';
 
 const FREQUENCY_OPTIONS: CustomSelectOption<'daily' | 'weekly' | 'monthly'>[] = [
   {

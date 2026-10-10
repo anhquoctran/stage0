@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import {
-  GitPullRequest,
-  CheckCircle2,
-  XCircle,
-  RotateCcw,
-  Bot,
-  AlertCircle,
-  RefreshCw,
-  ArrowRight,
-} from '@/common/components/icons';
+import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { XCircle } from '@/common/components/icons';
+import { RotateCcw } from '../../../common/components/icons/RotateCcw';
+import { Bot } from '../../../common/components/icons/Bot';
+import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
 

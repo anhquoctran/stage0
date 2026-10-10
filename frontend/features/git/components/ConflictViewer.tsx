@@ -1,26 +1,21 @@
 import React, { useState } from 'react';
-import {
-  AlertTriangle,
-  ShieldAlert,
-  Code2,
-  FolderOpen,
-  Copy,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Columns2,
-  FileCode,
-  RotateCw,
-  GitMerge,
-} from '@/common/components/icons';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
+import { ShieldAlert } from '../../../common/components/icons/ShieldAlert';
+import { Code2 } from '../../../common/components/icons/Code2';
+import { FolderOpen } from '../../../common/components/icons/FolderOpen';
+import { Copy } from '../../../common/components/icons/Copy';
+import { Check } from '../../../common/components/icons/Check';
+import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
+import { ChevronRight } from '../../../common/components/icons/ChevronRight';
+import { Columns2 } from '../../../common/components/icons/Columns2';
+import { FileCode } from '../../../common/components/icons/FileCode';
+import { RotateCw } from '../../../common/components/icons/RotateCw';
+import { GitMerge } from '../../../common/components/icons/GitMerge';
 import { useGitStore } from '../store/useGitStore';
 import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
 import { openFileInEditor, revealInOs, getOsFileManagerName } from '../utils/fileActions';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
-
-interface ConflictViewerProps {
-  onSwitchToDiff?: () => void;
-}
+import type { ConflictViewerProps } from '../types/ConflictViewerProps';
 
 export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }) => {
   const {

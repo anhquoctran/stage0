@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import {
-  Key,
-  ShieldCheck,
-  Plus,
-  Trash2,
-  Check,
-  Copy,
-  RefreshCw,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  Server,
-  User,
-  Tag,
-  Globe,
-  Lock,
-  X,
-  ShieldAlert,
-} from '@/common/components/icons';
+import { Key } from '../../../common/components/icons/Key';
+import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
+import { Plus } from '../../../common/components/icons/Plus';
+import { Trash2 } from '../../../common/components/icons/Trash2';
+import { Check } from '../../../common/components/icons/Check';
+import { Copy } from '../../../common/components/icons/Copy';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { Eye } from '../../../common/components/icons/Eye';
+import { EyeOff } from '../../../common/components/icons/EyeOff';
+import { Server } from '../../../common/components/icons/Server';
+import { User } from '../../../common/components/icons/User';
+import { Tag } from '../../../common/components/icons/Tag';
+import { Globe } from '../../../common/components/icons/Globe';
+import { Lock } from '../../../common/components/icons/Lock';
+import { X } from '../../../common/components/icons/X';
+import { ShieldAlert } from '../../../common/components/icons/ShieldAlert';
 import { useGitCredentialsStore } from '../store/useGitCredentialsStore';
-import {
-  GitCredentialProvider,
-  GitCredentialType,
-  SaveGitCredentialPayload,
-} from '../types/credentials';
+import { type GitCredentialProvider } from '../types/GitCredentialProvider';
+import { type GitCredentialType } from '../types/GitCredentialType';
+import { type SaveGitCredentialPayload } from '../types/SaveGitCredentialPayload';
 
 const PROVIDER_PRESETS: {
   id: GitCredentialProvider;

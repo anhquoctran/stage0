@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Folder,
-  Download,
-  Cog,
-  X,
-} from '@/common/components/icons';
+import { Folder } from '../../../common/components/icons/Folder';
+import { Download } from '../../../common/components/icons/Download';
+import { Cog } from '../../../common/components/icons/Cog';
+import { X } from '../../../common/components/icons/X';
 import { useGitStore } from '../../../features/git/store/useGitStore';
 import { usePreferencesStore } from '../../../features/preferences/store/usePreferencesStore';
 import { AppLogo } from '../../../common/components/AppLogo';
 import { AboutModal } from '../../../features/about/components/AboutModal';
 import { useAboutInfo } from '../../../features/about/hooks/useAboutInfo';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
-
-interface WelcomeScreenProps {
-  onOpenRepo?: () => void;
-  onCloneRepo?: () => void;
-}
+import type { WelcomeScreenProps } from '../../types/WelcomeScreenProps';
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   onOpenRepo,

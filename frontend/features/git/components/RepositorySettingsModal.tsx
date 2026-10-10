@@ -1,38 +1,31 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  X,
-  Globe,
-  GitBranch,
-  Tag,
-  Bookmark,
-  Bot,
-  Plus,
-  Trash2,
-  Edit2,
-  RefreshCw,
-  Check,
-  AlertCircle,
-  Shield,
-  Sparkles,
-  FolderCog,
-  ExternalLink,
-  RotateCcw,
-  ShieldCheck,
-} from '@/common/components/icons';
+import { X } from '../../../common/components/icons/X';
+import { Globe } from '../../../common/components/icons/Globe';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { Tag } from '../../../common/components/icons/Tag';
+import { Bookmark } from '../../../common/components/icons/Bookmark';
+import { Bot } from '../../../common/components/icons/Bot';
+import { Plus } from '../../../common/components/icons/Plus';
+import { Trash2 } from '../../../common/components/icons/Trash2';
+import { Edit2 } from '../../../common/components/icons/Edit2';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { Check } from '../../../common/components/icons/Check';
+import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { Shield } from '../../../common/components/icons/Shield';
+import { Sparkles } from '../../../common/components/icons/Sparkles';
+import { FolderCog } from '../../../common/components/icons/FolderCog';
+import { ExternalLink } from '../../../common/components/icons/ExternalLink';
+import { RotateCcw } from '../../../common/components/icons/RotateCcw';
+import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../store/useGitStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
 import { BOT_CATEGORIES } from '../../ai/constants/botPresets';
-import { BotCategory } from '../../virtual-mr/types/virtualMr';
+import { type BotCategory } from '../../virtual-mr/types/BotCategory';
+import type { RepositorySettingsModalProps } from '../types/RepositorySettingsModalProps';
 
-interface Props {
-  isOpen: boolean;
-  onClose: () => void;
-  initialTab?: 'remotes' | 'branches' | 'labels' | 'agents';
-}
-
-export const RepositorySettingsModal: React.FC<Props> = ({
+export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = ({
   isOpen,
   onClose,
   initialTab = 'remotes',

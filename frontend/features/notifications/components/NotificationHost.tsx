@@ -6,10 +6,13 @@ import { listen } from '@tauri-apps/api/event';
 import { ToastContainer } from './ToastContainer';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { applyThemeToDocument, resolveTheme, useThemeStore } from '../../../core/store/useThemeStore';
-import type { AppNotification, AppNotificationAction } from '../types/notification';
+import { type AppNotification } from '../types/AppNotification';
+import { type AppNotificationAction } from '../types/AppNotificationAction';
 
 const HOST_WIDTH = 400;
+
 const MIN_HOST_HEIGHT = 84;
+
 // CSS layout measurements exclude box-shadow. Reserve a small native-window
 // gutter so WebKit cannot crop the toast's border/shadow at the lower edge.
 const HOST_RENDER_GUTTER = 12;

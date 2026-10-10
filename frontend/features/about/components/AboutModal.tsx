@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { AppLogo } from '../../../common/components/AppLogo';
-import { Check, Copy, DownloadCloud, X } from '../../../common/components/icons';
+import { Check } from '../../../common/components/icons/Check';
+import { Copy } from '../../../common/components/icons/Copy';
+import { DownloadCloud } from '../../../common/components/icons/DownloadCloud';
+import { X } from '../../../common/components/icons/X';
 import { useAboutInfo } from '../hooks/useAboutInfo';
 import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
-
-interface AboutModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+import type { AboutModalProps } from '../types/AboutModalProps';
 
 export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   const about = useAboutInfo();

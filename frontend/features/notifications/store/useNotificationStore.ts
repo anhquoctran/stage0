@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import { AppNotification, NotificationSettings } from '../types/notification';
+import { type AppNotification } from '../types/AppNotification';
+import { type NotificationSettings } from '../types/NotificationSettings';
+import type { NotificationState } from '../types/NotificationState';
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   channels: {
@@ -10,29 +12,10 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   },
 };
 
-interface NotificationState {
-  settings: NotificationSettings;
-  notifications: AppNotification[];
-  activeToasts: AppNotification[];
-  unreadCount: number;
-  isHistoryDrawerOpen: boolean;
-
-  // Actions
-  updateSettings: (partial: Partial<NotificationSettings>) => void;
-  updateChannel: (channel: keyof NotificationSettings['channels'], enabled: boolean) => void;
-  resetSettings: () => void;
-  addNotification: (notification: AppNotification) => void;
-  showToast: (notification: AppNotification) => void;
-  dismissToast: (id: string) => void;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
-  clearAll: () => void;
-  toggleHistoryDrawer: () => void;
-  setHistoryDrawerOpen: (open: boolean) => void;
-}
-
 const HISTORY_STORAGE_KEY = 'stage0_notification_history';
+
 const SETTINGS_STORAGE_KEY = 'stage0_notification_settings';
+
 const MAX_STORED_NOTIFICATIONS = 50;
 
 function loadStoredSettings(): NotificationSettings {
@@ -81,6 +64,7 @@ function persistNotifications(notifications: AppNotification[]) {
 }
 
 const initialSettings = loadStoredSettings();
+
 const initialHistory = loadStoredNotifications();
 
 export const useNotificationStore = create<NotificationState>((set) => ({

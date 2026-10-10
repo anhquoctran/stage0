@@ -1,4 +1,21 @@
-use serde::{Deserialize, Serialize};
+mod repo_info;
+pub use repo_info::RepoInfo;
+mod branch_list;
+pub use branch_list::BranchList;
+mod changed_file;
+pub use changed_file::ChangedFile;
+mod mr_diff_payload;
+pub use mr_diff_payload::MrDiffPayload;
+mod conflicted_file_info;
+pub use conflicted_file_info::ConflictedFileInfo;
+mod conflict_report;
+pub use conflict_report::ConflictReport;
+mod conflict_region;
+pub use conflict_region::ConflictRegion;
+mod conflict_file_preview;
+pub use conflict_file_preview::ConflictFilePreview;
+mod repo_changed_event;
+pub use repo_changed_event::RepoChangedEvent;
 
 pub mod anchor;
 pub mod binary;
@@ -111,83 +128,6 @@ pub fn resolve_safe_repo_path(repo_root: &str, relative_path: &str) -> Result<Pa
         canonical_target.push(component);
     }
     Ok(canonical_target)
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RepoInfo {
-    pub id: String,
-    pub name: String,
-    pub local_path: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BranchList {
-    pub current: String,
-    pub local: Vec<String>,
-    pub remote: Vec<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ChangedFile {
-    pub path: String,
-    pub old_path: Option<String>,
-    pub status: String, // "ADDED" | "MODIFIED" | "DELETED" | "RENAMED"
-    pub additions: u32,
-    pub deletions: u32,
-    pub is_binary: bool,
-    pub is_conflicted: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MrDiffPayload {
-    pub base_commit: String,
-    pub compare_commit: String,
-    pub files: Vec<ChangedFile>,
-    pub raw_diff: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ConflictedFileInfo {
-    pub path: String,
-    pub conflict_type: String,
-    pub message: String,
-    pub conflict_markers_count: usize,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ConflictReport {
-    pub has_conflicts: bool,
-    pub conflicted_files: Vec<String>,
-    pub details: Vec<ConflictedFileInfo>,
-    pub base_branch: Option<String>,
-    pub compare_branch: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ConflictRegion {
-    pub start_line: usize,
-    pub end_line: usize,
-    pub base_code: String,
-    pub compare_code: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ConflictFilePreview {
-    pub file_path: String,
-    pub base_branch: String,
-    pub compare_branch: String,
-    pub conflict_type: String,
-    pub has_conflict_markers: bool,
-    pub conflict_markers_count: usize,
-    pub merged_content: String,
-    pub base_content: Option<String>,
-    pub compare_content: Option<String>,
-    pub conflict_regions: Vec<ConflictRegion>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RepoChangedEvent {
-    pub repo_path: String,
 }
 
 #[cfg(test)]

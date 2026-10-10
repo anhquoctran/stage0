@@ -1,70 +1,28 @@
-import React, {
-    useEffect,
-    useLayoutEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import {
-    ChevronLeft,
-    ChevronRight,
-    Copy,
-    GitBranch,
-    RotateCw,
-    Search,
-    X,
-} from '@/common/components/icons';
+import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
+import { ChevronRight } from '../../../common/components/icons/ChevronRight';
+import { Copy } from '../../../common/components/icons/Copy';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { RotateCw } from '../../../common/components/icons/RotateCw';
+import { Search } from '../../../common/components/icons/Search';
+import { X } from '../../../common/components/icons/X';
 import { formatDateTime } from '@/common/utils/dateTime';
 import { CommitAuthorAvatar } from './CommitAuthorAvatar';
 import { useGitStore } from '../store/useGitStore';
-
-interface GitGraphCommit {
-    hash: string;
-    short_hash: string;
-    parents: string[];
-    subject: string;
-    author_name: string;
-    author_email: string;
-    authored_date: string;
-    refs: string[];
-}
-
-interface GitGraph {
-    branch: string;
-    is_detached: boolean;
-    truncated: boolean;
-    commits: GitGraphCommit[];
-}
-
-interface GraphRowLayout {
-    lane: number;
-    hasIncomingEdge: boolean;
-    throughLanes: number[];
-    parentLanes: number[];
-}
-
-interface CommitContextMenuState {
-    x: number;
-    y: number;
-    hash: string;
-}
-
-interface CommitMessageSearchResult {
-    query: string;
-    caseSensitive: boolean;
-    hashes: Set<string>;
-}
-
-interface Props {
-    isOpen: boolean;
-    repoPath: string;
-    onClose: () => void;
-}
+import type { GitGraphModalProps } from '../types/GitGraphModalProps';
+import type { GitGraph } from '../types/GitGraph';
+import type { CommitMessageSearchResult } from '../types/CommitMessageSearchResult';
+import type { CommitContextMenuState } from '../types/CommitContextMenuState';
+import type { GraphRowLayout } from '../types/GraphRowLayout';
+import { CommitHashContextMenu } from './CommitHashContextMenu';
 
 const LANE_STEP = 18;
+
 const NODE_X_OFFSET = 12;
+
 const ROW_HEIGHT = 36;
+
 const LANE_COLORS = [
     'var(--color-brand)',
     'var(--color-blue)',
@@ -112,58 +70,7 @@ async function copyTextToClipboard(value: string) {
     if (!copied) throw new Error('Clipboard access was denied');
 }
 
-const CommitHashContextMenu: React.FC<{
-    menu: CommitContextMenuState;
-    onCopy: (hash: string) => void;
-    onClose: () => void;
-}> = ({ menu, onCopy, onClose }) => {
-    const menuRef = useRef<HTMLDivElement>(null);
-    const width = 210;
-    const height = 44;
-    const left = Math.max(8, Math.min(menu.x, window.innerWidth - width - 8));
-    const top = Math.max(8, Math.min(menu.y, window.innerHeight - height - 8));
-
-    useEffect(() => {
-        const handlePointerDown = (event: MouseEvent) => {
-            if (
-                menuRef.current &&
-                !menuRef.current.contains(event.target as Node)
-            )
-                onClose();
-        };
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') onClose();
-        };
-        document.addEventListener('mousedown', handlePointerDown);
-        window.addEventListener('keydown', handleKeyDown);
-        return () => {
-            document.removeEventListener('mousedown', handlePointerDown);
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [onClose]);
-
-    return (
-        <div
-            ref={menuRef}
-            role="menu"
-            aria-label="Commit actions"
-            style={{ left, top }}
-            className="fixed z-[60] w-[210px] border border-surface1 bg-mantle py-1 shadow-xl"
-        >
-            <button
-                type="button"
-                role="menuitem"
-                onClick={() => onCopy(menu.hash)}
-                className="flex h-8 w-full items-center gap-2 px-3 text-left text-xs text-text hover:bg-surface0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-brand"
-            >
-                <Copy className="h-3.5 w-3.5 text-subtext0" />
-                Copy Commit Hash
-            </button>
-        </div>
-    );
-};
-
-export const GitGraphModal: React.FC<Props> = ({
+export const GitGraphModal: React.FC<GitGraphModalProps> = ({
     isOpen,
     repoPath,
     onClose,

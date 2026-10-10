@@ -1,56 +1,46 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  FolderOpen,
-  Copy,
-  ArrowUp,
-  ArrowDown,
-  Columns2,
-  Rows2,
-  List,
-  FolderTree,
-  SunMoon,
-  RefreshCw,
-  Download,
-  DownloadCloud,
-  GitMerge,
-  GitBranch,
-  ArrowLeftRight,
-  GitCompare,
-  Keyboard,
-  Info,
-  Power,
-  Clock,
-  Check,
-  ChevronRight,
-  Cog,
-  Play,
-  SkipForward,
-  Undo2,
-  FileText,
-  Globe,
-  ExternalLink,
-  History,
-  GitCommit,
-  Terminal,
-  Code2,
-  Folder,
-  FolderDown,
-  FolderX,
-  FolderCog,
-  Trash2,
-  GitPullRequest,
-  HeartPulse,
-  X,
-} from '@/common/components/icons';
-import {
-  revealInOs,
-  getAbsoluteFilePath,
-  buildRemoteFileUrl,
-  openRepoInTerminal,
-  openRepoInVsCode,
-  openRepoInExplorer,
-  getOsFileManagerName,
-} from '../../../features/git/utils/fileActions';
+import { FolderOpen } from '../../../common/components/icons/FolderOpen';
+import { Copy } from '../../../common/components/icons/Copy';
+import { ArrowUp } from '../../../common/components/icons/ArrowUp';
+import { ArrowDown } from '../../../common/components/icons/ArrowDown';
+import { Columns2 } from '../../../common/components/icons/Columns2';
+import { Rows2 } from '../../../common/components/icons/Rows2';
+import { List } from '../../../common/components/icons/List';
+import { FolderTree } from '../../../common/components/icons/FolderTree';
+import { SunMoon } from '../../../common/components/icons/SunMoon';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { Download } from '../../../common/components/icons/Download';
+import { DownloadCloud } from '../../../common/components/icons/DownloadCloud';
+import { GitMerge } from '../../../common/components/icons/GitMerge';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { ArrowLeftRight } from '../../../common/components/icons/ArrowLeftRight';
+import { GitCompare } from '../../../common/components/icons/GitCompare';
+import { Keyboard } from '../../../common/components/icons/Keyboard';
+import { Info } from '../../../common/components/icons/Info';
+import { Power } from '../../../common/components/icons/Power';
+import { Clock } from '../../../common/components/icons/Clock';
+import { Check } from '../../../common/components/icons/Check';
+import { ChevronRight } from '../../../common/components/icons/ChevronRight';
+import { Cog } from '../../../common/components/icons/Cog';
+import { Play } from '../../../common/components/icons/Play';
+import { SkipForward } from '../../../common/components/icons/SkipForward';
+import { Undo2 } from '../../../common/components/icons/Undo2';
+import { FileText } from '../../../common/components/icons/FileText';
+import { Globe } from '../../../common/components/icons/Globe';
+import { ExternalLink } from '../../../common/components/icons/ExternalLink';
+import { History } from '../../../common/components/icons/History';
+import { GitCommit } from '../../../common/components/icons/GitCommit';
+import { Terminal } from '../../../common/components/icons/Terminal';
+import { Code2 } from '../../../common/components/icons/Code2';
+import { Folder } from '../../../common/components/icons/Folder';
+import { FolderDown } from '../../../common/components/icons/FolderDown';
+import { FolderX } from '../../../common/components/icons/FolderX';
+import { FolderCog } from '../../../common/components/icons/FolderCog';
+import { Trash2 } from '../../../common/components/icons/Trash2';
+import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
+import { HeartPulse } from '../../../common/components/icons/HeartPulse';
+import { X } from '../../../common/components/icons/X';
+import { revealInOs, getAbsoluteFilePath, buildRemoteFileUrl, openRepoInTerminal, openRepoInVsCode, openRepoInExplorer, getOsFileManagerName } from '../../../features/git/utils/fileActions';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useGitStore } from '../../../features/git/store/useGitStore';
@@ -60,10 +50,7 @@ import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtual
 import { AboutModal } from '../../../features/about/components/AboutModal';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
 import { usePerformanceMonitorStore } from '../../../features/performance/store/usePerformanceMonitorStore';
-
-export interface MenuBarProps {
-  hidden?: boolean;
-}
+import type { MenuBarProps } from '../../types/MenuBarProps';
 
 export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
   const { openRepoSettings, openNewMrDraft } = useVirtualMrStore();
@@ -1479,3 +1466,5 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
     </>
   );
 };
+
+export type { MenuBarProps } from '../../types/MenuBarProps';

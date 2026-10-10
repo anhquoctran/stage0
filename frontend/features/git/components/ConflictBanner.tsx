@@ -1,32 +1,19 @@
 import React, { useState } from 'react';
-import {
-  ChevronDown,
-  ChevronUp,
-  FileWarning,
-  ShieldAlert,
-  Code2,
-  Terminal,
-  FolderOpen,
-  Copy,
-  Check,
-  RotateCw,
-  AlertTriangle,
-} from '@/common/components/icons';
-import { ConflictReport } from '../types/git';
+import { ChevronDown } from '../../../common/components/icons/ChevronDown';
+import { ChevronUp } from '../../../common/components/icons/ChevronUp';
+import { FileWarning } from '../../../common/components/icons/FileWarning';
+import { ShieldAlert } from '../../../common/components/icons/ShieldAlert';
+import { Code2 } from '../../../common/components/icons/Code2';
+import { Terminal } from '../../../common/components/icons/Terminal';
+import { FolderOpen } from '../../../common/components/icons/FolderOpen';
+import { Copy } from '../../../common/components/icons/Copy';
+import { Check } from '../../../common/components/icons/Check';
+import { RotateCw } from '../../../common/components/icons/RotateCw';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
 import { useGitStore } from '../store/useGitStore';
-import {
-  openRepoInTerminal,
-  openRepoInVsCode,
-  openFileInEditor,
-  revealInOs,
-  getOsFileManagerName,
-} from '../utils/fileActions';
+import { openRepoInTerminal, openRepoInVsCode, openFileInEditor, revealInOs, getOsFileManagerName } from '../utils/fileActions';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
-
-interface ConflictBannerProps {
-  conflictReport: ConflictReport | null;
-  onSelectConflictFile?: (filePath: string) => void;
-}
+import type { ConflictBannerProps } from '../types/ConflictBannerProps';
 
 export const ConflictBanner: React.FC<ConflictBannerProps> = ({
   conflictReport,

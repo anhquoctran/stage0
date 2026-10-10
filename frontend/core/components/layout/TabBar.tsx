@@ -1,12 +1,10 @@
 import React, { useEffect } from 'react';
-import {
-  Plus,
-  X,
-  GitPullRequest,
-  CheckCircle2,
-  AlertTriangle,
-  Loader2,
-} from '@/common/components/icons';
+import { Plus } from '../../../common/components/icons/Plus';
+import { X } from '../../../common/components/icons/X';
+import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
+import { Loader2 } from '../../../common/components/icons/Loader2';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../../../features/git/store/useGitStore';
 import { formatShortcutText } from '../../../common/utils/shortcuts';

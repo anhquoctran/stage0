@@ -1,3 +1,8 @@
+mod repo_validation;
+pub use repo_validation::RepoValidation;
+mod clone_credential_lease;
+use clone_credential_lease::CloneCredentialLease;
+
 use crate::core::db::Database;
 use crate::core::window_manager::{
     close_repo_for_window, create_welcome_window, open_repo_path, resolve_repository,
@@ -25,15 +30,6 @@ use std::path::Path;
 use tauri::{AppHandle, Manager, WebviewWindow};
 use tauri_plugin_dialog::DialogExt;
 use zeroize::Zeroizing;
-
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-pub struct RepoValidation {
-    pub is_valid: bool,
-    pub exists: bool,
-    pub has_git: bool,
-    pub has_permission: bool,
-    pub error_message: Option<String>,
-}
 
 #[tauri::command]
 pub async fn open_repo_dialog(
@@ -793,21 +789,6 @@ pub async fn clone_repository(
     })
     .await
     .map_err(|e| format!("Task execution failed: {}", e))?
-}
-
-struct CloneCredentialLease {
-    token_ref: String,
-    expected_origin: String,
-    username: String,
-    delete_secret_on_drop: bool,
-}
-
-impl Drop for CloneCredentialLease {
-    fn drop(&mut self) {
-        if self.delete_secret_on_drop {
-            let _ = crate::features::credentials::delete_secret(&self.token_ref);
-        }
-    }
 }
 
 fn prepare_clone_credential(

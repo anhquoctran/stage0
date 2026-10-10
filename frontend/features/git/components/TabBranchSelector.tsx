@@ -1,20 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GitBranch, ChevronDown, Search, Check, Globe } from '@/common/components/icons';
-
-interface TabBranchSelectorProps {
-  value: string;
-  roleType: 'source' | 'target'; // 'source' = Compare, 'target' = Base
-  branches: {
-    current: string;
-    local: string[];
-    remote: string[];
-  } | null;
-  onChange: (branch: string) => void;
-  disabled?: boolean;
-  className?: string;
-  maxWidthClass?: string;
-  buttonClassName?: string;
-}
+import { GitBranch } from '../../../common/components/icons/GitBranch';
+import { ChevronDown } from '../../../common/components/icons/ChevronDown';
+import { Search } from '../../../common/components/icons/Search';
+import { Check } from '../../../common/components/icons/Check';
+import { Globe } from '../../../common/components/icons/Globe';
+import type { TabBranchSelectorProps } from '../types/TabBranchSelectorProps';
 
 export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
   value,

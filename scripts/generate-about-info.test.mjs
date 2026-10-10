@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { computeAboutInfo } from './generate-about-info.mjs';
+import { computeAboutInfo, renderFrontendAbout } from './generate-about-info.mjs';
+import { frontendOwners } from './check-source-ownership.mjs';
+
+test('generated metadata imports its canonical type rather than recreating it', () => {
+  const source = renderFrontendAbout(computeAboutInfo());
+  assert.deepEqual(frontendOwners(source, 'about.ts'), []);
+  assert.match(source, /import type \{ SoftwareAboutInfo \} from '\.\.\/types\/SoftwareAboutInfo'/);
+  assert.match(source, /export const SOFTWARE_ABOUT: SoftwareAboutInfo/);
+});
 
 test('computeAboutInfo places OS name immediately before arch name in version text', () => {
   const info = computeAboutInfo();

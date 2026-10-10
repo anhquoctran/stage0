@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import {
-  AlertCircle,
-  Check,
-  CheckCircle2,
-  Trash2,
-  Plus,
-  RefreshCw,
-  X,
-} from '@/common/components/icons';
+import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { Check } from '../../../common/components/icons/Check';
+import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { Trash2 } from '../../../common/components/icons/Trash2';
+import { Plus } from '../../../common/components/icons/Plus';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { X } from '../../../common/components/icons/X';
 import { formatTime } from '@/common/utils/dateTime';
 import { useAiMcpStore } from '../store/useAiMcpStore';
-import {
-  GuardrailMode,
-  GuardrailEvaluationResult,
-  DEFAULT_GUARDRAIL_POLICY,
-} from '../types/guardrails';
+import { type GuardrailMode } from '../types/GuardrailMode';
+import { type GuardrailEvaluationResult } from '../types/GuardrailEvaluationResult';
+import { DEFAULT_GUARDRAIL_POLICY } from '../types/guardrails';
 
 export const GuardrailsTab: React.FC = () => {
   const {

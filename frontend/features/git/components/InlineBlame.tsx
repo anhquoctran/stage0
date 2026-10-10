@@ -1,24 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  GitCommit,
-  Clock,
-  Copy,
-  Check,
-  ExternalLink,
-  History,
-} from '@/common/components/icons';
+import { GitCommit } from '../../../common/components/icons/GitCommit';
+import { Clock } from '../../../common/components/icons/Clock';
+import { Copy } from '../../../common/components/icons/Copy';
+import { Check } from '../../../common/components/icons/Check';
+import { ExternalLink } from '../../../common/components/icons/ExternalLink';
+import { History } from '../../../common/components/icons/History';
 import { formatUnixDateTime, formatUnixRelativeTime } from '@/common/utils/dateTime';
-import { BlameCommit } from '../types/git';
 import { buildRemoteCommitUrl } from '../utils/fileActions';
-
-interface InlineBlameProps {
-  commit: BlameCommit | null;
-  lineNo: number;
-  currentUser?: { name?: string | null; email?: string | null };
-  remoteUrl?: string | null;
-  onOpenFullBlame?: () => void;
-  showToast?: (msg: string) => void;
-}
+import type { InlineBlameProps } from '../types/InlineBlameProps';
 
 export const InlineBlame: React.FC<InlineBlameProps> = ({
   commit,

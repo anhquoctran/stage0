@@ -2,9 +2,6 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { TopBar } from './TopBar';
 import { StatusBar } from './StatusBar';
 import { FileList } from '../../../features/git/components/FileList';
-const DiffViewer = React.lazy(() =>
-  import('../../../features/git/components/DiffViewer').then(({ DiffViewer }) => ({ default: DiffViewer }))
-);
 import { ConflictBanner } from '../../../features/git/components/ConflictBanner';
 import { PreferencesModal } from '../../../features/preferences/components/PreferencesModal';
 import { PullFromModal } from '../../../features/git/components/PullFromModal';
@@ -23,20 +20,17 @@ import { useGitStore } from '../../../features/git/store/useGitStore';
 import { usePreferencesStore } from '../../../features/preferences/store/usePreferencesStore';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
 import { usePerformanceMonitorStore } from '../../../features/performance/store/usePerformanceMonitorStore';
-import { X, AlertCircle, Check } from '@/common/components/icons';
-import {
-  revealInOs,
-  getAbsoluteFilePath,
-  buildRemoteFileUrl,
-  openRepoInTerminal,
-  openRepoInVsCode,
-  openRepoInExplorer,
-  getOsFileManagerName,
-} from '../../../features/git/utils/fileActions';
+import { X } from '../../../common/components/icons/X';
+import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { Check } from '../../../common/components/icons/Check';
+import { revealInOs, getAbsoluteFilePath, buildRemoteFileUrl, openRepoInTerminal, openRepoInVsCode, openRepoInExplorer, getOsFileManagerName } from '../../../features/git/utils/fileActions';
 import { isMacOS } from '../../../common/utils/shortcuts';
+import { MainLayoutDiffViewer } from './MainLayoutDiffViewer';
 
 const DEFAULT_SIDEBAR_WIDTH = 320;
+
 const MIN_SIDEBAR_WIDTH = 220;
+
 const MAX_SIDEBAR_WIDTH = 640;
 
 export const MainLayout: React.FC = () => {
@@ -467,7 +461,7 @@ export const MainLayout: React.FC = () => {
               </div>
 
               <React.Suspense fallback={<div className="flex-1 grid place-items-center text-subtext0 text-xs">Loading diff viewer…</div>}>
-                <DiffViewer
+                <MainLayoutDiffViewer
                   selectedFile={selectedFile}
                   diffPayload={diffPayload}
                   viewMode={viewMode}

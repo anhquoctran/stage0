@@ -1,4 +1,5 @@
-import { AiProviderPreset, McpServerConfig } from '../types/ai';
+import { type AiProviderPreset } from '../types/AiProviderPreset';
+import { type McpServerConfig } from '../types/McpServerConfig';
 
 export const AI_PROVIDERS: AiProviderPreset[] = [
   {

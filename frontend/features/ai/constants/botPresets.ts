@@ -1,4 +1,5 @@
-import { BotReviewer, BotCategory } from '../../virtual-mr/types/virtualMr';
+import { type BotReviewer } from '../../virtual-mr/types/BotReviewer';
+import { type BotCategory } from '../../virtual-mr/types/BotCategory';
 
 export const BOT_CATEGORIES: { id: BotCategory; label: string; color: string; bg: string }[] = [
   { id: 'security', label: 'Security', color: 'var(--ctp-yellow)', bg: 'bg-yellow/10 text-yellow border-yellow/20' },

@@ -1,9 +1,8 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
+import type { DateInput } from '../types/DateInput';
 
 dayjs.extend(utc);
-
-type DateInput = string | number | Date | null | undefined;
 
 function validDate(value: DateInput) {
   if (value === null || value === undefined || value === '') return null;

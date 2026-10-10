@@ -1,9 +1,7 @@
 import { Channel, invoke, isTauri } from '@tauri-apps/api/core';
-import type {
-  LatestRelease,
-  UpdateChannel,
-  UpdateDownloadProgress,
-} from '../types/update';
+import { type LatestRelease } from '../types/LatestRelease';
+import { type UpdateChannel } from '../types/UpdateChannel';
+import { type UpdateDownloadProgress } from '../types/UpdateDownloadProgress';
 
 function requireDesktopRuntime(): void {
   if (!isTauri()) {

@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
-import {
-  RotateCw,
-  Trash2,
-} from '@/common/components/icons';
+import { RotateCw } from '../../../common/components/icons/RotateCw';
+import { Trash2 } from '../../../common/components/icons/Trash2';
 import { useGitStore } from '../../git/store/useGitStore';
-import { SandboxType } from '../../git/types/git';
-
-interface SandboxTabProps {
-  draftSandboxType: SandboxType;
-  onSelectAdapter: (type: SandboxType) => void;
-  isPendingCommit?: boolean;
-}
+import { type SandboxType } from '../../git/types/SandboxType';
+import type { SandboxTabProps } from '../types/SandboxTabProps';
 
 export const SandboxTab: React.FC<SandboxTabProps> = ({
   draftSandboxType,
