@@ -15,6 +15,9 @@ import { type GitTagInfo } from '../types/GitTagInfo';
 import { AVAILABLE_AI_BOTS, PRESET_REPO_LABELS } from '../types/virtualMr';
 import { type NewMrDraft } from '../types/NewMrDraft';
 import type { VirtualMrState } from '../types/VirtualMrState';
+import { AI_REVIEW_UNAVAILABLE } from '../../ai/constants/runtimeAvailability';
+import type { DbDiscussion } from '../types/DbDiscussion';
+import { fromDbDiscussion } from '../utils/fromDbDiscussion';
 
 let draftBranchRequestVersion = 0;
 
@@ -1170,6 +1173,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   },
 
   resolveDiscussion: async (discussionId, isResolved, resolveType = 'manual') => {
+    if (resolveType === 'ai_verified') throw new Error(AI_REVIEW_UNAVAILABLE);
     const { sessions } = get();
     const now = new Date().toISOString();
 
@@ -1181,7 +1185,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
           ...d,
           isResolved,
           resolveType,
-          resolvedBy: isResolved ? (resolveType === 'ai_verified' ? 'Security Bot' : s.assignee.name) : null,
+          resolvedBy: isResolved ? s.assignee.name : null,
           resolvedAt: isResolved ? now : null,
         };
       }),
@@ -1201,69 +1205,15 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     }
   },
 
-  reverifyDiscussionFix: async (discussionId, agentId = 'security-sentinel') => {
-    const { sessions, currentRepoId } = get();
-    const allBots = [
-      ...useBotReviewersStore.getState().globalReviewers,
-      ...(currentRepoId ? useBotReviewersStore.getState().repoCustomReviewers[currentRepoId] || [] : []),
-    ];
-    // Simulate smart verification flow based on current file/lines
-    const bot = allBots.find((b) => b.id === agentId) || AVAILABLE_AI_BOTS.find((b) => b.id === agentId);
-    const botName = bot?.name || agentId || 'AI Reviewer';
-
-    // 1. Mark as verifying
-    set({
-      sessions: sessions.map((s) => ({
-        ...s,
-        discussions: s.discussions.map((d) =>
-          d.id === discussionId ? { ...d, verificationStatus: 'verifying' as const } : d
-        ),
-      })),
-    });
-
-    // 2. Simulate AI verification delay (500ms)
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    // 3. Mark as verified & resolve
-    const pass = true; // Fix verified successfully
-    await get().resolveDiscussion(discussionId, true, 'ai_verified');
-
-    // Add verification reply from bot
-    await get().replyToDiscussion(
-      discussionId,
-      `✅ **[Re-verification Passed]** ${botName} has re-scanned the source code after developer fixes. Code conforms to standards and previous warnings have been resolved.`,
-      'approve',
-      'ai_agent',
-      botName
-    );
-
-    // Update status in db
-    try {
-      await invoke('verify_mr_discussion', {
-        discussionId,
-        verificationStatus: pass ? 'pass' : 'fail',
-        verifiedByBot: botName,
-        pass,
-      });
-    } catch {}
-
-    return true;
-  },
-
-  triggerIncrementalReReview: async (sessionId) => {
-    const { sessions } = get();
-    const session = sessions.find((s) => s.id === sessionId);
-    if (!session) return;
-
-    const unresolved = session.discussions.filter((d) => !d.isResolved);
-    for (const d of unresolved) {
-      await get().reverifyDiscussionFix(d.id);
-    }
-
-    // If all resolved, automatically approve session
-    const updatedSession = get().sessions.find((s) => s.id === sessionId);
-    if (updatedSession && updatedSession.discussions.every((d) => d.isResolved)) {
-      await get().updateSessionStatus(sessionId, 'approved');
-    }
+  // Native read-only findings do not authorize automatic fix verification.
+  // In particular, zero discussions is not proof of a successful review.
+  reverifyDiscussionFix: async () => { throw new Error(AI_REVIEW_UNAVAILABLE); },
+  triggerIncrementalReReview: async () => { throw new Error(AI_REVIEW_UNAVAILABLE); },
+  refreshDiscussions: async (sessionId) => {
+    const repoId = get().currentRepoId;
+    const items = await invoke<DbDiscussion[]>('list_mr_discussions', { sessionId });
+    if (get().currentRepoId !== repoId) return;
+    set((state) => ({ sessions: state.sessions.map((session) => session.id === sessionId
+      ? { ...session, discussions: items.map(fromDbDiscussion) } : session) }));
   },
 }));

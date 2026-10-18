@@ -273,9 +273,6 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
         case 'about':
           setShowAboutModal(true);
           break;
-        case 'check_updates':
-          usePreferencesStore.getState().openPreferences('updates-check');
-          break;
         default:
           break;
       }

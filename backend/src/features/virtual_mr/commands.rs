@@ -97,6 +97,12 @@ pub async fn create_mr_discussion(
     mut discussion: VirtualMrDiscussionDb,
     first_comment: VirtualMrCommentDb,
 ) -> Result<(), String> {
+    if discussion.resolve_type == "ai_verified"
+        || discussion.verification_status == "pass"
+        || discussion.verified_by_bot.is_some()
+    {
+        crate::features::ai::review_availability::require_review_runtime()?;
+    }
     tauri::async_runtime::spawn_blocking(move || {
         let db = app.state::<Database>();
 
@@ -154,6 +160,9 @@ pub async fn resolve_mr_discussion(
     resolve_type: String,
     resolved_by: Option<String>,
 ) -> Result<(), String> {
+    if resolve_type == "ai_verified" {
+        crate::features::ai::review_availability::require_review_runtime()?;
+    }
     let db = app.state::<Database>();
     db.resolve_discussion(
         &discussion_id,
@@ -172,9 +181,10 @@ pub async fn verify_mr_discussion(
     verified_by_bot: String,
     pass: bool,
 ) -> Result<(), String> {
-    let db = app.state::<Database>();
-    db.verify_discussion(&discussion_id, &verification_status, &verified_by_bot, pass)
-        .map_err(|e| e.to_string())
+    // A client-supplied boolean is not verification evidence. Keep this legacy
+    // command fail-closed: read-only findings do not authorize verification.
+    let _ = (app, discussion_id, verification_status, verified_by_bot, pass);
+    crate::features::ai::review_availability::require_review_runtime()
 }
 
 #[tauri::command]

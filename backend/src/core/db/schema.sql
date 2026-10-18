@@ -149,9 +149,26 @@ CREATE INDEX IF NOT EXISTS idx_comments_discussion ON virtual_mr_comments(discus
 CREATE INDEX IF NOT EXISTS idx_comments_disc_created ON virtual_mr_comments(discussion_id, created_at ASC);
 
 -- Global App Settings (Git executable binary, etc.)
+CREATE TABLE IF NOT EXISTS ai_review_runs (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES virtual_mr_sessions(id) ON DELETE CASCADE,
+    status TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    started_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_review_one_active_session ON ai_review_runs(session_id) WHERE status = 'running';
+CREATE INDEX IF NOT EXISTS idx_review_session_time ON ai_review_runs(session_id, started_at DESC);
+CREATE TABLE IF NOT EXISTS ai_review_events (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id TEXT NOT NULL REFERENCES ai_review_runs(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,
+    detail TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_review_events_run ON ai_review_events(run_id, seq);
+
 CREATE TABLE IF NOT EXISTS app_settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-

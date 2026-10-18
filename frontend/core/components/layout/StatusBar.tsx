@@ -9,18 +9,14 @@ import { Columns2 } from '../../../common/components/icons/Columns2';
 import { Rows2 } from '../../../common/components/icons/Rows2';
 import { Keyboard } from '../../../common/components/icons/Keyboard';
 import { Box } from '../../../common/components/icons/Box';
-import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { FileText } from '../../../common/components/icons/FileText';
-import { DownloadCloud } from '../../../common/components/icons/DownloadCloud';
-import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
-import { Sparkles } from '../../../common/components/icons/Sparkles';
 import { Bell } from '../../../common/components/icons/Bell';
 import { HeartPulse } from '../../../common/components/icons/HeartPulse';
 import { BackgroundTaskManager } from '../../../features/git/components/BackgroundTaskManager';
+import { ReviewActivity } from '../../../features/review/components/ReviewActivity';
 import { useGitTaskStore } from '../../../features/git/store/useGitTaskStore';
 import { useGitStore } from '../../../features/git/store/useGitStore';
 import { usePreferencesStore } from '../../../features/preferences/store/usePreferencesStore';
-import { useUpdateStore } from '../../../features/updates/store/useUpdateStore';
 import { useNotificationStore } from '../../../features/notifications/store/useNotificationStore';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
 import { usePerformanceMonitorStore } from '../../../features/performance/store/usePerformanceMonitorStore';
@@ -67,12 +63,6 @@ export const StatusBar: React.FC = () => {
   const { openPreferences } = usePreferencesStore();
   const { unreadCount, isHistoryDrawerOpen, toggleHistoryDrawer } = useNotificationStore();
   const isPerformanceMonitorEnabled = usePerformanceMonitorStore((state) => state.isEnabled);
-  const {
-    status: updateStatus,
-    updatePayload,
-    downloadProgress,
-    downloadedText,
-  } = useUpdateStore();
 
   const totalFiles = diffPayload?.files.length || 0;
   const currentFileIndex = selectedFile && diffPayload
@@ -114,7 +104,7 @@ export const StatusBar: React.FC = () => {
 
   return (
     <footer className="h-7 bg-mantle border-t border-surface0/80 px-3 flex items-center justify-between text-[11px] text-subtext1 shrink-0 select-none z-10">
-      {/* Left: Repository info & Active branch & Sync & Updates */}
+      {/* Left: Repository info & Active branch */}
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         {currentRepo ? (
           <>
@@ -138,59 +128,6 @@ export const StatusBar: React.FC = () => {
             <FolderGit2 className="w-3.5 h-3.5" />
             <span>No repository open</span>
           </div>
-        )}
-
-        {/* Background Update Activity Indicator */}
-        {updateStatus === 'checking' && (
-          <button
-            type="button"
-            onClick={() => openPreferences('updates')}
-            className="h-5 px-2 rounded-md bg-[#cba6f7]/10 hover:bg-[#cba6f7]/20 border border-[#cba6f7]/30 text-[#cba6f7] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
-            title="Stage0 is checking for software updates in the background. Click to open Updates preferences."
-          >
-            <RefreshCw className="w-2.5 h-2.5 text-[#cba6f7] animate-spin shrink-0" />
-            <span>Checking updates...</span>
-          </button>
-        )}
-
-        {(updateStatus === 'downloading' || updateStatus === 'cancelling') && (
-          <button
-            type="button"
-            onClick={() => openPreferences('updates')}
-            className="h-5 px-2 rounded-md bg-[#cba6f7]/15 hover:bg-[#cba6f7]/25 border border-[#cba6f7]/40 text-[#cba6f7] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
-            title={`${updateStatus === 'cancelling' ? 'Cancelling' : 'Downloading'} Stage0 update (${downloadProgress == null ? 'progress unavailable' : `${downloadProgress}%`} - ${downloadedText}). Click to view progress.`}
-          >
-            <DownloadCloud className="w-3 h-3 text-[#cba6f7] animate-bounce shrink-0" />
-            <span>
-              {updateStatus === 'cancelling' ? 'Cancelling update…' : (
-                <>Downloading update: <strong className="font-mono text-text font-bold">{downloadProgress == null ? '…' : `${downloadProgress}%`}</strong></>
-              )}
-            </span>
-          </button>
-        )}
-
-        {updateStatus === 'ready' && (
-          <button
-            type="button"
-            onClick={() => openPreferences('updates')}
-            className="h-5 px-2.5 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] font-semibold shadow-xs shrink-0 animate-in fade-in duration-200"
-            title={`Stage0 v${updatePayload?.version || ''} is ready. Click to open the operating-system installer.`}
-          >
-            <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-            <span>Update Ready • Install</span>
-          </button>
-        )}
-
-        {updateStatus === 'available' && (
-          <button
-            type="button"
-            onClick={() => openPreferences('updates')}
-            className="h-5 px-2 rounded-md bg-[#cba6f7]/15 hover:bg-[#cba6f7]/25 border border-[#cba6f7]/40 text-[#cba6f7] flex items-center gap-1.5 transition-colors cursor-pointer text-[10px] shadow-xs shrink-0 animate-in fade-in duration-200"
-            title={`Stage0 v${updatePayload?.version || ''} is available. Click to review.`}
-          >
-            <Sparkles className="w-3 h-3 text-[#cba6f7] shrink-0" />
-            <span>v{updatePayload?.version} Available</span>
-          </button>
         )}
       </div>
 
@@ -393,6 +330,7 @@ export const StatusBar: React.FC = () => {
         )}
 
         <BackgroundTaskManager />
+        <ReviewActivity />
 
         <button
           type="button"

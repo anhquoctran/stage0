@@ -267,13 +267,13 @@ fn drain_capped_output<R: Read + Send + 'static>(
 }
 
 #[cfg(unix)]
-fn configure_process_group(command: &mut Command) {
+pub(crate) fn configure_process_group(command: &mut Command) {
     use std::os::unix::process::CommandExt;
     command.process_group(0);
 }
 
 #[cfg(windows)]
-fn configure_process_group(command: &mut Command) {
+pub(crate) fn configure_process_group(command: &mut Command) {
     use std::os::windows::process::CommandExt;
     const CREATE_NO_WINDOW: u32 = 0x08000000;
     const CREATE_NEW_PROCESS_GROUP: u32 = 0x00000200;
@@ -281,10 +281,10 @@ fn configure_process_group(command: &mut Command) {
 }
 
 #[cfg(not(any(unix, windows)))]
-fn configure_process_group(_command: &mut Command) {}
+pub(crate) fn configure_process_group(_command: &mut Command) {}
 
 #[cfg(unix)]
-fn kill_process_tree(child: &mut Child) {
+pub(crate) fn kill_process_tree(child: &mut Child) {
     unsafe extern "C" {
         fn kill(pid: i32, signal: i32) -> i32;
     }
@@ -297,7 +297,7 @@ fn kill_process_tree(child: &mut Child) {
 }
 
 #[cfg(windows)]
-fn kill_process_tree(child: &mut Child) {
+pub(crate) fn kill_process_tree(child: &mut Child) {
     let pid = child.id().to_string();
     let _ = Command::new("taskkill.exe")
         .args(["/PID", &pid, "/T", "/F"])
@@ -308,7 +308,7 @@ fn kill_process_tree(child: &mut Child) {
 }
 
 #[cfg(not(any(unix, windows)))]
-fn kill_process_tree(child: &mut Child) {
+pub(crate) fn kill_process_tree(child: &mut Child) {
     let _ = child.kill();
 }
 

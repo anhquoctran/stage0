@@ -12,13 +12,13 @@ export const AI_PROVIDERS: AiProviderPreset[] = [
     supportedAuthModes: ['subscription_oauth', 'api_key'],
     docUrl: 'https://platform.openai.com/api-keys',
     models: [
-      { id: 'gpt-6.1-sol', name: 'GPT-6.1 Sol', recommendedFor: 'Flagship Frontier Intelligence & Coding' },
-      { id: 'gpt-6-astra', name: 'GPT-6 Astra', recommendedFor: 'High-Velocity Agentic Architecture' },
-      { id: 'gpt-6-sol', name: 'GPT-6 Sol', recommendedFor: 'Deep Reasoning & System Design' },
-      { id: 'gpt-6-luna', name: 'GPT-6 Luna', recommendedFor: 'Fast & Efficient GPT-6 Tier' },
-      { id: 'gpt-5.6-sol', name: 'GPT-5.6 Sol', recommendedFor: 'Balanced Agentic Workloads' },
-      { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra', recommendedFor: 'Grounded Analysis & Refactoring' },
-      { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna', recommendedFor: 'Rapid Feedback & Lightweight Tasks' },
+      { id: 'gpt-6.1-sol', name: 'GPT-6.1 Sol', recommendedFor: 'Flagship Frontier Intelligence & Coding', reasoningEfforts: ['low', 'medium', 'high', 'xhigh', 'max'], supportsFastMode: true },
+      { id: 'gpt-6-astra', name: 'GPT-6 Astra', recommendedFor: 'High-Velocity Agentic Architecture', reasoningEfforts: ['low', 'medium', 'high', 'xhigh', 'max'], supportsFastMode: true },
+      { id: 'gpt-6-sol', name: 'GPT-6 Sol', recommendedFor: 'Deep Reasoning & System Design', reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'], supportsFastMode: true },
+      { id: 'gpt-6-luna', name: 'GPT-6 Luna', recommendedFor: 'Fast & Efficient GPT-6 Tier', reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'], supportsFastMode: true },
+      { id: 'gpt-5.6-sol', name: 'GPT-5.6 Sol', recommendedFor: 'Balanced Agentic Workloads', reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'], supportsFastMode: true },
+      { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra', recommendedFor: 'Grounded Analysis & Refactoring', reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'] },
+      { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna', recommendedFor: 'Rapid Feedback & Lightweight Tasks', reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'] },
       { id: 'gpt-5.5', name: 'GPT-5.5', recommendedFor: 'Legacy Stable (Leaving Oct 14)' },
       { id: 'o3-mini', name: 'o3-mini', recommendedFor: 'Deep Code Reasoning' },
       { id: 'o1', name: 'o1', recommendedFor: 'Complex Problem Solving' },
@@ -126,12 +126,15 @@ export const AI_PROVIDERS: AiProviderPreset[] = [
   },
 ];
 
+const defaultAiProvider = AI_PROVIDERS.find((provider) => provider.id === 'openai')!;
+
 export const DEFAULT_AI_CONFIG = {
-  provider: 'anthropic' as const,
-  model: 'claude-opus-5-5',
+  provider: 'openai' as const,
+  model: defaultAiProvider.defaultModel,
   apiKey: '',
-  baseUrl: 'https://api.anthropic.com/v1',
+  baseUrl: defaultAiProvider.defaultBaseUrl,
   temperature: 0.2,
+  fastMode: false,
   maxTokens: 4096,
   systemPrompt: `You are an expert software engineer and code reviewer embedded in Stage0 Git Reviewer.
 When reviewing git diffs:
@@ -153,9 +156,7 @@ export const DEFAULT_MCP_SERVERS: McpServerConfig[] = [
     args: ['mcp-server-git', '--repository', '.'],
     env: {},
     enabled: true,
-    toolsCount: 6,
-    resourcesCount: 3,
-    testStatus: 'success',
+    testStatus: 'untested',
   },
   {
     id: 'filesystem-workspace',
@@ -166,9 +167,7 @@ export const DEFAULT_MCP_SERVERS: McpServerConfig[] = [
     args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
     env: {},
     enabled: true,
-    toolsCount: 8,
-    resourcesCount: 2,
-    testStatus: 'success',
+    testStatus: 'untested',
   },
   {
     id: 'github-integration',
@@ -181,8 +180,6 @@ export const DEFAULT_MCP_SERVERS: McpServerConfig[] = [
       GITHUB_PERSONAL_ACCESS_TOKEN: '',
     },
     enabled: false,
-    toolsCount: 14,
-    resourcesCount: 4,
     testStatus: 'untested',
   },
 ];
@@ -227,6 +224,15 @@ export const MCP_PRESET_TEMPLATES = [
     command: 'uvx',
     args: ['mcp-server-fetch'],
     env: {},
+  },
+  {
+    name: 'Streamable HTTP Server',
+    description: 'Source-free external tool discovery; does not attach tools to the harness',
+    type: 'http' as const,
+    command: '',
+    args: [],
+    env: {},
+    url: 'http://localhost:8000/mcp',
   },
   {
     name: 'Custom SSE Server',

@@ -5,7 +5,6 @@ import type { NotificationState } from '../types/NotificationState';
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   channels: {
-    softwareUpdates: true,
     aiReview: true,
     gitSync: true,
     guardrails: true,
@@ -18,18 +17,22 @@ const SETTINGS_STORAGE_KEY = 'stage0_notification_settings';
 
 const MAX_STORED_NOTIFICATIONS = 50;
 
+function normalizeSettings(value: Partial<NotificationSettings> | null | undefined): NotificationSettings {
+  return {
+    channels: {
+      aiReview: typeof value?.channels?.aiReview === 'boolean' ? value.channels.aiReview : DEFAULT_NOTIFICATION_SETTINGS.channels.aiReview,
+      gitSync: typeof value?.channels?.gitSync === 'boolean' ? value.channels.gitSync : DEFAULT_NOTIFICATION_SETTINGS.channels.gitSync,
+      guardrails: typeof value?.channels?.guardrails === 'boolean' ? value.channels.guardrails : DEFAULT_NOTIFICATION_SETTINGS.channels.guardrails,
+    },
+  };
+}
+
 function loadStoredSettings(): NotificationSettings {
   if (typeof window === 'undefined') return DEFAULT_NOTIFICATION_SETTINGS;
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        channels: {
-          ...DEFAULT_NOTIFICATION_SETTINGS.channels,
-          ...(parsed.channels || {}),
-        },
-      };
+      return normalizeSettings(JSON.parse(raw));
     }
   } catch {}
   return DEFAULT_NOTIFICATION_SETTINGS;
@@ -205,12 +208,7 @@ if (typeof window !== 'undefined') {
       try {
         const parsed = JSON.parse(event.newValue);
         useNotificationStore.setState({
-          settings: {
-            channels: {
-              ...DEFAULT_NOTIFICATION_SETTINGS.channels,
-              ...(parsed.channels || {}),
-            },
-          },
+          settings: normalizeSettings(parsed),
         });
       } catch {
         // Ignore malformed settings and keep the current in-memory value.

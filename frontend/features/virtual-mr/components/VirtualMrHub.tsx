@@ -20,6 +20,7 @@ import { type BotReviewer } from '../types/BotReviewer';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
 import { MarkdownPreview } from '../../../common/components/MarkdownPreview';
 import { TabBranchSelector } from '../../git/components/TabBranchSelector';
+import { useReviewStore } from '../../review/store/useReviewStore';
 
 export const VirtualMrHub: React.FC = () => {
   const { currentRepo, showToast, diffPayload, branches, setBranchComparison } = useGitStore();
@@ -34,7 +35,6 @@ export const VirtualMrHub: React.FC = () => {
     activeMrTab,
     setActiveMrTab,
     createDiscussion,
-    triggerIncrementalReReview,
     openRepoSettings,
     repoSettings,
   } = useVirtualMrStore();
@@ -68,7 +68,6 @@ export const VirtualMrHub: React.FC = () => {
   const [showReviewerDropdown, setShowReviewerDropdown] = useState(false);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
   const [newGeneralComment, setNewGeneralComment] = useState('');
-  const [isVerifyingAll, setIsVerifyingAll] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -105,7 +104,7 @@ export const VirtualMrHub: React.FC = () => {
     }
   };
 
-  const handleAiGenerateDescription = () => {
+  const handleGenerateDescription = () => {
     if (!session) return;
     setIsEditingDesc(true);
     const commitList =
@@ -116,13 +115,13 @@ export const VirtualMrHub: React.FC = () => {
     const draft = `## Summary\nAutomated overview for \`${session.compareBranch}\` → \`${session.baseBranch}\`.\n\n### Key Changes\n${commitList}\n\n### Testing & Verification\n- [ ] AI review checks verified\n- [ ] Local build & tests pass\n`;
 
     if (descValue.trim() && descValue.trim() !== draft.trim()) {
-      if (window.confirm('Replace current description with AI generated draft?')) {
+      if (window.confirm('Replace current description with a draft from commit metadata?')) {
         setDescValue(draft);
-        showToast('Generated description with AI draft');
+        showToast('Generated description from commit metadata. No AI request was sent.');
       }
     } else {
       setDescValue(draft);
-      showToast('Generated description with AI draft');
+      showToast('Generated description from commit metadata. No AI request was sent.');
     }
   };
 
@@ -133,17 +132,6 @@ export const VirtualMrHub: React.FC = () => {
     });
     setNewGeneralComment('');
     showToast('Comment posted');
-  };
-
-  const handleTriggerReReview = async () => {
-    setIsVerifyingAll(true);
-    showToast('Requesting AI Bots re-verification...');
-    try {
-      await triggerIncrementalReReview(session.id);
-      showToast('Re-verification completed');
-    } finally {
-      setIsVerifyingAll(false);
-    }
   };
 
   const handleBranchChange = async (
@@ -270,12 +258,12 @@ export const VirtualMrHub: React.FC = () => {
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={handleTriggerReReview}
-            disabled={isVerifyingAll}
+            onClick={() => useReviewStore.getState().open(session.id)}
+            title="Review a fixed Git snapshot with read-only LLM tools"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white transition-colors font-medium text-xs cursor-pointer shadow-sm disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-white ${isVerifyingAll ? 'animate-spin' : ''}`} />
-            <span className="text-white">Re-verify with AI</span>
+            <RefreshCw className="w-3.5 h-3.5 text-white" />
+            <span className="text-white">AI code review</span>
           </button>
         </div>
       </div>
@@ -491,7 +479,7 @@ export const VirtualMrHub: React.FC = () => {
                   rows={4}
                   minHeight="110px"
                   showActions={true}
-                  onAiGenerate={handleAiGenerateDescription}
+                  onGenerateDraft={handleGenerateDescription}
                   onSubmit={handleSaveDesc}
                   submitLabel="Save Description"
                   onCancel={session.description ? () => {

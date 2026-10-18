@@ -162,7 +162,7 @@ export const NewVirtualMrView: React.FC = () => {
     }
   };
 
-  const handleAiGenerateDescription = () => {
+  const handleGenerateDescription = () => {
     if (!draftMr) return;
 
     const commitList =
@@ -182,13 +182,13 @@ export const NewVirtualMrView: React.FC = () => {
     const draft = `## Summary\nAutomated virtual merge request for \`${draftMr.compareBranch}\` into \`${draftMr.baseBranch}\`.\n\n### Key Changes\n${commitList}${fileList ? `\n\n### Changed Files (${totalFiles})\n${fileList}${moreFiles}` : ''}\n\n### Testing & Verification\n- [ ] Virtual mergeability verified\n- [ ] Local build & tests pass\n- [ ] AI bot reviews completed\n`;
 
     if (draftMr.description.trim() && draftMr.description.trim() !== draft.trim()) {
-      if (window.confirm('Replace current description with AI generated draft?')) {
+      if (window.confirm('Replace current description with a draft from commit metadata?')) {
         updateDraftMr({ description: draft });
-        showToast('Generated description with AI draft');
+        showToast('Generated description from commit metadata. No AI request was sent.');
       }
     } else {
       updateDraftMr({ description: draft });
-      showToast('Generated description with AI draft');
+      showToast('Generated description from commit metadata. No AI request was sent.');
     }
   };
 
@@ -402,7 +402,7 @@ export const NewVirtualMrView: React.FC = () => {
                       onChange={(description) => updateDraftMr({ description })}
                       placeholder="Write your description or notes here..."
                       minHeight="110px"
-                      onAiGenerate={handleAiGenerateDescription}
+                      onGenerateDraft={handleGenerateDescription}
                     />
                   </div>
                 </div>

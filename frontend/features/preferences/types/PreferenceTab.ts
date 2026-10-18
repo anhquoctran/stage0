@@ -22,6 +22,4 @@ export type PreferenceTab =
   | 'reviewers'
   | 'guardrails'
   | 'notifications'
-  | 'notifications-settings'
-  | 'updates'
-  | 'updates-check';
+  | 'notifications-settings';

@@ -197,10 +197,6 @@ export const notificationService = {
     }
 
     switch (action.actionType) {
-      case 'open_preferences_updates':
-      case 'open_updates':
-        usePreferencesStore.getState().openPreferences('updates');
-        break;
       case 'open_preferences':
         usePreferencesStore.getState().openPreferences(action.payload || undefined);
         break;

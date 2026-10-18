@@ -35,7 +35,7 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
           ) : (
             'All Virtual MR tabs have been closed.'
           )}{' '}
-          Create a new session to compare diffs, detect merge conflicts in sandbox, and run AI code review bots.
+          Create a new session to compare diffs, detect merge conflicts in sandbox, and discuss code changes.
         </p>
 
         {/* Primary CTA Button */}
@@ -55,7 +55,7 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
         <div className="flex items-center gap-4 text-[11px] text-subtext1 pt-4 border-t border-surface0/60">
           <div className="flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-brand" />
-            <span>AI Bot auto-review</span>
+            <span>Local code review</span>
           </div>
           <span className="text-surface1">•</span>
           <div className="flex items-center gap-1.5">

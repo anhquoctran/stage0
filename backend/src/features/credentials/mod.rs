@@ -760,6 +760,16 @@ pub fn exists_in_keyring(token_ref: &str) -> bool {
 pub const AI_KEYRING_SERVICE: &str = "stage0.ai.credentials";
 
 pub fn store_ai_key(provider: &str, api_key: &str) -> Result<(), String> {
+    let mut progress = crate::features::ai::keyring_write_progress::KeyringWriteProgress::new(
+        "ai_credential", "native_single", 1,
+    );
+    progress.write_item("record", || store_ai_key_unlogged(provider, api_key))?;
+    progress.commit();
+    Ok(())
+}
+
+// The Preferences batch already owns the counters, including compensating writes.
+pub(crate) fn store_ai_key_unlogged(provider: &str, api_key: &str) -> Result<(), String> {
     let entry = keyring::Entry::new(AI_KEYRING_SERVICE, provider)
         .map_err(|e| map_keyring_error("initialize AI secret", e))?;
     entry

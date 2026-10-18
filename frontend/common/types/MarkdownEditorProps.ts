@@ -16,6 +16,6 @@ export interface MarkdownEditorProps {
   cancelLabel?: string;
   showActions?: boolean;
   isSubmitting?: boolean;
-  onAiGenerate?: () => void;
+  onGenerateDraft?: () => void;
   extraActions?: React.ReactNode;
 }

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { invoke, isTauri } from '@tauri-apps/api/core';
-import { formatTime } from '@/common/utils/dateTime';
 import { type AiConfig } from '../types/AiConfig';
 import { type AiModelPreset } from '../types/AiModelPreset';
 import { type McpServerConfig } from '../types/McpServerConfig';
@@ -17,8 +16,46 @@ import { type GuardrailEvaluationResult } from '../types/GuardrailEvaluationResu
 import { DEFAULT_GUARDRAIL_POLICY } from '../types/guardrails';
 import { DEFAULT_AI_CONFIG, DEFAULT_MCP_SERVERS, AI_PROVIDERS } from '../constants/aiPresets';
 import type { AiMcpState } from '../types/AiMcpState';
+import { MCP_TRANSPORT_UNAVAILABLE } from '../constants/runtimeAvailability';
+import { resetMcpVerification } from '../utils/resetMcpVerification';
 
 const STORAGE_KEY = 'stage0_ai_mcp_config';
+let chatGptEpoch = 0;
+let chatGptPoll = 0;
+
+function publicChatGptStatus(value: ChatGptAuthStatus): ChatGptAuthStatus {
+  if (!value || typeof value.connected !== 'boolean' || !['pending', 'signed_in', 'signed_out', 'failed', 'cancelled'].includes(value.phase || '') || !Array.isArray(value.profiles)) throw new Error('Invalid ChatGPT browser authentication status.');
+  return {
+    connected: value.connected, phase: value.phase,
+    account_email: typeof value.account_email === 'string' ? value.account_email : undefined,
+    error: typeof value.error === 'string' ? value.error : undefined,
+    attempt_id: value.phase === 'pending' && typeof value.attempt_id === 'string' ? value.attempt_id : null,
+    active_profile_id: typeof value.active_profile_id === 'string' ? value.active_profile_id : null,
+    plan_usage_enabled: value.connected && value.plan_usage_enabled === true,
+    credentials_loaded: value.credentials_loaded === true,
+    profiles: value.profiles.slice(0, 12).filter((profile) => typeof profile.id === 'string' && typeof profile.label === 'string').map((profile) => ({ id: profile.id, label: profile.label, email: typeof profile.email === 'string' ? profile.email : null, signed_in: profile.signed_in === true })),
+  };
+}
+
+async function chatGptAction(command: string, args: Record<string, unknown> | undefined, set: (value: Partial<AiMcpState>) => void, get: () => AiMcpState): Promise<void> {
+  if (get().isConnectingSubscription) return;
+  const epoch = ++chatGptEpoch;
+  set({ isConnectingSubscription: true });
+  try {
+    if (!isTauri()) throw new Error('ChatGPT browser sign-in requires the native Stage0 app. No Codex CLI is required.');
+    const status = publicChatGptStatus(await invoke<ChatGptAuthStatus>(command, args));
+    if (epoch === chatGptEpoch) set({ chatgptAuthStatus: status });
+  } catch (error) {
+    const previous = get().chatgptAuthStatus;
+    let recovered: ChatGptAuthStatus = { ...previous, connected: false, plan_usage_enabled: false, phase: previous?.phase === 'pending' ? 'pending' : 'failed', attempt_id: previous?.phase === 'pending' ? previous.attempt_id : null };
+    // A failed action can have partially completed (for example local sign-out).
+    // Re-read metadata only; never retry authorization or restore an old connected flag.
+    if (isTauri() && epoch === chatGptEpoch) {
+      try { recovered = publicChatGptStatus(await invoke<ChatGptAuthStatus>('chatgpt_oauth_check_status')); } catch {}
+    }
+    if (epoch === chatGptEpoch) set({ chatgptAuthStatus: { ...recovered, error: String(error) } });
+  } finally { if (epoch === chatGptEpoch) set({ isConnectingSubscription: false }); }
+}
 
 function loadPersistedState(): {
   aiConfig: AiConfig;
@@ -49,9 +86,9 @@ function loadPersistedState(): {
         ...(parsed.guardrailPolicy || {}),
       };
 
-      const loadedMcpServers = Array.isArray(parsed.mcpServers)
+      const loadedMcpServers = (Array.isArray(parsed.mcpServers)
         ? parsed.mcpServers
-        : DEFAULT_MCP_SERVERS;
+        : DEFAULT_MCP_SERVERS).map(resetMcpVerification);
       // Erase legacy plaintext before starting asynchronous keychain I/O. If
       // the OS keychain is unavailable, the user must re-enter the key rather
       // than silently leaving a plaintext credential behind.
@@ -67,7 +104,7 @@ function loadPersistedState(): {
         }
 
         if (isTauri()) {
-          const providerToMigrate = loadedAiConfig.provider || 'anthropic';
+          const providerToMigrate = loadedAiConfig.provider || DEFAULT_AI_CONFIG.provider;
           void invoke('store_ai_api_key', {
             provider: providerToMigrate,
             apiKey: legacyKey.trim(),
@@ -79,15 +116,11 @@ function loadPersistedState(): {
         }
       }
 
-      // Automatically upgrade legacy default Claude 3.7 Sonnet model to Claude Opus 5.5
-      if (loadedAiConfig.provider === 'anthropic' && (!loadedAiConfig.model || loadedAiConfig.model === 'claude-3-7-sonnet-20250219')) {
-        loadedAiConfig.model = 'claude-opus-5-5';
-      }
-
-      // Automatically upgrade legacy default OpenAI model gpt-4o to gpt-6.1-sol
-      if (loadedAiConfig.provider === 'openai' && (!loadedAiConfig.model || loadedAiConfig.model === 'gpt-4o')) {
-        loadedAiConfig.model = 'gpt-6.1-sol';
-      }
+      // Keep explicitly saved model choices. Preset defaults are for missing fields,
+      // not a reason to silently replace a user's valid selection on each startup.
+      const savedPreset = AI_PROVIDERS.find((provider) => provider.id === loadedAiConfig.provider);
+      if (!parsed.aiConfig?.model) loadedAiConfig.model = savedPreset?.defaultModel || DEFAULT_AI_CONFIG.model;
+      if (parsed.aiConfig?.baseUrl === undefined) loadedAiConfig.baseUrl = savedPreset?.defaultBaseUrl || DEFAULT_AI_CONFIG.baseUrl;
 
       return {
         aiConfig: loadedAiConfig,
@@ -119,7 +152,7 @@ function persistState(
       STORAGE_KEY,
       JSON.stringify({
         aiConfig: sanitizedAiConfig,
-        mcpServers,
+        mcpServers: mcpServers.map(resetMcpVerification),
         guardrailPolicy: guardrailPolicy || DEFAULT_GUARDRAIL_POLICY,
       })
     );
@@ -133,6 +166,8 @@ const initialState = loadPersistedState();
 export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   aiConfig: initialState.aiConfig,
   apiKeysConfigured: {},
+  isCheckingApiKey: false,
+  apiKeyCheckError: null,
   mcpServers: initialState.mcpServers,
   guardrailPolicy: initialState.guardrailPolicy,
   guardrailAuditLog: [],
@@ -153,6 +188,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   cliStatus: {},
   isDetectingCli: false,
   isConnectingSubscription: false,
+  isCheckingSubscription: false,
   copilotDeviceCode: null,
 
   setActiveSubTab: (tab) => set({ activeSubTab: tab }),
@@ -178,7 +214,6 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
         set((state) => ({
           apiKeysConfigured: { ...state.apiKeysConfigured, [provider]: true },
         }));
-        void get().fetchDynamicModels(provider);
       }).catch((err) => {
         console.error('Failed to store API key in OS Keyring:', err);
       });
@@ -199,18 +234,18 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   },
 
   loadApiKeyForProvider: async (providerId) => {
-    if (!isTauri()) return;
+    // Explicit user action only. Status checks must not cascade into another
+    // keyring read/model request, nor queue more prompts while one is open.
+    if (!isTauri() || get().isCheckingApiKey) return;
+    set({ isCheckingApiKey: true, apiKeyCheckError: null });
     try {
       const configured = await invoke<boolean>('has_ai_api_key', { provider: providerId });
       set((state) => ({
         apiKeysConfigured: { ...state.apiKeysConfigured, [providerId]: configured },
       }));
-      if (configured) {
-        void get().fetchDynamicModels(providerId);
-      }
     } catch (err) {
-      console.warn(`Failed to check API key status for ${providerId} in OS Keyring:`, err);
-    }
+      set({ apiKeyCheckError: `Could not check the saved key. OS credential access was denied or unavailable. Retry only when ready. (${String(err)})` });
+    } finally { set({ isCheckingApiKey: false }); }
   },
 
   setProvider: (providerId) => {
@@ -222,14 +257,14 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       provider: providerId,
       baseUrl: providerPreset.defaultBaseUrl,
       model: providerPreset.defaultModel,
+      reasoningEffort: undefined,
+      fastMode: false,
       apiKey: '',
     };
     set({ aiConfig: nextConfig, aiTestResult: null });
     persistState(nextConfig, get().mcpServers);
 
-    // Asynchronously load the key for this newly selected provider from the OS Keyring
-    void get().loadApiKeyForProvider(providerId);
-    void get().fetchDynamicModels(providerId);
+    // Selecting a provider never reads secrets or contacts a model endpoint.
   },
 
   testAiConnection: async (configOverride, apiKeyIsPresent = false) => {
@@ -331,7 +366,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
         return res;
       }
 
-      // 2. Real or simulated connectivity check depending on environment
+      // Live checks must report their actual transport/model result.
       if (aiConfig.provider === 'ollama') {
         const endpoint = getLocalOllamaEndpoint(aiConfig.baseUrl);
         if (!endpoint) {
@@ -383,17 +418,32 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
         }
       }
 
-      // For Cloud Providers (OpenAI, Anthropic, Gemini, Custom):
-      // Verify basic endpoint format and authentication token structure
-      await new Promise((resolve) => setTimeout(resolve, 600)); // Simulate round-trip latency
-      const latency = Date.now() - startTime;
+      if (isTauri()) {
+        if (aiConfig.apiKey.trim()) {
+          const res = { success: false, message: 'Apply API key changes before testing. Native checks use only the credential saved in the OS key store, not an unsaved draft.', timestamp: Date.now() };
+          set({ isTestingAi: false, aiTestResult: res });
+          return res;
+        }
+        const result = await invoke<{ success: boolean; message: string }>('test_ai_review_provider', {
+          request: {
+            sessionId: 'connection-check', provider: aiConfig.provider,
+            authMode: aiConfig.authMode || 'api_key', model: aiConfig.model,
+            baseUrl: aiConfig.baseUrl, instructions: '', allowRemote: true,
+            reasoningEffort: aiConfig.reasoningEffort || null, fastMode: aiConfig.fastMode === true,
+          },
+        });
+        const res = { ...result, timestamp: Date.now() };
+        set({ isTestingAi: false, aiTestResult: res });
+        return res;
+      }
 
+      // A regular browser cannot access the native key store or provider bridge.
       const providerName =
         AI_PROVIDERS.find((p) => p.id === aiConfig.provider)?.name || aiConfig.provider;
 
       const res = {
-        success: true,
-        message: `Configuration checks passed for ${providerName} (${aiConfig.model}) in ${latency}ms. Cloud provider connectivity is not tested yet.`,
+        success: false,
+        message: `Live inference checks for ${providerName} are not available yet. No inference request was sent; credentials and model access have not been verified.`,
         timestamp: Date.now(),
       };
 
@@ -487,6 +537,8 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   },
 
   checkCopilotStatus: async () => {
+    if (get().isCheckingSubscription) return get().copilotStatus || { connected: false, has_subscription: false };
+    set({ isCheckingSubscription: true });
     try {
       if (isTauri()) {
         const status = await invoke<CopilotAuthStatus>('copilot_check_status');
@@ -499,7 +551,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       const errStatus: CopilotAuthStatus = { connected: false, has_subscription: false, error: String(e) };
       set({ copilotStatus: errStatus });
       return errStatus;
-    }
+    } finally { set({ isCheckingSubscription: false }); }
   },
 
   disconnectCopilot: async () => {
@@ -521,13 +573,8 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
           clientId: null,
         });
         await invoke('open_external_url', { url: res.auth_url }).catch(() => {});
-        for (let i = 0; i < 24; i++) {
-          await new Promise((r) => setTimeout(r, 2500));
-          const status = await get().checkGoogleAuthStatus();
-          if (status.connected) {
-            break;
-          }
-        }
+        // The browser callback stores credentials. Do not poll the keyring;
+        // the user can explicitly check the saved sign-in after returning.
       } else {
         alert('Google AI Studio OAuth sign-in requires the Stage0 desktop app (Tauri).');
       }
@@ -539,6 +586,8 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   },
 
   checkGoogleAuthStatus: async () => {
+    if (get().isCheckingSubscription) return get().googleAuthStatus || { connected: false, auth_method: 'none' };
+    set({ isCheckingSubscription: true });
     try {
       if (isTauri()) {
         const status = await invoke<GoogleAuthStatus>('google_oauth_check_status');
@@ -551,7 +600,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       const errStatus: GoogleAuthStatus = { connected: false, auth_method: 'none', error: String(e) };
       set({ googleAuthStatus: errStatus });
       return errStatus;
-    }
+    } finally { set({ isCheckingSubscription: false }); }
   },
 
   disconnectGoogleOAuth: async () => {
@@ -565,71 +614,50 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     }
   },
 
-  startChatGptOAuth: async () => {
-    set({ isConnectingSubscription: true });
-    try {
-      if (isTauri()) {
-        const res = await invoke<{ auth_url: string; state: string; port: number }>('chatgpt_oauth_start', {
-          clientId: null,
-        });
-        await invoke('open_external_url', { url: res.auth_url }).catch(() => {});
-        for (let i = 0; i < 24; i++) {
-          await new Promise((r) => setTimeout(r, 2500));
-          const status = await get().checkChatGptAuthStatus();
-          if (status.connected) {
-            void get().fetchDynamicModels('openai');
-            break;
-          }
-        }
-      } else {
-        alert('ChatGPT Plus/Pro OAuth sign-in requires the Stage0 desktop app (Tauri) to start a local TCP loopback server and store the token in the OS keyring.');
-      }
-    } catch (e) {
-      console.error('Failed to start ChatGPT OAuth:', e);
-    } finally {
-      set({ isConnectingSubscription: false });
-    }
-  },
+  startChatGptOAuth: (profileId) => chatGptAction('chatgpt_oauth_start', { profileId: profileId || null }, set, get),
 
   checkChatGptAuthStatus: async () => {
+    const epoch = chatGptEpoch; const sequence = ++chatGptPoll;
+    if (get().isConnectingSubscription) return get().chatgptAuthStatus || { connected: false };
     try {
       if (isTauri()) {
-        const status = await invoke<ChatGptAuthStatus>('chatgpt_oauth_check_status');
-        set({ chatgptAuthStatus: status });
+        const status = publicChatGptStatus(await invoke<ChatGptAuthStatus>('chatgpt_oauth_check_status'));
+        if (epoch === chatGptEpoch && sequence === chatGptPoll && !get().isConnectingSubscription) set({ chatgptAuthStatus: status });
         return status;
       }
       const mock: ChatGptAuthStatus = { connected: false };
       return mock;
     } catch (e) {
       const errStatus: ChatGptAuthStatus = { connected: false, error: String(e) };
-      set({ chatgptAuthStatus: errStatus });
+      if (epoch === chatGptEpoch && sequence === chatGptPoll) set({ chatgptAuthStatus: errStatus });
       return errStatus;
     }
   },
 
-  disconnectChatGptOAuth: async () => {
-    try {
-      if (isTauri()) {
-        await invoke('chatgpt_oauth_disconnect');
-        set({ chatgptAuthStatus: { connected: false } });
-      }
-    } catch (e) {
-      console.error('Failed to disconnect ChatGPT OAuth:', e);
-    }
+  loadSavedChatGptAuth: () => chatGptAction('chatgpt_oauth_load_saved', undefined, set, get),
+
+  disconnectChatGptOAuth: (profileId) => chatGptAction('chatgpt_oauth_disconnect', { profileId }, set, get),
+  refreshChatGptSession: (profileId) => chatGptAction('chatgpt_oauth_refresh', { profileId }, set, get),
+  cancelChatGptOAuth: async () => {
+    const attemptId = get().chatgptAuthStatus?.attempt_id;
+    if (attemptId) await chatGptAction('chatgpt_oauth_cancel', { attemptId }, set, get);
   },
 
   clearCopilotDeviceCode: () => set({ copilotDeviceCode: null }),
 
-  fetchDynamicModels: async (providerOverride) => {
-    const provider = providerOverride || get().aiConfig.provider;
+  fetchDynamicModels: async (configOverride) => {
+    if (get().isFetchingDynamicModels) return { success: false, count: 0, error: 'A model refresh is already in progress.' };
+    const config = configOverride || get().aiConfig;
+    const provider = config.provider;
+    if (config.apiKey?.trim()) return { success: false, count: 0, error: 'Apply API key changes before refreshing models.' };
     set({ isFetchingDynamicModels: true, dynamicModelError: null });
 
     try {
       if (isTauri()) {
         const models = await invoke<Array<{ id: string; name: string; description?: string }>>('fetch_ai_models', {
           provider,
-          apiKey: get().aiConfig.apiKey || null,
-          baseUrl: get().aiConfig.baseUrl || null,
+          apiKey: null,
+          baseUrl: config.baseUrl || null,
         });
 
         const presets: AiModelPreset[] = models.map((m) => ({
@@ -668,12 +696,12 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
 
   addMcpServer: (serverData) => {
     const id = `mcp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-    const newServer: McpServerConfig = {
+    const newServer: McpServerConfig = resetMcpVerification({
       ...serverData,
       id,
       enabled: serverData.enabled ?? true,
       testStatus: 'untested',
-    };
+    });
     const nextServers = [...get().mcpServers, newServer];
     set({ mcpServers: nextServers });
     persistState(get().aiConfig, nextServers);
@@ -681,7 +709,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
 
   updateMcpServer: (id, updates) => {
     const nextServers = get().mcpServers.map((s) =>
-      s.id === id ? { ...s, ...updates } : s
+      s.id === id ? resetMcpVerification({ ...s, ...updates }) : s
     );
     set({ mcpServers: nextServers });
     persistState(get().aiConfig, nextServers);
@@ -695,7 +723,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
 
   toggleMcpServer: (id) => {
     const nextServers = get().mcpServers.map((s) =>
-      s.id === id ? { ...s, enabled: !s.enabled } : s
+      s.id === id ? resetMcpVerification({ ...s, enabled: !s.enabled }) : s
     );
     set({ mcpServers: nextServers });
     persistState(get().aiConfig, nextServers);
@@ -707,30 +735,20 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       return { success: false, message: 'Server not found' };
     }
 
-    // Set temporary testing indicator
-    get().updateMcpServer(id, { testStatus: 'untested' });
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    if (server.type === 'stdio' && !server.command.trim()) {
-      get().updateMcpServer(id, { testStatus: 'failed', lastTestedAt: formatTime(Date.now()) });
-      return { success: false, message: 'Executable command cannot be empty for stdio' };
-    }
-
-    if (server.type === 'sse' && !server.url?.trim()) {
-      get().updateMcpServer(id, { testStatus: 'failed', lastTestedAt: formatTime(Date.now()) });
-      return { success: false, message: 'SSE URL cannot be empty' };
-    }
-
-    get().updateMcpServer(id, {
-      testStatus: 'success',
-      lastTestedAt: formatTime(Date.now()),
-    });
-
-    return {
-      success: true,
-      message: `MCP handshake verified for "${server.name}" (${server.type})`,
-    };
+    const invalid = server.type === 'stdio' && !server.command.trim()
+      ? 'Executable command cannot be empty for stdio.'
+      : server.type !== 'stdio' && !server.url?.trim() ? 'HTTP URL cannot be empty.' : null;
+    const message = invalid
+      ? `Invalid local configuration: ${invalid} No server was contacted.`
+      : MCP_TRANSPORT_UNAVAILABLE;
+    // Config validation is not a transport handshake or tool discovery.
+    const nextServers = get().mcpServers.map((item) => item.id === id ? {
+      ...resetMcpVerification(item), testStatus: invalid ? 'failed' as const : 'unavailable' as const,
+      testMessage: message,
+    } : item);
+    set({ mcpServers: nextServers });
+    persistState(get().aiConfig, nextServers, get().guardrailPolicy);
+    return { success: false, message };
   },
 
   importMcpConfigFile: (jsonStr) => {
@@ -750,12 +768,12 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
             (s) => s.name.toLowerCase() === key.toLowerCase() || s.id === key
           );
 
-          const isSse = Boolean(conf.url);
+          const isHttp = Boolean(conf.url);
           const serverEntry: McpServerConfig = {
             id: key,
             name: key,
             description: `Imported MCP Server: ${key}`,
-            type: isSse ? 'sse' : 'stdio',
+            type: isHttp ? (conf.type === 'sse' ? 'sse' : 'http') : 'stdio',
             command: conf.command || '',
             args: Array.isArray(conf.args) ? conf.args : [],
             env: conf.env || {},
@@ -776,7 +794,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
         for (const item of parsed) {
           if (item && item.name) {
             currentServers.push({
-              ...item,
+              ...resetMcpVerification(item),
               id: item.id || `mcp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             });
             importedCount++;
@@ -809,13 +827,15 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     };
 
     for (const server of mcpServers) {
-      if (server.type === 'sse') {
+      if (server.type !== 'stdio') {
         exportObj.mcpServers[server.name] = {
+          type: server.type,
           url: server.url,
           env: Object.keys(server.env).length > 0 ? server.env : undefined,
         };
       } else {
         exportObj.mcpServers[server.name] = {
+          type: 'stdio',
           command: server.command,
           args: server.args,
           env: Object.keys(server.env).length > 0 ? server.env : undefined,
@@ -938,11 +958,17 @@ function getLocalOllamaEndpoint(baseUrl: string): string | null {
 if (typeof window !== 'undefined') {
   window.setTimeout(() => {
     if (isTauri()) {
-      void useAiMcpStore.getState().loadApiKeyForProvider(initialState.aiConfig.provider);
-      void useAiMcpStore.getState().loadGuardrailPolicy();
+      // Rehydrate the last committed policy before reading native state. Reading
+      // the fresh backend's balanced default first would erase saved preferences.
+      void (async () => {
+        try {
+          await invoke('commit_ai_preferences', { apiKeys: {}, policy: initialState.guardrailPolicy });
+          await useAiMcpStore.getState().loadGuardrailPolicy();
+        } catch {
+          console.warn('Could not restore the saved guardrail policy; saved preferences were retained.');
+        }
+      })();
       void useAiMcpStore.getState().loadGuardrailAuditLog();
-      void useAiMcpStore.getState().checkCopilotStatus();
-      void useAiMcpStore.getState().checkGoogleAuthStatus();
       void useAiMcpStore.getState().detectCli('claude');
       void useAiMcpStore.getState().detectCli('gh_copilot');
     }

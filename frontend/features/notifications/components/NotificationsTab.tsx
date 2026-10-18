@@ -15,12 +15,6 @@ const categories: Array<{
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   {
-    key: 'softwareUpdates',
-    title: 'Software updates',
-    description: 'New releases and update downloads.',
-    icon: Sparkles,
-  },
-  {
     key: 'aiReview',
     title: 'AI code review',
     description: 'When an AI review or re-verification finishes.',

@@ -4,10 +4,14 @@ mod unified_ai_chat_response;
 pub use unified_ai_chat_response::UnifiedAiChatResponse;
 
 pub mod chatgpt_oauth;
+pub mod codex_auth;
 pub mod cli_bridge;
 pub mod copilot;
 pub mod dynamic_models;
 pub mod google_oauth;
+pub mod preferences;
+pub(crate) mod keyring_write_progress;
+pub mod review_availability;
 
 /// Unified dispatcher to route prompts to either CLI Bridge, Copilot Device Token, or Google OAuth
 pub async fn dispatch_ai_chat(req: UnifiedAiChatRequest) -> Result<UnifiedAiChatResponse, String> {

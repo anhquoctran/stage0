@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { AppLogo } from '../../../common/components/AppLogo';
 import { Check } from '../../../common/components/icons/Check';
 import { Copy } from '../../../common/components/icons/Copy';
-import { DownloadCloud } from '../../../common/components/icons/DownloadCloud';
 import { X } from '../../../common/components/icons/X';
 import { useAboutInfo } from '../hooks/useAboutInfo';
-import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
 import type { AboutModalProps } from '../types/AboutModalProps';
 
 export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
@@ -175,19 +173,6 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                   <span>Copy Info</span>
                 </>
               )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                usePreferencesStore.getState().openPreferences('updates-check');
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-subtext1 hover:text-text text-xs transition-colors cursor-pointer"
-              title="Check for software updates in Preferences"
-            >
-              <DownloadCloud className="w-3.5 h-3.5 text-blue" />
-              <span>Check for Updates</span>
             </button>
           </div>
 

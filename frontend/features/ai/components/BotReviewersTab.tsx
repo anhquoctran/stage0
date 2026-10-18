@@ -12,14 +12,21 @@ import { ChevronUp } from '../../../common/components/icons/ChevronUp';
 import { Copy } from '../../../common/components/icons/Copy';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { CustomSelect } from '../../../common/components/CustomSelect';
+import { AiModelExecutionOptions } from './AiModelExecutionOptions';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useBotReviewersStore } from '../store/useBotReviewersStore';
 import { BOT_CATEGORIES } from '../constants/botPresets';
 import { type BotReviewer } from '../../virtual-mr/types/BotReviewer';
 import { type BotCategory } from '../../virtual-mr/types/BotCategory';
 import { AI_PROVIDERS } from '../constants/aiPresets';
+import { useAiMcpStore } from '../store/useAiMcpStore';
+import type { AiModelPreset } from '../types/AiModelPreset';
+import type { AiReasoningEffort } from '../types/AiReasoningEffort';
+import type { AiSettingsTabProps } from '../types/AiSettingsTabProps';
+import { resolveAiModelPreset } from '../utils/resolveAiModelPreset';
 
 const EMOJI_PRESETS = ['🛡️', '⚡', '🏗️', '🐛', '📝', '🎨', '🔒', '🚀', '🧪', '🔍', '⚙️', '💎'];
+const CUSTOM_MODEL_OPTION = '__stage0_custom_model__';
 
 const BOT_CATEGORY_OPTIONS: CustomSelectOption<BotCategory>[] = BOT_CATEGORIES.map((category) => ({
   value: category.id,
@@ -31,7 +38,9 @@ const BOT_PROVIDER_OPTIONS: CustomSelectOption<string>[] = [
   ...AI_PROVIDERS.map((provider) => ({ value: provider.id, label: provider.name })),
 ];
 
-export const BotReviewersTab: React.FC = () => {
+export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } = {}) => {
+  const { aiConfig: committedAiConfig, dynamicModels } = useAiMcpStore();
+  const globalAiConfig = draftSettings?.aiConfig || committedAiConfig;
   const {
     globalReviewers,
     addGlobalReviewer,
@@ -39,7 +48,7 @@ export const BotReviewersTab: React.FC = () => {
     deleteGlobalReviewer,
     toggleGlobalReviewer,
     resetGlobalReviewers,
-  } = useBotReviewersStore();
+  } = { ...useBotReviewersStore(), ...draftSettings };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -57,11 +66,53 @@ export const BotReviewersTab: React.FC = () => {
   const [formPrompt, setFormPrompt] = useState('');
   const [formProvider, setFormProvider] = useState<string>('global_default');
   const [formModel, setFormModel] = useState<string>('global_default');
+  const [isCustomModel, setIsCustomModel] = useState(false);
   const [formTemp, setFormTemp] = useState<number>(0.2);
+  const [formReasoningEffort, setFormReasoningEffort] = useState<AiReasoningEffort | undefined>();
+  const [formFastMode, setFormFastMode] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   // Confirm reset dialog
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const effectiveProvider = formProvider === 'global_default' ? globalAiConfig.provider : formProvider;
+  const providerPreset = AI_PROVIDERS.find((provider) => provider.id === effectiveProvider);
+  const inheritsGlobalModel = formProvider === 'global_default' && formModel === 'global_default';
+  // Reuse already-discovered models and offline presets. Opening this editor
+  // must not read Keychain credentials or automatically contact a provider.
+  const availableModels = useMemo(() => {
+    const candidates = [...(providerPreset ? dynamicModels[providerPreset.id] || [] : []), ...(providerPreset?.models || [])];
+    if (effectiveProvider === globalAiConfig.provider && globalAiConfig.model && !candidates.some((model) => model.id === globalAiConfig.model)) {
+      candidates.push({ id: globalAiConfig.model, name: globalAiConfig.model });
+    }
+    const models = new Map<string, AiModelPreset>();
+    for (const model of candidates) if (model.id && !models.has(model.id)) models.set(model.id, model);
+    return [...models.values()];
+  }, [dynamicModels, providerPreset, effectiveProvider, globalAiConfig.provider, globalAiConfig.model]);
+  const modelOptions: CustomSelectOption<string>[] = [
+    ...(formProvider === 'global_default' || formModel === 'global_default'
+      ? [{ value: 'global_default', label: `Use global model (${globalAiConfig.model})`, description: 'Inherit the model configured in LLM Providers.' }]
+      : []),
+    ...availableModels.map((model) => ({ value: model.id, label: model.name || model.id, description: model.id })),
+    ...(!isCustomModel && formModel && formModel !== 'global_default' && !availableModels.some((model) => model.id === formModel)
+      ? [{ value: formModel, label: `${formModel} (Saved custom model)` }]
+      : []),
+    { value: CUSTOM_MODEL_OPTION, label: 'Custom model…', description: 'Enter an ID for a model not listed above.' },
+  ];
+  const executionModelId = inheritsGlobalModel
+    ? globalAiConfig.model
+    : formModel === 'global_default'
+      ? providerPreset?.defaultModel || ''
+      : formModel;
+  const executionBaseUrl = formProvider === 'global_default'
+    ? globalAiConfig.baseUrl
+    : providerPreset?.defaultBaseUrl || '';
+  const executionModel = resolveAiModelPreset(
+    effectiveProvider,
+    executionModelId,
+    executionBaseUrl,
+    dynamicModels[effectiveProvider as keyof typeof dynamicModels] || [],
+  );
 
   // Filtered reviewers
   const filteredBots = useMemo(() => {
@@ -97,7 +148,10 @@ Analyze incoming code diffs and discussions:
 3. Be respectful, concise, and focused on code quality.`);
     setFormProvider('global_default');
     setFormModel('global_default');
+    setIsCustomModel(false);
     setFormTemp(0.2);
+    setFormReasoningEffort(undefined);
+    setFormFastMode(false);
     setFormError(null);
     setIsFormOpen(true);
   };
@@ -112,7 +166,10 @@ Analyze incoming code diffs and discussions:
     setFormPrompt(bot.systemPrompt);
     setFormProvider(bot.provider || 'global_default');
     setFormModel(bot.model || 'global_default');
+    setIsCustomModel(false);
     setFormTemp(bot.temperature ?? 0.2);
+    setFormReasoningEffort(bot.reasoningEffort);
+    setFormFastMode(bot.fastMode === true);
     setFormError(null);
     setIsFormOpen(true);
   };
@@ -128,6 +185,8 @@ Analyze incoming code diffs and discussions:
       provider: bot.provider,
       model: bot.model,
       temperature: bot.temperature,
+      reasoningEffort: bot.reasoningEffort,
+      fastMode: bot.fastMode,
       enabled: true,
       isBuiltin: false,
     });
@@ -143,6 +202,10 @@ Analyze incoming code diffs and discussions:
       setFormError('System prompt instructions are required');
       return;
     }
+    if (!formModel.trim()) {
+      setFormError('Select a model or enter a custom model ID');
+      return;
+    }
 
     if (editingBotId) {
       updateGlobalReviewer(editingBotId, {
@@ -153,8 +216,10 @@ Analyze incoming code diffs and discussions:
         avatarEmoji: formEmoji,
         systemPrompt: formPrompt.trim(),
         provider: formProvider,
-        model: formModel,
+        model: formModel.trim(),
         temperature: formTemp,
+        reasoningEffort: formReasoningEffort,
+        fastMode: formFastMode,
       });
     } else {
       addGlobalReviewer({
@@ -165,8 +230,10 @@ Analyze incoming code diffs and discussions:
         avatarEmoji: formEmoji,
         systemPrompt: formPrompt.trim(),
         provider: formProvider,
-        model: formModel,
+        model: formModel.trim(),
         temperature: formTemp,
+        reasoningEffort: formReasoningEffort,
+        fastMode: formFastMode,
         enabled: true,
         isBuiltin: false,
       });
@@ -434,6 +501,14 @@ Analyze incoming code diffs and discussions:
                         Temp: <strong className="text-text font-normal">{bot.temperature}</strong>
                       </span>
                     )}
+                    {bot.reasoningEffort && (
+                      <span className="font-mono text-subtext0/80">
+                        Effort: <strong className="text-text font-normal">{bot.reasoningEffort}</strong>
+                      </span>
+                    )}
+                    {bot.fastMode === true && (
+                      <span className="font-mono text-subtext0/80">Fast mode</span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-1">
@@ -630,6 +705,9 @@ Analyze incoming code diffs and discussions:
                       options={BOT_PROVIDER_OPTIONS}
                       onChange={(p) => {
                         setFormProvider(p);
+                        setIsCustomModel(false);
+                        setFormReasoningEffort(undefined);
+                        setFormFastMode(false);
                         if (p === 'global_default') {
                           setFormModel('global_default');
                         } else {
@@ -646,14 +724,51 @@ Analyze incoming code diffs and discussions:
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-subtext0 mb-1">Model Name</label>
-                    <input
+                    <label className="block text-[10px] text-subtext0 mb-1">Model</label>
+                    <CustomSelect
+                      value={isCustomModel ? CUSTOM_MODEL_OPTION : formModel}
+                      options={modelOptions}
+                      onChange={(model) => {
+                        if (model === CUSTOM_MODEL_OPTION) {
+                          setIsCustomModel(true);
+                          if (formModel === 'global_default' || availableModels.some((item) => item.id === formModel)) setFormModel('');
+                          setFormReasoningEffort(undefined);
+                          setFormFastMode(false);
+                        } else {
+                          setIsCustomModel(false);
+                          setFormModel(model);
+                          const nextModelId = model === 'global_default'
+                            ? formProvider === 'global_default' ? globalAiConfig.model : providerPreset?.defaultModel || ''
+                            : model;
+                          const nextModel = resolveAiModelPreset(
+                            effectiveProvider,
+                            nextModelId,
+                            executionBaseUrl,
+                            dynamicModels[effectiveProvider as keyof typeof dynamicModels] || [],
+                          );
+                          if (!nextModel?.reasoningEfforts?.includes(formReasoningEffort as AiReasoningEffort)) {
+                            setFormReasoningEffort(undefined);
+                          }
+                          if (!nextModel?.supportsFastMode) setFormFastMode(false);
+                        }
+                      }}
+                      searchable
+                      searchPlaceholder="Search models…"
+                      className="w-full"
+                      buttonClassName="w-full"
+                      dropdownWidth="w-full"
+                      align="left"
+                      aria-label="Model override"
+                    />
+                    {isCustomModel && <input
                       type="text"
+                      aria-label="Custom model ID"
+                      required
                       value={formModel}
                       onChange={(e) => setFormModel(e.target.value)}
-                      placeholder="e.g. gpt-4o, claude-3-5-sonnet"
-                      className="w-full px-2 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text focus:outline-none font-mono"
-                    />
+                      placeholder="Enter custom model ID"
+                      className="mt-2 w-full px-2 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text focus:outline-none focus:border-brand font-mono"
+                    />}
                   </div>
 
                   <div>
@@ -670,6 +785,21 @@ Analyze incoming code diffs and discussions:
                       className="w-full mt-2 cursor-pointer"
                     />
                   </div>
+                </div>
+                <div className="pt-2 border-t border-surface0/70 space-y-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">Reasoning &amp; processing</span>
+                  {inheritsGlobalModel ? (
+                    <p className="text-[10px] text-subtext0">Uses the global model and its reasoning and Fast mode settings.</p>
+                  ) : (
+                    <AiModelExecutionOptions
+                      model={executionModel}
+                      reasoningEffort={formReasoningEffort}
+                      fastMode={formFastMode}
+                      onReasoningEffortChange={setFormReasoningEffort}
+                      onFastModeChange={setFormFastMode}
+                      emptyMessage="Stage0 has no declared reasoning or Fast mode capabilities for this provider and model."
+                    />
+                  )}
                 </div>
               </div>
 
