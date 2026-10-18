@@ -1140,8 +1140,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         <div className="space-y-4 animate-in fade-in duration-100">
           <HarnessConnectionsPanel draftServers={draftSettings?.mcpServers} />
           {/* Header Action Bar */}
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <span className="text-xs font-bold text-text block">
                 Model Context Protocol (MCP) Ecosystem
               </span>
@@ -1150,7 +1150,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => {
@@ -1158,7 +1158,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   setJsonFeedback(null);
                   setIsJsonModalOpen(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
                 title="Import or Export JSON configuration"
               >
                 <FileJson className="w-3.5 h-3.5" />
@@ -1168,7 +1168,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               <button
                 type="button"
                 onClick={() => handleOpenAddServer()}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs border border-surface2"
+                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs border border-surface2"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add MCP Server</span>
@@ -1177,8 +1177,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
           </div>
 
           {/* Quick Preset Templates Bar */}
-          <div className="p-2.5 bg-surface0/20 border border-surface0/80 flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-subtext0 uppercase tracking-wider">
+          <div className="p-2.5 bg-surface0/20 border border-surface0/80 flex flex-wrap items-center gap-2">
+            <span className="shrink-0 text-[10px] font-bold text-subtext0 uppercase tracking-wider">
               Quick Add Presets:
             </span>
             {MCP_PRESET_TEMPLATES.map((preset) => (
@@ -1186,7 +1186,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 key={preset.name}
                 type="button"
                 onClick={() => handleOpenAddServer(preset)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium bg-surface0 border border-surface1 hover:bg-surface1 text-text transition-colors cursor-pointer"
+                className="flex shrink-0 items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded text-[11px] font-medium bg-surface0 border border-surface1 hover:bg-surface1 text-text transition-colors cursor-pointer"
               >
                 <Plus className="w-3 h-3 text-subtext0" />
                 <span>{preset.name}</span>
@@ -1446,10 +1446,10 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         : 'bg-surface0/10 border-surface0/40 opacity-70'
                     }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2.5">
+                    <div className="flex flex-wrap items-start gap-3">
+                      <div className="flex min-w-0 flex-1 items-start gap-2.5">
                         <div
-                          className={`w-8 h-8 border flex items-center justify-center text-text shadow-xs ${
+                          className={`w-8 h-8 shrink-0 border flex items-center justify-center text-text shadow-xs ${
                             server.enabled
                               ? 'bg-surface1 border-surface2'
                               : 'bg-surface0 border-surface0 text-subtext0'
@@ -1458,8 +1458,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           <Cable className="w-4 h-4 text-subtext0" />
                         </div>
 
-                        <div>
-                          <div className="flex items-center gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="text-xs font-bold text-text">{server.name}</span>
                             <span className="text-[10px] px-2 py-0.2 bg-surface1 text-subtext0 border border-surface2 font-mono uppercase">
                               {server.type}
@@ -1490,12 +1490,12 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                       </div>
 
                       {/* Server Controls */}
-                      <div className="flex items-center gap-1.5">
+                      <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                         {/* Enable/Disable Toggle */}
                         <button
                           type="button"
                           onClick={() => toggleMcpServer(server.id)}
-                          className={`px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                          className={`shrink-0 whitespace-nowrap px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
                             server.enabled
                               ? 'bg-surface1 border-surface2 text-text shadow-xs'
                               : 'bg-surface0/50 border-surface0 text-subtext0 hover:text-text'
