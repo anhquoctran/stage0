@@ -4,16 +4,14 @@ import type { CustomSelectOption } from '../../../common/types/CustomSelectOptio
 import type { AiReasoningEffort } from '../types/AiReasoningEffort';
 import type { AiModelPreset } from '../types/AiModelPreset';
 
-interface AiModelExecutionOptionsProps {
+export const AiModelExecutionOptions: React.FC<{
   model?: AiModelPreset;
   reasoningEffort?: AiReasoningEffort;
   fastMode: boolean;
   onReasoningEffortChange: (effort: AiReasoningEffort | undefined) => void;
   onFastModeChange: (enabled: boolean) => void;
   emptyMessage?: string;
-}
-
-export const AiModelExecutionOptions: React.FC<AiModelExecutionOptionsProps> = ({
+}> = ({
   model,
   reasoningEffort,
   fastMode,
@@ -62,7 +60,7 @@ export const AiModelExecutionOptions: React.FC<AiModelExecutionOptionsProps> = (
             />
             <span>Fast mode</span>
           </label>
-          <span className="text-[10px] text-subtext0 ml-5">Off follows the project tier; Fast may cost more.</span>
+          <span className="text-[10px] text-subtext0 ml-5">OpenAI API tier. Off follows the project setting; Fast may cost more.</span>
         </div>
       )}
     </div>

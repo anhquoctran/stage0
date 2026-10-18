@@ -15,13 +15,24 @@ use tauri::{AppHandle, Manager};
 #[tauri::command]
 pub async fn test_ai_review_provider(request: ReviewRequest) -> Result<Value, String> {
     let url = provider::endpoint(&request)?;
+    let subscription_token = if request.auth_mode == "subscription_oauth" {
+        Some(crate::features::ai::chatgpt_oauth::review_access_token().await?)
+    } else {
+        None
+    };
     let tools = super::schemas::tools()
         .into_iter()
         .filter(|tool| tool["name"] == "get_diff")
         .collect::<Vec<_>>();
     let mut history = provider::initial_history(&request.provider, "Connectivity check only. Call get_diff with empty arguments. No repository or source code is attached. Do not answer in plain text.");
     let body = provider::payload(&request, "Verify client-side function calling by calling the supplied get_diff tool. No tool will actually be executed.", &history, &tools, 512);
-    let response = provider::request(&request, &url, &body).await?;
+    let response = provider::request(
+        &request,
+        &url,
+        &body,
+        subscription_token.as_ref().map(|token| token.as_str()),
+    )
+    .await?;
     let (calls, usage) = provider::decode(&request.provider, &response, &mut history)?;
     if calls.len() != 1
         || calls[0].name != "get_diff"
@@ -38,8 +49,19 @@ pub async fn test_ai_review_provider(request: ReviewRequest) -> Result<Value, St
 
 #[tauri::command]
 pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<ReviewRun, String> {
+    if request.reviewer_id.as_deref().is_some_and(|id| id.len() > 200)
+        || request.reviewer_name.as_deref().is_some_and(|name| name.len() > 200)
+    {
+        return Err("Reviewer identity exceeds the supported length".into());
+    }
     let endpoint = provider::endpoint(&request)?;
+    let subscription_token = if request.auth_mode == "subscription_oauth" {
+        Some(crate::features::ai::chatgpt_oauth::review_access_token().await?)
+    } else {
+        None
+    };
     if request.provider != "ollama"
+        && request.auth_mode != "subscription_oauth"
         && !crate::features::credentials::ai_key_exists(&request.provider)?
     {
         return Err("Configure an API key in Preferences before starting a review".into());
@@ -69,6 +91,8 @@ pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<R
         session_id: session_id.clone(),
         provider: request.provider.clone(),
         model: request.model.clone(),
+        reviewer_id: request.reviewer_id.clone(),
+        reviewer_name: request.reviewer_name.clone(),
         endpoint,
         snapshot: snapshot.clone(),
         status: "running".into(),
@@ -105,9 +129,10 @@ pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<R
     let task_run = run.clone();
     tauri::async_runtime::spawn(async move {
         let worker_app = task_app.clone();
-        let worker = tauri::async_runtime::spawn(super::runtime::run(
+    let worker = tauri::async_runtime::spawn(super::runtime::run(
             worker_app,
             request,
+            subscription_token,
             task_run,
             context,
             cancellation,

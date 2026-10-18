@@ -46,7 +46,20 @@ selected provider's preset list with already-cached discovered models. Inherited
 provider/model labels resolve against the dialog's AI draft, not stale committed
 settings. Opening or switching the form does not fetch models or read credentials.
 Existing custom IDs remain selectable; manual entry is an explicit optional
-Custom model choice. Saving the form updates only the Preferences draft.
+Custom model choice. Reasoning effort choices and the Fast mode toggle are shown
+only when Stage0 has declared capabilities for the selected provider/model.
+Reviewer profiles inheriting the global model leave execution overrides unset,
+so a consumer can resolve them from global preferences. Saving the form updates
+only the Preferences draft. In the native review panel, choose an assigned
+reviewer to run with that profile's prompt and explicit model settings; a
+profile inheriting provider/model uses the current global AI settings. Runs are
+sequential per Virtual MR, and native reviews require an API key (or local
+Ollama), not a provider subscription/CLI bridge.
+
+Global AI settings include the optional reasoning effort and Fast mode selection
+in the same Apply/OK/Cancel transaction. Unknown models do not receive guessed
+capabilities. Fast mode is sent only when explicitly enabled; otherwise requests
+follow the provider project's service-tier setting.
 
 ## Credential access is explicit
 

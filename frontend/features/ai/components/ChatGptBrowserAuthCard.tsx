@@ -25,7 +25,7 @@ export const ChatGptBrowserAuthCard: React.FC = () => {
   return <section className="border border-surface1 bg-base p-3 space-y-3 text-xs">
     <h3 className="font-semibold">ChatGPT subscription · Browser sign-in</h3>
     <p className="text-subtext0">Sign in and authorize Stage0 in your system browser. No Codex CLI, API key or client secret is required. Credentials stay in your OS keyring.</p>
-    <p className="text-subtext0">Sign-in does not send repository source or run a model. Subscription inference is not yet connected to the review harness.</p>
+    <p className="text-subtext0">Sign-in itself does not send repository source or run a model. When you explicitly start an AI code review with OpenAI selected and allow remote source sharing, Stage0 uses the official Responses API with your ChatGPT plan session. Your access token stays in the OS keyring and native backend.</p>
     {!status?.credentials_loaded && !status?.profiles?.length && !pending && <p className="text-subtext0">Saved sign-ins are not read automatically. Check saved sign-in to unlock your OS keyring when ready.</p>}
     {!status?.credentials_loaded && !status?.profiles?.length && !pending && <p className="text-subtext0">If an older sign-in cannot be imported, choose Add a ChatGPT account or workspace and reconnect. Older keyring items are retained; Stage0 will not request access to every old credential chunk.</p>}
     {status?.connected && <p role="status" className="text-green break-words">Saved sign-in: {active?.label || 'ChatGPT connection'} · {status.account_email || 'ChatGPT account'}. {status.plan_usage_enabled ? 'ChatGPT plan usage permission granted.' : 'ChatGPT plan usage permission is not enabled.'} Model access and quota have not been tested.</p>}

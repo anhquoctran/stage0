@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X } from '../../../common/components/icons/X';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { useReviewStore } from '../store/useReviewStore';
@@ -7,19 +7,54 @@ import { usePreferencesStore } from '../../preferences/store/usePreferencesStore
 import { formatDateTime } from '../../../common/utils/dateTime';
 import { ReviewFindingCard } from './ReviewFindingCard';
 import { HarnessConnectionsPanel } from './HarnessConnectionsPanel';
+import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
+import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
+import type { BotReviewer } from '../../virtual-mr/types/BotReviewer';
+import { AI_PROVIDERS } from '../../ai/constants/aiPresets';
+import { resolveReviewBotConfig } from '../utils/resolveReviewBotConfig';
+
+const GLOBAL_REVIEWER_ID = '__stage0_global_ai_config__';
 
 export const ReviewPanel: React.FC = () => {
   const { isOpen, sessionId, runs, detail, error, isStarting, isPublishing, activeRuns, syncActive, close, load, start, cancel, publish } = useReviewStore();
   const config = useAiMcpStore((state) => state.aiConfig);
+  const dynamicModels = useAiMcpStore((state) => state.dynamicModels);
+  const session = useVirtualMrStore((state) => state.sessions.find((item) => item.id === sessionId) || null);
+  const globalReviewers = useBotReviewersStore((state) => state.globalReviewers);
+  const repoCustomReviewers = useBotReviewersStore((state) => state.repoCustomReviewers);
   const [allowRemote, setAllowRemote] = useState(false);
+  const [selectedReviewerId, setSelectedReviewerId] = useState(GLOBAL_REVIEWER_ID);
   const panelRef = useRef<HTMLDivElement>(null);
   const run = detail?.run;
   const running = run?.status === 'running';
   const hasRunning = running || runs.some((item) => item.status === 'running');
   const activeIds = Object.keys(activeRuns).sort().join(',');
-  const compatible = config.provider === 'ollama' || (config.provider !== 'github_copilot' && (!config.authMode || config.authMode === 'api_key'));
+  const reviewerProfiles = useMemo(() => {
+    if (!session) return [];
+    const assignedIds = new Set(session.reviewers.map((reviewer) => reviewer.agentId));
+    const configured = [...globalReviewers, ...(repoCustomReviewers[session.repoId] || [])];
+    const unique = new Map<string, BotReviewer>();
+    for (const bot of configured) if (assignedIds.has(bot.id) && !unique.has(bot.id)) unique.set(bot.id, bot);
+    return [...unique.values()];
+  }, [session, globalReviewers, repoCustomReviewers]);
+  const effectiveReviewerId = reviewerProfiles.some((bot) => bot.id === selectedReviewerId)
+    ? selectedReviewerId
+    : GLOBAL_REVIEWER_ID;
+  const selectedReviewer = reviewerProfiles.find((bot) => bot.id === effectiveReviewerId);
+  const reviewerProvider = selectedReviewer?.provider && selectedReviewer.provider !== 'global_default'
+    ? selectedReviewer.provider
+    : config.provider;
+  const reviewConfig = selectedReviewer
+    ? resolveReviewBotConfig(config, selectedReviewer, dynamicModels[reviewerProvider as keyof typeof dynamicModels] || [])
+    : config;
+  const usesChatGptSubscription = reviewConfig.provider === 'openai' && reviewConfig.authMode === 'subscription_oauth';
+  const compatible = AI_PROVIDERS.some((provider) => provider.id === reviewConfig.provider && provider.id !== 'github_copilot')
+    && (reviewConfig.provider === 'ollama' || !reviewConfig.authMode || reviewConfig.authMode === 'api_key' || usesChatGptSubscription);
 
-  useEffect(() => { setAllowRemote(false); }, [config.provider, config.baseUrl, sessionId]);
+  useEffect(() => { setAllowRemote(false); }, [reviewConfig.provider, reviewConfig.model, reviewConfig.baseUrl, effectiveReviewerId, sessionId]);
+  useEffect(() => {
+    setSelectedReviewerId(reviewerProfiles[0]?.id || GLOBAL_REVIEWER_ID);
+  }, [sessionId, reviewerProfiles]);
   useEffect(() => {
     if (!sessionId || !isOpen) return;
     void load(sessionId);
@@ -55,29 +90,52 @@ export const ReviewPanel: React.FC = () => {
         </header>
         <div className="min-h-0 overflow-y-auto p-5 space-y-4">
           <div className="border border-surface1 bg-base p-3 space-y-2 text-xs">
-            <p>Provider: <strong>{config.provider}</strong> · Model: <span className="font-mono">{config.model}</span>{config.reasoningEffort && <> · Reasoning: <strong>{config.reasoningEffort}</strong></>}{config.fastMode && <> · <strong>Fast mode</strong></>}</p>
-            <p className="break-all text-subtext0">Endpoint: {config.baseUrl}</p>
+            {session && <CustomSelect
+              value={effectiveReviewerId}
+              onChange={setSelectedReviewerId}
+              options={[
+                { value: GLOBAL_REVIEWER_ID, label: `Global AI preferences (${config.model})` },
+                ...reviewerProfiles.map((bot) => ({
+                  value: bot.id,
+                  label: `${bot.name} · ${bot.model && bot.model !== 'global_default'
+                    ? bot.model
+                    : bot.provider && bot.provider !== 'global_default'
+                      ? AI_PROVIDERS.find((provider) => provider.id === bot.provider)?.defaultModel || config.model
+                      : config.model}`,
+                  description: bot.tagline,
+                })),
+              ]}
+              aria-label="Review profile"
+              className="w-full"
+              buttonClassName="w-full"
+              dropdownWidth="w-full"
+              align="left"
+            />}
+            <p>{selectedReviewer ? <>Reviewer: <strong>{selectedReviewer.name}</strong> · </> : null}Provider: <strong>{reviewConfig.provider}</strong> · Model: <span className="font-mono">{reviewConfig.model}</span>{reviewConfig.reasoningEffort && <> · Reasoning: <strong>{reviewConfig.reasoningEffort}</strong></>}{reviewConfig.fastMode && <> · <strong>Fast mode</strong></>}</p>
+            <p className="break-all text-subtext0">Endpoint: {reviewConfig.baseUrl}</p>
+            {selectedReviewer && <p className="text-subtext0">This run uses the selected reviewer’s instructions and model profile.</p>}
             <p className="text-subtext0">Reads committed Git snapshots only. No terminal, file writes, auto-resolution or MR approval. A completed review does not prove the code is safe.</p>
-            <p className="text-subtext0">Native reviews are non-streaming and use fixed safety budgets (12 turns, 48 tool calls, up to 2,048 requested output tokens per turn), independent of chat streaming and auto-summary preferences.</p>
-            {!compatible && <p role="alert" className="text-yellow">Choose API-key authentication or local Ollama in AI Preferences. CLI/subscription bridges are not used by this native tool-calling runtime.</p>}
+            <p className="text-subtext0">Reviews use fixed safety budgets (12 turns, 48 tool calls and a 64,000-token reported-usage cap), independent of chat auto-summary preferences. API-key requests also cap requested output at 2,048 tokens per turn; ChatGPT subscription uses OpenAI’s streaming Responses API, which does not accept that output-limit field, plus a bounded response-size limit and the account’s plan limits.</p>
+            {usesChatGptSubscription && reviewConfig.fastMode && <p className="text-yellow">Fast mode is not sent for ChatGPT subscription reviews; this run uses the account’s standard Responses API plan usage.</p>}
+            {!compatible && <p role="alert" className="text-yellow">Choose a provider supported by native reviews with an API key, local Ollama, or OpenAI with ChatGPT subscription sign-in. Other CLI/subscription bridges are not supported here.</p>}
             <button type="button" className="text-primary underline" onClick={() => { close(); usePreferencesStore.getState().openPreferences('ai-providers'); }}>AI Preferences</button>
-            {config.provider !== 'ollama' && <label className="flex gap-2 items-start">
+            {reviewConfig.provider !== 'ollama' && <label className="flex gap-2 items-start">
               <input type="checkbox" checked={allowRemote} onChange={(event) => setAllowRemote(event.target.checked)} className="accent-primary mt-0.5" />
-              <span>I allow eligible tracked source to be sent to this provider. Sensitive files are excluded and matching secret lines are redacted, but automatic detection cannot identify every secret.</span>
+              <span>I allow eligible tracked source to be sent to {reviewConfig.provider}. Sensitive files are excluded and matching secret lines are redacted, but automatic detection cannot identify every secret.</span>
             </label>}
             <div className="flex gap-2 pt-1">
-              <button type="button" disabled={!compatible || isStarting || hasRunning || (config.provider !== 'ollama' && !allowRemote)} onClick={() => void start(config, allowRemote)} className="bg-primary text-on-accent px-3 py-2 font-semibold disabled:opacity-40">{isStarting ? 'Capturing snapshot…' : 'Start new review'}</button>
+              <button type="button" disabled={!compatible || isStarting || hasRunning || (reviewConfig.provider !== 'ollama' && !allowRemote)} onClick={() => void start(reviewConfig, allowRemote, selectedReviewer ? { id: selectedReviewer.id, name: selectedReviewer.name } : undefined)} className="bg-primary text-on-accent px-3 py-2 font-semibold disabled:opacity-40">{isStarting ? 'Capturing snapshot…' : selectedReviewer ? `Review as ${selectedReviewer.name}` : 'Start new review'}</button>
               {running && <button type="button" onClick={() => void cancel()} className="border border-surface1 px-3 py-2">Cancel review</button>}
               {running && <button type="button" onClick={close} className="border border-surface1 px-3 py-2">Run in background</button>}
             </div>
           </div>
           {error && <p role="alert" className="border border-red/40 p-3 text-xs text-red whitespace-pre-wrap">{error}</p>}
           <HarnessConnectionsPanel />
-          {runs.length > 0 && <CustomSelect value={run?.id || runs[0].id} onChange={(id) => sessionId && void load(sessionId, id)} options={runs.map((item) => ({ value: item.id, label: `${formatDateTime(item.startedAt)} · ${item.status} · ${item.model}` }))} aria-label="Review run history" className="w-full" buttonClassName="w-full" dropdownWidth="w-full" align="left" />}
+          {runs.length > 0 && <CustomSelect value={run?.id || runs[0].id} onChange={(id) => sessionId && void load(sessionId, id)} options={runs.map((item) => ({ value: item.id, label: `${formatDateTime(item.startedAt)} · ${item.reviewerName ? `${item.reviewerName} · ` : ''}${item.status} · ${item.model}` }))} aria-label="Review run history" className="w-full" buttonClassName="w-full" dropdownWidth="w-full" align="left" />}
           {!run && <p className="text-xs text-subtext0">No review run selected. Start a review or choose one from history.</p>}
           {run && <>
             <section className="border border-surface1 p-3 space-y-2 text-xs">
-              <p role="status"><strong className="uppercase">{run.status}</strong> · {run.provider} / {run.model} · {run.findings.length} findings</p>
+              <p role="status"><strong className="uppercase">{run.status}</strong>{run.reviewerName && <> · {run.reviewerName}</>} · {run.provider} / {run.model} · {run.findings.length} findings</p>
               <p className="break-all text-subtext0">Run endpoint: {run.endpoint}</p>
               <p className="font-mono text-[11px] break-all">{run.snapshot.repoPath}<br />base {run.snapshot.baseSha}<br />head {run.snapshot.headSha}<br />merge-base {run.snapshot.mergeBaseSha}</p>
               <p className="text-subtext0">{run.inspectedFiles.length} inspected paths · {run.snapshot.changedFiles.length} eligible changed paths · {run.snapshot.excludedFiles.length} excluded · {run.turns}/12 turns · {run.toolCalls}/48 tool calls · {run.usageTokens} reported tokens</p>

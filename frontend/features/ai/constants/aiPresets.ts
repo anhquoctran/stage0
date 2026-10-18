@@ -19,7 +19,7 @@ export const AI_PROVIDERS: AiProviderPreset[] = [
       { id: 'gpt-5.6-sol', name: 'GPT-5.6 Sol', recommendedFor: 'Balanced Agentic Workloads', reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'], supportsFastMode: true },
       { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra', recommendedFor: 'Grounded Analysis & Refactoring', reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'] },
       { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna', recommendedFor: 'Rapid Feedback & Lightweight Tasks', reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'] },
-      { id: 'gpt-5.5', name: 'GPT-5.5', recommendedFor: 'Legacy Stable (Leaving Oct 14)' },
+      { id: 'gpt-5.5', name: 'GPT-5.5', recommendedFor: 'Legacy Stable (Leaving Oct 14)', reasoningEfforts: ['none', 'low', 'medium', 'high', 'xhigh'] },
       { id: 'o3-mini', name: 'o3-mini', recommendedFor: 'Deep Code Reasoning' },
       { id: 'o1', name: 'o1', recommendedFor: 'Complex Problem Solving' },
       { id: 'gpt-4o', name: 'GPT-4o (Legacy)', recommendedFor: 'Fast & Intelligent' },

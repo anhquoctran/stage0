@@ -50,7 +50,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       if (version === loadVersion && get().sessionId === sessionId) set({ error: message(error) });
     }
   },
-  start: async (config, allowRemote) => {
+  start: async (config, allowRemote, reviewer) => {
     const sessionId = get().sessionId;
     if (!sessionId || get().isStarting) return;
     set({ isStarting: true, error: null });
@@ -59,6 +59,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         sessionId, provider: config.provider, authMode: config.authMode || 'api_key',
         model: config.model, baseUrl: config.baseUrl, instructions: config.systemPrompt, allowRemote,
         reasoningEffort: config.reasoningEffort || null, fastMode: config.fastMode === true,
+        reviewerId: reviewer?.id || null, reviewerName: reviewer?.name || null,
       } });
       set((state) => ({ activeRuns: { ...state.activeRuns, [run.id]: run } }));
       if (get().sessionId === sessionId) {

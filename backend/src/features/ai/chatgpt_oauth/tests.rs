@@ -221,7 +221,9 @@ fn separate_registrations_are_preserved_and_public_status_never_contains_credent
     first.client_id = "oaiapp_first".into();
     first.email = Some("same@example.test".into());
     first.subject = Some("first".into());
-    catalog.commit(first.clone(), session(&["openid"])).unwrap();
+    catalog
+        .commit(first.clone(), &session(&["openid"]))
+        .unwrap();
     let mut second = first.clone();
     second.id = uuid::Uuid::new_v4().to_string();
     second.client_id = "oaiapp_second".into();
@@ -229,7 +231,7 @@ fn separate_registrations_are_preserved_and_public_status_never_contains_credent
     catalog
         .commit(
             second.clone(),
-            session(&["resource.invoke", "chatgpt.tokens.use.direct"]),
+            &session(&["resource.invoke", "chatgpt.tokens.use.direct"]),
         )
         .unwrap();
     let catalog = AuthCatalog::load().unwrap();
@@ -276,7 +278,7 @@ fn passive_status_never_reads_keyring_and_uses_only_explicitly_hydrated_public_m
     catalog
         .commit(
             profile.clone(),
-            session(&["resource.invoke", "chatgpt.tokens.use.direct"]),
+            &session(&["resource.invoke", "chatgpt.tokens.use.direct"]),
         )
         .unwrap();
     runtime.snapshot(&catalog).unwrap();

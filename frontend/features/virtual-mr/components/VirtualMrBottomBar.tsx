@@ -5,11 +5,9 @@ import { XCircle } from '@/common/components/icons';
 import { RotateCcw } from '../../../common/components/icons/RotateCcw';
 import { Bot } from '../../../common/components/icons/Bot';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
-import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
-import { useReviewStore } from '../../review/store/useReviewStore';
 
 export const VirtualMrBottomBar: React.FC = () => {
   const { currentRepo, showToast } = useGitStore();
@@ -91,21 +89,8 @@ export const VirtualMrBottomBar: React.FC = () => {
         </div>
       </div>
 
-      {/* Right: Actions (AI Re-verify & Large Prominent Close / Reopen Button) */}
+      {/* Right: Large Prominent Close / Reopen Button */}
       <div className="flex items-center gap-3 shrink-0">
-        {/* AI Bot Verification Trigger (visible when not closed) */}
-        {session.status !== 'closed' && (
-          <button
-            type="button"
-            onClick={() => useReviewStore.getState().open(session.id)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-surface1 hover:bg-surface2 active:bg-surface0 text-white text-xs font-medium transition-colors cursor-pointer shadow-xs disabled:opacity-50"
-            title="Open read-only AI review runs; discussions are not auto-resolved"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-white" />
-            <span>AI code review</span>
-          </button>
-        )}
-
         {/* Prominent Large Close / Reopen Request Button */}
         {session.status === 'closed' ? (
           <button
