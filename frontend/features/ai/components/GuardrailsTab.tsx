@@ -13,6 +13,7 @@ import { useAiMcpStore } from '../store/useAiMcpStore';
 import { type GuardrailMode } from '../types/GuardrailMode';
 import { type GuardrailEvaluationResult } from '../types/GuardrailEvaluationResult';
 import { DEFAULT_GUARDRAIL_POLICY } from '../types/guardrails';
+import type { AiSettingsTabProps } from '../types/AiSettingsTabProps';
 
 const SIMULATOR_TOOL_OPTIONS: CustomSelectOption<
   'execute_terminal_cmd' | 'read_file_range' | 'get_diff'
@@ -22,7 +23,7 @@ const SIMULATOR_TOOL_OPTIONS: CustomSelectOption<
   { value: 'get_diff', label: 'get_diff' },
 ];
 
-export const GuardrailsTab: React.FC = () => {
+export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isPendingCommit = false } = {}) => {
   const {
     guardrailPolicy,
     guardrailAuditLog,
@@ -32,7 +33,7 @@ export const GuardrailsTab: React.FC = () => {
     loadGuardrailAuditLog,
     clearGuardrailAuditLog,
     simulateGuardrailCheck,
-  } = useAiMcpStore();
+  } = { ...useAiMcpStore(), ...draftSettings };
 
   const policy = guardrailPolicy || DEFAULT_GUARDRAIL_POLICY;
   const allowedCommands = Array.isArray(policy.allowed_commands) ? policy.allowed_commands : DEFAULT_GUARDRAIL_POLICY.allowed_commands;
@@ -127,6 +128,7 @@ export const GuardrailsTab: React.FC = () => {
   };
 
   const runSimulation = async () => {
+    if (isPendingCommit) return;
     setSimError(null);
     setIsSimulating(true);
     try {
@@ -183,7 +185,7 @@ export const GuardrailsTab: React.FC = () => {
                     : 'bg-yellow/10 text-yellow border-yellow/30'
                 }`}
               >
-                Active: {activeMode.toUpperCase()}
+                {draftSettings ? 'Draft' : 'Active'}: {activeMode.toUpperCase()}
               </span>
             </div>
             <p className="text-xs text-subtext0 mt-1">
@@ -652,7 +654,8 @@ export const GuardrailsTab: React.FC = () => {
             <button
               type="button"
               onClick={runSimulation}
-              disabled={isSimulating}
+              disabled={isSimulating || isPendingCommit}
+              title={isPendingCommit ? 'Apply or OK to save policy changes before testing the active policy' : 'Tests the committed policy; audit actions take effect immediately'}
               className="px-3.5 py-1.5 text-xs font-semibold bg-green/15 hover:bg-green/25 text-green border border-green/30 rounded cursor-pointer transition shadow-sm"
             >
               <span>{isSimulating ? 'Evaluating...' : 'Simulate Policy Check'}</span>

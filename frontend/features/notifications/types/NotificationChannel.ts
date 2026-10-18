@@ -1,1 +1,1 @@
-export type NotificationChannel = 'softwareUpdates' | 'aiReview' | 'gitSync' | 'guardrails';
+export type NotificationChannel = 'aiReview' | 'gitSync' | 'guardrails';

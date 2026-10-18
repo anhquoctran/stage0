@@ -27,10 +27,14 @@ import { BotReviewersTab } from '../../ai/components/BotReviewersTab';
 import { SandboxTab } from '../../ai/components/SandboxTab';
 import { GitBinaryTab } from '../../git/components/GitBinaryTab';
 import { GuardrailsTab } from '../../ai/components/GuardrailsTab';
-import { UpdatesTab } from '../../updates/components/UpdatesTab';
 import { NotificationsTab } from '../../notifications/components/NotificationsTab';
 import { useGitStore } from '../../git/store/useGitStore';
-import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
+import { createAiPreferencesDraft } from '../../ai/store/createAiPreferencesDraft';
+import { captureAiPreferences, commitAiPreferences } from '../../ai/services/commitAiPreferences';
+import { aiPreferencesChangeCount } from '../../ai/utils/aiPreferencesSnapshot';
+import { DEFAULT_MCP_SERVERS } from '../../ai/constants/aiPresets';
+import { DEFAULT_GUARDRAIL_POLICY } from '../../ai/types/guardrails';
+import { DEFAULT_BOT_REVIEWERS } from '../../ai/constants/botPresets';
 import { useGitBinaryStore } from '../../git/store/useGitBinaryStore';
 import { DEFAULT_AI_CONFIG } from '../../ai/constants/aiPresets';
 import { type AiConfig } from '../../ai/types/AiConfig';
@@ -170,19 +174,6 @@ const SETTINGS_TREE: TreeCategory[] = [
       },
     ],
   },
-  {
-    id: 'updates',
-    label: 'Software Updates',
-    children: [
-      {
-        id: 'updates-check',
-        label: 'Updates & Version',
-        title: 'Software Updates',
-        description: 'Check for application updates, inspect release notes, and configure automated version verification.',
-        keywords: ['update', 'version', 'upgrade', 'patch', 'check', 'download', 'release', 'install', 'channel'],
-      },
-    ],
-  },
 ];
 
 // Helper to normalize legacy tab strings
@@ -215,11 +206,10 @@ const normalizeTab = (tab?: string): PreferenceTab => {
     case 'notifications':
     case 'notifications-settings':
       return 'notifications-settings';
-    case 'updates':
-    case 'updates-check':
-      return 'updates-check';
     default:
-      return tab as PreferenceTab;
+      return SETTINGS_TREE.some((category) => category.children.some((child) => child.id === tab))
+        ? tab as PreferenceTab
+        : 'ai-overview';
   }
 };
 
@@ -237,14 +227,22 @@ export const PreferencesModal: React.FC = () => {
     lineSpacing: storedLineSpacing,
     enableLigatures: storedEnableLigatures,
     updateViewerFontSettings,
-    resetViewerFontSettings,
     showInlineBlame: storedShowInlineBlame,
     setShowInlineBlame: storeSetShowInlineBlame,
   } = usePreferencesStore();
 
   const { themeMode: storedThemeMode, setThemeMode: storeSetThemeMode } = useThemeStore();
   const { activeSandboxType: storedSandboxType, setActiveSandbox: storeSetActiveSandbox, showToast } = useGitStore();
-  const { aiConfig: storedAiConfig, updateAiConfig: storeUpdateAiConfig } = useAiMcpStore();
+  const [aiDraftStore] = useState(() => createAiPreferencesDraft(captureAiPreferences()));
+  const aiDraft = aiDraftStore();
+  const [aiBaseline, setAiBaseline] = useState(captureAiPreferences);
+  const draftAiConfig = aiDraft.aiConfig;
+  const storedAiConfig = aiBaseline.aiConfig;
+  const setDraftAiConfig = (next: AiConfig | ((previous: AiConfig) => AiConfig)) =>
+    aiDraft.updateAiConfig(typeof next === 'function' ? next(aiDraftStore.getState().aiConfig) : next);
+  const [isApplying, setIsApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
+  const applyingRef = useRef(false);
   const {
     activeBinaryId: storedGitBinaryId,
     activeBinaryPath: storedGitBinaryPath,
@@ -278,7 +276,6 @@ export const PreferencesModal: React.FC = () => {
   const [draftEnableLigatures, setDraftEnableLigatures] = useState(storedEnableLigatures);
   const [draftShowInlineBlame, setDraftShowInlineBlame] = useState(storedShowInlineBlame);
   const [draftSandboxType, setDraftSandboxType] = useState<SandboxType>(storedSandboxType);
-  const [draftAiConfig, setDraftAiConfig] = useState<AiConfig>({ ...storedAiConfig });
   const [draftGitBinaryId, setDraftGitBinaryId] = useState(storedGitBinaryId);
   const [draftGitBinaryPath, setDraftGitBinaryPath] = useState(storedGitBinaryPath);
 
@@ -320,7 +317,10 @@ export const PreferencesModal: React.FC = () => {
         setDraftEnableLigatures(storedEnableLigatures);
         setDraftShowInlineBlame(storedShowInlineBlame);
         setDraftSandboxType(storedSandboxType);
-        setDraftAiConfig({ ...storedAiConfig });
+        const snapshot = captureAiPreferences();
+        aiDraftStore.getState().replace(snapshot);
+        setAiBaseline(snapshot);
+        setApplyError(null);
         setDraftGitBinaryId(storedGitBinaryId);
         setDraftGitBinaryPath(storedGitBinaryPath);
 
@@ -360,7 +360,7 @@ export const PreferencesModal: React.FC = () => {
         wasOpenRef.current = false;
         setActiveTab(null);
         setExpandedGroups({});
-        setDraftAiConfig((current) => ({ ...current, apiKey: '' }));
+        aiDraftStore.getState().replace(captureAiPreferences());
       }
     }
   }, [
@@ -402,8 +402,7 @@ export const PreferencesModal: React.FC = () => {
   const totalUnsaved = useMemo(() => {
     let count = 0;
     if (draftShowInlineBlame !== savedBaseline.showInlineBlame) count++;
-    if (draftAiConfig.streamResponse !== savedBaseline.aiConfig.streamResponse) count++;
-    if (draftAiConfig.enableCodeReviewAssist !== savedBaseline.aiConfig.enableCodeReviewAssist) count++;
+    count += aiPreferencesChangeCount(aiDraft, aiBaseline);
     if (draftThemeMode !== savedBaseline.themeMode) count++;
     if (draftFontFamily !== savedBaseline.fontFamily) count++;
     if (draftFontSize !== savedBaseline.fontSize) count++;
@@ -429,10 +428,13 @@ export const PreferencesModal: React.FC = () => {
     draftSandboxType,
     draftGitBinaryId,
     savedBaseline,
+    aiDraft,
+    aiBaseline,
   ]);
 
   const hasUnsavedChanges = totalUnsaved > 0;
-  const canCommitPreferences = hasUnsavedChanges || isApplied;
+  const canCommitPreferences = hasUnsavedChanges && !isApplying;
+  useEffect(() => { if (hasUnsavedChanges) setIsApplied(false); }, [hasUnsavedChanges, aiDraft]);
 
   // Filter tree categories based on search
   const filteredTree = useMemo(() => {
@@ -514,67 +516,58 @@ export const PreferencesModal: React.FC = () => {
 
   // Commit changes
   const handleApply = async () => {
-    storeSetThemeMode(draftThemeMode);
-    const resolvedTheme = resolveTheme(draftThemeMode);
-    applyThemeToDocument(resolvedTheme);
+    if (applyingRef.current) return false;
+    applyingRef.current = true;
+    setIsApplying(true);
+    setApplyError(null);
+    try {
+      const committedAi = await commitAiPreferences(aiDraftStore.getState(), aiBaseline);
+      aiDraftStore.getState().replace(committedAi);
+      setAiBaseline(committedAi);
+      storeSetThemeMode(draftThemeMode);
+      applyThemeToDocument(resolveTheme(draftThemeMode));
 
-    const fontSettings: ViewerFontSettings = {
-      fontFamily: draftFontFamily,
-      fontSize: draftFontSize,
-      isBold: draftIsBold,
-      isItalic: draftIsItalic,
-      isUnderline: draftIsUnderline,
-      lineSpacing: draftLineSpacing,
-      enableLigatures: draftEnableLigatures,
-    };
-    updateViewerFontSettings(fontSettings);
-    applyViewerFontToDocument(fontSettings);
+      const fontSettings: ViewerFontSettings = {
+        fontFamily: draftFontFamily, fontSize: draftFontSize,
+        isBold: draftIsBold, isItalic: draftIsItalic, isUnderline: draftIsUnderline,
+        lineSpacing: draftLineSpacing, enableLigatures: draftEnableLigatures,
+      };
+      updateViewerFontSettings(fontSettings);
+      applyViewerFontToDocument(fontSettings);
+      storeSetShowInlineBlame(draftShowInlineBlame);
+      if (draftSandboxType !== savedBaseline.sandboxType) await storeSetActiveSandbox(draftSandboxType);
 
-    storeSetShowInlineBlame(draftShowInlineBlame);
-    await storeSetActiveSandbox(draftSandboxType);
-    const safeDraftAiConfig = { ...draftAiConfig, apiKey: '' };
-    storeUpdateAiConfig(draftAiConfig);
-    setDraftAiConfig(safeDraftAiConfig);
-
-    let needsRestart = false;
-    if (draftGitBinaryId !== savedBaseline.gitBinaryId) {
-      await storeSetActiveBinary(draftGitBinaryId, draftGitBinaryPath);
-      needsRestart = true;
-    }
-
-    setSavedBaseline({
-      themeMode: draftThemeMode,
-      fontFamily: draftFontFamily,
-      fontSize: draftFontSize,
-      isBold: draftIsBold,
-      isItalic: draftIsItalic,
-      isUnderline: draftIsUnderline,
-      lineSpacing: draftLineSpacing,
-      enableLigatures: draftEnableLigatures,
-      showInlineBlame: draftShowInlineBlame,
-      sandboxType: draftSandboxType,
-      aiConfig: safeDraftAiConfig,
-      gitBinaryId: draftGitBinaryId,
-      gitBinaryPath: draftGitBinaryPath,
-    });
-
-    setIsApplied(true);
-    setTimeout(() => setIsApplied(false), 2000);
-    showToast('Preferences applied successfully');
-
-    if (needsRestart) {
-      setShowRestartPrompt(true);
-    }
+      const needsRestart = draftGitBinaryId !== savedBaseline.gitBinaryId;
+      if (needsRestart) await storeSetActiveBinary(draftGitBinaryId, draftGitBinaryPath);
+      setSavedBaseline({
+        themeMode: draftThemeMode, fontFamily: draftFontFamily, fontSize: draftFontSize,
+        isBold: draftIsBold, isItalic: draftIsItalic, isUnderline: draftIsUnderline,
+        lineSpacing: draftLineSpacing, enableLigatures: draftEnableLigatures,
+        showInlineBlame: draftShowInlineBlame, sandboxType: draftSandboxType,
+        aiConfig: committedAi.aiConfig, gitBinaryId: draftGitBinaryId, gitBinaryPath: draftGitBinaryPath,
+      });
+      setIsApplied(true);
+      setTimeout(() => setIsApplied(false), 2000);
+      showToast('Preferences applied successfully');
+      if (needsRestart) setShowRestartPrompt(true);
+      return true;
+    } catch (error) {
+      setApplyError(error instanceof Error ? error.message : 'Could not apply preferences. Your drafts are still available.');
+      return false;
+    } finally { applyingRef.current = false; setIsApplying(false); }
   };
 
   const handleOk = async () => {
+    if (applyingRef.current) return;
     if (hasUnsavedChanges) {
-      await handleApply();
+      if (!await handleApply()) return;
     }
     setIsPreferencesOpen(false);
   };
 
   const handleCancel = () => {
+    if (applyingRef.current) return;
+    aiDraftStore.getState().replace(captureAiPreferences());
     const resolvedTheme = resolveTheme(savedBaseline.themeMode);
     applyThemeToDocument(resolvedTheme);
 
@@ -596,12 +589,18 @@ export const PreferencesModal: React.FC = () => {
     setDraftThemeMode('system');
     applyThemeToDocument(resolveTheme('system'));
 
-    resetViewerFontSettings();
+    setDraftFontFamily(DEFAULT_VIEWER_FONT_SETTINGS.fontFamily);
+    setDraftFontSize(DEFAULT_VIEWER_FONT_SETTINGS.fontSize);
+    setDraftIsBold(DEFAULT_VIEWER_FONT_SETTINGS.isBold);
+    setDraftIsItalic(DEFAULT_VIEWER_FONT_SETTINGS.isItalic);
+    setDraftIsUnderline(DEFAULT_VIEWER_FONT_SETTINGS.isUnderline);
+    setDraftLineSpacing(DEFAULT_VIEWER_FONT_SETTINGS.lineSpacing);
+    setDraftEnableLigatures(DEFAULT_VIEWER_FONT_SETTINGS.enableLigatures);
     applyViewerFontToDocument(DEFAULT_VIEWER_FONT_SETTINGS);
 
     setDraftShowInlineBlame(true);
     setDraftSandboxType('in_memory');
-    setDraftAiConfig({ ...DEFAULT_AI_CONFIG });
+    aiDraft.replace({ aiConfig: { ...DEFAULT_AI_CONFIG }, mcpServers: DEFAULT_MCP_SERVERS, guardrailPolicy: DEFAULT_GUARDRAIL_POLICY, globalReviewers: DEFAULT_BOT_REVIEWERS });
 
     setShowResetConfirm(false);
     showToast('Reset all draft settings to defaults (click Apply to save)');
@@ -644,6 +643,7 @@ export const PreferencesModal: React.FC = () => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Window Bar */}
+        <fieldset disabled={isApplying} className="contents">
         <div className="h-10 pl-4 pr-0 bg-crust border-b border-surface0/80 flex items-center justify-between shrink-0 select-none">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold tracking-tight text-text">Preferences</span>
@@ -836,7 +836,7 @@ export const PreferencesModal: React.FC = () => {
             {/* VIEW: SECURITY GUARDRAILS */}
             {currentTabId === 'ai-guardrails' && (
               <div className="animate-in fade-in duration-100">
-                <GuardrailsTab />
+                <GuardrailsTab draftSettings={aiDraft} isPendingCommit={JSON.stringify(aiDraft.guardrailPolicy) !== JSON.stringify(aiBaseline.guardrailPolicy)} />
               </div>
             )}
 
@@ -1286,10 +1286,16 @@ export const PreferencesModal: React.FC = () => {
               </div>
             )}
 
+            {currentTabId?.startsWith('ai-') && <p className="mb-4 border border-surface1 bg-base p-3 text-[11px] text-subtext0">
+              Configuration changes are drafts until Apply or OK. Cancel discards changes since the last Apply.
+              Sign-in/out, tests, discovery, audit clearing, copy/export and sandbox execution are separate immediate actions; Cancel does not undo them.
+            </p>}
+
             {/* VIEW: LLM PROVIDERS */}
             {currentTabId === 'ai-providers' && (
               <div className="animate-in fade-in duration-100">
                 <AiMcpTab
+                  draftSettings={aiDraft}
                   draftAiConfig={draftAiConfig}
                   onUpdateAiConfig={(partial) =>
                     setDraftAiConfig((prev) => ({ ...prev, ...partial }))
@@ -1304,6 +1310,7 @@ export const PreferencesModal: React.FC = () => {
             {currentTabId === 'ai-mcp' && (
               <div className="animate-in fade-in duration-100">
                 <AiMcpTab
+                  draftSettings={aiDraft}
                   draftAiConfig={draftAiConfig}
                   onUpdateAiConfig={(partial) =>
                     setDraftAiConfig((prev) => ({ ...prev, ...partial }))
@@ -1325,7 +1332,7 @@ export const PreferencesModal: React.FC = () => {
                   <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
                   <span>Back to AI overview</span>
                 </button>
-                <BotReviewersTab />
+                <BotReviewersTab draftSettings={aiDraft} />
               </div>
             )}
 
@@ -1343,6 +1350,7 @@ export const PreferencesModal: React.FC = () => {
                 <SandboxTab
                   draftSandboxType={draftSandboxType}
                   onSelectAdapter={setDraftSandboxType}
+                  isPendingCommit={draftSandboxType !== savedBaseline.sandboxType}
                 />
               </div>
             )}
@@ -1376,17 +1384,11 @@ export const PreferencesModal: React.FC = () => {
                 <NotificationsTab />
               </div>
             )}
-
-            {/* VIEW: SOFTWARE UPDATES */}
-            {currentTabId === 'updates-check' && (
-              <div className="animate-in fade-in duration-100">
-                <UpdatesTab />
-              </div>
-            )}
           </div>
         </div>
 
         {/* Footer: Reset on left, Cancel, Apply, OK on right */}
+        {applyError && <p role="alert" className="px-6 py-2 text-xs text-red break-words">{applyError}</p>}
         <div className="px-6 py-3 border-t border-surface0/60 flex items-center justify-between bg-crust/80 select-none shrink-0">
           <div className="flex items-center gap-3">
             <button
@@ -1420,7 +1422,7 @@ export const PreferencesModal: React.FC = () => {
             <button
               type="button"
               onClick={handleApply}
-              disabled={!canCommitPreferences}
+              disabled={isApplying || !hasUnsavedChanges}
               className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all rounded border ${isApplied
                   ? 'bg-green/10 border-green/30 text-green'
                   : canCommitPreferences
@@ -1434,15 +1436,15 @@ export const PreferencesModal: React.FC = () => {
                   <span>Applied</span>
                 </>
               ) : (
-                <span>Apply</span>
+                <span>{isApplying ? 'Applying…' : 'Apply'}</span>
               )}
             </button>
 
             <button
               type="button"
               onClick={handleOk}
-              disabled={!canCommitPreferences}
-              className={`px-4 py-1.5 text-xs font-semibold transition-colors rounded border ${canCommitPreferences
+              disabled={isApplying}
+              className={`px-4 py-1.5 text-xs font-semibold transition-colors rounded border ${!isApplying
                   ? 'bg-surface0 hover:bg-surface1 border-surface1 text-text cursor-pointer shadow-xs'
                   : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'
                 }`}
@@ -1451,6 +1453,7 @@ export const PreferencesModal: React.FC = () => {
             </button>
           </div>
         </div>
+        </fieldset>
       </div>
 
 

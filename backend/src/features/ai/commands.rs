@@ -95,20 +95,42 @@ pub async fn google_oauth_disconnect() -> Result<(), String> {
 
 #[tauri::command]
 pub async fn chatgpt_oauth_start(
-    client_id: Option<String>,
-) -> Result<crate::features::ai::chatgpt_oauth::ChatGptOAuthStartResult, String> {
-    crate::features::ai::chatgpt_oauth::start_chatgpt_oauth(client_id).await
+    profile_id: Option<String>,
+) -> Result<crate::features::ai::chatgpt_oauth::ChatGptAuthStatus, String> {
+    crate::features::ai::chatgpt_oauth::start_chatgpt_oauth(profile_id).await
 }
 
 #[tauri::command]
 pub async fn chatgpt_oauth_check_status(
 ) -> Result<crate::features::ai::chatgpt_oauth::ChatGptAuthStatus, String> {
-    Ok(crate::features::ai::chatgpt_oauth::check_chatgpt_auth_status().await)
+    crate::features::ai::chatgpt_oauth::check_chatgpt_auth_status().await
 }
 
 #[tauri::command]
-pub async fn chatgpt_oauth_disconnect() -> Result<(), String> {
-    crate::features::ai::chatgpt_oauth::disconnect_chatgpt_subscription()
+pub async fn chatgpt_oauth_load_saved(
+) -> Result<crate::features::ai::chatgpt_oauth::ChatGptAuthStatus, String> {
+    crate::features::ai::chatgpt_oauth::load_saved_chatgpt_auth().await
+}
+
+#[tauri::command]
+pub async fn chatgpt_oauth_disconnect(
+    profile_id: String,
+) -> Result<crate::features::ai::chatgpt_oauth::ChatGptAuthStatus, String> {
+    crate::features::ai::chatgpt_oauth::disconnect_chatgpt_subscription(&profile_id).await
+}
+
+#[tauri::command]
+pub async fn chatgpt_oauth_cancel(
+    attempt_id: String,
+) -> Result<crate::features::ai::chatgpt_oauth::ChatGptAuthStatus, String> {
+    crate::features::ai::chatgpt_oauth::cancel_chatgpt_oauth(&attempt_id).await
+}
+
+#[tauri::command]
+pub async fn chatgpt_oauth_refresh(
+    profile_id: String,
+) -> Result<crate::features::ai::chatgpt_oauth::ChatGptAuthStatus, String> {
+    crate::features::ai::chatgpt_oauth::refresh_chatgpt_session(&profile_id).await
 }
 
 #[tauri::command]

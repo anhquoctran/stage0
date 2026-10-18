@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { XCircle } from '@/common/components/icons';
@@ -9,11 +9,11 @@ import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
+import { useReviewStore } from '../../review/store/useReviewStore';
 
 export const VirtualMrBottomBar: React.FC = () => {
   const { currentRepo, showToast } = useGitStore();
-  const { getActiveSession, updateSessionStatus, triggerIncrementalReReview } = useVirtualMrStore();
-  const [isVerifying, setIsVerifying] = useState(false);
+  const { getActiveSession, updateSessionStatus } = useVirtualMrStore();
 
   const session = getActiveSession();
 
@@ -32,18 +32,6 @@ export const VirtualMrBottomBar: React.FC = () => {
     showToast(`Virtual MR #${session.title} reopened`);
   };
 
-  const handleReVerify = async () => {
-    setIsVerifying(true);
-    try {
-      await triggerIncrementalReReview(session.id);
-      showToast('AI Auditor completed verification');
-    } catch {
-      showToast('Failed to trigger AI verification');
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
   return (
     <div className="h-14 bg-mantle/95 backdrop-blur-xs border-t border-surface0 px-5 flex items-center justify-between shrink-0 select-none z-20 shadow-md">
       {/* Left: MR Status, Branch Flow & AI Auditor State */}
@@ -52,10 +40,10 @@ export const VirtualMrBottomBar: React.FC = () => {
         {session.status === 'approved' ? (
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-300 shrink-0 shadow-xs"
-            title="Approved by AI Reviewer"
+            title="Saved approval status. No evidence-backed AI review is recorded."
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-            <span>Approved by AI</span>
+            <span>Approved</span>
           </div>
         ) : session.status === 'closed' ? (
           <div
@@ -89,20 +77,15 @@ export const VirtualMrBottomBar: React.FC = () => {
 
         {/* AI Auditor Review Status Indicator */}
         <div className="flex items-center gap-2 pl-3 border-l border-surface0/60 hidden md:flex">
-          {session.status === 'approved' ? (
-            <div className="flex items-center gap-1.5 text-xs text-purple-300 font-medium">
-              <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-              <span>AI Auditor verified and approved all changes</span>
-            </div>
-          ) : unresolvedCount > 0 ? (
+          {unresolvedCount > 0 ? (
             <div className="flex items-center gap-1.5 text-xs text-amber-300 font-medium">
               <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>{unresolvedCount} AI discussion{unresolvedCount > 1 ? 's' : ''} require attention</span>
+              <span>{unresolvedCount} open discussion{unresolvedCount > 1 ? 's' : ''}</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-xs text-subtext0 font-medium">
               <Bot className="w-3.5 h-3.5 text-accent shrink-0" />
-              <span>AI bot review active</span>
+              <span>No evidence-backed approval recorded</span>
             </div>
           )}
         </div>
@@ -114,13 +97,12 @@ export const VirtualMrBottomBar: React.FC = () => {
         {session.status !== 'closed' && (
           <button
             type="button"
-            onClick={handleReVerify}
-            disabled={isVerifying}
+            onClick={() => useReviewStore.getState().open(session.id)}
             className="flex items-center gap-1.5 px-3 py-2 bg-surface1 hover:bg-surface2 active:bg-surface0 text-white text-xs font-medium transition-colors cursor-pointer shadow-xs disabled:opacity-50"
-            title="Trigger AI Auditor re-verification on unresolved discussions"
+            title="Open read-only AI review runs; discussions are not auto-resolved"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-white ${isVerifying ? 'animate-spin' : ''}`} />
-            <span>Re-verify with AI</span>
+            <RefreshCw className="w-3.5 h-3.5 text-white" />
+            <span>AI code review</span>
           </button>
         )}
 

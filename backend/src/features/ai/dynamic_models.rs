@@ -35,7 +35,11 @@ pub async fn fetch_provider_models(
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
     // Resolve key from param or OS Keyring
-    let resolved_key = if let Some(k) = api_key.filter(|k| !k.trim().is_empty()) {
+    let resolved_key = if matches!(provider, "ollama" | "github_copilot") {
+        // Local model discovery needs no credential; Copilot resolves its own
+        // subscription token below. Do not read either credential unnecessarily.
+        None
+    } else if let Some(k) = api_key.filter(|k| !k.trim().is_empty()) {
         Some(k.to_string())
     } else {
         crate::features::credentials::get_ai_key(provider)

@@ -1,4 +1,5 @@
 import type { BotCategory } from './BotCategory';
+import type { AiReasoningEffort } from '../../ai/types/AiReasoningEffort';
 
 export interface BotReviewer {
   id: string;
@@ -11,6 +12,8 @@ export interface BotReviewer {
   provider?: string;
   model?: string;
   temperature?: number;
+  reasoningEffort?: AiReasoningEffort;
+  fastMode?: boolean;
   enabled: boolean;
   isBuiltin?: boolean;
 }

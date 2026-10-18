@@ -19,6 +19,7 @@ import { type ReviewActionType } from '../../virtual-mr/types/ReviewActionType';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
 import { MarkdownPreview } from '../../../common/components/MarkdownPreview';
 import type { DiffDiscussionsBannerProps } from '../types/DiffDiscussionsBannerProps';
+import { AI_REVIEW_UNAVAILABLE } from '../../ai/constants/runtimeAvailability';
 
 export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ selectedFile }) => {
   const { currentRepo, showToast } = useGitStore();
@@ -27,7 +28,6 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
     createDiscussion,
     replyToDiscussion,
     resolveDiscussion,
-    reverifyDiscussionFix,
   } = useVirtualMrStore();
 
   const session = getActiveSession();
@@ -36,7 +36,6 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
   const [commentText, setCommentText] = useState('');
   const commentAction: ReviewActionType = 'comment';
   const [replyInputs, setReplyInputs] = useState<{ [discId: string]: string }>({});
-  const [verifyingDiscId, setVerifyingDiscId] = useState<string | null>(null);
   const [collapsedDiscIds, setCollapsedDiscIds] = useState<{ [discId: string]: boolean }>({});
 
   if (!session || !currentRepo) return null;
@@ -76,18 +75,6 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
     await replyToDiscussion(discId, text);
     setReplyInputs((prev) => ({ ...prev, [discId]: '' }));
     showToast('Reply posted');
-  };
-
-  const handleReverify = async (discId: string, botId?: string) => {
-    setVerifyingDiscId(discId);
-    try {
-      await reverifyDiscussionFix(discId, botId || 'security-bot');
-      showToast('AI Bot re-verified and approved the fix!');
-    } catch (err: any) {
-      showToast(`Re-verification error: ${err}`);
-    } finally {
-      setVerifyingDiscId(null);
-    }
   };
 
   const toggleCollapse = (id: string) => {
@@ -185,7 +172,6 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
       {fileDiscussions.map((disc) => {
         const firstComment = disc.comments[0];
         const isCollapsed = collapsedDiscIds[disc.id] || disc.isResolved;
-        const isVerifying = verifyingDiscId === disc.id || disc.verificationStatus === 'verifying';
 
         return (
           <div
@@ -238,8 +224,8 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
 
                 {/* Verification Badge */}
                 {disc.resolveType === 'ai_verified' && (
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> AI-Verified
+                  <span title="Historical verification has no evidence-backed review run." className="text-[10px] px-1.5 py-0.2 rounded bg-surface1 text-subtext0 font-mono flex items-center gap-1">
+                    Legacy result · unverified
                   </span>
                 )}
               </div>
@@ -261,12 +247,11 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
                 {!disc.isResolved && (
                   <button
                     type="button"
-                    disabled={isVerifying}
-                    onClick={() => handleReverify(disc.id, disc.verifiedByBot || undefined)}
+                    disabled
                     className="px-2.5 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-medium flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-xs"
-                    title="Request AI Bot to re-scan the code line after dev made fixes in IDE"
+                    title={AI_REVIEW_UNAVAILABLE}
                   >
-                    <RefreshCw className={`w-3 h-3 text-white ${isVerifying ? 'animate-spin' : ''}`} />
+                    <RefreshCw className="w-3 h-3 text-white" />
                     <span className="text-white">Re-verify Fix</span>
                   </button>
                 )}

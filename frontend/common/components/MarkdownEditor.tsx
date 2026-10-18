@@ -32,7 +32,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   cancelLabel = 'Cancel',
   showActions = false,
   isSubmitting = false,
-  onAiGenerate,
+  onGenerateDraft,
   extraActions,
 }) => {
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
@@ -246,7 +246,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       </div>
 
       {/* Action Bar / Bottom Bar */}
-      {(showActions || onAiGenerate) && (
+      {(showActions || onGenerateDraft) && (
         <div className="flex items-center justify-between px-3 py-1.5 border-t border-surface1 bg-base/50 gap-2 select-none">
           <div className="flex items-center gap-2 text-[10px] text-subtext0 font-mono">
             {showActions && (
@@ -257,14 +257,14 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {onAiGenerate && (
+            {onGenerateDraft && (
               <button
                 type="button"
-                onClick={onAiGenerate}
+                onClick={onGenerateDraft}
                 disabled={disabled || isSubmitting}
                 className="p-1 rounded text-subtext0 hover:text-purple-300 hover:bg-surface1 active:bg-surface2 transition-colors cursor-pointer disabled:opacity-40"
-                title="Generate with AI"
-                aria-label="Generate with AI"
+                title="Generate draft from commit metadata (no AI request)"
+                aria-label="Generate draft from commit metadata"
               >
                 <Sparkles className="w-3.5 h-3.5" />
               </button>

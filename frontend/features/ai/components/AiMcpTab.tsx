@@ -26,14 +26,19 @@ import { Zap } from '../../../common/components/icons/Zap';
 import { HardDrive } from '../../../common/components/icons/HardDrive';
 import { Cog } from '../../../common/components/icons/Cog';
 import { CustomSelect } from '../../../common/components/CustomSelect';
+import { AiModelExecutionOptions } from './AiModelExecutionOptions';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import { AI_PROVIDERS, MCP_PRESET_TEMPLATES, DEFAULT_AI_CONFIG } from '../constants/aiPresets';
+import { resolveAiModelPreset } from '../utils/resolveAiModelPreset';
 import { type AiConfig } from '../types/AiConfig';
 import { type AiProviderId } from '../types/AiProviderId';
 import { type McpServerConfig } from '../types/McpServerConfig';
 import { type McpServerType } from '../types/McpServerType';
 import type { AiMcpTabProps } from '../types/AiMcpTabProps';
+import { HarnessConnectionsPanel } from '../../review/components/HarnessConnectionsPanel';
+import { ChatGptDeviceCodeCard } from './ChatGptDeviceCodeCard';
+import { ChatGptBrowserAuthCard } from './ChatGptBrowserAuthCard';
 
 const MAX_TOKEN_OPTIONS: CustomSelectOption<string>[] = [
   { value: '1024', label: '1,024 Tokens (Compact)' },
@@ -45,7 +50,8 @@ const MAX_TOKEN_OPTIONS: CustomSelectOption<string>[] = [
 
 const MCP_SERVER_TYPE_OPTIONS: CustomSelectOption<McpServerType>[] = [
   { value: 'stdio', label: 'stdio (Command / Subprocess)' },
-  { value: 'sse', label: 'sse (HTTP Server-Sent Events)' },
+  { value: 'http', label: 'Streamable HTTP (MCP 2025-11-25 discovery)' },
+  { value: 'sse', label: 'Legacy HTTP+SSE (configuration only)' },
 ];
 
 const getProviderIcon = (providerId: string) => {
@@ -81,6 +87,7 @@ const openUrlInBrowser = async (url: string) => {
 };
 
 export const AiMcpTab: React.FC<AiMcpTabProps> = ({
+  draftSettings,
   draftAiConfig,
   onUpdateAiConfig,
   onNavigateToGuardrails,
@@ -90,6 +97,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   const {
     aiConfig: storeAiConfig,
     apiKeysConfigured,
+    isCheckingApiKey,
+    apiKeyCheckError,
     mcpServers,
     isTestingAi,
     aiTestResult,
@@ -106,6 +115,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     cliStatus,
     isDetectingCli,
     isConnectingSubscription,
+    isCheckingSubscription,
     copilotDeviceCode,
     detectCli,
     executeCliTest,
@@ -118,11 +128,10 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     disconnectGoogleOAuth,
     clearCopilotDeviceCode,
     dynamicModels,
+    isFetchingDynamicModels,
+    dynamicModelError,
     fetchDynamicModels,
     chatgptAuthStatus,
-    startChatGptOAuth,
-    checkChatGptAuthStatus,
-    disconnectChatGptOAuth,
     addMcpServer,
     updateMcpServer,
     deleteMcpServer,
@@ -130,11 +139,12 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     testMcpServer,
     importMcpConfigFile,
     exportMcpConfigFile,
-  } = useAiMcpStore();
+  } = { ...useAiMcpStore(), ...draftSettings };
 
   const aiConfig = draftAiConfig || storeAiConfig;
   const updateAiConfig = onUpdateAiConfig || storeUpdateAiConfig;
   const setProvider = (providerId: AiConfig['provider']) => {
+    if (providerId === aiConfig.provider) return;
     const preset = AI_PROVIDERS.find((p) => p.id === providerId) || AI_PROVIDERS[0];
     const defaultAuthMode: AiConfig['authMode'] =
       providerId === 'github_copilot'
@@ -154,6 +164,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         model: preset.defaultModel,
         baseUrl: preset.defaultBaseUrl,
         apiKey: '',
+        reasoningEffort: undefined,
+        fastMode: false,
       });
     } else {
       storeSetProvider(providerId);
@@ -162,7 +174,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   };
 
   const resetAiConfig = () => {
-    if (onUpdateAiConfig) {
+    if (draftSettings) {
+      draftSettings.replace({ aiConfig: { ...DEFAULT_AI_CONFIG }, mcpServers: draftSettings.mcpServers, guardrailPolicy: draftSettings.guardrailPolicy, globalReviewers: draftSettings.globalReviewers });
+    } else if (onUpdateAiConfig) {
       onUpdateAiConfig(DEFAULT_AI_CONFIG);
     } else {
       storeResetAiConfig();
@@ -191,16 +205,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   }, [copilotDeviceCode, pollCopilotToken]);
 
   useEffect(() => {
-    void checkCopilotStatus();
-    void checkGoogleAuthStatus();
-    void checkChatGptAuthStatus();
     void detectCli('claude');
     void detectCli('grok');
-  }, [checkCopilotStatus, checkGoogleAuthStatus, checkChatGptAuthStatus, detectCli]);
-
-  useEffect(() => {
-    void fetchDynamicModels(aiConfig.provider);
-  }, [aiConfig.provider, fetchDynamicModels]);
+  }, [detectCli]);
 
   // Add / Edit Server Form State
   const [isServerFormOpen, setIsServerFormOpen] = useState(false);
@@ -228,10 +235,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   useEffect(() => {
     setApiKeyDraft(draftAiConfig?.apiKey || '');
   }, [aiConfig.provider, draftAiConfig?.apiKey]);
-
-  useEffect(() => {
-    void loadApiKeyForProvider(aiConfig.provider);
-  }, [aiConfig.provider, loadApiKeyForProvider]);
 
   const enabledMcpCount = mcpServers.filter((s) => s.enabled).length;
 
@@ -289,8 +292,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       return;
     }
 
-    if (serverType === 'sse' && !serverUrl.trim()) {
-      setFormError('SSE endpoint URL is required');
+    if (serverType !== 'stdio' && !serverUrl.trim()) {
+      setFormError('HTTP endpoint URL is required');
       return;
     }
 
@@ -314,7 +317,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         type: serverType,
         command: serverCommand.trim(),
         args: parsedArgs,
-        url: serverType === 'sse' ? serverUrl.trim() : undefined,
+        url: serverType !== 'stdio' ? serverUrl.trim() : undefined,
         env: envMap,
       });
     } else {
@@ -324,7 +327,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         type: serverType,
         command: serverCommand.trim(),
         args: parsedArgs,
-        url: serverType === 'sse' ? serverUrl.trim() : undefined,
+        url: serverType !== 'stdio' ? serverUrl.trim() : undefined,
         env: envMap,
         enabled: true,
       });
@@ -335,8 +338,11 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 
   const handleTestServer = async (id: string) => {
     setTestingServerId(id);
-    await testMcpServer(id);
-    setTestingServerId(null);
+    try {
+      await testMcpServer(id);
+    } finally {
+      setTestingServerId(null);
+    }
   };
 
   const handleCopyJson = () => {
@@ -629,41 +635,15 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               {/* Sub-panels for Auth Modes */}
               {aiConfig.provider === 'openai' && isSubscriptionMode ? (
                 <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
-                  {chatgptAuthStatus?.connected ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-text">
-                        <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
-                        <span>Signed in as <strong className="font-mono text-text">{chatgptAuthStatus.account_email || 'ChatGPT Subscriber'}</strong></span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-green/10 text-green border border-green/20 font-mono">
-                          ChatGPT Plus / Pro
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => void disconnectChatGptOAuth()}
-                        className="px-2.5 py-1 rounded bg-red/10 hover:bg-red/20 text-[11px] text-red border border-red/30 transition-colors cursor-pointer"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-[11px] text-subtext0">
-                        Connect your ChatGPT Plus or Pro subscription via secure OAuth 2.0 PKCE.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => void startChatGptOAuth()}
-                        disabled={isConnectingSubscription}
-                        className="px-3 py-1.5 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 font-medium cursor-pointer shrink-0 disabled:opacity-50"
-                      >
-                        {isConnectingSubscription ? 'Connecting...' : 'Sign In with ChatGPT'}
-                      </button>
-                    </div>
-                  )}
+                  <ChatGptBrowserAuthCard />
+                  <details className="mt-3">
+                    <summary className="text-xs text-subtext0 cursor-pointer">Advanced: Codex-managed device code (requires Codex CLI; separate credentials)</summary>
+                    <div className="mt-2"><ChatGptDeviceCodeCard /></div>
+                  </details>
                 </div>
               ) : aiConfig.provider === 'github_copilot' ? (
                 <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                  <button type="button" disabled={isCheckingSubscription || isConnectingSubscription} onClick={() => void checkCopilotStatus()} className="mb-3 border border-surface1 px-3 py-1.5 disabled:opacity-40" title="Explicitly read saved credentials and check GitHub. Your OS may request keyring access.">{isCheckingSubscription ? 'Checking…' : 'Check saved sign-in'}</button>
                   {copilotStatus?.connected ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-text">
@@ -782,6 +762,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 </div>
               ) : aiConfig.provider === 'gemini' && isSubscriptionMode ? (
                 <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                  <button type="button" disabled={isCheckingSubscription || isConnectingSubscription} onClick={() => void checkGoogleAuthStatus()} className="mb-3 border border-surface1 px-3 py-1.5 disabled:opacity-40" title="Explicitly read saved credentials. Your OS may request keyring access.">{isCheckingSubscription ? 'Checking…' : 'Check saved sign-in'}</button>
                   {googleAuthStatus?.connected ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-text">
@@ -799,7 +780,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   ) : (
                     <div className="flex items-center justify-between gap-4">
                       <p className="text-[11px] text-subtext0">
-                        Sign in with Google One AI Premium / Gemini Advanced via secure OAuth.
+                        Sign in with Google One AI Premium / Gemini Advanced via secure OAuth. After returning from the browser, choose Check saved sign-in.
                       </p>
                       <button
                         type="button"
@@ -872,7 +853,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     </div>
                   )}
                 </div>
-              ) : activeProviderPreset.requiresApiKey ? (
+              ) : activeProviderPreset.requiresApiKey || activeProviderPreset.supportedAuthModes?.includes('api_key') ? (
                 /* Standard Developer API Key Field */
                 <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
                   <div className="flex items-center justify-between mb-1.5">
@@ -880,7 +861,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                       API Secret Key <span className="text-red">*</span>
                     </label>
                     <span className="text-[10px] text-green/90 font-mono">
-                      {hasSavedApiKey ? '✓ Stored securely in OS Keyring' : 'Saved in encrypted OS Keyring'}
+                      {apiKeyDraft.trim() && draftSettings ? 'Pending key change · Apply or OK to save' : hasSavedApiKey ? '✓ Stored securely in OS Keyring' : apiKeysConfigured[aiConfig.provider] === false ? 'No saved key found' : 'Saved key not checked'}
                     </span>
                   </div>
                   <div className="relative flex items-center">
@@ -914,6 +895,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                       {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
+                  <button type="button" disabled={isCheckingApiKey} onClick={() => void loadApiKeyForProvider(aiConfig.provider)} className="mt-2 border border-surface1 px-2.5 py-1 text-[11px] disabled:opacity-40" title="Your OS may request keyring access. This does not refresh models or send an inference request.">{isCheckingApiKey ? 'Checking…' : 'Check saved API key'}</button>
+                  {apiKeyCheckError && <p role="alert" className="mt-2 text-red">{apiKeyCheckError}</p>}
                 </div>
               ) : (
                 /* Ollama Local Informational Box */
@@ -930,7 +913,17 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
             {(() => {
               const currentDynamic = dynamicModels[aiConfig.provider];
               const modelsList = currentDynamic && currentDynamic.length > 0 ? currentDynamic : activeProviderPreset.models;
-              const selectedModelInfo = modelsList.find((m) => m.id === aiConfig.model);
+              const selectedModelInfo = resolveAiModelPreset(aiConfig.provider, aiConfig.model, aiConfig.baseUrl, modelsList);
+              const selectModel = (model: string) => {
+                const nextModel = resolveAiModelPreset(aiConfig.provider, model, aiConfig.baseUrl, modelsList);
+                updateAiConfig({
+                  model,
+                  reasoningEffort: nextModel?.reasoningEfforts?.includes(aiConfig.reasoningEffort as NonNullable<AiConfig['reasoningEffort']>)
+                    ? aiConfig.reasoningEffort
+                    : undefined,
+                  fastMode: nextModel?.supportsFastMode ? aiConfig.fastMode : false,
+                });
+              };
               const modelOptions: CustomSelectOption<string>[] = [
                 ...(aiConfig.model && !modelsList.some((model) => model.id === aiConfig.model)
                   ? [{ value: aiConfig.model, label: `${aiConfig.model} (Custom / Active)` }]
@@ -944,17 +937,21 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               return (
                 <div className="space-y-3 pt-3 border-t border-surface1/60">
                   <div>
-                    <label className="block text-xs font-semibold text-text mb-1.5">Model</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-semibold text-text">Model</label>
+                      {!isSubscriptionMode && <button type="button" disabled={isFetchingDynamicModels || !!apiKeyDraft.trim()} onClick={() => void fetchDynamicModels(aiConfig)} className="text-[11px] text-subtext0 hover:text-text disabled:opacity-40" title="Explicitly refresh models using saved credentials. Your OS may request keyring access. Apply key changes first.">{isFetchingDynamicModels ? 'Refreshing…' : 'Refresh models'}</button>}
+                    </div>
                     <CustomSelect
                       value={aiConfig.model}
                       options={modelOptions}
-                      onChange={(model) => updateAiConfig({ model })}
+                      onChange={selectModel}
                       className="w-full"
                       buttonClassName="w-full py-2 font-mono"
                       dropdownWidth="w-full"
                       align="left"
                       aria-label="Model"
                     />
+                    {dynamicModelError && <p role="alert" className="mt-1 text-xs text-red">{dynamicModelError}</p>}
                     {selectedModelInfo?.recommendedFor && (
                       <div className="text-[10px] text-subtext0 italic px-1 mt-1">
                         Recommended: {selectedModelInfo.recommendedFor}
@@ -1000,6 +997,17 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                       />
                     </div>
                   </div>
+
+                  <div className="pt-2 border-t border-surface1/60">
+                    <AiModelExecutionOptions
+                      model={selectedModelInfo}
+                      reasoningEffort={aiConfig.reasoningEffort}
+                      fastMode={aiConfig.fastMode === true}
+                      onReasoningEffortChange={(reasoningEffort) => updateAiConfig({ reasoningEffort })}
+                      onFastModeChange={(fastMode) => updateAiConfig({ fastMode })}
+                      emptyMessage="Stage0 has no declared reasoning or Fast mode capabilities for this provider and model."
+                    />
+                  </div>
                 </div>
               );
             })()}
@@ -1022,7 +1030,11 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 <input
                   type="text"
                   value={aiConfig.baseUrl}
-                  onChange={(e) => updateAiConfig({ baseUrl: e.target.value })}
+                  onChange={(e) => {
+                    const baseUrl = e.target.value;
+                    const nextModel = resolveAiModelPreset(aiConfig.provider, aiConfig.model, baseUrl, dynamicModels[aiConfig.provider]);
+                    updateAiConfig({ baseUrl, reasoningEffort: undefined, fastMode: nextModel?.supportsFastMode ? aiConfig.fastMode : false });
+                  }}
                   placeholder="https://api.openai.com/v1"
                   className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded"
                 />
@@ -1058,6 +1070,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   type="button"
                   onClick={() => void testAiConnection(aiConfig, hasSavedApiKey || !!apiKeyDraft.trim())}
                   disabled={isTestingAi}
+                  title="Native API tests use saved OS credentials, send no repository source and may incur provider charges. Apply API key changes first."
                   className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded transition-colors cursor-pointer border border-surface2 shadow-xs"
                 >
                   {isTestingAi ? (
@@ -1125,6 +1138,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       {/* SUB-TAB 2: MCP SERVERS (MODEL CONTEXT PROTOCOL) */}
       {activeSubTab === 'mcp' && (
         <div className="space-y-4 animate-in fade-in duration-100">
+          <HarnessConnectionsPanel draftServers={draftSettings?.mcpServers} />
           {/* Header Action Bar */}
           <div className="flex items-center justify-between">
             <div>
@@ -1132,7 +1146,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 Model Context Protocol (MCP) Ecosystem
               </span>
               <span className="text-[11px] text-subtext0 block">
-                Connect external developer tools, file systems, Git context, and APIs directly to your AI
+                Configure external tools; discovery does not grant access to AI review runs
               </span>
             </div>
 
@@ -1291,10 +1305,10 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   </div>
                 </div>
               ) : (
-                /* SSE URL */
+                /* HTTP endpoint */
                 <div>
                   <label className="block text-[11px] font-medium text-subtext0 mb-1">
-                    SSE Endpoint URL <span className="text-red">*</span>
+                    {serverType === 'http' ? 'Streamable HTTP Endpoint URL' : 'Legacy SSE Endpoint URL'} <span className="text-red">*</span>
                   </label>
                   <div className="relative flex items-center">
                     <Globe className="w-3.5 h-3.5 text-subtext0 absolute left-2.5" />
@@ -1302,7 +1316,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                       type="url"
                       value={serverUrl}
                       onChange={(e) => setServerUrl(e.target.value)}
-                      placeholder="http://localhost:8000/sse"
+                      placeholder={serverType === 'http' ? 'http://localhost:8000/mcp' : 'http://localhost:8000/sse'}
                       required
                       className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
                     />
@@ -1457,10 +1471,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                               </span>
                             )}
 
-                            {server.testStatus === 'success' && (
+                            {server.testStatus === 'unavailable' && (
                               <span className="text-[10px] px-1.5 py-0.2 bg-surface1 text-text border border-surface2 font-mono flex items-center gap-1">
-                                <Check className="w-3 h-3 text-text" />
-                                <span>Verified</span>
+                                <span>Not connected</span>
                               </span>
                             )}
                           </div>
@@ -1470,6 +1483,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                               {server.description}
                             </p>
                           )}
+                          <p className="text-[11px] text-subtext0 mt-1" role="status">
+                            {server.testMessage || 'Not attached to harness. Use the external connectors panel for explicit HTTP discovery.'}
+                          </p>
                         </div>
                       </div>
 
@@ -1484,9 +1500,9 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                               ? 'bg-surface1 border-surface2 text-text shadow-xs'
                               : 'bg-surface0/50 border-surface0 text-subtext0 hover:text-text'
                           }`}
-                          title={server.enabled ? 'Click to disable' : 'Click to enable'}
+                          title="Saved preference only; this does not start or connect an MCP server"
                         >
-                          {server.enabled ? 'Enabled' : 'Disabled'}
+                          {server.enabled ? 'Configured on' : 'Configured off'}
                         </button>
 
                         {/* Ping / Test Handshake */}
@@ -1495,7 +1511,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           onClick={() => handleTestServer(server.id)}
                           disabled={testingServerId === server.id}
                           className="p-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
-                          title="Test MCP Server Handshake"
+                          title="Validate saved configuration only. Use the external connectors panel for HTTP discovery."
                         >
                           <RefreshCw
                             className={`w-3.5 h-3.5 ${

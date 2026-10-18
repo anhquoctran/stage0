@@ -10,7 +10,7 @@ and Tauri load them directly.
 | `core` | App composition, window layout, theme and global styles. | App lifecycle, menu/window management, IPC registration, SQLite connection, schema and migrations. |
 | `features` | UI components, Zustand stores, services, types and constants grouped by feature. | Feature command handlers, domain modules and SQLite operations grouped by feature. |
 
-Features currently include About, AI, credentials, Git, notifications, updates,
+Features currently include About, AI, credentials, Git, notifications,
 performance and Virtual MR. The backend also has a sandbox feature; its
 frontend controls live with AI preferences. Preferences is a frontend feature
 that composes settings components from their owning features.

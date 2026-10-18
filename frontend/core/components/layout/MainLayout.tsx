@@ -28,6 +28,7 @@ import { Check } from '../../../common/components/icons/Check';
 import { revealInOs, getAbsoluteFilePath, buildRemoteFileUrl, openRepoInTerminal, openRepoInVsCode, openRepoInExplorer, getOsFileManagerName } from '../../../features/git/utils/fileActions';
 import { isMacOS } from '../../../common/utils/shortcuts';
 import { MainLayoutDiffViewer } from './MainLayoutDiffViewer';
+import { ReviewPanel } from '../../../features/review/components/ReviewPanel';
 
 const DEFAULT_SIDEBAR_WIDTH = 320;
 
@@ -425,6 +426,7 @@ export const MainLayout: React.FC = () => {
       {/* Clone Remote Repository Modal Dialog */}
       <CloneRepoModal />
       <GitTaskDialog />
+      <ReviewPanel />
 
       {/* In-Memory Merge Conflict Banner */}
       <ConflictBanner

@@ -14,6 +14,8 @@ import { type GuardrailEvaluationResult } from './GuardrailEvaluationResult';
 export interface AiMcpState {
   aiConfig: AiConfig;
   apiKeysConfigured: Partial<Record<AiConfig['provider'], boolean>>;
+  isCheckingApiKey: boolean;
+  apiKeyCheckError: string | null;
   mcpServers: McpServerConfig[];
   isTestingAi: boolean;
   aiTestResult: { success: boolean; message: string; timestamp: number } | null;
@@ -24,7 +26,7 @@ export interface AiMcpState {
   dynamicModels: Partial<Record<AiConfig['provider'], AiModelPreset[]>>;
   isFetchingDynamicModels: boolean;
   dynamicModelError: string | null;
-  fetchDynamicModels: (providerOverride?: AiConfig['provider']) => Promise<{ success: boolean; count: number; error?: string }>;
+  fetchDynamicModels: (configOverride?: AiConfig) => Promise<{ success: boolean; count: number; error?: string }>;
 
   // Cloud Subscription & CLI Bridge State
   copilotStatus: CopilotAuthStatus | null;
@@ -33,6 +35,7 @@ export interface AiMcpState {
   cliStatus: Record<string, CliDetectionResult | null>;
   isDetectingCli: boolean;
   isConnectingSubscription: boolean;
+  isCheckingSubscription: boolean;
   copilotDeviceCode: CopilotDeviceCodeResponse | null;
 
   // Cloud Subscription & CLI Bridge Actions
@@ -45,9 +48,12 @@ export interface AiMcpState {
   startGoogleOAuth: () => Promise<void>;
   checkGoogleAuthStatus: () => Promise<GoogleAuthStatus>;
   disconnectGoogleOAuth: () => Promise<void>;
-  startChatGptOAuth: () => Promise<void>;
+  startChatGptOAuth: (profileId?: string) => Promise<void>;
   checkChatGptAuthStatus: () => Promise<ChatGptAuthStatus>;
-  disconnectChatGptOAuth: () => Promise<void>;
+  loadSavedChatGptAuth: () => Promise<void>;
+  disconnectChatGptOAuth: (profileId: string) => Promise<void>;
+  cancelChatGptOAuth: () => Promise<void>;
+  refreshChatGptSession: (profileId: string) => Promise<void>;
   clearCopilotDeviceCode: () => void;
 
   // AI Configuration Actions

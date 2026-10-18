@@ -1,1 +1,1 @@
-export type McpServerType = 'stdio' | 'sse';
+export type McpServerType = 'stdio' | 'http' | 'sse';

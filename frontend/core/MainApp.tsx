@@ -7,7 +7,6 @@ import { notificationService } from '../features/notifications/services/notifica
 import { syncUnreadBadge } from '../features/notifications/services/notificationBadgeService';
 import { useGitStore } from '../features/git/store/useGitStore';
 import { useNotificationStore } from '../features/notifications/store/useNotificationStore';
-import { useUpdateStore } from '../features/updates/store/useUpdateStore';
 import { type RepoInfo } from '../features/git/types/RepoInfo';
 import { type WindowStartupContext } from '../features/git/types/WindowStartupContext';
 import { FirstLaunchWelcome, shouldShowFirstLaunchWelcome } from '../features/onboarding/components/FirstLaunchWelcome';
@@ -49,7 +48,6 @@ export const MainApp: React.FC = () => {
     let disposed = false;
     let unlistenFs: (() => void) | undefined;
     let unlistenOpen: (() => void) | undefined;
-    let startupCheckTimer: number | undefined;
 
     const initializeWindow = async () => {
       try {
@@ -79,27 +77,11 @@ export const MainApp: React.FC = () => {
       } catch (error) {
         console.warn('Failed to initialize window context:', error);
         await initApp();
-      } finally {
-        if (!disposed) {
-          // Graceful startup delay (5s) per industry standard to avoid boot I/O & CPU contention
-          startupCheckTimer = window.setTimeout(() => {
-            if (!disposed) {
-              void useUpdateStore.getState().checkIfUpdateDueAndRun();
-            }
-          }, 5000);
-        }
       }
     };
 
     void initializeWindow();
     void notificationService.init();
-
-    // Periodically evaluate update frequency during long-running app sessions (every 1 hour)
-    const updateCheckInterval = window.setInterval(() => {
-      if (!disposed) {
-        void useUpdateStore.getState().checkIfUpdateDueAndRun();
-      }
-    }, 60 * 60 * 1000);
 
     const checkWindowState = async () => {
       try {
@@ -120,8 +102,6 @@ export const MainApp: React.FC = () => {
       unlistenFs?.();
       unlistenOpen?.();
       notificationService.destroy();
-      if (startupCheckTimer !== undefined) window.clearTimeout(startupCheckTimer);
-      window.clearInterval(updateCheckInterval);
       window.removeEventListener('resize', checkWindowState);
     };
   }, [initApp, attachRepoToCurrentWindow, refreshDiff]);

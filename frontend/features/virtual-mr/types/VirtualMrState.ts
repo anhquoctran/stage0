@@ -101,4 +101,5 @@ export interface VirtualMrState {
   resolveDiscussion: (discussionId: string, isResolved: boolean, resolveType?: ResolveType) => Promise<void>;
   reverifyDiscussionFix: (discussionId: string, agentId?: string) => Promise<boolean>;
   triggerIncrementalReReview: (sessionId: string) => Promise<void>;
+  refreshDiscussions: (sessionId: string) => Promise<void>;
 }

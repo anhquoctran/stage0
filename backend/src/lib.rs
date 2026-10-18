@@ -4,7 +4,7 @@ pub mod features;
 
 use crate::core::{commands, db, menu, window_manager};
 use crate::features::git::watcher;
-use crate::features::{credentials, notifications, performance, sandbox, updates};
+use crate::features::{credentials, notifications, performance, sandbox};
 use db::Database;
 use sandbox::SandboxManager;
 use std::path::{Path, PathBuf};
@@ -37,6 +37,8 @@ pub fn run() {
     };
 
     let builder = tauri::Builder::default();
+    let builder = builder.manage(features::review::coordinator::ReviewCoordinator::default());
+    let builder = builder.manage(features::ai::codex_auth::CodexAuthManager::default());
     #[cfg(not(dev))]
     let builder = builder.register_uri_scheme_protocol("stagezero", |context, request| {
         let uri = request.uri();
@@ -237,6 +239,7 @@ pub fn run() {
             commands::verify_git_credential,
             commands::get_keyring_info,
             commands::store_ai_api_key,
+            commands::commit_ai_preferences,
             commands::has_ai_api_key,
             commands::delete_ai_api_key,
             commands::ai_detect_cli,
@@ -250,9 +253,25 @@ pub fn run() {
             commands::google_oauth_disconnect,
             commands::chatgpt_oauth_start,
             commands::chatgpt_oauth_check_status,
+            commands::chatgpt_oauth_load_saved,
             commands::chatgpt_oauth_disconnect,
+            commands::chatgpt_oauth_cancel,
+            commands::chatgpt_oauth_refresh,
+            commands::chatgpt_device_auth_status,
+            commands::chatgpt_device_auth_start,
+            commands::chatgpt_device_auth_check,
+            commands::chatgpt_device_auth_cancel,
+            commands::chatgpt_device_auth_logout,
             commands::open_external_url,
             commands::ai_chat_dispatch,
+            commands::start_ai_review,
+            commands::test_ai_review_provider,
+            commands::discover_harness_mcp,
+            commands::inspect_harness_cli,
+            commands::get_ai_review,
+            commands::list_ai_reviews,
+            commands::cancel_ai_review,
+            commands::publish_ai_review,
             commands::fetch_ai_models,
             commands::get_available_sandboxes,
             commands::get_active_sandbox,
@@ -324,15 +343,12 @@ pub fn run() {
             notifications::set_notification_host_visibility,
             notifications::dispatch_notification_action,
             performance::get_performance_metrics,
-            updates::check_for_update,
-            updates::download_update,
-            updates::cancel_update_download,
-            updates::install_update,
         ])
         .build(context)
         .expect("error while building tauri application")
         .run(|app, event| {
             if matches!(event, tauri::RunEvent::Exit) {
+                app.state::<features::ai::codex_auth::CodexAuthManager>().shutdown();
                 #[cfg(target_os = "linux")]
                 notifications::close_linux_notifications(app);
                 for error in app.state::<SandboxManager>().cleanup_all() {

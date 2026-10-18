@@ -193,6 +193,9 @@ impl Database {
         )?;
 
         conn.execute_batch(SCHEMA_SQL)?;
+        // Durable runs survive application restarts, but their in-flight model
+        // calls cannot be resumed safely without an explicit replay policy.
+        conn.execute("UPDATE ai_review_runs SET status='interrupted' WHERE status='running'", [])?;
         Self::migrate_discussions_fingerprint(&conn)?;
         Self::migrate_git_credentials(&conn)?;
 
