@@ -62,6 +62,8 @@ impl TestRepo {
             session_id: "session".into(),
             provider: "ollama".into(),
             model: "fixture".into(),
+            reviewer_id: None,
+            reviewer_name: None,
             endpoint: "http://localhost/api/chat".into(),
             snapshot: snapshot.clone(),
             status: "running".into(),

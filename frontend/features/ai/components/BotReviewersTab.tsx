@@ -91,7 +91,15 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
   }, [dynamicModels, providerPreset, effectiveProvider, globalAiConfig.provider, globalAiConfig.model]);
   const modelOptions: CustomSelectOption<string>[] = [
     ...(formProvider === 'global_default' || formModel === 'global_default'
-      ? [{ value: 'global_default', label: `Use global model (${globalAiConfig.model})`, description: 'Inherit the model configured in LLM Providers.' }]
+      ? [{
+          value: 'global_default',
+          label: formProvider === 'global_default'
+            ? `Use global model (${globalAiConfig.model})`
+            : `Use provider default (${providerPreset?.defaultModel || globalAiConfig.model})`,
+          description: formProvider === 'global_default'
+            ? 'Inherit the model configured in LLM Providers.'
+            : 'Use the selected provider’s default model.',
+        }]
       : []),
     ...availableModels.map((model) => ({ value: model.id, label: model.name || model.id, description: model.id })),
     ...(!isCustomModel && formModel && formModel !== 'global_default' && !availableModels.some((model) => model.id === formModel)
@@ -206,6 +214,14 @@ Analyze incoming code diffs and discussions:
       setFormError('Select a model or enter a custom model ID');
       return;
     }
+    const savedReasoningEffort = !inheritsGlobalModel && executionModel?.reasoningEfforts?.includes(formReasoningEffort as AiReasoningEffort)
+      ? formReasoningEffort
+      : undefined;
+    const savedFastMode = inheritsGlobalModel
+      ? undefined
+      : executionModel?.supportsFastMode === true
+        ? formFastMode
+        : false;
 
     if (editingBotId) {
       updateGlobalReviewer(editingBotId, {
@@ -218,8 +234,8 @@ Analyze incoming code diffs and discussions:
         provider: formProvider,
         model: formModel.trim(),
         temperature: formTemp,
-        reasoningEffort: formReasoningEffort,
-        fastMode: formFastMode,
+        reasoningEffort: savedReasoningEffort,
+        fastMode: savedFastMode,
       });
     } else {
       addGlobalReviewer({
@@ -232,8 +248,8 @@ Analyze incoming code diffs and discussions:
         provider: formProvider,
         model: formModel.trim(),
         temperature: formTemp,
-        reasoningEffort: formReasoningEffort,
-        fastMode: formFastMode,
+        reasoningEffort: savedReasoningEffort,
+        fastMode: savedFastMode,
         enabled: true,
         isBuiltin: false,
       });

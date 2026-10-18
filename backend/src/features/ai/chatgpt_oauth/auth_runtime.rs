@@ -1,6 +1,6 @@
 use super::{
     auth_catalog::AuthCatalog, chat_gpt_auth_status::ChatGptAuthStatus,
-    public_profile::PublicProfile,
+    public_profile::PublicProfile, stored_session::StoredSession,
 };
 
 pub(super) struct AuthRuntime {
@@ -51,9 +51,19 @@ impl AuthRuntime {
             .iter()
             .find(|p| Some(&p.id) == catalog.active.as_ref());
         let session = active.map(|p| p.session()).transpose()?.flatten();
-        let connected = session
-            .as_ref()
-            .is_some_and(|s| s.expires_at > chrono::Utc::now().timestamp());
+        Ok(self.snapshot_with_session(catalog, session.as_ref()))
+    }
+
+    pub fn snapshot_with_session(
+        &mut self,
+        catalog: &AuthCatalog,
+        session: Option<&StoredSession>,
+    ) -> ChatGptAuthStatus {
+        let active = catalog
+            .profiles
+            .iter()
+            .find(|p| Some(&p.id) == catalog.active.as_ref());
+        let connected = session.is_some_and(|s| s.expires_at > chrono::Utc::now().timestamp());
         let profiles = catalog
             .profiles
             .iter()
@@ -65,7 +75,7 @@ impl AuthRuntime {
                 signed_in: p.secret.is_some(),
             })
             .collect();
-        self.expires_at = session.as_ref().map(|s| s.expires_at);
+        self.expires_at = session.map(|s| s.expires_at);
         self.cached_status = Some(ChatGptAuthStatus {
             connected,
             account_email: active.and_then(|p| p.email.clone()),
@@ -81,7 +91,7 @@ impl AuthRuntime {
             profiles,
             credentials_loaded: true,
         });
-        Ok(self.status())
+        self.status()
     }
 
     // Passive polling must not open the keyring or refresh credentials.

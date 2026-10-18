@@ -16,7 +16,7 @@ export interface ReviewState {
   open: (sessionId: string) => void;
   close: () => void;
   load: (sessionId: string, runId?: string) => Promise<void>;
-  start: (config: AiConfig, allowRemote: boolean) => Promise<void>;
+  start: (config: AiConfig, allowRemote: boolean, reviewer?: { id: string; name: string }) => Promise<void>;
   cancel: () => Promise<void>;
   publish: () => Promise<void>;
 }

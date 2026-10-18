@@ -2,6 +2,7 @@ export type { AiProviderId } from './AiProviderId';
 export type { AiAuthMode } from './AiAuthMode';
 export type { DynamicModelInfo } from './DynamicModelInfo';
 export type { AiModelPreset } from './AiModelPreset';
+export type { AiReasoningEffort } from './AiReasoningEffort';
 export type { AiProviderPreset } from './AiProviderPreset';
 export type { AiConfig } from './AiConfig';
 export type { CliDetectionResult } from './CliDetectionResult';

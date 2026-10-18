@@ -6,6 +6,8 @@ export interface ReviewRun {
   sessionId: string;
   provider: string;
   model: string;
+  reviewerId?: string;
+  reviewerName?: string;
   endpoint: string;
   snapshot: ReviewSnapshot;
   status: 'running' | 'completed' | 'partial' | 'incomplete' | 'failed' | 'cancelled' | 'interrupted';

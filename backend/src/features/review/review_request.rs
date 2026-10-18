@@ -9,6 +9,10 @@ pub struct ReviewRequest {
     pub reasoning_effort: Option<String>,
     #[serde(default)]
     pub fast_mode: bool,
+    #[serde(default)]
+    pub reviewer_id: Option<String>,
+    #[serde(default)]
+    pub reviewer_name: Option<String>,
     pub base_url: String,
     pub instructions: String,
     pub allow_remote: bool,

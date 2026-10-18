@@ -70,7 +70,7 @@ impl AuthCatalog {
     pub fn commit(
         &mut self,
         mut profile: AuthProfile,
-        session: StoredSession,
+        session: &StoredSession,
     ) -> Result<(), String> {
         let old = profile.secret.clone();
         let key = format!("chatgpt_browser_v2_session_{}", uuid::Uuid::new_v4());

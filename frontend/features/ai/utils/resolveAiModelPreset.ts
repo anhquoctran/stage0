@@ -18,5 +18,5 @@ export function resolveAiModelPreset(
   if (providerId !== 'openai' || baseUrl.replace(/\/+$/, '') !== OPENAI_API_BASE_URL) {
     return { id: model.id, name: model.name, recommendedFor: model.recommendedFor };
   }
-  return { ...dynamic, ...preset, ...model };
+  return model;
 }

@@ -11,6 +11,7 @@ fn openai_reasoning_efforts(model: &str) -> &'static [&'static str] {
         "gpt-6-sol" | "gpt-6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-5.6-luna" => {
             &["none", "low", "medium", "high", "xhigh", "max"]
         }
+        "gpt-5.5" => &["none", "low", "medium", "high", "xhigh"],
         _ => &[],
     }
 }
@@ -22,6 +23,15 @@ fn openai_supports_fast_mode(model: &str) -> bool {
     )
 }
 
+fn anthropic_supports_forced_tool_choice(model: &str) -> bool {
+    // Claude 5.5/5.1 frontier models currently reject tool_choice=any. Only
+    // force calls for the Anthropic models Stage0 explicitly knows support it;
+    // unknown IDs use auto plus the review prompt and bounded retry instead.
+    ["claude-haiku-4-5", "claude-3-7-sonnet", "claude-3-5-sonnet"]
+        .iter()
+        .any(|prefix| model.starts_with(prefix))
+}
+
 pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
     if config.model.trim().is_empty()
         || config.model.len() > 200
@@ -29,8 +39,12 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
     {
         return Err("Invalid model or instruction length".into());
     }
-    if config.provider != "ollama" && config.auth_mode != "api_key" {
-        return Err("Native review requires API-key authentication (or local Ollama), not CLI/subscription bridges".into());
+    let subscription_auth = config.auth_mode == "subscription_oauth";
+    if config.provider != "ollama"
+        && config.auth_mode != "api_key"
+        && !(subscription_auth && config.provider == "openai")
+    {
+        return Err("Native review supports API-key authentication, local Ollama, or ChatGPT subscription sign-in for OpenAI. CLI bridges are not supported.".into());
     }
     let url =
         reqwest::Url::parse(config.base_url.trim()).map_err(|_| "Invalid provider base URL")?;
@@ -53,6 +67,9 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
         );
     }
     let root = url.as_str().trim_end_matches('/');
+    if subscription_auth && root != OPENAI_API_BASE_URL {
+        return Err("ChatGPT subscription sign-in can only be used with the official OpenAI Responses API endpoint".into());
+    }
     if let Some(effort) = config.reasoning_effort.as_deref() {
         if config.provider != "openai"
             || root != OPENAI_API_BASE_URL
@@ -107,20 +124,50 @@ pub fn payload(
 ) -> Value {
     match config.provider.as_str() {
         "openai" => {
-            let mut body = json!({"model":config.model,"instructions":system,"input":history,"store":false,"include":["reasoning.encrypted_content"],"max_output_tokens":max_tokens,"parallel_tool_calls":false,"tools":tools.iter().map(|t|json!({"type":"function","name":t["name"],"description":t["description"],"parameters":t["parameters"],"strict":true})).collect::<Vec<_>>()});
+            let tool_definitions = tools
+                .iter()
+                .map(|tool| {
+                    json!({
+                        "type":"function",
+                        "name":tool["name"],
+                        "description":tool["description"],
+                        "parameters":tool["parameters"],
+                        "strict":true
+                    })
+                })
+                .collect::<Vec<_>>();
+            let mut input = Vec::with_capacity(history.len() + 1);
+            if config.auth_mode == "subscription_oauth" {
+                input.push(json!({"type":"additional_tools","role":"developer","tools":tool_definitions}));
+            }
+            input.extend_from_slice(history);
+            let mut body = if config.auth_mode == "subscription_oauth" {
+                // Sign in with ChatGPT plan usage requires HTTP/SSE, store:false,
+                // and rejects max_output_tokens. Its fixed local review budget
+                // remains enforced by the coordinator and response-size cap.
+                json!({"model":config.model,"instructions":system,"input":input,"store":false,"stream":true,"parallel_tool_calls":false,"tool_choice":"required"})
+            } else {
+                json!({"model":config.model,"instructions":system,"input":input,"store":false,"include":["reasoning.encrypted_content"],"max_output_tokens":max_tokens,"parallel_tool_calls":false,"tool_choice":"required","tools":tool_definitions})
+            };
             if let Some(effort) = config.reasoning_effort.as_deref() {
                 body["reasoning"] = json!({"effort": effort});
             }
-            if config.fast_mode {
+            if config.fast_mode && config.auth_mode != "subscription_oauth" {
                 body["service_tier"] = json!("fast");
             }
             body
         }
         "anthropic" => {
-            json!({"model":config.model,"system":system,"messages":history,"max_tokens":max_tokens,"tools":tools.iter().map(|t|json!({"name":t["name"],"description":t["description"],"input_schema":t["parameters"]})).collect::<Vec<_>>()})
+            let mut body = json!({"model":config.model,"system":system,"messages":history,"max_tokens":max_tokens,"tools":tools.iter().map(|t|json!({"name":t["name"],"description":t["description"],"input_schema":t["parameters"]})).collect::<Vec<_>>()});
+            body["tool_choice"] = if anthropic_supports_forced_tool_choice(&config.model) {
+                json!({"type":"any","disable_parallel_tool_use":true})
+            } else {
+                json!({"type":"auto","disable_parallel_tool_use":true})
+            };
+            body
         }
         "gemini" => {
-            json!({"contents":history,"systemInstruction":{"parts":[{"text":system}]},"generationConfig":{"maxOutputTokens":max_tokens},"tools":[{"functionDeclarations":tools.iter().map(|t|json!({"name":t["name"],"description":t["description"],"parametersJsonSchema":t["parameters"]})).collect::<Vec<_>>()}]})
+            json!({"contents":history,"systemInstruction":{"parts":[{"text":system}]},"generationConfig":{"maxOutputTokens":max_tokens},"toolConfig":{"functionCallingConfig":{"mode":"ANY"}},"tools":[{"functionDeclarations":tools.iter().map(|t|json!({"name":t["name"],"description":t["description"],"parametersJsonSchema":t["parameters"]})).collect::<Vec<_>>()}]})
         }
         _ => {
             let mut messages = vec![json!({"role":"system","content":system})];
@@ -129,6 +176,8 @@ pub fn payload(
             if config.provider == "ollama" {
                 body["options"] = json!({"num_predict":max_tokens});
             } else {
+                body["tool_choice"] = json!("required");
+                body["parallel_tool_calls"] = json!(false);
                 body["max_tokens"] = json!(max_tokens);
             }
             body
@@ -136,13 +185,43 @@ pub fn payload(
     }
 }
 
-pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<Value, String> {
+pub async fn request(
+    config: &ReviewRequest,
+    url: &str,
+    body: &Value,
+    subscription_token: Option<&str>,
+) -> Result<Value, String> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(60))
         .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|_| "Could not initialize provider client")?;
     let mut request = client.post(url).json(body);
+    if config.auth_mode == "subscription_oauth" {
+        let token = subscription_token.ok_or("ChatGPT subscription session is unavailable")?;
+        request = request.bearer_auth(token);
+        let response = request
+            .send()
+            .await
+            .map_err(|_| "ChatGPT subscription request failed or timed out; check your connection and sign-in")?;
+        let status = response.status();
+        if !status.is_success() {
+            return Err(format!("ChatGPT subscription endpoint returned HTTP {}. Check the selected account, model access and plan usage limits.", status.as_u16()));
+        }
+        let mut bytes = Vec::new();
+        let mut response = response;
+        while let Some(chunk) = response
+            .chunk()
+            .await
+            .map_err(|_| "ChatGPT subscription response stream was interrupted")?
+        {
+            if bytes.len() + chunk.len() > 512 * 1024 {
+                return Err("ChatGPT subscription response exceeded the safety limit".into());
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        return decode_subscription_stream(&bytes);
+    }
     if config.provider != "ollama" {
         let key = Zeroizing::new(
             crate::features::credentials::get_ai_key(&config.provider).map_err(|_| {
@@ -198,6 +277,50 @@ pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<
         bytes.extend_from_slice(&chunk);
     }
     serde_json::from_slice(&bytes).map_err(|_| "Provider returned invalid JSON".into())
+}
+
+fn decode_subscription_stream(bytes: &[u8]) -> Result<Value, String> {
+    let stream = std::str::from_utf8(bytes).map_err(|_| "ChatGPT returned an invalid event stream")?;
+    let normalized = stream.replace("\r\n", "\n");
+    for frame in normalized.split("\n\n") {
+        let data = frame
+            .lines()
+            .filter_map(|line| line.strip_prefix("data:"))
+            .map(str::trim_start)
+            .collect::<Vec<_>>()
+            .join("\n");
+        if data.is_empty() || data == "[DONE]" {
+            continue;
+        }
+        let event: Value = serde_json::from_str(&data)
+            .map_err(|_| "ChatGPT returned an invalid event in the response stream")?;
+        match event["type"].as_str().unwrap_or_default() {
+            "response.completed" => {
+                return event
+                    .get("response")
+                    .cloned()
+                    .ok_or_else(|| "ChatGPT completed without a response payload".into());
+            }
+            "response.failed" | "error" => {
+                let code = event["response"]["error"]["code"]
+                    .as_str()
+                    .or(event["error"]["code"].as_str())
+                    .unwrap_or("request_failed");
+                return Err(match code {
+                    "subscription_sharing_usage_limit_exceeded"
+                    | "subscription_sharing_usage_unavailable" => {
+                        "ChatGPT plan usage is currently unavailable or its usage limit was reached. Check the account's plan limits and retry later.".into()
+                    }
+                    _ => format!("ChatGPT subscription inference failed ({code}). Check model access and account settings."),
+                });
+            }
+            "response.incomplete" => {
+                return Err("ChatGPT subscription response was incomplete. The review was not submitted.".into());
+            }
+            _ => {}
+        }
+    }
+    Err("ChatGPT response stream ended without response.completed; the review is incomplete.".into())
 }
 
 pub fn decode(
@@ -384,6 +507,8 @@ mod tests {
             model: "fixture-model".into(),
             reasoning_effort: None,
             fast_mode: false,
+            reviewer_id: None,
+            reviewer_name: None,
             base_url: url.into(),
             instructions: String::new(),
             allow_remote: true,
@@ -479,6 +604,78 @@ mod tests {
             assert!(request.to_string().contains("submit_review"));
             assert!(!request.to_string().contains("execute_terminal_cmd"));
         }
+    }
+    #[test]
+    fn tool_call_policy_matches_the_configured_provider_and_model() {
+        let tools = super::super::schemas::tools();
+        for auth_mode in ["api_key", "subscription_oauth"] {
+            let mut cfg = config("openai", "https://api.openai.com/v1");
+            cfg.auth_mode = auth_mode.into();
+            let request = payload(
+                &cfg,
+                "policy",
+                &initial_history("openai", "fixture"),
+                &tools,
+                2048,
+            );
+            assert_eq!(request["tool_choice"], "required");
+            assert_eq!(request["parallel_tool_calls"], false);
+            if auth_mode == "subscription_oauth" {
+                assert_eq!(request["stream"], true);
+                assert_eq!(request["store"], false);
+                assert!(request.get("tools").is_none());
+                assert!(request["input"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|item| { item["type"] == "additional_tools" }));
+            } else {
+                assert!(request["tools"]
+                    .as_array()
+                    .is_some_and(|tools| !tools.is_empty()));
+            }
+        }
+
+        let mut legacy_anthropic = config("anthropic", "https://api.anthropic.com/v1");
+        legacy_anthropic.model = "claude-haiku-4-5-20251001".into();
+        let legacy = payload(&legacy_anthropic, "policy", &[], &tools, 2048);
+        assert_eq!(legacy["tool_choice"]["type"], "any");
+        assert_eq!(legacy["tool_choice"]["disable_parallel_tool_use"], true);
+
+        let mut frontier_anthropic = legacy_anthropic;
+        frontier_anthropic.model = "claude-opus-5-5".into();
+        let frontier = payload(&frontier_anthropic, "policy", &[], &tools, 2048);
+        assert_eq!(frontier["tool_choice"]["type"], "auto");
+
+        let gemini = payload(
+            &config("gemini", "https://generativelanguage.googleapis.com/v1beta"),
+            "policy",
+            &[],
+            &tools,
+            2048,
+        );
+        assert_eq!(gemini["toolConfig"]["functionCallingConfig"]["mode"], "ANY");
+
+        for provider in ["custom", "xai_grok"] {
+            let openai_compatible = payload(
+                &config(provider, "https://provider.example/v1"),
+                "policy",
+                &[],
+                &tools,
+                2048,
+            );
+            assert_eq!(openai_compatible["tool_choice"], "required");
+            assert_eq!(openai_compatible["parallel_tool_calls"], false);
+        }
+
+        let ollama = payload(
+            &config("ollama", "http://localhost:11434"),
+            "policy",
+            &[],
+            &tools,
+            2048,
+        );
+        assert!(ollama.get("tool_choice").is_none());
     }
     #[test]
     fn gemini_native_ids_are_echoed_exactly_even_with_fallback_like_prefixes() {
