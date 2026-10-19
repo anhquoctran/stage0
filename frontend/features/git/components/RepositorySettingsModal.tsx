@@ -25,6 +25,7 @@ import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
 import { BOT_CATEGORIES } from '../../ai/constants/botPresets';
 import { type BotCategory } from '../../virtual-mr/types/BotCategory';
+import { getBotRolePrompt } from '../../ai/utils/botRolePrompts';
 import type { RepositorySettingsModalProps } from '../types/RepositorySettingsModalProps';
 
 export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = ({
@@ -124,7 +125,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
   const [repoBotDesc, setRepoBotDesc] = useState('');
   const [repoBotCategory, setRepoBotCategory] = useState<BotCategory>('custom');
   const [repoBotEmoji, setRepoBotEmoji] = useState('🤖');
-  const [repoBotPrompt, setRepoBotPrompt] = useState('');
+  const [repoBotInstructions, setRepoBotInstructions] = useState('');
 
   const currentRepoId = currentRepo?.id || '';
 
@@ -149,7 +150,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
 
   const handleSaveRepoCustomBot = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!repoBotName.trim() || !repoBotPrompt.trim() || !currentRepoId) return;
+    if (!repoBotName.trim() || !currentRepoId) return;
 
     addRepoCustomReviewer(currentRepoId, {
       name: repoBotName.trim(),
@@ -157,7 +158,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
       description: repoBotDesc.trim(),
       category: repoBotCategory,
       avatarEmoji: repoBotEmoji,
-      systemPrompt: repoBotPrompt.trim(),
+      customInstructions: repoBotInstructions.trim(),
       enabled: true,
       isBuiltin: false,
     });
@@ -168,7 +169,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
     setRepoBotDesc('');
     setRepoBotCategory('custom');
     setRepoBotEmoji('🤖');
-    setRepoBotPrompt('');
+    setRepoBotInstructions('');
     showToast(`Added repo reviewer: ${repoBotName.trim()}`);
   };
 
@@ -1292,7 +1293,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] text-subtext0 mb-1">Category</label>
+                          <label className="block text-[10px] text-subtext0 mb-1">Role</label>
                           <CustomSelect
                             value={repoBotCategory}
                             options={repoBotCategoryOptions}
@@ -1301,19 +1302,26 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                             buttonClassName="w-full"
                             dropdownWidth="w-full"
                             align="left"
-                            aria-label="Category"
+                            aria-label="Reviewer role"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-[10px] text-subtext0 mb-1">System Prompt *</label>
+                        <label className="block text-[10px] text-subtext0 mb-1">
+                          Stage0 System Prompt · {BOT_CATEGORIES.find((category) => category.id === repoBotCategory)?.label} · read-only
+                        </label>
+                        <pre className="max-h-24 overflow-y-auto whitespace-pre-wrap px-2.5 py-1.5 bg-crust border border-surface1 rounded text-[10px] font-mono text-subtext1">
+                          {getBotRolePrompt(repoBotCategory)}
+                        </pre>
+                        <label className="block text-[10px] text-subtext0 mb-1 mt-2">
+                          Additional Instructions <span className="font-normal">(optional)</span>
+                        </label>
                         <textarea
                           rows={3}
-                          required
-                          value={repoBotPrompt}
-                          onChange={(e) => setRepoBotPrompt(e.target.value)}
-                          placeholder="Specialized instructions for this repository..."
+                          value={repoBotInstructions}
+                          onChange={(e) => setRepoBotInstructions(e.target.value)}
+                          placeholder="Add bot-specific review guidance for this repository..."
                           className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 rounded text-xs font-mono text-text"
                         />
                       </div>

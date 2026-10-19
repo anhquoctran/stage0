@@ -1,10 +1,13 @@
 # AI Preferences transaction
 
 Preferences creates one isolated draft store when opened. All provider fields
-(including auth mode, model, endpoint, limits and prompts), MCP definitions,
-global external agents and guardrail settings are edited there. Sandbox adapter
-selection uses the same dialog's existing draft. No configuration editor writes
-to the runtime stores, native policy or keyring before Apply/OK.
+(including auth mode, model, endpoint and limits), MCP definitions, global
+external agents and guardrail settings are edited there. Reviewer system prompt
+templates are bundled with Stage0 and are not provider preferences. Sandbox
+adapter selection uses the same dialog's existing draft. No configuration editor
+writes to the runtime stores, native policy or keyring before Apply/OK.
+The global review profile may have separate supplemental instructions; those
+instructions do not replace or edit the read-only role prompt.
 
 - **Apply** waits for persistence, advances the committed baseline and stays open.
 - **OK** uses the same save path, closes only on success, and can close unchanged
@@ -51,8 +54,9 @@ only when Stage0 has declared capabilities for the selected provider/model.
 Reviewer profiles inheriting the global model leave execution overrides unset,
 so a consumer can resolve them from global preferences. Saving the form updates
 only the Preferences draft. In the native review panel, choose an assigned
-reviewer to run with that profile's prompt and explicit model settings; a
-profile inheriting provider/model uses the current global AI settings. Runs are
+reviewer to run with that profile's Stage0-managed role prompt, supplemental
+instructions and explicit model settings; a profile inheriting provider/model
+uses the current global AI settings. Runs are
 sequential per Virtual MR, and native reviews require an API key (or local
 Ollama), not a provider subscription/CLI bridge.
 

@@ -136,12 +136,7 @@ export const DEFAULT_AI_CONFIG = {
   temperature: 0.2,
   fastMode: false,
   maxTokens: 4096,
-  systemPrompt: `You are an expert software engineer and code reviewer embedded in Stage0 Git Reviewer.
-When reviewing git diffs:
-1. Identify logic flaws, subtle edge cases, concurrency hazards, and security issues.
-2. Recommend idiomatic, performant patterns conforming to the language standard.
-3. Be clear, constructive, and concise. Avoid superfluous praise.
-4. Format markdown with code blocks, line references, and actionable improvements.`,
+  reviewerInstructions: '',
   streamResponse: true,
   enableCodeReviewAssist: true,
 };

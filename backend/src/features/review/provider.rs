@@ -475,6 +475,7 @@ mod tests {
             fast_mode: false,
             reviewer_id: None,
             reviewer_name: None,
+            reviewer_role: None,
             base_url: url.into(),
             instructions: String::new(),
             allow_remote: true,

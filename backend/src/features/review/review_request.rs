@@ -13,6 +13,8 @@ pub struct ReviewRequest {
     pub reviewer_id: Option<String>,
     #[serde(default)]
     pub reviewer_name: Option<String>,
+    #[serde(default)]
+    pub reviewer_role: Option<String>,
     pub base_url: String,
     pub instructions: String,
     pub allow_remote: bool,

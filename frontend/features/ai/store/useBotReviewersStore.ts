@@ -16,6 +16,46 @@ const LEGACY_MOCK_IDS = new Set([
   'bug-hunter',
   'documentation-spec',
 ]);
+const BOT_ROLE_IDS = new Set(['security', 'performance', 'architecture', 'style', 'test', 'documentation', 'custom']);
+
+function normalizeReviewer(value: unknown): BotReviewer | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const persisted = { ...(value as Record<string, unknown>) };
+  if (typeof persisted.id !== 'string' || typeof persisted.name !== 'string') return null;
+  if (typeof persisted.category !== 'string' || !BOT_ROLE_IDS.has(persisted.category)) {
+    persisted.category = 'custom';
+  }
+
+  const legacyPrompt = persisted.systemPrompt;
+  const customInstructions = typeof persisted.customInstructions === 'string'
+    ? persisted.customInstructions
+    : typeof legacyPrompt === 'string'
+      ? legacyPrompt
+      : '';
+  delete persisted.systemPrompt;
+
+  return { ...persisted, customInstructions } as unknown as BotReviewer;
+}
+
+function normalizeReviewerList(values: unknown[]): { reviewers: BotReviewer[]; changed: boolean } {
+  const reviewers: BotReviewer[] = [];
+  let changed = false;
+  for (const value of values) {
+    const reviewer = normalizeReviewer(value);
+    if (!reviewer) {
+      changed = true;
+      continue;
+    }
+    if (
+      !value || typeof value !== 'object' || Array.isArray(value) ||
+      'systemPrompt' in value || typeof (value as Record<string, unknown>).customInstructions !== 'string' ||
+      typeof (value as Record<string, unknown>).category !== 'string' ||
+      !BOT_ROLE_IDS.has((value as Record<string, unknown>).category as string)
+    ) changed = true;
+    reviewers.push(reviewer);
+  }
+  return { reviewers, changed };
+}
 
 function loadPersistedGlobalReviewers(): BotReviewer[] {
   if (typeof window === 'undefined') return DEFAULT_BOT_REVIEWERS;
@@ -27,10 +67,9 @@ function loadPersistedGlobalReviewers(): BotReviewer[] {
         const filtered = parsed.filter(
           (b: BotReviewer) => !LEGACY_MOCK_IDS.has(b.id) && !b.isBuiltin
         );
-        if (filtered.length !== parsed.length) {
-          persistGlobalReviewers(filtered);
-        }
-        return filtered;
+        const normalized = normalizeReviewerList(filtered);
+        if (filtered.length !== parsed.length || normalized.changed) persistGlobalReviewers(normalized.reviewers);
+        return normalized.reviewers;
       }
     }
   } catch (err) {
@@ -64,7 +103,23 @@ function loadPersistedRepoCustomBots(): Record<string, BotReviewer[]> {
   if (typeof window === 'undefined') return {};
   try {
     const raw = localStorage.getItem(REPO_CUSTOM_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+      const normalized: Record<string, BotReviewer[]> = {};
+      let changed = false;
+      for (const [repoId, values] of Object.entries(parsed)) {
+        if (!Array.isArray(values)) {
+          changed = true;
+          continue;
+        }
+        const list = normalizeReviewerList(values);
+        normalized[repoId] = list.reviewers;
+        if (list.changed) changed = true;
+      }
+      if (changed) persistRepoCustomBots(normalized);
+      return normalized;
+    }
   } catch {}
   return {};
 }
