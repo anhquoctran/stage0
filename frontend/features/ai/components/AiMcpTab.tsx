@@ -39,6 +39,9 @@ import type { AiMcpTabProps } from '../types/AiMcpTabProps';
 import { HarnessConnectionsPanel } from '../../review/components/HarnessConnectionsPanel';
 import { ChatGptDeviceCodeCard } from './ChatGptDeviceCodeCard';
 import { ChatGptBrowserAuthCard } from './ChatGptBrowserAuthCard';
+import { BOT_CATEGORIES } from '../constants/botPresets';
+import type { BotCategory } from '../../virtual-mr/types/BotCategory';
+import { getBotRolePrompt } from '../utils/botRolePrompts';
 
 const MAX_TOKEN_OPTIONS: CustomSelectOption<string>[] = [
   { value: '1024', label: '1,024 Tokens (Compact)' },
@@ -53,6 +56,11 @@ const MCP_SERVER_TYPE_OPTIONS: CustomSelectOption<McpServerType>[] = [
   { value: 'http', label: 'Streamable HTTP (MCP 2025-11-25 discovery)' },
   { value: 'sse', label: 'Legacy HTTP+SSE (configuration only)' },
 ];
+
+const PROMPT_ROLE_OPTIONS: CustomSelectOption<BotCategory>[] = BOT_CATEGORIES.map((category) => ({
+  value: category.id,
+  label: category.label,
+}));
 
 const getProviderIcon = (providerId: string) => {
   switch (providerId) {
@@ -142,6 +150,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   } = { ...useAiMcpStore(), ...draftSettings };
 
   const aiConfig = draftAiConfig || storeAiConfig;
+  const [promptPreviewRole, setPromptPreviewRole] = useState<BotCategory>('custom');
   const updateAiConfig = onUpdateAiConfig || storeUpdateAiConfig;
   const setProvider = (providerId: AiConfig['provider']) => {
     if (providerId === aiConfig.provider) return;
@@ -504,7 +513,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
               }`}
             >
-              <span>Reviewer Persona & Prompts</span>
+              <span>Stage0 System Prompts</span>
             </button>
           </div>
         </div>
@@ -1595,107 +1604,46 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         </div>
       )}
 
-      {/* SUB-TAB 3: REVIEWER PERSONA & PROMPTS */}
+      {/* SUB-TAB 3: STAGE0 MANAGED ROLE PROMPTS */}
       {activeSubTab === 'prompts' && (
         <div className="space-y-4 animate-in fade-in duration-100">
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold text-text">
-                System Instructions & Code Review Persona
-              </label>
-              <button
-                type="button"
-                onClick={() => updateAiConfig({ systemPrompt: DEFAULT_AI_CONFIG.systemPrompt })}
-                className="text-[10px] text-subtext0 hover:text-text underline cursor-pointer"
-              >
-                Reset to Default Persona
-              </button>
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-xs font-semibold text-text">Stage0 system prompts</h3>
+              <p className="text-[11px] text-subtext0 mt-1">
+                These role prompts are built into Stage0 and read-only. A reviewer bot selects one by role; custom bots can add separate instructions in the Reviewer Bots tab.
+              </p>
             </div>
-            <p className="text-[11px] text-subtext0 mb-2">
-              Guide how the AI agent critiques code diffs, detects bugs, and suggests refactoring
-            </p>
-
-            <textarea
-              rows={8}
-              value={aiConfig.systemPrompt}
-              onChange={(e) => updateAiConfig({ systemPrompt: e.target.value })}
-              className="w-full p-3 bg-base border border-surface1 text-xs text-text font-mono leading-relaxed placeholder:text-subtext0 focus:outline-none focus:border-surface2 select-text"
-              placeholder="Enter instructions for the AI reviewer..."
-            />
-          </div>
-
-          {/* Persona Presets */}
-          <div>
-            <span className="block text-xs font-semibold text-text mb-2">
-              One-Click Persona Presets:
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  updateAiConfig({
-                    systemPrompt: `You are an expert Security Engineer and Auditor.
-Analyze code changes for:
-- Injection risks (SQL, Command, XSS)
-- Authentication/Authorization vulnerabilities
-- Unsafe memory operations or concurrent race conditions
-- Data leaks, secrets exposure, and untrusted input parsing
-Provide clear CVSS impact assessment and secure remediations.`,
-                  })
-                }
-                className="p-3 bg-surface0/30 hover:bg-surface0 border border-surface0 hover:border-surface1 text-left rounded-xl transition-all cursor-pointer group"
-              >
-                <div className="text-xs font-bold text-text group-hover:text-brand">
-                  🔒 Security & Vulnerability Auditor
-                </div>
-                <div className="text-[10px] text-subtext0 mt-1">
-                  Focus on OWASP Top 10, concurrency races, input sanitization, and leak prevention
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  updateAiConfig({
-                    systemPrompt: `You are a Principal Software Architect.
-Review git diffs for:
-- High-level design patterns and SOLID principles
-- Maintainability, decoupling, and API contract purity
-- Performance bottlenecks and algorithmic complexity
-- Testability and clear error handling hierarchies`,
-                  })
-                }
-                className="p-3 bg-surface0/30 hover:bg-surface0 border border-surface0 hover:border-surface1 text-left rounded-xl transition-all cursor-pointer group"
-              >
-                <div className="text-xs font-bold text-text group-hover:text-brand">
-                  🏛️ Senior Software Architect
-                </div>
-                <div className="text-[10px] text-subtext0 mt-1">
-                  Focus on architectural cohesion, API design, scalability, and clean code
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  updateAiConfig({
-                    systemPrompt: `You are a Concise Pull Request Reviewer.
-Produce rapid, punchy reviews:
-- 1-sentence summary of the commit/PR intent
-- Bullet points of breaking changes or hazards
-- Immediate suggestions (line-by-line diff replacements)
-Keep response under 200 words.`,
-                  })
-                }
-                className="p-3 bg-surface0/30 hover:bg-surface0 border border-surface0 hover:border-surface1 text-left rounded-xl transition-all cursor-pointer group"
-              >
-                <div className="text-xs font-bold text-text group-hover:text-brand">
-                  ⚡ Concise PR Summarizer
-                </div>
-                <div className="text-[10px] text-subtext0 mt-1">
-                  Short, bulleted summaries emphasizing breaking changes and risks
-                </div>
-              </button>
+            <div className="max-w-sm">
+              <label className="block text-[11px] font-semibold text-subtext0 mb-1">Preview role</label>
+              <CustomSelect
+                value={promptPreviewRole}
+                options={PROMPT_ROLE_OPTIONS}
+                onChange={setPromptPreviewRole}
+                className="w-full"
+                buttonClassName="w-full"
+                dropdownWidth="w-full"
+                align="left"
+                aria-label="System prompt role preview"
+              />
+            </div>
+            <pre className="w-full max-h-[28rem] overflow-y-auto whitespace-pre-wrap p-3 bg-base border border-surface1 text-xs text-subtext1 font-mono leading-relaxed select-text">
+              {getBotRolePrompt(promptPreviewRole)}
+            </pre>
+            <div>
+              <label className="block text-[11px] font-semibold text-subtext0 mb-1">
+                Additional Instructions for Global AI Reviews <span className="font-normal">(optional)</span>
+              </label>
+              <p className="text-[10px] text-subtext0 mb-2">
+                This text supplements the read-only General Reviewer prompt when a review uses Global AI Preferences. Reviewer bots keep their own instructions in the Reviewer Bots tab.
+              </p>
+              <textarea
+                rows={5}
+                value={aiConfig.reviewerInstructions}
+                onChange={(event) => updateAiConfig({ reviewerInstructions: event.target.value })}
+                placeholder="Add extra guidance for reviews started with Global AI Preferences..."
+                className="w-full p-3 bg-base border border-surface1 text-xs text-text font-mono leading-relaxed placeholder:text-subtext0 focus:outline-none focus:border-surface2 select-text"
+              />
             </div>
           </div>
         </div>

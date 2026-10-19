@@ -13,7 +13,7 @@ export interface AiConfig {
   reasoningEffort?: AiReasoningEffort;
   fastMode?: boolean;
   maxTokens: number;
-  systemPrompt: string;
+  reviewerInstructions: string;
   streamResponse: boolean;
   enableCodeReviewAssist: boolean;
 }

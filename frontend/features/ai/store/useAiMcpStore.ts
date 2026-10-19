@@ -20,6 +20,12 @@ import { MCP_TRANSPORT_UNAVAILABLE } from '../constants/runtimeAvailability';
 import { resetMcpVerification } from '../utils/resetMcpVerification';
 
 const STORAGE_KEY = 'stage0_ai_mcp_config';
+const LEGACY_DEFAULT_AI_SYSTEM_PROMPT = `You are an expert software engineer and code reviewer embedded in Stage0 Git Reviewer.
+When reviewing git diffs:
+1. Identify logic flaws, subtle edge cases, concurrency hazards, and security issues.
+2. Recommend idiomatic, performant patterns conforming to the language standard.
+3. Be clear, constructive, and concise. Avoid superfluous praise.
+4. Format markdown with code blocks, line references, and actionable improvements.`;
 let chatGptEpoch = 0;
 let chatGptPoll = 0;
 
@@ -75,9 +81,22 @@ function loadPersistedState(): {
     if (raw) {
       const parsed = JSON.parse(raw);
       const legacyKey = parsed.aiConfig?.apiKey;
+      const savedAiConfig = { ...(parsed.aiConfig || {}) };
+      // Reviewer system prompts are product-owned, not user preferences. Drop
+      // the legacy editable field and retain a customized value as separate
+      // supplemental instructions for global reviews.
+      const legacySystemPrompt = savedAiConfig.systemPrompt;
+      delete savedAiConfig.systemPrompt;
+      if (typeof savedAiConfig.reviewerInstructions !== 'string') {
+        savedAiConfig.reviewerInstructions = typeof legacySystemPrompt === 'string'
+          && legacySystemPrompt.trim()
+          && legacySystemPrompt !== LEGACY_DEFAULT_AI_SYSTEM_PROMPT
+          ? legacySystemPrompt
+          : '';
+      }
       const loadedAiConfig: AiConfig = {
         ...DEFAULT_AI_CONFIG,
-        ...(parsed.aiConfig || {}),
+        ...savedAiConfig,
         apiKey: '', // Never trust or retain plaintext apiKey from localStorage
       };
 

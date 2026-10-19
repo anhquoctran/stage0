@@ -54,6 +54,13 @@ pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<R
     {
         return Err("Reviewer identity exceeds the supported length".into());
     }
+    if request
+        .reviewer_role
+        .as_deref()
+        .is_some_and(|role| !super::runtime::is_supported_reviewer_role(role))
+    {
+        return Err("Unsupported reviewer role".into());
+    }
     let endpoint = provider::endpoint(&request)?;
     let subscription_token = if request.auth_mode == "subscription_oauth" {
         Some(crate::features::ai::chatgpt_oauth::review_access_token().await?)

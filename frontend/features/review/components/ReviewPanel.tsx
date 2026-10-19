@@ -12,6 +12,7 @@ import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import type { BotReviewer } from '../../virtual-mr/types/BotReviewer';
 import { AI_PROVIDERS } from '../../ai/constants/aiPresets';
 import { resolveReviewBotConfig } from '../utils/resolveReviewBotConfig';
+import type { ReviewBotConfig } from '../types/ReviewBotConfig';
 
 const GLOBAL_REVIEWER_ID = '__stage0_global_ai_config__';
 
@@ -44,9 +45,9 @@ export const ReviewPanel: React.FC = () => {
   const reviewerProvider = selectedReviewer?.provider && selectedReviewer.provider !== 'global_default'
     ? selectedReviewer.provider
     : config.provider;
-  const reviewConfig = selectedReviewer
+  const reviewConfig: ReviewBotConfig = selectedReviewer
     ? resolveReviewBotConfig(config, selectedReviewer, dynamicModels[reviewerProvider as keyof typeof dynamicModels] || [])
-    : config;
+    : { ...config, reviewerRole: 'custom', customInstructions: config.reviewerInstructions };
   const usesChatGptSubscription = reviewConfig.provider === 'openai' && reviewConfig.authMode === 'subscription_oauth';
   const compatible = AI_PROVIDERS.some((provider) => provider.id === reviewConfig.provider && provider.id !== 'github_copilot')
     && (reviewConfig.provider === 'ollama' || !reviewConfig.authMode || reviewConfig.authMode === 'api_key' || usesChatGptSubscription);

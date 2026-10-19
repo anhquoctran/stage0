@@ -1,6 +1,7 @@
 import type { AiConfig } from '../../ai/types/AiConfig';
 import type { AiModelPreset } from '../../ai/types/AiModelPreset';
 import type { BotReviewer } from '../../virtual-mr/types/BotReviewer';
+import type { ReviewBotConfig } from '../types/ReviewBotConfig';
 import { AI_PROVIDERS } from '../../ai/constants/aiPresets';
 import { resolveAiModelPreset } from '../../ai/utils/resolveAiModelPreset';
 
@@ -8,7 +9,7 @@ export function resolveReviewBotConfig(
   globalConfig: AiConfig,
   reviewer: BotReviewer,
   dynamicModels: AiModelPreset[] = [],
-): AiConfig {
+): ReviewBotConfig {
   const provider = reviewer.provider && reviewer.provider !== 'global_default'
     ? reviewer.provider as AiConfig['provider']
     : globalConfig.provider;
@@ -27,7 +28,11 @@ export function resolveReviewBotConfig(
     : providerPreset?.defaultBaseUrl || globalConfig.baseUrl;
 
   if (usesGlobalModel) {
-    return { ...globalConfig, systemPrompt: reviewer.systemPrompt };
+    return {
+      ...globalConfig,
+      reviewerRole: reviewer.category,
+      customInstructions: reviewer.customInstructions,
+    };
   }
 
   const capabilities = resolveAiModelPreset(provider, model, baseUrl, dynamicModels);
@@ -43,7 +48,8 @@ export function resolveReviewBotConfig(
     cliType: undefined,
     model,
     baseUrl,
-    systemPrompt: reviewer.systemPrompt,
+    reviewerRole: reviewer.category,
+    customInstructions: reviewer.customInstructions,
     reasoningEffort,
     fastMode: capabilities?.supportsFastMode === true && reviewer.fastMode === true,
   };

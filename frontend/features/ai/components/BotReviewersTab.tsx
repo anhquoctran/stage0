@@ -24,6 +24,7 @@ import type { AiModelPreset } from '../types/AiModelPreset';
 import type { AiReasoningEffort } from '../types/AiReasoningEffort';
 import type { AiSettingsTabProps } from '../types/AiSettingsTabProps';
 import { resolveAiModelPreset } from '../utils/resolveAiModelPreset';
+import { getBotRolePrompt } from '../utils/botRolePrompts';
 
 const EMOJI_PRESETS = ['🛡️', '⚡', '🏗️', '🐛', '📝', '🎨', '🔒', '🚀', '🧪', '🔍', '⚙️', '💎'];
 const CUSTOM_MODEL_OPTION = '__stage0_custom_model__';
@@ -63,7 +64,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
   const [formDesc, setFormDesc] = useState('');
   const [formCategory, setFormCategory] = useState<BotCategory>('custom');
   const [formEmoji, setFormEmoji] = useState('🤖');
-  const [formPrompt, setFormPrompt] = useState('');
+  const [formInstructions, setFormInstructions] = useState('');
   const [formProvider, setFormProvider] = useState<string>('global_default');
   const [formModel, setFormModel] = useState<string>('global_default');
   const [isCustomModel, setIsCustomModel] = useState(false);
@@ -134,7 +135,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
         bot.name.toLowerCase().includes(q) ||
         bot.tagline.toLowerCase().includes(q) ||
         bot.description.toLowerCase().includes(q) ||
-        bot.systemPrompt.toLowerCase().includes(q)
+        bot.customInstructions.toLowerCase().includes(q)
       );
     });
   }, [globalReviewers, searchQuery, selectedCategory, onlyEnabled]);
@@ -149,11 +150,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
     setFormDesc('');
     setFormCategory('custom');
     setFormEmoji('🤖');
-    setFormPrompt(`You are a specialized code reviewer bot.
-Analyze incoming code diffs and discussions:
-1. Identify logic flaws, regressions, and security anomalies.
-2. Provide clear, actionable recommendations with code examples.
-3. Be respectful, concise, and focused on code quality.`);
+    setFormInstructions('');
     setFormProvider('global_default');
     setFormModel('global_default');
     setIsCustomModel(false);
@@ -171,7 +168,7 @@ Analyze incoming code diffs and discussions:
     setFormDesc(bot.description);
     setFormCategory(bot.category);
     setFormEmoji(bot.avatarEmoji);
-    setFormPrompt(bot.systemPrompt);
+    setFormInstructions(bot.customInstructions);
     setFormProvider(bot.provider || 'global_default');
     setFormModel(bot.model || 'global_default');
     setIsCustomModel(false);
@@ -189,7 +186,7 @@ Analyze incoming code diffs and discussions:
       description: bot.description,
       category: bot.category,
       avatarEmoji: bot.avatarEmoji,
-      systemPrompt: bot.systemPrompt,
+      customInstructions: bot.customInstructions,
       provider: bot.provider,
       model: bot.model,
       temperature: bot.temperature,
@@ -204,10 +201,6 @@ Analyze incoming code diffs and discussions:
     e.preventDefault();
     if (!formName.trim()) {
       setFormError('Bot name is required');
-      return;
-    }
-    if (!formPrompt.trim()) {
-      setFormError('System prompt instructions are required');
       return;
     }
     if (!formModel.trim()) {
@@ -230,7 +223,7 @@ Analyze incoming code diffs and discussions:
         description: formDesc.trim(),
         category: formCategory,
         avatarEmoji: formEmoji,
-        systemPrompt: formPrompt.trim(),
+        customInstructions: formInstructions.trim(),
         provider: formProvider,
         model: formModel.trim(),
         temperature: formTemp,
@@ -244,7 +237,7 @@ Analyze incoming code diffs and discussions:
         description: formDesc.trim(),
         category: formCategory,
         avatarEmoji: formEmoji,
-        systemPrompt: formPrompt.trim(),
+        customInstructions: formInstructions.trim(),
         provider: formProvider,
         model: formModel.trim(),
         temperature: formTemp,
@@ -561,12 +554,21 @@ Analyze incoming code diffs and discussions:
                 {isPromptExpanded && (
                   <div className="mt-3 p-3 bg-crust border border-surface0/80 rounded space-y-1.5 animate-in fade-in duration-150">
                     <div className="flex items-center justify-between text-[11px] text-subtext0 font-mono">
-                      <span>SYSTEM_PROMPT</span>
-                      <span>{bot.systemPrompt.length} characters</span>
+                      <span>STAGE0 ROLE PROMPT · {getCategoryInfo(bot.category).label.toUpperCase()}</span>
+                      <span>{getBotRolePrompt(bot.category).length} characters</span>
                     </div>
                     <pre className="text-xs font-mono text-subtext1 whitespace-pre-wrap leading-relaxed max-h-56 overflow-y-auto select-text p-1">
-                      {bot.systemPrompt}
+                      {getBotRolePrompt(bot.category)}
                     </pre>
+                    {bot.customInstructions.trim() && <>
+                      <div className="flex items-center justify-between text-[11px] text-subtext0 font-mono pt-2">
+                        <span>USER ADDITIONAL INSTRUCTIONS</span>
+                        <span>{bot.customInstructions.length} characters</span>
+                      </div>
+                      <pre className="text-xs font-mono text-subtext1 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto select-text p-1">
+                        {bot.customInstructions}
+                      </pre>
+                    </>}
                   </div>
                 )}
               </div>
@@ -660,7 +662,7 @@ Analyze incoming code diffs and discussions:
 
                 <div>
                   <label className="block text-[11px] font-semibold text-subtext0 mb-1">
-                    Category
+                    Role
                   </label>
                   <CustomSelect
                     value={formCategory}
@@ -670,7 +672,7 @@ Analyze incoming code diffs and discussions:
                     buttonClassName="w-full"
                     dropdownWidth="w-full"
                     align="left"
-                    aria-label="Bot category"
+                    aria-label="Bot role"
                   />
                 </div>
               </div>
@@ -688,22 +690,25 @@ Analyze incoming code diffs and discussions:
                 />
               </div>
 
-              {/* System Prompt */}
+              {/* Stage0 managed role prompt and user additions */}
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-[11px] font-semibold text-subtext0">
-                    System Prompt Instructions *
+                    Stage0 System Prompt · {BOT_CATEGORIES.find((category) => category.id === formCategory)?.label}
                   </label>
-                  <span className="text-[10px] text-subtext0 font-mono">
-                    Executed when reviewing Virtual MR diffs
-                  </span>
+                  <span className="text-[10px] text-subtext0 font-mono">Read-only · selected by role</span>
                 </div>
+                <pre className="w-full max-h-36 overflow-y-auto whitespace-pre-wrap px-3 py-2 bg-crust border border-surface1 rounded text-xs font-mono text-subtext1 leading-relaxed select-text">
+                  {getBotRolePrompt(formCategory)}
+                </pre>
+                <label className="block text-[11px] font-semibold text-subtext0 mt-3 mb-1">
+                  Additional Instructions <span className="font-normal">(optional)</span>
+                </label>
                 <textarea
-                  rows={7}
-                  required
-                  value={formPrompt}
-                  onChange={(e) => setFormPrompt(e.target.value)}
-                  placeholder="Define role, review criteria, rules to enforce, and preferred response format..."
+                  rows={5}
+                  value={formInstructions}
+                  onChange={(e) => setFormInstructions(e.target.value)}
+                  placeholder="Add bot-specific review guidance. This is combined with the read-only Stage0 role prompt."
                   className="w-full px-3 py-2 bg-surface0 border border-surface1 rounded text-xs font-mono text-text focus:outline-none focus:border-brand leading-relaxed"
                 />
               </div>

@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { ReviewState } from '../types/ReviewState';
 import type { ReviewRun } from '../types/ReviewRun';
 import type { ReviewRunDetail } from '../types/ReviewRunDetail';
+import type { ReviewBotConfig } from '../types/ReviewBotConfig';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 
 let loadVersion = 0;
@@ -50,14 +51,15 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       if (version === loadVersion && get().sessionId === sessionId) set({ error: message(error) });
     }
   },
-  start: async (config, allowRemote, reviewer) => {
+  start: async (config: ReviewBotConfig, allowRemote, reviewer) => {
     const sessionId = get().sessionId;
     if (!sessionId || get().isStarting) return;
     set({ isStarting: true, error: null });
     try {
       const run = await invoke<ReviewRun>('start_ai_review', { request: {
         sessionId, provider: config.provider, authMode: config.authMode || 'api_key',
-        model: config.model, baseUrl: config.baseUrl, instructions: config.systemPrompt, allowRemote,
+        model: config.model, baseUrl: config.baseUrl, reviewerRole: config.reviewerRole,
+        instructions: config.customInstructions, allowRemote,
         reasoningEffort: config.reasoningEffort || null, fastMode: config.fastMode === true,
         reviewerId: reviewer?.id || null, reviewerName: reviewer?.name || null,
       } });

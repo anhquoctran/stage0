@@ -8,7 +8,7 @@ export interface BotReviewer {
   description: string;
   category: BotCategory;
   avatarEmoji: string;
-  systemPrompt: string;
+  customInstructions: string;
   provider?: string;
   model?: string;
   temperature?: number;
