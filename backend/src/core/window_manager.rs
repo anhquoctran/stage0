@@ -107,13 +107,7 @@ pub fn resolve_repository(
     };
 
     #[cfg(windows)]
-    let identity = {
-        let normalized = canonical
-            .to_str()
-            .map(|s| PathBuf::from(s.to_lowercase()))
-            .unwrap_or_else(|| canonical.clone());
-        RepoIdentity::Path(normalized)
-    };
+    let identity = windows_directory_identity(&canonical)?;
 
     #[cfg(not(any(unix, windows)))]
     let identity = RepoIdentity::Path(canonical.clone());
@@ -282,6 +276,62 @@ fn start_watcher(app: &AppHandle, label: &str, path: &Path) {
     }
 }
 
+#[cfg(windows)]
+fn windows_directory_identity(path: &Path) -> Result<RepoIdentity, String> {
+    use std::os::windows::ffi::OsStrExt;
+    use std::os::windows::io::{AsRawHandle, FromRawHandle};
+    use windows_sys::Win32::Foundation::{HANDLE, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::Storage::FileSystem::{
+        CreateFileW, GetFileInformationByHandle, BY_HANDLE_FILE_INFORMATION,
+        FILE_FLAG_BACKUP_SEMANTICS, FILE_READ_ATTRIBUTES, FILE_SHARE_DELETE, FILE_SHARE_READ,
+        FILE_SHARE_WRITE, OPEN_EXISTING,
+    };
+
+    let wide_path = path
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect::<Vec<_>>();
+
+    // Opening a directory requires FILE_FLAG_BACKUP_SEMANTICS. Share all access
+    // modes so identity lookup does not block Git or another filesystem reader.
+    let handle = unsafe {
+        CreateFileW(
+            wide_path.as_ptr(),
+            FILE_READ_ATTRIBUTES,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            std::ptr::null(),
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS,
+            std::ptr::null_mut(),
+        )
+    };
+    if handle == INVALID_HANDLE_VALUE {
+        return Err(format!(
+            "Could not open repository directory to determine its physical identity: {}",
+            std::io::Error::last_os_error()
+        ));
+    }
+
+    // Transfer ownership to File so the native handle is closed on every path.
+    let file = unsafe { std::fs::File::from_raw_handle(handle as HANDLE) };
+    let mut information = BY_HANDLE_FILE_INFORMATION::default();
+    let succeeded =
+        unsafe { GetFileInformationByHandle(file.as_raw_handle() as HANDLE, &mut information) };
+    if succeeded == 0 {
+        return Err(format!(
+            "Could not read repository physical identity: {}",
+            std::io::Error::last_os_error()
+        ));
+    }
+
+    Ok(RepoIdentity::File {
+        volume: u64::from(information.dwVolumeSerialNumber),
+        file_index: (u64::from(information.nFileIndexHigh) << 32)
+            | u64::from(information.nFileIndexLow),
+    })
+}
+
 fn wait_for_window(app: &AppHandle, label: &str) -> Option<WebviewWindow> {
     for _ in 0..80 {
         if let Some(window) = app.get_webview_window(label) {
@@ -344,6 +394,35 @@ mod tests {
             alias_canonical_path,
             dunce::canonicalize(&repository).unwrap()
         );
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn repository_symlink_aliases_resolve_to_the_same_physical_identity() {
+        use std::os::windows::fs::symlink_dir;
+
+        let root =
+            std::env::temp_dir().join(format!("stage0_window_manager_{}", uuid::Uuid::new_v4()));
+        let repository = root.join("repository");
+        let alias = root.join("repository-alias");
+        fs::create_dir_all(repository.join(".git")).unwrap();
+
+        if let Err(error) = symlink_dir(&repository, &alias) {
+            let _ = fs::remove_dir_all(&root);
+            if error.kind() == std::io::ErrorKind::PermissionDenied {
+                // Windows may require Developer Mode or an elevated test runner
+                // to create directory symlinks.
+                return;
+            }
+            panic!("Could not create repository symlink: {error}");
+        }
+
+        let (_, canonical_identity, _) = resolve_repository(&repository).unwrap();
+        let (_, alias_identity, _) = resolve_repository(&alias).unwrap();
+
+        assert!(matches!(canonical_identity, RepoIdentity::File { .. }));
+        assert_eq!(canonical_identity, alias_identity);
         fs::remove_dir_all(root).unwrap();
     }
 
