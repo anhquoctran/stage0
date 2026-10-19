@@ -77,9 +77,22 @@ async fn execute_with_adapter(
     let mut wire_bytes = 0;
     let mut had_errors = false;
     let mut recovered_missing_tool_call = false;
-    if run.snapshot.changed_files.is_empty() && run.snapshot.excluded_files.is_empty() {
-        run.summary="No changed files in this snapshot. No model request was needed; no approval was recorded.".into();
-        run.status = "completed".into();
+    if run.snapshot.changed_files.is_empty() {
+        if run.snapshot.excluded_files.is_empty() {
+            run.summary="No changed files in this snapshot. No model request was needed; no approval was recorded.".into();
+            run.status = "completed".into();
+        } else {
+            run.summary = format!(
+                "No eligible changed files to review: all {} changed paths were excluded by source policy. No model request was sent and no code was reviewed.",
+                run.snapshot.excluded_files.len()
+            );
+            run.status = "partial".into();
+            db.review_event(
+                &run.id,
+                "no_eligible_files",
+                json!({"excludedFileCount":run.snapshot.excluded_files.len()}),
+            )?;
+        }
         return Ok(());
     }
     for turn in 0..12 {
@@ -125,11 +138,23 @@ async fn execute_with_adapter(
             });
         let has_output_text = response["output_text"]
             .as_str()
-            .is_some_and(|text| !text.trim().is_empty());
+            .is_some_and(|text| !text.trim().is_empty())
+            || response["output"].as_array().is_some_and(|items| {
+                items.iter().any(|item| {
+                    item["content"].as_array().is_some_and(|content| {
+                        content.iter().any(|block| {
+                            block["type"] == "output_text"
+                                && block["text"]
+                                    .as_str()
+                                    .is_some_and(|text| !text.trim().is_empty())
+                        })
+                    })
+                })
+            });
         db.review_event(
             &run.id,
             "model_response",
-            json!({"turn":run.turns,"usageTokens":usage,"toolCalls":calls.len(),"outputItemTypes":output_item_types,"hasOutputText":has_output_text,"hasRefusal":has_refusal}),
+            json!({"turn":run.turns,"usageTokens":usage,"toolCalls":calls.len(),"outputItemTypes":output_item_types,"hasOutputText":has_output_text,"hasRefusal":has_refusal,"streamedOutputItems":response["_stage0Stream"]["completedOutputItems"].as_u64(),"terminalOutputItems":response["_stage0Stream"]["terminalOutputItems"].as_u64()}),
         )?;
         if run.usage_tokens > 64000 {
             return Err("Review token budget exhausted".into());
@@ -316,9 +341,20 @@ mod tests {
                 }
                 requests
                     .push(serde_json::from_slice(&bytes[header_end..header_end + length]).unwrap());
-                let body = response.to_string();
+                let (body, content_type) =
+                    if let Some(events) = response["fixtureSseEvents"].as_array() {
+                        (
+                            events
+                                .iter()
+                                .map(|event| format!("data: {event}\r\n\r\n"))
+                                .collect::<String>(),
+                            "text/event-stream",
+                        )
+                    } else {
+                        (response.to_string(), "application/json")
+                    };
                 let status = response["fixtureHttpStatus"].as_u64().unwrap_or(200);
-                stream.write_all(format!("HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",body.len(),body).as_bytes()).await.unwrap();
+                stream.write_all(format!("HTTP/1.1 {status} Fixture\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",body.len(),body).as_bytes()).await.unwrap();
             }
             requests
         });
@@ -347,6 +383,43 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn subscription_http_stream_restores_calls_and_matching_continuation() {
+        let reasoning = json!({"id":"rs_fixture","type":"reasoning","encrypted_content":"opaque-signature","summary":[]});
+        let call = json!({"id":"fc_fixture","type":"function_call","status":"completed","call_id":"call_fixture","name":"get_diff","arguments":"{}"});
+        let (url, requests) = server(vec![json!({"fixtureSseEvents":[
+            {"type":"response.output_item.done","output_index":0,"item":reasoning},
+            {"type":"response.output_item.done","output_index":1,"item":call},
+            {"type":"response.completed","response":{"status":"completed","output":[],"usage":{"total_tokens":12}}}
+        ]})]).await;
+        let mut cfg = config("https://api.openai.com/v1".into());
+        cfg.provider = "openai".into();
+        cfg.auth_mode = "subscription_oauth".into();
+        cfg.model = "gpt-6-luna".into();
+        cfg.allow_remote = true;
+        let mut history = provider::initial_history("openai", "Source-free fixture");
+        let body = provider::payload(&cfg, "Fixture policy", &history, &[], 512);
+        // The local fixture exercises the same HTTP/SSE transport without a
+        // real account, keyring access, repository egress or model charges.
+        let response = provider::request(&cfg, &url, &body, Some("fixture-oauth-token"))
+            .await
+            .unwrap();
+        let (calls, usage) = provider::decode("openai", &response, &mut history).unwrap();
+        assert_eq!(calls.len(), 1);
+        assert_eq!(usage, 12);
+        assert_eq!(calls[0].name, "get_diff");
+        provider::append_results(
+            "openai",
+            &mut history,
+            &[(calls[0].clone(), json!({"result":"fixture"}))],
+        );
+        let continuation = provider::payload(&cfg, "Fixture policy", &history, &[], 512);
+        assert_eq!(continuation["input"][2], reasoning);
+        assert_eq!(continuation["input"][3], call);
+        assert_eq!(continuation["input"][4]["call_id"], "call_fixture");
+        assert_eq!(requests.await.unwrap()[0], body);
+    }
+
+    #[tokio::test]
     async fn real_http_tool_loop_validates_evidence_redacts_context_and_persists_findings() {
         let repo = TestRepo::new();
         let (mut run, ctx) = repo.review();
@@ -357,7 +430,14 @@ mod tests {
             reply("execute_terminal_cmd",json!({"command":"touch","args":["forbidden"]})),
             reply("submit_review",json!({"summary":"Fixture review with excluded content","findings":[{"filePath":"source.rs","side":"head","startLine":1,"endLine":1,"severity":"medium","title":"Fixture finding","body":"Evidence-backed fixture, not a live model judgment","evidence":"fn value() -> u32 { 2 }"}]})),
         ]).await;
-        let result = execute(&db, &config(url), None, &mut run, &Arc::new(Mutex::new(ctx))).await;
+        let result = execute(
+            &db,
+            &config(url),
+            None,
+            &mut run,
+            &Arc::new(Mutex::new(ctx)),
+        )
+        .await;
         assert!(result.is_ok(), "{result:?}");
         run.finish(result);
         db.save_review_run(&run).unwrap();
@@ -427,7 +507,14 @@ mod tests {
         let db = test_database(&run);
         db.save_review_run(&run).unwrap();
         let (url, requests) = server(vec![reply("get_diff", json!({})); 12]).await;
-        let result = execute(&db, &config(url), None, &mut run, &Arc::new(Mutex::new(ctx))).await;
+        let result = execute(
+            &db,
+            &config(url),
+            None,
+            &mut run,
+            &Arc::new(Mutex::new(ctx)),
+        )
+        .await;
         assert!(result.as_ref().unwrap_err().contains("budget"));
         run.finish(result);
         assert_eq!(run.status, "incomplete");
@@ -448,19 +535,25 @@ mod tests {
             reply("get_diff", json!({})),
         ])
         .await;
-        assert!(
-            provider::request(&config(url.clone()), &format!("{url}/api/chat"), &json!({}), None)
-                .await
-                .is_ok()
-        );
+        assert!(provider::request(
+            &config(url.clone()),
+            &format!("{url}/api/chat"),
+            &json!({}),
+            None
+        )
+        .await
+        .is_ok());
         assert_eq!(requests.await.unwrap().len(), 2);
         let (url, requests) = server(vec![json!({"fixtureHttpStatus":401})]).await;
-        assert!(
-            provider::request(&config(url.clone()), &format!("{url}/api/chat"), &json!({}), None)
-                .await
-                .unwrap_err()
-                .contains("401")
-        );
+        assert!(provider::request(
+            &config(url.clone()),
+            &format!("{url}/api/chat"),
+            &json!({}),
+            None
+        )
+        .await
+        .unwrap_err()
+        .contains("401"));
         assert_eq!(requests.await.unwrap().len(), 1);
     }
     #[tokio::test]
@@ -483,7 +576,14 @@ mod tests {
             ),
         ])
         .await;
-        let result = execute(&db, &config(url), None, &mut run, &Arc::new(Mutex::new(ctx))).await;
+        let result = execute(
+            &db,
+            &config(url),
+            None,
+            &mut run,
+            &Arc::new(Mutex::new(ctx)),
+        )
+        .await;
         assert!(result.is_ok());
         run.finish(result);
         assert_eq!(run.status, "partial");
@@ -504,7 +604,14 @@ mod tests {
             json!({"summary":"No findings; context uninspected","findings":[]}),
         )])
         .await;
-        let result = execute(&db, &config(url), None, &mut run, &Arc::new(Mutex::new(ctx))).await;
+        let result = execute(
+            &db,
+            &config(url),
+            None,
+            &mut run,
+            &Arc::new(Mutex::new(ctx)),
+        )
+        .await;
         assert!(result.is_ok());
         run.finish(result);
         assert_eq!(run.status, "partial");
@@ -515,7 +622,14 @@ mod tests {
         .await;
         let (_, ctx) = repo.review();
         run.status = "running".into();
-        let result = execute(&db, &config(url), None, &mut run, &Arc::new(Mutex::new(ctx))).await;
+        let result = execute(
+            &db,
+            &config(url),
+            None,
+            &mut run,
+            &Arc::new(Mutex::new(ctx)),
+        )
+        .await;
         assert!(result.is_err());
         run.finish(result);
         assert_eq!(run.status, "failed");
@@ -547,6 +661,43 @@ mod tests {
         assert!(db.review_events(&run.id).unwrap().is_empty());
     }
     #[tokio::test]
+    async fn fully_excluded_snapshot_finishes_partial_without_contacting_a_model() {
+        let repo = TestRepo::new();
+        repo.git(&["checkout", "main"]);
+        repo.git(&["checkout", "-b", "excluded-only"]);
+        repo.write(".env", "PRIVATE_FIXTURE=value\n");
+        repo.git(&["add", ".env"]);
+        repo.git(&["commit", "-m", "Only excluded changes"]);
+        let (mut run, mut ctx) = repo.review();
+        let guards = crate::features::sandbox::guardrails::GuardrailsEngine::new();
+        ctx.snapshot =
+            super::super::context::capture(repo.path(), "main", "excluded-only", &guards).unwrap();
+        run.snapshot = ctx.snapshot.clone();
+        assert!(run.snapshot.changed_files.is_empty());
+        assert_eq!(run.snapshot.excluded_files, vec![".env"]);
+        let db = test_database(&run);
+        db.save_review_run(&run).unwrap();
+        let result = execute(
+            &db,
+            &config("http://127.0.0.1:1".into()),
+            None,
+            &mut run,
+            &Arc::new(Mutex::new(ctx)),
+        )
+        .await;
+        assert!(result.is_ok(), "{result:?}");
+        run.finish(result);
+        assert_eq!(run.status, "partial");
+        assert_eq!(run.turns, 0);
+        assert_eq!(run.tool_calls, 0);
+        assert_eq!(run.usage_tokens, 0);
+        assert!(run.findings.is_empty());
+        assert!(run.summary.contains("no code was reviewed"));
+        let events = db.review_events(&run.id).unwrap();
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0]["kind"], "no_eligible_files");
+    }
+    #[tokio::test]
     async fn complete_eligible_diff_coverage_can_finish_without_approving_the_mr() {
         let repo = TestRepo::new();
         repo.git(&["rm", ".env"]);
@@ -560,7 +711,14 @@ mod tests {
         let db = test_database(&run);
         db.save_review_run(&run).unwrap();
         let (url,requests)=server(vec![reply("get_file_diff",json!({"filePath":"source.rs","offset":0})),reply("submit_review",json!({"summary":"No issue identified in inspected changes; not approval","findings":[]}))]).await;
-        let result = execute(&db, &config(url), None, &mut run, &Arc::new(Mutex::new(ctx))).await;
+        let result = execute(
+            &db,
+            &config(url),
+            None,
+            &mut run,
+            &Arc::new(Mutex::new(ctx)),
+        )
+        .await;
         assert!(result.is_ok());
         run.finish(result);
         assert_eq!(run.status, "completed");

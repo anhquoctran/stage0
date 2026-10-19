@@ -30,8 +30,11 @@ pub fn safe_path(path: &str, guards: &GuardrailsEngine) -> Result<(), String> {
     {
         return Err("File excluded by mandatory review egress policy".into());
     }
+    // Inventory scans and repeated snapshot checks are not tool invocations.
+    // Consult the sensitive-path policy without consuming the sandbox read
+    // rate limit; the review runtime enforces its own tool/context budgets.
     guards
-        .evaluate_read_file(path, 1, 1)
+        .evaluate_resolved_read_path(path)
         .map_err(|_| "File excluded by sensitive-path policy".to_string())?;
     Ok(())
 }

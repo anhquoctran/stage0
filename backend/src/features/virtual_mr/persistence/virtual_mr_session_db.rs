@@ -15,4 +15,6 @@ pub struct VirtualMrSessionDb {
     pub created_at: String,
     pub updated_at: String,
     pub label_ids: Vec<String>,
+    #[serde(default)]
+    pub reviewers: Vec<super::VirtualMrReviewerDb>,
 }

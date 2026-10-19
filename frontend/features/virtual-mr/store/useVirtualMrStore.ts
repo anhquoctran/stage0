@@ -18,8 +18,46 @@ import type { VirtualMrState } from '../types/VirtualMrState';
 import { AI_REVIEW_UNAVAILABLE } from '../../ai/constants/runtimeAvailability';
 import type { DbDiscussion } from '../types/DbDiscussion';
 import { fromDbDiscussion } from '../utils/fromDbDiscussion';
+import { enqueueSessionWrite, flushSessionWrites, pendingSessionSnapshot, saveSessionSnapshot } from '../services/sessionPersistence';
 
 let draftBranchRequestVersion = 0;
+let repoDataRequestVersion = 0;
+let repoMetadataRequestVersion = 0;
+
+const persistSession = (session: VirtualMrSession): Promise<void> =>
+  enqueueSessionWrite(session.id, () => {
+    // A metadata save may have finished while this write was queued.
+    const current = useVirtualMrStore.getState().sessions.find((item) => item.id === session.id);
+    return saveSessionSnapshot(current ?? pendingSessionSnapshot(session.id) ?? session);
+  });
+
+const updateSessionMetadata = async (
+  sessionId: string,
+  update: (session: VirtualMrSession) => Partial<Pick<VirtualMrSession, 'reviewers' | 'labels'>> | null,
+): Promise<void> => {
+  const original = useVirtualMrStore.getState().sessions.find((item) => item.id === sessionId);
+  if (!original) return;
+  try {
+    await enqueueSessionWrite(sessionId, async () => {
+      const session = useVirtualMrStore.getState().sessions.find((item) => item.id === sessionId)
+        ?? pendingSessionSnapshot(sessionId) ?? original;
+      const changes = update(session);
+      if (!changes) return;
+      const updatedAt = new Date().toISOString();
+      await saveSessionSnapshot({ ...session, ...changes, updatedAt });
+      // Publish only after SQLite confirms the selection. Merge with current
+      // state so another edit or a repository switch cannot be overwritten.
+      useVirtualMrStore.setState((state) => ({
+        sessions: state.sessions.map((item) => item.id === sessionId
+          ? { ...item, ...changes, updatedAt }
+          : item),
+      }));
+    });
+  } catch (error) {
+    console.error('Failed to save Virtual MR selections:', error);
+    useGitStore.getState().showToast('Could not save MR reviewers or labels. Please try again.');
+  }
+};
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error === 'string') return error;
@@ -60,6 +98,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   },
 
   loadRepoData: async (repoId: string, repoPath: string, availableBranches: string[], defaultBase?: string) => {
+    const requestVersion = ++repoDataRequestVersion;
     const repoChanged =
       get().currentRepoId !== repoId || get().currentRepoPath !== repoPath;
     set({
@@ -141,6 +180,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       // 4. Load Sessions (Parallelized to eliminate waterfall)
       let sessions: VirtualMrSession[] = [];
       try {
+        await flushSessionWrites();
         const dbSessions = await invoke<any[]>('list_virtual_mr_sessions', { repoId });
         if (dbSessions && dbSessions.length > 0) {
           sessions = await Promise.all(
@@ -220,7 +260,12 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
                   name: ds.assignee_name || userName,
                   email: ds.assignee_email || userEmail,
                 },
-                reviewers: [],
+                reviewers: (ds.reviewers || []).map((reviewer: any) => ({
+                  agentId: reviewer.agent_id,
+                  agentName: reviewer.agent_name,
+                  reviewStatus: reviewer.review_status,
+                  assignedAt: reviewer.assigned_at,
+                })),
                 labels: attachedLabels,
                 discussions,
                 commits,
@@ -235,6 +280,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
         console.warn('Failed to load sessions from db:', err);
       }
 
+      if (requestVersion !== repoDataRequestVersion) return;
       let activeSessionId = get().activeSessionId;
       if (sessions.length > 0) {
         if (!activeSessionId || !sessions.some((s) => s.id === activeSessionId)) {
@@ -258,8 +304,50 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
 
     } catch (err) {
       console.error('loadRepoData error:', err);
-      set({ isLoadingSessions: false });
+      if (requestVersion === repoDataRequestVersion) set({ isLoadingSessions: false });
     }
+  },
+
+  refreshRepoMetadata: async (repoId: string) => {
+    const requestVersion = ++repoMetadataRequestVersion;
+    const [settingsResult, labelsResult] = await Promise.allSettled([
+      invoke<any>('get_repo_settings', { repoId }),
+      invoke<any[]>('list_repo_labels', { repoId }),
+    ]);
+
+    if (requestVersion !== repoMetadataRequestVersion || get().currentRepoId !== repoId) return;
+
+    const updates: Partial<Pick<VirtualMrState, 'repoSettings' | 'repoLabels'>> = {};
+    if (settingsResult.status === 'fulfilled') {
+      const dbSettings = settingsResult.value;
+      const currentSettings = get().repoSettings;
+      if (dbSettings) {
+        updates.repoSettings = {
+          repoId: dbSettings.repo_id,
+          defaultBaseBranch: dbSettings.default_base_branch || currentSettings?.defaultBaseBranch || 'HEAD',
+          inheritGlobalAgents: Boolean(dbSettings.inherit_global_agents),
+          customAgentRules: dbSettings.custom_agent_rules || '',
+          activeAgentIds: currentSettings?.activeAgentIds || AVAILABLE_AI_BOTS.map((bot) => bot.id),
+          customReviewers: currentSettings?.customReviewers,
+        };
+      }
+    } else {
+      console.warn('Failed to refresh repository settings:', settingsResult.reason);
+    }
+
+    if (labelsResult.status === 'fulfilled') {
+      updates.repoLabels = (labelsResult.value || []).map((label) => ({
+        id: label.id,
+        repoId: label.repo_id,
+        name: label.name,
+        color: label.color,
+        description: label.description || undefined,
+      }));
+    } else {
+      console.warn('Failed to refresh repository labels:', labelsResult.reason);
+    }
+
+    if (Object.keys(updates).length > 0) set(updates);
   },
 
   createSession: async (baseBranch, compareBranch, customTitle) => {
@@ -349,25 +437,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     gitStore.showToast(`Created Virtual MR: ${title}`);
 
     try {
-      await invoke('save_virtual_mr_session', {
-        session: {
-          id: session.id,
-          repo_id: currentRepoId,
-          title: session.title,
-          description: session.description,
-          base_branch: session.baseBranch,
-          compare_branch: session.compareBranch,
-          status: session.status,
-          assignee_name: session.assignee.name,
-          assignee_email: session.assignee.email,
-          is_pinned: session.isPinned,
-          sandbox_adapter_type: 'in_memory',
-          sandbox_instance_id: null,
-          created_at: session.createdAt,
-          updated_at: session.updatedAt,
-          label_ids: session.labels.map((l) => l.id),
-        },
-      });
+      await persistSession(session);
     } catch (e) {
       console.error('Failed to persist session:', e);
     }
@@ -625,25 +695,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
 
     // Save to SQLite DB
     try {
-      await invoke('save_virtual_mr_session', {
-        session: {
-          id: newSession.id,
-          repo_id: newSession.repoId,
-          title: newSession.title,
-          description: newSession.description,
-          base_branch: newSession.baseBranch,
-          compare_branch: newSession.compareBranch,
-          status: newSession.status,
-          assignee_name: newSession.assignee.name,
-          assignee_email: newSession.assignee.email,
-          is_pinned: newSession.isPinned,
-          sandbox_adapter_type: 'in_memory',
-          sandbox_instance_id: null,
-          created_at: newSession.createdAt,
-          updated_at: newSession.updatedAt,
-          label_ids: newSession.labels.map((l) => l.id),
-        },
-      });
+      await persistSession(newSession);
     } catch (err) {
       console.error('Failed to save virtual MR to database:', err);
     }
@@ -686,7 +738,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     }
 
     try {
-      await invoke('delete_virtual_mr_session', { sessionId });
+      await enqueueSessionWrite(sessionId, () => invoke('delete_virtual_mr_session', { sessionId }));
     } catch (e) {
       console.warn('Failed to delete session in db:', e);
     }
@@ -700,25 +752,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     const target = updated.find((s) => s.id === sessionId);
     if (target && currentRepoId) {
       try {
-        await invoke('save_virtual_mr_session', {
-          session: {
-            id: target.id,
-            repo_id: currentRepoId,
-            title: target.title,
-            description: target.description,
-            base_branch: target.baseBranch,
-            compare_branch: target.compareBranch,
-            status: target.status,
-            assignee_name: target.assignee.name,
-            assignee_email: target.assignee.email,
-            is_pinned: target.isPinned,
-            sandbox_adapter_type: 'in_memory',
-            sandbox_instance_id: null,
-            created_at: target.createdAt,
-            updated_at: target.updatedAt,
-            label_ids: target.labels.map((l) => l.id),
-          },
-        });
+        await persistSession(target);
       } catch {}
     }
   },
@@ -733,31 +767,13 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     const target = updated.find((s) => s.id === sessionId);
     if (target && currentRepoId) {
       try {
-        await invoke('save_virtual_mr_session', {
-          session: {
-            id: target.id,
-            repo_id: currentRepoId,
-            title: target.title,
-            description: target.description,
-            base_branch: target.baseBranch,
-            compare_branch: target.compareBranch,
-            status: target.status,
-            assignee_name: target.assignee.name,
-            assignee_email: target.assignee.email,
-            is_pinned: target.isPinned,
-            sandbox_adapter_type: 'in_memory',
-            sandbox_instance_id: null,
-            created_at: target.createdAt,
-            updated_at: target.updatedAt,
-            label_ids: target.labels.map((l) => l.id),
-          },
-        });
+        await persistSession(target);
       } catch {}
     }
   },
 
   updateSessionBranches: async (sessionId, base, compare) => {
-    const { sessions, currentRepoPath } = get();
+    const { currentRepoPath } = get();
     let commits: VirtualMrCommit[] = [];
     if (currentRepoPath) {
       try {
@@ -778,7 +794,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       } catch {}
     }
 
-    const updated = sessions.map((s) =>
+    const updated = get().sessions.map((s) =>
       s.id === sessionId
         ? {
             ...s,
@@ -796,25 +812,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     const { currentRepoId } = get();
     if (target && currentRepoId) {
       try {
-        await invoke('save_virtual_mr_session', {
-          session: {
-            id: target.id,
-            repo_id: currentRepoId,
-            title: target.title,
-            description: target.description,
-            base_branch: target.baseBranch,
-            compare_branch: target.compareBranch,
-            status: target.status,
-            assignee_name: target.assignee.name,
-            assignee_email: target.assignee.email,
-            is_pinned: target.isPinned,
-            sandbox_adapter_type: 'in_memory',
-            sandbox_instance_id: null,
-            created_at: target.createdAt,
-            updated_at: target.updatedAt,
-            label_ids: target.labels.map((l) => l.id),
-          },
-        });
+        await persistSession(target);
       } catch (err) {
         console.warn('Failed to persist session branch changes:', err);
       }
@@ -830,42 +828,37 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     const bot = allBots.find((b) => b.id === botId) || AVAILABLE_AI_BOTS.find((b) => b.id === botId);
     if (!bot) return;
 
-    const { sessions } = get();
-    const updated = sessions.map((s) => {
-      if (s.id !== sessionId) return s;
-      if (s.reviewers.some((r) => r.agentId === botId)) return s;
+    await updateSessionMetadata(sessionId, (session) => {
+      if (session.reviewers.some((r) => r.agentId === botId)) return null;
       const newReviewer: VirtualMrReviewer = {
         agentId: bot.id,
         agentName: bot.name,
         reviewStatus: 'pending',
         assignedAt: new Date().toISOString(),
       };
-      return { ...s, reviewers: [...s.reviewers, newReviewer] };
+      return { reviewers: [...session.reviewers, newReviewer] };
     });
-    set({ sessions: updated });
   },
 
   removeReviewerBot: async (sessionId, agentId) => {
-    const { sessions } = get();
-    const updated = sessions.map((s) => {
-      if (s.id !== sessionId) return s;
-      return { ...s, reviewers: s.reviewers.filter((r) => r.agentId !== agentId) };
+    await updateSessionMetadata(sessionId, (session) => {
+      if (!session.reviewers.some((reviewer) => reviewer.agentId === agentId)) return null;
+      return { reviewers: session.reviewers.filter((reviewer) => reviewer.agentId !== agentId) };
     });
-    set({ sessions: updated });
   },
 
   toggleSessionLabel: async (sessionId, labelId) => {
-    const { sessions, repoLabels } = get();
+    const { repoLabels } = get();
     const targetLabel = repoLabels.find((l) => l.id === labelId);
     if (!targetLabel) return;
 
-    const updated = sessions.map((s) => {
-      if (s.id !== sessionId) return s;
-      const has = s.labels.some((l) => l.id === labelId);
-      const newLabels = has ? s.labels.filter((l) => l.id !== labelId) : [...s.labels, targetLabel];
-      return { ...s, labels: newLabels };
+    await updateSessionMetadata(sessionId, (session) => {
+      if (session.repoId !== targetLabel.repoId) return null;
+      const has = session.labels.some((label) => label.id === labelId);
+      return { labels: has
+        ? session.labels.filter((label) => label.id !== labelId)
+        : [...session.labels, targetLabel] };
     });
-    set({ sessions: updated });
   },
 
   // Labels CRUD

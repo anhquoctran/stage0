@@ -34,6 +34,7 @@ export const NewVirtualMrView: React.FC = () => {
     repoLabels,
     createRepoLabel,
     repoSettings,
+    refreshRepoMetadata,
   } = useVirtualMrStore();
 
   const {
@@ -53,19 +54,55 @@ export const NewVirtualMrView: React.FC = () => {
     showToast,
   } = useGitStore();
 
-  const { getEffectiveReviewers } = useBotReviewersStore();
+  const {
+    getEffectiveReviewers,
+    globalReviewers,
+    repoActiveBotIds,
+    repoCustomReviewers,
+    reloadPersistedReviewers,
+  } = useBotReviewersStore();
   const { reviewers: effectiveReviewers } = useMemo(() => {
     return getEffectiveReviewers(currentRepo?.id, repoSettings?.inheritGlobalAgents);
-  }, [currentRepo?.id, repoSettings?.inheritGlobalAgents, getEffectiveReviewers]);
+  }, [currentRepo?.id, repoSettings?.inheritGlobalAgents, getEffectiveReviewers, globalReviewers, repoActiveBotIds, repoCustomReviewers]);
 
   const [previewTab, setPreviewTab] = useState<'commits' | 'diff'>('commits');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showBotDropdown, setShowBotDropdown] = useState(false);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
+  const [isLoadingReviewerOptions, setIsLoadingReviewerOptions] = useState(false);
+  const [isLoadingLabelOptions, setIsLoadingLabelOptions] = useState(false);
   const [labelSearch, setLabelSearch] = useState('');
   const [newLabelColor, setNewLabelColor] = useState('#3b82f6');
   const botDropdownRef = useRef<HTMLDivElement>(null);
   const labelDropdownRef = useRef<HTMLDivElement>(null);
+
+  const toggleReviewerDropdown = async () => {
+    const willOpen = !showBotDropdown;
+    setShowBotDropdown(willOpen);
+    if (!willOpen) return;
+
+    reloadPersistedReviewers();
+    if (!currentRepo?.id) return;
+    setIsLoadingReviewerOptions(true);
+    try {
+      await refreshRepoMetadata(currentRepo.id);
+    } finally {
+      setIsLoadingReviewerOptions(false);
+    }
+  };
+
+  const toggleLabelDropdown = async () => {
+    const willOpen = !showLabelDropdown;
+    setShowLabelDropdown(willOpen);
+    if (!willOpen || !currentRepo?.id) return;
+
+    setIsLoadingLabelOptions(true);
+    try {
+      await refreshRepoMetadata(currentRepo.id);
+    } finally {
+      setIsLoadingLabelOptions(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -418,7 +455,7 @@ export const NewVirtualMrView: React.FC = () => {
                       </div>
                       <button
                         type="button"
-                        onClick={() => setShowBotDropdown(!showBotDropdown)}
+                        onClick={toggleReviewerDropdown}
                         className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer"
                         title="Assign Reviewer Bots"
                       >
@@ -471,7 +508,11 @@ export const NewVirtualMrView: React.FC = () => {
                           </button>
                         </div>
                         <div className="max-h-56 overflow-y-auto divide-y divide-surface0/60">
-                          {effectiveReviewers.length === 0 ? (
+                          {isLoadingReviewerOptions ? (
+                            <div className="px-3 py-6 text-center text-xs text-subtext0/70 italic">
+                              Loading reviewers...
+                            </div>
+                          ) : effectiveReviewers.length === 0 ? (
                             <div className="px-3 py-6 text-center text-xs text-subtext0/70 italic">
                               No AI reviewers available
                             </div>
@@ -513,7 +554,7 @@ export const NewVirtualMrView: React.FC = () => {
                       </div>
                       <button
                         type="button"
-                        onClick={() => setShowLabelDropdown(!showLabelDropdown)}
+                        onClick={toggleLabelDropdown}
                         className="p-1 text-subtext0 hover:text-teal hover:bg-surface0 transition-colors cursor-pointer"
                         title="Edit Labels"
                       >
@@ -612,48 +653,56 @@ export const NewVirtualMrView: React.FC = () => {
 
                         {/* Label Items List */}
                         <div className="max-h-48 overflow-y-auto divide-y divide-surface0/40">
-                          {/* Create new label action button if search input doesn't match existing */}
-                          {labelSearch.trim() && !repoLabels.some((l) => l.name.toLowerCase() === labelSearch.trim().toLowerCase()) && (
-                            <button
-                              type="button"
-                              onClick={handleCreateAndSelectLabel}
-                              className="w-full px-3 py-2 flex items-center gap-2 hover:bg-surface0 text-left text-xs text-brand transition-colors cursor-pointer font-medium"
-                            >
-                              <Plus className="w-3.5 h-3.5 shrink-0" />
-                              <span className="truncate">Create label <strong>"{labelSearch.trim()}"</strong></span>
-                            </button>
-                          )}
-
-                          {/* Existing labels */}
-                          {repoLabels
-                            .filter((lbl) => lbl.name.toLowerCase().includes(labelSearch.toLowerCase()))
-                            .map((lbl) => {
-                              const isSelected = draftMr.selectedLabels.includes(lbl.id);
-                              return (
-                                <button
-                                  key={lbl.id}
-                                  type="button"
-                                  onClick={() => handleToggleLabel(lbl.id)}
-                                  className={`w-full px-3 py-1.5 flex items-center justify-between text-left text-xs font-mono transition-colors cursor-pointer ${
-                                    isSelected ? 'bg-surface0 text-text' : 'hover:bg-surface0/60 text-subtext0'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2 truncate pr-2">
-                                    <span
-                                      className="w-2.5 h-2.5 shrink-0"
-                                      style={{ backgroundColor: lbl.color }}
-                                    />
-                                    <span className="truncate">{lbl.name}</span>
-                                  </div>
-                                  {isSelected && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
-                                </button>
-                              );
-                            })}
-
-                          {repoLabels.length === 0 && !labelSearch.trim() && (
-                            <div className="px-3 py-3 text-xs text-subtext0/70 italic text-center">
-                              No labels yet. Type above to create one.
+                          {isLoadingLabelOptions ? (
+                            <div className="px-3 py-3 text-center text-xs text-subtext0/70">
+                              Loading labels...
                             </div>
+                          ) : (
+                            <>
+                              {/* Create new label action button if search input doesn't match existing */}
+                              {labelSearch.trim() && !repoLabels.some((l) => l.name.toLowerCase() === labelSearch.trim().toLowerCase()) && (
+                                <button
+                                  type="button"
+                                  onClick={handleCreateAndSelectLabel}
+                                  className="w-full px-3 py-2 flex items-center gap-2 hover:bg-surface0 text-left text-xs text-brand transition-colors cursor-pointer font-medium"
+                                >
+                                  <Plus className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="truncate">Create label <strong>"{labelSearch.trim()}"</strong></span>
+                                </button>
+                              )}
+
+                              {/* Existing labels */}
+                              {repoLabels
+                                .filter((lbl) => lbl.name.toLowerCase().includes(labelSearch.toLowerCase()))
+                                .map((lbl) => {
+                                  const isSelected = draftMr.selectedLabels.includes(lbl.id);
+                                  return (
+                                    <button
+                                      key={lbl.id}
+                                      type="button"
+                                      onClick={() => handleToggleLabel(lbl.id)}
+                                      className={`w-full px-3 py-1.5 flex items-center justify-between text-left text-xs font-mono transition-colors cursor-pointer ${
+                                        isSelected ? 'bg-surface0 text-text' : 'hover:bg-surface0/60 text-subtext0'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2 truncate pr-2">
+                                        <span
+                                          className="w-2.5 h-2.5 shrink-0"
+                                          style={{ backgroundColor: lbl.color }}
+                                        />
+                                        <span className="truncate">{lbl.name}</span>
+                                      </div>
+                                      {isSelected && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
+                                    </button>
+                                  );
+                                })}
+
+                              {repoLabels.length === 0 && !labelSearch.trim() && (
+                                <div className="px-3 py-3 text-xs text-subtext0/70 italic text-center">
+                                  No labels yet. Type above to create one.
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>

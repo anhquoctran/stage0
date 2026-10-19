@@ -9,6 +9,8 @@ export interface BotReviewersState {
   repoActiveBotIds: Record<string, string[]>;
   repoCustomReviewers: Record<string, BotReviewer[]>;
 
+  reloadPersistedReviewers: () => void;
+
   // Global Actions
   addGlobalReviewer: (bot: Omit<BotReviewer, 'id'>) => string;
   updateGlobalReviewer: (id: string, updates: Partial<BotReviewer>) => void;

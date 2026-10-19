@@ -1,5 +1,7 @@
 mod virtual_mr_session_db;
 pub use virtual_mr_session_db::VirtualMrSessionDb;
+mod virtual_mr_reviewer_db;
+pub use virtual_mr_reviewer_db::VirtualMrReviewerDb;
 mod virtual_mr_comment_db;
 pub use virtual_mr_comment_db::VirtualMrCommentDb;
 mod virtual_mr_discussion_db;
@@ -8,6 +10,9 @@ pub use virtual_mr_discussion_db::VirtualMrDiscussionDb;
 use crate::core::db::Database;
 use rusqlite::params;
 use std::collections::HashMap;
+
+#[cfg(test)]
+mod tests;
 
 impl Database {
     // =======================================================================
@@ -38,7 +43,32 @@ impl Database {
             }
         }
 
-        // 2. Fetch sessions in a single cached query
+        let mut reviewer_map: HashMap<String, Vec<VirtualMrReviewerDb>> = HashMap::new();
+        {
+            let mut stmt = conn.prepare_cached(
+                "SELECT r.session_id, r.agent_id, r.agent_name, r.review_status, r.assigned_at
+                 FROM virtual_mr_session_reviewers r
+                 JOIN virtual_mr_sessions s ON s.id = r.session_id
+                 WHERE s.repo_id = ?1 ORDER BY r.assigned_at, r.agent_id;",
+            )?;
+            let rows = stmt.query_map(params![repo_id], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    VirtualMrReviewerDb {
+                        agent_id: row.get(1)?,
+                        agent_name: row.get(2)?,
+                        review_status: row.get(3)?,
+                        assigned_at: row.get(4)?,
+                    },
+                ))
+            })?;
+            for row in rows {
+                let (session_id, reviewer) = row?;
+                reviewer_map.entry(session_id).or_default().push(reviewer);
+            }
+        }
+
+        // Fetch sessions after batching their label and reviewer mappings.
         let mut stmt = conn.prepare_cached(
             "SELECT id, repo_id, title, description, base_branch, compare_branch, status,
                     assignee_name, assignee_email, is_pinned, sandbox_adapter_type, sandbox_instance_id,
@@ -84,6 +114,7 @@ impl Database {
                 uat,
             ) = r?;
             let label_ids = label_map.remove(&id).unwrap_or_default();
+            let reviewers = reviewer_map.remove(&id).unwrap_or_default();
 
             sessions.push(VirtualMrSessionDb {
                 id,
@@ -101,6 +132,7 @@ impl Database {
                 created_at: cat,
                 updated_at: uat,
                 label_ids,
+                reviewers,
             });
         }
 
@@ -145,6 +177,25 @@ impl Database {
             tx.execute(
                 "INSERT OR IGNORE INTO virtual_mr_session_labels (session_id, label_id) VALUES (?1, ?2);",
                 params![s.id, lid],
+            )?;
+        }
+
+        tx.execute(
+            "DELETE FROM virtual_mr_session_reviewers WHERE session_id = ?1;",
+            params![s.id],
+        )?;
+        for reviewer in &s.reviewers {
+            tx.execute(
+                "INSERT INTO virtual_mr_session_reviewers
+                    (session_id, agent_id, agent_name, review_status, assigned_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5);",
+                params![
+                    s.id,
+                    reviewer.agent_id,
+                    reviewer.agent_name,
+                    reviewer.review_status,
+                    reviewer.assigned_at
+                ],
             )?;
         }
 
