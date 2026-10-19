@@ -37,12 +37,19 @@ export const VirtualMrHub: React.FC = () => {
     createDiscussion,
     openRepoSettings,
     repoSettings,
+    refreshRepoMetadata,
   } = useVirtualMrStore();
 
-  const { getEffectiveReviewers } = useBotReviewersStore();
+  const {
+    getEffectiveReviewers,
+    globalReviewers,
+    repoActiveBotIds,
+    repoCustomReviewers,
+    reloadPersistedReviewers,
+  } = useBotReviewersStore();
   const { reviewers: effectiveReviewers } = useMemo(() => {
     return getEffectiveReviewers(currentRepo?.id, repoSettings?.inheritGlobalAgents);
-  }, [currentRepo?.id, repoSettings?.inheritGlobalAgents, getEffectiveReviewers]);
+  }, [currentRepo?.id, repoSettings?.inheritGlobalAgents, getEffectiveReviewers, globalReviewers, repoActiveBotIds, repoCustomReviewers]);
 
   const session = getActiveSession();
 
@@ -67,7 +74,37 @@ export const VirtualMrHub: React.FC = () => {
   // Dropdown states
   const [showReviewerDropdown, setShowReviewerDropdown] = useState(false);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
+  const [isLoadingReviewerOptions, setIsLoadingReviewerOptions] = useState(false);
+  const [isLoadingLabelOptions, setIsLoadingLabelOptions] = useState(false);
   const [newGeneralComment, setNewGeneralComment] = useState('');
+
+  const toggleReviewerDropdown = async () => {
+    const willOpen = !showReviewerDropdown;
+    setShowReviewerDropdown(willOpen);
+    if (!willOpen) return;
+
+    reloadPersistedReviewers();
+    if (!currentRepo?.id) return;
+    setIsLoadingReviewerOptions(true);
+    try {
+      await refreshRepoMetadata(currentRepo.id);
+    } finally {
+      setIsLoadingReviewerOptions(false);
+    }
+  };
+
+  const toggleLabelDropdown = async () => {
+    const willOpen = !showLabelDropdown;
+    setShowLabelDropdown(willOpen);
+    if (!willOpen || !currentRepo?.id) return;
+
+    setIsLoadingLabelOptions(true);
+    try {
+      await refreshRepoMetadata(currentRepo.id);
+    } finally {
+      setIsLoadingLabelOptions(false);
+    }
+  };
 
   useEffect(() => {
     if (session) {
@@ -303,7 +340,7 @@ export const VirtualMrHub: React.FC = () => {
               ))}
               <button
                 type="button"
-                onClick={() => setShowReviewerDropdown(!showReviewerDropdown)}
+                onClick={toggleReviewerDropdown}
                 className="p-1 rounded bg-surface1 hover:bg-surface2 text-white cursor-pointer"
                 title="Add AI Reviewer Bot"
               >
@@ -317,7 +354,11 @@ export const VirtualMrHub: React.FC = () => {
                 <div className="px-3 py-1.5 text-[11px] font-semibold text-subtext0 uppercase tracking-wider">
                   Select AI Reviewer Bot
                 </div>
-                {effectiveReviewers.map((bot: BotReviewer) => {
+                {isLoadingReviewerOptions ? (
+                  <div className="px-3 py-3 text-xs text-subtext0">Loading reviewers...</div>
+                ) : effectiveReviewers.length === 0 ? (
+                  <div className="px-3 py-3 text-xs text-subtext0">No reviewers configured.</div>
+                ) : effectiveReviewers.map((bot: BotReviewer) => {
                   const isAssigned = session.reviewers.some((r) => r.agentId === bot.id);
                   return (
                     <button
@@ -360,7 +401,7 @@ export const VirtualMrHub: React.FC = () => {
               ))}
               <button
                 type="button"
-                onClick={() => setShowLabelDropdown(!showLabelDropdown)}
+                onClick={toggleLabelDropdown}
                 className="p-1 rounded bg-surface1 hover:bg-surface2 text-white cursor-pointer"
                 title="Manage Labels"
               >
@@ -384,7 +425,9 @@ export const VirtualMrHub: React.FC = () => {
                   </button>
                 </div>
                 <div className="max-h-48 overflow-y-auto py-1">
-                  {repoLabels.map((lbl) => {
+                  {isLoadingLabelOptions ? (
+                    <div className="px-3 py-3 text-xs text-subtext0">Loading labels...</div>
+                  ) : repoLabels.map((lbl) => {
                     const isChecked = session.labels.some((l) => l.id === lbl.id);
                     return (
                       <button

@@ -40,6 +40,7 @@ export interface VirtualMrState {
 
   // Actions
   loadRepoData: (repoId: string, repoPath: string, branches: string[], defaultBase?: string) => Promise<void>;
+  refreshRepoMetadata: (repoId: string) => Promise<void>;
   createSession: (baseBranch?: string, compareBranch?: string, title?: string) => Promise<string>;
   openNewMrDraft: (baseBranch?: string, compareBranch?: string) => Promise<void>;
   updateDraftMr: (updates: Partial<NewMrDraft>) => void;

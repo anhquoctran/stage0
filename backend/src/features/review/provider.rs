@@ -75,7 +75,10 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
             || root != OPENAI_API_BASE_URL
             || !openai_reasoning_efforts(&config.model).contains(&effort)
         {
-            return Err("The selected provider/model does not declare support for this reasoning effort".into());
+            return Err(
+                "The selected provider/model does not declare support for this reasoning effort"
+                    .into(),
+            );
         }
     }
     if config.fast_mode
@@ -138,14 +141,16 @@ pub fn payload(
                 .collect::<Vec<_>>();
             let mut input = Vec::with_capacity(history.len() + 1);
             if config.auth_mode == "subscription_oauth" {
-                input.push(json!({"type":"additional_tools","role":"developer","tools":tool_definitions}));
+                input.push(
+                    json!({"type":"additional_tools","role":"developer","tools":tool_definitions}),
+                );
             }
             input.extend_from_slice(history);
             let mut body = if config.auth_mode == "subscription_oauth" {
                 // Sign in with ChatGPT plan usage requires HTTP/SSE, store:false,
                 // and rejects max_output_tokens. Its fixed local review budget
                 // remains enforced by the coordinator and response-size cap.
-                json!({"model":config.model,"instructions":system,"input":input,"store":false,"stream":true,"parallel_tool_calls":false,"tool_choice":"required"})
+                json!({"model":config.model,"instructions":system,"input":input,"store":false,"stream":true,"include":["reasoning.encrypted_content"],"parallel_tool_calls":false,"tool_choice":"required"})
             } else {
                 json!({"model":config.model,"instructions":system,"input":input,"store":false,"include":["reasoning.encrypted_content"],"max_output_tokens":max_tokens,"parallel_tool_calls":false,"tool_choice":"required","tools":tool_definitions})
             };
@@ -200,10 +205,9 @@ pub async fn request(
     if config.auth_mode == "subscription_oauth" {
         let token = subscription_token.ok_or("ChatGPT subscription session is unavailable")?;
         request = request.bearer_auth(token);
-        let response = request
-            .send()
-            .await
-            .map_err(|_| "ChatGPT subscription request failed or timed out; check your connection and sign-in")?;
+        let response = request.send().await.map_err(|_| {
+            "ChatGPT subscription request failed or timed out; check your connection and sign-in"
+        })?;
         let status = response.status();
         if !status.is_success() {
             return Err(format!("ChatGPT subscription endpoint returned HTTP {}. Check the selected account, model access and plan usage limits.", status.as_u16()));
@@ -220,7 +224,7 @@ pub async fn request(
             }
             bytes.extend_from_slice(&chunk);
         }
-        return decode_subscription_stream(&bytes);
+        return super::responses_stream::decode(&bytes);
     }
     if config.provider != "ollama" {
         let key = Zeroizing::new(
@@ -279,50 +283,6 @@ pub async fn request(
     serde_json::from_slice(&bytes).map_err(|_| "Provider returned invalid JSON".into())
 }
 
-fn decode_subscription_stream(bytes: &[u8]) -> Result<Value, String> {
-    let stream = std::str::from_utf8(bytes).map_err(|_| "ChatGPT returned an invalid event stream")?;
-    let normalized = stream.replace("\r\n", "\n");
-    for frame in normalized.split("\n\n") {
-        let data = frame
-            .lines()
-            .filter_map(|line| line.strip_prefix("data:"))
-            .map(str::trim_start)
-            .collect::<Vec<_>>()
-            .join("\n");
-        if data.is_empty() || data == "[DONE]" {
-            continue;
-        }
-        let event: Value = serde_json::from_str(&data)
-            .map_err(|_| "ChatGPT returned an invalid event in the response stream")?;
-        match event["type"].as_str().unwrap_or_default() {
-            "response.completed" => {
-                return event
-                    .get("response")
-                    .cloned()
-                    .ok_or_else(|| "ChatGPT completed without a response payload".into());
-            }
-            "response.failed" | "error" => {
-                let code = event["response"]["error"]["code"]
-                    .as_str()
-                    .or(event["error"]["code"].as_str())
-                    .unwrap_or("request_failed");
-                return Err(match code {
-                    "subscription_sharing_usage_limit_exceeded"
-                    | "subscription_sharing_usage_unavailable" => {
-                        "ChatGPT plan usage is currently unavailable or its usage limit was reached. Check the account's plan limits and retry later.".into()
-                    }
-                    _ => format!("ChatGPT subscription inference failed ({code}). Check model access and account settings."),
-                });
-            }
-            "response.incomplete" => {
-                return Err("ChatGPT subscription response was incomplete. The review was not submitted.".into());
-            }
-            _ => {}
-        }
-    }
-    Err("ChatGPT response stream ended without response.completed; the review is incomplete.".into())
-}
-
 pub fn decode(
     provider: &str,
     response: &Value,
@@ -339,6 +299,12 @@ pub fn decode(
                 .ok_or("Missing response output")?;
             for item in output {
                 if item["type"] == "function_call" {
+                    if item
+                        .get("status")
+                        .is_some_and(|status| status != "completed")
+                    {
+                        return Err("Provider returned an unfinished function call".into());
+                    }
                     calls.push(ReviewToolCall {
                         id: text(item, "call_id")?,
                         native_id: Some(text(item, "call_id")?),
@@ -587,6 +553,7 @@ mod tests {
     fn truncation_malformed_arguments_and_duplicate_ids_fail_closed() {
         for response in [
             json!({"status":"incomplete","output":[]}),
+            json!({"status":"completed","output":[{"type":"function_call","status":"in_progress","call_id":"1","name":"get_diff","arguments":"{}"}]}),
             json!({"status":"completed","output":[{"type":"function_call","call_id":"1","name":"get_diff","arguments":"{"}]}),
             json!({"status":"completed","output":[{"type":"function_call","call_id":"1","name":"get_diff","arguments":"{}"},{"type":"function_call","call_id":"1","name":"get_diff","arguments":"{}"}]}),
         ] {
@@ -623,6 +590,7 @@ mod tests {
             if auth_mode == "subscription_oauth" {
                 assert_eq!(request["stream"], true);
                 assert_eq!(request["store"], false);
+                assert_eq!(request["include"], json!(["reasoning.encrypted_content"]));
                 assert!(request.get("tools").is_none());
                 assert!(request["input"]
                     .as_array()

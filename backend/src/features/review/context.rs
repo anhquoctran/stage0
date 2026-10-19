@@ -480,6 +480,47 @@ mod tests {
         )
     }
     #[test]
+    fn large_inventory_keeps_eligible_paths_without_consuming_read_rate_limits() {
+        let repo = TestRepo::new();
+        for index in 0..150 {
+            repo.write(&format!("unchanged_{index:03}.rs"), "fn unchanged() {}\n");
+        }
+        repo.git(&["add", "."]);
+        repo.git(&["commit", "-m", "Large base inventory"]);
+        repo.git(&["branch", "-f", "main"]);
+        repo.write("source.rs", "fn value() -> u32 { 3 }\n");
+        repo.write("z_last.rs", "fn last_changed() {}\n");
+        repo.write("z_private.rs", "private fixture\n");
+        repo.git(&["add", "."]);
+        repo.git(&["commit", "-m", "Changes after a large inventory"]);
+
+        let guards = Arc::new(GuardrailsEngine::new());
+        let mut policy = guards.get_policy();
+        policy.rate_limit_per_minute = 1;
+        policy.sensitive_path_patterns.push("z_private.rs".into());
+        guards.update_policy(policy);
+        for _ in 0..2 {
+            let snapshot = capture(repo.path(), "main", "feature", &guards).unwrap();
+            assert_eq!(snapshot.changed_files, vec!["source.rs", "z_last.rs"]);
+            assert_eq!(snapshot.excluded_files, vec!["z_private.rs"]);
+            assert!(snapshot.tree_files.len() > 150);
+            let ctx = ReviewContext::new(snapshot, Arc::clone(&guards));
+            assert!(ctx
+                .blob("z_last.rs", "head")
+                .unwrap()
+                .contains("last_changed"));
+            assert!(ctx.blob("z_private.rs", "head").is_err());
+        }
+        assert!(guards.evaluate_read_file("source.rs", 1, 1).is_ok());
+        assert_eq!(
+            guards
+                .evaluate_read_file("source.rs", 1, 1)
+                .unwrap_err()
+                .rule,
+            "RATE_LIMIT_EXCEEDED"
+        );
+    }
+    #[test]
     fn tools_read_fixed_commits_not_checkout_and_filter_diff_and_search() {
         let repo = TestRepo::new();
         let mut ctx = context(&repo);

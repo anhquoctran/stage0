@@ -101,6 +101,12 @@ export const useBotReviewersStore = create<BotReviewersState>((set, get) => ({
   repoActiveBotIds: loadPersistedRepoActiveBots(),
   repoCustomReviewers: loadPersistedRepoCustomBots(),
 
+  reloadPersistedReviewers: () => set({
+    globalReviewers: loadPersistedGlobalReviewers(),
+    repoActiveBotIds: loadPersistedRepoActiveBots(),
+    repoCustomReviewers: loadPersistedRepoCustomBots(),
+  }),
+
   addGlobalReviewer: (bot) => {
     const newId = `custom-bot-${Date.now()}`;
     const newBot: BotReviewer = {
