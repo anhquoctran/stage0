@@ -22,11 +22,11 @@ Mọi đường dẫn được kiểm tra trong `window_manager::resolve_reposit
 
 - Đường dẫn phải tồn tại, trỏ tới thư mục và có `.git` (thư mục hoặc file, để hỗ trợ linked worktree).
 - `dunce::canonicalize` loại bỏ alias đường dẫn như symlink và chuẩn hóa đường dẫn hệ điều hành.
-- Trên Unix, định danh ưu tiên cặp device/inode của thư mục; trên Windows ưu tiên volume serial/file index. Nếu hệ điều hành không cung cấp file identity, dùng canonical path làm dự phòng.
+- Trên Unix, định danh dùng cặp device/inode của thư mục; trên Windows dùng volume serial/file index để nhận diện cùng thư mục qua các alias đường dẫn. Nếu Windows filesystem không cung cấp physical identity, từ chối mở thay vì hạ xuống so sánh path và có nguy cơ tạo cửa sổ trùng. Trên nền tảng khác, dùng canonical path.
 - Database lưu canonical path. Upsert theo path trả về bản ghi thực tế đã lưu để không tạo ID frontend khác ID persisted khi path đã tồn tại.
 - Kiểm tra `.git` hiện là kiểm tra cấu trúc tối thiểu (`exists`), không chạy `git rev-parse`; metadata hỏng vẫn có thể khiến thao tác Git sau đó thất bại và phải được hiển thị như lỗi thao tác.
 
-Không tự lowercase đường dẫn: quy tắc phân biệt hoa/thường phụ thuộc filesystem. File identity sau canonicalization là khóa chống mở trùng trong tiến trình.
+Không tự lowercase đường dẫn để định danh: quy tắc phân biệt hoa/thường phụ thuộc filesystem. Physical file identity sau canonicalization là khóa chống mở trùng trong tiến trình.
 
 ## Điều phối cửa sổ ở backend
 

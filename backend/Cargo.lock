@@ -4394,6 +4394,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tokio",
  "uuid",
+ "windows-sys 0.61.2",
  "zbus 5.19.0",
  "zeroize",
 ]
