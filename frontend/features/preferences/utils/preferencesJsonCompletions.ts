@@ -1,5 +1,5 @@
 const PROPERTY_NAMES: Record<string, string[]> = {
-  '': ['schemaVersion', 'general', 'appearance', 'ai', 'reviewers', 'sandbox', 'git', 'notifications', 'gitCredentials'],
+  '': ['schemaVersion', 'general', 'appearance', 'ai', 'reviewers', 'sandbox', 'git', 'notifications'],
   general: ['showInlineBlame', 'streamResponse', 'enableCodeReviewAssist'],
   appearance: ['themeMode', 'viewerFont'],
   'appearance.viewerFont': ['fontFamily', 'fontSize', 'isBold', 'isItalic', 'isUnderline', 'lineSpacing', 'enableLigatures'],
@@ -12,7 +12,6 @@ const PROPERTY_NAMES: Record<string, string[]> = {
   git: ['binaryId', 'binaryPath'],
   notifications: ['channels'],
   'notifications.channels': ['aiReview', 'gitSync', 'guardrails'],
-  'gitCredentials.[]': ['id', 'provider', 'server_url', 'account_name', 'token_type', 'label', 'source', 'helper_name', 'created_at', 'updated_at'],
 };
 
 const VALUE_OPTIONS: Record<string, string[]> = {

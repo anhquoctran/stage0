@@ -30,6 +30,19 @@ CREATE TABLE IF NOT EXISTS git_credentials (
 
 CREATE INDEX IF NOT EXISTS idx_git_credentials_token_ref ON git_credentials(token_ref);
 
+CREATE TABLE IF NOT EXISTS git_credential_metadata (
+    id TEXT PRIMARY KEY,
+    provider TEXT NOT NULL,
+    server_url TEXT NOT NULL,
+    account_name TEXT NOT NULL,
+    token_type TEXT NOT NULL,
+    label TEXT,
+    source TEXT NOT NULL DEFAULT 'stage0',
+    helper_name TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS preference_secret_refs (
     id TEXT PRIMARY KEY,
     keychain_ref TEXT NOT NULL UNIQUE

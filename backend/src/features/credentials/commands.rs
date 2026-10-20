@@ -1,20 +1,16 @@
 use crate::core::db::Database;
 use crate::features::credentials::{GitCredentialMeta, GitCredentialPreferenceRecord};
-use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager};
 use zeroize::Zeroizing;
 
-fn read_records(settings: &Value) -> Result<Vec<GitCredentialPreferenceRecord>, String> {
-    let records = settings.get("gitCredentials").and_then(Value::as_array)
-        .ok_or_else(|| "Git credential metadata is unavailable in preferences.json".to_string())?;
-    records.iter().cloned().map(|record| serde_json::from_value(record)
-        .map_err(|_| "Git credential metadata in preferences.json is invalid".to_string()))
-        .collect()
-}
-
-fn output_meta(record: GitCredentialPreferenceRecord, token_ref: Option<String>) -> GitCredentialMeta {
+fn output_meta(
+    record: GitCredentialPreferenceRecord,
+    token_ref: Option<String>,
+) -> GitCredentialMeta {
     let is_in_keyring = record.source == "system_global"
-        || token_ref.as_deref().is_some_and(crate::features::credentials::exists_in_keyring);
+        || token_ref
+            .as_deref()
+            .is_some_and(crate::features::credentials::exists_in_keyring);
     GitCredentialMeta {
         id: record.id,
         provider: record.provider,
@@ -33,15 +29,17 @@ fn output_meta(record: GitCredentialPreferenceRecord, token_ref: Option<String>)
 
 #[tauri::command]
 pub async fn list_git_credentials(app: AppHandle) -> Result<Vec<GitCredentialMeta>, String> {
-    let document = app.state::<crate::features::preferences::PreferencesManager>().read()?;
-    let settings = document.settings.ok_or_else(|| "preferences.json is invalid; Git credentials could not be loaded".to_string())?;
-    let records = read_records(&settings)?;
     let db = app.state::<Database>();
-    records.into_iter().map(|record| {
-        let token_ref = db.get_git_credential_token_ref(&record.id)
-            .map_err(|_| "Git credential keychain references could not be loaded".to_string())?;
-        Ok(output_meta(record, token_ref))
-    }).collect()
+    db.list_git_credential_metadata()
+        .map_err(|_| "Git credential metadata could not be loaded from SQLite".to_string())?
+        .into_iter()
+        .map(|record| {
+            let token_ref = db
+                .get_git_credential_token_ref(&record.id)
+                .map_err(|_| "Git credential keychain references could not be loaded".to_string())?;
+            Ok(output_meta(record, token_ref))
+        })
+        .collect()
 }
 
 #[tauri::command]
@@ -49,10 +47,21 @@ pub async fn save_git_credential(
     app: AppHandle,
     payload: crate::features::credentials::SaveGitCredentialPayload,
 ) -> Result<GitCredentialMeta, String> {
-    let crate::features::credentials::SaveGitCredentialPayload { provider, server_url, account_name, token_type, label, secret } = payload;
+    let crate::features::credentials::SaveGitCredentialPayload {
+        provider,
+        server_url,
+        account_name,
+        token_type,
+        label,
+        secret,
+    } = payload;
     let secret = Zeroizing::new(secret);
-    if account_name.trim().is_empty() { return Err("Account name cannot be empty".into()); }
-    if secret.trim().is_empty() { return Err("Secret / token cannot be empty".into()); }
+    if account_name.trim().is_empty() {
+        return Err("Account name cannot be empty".into());
+    }
+    if secret.trim().is_empty() {
+        return Err("Secret / token cannot be empty".into());
+    }
 
     let id = uuid::Uuid::new_v4().to_string();
     let token_ref = format!("st0_tok_{}", uuid::Uuid::new_v4().simple());
@@ -60,71 +69,62 @@ pub async fn save_git_credential(
 
     let now = chrono::Utc::now().to_rfc3339();
     let record = GitCredentialPreferenceRecord {
-        id: id.clone(), provider: provider.clone(), server_url: server_url.clone(), account_name: account_name.trim().to_string(),
-        token_type: token_type.clone(), label: label.clone(), source: "stage0".into(), helper_name: None,
-        created_at: now.clone(), updated_at: now.clone(),
+        id: id.clone(),
+        provider,
+        server_url,
+        account_name: account_name.trim().to_string(),
+        token_type,
+        label,
+        source: "stage0".into(),
+        helper_name: None,
+        created_at: now.clone(),
+        updated_at: now,
     };
     let db = app.state::<Database>();
-    db.insert_git_credential_ref(&id, &token_ref).map_err(|_| {
+    if db.upsert_git_credential(&record, &token_ref).is_err() {
         let _ = crate::features::credentials::delete_secret(&token_ref);
-        "Git credential keychain mapping could not be saved".to_string()
-    })?;
-
-    let preferences = app.state::<crate::features::preferences::PreferencesManager>();
-    let write_result = (|| {
-        let current = preferences.read()?;
-        let settings = current.settings.ok_or_else(|| "preferences.json is invalid; credential metadata was not saved".to_string())?;
-        let mut records = read_records(&settings)?;
-        records.push(record.clone());
-        let serialized = records.iter().map(serde_json::to_value).collect::<Result<Vec<_>, _>>()
-            .map_err(|_| "Git credential metadata could not be encoded".to_string())?;
-        preferences.patch(json!({ "gitCredentials": serialized }), current.revision)?;
-        Ok::<(), String>(())
-    })();
-    if let Err(error) = write_result {
-        let _ = db.delete_git_credential(&id);
-        let _ = crate::features::credentials::delete_secret(&token_ref);
-        return Err(error);
+        return Err("Git credential metadata and keychain mapping could not be saved to SQLite".into());
     }
+
     let _ = app.emit("git-credentials-updated", ());
     Ok(output_meta(record, Some(token_ref)))
 }
 
 #[tauri::command]
 pub async fn delete_git_credential(app: AppHandle, id: String) -> Result<(), String> {
-    let preferences = app.state::<crate::features::preferences::PreferencesManager>();
-    let current = preferences.read()?;
-    let settings = current.settings.ok_or_else(|| "preferences.json is invalid; credential metadata was not changed".to_string())?;
-    let mut records = read_records(&settings)?;
-    let index = records.iter().position(|record| record.id == id).ok_or_else(|| "Credential not found".to_string())?;
-    if records[index].source == "system_global" {
-        return Err("This credential is managed by the system/global Git helper and cannot be deleted here.".into());
-    }
-    let removed = records.remove(index);
     let db = app.state::<Database>();
-    let token_ref = db.get_git_credential_token_ref(&id).map_err(|_| "Credential mapping could not be loaded".to_string())?;
-    let previous_secret = token_ref.as_deref().and_then(|reference| crate::features::credentials::retrieve_secret(reference).ok()).map(Zeroizing::new);
-    if let Some(reference) = token_ref.as_deref() { crate::features::credentials::delete_secret(reference)?; }
+    let record = db
+        .get_git_credential_metadata(&id)
+        .map_err(|_| "Credential metadata could not be loaded from SQLite".to_string())?
+        .ok_or_else(|| "Credential not found".to_string())?;
+    if record.source == "system_global" {
+        return Err(
+            "This credential is managed by the system/global Git helper and cannot be deleted here."
+                .into(),
+        );
+    }
 
-    let serialized = records.iter().map(serde_json::to_value).collect::<Result<Vec<_>, _>>()
-        .map_err(|_| "Git credential metadata could not be encoded".to_string())?;
-    if let Err(error) = preferences.patch(json!({ "gitCredentials": serialized }), current.revision) {
-        if let (Some(reference), Some(secret)) = (token_ref.as_deref(), previous_secret.as_deref()) {
-            let _ = crate::features::credentials::store_secret(reference, secret);
-        }
-        return Err(error);
+    let token_ref = db
+        .get_git_credential_token_ref(&id)
+        .map_err(|_| "Credential keychain mapping could not be loaded".to_string())?;
+    let previous_secret = token_ref
+        .as_deref()
+        .and_then(|reference| crate::features::credentials::retrieve_secret(reference).ok())
+        .map(Zeroizing::new);
+    if let Some(reference) = token_ref.as_deref() {
+        crate::features::credentials::delete_secret(reference)?;
     }
+
     if db.delete_git_credential(&id).is_err() {
-        let current = preferences.read()?;
-        let mut restore = read_records(&current.settings.ok_or_else(|| "Credential metadata rollback failed".to_string())?)?;
-        restore.push(removed);
-        let serialized = restore.iter().map(serde_json::to_value).collect::<Result<Vec<_>, _>>().map_err(|_| "Credential metadata rollback failed".to_string())?;
-        let _ = preferences.patch(json!({ "gitCredentials": serialized }), current.revision);
         if let (Some(reference), Some(secret)) = (token_ref.as_deref(), previous_secret.as_deref()) {
             let _ = crate::features::credentials::store_secret(reference, secret);
         }
-        return Err("Credential metadata could not be removed from SQLite; the operation was rolled back where possible.".into());
+        return Err(
+            "Credential metadata could not be removed from SQLite; the keychain entry was restored where possible."
+                .into(),
+        );
     }
+
     let _ = app.emit("git-credentials-updated", ());
     Ok(())
 }
@@ -132,7 +132,9 @@ pub async fn delete_git_credential(app: AppHandle, id: String) -> Result<(), Str
 #[tauri::command]
 pub async fn verify_git_credential(app: AppHandle, id: String) -> Result<bool, String> {
     let db = app.state::<Database>();
-    let token_ref = db.get_git_credential_token_ref(&id).map_err(|_| "Credential mapping could not be loaded".to_string())?;
+    let token_ref = db
+        .get_git_credential_token_ref(&id)
+        .map_err(|_| "Credential mapping could not be loaded".to_string())?;
     if let Some(token_ref) = token_ref {
         Ok(crate::features::credentials::exists_in_keyring(&token_ref))
     } else {

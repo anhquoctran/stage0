@@ -115,7 +115,6 @@ When reviewing git diffs:
     sandbox: { type: 'in_memory' },
     git: {},
     notifications: oldNotifications && typeof oldNotifications === 'object' ? oldNotifications : { channels: { aiReview: true, gitSync: true, guardrails: true } },
-    gitCredentials: [],
   };
 }
 

@@ -17,6 +17,9 @@ import { formatRecentTime } from '@/common/utils/dateTime';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
+import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
+import { useReviewStore } from '../../review/store/useReviewStore';
+import { resolveReviewBotConfig } from '../../review/utils/resolveReviewBotConfig';
 import { type BotReviewer } from '../types/BotReviewer';
 import { TabBranchSelector } from '../../git/components/TabBranchSelector';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
@@ -233,9 +236,42 @@ export const NewVirtualMrView: React.FC = () => {
     if (e) e.preventDefault();
     if (!canCreateVirtualMr || isSubmitting) return;
 
+    const selectedReviewer = draftMr.selectedBots
+      .map((botId) => effectiveReviewers.find((bot) => bot.id === botId))
+      .find((bot): bot is BotReviewer => Boolean(bot));
+
     setIsSubmitting(true);
     try {
-      await submitNewMrDraft();
+      const sessionId = await submitNewMrDraft();
+      if (!sessionId || draftMr.selectedBots.length === 0) return;
+      if (!selectedReviewer) {
+        showToast('Virtual MR created, but its assigned reviewer could not be loaded.');
+        return;
+      }
+
+      const aiState = useAiMcpStore.getState();
+      const reviewerProvider = selectedReviewer.provider && selectedReviewer.provider !== 'global_default'
+        ? selectedReviewer.provider as keyof typeof aiState.dynamicModels
+        : aiState.aiConfig.provider;
+      const reviewConfig = resolveReviewBotConfig(
+        aiState.aiConfig,
+        selectedReviewer,
+        aiState.dynamicModels[reviewerProvider] || [],
+      );
+
+      // Assigning a reviewer while creating the MR is the request to start its review.
+      // Remote providers are allowed here so the flow does not ask for a second confirmation.
+      const reviewStore = useReviewStore.getState();
+      reviewStore.open(sessionId);
+      void reviewStore.start(reviewConfig, reviewConfig.provider !== 'ollama', {
+        id: selectedReviewer.id,
+        name: selectedReviewer.name,
+      }).then(() => {
+        const reviewState = useReviewStore.getState();
+        if (reviewState.sessionId === sessionId && reviewState.error) {
+          useGitStore.getState().showToast(`Virtual MR created, but AI review could not start: ${reviewState.error}`);
+        }
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -469,28 +505,33 @@ export const NewVirtualMrView: React.FC = () => {
                         No reviewers requested
                       </div>
                     ) : (
-                      <div className="flex flex-wrap gap-1.5 pt-0.5">
-                        {draftMr.selectedBots.map((botId) => {
-                          const bot = effectiveReviewers.find((b: BotReviewer) => b.id === botId);
-                          if (!bot) return null;
-                          return (
-                            <div
-                              key={bot.id}
-                              className="flex items-center gap-1.5 px-2 py-0.5 bg-brand/10 border border-brand/20 text-brand text-xs font-medium"
-                            >
-                              <span>{bot.avatarEmoji}</span>
-                              <span className="truncate max-w-[130px]">{bot.name}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveBot(bot.id)}
-                                className="text-brand/60 hover:text-red hover:bg-surface0 transition-colors cursor-pointer ml-0.5"
-                                title={`Remove ${bot.name}`}
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {draftMr.selectedBots.map((botId) => {
+                            const bot = effectiveReviewers.find((b: BotReviewer) => b.id === botId);
+                            if (!bot) return null;
+                            return (
+                              <div
+                                key={bot.id}
+                                className="flex items-center gap-1.5 px-2 py-0.5 bg-brand/10 border border-brand/20 text-brand text-xs font-medium"
                               >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          );
-                        })}
+                                <span>{bot.avatarEmoji}</span>
+                                <span className="truncate max-w-[130px]">{bot.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveBot(bot.id)}
+                                  className="text-brand/60 hover:text-red hover:bg-surface0 transition-colors cursor-pointer ml-0.5"
+                                  title={`Remove ${bot.name}`}
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[10px] leading-relaxed text-subtext0">
+                          Creating this MR starts a review with the first selected reviewer. Eligible tracked source may be sent to its configured provider.
+                        </p>
                       </div>
                     )}
 

@@ -227,7 +227,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
   }, [draft]);
 
   return createPortal(
-    <section className="fixed inset-0 z-[100] flex min-h-0 flex-col bg-mantle text-text" aria-label="Edit preferences.json">
+    <section className="fixed inset-x-0 bottom-0 top-8.5 z-[90] flex min-h-0 flex-col bg-mantle text-text" aria-label="Edit preferences.json">
       <header className={`flex shrink-0 items-center justify-between border-b border-surface0 ${isMac ? 'pl-16 pr-4' : 'px-4'} py-3`}>
         <div>
           <h2 className="text-sm font-semibold">Edit in preferences.json</h2>

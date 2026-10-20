@@ -8,9 +8,9 @@ Tài liệu này ghi lại các yêu cầu đã thống nhất, phạm vi dữ l
 
 ## Mục tiêu và phạm vi
 
-- Dùng một file `preferences.json` làm nguồn cấu hình bền vững duy nhất cho dữ liệu Preferences của app. File dùng cú pháp JSON có comment (JSONC), để người dùng có thể ghi chú và chỉnh sửa thủ công.
+- Dùng một file `preferences.json` làm nguồn cấu hình bền vững cho các tùy chọn app. File dùng cú pháp JSON có comment (JSONC), để người dùng có thể ghi chú và chỉnh sửa thủ công.
 - Mọi giá trị trong file đều **app-scoped**. Không lưu giá trị theo repository trong file này.
-- Ngoại lệ lưu trữ: giá trị bí mật bắt buộc nằm trong OS keychain; SQLite chỉ giữ ánh xạ ID của bản ghi sang tham chiếu keychain. SQLite không tiếp tục là nơi lưu metadata Preferences hoặc cấu hình thường.
+- Ngoại lệ lưu trữ: giá trị bí mật bắt buộc nằm trong OS keychain. Git credential metadata và mapping keychain được lưu trong SQLite, không xuất hiện trong JSONC và chỉ được quản lý qua UI Preferences. Các tùy chọn Preferences khác không lưu ở SQLite.
 - Tính năng repo settings lưu JSON là một tính năng riêng, triển khai sau; không gộp vào refactor này.
 - Preferences dialog vẫn là giao diện thân thiện để chỉnh các giá trị cấu hình. Người dùng nâng cao có thể mở editor JSONC tích hợp ngay trong app.
 
@@ -18,7 +18,7 @@ Tài liệu này ghi lại các yêu cầu đã thống nhất, phạm vi dữ l
 
 1. **Một nguồn cấu hình chuẩn:** `preferences.json` là nguồn lâu dài duy nhất cho các giá trị Preferences. Store frontend/Zustand nếu còn cần sẽ chỉ là cache/view của cấu hình được backend nạp, không tự persist song song vào localStorage.
 2. **Phạm vi app:** toàn bộ giá trị trong file áp dụng cho app hiện tại, không phụ thuộc repository đang mở.
-3. **Ngoại lệ secrets:** giá trị bí mật ở OS keychain; SQLite giữ mapping khóa định danh sang keychain reference. Không ghi secret vào JSON, log, thông báo lỗi hoặc export cấu hình.
+3. **Ngoại lệ secrets và Git credentials:** secret ở OS keychain; metadata Git credential và mapping sang keychain reference nằm trong SQLite. JSONC editor từ chối trường `gitCredentials`; chỉ UI Git Credentials trong Preferences được phép quản lý các bản ghi này. Không ghi secret vào JSON, log, thông báo lỗi hoặc export cấu hình.
 4. **Chỉnh sửa nâng cao trong app:** header của Preferences dialog có mục **Edit in preferences.json** và mở editor tích hợp.
 5. **Autosave:** editor lưu tự động sau 2 giây kể từ lần sửa cuối.
 6. **Cấu hình mặc định:** có bộ default được đóng gói cùng app, dùng cho cài đặt mới và lệnh Reset to Defaults.
@@ -27,7 +27,7 @@ Tài liệu này ghi lại các yêu cầu đã thống nhất, phạm vi dữ l
 
 ## Tình trạng triển khai và vấn đề còn mở
 
-Đã có nền tảng backend JSONC với atomic write, revision conflict, giới hạn kích thước/độ sâu, từ chối secret, patch giữ comment/unknown fields, editor autosave 2 giây, bootstrap/migration một phần và SQLite mapping ID → keychain reference cho Git credentials lẫn MCP secrets. MCP secret values được gom thành một keychain record mỗi server; `preferences.json` chỉ chứa danh sách tên biến, còn SQLite không giữ giá trị bí mật. Migration legacy chỉ xóa browser storage sau khi JSON hợp lệ và các secret tương ứng đã vào keychain. Resolver native đã được triển khai fail-closed nhưng chưa có MCP process runner sử dụng nó. Writer trong cùng process dùng mutex; các process Stage0 dùng thêm OS file lock. Khi tự hòa giải patch cũ, frontend chỉ retry nếu các trường được patch không đổi; thay đổi chồng lấn sẽ báo conflict. Các quyết định sau đã được chốt trong implementation:
+Đã có nền tảng backend JSONC với atomic write, revision conflict, giới hạn kích thước/độ sâu, từ chối secret, patch giữ comment/unknown fields và editor autosave 2 giây. Git credential metadata được chuyển sang bảng SQLite riêng cùng với mapping keychain; migration loại trường `gitCredentials` khỏi JSONC và editor từ chối ghi trường này. MCP secret values được gom thành một keychain record mỗi server; `preferences.json` chỉ chứa danh sách tên biến, còn SQLite không giữ giá trị bí mật. Migration legacy chỉ xóa browser storage sau khi JSON hợp lệ và các secret tương ứng đã vào keychain. Resolver native đã được triển khai fail-closed nhưng chưa có MCP process runner sử dụng nó. Writer trong cùng process dùng mutex; các process Stage0 dùng thêm OS file lock. Khi tự hòa giải patch cũ, frontend chỉ retry nếu các trường được patch không đổi; thay đổi chồng lấn sẽ báo conflict. Các quyết định sau đã được chốt trong implementation:
 
 - JSONC hợp lệ được autosave và áp dụng runtime ngay; Preferences dialog thông thường vẫn giữ draft đến Apply/OK, Cancel bỏ phần draft kể từ lần Apply gần nhất.
 - File lỗi được giữ nguyên để người dùng sửa; runtime dùng bản last-known-good hợp lệ, hoặc defaults nếu chưa có bản cứu hộ. File lỗi không được tự ghi đè.
@@ -61,7 +61,7 @@ Bảng dưới đây là inventory dự kiến theo các mục đang xuất hi�
 | Guardrails | Toàn bộ cấu hình policy | Audit trail là dữ liệu lịch sử vận hành, không thuộc file Preferences. |
 | Git | Git binary ID và path | Hiện đang dùng SQLite app settings; dự kiến chuyển giá trị thường sang JSON. |
 | Notifications | Các kênh `aiReview`, `gitSync`, `guardrails` | Chuyển cấu hình kênh khỏi localStorage. Lịch sử notification không phải preference. |
-| Git Credentials | Metadata không bí mật như ID, provider, server URL, account name, token type, label, source, helper và timestamps | Secret ở keychain. SQLite chỉ giữ mapping credential ID → keychain reference. `is_in_keyring` là trạng thái suy ra/runtime. |
+| Git Credentials | Không nằm trong `preferences.json`; quản lý qua UI Git Credentials trong Preferences | Metadata và mapping credential ID → keychain reference ở SQLite; secret ở keychain. `is_in_keyring` là trạng thái suy ra/runtime. |
 
 Các trạng thái điều hướng/search của dialog, draft chưa lưu, trạng thái đăng nhập, kết quả test/probe/discovery, toast và dữ liệu UI tạm thời không phải cấu hình lâu dài. Các thao tác đăng nhập/đăng xuất, test kết nối, discovery, sandbox provisioning/execution và kiểm tra credential tiếp tục là hành động riêng, không chạy chỉ vì file được parse.
 
@@ -78,7 +78,7 @@ Khi migration, `aiConfig.systemPrompt` cũ không còn ghi vào prompt nền. N�
 ### Các ranh giới còn cần rà soát
 
 - **Guardrail audit trail:** đây là lịch sử vận hành, không phải cấu hình; giữ ngoài JSON và clear bằng hành động riêng.
-- **Credential metadata:** JSON giữ metadata không bí mật và SQLite giữ mapping ID → keychain reference; cần hoàn tất migration/tests như ghi trong tình trạng triển khai.
+- **Credential metadata:** SQLite giữ metadata và mapping ID → keychain reference; JSONC editor không được đọc/ghi trường này. Chỉ luồng UI Preferences được phép thêm/xóa credential.
 - **Repo reviewer maps:** vẫn là repo-scoped và nằm ngoài file này; sẽ được xử lý khi làm tính năng repo settings riêng.
 
 ## Luồng editor và đồng bộ cấu hình
@@ -115,7 +115,7 @@ Default nên có phiên bản schema và được đóng gói trong tài nguyên
 |---|---|---|
 | P0 | Autosave nội dung lỗi làm mất cấu hình hợp lệ cuối | Đã giữ draft lỗi ở editor, dùng last-known-good/default cho runtime và kiểm tra không ghi đè file lỗi; vẫn cần test thêm file bị xóa/hỏng giữa phiên. |
 | P0 | Nhiều writer: editor, GUI Apply, nhiều cửa sổ app, VS Code/Zed cùng sửa file | Đã có Stage0 mutex + OS lock, revision/hash và phát hiện xung đột trường khi retry patch. External editors không lock được; race còn lại được ghi rõ ở mục vấn đề mở. |
-| P0 | Secret bị dán vào JSON hoặc log, nhất là API keys/MCP env/credential metadata | API keys, Git credentials và MCP secret env đi qua keychain; schema từ chối secret values, MCP JSON chỉ giữ tên biến, còn config export loại secret env. Legacy browser storage chỉ bị xóa sau khi migration tương ứng thành công. Cần giữ invariant này khi thêm runner/runtime. |
+| P0 | Secret hoặc Git credential metadata lọt vào JSONC hay log | API keys, Git credential secrets và MCP secret env đi qua keychain; Git credential metadata ở SQLite và JSONC editor từ chối trường `gitCredentials`. MCP JSON chỉ giữ tên biến, còn config export loại secret env. Legacy data chỉ bị xóa sau khi migration tương ứng thành công. Cần giữ invariant này khi thêm runner/runtime. |
 | P1 | GUI viết lại file làm mất comments, unknown keys hoặc format | Đã dùng CST patch và có test round-trip comments, unknown fields và JSONC formatting. |
 | P1 | Nâng cấp/hạ cấp schema làm mất trường hoặc hỏng file | Versioned migrations, giữ trường chưa biết; app cũ không rewrite schema mới; migration có backup và ghi nguyên tử. |
 | P1 | Autosave được hiểu thành chạy MCP, probe hoặc tác vụ hệ thống | Parse/save không thực thi lệnh. Test/Connect/Provision/Run vẫn cần hành động rõ ràng riêng. |
@@ -127,7 +127,7 @@ Default nên có phiên bản schema và được đóng gói trong tài nguyên
 | P1 | Metadata trong JSON vẫn nhạy cảm dù không chứa secret | Thư mục/file chỉ cho user hiện tại truy cập; cẩn thận với diagnostics, backup và đồng bộ cloud; JSON có command, đường dẫn, prompt và server URLs. |
 | P2 | Khác biệt dialect JSONC giữa editor, parser và công cụ ngoài | Chốt cú pháp hỗ trợ; ưu tiên tập giao chung hoặc ghi rõ hỗ trợ block comments/trailing commas; test với VS Code/Zed. |
 | P2 | File quá lớn, lồng sâu hoặc giá trị nằm ngoài range gây treo/lỗi runtime | Giới hạn kích thước/độ sâu và validate range/enum/format trước khi áp dụng. |
-| P2 | Credential bị xoá khỏi JSON nhưng keychain mapping còn sót hoặc ngược lại | Có quy tắc reconciliation và cleanup riêng; không xoá secrets chỉ vì metadata không parse được. Hiển thị credential orphan để xử lý an toàn. |
+| P2 | Credential metadata, SQLite mapping và keychain secret lệch nhau | Có quy tắc reconciliation và cleanup riêng; không xoá secrets chỉ vì metadata không parse được. Hiển thị credential orphan để xử lý an toàn. |
 
 Các quyền hệ điều hành cần được áp dụng cho file/thư mục ở từng nền tảng. Việc tạo, thay thế và khôi phục file phải xử lý symlink/path bất thường an toàn, tránh ghi ra ngoài app data directory.
 
@@ -146,7 +146,7 @@ Mức ưu tiên:
 | 1 | Chốt schema và semantics: inventory field, audit trail, Apply/editor runtime timing, JSONC dialect, recovery, Reset, role/prompt và migration prompt cũ | P0 | M | Chốt hợp đồng trước khi backend và UI dựa vào các giả định khác nhau. |
 | 2 | Native preference service: defaults có version, JSONC parse/schema validation, read API và error model | P0 | L | Nền dùng chung cho startup, dialog, editor và migration. |
 | 3 | File safety: atomic write, revision/hash conflict, serialized writes, recovery sau JSON lỗi, theo dõi thay đổi ngoài app và quyền file | P0 | L | Bảo vệ dữ liệu khi autosave, nhiều cửa sổ và editor ngoài cùng sửa file. |
-| 4 | Migration và secret boundary: chuyển localStorage/SQLite settings/credential metadata vào JSON; secret ở keychain, SQLite còn mapping; có rollback/recovery | P0 | XL | Đã triển khai đường chính và kiểm tra bằng unit tests; cần xác minh fixture nâng cấp thật cùng OS keychain trước khi phát hành. |
+| 4 | Migration và secret boundary: chuyển localStorage/SQLite settings vào JSON; Git credential metadata tiếp tục ở SQLite; secret ở keychain; có rollback/recovery | P0 | XL | Đã triển khai đường chính và kiểm tra bằng unit tests; cần xác minh fixture nâng cấp thật cùng OS keychain trước khi phát hành. |
 | 5 | Refactor Preferences dialog: snapshot/draft/Apply/Cancel ghi về một store; system prompt nền read-only theo role; custom bot lưu role và instruction bổ sung | P1 | L | Phụ thuộc service và semantics đã chốt; đồng thời đổi đường đi của prompt runtime. |
 | 6 | Editor JSONC trong app: header action, autosave 2 giây, trạng thái saved/invalid/conflict, sửa giữ comment và unknown fields | P1 | L | Phụ thuộc read/write API, recovery và conflict handling. Đây là yêu cầu sản phẩm cốt lõi. |
 | 7 | Kiểm chứng và phát hành: first install/upgrade/reset, file lỗi/phiên bản mới, autosave/close, nhiều cửa sổ/ngoài app, secrets và credential orphan | P1 | L | Cần có sau các luồng chính; kiểm tra migration trên dữ liệu nâng cấp mẫu trước khi xóa store cũ. |
