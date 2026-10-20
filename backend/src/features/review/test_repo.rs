@@ -71,6 +71,7 @@ impl TestRepo {
             decision: None,
             generated_description: None,
             error: None,
+            retry: None,
             findings: vec![],
             inspected_files: vec![],
             turns: 0,

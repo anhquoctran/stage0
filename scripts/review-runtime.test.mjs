@@ -143,6 +143,36 @@ function assignedBatchFixture(finished) {
   return { service, started, synchronized, reviewState };
 }
 
+test('provider backoff is synchronized and shown instead of a misleading summarizing status', async () => {
+  const retry = { reason: 'rate_limit', httpStatus: 429, attempt: 1, maxAttempts: 2, retryAt: '2026-10-20T15:30:00Z' };
+  let current = { ...run(), retry, turns: 10 };
+  const { store } = storeFixture(() => ({ run: current, events: [] }));
+  store.setState({ activeRuns: { 'run-a': run() } });
+  await store.getState().syncActive();
+  assert.deepEqual(store.getState().activeRuns['run-a'].retry, retry);
+
+  const harness = componentHarness();
+  const originalWindow = globalThis.window;
+  globalThis.window = { setInterval: () => 1, clearInterval: () => {} };
+  const state = { ...store.getState(), syncActive: async () => {}, reviewBatches: { a: { phase: 'preparing-description', current: 1, total: 1, reviewerName: 'Reviewer 01' } } };
+  const { ReviewActivity } = loadWithMocks(new URL('../frontend/features/review/components/ReviewActivity.tsx', import.meta.url), {
+    react: harness.react,
+    '../store/useReviewStore': { useReviewStore: (selector) => selector(state) },
+  });
+  try {
+    const nodes = componentNodes(await harness.render(ReviewActivity));
+    const status = nodes.find((node) => node.props.role === 'status');
+    assert.match(status.props.children.flat(Infinity).join(''), /rate limited.*retry 1\/2/);
+    assert.match(status.props.title, /HTTP 429.*next retry/);
+    current = { ...current, retry: undefined, turns: 11 };
+    await store.getState().syncActive();
+    assert.equal(store.getState().activeRuns['run-a'].retry, undefined);
+  } finally {
+    harness.cleanup();
+    if (originalWindow === undefined) delete globalThis.window; else globalThis.window = originalWindow;
+  }
+});
+
 test('assigned batches synchronize the result and report ACP failure without claiming description generation', async () => {
   const failed = { ...run('run-a', 'a', 'failed'), error: 'Invalid ACP tool-call envelope' };
   const { service, started, synchronized, reviewState } = assignedBatchFixture(failed);

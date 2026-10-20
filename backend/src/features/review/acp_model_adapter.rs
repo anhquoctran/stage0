@@ -1,4 +1,4 @@
-use super::{model_adapter::ReviewModelAdapter, ReviewToolCall};
+use super::{model_adapter::ReviewModelAdapter, ReviewModelFailure, ReviewToolCall};
 use crate::features::ai::acp::{AcpAgentConfig, AcpAgentReviewSession};
 use serde_json::{json, Value};
 use std::{
@@ -126,13 +126,13 @@ impl ReviewModelAdapter for AcpModelAdapter {
                 turn.to_string().len(),
                 turn["continuation"] == true
             ));
-            let output = match session
+            let response = match session
                 .as_mut()
                 .expect("ACP review session initialized")
                 .prompt_turn(&turn)
                 .await
             {
-                Ok(output) => output,
+                Ok(response) => response,
                 Err(error) => {
                     super::debug_log::log(format_args!(
                         "event=acp_prompt_failed agent_id={} elapsed_ms={} error_class={}",
@@ -147,12 +147,12 @@ impl ReviewModelAdapter for AcpModelAdapter {
                 "event=acp_prompt_completed agent_id={} elapsed_ms={} response_bytes={}",
                 super::debug_log::safe_label(&self.agent.id, 100),
                 turn_started.elapsed().as_millis(),
-                output.len()
+                response["output"].as_str().map_or(0, str::len)
             ));
             self.sent_history_items
                 .store(turn_history_len, Ordering::Release);
             self.session_prompted.store(true, Ordering::Release);
-            Ok(json!({"output":output}))
+            Ok(response)
         })
     }
 
@@ -161,6 +161,9 @@ impl ReviewModelAdapter for AcpModelAdapter {
         response: &Value,
         history: &mut Vec<Value>,
     ) -> Result<(Vec<ReviewToolCall>, u64), String> {
+        if let Some(failure) = self.response_failure(response) {
+            return Err(failure.message);
+        }
         let text = response["output"]
             .as_str()
             .ok_or("ACP agent returned no text response")?;
@@ -224,6 +227,17 @@ impl ReviewModelAdapter for AcpModelAdapter {
         true
     }
 
+    fn response_failure(&self, response: &Value) -> Option<ReviewModelFailure> {
+        super::acp_failure::from_response(response)
+    }
+
+    fn append_request_retry(&self, history: &mut Vec<Value>) {
+        history.push(json!({
+            "role":"user",
+            "content":"The previous provider request failed and produced no Stage0 tool calls. The client waited before retrying. Continue this same review from the existing successful Stage0 tool results and the pending user request. Return the required JSON tool-call envelope. Do not repeat completed mutations or invent missing tool results."
+        }));
+    }
+
     fn append_results(&self, history: &mut Vec<Value>, results: &[(ReviewToolCall, Value)]) {
         let tool_results = results
             .iter()
@@ -280,6 +294,25 @@ mod tests {
         assert_eq!(continuation["messages"].as_array().unwrap().len(), 1);
         assert_eq!(continuation["messages"][0]["content"], "new tool result");
         assert!(adapter.request_size(&next) < first.to_string().len());
+
+        let mut history = next["history"].as_array().unwrap().clone();
+        adapter.sent_history_items.store(history.len(), Ordering::Release);
+        adapter.append_request_retry(&mut history);
+        let retry = adapter.turn_for_session(&json!({"history":history}));
+        assert_eq!(retry["messages"].as_array().unwrap().len(), 1);
+        assert!(retry["messages"][0]["content"].as_str().unwrap().contains("client waited"));
+        assert!(!retry.to_string().contains("new tool result"));
+    }
+
+    #[test]
+    fn operational_agent_errors_never_trigger_json_format_correction() {
+        let adapter = adapter();
+        let response = json!({"output":"exceeded retry limit, last status: 429 Too Many Requests","stopReason":"end_turn"});
+        let mut history = vec![];
+        let error = adapter.decode(&response, &mut history).unwrap_err();
+        assert!(error.contains("HTTP 429"));
+        assert!(!adapter.recover_decode_error(&error, &mut history));
+        assert!(history.is_empty());
     }
 
     #[test]

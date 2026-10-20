@@ -1,7 +1,7 @@
 use super::{
     context::ReviewContext, model_adapter::ReviewModelAdapter,
     native_model_adapter::NativeModelAdapter, tool_registry::ReviewToolRegistry, ReviewFinding,
-    ReviewRequest, ReviewRun,
+    ReviewRequest, ReviewRetryState, ReviewRun,
 };
 use super::persistence::ReviewDiscussionAction;
 use crate::core::db::Database;
@@ -17,6 +17,7 @@ use tauri::{AppHandle, Manager};
 const MAX_REVIEW_TURNS: usize = 128;
 const MAX_REVIEW_TOOL_CALLS: usize = 256;
 const MAX_DECODE_RECOVERIES: usize = 2;
+const MAX_PROVIDER_RETRIES: usize = 2;
 
 pub const SYSTEM: &str = r#"You are Stage0's AI code reviewer for one Virtual MR. Review only the fixed, sandboxed Git snapshot provided through tools. Every response in this review loop must invoke one or more supplied tools; never substitute prose for a tool call.
 
@@ -191,6 +192,7 @@ async fn execute_with_adapter(
     let mut had_errors = false;
     let mut recovered_missing_tool_call = false;
     let mut decode_recoveries = 0;
+    let mut provider_retries = 0;
     let mut pending_findings = Vec::<ReviewFinding>::new();
     let mut pending_discussion_actions = Vec::<ReviewDiscussionAction>::new();
     let mut description_updated = !config.generate_description;
@@ -237,8 +239,8 @@ async fn execute_with_adapter(
         run.turns = turn + 1;
         let body = adapter.payload(&system, &history, tools, 2048);
         let bytes = adapter.request_size(&body);
-        // Stateless HTTP providers reserve one bounded retry. Stateful ACP
-        // sessions transmit only the incremental turn and do not retry.
+        // Stateless HTTP providers reserve their transport retry. Every ACP
+        // continuation, including a delayed provider retry, is counted here.
         wire_bytes = wire_bytes.saturating_add(
             bytes.saturating_mul(adapter.retry_reserve_factor()),
         );
@@ -284,6 +286,48 @@ async fn execute_with_adapter(
                 return Err(error);
             }
         };
+        if let Some(failure) = adapter.response_failure(&response) {
+            db.review_event(&run.id, "agent_failure", json!({
+                "turn":run.turns,"kind":failure.kind,"httpStatus":failure.http_status,"retryable":failure.retryable,
+            }))?;
+            super::debug_log::log(format_args!(
+                "event=agent_provider_failure run={} turn={} kind={} http_status={} retryable={}",
+                super::debug_log::safe_label(&run.id, 80), run.turns,
+                failure.kind, failure.http_status.unwrap_or(0), failure.retryable
+            ));
+            let delay = if provider_retries < MAX_PROVIDER_RETRIES && run.turns < MAX_REVIEW_TURNS {
+                failure.retry_delay(provider_retries + 1)
+            } else { None };
+            let Some(delay) = delay else {
+                return Err(failure.message);
+            };
+            provider_retries += 1;
+            let retry_at = (chrono::Utc::now() + chrono::Duration::milliseconds(delay.as_millis() as i64)).to_rfc3339();
+            run.retry = Some(ReviewRetryState {
+                reason: failure.kind.into(),
+                http_status: failure.http_status,
+                attempt: provider_retries,
+                max_attempts: MAX_PROVIDER_RETRIES,
+                retry_at: retry_at.clone(),
+            });
+            db.save_review_run(run)?;
+            db.review_event(&run.id, "provider_retry_scheduled", json!({
+                "turn":run.turns,"reason":failure.kind,"httpStatus":failure.http_status,
+                "attempt":provider_retries,"maxAttempts":MAX_PROVIDER_RETRIES,"delayMs":delay.as_millis(),"retryAt":retry_at,
+            }))?;
+            super::debug_log::log(format_args!(
+                "event=provider_retry_scheduled run={} turn={} reason={} http_status={} attempt={} max_attempts={} delay_ms={}",
+                super::debug_log::safe_label(&run.id, 80), run.turns, failure.kind,
+                failure.http_status.unwrap_or(0), provider_retries, MAX_PROVIDER_RETRIES, delay.as_millis()
+            ));
+            // The run's existing deadline and cancellation select still own
+            // this wait. No extra request is sent while the timer is pending.
+            tokio::time::sleep(delay).await;
+            run.retry = None;
+            db.save_review_run(run)?;
+            adapter.append_request_retry(&mut history);
+            continue;
+        }
         let (calls, usage) = match adapter.decode(&response, &mut history) {
             Ok(decoded) => decoded,
             Err(error) => {
@@ -1429,6 +1473,116 @@ mod tests {
             .unwrap();
         assert_eq!(status, "open");
     }
+    #[tokio::test(start_paused = true)]
+    async fn acp_rate_limit_waits_then_continues_and_generates_the_description() {
+        use super::super::fixture_acp_adapter::FixtureAcpAdapter;
+        let repo = TestRepo::new();
+        repo.git(&["rm", ".env"]);
+        repo.write("source.rs", "fn value() -> u32 { 2 }\n");
+        repo.write("deleted.rs", "fn deleted() {}\n");
+        repo.git(&["add", "."]);
+        repo.git(&["commit", "-m", "Clean rate limit fixture"]);
+        let (mut run, ctx) = repo.review();
+        let db = test_database(&run);
+        db.save_review_run(&run).unwrap();
+        let description = "## Summary\nChange the value compared with main.";
+        let envelope = |name: &str, arguments: Value| json!({"output":json!({"calls":[{"name":name,"arguments":arguments}]}).to_string()});
+        let adapter = FixtureAcpAdapter::new(vec![
+            json!({"output":"exceeded retry limit, last status: 429 Too Many Requests","stopReason":"end_turn"}),
+            envelope("get_file_diff", json!({"filePath":"source.rs","offset":0})),
+            envelope("update_mr_description", json!({"description":description})),
+            envelope("submit_review", json!({"summary":"Reviewed the value change.","decision":"comment","findings":[]})),
+        ]);
+        let mut request = config("http://localhost".into());
+        request.execution_mode = "acp".into();
+        request.generate_description = true;
+        let run_id = run.id.clone();
+        let context = Arc::new(Mutex::new(ctx));
+        let started = tokio::time::Instant::now();
+        let work = execute_with_adapter(&db, &request, &mut run, &context, &adapter);
+        let observe_wait = async {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            let saved = db.get_review_run(&run_id).unwrap();
+            assert_eq!(saved.status, "running");
+            let retry = saved.retry.unwrap();
+            assert_eq!(retry.reason, "rate_limit");
+            assert_eq!(retry.http_status, Some(429));
+            assert_eq!(retry.attempt, 1);
+            assert_eq!(retry.max_attempts, MAX_PROVIDER_RETRIES);
+            assert_eq!(adapter.requests.lock().unwrap().len(), 1);
+        };
+        let (outcome, ()) = tokio::join!(work, observe_wait);
+        assert!(outcome.is_ok(), "{outcome:?}");
+        run.finish(outcome);
+        assert!(started.elapsed() >= Duration::from_secs(20));
+        assert_eq!(run.status, "completed");
+        assert_eq!(run.generated_description.as_deref(), Some(description));
+        assert!(run.retry.is_none());
+        assert_eq!(run.turns, 4);
+        assert_eq!(run.tool_calls, 3);
+        let requests = adapter.requests.lock().unwrap();
+        assert!(requests[1]["history"].to_string().contains("client waited"));
+        assert!(!requests[1]["history"].to_string().contains("could not decode"));
+        let events = db.review_events(&run.id).unwrap();
+        assert_eq!(events.iter().filter(|event| event["kind"] == "provider_retry_scheduled").count(), 1);
+        assert!(!events.iter().any(|event| event["kind"] == "tool_call_retry"));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn acp_provider_failures_remain_accurate_and_retries_are_bounded() {
+        use super::super::fixture_acp_adapter::FixtureAcpAdapter;
+        for (response, expected_kind, retries) in [
+            (json!({"output":"exceeded retry limit, last status: 429 Too Many Requests"}), "rate_limit", 2),
+            (json!({"error":{"code":-32000,"message":"You've hit your usage limit","data":{"http_status_code":429}}}), "quota_exhausted", 0),
+            (json!({"error":{"code":-32000,"message":"Unauthorized","data":{"http_status_code":401}}}), "authentication", 0),
+        ] {
+            let repo = TestRepo::new();
+            let (mut run, ctx) = repo.review();
+            let db = test_database(&run);
+            db.save_review_run(&run).unwrap();
+            let adapter = FixtureAcpAdapter::new(vec![response; retries + 1]);
+            let mut request = config("http://localhost".into());
+            request.execution_mode = "acp".into();
+            let started = tokio::time::Instant::now();
+            let outcome = execute_with_adapter(&db, &request, &mut run, &Arc::new(Mutex::new(ctx)), &adapter).await;
+            assert!(outcome.is_err());
+            run.finish(outcome);
+            assert_eq!(run.status, "failed");
+            assert_eq!(super::super::debug_log::error_class(run.error.as_deref().unwrap()), expected_kind);
+            assert!(run.retry.is_none());
+            assert!(run.generated_description.is_none());
+            assert_eq!(run.tool_calls, 0);
+            assert_eq!(adapter.requests.lock().unwrap().len(), retries + 1);
+            let events = db.review_events(&run.id).unwrap();
+            assert_eq!(events.iter().filter(|event| event["kind"] == "provider_retry_scheduled").count(), retries);
+            assert!(!events.iter().any(|event| event["kind"] == "tool_call_retry"));
+            if retries > 0 {
+                assert!(started.elapsed() >= Duration::from_secs(60));
+                assert!(run.error.as_deref().unwrap().contains("HTTP 429"));
+            }
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn cancelling_an_acp_rate_limit_wait_prevents_the_next_request() {
+        use super::super::fixture_acp_adapter::FixtureAcpAdapter;
+        let repo = TestRepo::new();
+        let (mut run, ctx) = repo.review();
+        let db = test_database(&run);
+        db.save_review_run(&run).unwrap();
+        let adapter = FixtureAcpAdapter::new(vec![json!({"output":"exceeded retry limit, last status: 429 Too Many Requests"})]);
+        let request = config("http://localhost".into());
+        let context = Arc::new(Mutex::new(ctx));
+        let outcome = tokio::select! {
+            result = execute_with_adapter(&db, &request, &mut run, &context, &adapter) => result,
+            _ = tokio::time::sleep(Duration::from_secs(1)) => Err("Review cancelled during provider backoff".into()),
+        };
+        run.finish(outcome);
+        assert_eq!(run.status, "cancelled");
+        assert!(run.retry.is_none());
+        assert_eq!(adapter.requests.lock().unwrap().len(), 1);
+    }
+
     #[tokio::test]
     async fn acp_recovers_a_malformed_turn_and_saves_the_generated_description() {
         use super::super::fixture_acp_adapter::FixtureAcpAdapter;

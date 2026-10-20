@@ -1,4 +1,4 @@
-use super::ReviewToolCall;
+use super::{ReviewModelFailure, ReviewToolCall};
 use serde_json::Value;
 use std::{future::Future, pin::Pin};
 
@@ -34,6 +34,12 @@ pub trait ReviewModelAdapter: Send + Sync {
     fn recover_decode_error(&self, _error: &str, _history: &mut Vec<Value>) -> bool {
         false
     }
+
+    fn response_failure(&self, _response: &Value) -> Option<ReviewModelFailure> {
+        None
+    }
+
+    fn append_request_retry(&self, _history: &mut Vec<Value>) {}
 
     fn append_results(&self, history: &mut Vec<Value>, results: &[(ReviewToolCall, Value)]);
 }

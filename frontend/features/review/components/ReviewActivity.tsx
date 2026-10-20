@@ -10,6 +10,7 @@ export const ReviewActivity: React.FC = () => {
   const batch = Object.values(batches)[0];
   const activeIds = Object.keys(active).sort().join(',');
   const target = running[0] || finished;
+  const waiting = running.find((run) => run.retry)?.retry;
 
   useEffect(() => {
     if (!activeIds) return;
@@ -19,7 +20,9 @@ export const ReviewActivity: React.FC = () => {
   }, [activeIds, syncActive]);
 
   if (!target && !batch) return null;
-  const label = batch
+  const label = waiting
+    ? `AI review: ${waiting.reason === 'rate_limit' ? 'rate limited' : 'waiting for provider'} · retry ${waiting.attempt}/${waiting.maxAttempts}`
+    : batch
     ? `AI review: ${batch.phase === 'preparing-description' ? 'summarizing MR' : 'reviewing'} ${batch.current}/${batch.total}`
     : running.length
       ? `AI review: ${running.length} running`
@@ -28,8 +31,8 @@ export const ReviewActivity: React.FC = () => {
   return (
     <span
       role="status"
-      title={batch ? `${batch.reviewerName} · ${label}` : target!.error || target!.summary || 'AI review status'}
-      className="px-2 text-[10px] text-primary"
+      title={waiting ? `Provider${waiting.httpStatus ? ` HTTP ${waiting.httpStatus}` : ''} · next retry at ${new Date(waiting.retryAt).toLocaleTimeString()}` : batch ? `${batch.reviewerName} · ${label}` : target!.error || target!.summary || 'AI review status'}
+      className={`px-2 text-[10px] ${waiting ? 'text-yellow' : 'text-primary'}`}
     >
       {label}
     </span>

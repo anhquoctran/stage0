@@ -35,6 +35,10 @@ uuid = { version = "1.8", features = ["v4"] }
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 base64 = "0.22"
+zip = { version = "9", default-features = false, features = ["deflate", "bzip2"] }
+tar = "0.4"
+flate2 = "1"
+bzip2 = "0.6"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 keyring = { version = "3", features = ["windows-native"] }
@@ -68,3 +72,7 @@ strip = true
 [profile.dev]
 opt-level = 0
 debug = 1
+
+[dev-dependencies]
+tokio = { version = "1", features = ["test-util"] }
+tempfile = "3"
