@@ -219,7 +219,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                 setIsMrListOpen(false);
                 void openNewMrDraft();
               }}
-              className="flex items-center gap-1.5 bg-primary px-2.5 py-1.5 text-xs text-text hover:bg-surface1"
+              className="flex items-center gap-1.5 bg-primary px-2.5 py-1.5 text-xs font-semibold text-on-accent hover:bg-primary/90"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Create Merge Request</span>
@@ -375,8 +375,8 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
               title={`${sortDirection === 'asc' ? 'Ascending' : 'Descending'} order`}
             >
               {sortDirection === 'asc'
-                ? <SortAscending className="h-3.5 w-3.5" />
-                : <SortDescending className="h-3.5 w-3.5" />}
+                ? <SortAscending className="h-3 w-3" />
+                : <SortDescending className="h-3 w-3" />}
             </button>
           </div>
         </div>
