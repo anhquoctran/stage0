@@ -18,4 +18,6 @@ pub struct ReviewRequest {
     pub base_url: String,
     pub instructions: String,
     pub allow_remote: bool,
+    #[serde(default)]
+    pub generate_description: bool,
 }

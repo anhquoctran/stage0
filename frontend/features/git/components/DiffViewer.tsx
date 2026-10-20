@@ -390,7 +390,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-base text-subtext1">
-        <div className="w-8 h-8 border-2 border-blue border-t-transparent  animate-spin mb-3" />
+        <div className="w-8 h-8 rounded-full border-2 border-blue border-t-transparent animate-spin mb-3" />
         <span className="text-sm font-medium text-text">Computing 3-dot MR diff...</span>
         <span className="text-xs text-subtext0 mt-1">Executing git diff and merge-tree simulation</span>
       </div>
@@ -526,13 +526,13 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   return (
     <section className="flex-1 flex flex-col h-full bg-base overflow-hidden select-none">
       {/* File Diff Header Toolbar (Fork / GitHub Desktop style) */}
-      <div className="h-11 border-b border-surface0 bg-mantle px-3.5 flex items-center justify-between shrink-0 relative z-20">
+      <div className="min-h-11 h-auto border-b border-surface0 bg-mantle px-3.5 py-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 shrink-0 relative z-20">
         {/* Left: Breadcrumbs & Copy Path */}
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0 flex-[1_1_320px]">
           <FileCode className="w-4 h-4 text-blue shrink-0" />
           <div className="flex items-center gap-1 min-w-0 font-mono text-xs">
             {dirPath && (
-              <span className="text-subtext1 truncate max-w-[200px]">
+              <span className="text-subtext1 truncate max-w-[200px] max-xl:hidden">
                 {dirPath}/
               </span>
             )}
@@ -540,7 +540,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               {fileName}
             </span>
             {selectedFile.old_path && (
-              <span className="text-subtext1 text-[11px] truncate ml-1">
+              <span className="text-subtext1 text-[11px] truncate ml-1 max-xl:hidden">
                 (renamed from {selectedFile.old_path})
               </span>
             )}
@@ -568,7 +568,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             </div>
           )}
 
-          <div className="flex items-center gap-1.5 font-mono text-xs ml-1 font-semibold">
+          <div className="flex items-center gap-1.5 font-mono text-xs ml-1 font-semibold max-xl:hidden">
             {selectedFile.is_binary ? (
               <span className="text-amber-400">Binary · preview unavailable</span>
             ) : (
@@ -585,7 +585,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         </div>
 
         {/* Center: File Stepper & Conflict Stepper */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0 max-xl:ml-auto">
           {diffPayload && diffPayload.files.length > 1 && (
             <div className="flex items-center gap-1 bg-surface0  border border-surface0 px-1 py-0.5">
               <button
@@ -646,7 +646,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         </div>
 
         {/* Right: View Mode Toggle & Diff/Blame Switcher */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0 max-xl:basis-full max-xl:flex-wrap max-xl:justify-end max-xl:gap-y-1.5">
           {/* Diff / Blame / Conflict Tab Switcher */}
           <div className="flex items-center bg-surface0 p-0.5 gap-0.5">
             {selectedFile?.is_conflicted && !selectedFile.is_binary && (
@@ -661,7 +661,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 title="Inspect 3-way collision blocks side-by-side"
               >
                 <GitMerge className="w-3.5 h-3.5 text-white" />
-                <span>Conflicts 3-Way</span>
+                <span className="max-md:hidden">Conflicts 3-Way</span>
               </button>
             )}
 
@@ -676,7 +676,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               title="Inspect file diff"
             >
               <FileCode className="w-3.5 h-3.5 text-white" />
-              <span>Diff</span>
+              <span className="max-md:hidden">Diff</span>
             </button>
             {!selectedFile.is_binary && (
               <button
@@ -690,7 +690,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 title={formatShortcutText('Inspect line-by-line git blame (Alt+B)')}
               >
                 <History className="w-3.5 h-3.5 text-white" />
-                <span>Blame</span>
+                <span className="max-md:hidden">Blame</span>
               </button>
             )}
           </div>
@@ -709,7 +709,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 title="Side-by-side split view"
               >
                 <Columns2 className="w-3.5 h-3.5 text-white" />
-                <span>Split</span>
+                <span className="max-md:hidden">Split</span>
               </button>
               <button
                 type="button"
@@ -722,7 +722,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 title="Inline unified view"
               >
                 <Rows2 className="w-3.5 h-3.5 text-white" />
-                <span>Unified</span>
+                <span className="max-md:hidden">Unified</span>
               </button>
             </div>
           )}
@@ -740,7 +740,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               title={formatShortcutText(`Toggle inline git blame on active line (Alt+Shift+B) - ${showInlineBlame ? 'Active' : 'Disabled'}`)}
             >
               <GitCommit className="w-3.5 h-3.5 text-white" />
-              <span>Inline Blame</span>
+              <span className="max-md:hidden">Inline Blame</span>
             </button>
           )}
         </div>

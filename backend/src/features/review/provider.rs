@@ -433,6 +433,7 @@ mod tests {
             base_url: url.into(),
             instructions: String::new(),
             allow_remote: true,
+            generate_description: false,
         }
     }
     #[test]

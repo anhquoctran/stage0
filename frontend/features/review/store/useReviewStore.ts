@@ -20,6 +20,13 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   isStarting: false, isPublishing: false,
   activeRuns: {},
   lastFinishedRun: null,
+  reviewBatches: {},
+  setReviewBatch: (sessionId, progress) => set((state) => {
+    const reviewBatches = { ...state.reviewBatches };
+    if (progress) reviewBatches[sessionId] = progress;
+    else delete reviewBatches[sessionId];
+    return { reviewBatches };
+  }),
   syncActive: async () => {
     await Promise.all(Object.keys(get().activeRuns).map(async (id) => {
       try {
@@ -69,7 +76,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     try { await get().startForSession(sessionId, config, allowRemote, reviewer); }
     catch { /* The store records the error for the open review panel. */ }
   },
-  startForSession: async (sessionId, config, allowRemote, reviewer) => {
+  startForSession: async (sessionId, config, allowRemote, reviewer, generateDescription = false) => {
     if (startingSessionIds.has(sessionId) || Object.values(get().activeRuns).some((run) => run.sessionId === sessionId && run.status === 'running')) return null;
     startingSessionIds.add(sessionId);
     set({ isStarting: true, error: null });
@@ -80,6 +87,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         instructions: config.customInstructions, allowRemote,
         reasoningEffort: config.reasoningEffort || null, fastMode: config.fastMode === true,
         reviewerId: reviewer?.id || null, reviewerName: reviewer?.name || null,
+        generateDescription,
       } });
       set((state) => ({ activeRuns: { ...state.activeRuns, [run.id]: run } }));
       if (get().isOpen && get().sessionId === sessionId) {

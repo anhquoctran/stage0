@@ -12,6 +12,7 @@ export interface ReviewRun {
   snapshot: ReviewSnapshot;
   status: 'running' | 'completed' | 'partial' | 'incomplete' | 'failed' | 'cancelled' | 'interrupted';
   summary: string;
+  generatedDescription?: string;
   error: string | null;
   findings: ReviewFinding[];
   inspectedFiles: string[];

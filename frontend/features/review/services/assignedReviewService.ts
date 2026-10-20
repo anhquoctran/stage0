@@ -6,42 +6,166 @@ import { isReviewStartingForSession, useReviewStore } from '../store/useReviewSt
 import { useGitStore } from '../../git/store/useGitStore';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import type { ReviewRun } from '../types/ReviewRun';
+import type { ReviewRunDetail } from '../types/ReviewRunDetail';
+import type { BotReviewer } from '../../virtual-mr/types/BotReviewer';
 
 const attemptedHeadBySession = new Map<string, string>();
 const checkingSession = new Set<string>();
 const queuedReReviewSessions = new Set<string>();
 
-function reviewerForSession(sessionId: string) {
+function reviewersForSession(sessionId: string) {
   const virtualMr = useVirtualMrStore.getState();
   const session = virtualMr.sessions.find((item) => item.id === sessionId);
   if (!session?.reviewers.length) return null;
-  const reviewerId = session.reviewers[0].agentId;
   const profiles = useBotReviewersStore.getState();
-  const reviewer = [
+  const profileById = new Map<string, BotReviewer>([
     ...profiles.globalReviewers,
     ...(profiles.repoCustomReviewers[session.repoId] || []),
-  ].find((item) => item.id === reviewerId);
-  return reviewer ? { session, reviewer } : null;
+  ].map((reviewer) => [reviewer.id, reviewer]));
+  const seen = new Set<string>();
+  const reviewers = session.reviewers.flatMap((assignment) => {
+    if (seen.has(assignment.agentId)) return [];
+    seen.add(assignment.agentId);
+    return [{
+      id: assignment.agentId,
+      name: assignment.agentName,
+      profile: profileById.get(assignment.agentId) || null,
+    }];
+  });
+  return { session, reviewers };
+}
+
+function configForReviewer(reviewer: BotReviewer) {
+  const aiState = useAiMcpStore.getState();
+  const reviewerProvider = reviewer.provider && reviewer.provider !== 'global_default'
+    ? reviewer.provider as keyof typeof aiState.dynamicModels
+    : aiState.aiConfig.provider;
+  return resolveReviewBotConfig(
+    aiState.aiConfig,
+    reviewer,
+    aiState.dynamicModels[reviewerProvider] || [],
+  );
 }
 
 export async function startAssignedReviewForSession(sessionId: string): Promise<ReviewRun | null> {
-  const assigned = reviewerForSession(sessionId);
-  if (!assigned) return null;
-  const aiState = useAiMcpStore.getState();
-  const reviewerProvider = assigned.reviewer.provider && assigned.reviewer.provider !== 'global_default'
-    ? assigned.reviewer.provider as keyof typeof aiState.dynamicModels
-    : aiState.aiConfig.provider;
-  const config = resolveReviewBotConfig(
-    aiState.aiConfig,
-    assigned.reviewer,
-    aiState.dynamicModels[reviewerProvider] || [],
-  );
+  const assigned = reviewersForSession(sessionId)?.reviewers.find((reviewer) => reviewer.profile);
+  if (!assigned?.profile) return null;
+  const config = configForReviewer(assigned.profile);
   return useReviewStore.getState().startForSession(
     sessionId,
     config,
     config.provider !== 'ollama',
-    { id: assigned.reviewer.id, name: assigned.reviewer.name },
+    { id: assigned.id, name: assigned.name },
   );
+}
+
+export interface AssignedReviewBatchResult {
+  runs: ReviewRun[];
+  failures: string[];
+  descriptionGenerated: boolean;
+  hasChanges: boolean;
+}
+
+async function waitForReviewRun(runId: string, onUpdate: (run: ReviewRun) => void | Promise<void>): Promise<ReviewRun> {
+  const deadline = Date.now() + 330_000;
+  while (Date.now() < deadline) {
+    const detail = await invoke<ReviewRunDetail>('get_ai_review', { runId });
+    await onUpdate(detail.run);
+    if (detail.run.status !== 'running') {
+      await useReviewStore.getState().syncActive();
+      return detail.run;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+  }
+  throw new Error('Timed out waiting for the AI review run to finish.');
+}
+
+async function waitForSessionIdle(sessionId: string): Promise<void> {
+  const deadline = Date.now() + 330_000;
+  while (Date.now() < deadline) {
+    const store = useReviewStore.getState();
+    const active = Object.values(store.activeRuns).some((run) => run.sessionId === sessionId && run.status === 'running');
+    if (!active && !isReviewStartingForSession(sessionId)) return;
+    await store.syncActive();
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  }
+  throw new Error('Timed out waiting for another review of this Virtual MR to finish.');
+}
+
+export async function startAssignedReviewBatchForSession(sessionId: string): Promise<AssignedReviewBatchResult> {
+  const assigned = reviewersForSession(sessionId);
+  if (!assigned) return { runs: [], failures: [], descriptionGenerated: false, hasChanges: false };
+
+  const store = useReviewStore.getState();
+  if (store.reviewBatches[sessionId]
+    || isReviewStartingForSession(sessionId)
+    || Object.values(store.activeRuns).some((run) => run.sessionId === sessionId && run.status === 'running')) {
+    throw new Error('An AI review is already starting or running for this Virtual MR.');
+  }
+
+  const result: AssignedReviewBatchResult = { runs: [], failures: [], descriptionGenerated: false, hasChanges: false };
+  const { setReviewBatch } = store;
+  try {
+    for (let index = 0; index < assigned.reviewers.length; index++) {
+      const reviewer = assigned.reviewers[index];
+      if (index > 0) await waitForSessionIdle(sessionId);
+      const generateDescription = !result.descriptionGenerated;
+      setReviewBatch(sessionId, {
+        current: index + 1,
+        total: assigned.reviewers.length,
+        completed: index,
+        reviewerName: reviewer.name,
+        phase: generateDescription ? 'preparing-description' : 'reviewing',
+      });
+
+      if (!reviewer.profile) {
+        result.failures.push(`${reviewer.name}: reviewer configuration is unavailable.`);
+        continue;
+      }
+
+      try {
+        const config = configForReviewer(reviewer.profile);
+        const run = await useReviewStore.getState().startForSession(
+          sessionId,
+          config,
+          config.provider !== 'ollama',
+          { id: reviewer.id, name: reviewer.name },
+          generateDescription,
+        );
+        if (!run) {
+          result.failures.push(`${reviewer.name}: another review is already running.`);
+          continue;
+        }
+
+        const finished = await waitForReviewRun(run.id, async (updatedRun) => {
+          result.hasChanges ||= updatedRun.snapshot.changedFiles.length > 0 || updatedRun.snapshot.excludedFiles.length > 0;
+          if (!result.descriptionGenerated && updatedRun.generatedDescription?.trim()) {
+            result.descriptionGenerated = true;
+            await useVirtualMrStore.getState().applyReviewGeneratedDescription(sessionId, updatedRun.generatedDescription);
+            const progress = useReviewStore.getState().reviewBatches[sessionId];
+            if (progress) useReviewStore.getState().setReviewBatch(sessionId, { ...progress, phase: 'reviewing' });
+          }
+        });
+        result.runs.push(finished);
+        result.hasChanges ||= finished.snapshot.changedFiles.length > 0 || finished.snapshot.excludedFiles.length > 0;
+        if (!result.descriptionGenerated && finished.generatedDescription?.trim()) {
+          result.descriptionGenerated = true;
+          await useVirtualMrStore.getState().applyReviewGeneratedDescription(sessionId, finished.generatedDescription);
+        }
+        if (finished.status !== 'completed' && finished.status !== 'partial') {
+          result.failures.push(`${reviewer.name}: ${finished.error || `review ended with status ${finished.status}`}`);
+        }
+      } catch (error) {
+        result.failures.push(`${reviewer.name}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+    if (!result.descriptionGenerated && result.runs.some((run) => run.snapshot.changedFiles.length > 0)) {
+      result.failures.push('No assigned reviewer could generate the MR description from the complete diff.');
+    }
+    return result;
+  } finally {
+    useReviewStore.getState().setReviewBatch(sessionId, null);
+  }
 }
 
 export async function reReviewAssignedSession(sessionId: string): Promise<void> {

@@ -90,6 +90,7 @@ pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<R
         snapshot: snapshot.clone(),
         status: "running".into(),
         summary: String::new(),
+        generated_description: None,
         error: None,
         findings: vec![],
         inspected_files: vec![],

@@ -31,9 +31,9 @@ export const VirtualMrBottomBar: React.FC = () => {
   };
 
   return (
-    <div className="h-14 bg-mantle/95 backdrop-blur-xs border-t border-surface0 px-5 flex items-center justify-between shrink-0 select-none z-20 shadow-md">
+    <div className="min-h-14 bg-mantle/95 backdrop-blur-xs border-t border-surface0 px-3 xl:px-5 py-2 flex items-center justify-between gap-3 shrink-0 select-none z-20 shadow-md">
       {/* Left: MR Status, Branch Flow & AI Auditor State */}
-      <div className="flex items-center gap-4 min-w-0">
+      <div className="flex items-center gap-4 max-xl:gap-2 min-w-0 flex-1">
         {/* Status Badge */}
         {session.status === 'approved' ? (
           <div
@@ -62,28 +62,28 @@ export const VirtualMrBottomBar: React.FC = () => {
         )}
 
         {/* Branch Routing Pill */}
-        <div className="flex items-center gap-1.5 text-xs font-mono text-subtext0 hidden sm:flex">
+        <div className="flex items-center gap-1.5 text-xs font-mono text-subtext0 hidden sm:flex min-w-0 max-w-[55vw]">
           <GitPullRequest className="w-3.5 h-3.5 text-brand shrink-0" />
-          <span className="px-2 py-0.5  bg-surface0 text-accent font-semibold">
+          <span className="px-2 py-0.5 bg-surface0 text-accent font-semibold max-w-[18vw] truncate whitespace-nowrap" title={session.compareBranch}>
             {session.compareBranch}
           </span>
-          <ArrowRight className="w-3.5 h-3.5 text-subtext1" />
-          <span className="px-2 py-0.5  bg-surface0 text-subtext1">
+          <ArrowRight className="w-3.5 h-3.5 text-subtext1 shrink-0" />
+          <span className="px-2 py-0.5 bg-surface0 text-subtext1 max-w-[18vw] truncate whitespace-nowrap" title={session.baseBranch}>
             {session.baseBranch}
           </span>
         </div>
 
         {/* AI Auditor Review Status Indicator */}
-        <div className="flex items-center gap-2 pl-3 border-l border-surface0/60 hidden md:flex">
+        <div className="flex items-center gap-2 pl-3 max-xl:pl-2 border-l border-surface0/60 hidden md:flex" title={unresolvedCount > 0 ? `${unresolvedCount} open discussion${unresolvedCount > 1 ? 's' : ''}` : 'No evidence-backed approval recorded'}>
           {unresolvedCount > 0 ? (
             <div className="flex items-center gap-1.5 text-xs text-amber-300 font-medium">
               <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>{unresolvedCount} open discussion{unresolvedCount > 1 ? 's' : ''}</span>
+              <span className="max-xl:hidden">{unresolvedCount} open discussion{unresolvedCount > 1 ? 's' : ''}</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-xs text-subtext0 font-medium">
               <Bot className="w-3.5 h-3.5 text-accent shrink-0" />
-              <span>No evidence-backed approval recorded</span>
+              <span className="max-xl:hidden">No evidence-backed approval recorded</span>
             </div>
           )}
         </div>
@@ -96,21 +96,21 @@ export const VirtualMrBottomBar: React.FC = () => {
           <button
             type="button"
             onClick={handleReopenRequest}
-            className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
+            className="flex items-center gap-2 px-3 xl:px-6 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
             title="Reopen this Virtual MR request"
           >
             <RotateCcw className="w-4 h-4 text-white stroke-[2.5]" />
-            <span>Reopen request</span>
+            <span className="max-sm:hidden">Reopen request</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={handleCloseRequest}
-            className="flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
+            className="flex items-center gap-2 px-3 xl:px-6 py-2 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
             title="Close this Virtual MR request"
           >
             <XCircle className="w-4 h-4 text-white stroke-[2.5]" />
-            <span>Close request</span>
+            <span className="max-sm:hidden">Close request</span>
           </button>
         )}
       </div>

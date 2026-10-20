@@ -85,7 +85,10 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
 
   sessions: [],
   activeSessionId: null,
+  closedSessionTabIds: [],
   isLoadingSessions: false,
+  isMrListOpen: false,
+  setIsMrListOpen: (isMrListOpen) => set({ isMrListOpen }),
   activeMrTab: 'overview',
   setActiveMrTab: (tab) => set({ activeMrTab: tab }),
 
@@ -94,7 +97,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
 
   getActiveSession: () => {
     const { sessions, activeSessionId } = get();
-    return sessions.find((s) => s.id === activeSessionId) || sessions[0] || null;
+    return sessions.find((s) => s.id === activeSessionId) || null;
   },
 
   loadRepoData: async (repoId: string, repoPath: string, availableBranches: string[], defaultBase?: string) => {
@@ -111,6 +114,8 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
             repoLabels: [],
             sessions: [],
             activeSessionId: null,
+            closedSessionTabIds: [],
+            isMrListOpen: false,
             draftMr: null,
             isDraftActive: false,
           }
@@ -281,10 +286,12 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       }
 
       if (requestVersion !== repoDataRequestVersion) return;
+      const closedSessionTabIds = get().closedSessionTabIds;
+      const openTabs = sessions.filter((session) => !closedSessionTabIds.includes(session.id));
       let activeSessionId = get().activeSessionId;
-      if (sessions.length > 0) {
-        if (!activeSessionId || !sessions.some((s) => s.id === activeSessionId)) {
-          activeSessionId = sessions[0].id;
+      if (openTabs.length > 0) {
+        if (!activeSessionId || !openTabs.some((s) => s.id === activeSessionId)) {
+          activeSessionId = openTabs[0].id;
         }
       } else {
         activeSessionId = null;
@@ -424,8 +431,21 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       updatedAt: new Date().toISOString(),
     };
 
-    const newSessions = [...sessions, session];
-    set({ sessions: newSessions, activeSessionId: newId });
+    try {
+      await persistSession(session);
+    } catch (error) {
+      console.error('Failed to persist session:', error);
+      gitStore.showToast('Could not save this Virtual MR to the database. Please try again.');
+      return '';
+    }
+
+    if (get().currentRepoId !== currentRepoId) return newId;
+    const newSessions = [...get().sessions, session];
+    set({
+      sessions: newSessions,
+      activeSessionId: newId,
+      closedSessionTabIds: get().closedSessionTabIds.filter((id) => id !== newId),
+    });
 
     // Sync with gitStore so diff immediately loads for this MR
     try {
@@ -435,12 +455,6 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     }
 
     gitStore.showToast(`Created Virtual MR: ${title}`);
-
-    try {
-      await persistSession(session);
-    } catch (e) {
-      console.error('Failed to persist session:', e);
-    }
 
     return newId;
   },
@@ -685,39 +699,48 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       updatedAt: new Date().toISOString(),
     };
 
-    const newSessions = [...sessions, newSession];
-    set({
-      sessions: newSessions,
-      activeSessionId: newId,
-      draftMr: null,
-      isDraftActive: false,
-    });
-
-    // Save to SQLite DB
     try {
       await persistSession(newSession);
     } catch (err) {
       console.error('Failed to save virtual MR to database:', err);
+      useGitStore.getState().showToast('Could not save this Virtual MR to the database. Your draft is still available; please try again.');
+      return '';
     }
+
+    const currentState = get();
+    if (currentState.currentRepoId !== currentRepoId) return newId;
+    set({
+      sessions: [...currentState.sessions, newSession],
+      activeSessionId: newId,
+      closedSessionTabIds: currentState.closedSessionTabIds.filter((id) => id !== newId),
+      draftMr: null,
+      isDraftActive: false,
+    });
 
     useGitStore.getState().showToast(`Created Virtual MR: ${title}`);
     return newId;
   },
 
   switchSession: (sessionId) => {
-    set({ activeSessionId: sessionId, isDraftActive: false });
+    set((state) => ({
+      activeSessionId: sessionId,
+      isDraftActive: false,
+      closedSessionTabIds: state.closedSessionTabIds.filter((id) => id !== sessionId),
+    }));
   },
 
   closeSession: async (sessionId) => {
-    const { sessions, activeSessionId, draftMr } = get();
+    const { sessions, activeSessionId, draftMr, isDraftActive, closedSessionTabIds } = get();
+    if (!sessions.some((session) => session.id === sessionId)) return;
 
-    const updated = sessions.filter((s) => s.id !== sessionId);
+    const closedTabs = [...new Set([...closedSessionTabIds, sessionId])];
+    const remainingTabs = sessions.filter((session) => !closedTabs.includes(session.id));
     let nextActive = activeSessionId;
-    let nextDraftActive = false;
+    let nextDraftActive = isDraftActive;
 
-    if (activeSessionId === sessionId) {
-      if (updated.length > 0) {
-        nextActive = updated[0].id;
+    if (!isDraftActive && activeSessionId === sessionId) {
+      if (remainingTabs.length > 0) {
+        nextActive = remainingTabs[0].id;
       } else if (draftMr) {
         nextActive = null;
         nextDraftActive = true;
@@ -726,21 +749,15 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       }
     }
 
-    set({ sessions: updated, activeSessionId: nextActive, isDraftActive: nextDraftActive });
+    set({ closedSessionTabIds: closedTabs, activeSessionId: nextActive, isDraftActive: nextDraftActive });
 
     if (nextDraftActive && draftMr) {
       get().activateDraftMr();
     } else if (nextActive) {
-      const nextSession = updated.find((s) => s.id === nextActive);
+      const nextSession = sessions.find((s) => s.id === nextActive);
       if (nextSession) {
         useGitStore.getState().setBranchComparison(nextSession.baseBranch, nextSession.compareBranch);
       }
-    }
-
-    try {
-      await enqueueSessionWrite(sessionId, () => invoke('delete_virtual_mr_session', { sessionId }));
-    } catch (e) {
-      console.warn('Failed to delete session in db:', e);
     }
   },
 
@@ -769,6 +786,13 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       try {
         await persistSession(target);
       } catch {}
+    }
+  },
+
+  applyReviewGeneratedDescription: async (sessionId, description) => {
+    const session = get().sessions.find((item) => item.id === sessionId);
+    if (session && session.description !== description) {
+      await get().updateSessionDetails(sessionId, session.title, description);
     }
   },
 

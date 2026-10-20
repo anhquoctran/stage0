@@ -19,6 +19,21 @@ pub enum ReviewDiscussionAction {
 }
 
 impl Database {
+    pub fn update_review_generated_description(
+        &self,
+        session_id: &str,
+        description: &str,
+    ) -> Result<(), String> {
+        let changed = self.conn().execute(
+            "UPDATE virtual_mr_sessions SET description=?2, updated_at=CURRENT_TIMESTAMP WHERE id=?1",
+            params![session_id, description],
+        ).map_err(|error| format!("Could not update the Virtual MR description: {error}"))?;
+        if changed != 1 {
+            return Err("Virtual MR no longer exists; description was not updated".into());
+        }
+        Ok(())
+    }
+
     pub fn save_review_run(&self, run: &ReviewRun) -> Result<(), String> {
         let payload = serde_json::to_string(run).map_err(|_| "Could not serialize review run")?;
         self.conn().execute("INSERT INTO ai_review_runs(id,session_id,status,payload,started_at) VALUES(?1,?2,?3,?4,?5) ON CONFLICT(id) DO UPDATE SET status=excluded.status,payload=excluded.payload",params![run.id,run.session_id,run.status,payload,run.started_at]).map_err(|e|format!("Could not save review state: {e}"))?;
