@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { isMacOS } from '../../../common/utils/shortcuts';
 import { preferencesJsonService } from '../services/preferencesJsonService';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import type { PreferencesDocument } from '../types/PreferencesDocument';
@@ -11,6 +12,7 @@ import { getPreferencesJsonCompletions, hidePreferencesSchemaProperty } from '..
 const PREFERENCES_SCHEMA_URI = 'https://stage0.app/schemas/preferences-v1.json';
 
 export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ onClose }) => {
+  const isMac = isMacOS();
   const [document, setDocument] = useState<PreferencesDocument | null>(null);
   const [draft, setDraft] = useState('');
   const [saveState, setSaveState] = useState<PreferencesJsonEditorSaveState>('loading');
@@ -226,7 +228,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
 
   return createPortal(
     <section className="fixed inset-0 z-[100] flex min-h-0 flex-col bg-mantle text-text" aria-label="Edit preferences.json">
-      <header className="flex shrink-0 items-center justify-between border-b border-surface0 px-4 py-3">
+      <header className={`flex shrink-0 items-center justify-between border-b border-surface0 ${isMac ? 'pl-16 pr-4' : 'px-4'} py-3`}>
         <div>
           <h2 className="text-sm font-semibold">Edit in preferences.json</h2>
           <p className="mt-1 text-xs text-subtext0">JSONC · comments and trailing commas supported · Ctrl+Space for completions · autosaves after 2 seconds</p>
