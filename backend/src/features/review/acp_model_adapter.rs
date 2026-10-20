@@ -4,6 +4,7 @@ use serde_json::{json, Value};
 use std::{
     future::Future,
     pin::Pin,
+    sync::atomic::{AtomicBool, AtomicUsize, Ordering},
     time::Instant,
 };
 
@@ -11,6 +12,8 @@ pub struct AcpModelAdapter {
     agent: AcpAgentConfig,
     config_options: serde_json::Value,
     session: tokio::sync::Mutex<Option<AcpAgentReviewSession>>,
+    session_prompted: AtomicBool,
+    sent_history_items: AtomicUsize,
 }
 
 impl AcpModelAdapter {
@@ -19,7 +22,30 @@ impl AcpModelAdapter {
             agent,
             config_options,
             session: tokio::sync::Mutex::new(None),
+            session_prompted: AtomicBool::new(false),
+            sent_history_items: AtomicUsize::new(0),
         }
+    }
+
+    fn turn_for_session(&self, body: &Value) -> Value {
+        if !self.session_prompted.load(Ordering::Acquire) {
+            return body.clone();
+        }
+        let sent = self.sent_history_items.load(Ordering::Acquire);
+        let messages = body["history"]
+            .as_array()
+            .map(|history| {
+                history
+                    .iter()
+                    .skip(sent)
+                    // The persistent ACP session already contains the agent's
+                    // own response. Only new harness/user messages need replay.
+                    .filter(|message| message["role"] == "user")
+                    .cloned()
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        json!({"continuation":true,"messages":messages})
     }
 
     pub async fn close(&self) {
@@ -45,6 +71,15 @@ impl ReviewModelAdapter for AcpModelAdapter {
 
     fn payload(&self, system: &str, history: &[Value], tools: &[Value], _max_tokens: u64) -> Value {
         json!({"system":system,"history":history,"tools":tools})
+    }
+
+    fn request_size(&self, body: &Value) -> usize {
+        // Include a conservative allowance for the ACP continuation wrapper.
+        self.turn_for_session(body).to_string().len() + 1024
+    }
+
+    fn retry_reserve_factor(&self) -> usize {
+        1
     }
 
     fn request<'a>(
@@ -81,16 +116,20 @@ impl ReviewModelAdapter for AcpModelAdapter {
                 ));
             }
             let request_bytes = body.to_string().len();
+            let turn = self.turn_for_session(body);
+            let turn_history_len = body["history"].as_array().map_or(0, Vec::len);
             let turn_started = Instant::now();
             super::debug_log::log(format_args!(
-                "event=acp_prompt_started agent_id={} request_bytes={}",
+                "event=acp_prompt_started agent_id={} request_bytes={} incremental_request_bytes={} continuation={}",
                 super::debug_log::safe_label(&self.agent.id, 100),
-                request_bytes
+                request_bytes,
+                turn.to_string().len(),
+                turn["continuation"] == true
             ));
             let output = match session
                 .as_mut()
                 .expect("ACP review session initialized")
-                .prompt_turn(body)
+                .prompt_turn(&turn)
                 .await
             {
                 Ok(output) => output,
@@ -110,6 +149,9 @@ impl ReviewModelAdapter for AcpModelAdapter {
                 turn_started.elapsed().as_millis(),
                 output.len()
             ));
+            self.sent_history_items
+                .store(turn_history_len, Ordering::Release);
+            self.session_prompted.store(true, Ordering::Release);
             Ok(json!({"output":output}))
         })
     }
@@ -125,7 +167,17 @@ impl ReviewModelAdapter for AcpModelAdapter {
         if text.len() > 128 * 1024 {
             return Err("ACP agent response exceeded the review safety limit".into());
         }
-        let envelope: Value = serde_json::from_str(text.trim())
+        let trimmed = text.trim();
+        // Accept one complete JSON code fence, but never extract a tool call
+        // from surrounding prose or guess at missing/malformed JSON.
+        let document = trimmed
+            .strip_prefix("```")
+            .and_then(|fenced| fenced.split_once('\n'))
+            .filter(|(language, _)| language.trim().is_empty() || language.trim().eq_ignore_ascii_case("json"))
+            .and_then(|(_, document)| document.trim_end().strip_suffix("```"))
+            .map(str::trim)
+            .unwrap_or(trimmed);
+        let envelope: Value = serde_json::from_str(document)
             .map_err(|_| "ACP reviewer must return the required JSON tool-call envelope")?;
         let object = envelope
             .as_object()
@@ -161,6 +213,17 @@ impl ReviewModelAdapter for AcpModelAdapter {
         Ok((calls, 0))
     }
 
+    fn recover_decode_error(&self, error: &str, history: &mut Vec<Value>) -> bool {
+        if !(error.starts_with("ACP reviewer") || error.starts_with("ACP tool call")) {
+            return false;
+        }
+        history.push(json!({
+            "role":"user",
+            "content":"Stage0 could not decode your previous response. None of that response's tool requests were executed. Continue the same review from the last successful Stage0 tool result. Return only one valid JSON object in this exact envelope: {\"calls\":[{\"name\":\"get_diff\",\"arguments\":{}}]}. Choose the appropriate supplied tool and its exact schema; get_diff here is only an example. Request exactly one call, no extra keys, prose, reasoning or markdown fences. If the eligible diff inventory is complete and the MR description still needs to be written, call update_mr_description with your summary before continuing the review. Stage0 still validates every call and all coverage requirements."
+        }));
+        true
+    }
+
     fn append_results(&self, history: &mut Vec<Value>, results: &[(ReviewToolCall, Value)]) {
         let tool_results = results
             .iter()
@@ -192,6 +255,34 @@ mod tests {
     }
 
     #[test]
+    fn persistent_acp_turns_send_only_new_harness_messages() {
+        let adapter = adapter();
+        let first = json!({
+            "system":"x".repeat(2048),
+            "tools":[{"name":"get_diff","description":"x".repeat(4096)}],
+            "history":[{"role":"user","content":"initial request"}]
+        });
+        assert_eq!(adapter.request_size(&first), first.to_string().len() + 1024);
+
+        adapter.sent_history_items.store(1, Ordering::Release);
+        adapter.session_prompted.store(true, Ordering::Release);
+        let next = json!({
+            "system":"review policy",
+            "tools":[{"name":"get_diff"}],
+            "history":[
+                {"role":"user","content":"initial request"},
+                {"role":"assistant","content":"previous tool call"},
+                {"role":"user","content":"new tool result"}
+            ]
+        });
+        let continuation = adapter.turn_for_session(&next);
+        assert_eq!(continuation["continuation"], true);
+        assert_eq!(continuation["messages"].as_array().unwrap().len(), 1);
+        assert_eq!(continuation["messages"][0]["content"], "new tool result");
+        assert!(adapter.request_size(&next) < first.to_string().len());
+    }
+
+    #[test]
     fn decodes_only_closed_json_tool_call_envelopes() {
         let adapter = adapter();
         let mut history = Vec::new();
@@ -205,6 +296,23 @@ mod tests {
         assert_eq!(calls[0].name, "get_diff");
         assert_eq!(usage, 0);
         assert_eq!(history.len(), 1);
+    }
+
+    #[test]
+    fn a_complete_json_fence_keeps_the_same_closed_envelope_validation() {
+        let adapter = adapter();
+        for language in ["", "json", "JSON\r"] {
+            let text = format!("```{language}\n{{\"calls\":[{{\"name\":\"get_diff\",\"arguments\":{{}}}}]}}\n```");
+            let (calls, _) = adapter.decode(&json!({"output":text}), &mut vec![]).unwrap();
+            assert_eq!(calls[0].name, "get_diff");
+        }
+        for text in [
+            "Here is the call:\n```json\n{\"calls\":[{\"name\":\"get_diff\",\"arguments\":{}}]}\n```",
+            "```json\n{\"calls\":[{\"name\":\"get_diff\",\"arguments\":{}}]}\n```\nDone",
+            "```json\n{\"calls\":[{\"name\":\"get_diff\",\"arguments\":{},\"command\":\"rm\"}]}\n```",
+        ] {
+            assert!(adapter.decode(&json!({"output":text}), &mut vec![]).is_err());
+        }
     }
 
     #[test]

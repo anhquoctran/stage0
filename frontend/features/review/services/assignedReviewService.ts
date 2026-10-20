@@ -85,9 +85,9 @@ async function waitForReviewRun(runId: string, onUpdate: (run: ReviewRun) => voi
   const deadline = Date.now() + 330_000;
   while (Date.now() < deadline) {
     const detail = await invoke<ReviewRunDetail>('get_ai_review', { runId });
+    await useReviewStore.getState().syncRun(detail);
     await onUpdate(detail.run);
     if (detail.run.status !== 'running') {
-      await useReviewStore.getState().syncActive();
       return detail.run;
     }
     await new Promise((resolve) => setTimeout(resolve, 1200));
@@ -156,11 +156,10 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
           continue;
         }
 
-        const finished = await waitForReviewRun(run.id, async (updatedRun) => {
+        const finished = await waitForReviewRun(run.id, (updatedRun) => {
           result.hasChanges ||= updatedRun.snapshot.changedFiles.length > 0 || updatedRun.snapshot.excludedFiles.length > 0;
           if (!result.descriptionGenerated && updatedRun.generatedDescription?.trim()) {
             result.descriptionGenerated = true;
-            await useVirtualMrStore.getState().applyReviewGeneratedDescription(sessionId, updatedRun.generatedDescription);
             const progress = useReviewStore.getState().reviewBatches[sessionId];
             if (progress) useReviewStore.getState().setReviewBatch(sessionId, { ...progress, phase: 'reviewing' });
           }
@@ -169,7 +168,6 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
         result.hasChanges ||= finished.snapshot.changedFiles.length > 0 || finished.snapshot.excludedFiles.length > 0;
         if (!result.descriptionGenerated && finished.generatedDescription?.trim()) {
           result.descriptionGenerated = true;
-          await useVirtualMrStore.getState().applyReviewGeneratedDescription(sessionId, finished.generatedDescription);
         }
         if (finished.status !== 'completed' && finished.status !== 'partial') {
           result.failures.push(`${reviewer.name}: ${finished.error || `review ended with status ${finished.status}`}`);
@@ -201,14 +199,14 @@ export async function reReviewAssignedSession(sessionId: string): Promise<void> 
   try {
     const result = await startAssignedReviewBatchForSession(sessionId);
     if (result.failures.length > 0) {
-      useGitStore.getState().showToast(`Some AI reviewers could not finish: ${result.failures.join('; ')}`);
+      useGitStore.getState().showToast(`Some AI reviewers could not finish: ${result.failures.join('; ')}`, 'warning');
     }
     if (result.runs.length === 0 && (isReviewStartingForSession(sessionId) || Object.values(useReviewStore.getState().activeRuns).some((item) => item.sessionId === sessionId && item.status === 'running'))) {
       queuedReReviewSessions.add(sessionId);
     }
   } catch (error) {
     queuedReReviewSessions.delete(sessionId);
-    useGitStore.getState().showToast(`AI reviewer could not start: ${error instanceof Error ? error.message : String(error)}`);
+    useGitStore.getState().showToast(`AI reviewer could not start: ${error instanceof Error ? error.message : String(error)}`, 'error');
   }
 }
 
@@ -249,14 +247,14 @@ export async function reviewAssignedSessionAfterGitChange(repoPath: string): Pro
     attemptedHeadBySession.set(session.id, revisionKey);
     const batch = await startAssignedReviewBatchForSession(session.id);
     if (batch.failures.length > 0) {
-      useGitStore.getState().showToast(`Some AI reviewers could not finish: ${batch.failures.join('; ')}`);
+      useGitStore.getState().showToast(`Some AI reviewers could not finish: ${batch.failures.join('; ')}`, 'warning');
     }
     if (batch.runs.length === 0 && (isReviewStartingForSession(session.id) || Object.values(useReviewStore.getState().activeRuns).some((run) => run.sessionId === session.id && run.status === 'running'))) {
       queuedReReviewSessions.add(session.id);
     }
   } catch (error) {
     queuedReReviewSessions.delete(session.id);
-    useGitStore.getState().showToast(`AI reviewer could not check the updated Virtual MR: ${error instanceof Error ? error.message : String(error)}`);
+    useGitStore.getState().showToast(`AI reviewer could not check the updated Virtual MR: ${error instanceof Error ? error.message : String(error)}`, 'error');
   } finally {
     checkingSession.delete(session.id);
   }

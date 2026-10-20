@@ -25,6 +25,12 @@ impl ReviewModelAdapter for FixtureCliAdapter {
     fn payload(&self, system: &str, history: &[Value], tools: &[Value], max_tokens: u64) -> Value {
         cli_protocol::turn_request(system, history, tools, max_tokens).unwrap()
     }
+    fn request_size(&self, _body: &Value) -> usize {
+        0
+    }
+    fn retry_reserve_factor(&self) -> usize {
+        1
+    }
     fn request<'a>(
         &'a self,
         body: &'a Value,

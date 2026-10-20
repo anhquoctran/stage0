@@ -10,7 +10,7 @@ use std::time::Instant;
 pub struct GuardrailsEngine {
     pub(super) policy: Mutex<GuardrailPolicy>,
     pub(super) call_timestamps: Mutex<VecDeque<Instant>>,
-    pub(super) audit_log: Mutex<Vec<GuardrailAuditEvent>>,
+    pub(super) audit_log: std::sync::Arc<Mutex<Vec<GuardrailAuditEvent>>>,
 }
 
 impl GuardrailsEngine {
@@ -18,7 +18,17 @@ impl GuardrailsEngine {
         Self {
             policy: Mutex::new(GuardrailPolicy::balanced()),
             call_timestamps: Mutex::new(VecDeque::new()),
-            audit_log: Mutex::new(Vec::new()),
+            audit_log: std::sync::Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+
+    /// Create an isolated per-run policy/rate-limit snapshot while keeping
+    /// guardrail audit events visible in the app-wide audit log.
+    pub fn fork_with_policy_snapshot(&self) -> Self {
+        Self {
+            policy: Mutex::new(self.get_policy()),
+            call_timestamps: Mutex::new(VecDeque::new()),
+            audit_log: std::sync::Arc::clone(&self.audit_log),
         }
     }
 
@@ -118,10 +128,6 @@ impl GuardrailsEngine {
         start_line: usize,
         end_line: usize,
     ) -> Result<GuardrailEvaluationResult, GuardrailViolation> {
-        let policy = self.get_policy();
-        let mut violations = Vec::new();
-        let mut risk_score = 0u32;
-
         if start_line == 0 || end_line < start_line {
             let violation = GuardrailViolation {
                 rule: "INVALID_LINE_RANGE".to_string(),
@@ -137,52 +143,78 @@ impl GuardrailsEngine {
             );
             return Err(violation);
         }
-
-        // 1. Rate Limit
-        if let Err(e) = self.check_rate_limit(policy.rate_limit_per_minute) {
-            self.record_audit_event("read_file_range", file_path, false, 90, vec![e.clone()]);
-            return Err(e);
-        }
-
-        // 2. Directory Traversal Check
-        let normalized = file_path.replace('\\', "/");
-        if normalized.contains("../")
-            || normalized.starts_with('/')
-            || (normalized.len() > 1 && normalized.as_bytes()[1] == b':')
-        {
-            let v = GuardrailViolation {
-                rule: "PATH_TRAVERSAL_DETECTED".to_string(),
-                severity: GuardrailSeverity::Critical,
-                message: format!("Access to path '{}' blocked: Directory traversal outside workspace is prohibited.", file_path),
-            };
-            self.record_audit_event("read_file_range", file_path, false, 100, vec![v.clone()]);
-            return Err(v);
-        }
-
-        // 3. Sensitive Path Protection
-        let lower_path = normalized.to_lowercase();
-        for sensitive in &policy.sensitive_path_patterns {
-            let sensitive_lower = sensitive.to_lowercase();
-            if lower_path.contains(&sensitive_lower) || lower_path.ends_with(&sensitive_lower) {
-                let v = GuardrailViolation {
-                    rule: "SENSITIVE_FILE_ACCESS_DENIED".to_string(),
-                    severity: GuardrailSeverity::Critical,
-                    message: format!(
-                        "Access to '{}' blocked: Path matches sensitive pattern '{}'. Credentials, tokens, and private keys are protected.",
-                        file_path, sensitive
-                    ),
-                };
-                self.record_audit_event("read_file_range", file_path, false, 100, vec![v.clone()]);
-                return Err(v);
-            }
-        }
-
-        // 4. Max Read Lines Check
         let line_count = end_line
             .checked_sub(start_line)
             .and_then(|count| count.checked_add(1))
             .unwrap_or(usize::MAX);
+        self.evaluate_review_read("read_file_range", Some(file_path), line_count)
+    }
 
+    /// Apply the Stage0 source-read policy to every review tool that can return
+    /// repository content, including review runs executed through ACP.
+    pub fn evaluate_review_read(
+        &self,
+        tool_name: &str,
+        file_path: Option<&str>,
+        line_count: usize,
+    ) -> Result<GuardrailEvaluationResult, GuardrailViolation> {
+        let policy = self.get_policy();
+        let action = file_path.unwrap_or("repository content search");
+        let mut violations = Vec::new();
+        let mut risk_score = 0u32;
+
+        if line_count == 0 {
+            let violation = GuardrailViolation {
+                rule: "INVALID_READ_SIZE".to_string(),
+                severity: GuardrailSeverity::High,
+                message: "Requested review read must return at least one line.".to_string(),
+            };
+            self.record_audit_event(tool_name, action, false, 85, vec![violation.clone()]);
+            return Err(violation);
+        }
+
+        // 1. Rate Limit
+        if let Err(e) = self.check_rate_limit(policy.rate_limit_per_minute) {
+            self.record_audit_event(tool_name, action, false, 90, vec![e.clone()]);
+            return Err(e);
+        }
+
+        if let Some(file_path) = file_path {
+            // 2. Directory Traversal Check
+            let normalized = file_path.replace('\\', "/");
+            if normalized.contains("../")
+                || normalized.starts_with('/')
+                || (normalized.len() > 1 && normalized.as_bytes()[1] == b':')
+            {
+                let violation = GuardrailViolation {
+                    rule: "PATH_TRAVERSAL_DETECTED".to_string(),
+                    severity: GuardrailSeverity::Critical,
+                    message: format!("Access to path '{}' blocked: Directory traversal outside workspace is prohibited.", file_path),
+                };
+                self.record_audit_event(tool_name, action, false, 100, vec![violation.clone()]);
+                return Err(violation);
+            }
+
+            // 3. Sensitive Path Protection
+            let lower_path = normalized.to_lowercase();
+            for sensitive in &policy.sensitive_path_patterns {
+                let sensitive_lower = sensitive.to_lowercase();
+                if lower_path.contains(&sensitive_lower) || lower_path.ends_with(&sensitive_lower) {
+                    let violation = GuardrailViolation {
+                        rule: "SENSITIVE_FILE_ACCESS_DENIED".to_string(),
+                        severity: GuardrailSeverity::Critical,
+                        message: format!(
+                            "Access to '{}' blocked: Path matches sensitive pattern '{}'. Credentials, tokens, and private keys are protected.",
+                            file_path, sensitive
+                        ),
+                    };
+                    self.record_audit_event(tool_name, action, false, 100, vec![violation.clone()]);
+                    return Err(violation);
+                }
+            }
+        }
+
+        // 4. Max Read Lines Check
         if line_count > policy.max_file_read_lines {
             let v = GuardrailViolation {
                 rule: "LINE_RANGE_EXCEEDED".to_string(),
@@ -192,7 +224,7 @@ impl GuardrailsEngine {
                     line_count, policy.max_file_read_lines
                 ),
             };
-            self.record_audit_event("read_file_range", file_path, false, 50, vec![v.clone()]);
+            self.record_audit_event(tool_name, action, false, 50, vec![v.clone()]);
             return Err(v);
         }
 
@@ -212,8 +244,33 @@ impl GuardrailsEngine {
             requires_confirmation: false,
         };
 
-        self.record_audit_event("read_file_range", file_path, true, risk_score, violations);
+        self.record_audit_event(tool_name, action, true, risk_score, violations);
         Ok(result)
+    }
+
+    /// Reject oversized structured review output instead of byte-truncating JSON.
+    pub fn evaluate_review_output(
+        &self,
+        tool_name: &str,
+        output_bytes: usize,
+    ) -> Result<(), GuardrailViolation> {
+        let limit = self.get_policy().max_output_bytes;
+        if output_bytes <= limit {
+            return Ok(());
+        }
+        let violation = GuardrailViolation {
+            rule: "REVIEW_OUTPUT_LIMIT_EXCEEDED".to_string(),
+            severity: GuardrailSeverity::High,
+            message: format!(
+                "Review tool output ({output_bytes} bytes) exceeds the configured Stage0 limit of {limit} bytes."
+            ),
+        };
+        self.record_policy_denial(
+            tool_name,
+            "Blocked oversized structured review output",
+            violation.clone(),
+        );
+        Err(violation)
     }
 
     /// Re-check sensitive-file rules after resolving a path through symlinks.

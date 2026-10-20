@@ -31,41 +31,46 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     await Promise.all(Object.keys(get().activeRuns).map(async (id) => {
       try {
         const detail = await invoke<ReviewRunDetail>('get_ai_review', { runId: id });
-        const finished = detail.run.status !== 'running' && Boolean(get().activeRuns[id]);
-        set((state) => {
-          if (!state.activeRuns[id]) return state;
-          const activeRuns = { ...state.activeRuns };
-          if (detail.run.status === 'running') activeRuns[id] = detail.run; else delete activeRuns[id];
-          return { activeRuns,
-            ...(detail.run.status !== 'running' ? { lastFinishedRun: detail.run } : {}),
-            ...(state.detail?.run.id === id ? { detail } : {}),
-            ...(state.sessionId === detail.run.sessionId ? { runs: state.runs.map((run) => run.id === id ? detail.run : run) } : {}),
-          };
-        });
-        if (finished) {
-          await useVirtualMrStore.getState().refreshDiscussions(detail.run.sessionId);
-          if (detail.run.reviewerId) {
-            const reviewerStatus = detail.run.status === 'completed' && detail.run.decision === 'approve'
-              ? 'approved'
-              : detail.run.decision === 'request_changes' || detail.run.findings.length > 0
-                ? 'changes_requested'
-                : ['completed', 'partial'].includes(detail.run.status)
-                  ? 'commented'
-                  : 'pending';
-            await useVirtualMrStore.getState().setReviewerReviewStatus(
-              detail.run.sessionId,
-              detail.run.reviewerId,
-              reviewerStatus,
-            );
-          }
-          if (detail.run.reviewerId) {
-            await useVirtualMrStore.getState().tryResolveSession(detail.run.sessionId);
-          }
-          const { flushQueuedReReviewAfterActive } = await import('../services/assignedReviewService');
-          void flushQueuedReReviewAfterActive(detail.run.sessionId);
-        }
+        await get().syncRun(detail);
       } catch (error) { if (get().isOpen) set({ error: message(error) }); }
     }));
+  },
+  syncRun: async (detail) => {
+    const { run } = detail;
+    const previous = get().activeRuns[run.id];
+    if (!previous) return;
+    if (run.status === 'running' && (run.turns < previous.turns || (previous.generatedDescription && !run.generatedDescription))) return;
+    const finished = run.status !== 'running';
+    set((state) => {
+      if (!state.activeRuns[run.id]) return state;
+      const activeRuns = { ...state.activeRuns };
+      if (finished) delete activeRuns[run.id]; else activeRuns[run.id] = run;
+      return { activeRuns,
+        ...(finished ? { lastFinishedRun: run } : {}),
+        ...(state.detail?.run.id === run.id ? { detail } : {}),
+        ...(state.sessionId === run.sessionId ? { runs: state.runs.map((item) => item.id === run.id ? run : item) } : {}),
+      };
+    });
+    // The backend saves this description before exposing generatedDescription.
+    // Apply it as soon as it appears, including if a later review step fails.
+    if (run.generatedDescription?.trim() && run.generatedDescription !== previous.generatedDescription) {
+      await useVirtualMrStore.getState().applyReviewGeneratedDescription(run.sessionId, run.generatedDescription);
+    }
+    if (!finished) return;
+    await useVirtualMrStore.getState().refreshDiscussions(run.sessionId);
+    if (run.reviewerId) {
+      const reviewerStatus = run.status === 'completed' && run.decision === 'approve'
+        ? 'approved'
+        : run.decision === 'request_changes' || run.findings.length > 0
+          ? 'changes_requested'
+          : ['completed', 'partial'].includes(run.status)
+            ? 'commented'
+            : 'pending';
+      await useVirtualMrStore.getState().setReviewerReviewStatus(run.sessionId, run.reviewerId, reviewerStatus);
+      await useVirtualMrStore.getState().tryResolveSession(run.sessionId);
+    }
+    const { flushQueuedReReviewAfterActive } = await import('../services/assignedReviewService');
+    void flushQueuedReReviewAfterActive(run.sessionId);
   },
   open: (sessionId) => {
     loadVersion++;
@@ -90,7 +95,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   start: async (config: ReviewBotConfig, allowRemote, reviewer) => {
     const sessionId = get().sessionId;
     if (!sessionId) return;
-    try { await get().startForSession(sessionId, config, allowRemote, reviewer); }
+    try { await get().startForSession(sessionId, config, allowRemote, reviewer, true); }
     catch { /* The store records the error for the open review panel. */ }
   },
   startForSession: async (sessionId, config, allowRemote, reviewer, generateDescription = false) => {
