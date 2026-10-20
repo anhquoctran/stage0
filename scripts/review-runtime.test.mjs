@@ -13,13 +13,19 @@ function run(id = 'run-a', sessionId = 'a', status = 'running') {
 }
 function deferred() { let resolve; const promise = new Promise((ok) => { resolve = ok; }); return { promise, resolve }; }
 function storeFixture(handler) {
-  const calls = []; const refreshed = [];
+  const calls = []; const refreshed = []; const descriptions = []; const reviewerStatuses = [];
   const { useReviewStore: store } = loadWithMocks(new URL('../frontend/features/review/store/useReviewStore.ts', import.meta.url), {
     zustand: { create },
     '@tauri-apps/api/core': { invoke: async (...args) => { calls.push(args); return handler(...args); } },
-    '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: { getState: () => ({ refreshDiscussions: async (id) => { refreshed.push(id); } }) } },
+    '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: { getState: () => ({
+      refreshDiscussions: async (id) => { refreshed.push(id); },
+      applyReviewGeneratedDescription: async (...args) => { descriptions.push(args); },
+      setReviewerReviewStatus: async (...args) => { reviewerStatuses.push(args); },
+      tryResolveSession: async () => {},
+    }) } },
+    '../services/assignedReviewService': { flushQueuedReReviewAfterActive: async () => {} },
   });
-  return { store, calls, refreshed };
+  return { store, calls, refreshed, descriptions, reviewerStatuses };
 }
 
 test('new reviews send only configuration and consent, not plaintext API keys or client-selected refs', async () => {
@@ -28,6 +34,7 @@ test('new reviews send only configuration and consent, not plaintext API keys or
   const request = calls[0][1].request;
   assert.equal(request.allowRemote, true); assert.equal(request.authMode, 'api_key');
   assert.equal(request.sessionId, 'a');
+  assert.equal(request.generateDescription, true);
   assert.equal(request.apiKey, undefined); assert.equal(request.repoPath, undefined); assert.equal(request.headSha, undefined);
   assert.doesNotMatch(JSON.stringify(request), /not-sent-to-ipc/);
   assert.equal(store.getState().detail.run.id, 'run-a');
@@ -81,6 +88,80 @@ test('provider failures remain errors and cannot manufacture findings or success
   assert.match(store.getState().error, /provider failure/);
   assert.equal(store.getState().detail, null); assert.equal(store.getState().isStarting, false);
   assert.deepEqual(store.getState().activeRuns, {});
+});
+
+test('a backend-saved description reaches the MR during the run and is not replayed over later user edits', async () => {
+  let current = { ...run(), generatedDescription: '## Summary\nSaved by the reviewer.', turns: 4 };
+  const { store, descriptions, refreshed } = storeFixture(() => ({ run: current, events: [] }));
+  store.setState({ activeRuns: { 'run-a': run() } });
+  await store.getState().syncActive();
+  assert.deepEqual(descriptions, [['a', current.generatedDescription]]);
+  assert.deepEqual(refreshed, []);
+  await store.getState().syncActive();
+  assert.equal(descriptions.length, 1);
+  // A slower poll captured before the description was written cannot regress
+  // the tracked run and trigger another application over a user's later edit.
+  await store.getState().syncRun({ run: { ...run(), turns: 3 }, events: [] });
+  assert.equal(store.getState().activeRuns['run-a'].generatedDescription, current.generatedDescription);
+  current = { ...current, status: 'failed', error: 'ACP reviewer must return the required JSON tool-call envelope' };
+  await store.getState().syncActive();
+  assert.equal(descriptions.length, 1);
+  assert.equal(store.getState().lastFinishedRun.status, 'failed');
+  assert.equal(store.getState().lastFinishedRun.error, current.error);
+  assert.deepEqual(refreshed, ['a']);
+});
+
+test('a failed first phase cannot report a generated description or an approved reviewer', async () => {
+  const failed = { ...run('run-a', 'a', 'failed'), reviewerId: 'bot-a', error: 'Invalid ACP tool-call envelope' };
+  const { store, descriptions, reviewerStatuses } = storeFixture(() => ({ run: failed, events: [] }));
+  store.setState({ activeRuns: { 'run-a': run() } });
+  await store.getState().syncActive();
+  assert.deepEqual(descriptions, []);
+  assert.equal(store.getState().lastFinishedRun.status, 'failed');
+  assert.deepEqual(reviewerStatuses, [['a', 'bot-a', 'pending']]);
+  assert.deepEqual(store.getState().activeRuns, {});
+});
+
+function assignedBatchFixture(finished) {
+  const started = []; const synchronized = [];
+  const session = { id: 'a', repoId: 'repo-a', status: 'open', reviewers: [{ agentId: 'bot-a', agentName: 'Reviewer 01' }] };
+  const reviewState = {
+    activeRuns: {}, reviewBatches: {},
+    setReviewBatch: (id, progress) => { if (progress) reviewState.reviewBatches[id] = progress; else delete reviewState.reviewBatches[id]; },
+    startForSession: async (...args) => { started.push(args); return run(); },
+    syncRun: async (detail) => { synchronized.push(detail.run); },
+  };
+  const service = loadWithMocks(new URL('../frontend/features/review/services/assignedReviewService.ts', import.meta.url), {
+    '@tauri-apps/api/core': { invoke: async (name) => { assert.equal(name, 'get_ai_review'); return { run: finished, events: [] }; } },
+    '../../ai/store/useAiMcpStore': { useAiMcpStore: { getState: () => ({ aiConfig: { provider: 'ollama' }, dynamicModels: {}, externalAgents: [] }) } },
+    '../../ai/store/useBotReviewersStore': { useBotReviewersStore: { getState: () => ({ globalReviewers: [{ id: 'bot-a', name: 'Reviewer 01' }], repoCustomReviewers: {} }) } },
+    '../utils/resolveReviewBotConfig': { resolveReviewBotConfig: () => ({ provider: 'ollama' }) },
+    '../store/useReviewStore': { useReviewStore: { getState: () => reviewState }, isReviewStartingForSession: () => false },
+    '../../git/store/useGitStore': { useGitStore: { getState: () => ({ showToast: () => {} }) } },
+    '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: { getState: () => ({ sessions: [session], resetReviewerReviews: async () => {} }) } },
+  });
+  return { service, started, synchronized, reviewState };
+}
+
+test('assigned batches synchronize the result and report ACP failure without claiming description generation', async () => {
+  const failed = { ...run('run-a', 'a', 'failed'), error: 'Invalid ACP tool-call envelope' };
+  const { service, started, synchronized, reviewState } = assignedBatchFixture(failed);
+  const result = await service.startAssignedReviewBatchForSession('a');
+  assert.equal(started[0][4], true);
+  assert.equal(result.descriptionGenerated, false);
+  assert.equal(result.runs[0].status, 'failed');
+  assert.match(result.failures[0], /Invalid ACP/);
+  assert.equal(synchronized[0], failed);
+  assert.deepEqual(reviewState.reviewBatches, {});
+});
+
+test('a later review failure still retains the confirmed description phase in the assigned batch', async () => {
+  const failed = { ...run('run-a', 'a', 'failed'), generatedDescription: '## Summary\nSaved before review failed.', error: 'Invalid later ACP response' };
+  const { service } = assignedBatchFixture(failed);
+  const result = await service.startAssignedReviewBatchForSession('a');
+  assert.equal(result.descriptionGenerated, true);
+  assert.equal(result.failures.length, 1);
+  assert.match(result.failures[0], /Invalid later ACP/);
 });
 
 test('review panel requires renewed remote consent after changing endpoints and does not cancel on close', async () => {

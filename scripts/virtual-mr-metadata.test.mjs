@@ -118,6 +118,17 @@ test('reviewer and label additions/removals persist and reload with assignment i
   assert.ok(!calls.some(([command]) => /start_ai_review|approve/.test(command)));
 });
 
+test('a review description already saved by the backend updates the editor without re-saving stale MR metadata', async () => {
+  const { store, records, writes, reload } = await fixture();
+  const description = '## Summary\nGenerated from the complete diff.';
+  records.get('mr').description = description;
+  await store.getState().applyReviewGeneratedDescription('mr', description);
+  assert.equal(store.getState().sessions[0].description, description);
+  assert.equal(writes.length, 0);
+  await reload();
+  assert.equal(store.getState().sessions[0].description, description);
+});
+
 test('draft selections and later title/status/branch edits retain the saved metadata', async () => {
   const { store, records, reload } = await fixture();
   store.setState({ draftMr: {

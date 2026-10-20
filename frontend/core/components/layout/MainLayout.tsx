@@ -26,6 +26,7 @@ import { usePerformanceMonitorStore } from '../../../features/performance/store/
 import { X } from '../../../common/components/icons/X';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Check } from '../../../common/components/icons/Check';
+import { Info } from '../../../common/components/icons/Info';
 import { revealInOs, getAbsoluteFilePath, buildRemoteFileUrl, openRepoInTerminal, openRepoInVsCode, openRepoInExplorer, getOsFileManagerName } from '../../../features/git/utils/fileActions';
 import { isMacOS } from '../../../common/utils/shortcuts';
 import { MainLayoutDiffViewer } from './MainLayoutDiffViewer';
@@ -63,6 +64,7 @@ export const MainLayout: React.FC = () => {
     baseBranch,
     branches,
     toastMessage,
+    toastLevel,
     showToast,
     setIsRemoteUrlFromOpen,
     setTargetFileForUrl,
@@ -520,8 +522,11 @@ export const MainLayout: React.FC = () => {
 
       {/* Global Feedback Toast */}
       {toastMessage && (
-        <div className="fixed bottom-10 right-6 z-50 bg-mantle border border-surface1 text-text text-xs px-3.5 py-2 shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
-          <Check className="w-3.5 h-3.5 text-green shrink-0" />
+        <div role={toastLevel === 'error' ? 'alert' : 'status'} className="fixed bottom-10 right-6 z-50 bg-mantle border border-surface1 text-text text-xs px-3.5 py-2 shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          {toastLevel === 'error' || toastLevel === 'warning'
+            ? <AlertCircle className={`w-3.5 h-3.5 shrink-0 ${toastLevel === 'error' ? 'text-red' : 'text-yellow'}`} />
+            : toastLevel === 'info' ? <Info className="w-3.5 h-3.5 text-primary shrink-0" />
+              : <Check className="w-3.5 h-3.5 text-green shrink-0" />}
           <span className="font-medium">{toastMessage}</span>
         </div>
       )}

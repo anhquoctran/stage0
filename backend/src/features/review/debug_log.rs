@@ -34,7 +34,7 @@ pub(super) fn error_class(error: &str) -> &'static str {
         || error.contains("unauthorized")
     {
         "authentication"
-    } else if error.contains("tool call") || error.contains("function call") {
+    } else if error.contains("tool call") || error.contains("tool-call") || error.contains("function call") {
         "tool_call_protocol"
     } else if error.contains("budget") || error.contains("limit") {
         "safety_limit"

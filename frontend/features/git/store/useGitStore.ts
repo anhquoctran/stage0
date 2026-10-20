@@ -50,8 +50,9 @@ export const useGitStore = create<GitState>((set, get) => ({
   remotes: [],
   remoteUrl: null,
   toastMessage: null,
-  showToast: (msg: string) => {
-    set({ toastMessage: msg });
+  toastLevel: 'success',
+  showToast: (msg, level = 'success') => {
+    set({ toastMessage: msg, toastLevel: level });
     setTimeout(() => {
       if (get().toastMessage === msg) {
         set({ toastMessage: null });

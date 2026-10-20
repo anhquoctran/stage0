@@ -91,6 +91,31 @@ mod tests {
     }
 
     #[test]
+    fn per_review_guardrails_freeze_policy_but_share_the_app_audit_log() {
+        let engine = GuardrailsEngine::new();
+        let mut policy = engine.get_policy();
+        policy.max_file_read_lines = 8;
+        policy.rate_limit_per_minute = 1;
+        engine.update_policy(policy);
+
+        let review = engine.fork_with_policy_snapshot();
+        let mut updated_policy = engine.get_policy();
+        updated_policy.max_file_read_lines = 1;
+        engine.update_policy(updated_policy);
+
+        assert_eq!(review.get_policy().max_file_read_lines, 8);
+        assert!(review
+            .evaluate_review_read("get_file_diff", Some("src/lib.rs"), 2)
+            .is_ok());
+        // The fork has an independent rate limit but records into the
+        // app-wide audit history shown in Preferences.
+        assert!(engine.evaluate_read_file("src/lib.rs", 1, 1).is_ok());
+        assert!(engine.get_audit_log(Some(10)).iter().any(|event| {
+            event.tool_name == "get_file_diff" && event.action_summary == "src/lib.rs"
+        }));
+    }
+
+    #[test]
     fn test_output_truncation_respects_utf8_boundaries() {
         let engine = GuardrailsEngine::new();
         let mut policy = engine.get_policy();

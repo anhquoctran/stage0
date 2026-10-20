@@ -23,6 +23,7 @@ export interface ReviewState {
   reviewBatches: Record<string, ReviewBatchProgress>;
   setReviewBatch: (sessionId: string, progress: ReviewBatchProgress | null) => void;
   syncActive: () => Promise<void>;
+  syncRun: (detail: ReviewRunDetail) => Promise<void>;
   open: (sessionId: string) => void;
   close: () => void;
   load: (sessionId: string, runId?: string) => Promise<void>;

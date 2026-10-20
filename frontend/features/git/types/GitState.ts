@@ -58,7 +58,8 @@ export interface GitState {
   remoteUrl: string | null;
   isRebasing: boolean;
   toastMessage: string | null;
-  showToast: (msg: string) => void;
+  toastLevel: 'info' | 'success' | 'warning' | 'error';
+  showToast: (msg: string, level?: GitState['toastLevel']) => void;
   isPullFromOpen: boolean;
   isMergeFromOpen: boolean;
   isRebaseFromOpen: boolean;

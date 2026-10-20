@@ -7,6 +7,7 @@ import { ExternalLink } from '../../../common/components/icons/ExternalLink';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { X } from '../../../common/components/icons/X';
 import { Bot } from '../../../common/components/icons/Bot';
+import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { AcpRegistryAbout } from './AcpRegistryAbout';
 import { AcpRegistryProjectInfo } from './AcpRegistryProjectInfo';
@@ -155,7 +156,9 @@ function Modal({ children, onClose, title }: { children: React.ReactNode; onClos
   );
 }
 
-export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings } = {}) => {
+type ExternalAgentsTabProps = AiSettingsTabProps & { onBackToOverview?: () => void };
+
+export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({ draftSettings, onBackToOverview } = {}) => {
   const store = useAiMcpStore();
   const currentRepoPath = useGitStore((state) => state.currentRepo?.local_path ?? null);
   const externalAgents = draftSettings?.externalAgents ?? store.externalAgents;
@@ -313,13 +316,13 @@ export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings 
   const projectLicenseUrl = safeProjectUrl(detailRegistryEntry?.licenseUrl);
 
   return (
-    <div className="space-y-4 text-text">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold">External Agents</h2>
-          <p className="mt-1 max-w-3xl text-xs text-subtext0">Find ACP agents, connect with their own account, and send a prompt. Subscription sign-in stays with the agent and does not become an LLM provider API key.</p>
-        </div>
-        <div className="flex gap-2">
+    <div className="space-y-2 text-text">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {onBackToOverview ? <button type="button" onClick={onBackToOverview} className="inline-flex items-center gap-1 text-xs text-subtext0 transition-colors hover:text-text">
+          <ChevronLeft className="h-3.5 w-3.5" /> AI overview
+        </button> : <span />}
+        <div className="flex flex-wrap items-center gap-2">
+          <AcpRegistryAbout />
           <button type="button" onClick={() => setIsCustomOpen(true)} className="flex items-center gap-1.5 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0"><Plus className="h-3.5 w-3.5" /> Add custom</button>
           <button type="button" disabled={isLoading} onClick={() => { setError(null); setIsLoading(true); void invoke<AcpRegistryResponse>('acp_fetch_registry').then((result) => { setRegistry(result.agents); setSupportedBinaryTarget(result.supportedBinaryTarget ?? undefined); }).catch((cause) => setError(String(cause))).finally(() => setIsLoading(false)); }} className="flex items-center gap-1.5 border border-surface1 px-2.5 py-1.5 text-xs text-subtext0 hover:text-text disabled:opacity-50"><RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh</button>
         </div>
@@ -328,9 +331,7 @@ export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings 
       {error && <p role="status" className="border border-yellow/40 bg-yellow/5 px-3 py-2 text-xs text-yellow">{error}</p>}
       {!isTauri() && <p className="border border-surface1 px-3 py-2 text-xs text-subtext0">ACP agents need the Stage0 desktop app to launch a local agent process.</p>}
 
-      <AcpRegistryAbout />
-
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface1 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
         <label className="flex min-w-56 flex-1 items-center gap-2 border border-surface1 bg-base px-2.5 py-1.5 text-subtext0">
           <Search className="h-3.5 w-3.5" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search ACP Registry…" className="w-full bg-transparent text-xs text-text outline-none placeholder:text-subtext0" />
         </label>

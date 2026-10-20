@@ -797,7 +797,7 @@ export const PreferencesModal: React.FC = () => {
           </div>
 
           {/* Right Column: Settings Content Area */}
-          <div className="flex-1 overflow-y-auto p-8 bg-base flex flex-col">
+          <div className={`flex-1 overflow-y-auto ${currentTabId === 'ai-external-agents' ? 'px-5 py-4' : 'p-8'} bg-base flex flex-col`}>
 
             {/* Placeholder when no item selected */}
             {!currentChildItem && (
@@ -812,7 +812,7 @@ export const PreferencesModal: React.FC = () => {
 
             {/* Category Header */}
             {currentChildItem && (
-              <div className="mb-5 pb-3 border-b border-surface0/60">
+              <div className={`border-b border-surface0/60 ${currentTabId === 'ai-external-agents' ? 'mb-2 pb-2' : 'mb-5 pb-3'}`}>
                 <h2 className="text-base font-semibold text-text">{currentChildItem.title}</h2>
                 <p className="text-[11px] text-subtext0 mt-0.5">{currentChildItem.description}</p>
               </div>
@@ -1376,16 +1376,8 @@ export const PreferencesModal: React.FC = () => {
 
             {/* VIEW: EXTERNAL AGENTS */}
             {currentTabId === 'ai-external-agents' && (
-              <div className="animate-in fade-in duration-100 space-y-4">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('ai-overview')}
-                  className="inline-flex items-center gap-1.5 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-                  <span>Back to AI overview</span>
-                </button>
-                <ExternalAgentsTab draftSettings={aiDraft} />
+              <div className="animate-in fade-in duration-100">
+                <ExternalAgentsTab draftSettings={aiDraft} onBackToOverview={() => setActiveTab('ai-overview')} />
               </div>
             )}
 

@@ -891,10 +891,13 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   },
 
   applyReviewGeneratedDescription: async (sessionId, description) => {
-    const session = get().sessions.find((item) => item.id === sessionId);
-    if (session && session.description !== description) {
-      await get().updateSessionDetails(sessionId, session.title, description);
-    }
+    // Already persisted by the review coordinator. Updating local state must
+    // not re-save an entire, potentially stale session over the backend write.
+    set((state) => ({
+      sessions: state.sessions.map((session) => session.id === sessionId && session.description !== description
+        ? { ...session, description, updatedAt: new Date().toISOString() }
+        : session),
+    }));
   },
 
   updateSessionBranches: async (sessionId, base, compare) => {

@@ -91,8 +91,11 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
         let conn = db.conn();
         conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&session_id],|row|Ok((row.get::<_,String>(0)?,row.get::<_,String>(1)?,row.get::<_,String>(2)?))).map_err(|_|"Virtual MR or repository not found")?
     };
-    let guards = Arc::new(GuardrailsEngine::new());
-    guards.update_policy(app.state::<SandboxManager>().get_guardrail_policy());
+    let guards = Arc::new(
+        app.state::<SandboxManager>()
+            .guardrails()
+            .fork_with_policy_snapshot(),
+    );
     let policy = serde_json::to_string(&guards.get_policy())
         .map_err(|_| "Could not capture review policy")?;
     let policy_guards = Arc::clone(&guards);
