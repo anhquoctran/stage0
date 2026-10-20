@@ -18,6 +18,8 @@ import { ExternalLink } from '../../../common/components/icons/ExternalLink';
 import { RotateCcw } from '../../../common/components/icons/RotateCcw';
 import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
 import { CustomSelect } from '../../../common/components/CustomSelect';
+import { AcpReviewerConfigOptions } from '../../ai/components/AcpReviewerConfigOptions';
+import type { AcpReviewConfigOverrides } from '../../ai/types/AcpReviewConfigOverrides';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../store/useGitStore';
@@ -131,6 +133,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
   const [repoBotExecutionMode, setRepoBotExecutionMode] = useState<'provider' | 'acp'>('provider');
   const [repoBotAcpAgentId, setRepoBotAcpAgentId] = useState('');
   const [repoBotAllowAcpSourceTransfer, setRepoBotAllowAcpSourceTransfer] = useState(false);
+  const [repoBotAcpConfigOptions, setRepoBotAcpConfigOptions] = useState<AcpReviewConfigOverrides>({});
 
   const currentRepoId = currentRepo?.id || '';
 
@@ -172,6 +175,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
       model: repoBotExecutionMode === 'acp' ? 'global_default' : undefined,
       acpAgentId: repoBotExecutionMode === 'acp' ? repoBotAcpAgentId : undefined,
       allowAcpSourceTransfer: repoBotExecutionMode === 'acp' ? repoBotAllowAcpSourceTransfer : undefined,
+      acpConfigOptions: repoBotExecutionMode === 'acp' ? repoBotAcpConfigOptions : undefined,
       enabled: true,
       isBuiltin: false,
     });
@@ -186,6 +190,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
     setRepoBotExecutionMode('provider');
     setRepoBotAcpAgentId('');
     setRepoBotAllowAcpSourceTransfer(false);
+    setRepoBotAcpConfigOptions({});
     showToast(`Added repo reviewer: ${repoBotName.trim()}`);
   };
 
@@ -1352,7 +1357,10 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                               label: `${agent.name}${agent.version ? ` · ${agent.version}` : ''}`,
                               description: agent.description || agent.source,
                             }))}
-                            onChange={setRepoBotAcpAgentId}
+                            onChange={(agentId) => {
+                              setRepoBotAcpAgentId(agentId);
+                              setRepoBotAcpConfigOptions({});
+                            }}
                             searchable
                             searchPlaceholder="Search installed agents…"
                             className="w-full"
@@ -1363,6 +1371,12 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           /> : <p className="border border-yellow/40 bg-yellow/5 p-2 text-[10px] text-yellow">Install an agent in AI Preferences → External Agents first.</p>}
                         </div>}
                       </div>
+
+                      {repoBotExecutionMode === 'acp' && <AcpReviewerConfigOptions
+                        agent={externalAgents.find((agent) => agent.id === repoBotAcpAgentId)}
+                        value={repoBotAcpConfigOptions}
+                        onChange={setRepoBotAcpConfigOptions}
+                      />}
 
                       {repoBotExecutionMode === 'acp' && <div className="space-y-2 border border-surface0 bg-surface0/20 p-2.5">
                         <label className="flex items-start gap-2 text-[10px] text-subtext0">

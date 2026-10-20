@@ -8,6 +8,8 @@ import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { X } from '../../../common/components/icons/X';
 import { Bot } from '../../../common/components/icons/Bot';
 import { CustomSelect } from '../../../common/components/CustomSelect';
+import { AcpRegistryAbout } from './AcpRegistryAbout';
+import { AcpRegistryProjectInfo } from './AcpRegistryProjectInfo';
 import type { AiSettingsTabProps } from '../types/AiSettingsTabProps';
 import type { AcpAgentConfig, AcpRegistryAgent } from '../types/AcpAgentConfig';
 import type { AcpAgentConnectionInfo } from '../types/AcpAgentConnectionInfo';
@@ -326,6 +328,8 @@ export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings 
       {error && <p role="status" className="border border-yellow/40 bg-yellow/5 px-3 py-2 text-xs text-yellow">{error}</p>}
       {!isTauri() && <p className="border border-surface1 px-3 py-2 text-xs text-subtext0">ACP agents need the Stage0 desktop app to launch a local agent process.</p>}
 
+      <AcpRegistryAbout />
+
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface1 pb-3">
         <label className="flex min-w-56 flex-1 items-center gap-2 border border-surface1 bg-base px-2.5 py-1.5 text-subtext0">
           <Search className="h-3.5 w-3.5" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search ACP Registry…" className="w-full bg-transparent text-xs text-text outline-none placeholder:text-subtext0" />
@@ -349,14 +353,17 @@ export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings 
           const description = isCustom ? (item as AcpAgentConfig).command : (item as AcpRegistryAgent).description;
           const installable = !isCustom && canInstallFromRegistry(entry!, supportedBinaryTarget);
           return (
-            <article key={`${isCustom ? 'custom' : 'registry'}-${item.id}`} className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <button type="button" onClick={() => installed ? openDetails(installed, entry) : setError(installable ? 'Install this agent first to configure or send a prompt.' : 'This Registry entry has no supported package for this platform.')} className="min-w-0 flex-1 text-left">
-                <span className="flex items-center gap-2 text-sm font-medium"><AgentIcon icon={entry?.icon} /> <span className="truncate">{name}</span>{version && <span className="text-xs text-subtext0">v{version}</span>}{installed && <span className="border border-green/40 px-1.5 py-0.5 text-[10px] text-green">Installed</span>}</span>
-                <span className="mt-1 block truncate text-[11px] text-subtext0">{description}</span>
-              </button>
-              {installed ? <button type="button" onClick={() => openDetails(installed, entry)} className="shrink-0 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0">Manage</button>
-                : installable ? <button type="button" disabled={busyId === item.id || !isTauri()} onClick={() => void install(entry!)} className="shrink-0 border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand hover:bg-brand/15 disabled:opacity-45">{busyId === item.id ? 'Installing…' : 'Install'}</button>
-                  : <span className="shrink-0 text-[10px] text-subtext0">No package for this platform</span>}
+            <article key={`${isCustom ? 'custom' : 'registry'}-${item.id}`} className="py-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button type="button" onClick={() => installed ? openDetails(installed, entry) : setError(installable ? 'Install this agent first to configure or send a prompt.' : 'This Registry entry has no supported package for this platform.')} className="min-w-0 flex-1 text-left">
+                  <span className="flex items-center gap-2 text-sm font-medium"><AgentIcon icon={entry?.icon} /> <span className="truncate">{name}</span>{version && <span className="text-xs text-subtext0">v{version}</span>}{installed && <span className="border border-green/40 px-1.5 py-0.5 text-[10px] text-green">Installed</span>}</span>
+                  <span className="mt-1 block truncate text-[11px] text-subtext0">{description}</span>
+                </button>
+                {installed ? <button type="button" onClick={() => openDetails(installed, entry)} className="shrink-0 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0">Manage</button>
+                  : installable ? <button type="button" disabled={busyId === item.id || !isTauri()} onClick={() => void install(entry!)} className="shrink-0 border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand hover:bg-brand/15 disabled:opacity-45">{busyId === item.id ? 'Installing…' : 'Install'}</button>
+                    : <span className="shrink-0 text-[10px] text-subtext0">No package for this platform</span>}
+              </div>
+              {entry && <AcpRegistryProjectInfo entry={entry} distribution={registryDistribution(entry)} />}
             </article>
           );
         })}

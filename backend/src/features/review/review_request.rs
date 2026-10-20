@@ -14,6 +14,8 @@ pub struct ReviewRequest {
     #[serde(default)]
     pub acp_agent: Option<crate::features::ai::acp::AcpAgentConfig>,
     #[serde(default)]
+    pub acp_config_options: Option<serde_json::Value>,
+    #[serde(default)]
     pub reviewer_id: Option<String>,
     #[serde(default)]
     pub reviewer_name: Option<String>,

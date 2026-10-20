@@ -882,6 +882,22 @@ fn validate_reviewer(value: &Value, index: usize) -> Result<(), String> {
     )?;
     validate_optional_bool(reviewer, "fastMode", &path)?;
     validate_optional_bool(reviewer, "allowAcpSourceTransfer", &path)?;
+    if let Some(options) = reviewer.get("acpConfigOptions") {
+        let options = options.as_object().ok_or_else(|| format!("{path}.acpConfigOptions must be an object"))?;
+        if options.len() > 32 {
+            return Err(format!("{path}.acpConfigOptions has too many options"));
+        }
+        for (id, value) in options {
+            if id.is_empty() || id.len() > 128 || id.chars().any(char::is_control) {
+                return Err(format!("{path}.acpConfigOptions contains an invalid option ID"));
+            }
+            if !value.as_bool().is_some()
+                && !value.as_str().is_some_and(|text| text.len() <= 256 && !text.chars().any(char::is_control))
+            {
+                return Err(format!("{path}.acpConfigOptions contains an invalid option value"));
+            }
+        }
+    }
     validate_optional_bool(reviewer, "isBuiltin", &path)?;
     Ok(())
 }
@@ -1486,9 +1502,14 @@ mod tests {
             "provider": "global_default",
             "model": "global_default",
             "acpAgentId": "codex-acp",
-            "allowAcpSourceTransfer": true
+            "allowAcpSourceTransfer": true,
+            "acpConfigOptions": {"model":"gpt-6-luna","reasoning_effort":"high","fast-mode":true}
         }]);
         assert!(validate_schema(&acp_reviewer).is_ok());
+
+        let mut malformed_acp_options = acp_reviewer.clone();
+        malformed_acp_options["reviewers"][0]["acpConfigOptions"] = json!({"fast-mode": ["true"]});
+        assert!(validate_schema(&malformed_acp_options).is_err());
 
         let mut wrong_type = valid.clone();
         wrong_type["general"]["showInlineBlame"] = json!("true");

@@ -52,6 +52,9 @@ export const ReviewPanel: React.FC = () => {
   const compatible = reviewConfig.executionMode === 'acp'
     ? Boolean(reviewConfig.acpAgent)
     : AI_PROVIDERS.some((provider) => provider.id === reviewConfig.provider);
+  const acpConfigSummary = Object.entries(reviewConfig.acpConfigOptions || {})
+    .map(([id, value]) => `${id}: ${String(value)}`)
+    .join(' · ');
 
   useEffect(() => { setAllowRemote(false); }, [reviewConfig.provider, reviewConfig.model, reviewConfig.baseUrl, reviewConfig.acpAgent?.id, effectiveReviewerId, sessionId]);
   useEffect(() => {
@@ -117,6 +120,7 @@ export const ReviewPanel: React.FC = () => {
             />}
             <p>{selectedReviewer ? <>Reviewer: <strong>{selectedReviewer.name}</strong> · </> : null}{reviewConfig.executionMode === 'acp' ? <>ACP agent: <strong>{reviewConfig.acpAgent?.name || 'Unavailable'}</strong></> : <>Provider: <strong>{reviewConfig.provider}</strong> · Model: <span className="font-mono">{reviewConfig.model}</span>{reviewConfig.reasoningEffort && <> · Reasoning: <strong>{reviewConfig.reasoningEffort}</strong></>}{reviewConfig.fastMode && <> · <strong>Fast mode</strong></>}</>}</p>
             {reviewConfig.executionMode === 'acp' ? <p className="text-subtext0">Agent: {reviewConfig.acpAgent?.name || 'Not installed'} · configured in AI Preferences → External Agents</p> : <p className="break-all text-subtext0">Endpoint: {reviewConfig.baseUrl}</p>}
+            {reviewConfig.executionMode === 'acp' && selectedReviewer && <p className="text-subtext0">Reviewer model settings: {acpConfigSummary || 'using agent defaults'}</p>}
             {selectedReviewer && <p className="text-subtext0">This run uses the selected reviewer’s instructions and model profile.</p>}
             <p className="text-subtext0">Reads committed Git snapshots only. It can create inline discussions, reply to user comments, and resolve threads with changed-line evidence. It cannot modify code, approve, or merge. Discussion actions are saved to this local Virtual MR.</p>
             <p className="text-subtext0">Reviews use fixed safety budgets (12 turns, 48 tool calls and a 64,000-token reported-usage cap), independent of chat auto-summary preferences. ACP agent turns use a structured Stage0 tool-call bridge; reported token usage may not be available.</p>

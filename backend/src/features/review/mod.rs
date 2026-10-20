@@ -2,6 +2,7 @@ pub mod commands;
 pub mod connectors;
 pub mod context;
 pub mod coordinator;
+mod debug_log;
 pub mod model_adapter;
 mod acp_model_adapter;
 mod native_model_adapter;

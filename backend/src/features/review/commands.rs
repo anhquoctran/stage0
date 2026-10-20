@@ -10,7 +10,10 @@ use crate::{
 };
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
-use std::sync::{Arc, Mutex};
+use std::{
+    sync::{Arc, Mutex},
+    time::Instant,
+};
 use tauri::{AppHandle, Manager};
 
 #[tauri::command]
@@ -58,8 +61,8 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
     }
     let (endpoint, run_provider, run_model) = match request.execution_mode.as_str() {
         "provider" => {
-            if request.acp_agent.is_some() {
-                return Err("A built-in provider review cannot include an ACP agent".into());
+            if request.acp_agent.is_some() || request.acp_config_options.is_some() {
+                return Err("A built-in provider review cannot include ACP agent configuration".into());
             }
             let endpoint = provider::endpoint(&request)?;
             if request.provider != "ollama" && !crate::features::credentials::ai_key_exists(&request.provider)? {
@@ -68,6 +71,9 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
             (endpoint, request.provider.clone(), request.model.clone())
         }
         "acp" => {
+            if let Some(options) = request.acp_config_options.as_ref() {
+                crate::features::ai::acp::validate_review_config_overrides(options)?;
+            }
             let requested_id = request.acp_agent.as_ref().map(|agent| agent.id.as_str())
                 .ok_or("Select an installed ACP agent for this reviewer")?;
             let agent = resolve_saved_review_agent(&app, requested_id)?;
@@ -90,10 +96,43 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
     let policy = serde_json::to_string(&guards.get_policy())
         .map_err(|_| "Could not capture review policy")?;
     let policy_guards = Arc::clone(&guards);
-    let snapshot =
-        tauri::async_runtime::spawn_blocking(move || capture(&repo, &base, &head, &policy_guards))
-            .await
-            .map_err(|_| "Could not capture Git snapshot")??;
+    super::debug_log::log(format_args!(
+        "event=snapshot_capture_started session={} mode={}",
+        super::debug_log::safe_label(&session_id, 80),
+        request.execution_mode
+    ));
+    let capture_started = Instant::now();
+    let snapshot = match tauri::async_runtime::spawn_blocking(move || {
+        capture(&repo, &base, &head, &policy_guards)
+    })
+    .await
+    {
+        Ok(Ok(snapshot)) => snapshot,
+        Ok(Err(error)) => {
+            super::debug_log::log(format_args!(
+                "event=snapshot_capture_failed session={} elapsed_ms={} error_class={}",
+                super::debug_log::safe_label(&session_id, 80),
+                capture_started.elapsed().as_millis(),
+                super::debug_log::error_class(&error)
+            ));
+            return Err(error);
+        }
+        Err(_) => {
+            super::debug_log::log(format_args!(
+                "event=snapshot_capture_failed session={} elapsed_ms={} error_class=worker_stopped",
+                super::debug_log::safe_label(&session_id, 80),
+                capture_started.elapsed().as_millis()
+            ));
+            return Err("Could not capture Git snapshot".into());
+        }
+    };
+    super::debug_log::log(format_args!(
+        "event=snapshot_capture_completed session={} elapsed_ms={} changed_files={} excluded_files={}",
+        super::debug_log::safe_label(&session_id, 80),
+        capture_started.elapsed().as_millis(),
+        snapshot.changed_files.len(),
+        snapshot.excluded_files.len()
+    ));
     if snapshot.changed_files.len() > 5000 {
         return Err("More than 5,000 changed files; split the review into smaller changes".into());
     }
@@ -141,6 +180,20 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
         app.state::<ReviewCoordinator>().release(&session_id);
         return Err(error);
     }
+    super::debug_log::log(format_args!(
+        "event=review_queued run={} session={} mode={} provider={} model={} reviewer={} changed_files={} excluded_files={}",
+        super::debug_log::safe_label(&id, 80),
+        super::debug_log::safe_label(&session_id, 80),
+        request.execution_mode,
+        super::debug_log::safe_label(&run.provider, 40),
+        super::debug_log::safe_label(&run.model, 100),
+        super::debug_log::safe_label(
+            request.reviewer_name.as_deref().or(request.reviewer_id.as_deref()).unwrap_or("default"),
+            100
+        ),
+        run.snapshot.changed_files.len(),
+        run.snapshot.excluded_files.len()
+    ));
     let context = Arc::new(Mutex::new(ReviewContext::new(snapshot, guards)));
     let task_app = app.clone();
     let task_run = run.clone();
@@ -154,6 +207,11 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
             cancellation,
         ));
         if worker.await.is_err() {
+            super::debug_log::log(format_args!(
+                "event=review_worker_stopped run={} session={} error_class=worker_panicked",
+                super::debug_log::safe_label(&id, 80),
+                super::debug_log::safe_label(&session_id, 80)
+            ));
             if let Ok(mut failed) = task_app.state::<Database>().get_review_run(&id) {
                 failed.status = "failed".into();
                 failed.error =

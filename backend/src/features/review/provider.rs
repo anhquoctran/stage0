@@ -429,6 +429,7 @@ mod tests {
             fast_mode: false,
             execution_mode: "provider".into(),
             acp_agent: None,
+            acp_config_options: None,
             reviewer_id: None,
             reviewer_name: None,
             reviewer_role: None,

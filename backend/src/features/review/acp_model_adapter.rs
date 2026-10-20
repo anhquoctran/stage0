@@ -1,24 +1,39 @@
 use super::{model_adapter::ReviewModelAdapter, ReviewToolCall};
 use crate::features::ai::acp::{AcpAgentConfig, AcpAgentReviewSession};
 use serde_json::{json, Value};
-use std::{future::Future, pin::Pin};
+use std::{
+    future::Future,
+    pin::Pin,
+    time::Instant,
+};
 
 pub struct AcpModelAdapter {
     agent: AcpAgentConfig,
+    config_options: serde_json::Value,
     session: tokio::sync::Mutex<Option<AcpAgentReviewSession>>,
 }
 
 impl AcpModelAdapter {
-    pub fn new(agent: AcpAgentConfig) -> Self {
+    pub fn new(agent: AcpAgentConfig, config_options: serde_json::Value) -> Self {
         Self {
             agent,
+            config_options,
             session: tokio::sync::Mutex::new(None),
         }
     }
 
     pub async fn close(&self) {
         if let Some(session) = self.session.lock().await.take() {
+            super::debug_log::log(format_args!(
+                "event=acp_session_closing agent_id={} agent_name={}",
+                super::debug_log::safe_label(&self.agent.id, 100),
+                super::debug_log::safe_label(&self.agent.name, 100)
+            ));
             session.close().await;
+            super::debug_log::log(format_args!(
+                "event=acp_session_closed agent_id={}",
+                super::debug_log::safe_label(&self.agent.id, 100)
+            ));
         }
     }
 }
@@ -39,13 +54,62 @@ impl ReviewModelAdapter for AcpModelAdapter {
         Box::pin(async move {
             let mut session = self.session.lock().await;
             if session.is_none() {
-                *session = Some(AcpAgentReviewSession::start(&self.agent).await?);
+                let started = Instant::now();
+                super::debug_log::log(format_args!(
+                    "event=acp_session_starting agent_id={} agent_name={} version={} config_overrides={}",
+                    super::debug_log::safe_label(&self.agent.id, 100),
+                    super::debug_log::safe_label(&self.agent.name, 100),
+                    self.agent.version.as_deref().map(|version| super::debug_log::safe_label(version, 80)).unwrap_or_else(|| "unknown".into()),
+                    self.config_options.as_object().map_or(0, serde_json::Map::len)
+                ));
+                *session = Some(match AcpAgentReviewSession::start(&self.agent, &self.config_options).await {
+                    Ok(session) => session,
+                    Err(error) => {
+                        super::debug_log::log(format_args!(
+                            "event=acp_session_start_failed agent_id={} elapsed_ms={} error_class={}",
+                            super::debug_log::safe_label(&self.agent.id, 100),
+                            started.elapsed().as_millis(),
+                            super::debug_log::error_class(&error)
+                        ));
+                        return Err(error);
+                    }
+                });
+                super::debug_log::log(format_args!(
+                    "event=acp_session_ready agent_id={} elapsed_ms={}",
+                    super::debug_log::safe_label(&self.agent.id, 100),
+                    started.elapsed().as_millis()
+                ));
             }
-            let output = session
+            let request_bytes = body.to_string().len();
+            let turn_started = Instant::now();
+            super::debug_log::log(format_args!(
+                "event=acp_prompt_started agent_id={} request_bytes={}",
+                super::debug_log::safe_label(&self.agent.id, 100),
+                request_bytes
+            ));
+            let output = match session
                 .as_mut()
                 .expect("ACP review session initialized")
                 .prompt_turn(body)
-                .await?;
+                .await
+            {
+                Ok(output) => output,
+                Err(error) => {
+                    super::debug_log::log(format_args!(
+                        "event=acp_prompt_failed agent_id={} elapsed_ms={} error_class={}",
+                        super::debug_log::safe_label(&self.agent.id, 100),
+                        turn_started.elapsed().as_millis(),
+                        super::debug_log::error_class(&error)
+                    ));
+                    return Err(error);
+                }
+            };
+            super::debug_log::log(format_args!(
+                "event=acp_prompt_completed agent_id={} elapsed_ms={} response_bytes={}",
+                super::debug_log::safe_label(&self.agent.id, 100),
+                turn_started.elapsed().as_millis(),
+                output.len()
+            ));
             Ok(json!({"output":output}))
         })
     }
@@ -124,7 +188,7 @@ mod tests {
             command: "agent".into(),
             launch_mode: None,
             args: vec![],
-        })
+        }, serde_json::Value::Null)
     }
 
     #[test]
