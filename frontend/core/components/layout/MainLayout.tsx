@@ -14,6 +14,7 @@ import { WelcomeScreen } from './WelcomeScreen';
 import { TabBar } from './TabBar';
 import { VirtualMrHub } from '../../../features/virtual-mr/components/VirtualMrHub';
 import { EmptyVirtualMrWorkspace } from '../../../features/virtual-mr/components/EmptyVirtualMrWorkspace';
+import { VirtualMrListDialog } from '../../../features/virtual-mr/components/VirtualMrListDialog';
 import { VirtualMrBottomBar } from '../../../features/virtual-mr/components/VirtualMrBottomBar';
 import { NotificationDrawer } from '../../../features/notifications/components/NotificationDrawer';
 import { NewVirtualMrView } from '../../../features/virtual-mr/components/NewVirtualMrView';
@@ -75,10 +76,10 @@ export const MainLayout: React.FC = () => {
     closeRepoSettings,
     repoSettingsActiveTab,
     sessions,
+    isLoadingSessions,
     activeSessionId,
     draftMr,
     isDraftActive,
-    setIsMrListOpen,
     openNewMrDraft,
     repoSettings,
   } = useVirtualMrStore();
@@ -495,13 +496,15 @@ export const MainLayout: React.FC = () => {
               </React.Suspense>
             </>
           ) : (
-            <EmptyVirtualMrWorkspace
-              onNewMr={() => openNewMrDraft()}
-              onShowSavedMrs={() => setIsMrListOpen(true)}
-              hasSavedMrs={sessions.length > 0}
-              repoName={currentRepo.name}
-              defaultBaseBranch={repoSettings?.defaultBaseBranch || 'main'}
-            />
+            isLoadingSessions || sessions.length > 0 ? (
+              <VirtualMrListDialog inline />
+            ) : (
+              <EmptyVirtualMrWorkspace
+                onNewMr={() => openNewMrDraft()}
+                repoName={currentRepo.name}
+                defaultBaseBranch={repoSettings?.defaultBaseBranch || 'main'}
+              />
+            )
           )
         ) : (
           <WelcomeScreen />

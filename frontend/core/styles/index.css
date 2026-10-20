@@ -519,6 +519,12 @@ select:focus-visible {
   outline: none !important;
 }
 
+.mr-list-search-input:focus-visible {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
 input[type="checkbox"]:checked,
 input[type="radio"]:checked {
   accent-color: var(--color-brand) !important;
