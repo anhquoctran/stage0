@@ -26,6 +26,7 @@ export async function commitAiPreferences(
   try {
     const snapshot = mergeAiPreferences(draft, baseline, captureAiPreferences());
     const apiKeys = Object.fromEntries(Object.entries(draft.apiKeyDrafts).filter(([, key]) => key?.trim()).map(([provider, key]) => [provider, key!.trim()]));
+    const apiKeyRemovals = draft.apiKeyRemovals.filter((provider) => !(provider in apiKeys));
     const currentMcpServers = captureAiPreferences().mcpServers;
     const mcpEnvSecrets: Record<string, Record<string, string>> = {};
     const persistedMcpServers = snapshot.mcpServers.map((server) => {
@@ -50,7 +51,7 @@ export async function commitAiPreferences(
       const removed = (server.secretEnvKeys ?? []).filter((name) => !nextNames.has(name));
       if (removed.length) mcpEnvRemovals[server.id] = removed;
     }
-    if (!isTauri() && (Object.keys(apiKeys).length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
+    if (!isTauri() && (Object.keys(apiKeys).length || apiKeyRemovals.length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
       throw new Error('Saving credentials requires the native Stage0 app and OS keychain. The draft is preserved.');
     }
     previous = await preferencesJsonService.load();
@@ -64,9 +65,10 @@ export async function commitAiPreferences(
       reviewers: snapshot.globalReviewers,
     });
     let configured: Partial<Record<AiProviderId, boolean>> = {};
-    if (isTauri() && (Object.keys(apiKeys).length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
+    if (isTauri() && (Object.keys(apiKeys).length || apiKeyRemovals.length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
       configured = await invoke('commit_ai_preferences', {
         apiKeys,
+        apiKeyRemovals,
         policy: null,
         mcpEnvSecrets,
         mcpEnvRemovals,

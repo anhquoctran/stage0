@@ -360,7 +360,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
             type="button"
             onClick={() => handleMenuClick('file')}
             onMouseEnter={() => handleMenuHover('file')}
-            className={`px-2.5 py-1 rounded text-xs font-normal transition-colors cursor-pointer ${
+            className={`px-2.5 py-1  text-xs font-normal transition-colors cursor-pointer ${
               activeMenu === 'file'
                 ? 'bg-surface1 text-text'
                 : 'text-subtext1 hover:text-text hover:bg-surface0'
@@ -370,7 +370,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
           </button>
 
           {activeMenu === 'file' && (
-            <div className="absolute left-0 top-full mt-0.5 w-64 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+            <div className="absolute left-0 top-full mt-0.5 w-64  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
               <button
                 type="button"
                 onClick={() => {
@@ -458,7 +458,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 </button>
 
                 {showRecentSubmenu && (
-                  <div className="absolute left-full top-0 ml-0.5 w-80 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs max-h-72 overflow-y-auto">
+                  <div className="absolute left-full top-0 ml-0.5 w-80  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs max-h-72 overflow-y-auto">
                     {recentRepos.length === 0 ? (
                       <div className="px-3 py-2 text-subtext0 text-center italic">
                         No recent repositories
@@ -492,7 +492,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                                 e.stopPropagation();
                                 removeRecentRepo(repo.id);
                               }}
-                              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface2 text-subtext0 hover:text-red transition-all cursor-pointer"
+                              className="opacity-0 group-hover:opacity-100 p-1  hover:bg-surface2 text-subtext0 hover:text-red transition-all cursor-pointer"
                               title="Remove from recent repositories"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -590,7 +590,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
             disabled={!currentRepo}
             onClick={() => handleMenuClick('edit')}
             onMouseEnter={() => currentRepo && handleMenuHover('edit')}
-            className={`px-2.5 py-1 rounded text-xs font-normal transition-colors ${
+            className={`px-2.5 py-1  text-xs font-normal transition-colors ${
               !currentRepo
                 ? 'text-subtext0/50 cursor-not-allowed'
                 : activeMenu === 'edit'
@@ -602,7 +602,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
           </button>
 
           {currentRepo && activeMenu === 'edit' && (
-            <div className="absolute left-0 top-full mt-0.5 w-68 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+            <div className="absolute left-0 top-full mt-0.5 w-68  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
               <button
                 type="button"
                 disabled={!currentRepo || !selectedFile}
@@ -776,7 +776,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
             type="button"
             onClick={() => handleMenuClick('view')}
             onMouseEnter={() => handleMenuHover('view')}
-            className={`px-2.5 py-1 rounded text-xs font-normal transition-colors cursor-pointer ${
+            className={`px-2.5 py-1  text-xs font-normal transition-colors cursor-pointer ${
               activeMenu === 'view'
                 ? 'bg-surface1 text-text'
                 : 'text-subtext1 hover:text-text hover:bg-surface0'
@@ -786,7 +786,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
           </button>
 
           {activeMenu === 'view' && (
-            <div className="absolute left-0 top-full mt-0.5 w-64 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+            <div className="absolute left-0 top-full mt-0.5 w-64  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
               {currentRepo && <>
                 <button
                 type="button"
@@ -952,7 +952,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 </button>
 
                 {showPerformanceSubmenu && (
-                  <div className="absolute left-full top-0 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                  <div className="absolute left-full top-0 w-60  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
                     <button
                       type="button"
                       role="menuitemcheckbox"
@@ -986,7 +986,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
             disabled={!currentRepo}
             onClick={() => handleMenuClick('repository')}
             onMouseEnter={() => currentRepo && handleMenuHover('repository')}
-            className={`px-2.5 py-1 rounded text-xs font-normal transition-colors ${
+            className={`px-2.5 py-1  text-xs font-normal transition-colors ${
               !currentRepo
                 ? 'text-subtext0/50 cursor-not-allowed'
                 : activeMenu === 'repository'
@@ -998,7 +998,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
           </button>
 
           {currentRepo && activeMenu === 'repository' && (
-            <div className="absolute left-0 top-full mt-0.5 w-68 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+            <div className="absolute left-0 top-full mt-0.5 w-68  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
               {/* New Virtual MR */}
               <button
                 type="button"
@@ -1035,7 +1035,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <ChevronRight className="w-3.5 h-3.5 text-subtext0" />
                 </button>
                 {activeRepositorySubmenu === 'sync' && (
-                  <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                  <div className="absolute left-full top-0 ml-0.5 w-60  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
                     <button type="button" disabled={isSyncing} onClick={() => { runSync('fetch'); closeMenus(); }} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer">
                       <span className="flex items-center gap-2"><RefreshCw className="w-3.5 h-3.5 text-subtext0" />Fetch (All &amp; Prune)</span>
                       <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+F')}</span>
@@ -1058,7 +1058,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <ChevronRight className="w-3.5 h-3.5 text-subtext0" />
                 </button>
                 {activeRepositorySubmenu === 'merge' && (
-                  <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                  <div className="absolute left-full top-0 ml-0.5 w-60  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
                     <button type="button" disabled={isSyncing} onClick={() => { runSync('merge'); closeMenus(); }} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer">
                       <span className="flex items-center gap-2"><GitMerge className="w-3.5 h-3.5 text-subtext0" />Merge Upstream</span>
                       <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+M')}</span>
@@ -1077,7 +1077,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                   <ChevronRight className="w-3.5 h-3.5 text-subtext0" />
                 </button>
                 {activeRepositorySubmenu === 'rebase' && (
-                  <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                  <div className="absolute left-full top-0 ml-0.5 w-60  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
                     <button type="button" disabled={isSyncing} onClick={() => { runSync('rebase'); closeMenus(); }} className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left disabled:opacity-40 group cursor-pointer">
                       <span className="flex items-center gap-2"><GitBranch className="w-3.5 h-3.5 text-subtext0" />Rebase</span>
                       <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+R')}</span>
@@ -1149,7 +1149,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 </button>
 
                 {activeRepositorySubmenu === 'open' && currentRepo && (
-                  <div className="absolute left-full top-0 ml-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+                  <div className="absolute left-full top-0 ml-0.5 w-60  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
                     <button
                       type="button"
                       onClick={async () => {
@@ -1240,7 +1240,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
             type="button"
             onClick={() => handleMenuClick('help')}
             onMouseEnter={() => handleMenuHover('help')}
-            className={`px-2.5 py-1 rounded text-xs font-normal transition-colors cursor-pointer ${
+            className={`px-2.5 py-1  text-xs font-normal transition-colors cursor-pointer ${
               activeMenu === 'help'
                 ? 'bg-surface1 text-text'
                 : 'text-subtext1 hover:text-text hover:bg-surface0'
@@ -1250,7 +1250,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
           </button>
 
           {activeMenu === 'help' && (
-            <div className="absolute left-0 top-full mt-0.5 w-60 rounded-md shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+            <div className="absolute left-0 top-full mt-0.5 w-60  shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
               <button
                 type="button"
                 onClick={() => {
@@ -1373,7 +1373,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
             onClick={() => setShowShortcutsModal(false)}
           >
             <div
-              className="relative bg-mantle border border-surface0 p-5 sm:p-6 max-w-5xl w-full shadow-2xl animate-in zoom-in-95 duration-150 text-text cursor-default rounded-none"
+              className="relative bg-mantle border border-surface0 p-5 sm:p-6 max-w-5xl w-full shadow-2xl animate-in zoom-in-95 duration-150 text-text cursor-default "
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -1388,7 +1388,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 <button
                   type="button"
                   onClick={() => setShowShortcutsModal(false)}
-                  className="p-1 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-none"
+                  className="p-1 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer "
                   title="Close (Esc)"
                 >
                   <X className="w-4 h-4" />
@@ -1431,7 +1431,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 <button
                   type="button"
                   onClick={() => setShowShortcutsModal(false)}
-                  className="px-5 py-1.5 bg-surface1 hover:bg-surface2 text-text font-semibold text-xs cursor-pointer transition-colors border border-surface1 hover:border-surface2 rounded-none"
+                  className="px-5 py-1.5 bg-surface1 hover:bg-surface2 text-text font-semibold text-xs cursor-pointer transition-colors border border-surface1 hover:border-surface2 "
                 >
                   Got it
                 </button>

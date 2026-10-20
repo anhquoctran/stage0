@@ -9,40 +9,45 @@ static COMMIT: std::sync::Mutex<()> = std::sync::Mutex::new(());
 // Read every old key before writing anything. Never send previous secrets to the WebView.
 fn apply_keys(
     keys: &BTreeMap<String, Zeroizing<String>>,
+    removals: &[String],
     read: impl Fn(&str) -> Result<Option<String>, String>,
     write: impl Fn(&str, Option<&str>) -> Result<(), String>,
 ) -> Result<(BTreeMap<String, bool>, BTreeMap<String, Option<Zeroizing<String>>>), String> {
-    if keys.len() > 7
+    let mut changes = keys
+        .iter()
+        .map(|(provider, key)| (provider.clone(), Some(Zeroizing::new(key.to_string()))))
+        .collect::<BTreeMap<_, _>>();
+    let valid_provider = |provider: &str| matches!(
+        provider,
+        "openai" | "anthropic" | "github_copilot" | "gemini" | "xai_grok" | "ollama" | "custom"
+    );
+    if keys.len() + removals.len() > 7
         || keys.iter().any(|(provider, key)| {
-            !matches!(
-                provider.as_str(),
-                "openai"
-                    | "anthropic"
-                    | "github_copilot"
-                    | "gemini"
-                    | "xai_grok"
-                    | "ollama"
-                    | "custom"
-            ) || key.trim().is_empty()
+            !valid_provider(provider) || key.trim().is_empty()
                 || key.len() > 8192
         })
+        || removals.iter().any(|provider| !valid_provider(provider) || keys.contains_key(provider))
+        || removals.iter().collect::<BTreeSet<_>>().len() != removals.len()
     {
         return Err("Invalid AI provider key changes. Nothing was saved.".into());
     }
-    if keys.is_empty() {
+    if keys.is_empty() && removals.is_empty() {
         return Ok((BTreeMap::new(), BTreeMap::new()));
     }
-    let mut progress = KeyringWriteProgress::new("ai_api_key_batch", "native_single", keys.len());
+    for provider in removals {
+        changes.insert(provider.clone(), None);
+    }
+    let mut progress = KeyringWriteProgress::new("ai_api_key_batch", "native_single", changes.len());
     progress.stage("read_previous_keys");
     let mut previous = BTreeMap::new();
-    for provider in keys.keys() {
+    for provider in changes.keys() {
         previous.insert(provider.clone(), read(provider)?.map(Zeroizing::new));
     }
     let mut changed: Vec<&String> = vec![];
-    for (provider, key) in keys {
+    for (provider, key) in &changes {
         changed.push(provider);
         if progress
-            .write_item("api_key", || write(provider, Some(key.trim())))
+            .write_item("api_key", || write(provider, key.as_deref().map(|value| value.trim())))
             .is_err()
         {
             let mut restored = true;
@@ -61,7 +66,7 @@ fn apply_keys(
     }
     progress.commit();
     Ok((
-        keys.keys().map(|provider| (provider.clone(), true)).collect(),
+        changes.iter().map(|(provider, key)| (provider.clone(), key.is_some())).collect(),
         previous,
     ))
 }
@@ -286,6 +291,7 @@ fn apply_mcp_env_changes(
 pub async fn commit_ai_preferences(
     app: tauri::AppHandle,
     api_keys: BTreeMap<String, String>,
+    api_key_removals: Option<Vec<String>>,
     policy: Option<GuardrailPolicy>,
     mcp_env_secrets: Option<BTreeMap<String, BTreeMap<String, String>>>,
     mcp_env_removals: Option<BTreeMap<String, Vec<String>>>,
@@ -300,6 +306,7 @@ pub async fn commit_ai_preferences(
             .collect();
         let (configured, previous_ai_keys) = apply_keys(
             &secrets,
+            &api_key_removals.unwrap_or_default(),
             |provider| {
                 let entry =
                     keyring::Entry::new(crate::features::credentials::AI_KEYRING_SERVICE, provider)
@@ -537,6 +544,7 @@ mod tests {
         ]);
         let result = apply_keys(
             &keys,
+            &[],
             |provider| Ok(saved.borrow().get(provider).cloned()),
             |provider, key| {
                 if key == Some("reject") && !*failed.borrow() {
@@ -565,6 +573,7 @@ mod tests {
         )]);
         assert!(apply_keys(
             &keys,
+            &[],
             |_| panic!("must not read"),
             |_, _| panic!("must not write")
         )

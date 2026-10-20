@@ -10,7 +10,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ size = 'md', className = '' })
     return (
       <div
         title="Stage0"
-        className={`w-5 h-5 rounded bg-[#b87ff4]/15 border border-[#b87ff4]/30 flex items-center justify-center text-[#b87ff4] shrink-0 select-none ${className}`}
+        className={`w-5 h-5  bg-[#b87ff4]/15 border border-[#b87ff4]/30 flex items-center justify-center text-[#b87ff4] shrink-0 select-none ${className}`}
       >
         <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="8" />
@@ -24,7 +24,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ size = 'md', className = '' })
     return (
       <div
         title="Stage0"
-        className={`w-20 h-20 rounded-2xl bg-gradient-to-br from-[#b87ff4]/20 via-[#b87ff4]/10 to-surface0 border border-[#b87ff4]/40 flex flex-col items-center justify-center text-[#b87ff4] gap-1.5 shrink-0 select-none ${className}`}
+        className={`w-20 h-20  bg-gradient-to-br from-[#b87ff4]/20 via-[#b87ff4]/10 to-surface0 border border-[#b87ff4]/40 flex flex-col items-center justify-center text-[#b87ff4] gap-1.5 shrink-0 select-none ${className}`}
       >
         <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="8" />
@@ -41,7 +41,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ size = 'md', className = '' })
   return (
     <div
       title="Stage0"
-      className={`w-12 h-12 rounded-xl bg-gradient-to-br from-[#b87ff4]/25 to-[#b87ff4]/5 border border-[#b87ff4]/40 flex items-center justify-center text-[#b87ff4] shrink-0 select-none ${className}`}
+      className={`w-12 h-12  bg-gradient-to-br from-[#b87ff4]/25 to-[#b87ff4]/5 border border-[#b87ff4]/40 flex items-center justify-center text-[#b87ff4] shrink-0 select-none ${className}`}
     >
       <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="8" />

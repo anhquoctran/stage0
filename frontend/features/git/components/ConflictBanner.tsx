@@ -72,7 +72,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
       {/* Top Summary Bar */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="p-2 bg-red/20 text-red rounded-lg border border-red/40 shadow-xs shrink-0 mt-0.5">
+          <div className="p-2 bg-red/20 text-red  border border-red/40 shadow-xs shrink-0 mt-0.5">
             <ShieldAlert className="w-5 h-5 text-red" />
           </div>
           <div className="min-w-0">
@@ -87,13 +87,13 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                     onSelectConflictFile?.(conflictReport.conflicted_files[0]);
                   }
                 }}
-                className="text-[11px] px-2 py-0.5 rounded-full bg-red/25 hover:bg-red/35 text-red font-mono font-bold border border-red/40 conflict-pulse cursor-pointer transition-colors"
+                className="text-[11px] px-2 py-0.5  bg-red/25 hover:bg-red/35 text-red font-mono font-bold border border-red/40 conflict-pulse cursor-pointer transition-colors"
                 title={formatShortcutText('Click to jump directly to first conflicted file (Alt+C)')}
               >
                 {conflictedCount > 0 ? `${conflictedCount} file(s) in conflict` : 'In-memory conflict'}
               </button>
               <span className="text-[11px] text-subtext1">
-                between <code className="font-mono text-text bg-surface0 px-1 py-0.5 rounded border border-surface1">{compare}</code> and <code className="font-mono text-text bg-surface0 px-1 py-0.5 rounded border border-surface1">{base}</code>
+                between <code className="font-mono text-text bg-surface0 px-1 py-0.5  border border-surface1">{compare}</code> and <code className="font-mono text-text bg-surface0 px-1 py-0.5  border border-surface1">{base}</code>
               </span>
             </div>
             <p className="text-xs text-subtext1 mt-1 leading-relaxed">
@@ -117,7 +117,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                     showToast(`Failed to open VS Code: ${err}`);
                   }
                 }}
-                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5  bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
                 title={formatShortcutText('Open repository in Visual Studio Code (Alt+Shift+V)')}
               >
                 <Code2 className="w-3.5 h-3.5 text-subtext0" />
@@ -134,7 +134,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                     showToast(`Failed to open Terminal: ${err}`);
                   }
                 }}
-                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5  bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
                 title={formatShortcutText('Open repository in Default Terminal (Alt+Shift+T)')}
               >
                 <Terminal className="w-3.5 h-3.5 text-subtext0" />
@@ -146,7 +146,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
           <button
             type="button"
             onClick={refreshDiff}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5  bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
             title={formatShortcutText('Refresh virtual diff and re-check conflicts (Ctrl+R)')}
           >
             <RotateCw className="w-3.5 h-3.5 text-subtext0" />
@@ -157,7 +157,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-red/20 hover:bg-red/30 border border-red/40 text-red transition-colors shadow-xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold  bg-red/20 hover:bg-red/30 border border-red/40 text-red transition-colors shadow-xs cursor-pointer"
             >
               <span>{isExpanded ? 'Hide Details' : 'View Conflicts'}</span>
               {isExpanded ? (
@@ -174,7 +174,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
       {isExpanded && conflictedCount > 0 && (
         <div className="mt-3 pt-3 border-t border-red/20 space-y-3 animate-in fade-in duration-150">
           {/* External Resolution Guide & Quick Commands */}
-          <div className="bg-mantle/80 border border-surface0 rounded-lg p-2.5 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <div className="bg-mantle/80 border border-surface0  p-2.5 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div className="space-y-1">
               <span className="font-semibold text-text flex items-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5 text-red" />
@@ -189,7 +189,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
               <button
                 type="button"
                 onClick={() => handleCopyCommand(rebaseCmd)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface0 hover:bg-surface1 border border-surface1 text-xs font-mono text-text transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1  bg-surface0 hover:bg-surface1 border border-surface1 text-xs font-mono text-text transition-colors cursor-pointer"
                 title={`Copy command: ${rebaseCmd}`}
               >
                 {copiedCmd === rebaseCmd ? (
@@ -203,7 +203,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
               <button
                 type="button"
                 onClick={() => handleCopyCommand(mergeCmd)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface0 hover:bg-surface1 border border-surface1 text-xs font-mono text-text transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1  bg-surface0 hover:bg-surface1 border border-surface1 text-xs font-mono text-text transition-colors cursor-pointer"
                 title={`Copy command: ${mergeCmd}`}
               >
                 {copiedCmd === mergeCmd ? (
@@ -235,7 +235,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                   <div
                     key={filePath}
                     onClick={() => onSelectConflictFile?.(filePath)}
-                    className="group flex items-center justify-between gap-2 p-2 rounded-lg bg-mantle border border-surface0 hover:border-red/60 hover:bg-surface0 transition-colors cursor-pointer"
+                    className="group flex items-center justify-between gap-2 p-2  bg-mantle border border-surface0 hover:border-red/60 hover:bg-surface0 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <FileWarning className="w-4 h-4 text-red shrink-0" />
@@ -244,7 +244,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                           {filePath}
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] text-subtext0 mt-0.5">
-                          <span className="uppercase px-1.5 py-0.2 rounded bg-surface1 text-subtext1 font-bold">
+                          <span className="uppercase px-1.5 py-0.2  bg-surface1 text-subtext1 font-bold">
                             {conflictType}
                           </span>
                           {markersCount > 0 ? (
@@ -264,7 +264,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                       <button
                         type="button"
                         onClick={(e) => handleOpenFileInVsCode(filePath, e)}
-                        className="p-1 rounded hover:bg-surface1 text-subtext0 hover:text-text transition-colors"
+                        className="p-1  hover:bg-surface1 text-subtext0 hover:text-text transition-colors"
                         title="Open file in Visual Studio Code to resolve"
                       >
                         <Code2 className="w-3.5 h-3.5" />
@@ -272,7 +272,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                       <button
                         type="button"
                         onClick={(e) => handleRevealInOs(filePath, e)}
-                        className="p-1 rounded hover:bg-surface1 text-subtext0 hover:text-text transition-colors"
+                        className="p-1  hover:bg-surface1 text-subtext0 hover:text-text transition-colors"
                         title={`Reveal in ${fileManagerName}`}
                       >
                         <FolderOpen className="w-3.5 h-3.5" />

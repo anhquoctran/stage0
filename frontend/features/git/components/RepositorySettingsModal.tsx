@@ -430,7 +430,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                 <div className="min-w-0 flex-1">
                   <div className="text-xs leading-tight font-medium flex items-center justify-between">
                     <span>Labels</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-surface1 font-mono text-subtext1">
+                    <span className="text-[10px] px-1.5 py-0.2  bg-surface1 font-mono text-subtext1">
                       {repoLabels.length}
                     </span>
                   </div>
@@ -516,7 +516,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           placeholder="e.g. upstream"
                           value={newRemoteName}
                           onChange={(e) => setNewRemoteName(e.target.value)}
-                          className="w-full px-3 py-1.5 rounded bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent"
+                          className="w-full px-3 py-1.5  bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent"
                         />
                       </div>
                       <div className="col-span-2">
@@ -527,7 +527,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           placeholder="https://github.com/org/repo.git"
                           value={newRemoteUrl}
                           onChange={(e) => setNewRemoteUrl(e.target.value)}
-                          className="w-full px-3 py-1.5 rounded bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent"
+                          className="w-full px-3 py-1.5  bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent"
                         />
                       </div>
                     </div>
@@ -535,13 +535,13 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                       <button
                         type="button"
                         onClick={() => setIsAddingRemote(false)}
-                        className="px-3 py-1 rounded bg-surface0 hover:bg-surface1 text-xs cursor-pointer"
+                        className="px-3 py-1  bg-surface0 hover:bg-surface1 text-xs cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-3 py-1 rounded bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
+                        className="px-3 py-1  bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
                       >
                         Add
                       </button>
@@ -564,7 +564,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-sm">{rem.name}</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-surface0 font-mono text-subtext0">
+                            <span className="text-[10px] px-2 py-0.5  bg-surface0 font-mono text-subtext0">
                               {rem.name === 'origin' ? 'Default Origin' : 'Secondary'}
                             </span>
                           </div>
@@ -573,7 +573,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                               type="button"
                               onClick={() => handleTestRemote(rem.name, rem.fetch_url)}
                               disabled={testingRemoteName === rem.name}
-                              className="px-2.5 py-1 rounded bg-surface0 hover:bg-surface1 text-xs font-mono text-subtext0 hover:text-text transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                              className="px-2.5 py-1  bg-surface0 hover:bg-surface1 text-xs font-mono text-subtext0 hover:text-text transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                             >
                               <RefreshCw
                                 className={`w-3 h-3 ${testingRemoteName === rem.name ? 'animate-spin' : ''}`}
@@ -586,7 +586,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                                 setEditingRemoteName(rem.name);
                                 setEditingRemoteUrl(rem.fetch_url);
                               }}
-                              className="p-1 rounded hover:bg-surface1 text-subtext0 hover:text-text cursor-pointer"
+                              className="p-1  hover:bg-surface1 text-subtext0 hover:text-text cursor-pointer"
                               title="Edit URL"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -598,7 +598,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                                   removeRemote(rem.name);
                                 }
                               }}
-                              className="p-1 rounded hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
+                              className="p-1  hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
                               title="Remove Remote"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -707,7 +707,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                     </span>
                     <button
                       onClick={() => setIsAddingBranch(true)}
-                      className="px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1  bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
                       <span>New Branch</span>
@@ -725,7 +725,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                         placeholder="New branch name (e.g. feat/checkout)"
                         value={newBranchName}
                         onChange={(e) => setNewBranchName(e.target.value)}
-                        className="flex-1 px-3 py-1.5 rounded bg-surface0 border border-surface1 text-text focus:outline-none"
+                        className="flex-1 px-3 py-1.5  bg-surface0 border border-surface1 text-text focus:outline-none"
                       />
                       <CustomSelect
                         value={newBranchBase}
@@ -739,14 +739,14 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                       />
                       <button
                         type="submit"
-                        className="px-3 py-1.5 rounded bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
+                        className="px-3 py-1.5  bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
                       >
                         Create
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsAddingBranch(false)}
-                        className="px-2 py-1.5 rounded bg-surface0 cursor-pointer"
+                        className="px-2 py-1.5  bg-surface0 cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -759,12 +759,12 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                         <div className="flex items-center gap-2">
                           <span className="font-mono">{b}</span>
                           {b === branches?.current && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-surface1 text-text font-mono border border-surface2/40">
+                            <span className="text-[10px] px-1.5 py-0.2  bg-surface1 text-text font-mono border border-surface2/40">
                               current HEAD
                             </span>
                           )}
                           {b === defaultBaseBranch && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-surface1 text-subtext0 font-mono border border-surface2/40">
+                            <span className="text-[10px] px-1.5 py-0.2  bg-surface1 text-subtext0 font-mono border border-surface2/40">
                               default base
                             </span>
                           )}
@@ -778,7 +778,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                                 fetchBranches(currentRepo.local_path);
                               }
                             }}
-                            className="p-1 rounded hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
+                            className="p-1  hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
                             title="Delete branch"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -798,7 +798,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                     </span>
                     <button
                       onClick={() => setIsAddingTag(true)}
-                      className="px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1  bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
                       <span>Create Tag</span>
@@ -817,27 +817,27 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           placeholder="Tag name (e.g. v1.0.0)"
                           value={newTagName}
                           onChange={(e) => setNewTagName(e.target.value)}
-                          className="px-3 py-1.5 rounded bg-surface0 border border-surface1 text-text focus:outline-none"
+                          className="px-3 py-1.5  bg-surface0 border border-surface1 text-text focus:outline-none"
                         />
                         <input
                           type="text"
                           placeholder="Annotated message"
                           value={newTagMessage}
                           onChange={(e) => setNewTagMessage(e.target.value)}
-                          className="px-3 py-1.5 rounded bg-surface0 border border-surface1 text-text focus:outline-none"
+                          className="px-3 py-1.5  bg-surface0 border border-surface1 text-text focus:outline-none"
                         />
                       </div>
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
                           onClick={() => setIsAddingTag(false)}
-                          className="px-3 py-1 rounded bg-surface0 cursor-pointer"
+                          className="px-3 py-1  bg-surface0 cursor-pointer"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="px-3 py-1 rounded bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
+                          className="px-3 py-1  bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
                         >
                           Create Tag
                         </button>
@@ -863,7 +863,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                                 deleteTag(t.name);
                               }
                             }}
-                            className="p-1 rounded hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
+                            className="p-1  hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
                             title="Delete tag"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -942,7 +942,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           placeholder="e.g. priority-high"
                           value={labelFormName}
                           onChange={(e) => setLabelFormName(e.target.value)}
-                          className="w-full px-3 py-1.5 rounded bg-surface0 border border-surface1 text-text text-xs focus:outline-none"
+                          className="w-full px-3 py-1.5  bg-surface0 border border-surface1 text-text text-xs focus:outline-none"
                         />
                       </div>
                       <div className="col-span-2">
@@ -952,7 +952,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           placeholder="Describe the purpose of this label..."
                           value={labelFormDesc}
                           onChange={(e) => setLabelFormDesc(e.target.value)}
-                          className="w-full px-3 py-1.5 rounded bg-surface0 border border-surface1 text-text text-xs focus:outline-none"
+                          className="w-full px-3 py-1.5  bg-surface0 border border-surface1 text-text text-xs focus:outline-none"
                         />
                       </div>
                     </div>
@@ -965,7 +965,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           type="color"
                           value={labelFormColor}
                           onChange={(e) => setLabelFormColor(e.target.value)}
-                          className="w-8 h-8 rounded border-0 cursor-pointer bg-transparent"
+                          className="w-8 h-8  border-0 cursor-pointer bg-transparent"
                         />
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {colorPresets.map((c) => (
@@ -973,7 +973,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                               key={c}
                               type="button"
                               onClick={() => setLabelFormColor(c)}
-                              className="w-6 h-6 rounded-full border border-surface1 transition-transform hover:scale-110 cursor-pointer"
+                              className="w-6 h-6  border border-surface1 transition-transform hover:scale-110 cursor-pointer"
                               style={{ backgroundColor: c }}
                             />
                           ))}
@@ -988,13 +988,13 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           setIsAddingLabel(false);
                           setEditingLabelId(null);
                         }}
-                        className="px-3 py-1 rounded bg-surface0 text-xs cursor-pointer"
+                        className="px-3 py-1  bg-surface0 text-xs cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-3 py-1 rounded bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
+                        className="px-3 py-1  bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
                       >
                         Save Label
                       </button>
@@ -1040,7 +1040,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                                 <div className="flex min-w-0 items-center gap-2">
                                   <span
                                     aria-hidden="true"
-                                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                    className="h-2.5 w-2.5 shrink-0 "
                                     style={{ backgroundColor: lbl.color }}
                                   />
                                   <span className="truncate text-xs font-medium text-text" title={lbl.name}>
@@ -1129,7 +1129,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                             Inherit Global Preferences
                           </span>
                         </div>
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-brand/20 text-brand border border-brand/30">
+                        <span className="text-[10px] font-mono px-1.5 py-0.2  bg-brand/20 text-brand border border-brand/30">
                           Default
                         </span>
                       </div>
@@ -1181,7 +1181,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                             Custom for this Repository
                           </span>
                         </div>
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-surface1 text-subtext0 border border-surface2">
+                        <span className="text-[10px] font-mono px-1.5 py-0.2  bg-surface1 text-subtext0 border border-surface2">
                           Isolated
                         </span>
                       </div>
@@ -1229,7 +1229,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                       <button
                         type="button"
                         onClick={() => setIsAddingRepoBot(true)}
-                        className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs rounded transition-colors cursor-pointer border border-surface2/40"
+                        className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs  transition-colors cursor-pointer border border-surface2/40"
                       >
                         <Plus className="w-3 h-3" />
                         <span>Add Repo Bot</span>
@@ -1241,7 +1241,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                   {isAddingRepoBot && !inheritAgents && (
                     <form
                       onSubmit={handleSaveRepoCustomBot}
-                      className="p-4 bg-crust border border-accent/40 rounded space-y-3 animate-in fade-in duration-150"
+                      className="p-4 bg-crust border border-accent/40  space-y-3 animate-in fade-in duration-150"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-xs text-text flex items-center gap-1.5">
@@ -1265,7 +1265,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                             maxLength={4}
                             value={repoBotEmoji}
                             onChange={(e) => setRepoBotEmoji(e.target.value)}
-                            className="w-12 h-8 text-center text-[1rem] bg-surface0 border border-surface1 rounded text-text"
+                            className="w-12 h-8 text-center text-[1rem] bg-surface0 border border-surface1  text-text"
                           />
                         </div>
                         <div className="col-span-3">
@@ -1276,7 +1276,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                             placeholder="e.g. Migration Linter"
                             value={repoBotName}
                             onChange={(e) => setRepoBotName(e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text"
+                            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1  text-xs text-text"
                           />
                         </div>
                       </div>
@@ -1289,7 +1289,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                             placeholder="e.g. Database schema backwards compatibility"
                             value={repoBotTagline}
                             onChange={(e) => setRepoBotTagline(e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text"
+                            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1  text-xs text-text"
                           />
                         </div>
                         <div>
@@ -1311,7 +1311,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                         <label className="block text-[10px] text-subtext0 mb-1">
                           Stage0 System Prompt · {BOT_CATEGORIES.find((category) => category.id === repoBotCategory)?.label} · read-only
                         </label>
-                        <pre className="max-h-24 overflow-y-auto whitespace-pre-wrap px-2.5 py-1.5 bg-crust border border-surface1 rounded text-[10px] font-mono text-subtext1">
+                        <pre className="max-h-24 overflow-y-auto whitespace-pre-wrap px-2.5 py-1.5 bg-crust border border-surface1  text-[10px] font-mono text-subtext1">
                           {getBotRolePrompt(repoBotCategory)}
                         </pre>
                         <label className="block text-[10px] text-subtext0 mb-1 mt-2">
@@ -1322,7 +1322,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           value={repoBotInstructions}
                           onChange={(e) => setRepoBotInstructions(e.target.value)}
                           placeholder="Add bot-specific review guidance for this repository..."
-                          className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 rounded text-xs font-mono text-text"
+                          className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1  text-xs font-mono text-text"
                         />
                       </div>
 
@@ -1330,13 +1330,13 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                         <button
                           type="button"
                           onClick={() => setIsAddingRepoBot(false)}
-                          className="px-3 py-1 bg-surface0 text-xs rounded cursor-pointer"
+                          className="px-3 py-1 bg-surface0 text-xs  cursor-pointer"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="px-4 py-1 bg-accent text-on-accent font-semibold text-xs rounded cursor-pointer shadow-xs"
+                          className="px-4 py-1 bg-accent text-on-accent font-semibold text-xs  cursor-pointer shadow-xs"
                         >
                           Save Bot
                         </button>
@@ -1357,13 +1357,13 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                           >
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
-                                <span className="text-xl p-1 bg-surface0 rounded">{bot.avatarEmoji}</span>
+                                <span className="text-xl p-1 bg-surface0 ">{bot.avatarEmoji}</span>
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center justify-between">
                                     <span className="font-semibold text-xs text-text truncate">
                                       {bot.name}
                                     </span>
-                                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-brand/10 text-brand border border-brand/20">
+                                    <span className="text-[10px] font-mono px-1.5 py-0.2  bg-brand/10 text-brand border border-brand/20">
                                       Global
                                     </span>
                                   </div>
@@ -1409,21 +1409,21 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                                   type="checkbox"
                                   checked={isChecked}
                                   onChange={() => toggleRepoActiveBotId(currentRepoId, bot.id)}
-                                  className="rounded border-surface1 text-accent focus:ring-0 cursor-pointer"
+                                  className=" border-surface1 text-accent focus:ring-0 cursor-pointer"
                                   onClick={(e) => e.stopPropagation()}
                                 />
-                                <span className="text-xl p-1 bg-surface0 rounded">{bot.avatarEmoji}</span>
+                                <span className="text-xl p-1 bg-surface0 ">{bot.avatarEmoji}</span>
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center justify-between">
                                     <span className="font-semibold text-xs text-text truncate">
                                       {bot.name}
                                     </span>
                                     {isRepoExclusive ? (
-                                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-accent/20 text-accent border border-accent/30">
+                                      <span className="text-[9px] font-mono px-1.5 py-0.2  bg-accent/20 text-accent border border-accent/30">
                                         Repo Custom
                                       </span>
                                     ) : (
-                                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-surface1 text-subtext0">
+                                      <span className="text-[9px] font-mono px-1.5 py-0.2  bg-surface1 text-subtext0">
                                         Global
                                       </span>
                                     )}
@@ -1494,7 +1494,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                         key={snip.label}
                         type="button"
                         onClick={() => handleAppendSnippet(snip.text)}
-                        className="px-2 py-0.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-[11px] rounded transition-colors cursor-pointer border border-surface1"
+                        className="px-2 py-0.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-[11px]  transition-colors cursor-pointer border border-surface1"
                         title={snip.text}
                       >
                         + {snip.label}
@@ -1507,7 +1507,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                     value={customRules}
                     onChange={(e) => setCustomRules(e.target.value)}
                     placeholder="e.g. This project requires strict TypeScript without 'any'; verify Prisma query transactions; all exported APIs must include JSDoc comments..."
-                    className="w-full px-3 py-2 rounded bg-surface0 border border-surface1 text-text text-xs font-mono focus:outline-none focus:border-brand leading-relaxed"
+                    className="w-full px-3 py-2  bg-surface0 border border-surface1 text-text text-xs font-mono focus:outline-none focus:border-brand leading-relaxed"
                   />
                 </div>
               </div>

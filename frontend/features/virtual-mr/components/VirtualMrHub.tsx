@@ -196,7 +196,7 @@ export const VirtualMrHub: React.FC = () => {
           {/* Read-only MR Status Badge */}
           {session.status === 'approved' ? (
             <div
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-300 select-none shadow-xs shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-300 select-none shadow-xs shrink-0"
               title="Approved by AI Reviewer"
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
@@ -204,7 +204,7 @@ export const VirtualMrHub: React.FC = () => {
             </div>
           ) : session.status === 'closed' ? (
             <div
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 select-none shadow-xs shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 select-none shadow-xs shrink-0"
               title="Virtual MR is Closed"
             >
               <XCircle className="w-3.5 h-3.5 text-subtext1 shrink-0" />
@@ -212,10 +212,10 @@ export const VirtualMrHub: React.FC = () => {
             </div>
           ) : (
             <div
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 select-none shadow-xs shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 select-none shadow-xs shrink-0"
               title="Virtual MR is Open"
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="w-2 h-2  bg-emerald-400 animate-pulse shrink-0" />
               <span>Open</span>
             </div>
           )}
@@ -231,13 +231,13 @@ export const VirtualMrHub: React.FC = () => {
                   if (e.key === 'Enter') handleSaveTitle();
                   if (e.key === 'Escape') setIsEditingTitle(false);
                 }}
-                className="flex-1 px-2.5 py-1 rounded bg-surface0 border border-surface1 text-text text-sm font-semibold focus:outline-none"
+                className="flex-1 px-2.5 py-1  bg-surface0 border border-surface1 text-text text-sm font-semibold focus:outline-none"
                 autoFocus
               />
               <button
                 type="button"
                 onClick={handleSaveTitle}
-                className="p-1 rounded bg-brand hover:bg-brand/90 text-on-accent cursor-pointer shadow-xs"
+                className="p-1  bg-brand hover:bg-brand/90 text-on-accent cursor-pointer shadow-xs"
                 title="Save"
               >
                 <Check className="w-4 h-4" />
@@ -245,7 +245,7 @@ export const VirtualMrHub: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsEditingTitle(false)}
-                className="p-1 rounded bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+                className="p-1  bg-surface1 hover:bg-surface2 text-white cursor-pointer"
                 title="Cancel"
               >
                 <X className="w-4 h-4 text-white" />
@@ -257,7 +257,7 @@ export const VirtualMrHub: React.FC = () => {
               <button
                 type="button"
                 onClick={handleStartEditTitle}
-                className="p-1 rounded bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+                className="p-1  bg-surface1 hover:bg-surface2 text-white cursor-pointer"
                 title="Edit title"
               >
                 <Edit2 className="w-3.5 h-3.5 text-white" />
@@ -266,7 +266,7 @@ export const VirtualMrHub: React.FC = () => {
           )}
 
           {/* Branch Selector for Active Virtual MR */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface0/60 border border-surface1/60 shrink-0">
+          <div className="flex items-center gap-1.5 px-2.5 py-1  bg-surface0/60 border border-surface1/60 shrink-0">
             <span className="text-[10px] text-subtext0 uppercase font-mono tracking-wider font-semibold mr-0.5">Branch:</span>
             <TabBranchSelector
               roleType="source"
@@ -311,7 +311,7 @@ export const VirtualMrHub: React.FC = () => {
           {/* Assignee */}
           <div className="flex items-center gap-2">
             <span className="text-subtext0">Assignee:</span>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface0 font-medium">
+            <div className="flex items-center gap-1.5 px-2 py-0.5  bg-surface0 font-medium">
               <User className="w-3 h-3 text-accent" />
               <span>{session.assignee.name}</span>
               <span className="text-[10px] text-subtext0 font-mono">(Local)</span>
@@ -325,7 +325,7 @@ export const VirtualMrHub: React.FC = () => {
               {session.reviewers.map((rev) => (
                 <div
                   key={rev.agentId}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-300 text-[11px]"
+                  className="flex items-center gap-1 px-2 py-0.5  bg-purple-500/10 border border-purple-500/20 text-purple-300 text-[11px]"
                 >
                   <Bot className="w-3 h-3" />
                   <span>{rev.agentName}</span>
@@ -341,7 +341,7 @@ export const VirtualMrHub: React.FC = () => {
               <button
                 type="button"
                 onClick={toggleReviewerDropdown}
-                className="p-1 rounded bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+                className="p-1  bg-surface1 hover:bg-surface2 text-white cursor-pointer"
                 title="Add AI Reviewer Bot"
               >
                 <Plus className="w-3 h-3 text-white" />
@@ -350,7 +350,7 @@ export const VirtualMrHub: React.FC = () => {
 
             {/* Reviewer Dropdown */}
             {showReviewerDropdown && (
-              <div className="absolute top-full left-16 mt-1 w-60 rounded-lg bg-crust border border-surface0 shadow-xl py-1 z-50">
+              <div className="absolute top-full left-16 mt-1 w-60  bg-crust border border-surface0 shadow-xl py-1 z-50">
                 <div className="px-3 py-1.5 text-[11px] font-semibold text-subtext0 uppercase tracking-wider">
                   Select AI Reviewer Bot
                 </div>
@@ -393,7 +393,7 @@ export const VirtualMrHub: React.FC = () => {
               {session.labels.map((lbl) => (
                 <span
                   key={lbl.id}
-                  className="px-2 py-0.5 rounded-full text-[10px] font-medium text-white shadow-2xs"
+                  className="px-2 py-0.5  text-[10px] font-medium text-white shadow-2xs"
                   style={{ backgroundColor: lbl.color }}
                 >
                   {lbl.name}
@@ -402,7 +402,7 @@ export const VirtualMrHub: React.FC = () => {
               <button
                 type="button"
                 onClick={toggleLabelDropdown}
-                className="p-1 rounded bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+                className="p-1  bg-surface1 hover:bg-surface2 text-white cursor-pointer"
                 title="Manage Labels"
               >
                 <Plus className="w-3 h-3 text-white" />
@@ -411,7 +411,7 @@ export const VirtualMrHub: React.FC = () => {
 
             {/* Label Dropdown */}
             {showLabelDropdown && (
-              <div className="absolute top-full left-14 mt-1 w-56 rounded-lg bg-crust border border-surface0 shadow-xl py-1 z-50">
+              <div className="absolute top-full left-14 mt-1 w-56  bg-crust border border-surface0 shadow-xl py-1 z-50">
                 <div className="px-3 py-1.5 flex items-center justify-between text-[11px] font-semibold text-subtext0 uppercase tracking-wider border-b border-surface0/60">
                   <span>Toggle Labels</span>
                   <button
@@ -438,7 +438,7 @@ export const VirtualMrHub: React.FC = () => {
                       >
                         <div className="flex items-center gap-2">
                           <span
-                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            className="w-2.5 h-2.5  shrink-0"
                             style={{ backgroundColor: lbl.color }}
                           />
                           <span className="text-xs">{lbl.name}</span>
@@ -492,7 +492,7 @@ export const VirtualMrHub: React.FC = () => {
       {activeMrTab === 'overview' && (
         <div className="p-4 bg-crust/50 border-b border-surface0 space-y-4 max-h-80 overflow-y-auto">
           {/* Description Section */}
-          <div className="p-3.5 rounded-lg bg-mantle border border-surface0 space-y-2">
+          <div className="p-3.5  bg-mantle border border-surface0 space-y-2">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-xs text-subtext1">Description</span>
               {session.description && !isEditingDesc ? (
@@ -554,7 +554,7 @@ export const VirtualMrHub: React.FC = () => {
             {session.discussions
               .filter((d) => !d.filePath)
               .map((disc) => (
-                <div key={disc.id} className="p-3 rounded-lg bg-mantle border border-surface0 space-y-2">
+                <div key={disc.id} className="p-3  bg-mantle border border-surface0 space-y-2">
                   <div className="flex items-center justify-between text-[11px] text-subtext0">
                     <span className="font-medium text-text">{disc.comments[0]?.authorName}</span>
                     <span>{formatTime(disc.createdAt)}</span>
@@ -609,7 +609,7 @@ export const VirtualMrHub: React.FC = () => {
             session.commits.map((c) => (
               <div
                 key={c.hash}
-                className="p-3 rounded-lg bg-mantle border border-surface0 flex items-center justify-between gap-4"
+                className="p-3  bg-mantle border border-surface0 flex items-center justify-between gap-4"
               >
                 <div className="space-y-1 min-w-0">
                   <div className="font-medium text-xs text-text truncate">{c.subject}</div>
@@ -619,7 +619,7 @@ export const VirtualMrHub: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="px-2 py-0.5 rounded bg-surface0 font-mono text-[11px] text-subtext0">
+                  <span className="px-2 py-0.5  bg-surface0 font-mono text-[11px] text-subtext0">
                     {c.shortHash}
                   </span>
                 </div>

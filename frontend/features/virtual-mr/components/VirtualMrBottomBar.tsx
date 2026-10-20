@@ -37,7 +37,7 @@ export const VirtualMrBottomBar: React.FC = () => {
         {/* Status Badge */}
         {session.status === 'approved' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-300 shrink-0 shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-300 shrink-0 shadow-xs"
             title="Saved approval status. No evidence-backed AI review is recorded."
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
@@ -45,7 +45,7 @@ export const VirtualMrBottomBar: React.FC = () => {
           </div>
         ) : session.status === 'closed' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 shrink-0 shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 shrink-0 shadow-xs"
             title="Virtual MR is Closed"
           >
             <XCircle className="w-3.5 h-3.5 text-subtext1 shrink-0" />
@@ -53,10 +53,10 @@ export const VirtualMrBottomBar: React.FC = () => {
           </div>
         ) : (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0 shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0 shadow-xs"
             title="Virtual MR is Open"
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="w-2 h-2  bg-emerald-400 animate-pulse shrink-0" />
             <span>Open</span>
           </div>
         )}
@@ -64,11 +64,11 @@ export const VirtualMrBottomBar: React.FC = () => {
         {/* Branch Routing Pill */}
         <div className="flex items-center gap-1.5 text-xs font-mono text-subtext0 hidden sm:flex">
           <GitPullRequest className="w-3.5 h-3.5 text-brand shrink-0" />
-          <span className="px-2 py-0.5 rounded bg-surface0 text-accent font-semibold">
+          <span className="px-2 py-0.5  bg-surface0 text-accent font-semibold">
             {session.compareBranch}
           </span>
           <ArrowRight className="w-3.5 h-3.5 text-subtext1" />
-          <span className="px-2 py-0.5 rounded bg-surface0 text-subtext1">
+          <span className="px-2 py-0.5  bg-surface0 text-subtext1">
             {session.baseBranch}
           </span>
         </div>

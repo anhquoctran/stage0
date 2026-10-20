@@ -114,11 +114,7 @@ export const MainApp: React.FC = () => {
     <div
       className={clsx(
         'flex flex-col h-screen w-screen overflow-hidden box-border bg-crust select-none transition-all duration-150',
-        hideCustomFrame
-          ? 'border-0 rounded-none'
-          : usesNativeMacFrame
-            ? 'border border-[#313244] rounded-[12px]'
-            : 'border border-[#313244] rounded-[8px]'
+        hideCustomFrame ? 'border-0' : 'border border-[#313244]'
       )}
     >
       <MainLayout />

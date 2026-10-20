@@ -174,7 +174,7 @@ export const BlameViewer: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsRevisionDropdownOpen(!isRevisionDropdownOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1  bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
               title="Select branch or revision to blame"
             >
               <GitBranch className="w-3.5 h-3.5 text-subtext0 shrink-0" />
@@ -185,7 +185,7 @@ export const BlameViewer: React.FC = () => {
             </button>
 
             {isRevisionDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1 w-64 shadow-2xl bg-mantle border border-surface0 py-1 z-50 rounded-md text-xs animate-in fade-in duration-75">
+              <div className="absolute left-0 top-full mt-1 w-64 shadow-2xl bg-mantle border border-surface0 py-1 z-50  text-xs animate-in fade-in duration-75">
                 <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/60 mb-1">
                   Blame Revision
                 </div>
@@ -268,7 +268,7 @@ export const BlameViewer: React.FC = () => {
 
           {/* Ignore Whitespace Toggle (-w) */}
           <label
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1  bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
             title="Ignore whitespace changes when attributing lines (-w)"
           >
             <input
@@ -285,7 +285,7 @@ export const BlameViewer: React.FC = () => {
             type="button"
             onClick={() => fetchFileBlame()}
             disabled={isBlameLoading}
-            className="p-1.5 rounded bg-mantle hover:bg-surface0 border border-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1.5  bg-mantle hover:bg-surface0 border border-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer disabled:opacity-40"
             title="Refresh Git Blame"
           >
             <RotateCw className={`w-3.5 h-3.5 ${isBlameLoading ? 'animate-spin' : ''}`} />
@@ -302,13 +302,13 @@ export const BlameViewer: React.FC = () => {
               placeholder="Search blame (code, author, commit)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-7 pr-6 py-1 w-56 text-xs bg-mantle border border-surface0 rounded text-text placeholder-subtext0 focus:outline-none focus:border-surface2 transition-colors font-mono"
+              className="pl-7 pr-6 py-1 w-56 text-xs bg-mantle border border-surface0  text-text placeholder-subtext0 focus:outline-none focus:border-surface2 transition-colors font-mono"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-1.5 p-0.5 text-subtext0 hover:text-text rounded cursor-pointer"
+                className="absolute right-1.5 p-0.5 text-subtext0 hover:text-text  cursor-pointer"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -321,7 +321,7 @@ export const BlameViewer: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsStatsOpen(!isStatsOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1  bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
                 title="View contributor breakdown"
               >
                 <Users className="w-3.5 h-3.5 text-subtext0 shrink-0" />
@@ -333,7 +333,7 @@ export const BlameViewer: React.FC = () => {
               </button>
 
               {isStatsOpen && (
-                <div className="absolute right-0 top-full mt-1 w-72 shadow-2xl bg-mantle border border-surface0 py-2 px-3 z-50 rounded-md text-xs animate-in fade-in duration-75">
+                <div className="absolute right-0 top-full mt-1 w-72 shadow-2xl bg-mantle border border-surface0 py-2 px-3 z-50  text-xs animate-in fade-in duration-75">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/60 pb-1 mb-2">
                     Line Attribution Breakdown
                   </div>
@@ -348,9 +348,9 @@ export const BlameViewer: React.FC = () => {
                             {st.line_count} ({st.percentage}%)
                           </span>
                         </div>
-                        <div className="w-full bg-surface0 h-1.5 rounded-full overflow-hidden">
+                        <div className="w-full bg-surface0 h-1.5  overflow-hidden">
                           <div
-                            className="bg-subtext1 h-full rounded-full transition-all duration-300"
+                            className="bg-subtext1 h-full  transition-all duration-300"
                             style={{ width: `${Math.min(100, Math.max(2, st.percentage))}%` }}
                           />
                         </div>
@@ -368,14 +368,14 @@ export const BlameViewer: React.FC = () => {
       <div className="flex-1 overflow-auto bg-base p-2">
         {isBlameLoading ? (
           <div className="flex flex-col items-center justify-center h-64 text-subtext1 text-xs space-y-2">
-            <div className="w-6 h-6 border-2 border-subtext0 border-t-text rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-subtext0 border-t-text  animate-spin" />
             <span className="font-medium text-text">Loading Git Blame...</span>
             <span className="text-[11px] text-subtext0">
               Running git blame for {selectedFile.path}
             </span>
           </div>
         ) : blameError ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center p-6 bg-mantle border border-surface0 rounded-lg">
+          <div className="flex flex-col items-center justify-center h-64 text-center p-6 bg-mantle border border-surface0 ">
             <Info className="w-8 h-8 text-subtext0 mb-2" />
             <h4 className="text-sm font-bold text-text mb-1">Failed to Blame File</h4>
             <p className="text-xs text-subtext0 font-mono max-w-md mb-4 break-all">
@@ -384,7 +384,7 @@ export const BlameViewer: React.FC = () => {
             <button
               type="button"
               onClick={() => fetchFileBlame()}
-              className="px-3.5 py-1.5 rounded bg-surface1 hover:bg-surface2 text-text text-xs font-medium border border-surface2 transition-colors cursor-pointer"
+              className="px-3.5 py-1.5  bg-surface1 hover:bg-surface2 text-text text-xs font-medium border border-surface2 transition-colors cursor-pointer"
             >
               Try Again
             </button>
@@ -394,7 +394,7 @@ export const BlameViewer: React.FC = () => {
             {searchQuery ? 'No lines match your search query.' : 'Empty file or no blame lines available.'}
           </div>
         ) : (
-          <div className="border border-surface0 rounded-lg overflow-hidden bg-base shadow-xs text-xs font-mono">
+          <div className="border border-surface0  overflow-hidden bg-base shadow-xs text-xs font-mono">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-surface0 bg-mantle text-[10px] text-subtext0 uppercase font-sans font-bold select-none">
@@ -480,7 +480,7 @@ export const BlameViewer: React.FC = () => {
         <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div
             ref={commitModalRef}
-            className="bg-mantle border border-surface0 rounded-lg w-full max-w-lg shadow-2xl p-4 animate-in zoom-in-95 duration-100 flex flex-col space-y-3.5 select-none"
+            className="bg-mantle border border-surface0  w-full max-w-lg shadow-2xl p-4 animate-in zoom-in-95 duration-100 flex flex-col space-y-3.5 select-none"
           >
             {/* Header */}
             <div
@@ -494,14 +494,14 @@ export const BlameViewer: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedCommit(null)}
-                className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
+                className="p-1  text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Commit Message */}
-            <div className="bg-base border border-surface0 rounded p-3">
+            <div className="bg-base border border-surface0  p-3">
               <div className="text-[10px] uppercase font-bold text-subtext0 mb-1">Commit Message</div>
               <p className="text-xs text-text font-medium whitespace-pre-wrap leading-relaxed">
                 {selectedCommit.summary}
@@ -511,7 +511,7 @@ export const BlameViewer: React.FC = () => {
             {/* Commit Metadata Grid */}
             <div className="space-y-2 text-xs">
               {/* Full SHA */}
-              <div className="flex items-center justify-between gap-2 p-2 bg-surface0/40 rounded border border-surface0/60 font-mono">
+              <div className="flex items-center justify-between gap-2 p-2 bg-surface0/40  border border-surface0/60 font-mono">
                 <div className="min-w-0 flex-1 truncate">
                   <span className="text-[10px] uppercase block font-sans text-subtext0 font-bold">SHA</span>
                   <span className="text-xs text-text select-all font-semibold truncate block">
@@ -521,7 +521,7 @@ export const BlameViewer: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleCopySha(selectedCommit.commit_id)}
-                  className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs rounded transition-colors shrink-0 cursor-pointer"
+                  className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs  transition-colors shrink-0 cursor-pointer"
                   title="Copy full SHA"
                 >
                   {copiedSha ? <Check className="w-3.5 h-3.5 text-text" /> : <Copy className="w-3.5 h-3.5 text-subtext0" />}
@@ -530,7 +530,7 @@ export const BlameViewer: React.FC = () => {
               </div>
 
               {/* Author Info */}
-              <div className="flex items-start gap-2 p-2 bg-surface0/20 rounded border border-surface0/40">
+              <div className="flex items-start gap-2 p-2 bg-surface0/20  border border-surface0/40">
                 <User className="w-4 h-4 text-subtext0 mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-text">{selectedCommit.author}</div>
@@ -541,7 +541,7 @@ export const BlameViewer: React.FC = () => {
               </div>
 
               {/* Date Info */}
-              <div className="flex items-start gap-2 p-2 bg-surface0/20 rounded border border-surface0/40">
+              <div className="flex items-start gap-2 p-2 bg-surface0/20  border border-surface0/40">
                 <Clock className="w-4 h-4 text-subtext0 mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-text">
@@ -559,7 +559,7 @@ export const BlameViewer: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleCopyCommitUrl(selectedCommit.commit_id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs rounded transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs  transition-colors cursor-pointer"
               >
                 <ExternalLink className="w-3.5 h-3.5 text-subtext0" />
                 <span>Copy Remote Link</span>
@@ -568,7 +568,7 @@ export const BlameViewer: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedCommit(null)}
-                className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded transition-colors cursor-pointer"
+                className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold  transition-colors cursor-pointer"
               >
                 Close
               </button>

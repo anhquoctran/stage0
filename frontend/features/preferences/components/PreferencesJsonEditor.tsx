@@ -237,7 +237,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
           <span className={`text-xs ${saveState === 'invalid' || saveState === 'conflict' || saveState === 'error' ? 'text-red' : 'text-subtext0'}`} role="status">
             {saveState === 'loading' ? 'Loading…' : saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : saveState === 'invalid' ? 'Invalid draft' : saveState === 'conflict' ? 'Conflict' : 'Not saved'}
           </span>
-          <button type="button" onClick={() => void handleClose()} className="rounded border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0">Back to Preferences</button>
+          <button type="button" onClick={() => void handleClose()} className=" border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0">Back to Preferences</button>
         </div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
@@ -245,12 +245,12 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
           <span className="truncate" title={document?.path}>{document?.path ?? 'Loading preferences file…'}</span>
           <div className="flex shrink-0 items-center gap-2">
             <label htmlFor="preferences-json-schema" className="text-overlay1">Schema</label>
-            <input id="preferences-json-schema" disabled value={PREFERENCES_SCHEMA_URI} className="w-[min(34vw,420px)] rounded border border-surface0 bg-crust px-2 py-1 text-[10px] text-overlay1 disabled:opacity-80" />
-            {saveState === 'conflict' && <button type="button" onClick={() => void reload()} className="rounded border border-surface1 px-2 py-1 hover:bg-surface0">Reload latest</button>}
-            <button type="button" onClick={() => void handleRestoreDefaults()} className="rounded border border-surface1 px-2 py-1 hover:bg-surface0">Restore defaults</button>
+            <input id="preferences-json-schema" disabled value={PREFERENCES_SCHEMA_URI} className="w-[min(34vw,420px)]  border border-surface0 bg-crust px-2 py-1 text-[10px] text-overlay1 disabled:opacity-80" />
+            {saveState === 'conflict' && <button type="button" onClick={() => void reload()} className=" border border-surface1 px-2 py-1 hover:bg-surface0">Reload latest</button>}
+            <button type="button" onClick={() => void handleRestoreDefaults()} className=" border border-surface1 px-2 py-1 hover:bg-surface0">Restore defaults</button>
           </div>
         </div>
-        <div className="flex min-h-0 flex-1 overflow-hidden rounded border border-surface0 bg-crust focus-within:border-primary">
+        <div className="flex min-h-0 flex-1 overflow-hidden  border border-surface0 bg-crust focus-within:border-primary">
           <div aria-hidden="true" className="relative w-14 shrink-0 overflow-hidden border-r border-surface0 bg-mantle text-right text-overlay0 select-none" style={fontStyle}>
             <div ref={gutterRef} className="px-3 pt-3">
               {lines.map((_, index) => (
@@ -301,7 +301,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
               <div
                 role="listbox"
                 aria-label="JSONC completions"
-                className="absolute z-20 max-h-52 overflow-y-auto rounded border border-surface1 bg-mantle py-1 shadow-xl"
+                className="absolute z-20 max-h-52 overflow-y-auto  border border-surface1 bg-mantle py-1 shadow-xl"
                 style={completionPosition}
               >
                 {completion.items.map((item, index) => (

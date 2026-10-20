@@ -10,18 +10,19 @@ export function aiPreferencesChangeCount(draft: AiPreferencesEditor, baseline: A
   // Project explicitly: editor contains methods and temporary secret drafts, never persistence data.
   let count = Object.keys({ ...saved.aiConfig, ...current.aiConfig }).filter((key) => {
     const field = key as keyof AiPreferencesSnapshot['aiConfig'];
-    return current.aiConfig[field] !== saved.aiConfig[field];
+    return !sameValue(current.aiConfig[field], saved.aiConfig[field]);
   }).length;
   for (const key of ['mcpServers', 'guardrailPolicy', 'globalReviewers'] as const) if (JSON.stringify(current[key]) !== JSON.stringify(saved[key])) count++;
   count += Object.values(draft.apiKeyDrafts).filter((key) => key?.trim()).length;
+  count += draft.apiKeyRemovals.length;
   return count;
 }
 
 export function mergeAiPreferences(draft: AiPreferencesSnapshot, baseline: AiPreferencesSnapshot, latest: AiPreferencesSnapshot): AiPreferencesSnapshot {
   const result = cleanAiSnapshot(latest); const current = cleanAiSnapshot(draft); const previous = cleanAiSnapshot(baseline);
   for (const key of Object.keys({ ...previous.aiConfig, ...current.aiConfig }) as Array<keyof AiPreferencesSnapshot['aiConfig']>) {
-    if (current.aiConfig[key] === previous.aiConfig[key]) continue;
-    if (latest.aiConfig[key] !== previous.aiConfig[key] && latest.aiConfig[key] !== current.aiConfig[key]) throw new Error('AI configuration changed outside this dialog. Cancel and reopen Preferences before retrying.');
+    if (sameValue(current.aiConfig[key], previous.aiConfig[key])) continue;
+    if (!sameValue(latest.aiConfig[key], previous.aiConfig[key]) && !sameValue(latest.aiConfig[key], current.aiConfig[key])) throw new Error('AI configuration changed outside this dialog. Cancel and reopen Preferences before retrying.');
     Object.assign(result.aiConfig, { [key]: current.aiConfig[key] });
   }
   for (const key of ['mcpServers', 'guardrailPolicy', 'globalReviewers'] as const) {
@@ -30,4 +31,8 @@ export function mergeAiPreferences(draft: AiPreferencesSnapshot, baseline: AiPre
     Object.assign(result, { [key]: current[key] });
   }
   return result;
+}
+
+function sameValue(left: unknown, right: unknown): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
 }

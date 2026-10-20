@@ -52,7 +52,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
         type="button"
         disabled={disabled || !branches}
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-between gap-2.5 px-2.5 py-1 rounded-md border text-left transition-all ${
+        className={`flex items-center justify-between gap-2.5 px-2.5 py-1  border text-left transition-all ${
           disabled || !branches
             ? 'bg-mantle/50 border-surface0/50 text-subtext0 cursor-not-allowed'
             : 'bg-surface0 border-surface0 text-text hover:bg-surface1 hover:border-surface2 focus:outline-none focus:ring-1 focus:ring-blue/50 shadow-xs'
@@ -73,7 +73,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-1.5 w-64 rounded-md shadow-2xl bg-mantle border border-surface0 z-50 overflow-hidden py-1 animate-in fade-in duration-100">
+        <div className="absolute left-0 mt-1.5 w-64  shadow-2xl bg-mantle border border-surface0 z-50 overflow-hidden py-1 animate-in fade-in duration-100">
           <div className="p-2 border-b border-surface0 bg-base">
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-subtext1" />
@@ -83,7 +83,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                 placeholder="Filter branches..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-2.5 py-1 bg-mantle border border-surface0 rounded text-xs text-text placeholder-subtext0 focus:outline-none focus:border-surface2"
+                className="w-full pl-8 pr-2.5 py-1 bg-mantle border border-surface0  text-xs text-text placeholder-subtext0 focus:outline-none focus:border-surface2"
               />
             </div>
           </div>
@@ -118,7 +118,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                         <GitBranch className="w-3 h-3 text-subtext1 shrink-0" />
                         <span className="truncate">{branch}</span>
                         {isCurrent && (
-                          <span className="text-[9px] px-1 py-0.2 bg-surface1 text-subtext1 border border-surface2 rounded font-sans">
+                          <span className="text-[9px] px-1 py-0.2 bg-surface1 text-subtext1 border border-surface2  font-sans">
                             HEAD
                           </span>
                         )}

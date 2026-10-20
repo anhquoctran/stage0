@@ -444,7 +444,7 @@ export const MainLayout: React.FC = () => {
           <button
             type="button"
             onClick={clearError}
-            className="p-1 hover:bg-red/20 rounded text-red hover:text-text transition-colors cursor-pointer"
+            className="p-1 hover:bg-red/20  text-red hover:text-text transition-colors cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -478,7 +478,7 @@ export const MainLayout: React.FC = () => {
                 }`}
               >
                 <div
-                  className={`w-0.5 h-7 rounded-full transition-colors ${
+                  className={`w-0.5 h-7  transition-colors ${
                     isResizing ? 'bg-crust' : 'bg-surface2 group-hover:bg-blue'
                   }`}
                 />

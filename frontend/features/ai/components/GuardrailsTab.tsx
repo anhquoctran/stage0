@@ -171,13 +171,13 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
   return (
     <div className="space-y-6">
       {/* 1. Header & Policy Presets Selector */}
-      <div className="p-4 bg-surface0/60 border border-surface1 rounded-md space-y-4">
+      <div className="p-4 bg-surface0/60 border border-surface1  space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <div>
               <h4 className="text-sm font-bold text-text">AI Security Guardrails & Policy Enforcement</h4>
               <span
-                className={`inline-block mt-1 text-[10px] font-mono px-2 py-0.5 font-semibold border rounded uppercase ${
+                className={`inline-block mt-1 text-[10px] font-mono px-2 py-0.5 font-semibold border  uppercase ${
                   activeMode === 'balanced'
                     ? 'bg-green/10 text-green border-green/30'
                     : activeMode === 'strict'
@@ -199,7 +199,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
               type="button"
               onClick={() => void loadGuardrailAuditLog(30)}
               disabled={isGuardrailLoading}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 transition cursor-pointer rounded"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 transition cursor-pointer "
               title="Refresh audit log"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isGuardrailLoading ? 'animate-spin' : ''}`} />
@@ -214,7 +214,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
           <button
             type="button"
             onClick={() => handlePresetSelect('strict')}
-            className={`p-3 text-left rounded-md transition-all cursor-pointer flex flex-col justify-between ${
+            className={`p-3 text-left  transition-all cursor-pointer flex flex-col justify-between ${
               activeMode === 'strict'
                 ? 'bg-red/10 border border-red/40 text-text shadow-sm'
                 : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
@@ -242,7 +242,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
           <button
             type="button"
             onClick={() => handlePresetSelect('balanced')}
-            className={`p-3 text-left rounded-md transition-all cursor-pointer flex flex-col justify-between ${
+            className={`p-3 text-left  transition-all cursor-pointer flex flex-col justify-between ${
               activeMode === 'balanced'
                 ? 'bg-green/10 border border-green/40 text-text shadow-sm'
                 : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
@@ -270,7 +270,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
           <button
             type="button"
             onClick={() => handlePresetSelect('permissive')}
-            className={`p-3 text-left rounded-md transition-all cursor-pointer flex flex-col justify-between ${
+            className={`p-3 text-left  transition-all cursor-pointer flex flex-col justify-between ${
               activeMode === 'permissive'
                 ? 'bg-yellow/10 border border-yellow/40 text-text shadow-sm'
                 : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
@@ -297,7 +297,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
       </div>
 
       {/* 2. Command Safety Policies & Whitelists */}
-      <div className="p-4 bg-surface0/60 border border-surface1 rounded-md space-y-4">
+      <div className="p-4 bg-surface0/60 border border-surface1  space-y-4">
         <h4 className="text-xs font-bold text-text">
           Terminal Command Execution Guardrails
         </h4>
@@ -307,11 +307,11 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
           <label className="text-[11px] font-medium text-subtext0">
             Whitelisted Toolchain Executables
           </label>
-          <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 rounded-md min-h-[42px] items-center">
+          <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1  min-h-[42px] items-center">
             {allowedCommands.map((cmd) => (
               <span
                 key={cmd}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-green/10 text-green border border-green/30 rounded font-mono font-medium"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-green/10 text-green border border-green/30  font-mono font-medium"
               >
                 <span>{cmd}</span>
                 <button
@@ -332,12 +332,12 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
               value={newAllowedCmd}
               onChange={(e) => setNewAllowedCmd(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddAllowedCmd())}
-              className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 rounded text-text font-mono focus:outline-none focus:border-surface2"
+              className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1  text-text font-mono focus:outline-none focus:border-surface2"
             />
             <button
               type="button"
               onClick={handleAddAllowedCmd}
-              className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 rounded cursor-pointer transition"
+              className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2  cursor-pointer transition"
             >
               <Plus className="w-3 h-3" />
               <span>Add Command</span>
@@ -350,11 +350,11 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
           <label className="text-[11px] font-medium text-red">
             Explicitly Blocked Destructive Commands (Hard Deny)
           </label>
-          <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 rounded-md min-h-[42px] items-center">
+          <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1  min-h-[42px] items-center">
             {blockedCommands.map((cmd) => (
               <span
                 key={cmd}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-red/10 text-red border border-red/30 rounded font-mono font-medium"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-red/10 text-red border border-red/30  font-mono font-medium"
               >
                 <span>{cmd}</span>
                 <button
@@ -375,12 +375,12 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
               value={newBlockedCmd}
               onChange={(e) => setNewBlockedCmd(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddBlockedCmd())}
-              className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 rounded text-text font-mono focus:outline-none focus:border-surface2"
+              className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1  text-text font-mono focus:outline-none focus:border-surface2"
             />
             <button
               type="button"
               onClick={handleAddBlockedCmd}
-              className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 rounded cursor-pointer transition"
+              className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2  cursor-pointer transition"
             >
               <Plus className="w-3 h-3" />
               <span>Add Blocked</span>
@@ -393,11 +393,11 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
           <label className="text-[11px] font-medium text-yellow">
             Blocked Shell Injection & Malicious Patterns
           </label>
-          <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 rounded-md min-h-[42px] items-center">
+          <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1  min-h-[42px] items-center">
             {blockedPatterns.map((pat) => (
               <span
                 key={pat}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-yellow/10 text-yellow border border-yellow/30 rounded font-mono font-medium"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-yellow/10 text-yellow border border-yellow/30  font-mono font-medium"
               >
                 <span>{pat}</span>
                 <button
@@ -418,12 +418,12 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
               value={newBlockedPattern}
               onChange={(e) => setNewBlockedPattern(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddBlockedPattern())}
-              className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 rounded text-text font-mono focus:outline-none focus:border-surface2"
+              className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1  text-text font-mono focus:outline-none focus:border-surface2"
             />
             <button
               type="button"
               onClick={handleAddBlockedPattern}
-              className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 rounded cursor-pointer transition"
+              className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2  cursor-pointer transition"
             >
               <Plus className="w-3 h-3" />
               <span>Add Pattern</span>
@@ -481,7 +481,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
       </div>
 
       {/* 3. Sensitive Data & File Reading Protection */}
-      <div className="p-4 bg-surface0/60 border border-surface1 rounded-md space-y-4">
+      <div className="p-4 bg-surface0/60 border border-surface1  space-y-4">
         <h4 className="text-xs font-bold text-text">
           Workspace & Sensitive File Shield
         </h4>
@@ -490,11 +490,11 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
           <label className="text-[11px] font-medium text-subtext0">
             Protected Sensitive File Patterns (Access Blocked)
           </label>
-          <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 rounded-md min-h-[42px] items-center">
+          <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1  min-h-[42px] items-center">
             {sensitivePatterns.map((pat) => (
               <span
                 key={pat}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-mauve/10 text-mauve border border-mauve/30 rounded font-mono font-medium"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-mauve/10 text-mauve border border-mauve/30  font-mono font-medium"
               >
                 <span>{pat}</span>
                 <button
@@ -515,12 +515,12 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
               value={newSensitivePattern}
               onChange={(e) => setNewSensitivePattern(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSensitivePattern())}
-              className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 rounded text-text font-mono focus:outline-none focus:border-surface2"
+              className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1  text-text font-mono focus:outline-none focus:border-surface2"
             />
             <button
               type="button"
               onClick={handleAddSensitivePattern}
-              className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 rounded cursor-pointer transition"
+              className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2  cursor-pointer transition"
             >
               <Plus className="w-3 h-3" />
               <span>Add Sensitive Pattern</span>
@@ -550,7 +550,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
               id="confirm-commands-chk"
               checked={!!policy.require_human_confirmation_for_commands}
               onChange={(e) => void updateGuardrailPolicy({ require_human_confirmation_for_commands: e.target.checked })}
-              className="rounded border-surface2 text-green focus:ring-0 cursor-pointer"
+              className=" border-surface2 text-green focus:ring-0 cursor-pointer"
             />
             <label htmlFor="confirm-commands-chk" className="text-xs text-text cursor-pointer select-none">
               Require confirmation for all terminal commands
@@ -562,7 +562,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
               id="confirm-writes-chk"
               checked={!!policy.require_human_confirmation_for_writes}
               onChange={(e) => void updateGuardrailPolicy({ require_human_confirmation_for_writes: e.target.checked })}
-              className="mt-0.5 rounded border-surface2 text-green focus:ring-0 cursor-pointer"
+              className="mt-0.5  border-surface2 text-green focus:ring-0 cursor-pointer"
             />
             <div>
               <label htmlFor="confirm-writes-chk" className="text-xs text-text cursor-pointer select-none">
@@ -577,7 +577,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
       </div>
 
       {/* 4. Live Policy Simulator */}
-      <div className="p-4 bg-surface0/60 border border-surface1 rounded-md space-y-4">
+      <div className="p-4 bg-surface0/60 border border-surface1  space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h4 className="text-xs font-bold text-text">Live Policy Simulator & Dry-Run</h4>
@@ -590,35 +590,35 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
           <button
             type="button"
             onClick={() => setSampleScenario('safe_test')}
-            className="px-2.5 py-1 text-[11px] bg-green/10 hover:bg-green/20 text-green border border-green/30 rounded cursor-pointer transition font-mono font-medium"
+            className="px-2.5 py-1 text-[11px] bg-green/10 hover:bg-green/20 text-green border border-green/30  cursor-pointer transition font-mono font-medium"
           >
             Safe: `cargo test`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('dangerous_rm')}
-            className="px-2.5 py-1 text-[11px] bg-red/10 hover:bg-red/20 text-red border border-red/30 rounded cursor-pointer transition font-mono font-medium"
+            className="px-2.5 py-1 text-[11px] bg-red/10 hover:bg-red/20 text-red border border-red/30  cursor-pointer transition font-mono font-medium"
           >
             Dangerous: `rm -rf /`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('sensitive_env')}
-            className="px-2.5 py-1 text-[11px] bg-mauve/10 hover:bg-mauve/20 text-mauve border border-mauve/30 rounded cursor-pointer transition font-mono font-medium"
+            className="px-2.5 py-1 text-[11px] bg-mauve/10 hover:bg-mauve/20 text-mauve border border-mauve/30  cursor-pointer transition font-mono font-medium"
           >
             Sensitive: `.env.production`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('pipe_injection')}
-            className="px-2.5 py-1 text-[11px] bg-yellow/10 hover:bg-yellow/20 text-yellow border border-yellow/30 rounded cursor-pointer transition font-mono font-medium"
+            className="px-2.5 py-1 text-[11px] bg-yellow/10 hover:bg-yellow/20 text-yellow border border-yellow/30  cursor-pointer transition font-mono font-medium"
           >
             Injection: `npm test | sh`
           </button>
           <button
             type="button"
             onClick={() => setSampleScenario('large_read')}
-            className="px-2.5 py-1 text-[11px] bg-surface0 hover:bg-surface1 text-text border border-surface1 rounded cursor-pointer transition font-mono font-medium"
+            className="px-2.5 py-1 text-[11px] bg-surface0 hover:bg-surface1 text-text border border-surface1  cursor-pointer transition font-mono font-medium"
           >
             Exceeded: 8,000 Lines
           </button>
@@ -644,7 +644,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
               value={simArgsText}
               onChange={(e) => setSimArgsText(e.target.value)}
               placeholder="Tool arguments JSON"
-              className="w-full p-2.5 bg-base border border-surface1 rounded font-mono text-xs text-text focus:outline-none focus:border-surface2"
+              className="w-full p-2.5 bg-base border border-surface1  font-mono text-xs text-text focus:outline-none focus:border-surface2"
             />
 
             {simError && (
@@ -656,14 +656,14 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
               onClick={runSimulation}
               disabled={isSimulating || isPendingCommit}
               title={isPendingCommit ? 'Apply or OK to save policy changes before testing the active policy' : 'Tests the committed policy; audit actions take effect immediately'}
-              className="px-3.5 py-1.5 text-xs font-semibold bg-green/15 hover:bg-green/25 text-green border border-green/30 rounded cursor-pointer transition shadow-sm"
+              className="px-3.5 py-1.5 text-xs font-semibold bg-green/15 hover:bg-green/25 text-green border border-green/30  cursor-pointer transition shadow-sm"
             >
               <span>{isSimulating ? 'Evaluating...' : 'Simulate Policy Check'}</span>
             </button>
           </div>
 
           {/* Verdict Card */}
-          <div className="p-3 bg-base border border-surface1 rounded flex flex-col justify-between">
+          <div className="p-3 bg-base border border-surface1  flex flex-col justify-between">
             <div>
               <div className="text-[11px] font-bold text-subtext0 uppercase tracking-wider mb-2">
                 Simulation Verdict
@@ -674,19 +674,19 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {simResult.allowed ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-green/10 text-green border border-green/30 rounded">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-green/10 text-green border border-green/30 ">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           ALLOWED
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-red/10 text-red border border-red/30 rounded">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-red/10 text-red border border-red/30 ">
                           <AlertCircle className="w-3.5 h-3.5" />
                           BLOCKED
                         </span>
                       )}
 
                       {simResult.requires_confirmation && (
-                        <span className="px-2 py-0.5 text-[10px] bg-yellow/10 text-yellow border border-yellow/30 rounded font-semibold">
+                        <span className="px-2 py-0.5 text-[10px] bg-yellow/10 text-yellow border border-yellow/30  font-semibold">
                           CONFIRMATION REQUIRED
                         </span>
                       )}
@@ -703,7 +703,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
                       {simResult.violations.map((v, i) => (
                         <div
                           key={i}
-                          className="p-2 text-[11px] bg-surface0 border border-surface1 rounded space-y-0.5"
+                          className="p-2 text-[11px] bg-surface0 border border-surface1  space-y-0.5"
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-mono font-bold text-red">{v.rule}</span>
@@ -730,7 +730,7 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
       </div>
 
       {/* 5. Real-Time Audit Log Trail */}
-      <div className="p-4 bg-surface0/60 border border-surface1 rounded-md space-y-3">
+      <div className="p-4 bg-surface0/60 border border-surface1  space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h4 className="text-xs font-bold text-text">Guardrails Audit Trail (Recent Activity)</h4>
@@ -754,17 +754,17 @@ export const GuardrailsTab: React.FC<AiSettingsTabProps> = ({ draftSettings, isP
             No tool execution attempts recorded yet.
           </div>
         ) : (
-          <div className="border border-surface1 rounded overflow-hidden">
+          <div className="border border-surface1  overflow-hidden">
             <div className="max-h-60 overflow-y-auto divide-y divide-surface1">
               {auditLogs.map((event) => (
                 <div key={event.id} className="p-2.5 hover:bg-surface1/30 transition flex flex-col md:flex-row md:items-center justify-between gap-2">
                   <div className="flex items-start md:items-center gap-2.5">
                     {event.allowed ? (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-green/10 text-green border border-green/30 rounded font-mono">
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-green/10 text-green border border-green/30  font-mono">
                         PASS
                       </span>
                     ) : (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red/10 text-red border border-red/30 rounded font-mono">
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red/10 text-red border border-red/30  font-mono">
                         BLOCK
                       </span>
                     )}

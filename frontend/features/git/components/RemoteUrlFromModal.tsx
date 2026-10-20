@@ -125,7 +125,7 @@ export const RemoteUrlFromModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsRemoteUrlFromOpen(false)}
-            className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
+            className="p-1  text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -182,7 +182,7 @@ export const RemoteUrlFromModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleCopy(item.url, item.key)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors shrink-0 cursor-pointer ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium  transition-colors shrink-0 cursor-pointer ${
                           isCopied
                             ? 'bg-surface2 text-text font-bold'
                             : 'bg-surface1 hover:bg-surface2 text-text'
@@ -222,7 +222,7 @@ export const RemoteUrlFromModal: React.FC = () => {
                     type="button"
                     disabled={!customUrl}
                     onClick={() => handleCopy(customUrl, 'custom')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-surface1 hover:bg-surface2 text-text border border-surface2 rounded transition-colors disabled:opacity-40 cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-surface1 hover:bg-surface2 text-text border border-surface2  transition-colors disabled:opacity-40 cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>Copy Custom URL</span>
@@ -243,7 +243,7 @@ export const RemoteUrlFromModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsRemoteUrlFromOpen(false)}
-            className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text font-medium text-xs rounded transition-colors cursor-pointer"
+            className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text font-medium text-xs  transition-colors cursor-pointer"
           >
             Close
           </button>

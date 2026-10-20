@@ -34,6 +34,7 @@ import { isLikelySecretMcpEnvValue, isSecretMcpEnvName } from '../utils/listSecr
 import { resolveAiModelPreset } from '../utils/resolveAiModelPreset';
 import { type AiConfig } from '../types/AiConfig';
 import { type AiProviderId } from '../types/AiProviderId';
+import { activeProviderSettings, configuredProviderIds, providerSettingsFor, rememberActiveProviderSettings } from '../utils/aiProviderSettings';
 import { type McpServerConfig } from '../types/McpServerConfig';
 import { type McpServerType } from '../types/McpServerType';
 import type { AiMcpTabProps } from '../types/AiMcpTabProps';
@@ -152,10 +153,29 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 
   const aiConfig = draftAiConfig || storeAiConfig;
   const [promptPreviewRole, setPromptPreviewRole] = useState<BotCategory>('custom');
-  const updateAiConfig = onUpdateAiConfig || storeUpdateAiConfig;
+  const updateAiConfig = (partial: Partial<AiConfig>) => {
+    if (!onUpdateAiConfig) {
+      storeUpdateAiConfig(partial);
+      return;
+    }
+    const nextConfig = { ...aiConfig, ...partial };
+    const hasProviderSettingsChange = ['authMode', 'cliType', 'model', 'baseUrl', 'reasoningEffort', 'fastMode']
+      .some((key) => key in partial);
+    if (hasProviderSettingsChange) {
+      const providerSettings = { ...nextConfig.providerSettings };
+      if (configuredProviderIds(nextConfig).includes(nextConfig.provider)) {
+        providerSettings[nextConfig.provider] = activeProviderSettings(nextConfig);
+      }
+      onUpdateAiConfig({ ...partial, providerSettings });
+    } else {
+      onUpdateAiConfig(partial);
+    }
+  };
   const setProvider = (providerId: AiConfig['provider']) => {
     if (providerId === aiConfig.provider) return;
     const preset = AI_PROVIDERS.find((p) => p.id === providerId) || AI_PROVIDERS[0];
+    const rememberedConfig = rememberActiveProviderSettings(aiConfig);
+    const selectedSettings = providerSettingsFor(rememberedConfig, providerId);
     const defaultAuthMode: AiConfig['authMode'] =
       providerId === 'github_copilot'
         ? 'subscription_oauth'
@@ -165,21 +185,21 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         ? 'cli_bridge'
         : providerId === 'xai_grok' && cliStatus.grok?.available
         ? 'cli_bridge'
-        : 'api_key';
+        : preset.supportedAuthModes?.includes('api_key')
+        ? 'api_key'
+        : preset.supportedAuthModes?.[0];
 
     if (onUpdateAiConfig) {
       onUpdateAiConfig({
+        ...rememberedConfig,
         provider: providerId,
-        authMode: defaultAuthMode,
-        model: preset.defaultModel,
-        baseUrl: preset.defaultBaseUrl,
+        ...selectedSettings,
+        authMode: selectedSettings.authMode ?? defaultAuthMode,
         apiKey: '',
-        reasoningEffort: undefined,
-        fastMode: false,
       });
     } else {
       storeSetProvider(providerId);
-      storeUpdateAiConfig({ authMode: defaultAuthMode });
+      storeUpdateAiConfig({ authMode: selectedSettings.authMode ?? defaultAuthMode });
     }
   };
 
@@ -195,8 +215,34 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 
   const [showApiKey, setShowApiKey] = useState(false);
   const [apiKeyDraft, setApiKeyDraft] = useState(draftAiConfig?.apiKey || '');
+  const [isProviderDetailsOpen, setIsProviderDetailsOpen] = useState(false);
+  const [returnProviderAfterDetails, setReturnProviderAfterDetails] = useState<AiProviderId | null>(null);
+  const [isProviderSetupOpen, setIsProviderSetupOpen] = useState(false);
+  const [setupProviderId, setSetupProviderId] = useState<AiProviderId>('custom');
+  const [setupProviderName, setSetupProviderName] = useState('');
+  const [setupAuthMode, setSetupAuthMode] = useState<AiConfig['authMode']>();
+  const [setupModel, setSetupModel] = useState('');
+  const [setupBaseUrl, setSetupBaseUrl] = useState('');
+  const [setupApiKey, setSetupApiKey] = useState('');
+  const [providerSetupError, setProviderSetupError] = useState<string | null>(null);
+  const [providerToDelete, setProviderToDelete] = useState<AiProviderId | null>(null);
+  const [providerDeleteError, setProviderDeleteError] = useState<string | null>(null);
+  const [isDeletingProvider, setIsDeletingProvider] = useState(false);
   const [testingServerId, setTestingServerId] = useState<string | null>(null);
   const [deletingServerId, setDeletingServerId] = useState<string | null>(null);
+
+  const openProviderDetails = (providerId: AiProviderId) => {
+    setReturnProviderAfterDetails(providerId === aiConfig.provider ? null : aiConfig.provider);
+    if (providerId !== aiConfig.provider) setProvider(providerId);
+    setIsProviderDetailsOpen(true);
+  };
+
+  const closeProviderDetails = () => {
+    const providerToRestore = returnProviderAfterDetails;
+    setIsProviderDetailsOpen(false);
+    setReturnProviderAfterDetails(null);
+    if (providerToRestore && providerToRestore !== aiConfig.provider) setProvider(providerToRestore);
+  };
 
   // Cloud Subscription & CLI Bridge UI State
   const [testingCliType, setTestingCliType] = useState<string | null>(null);
@@ -240,6 +286,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 
   const activeProviderPreset =
     AI_PROVIDERS.find((p) => p.id === aiConfig.provider) || AI_PROVIDERS[0];
+  const configuredProviderList = configuredProviderIds(aiConfig);
+  const availableProviderList = AI_PROVIDERS.filter((provider) => !configuredProviderList.includes(provider.id));
   const hasSavedApiKey = !!apiKeysConfigured[aiConfig.provider];
 
   useEffect(() => {
@@ -420,25 +468,35 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     : 'cli_bridge';
 
   const isProviderConfigured = (id: string) => {
+    const hasApiKey = hasProviderApiKey(id);
     if (id === 'openai') {
-      return chatgptAuthStatus?.connected || !!apiKeysConfigured['openai'];
+      return chatgptAuthStatus?.connected || hasApiKey;
     }
     if (id === 'github_copilot') {
       return !!copilotStatus?.connected;
     }
     if (id === 'gemini') {
-      return googleAuthStatus?.connected || !!apiKeysConfigured['gemini'];
+      return googleAuthStatus?.connected || hasApiKey;
     }
     if (id === 'anthropic') {
-      return (aiConfig.authMode === 'cli_bridge' && !!cliStatus.claude?.available) || !!apiKeysConfigured['anthropic'];
+      return (providerSettingsFor(aiConfig, 'anthropic').authMode === 'cli_bridge' && !!cliStatus.claude?.available) || hasApiKey;
     }
     if (id === 'xai_grok') {
-      return (aiConfig.authMode === 'cli_bridge' && !!cliStatus.grok?.available) || !!apiKeysConfigured['xai_grok'];
+      return (providerSettingsFor(aiConfig, 'xai_grok').authMode === 'cli_bridge' && !!cliStatus.grok?.available) || hasApiKey;
     }
     if (id === 'ollama') {
       return true;
     }
-    return !!apiKeysConfigured[id as AiProviderId];
+    return hasApiKey;
+  };
+
+  const hasProviderApiKey = (id: string) => {
+    const providerId = id as AiProviderId;
+    return !draftSettings?.apiKeyRemovals.includes(providerId) && (
+      !!apiKeysConfigured[providerId]
+      || !!draftSettings?.apiKeyDrafts?.[providerId]
+      || (providerId === aiConfig.provider && !!apiKeyDraft.trim())
+    );
   };
 
   const getProviderDisplayName = (id: string) => {
@@ -449,8 +507,160 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       case 'gemini': return 'Google Gemini';
       case 'xai_grok': return 'SuperGrok';
       case 'ollama': return 'Ollama (Local)';
-      case 'custom': return 'Custom Endpoint';
+      case 'custom': return aiConfig.customProviderName?.trim() || 'Custom Endpoint';
       default: return id;
+    }
+  };
+
+  const getProviderAuthModes = (providerId: AiProviderId) => {
+    const preset = AI_PROVIDERS.find((provider) => provider.id === providerId) || AI_PROVIDERS[0];
+    return preset.supportedAuthModes || (preset.requiresApiKey ? ['api_key' as const] : []);
+  };
+
+  const defaultAuthModeFor = (providerId: AiProviderId): AiConfig['authMode'] => {
+    const preset = AI_PROVIDERS.find((provider) => provider.id === providerId) || AI_PROVIDERS[0];
+    if (providerId === 'github_copilot') return 'subscription_oauth';
+    if (providerId === 'openai' && chatgptAuthStatus?.connected) return 'subscription_oauth';
+    if (providerId === 'anthropic' && cliStatus.claude?.available) return 'cli_bridge';
+    if (providerId === 'xai_grok' && cliStatus.grok?.available) return 'cli_bridge';
+    if (preset.supportedAuthModes?.includes('api_key') || preset.requiresApiKey) return 'api_key';
+    return preset.supportedAuthModes?.[0];
+  };
+
+  const loadProviderSetup = (providerId: AiProviderId) => {
+    const settings = providerSettingsFor(aiConfig, providerId);
+    setSetupProviderId(providerId);
+    setSetupProviderName(providerId === 'custom'
+      ? aiConfig.customProviderName?.trim() || 'My Custom Provider'
+      : '');
+    setSetupAuthMode(settings.authMode ?? defaultAuthModeFor(providerId));
+    setSetupModel(settings.model);
+    setSetupBaseUrl(settings.baseUrl);
+    setSetupApiKey('');
+    setProviderSetupError(null);
+    setIsProviderSetupOpen(true);
+  };
+
+  const openAddProvider = () => {
+    const configured = configuredProviderIds(aiConfig);
+    const firstAvailable = AI_PROVIDERS.find((provider) => !configured.includes(provider.id));
+    if (firstAvailable) loadProviderSetup(firstAvailable.id);
+  };
+
+  const handleSaveProviderSetup = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setProviderSetupError(null);
+    const model = setupModel.trim();
+    const baseUrl = setupBaseUrl.trim().replace(/\/+$/, '');
+
+    if (setupProviderId === 'custom' && !setupProviderName.trim()) {
+      setProviderSetupError('Enter a name for this custom provider.');
+      return;
+    }
+    if (!model) {
+      setProviderSetupError('Enter a model ID.');
+      return;
+    }
+    if (configuredProviderIds(aiConfig).includes(setupProviderId)) {
+      setProviderSetupError('This provider is already in the table. Remove it first if you want to add it again.');
+      return;
+    }
+    try {
+      const endpoint = new URL(baseUrl);
+      if (!['http:', 'https:'].includes(endpoint.protocol) || !endpoint.hostname) throw new Error('invalid URL');
+    } catch {
+      setProviderSetupError('Enter a valid HTTP or HTTPS base URL.');
+      return;
+    }
+
+    const needsApiKey = setupAuthMode === 'api_key' && setupProviderId !== 'ollama';
+    if (needsApiKey && !setupApiKey.trim() && !hasProviderApiKey(setupProviderId)) {
+      setProviderSetupError('Enter an API key or select a different connection method.');
+      return;
+    }
+
+    const configured = configuredProviderIds(aiConfig);
+    const rememberedConfig = configured.includes(aiConfig.provider)
+      ? rememberActiveProviderSettings(aiConfig)
+      : aiConfig;
+    const currentSettings = providerSettingsFor(rememberedConfig, setupProviderId);
+    const rememberedPreferences: Partial<AiConfig> = { ...rememberedConfig };
+    delete rememberedPreferences.apiKey;
+    const nextProviderSettings = {
+      ...currentSettings,
+      authMode: setupAuthMode,
+      model,
+      baseUrl,
+    };
+    const nextConfig: Partial<AiConfig> = {
+      ...rememberedPreferences,
+      providerSettings: {
+        ...rememberedConfig.providerSettings,
+        [setupProviderId]: nextProviderSettings,
+      },
+      configuredProviders: [...configured, setupProviderId],
+      provider: setupProviderId,
+      ...nextProviderSettings,
+      ...(setupProviderId !== aiConfig.provider ? { apiKey: '' } : {}),
+      ...(setupProviderId === 'custom' ? { customProviderName: setupProviderName.trim() } : {}),
+    };
+
+    updateAiConfig(nextConfig);
+    if (setupApiKey.trim()) updateAiConfig({ apiKey: setupApiKey.trim() });
+    setIsProviderSetupOpen(false);
+  };
+
+  const confirmRemoveProvider = async () => {
+    if (!providerToDelete || isDeletingProvider) return;
+    const providerId = providerToDelete;
+    setIsDeletingProvider(true);
+    setProviderDeleteError(null);
+    try {
+      if (!draftSettings && isTauri()) {
+        await invoke('delete_ai_api_key', { provider: providerId });
+      }
+
+      const configured = configuredProviderIds(aiConfig);
+      const remaining = configured.filter((id) => id !== providerId);
+      const remainingSettings = Object.fromEntries(
+        Object.entries(aiConfig.providerSettings || {}).filter(([id]) => remaining.includes(id as AiProviderId)),
+      ) as AiConfig['providerSettings'];
+      const nextConfig: Partial<AiConfig> = {
+        ...aiConfig,
+        configuredProviders: remaining,
+        providerSettings: remainingSettings,
+      };
+      delete nextConfig.apiKey;
+      if (providerId === 'custom') delete nextConfig.customProviderName;
+
+      if (aiConfig.provider === providerId) {
+        if (remaining.length) {
+          const nextProvider = remaining[0];
+          Object.assign(nextConfig, providerSettingsFor({ ...aiConfig, providerSettings: remainingSettings }, nextProvider), {
+            provider: nextProvider,
+          });
+        } else {
+          const fallback = providerSettingsFor(DEFAULT_AI_CONFIG, DEFAULT_AI_CONFIG.provider);
+          Object.assign(nextConfig, fallback, {
+            provider: DEFAULT_AI_CONFIG.provider,
+          });
+        }
+      }
+
+      if (draftSettings) {
+        draftSettings.removeApiKey(providerId);
+        updateAiConfig(nextConfig);
+      } else {
+        updateAiConfig(nextConfig);
+        useAiMcpStore.setState((state) => ({
+          apiKeysConfigured: { ...state.apiKeysConfigured, [providerId]: false },
+        }));
+      }
+      setProviderToDelete(null);
+    } catch (error) {
+      setProviderDeleteError(`Could not remove the saved API key, so the provider was kept. ${String(error)}`);
+    } finally {
+      setIsDeletingProvider(false);
     }
   };
 
@@ -488,7 +698,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               </p>
             </div>
             <span className="text-[10px] text-subtext0 font-mono px-2 py-0.5 bg-surface0 border border-surface1">
-              Active: {activeProviderPreset.name} • {aiConfig.model}
+              Active: {getProviderDisplayName(activeProviderPreset.id)} • {aiConfig.model}
             </span>
           </div>
 
@@ -538,59 +748,137 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       {/* VIEW: AI MODEL & PROVIDER CONFIGURATION */}
       {(activeView === 'providers' || (!activeView && (activeSubTab === 'ai' || activeSubTab === 'guardrails'))) && (
         <div className="space-y-4 animate-in fade-in duration-100">
-          {/* Provider Selector: Flex wrap pills with full names */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold text-text uppercase tracking-wider">
-                Select Provider
-              </span>
-              <span className="text-[10px] text-subtext0 font-mono">
-                {activeProviderPreset.name} active
-              </span>
+          {/* Provider management table */}
+          <div className="overflow-hidden border border-surface1  bg-base/60">
+            <div className="flex items-center justify-between gap-3 px-3.5 py-3 border-b border-surface1">
+              <div>
+                <h4 className="text-xs font-bold text-text">Providers</h4>
+                <p className="text-[10px] text-subtext0 mt-0.5">Only providers you add and configure appear here. The active provider is marked in the table.</p>
+              </div>
+              <button
+                type="button"
+                onClick={openAddProvider}
+                disabled={availableProviderList.length === 0}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-brand text-base text-[11px] font-semibold hover:brightness-110 transition cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add provider</span>
+              </button>
             </div>
 
-            <div className="flex flex-wrap gap-2 p-1.5 bg-base/70 border border-surface1 rounded-xl">
-              {AI_PROVIDERS.map((p) => {
-                const isSelected = aiConfig.provider === p.id;
-                const ProviderIcon = getProviderIcon(p.id);
-                const connected = isProviderConfigured(p.id);
-
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setProvider(p.id)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer select-none whitespace-nowrap ${
-                      isSelected
-                        ? 'bg-surface1 text-text font-bold shadow-xs border border-surface2 ring-1 ring-surface2'
-                        : 'text-subtext0 hover:text-text hover:bg-surface0/60 border border-transparent'
-                    }`}
-                  >
-                    <ProviderIcon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-brand' : 'text-subtext0'}`} />
-                    <span className="whitespace-nowrap">{getProviderDisplayName(p.id)}</span>
-                    {connected ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-green shrink-0" title="Connected / Configured" />
-                    ) : (
-                      <span className="w-1.5 h-1.5 rounded-full bg-surface2 shrink-0 opacity-30" />
-                    )}
-                  </button>
-                );
-              })}
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[620px] text-left">
+                <thead>
+                  <tr className="border-b border-surface1 bg-surface0/40 text-[9px] uppercase tracking-wider text-subtext0">
+                    <th className="px-3.5 py-2 font-semibold">Provider</th>
+                    <th className="px-3.5 py-2 font-semibold">Endpoint & model</th>
+                    <th className="px-3.5 py-2 font-semibold">Connection</th>
+                    <th className="px-3.5 py-2 text-right font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {AI_PROVIDERS.filter((provider) => configuredProviderList.includes(provider.id)).map((provider) => {
+                    const isActive = aiConfig.provider === provider.id;
+                    const settings = providerSettingsFor(aiConfig, provider.id);
+                    const configured = isProviderConfigured(provider.id);
+                    const ProviderIcon = getProviderIcon(provider.id);
+                    return (
+                      <tr key={provider.id} className={`border-b border-surface1/70 last:border-0 ${isActive ? 'bg-surface0/70' : 'hover:bg-surface0/35'}`}>
+                        <td className="px-3.5 py-2.5">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className={`w-7 h-7  border border-surface2 bg-surface0 flex items-center justify-center shrink-0 ${isActive ? 'text-brand' : 'text-subtext0'}`}>
+                              <ProviderIcon className="w-3.5 h-3.5" />
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block text-[11px] font-semibold text-text truncate">{getProviderDisplayName(provider.id)}</span>
+                              <span className="block text-[9px] text-subtext0 truncate">{provider.description}</span>
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-3.5 py-2.5 max-w-0">
+                          <code className="block text-[10px] text-subtext0 truncate" title={settings.baseUrl}>{settings.baseUrl}</code>
+                          <span className="block text-[10px] text-text/80 mt-0.5 truncate" title={settings.model}>{settings.model}</span>
+                        </td>
+                        <td className="px-3.5 py-2.5">
+                          <span className={`inline-flex items-center gap-1.5 text-[10px] ${isActive ? 'text-brand' : configured ? 'text-green' : 'text-subtext0'}`}>
+                            <span className={`w-1.5 h-1.5 ${isActive ? 'bg-brand' : configured ? 'bg-green' : 'bg-surface2'}`} />
+                            {isActive ? 'Active' : configured ? 'Ready' : 'Needs sign-in'}
+                          </span>
+                        </td>
+                        <td className="px-3.5 py-2.5 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openProviderDetails(provider.id)}
+                              className="px-2.5 py-1 border border-surface2 text-[10px] font-semibold text-text hover:bg-surface1 transition cursor-pointer"
+                            >
+                              Configure
+                            </button>
+                            {!isActive && (
+                              <button
+                                type="button"
+                                onClick={() => setProvider(provider.id)}
+                                className="px-2.5 py-1 border border-surface2 text-[10px] font-semibold text-text hover:bg-surface1 transition cursor-pointer"
+                              >
+                                Use
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProviderDeleteError(null);
+                                setProviderToDelete(provider.id);
+                              }}
+                              aria-label={`Remove ${getProviderDisplayName(provider.id)}`}
+                              title="Remove provider and saved configuration"
+                              className="inline-flex items-center justify-center w-7 h-7 border border-surface2 text-subtext0 hover:border-red/50 hover:text-red transition cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {configuredProviderList.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-9 text-center text-[11px] text-subtext0">
+                        No providers added yet. Add a supported provider and complete its connection details to get started.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* Unified Settings Card for Active Provider */}
-          <div className="p-4 bg-surface0/30 border border-surface1 rounded-xl space-y-4">
+          {/* MODAL: PROVIDER DETAILS */}
+          {isProviderDetailsOpen && (
+            <div
+              className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-[var(--backdrop-modal)] backdrop-blur-xs"
+              onClick={closeProviderDetails}
+              aria-hidden="true"
+            />
+          )}
+          <div
+            className={`p-4 border border-surface1 space-y-4 ${isProviderDetailsOpen
+              ? 'fixed inset-x-4 top-12 bottom-4 z-60 mx-auto max-w-4xl overflow-y-auto bg-mantle shadow-2xl'
+              : 'hidden'
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="provider-details-title"
+          >
             {/* Header: Active Provider Info & Docs */}
             <div className="flex items-center justify-between pb-3 border-b border-surface1/60">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-surface1 border border-surface2 flex items-center justify-center text-brand shrink-0">
+                <div className="w-8 h-8  bg-surface1 border border-surface2 flex items-center justify-center text-brand shrink-0">
                   <ActiveProviderIcon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-xs font-bold text-text">{activeProviderPreset.name}</h4>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-surface1 text-subtext0 border border-surface2 font-mono shrink-0">
+                    <h4 id="provider-details-title" className="text-xs font-bold text-text">{getProviderDisplayName(activeProviderPreset.id)}</h4>
+                    <span className="text-[10px] px-2 py-0.5  bg-surface1 text-subtext0 border border-surface2 font-mono shrink-0">
                       {aiConfig.provider === 'ollama'
                         ? 'Offline Local'
                         : isSubscriptionMode
@@ -602,30 +890,53 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 </div>
               </div>
 
-              {activeProviderPreset.docUrl && (
-                <a
-                  href={activeProviderPreset.docUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (activeProviderPreset.docUrl) {
-                      void openUrlInBrowser(activeProviderPreset.docUrl);
-                    }
-                  }}
-                  className="flex items-center gap-1 text-[11px] text-subtext0 hover:text-text underline cursor-pointer shrink-0 ml-3"
+              <div className="flex items-center gap-3 shrink-0">
+                {activeProviderPreset.docUrl && (
+                  <a
+                    href={activeProviderPreset.docUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (activeProviderPreset.docUrl) {
+                        void openUrlInBrowser(activeProviderPreset.docUrl);
+                      }
+                    }}
+                    className="flex items-center gap-1 text-[11px] text-subtext0 hover:text-text underline cursor-pointer"
+                  >
+                    <span>Documentation</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={closeProviderDetails}
+                  className="p-1 text-subtext0 hover:text-text transition-colors cursor-pointer"
+                  aria-label="Close provider details"
                 >
-                  <span>Documentation</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
+
+            {aiConfig.provider === 'custom' && (
+              <div>
+                <label htmlFor="custom-provider-display-name" className="block text-xs font-semibold text-text mb-1">Provider display name</label>
+                <input
+                  id="custom-provider-display-name"
+                  value={aiConfig.customProviderName || ''}
+                  onChange={(event) => updateAiConfig({ customProviderName: event.target.value })}
+                  placeholder="e.g. OpenRouter, DeepSeek, LM Studio"
+                  className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                />
+              </div>
+            )}
 
             {/* SECTION 1: AUTHENTICATION / ACCESS */}
             <div className="space-y-2.5">
               {/* Connection Option Switch (when provider supports both Subscription and API Key) */}
               {activeProviderPreset.supportedAuthModes && activeProviderPreset.supportedAuthModes.length > 1 && (
-                <div className="flex items-center justify-between p-2.5 bg-base/50 border border-surface1 rounded-lg">
+                <div className="flex items-center justify-between p-2.5 bg-base/50 border border-surface1 ">
                   <div>
                     <div className="text-xs font-semibold text-text">Connection Option</div>
                     <div className="text-[10px] text-subtext0">
@@ -634,11 +945,11 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         : 'Standard pay-per-token developer API key'}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 p-0.5 bg-surface0 border border-surface1 rounded-md shrink-0">
+                  <div className="flex items-center gap-1 p-0.5 bg-surface0 border border-surface1  shrink-0">
                     <button
                       type="button"
                       onClick={() => updateAiConfig({ authMode: defaultSubMode })}
-                      className={`px-3 py-1 rounded text-xs transition-all cursor-pointer font-medium ${
+                      className={`px-3 py-1  text-xs transition-all cursor-pointer font-medium ${
                         isSubscriptionMode ? 'bg-surface2 text-text font-semibold shadow-xs' : 'text-subtext0 hover:text-text'
                       }`}
                     >
@@ -647,7 +958,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     <button
                       type="button"
                       onClick={() => updateAiConfig({ authMode: 'api_key' })}
-                      className={`px-3 py-1 rounded text-xs transition-all cursor-pointer font-medium ${
+                      className={`px-3 py-1  text-xs transition-all cursor-pointer font-medium ${
                         !isSubscriptionMode ? 'bg-surface2 text-text font-semibold shadow-xs' : 'text-subtext0 hover:text-text'
                       }`}
                     >
@@ -659,7 +970,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 
               {/* Sub-panels for Auth Modes */}
               {aiConfig.provider === 'openai' && isSubscriptionMode ? (
-                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                <div className="p-3 bg-base/60 border border-surface1 ">
                   <ChatGptBrowserAuthCard />
                   <details className="mt-3">
                     <summary className="text-xs text-subtext0 cursor-pointer">Advanced: Codex-managed device code (requires Codex CLI; separate credentials)</summary>
@@ -667,21 +978,21 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   </details>
                 </div>
               ) : aiConfig.provider === 'github_copilot' ? (
-                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                <div className="p-3 bg-base/60 border border-surface1 ">
                   <button type="button" disabled={isCheckingSubscription || isConnectingSubscription} onClick={() => void checkCopilotStatus()} className="mb-3 border border-surface1 px-3 py-1.5 disabled:opacity-40" title="Explicitly read saved credentials and check GitHub. Your OS may request keyring access.">{isCheckingSubscription ? 'Checking…' : 'Check saved sign-in'}</button>
                   {copilotStatus?.connected ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-text">
                         <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
                         <span>GitHub User: <strong className="font-mono text-text">{copilotStatus.username || 'Subscriber'}</strong></span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-green/10 text-green border border-green/20 font-mono">
+                        <span className="text-[9px] px-1.5 py-0.2  bg-green/10 text-green border border-green/20 font-mono">
                           Copilot Active
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => disconnectCopilot()}
-                        className="px-2.5 py-1 rounded bg-red/10 hover:bg-red/20 text-[11px] text-red border border-red/30 transition-colors cursor-pointer"
+                        className="px-2.5 py-1  bg-red/10 hover:bg-red/20 text-[11px] text-red border border-red/30 transition-colors cursor-pointer"
                       >
                         Sign Out
                       </button>
@@ -694,7 +1005,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <div className="flex items-center justify-between p-2 bg-surface0 border border-surface2 rounded">
+                      <div className="flex items-center justify-between p-2 bg-surface0 border border-surface2 ">
                         <span className="text-base font-mono font-bold tracking-widest text-brand">{copilotDeviceCode.user_code}</span>
                         <button
                           type="button"
@@ -702,7 +1013,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                             void navigator.clipboard.writeText(copilotDeviceCode.user_code);
                             void openUrlInBrowser(copilotDeviceCode.verification_uri);
                           }}
-                          className="px-2.5 py-1 rounded bg-brand hover:bg-brand/90 text-on-accent font-bold text-xs flex items-center gap-1 cursor-pointer"
+                          className="px-2.5 py-1  bg-brand hover:bg-brand/90 text-on-accent font-bold text-xs flex items-center gap-1 cursor-pointer"
                         >
                           <Copy className="w-3 h-3" />
                           <span>Copy &amp; Open GitHub</span>
@@ -718,7 +1029,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         type="button"
                         onClick={() => startCopilotFlow()}
                         disabled={isConnectingSubscription}
-                        className="px-3 py-1.5 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 font-medium cursor-pointer shrink-0 disabled:opacity-50"
+                        className="px-3 py-1.5  bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 font-medium cursor-pointer shrink-0 disabled:opacity-50"
                       >
                         {isConnectingSubscription ? 'Connecting...' : 'Sign In with GitHub Copilot'}
                       </button>
@@ -726,13 +1037,13 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   )}
                 </div>
               ) : aiConfig.provider === 'anthropic' && isSubscriptionMode ? (
-                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                <div className="p-3 bg-base/60 border border-surface1 ">
                   {cliStatus.claude?.available ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-text">
                         <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
                         <span className="font-mono text-text">Claude Code CLI ({cliStatus.claude.version || 'Ready'})</span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-green/10 text-green border border-green/20 font-mono">
+                        <span className="text-[9px] px-1.5 py-0.2  bg-green/10 text-green border border-green/20 font-mono">
                           Session Ready
                         </span>
                       </div>
@@ -746,7 +1057,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                             setTestingCliType(null);
                           }}
                           disabled={testingCliType === 'claude'}
-                          className="px-2.5 py-1 rounded bg-brand/15 hover:bg-brand/25 text-[11px] text-brand border border-brand/40 cursor-pointer"
+                          className="px-2.5 py-1  bg-brand/15 hover:bg-brand/25 text-[11px] text-brand border border-brand/40 cursor-pointer"
                         >
                           {testingCliType === 'claude' ? 'Testing...' : 'Test CLI'}
                         </button>
@@ -754,13 +1065,13 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           type="button"
                           onClick={() => detectCli('claude')}
                           disabled={isDetectingCli}
-                          className="px-2 py-1 rounded bg-surface1 hover:bg-surface2 text-[11px] text-subtext0 hover:text-text border border-surface2 cursor-pointer"
+                          className="px-2 py-1  bg-surface1 hover:bg-surface2 text-[11px] text-subtext0 hover:text-text border border-surface2 cursor-pointer"
                         >
                           Re-scan
                         </button>
                       </div>
                       {cliTestOutput.claude && (
-                        <div className="mt-2 p-2 bg-surface0 border border-surface1 rounded font-mono text-[10px] text-subtext1 max-h-24 overflow-y-auto whitespace-pre-wrap">
+                        <div className="mt-2 p-2 bg-surface0 border border-surface1  font-mono text-[10px] text-subtext1 max-h-24 overflow-y-auto whitespace-pre-wrap">
                           {cliTestOutput.claude}
                         </div>
                       )}
@@ -778,7 +1089,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           setCopiedCode(true);
                           setTimeout(() => setCopiedCode(false), 2000);
                         }}
-                        className="px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 cursor-pointer shrink-0"
+                        className="px-2.5 py-1  bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 cursor-pointer shrink-0"
                       >
                         {copiedCode ? 'Copied!' : 'Copy Install Command'}
                       </button>
@@ -786,7 +1097,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   )}
                 </div>
               ) : aiConfig.provider === 'gemini' && isSubscriptionMode ? (
-                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                <div className="p-3 bg-base/60 border border-surface1 ">
                   <button type="button" disabled={isCheckingSubscription || isConnectingSubscription} onClick={() => void checkGoogleAuthStatus()} className="mb-3 border border-surface1 px-3 py-1.5 disabled:opacity-40" title="Explicitly read saved credentials. Your OS may request keyring access.">{isCheckingSubscription ? 'Checking…' : 'Check saved sign-in'}</button>
                   {googleAuthStatus?.connected ? (
                     <div className="flex items-center justify-between">
@@ -797,7 +1108,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                       <button
                         type="button"
                         onClick={() => disconnectGoogleOAuth()}
-                        className="px-2.5 py-1 rounded bg-red/10 hover:bg-red/20 text-[11px] text-red border border-red/30 cursor-pointer"
+                        className="px-2.5 py-1  bg-red/10 hover:bg-red/20 text-[11px] text-red border border-red/30 cursor-pointer"
                       >
                         Sign Out
                       </button>
@@ -811,7 +1122,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         type="button"
                         onClick={() => startGoogleOAuth()}
                         disabled={isConnectingSubscription}
-                        className="px-3 py-1.5 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 font-medium cursor-pointer shrink-0 disabled:opacity-50"
+                        className="px-3 py-1.5  bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 font-medium cursor-pointer shrink-0 disabled:opacity-50"
                       >
                         {isConnectingSubscription ? 'Connecting...' : 'Sign In with Google'}
                       </button>
@@ -819,13 +1130,13 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   )}
                 </div>
               ) : aiConfig.provider === 'xai_grok' && isSubscriptionMode ? (
-                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                <div className="p-3 bg-base/60 border border-surface1 ">
                   {cliStatus.grok?.available ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-text">
                         <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
                         <span className="font-mono text-text">SuperGrok CLI ({cliStatus.grok.version || 'Ready'})</span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-green/10 text-green border border-green/20 font-mono">
+                        <span className="text-[9px] px-1.5 py-0.2  bg-green/10 text-green border border-green/20 font-mono">
                           SuperGrok
                         </span>
                       </div>
@@ -839,7 +1150,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                             setTestingCliType(null);
                           }}
                           disabled={testingCliType === 'grok'}
-                          className="px-2.5 py-1 rounded bg-brand/15 hover:bg-brand/25 text-[11px] text-brand border border-brand/40 cursor-pointer"
+                          className="px-2.5 py-1  bg-brand/15 hover:bg-brand/25 text-[11px] text-brand border border-brand/40 cursor-pointer"
                         >
                           {testingCliType === 'grok' ? 'Testing...' : 'Test CLI'}
                         </button>
@@ -847,13 +1158,13 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           type="button"
                           onClick={() => void detectCli('grok')}
                           disabled={isDetectingCli}
-                          className="px-2 py-1 rounded bg-surface1 hover:bg-surface2 text-[11px] text-subtext0 hover:text-text border border-surface2 cursor-pointer"
+                          className="px-2 py-1  bg-surface1 hover:bg-surface2 text-[11px] text-subtext0 hover:text-text border border-surface2 cursor-pointer"
                         >
                           Re-scan
                         </button>
                       </div>
                       {cliTestOutput.grok && (
-                        <div className="mt-2 p-2 bg-surface0 border border-surface1 rounded font-mono text-[10px] text-subtext1 max-h-24 overflow-y-auto whitespace-pre-wrap">
+                        <div className="mt-2 p-2 bg-surface0 border border-surface1  font-mono text-[10px] text-subtext1 max-h-24 overflow-y-auto whitespace-pre-wrap">
                           {cliTestOutput.grok}
                         </div>
                       )}
@@ -871,7 +1182,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           setCopiedCode(true);
                           setTimeout(() => setCopiedCode(false), 2000);
                         }}
-                        className="px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 cursor-pointer shrink-0"
+                        className="px-2.5 py-1  bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 cursor-pointer shrink-0"
                       >
                         {copiedCode ? 'Copied!' : 'Copy Install Command'}
                       </button>
@@ -880,7 +1191,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 </div>
               ) : activeProviderPreset.requiresApiKey || activeProviderPreset.supportedAuthModes?.includes('api_key') ? (
                 /* Standard Developer API Key Field */
-                <div className="p-3 bg-base/60 border border-surface1 rounded-lg">
+                <div className="p-3 bg-base/60 border border-surface1 ">
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-semibold text-text">
                       API Secret Key <span className="text-red">*</span>
@@ -909,7 +1220,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           ? 'Key saved securely. Enter a new key to replace it.'
                           : 'sk-..., gsk_..., or developer token'
                       }
-                      className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded"
+                      className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 "
                     />
                     <button
                       type="button"
@@ -925,7 +1236,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 </div>
               ) : (
                 /* Ollama Local Informational Box */
-                <div className="p-3 bg-base/60 border border-surface1 rounded-lg flex items-center gap-2.5 text-xs text-subtext0">
+                <div className="p-3 bg-base/60 border border-surface1  flex items-center gap-2.5 text-xs text-subtext0">
                   <ShieldCheck className="w-4 h-4 text-green shrink-0" />
                   <span>
                     Ollama runs offline on your local machine (http://localhost:11434). No API key or cloud subscription required.
@@ -1001,7 +1312,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         step="0.05"
                         value={aiConfig.temperature}
                         onChange={(e) => updateAiConfig({ temperature: parseFloat(e.target.value) })}
-                        className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-text rounded"
+                        className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-text "
                       />
                     </div>
 
@@ -1061,7 +1372,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     updateAiConfig({ baseUrl, reasoningEffort: undefined, fastMode: nextModel?.supportsFastMode ? aiConfig.fastMode : false });
                   }}
                   placeholder="https://api.openai.com/v1"
-                  className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded"
+                  className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 "
                 />
               </div>
 
@@ -1071,7 +1382,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     type="checkbox"
                     checked={aiConfig.streamResponse}
                     onChange={(e) => updateAiConfig({ streamResponse: e.target.checked })}
-                    className="w-4 h-4 accent-text cursor-pointer rounded"
+                    className="w-4 h-4 accent-text cursor-pointer "
                   />
                   <span>Stream responses in real-time</span>
                 </label>
@@ -1081,7 +1392,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     type="checkbox"
                     checked={aiConfig.enableCodeReviewAssist}
                     onChange={(e) => updateAiConfig({ enableCodeReviewAssist: e.target.checked })}
-                    className="w-4 h-4 accent-text cursor-pointer rounded"
+                    className="w-4 h-4 accent-text cursor-pointer "
                   />
                   <span>Auto-summarize Git commits &amp; diffs</span>
                 </label>
@@ -1096,7 +1407,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   onClick={() => void testAiConnection(aiConfig, hasSavedApiKey || !!apiKeyDraft.trim())}
                   disabled={isTestingAi}
                   title="Native API tests use saved OS credentials, send no repository source and may incur provider charges. Apply API key changes first."
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded transition-colors cursor-pointer border border-surface2 shadow-xs"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold  transition-colors cursor-pointer border border-surface2 shadow-xs"
                 >
                   {isTestingAi ? (
                     <>
@@ -1111,7 +1422,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 <button
                   type="button"
                   onClick={resetAiConfig}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs text-subtext0 hover:text-text hover:bg-surface1/40 rounded transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs text-subtext0 hover:text-text hover:bg-surface1/40  transition-colors cursor-pointer"
                   title="Reset provider settings to defaults"
                 >
                   <RotateCcw className="w-3 h-3" />
@@ -1122,7 +1433,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               {/* Inline Test Result */}
               {aiTestResult && (
                 <div
-                  className={`flex items-center gap-2 px-2.5 py-1 rounded text-xs animate-in fade-in ${
+                  className={`flex items-center gap-2 px-2.5 py-1  text-xs animate-in fade-in ${
                     aiTestResult.success
                       ? 'bg-green/10 text-green border border-green/20'
                       : 'bg-red/10 text-red border border-red/20'
@@ -1183,7 +1494,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   setJsonFeedback(null);
                   setIsJsonModalOpen(true);
                 }}
-                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
                 title="Import or Export JSON configuration"
               >
                 <FileJson className="w-3.5 h-3.5" />
@@ -1193,7 +1504,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               <button
                 type="button"
                 onClick={() => handleOpenAddServer()}
-                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs border border-surface2"
+                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold  transition-colors cursor-pointer shadow-xs border border-surface2"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add MCP Server</span>
@@ -1211,7 +1522,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 key={preset.name}
                 type="button"
                 onClick={() => handleOpenAddServer(preset)}
-                className="flex shrink-0 items-center gap-1 whitespace-nowrap px-2.5 py-1 rounded text-[11px] font-medium bg-surface0 border border-surface1 hover:bg-surface1 text-text transition-colors cursor-pointer"
+                className="flex shrink-0 items-center gap-1 whitespace-nowrap px-2.5 py-1  text-[11px] font-medium bg-surface0 border border-surface1 hover:bg-surface1 text-text transition-colors cursor-pointer"
               >
                 <Plus className="w-3 h-3 text-subtext0" />
                 <span>{preset.name}</span>
@@ -1233,7 +1544,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsServerFormOpen(false)}
-                  className="p-1 text-subtext0 hover:text-text rounded cursor-pointer"
+                  className="p-1 text-subtext0 hover:text-text  cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1360,7 +1671,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     onClick={() =>
                       setServerEnvPairs([...serverEnvPairs, { key: '', value: '' }])
                     }
-                    className="flex items-center gap-1 text-[10px] text-subtext0 hover:text-text px-2 py-0.5 rounded hover:bg-surface1 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-[10px] text-subtext0 hover:text-text px-2 py-0.5  hover:bg-surface1 transition-colors cursor-pointer"
                   >
                     <Plus className="w-3 h-3" />
                     <span>Add Variable</span>
@@ -1402,7 +1713,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           onClick={() => {
                             setServerEnvPairs(serverEnvPairs.filter((_, i) => i !== idx));
                           }}
-                          className="p-1 text-subtext0 hover:text-red rounded cursor-pointer"
+                          className="p-1 text-subtext0 hover:text-red  cursor-pointer"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -1421,13 +1732,13 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsServerFormOpen(false)}
-                  className="px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                  className="px-3 py-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
+                  className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold  transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5 text-on-accent" />
                   <span>{editingServerId ? 'Save Changes' : 'Register Server'}</span>
@@ -1453,7 +1764,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 <button
                   type="button"
                   onClick={() => handleOpenAddServer(MCP_PRESET_TEMPLATES[0])}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer border border-surface2 shadow-xs mt-1"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold  transition-colors cursor-pointer border border-surface2 shadow-xs mt-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Default Git MCP Server</span>
@@ -1520,7 +1831,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         <button
                           type="button"
                           onClick={() => toggleMcpServer(server.id)}
-                          className={`shrink-0 whitespace-nowrap px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                          className={`shrink-0 whitespace-nowrap px-2 py-1  text-[11px] font-semibold border transition-all cursor-pointer ${
                             server.enabled
                               ? 'bg-surface1 border-surface2 text-text shadow-xs'
                               : 'bg-surface0/50 border-surface0 text-subtext0 hover:text-text'
@@ -1535,7 +1846,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           type="button"
                           onClick={() => handleTestServer(server.id)}
                           disabled={testingServerId === server.id}
-                          className="p-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
+                          className="p-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
                           title="Validate saved configuration only. Use the external connectors panel for HTTP discovery."
                         >
                           <RefreshCw
@@ -1549,7 +1860,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                         <button
                           type="button"
                           onClick={() => handleOpenEditServer(server)}
-                          className="p-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
+                          className="p-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
                           title="Edit Server Configuration"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
@@ -1564,14 +1875,14 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                                 deleteMcpServer(server.id);
                                 setDeletingServerId(null);
                               }}
-                              className="px-2 py-0.5 bg-red/20 hover:bg-red/30 text-red text-[11px] font-medium rounded transition-colors cursor-pointer"
+                              className="px-2 py-0.5 bg-red/20 hover:bg-red/30 text-red text-[11px] font-medium  transition-colors cursor-pointer"
                             >
                               Confirm
                             </button>
                             <button
                               type="button"
                               onClick={() => setDeletingServerId(null)}
-                              className="px-1.5 py-0.5 text-subtext0 hover:text-text text-[11px] rounded transition-colors cursor-pointer"
+                              className="px-1.5 py-0.5 text-subtext0 hover:text-text text-[11px]  transition-colors cursor-pointer"
                             >
                               Cancel
                             </button>
@@ -1580,7 +1891,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           <button
                             type="button"
                             onClick={() => setDeletingServerId(server.id)}
-                            className="p-1.5 rounded-lg border border-surface1 hover:bg-red/10 text-subtext0 hover:text-red transition-colors cursor-pointer"
+                            className="p-1.5  border border-surface1 hover:bg-red/10 text-subtext0 hover:text-red transition-colors cursor-pointer"
                             title="Remove MCP Server"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1665,6 +1976,163 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         </div>
       )}
 
+      {/* MODAL: ADD / EDIT LLM PROVIDER */}
+      {isProviderSetupOpen && (
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
+          <form onSubmit={handleSaveProviderSetup} className="bg-mantle border border-surface0 w-full max-w-xl shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150">
+            <div data-tauri-drag-region className="flex items-center justify-between pb-2 border-b border-surface0 cursor-default">
+              <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
+                <Sparkles className="w-4 h-4 text-brand" />
+                <span>
+                  <h4 className="text-sm font-bold text-text">Add LLM provider</h4>
+                  <span className="block text-[10px] text-subtext0 mt-0.5">Choose a provider and save its connection details.</span>
+                </span>
+              </div>
+              <button type="button" onClick={() => setIsProviderSetupOpen(false)} className="p-1 text-subtext0 hover:text-text  cursor-pointer" aria-label="Close provider form">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="llm-provider-select" className="block text-[11px] font-semibold text-subtext0 mb-1">Provider</label>
+                <select
+                  id="llm-provider-select"
+                  value={setupProviderId}
+                  onChange={(event) => loadProviderSetup(event.target.value as AiProviderId)}
+                  className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2"
+                >
+                  {availableProviderList.map((provider) => <option key={provider.id} value={provider.id}>{getProviderDisplayName(provider.id)}</option>)}
+                </select>
+              </div>
+
+              {setupProviderId === 'custom' && (
+                <div>
+                  <label htmlFor="llm-provider-name" className="block text-[11px] font-semibold text-subtext0 mb-1">Display name</label>
+                  <input
+                    id="llm-provider-name"
+                    value={setupProviderName}
+                    onChange={(event) => setSetupProviderName(event.target.value)}
+                    placeholder="e.g. OpenRouter, DeepSeek, LM Studio"
+                    className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                  />
+                </div>
+              )}
+
+              {getProviderAuthModes(setupProviderId).length > 1 && (
+                <div>
+                  <label htmlFor="llm-provider-auth" className="block text-[11px] font-semibold text-subtext0 mb-1">Connection method</label>
+                  <select
+                    id="llm-provider-auth"
+                    value={setupAuthMode || ''}
+                    onChange={(event) => setSetupAuthMode((event.target.value || undefined) as AiConfig['authMode'])}
+                    className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2"
+                  >
+                    {getProviderAuthModes(setupProviderId).map((mode) => (
+                      <option key={mode} value={mode}>
+                        {mode === 'api_key' ? 'API key' : mode === 'subscription_oauth' ? 'Subscription sign-in' : 'CLI bridge'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {setupAuthMode === 'api_key' && setupProviderId !== 'ollama' && (
+                <div>
+                  <label htmlFor="llm-provider-api-key" className="block text-[11px] font-semibold text-subtext0 mb-1">API key</label>
+                  <input
+                    id="llm-provider-api-key"
+                    type="password"
+                    autoComplete="new-password"
+                    value={setupApiKey}
+                    onChange={(event) => setSetupApiKey(event.target.value)}
+                    placeholder={hasProviderApiKey(setupProviderId) ? 'Saved securely · leave empty to keep' : 'Paste your API key'}
+                    className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                  />
+                  <p className="text-[9px] text-subtext0 mt-1">On Apply, the key is saved securely and never written to preferences.json.</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="llm-provider-base-url" className="block text-[11px] font-semibold text-subtext0 mb-1">API base URL</label>
+                  <input
+                    id="llm-provider-base-url"
+                    type="url"
+                    value={setupBaseUrl}
+                    onChange={(event) => setSetupBaseUrl(event.target.value)}
+                    placeholder="https://api.example.com/v1"
+                    className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="llm-provider-model" className="block text-[11px] font-semibold text-subtext0 mb-1">Model ID</label>
+                  <input
+                    id="llm-provider-model"
+                    value={setupModel}
+                    onChange={(event) => setSetupModel(event.target.value)}
+                    placeholder="model-name"
+                    className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {providerSetupError && (
+              <div role="alert" className="flex items-center gap-2 p-2.5 bg-red/10 border border-red/30 text-red text-[11px]">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{providerSetupError}</span>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-surface0">
+              <button type="button" onClick={() => setIsProviderSetupOpen(false)} className="px-3 py-1.5 border border-surface1 text-subtext0 hover:text-text hover:bg-surface0 text-xs transition cursor-pointer">
+                Cancel
+              </button>
+              <button type="submit" className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-brand text-base text-xs font-semibold hover:brightness-110 transition cursor-pointer">
+                <Check className="w-3.5 h-3.5" />
+                <span>Save provider</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {providerToDelete && (
+        <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
+          <div role="alertdialog" aria-modal="true" aria-labelledby="remove-provider-title" className="w-full max-w-md bg-mantle border border-surface0 shadow-2xl p-5 space-y-4">
+            <div className="flex items-start gap-3">
+              <span className="w-9 h-9 shrink-0 border border-red/40 bg-red/10 text-red flex items-center justify-center">
+                <Trash2 className="w-4 h-4" />
+              </span>
+              <div>
+                <h4 id="remove-provider-title" className="text-sm font-bold text-text">Remove {getProviderDisplayName(providerToDelete)}?</h4>
+                <p className="text-[11px] leading-relaxed text-subtext0 mt-1">
+                  This removes its provider entry and all saved connection settings. The saved API key in the OS credential store will also be deleted. In Preferences, the removal takes effect when you apply your changes.
+                </p>
+              </div>
+            </div>
+
+            {providerDeleteError && (
+              <div role="alert" className="flex items-center gap-2 p-2.5 bg-red/10 border border-red/30 text-red text-[11px]">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{providerDeleteError}</span>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-surface0">
+              <button type="button" disabled={isDeletingProvider} onClick={() => setProviderToDelete(null)} className="px-3 py-1.5 border border-surface1 text-subtext0 hover:text-text hover:bg-surface0 text-xs transition cursor-pointer disabled:opacity-50">
+                Cancel
+              </button>
+              <button type="button" disabled={isDeletingProvider} onClick={() => void confirmRemoveProvider()} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red text-base text-xs font-semibold hover:brightness-110 transition cursor-pointer disabled:opacity-50">
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isDeletingProvider ? 'Removing…' : 'Remove provider'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MODAL: IMPORT / EXPORT MCP CONFIG JSON */}
       {isJsonModalOpen && (
         <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
@@ -1680,7 +2148,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               <button
                 type="button"
                 onClick={() => setIsJsonModalOpen(false)}
-                className="p-1 text-subtext0 hover:text-text rounded cursor-pointer"
+                className="p-1 text-subtext0 hover:text-text  cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1731,7 +2199,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   <button
                     type="button"
                     onClick={handleCopyJson}
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer border border-surface2 shadow-xs"
+                    className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold  transition-colors cursor-pointer border border-surface2 shadow-xs"
                   >
                     {copiedJson ? (
                       <>
@@ -1782,14 +2250,14 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsJsonModalOpen(false)}
-                    className="px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                    className="px-3 py-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleImportJson}
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-lg transition-colors cursor-pointer border border-surface2 shadow-xs"
+                    className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold  transition-colors cursor-pointer border border-surface2 shadow-xs"
                   >
                     <Check className="w-3.5 h-3.5 text-text" />
                     <span>Import Config</span>

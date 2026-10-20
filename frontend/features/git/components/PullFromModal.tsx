@@ -113,7 +113,7 @@ export const PullFromModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsPullFromOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+            className="p-1.5  hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
             title="Close (Esc)"
           >
             <X className="w-4 h-4" />
@@ -270,7 +270,7 @@ export const PullFromModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsPullFromOpen(false)}
-              className="px-4 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+              className="px-4 py-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
             >
               Cancel
             </button>

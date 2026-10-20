@@ -1,4 +1,5 @@
 import { type AiProviderPreset } from '../types/AiProviderPreset';
+import type { AiProviderId } from '../types/AiProviderId';
 import { type McpServerConfig } from '../types/McpServerConfig';
 
 export const AI_PROVIDERS: AiProviderPreset[] = [
@@ -130,6 +131,7 @@ const defaultAiProvider = AI_PROVIDERS.find((provider) => provider.id === 'opena
 
 export const DEFAULT_AI_CONFIG = {
   provider: 'openai' as const,
+  configuredProviders: [] as AiProviderId[],
   model: defaultAiProvider.defaultModel,
   apiKey: '',
   baseUrl: defaultAiProvider.defaultBaseUrl,

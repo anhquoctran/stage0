@@ -75,7 +75,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
           onClick={handleClose}
           title="Close (⌘W)"
           aria-label="Close"
-          className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]/70 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs relative"
+          className="w-3 h-3  bg-[#ff5f56] border border-[#e0443e]/70 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs relative"
         >
           <svg
             className="w-2 h-2 text-[#4c0002] opacity-0 group-hover/traffic:opacity-100 transition-opacity"
@@ -96,7 +96,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
           onClick={handleMinimize}
           title="Minimize (⌘M)"
           aria-label="Minimize"
-          className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea125]/70 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs relative"
+          className="w-3 h-3  bg-[#ffbd2e] border border-[#dea125]/70 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs relative"
         >
           <svg
             className="w-2 h-2 text-[#5e3b00] opacity-0 group-hover/traffic:opacity-100 transition-opacity"
@@ -116,7 +116,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
           onClick={handleToggleMaximize}
           title={isMaximized ? 'Restore Down' : 'Zoom (Maximize)'}
           aria-label={isMaximized ? 'Restore Down' : 'Zoom'}
-          className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]/70 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs relative"
+          className="w-3 h-3  bg-[#27c93f] border border-[#1aab29]/70 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs relative"
         >
           <svg
             className="w-2 h-2 text-[#004d11] opacity-0 group-hover/traffic:opacity-100 transition-opacity"

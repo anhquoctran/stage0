@@ -155,6 +155,7 @@ async function startApp() {
           try {
             await invoke('commit_ai_preferences', {
               apiKeys: {},
+              apiKeyRemovals: [],
               policy: null,
               mcpEnvSecrets: legacyMcpSecrets,
               mcpEnvRemovals: {},

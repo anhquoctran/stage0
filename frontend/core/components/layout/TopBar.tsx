@@ -170,7 +170,7 @@ export const TopBar: React.FC = () => {
           {/* Active Repository Indicator */}
           {currentRepo ? (
             <div
-              className="flex items-center gap-3 px-3.5 h-12 bg-surface0 text-left max-w-[260px] select-none shrink-0 rounded"
+              className="flex items-center gap-3 px-3.5 h-12 bg-surface0 text-left max-w-[260px] select-none shrink-0 "
               title={currentRepo.local_path}
             >
               <FolderGit2 className="w-5 h-5 text-primary shrink-0" />
@@ -184,7 +184,7 @@ export const TopBar: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2.5 px-3.5 h-12 bg-surface0 text-subtext0 text-xs select-none shrink-0 rounded">
+            <div className="flex items-center gap-2.5 px-3.5 h-12 bg-surface0 text-subtext0 text-xs select-none shrink-0 ">
               <FolderGit2 className="w-4 h-4 text-subtext0 shrink-0" />
               <span>No Repository Opened</span>
             </div>
@@ -202,7 +202,7 @@ export const TopBar: React.FC = () => {
                   type="button"
                   disabled={isSyncing}
                   onClick={() => runSync('fetch')}
-                  className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
+                  className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center  hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
                   title={shortcut('git fetch --all --prune (Ctrl+Shift+F)')}
                 >
                   <RefreshCw
@@ -215,7 +215,7 @@ export const TopBar: React.FC = () => {
 
                 {/* PULL SPLIT BUTTON */}
                 <div
-                  className={`relative flex items-stretch rounded transition-colors cursor-pointer ${
+                  className={`relative flex items-stretch  transition-colors cursor-pointer ${
                     isPullMenuOpen
                       ? 'bg-surface0 text-primary'
                       : 'text-subtext1 hover:bg-surface0 hover:text-text'
@@ -254,7 +254,7 @@ export const TopBar: React.FC = () => {
                   </button>
 
                   {isPullMenuOpen && (
-                    <div className="absolute left-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 rounded">
+                    <div className="absolute left-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 ">
                       <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0 mb-1">
                         Pull Options
                       </div>
@@ -293,7 +293,7 @@ export const TopBar: React.FC = () => {
 
                 {/* MERGE SPLIT BUTTON */}
                 <div
-                  className={`relative flex items-stretch rounded transition-colors cursor-pointer ${
+                  className={`relative flex items-stretch  transition-colors cursor-pointer ${
                     isMergeMenuOpen
                       ? 'bg-surface0 text-primary'
                       : 'text-subtext1 hover:bg-surface0 hover:text-text'
@@ -331,7 +331,7 @@ export const TopBar: React.FC = () => {
                     <ChevronDown className="w-2.5 h-2.5 text-current transition-colors" />
                   </button>
                   {isMergeMenuOpen && (
-                    <div className="absolute left-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 rounded">
+                    <div className="absolute left-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 ">
                       <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0 mb-1">
                         Merge Options
                       </div>
@@ -361,7 +361,7 @@ export const TopBar: React.FC = () => {
 
                 {/* REBASE SPLIT BUTTON */}
                 <div
-                  className={`relative flex items-stretch rounded transition-colors cursor-pointer ${
+                  className={`relative flex items-stretch  transition-colors cursor-pointer ${
                     isRebaseMenuOpen
                       ? 'bg-surface0 text-primary'
                       : 'text-subtext1 hover:bg-surface0 hover:text-text'
@@ -400,7 +400,7 @@ export const TopBar: React.FC = () => {
                   </button>
 
                   {isRebaseMenuOpen && (
-                    <div className="absolute left-0 top-full mt-1.5 w-60 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 rounded">
+                    <div className="absolute left-0 top-full mt-1.5 w-60 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 ">
                       <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0 mb-1">
                         Rebase Options
                       </div>
@@ -492,7 +492,7 @@ export const TopBar: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsGitGraphOpen(true)}
-                  className="h-12 min-w-[58px] px-1.5 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors cursor-pointer group"
+                  className="h-12 min-w-[58px] px-1.5 flex flex-col items-center justify-center  hover:bg-surface0 text-subtext1 hover:text-text transition-colors cursor-pointer group"
                   title="Show Git Graph for the checked-out branch"
                 >
                   <GitCommit className="w-5 h-5 text-primary shrink-0 transition-colors" />
@@ -506,7 +506,7 @@ export const TopBar: React.FC = () => {
                   type="button"
                   disabled={isSyncing}
                   onClick={refreshDiff}
-                  className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
+                  className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center  hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
                   title={shortcut('Refresh MR diff & conflict simulation (Ctrl+R)')}
                 >
                   <RotateCw className="w-5 h-5 text-primary shrink-0 transition-colors" />
@@ -520,7 +520,7 @@ export const TopBar: React.FC = () => {
                   type="button"
                   disabled={!currentRepo}
                   onClick={() => openRepoSettings('remotes')}
-                  className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center rounded hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
+                  className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center  hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
                   title={shortcut('Repository Settings (Ctrl+Alt+S)')}
                 >
                   <FolderCog className="w-5 h-5 text-primary shrink-0 transition-colors" />
@@ -542,7 +542,7 @@ export const TopBar: React.FC = () => {
           {currentRepo && (
             <>
               {isRebasing && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950 text-white text-xs rounded">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950 text-white text-xs ">
                   <span className="text-xs font-semibold text-amber-200 uppercase tracking-wider mr-1">
                     Rebasing:
                   </span>
@@ -550,7 +550,7 @@ export const TopBar: React.FC = () => {
                     type="button"
                     disabled={isSyncing}
                     onClick={() => runSync('rebase_continue')}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-900 hover:bg-emerald-800 text-white text-xs font-medium transition-colors cursor-pointer rounded"
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-900 hover:bg-emerald-800 text-white text-xs font-medium transition-colors cursor-pointer "
                     title="Continue rebase after resolving conflicts"
                   >
                     <Play className="w-3.5 h-3.5 text-white" />
@@ -560,7 +560,7 @@ export const TopBar: React.FC = () => {
                     type="button"
                     disabled={isSyncing}
                     onClick={() => runSync('rebase_skip')}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white text-xs font-medium transition-colors cursor-pointer rounded"
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white text-xs font-medium transition-colors cursor-pointer "
                     title="Skip this commit"
                   >
                     <SkipForward className="w-3.5 h-3.5 text-white" />
@@ -570,7 +570,7 @@ export const TopBar: React.FC = () => {
                     type="button"
                     disabled={isSyncing}
                     onClick={() => runSync('rebase_abort')}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-red-900 hover:bg-red-800 text-white text-xs font-medium transition-colors cursor-pointer rounded"
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-red-900 hover:bg-red-800 text-white text-xs font-medium transition-colors cursor-pointer "
                     title="Abort rebase and restore original state"
                   >
                     <Undo2 className="w-3.5 h-3.5 text-white" />

@@ -304,7 +304,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
             <span className="text-[10px] uppercase font-bold text-subtext0 tracking-wider">Total Bots</span>
             <div className="text-lg font-bold text-text mt-0.5">{globalReviewers.length}</div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-surface0 flex items-center justify-center text-subtext0">
+          <div className="w-8 h-8  bg-surface0 flex items-center justify-center text-subtext0">
             <Bot className="w-4 h-4" />
           </div>
         </div>
@@ -314,7 +314,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
             <span className="text-[10px] uppercase font-bold text-subtext0 tracking-wider">Active in Global</span>
             <div className="text-lg font-bold text-brand mt-0.5">{enabledCount}</div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center text-brand">
+          <div className="w-8 h-8  bg-brand/10 border border-brand/20 flex items-center justify-center text-brand">
             <Check className="w-4 h-4" />
           </div>
         </div>
@@ -324,7 +324,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
             <span className="text-[10px] uppercase font-bold text-subtext0 tracking-wider">Custom Bots</span>
             <div className="text-lg font-bold text-brand mt-0.5">{customCount}</div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-surface0 flex items-center justify-center text-subtext0">
+          <div className="w-8 h-8  bg-surface0 flex items-center justify-center text-subtext0">
             <Bot className="w-4 h-4" />
           </div>
         </div>
@@ -340,7 +340,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
               placeholder="Search reviewer bots by name, category, or prompt..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text placeholder:text-subtext0/60 focus:outline-none focus:border-brand"
+              className="w-full pl-8 pr-3 py-1.5 bg-surface0 border border-surface1  text-xs text-text placeholder:text-subtext0/60 focus:outline-none focus:border-brand"
             />
           </div>
           <label className="flex items-center gap-1.5 text-xs text-subtext0 cursor-pointer shrink-0 select-none">
@@ -348,7 +348,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
               type="checkbox"
               checked={onlyEnabled}
               onChange={(e) => setOnlyEnabled(e.target.checked)}
-              className="rounded border-surface1 text-brand focus:ring-0 cursor-pointer"
+              className=" border-surface1 text-brand focus:ring-0 cursor-pointer"
             />
             <span>Enabled only</span>
           </label>
@@ -359,7 +359,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
           <button
             type="button"
             onClick={() => setSelectedCategory('all')}
-            className={`px-2.5 py-1 text-xs rounded transition-colors cursor-pointer border ${
+            className={`px-2.5 py-1 text-xs  transition-colors cursor-pointer border ${
               selectedCategory === 'all'
                 ? 'bg-surface2 text-text font-medium border-surface2'
                 : 'bg-surface0/60 text-subtext0 hover:bg-surface0 border-transparent'
@@ -375,7 +375,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-2 py-1 text-xs rounded transition-colors cursor-pointer border ${
+                className={`px-2 py-1 text-xs  transition-colors cursor-pointer border ${
                   selectedCategory === cat.id
                     ? `${cat.bg} font-medium`
                     : 'bg-surface0/60 text-subtext0 hover:bg-surface0 border-transparent'
@@ -391,7 +391,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
       {/* Reviewer Cards List */}
       <div className="space-y-3">
         {filteredBots.length === 0 ? (
-          <div className="p-8 text-center bg-surface0/20 border border-dashed border-surface1 rounded space-y-2">
+          <div className="p-8 text-center bg-surface0/20 border border-dashed border-surface1  space-y-2">
             <Bot className="w-8 h-8 mx-auto text-subtext0/40" />
             <div className="text-xs text-subtext0 font-medium">No reviewer bots found matching your criteria</div>
             <button
@@ -422,23 +422,23 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <span className="text-2xl p-1.5 bg-surface0 border border-surface1 rounded-lg shrink-0">
+                    <span className="text-2xl p-1.5 bg-surface0 border border-surface1  shrink-0">
                       {bot.avatarEmoji}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-bold text-text truncate">{bot.name}</span>
                         <span
-                          className={`px-2 py-0.5 text-[10px] font-semibold border rounded-full ${cat.bg}`}
+                          className={`px-2 py-0.5 text-[10px] font-semibold border  ${cat.bg}`}
                         >
                           {cat.label}
                         </span>
                         {bot.isBuiltin ? (
-                          <span className="px-1.5 py-0.2 text-[9px] font-mono bg-surface1 text-subtext0 rounded border border-surface2/60">
+                          <span className="px-1.5 py-0.2 text-[9px] font-mono bg-surface1 text-subtext0  border border-surface2/60">
                             Built-in
                           </span>
                         ) : (
-                          <span className="px-1.5 py-0.2 text-[9px] font-mono bg-brand/10 text-brand rounded border border-brand/20">
+                          <span className="px-1.5 py-0.2 text-[9px] font-mono bg-brand/10 text-brand  border border-brand/20">
                             Custom
                           </span>
                         )}
@@ -457,13 +457,13 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                     <button
                       type="button"
                       onClick={() => toggleGlobalReviewer(bot.id)}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer  border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                         bot.enabled ? 'bg-brand' : 'bg-surface1'
                       }`}
                       title={bot.enabled ? 'Click to disable globally' : 'Click to enable globally'}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-base shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        className={`pointer-events-none inline-block h-4 w-4 transform  bg-base shadow-lg ring-0 transition duration-200 ease-in-out ${
                           bot.enabled ? 'translate-x-4' : 'translate-x-0'
                         }`}
                       />
@@ -524,7 +524,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                     <button
                       type="button"
                       onClick={() => handleCloneBot(bot)}
-                      className="p-1.5 hover:bg-surface0 rounded text-subtext0 hover:text-text transition-colors cursor-pointer"
+                      className="p-1.5 hover:bg-surface0  text-subtext0 hover:text-text transition-colors cursor-pointer"
                       title="Clone this reviewer bot"
                     >
                       <Copy className="w-3.5 h-3.5" />
@@ -532,7 +532,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(bot)}
-                      className="p-1.5 hover:bg-surface0 rounded text-subtext0 hover:text-text transition-colors cursor-pointer"
+                      className="p-1.5 hover:bg-surface0  text-subtext0 hover:text-text transition-colors cursor-pointer"
                       title="Edit bot settings and prompt"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -541,7 +541,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                       <button
                         type="button"
                         onClick={() => deleteGlobalReviewer(bot.id)}
-                        className="p-1.5 hover:bg-red/20 rounded text-subtext0 hover:text-red transition-colors cursor-pointer"
+                        className="p-1.5 hover:bg-red/20  text-subtext0 hover:text-red transition-colors cursor-pointer"
                         title="Delete custom bot"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -552,7 +552,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
 
                 {/* Expanded Prompt Viewer */}
                 {isPromptExpanded && (
-                  <div className="mt-3 p-3 bg-crust border border-surface0/80 rounded space-y-1.5 animate-in fade-in duration-150">
+                  <div className="mt-3 p-3 bg-crust border border-surface0/80  space-y-1.5 animate-in fade-in duration-150">
                     <div className="flex items-center justify-between text-[11px] text-subtext0 font-mono">
                       <span>STAGE0 ROLE PROMPT · {getCategoryInfo(bot.category).label.toUpperCase()}</span>
                       <span>{getBotRolePrompt(bot.category).length} characters</span>
@@ -596,7 +596,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
             </div>
 
             {formError && (
-              <div className="p-2.5 bg-red/10 border border-red/20 text-red text-xs rounded flex items-center gap-2">
+              <div className="p-2.5 bg-red/10 border border-red/20 text-red text-xs  flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{formError}</span>
               </div>
@@ -614,7 +614,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                       maxLength={4}
                       value={formEmoji}
                       onChange={(e) => setFormEmoji(e.target.value)}
-                      className="w-12 h-9 text-center text-lg bg-surface0 border border-surface1 rounded text-text focus:outline-none focus:border-brand"
+                      className="w-12 h-9 text-center text-lg bg-surface0 border border-surface1  text-text focus:outline-none focus:border-brand"
                     />
                     <div className="flex gap-1 flex-wrap max-w-[80px]">
                       {EMOJI_PRESETS.slice(0, 6).map((em) => (
@@ -641,7 +641,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                     placeholder="e.g. Accessibility Auditor"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text focus:outline-none focus:border-brand"
+                    className="w-full px-3 py-1.5 bg-surface0 border border-surface1  text-xs text-text focus:outline-none focus:border-brand"
                   />
                 </div>
               </div>
@@ -656,7 +656,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                     placeholder="e.g. WCAG 2.1 & Screen Reader Compliance"
                     value={formTagline}
                     onChange={(e) => setFormTagline(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text focus:outline-none focus:border-brand"
+                    className="w-full px-3 py-1.5 bg-surface0 border border-surface1  text-xs text-text focus:outline-none focus:border-brand"
                   />
                 </div>
 
@@ -686,7 +686,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                   placeholder="Short explanation of what this bot checks in code reviews..."
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text focus:outline-none focus:border-brand"
+                  className="w-full px-3 py-1.5 bg-surface0 border border-surface1  text-xs text-text focus:outline-none focus:border-brand"
                 />
               </div>
 
@@ -698,7 +698,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                   </label>
                   <span className="text-[10px] text-subtext0 font-mono">Read-only · selected by role</span>
                 </div>
-                <pre className="w-full max-h-36 overflow-y-auto whitespace-pre-wrap px-3 py-2 bg-crust border border-surface1 rounded text-xs font-mono text-subtext1 leading-relaxed select-text">
+                <pre className="w-full max-h-36 overflow-y-auto whitespace-pre-wrap px-3 py-2 bg-crust border border-surface1  text-xs font-mono text-subtext1 leading-relaxed select-text">
                   {getBotRolePrompt(formCategory)}
                 </pre>
                 <label className="block text-[11px] font-semibold text-subtext0 mt-3 mb-1">
@@ -709,12 +709,12 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                   value={formInstructions}
                   onChange={(e) => setFormInstructions(e.target.value)}
                   placeholder="Add bot-specific review guidance. This is combined with the read-only Stage0 role prompt."
-                  className="w-full px-3 py-2 bg-surface0 border border-surface1 rounded text-xs font-mono text-text focus:outline-none focus:border-brand leading-relaxed"
+                  className="w-full px-3 py-2 bg-surface0 border border-surface1  text-xs font-mono text-text focus:outline-none focus:border-brand leading-relaxed"
                 />
               </div>
 
               {/* Model & Execution Parameters */}
-              <div className="p-3 bg-surface0/30 border border-surface0 rounded space-y-3">
+              <div className="p-3 bg-surface0/30 border border-surface0  space-y-3">
                 <span className="text-[11px] font-bold text-text uppercase tracking-wider block">
                   Model &amp; Execution Override (Optional)
                 </span>
@@ -788,7 +788,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                       value={formModel}
                       onChange={(e) => setFormModel(e.target.value)}
                       placeholder="Enter custom model ID"
-                      className="mt-2 w-full px-2 py-1.5 bg-surface0 border border-surface1 rounded text-xs text-text focus:outline-none focus:border-brand font-mono"
+                      className="mt-2 w-full px-2 py-1.5 bg-surface0 border border-surface1  text-xs text-text focus:outline-none focus:border-brand font-mono"
                     />}
                   </div>
 
@@ -828,13 +828,13 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs rounded transition-colors cursor-pointer"
+                  className="px-4 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs  transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs rounded transition-colors cursor-pointer shadow-xs"
+                  className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs  transition-colors cursor-pointer shadow-xs"
                 >
                   {editingBotId ? 'Update Bot' : 'Create Bot'}
                 </button>
@@ -859,7 +859,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
               <button
                 type="button"
                 onClick={() => setShowResetConfirm(false)}
-                className="px-3 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs rounded cursor-pointer"
+                className="px-3 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs  cursor-pointer"
               >
                 Cancel
               </button>
@@ -869,7 +869,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                   resetGlobalReviewers();
                   setShowResetConfirm(false);
                 }}
-                className="px-4 py-1.5 bg-yellow hover:brightness-95 text-on-accent font-semibold text-xs rounded cursor-pointer shadow-xs"
+                className="px-4 py-1.5 bg-yellow hover:brightness-95 text-on-accent font-semibold text-xs  cursor-pointer shadow-xs"
               >
                 Reset to Defaults
               </button>

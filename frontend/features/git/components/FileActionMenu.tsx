@@ -100,7 +100,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         title="File actions (Reveal in Explorer, Copy paths, Copy remote URL)"
-        className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded transition-colors border cursor-pointer ${
+        className={`flex items-center gap-1 px-2 py-1 text-xs font-medium  transition-colors border cursor-pointer ${
           isOpen
             ? 'bg-surface1 text-text border-surface2'
             : 'bg-surface0 border-surface0 text-subtext1 hover:text-text hover:bg-surface1'
