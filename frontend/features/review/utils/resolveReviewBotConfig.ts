@@ -19,6 +19,7 @@ export function resolveReviewBotConfig(
       customInstructions: reviewer.customInstructions,
       executionMode: 'acp',
       acpAgent: externalAgents.find((agent) => agent.id === reviewer.acpAgentId),
+      acpConfigOptions: reviewer.acpConfigOptions || {},
       allowAcpSourceTransfer: reviewer.allowAcpSourceTransfer === true,
     };
   }

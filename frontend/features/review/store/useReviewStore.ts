@@ -103,6 +103,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         model: config.model, baseUrl: config.baseUrl, reviewerRole: config.reviewerRole,
         instructions: config.customInstructions, allowRemote,
         executionMode: config.executionMode || 'provider', acpAgent: config.acpAgent || null,
+        acpConfigOptions: config.acpConfigOptions || null,
         reasoningEffort: config.reasoningEffort || null, fastMode: config.fastMode === true,
         reviewerId: reviewer?.id || null, reviewerName: reviewer?.name || null,
         generateDescription,

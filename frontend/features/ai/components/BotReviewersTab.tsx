@@ -13,6 +13,8 @@ import { Copy } from '../../../common/components/icons/Copy';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { AiModelExecutionOptions } from './AiModelExecutionOptions';
+import { AcpReviewerConfigOptions } from './AcpReviewerConfigOptions';
+import type { AcpReviewConfigOverrides } from '../types/AcpReviewConfigOverrides';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useBotReviewersStore } from '../store/useBotReviewersStore';
 import { BOT_CATEGORIES } from '../constants/botPresets';
@@ -73,6 +75,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
   const [formExecutionMode, setFormExecutionMode] = useState<'provider' | 'acp'>('provider');
   const [formAcpAgentId, setFormAcpAgentId] = useState('');
   const [formAllowAcpSourceTransfer, setFormAllowAcpSourceTransfer] = useState(false);
+  const [formAcpConfigOptions, setFormAcpConfigOptions] = useState<AcpReviewConfigOverrides>({});
   const [formProvider, setFormProvider] = useState<string>('global_default');
   const [formModel, setFormModel] = useState<string>('global_default');
   const [isCustomModel, setIsCustomModel] = useState(false);
@@ -162,6 +165,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
     setFormExecutionMode('provider');
     setFormAcpAgentId(externalAgents[0]?.id || '');
     setFormAllowAcpSourceTransfer(false);
+    setFormAcpConfigOptions({});
     setFormProvider('global_default');
     setFormModel('global_default');
     setIsCustomModel(false);
@@ -183,6 +187,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
     setFormExecutionMode(bot.acpAgentId ? 'acp' : 'provider');
     setFormAcpAgentId(bot.acpAgentId || externalAgents[0]?.id || '');
     setFormAllowAcpSourceTransfer(bot.allowAcpSourceTransfer === true);
+    setFormAcpConfigOptions(bot.acpConfigOptions || {});
     setFormProvider(bot.provider || 'global_default');
     setFormModel(bot.model || 'global_default');
     setIsCustomModel(false);
@@ -205,6 +210,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
       model: bot.model,
       acpAgentId: bot.acpAgentId,
       allowAcpSourceTransfer: bot.allowAcpSourceTransfer,
+      acpConfigOptions: bot.acpConfigOptions,
       temperature: bot.temperature,
       reasoningEffort: bot.reasoningEffort,
       fastMode: bot.fastMode,
@@ -249,6 +255,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
         model: acpMode ? 'global_default' : formModel.trim(),
         acpAgentId: acpMode ? formAcpAgentId : undefined,
         allowAcpSourceTransfer: acpMode ? formAllowAcpSourceTransfer : undefined,
+        acpConfigOptions: acpMode ? formAcpConfigOptions : undefined,
         temperature: formTemp,
         reasoningEffort: savedReasoningEffort,
         fastMode: savedFastMode,
@@ -265,6 +272,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
         model: acpMode ? 'global_default' : formModel.trim(),
         acpAgentId: acpMode ? formAcpAgentId : undefined,
         allowAcpSourceTransfer: acpMode ? formAllowAcpSourceTransfer : undefined,
+        acpConfigOptions: acpMode ? formAcpConfigOptions : undefined,
         temperature: formTemp,
         reasoningEffort: savedReasoningEffort,
         fastMode: savedFastMode,
@@ -481,14 +489,16 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                   <div className="flex items-center gap-3 shrink-0">
                     <button
                       type="button"
+                      role="switch"
+                      aria-checked={bot.enabled}
                       onClick={() => toggleGlobalReviewer(bot.id)}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer  border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                         bot.enabled ? 'bg-brand' : 'bg-surface1'
                       }`}
                       title={bot.enabled ? 'Click to disable globally' : 'Click to enable globally'}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform  bg-base shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-base shadow-lg ring-0 transition duration-200 ease-in-out ${
                           bot.enabled ? 'translate-x-4' : 'translate-x-0'
                         }`}
                       />
@@ -879,7 +889,10 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                         label: `${agent.name}${agent.version ? ` · ${agent.version}` : ''}`,
                         description: agent.description || agent.source,
                       }))}
-                      onChange={setFormAcpAgentId}
+                      onChange={(agentId) => {
+                        setFormAcpAgentId(agentId);
+                        setFormAcpConfigOptions({});
+                      }}
                       searchable
                       searchPlaceholder="Search installed agents…"
                       className="w-full"
@@ -889,6 +902,11 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                       aria-label="ACP reviewer agent"
                     /> : <p className="border border-yellow/40 bg-yellow/5 p-2 text-[10px] text-yellow">No ACP agents are installed. Add one in AI Preferences → External Agents.</p>}
                   </div>
+                  <AcpReviewerConfigOptions
+                    agent={externalAgents.find((agent) => agent.id === formAcpAgentId)}
+                    value={formAcpConfigOptions}
+                    onChange={setFormAcpConfigOptions}
+                  />
                   <label className="flex items-start gap-2 text-[10px] text-subtext0">
                     <input type="checkbox" checked={formAllowAcpSourceTransfer} onChange={(event) => setFormAllowAcpSourceTransfer(event.target.checked)} className="mt-0.5 accent-brand" />
                     <span>I allow this ACP agent to receive eligible changed-file diffs and review context. Sensitive paths are excluded and matching secret lines are redacted, but detection cannot catch every secret. This consent is used for automatic reviews assigned to this bot.</span>

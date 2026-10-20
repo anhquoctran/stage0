@@ -11,7 +11,7 @@ use std::sync::{
     Arc, Mutex, OnceLock,
 };
 use std::collections::{HashMap, HashSet};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Manager};
 
 pub const SYSTEM: &str = r#"You are Stage0's AI code reviewer for one Virtual MR. Review only the fixed, sandboxed Git snapshot provided through tools. Every response in this review loop must invoke one or more supplied tools; never substitute prose for a tool call.
@@ -71,12 +71,46 @@ pub async fn run(
     cancel: Arc<AtomicBool>,
 ) {
     let database = app.state::<Database>();
+    let review_started = Instant::now();
+    let run_id = run.id.clone();
+    super::debug_log::log(format_args!(
+        "event=review_started run={} session={} mode={} provider={} model={} reviewer={}",
+        super::debug_log::safe_label(&run.id, 80),
+        super::debug_log::safe_label(&run.session_id, 80),
+        config.execution_mode,
+        super::debug_log::safe_label(&run.provider, 40),
+        super::debug_log::safe_label(&run.model, 100),
+        super::debug_log::safe_label(
+            config.reviewer_name.as_deref().or(config.reviewer_id.as_deref()).unwrap_or("default"),
+            100
+        )
+    ));
     let outcome = tokio::select! {
         result=execute(&database,&config,&mut run,&context)=>result,
-        _=wait_cancel(cancel)=>Err("Review cancelled. An already-sent provider request may still be billed.".into()),
-        _=tokio::time::sleep(Duration::from_secs(300))=>Err("Review deadline exceeded; results are incomplete.".into()),
+        _=wait_cancel(cancel)=>{
+            super::debug_log::log(format_args!("event=review_cancelled run={}", super::debug_log::safe_label(&run_id, 80)));
+            Err("Review cancelled. An already-sent provider request may still be billed.".into())
+        },
+        _=tokio::time::sleep(Duration::from_secs(300))=>{
+            super::debug_log::log(format_args!("event=review_deadline_exceeded run={} deadline_seconds=300", super::debug_log::safe_label(&run_id, 80)));
+            Err("Review deadline exceeded; results are incomplete.".into())
+        },
     };
     run.finish(outcome);
+    super::debug_log::log(format_args!(
+        "event=review_finished run={} status={} elapsed_ms={} turns={} tool_calls={} findings={} inspected_files={} context_bytes={} usage_tokens={} published={} error_class={}",
+        super::debug_log::safe_label(&run.id, 80),
+        run.status,
+        review_started.elapsed().as_millis(),
+        run.turns,
+        run.tool_calls,
+        run.findings.len(),
+        run.inspected_files.len(),
+        run.context_bytes,
+        run.usage_tokens,
+        run.published,
+        run.error.as_deref().map(super::debug_log::error_class).unwrap_or("none")
+    ));
     let db = app.state::<Database>();
     let _ = db.review_event(
         &run.id,
@@ -109,7 +143,18 @@ async fn execute(
         }
         "acp" => {
             let agent = config.acp_agent.clone().ok_or("The selected ACP reviewer agent is unavailable")?;
-            let adapter = super::acp_model_adapter::AcpModelAdapter::new(agent);
+            super::debug_log::log(format_args!(
+                "event=acp_reviewer_selected run={} agent_id={} agent_name={} version={} config_overrides={}",
+                super::debug_log::safe_label(&run.id, 80),
+                super::debug_log::safe_label(&agent.id, 100),
+                super::debug_log::safe_label(&agent.name, 100),
+                agent.version.as_deref().map(|version| super::debug_log::safe_label(version, 80)).unwrap_or_else(|| "unknown".into()),
+                config.acp_config_options.as_ref().and_then(Value::as_object).map_or(0, serde_json::Map::len)
+            ));
+            let adapter = super::acp_model_adapter::AcpModelAdapter::new(
+                agent,
+                config.acp_config_options.clone().unwrap_or_default(),
+            );
             let result = execute_with_adapter(db, config, run, context, &adapter).await;
             adapter.close().await;
             result
@@ -167,8 +212,22 @@ async fn execute_with_adapter(
                 json!({"excludedFileCount":run.snapshot.excluded_files.len()}),
             )?;
         }
+        super::debug_log::log(format_args!(
+            "event=review_skipped_no_eligible_work run={} excluded_files={} model_requests=0",
+            super::debug_log::safe_label(&run.id, 80),
+            run.snapshot.excluded_files.len()
+        ));
         return Ok(());
     }
+    super::debug_log::log(format_args!(
+        "event=review_context_ready run={} eligible_files={} excluded_files={} open_discussions={} tool_count={} description_generation={}",
+        super::debug_log::safe_label(&run.id, 80),
+        run.snapshot.changed_files.len(),
+        run.snapshot.excluded_files.len(),
+        db.list_discussions(&run.session_id).map(|discussions| discussions.iter().filter(|discussion| !discussion.is_resolved).count()).unwrap_or_default(),
+        tools.len(),
+        config.generate_description
+    ));
     for turn in 0..12 {
         run.turns = turn + 1;
         let body = adapter.payload(&system, &history, tools, 2048);
@@ -176,6 +235,14 @@ async fn execute_with_adapter(
         // Reserve the initial request plus its one permitted HTTP retry.
         wire_bytes += bytes * 2;
         if bytes > 160 * 1024 || wire_bytes > 512 * 1024 || run.usage_tokens >= 64000 {
+            super::debug_log::log(format_args!(
+                "event=review_budget_exhausted run={} turn={} request_bytes={} estimated_wire_bytes={} usage_tokens={}",
+                super::debug_log::safe_label(&run.id, 80),
+                run.turns,
+                bytes,
+                wire_bytes,
+                run.usage_tokens
+            ));
             return Err("Review context/token budget exhausted".into());
         }
         db.review_event(
@@ -184,8 +251,45 @@ async fn execute_with_adapter(
             json!({"turn":run.turns,"requestBytes":bytes}),
         )?;
         db.save_review_run(run)?;
-        let response = adapter.request(&body).await?;
-        let (calls, usage) = adapter.decode(&response, &mut history)?;
+        super::debug_log::log(format_args!(
+            "event=model_request_started run={} turn={} mode={} provider={} model={} request_bytes={} history_items={} estimated_wire_bytes={}",
+            super::debug_log::safe_label(&run.id, 80),
+            run.turns,
+            config.execution_mode,
+            super::debug_log::safe_label(&run.provider, 40),
+            super::debug_log::safe_label(&run.model, 100),
+            bytes,
+            history.len(),
+            wire_bytes
+        ));
+        let request_started = Instant::now();
+        let response = match adapter.request(&body).await {
+            Ok(response) => response,
+            Err(error) => {
+                super::debug_log::log(format_args!(
+                    "event=model_request_failed run={} turn={} elapsed_ms={} error_class={}",
+                    super::debug_log::safe_label(&run.id, 80),
+                    run.turns,
+                    request_started.elapsed().as_millis(),
+                    super::debug_log::error_class(&error)
+                ));
+                return Err(error);
+            }
+        };
+        let (calls, usage) = match adapter.decode(&response, &mut history) {
+            Ok(decoded) => decoded,
+            Err(error) => {
+                super::debug_log::log(format_args!(
+                    "event=model_response_decode_failed run={} turn={} elapsed_ms={} response_bytes={} error_class={}",
+                    super::debug_log::safe_label(&run.id, 80),
+                    run.turns,
+                    request_started.elapsed().as_millis(),
+                    response.to_string().len(),
+                    super::debug_log::error_class(&error)
+                ));
+                return Err(error);
+            }
+        };
         run.usage_tokens = run.usage_tokens.saturating_add(usage);
         let output_item_types = response["output"]
             .as_array()
@@ -230,10 +334,35 @@ async fn execute_with_adapter(
             "model_response",
             json!({"turn":run.turns,"usageTokens":usage,"toolCalls":calls.len(),"outputItemTypes":output_item_types,"hasOutputText":has_output_text,"hasRefusal":has_refusal,"streamedOutputItems":response["_stage0Stream"]["completedOutputItems"].as_u64(),"terminalOutputItems":response["_stage0Stream"]["terminalOutputItems"].as_u64()}),
         )?;
+        super::debug_log::log(format_args!(
+            "event=model_response_received run={} turn={} elapsed_ms={} usage_tokens={} total_usage_tokens={} tool_calls={} output_item_types={} has_output_text={} has_refusal={}",
+            super::debug_log::safe_label(&run.id, 80),
+            run.turns,
+            request_started.elapsed().as_millis(),
+            usage,
+            run.usage_tokens,
+            calls.len(),
+            output_item_types.join(","),
+            has_output_text,
+            has_refusal
+        ));
         if run.usage_tokens > 64000 {
+            super::debug_log::log(format_args!(
+                "event=review_budget_exhausted run={} reason=reported_token_limit usage_tokens={} limit=64000",
+                super::debug_log::safe_label(&run.id, 80),
+                run.usage_tokens
+            ));
             return Err("Review token budget exhausted".into());
         }
         if calls.is_empty() {
+            super::debug_log::log(format_args!(
+                "event=model_response_without_tool_call run={} turn={} has_refusal={} has_output_text={} recovery_available={}",
+                super::debug_log::safe_label(&run.id, 80),
+                run.turns,
+                has_refusal,
+                has_output_text,
+                !has_refusal && !recovered_missing_tool_call && run.turns < 12
+            ));
             if !has_refusal && !recovered_missing_tool_call && run.turns < 12 {
                 let reminder = "Your previous response did not invoke a tool and is not a review result. Continue the sandboxed review now: call one supplied snapshot or discussion tool; do not answer in prose. If the investigation is complete, call submit_review with the summary and findings.";
                 if config.execution_mode != "acp" && config.provider == "gemini" {
@@ -247,22 +376,63 @@ async fn execute_with_adapter(
                     "tool_call_retry",
                     json!({"turn":run.turns,"reason":"provider_returned_no_tool_call"}),
                 )?;
+                super::debug_log::log(format_args!(
+                    "event=tool_call_recovery_prompt run={} turn={} reason=missing_tool_call",
+                    super::debug_log::safe_label(&run.id, 80),
+                    run.turns
+                ));
                 continue;
             }
             return Err("The provider returned no function call although this review requires tool use. The selected model/account may not support required function calling, or the response may have been refused; check the run trace for response type metadata.".into());
         }
         if run.tool_calls + calls.len() > 48 {
+            super::debug_log::log(format_args!(
+                "event=review_budget_exhausted run={} reason=tool_call_limit current_calls={} requested_calls={} limit=48",
+                super::debug_log::safe_label(&run.id, 80),
+                run.tool_calls,
+                calls.len()
+            ));
             return Err("Review tool-call budget exhausted".into());
         }
         if calls.iter().any(|call| call.name == "submit_review") && calls.len() != 1 {
+            super::debug_log::log(format_args!(
+                "event=tool_call_batch_rejected run={} turn={} reason=submit_review_must_be_solo calls={}",
+                super::debug_log::safe_label(&run.id, 80),
+                run.turns,
+                calls.len()
+            ));
             return Err("submit_review must be the only call in its final turn".into());
         }
         let mut results = Vec::new();
         let mut turn_review_file: Option<String> = None;
-        for call in calls {
+        for (tool_index, call) in calls.into_iter().enumerate() {
             run.tool_calls += 1;
+            super::debug_log::log(format_args!(
+                "event=tool_call_received run={} turn={} tool_index={} tool={} tool_call_total={}",
+                super::debug_log::safe_label(&run.id, 80),
+                run.turns,
+                tool_index + 1,
+                super::debug_log::safe_label(&call.name, 100),
+                run.tool_calls
+            ));
             let valid = registry.validate_call(&call.name, &call.arguments);
+            if valid.is_ok() {
+                if let Some(file_path) = call.arguments["filePath"].as_str() {
+                    super::debug_log::log(format_args!(
+                        "event=tool_target run={} turn={} tool={} file={}",
+                        super::debug_log::safe_label(&run.id, 80),
+                        run.turns,
+                        super::debug_log::safe_label(&call.name, 100),
+                        super::debug_log::safe_label(file_path, 240)
+                    ));
+                }
+            }
             if call.name == "submit_review" && valid.is_ok() && !description_updated {
+                super::debug_log::log(format_args!(
+                    "event=tool_call_rejected run={} turn={} tool=submit_review reason=description_inventory_incomplete",
+                    super::debug_log::safe_label(&run.id, 80),
+                    run.turns
+                ));
                 results.push((
                     call,
                     json!({"isError":true,"error":"Complete the whole eligible diff inventory and call update_mr_description before submitting this review."}),
@@ -278,6 +448,12 @@ async fn execute_with_adapter(
                 };
                 if let Some(file_path) = file_path {
                     if turn_review_file.as_deref().is_some_and(|current| current != file_path) {
+                        super::debug_log::log(format_args!(
+                            "event=tool_call_rejected run={} turn={} tool={} reason=one_file_per_turn_policy",
+                            super::debug_log::safe_label(&run.id, 80),
+                            run.turns,
+                            super::debug_log::safe_label(&call.name, 100)
+                        ));
                         results.push((
                             call,
                             json!({"isError":true,"error":"Review one changed file at a time. Finish considering the current file in this turn before moving to another file."}),
@@ -297,6 +473,12 @@ async fn execute_with_adapter(
                 let findings = deduplicate(findings);
                 if findings.len() > 50 {
                     had_errors = true;
+                    super::debug_log::log(format_args!(
+                        "event=tool_call_rejected run={} turn={} tool=submit_review reason=finding_limit findings={}",
+                        super::debug_log::safe_label(&run.id, 80),
+                        run.turns,
+                        findings.len()
+                    ));
                     results.push((
                         call,
                         json!({"isError":true,"error":"A review may contain at most 50 inline findings"}),
@@ -351,6 +533,14 @@ async fn execute_with_adapter(
                             || !run.findings.is_empty()
                             || has_unresolved_discussions
                         {
+                            super::debug_log::log(format_args!(
+                                "event=tool_call_rejected run={} turn={} tool=submit_review reason=approval_guard coverage_status={} findings={} unresolved_discussions={}",
+                                super::debug_log::safe_label(&run.id, 80),
+                                run.turns,
+                                run.status,
+                                run.findings.len(),
+                                has_unresolved_discussions
+                            ));
                             run.decision = None;
                             run.status = "running".into();
                             results.push((
@@ -368,12 +558,29 @@ async fn execute_with_adapter(
                         "submitted",
                         json!({"findingCount":run.findings.len(),"discussionActions":pending_discussion_actions.len(),"coverage":run.status}),
                     )?;
+                    super::debug_log::log(format_args!(
+                        "event=review_submitted run={} decision={} status={} findings={} discussion_actions={} inspected_files={} context_bytes={}",
+                        super::debug_log::safe_label(&run.id, 80),
+                        super::debug_log::safe_label(&submitted_decision, 40),
+                        run.status,
+                        run.findings.len(),
+                        pending_discussion_actions.len(),
+                        run.inspected_files.len(),
+                        run.context_bytes
+                    ));
                     return Ok(());
                 }
                 had_errors = true;
+                let validation_error = validation.unwrap_err();
+                super::debug_log::log(format_args!(
+                    "event=tool_call_rejected run={} turn={} tool=submit_review reason=finding_validation error_class={}",
+                    super::debug_log::safe_label(&run.id, 80),
+                    run.turns,
+                    super::debug_log::error_class(&validation_error)
+                ));
                 results.push((
                     call,
-                    json!({"isError":true,"error":validation.unwrap_err()}),
+                    json!({"isError":true,"error":validation_error}),
                 ));
                 continue;
             }
@@ -381,6 +588,12 @@ async fn execute_with_adapter(
                 && !description_updated
                 && matches!(call.name.as_str(), "create_review_discussion" | "reply_to_discussion" | "resolve_discussion")
             {
+                super::debug_log::log(format_args!(
+                    "event=tool_call_rejected run={} turn={} tool={} reason=description_inventory_incomplete",
+                    super::debug_log::safe_label(&run.id, 80),
+                    run.turns,
+                    super::debug_log::safe_label(&call.name, 100)
+                ));
                 results.push((
                     call,
                     json!({"isError":true,"error":"Update the MR description after completing all eligible diffs before taking discussion actions."}),
@@ -573,17 +786,37 @@ async fn execute_with_adapter(
                 }
             };
             // No raw prompt, source, tool arguments, model reasoning or secrets in logs.
-            db.review_event(&run.id,"tool_result",json!({"tool":call.name,"isError":value["isError"],"outputBytes":value.to_string().len()}))?;
-            {
+            let output_bytes = value.to_string().len();
+            db.review_event(&run.id,"tool_result",json!({"tool":call.name,"isError":value["isError"],"outputBytes":output_bytes}))?;
+            let (complete_diffs, context_bytes, inspected_files) = {
                 let ctx = context.lock().map_err(|_| "Review context unavailable")?;
                 run.context_bytes = ctx.bytes;
                 run.inspected_files = ctx.inspected.iter().cloned().collect();
-            }
+                (ctx.complete_diffs.len(), ctx.bytes, ctx.inspected.len())
+            };
+            super::debug_log::log(format_args!(
+                "event=tool_result run={} turn={} tool={} outcome={} output_bytes={} inspected_files={} complete_diffs={} findings={} context_bytes={}",
+                super::debug_log::safe_label(&run.id, 80),
+                run.turns,
+                super::debug_log::safe_label(&call.name, 100),
+                if value["isError"] == true { "error" } else { "ok" },
+                output_bytes,
+                inspected_files,
+                complete_diffs,
+                pending_findings.len(),
+                context_bytes
+            ));
             db.save_review_run(run)?;
             results.push((call, value));
         }
         adapter.append_results(&mut history, &results);
     }
+    super::debug_log::log(format_args!(
+        "event=review_turn_budget_exhausted run={} turns={} tool_calls={}",
+        super::debug_log::safe_label(&run.id, 80),
+        run.turns,
+        run.tool_calls
+    ));
     Err("Review turn budget exhausted without a final structured result".into())
 }
 
@@ -812,6 +1045,7 @@ mod tests {
             fast_mode: false,
             execution_mode: "provider".into(),
             acp_agent: None,
+            acp_config_options: None,
             reviewer_id: None,
             reviewer_name: None,
             reviewer_role: None,

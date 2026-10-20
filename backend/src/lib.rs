@@ -258,6 +258,7 @@ pub fn run() {
             features::ai::acp::acp_agent_connection_info,
             features::ai::acp::acp_agent_authenticate,
             features::ai::acp::acp_agent_prompt,
+            features::ai::acp::review_config::acp_agent_review_config_options,
             commands::start_ai_review,
             commands::test_ai_review_provider,
             commands::discover_harness_mcp,

@@ -1,5 +1,6 @@
 import type { BotCategory } from './BotCategory';
 import type { AiReasoningEffort } from '../../ai/types/AiReasoningEffort';
+import type { AcpReviewConfigOverrides } from '../../ai/types/AcpReviewConfigOverrides';
 
 export interface BotReviewer {
   id: string;
@@ -15,6 +16,8 @@ export interface BotReviewer {
   acpAgentId?: string;
   /** Explicit per-reviewer consent to send eligible, redacted source to this ACP agent. */
   allowAcpSourceTransfer?: boolean;
+  /** ACP session config values selected for this reviewer; absent keys keep agent defaults. */
+  acpConfigOptions?: AcpReviewConfigOverrides;
   temperature?: number;
   reasoningEffort?: AiReasoningEffort;
   fastMode?: boolean;

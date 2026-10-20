@@ -9,6 +9,8 @@ use tokio::{
     process::{Child, ChildStdin, ChildStdout, Command},
 };
 
+pub mod review_config;
+
 const REGISTRY_URL: &str = "https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json";
 const MAX_BINARY_ARCHIVE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_REGISTRY_ICON_BYTES: usize = 128 * 1024;
@@ -395,6 +397,24 @@ pub fn validate_review_agent_config(config: &AcpAgentConfig) -> Result<(), Strin
     validate_config(config)
 }
 
+pub fn validate_review_config_overrides(overrides: &Value) -> Result<(), String> {
+    let options = overrides.as_object().ok_or("ACP reviewer configuration must be an object")?;
+    if options.len() > 32 {
+        return Err("ACP reviewer configuration contains too many options".into());
+    }
+    for (id, value) in options {
+        if id.is_empty() || id.len() > 128 || id.chars().any(char::is_control) {
+            return Err("ACP reviewer configuration contains an invalid option ID".into());
+        }
+        let valid_value = value.as_bool().is_some()
+            || value.as_str().is_some_and(|value| value.len() <= 256 && !value.chars().any(char::is_control));
+        if !valid_value {
+            return Err("ACP reviewer configuration contains an invalid option value".into());
+        }
+    }
+    Ok(())
+}
+
 fn make_command(config: &AcpAgentConfig, working_directory: Option<&Path>) -> Command {
     #[cfg(target_os = "windows")]
     let mut command = if config.launch_mode.as_deref() == Some("binary") {
@@ -516,7 +536,7 @@ impl AcpProcess {
     async fn initialize(&mut self) -> Result<Value, String> {
         let response = self.request(0, "initialize", json!({
             "protocolVersion": 1,
-            "clientCapabilities": {},
+            "clientCapabilities": {"session":{"configOptions":{"boolean":{}}}},
             "clientInfo": {"name":"stage0","title":"Stage0","version":env!("CARGO_PKG_VERSION")}
         })).await?;
         if response.get("protocolVersion").and_then(Value::as_u64) != Some(1) {
@@ -582,7 +602,11 @@ pub async fn acp_agent_connection_info(config: AcpAgentConfig) -> Result<Value, 
 
 #[cfg(test)]
 mod tests {
-    use super::{sanitize_agent_info, sanitize_auth_method, sanitize_auth_status};
+    use super::{
+        sanitize_agent_info, sanitize_auth_method, sanitize_auth_status,
+        validate_review_config_overrides,
+    };
+    use super::review_config::filter_review_config_options;
     use serde_json::json;
 
     #[test]
@@ -635,6 +659,29 @@ mod tests {
             "token": "must-not-escape"
         }));
         assert_eq!(agent.unwrap(), json!({"name":"codex-acp","title":"Codex","version":"2.2.2"}));
+    }
+
+    #[test]
+    fn reviewer_config_discovery_keeps_model_reasoning_and_fast_mode_only() {
+        let options = filter_review_config_options(&[
+            json!({"id":"model","name":"Model","category":"model","type":"select","currentValue":"gpt-6-luna","options":[{"group":"recommended","name":"Recommended","options":[{"value":"gpt-6-luna","name":"GPT-6 Luna"}]}]}),
+            json!({"id":"reasoning_effort","name":"Reasoning effort","category":"thought_level","type":"select","currentValue":"high","options":[{"value":"high","name":"High"}]}),
+            json!({"id":"fast-mode","name":"Fast mode","category":"model_config","type":"boolean","currentValue":false}),
+            json!({"id":"mode","name":"Permission mode","category":"mode","type":"select","currentValue":"ask","options":[{"value":"ask","name":"Ask"}]}),
+        ]);
+
+        assert_eq!(options.len(), 3);
+        assert_eq!(options[0]["reviewKind"], "model");
+        assert_eq!(options[0]["options"][0]["name"], "Recommended · GPT-6 Luna");
+        assert_eq!(options[1]["reviewKind"], "reasoning");
+        assert_eq!(options[2]["reviewKind"], "fastMode");
+    }
+
+    #[test]
+    fn reviewer_config_overrides_are_bounded_and_typed() {
+        assert!(validate_review_config_overrides(&json!({"model":"gpt-6-luna","fast-mode":true})).is_ok());
+        assert!(validate_review_config_overrides(&json!(["not an object"])).is_err());
+        assert!(validate_review_config_overrides(&json!({"model":["bad value"]})).is_err());
     }
 }
 
@@ -744,7 +791,7 @@ pub struct AcpAgentReviewSession {
 }
 
 impl AcpAgentReviewSession {
-    pub async fn start(config: &AcpAgentConfig) -> Result<Self, String> {
+    pub async fn start(config: &AcpAgentConfig, config_overrides: &Value) -> Result<Self, String> {
         let working_directory = std::env::temp_dir().join(format!("stage0-acp-review-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir(&working_directory).map_err(|_| "Could not create an isolated ACP review working directory")?;
         let mut process = match AcpProcess::start(config, Some(&working_directory)).await {
@@ -757,7 +804,12 @@ impl AcpAgentReviewSession {
         let setup = async {
             process.initialize().await?;
             let session = process.request(1, "session/new", json!({"cwd":working_directory.to_string_lossy(),"mcpServers":[]})).await?;
-            session.get("sessionId").and_then(Value::as_str).map(str::to_owned).ok_or_else(|| "ACP agent did not return a session ID".to_owned())
+            let session_id = session.get("sessionId").and_then(Value::as_str).map(str::to_owned).ok_or_else(|| "ACP agent did not return a session ID".to_owned())?;
+            if let Some(overrides) = config_overrides.as_object() {
+                let options = session.get("configOptions").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                review_config::apply_review_config_options(&mut process, &session_id, options, overrides).await?;
+            }
+            Ok(session_id)
         }.await;
         match setup {
             Ok(session_id) => Ok(Self { process, session_id, next_prompt_id: 2, working_directory }),
