@@ -199,6 +199,12 @@ impl Database {
             "UPDATE virtual_mr_sessions SET status='open' WHERE status='approved'",
             [],
         )?;
+        let closed_duplicate_open_mrs = Self::migrate_unique_open_virtual_mr_pairs(&conn)?;
+        if closed_duplicate_open_mrs > 0 {
+            eprintln!(
+                "Closed {closed_duplicate_open_mrs} duplicate open Virtual MR record(s) while preserving their data."
+            );
+        }
         conn.execute(
             "UPDATE virtual_mr_session_reviewers SET review_status='pending' WHERE review_status='reviewing'",
             [],
@@ -213,6 +219,32 @@ impl Database {
         Self::migrate_git_credentials(&conn)?;
 
         Ok(Database(Mutex::new(conn)))
+    }
+
+    fn migrate_unique_open_virtual_mr_pairs(conn: &Connection) -> Result<usize, rusqlite::Error> {
+        let closed = conn.execute(
+            "UPDATE virtual_mr_sessions
+             SET status = 'closed', updated_at = CURRENT_TIMESTAMP
+             WHERE status = 'open' AND rowid IN (
+                 SELECT duplicate.rowid
+                 FROM virtual_mr_sessions duplicate
+                 WHERE duplicate.status = 'open' AND EXISTS (
+                     SELECT 1 FROM virtual_mr_sessions earlier
+                     WHERE earlier.status = 'open'
+                       AND earlier.repo_id = duplicate.repo_id
+                       AND earlier.compare_branch = duplicate.compare_branch
+                       AND earlier.base_branch = duplicate.base_branch
+                       AND earlier.rowid < duplicate.rowid
+                 )
+             );",
+            [],
+        )?;
+        conn.execute_batch(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_vmr_unique_open_source_target
+             ON virtual_mr_sessions(repo_id, compare_branch, base_branch)
+             WHERE status = 'open';",
+        )?;
+        Ok(closed)
     }
 
     fn migrate_discussions_fingerprint(conn: &Connection) -> Result<(), rusqlite::Error> {
@@ -438,6 +470,52 @@ mod tests {
     }
 
     #[test]
+    fn open_virtual_mr_pair_migration_preserves_rows_and_closes_older_duplicates() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA_SQL).unwrap();
+        conn.execute_batch(
+            "INSERT INTO repositories(id, name, local_path) VALUES ('repo', 'Repo', '/fixture/repo');
+             INSERT INTO virtual_mr_sessions(id, repo_id, title, base_branch, compare_branch, status)
+                 VALUES ('first', 'repo', 'Original', 'main', 'feature', 'open'),
+                        ('second', 'repo', 'Duplicate', 'main', 'feature', 'open');",
+        ).unwrap();
+
+        assert_eq!(
+            Database::migrate_unique_open_virtual_mr_pairs(&conn).unwrap(),
+            1
+        );
+        let statuses = conn
+            .prepare("SELECT id, status FROM virtual_mr_sessions ORDER BY rowid")
+            .unwrap()
+            .query_map([], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            })
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+        assert_eq!(
+            statuses,
+            vec![
+                ("first".into(), "open".into()),
+                ("second".into(), "closed".into())
+            ]
+        );
+
+        let insert_duplicate = conn.execute(
+            "INSERT INTO virtual_mr_sessions(id, repo_id, title, base_branch, compare_branch, status)
+             VALUES ('third', 'repo', 'Duplicate', 'main', 'feature', 'open');",
+            [],
+        );
+        assert!(insert_duplicate.is_err());
+        assert_eq!(
+            conn.query_row("SELECT COUNT(*) FROM virtual_mr_sessions", [], |row| row
+                .get::<_, i64>(0))
+                .unwrap(),
+            2
+        );
+    }
+
+    #[test]
     fn legacy_git_credential_metadata_is_migrated_to_sqlite_before_refs_are_compacted() {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch(
@@ -476,7 +554,10 @@ mod tests {
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
             .unwrap();
-        assert_eq!((provider.as_str(), account_name.as_str()), ("github", "alice"));
+        assert_eq!(
+            (provider.as_str(), account_name.as_str()),
+            ("github", "alice")
+        );
         let (id, token_ref): (String, String) = db
             .conn()
             .query_row("SELECT id, token_ref FROM git_credentials", [], |row| {

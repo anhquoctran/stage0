@@ -1,5 +1,7 @@
 mod virtual_mr_session_db;
 pub use virtual_mr_session_db::VirtualMrSessionDb;
+mod virtual_mr_session_save_outcome;
+pub use virtual_mr_session_save_outcome::VirtualMrSessionSaveOutcome;
 mod virtual_mr_reviewer_db;
 pub use virtual_mr_reviewer_db::VirtualMrReviewerDb;
 mod virtual_mr_comment_db;
@@ -8,7 +10,7 @@ mod virtual_mr_discussion_db;
 pub use virtual_mr_discussion_db::VirtualMrDiscussionDb;
 
 use crate::core::db::Database;
-use rusqlite::params;
+use rusqlite::{params, OptionalExtension, TransactionBehavior};
 use std::collections::HashMap;
 
 #[cfg(test)]
@@ -139,9 +141,34 @@ impl Database {
         Ok(sessions)
     }
 
-    pub fn save_virtual_mr_session(&self, s: &VirtualMrSessionDb) -> Result<(), rusqlite::Error> {
+    pub fn save_virtual_mr_session(
+        &self,
+        s: &VirtualMrSessionDb,
+    ) -> Result<VirtualMrSessionSaveOutcome, rusqlite::Error> {
         let mut conn = self.conn();
-        let tx = conn.transaction()?;
+        let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        if s.status == "open" {
+            let duplicate = tx
+                .query_row(
+                    "SELECT id, title FROM virtual_mr_sessions
+                     WHERE repo_id = ?1 AND compare_branch = ?2 AND base_branch = ?3
+                       AND status = 'open' AND id != ?4
+                     ORDER BY rowid ASC LIMIT 1;",
+                    params![s.repo_id, s.compare_branch, s.base_branch, s.id],
+                    |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
+                )
+                .optional()?;
+
+            if let Some((existing_id, existing_title)) = duplicate {
+                return Ok(VirtualMrSessionSaveOutcome::DuplicateOpen {
+                    existing_id,
+                    existing_title,
+                    base_branch: s.base_branch.clone(),
+                    compare_branch: s.compare_branch.clone(),
+                });
+            }
+        }
 
         // Atomic session upsert within transaction
         tx.execute(
@@ -200,7 +227,7 @@ impl Database {
         }
 
         tx.commit()?;
-        Ok(())
+        Ok(VirtualMrSessionSaveOutcome::Saved)
     }
 
     pub fn delete_virtual_mr_session(&self, session_id: &str) -> Result<(), rusqlite::Error> {

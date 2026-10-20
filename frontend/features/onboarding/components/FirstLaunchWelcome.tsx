@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { Sparkles } from '../../../common/components/icons/Sparkles';
 import { X } from '../../../common/components/icons/X';
+import { isMacOS } from '../../../common/utils/shortcuts';
 import { AppLogo } from '../../../common/components/AppLogo';
 import { useGitStore } from '../../git/store/useGitStore';
 import { BranchArtwork } from './BranchArtwork';
@@ -50,7 +51,10 @@ const ARTWORK = [BranchArtwork, CompareArtwork, ReviewArtwork];
 export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComplete }) => {
   const [activeSlide, setActiveSlide] = useState(0);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const skipRef = useRef<HTMLButtonElement>(null);
+  const initialFocusRef = useRef<HTMLButtonElement>(null);
+  const isMac =
+    isMacOS() ||
+    (typeof window !== 'undefined' && window.location.search.includes('platform=mac'));
   const currentSlide = SLIDES[activeSlide];
   const Artwork = ARTWORK[activeSlide];
 
@@ -68,7 +72,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   };
 
   useEffect(() => {
-    skipRef.current?.focus();
+    initialFocusRef.current?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -78,7 +82,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
 
       if (event.key !== 'Tab' || !dialogRef.current) return;
       const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+        'button:not([disabled]):not([tabindex="-1"]), [href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])'
       );
       if (focusable.length === 0) return;
       const first = focusable[0];
@@ -121,29 +125,31 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
         aria-describedby="first-launch-description"
         className="grid h-full w-full grid-cols-1 overflow-hidden md:grid-cols-[1.05fr_0.95fr]"
       >
-        <div className="absolute right-4 top-4 z-10 flex items-center sm:right-6 sm:top-6">
-          <button
-            type="button"
-            onClick={minimizeWindow}
-            aria-label="Minimize window"
-            title="Minimize window"
-            className="flex h-10 w-10 items-center justify-center border border-transparent text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-              <path d="M2 6h8" stroke="currentColor" strokeWidth="1.25" />
-            </svg>
-          </button>
-          <button
-            ref={skipRef}
-            type="button"
-            onClick={finish}
-            aria-label="Close welcome guide"
-            title="Close welcome guide"
-            className="flex h-10 w-10 items-center justify-center border border-transparent text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        {!isMac && (
+          <div className="absolute right-4 top-4 z-10 flex items-center sm:right-6 sm:top-6">
+            <button
+              type="button"
+              onClick={minimizeWindow}
+              aria-label="Minimize window"
+              title="Minimize window"
+              className="flex h-10 w-10 items-center justify-center border border-transparent text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M2 6h8" stroke="currentColor" strokeWidth="1.25" />
+              </svg>
+            </button>
+            <button
+              ref={isMac ? undefined : initialFocusRef}
+              type="button"
+              onClick={finish}
+              aria-label="Close welcome guide"
+              title="Close welcome guide"
+              className="flex h-10 w-10 items-center justify-center border border-transparent text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         <section className="flex min-h-0 flex-col overflow-y-auto px-6 py-8 sm:px-10 sm:py-10 lg:px-16 lg:py-14">
           <div className="flex items-center gap-3">
@@ -183,9 +189,14 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                 ))}
                 <span className="ml-1 text-[10px] font-mono text-subtext0">0{activeSlide + 1} / 0{SLIDES.length}</span>
               </div>
-              {activeSlide < SLIDES.length - 1 ? (
-                <button type="button" onClick={finish} className="text-xs text-subtext0 transition-colors hover:text-text">Skip intro</button>
-              ) : null}
+              <button
+                type="button"
+                onClick={finish}
+                tabIndex={-1}
+                className="text-xs text-subtext0 transition-colors hover:text-text"
+              >
+                Skip tour
+              </button>
             </div>
 
             <div className="flex items-center justify-between gap-3">
@@ -195,7 +206,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                 <span className="text-[11px] text-subtext0">A quick 3-step tour</span>
               )}
               {activeSlide < SLIDES.length - 1 ? (
-                <button type="button" onClick={() => setActiveSlide((slide) => slide + 1)} className="flex h-10 items-center gap-2 bg-primary px-4 text-xs font-semibold text-on-accent transition-colors hover:brightness-110">
+                <button ref={isMac ? initialFocusRef : undefined} type="button" onClick={() => setActiveSlide((slide) => slide + 1)} className="flex h-10 items-center gap-2 bg-primary px-4 text-xs font-semibold text-on-accent transition-colors hover:brightness-110">
                   Next <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               ) : (

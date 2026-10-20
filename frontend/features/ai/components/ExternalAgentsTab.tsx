@@ -7,6 +7,7 @@ import { ExternalLink } from '../../../common/components/icons/ExternalLink';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { X } from '../../../common/components/icons/X';
 import { Bot } from '../../../common/components/icons/Bot';
+import { CustomSelect } from '../../../common/components/CustomSelect';
 import type { AiSettingsTabProps } from '../types/AiSettingsTabProps';
 import type { AcpAgentConfig, AcpRegistryAgent } from '../types/AcpAgentConfig';
 import { useAiMcpStore } from '../store/useAiMcpStore';
@@ -294,7 +295,20 @@ export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings 
             <h3 className="text-xs font-semibold">Sign in with ACP</h3>
             <p className="text-[11px] text-subtext0">The agent stores its own account session. Stage0 does not read or save subscription credentials.</p>
             {!authMethods.length ? <button type="button" disabled={isCheckingAuth || !isTauri()} onClick={() => void discoverAuth()} className="border border-surface2 px-3 py-1.5 text-xs disabled:opacity-50">{isCheckingAuth ? 'Checking…' : 'Check sign-in options'}</button> : <div className="flex flex-wrap gap-2">
-              <select value={selectedAuthMethod} onChange={(event) => setSelectedAuthMethod(event.target.value)} className="min-w-40 border border-surface1 bg-base px-2 py-1.5 text-xs">{authMethods.map((method) => <option key={method.id} value={method.id}>{method.name || method.id}{method.type === 'terminal' ? ' · Interactive terminal' : ''}</option>)}</select>
+              <CustomSelect
+                value={selectedAuthMethod}
+                onChange={setSelectedAuthMethod}
+                options={authMethods.map((method) => ({
+                  value: method.id,
+                  label: `${method.name || method.id}${method.type === 'terminal' ? ' · Interactive terminal' : ''}`,
+                  description: method.description,
+                }))}
+                className="min-w-40"
+                buttonClassName="min-w-40"
+                dropdownWidth="w-64"
+                align="left"
+                aria-label="ACP sign-in method"
+              />
               <button type="button" disabled={busyId === detailAgent.id || !isTauri() || authMethods.find((method) => method.id === selectedAuthMethod)?.type === 'terminal'} onClick={() => void signIn()} className="border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand disabled:opacity-50">{busyId === detailAgent.id ? 'Connecting…' : 'Connect account'}</button>
             </div>}
             {authMethods.find((method) => method.id === selectedAuthMethod)?.type === 'terminal' && <p className="text-[11px] text-subtext0">This agent offers terminal-based sign-in, which Stage0 does not support yet.</p>}

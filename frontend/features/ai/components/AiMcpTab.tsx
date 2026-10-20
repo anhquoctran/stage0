@@ -1624,14 +1624,20 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
             <div className="space-y-3">
               <div>
                 <label htmlFor="llm-provider-select" className="block text-[11px] font-semibold text-subtext0 mb-1">Provider</label>
-                <select
+                <CustomSelect<AiProviderId>
                   id="llm-provider-select"
                   value={setupProviderId}
-                  onChange={(event) => loadProviderSetup(event.target.value as AiProviderId)}
-                  className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2"
-                >
-                  {availableProviderList.map((provider) => <option key={provider.id} value={provider.id}>{getProviderDisplayName(provider.id)}</option>)}
-                </select>
+                  onChange={loadProviderSetup}
+                  options={availableProviderList.map((provider) => ({
+                    value: provider.id,
+                    label: getProviderDisplayName(provider.id),
+                  }))}
+                  className="w-full"
+                  buttonClassName="w-full px-3 py-2"
+                  dropdownWidth="w-full"
+                  align="left"
+                  aria-label="Provider"
+                />
               </div>
 
               {setupProviderId === 'custom' && (

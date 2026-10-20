@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import type { VirtualMrSession } from '../types/VirtualMrSession';
+import type { VirtualMrSessionSaveOutcome } from '../types/VirtualMrSessionSaveOutcome';
 
 const pendingWrites = new Map<string, Promise<unknown>>();
 const savedDuringQueue = new Map<string, VirtualMrSession>();
@@ -28,8 +29,8 @@ export function pendingSessionSnapshot(sessionId: string): VirtualMrSession | un
   return savedDuringQueue.get(sessionId);
 }
 
-export async function saveSessionSnapshot(session: VirtualMrSession): Promise<void> {
-  await invoke('save_virtual_mr_session', {
+export async function saveSessionSnapshot(session: VirtualMrSession): Promise<VirtualMrSessionSaveOutcome> {
+  const result = await invoke<VirtualMrSessionSaveOutcome>('save_virtual_mr_session', {
     session: {
       id: session.id,
       repo_id: session.repoId,
@@ -54,5 +55,6 @@ export async function saveSessionSnapshot(session: VirtualMrSession): Promise<vo
       })),
     },
   });
-  savedDuringQueue.set(session.id, session);
+  if (result.outcome === 'saved') savedDuringQueue.set(session.id, session);
+  return result;
 }
