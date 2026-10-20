@@ -29,6 +29,12 @@ pub async fn set_active_sandbox(
     app: AppHandle,
     adapter_type: SandboxType,
 ) -> Result<SandboxType, String> {
+    let preferences = app.state::<crate::features::preferences::PreferencesManager>();
+    let current = preferences.read()?;
+    preferences.patch(
+        serde_json::json!({ "sandbox": { "type": adapter_type } }),
+        current.revision,
+    )?;
     let manager = app.state::<SandboxManager>();
     manager.set_active_type(adapter_type.clone());
     Ok(adapter_type)

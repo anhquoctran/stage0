@@ -6,6 +6,7 @@ import { componentHarness, componentNodes, loadWithMocks } from './helpers/compo
 const url = (path) => new URL(`../frontend/features/ai/${path}`, import.meta.url);
 const presets = loadWithMocks(url('constants/aiPresets.ts'), {});
 const bots = loadWithMocks(url('constants/botPresets.ts'), {});
+const modelPresets = loadWithMocks(url('utils/resolveAiModelPreset.ts'), { '../constants/aiPresets': presets });
 const sample = (overrides = {}) => ({ id: 'fixture-bot', name: 'Fixture reviewer', tagline: '', description: '', category: 'custom', avatarEmoji: '🤖', systemPrompt: 'Review safely.', provider: 'openai', model: 'saved-private-model', enabled: true, isBuiltin: false, ...overrides });
 const text = (node) => componentNodes(node).flatMap((item) => [item.props?.children].flat(Infinity)).filter((value) => typeof value === 'string').join(' ');
 const button = (nodes, label) => nodes.find((node) => node.type === 'button' && text(node).trim() === label);
@@ -22,6 +23,9 @@ function fixture(initial = [], dynamicModels = {}) {
   const select = () => null;
   const dependencies = {
     react: harness.react, '../constants/aiPresets': presets, '../constants/botPresets': bots,
+    '../utils/resolveAiModelPreset': modelPresets,
+    '../utils/botRolePrompts': { getBotRolePrompt: () => 'Fixture prompt' },
+    './AiModelExecutionOptions': { AiModelExecutionOptions: () => null },
     '../store/useAiMcpStore': { useAiMcpStore: () => ({ aiConfig: { ...presets.DEFAULT_AI_CONFIG, provider: 'anthropic', model: 'committed-model' }, dynamicModels }) },
     '../store/useBotReviewersStore': { useBotReviewersStore: () => ({ globalReviewers: [], addGlobalReviewer: () => assert.fail('Editing must not mutate committed reviewers'), updateGlobalReviewer: () => assert.fail('Editing must remain a draft') }) },
     '../../../common/components/CustomSelect': { CustomSelect: select },
@@ -84,6 +88,8 @@ test('editing a saved custom model preserves it as a dropdown option and updates
     assert.equal(models.props.value, 'saved-private-model');
     assert.ok(models.props.options.some((option) => option.value === 'saved-private-model'));
     assert.equal(labelled(nodes, 'Custom model ID'), undefined);
+    assert.equal(nodes.find((node) => node.type === 'input' && node.props.placeholder === 'e.g. Accessibility Auditor')?.props.value, 'Fixture reviewer');
+    models.props.onChange('saved-private-model'); nodes = await f.render();
     nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} });
     assert.equal(f.writes[0][0], 'update'); assert.equal(f.writes[0][2].model, 'saved-private-model');
   } finally { f.harness.cleanup(); }
@@ -96,6 +102,8 @@ test('custom model entry is optional, validated, trimmed and cancelled without m
     const custom = labelled(nodes, 'Model override').props.options.find((option) => option.label === 'Custom model…');
     labelled(nodes, 'Model override').props.onChange(custom.value); nodes = await f.render();
     assert.equal(labelled(nodes, 'Custom model ID').props.value, '');
+    assert.equal(nodes.find((node) => node.type === 'input' && node.props.placeholder === 'e.g. Accessibility Auditor')?.props.value, 'Fixture reviewer');
+    labelled(nodes, 'Model override').props.onChange(custom.value); nodes = await f.render();
     nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} }); nodes = await f.render();
     assert.match(text({ props: { children: nodes } }), /Select a model or enter a custom model ID/); assert.deepEqual(f.writes, []);
     labelled(nodes, 'Custom model ID').props.onChange({ target: { value: '  my-custom-model  ' } }); nodes = await f.render();

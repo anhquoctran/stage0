@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { type AppNotification } from '../types/AppNotification';
 import { type NotificationSettings } from '../types/NotificationSettings';
 import type { NotificationState } from '../types/NotificationState';
+import { preferencesJsonService } from '../../preferences/services/preferencesJsonService';
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   channels: {
@@ -29,6 +30,8 @@ function normalizeSettings(value: Partial<NotificationSettings> | null | undefin
 
 function loadStoredSettings(): NotificationSettings {
   if (typeof window === 'undefined') return DEFAULT_NOTIFICATION_SETTINGS;
+  const configured = window.__STAGE0_PREFERENCES__?.notifications as Partial<NotificationSettings> | undefined;
+  if (configured) return normalizeSettings(configured);
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (raw) {
@@ -39,10 +42,7 @@ function loadStoredSettings(): NotificationSettings {
 }
 
 function persistSettings(settings: NotificationSettings) {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-  } catch {}
+  void preferencesJsonService.patch({ notifications: settings }).catch((error) => console.error('Could not save preferences.json:', error));
 }
 
 function loadStoredNotifications(): AppNotification[] {
@@ -184,10 +184,14 @@ export const useNotificationStore = create<NotificationState>((set) => ({
   },
 }));
 
-// Tauri webviews have separate Zustand instances even though their localStorage
-// is shared. Keep history, category switches, unread count, and the taskbar dot
-// aligned when notifications are read or cleared in another window.
-if (typeof window !== 'undefined') {
+// Preferences changes are broadcast from the shared JSON document; notification
+// history remains UI state in localStorage and is synchronized separately.
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('stage0-preferences-updated', (event) => {
+    const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
+    if (settings?.notifications) useNotificationStore.setState({ settings: normalizeSettings(settings.notifications) });
+  });
+
   window.addEventListener('storage', (event) => {
     if (event.key === HISTORY_STORAGE_KEY) {
       try {
@@ -204,15 +208,5 @@ if (typeof window !== 'undefined') {
       return;
     }
 
-    if (event.key === SETTINGS_STORAGE_KEY && event.newValue) {
-      try {
-        const parsed = JSON.parse(event.newValue);
-        useNotificationStore.setState({
-          settings: normalizeSettings(parsed),
-        });
-      } catch {
-        // Ignore malformed settings and keep the current in-memory value.
-      }
-    }
   });
 }

@@ -164,11 +164,11 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
   const handleOpenEdit = (bot: BotReviewer) => {
     setEditingBotId(bot.id);
     setFormName(bot.name);
-    setFormTagline(bot.tagline);
-    setFormDesc(bot.description);
+    setFormTagline(bot.tagline || '');
+    setFormDesc(bot.description || '');
     setFormCategory(bot.category);
     setFormEmoji(bot.avatarEmoji);
-    setFormInstructions(bot.customInstructions);
+    setFormInstructions(bot.customInstructions || '');
     setFormProvider(bot.provider || 'global_default');
     setFormModel(bot.model || 'global_default');
     setIsCustomModel(false);

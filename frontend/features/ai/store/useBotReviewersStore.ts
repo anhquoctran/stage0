@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { type BotReviewer } from '../../virtual-mr/types/BotReviewer';
 import { DEFAULT_BOT_REVIEWERS } from '../constants/botPresets';
 import type { BotReviewersState } from '../types/BotReviewersState';
+import { preferencesJsonService } from '../../preferences/services/preferencesJsonService';
 
 const GLOBAL_STORAGE_KEY = 'stage0_global_bot_reviewers';
 
@@ -59,6 +60,11 @@ function normalizeReviewerList(values: unknown[]): { reviewers: BotReviewer[]; c
 
 function loadPersistedGlobalReviewers(): BotReviewer[] {
   if (typeof window === 'undefined') return DEFAULT_BOT_REVIEWERS;
+  const configured = window.__STAGE0_PREFERENCES__?.reviewers;
+  if (Array.isArray(configured)) {
+    const normalized = normalizeReviewerList(configured);
+    return normalized.reviewers;
+  }
   try {
     const raw = localStorage.getItem(GLOBAL_STORAGE_KEY);
     if (raw) {
@@ -125,12 +131,7 @@ function loadPersistedRepoCustomBots(): Record<string, BotReviewer[]> {
 }
 
 function persistGlobalReviewers(reviewers: BotReviewer[]) {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(GLOBAL_STORAGE_KEY, JSON.stringify(reviewers));
-  } catch (err) {
-    console.error('Failed to save global bot reviewers:', err);
-  }
+  void preferencesJsonService.patch({ reviewers }).catch((error) => console.error('Could not save preferences.json:', error));
 }
 
 function persistRepoActiveBots(data: Record<string, string[]>) {
@@ -322,3 +323,12 @@ export const useBotReviewersStore = create<BotReviewersState>((set, get) => ({
     };
   },
 }));
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('stage0-preferences-updated', (event) => {
+    const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
+    if (Array.isArray(settings?.reviewers)) {
+      useBotReviewersStore.setState({ globalReviewers: normalizeReviewerList(settings.reviewers).reviewers });
+    }
+  });
+}

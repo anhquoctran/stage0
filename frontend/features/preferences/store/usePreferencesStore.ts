@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { SUPPORTED_FONTS } from '../constants/fonts';
 import type { ViewerFontSettings } from '../types/ViewerFontSettings';
 import type { PreferencesState } from '../types/PreferencesState';
+import { preferencesJsonService } from '../services/preferencesJsonService';
 
 const STORAGE_KEY = 'stage0_viewer_font_settings';
 
@@ -56,6 +57,11 @@ export function applyViewerFontToDocument(settings: ViewerFontSettings) {
 function getInitialSettings(): ViewerFontSettings {
   if (typeof window === 'undefined') return DEFAULT_VIEWER_FONT_SETTINGS;
 
+  const configured = window.__STAGE0_PREFERENCES__?.appearance?.viewerFont;
+  if (configured && typeof configured === 'object') {
+    return { ...DEFAULT_VIEWER_FONT_SETTINGS, ...(configured as Partial<ViewerFontSettings>) };
+  }
+
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -78,6 +84,8 @@ applyViewerFontToDocument(initialSettings);
 
 function getInitialInlineBlame(): boolean {
   if (typeof window === 'undefined') return true;
+  const configured = window.__STAGE0_PREFERENCES__?.general?.showInlineBlame;
+  if (typeof configured === 'boolean') return configured;
   try {
     const val = localStorage.getItem(INLINE_BLAME_STORAGE_KEY);
     return val !== 'false';
@@ -108,12 +116,8 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     }),
 
   setShowInlineBlame: (show: boolean) => {
-    try {
-      localStorage.setItem(INLINE_BLAME_STORAGE_KEY, String(show));
-    } catch {
-      // ignore
-    }
     set({ showInlineBlame: show });
+    void preferencesJsonService.patch({ general: { showInlineBlame: show } }).catch((error) => console.error('Could not save preferences.json:', error));
   },
 
   toggleInlineBlame: () => {
@@ -133,26 +137,30 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
       enableLigatures: partial.enableLigatures ?? current.enableLigatures,
     };
 
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {
-      // ignore
-    }
-
     applyViewerFontToDocument(updated);
     set(updated);
+    void preferencesJsonService.patch({ appearance: { viewerFont: updated } }).catch((error) => console.error('Could not save preferences.json:', error));
   },
 
   resetViewerFontSettings: () => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_VIEWER_FONT_SETTINGS));
-    } catch {
-      // ignore
-    }
-
     applyViewerFontToDocument(DEFAULT_VIEWER_FONT_SETTINGS);
     set(DEFAULT_VIEWER_FONT_SETTINGS);
+    void preferencesJsonService.patch({ appearance: { viewerFont: DEFAULT_VIEWER_FONT_SETTINGS } }).catch((error) => console.error('Could not save preferences.json:', error));
   },
 }));
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('stage0-preferences-updated', (event) => {
+    const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
+    const font = settings?.appearance?.viewerFont;
+    const general = settings?.general;
+    if (font && typeof font === 'object') {
+      const next = { ...DEFAULT_VIEWER_FONT_SETTINGS, ...(font as Partial<ViewerFontSettings>) };
+      applyViewerFontToDocument(next);
+      usePreferencesStore.setState(next);
+    }
+    if (typeof general?.showInlineBlame === 'boolean') usePreferencesStore.setState({ showInlineBlame: general.showInlineBlame });
+  });
+}
 
 export type { ViewerFontSettings } from '../types/ViewerFontSettings';

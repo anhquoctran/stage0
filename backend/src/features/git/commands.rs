@@ -708,7 +708,12 @@ pub async fn get_clone_remote_refs(
         super::ops::validate_remote_url(url)?;
         let mut command = std::process::Command::new(super::runner::get_active_git_path());
         let credential_lease = match credential_id.as_deref() {
-            Some(id) => Some(prepare_clone_credential(&app.state::<Database>(), id, url)?),
+            Some(id) => Some(prepare_clone_credential(
+                &app.state::<Database>(),
+                &app.state::<crate::features::preferences::PreferencesManager>(),
+                id,
+                url,
+            )?),
             None => None,
         };
         if let Some(credential) = credential_lease.as_ref() {
@@ -777,7 +782,8 @@ pub async fn clone_repository(
         let credential_lease = match credential_id.as_deref() {
             Some(id) => {
                 let db = app.state::<Database>();
-                Some(prepare_clone_credential(&db, id, trimmed_url)?)
+                let preferences = app.state::<crate::features::preferences::PreferencesManager>();
+                Some(prepare_clone_credential(&db, &preferences, id, trimmed_url)?)
             }
             None => None,
         };
@@ -850,17 +856,22 @@ pub async fn clone_repository(
 
 fn prepare_clone_credential(
     db: &Database,
+    preferences: &crate::features::preferences::PreferencesManager,
     credential_id: &str,
     remote_url: &str,
 ) -> Result<CloneCredentialLease, String> {
     let target_origin = crate::features::credentials::https_origin(remote_url)?;
-    let credential = db
-        .get_git_credential_for_clone(credential_id)
-        .map_err(|error| format!("Failed to load Git credentials: {error}"))?
-        .ok_or_else(|| {
-            "The selected Git credential is no longer available. Refresh the list and try again."
-                .to_string()
-        })?;
+    let document = preferences.read()?;
+    let settings = document.settings.ok_or_else(|| "preferences.json is invalid; Git credentials cannot be used".to_string())?;
+    let records = settings.get("gitCredentials").and_then(serde_json::Value::as_array)
+        .ok_or_else(|| "Git credential metadata is unavailable".to_string())?;
+    let credential = records.iter().find(|record| record.get("id").and_then(serde_json::Value::as_str) == Some(credential_id))
+        .cloned().ok_or_else(|| "The selected Git credential is no longer available. Refresh the list and try again.".to_string())?;
+    let credential: crate::features::credentials::GitCredentialPreferenceRecord = serde_json::from_value(credential)
+        .map_err(|_| "The selected Git credential metadata is invalid".to_string())?;
+    let token_ref = db.get_git_credential_token_ref(credential_id)
+        .map_err(|_| "The selected Git credential keychain mapping is unavailable".to_string())?
+        .ok_or_else(|| "The selected Git credential keychain mapping is unavailable".to_string())?;
 
     if credential.token_type == "ssh_key" {
         return Err("SSH key credentials cannot be selected for an HTTPS clone.".to_string());
@@ -880,12 +891,12 @@ fn prepare_clone_credential(
 
     let (token_ref, delete_secret_on_drop) = match credential.source.as_str() {
         "stage0" => {
-            let secret = crate::features::credentials::retrieve_secret(&credential.token_ref)
+            let secret = crate::features::credentials::retrieve_secret(&token_ref)
                 .map_err(|_| {
                     "The selected credential is missing from the OS credential store.".to_string()
                 })?;
             drop(Zeroizing::new(secret));
-            (credential.token_ref, false)
+            (token_ref, false)
         }
         "system_global" => {
             let secret = crate::features::credentials::retrieve_system_global_credential_for_clone(
@@ -1130,9 +1141,10 @@ pub async fn rename_git_branch(
 pub async fn scan_git_binaries(
     app: AppHandle,
 ) -> Result<Vec<crate::features::git::GitBinaryInfo>, String> {
-    let db = app.state::<Database>();
-    let active_path = db.get_setting("git_binary_path").ok().flatten();
-    let active_id = db.get_setting("git_binary_id").ok().flatten();
+    let prefs = app.state::<crate::features::preferences::PreferencesManager>().read().ok();
+    let selected = prefs.and_then(|doc| jsonc_parser::parse_to_serde_value::<serde_json::Value>(&doc.content, &Default::default()).ok());
+    let active_path = selected.as_ref().and_then(|value| value.pointer("/git/binaryPath").and_then(serde_json::Value::as_str)).map(str::to_string);
+    let active_id = selected.as_ref().and_then(|value| value.pointer("/git/binaryId").and_then(serde_json::Value::as_str)).map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
         Ok(crate::features::git::scan_system_git_binaries(
             active_path.as_deref(),
@@ -1147,9 +1159,10 @@ pub async fn scan_git_binaries(
 pub async fn get_active_git_binary(
     app: AppHandle,
 ) -> Result<crate::features::git::GitBinaryInfo, String> {
-    let db = app.state::<Database>();
-    let active_path = db.get_setting("git_binary_path").ok().flatten();
-    let active_id = db.get_setting("git_binary_id").ok().flatten();
+    let prefs = app.state::<crate::features::preferences::PreferencesManager>().read().ok();
+    let selected = prefs.and_then(|doc| jsonc_parser::parse_to_serde_value::<serde_json::Value>(&doc.content, &Default::default()).ok());
+    let active_path = selected.as_ref().and_then(|value| value.pointer("/git/binaryPath").and_then(serde_json::Value::as_str)).map(str::to_string);
+    let active_id = selected.as_ref().and_then(|value| value.pointer("/git/binaryId").and_then(serde_json::Value::as_str)).map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
         let binaries = crate::features::git::scan_system_git_binaries(
             active_path.as_deref(),
@@ -1175,9 +1188,9 @@ pub async fn set_active_git_binary(
         let version = crate::features::git::test_git_version(&path)
             .map_err(|error| format!("Cannot select invalid Git binary: {}", error))?;
 
-        let db = app.state::<Database>();
-        db.set_settings_atomic(&[("git_binary_id", &id), ("git_binary_path", &path)])
-            .map_err(|error| format!("Failed to persist selected Git binary: {}", error))?;
+        let preferences = app.state::<crate::features::preferences::PreferencesManager>();
+        let current = preferences.read()?;
+        preferences.patch(serde_json::json!({ "git": { "binaryId": id, "binaryPath": path } }), current.revision)?;
 
         crate::features::git::runner::set_active_git_path(Some(path.clone()));
 

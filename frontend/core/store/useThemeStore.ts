@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { CatppuccinTheme } from '../types/CatppuccinTheme';
 import type { ThemeMode } from '../types/ThemeMode';
 import type { ThemeState } from '../types/ThemeState';
+import { preferencesJsonService } from '../../features/preferences/services/preferencesJsonService';
 
 const STORAGE_KEY = 'stage0_catppuccin_theme_mode';
 
@@ -40,6 +41,8 @@ export function applyThemeToDocument(theme: CatppuccinTheme) {
 
 function getInitialThemeMode(): ThemeMode {
   if (typeof window === 'undefined') return 'system';
+  const configured = window.__STAGE0_PREFERENCES__?.appearance?.themeMode;
+  if (configured === 'system' || configured === 'dark' || configured === 'light') return configured;
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved === 'system' || saved === 'dark' || saved === 'light') {
     return saved as ThemeMode;
@@ -63,25 +66,17 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   theme: initialResolved,
 
   setThemeMode: (mode: ThemeMode) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, mode);
-    } catch {
-      // ignore
-    }
     const resolved = resolveTheme(mode);
     applyThemeToDocument(resolved);
     set({ themeMode: mode, theme: resolved });
+    void preferencesJsonService.patch({ appearance: { themeMode: mode } }).catch((error) => console.error('Could not save preferences.json:', error));
   },
 
   setTheme: (theme: CatppuccinTheme) => {
     const mode: ThemeMode = theme === 'mocha-light' ? 'light' : 'dark';
-    try {
-      localStorage.setItem(STORAGE_KEY, mode);
-    } catch {
-      // ignore
-    }
     applyThemeToDocument(theme);
     set({ themeMode: mode, theme });
+    void preferencesJsonService.patch({ appearance: { themeMode: mode } }).catch((error) => console.error('Could not save preferences.json:', error));
   },
 
   toggleTheme: () => {
@@ -106,6 +101,18 @@ if (typeof window !== 'undefined' && window.matchMedia) {
     // Safari / older browser fallback
     mediaQuery.addListener(handleMediaChange);
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('stage0-preferences-updated', (event) => {
+    const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
+    const mode = settings?.appearance?.themeMode;
+    if (mode === 'system' || mode === 'dark' || mode === 'light') {
+      const theme = resolveTheme(mode);
+      applyThemeToDocument(theme);
+      useThemeStore.setState({ themeMode: mode, theme });
+    }
+  });
 }
 
 export type { ThemeMode } from '../types/ThemeMode';

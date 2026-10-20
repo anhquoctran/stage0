@@ -2,6 +2,8 @@ mod os_keyring_info;
 pub use os_keyring_info::OsKeyringInfo;
 mod git_credential_meta;
 pub use git_credential_meta::GitCredentialMeta;
+mod git_credential_preference_record;
+pub use git_credential_preference_record::GitCredentialPreferenceRecord;
 mod system_git_credential_discovery;
 pub use system_git_credential_discovery::SystemGitCredentialDiscovery;
 mod git_credential_scan_coordinator;
@@ -59,8 +61,33 @@ pub fn schedule_system_git_credential_rescan(app: &AppHandle) {
             let db = app.state::<crate::core::db::Database>();
             let repo_paths = db.get_all_repository_paths().ok()?;
             let discovery = discover_system_git_credentials(&repo_paths);
-            db.sync_system_git_credentials(&discovery.credentials, discovery.complete)
-                .ok()?;
+            let preferences = app.state::<crate::features::preferences::PreferencesManager>();
+            let mut synced = false;
+            for _ in 0..2 {
+                let current = preferences.read().ok()?;
+                let settings = current.settings?;
+                let mut records = settings.get("gitCredentials")?.as_array()?.clone();
+                if discovery.complete {
+                    records.retain(|record| record.get("source").and_then(serde_json::Value::as_str) != Some("system_global"));
+                }
+                let existing_ids = records.iter().filter_map(|record| record.get("id").and_then(serde_json::Value::as_str).map(str::to_string)).collect::<HashSet<_>>();
+                for credential in &discovery.credentials {
+                    let record = serde_json::json!({
+                        "id": credential.id, "provider": credential.provider, "server_url": credential.server_url,
+                        "account_name": credential.account_name, "token_type": credential.token_type,
+                        "label": credential.label, "source": credential.source, "helper_name": credential.helper_name,
+                        "created_at": credential.created_at, "updated_at": credential.updated_at,
+                    });
+                    if !existing_ids.contains(&credential.id) { records.push(record); }
+                    db.upsert_git_credential_ref(&credential.id, &credential.token_ref).ok()?;
+                }
+                match preferences.patch(serde_json::json!({ "gitCredentials": records }), current.revision) {
+                    Ok(_) => { synced = true; break; }
+                    Err(error) if error.contains("changed outside") => continue,
+                    Err(_) => break,
+                }
+            }
+            if !synced { return None; }
             Some(())
         })();
         if scan_result.is_some() {
@@ -758,6 +785,7 @@ pub fn exists_in_keyring(token_ref: &str) -> bool {
 }
 
 pub const AI_KEYRING_SERVICE: &str = "stage0.ai.credentials";
+pub const PREFERENCES_KEYRING_SERVICE: &str = "stage0.preferences.secrets";
 
 pub fn store_ai_key(provider: &str, api_key: &str) -> Result<(), String> {
     let mut progress = crate::features::ai::keyring_write_progress::KeyringWriteProgress::new(
@@ -803,6 +831,31 @@ pub fn get_ai_key(provider: &str) -> Result<String, String> {
     entry
         .get_password()
         .map_err(|e| map_keyring_error("read AI secret", e))
+}
+
+pub fn store_preference_secret(reference: &str, secret: &str) -> Result<(), String> {
+    let entry = keyring::Entry::new(PREFERENCES_KEYRING_SERVICE, reference)
+        .map_err(|e| map_keyring_error("initialize preference secret", e))?;
+    entry
+        .set_password(secret)
+        .map_err(|e| map_keyring_error("store preference secret", e))
+}
+
+pub fn retrieve_preference_secret(reference: &str) -> Result<String, String> {
+    let entry = keyring::Entry::new(PREFERENCES_KEYRING_SERVICE, reference)
+        .map_err(|e| map_keyring_error("initialize preference secret", e))?;
+    entry
+        .get_password()
+        .map_err(|e| map_keyring_error("retrieve preference secret", e))
+}
+
+pub fn delete_preference_secret(reference: &str) -> Result<(), String> {
+    let entry = keyring::Entry::new(PREFERENCES_KEYRING_SERVICE, reference)
+        .map_err(|e| map_keyring_error("initialize preference secret", e))?;
+    match entry.delete_credential() {
+        Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+        Err(error) => Err(map_keyring_error("delete preference secret", error)),
+    }
 }
 pub mod commands;
 pub mod persistence;

@@ -50,15 +50,8 @@ pub fn redact(text: &str) -> String {
                 in_private_key = true;
             }
             let sensitive = in_private_key
+                || has_sensitive_assignment(&lower)
                 || [
-                    "password",
-                    "passwd",
-                    "secret",
-                    "api_key",
-                    "api-key",
-                    "apikey",
-                    "authorization",
-                    "token",
                     "ghp_",
                     "gho_",
                     "github_pat_",
@@ -82,6 +75,32 @@ pub fn redact(text: &str) -> String {
         .join("\n")
 }
 
+fn has_sensitive_assignment(line: &str) -> bool {
+    [
+        "password",
+        "passwd",
+        "secret",
+        "api_key",
+        "api-key",
+        "apikey",
+        "authorization",
+        "access_token",
+        "refresh_token",
+        "token",
+        "credential",
+    ]
+    .iter()
+    .any(|marker| {
+        line.match_indices(marker).any(|(offset, _)| {
+            let remainder = &line[offset + marker.len()..];
+            let remainder = remainder.trim_start_matches(|character: char| {
+                character.is_whitespace() || character == '"' || character == '\''
+            });
+            remainder.starts_with(':') || remainder.starts_with('=')
+        })
+    })
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -100,5 +119,14 @@ mod tests {
         let filtered = super::redact("+password = 'fixture'\n-----BEGIN PRIVATE KEY-----\nprivate material\n-----END PRIVATE KEY-----\nfn ordinary() {}");
         assert!(!filtered.contains("fixture") && !filtered.contains("private material"));
         assert!(filtered.contains("fn ordinary() {}"));
+
+        let instruction =
+            super::redact("Prefer checking authorization edge cases and token validation.");
+        assert_eq!(
+            instruction,
+            "Prefer checking authorization edge cases and token validation."
+        );
+        assert!(super::redact("Authorization: Bearer fixture-secret")
+            .contains("[REDACTED BY SOURCE EGRESS POLICY]"));
     }
 }

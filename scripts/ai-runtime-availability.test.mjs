@@ -66,14 +66,13 @@ test('review UI does not infer AI execution or approval from discussion/session 
       '../store/useVirtualMrStore': { useVirtualMrStore: () => ({ getActiveSession: () => item }) },
       '../../git/store/useGitStore': { useGitStore: () => ({ currentRepo: { id: 'repo' } }) },
       '../../ai/constants/runtimeAvailability': availability,
-      '../../review/store/useReviewStore': { useReviewStore: { getState: () => ({ open: () => {} }) } },
     });
     const tree = await harness.render(VirtualMrBottomBar);
     const nodes = componentNodes(tree);
     const text = nodes.flatMap((node) => [node.props?.children].flat(Infinity)).filter((value) => typeof value === 'string').join(' ');
     assert.doesNotMatch(text, /Approved by AI|AI bot review active|verified and approved/);
     const button = nodes.find((node) => node.type === 'button' && node.props.title === 'Open read-only AI review runs; discussions are not auto-resolved');
-    if (status !== 'closed') assert.equal(typeof button?.props.onClick, 'function');
+    assert.equal(button, undefined);
     harness.cleanup();
   }
 });
@@ -115,7 +114,7 @@ test('MCP defaults and restored/imported settings cannot assert a verified conne
     store.getState().importMcpConfigFile(JSON.stringify([{ ...legacy, id: 'imported' }]));
     store.getState().updateMcpServer('legacy', { testStatus: 'success', toolsCount: 42 });
     store.getState().mcpServers.forEach(check);
-    JSON.parse(saved.get('stage0_ai_mcp_config')).mcpServers.forEach(check);
+    globalThis.window.__STAGE0_PREFERENCES__.ai.mcpServers.forEach(check);
     assert.deepEqual(calls, []);
   }, { mcpServers: [legacy] });
 });
@@ -139,12 +138,14 @@ test('local MCP checks report unavailable or invalid without starting a process 
 
 test('MCP import and export preserve HTTP vs legacy SSE without importing verification authority', async () => {
   await withAiStore((store) => {
-    const imported=store.getState().importMcpConfigFile(JSON.stringify({mcpServers:{modern:{type:'http',url:'http://localhost:8000/mcp'},legacy:{type:'sse',url:'http://localhost:8000/sse'}}}));
+    const imported=store.getState().importMcpConfigFile(JSON.stringify({mcpServers:{modern:{type:'http',url:'http://localhost:8000/mcp',env:{GITHUB_TOKEN:'ghp-do-not-export',PUBLIC_SETTING:'enabled'}},legacy:{type:'sse',url:'http://localhost:8000/sse'}}}));
     assert.equal(imported.success,true);
     assert.equal(store.getState().mcpServers.find((s)=>s.id==='modern').type,'http');
     assert.equal(store.getState().mcpServers.find((s)=>s.id==='legacy').type,'sse');
     const exported=JSON.parse(store.getState().exportMcpConfigFile());
     assert.equal(exported.mcpServers.modern.type,'http'); assert.equal(exported.mcpServers.legacy.type,'sse');
+    assert.deepEqual(exported.mcpServers.modern.env,{PUBLIC_SETTING:'enabled'});
+    assert.doesNotMatch(JSON.stringify(exported),/GITHUB_TOKEN|ghp-do-not-export/);
     assert.equal(exported.mcpServers.modern.testStatus,undefined); assert.equal(exported.mcpServers.modern.toolsCount,undefined);
   });
 });

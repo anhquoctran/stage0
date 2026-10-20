@@ -8,6 +8,7 @@ const require = createRequire(import.meta.url);
 const { create } = require('zustand');
 const url = (path) => new URL(`../frontend/${path}`, import.meta.url);
 const presets = loadWithMocks(url('features/ai/constants/aiPresets.ts'), {});
+const modelPresets = loadWithMocks(url('features/ai/utils/resolveAiModelPreset.ts'), { '../constants/aiPresets': presets });
 const guards = loadWithMocks(url('features/ai/types/guardrails.ts'), {});
 const bots = loadWithMocks(url('features/ai/constants/botPresets.ts'), {});
 const verification = loadWithMocks(url('features/ai/utils/resetMcpVerification.ts'), {});
@@ -77,13 +78,30 @@ test('unchanged groups retain asynchronously loaded committed settings and confl
 function serviceFixture(handler = async () => ({})) {
   const initial = baseline(); const ai = create(() => ({ ...initial, apiKeysConfigured: {} })); const reviewers = create(() => ({ globalReviewers: [] }));
   const calls = []; const storage = new Map([['stage0_ai_mcp_config', JSON.stringify(initial)], ['stage0_global_bot_reviewers', '[]']]);
+  const originalDocument = { content: '{}', revision: 'fixture-1', path: 'fixture', migrated: false, settings: {} };
+  let document = originalDocument;
+  const preferenceWrites = [];
   const api = loadWithMocks(url('features/ai/services/commitAiPreferences.ts'), {
     '@tauri-apps/api/core': { isTauri: () => true, invoke: async (...args) => { calls.push(args); return handler(...args); } },
     '../store/useAiMcpStore': { useAiMcpStore: ai }, '../store/useBotReviewersStore': { useBotReviewersStore: reviewers },
     '../utils/aiPreferencesSnapshot': snapshots,
+    '../../preferences/services/preferencesJsonService': { preferencesJsonService: {
+      load: async () => document,
+      patch: async (patch) => {
+        preferenceWrites.push(['patch', patch]);
+        document = { ...document, content: JSON.stringify(patch), revision: 'fixture-2', settings: patch };
+        return document;
+      },
+      saveText: async (content) => {
+        preferenceWrites.push(['rollback', content]);
+        if (document.rollbackFailure) throw new Error('fixture file rollback failure');
+        document = { ...originalDocument, content, revision: 'fixture-3' };
+        return document;
+      },
+    } },
   });
   const local = { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value), removeItem: (key) => storage.delete(key) };
-  return { initial, ai, reviewers, calls, storage, local, ...api };
+  return { initial, ai, reviewers, calls, storage, local, preferenceWrites, getPreferenceDocument: () => document, ...api };
 }
 
 test('Apply awaits one native key/policy batch, publishes all AI sections together and persists no API secrets', async () => {
@@ -93,9 +111,12 @@ test('Apply awaits one native key/policy batch, publishes all AI sections togeth
     draft.getState().updateAiConfig({ apiKey: 'fixture-private-key', maxTokens: 2048 });
     await draft.getState().resetGuardrailPolicy('strict'); draft.getState().addGlobalReviewer({ name: 'Agent', enabled: true });
     const save = fixture.commitAiPreferences(draft.getState(), fixture.initial);
+    await new Promise((resolve) => setImmediate(resolve));
     assert.equal(fixture.ai.getState().aiConfig.maxTokens, 4096); assert.equal(fixture.reviewers.getState().globalReviewers.length, 0);
     assert.equal(fixture.calls.length, 1); assert.equal(fixture.calls[0][0], 'commit_ai_preferences');
     assert.deepEqual(fixture.calls[0][1].apiKeys, { openai: 'fixture-private-key' });
+    assert.equal(fixture.preferenceWrites[0][0], 'patch');
+    assert.doesNotMatch(JSON.stringify(fixture.preferenceWrites[0][1]), /fixture-private-key|apiKeyDrafts/);
     assert.doesNotMatch([...fixture.storage.values()].join(''), /fixture-private-key|apiKeyDrafts/);
     await assert.rejects(fixture.commitAiPreferences(draft.getState(), fixture.initial), /already in progress/);
     native.resolve({ openai: true }); const saved = await save;
@@ -105,20 +126,63 @@ test('Apply awaits one native key/policy batch, publishes all AI sections togeth
   } finally { globalThis.localStorage = old; }
 });
 
-test('keyring and storage failures preserve committed settings and keep pending secrets available for retry', async () => {
-  for (const storageFailure of [false, true]) {
+test('keyring failures roll back JSON and incomplete file rollback keeps pending secrets available for retry', async () => {
+  for (const rollbackFailure of [false, true]) {
     const fixture = serviceFixture(async () => { throw new Error('OS keyring unavailable'); });
     const old = globalThis.localStorage; const previous = [...fixture.storage];
-    let writes = 0;
-    globalThis.localStorage = { ...fixture.local, setItem: (key, value) => { if (storageFailure && writes++ === 1) throw new Error('Storage full'); fixture.local.setItem(key, value); } };
+    globalThis.localStorage = fixture.local;
+    if (rollbackFailure) fixture.getPreferenceDocument().rollbackFailure = true;
     try {
       const draft = createAiPreferencesDraft(fixture.initial); draft.getState().updateAiConfig({ apiKey: 'retry-secret', maxTokens: 2048 });
-      await assert.rejects(fixture.commitAiPreferences(draft.getState(), fixture.initial), /keyring unavailable|Storage full/);
+      await assert.rejects(fixture.commitAiPreferences(draft.getState(), fixture.initial), /keyring unavailable|rollback was incomplete/);
       assert.deepEqual([...fixture.storage], previous); assert.equal(fixture.ai.getState().aiConfig.maxTokens, 4096);
       assert.equal(draft.getState().apiKeyDrafts.openai, 'retry-secret');
-      assert.equal(fixture.calls.length, storageFailure ? 0 : 1);
+      assert.equal(fixture.calls.length, 1);
+      assert.equal(fixture.preferenceWrites[0][0], 'patch');
+      assert.equal(fixture.preferenceWrites[1][0], 'rollback');
+      if (!rollbackFailure) assert.equal(fixture.getPreferenceDocument().content, '{}');
     } finally { globalThis.localStorage = old; }
   }
+});
+
+test('MCP secret variables are stored per server in the keychain and never retained in JSON or committed state', async () => {
+  const fixture = serviceFixture(async () => ({}));
+  const server = { id: 'git-context', name: 'Git Context', type: 'stdio', command: 'mcp-server', args: [], env: {}, secretEnvKeys: [], enabled: true };
+  fixture.initial.mcpServers = [server];
+  fixture.ai.setState({ mcpServers: [server] });
+  const draft = createAiPreferencesDraft(fixture.initial);
+  draft.getState().updateMcpServer(server.id, {
+    env: { GITHUB_TOKEN: 'ghp_sensitive-fixture' },
+    secretEnvKeys: ['GITHUB_TOKEN'],
+  });
+
+  const saved = await fixture.commitAiPreferences(draft.getState(), fixture.initial);
+  assert.deepEqual(fixture.calls[0], ['commit_ai_preferences', {
+    apiKeys: {}, policy: null,
+    mcpEnvSecrets: { 'git-context': { GITHUB_TOKEN: 'ghp_sensitive-fixture' } },
+    mcpEnvRemovals: {},
+  }]);
+  const persisted = fixture.preferenceWrites[0][1].ai.mcpServers[0];
+  assert.deepEqual(persisted.env, {});
+  assert.deepEqual(persisted.secretEnvKeys, ['GITHUB_TOKEN']);
+  assert.doesNotMatch(JSON.stringify(fixture.preferenceWrites), /ghp_sensitive-fixture/);
+  assert.deepEqual(fixture.ai.getState().mcpServers[0].env, {});
+  assert.deepEqual(saved.mcpServers[0].env, {});
+  assert.doesNotMatch(JSON.stringify(saved), /ghp_sensitive-fixture/);
+});
+
+test('removing the last MCP secret removes that server’s keychain record after JSON patching', async () => {
+  const fixture = serviceFixture(async () => ({}));
+  const server = { id: 'git-context', name: 'Git Context', type: 'stdio', command: 'mcp-server', args: [], env: {}, secretEnvKeys: ['GITHUB_TOKEN'], enabled: true };
+  fixture.initial.mcpServers = [server];
+  fixture.ai.setState({ mcpServers: [server] });
+  const draft = createAiPreferencesDraft(fixture.initial);
+  draft.getState().deleteMcpServer(server.id);
+
+  await fixture.commitAiPreferences(draft.getState(), fixture.initial);
+  assert.deepEqual(fixture.calls[0][1].mcpEnvSecrets, {});
+  assert.deepEqual(fixture.calls[0][1].mcpEnvRemovals, { 'git-context': ['GITHUB_TOKEN'] });
+  assert.deepEqual(fixture.preferenceWrites[0][1].ai.mcpServers, []);
 });
 
 function dialogFixture(commitHandler) {
@@ -130,14 +194,21 @@ function dialogFixture(commitHandler) {
     updateViewerFontSettings() {}, setShowInlineBlame() {},
   };
   let draftStore; let saves = 0; const child = () => null;
+  const themeState = { themeMode: 'system', theme: 'dark' };
+  const useThemeStore = Object.assign(() => themeState, { setState: (value) => Object.assign(themeState, typeof value === 'function' ? value(themeState) : value) });
+  const gitState = { activeSandboxType: 'in_memory', showToast() {}, refreshDiff() {} };
+  const useGitStore = Object.assign(() => gitState, { getState: () => gitState, setState: (value) => Object.assign(gitState, typeof value === 'function' ? value(gitState) : value) });
+  const gitBinaryState = { activeBinaryId: 'system', activeBinaryPath: 'git', binaries: [], fetchActiveBinary: async () => ({ id: 'system', path: 'git' }) };
+  const useGitBinaryStore = Object.assign(() => gitBinaryState, { getState: () => gitBinaryState, setState: (value) => Object.assign(gitBinaryState, typeof value === 'function' ? value(gitBinaryState) : value) });
+  const usePreferencesStore = Object.assign(() => preferences, { setState: (value) => Object.assign(preferences, typeof value === 'function' ? value(preferences) : value) });
   const dependencies = {
     react: harness.react,
-    '../store/usePreferencesStore': { usePreferencesStore: () => preferences, checkFontLigaturesSupport: () => true, applyViewerFontToDocument() {}, DEFAULT_VIEWER_FONT_SETTINGS: preferences },
-    '../../../core/store/useThemeStore': { useThemeStore: () => ({ themeMode: 'system', setThemeMode() {} }), resolveTheme: () => 'dark', applyThemeToDocument() {} },
+    '../store/usePreferencesStore': { usePreferencesStore, checkFontLigaturesSupport: () => true, applyViewerFontToDocument() {}, DEFAULT_VIEWER_FONT_SETTINGS: preferences },
+    '../../../core/store/useThemeStore': { useThemeStore, resolveTheme: () => 'dark', applyThemeToDocument() {} },
     '../constants/fonts': { SUPPORTED_FONTS: [{ fontFamilyName: 'Fira Code' }] },
     '../../../common/utils/shortcuts': { formatShortcutText: (s) => s },
-    '../../git/store/useGitStore': { useGitStore: () => ({ activeSandboxType: 'in_memory', setActiveSandbox: async () => {}, showToast() {} }) },
-    '../../git/store/useGitBinaryStore': { useGitBinaryStore: () => ({ activeBinaryId: 'system', activeBinaryPath: 'git', setActiveBinary: async () => {}, fetchActiveBinary: async () => ({ id: 'system', path: 'git' }) }) },
+    '../../git/store/useGitStore': { useGitStore },
+    '../../git/store/useGitBinaryStore': { useGitBinaryStore },
     '../../ai/store/createAiPreferencesDraft': { createAiPreferencesDraft: (snapshot) => { draftStore = createAiPreferencesDraft(snapshot); return Object.assign(() => draftStore.getState(), draftStore); } },
     '../../ai/services/commitAiPreferences': { captureAiPreferences: () => structuredClone(committed), commitAiPreferences: async (draft, base) => {
       saves++; if (commitHandler) await commitHandler(); committed = snapshots.mergeAiPreferences(draft, base, committed); return committed;
@@ -147,6 +218,8 @@ function dialogFixture(commitHandler) {
     '../../ai/components/GuardrailsTab': { GuardrailsTab: child }, '../../ai/components/BotReviewersTab': { BotReviewersTab: child }, '../../ai/components/SandboxTab': { SandboxTab: child },
     '../../credentials/components/GitCredentialsTab': { GitCredentialsTab: child }, '../../git/components/GitBinaryTab': { GitBinaryTab: child }, '../../notifications/components/NotificationsTab': { NotificationsTab: child },
     './SettingRow': { SettingRow: child }, './ZedSwitch': { ZedSwitch: child },
+    './PreferencesJsonEditor': { PreferencesJsonEditor: child },
+    '../constants/botPresets': bots,
   };
   for (const name of ['X', 'RotateCcw', 'Check', 'ChevronDown', 'ChevronRight', 'ChevronLeft', 'Search', 'Monitor', 'Moon', 'Sun', 'AlertCircle', 'AlertTriangle', 'Bold', 'Italic', 'Underline', 'Code']) dependencies[`../../../common/components/icons/${name}`] = { [name]: child };
   const { PreferencesModal } = loadWithMocks(url('features/preferences/components/PreferencesModal.tsx'), dependencies);
@@ -254,6 +327,7 @@ test('startup restores the committed guardrail policy before native hydration in
   try {
     const { useAiMcpStore: store } = loadWithMocks(url('features/ai/store/useAiMcpStore.ts'), {
       zustand: { create }, '../constants/aiPresets': presets, '../types/guardrails': guards,
+      '../constants/botPresets': bots,
       '../constants/runtimeAvailability': availability, '../utils/resetMcpVerification': verification,
       '@tauri-apps/api/core': { isTauri: () => true, invoke: async (name, args) => {
         calls.push(name);
@@ -276,10 +350,11 @@ test('reloading the AI store preserves the chosen provider, auth mode, explicit 
   try {
     globalThis.window = { setTimeout() {} };
     for (const [provider, model] of presets.AI_PROVIDERS.map((preset) => [preset.id, preset.id === 'openai' ? 'gpt-4o' : preset.id === 'anthropic' ? 'claude-3-7-sonnet-20250219' : preset.defaultModel])) {
-      const saved = baseline(); saved.aiConfig = { ...saved.aiConfig, provider, model, authMode: 'subscription_oauth', baseUrl: 'https://fixture.test/v1', temperature: 0.6, maxTokens: 2048, systemPrompt: 'My saved instructions', streamResponse: false, enableCodeReviewAssist: false };
+      const saved = baseline(); saved.aiConfig = { ...saved.aiConfig, provider, model, authMode: 'subscription_oauth', baseUrl: 'https://fixture.test/v1', temperature: 0.6, maxTokens: 2048, reviewerInstructions: 'My saved instructions', streamResponse: false, enableCodeReviewAssist: false };
       globalThis.localStorage = { getItem: () => JSON.stringify(saved), setItem() {} };
       const { useAiMcpStore: store } = loadWithMocks(url('features/ai/store/useAiMcpStore.ts'), {
         zustand: { create }, '../constants/aiPresets': presets, '../types/guardrails': guards,
+        '../constants/botPresets': bots,
         '../constants/runtimeAvailability': availability, '../utils/resetMcpVerification': verification,
         '@tauri-apps/api/core': { isTauri: () => true, invoke: () => assert.fail('Hydration should not run in this fixture') },
       });
@@ -308,7 +383,7 @@ test('first launch, incomplete settings and Reset use OpenAI defaults without ov
       assert.equal(store.getState().aiConfig.provider, 'anthropic');
       store.getState().resetAiConfig();
       assert.equal(store.getState().aiConfig.provider, 'openai');
-      assert.equal(JSON.parse(raw).aiConfig.provider, 'openai');
+      assert.equal(globalThis.window.__STAGE0_PREFERENCES__.ai.aiConfig.provider, 'openai');
     }
   } finally { globalThis.window = originalWindow; globalThis.localStorage = originalStorage; }
 });
@@ -326,6 +401,10 @@ test('provider UI selects OpenAI on first launch, exposes its API key input and 
       detectCli: noop, fetchDynamicModels: () => credentialCalls.push('models'), loadApiKeyForProvider: () => credentialCalls.push('key'),
     }) },
     '../constants/aiPresets': presets,
+    '../constants/botPresets': bots,
+    '../utils/resolveAiModelPreset': modelPresets,
+    '../utils/botRolePrompts': { getBotRolePrompt: () => 'Fixture prompt' },
+    './AiModelExecutionOptions': { AiModelExecutionOptions: () => null },
     '../../../common/components/CustomSelect': { CustomSelect: () => null },
     '../../review/components/HarnessConnectionsPanel': { HarnessConnectionsPanel: () => null },
     './ChatGptDeviceCodeCard': { ChatGptDeviceCodeCard: () => null },

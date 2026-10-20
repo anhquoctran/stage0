@@ -82,18 +82,24 @@ test('legacy notification settings cannot restore the removed category; saved hi
     ['stage0_notification_settings', JSON.stringify({ channels: { softwareUpdates: true, aiReview: false, gitSync: false, guardrails: true } })],
     ['stage0_notification_history', JSON.stringify(history)],
   ]);
-  let storageListener;
-  globalThis.window = { addEventListener: (event, handler) => { if (event === 'storage') storageListener = handler; } };
+  let storageListener; let preferenceListener;
+  globalThis.window = { addEventListener: (event, handler) => {
+    if (event === 'storage') storageListener = handler;
+    if (event === 'stage0-preferences-updated') preferenceListener = handler;
+  } };
   globalThis.localStorage = { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
   try {
     const { useNotificationStore: store } = loadWithMocks(new URL('../frontend/features/notifications/store/useNotificationStore.ts', import.meta.url), { zustand: { create } });
     assert.deepEqual(store.getState().settings.channels, { aiReview: false, gitSync: false, guardrails: true });
     assert.deepEqual(store.getState().notifications, history);
     store.getState().updateChannel('aiReview', true);
-    assert.deepEqual(JSON.parse(values.get('stage0_notification_settings')).channels, { aiReview: true, gitSync: false, guardrails: true });
+    assert.deepEqual(globalThis.window.__STAGE0_PREFERENCES__.notifications.channels, { aiReview: true, gitSync: false, guardrails: true });
+    assert.deepEqual(JSON.parse(values.get('stage0_notification_settings')).channels, { softwareUpdates: true, aiReview: false, gitSync: false, guardrails: true });
     assert.deepEqual(JSON.parse(values.get('stage0_notification_history')), history);
     assert.equal(store.getState().unreadCount, 1);
     storageListener({ key: 'stage0_notification_settings', newValue: JSON.stringify({ channels: { softwareUpdates: true, aiReview: false, gitSync: true, guardrails: false } }) });
+    assert.deepEqual(store.getState().settings.channels, { aiReview: true, gitSync: false, guardrails: true });
+    preferenceListener({ detail: { notifications: { channels: { aiReview: false, gitSync: true, guardrails: false } } } });
     assert.deepEqual(store.getState().settings.channels, { aiReview: false, gitSync: true, guardrails: false });
     assert.deepEqual(store.getState().notifications, history);
   } finally { globalThis.window = originalWindow; globalThis.localStorage = originalStorage; }

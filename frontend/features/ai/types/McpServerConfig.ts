@@ -8,6 +8,7 @@ export interface McpServerConfig {
   command: string; // for stdio (e.g. npx, uvx, python)
   args: string[]; // arguments
   env: Record<string, string>; // environment variables
+  secretEnvKeys?: string[]; // names are public; values live only in OS keychain
   url?: string; // Streamable HTTP or legacy SSE endpoint; never embed credentials
   cwd?: string; // working directory
   enabled: boolean;
