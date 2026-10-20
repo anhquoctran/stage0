@@ -1,22 +1,40 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
 import { Loader2 } from '../../../common/components/icons/Loader2';
 import { MessageSquare } from '../../../common/components/icons/MessageSquare';
 import { Plus } from '../../../common/components/icons/Plus';
 import { Search } from '../../../common/components/icons/Search';
+import { Tag } from '../../../common/components/icons/Tag';
+import { User } from '../../../common/components/icons/User';
 import { X } from '../../../common/components/icons/X';
 import { formatDateTime, formatRecentTime } from '../../../common/utils/dateTime';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import type { VirtualMrSession } from '../types/VirtualMrSession';
+import { getVirtualMrSearchSuggestions, matchesVirtualMrSearch, type VirtualMrSearchSuggestion } from '../utils/virtualMrSearch';
 
-type MrFilter = 'open' | 'resolved' | 'all';
+type MrFilter = 'open' | 'closed' | 'all';
 type MrSort = 'updated' | 'newest' | 'oldest' | 'title';
 
-const isResolved = (session: VirtualMrSession) => session.status === 'closed';
+const isClosed = (session: VirtualMrSession) => session.status === 'closed';
 
-export const VirtualMrListDialog: React.FC = () => {
+const SearchSuggestionIcon: React.FC<{ field: VirtualMrSearchSuggestion['field'] }> = ({ field }) => {
+  if (field === 'author' || field === 'assignee') return <User className="h-3.5 w-3.5" />;
+  if (field === 'reviewer' || field === 'approved-by') return <GitPullRequest className="h-3.5 w-3.5" />;
+  if (field === 'label') return <Tag className="h-3.5 w-3.5" />;
+  if (field === 'base' || field === 'head') return <GitBranch className="h-3.5 w-3.5" />;
+  if (field === 'is') return <CheckCircle2 className="h-3.5 w-3.5" />;
+  if (field === 'has' || field === 'no') return <MessageSquare className="h-3.5 w-3.5" />;
+  return <Search className="h-3.5 w-3.5" />;
+};
+
+interface VirtualMrListDialogProps {
+  inline?: boolean;
+}
+
+export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline = false }) => {
   const { currentRepo, showToast, setBranchComparison } = useGitStore();
   const {
     sessions,
@@ -29,6 +47,10 @@ export const VirtualMrListDialog: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<MrFilter>('open');
   const [sortBy, setSortBy] = useState<MrSort>('updated');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchCaret, setSearchCaret] = useState(0);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isMrListOpen) return;
@@ -40,29 +62,16 @@ export const VirtualMrListDialog: React.FC = () => {
   }, [isMrListOpen, setIsMrListOpen]);
 
   const counts = useMemo(() => ({
-    open: sessions.filter((session) => !isResolved(session)).length,
-    resolved: sessions.filter(isResolved).length,
+    open: sessions.filter((session) => !isClosed(session)).length,
+    closed: sessions.filter(isClosed).length,
     all: sessions.length,
   }), [sessions]);
 
   const visibleSessions = useMemo(() => {
-    const query = searchTerm.trim().toLocaleLowerCase();
     const filtered = sessions.filter((session) => {
-      if (activeFilter === 'open' && isResolved(session)) return false;
-      if (activeFilter === 'resolved' && !isResolved(session)) return false;
-      if (!query) return true;
-
-      const searchable = [
-        session.title,
-        session.description,
-        session.baseBranch,
-        session.compareBranch,
-        session.assignee.name,
-        session.assignee.email,
-        ...session.labels.map((label) => label.name),
-        ...session.reviewers.map((reviewer) => reviewer.agentName),
-      ].join('\n').toLocaleLowerCase();
-      return searchable.includes(query);
+      if (activeFilter === 'open' && isClosed(session)) return false;
+      if (activeFilter === 'closed' && !isClosed(session)) return false;
+      return matchesVirtualMrSearch(session, searchTerm);
     });
 
     return filtered.sort((left, right) => {
@@ -77,7 +86,18 @@ export const VirtualMrListDialog: React.FC = () => {
     });
   }, [activeFilter, searchTerm, sessions, sortBy]);
 
-  if (!isMrListOpen || !currentRepo) return null;
+  const searchSuggestions = useMemo(
+    () => isSearchFocused
+      ? getVirtualMrSearchSuggestions(searchTerm, searchCaret, sessions)
+      : [],
+    [isSearchFocused, searchCaret, searchTerm, sessions],
+  );
+
+  useEffect(() => {
+    setActiveSuggestionIndex(0);
+  }, [isSearchFocused, searchCaret, searchTerm]);
+
+  if ((!inline && !isMrListOpen) || !currentRepo) return null;
 
   const handleSelect = async (sessionId: string) => {
     const session = sessions.find((item) => item.id === sessionId);
@@ -90,23 +110,72 @@ export const VirtualMrListDialog: React.FC = () => {
 
   const filters: { id: MrFilter; label: string }[] = [
     { id: 'open', label: 'Open' },
-    { id: 'resolved', label: 'Resolved' },
+    { id: 'closed', label: 'Closed' },
     { id: 'all', label: 'All' },
   ];
 
+  const applySearchSuggestion = (suggestion: VirtualMrSearchSuggestion) => {
+    const input = searchInputRef.current;
+    const caret = input?.selectionStart ?? searchTerm.length;
+    const beforeCaret = searchTerm.slice(0, caret);
+    const tokenStart = beforeCaret.length - (beforeCaret.match(/\S*$/)?.[0].length ?? 0);
+    const afterCaret = searchTerm.slice(caret);
+    const nextWhitespace = afterCaret.search(/\s/);
+    const tokenEnd = nextWhitespace < 0 ? searchTerm.length : caret + nextWhitespace;
+    const left = searchTerm.slice(0, tokenStart);
+    const right = searchTerm.slice(tokenEnd);
+    const value = suggestion.value.includes(' ')
+      ? `"${suggestion.value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+      : suggestion.value;
+    const replacement = suggestion.kind === 'field' ? `${suggestion.field}:` : `${suggestion.field}:${value}`;
+    const separator = suggestion.kind === 'value' && (!right || !/^\s/.test(right)) ? ' ' : '';
+    const nextQuery = `${left}${replacement}${separator}${right}`;
+    const nextCaret = left.length + replacement.length + separator.length;
+
+    setSearchTerm(nextQuery);
+    setSearchCaret(nextCaret);
+    setIsSearchFocused(true);
+    requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+      searchInputRef.current?.setSelectionRange(nextCaret, nextCaret);
+      setSearchCaret(nextCaret);
+    });
+  };
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown' && searchSuggestions.length > 0) {
+      event.preventDefault();
+      setActiveSuggestionIndex((index) => (index + 1) % searchSuggestions.length);
+    } else if (event.key === 'ArrowUp' && searchSuggestions.length > 0) {
+      event.preventDefault();
+      setActiveSuggestionIndex((index) => (index - 1 + searchSuggestions.length) % searchSuggestions.length);
+    } else if (event.key === 'Enter' && searchSuggestions[activeSuggestionIndex]) {
+      event.preventDefault();
+      applySearchSuggestion(searchSuggestions[activeSuggestionIndex]);
+    } else if (event.key === 'Escape' && isSearchFocused && searchSuggestions.length > 0) {
+      event.preventDefault();
+      event.stopPropagation();
+      setIsSearchFocused(false);
+    }
+  };
+
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-8"
-      role="presentation"
-      onMouseDown={(event) => {
+      className={inline
+        ? 'flex h-full min-h-0 w-full flex-col bg-crust'
+        : 'fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-8'}
+      role={inline ? undefined : 'presentation'}
+      onMouseDown={inline ? undefined : (event) => {
         if (event.target === event.currentTarget) setIsMrListOpen(false);
       }}
     >
       <section
         aria-labelledby="virtual-mr-list-title"
-        aria-modal="true"
-        className="flex w-full max-w-5xl max-h-[calc(100vh-4rem)] flex-col border border-surface1 bg-mantle text-text shadow-2xl"
-        role="dialog"
+        aria-modal={inline ? undefined : true}
+        className={`flex w-full flex-col border border-surface1 bg-mantle text-text ${
+          inline ? 'min-h-0 flex-1' : 'max-w-5xl max-h-[calc(100vh-4rem)] shadow-2xl'
+        }`}
+        role={inline ? 'region' : 'dialog'}
       >
         <header className="flex items-start justify-between gap-4 border-b border-surface0 px-5 py-4">
           <div className="min-w-0">
@@ -133,14 +202,16 @@ export const VirtualMrListDialog: React.FC = () => {
               <Plus className="h-3.5 w-3.5" />
               <span>New MR</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setIsMrListOpen(false)}
-              className="shrink-0 p-1 text-subtext0 hover:bg-surface0 hover:text-text"
-              title="Close merge request list"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            {!inline && (
+              <button
+                type="button"
+                onClick={() => setIsMrListOpen(false)}
+                className="shrink-0 p-1 text-subtext0 hover:bg-surface0 hover:text-text"
+                title="Close merge request list"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </header>
 
@@ -166,17 +237,73 @@ export const VirtualMrListDialog: React.FC = () => {
             ))}
           </div>
 
-          <label className="flex h-8 min-w-[220px] flex-1 items-center gap-2 border border-surface1 bg-crust px-2.5 text-subtext0 focus-within:border-brand">
-            <Search className="h-3.5 w-3.5 shrink-0" />
-            <input
-              type="search"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search by title, branch, description, label…"
-              className="min-w-0 flex-1 bg-transparent text-xs text-text placeholder:text-subtext0 focus:outline-none"
-              aria-label="Search merge requests"
-            />
-          </label>
+          <div className="relative min-w-[220px] flex-1">
+            <label className="flex h-8 items-center gap-2 border border-surface1 bg-crust px-2.5 text-subtext0 focus-within:border-brand">
+              <Search className="h-3.5 w-3.5 shrink-0" />
+              <input
+                ref={searchInputRef}
+                type="search"
+                value={searchTerm}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  setSearchCaret(event.target.selectionStart ?? event.target.value.length);
+                }}
+                onFocus={(event) => {
+                  setIsSearchFocused(true);
+                  setSearchCaret(event.currentTarget.selectionStart ?? searchTerm.length);
+                }}
+                onBlur={() => setIsSearchFocused(false)}
+                onClick={(event) => setSearchCaret(event.currentTarget.selectionStart ?? searchTerm.length)}
+                onKeyUp={(event) => setSearchCaret(event.currentTarget.selectionStart ?? searchTerm.length)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search MRs or type to filter…"
+                className="mr-list-search-input min-w-0 flex-1 bg-transparent text-xs text-text placeholder:text-subtext0 focus:outline-none"
+                aria-label="Search merge requests"
+                aria-autocomplete="list"
+                aria-controls={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestions`}
+                aria-expanded={searchSuggestions.length > 0}
+                aria-activedescendant={searchSuggestions.length > 0
+                  ? `virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestion-${activeSuggestionIndex}`
+                  : undefined}
+              />
+            </label>
+            {searchSuggestions.length > 0 && (
+              <div
+                id={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestions`}
+                className="absolute left-0 top-full z-[120] mt-1 max-h-80 w-[min(26rem,calc(100vw-2rem))] overflow-y-auto border border-surface1 bg-surface0 py-1 text-left shadow-xl"
+                role="listbox"
+                aria-label="Search syntax suggestions"
+              >
+                {searchSuggestions.map((suggestion, index) => (
+                  <button
+                    key={`${suggestion.field}:${suggestion.value}`}
+                    id={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestion-${index}`}
+                    type="button"
+                    role="option"
+                    aria-selected={activeSuggestionIndex === index}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => setActiveSuggestionIndex(index)}
+                    onClick={() => applySearchSuggestion(suggestion)}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs ${
+                      activeSuggestionIndex === index
+                        ? 'bg-surface2 text-text'
+                        : 'text-subtext1 hover:bg-surface1 hover:text-text'
+                    }`}
+                  >
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center text-brand">
+                      <SearchSuggestionIcon field={suggestion.field} />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate font-medium">
+                      {suggestion.label}
+                    </span>
+                    <span className="shrink-0 truncate text-[10px] text-subtext0">
+                      {suggestion.detail}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <label className="flex h-8 items-center gap-2 text-xs text-subtext0">
             <span>Sort:</span>
@@ -203,8 +330,8 @@ export const VirtualMrListDialog: React.FC = () => {
           ) : visibleSessions.length > 0 ? (
             <div className="divide-y divide-surface0">
               {visibleSessions.map((session) => {
-                const resolved = isResolved(session);
-                const statusLabel = resolved ? 'Resolved' : session.status === 'approved' ? 'Approved' : 'Open';
+                const closed = isClosed(session);
+                const statusLabel = closed ? 'Closed' : session.status === 'approved' ? 'Approved' : 'Open';
                 const updatedLabel = formatRecentTime(session.updatedAt) || 'Unknown';
 
                 return (
@@ -220,13 +347,13 @@ export const VirtualMrListDialog: React.FC = () => {
                           {session.title}
                         </span>
                         <span className={`inline-flex shrink-0 items-center gap-1 border px-1.5 py-0.5 text-[10px] ${
-                          resolved
+                          closed
                             ? 'border-surface1 bg-surface0 text-subtext1'
                             : session.status === 'approved'
                             ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
                             : 'border-brand/30 bg-brand/10 text-brand'
                         }`}>
-                          {resolved ? <CheckCircle2 className="h-3 w-3" /> : null}
+                          {closed ? <CheckCircle2 className="h-3 w-3" /> : null}
                           {statusLabel}
                         </span>
                       </div>
@@ -264,14 +391,14 @@ export const VirtualMrListDialog: React.FC = () => {
             <div className="flex flex-col items-center px-6 py-14 text-center">
               <GitPullRequest className="mb-3 h-7 w-7 text-subtext0" />
               <h3 className="text-sm font-semibold text-text">
-                {searchTerm.trim() ? 'No matching merge requests' : activeFilter === 'resolved' ? 'No resolved merge requests' : activeFilter === 'open' ? 'No open merge requests' : 'No merge requests yet'}
+                {searchTerm.trim() ? 'No matching merge requests' : activeFilter === 'closed' ? 'No closed merge requests' : activeFilter === 'open' ? 'No open merge requests' : 'No merge requests yet'}
               </h3>
               <p className="mt-1 max-w-sm text-xs leading-relaxed text-subtext0">
                 {searchTerm.trim()
                   ? 'Try another title, branch, description, or label.'
                   : 'Virtual MRs are saved with this repository and will be here when you open it again.'}
               </p>
-              {!searchTerm.trim() && activeFilter !== 'resolved' && (
+              {!searchTerm.trim() && activeFilter !== 'closed' && (
                 <button
                   type="button"
                   onClick={() => {
