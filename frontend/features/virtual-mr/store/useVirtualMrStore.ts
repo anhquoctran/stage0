@@ -16,6 +16,7 @@ import { type GitTagInfo } from '../types/GitTagInfo';
 import { AVAILABLE_AI_BOTS, PRESET_REPO_LABELS } from '../types/virtualMr';
 import { type NewMrDraft } from '../types/NewMrDraft';
 import type { VirtualMrState } from '../types/VirtualMrState';
+import type { VirtualMrSessionSaveOutcome } from '../types/VirtualMrSessionSaveOutcome';
 import { AI_REVIEW_UNAVAILABLE } from '../../ai/constants/runtimeAvailability';
 import type { DbDiscussion } from '../types/DbDiscussion';
 import { fromDbDiscussion } from '../utils/fromDbDiscussion';
@@ -25,7 +26,7 @@ let draftBranchRequestVersion = 0;
 let repoDataRequestVersion = 0;
 let repoMetadataRequestVersion = 0;
 
-const persistSession = (session: VirtualMrSession): Promise<void> =>
+const persistSession = (session: VirtualMrSession): Promise<VirtualMrSessionSaveOutcome> =>
   enqueueSessionWrite(session.id, () => {
     // A metadata save may have finished while this write was queued.
     const current = useVirtualMrStore.getState().sessions.find((item) => item.id === session.id);
@@ -45,7 +46,11 @@ const updateSessionMetadata = async (
       const changes = update(session);
       if (!changes) return;
       const updatedAt = new Date().toISOString();
-      await saveSessionSnapshot({ ...session, ...changes, updatedAt });
+      const outcome = await saveSessionSnapshot({ ...session, ...changes, updatedAt });
+      if (outcome.outcome === 'duplicate_open') {
+        openExistingVirtualMr(outcome);
+        return;
+      }
       // Publish only after SQLite confirms the selection. Merge with current
       // state so another edit or a repository switch cannot be overwritten.
       useVirtualMrStore.setState((state) => ({
@@ -69,6 +74,27 @@ const getErrorMessage = (error: unknown): string => {
     return String(error);
   }
 };
+
+type DuplicateOpenVirtualMr = Extract<VirtualMrSessionSaveOutcome, { outcome: 'duplicate_open' }>;
+
+function openExistingVirtualMr(duplicate: DuplicateOpenVirtualMr): void {
+  const state = useVirtualMrStore.getState();
+  const existing = state.sessions.find((session) => session.id === duplicate.existing_id);
+  const sourceToTarget = `${duplicate.compare_branch} → ${duplicate.base_branch}`;
+
+  if (existing) {
+    state.switchSession(existing.id);
+    void useGitStore.getState().setBranchComparison(existing.baseBranch, existing.compareBranch);
+    useGitStore.getState().showToast(
+      `An open Virtual MR already exists for ${sourceToTarget}. Opened “${existing.title}” instead.`,
+    );
+    return;
+  }
+
+  useGitStore.getState().showToast(
+    `An open Virtual MR already exists for ${sourceToTarget}: “${duplicate.existing_title}”. Open it from the Merge Requests list.`,
+  );
+}
 
 export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   currentRepoId: null,
@@ -442,7 +468,11 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     };
 
     try {
-      await persistSession(session);
+      const outcome = await persistSession(session);
+      if (outcome.outcome === 'duplicate_open') {
+        openExistingVirtualMr(outcome);
+        return '';
+      }
     } catch (error) {
       console.error('Failed to persist session:', error);
       gitStore.showToast('Could not save this Virtual MR to the database. Please try again.');
@@ -711,7 +741,11 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     };
 
     try {
-      await persistSession(newSession);
+      const outcome = await persistSession(newSession);
+      if (outcome.outcome === 'duplicate_open') {
+        openExistingVirtualMr(outcome);
+        return '';
+      }
     } catch (err) {
       console.error('Failed to save virtual MR to database:', err);
       useGitStore.getState().showToast('Could not save this Virtual MR to the database. Your draft is still available; please try again.');
@@ -781,7 +815,11 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     const target = updated.find((s) => s.id === sessionId);
     if (target && currentRepoId) {
       try {
-        await persistSession(target);
+        const outcome = await persistSession(target);
+        if (outcome.outcome === 'duplicate_open') {
+          set({ sessions });
+          openExistingVirtualMr(outcome);
+        }
       } catch {}
     }
   },
@@ -843,7 +881,11 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     const target = updated.find((s) => s.id === sessionId);
     if (target && currentRepoId) {
       try {
-        await persistSession(target);
+        const outcome = await persistSession(target);
+        if (outcome.outcome === 'duplicate_open') {
+          set({ sessions });
+          openExistingVirtualMr(outcome);
+        }
       } catch {}
     }
   },
@@ -877,7 +919,8 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       } catch {}
     }
 
-    const updated = get().sessions.map((s) =>
+    const previousSessions = get().sessions;
+    const updated = previousSessions.map((s) =>
       s.id === sessionId
         ? {
             ...s,
@@ -897,7 +940,11 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     const { currentRepoId } = get();
     if (target && currentRepoId) {
       try {
-        await persistSession(target);
+        const outcome = await persistSession(target);
+        if (outcome.outcome === 'duplicate_open') {
+          set({ sessions: previousSessions });
+          openExistingVirtualMr(outcome);
+        }
       } catch (err) {
         console.warn('Failed to persist session branch changes:', err);
       }

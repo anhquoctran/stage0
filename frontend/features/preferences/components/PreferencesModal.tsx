@@ -583,7 +583,10 @@ export const PreferencesModal: React.FC = () => {
       if (needsRestart) setShowRestartPrompt(true);
       return true;
     } catch (error) {
-      setApplyError(error instanceof Error ? error.message : 'Could not apply preferences. Your drafts are still available.');
+      const detail = error instanceof Error ? error.message : String(error ?? '').trim();
+      setApplyError(detail
+        ? `Could not apply preferences: ${detail}. Your drafts are still available.`
+        : 'Could not apply preferences. Your drafts are still available.');
       return false;
     } finally { applyingRef.current = false; setIsApplying(false); }
   };

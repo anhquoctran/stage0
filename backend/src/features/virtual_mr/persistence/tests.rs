@@ -1,4 +1,4 @@
-use super::{Database, VirtualMrReviewerDb, VirtualMrSessionDb};
+use super::{Database, VirtualMrReviewerDb, VirtualMrSessionDb, VirtualMrSessionSaveOutcome};
 use rusqlite::Connection;
 use std::sync::Mutex;
 
@@ -114,4 +114,58 @@ fn old_session_payload_without_reviewers_is_still_readable() {
     payload.as_object_mut().unwrap().remove("reviewers");
     let loaded: VirtualMrSessionDb = serde_json::from_value(payload).unwrap();
     assert!(loaded.reviewers.is_empty());
+}
+
+#[test]
+fn only_one_open_session_can_use_a_repo_and_source_target_pair() {
+    let conn = Connection::open_in_memory().unwrap();
+    seed(&conn);
+    let db = Database(Mutex::new(conn));
+
+    let first = session("mr-first", "repo-a");
+    assert_eq!(
+        db.save_virtual_mr_session(&first).unwrap(),
+        VirtualMrSessionSaveOutcome::Saved
+    );
+
+    let duplicate = session("mr-duplicate", "repo-a");
+    assert_eq!(
+        db.save_virtual_mr_session(&duplicate).unwrap(),
+        VirtualMrSessionSaveOutcome::DuplicateOpen {
+            existing_id: "mr-first".into(),
+            existing_title: "Fixture MR".into(),
+            base_branch: "main".into(),
+            compare_branch: "feature".into(),
+        }
+    );
+    assert_eq!(db.list_virtual_mr_sessions("repo-a").unwrap().len(), 1);
+
+    let mut closed_duplicate = session("mr-closed", "repo-a");
+    closed_duplicate.status = "closed".into();
+    assert_eq!(
+        db.save_virtual_mr_session(&closed_duplicate).unwrap(),
+        VirtualMrSessionSaveOutcome::Saved
+    );
+
+    // The same branches are valid in a different repo, and reversing the
+    // source/target direction is a different merge request pair.
+    let other_repo = session("mr-other-repo", "repo-b");
+    assert_eq!(
+        db.save_virtual_mr_session(&other_repo).unwrap(),
+        VirtualMrSessionSaveOutcome::Saved
+    );
+    let mut reversed = session("mr-reversed", "repo-a");
+    reversed.base_branch = "feature".into();
+    reversed.compare_branch = "main".into();
+    assert_eq!(
+        db.save_virtual_mr_session(&reversed).unwrap(),
+        VirtualMrSessionSaveOutcome::Saved
+    );
+
+    // Reopening a closed MR is rejected when an equivalent MR is already open.
+    closed_duplicate.status = "open".into();
+    assert!(matches!(
+        db.save_virtual_mr_session(&closed_duplicate).unwrap(),
+        VirtualMrSessionSaveOutcome::DuplicateOpen { existing_id, .. } if existing_id == "mr-first"
+    ));
 }

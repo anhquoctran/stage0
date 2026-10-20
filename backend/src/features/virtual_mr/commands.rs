@@ -1,7 +1,7 @@
 use crate::core::db::Database;
 use crate::features::git::ops::{get_commits_between, get_git_user_identity, GitCommitItem};
 use crate::features::virtual_mr::persistence::{
-    VirtualMrCommentDb, VirtualMrDiscussionDb, VirtualMrSessionDb,
+    VirtualMrCommentDb, VirtualMrDiscussionDb, VirtualMrSessionDb, VirtualMrSessionSaveOutcome,
 };
 use std::io::Read;
 use std::path::Path;
@@ -25,7 +25,7 @@ pub async fn list_virtual_mr_sessions(
 pub async fn save_virtual_mr_session(
     app: AppHandle,
     session: VirtualMrSessionDb,
-) -> Result<(), String> {
+) -> Result<VirtualMrSessionSaveOutcome, String> {
     let db = app.state::<Database>();
     db.save_virtual_mr_session(&session)
         .map_err(|e| e.to_string())
@@ -192,7 +192,13 @@ pub async fn verify_mr_discussion(
 ) -> Result<(), String> {
     // A client-supplied boolean is not verification evidence. The sandboxed
     // review runtime validates current-snapshot evidence before resolving.
-    let _ = (app, discussion_id, verification_status, verified_by_bot, pass);
+    let _ = (
+        app,
+        discussion_id,
+        verification_status,
+        verified_by_bot,
+        pass,
+    );
     crate::features::ai::review_availability::require_review_runtime()
 }
 

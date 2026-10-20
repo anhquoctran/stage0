@@ -39,13 +39,27 @@ async function fixture(beforeSave = async () => {}) {
     if (command === 'save_virtual_mr_session') {
       const payload = structuredClone(args.session);
       writes.push(payload);
+      const duplicate = payload.status === 'open'
+        ? [...records.values()].find((item) => item.id !== payload.id
+          && item.repo_id === payload.repo_id
+          && item.compare_branch === payload.compare_branch
+          && item.base_branch === payload.base_branch
+          && item.status === 'open')
+        : null;
+      if (duplicate) return {
+        outcome: 'duplicate_open',
+        existing_id: duplicate.id,
+        existing_title: duplicate.title,
+        base_branch: payload.base_branch,
+        compare_branch: payload.compare_branch,
+      };
       activeWrites++;
       maxActiveWrites = Math.max(maxActiveWrites, activeWrites);
       try {
         await beforeSave(payload, writes.length);
         records.set(payload.id, payload);
       } finally { activeWrites--; }
-      return;
+      return { outcome: 'saved' };
     }
     if (command === 'delete_virtual_mr_session') { records.delete(args.sessionId); return; }
     if (command === 'list_virtual_mr_sessions') {
@@ -69,6 +83,7 @@ async function fixture(beforeSave = async () => {}) {
       globalReviewers: [{ id: 'bot-1', name: 'Reviewer 01' }, { id: 'bot-2', name: 'Reviewer 02' }],
       repoCustomReviewers: {},
     }) } },
+    '../../review/services/assignedReviewService': { reReviewAssignedSession: async () => {} },
     '../types/virtualMr': { AVAILABLE_AI_BOTS: [], PRESET_REPO_LABELS: [] },
     '../../ai/constants/runtimeAvailability': {},
     '../utils/fromDbDiscussion': {},
@@ -106,7 +121,7 @@ test('reviewer and label additions/removals persist and reload with assignment i
 test('draft selections and later title/status/branch edits retain the saved metadata', async () => {
   const { store, records, reload } = await fixture();
   store.setState({ draftMr: {
-    title: 'New fixture MR', description: 'Description', baseBranch: 'main', compareBranch: 'feature',
+    title: 'New fixture MR', description: 'Description', baseBranch: 'main', compareBranch: 'feature-new',
     selectedBots: ['bot-2'], selectedLabels: ['feature'], commits: [],
     isCommitsLoading: false, commitsError: null,
   } });
@@ -122,6 +137,28 @@ test('draft selections and later title/status/branch edits retain the saved meta
   assert.deepEqual(loaded.labels.map((label) => label.id), ['feature']);
   assert.equal(loaded.status, 'closed');
   assert.equal(loaded.compareBranch, 'other-feature');
+});
+
+test('submitting a duplicate open source-target pair opens the existing MR instead', async () => {
+  const { store, records, toasts, calls } = await fixture();
+  store.setState({
+    draftMr: {
+      title: 'Duplicate fixture MR', description: 'This must not be saved',
+      baseBranch: 'main', compareBranch: 'feature', selectedBots: ['bot-1'],
+      selectedLabels: ['bug'], commits: [], isCommitsLoading: false, commitsError: null,
+    },
+    isDraftActive: true,
+  });
+
+  const id = await store.getState().submitNewMrDraft();
+
+  assert.equal(id, '');
+  assert.equal(records.size, 1);
+  assert.equal(records.has('mr'), true);
+  assert.equal(store.getState().activeSessionId, 'mr');
+  assert.equal(store.getState().isDraftActive, false);
+  assert.equal(toasts.at(-1), 'An open Virtual MR already exists for feature → main. Opened “Fixture MR” instead.');
+  assert.ok(!calls.some(([command]) => /start_ai_review|approve/.test(command)));
 });
 
 test('rapid selections save in order and an overlapping title edit cannot erase them', async () => {
@@ -184,7 +221,7 @@ test('switching repositories flushes queued selections without replacing the new
   assert.deepEqual(store.getState().sessions[0].labels.map((item) => item.id), ['bug']);
 });
 
-test('closing an MR during a queued selection does not recreate it after deletion', async () => {
+test('closing an MR workspace tab during a queued selection keeps the saved MR', async () => {
   const gate = deferred();
   const started = deferred();
   const { store, records, reload } = await fixture(async (_payload, count) => {
@@ -195,7 +232,8 @@ test('closing an MR during a queued selection does not recreate it after deletio
   const closed = store.getState().closeSession('mr');
   gate.resolve();
   await Promise.all([assign, closed]);
-  assert.equal(records.has('mr'), false);
+  assert.equal(records.has('mr'), true);
   await reload();
-  assert.deepEqual(store.getState().sessions, []);
+  assert.equal(store.getState().sessions[0].id, 'mr');
+  assert.equal(store.getState().sessions[0].reviewers[0].agentId, 'bot-1');
 });

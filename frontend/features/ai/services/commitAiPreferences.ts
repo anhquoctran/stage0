@@ -57,8 +57,20 @@ export async function commitAiPreferences(
     previous = await preferencesJsonService.load();
     const persistedAiConfig = { ...snapshot.aiConfig } as Record<string, unknown>;
     delete persistedAiConfig.apiKey;
-    persistedAiConfig.authMode = { $stage0Delete: true };
-    persistedAiConfig.cliType = { $stage0Delete: true };
+    const previousAi = previous.settings?.ai;
+    const previousAiConfig = previousAi && typeof previousAi === 'object' && !Array.isArray(previousAi)
+      ? (previousAi as Record<string, unknown>).aiConfig
+      : undefined;
+    const previousAiConfigFields = previousAiConfig && typeof previousAiConfig === 'object' && !Array.isArray(previousAiConfig)
+      ? previousAiConfig as Record<string, unknown>
+      : undefined;
+    for (const key of ['authMode', 'cliType']) {
+      if (previousAiConfigFields && Object.prototype.hasOwnProperty.call(previousAiConfigFields, key)) {
+        persistedAiConfig[key] = { $stage0Delete: true };
+      } else {
+        delete persistedAiConfig[key];
+      }
+    }
     // One JSONC patch commits AI plus the dialog's other app preferences and reviewers.
     // Runtime Zustand state is published only after the keyring batch also succeeds.
     committed = await preferencesJsonService.patch({
