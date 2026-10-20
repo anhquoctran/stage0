@@ -193,6 +193,16 @@ impl Database {
         )?;
 
         conn.execute_batch(SCHEMA_SQL)?;
+        // Legacy 'approved' was a display-only status and carried no reviewer verdict.
+        // Reopen those rows so they can satisfy the explicit Resolved rules.
+        conn.execute(
+            "UPDATE virtual_mr_sessions SET status='open' WHERE status='approved'",
+            [],
+        )?;
+        conn.execute(
+            "UPDATE virtual_mr_session_reviewers SET review_status='pending' WHERE review_status='reviewing'",
+            [],
+        )?;
         // Durable runs survive application restarts, but their in-flight model
         // calls cannot be resumed safely without an explicit replay policy.
         conn.execute(

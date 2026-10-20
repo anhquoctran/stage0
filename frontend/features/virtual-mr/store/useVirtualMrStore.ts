@@ -4,6 +4,7 @@ import { useGitStore } from '../../git/store/useGitStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { type VirtualMrSession } from '../types/VirtualMrSession';
 import { type VirtualMrStatus } from '../types/VirtualMrStatus';
+import { type ReviewerState } from '../types/ReviewerState';
 import { type VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
 import { type VirtualMrComment } from '../types/VirtualMrComment';
 import { type VirtualMrReviewer } from '../types/VirtualMrReviewer';
@@ -33,7 +34,7 @@ const persistSession = (session: VirtualMrSession): Promise<void> =>
 
 const updateSessionMetadata = async (
   sessionId: string,
-  update: (session: VirtualMrSession) => Partial<Pick<VirtualMrSession, 'reviewers' | 'labels'>> | null,
+  update: (session: VirtualMrSession) => Partial<Pick<VirtualMrSession, 'reviewers' | 'labels' | 'status'>> | null,
 ): Promise<void> => {
   const original = useVirtualMrStore.getState().sessions.find((item) => item.id === sessionId);
   if (!original) return;
@@ -85,6 +86,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
 
   sessions: [],
   activeSessionId: null,
+  pendingDescriptionEditSessionId: null,
   closedSessionTabIds: [],
   isLoadingSessions: false,
   isMrListOpen: false,
@@ -98,6 +100,11 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   getActiveSession: () => {
     const { sessions, activeSessionId } = get();
     return sessions.find((s) => s.id === activeSessionId) || null;
+  },
+  consumeDescriptionEditRequest: (sessionId) => {
+    if (get().pendingDescriptionEditSessionId !== sessionId) return false;
+    set({ pendingDescriptionEditSessionId: null });
+    return true;
   },
 
   loadRepoData: async (repoId: string, repoPath: string, availableBranches: string[], defaultBase?: string) => {
@@ -114,6 +121,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
             repoLabels: [],
             sessions: [],
             activeSessionId: null,
+            pendingDescriptionEditSessionId: null,
             closedSessionTabIds: [],
             isMrListOpen: false,
             draftMr: null,
@@ -260,7 +268,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
                 description: cleanDesc,
                 baseBranch: ds.base_branch,
                 compareBranch: ds.compare_branch,
-                status: (ds.status as VirtualMrStatus) || 'open',
+                status: (ds.status === 'approved' ? 'open' : (ds.status as VirtualMrStatus)) || 'open',
                 assignee: {
                   name: ds.assignee_name || userName,
                   email: ds.assignee_email || userEmail,
@@ -268,7 +276,9 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
                 reviewers: (ds.reviewers || []).map((reviewer: any) => ({
                   agentId: reviewer.agent_id,
                   agentName: reviewer.agent_name,
-                  reviewStatus: reviewer.review_status,
+                  reviewStatus: reviewer.review_status === 'reviewing'
+                    ? 'pending'
+                    : reviewer.review_status || 'pending',
                   assignedAt: reviewer.assigned_at,
                 })),
                 labels: attachedLabels,
@@ -444,6 +454,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     set({
       sessions: newSessions,
       activeSessionId: newId,
+      pendingDescriptionEditSessionId: newId,
       closedSessionTabIds: get().closedSessionTabIds.filter((id) => id !== newId),
     });
 
@@ -712,6 +723,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     set({
       sessions: [...currentState.sessions, newSession],
       activeSessionId: newId,
+      pendingDescriptionEditSessionId: newId,
       closedSessionTabIds: currentState.closedSessionTabIds.filter((id) => id !== newId),
       draftMr: null,
       isDraftActive: false,
@@ -774,6 +786,53 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     }
   },
 
+  setReviewerReviewStatus: async (sessionId, agentId, reviewStatus: ReviewerState) => {
+    await updateSessionMetadata(sessionId, (session) => {
+      const current = session.reviewers.find((reviewer) => reviewer.agentId === agentId);
+      if (!current) return null;
+      const reviewers = session.reviewers.map((reviewer) => reviewer.agentId === agentId
+        ? { ...reviewer, reviewStatus }
+        : reviewer);
+      const allReviewersApproved = reviewers.length > 0 && reviewers.every((reviewer) => reviewer.reviewStatus === 'approved');
+      const hasOpenDiscussions = session.discussions.some((discussion) => !discussion.isResolved);
+      const status = reviewStatus === 'reviewing'
+        ? (session.status === 'resolved' ? 'open' : session.status)
+        : session.status === 'closed'
+          ? 'closed'
+          : allReviewersApproved && !hasOpenDiscussions
+            ? 'resolved'
+            : 'open';
+      if (current.reviewStatus === reviewStatus && session.status === status) return null;
+      return { reviewers, status };
+    });
+  },
+
+  resetReviewerReviews: async (sessionId) => {
+    await updateSessionMetadata(sessionId, (session) => ({
+      status: 'open',
+      reviewers: session.reviewers.map((reviewer) => ({ ...reviewer, reviewStatus: 'pending' })),
+    }));
+  },
+
+  invalidateReviewerApprovals: async (sessionId) => {
+    await updateSessionMetadata(sessionId, (session) => {
+      const status = session.status === 'resolved' ? 'open' : session.status;
+      if (session.reviewers.every((reviewer) => reviewer.reviewStatus === 'pending') && session.status === status) return null;
+      return {
+        status,
+        reviewers: session.reviewers.map((reviewer) => ({ ...reviewer, reviewStatus: 'pending' })),
+      };
+    });
+  },
+
+  tryResolveSession: async (sessionId) => {
+    const session = get().sessions.find((item) => item.id === sessionId);
+    if (!session || session.status !== 'open' || session.reviewers.length === 0) return;
+    if (session.reviewers.some((reviewer) => reviewer.reviewStatus !== 'approved')) return;
+    if (session.discussions.some((discussion) => !discussion.isResolved)) return;
+    await get().updateSessionStatus(sessionId, 'resolved');
+  },
+
   updateSessionDetails: async (sessionId, title, description) => {
     const { sessions, currentRepoId } = get();
     const updated = sessions.map((s) =>
@@ -825,6 +884,8 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
             baseBranch: base,
             compareBranch: compare,
             title: `${compare} → ${base}`,
+            status: (s.status === 'closed' ? 'closed' : 'open') as VirtualMrStatus,
+            reviewers: s.reviewers.map((reviewer) => ({ ...reviewer, reviewStatus: 'pending' as const })),
             commits,
             updatedAt: new Date().toISOString(),
           }
@@ -860,7 +921,10 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
         reviewStatus: 'pending',
         assignedAt: new Date().toISOString(),
       };
-      return { reviewers: [...session.reviewers, newReviewer] };
+      return {
+        status: session.status === 'closed' ? 'closed' : 'open',
+        reviewers: [...session.reviewers.map((reviewer) => ({ ...reviewer, reviewStatus: 'pending' as const })), newReviewer],
+      };
     });
     void import('../../review/services/assignedReviewService')
       .then(({ reReviewAssignedSession }) => reReviewAssignedSession(sessionId));
@@ -869,8 +933,15 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   removeReviewerBot: async (sessionId, agentId) => {
     await updateSessionMetadata(sessionId, (session) => {
       if (!session.reviewers.some((reviewer) => reviewer.agentId === agentId)) return null;
-      return { reviewers: session.reviewers.filter((reviewer) => reviewer.agentId !== agentId) };
+      return {
+        status: session.status === 'closed' ? 'closed' : 'open',
+        reviewers: session.reviewers
+          .filter((reviewer) => reviewer.agentId !== agentId)
+          .map((reviewer) => ({ ...reviewer, reviewStatus: 'pending' as const })),
+      };
     });
+    void import('../../review/services/assignedReviewService')
+      .then(({ reReviewAssignedSession }) => reReviewAssignedSession(sessionId));
   },
 
   toggleSessionLabel: async (sessionId, labelId) => {
@@ -1146,6 +1217,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       console.error('Failed to create discussion in db:', e);
     }
     if (saved) {
+      await get().invalidateReviewerApprovals(sessionId);
       void import('../../review/services/assignedReviewService')
         .then(({ reReviewAssignedSession }) => reReviewAssignedSession(sessionId));
     }
@@ -1199,6 +1271,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       console.error('Failed to add comment in db:', e);
     }
     if (saved && authorType === 'user' && targetSessionId) {
+      await get().invalidateReviewerApprovals(targetSessionId);
       void import('../../review/services/assignedReviewService')
         .then(({ reReviewAssignedSession }) => reReviewAssignedSession(targetSessionId));
     }
@@ -1235,6 +1308,9 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     } catch (e) {
       console.error('Failed to resolve discussion in db:', e);
     }
+    const targetSessionId = sessions.find((session) => session.discussions.some((discussion) => discussion.id === discussionId))?.id;
+    if (targetSessionId && !isResolved) await get().invalidateReviewerApprovals(targetSessionId);
+    if (targetSessionId && isResolved) await get().tryResolveSession(targetSessionId);
   },
 
   // Re-review the committed Virtual MR snapshot; the model may resolve only

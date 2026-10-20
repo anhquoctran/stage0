@@ -176,6 +176,55 @@ impl Database {
                 }
             }
         }
+        if let Some(reviewer_id) = run.reviewer_id.as_deref() {
+            let unresolved_count: i64 = tx
+                .query_row(
+                    "SELECT COUNT(*) FROM virtual_mr_discussions WHERE session_id=?1 AND is_resolved=0",
+                    [&run.session_id],
+                    |row| row.get(0),
+                )
+                .map_err(|e| e.to_string())?;
+            let reviewer_status = if run.status == "completed"
+                && run.decision.as_deref() == Some("approve")
+                && run.findings.is_empty()
+                && unresolved_count == 0
+            {
+                "approved"
+            } else if run.decision.as_deref() == Some("request_changes") || !run.findings.is_empty() {
+                "changes_requested"
+            } else {
+                "commented"
+            };
+            let updated_reviewer = tx.execute(
+                "UPDATE virtual_mr_session_reviewers SET review_status=?1 WHERE session_id=?2 AND agent_id=?3",
+                params![reviewer_status, run.session_id, reviewer_id],
+            )
+            .map_err(|e| e.to_string())?;
+
+            if updated_reviewer == 1 {
+                let assigned_count: i64 = tx
+                    .query_row(
+                        "SELECT COUNT(*) FROM virtual_mr_session_reviewers WHERE session_id=?1",
+                        [&run.session_id],
+                        |row| row.get(0),
+                    )
+                    .map_err(|e| e.to_string())?;
+                let unapproved_count: i64 = tx
+                    .query_row(
+                        "SELECT COUNT(*) FROM virtual_mr_session_reviewers WHERE session_id=?1 AND review_status!='approved'",
+                        [&run.session_id],
+                        |row| row.get(0),
+                    )
+                    .map_err(|e| e.to_string())?;
+                if assigned_count > 0 && unapproved_count == 0 && unresolved_count == 0 {
+                    tx.execute(
+                        "UPDATE virtual_mr_sessions SET status='resolved', updated_at=CURRENT_TIMESTAMP WHERE id=?1 AND status='open'",
+                        [&run.session_id],
+                    )
+                    .map_err(|e| e.to_string())?;
+                }
+            }
+        }
         let mut saved = run.clone();
         saved.published = true;
         tx.execute(

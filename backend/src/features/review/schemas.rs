@@ -25,8 +25,9 @@ pub fn tools() -> Vec<Value> {
             "evidence":{"type":"string","minLength":1,"maxLength":1000},
             "body":{"type":"string","minLength":1,"maxLength":4000}
         })),
-        ("submit_review", "Finish the review with a short summary and evidence-backed findings. Each finding must quote exact non-redacted source in its stated range, target an eligible changed line, and use base/head coordinates. Findings are automatically created as inline discussions; queued replies and resolutions are committed with them. No finding means no issue identified, NOT approval. Do not submit if tools failed or context is incomplete without describing the limitation.", json!({
+        ("submit_review", "Finish the local Virtual MR review with a short summary, a decision, and evidence-backed findings. Use approve only when the entire eligible diff was reviewed, there are no findings, and every discussion is resolved. Use request_changes when there are actionable findings or unresolved review discussions. Use comment when the review cannot accept or request changes. This decision is local to Stage0 and is never sent to GitHub or GitLab. Each finding must quote exact non-redacted source in its stated range, target an eligible changed line, and use base/head coordinates. Findings are automatically created as inline discussions; queued replies and resolutions are committed with them. Describe any coverage limits.", json!({
             "summary":{"type":"string","minLength":1,"maxLength":4000},
+            "decision":{"type":"string","enum":["approve","request_changes","comment"]},
             "findings":{"type":"array","maxItems":50,"items":object(json!({
                 "filePath":{"type":"string","minLength":1,"maxLength":1024},"side":side,"startLine":line,"endLine":line,
                 "severity":{"type":"string","enum":["critical","high","medium","low"]},

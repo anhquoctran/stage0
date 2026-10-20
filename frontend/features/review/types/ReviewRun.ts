@@ -1,6 +1,8 @@
 import type { ReviewSnapshot } from './ReviewSnapshot';
 import type { ReviewFinding } from './ReviewFinding';
 
+export type ReviewDecision = 'approve' | 'request_changes' | 'comment';
+
 export interface ReviewRun {
   id: string;
   sessionId: string;
@@ -12,6 +14,7 @@ export interface ReviewRun {
   snapshot: ReviewSnapshot;
   status: 'running' | 'completed' | 'partial' | 'incomplete' | 'failed' | 'cancelled' | 'interrupted';
   summary: string;
+  decision: ReviewDecision | null;
   generatedDescription?: string;
   error: string | null;
   findings: ReviewFinding[];

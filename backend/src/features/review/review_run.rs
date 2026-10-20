@@ -17,6 +17,8 @@ pub struct ReviewRun {
     pub snapshot: ReviewSnapshot,
     pub status: String,
     pub summary: String,
+    #[serde(default)]
+    pub decision: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub generated_description: Option<String>,
     pub error: Option<String>,

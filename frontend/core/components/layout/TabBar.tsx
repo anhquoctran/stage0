@@ -88,10 +88,10 @@ export const TabBar: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'resolved':
         return (
           <span className="text-[10px] px-1.5 py-0.2  bg-emerald-500/20 text-emerald-400 font-mono">
-            Approved
+            Resolved
           </span>
         );
       case 'closed':

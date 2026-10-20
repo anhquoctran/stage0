@@ -68,6 +68,7 @@ impl TestRepo {
             snapshot: snapshot.clone(),
             status: "running".into(),
             summary: String::new(),
+            decision: None,
             generated_description: None,
             error: None,
             findings: vec![],

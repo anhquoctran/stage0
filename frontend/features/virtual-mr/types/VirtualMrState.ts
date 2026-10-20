@@ -7,6 +7,7 @@ import { type GitTagInfo } from './GitTagInfo';
 import { type ReviewActionType } from './ReviewActionType';
 import { type ResolveType } from './ResolveType';
 import { type NewMrDraft } from './NewMrDraft';
+import { type ReviewerState } from './ReviewerState';
 
 export interface VirtualMrState {
   // Repository-scoped State
@@ -27,6 +28,7 @@ export interface VirtualMrState {
   // Virtual MR Sessions
   sessions: VirtualMrSession[];
   activeSessionId: string | null;
+  pendingDescriptionEditSessionId: string | null;
   // Closing a workspace tab only affects this transient UI state; the MR stays in SQLite.
   closedSessionTabIds: string[];
   isLoadingSessions: boolean;
@@ -41,6 +43,7 @@ export interface VirtualMrState {
 
   // Selectors
   getActiveSession: () => VirtualMrSession | null;
+  consumeDescriptionEditRequest: (sessionId: string) => boolean;
 
   // Actions
   loadRepoData: (repoId: string, repoPath: string, branches: string[], defaultBase?: string) => Promise<void>;
@@ -55,6 +58,10 @@ export interface VirtualMrState {
   switchSession: (sessionId: string) => void;
   closeSession: (sessionId: string) => Promise<void>;
   updateSessionStatus: (sessionId: string, status: VirtualMrStatus) => Promise<void>;
+  setReviewerReviewStatus: (sessionId: string, agentId: string, status: ReviewerState) => Promise<void>;
+  resetReviewerReviews: (sessionId: string) => Promise<void>;
+  invalidateReviewerApprovals: (sessionId: string) => Promise<void>;
+  tryResolveSession: (sessionId: string) => Promise<void>;
   updateSessionDetails: (sessionId: string, title: string, description: string) => Promise<void>;
   applyReviewGeneratedDescription: (sessionId: string, description: string) => Promise<void>;
   updateSessionBranches: (sessionId: string, base: string, compare: string) => Promise<void>;

@@ -95,6 +95,9 @@ async function waitForSessionIdle(sessionId: string): Promise<void> {
 export async function startAssignedReviewBatchForSession(sessionId: string): Promise<AssignedReviewBatchResult> {
   const assigned = reviewersForSession(sessionId);
   if (!assigned) return { runs: [], failures: [], descriptionGenerated: false, hasChanges: false };
+  if (assigned.session.status === 'closed') {
+    return { runs: [], failures: ['This Virtual MR is manually closed. Reopen it before starting another review.'], descriptionGenerated: false, hasChanges: false };
+  }
 
   const store = useReviewStore.getState();
   if (store.reviewBatches[sessionId]
@@ -106,6 +109,7 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
   const result: AssignedReviewBatchResult = { runs: [], failures: [], descriptionGenerated: false, hasChanges: false };
   const { setReviewBatch } = store;
   try {
+    await useVirtualMrStore.getState().resetReviewerReviews(sessionId);
     for (let index = 0; index < assigned.reviewers.length; index++) {
       const reviewer = assigned.reviewers[index];
       if (index > 0) await waitForSessionIdle(sessionId);
@@ -169,6 +173,8 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
 }
 
 export async function reReviewAssignedSession(sessionId: string): Promise<void> {
+  const currentSession = useVirtualMrStore.getState().sessions.find((item) => item.id === sessionId);
+  if (!currentSession || currentSession.status === 'closed' || !currentSession.reviewers.length) return;
   if (Object.values(useReviewStore.getState().activeRuns).some((run) => run.sessionId === sessionId && run.status === 'running')) {
     queuedReReviewSessions.add(sessionId);
     return;
@@ -178,8 +184,11 @@ export async function reReviewAssignedSession(sessionId: string): Promise<void> 
     return;
   }
   try {
-    const run = await startAssignedReviewForSession(sessionId);
-    if (!run && (isReviewStartingForSession(sessionId) || Object.values(useReviewStore.getState().activeRuns).some((item) => item.sessionId === sessionId && item.status === 'running'))) {
+    const result = await startAssignedReviewBatchForSession(sessionId);
+    if (result.failures.length > 0) {
+      useGitStore.getState().showToast(`Some AI reviewers could not finish: ${result.failures.join('; ')}`);
+    }
+    if (result.runs.length === 0 && (isReviewStartingForSession(sessionId) || Object.values(useReviewStore.getState().activeRuns).some((item) => item.sessionId === sessionId && item.status === 'running'))) {
       queuedReReviewSessions.add(sessionId);
     }
   } catch (error) {
@@ -196,7 +205,7 @@ export async function flushQueuedReReviewAfterActive(sessionId: string): Promise
 export async function reviewAssignedSessionAfterGitChange(repoPath: string): Promise<void> {
   const virtualMr = useVirtualMrStore.getState();
   const session = virtualMr.getActiveSession();
-  if (!session || virtualMr.currentRepoPath !== repoPath || session.status !== 'open' || !session.reviewers.length || checkingSession.has(session.id)) return;
+  if (!session || virtualMr.currentRepoPath !== repoPath || session.status === 'closed' || !session.reviewers.length || checkingSession.has(session.id)) return;
   checkingSession.add(session.id);
   try {
     const [baseSha, headSha] = await Promise.all([
@@ -223,8 +232,11 @@ export async function reviewAssignedSessionAfterGitChange(repoPath: string): Pro
       return;
     }
     attemptedHeadBySession.set(session.id, revisionKey);
-    const started = await startAssignedReviewForSession(session.id);
-    if (!started && (isReviewStartingForSession(session.id) || Object.values(useReviewStore.getState().activeRuns).some((run) => run.sessionId === session.id && run.status === 'running'))) {
+    const batch = await startAssignedReviewBatchForSession(session.id);
+    if (batch.failures.length > 0) {
+      useGitStore.getState().showToast(`Some AI reviewers could not finish: ${batch.failures.join('; ')}`);
+    }
+    if (batch.runs.length === 0 && (isReviewStartingForSession(session.id) || Object.values(useReviewStore.getState().activeRuns).some((run) => run.sessionId === session.id && run.status === 'running'))) {
       queuedReReviewSessions.add(session.id);
     }
   } catch (error) {
