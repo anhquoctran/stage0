@@ -1,16 +1,10 @@
 export type { AiProviderId } from './AiProviderId';
-export type { AiAuthMode } from './AiAuthMode';
 export type { DynamicModelInfo } from './DynamicModelInfo';
 export type { AiModelPreset } from './AiModelPreset';
 export type { AiReasoningEffort } from './AiReasoningEffort';
 export type { AiProviderPreset } from './AiProviderPreset';
 export type { AiProviderSettings } from './AiProviderSettings';
 export type { AiConfig } from './AiConfig';
-export type { CliDetectionResult } from './CliDetectionResult';
-export type { CopilotDeviceCodeResponse } from './CopilotDeviceCodeResponse';
-export type { CopilotAuthStatus } from './CopilotAuthStatus';
-export type { GoogleAuthStatus } from './GoogleAuthStatus';
-export type { ChatGptAuthStatus } from './ChatGptAuthStatus';
 export type { UnifiedAiChatResponse } from './UnifiedAiChatResponse';
 export type { McpServerType } from './McpServerType';
 export type { McpServerConfig } from './McpServerConfig';

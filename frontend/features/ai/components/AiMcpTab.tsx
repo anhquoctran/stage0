@@ -21,7 +21,6 @@ import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
 import { Edit3 } from '../../../common/components/icons/Edit3';
 import { Bot } from '../../../common/components/icons/Bot';
 import { Sparkles } from '../../../common/components/icons/Sparkles';
-import { Code2 } from '../../../common/components/icons/Code2';
 import { Zap } from '../../../common/components/icons/Zap';
 import { HardDrive } from '../../../common/components/icons/HardDrive';
 import { Cog } from '../../../common/components/icons/Cog';
@@ -39,8 +38,6 @@ import { type McpServerConfig } from '../types/McpServerConfig';
 import { type McpServerType } from '../types/McpServerType';
 import type { AiMcpTabProps } from '../types/AiMcpTabProps';
 import { HarnessConnectionsPanel } from '../../review/components/HarnessConnectionsPanel';
-import { ChatGptDeviceCodeCard } from './ChatGptDeviceCodeCard';
-import { ChatGptBrowserAuthCard } from './ChatGptBrowserAuthCard';
 import { BOT_CATEGORIES } from '../constants/botPresets';
 import type { BotCategory } from '../../virtual-mr/types/BotCategory';
 import { getBotRolePrompt } from '../utils/botRolePrompts';
@@ -70,8 +67,6 @@ const getProviderIcon = (providerId: string) => {
       return Sparkles;
     case 'anthropic':
       return Bot;
-    case 'github_copilot':
-      return Code2;
     case 'gemini':
       return Globe;
     case 'xai_grok':
@@ -120,28 +115,10 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     loadApiKeyForProvider,
     testAiConnection,
     clearAiTestResult,
-    copilotStatus,
-    googleAuthStatus,
-    cliStatus,
-    isDetectingCli,
-    isConnectingSubscription,
-    isCheckingSubscription,
-    copilotDeviceCode,
-    detectCli,
-    executeCliTest,
-    startCopilotFlow,
-    pollCopilotToken,
-    checkCopilotStatus,
-    disconnectCopilot,
-    startGoogleOAuth,
-    checkGoogleAuthStatus,
-    disconnectGoogleOAuth,
-    clearCopilotDeviceCode,
     dynamicModels,
     isFetchingDynamicModels,
     dynamicModelError,
     fetchDynamicModels,
-    chatgptAuthStatus,
     addMcpServer,
     updateMcpServer,
     deleteMcpServer,
@@ -159,7 +136,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       return;
     }
     const nextConfig = { ...aiConfig, ...partial };
-    const hasProviderSettingsChange = ['authMode', 'cliType', 'model', 'baseUrl', 'reasoningEffort', 'fastMode']
+    const hasProviderSettingsChange = ['model', 'baseUrl', 'reasoningEffort', 'fastMode']
       .some((key) => key in partial);
     if (hasProviderSettingsChange) {
       const providerSettings = { ...nextConfig.providerSettings };
@@ -173,39 +150,23 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   };
   const setProvider = (providerId: AiConfig['provider']) => {
     if (providerId === aiConfig.provider) return;
-    const preset = AI_PROVIDERS.find((p) => p.id === providerId) || AI_PROVIDERS[0];
     const rememberedConfig = rememberActiveProviderSettings(aiConfig);
     const selectedSettings = providerSettingsFor(rememberedConfig, providerId);
-    const defaultAuthMode: AiConfig['authMode'] =
-      providerId === 'github_copilot'
-        ? 'subscription_oauth'
-        : providerId === 'openai' && chatgptAuthStatus?.connected
-        ? 'subscription_oauth'
-        : providerId === 'anthropic' && cliStatus.claude?.available
-        ? 'cli_bridge'
-        : providerId === 'xai_grok' && cliStatus.grok?.available
-        ? 'cli_bridge'
-        : preset.supportedAuthModes?.includes('api_key')
-        ? 'api_key'
-        : preset.supportedAuthModes?.[0];
-
     if (onUpdateAiConfig) {
       onUpdateAiConfig({
         ...rememberedConfig,
         provider: providerId,
         ...selectedSettings,
-        authMode: selectedSettings.authMode ?? defaultAuthMode,
         apiKey: '',
       });
     } else {
       storeSetProvider(providerId);
-      storeUpdateAiConfig({ authMode: selectedSettings.authMode ?? defaultAuthMode });
     }
   };
 
   const resetAiConfig = () => {
     if (draftSettings) {
-      draftSettings.replace({ aiConfig: { ...DEFAULT_AI_CONFIG }, mcpServers: draftSettings.mcpServers, guardrailPolicy: draftSettings.guardrailPolicy, globalReviewers: draftSettings.globalReviewers });
+      draftSettings.replace({ aiConfig: { ...DEFAULT_AI_CONFIG }, mcpServers: draftSettings.mcpServers, guardrailPolicy: draftSettings.guardrailPolicy, globalReviewers: draftSettings.globalReviewers, externalAgents: draftSettings.externalAgents });
     } else if (onUpdateAiConfig) {
       onUpdateAiConfig(DEFAULT_AI_CONFIG);
     } else {
@@ -220,7 +181,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   const [isProviderSetupOpen, setIsProviderSetupOpen] = useState(false);
   const [setupProviderId, setSetupProviderId] = useState<AiProviderId>('custom');
   const [setupProviderName, setSetupProviderName] = useState('');
-  const [setupAuthMode, setSetupAuthMode] = useState<AiConfig['authMode']>();
   const [setupModel, setSetupModel] = useState('');
   const [setupBaseUrl, setSetupBaseUrl] = useState('');
   const [setupApiKey, setSetupApiKey] = useState('');
@@ -243,27 +203,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     setReturnProviderAfterDetails(null);
     if (providerToRestore && providerToRestore !== aiConfig.provider) setProvider(providerToRestore);
   };
-
-  // Cloud Subscription & CLI Bridge UI State
-  const [testingCliType, setTestingCliType] = useState<string | null>(null);
-  const [cliTestOutput, setCliTestOutput] = useState<{ [key: string]: string }>({});
-  const [copiedCode, setCopiedCode] = useState(false);
-
-  useEffect(() => {
-    if (!copilotDeviceCode) return;
-    const interval = setInterval(async () => {
-      const res = await pollCopilotToken(copilotDeviceCode.device_code);
-      if (res.status === 'authorized' || res.status === 'expired' || res.status === 'denied') {
-        clearInterval(interval);
-      }
-    }, (copilotDeviceCode.interval || 5) * 1000);
-    return () => clearInterval(interval);
-  }, [copilotDeviceCode, pollCopilotToken]);
-
-  useEffect(() => {
-    void detectCli('claude');
-    void detectCli('grok');
-  }, [detectCli]);
 
   // Add / Edit Server Form State
   const [isServerFormOpen, setIsServerFormOpen] = useState(false);
@@ -460,30 +399,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     }
   }, [activeView, setActiveSubTab]);
 
-  const isSubscriptionMode =
-    aiConfig.authMode === 'subscription_oauth' || aiConfig.authMode === 'cli_bridge';
-
-  const defaultSubMode = activeProviderPreset.supportedAuthModes?.includes('subscription_oauth')
-    ? 'subscription_oauth'
-    : 'cli_bridge';
-
   const isProviderConfigured = (id: string) => {
     const hasApiKey = hasProviderApiKey(id);
-    if (id === 'openai') {
-      return chatgptAuthStatus?.connected || hasApiKey;
-    }
-    if (id === 'github_copilot') {
-      return !!copilotStatus?.connected;
-    }
-    if (id === 'gemini') {
-      return googleAuthStatus?.connected || hasApiKey;
-    }
-    if (id === 'anthropic') {
-      return (providerSettingsFor(aiConfig, 'anthropic').authMode === 'cli_bridge' && !!cliStatus.claude?.available) || hasApiKey;
-    }
-    if (id === 'xai_grok') {
-      return (providerSettingsFor(aiConfig, 'xai_grok').authMode === 'cli_bridge' && !!cliStatus.grok?.available) || hasApiKey;
-    }
     if (id === 'ollama') {
       return true;
     }
@@ -503,7 +420,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     switch (id) {
       case 'openai': return 'OpenAI / ChatGPT';
       case 'anthropic': return 'Anthropic Claude';
-      case 'github_copilot': return 'GitHub Copilot';
       case 'gemini': return 'Google Gemini';
       case 'xai_grok': return 'SuperGrok';
       case 'ollama': return 'Ollama (Local)';
@@ -512,28 +428,12 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     }
   };
 
-  const getProviderAuthModes = (providerId: AiProviderId) => {
-    const preset = AI_PROVIDERS.find((provider) => provider.id === providerId) || AI_PROVIDERS[0];
-    return preset.supportedAuthModes || (preset.requiresApiKey ? ['api_key' as const] : []);
-  };
-
-  const defaultAuthModeFor = (providerId: AiProviderId): AiConfig['authMode'] => {
-    const preset = AI_PROVIDERS.find((provider) => provider.id === providerId) || AI_PROVIDERS[0];
-    if (providerId === 'github_copilot') return 'subscription_oauth';
-    if (providerId === 'openai' && chatgptAuthStatus?.connected) return 'subscription_oauth';
-    if (providerId === 'anthropic' && cliStatus.claude?.available) return 'cli_bridge';
-    if (providerId === 'xai_grok' && cliStatus.grok?.available) return 'cli_bridge';
-    if (preset.supportedAuthModes?.includes('api_key') || preset.requiresApiKey) return 'api_key';
-    return preset.supportedAuthModes?.[0];
-  };
-
   const loadProviderSetup = (providerId: AiProviderId) => {
     const settings = providerSettingsFor(aiConfig, providerId);
     setSetupProviderId(providerId);
     setSetupProviderName(providerId === 'custom'
       ? aiConfig.customProviderName?.trim() || 'My Custom Provider'
       : '');
-    setSetupAuthMode(settings.authMode ?? defaultAuthModeFor(providerId));
     setSetupModel(settings.model);
     setSetupBaseUrl(settings.baseUrl);
     setSetupApiKey('');
@@ -573,7 +473,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       return;
     }
 
-    const needsApiKey = setupAuthMode === 'api_key' && setupProviderId !== 'ollama';
+    const needsApiKey = setupProviderId !== 'ollama';
     if (needsApiKey && !setupApiKey.trim() && !hasProviderApiKey(setupProviderId)) {
       setProviderSetupError('Enter an API key or select a different connection method.');
       return;
@@ -588,7 +488,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     delete rememberedPreferences.apiKey;
     const nextProviderSettings = {
       ...currentSettings,
-      authMode: setupAuthMode,
       model,
       baseUrl,
     };
@@ -881,8 +780,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     <span className="text-[10px] px-2 py-0.5  bg-surface1 text-subtext0 border border-surface2 font-mono shrink-0">
                       {aiConfig.provider === 'ollama'
                         ? 'Offline Local'
-                        : isSubscriptionMode
-                        ? 'Subscription / CLI'
                         : 'API Key'}
                     </span>
                   </div>
@@ -932,266 +829,10 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               </div>
             )}
 
-            {/* SECTION 1: AUTHENTICATION / ACCESS */}
+            {/* Built-in providers use API keys; Ollama stays local and credential-free. */}
             <div className="space-y-2.5">
-              {/* Connection Option Switch (when provider supports both Subscription and API Key) */}
-              {activeProviderPreset.supportedAuthModes && activeProviderPreset.supportedAuthModes.length > 1 && (
-                <div className="flex items-center justify-between p-2.5 bg-base/50 border border-surface1 ">
-                  <div>
-                    <div className="text-xs font-semibold text-text">Connection Option</div>
-                    <div className="text-[10px] text-subtext0">
-                      {isSubscriptionMode
-                        ? 'Included in your subscription plan (No token charges)'
-                        : 'Standard pay-per-token developer API key'}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 p-0.5 bg-surface0 border border-surface1  shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => updateAiConfig({ authMode: defaultSubMode })}
-                      className={`px-3 py-1  text-xs transition-all cursor-pointer font-medium ${
-                        isSubscriptionMode ? 'bg-surface2 text-text font-semibold shadow-xs' : 'text-subtext0 hover:text-text'
-                      }`}
-                    >
-                      Subscription / CLI
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => updateAiConfig({ authMode: 'api_key' })}
-                      className={`px-3 py-1  text-xs transition-all cursor-pointer font-medium ${
-                        !isSubscriptionMode ? 'bg-surface2 text-text font-semibold shadow-xs' : 'text-subtext0 hover:text-text'
-                      }`}
-                    >
-                      API Key
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Sub-panels for Auth Modes */}
-              {aiConfig.provider === 'openai' && isSubscriptionMode ? (
-                <div className="p-3 bg-base/60 border border-surface1 ">
-                  <ChatGptBrowserAuthCard />
-                  <details className="mt-3">
-                    <summary className="text-xs text-subtext0 cursor-pointer">Advanced: Codex-managed device code (requires Codex CLI; separate credentials)</summary>
-                    <div className="mt-2"><ChatGptDeviceCodeCard /></div>
-                  </details>
-                </div>
-              ) : aiConfig.provider === 'github_copilot' ? (
-                <div className="p-3 bg-base/60 border border-surface1 ">
-                  <button type="button" disabled={isCheckingSubscription || isConnectingSubscription} onClick={() => void checkCopilotStatus()} className="mb-3 border border-surface1 px-3 py-1.5 disabled:opacity-40" title="Explicitly read saved credentials and check GitHub. Your OS may request keyring access.">{isCheckingSubscription ? 'Checking…' : 'Check saved sign-in'}</button>
-                  {copilotStatus?.connected ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-text">
-                        <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
-                        <span>GitHub User: <strong className="font-mono text-text">{copilotStatus.username || 'Subscriber'}</strong></span>
-                        <span className="text-[9px] px-1.5 py-0.2  bg-green/10 text-green border border-green/20 font-mono">
-                          Copilot Active
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => disconnectCopilot()}
-                        className="px-2.5 py-1  bg-red/10 hover:bg-red/20 text-[11px] text-red border border-red/30 transition-colors cursor-pointer"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  ) : copilotDeviceCode ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs font-semibold text-text">
-                        <span>Device Authorization</span>
-                        <button type="button" onClick={() => clearCopilotDeviceCode()} className="text-subtext0 hover:text-text cursor-pointer">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-surface0 border border-surface2 ">
-                        <span className="text-base font-mono font-bold tracking-widest text-brand">{copilotDeviceCode.user_code}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void navigator.clipboard.writeText(copilotDeviceCode.user_code);
-                            void openUrlInBrowser(copilotDeviceCode.verification_uri);
-                          }}
-                          className="px-2.5 py-1  bg-brand hover:bg-brand/90 text-on-accent font-bold text-xs flex items-center gap-1 cursor-pointer"
-                        >
-                          <Copy className="w-3 h-3" />
-                          <span>Copy &amp; Open GitHub</span>
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-[11px] text-subtext0">
-                        Authorize your GitHub Copilot subscription via device code flow.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => startCopilotFlow()}
-                        disabled={isConnectingSubscription}
-                        className="px-3 py-1.5  bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 font-medium cursor-pointer shrink-0 disabled:opacity-50"
-                      >
-                        {isConnectingSubscription ? 'Connecting...' : 'Sign In with GitHub Copilot'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : aiConfig.provider === 'anthropic' && isSubscriptionMode ? (
-                <div className="p-3 bg-base/60 border border-surface1 ">
-                  {cliStatus.claude?.available ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-text">
-                        <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
-                        <span className="font-mono text-text">Claude Code CLI ({cliStatus.claude.version || 'Ready'})</span>
-                        <span className="text-[9px] px-1.5 py-0.2  bg-green/10 text-green border border-green/20 font-mono">
-                          Session Ready
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            setTestingCliType('claude');
-                            const res = await executeCliTest('claude');
-                            setCliTestOutput((prev) => ({ ...prev, claude: res.output }));
-                            setTestingCliType(null);
-                          }}
-                          disabled={testingCliType === 'claude'}
-                          className="px-2.5 py-1  bg-brand/15 hover:bg-brand/25 text-[11px] text-brand border border-brand/40 cursor-pointer"
-                        >
-                          {testingCliType === 'claude' ? 'Testing...' : 'Test CLI'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => detectCli('claude')}
-                          disabled={isDetectingCli}
-                          className="px-2 py-1  bg-surface1 hover:bg-surface2 text-[11px] text-subtext0 hover:text-text border border-surface2 cursor-pointer"
-                        >
-                          Re-scan
-                        </button>
-                      </div>
-                      {cliTestOutput.claude && (
-                        <div className="mt-2 p-2 bg-surface0 border border-surface1  font-mono text-[10px] text-subtext1 max-h-24 overflow-y-auto whitespace-pre-wrap">
-                          {cliTestOutput.claude}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between gap-3 text-xs">
-                      <div>
-                        <span className="text-yellow font-semibold">Claude Code CLI not found in PATH.</span>
-                        <span className="text-subtext0 block text-[11px]">Run: <code className="font-mono text-text">npm i -g @anthropic-ai/claude-code</code> then <code className="font-mono text-text">claude login</code></span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void navigator.clipboard.writeText('npm install -g @anthropic-ai/claude-code');
-                          setCopiedCode(true);
-                          setTimeout(() => setCopiedCode(false), 2000);
-                        }}
-                        className="px-2.5 py-1  bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 cursor-pointer shrink-0"
-                      >
-                        {copiedCode ? 'Copied!' : 'Copy Install Command'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : aiConfig.provider === 'gemini' && isSubscriptionMode ? (
-                <div className="p-3 bg-base/60 border border-surface1 ">
-                  <button type="button" disabled={isCheckingSubscription || isConnectingSubscription} onClick={() => void checkGoogleAuthStatus()} className="mb-3 border border-surface1 px-3 py-1.5 disabled:opacity-40" title="Explicitly read saved credentials. Your OS may request keyring access.">{isCheckingSubscription ? 'Checking…' : 'Check saved sign-in'}</button>
-                  {googleAuthStatus?.connected ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-text">
-                        <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
-                        <span>Google Account: <strong className="font-mono text-text">{googleAuthStatus.account_email || 'Connected'}</strong></span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => disconnectGoogleOAuth()}
-                        className="px-2.5 py-1  bg-red/10 hover:bg-red/20 text-[11px] text-red border border-red/30 cursor-pointer"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-[11px] text-subtext0">
-                        Sign in with Google One AI Premium / Gemini Advanced via secure OAuth. After returning from the browser, choose Check saved sign-in.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => startGoogleOAuth()}
-                        disabled={isConnectingSubscription}
-                        className="px-3 py-1.5  bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 font-medium cursor-pointer shrink-0 disabled:opacity-50"
-                      >
-                        {isConnectingSubscription ? 'Connecting...' : 'Sign In with Google'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : aiConfig.provider === 'xai_grok' && isSubscriptionMode ? (
-                <div className="p-3 bg-base/60 border border-surface1 ">
-                  {cliStatus.grok?.available ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-text">
-                        <CheckCircle2 className="w-4 h-4 text-green shrink-0" />
-                        <span className="font-mono text-text">SuperGrok CLI ({cliStatus.grok.version || 'Ready'})</span>
-                        <span className="text-[9px] px-1.5 py-0.2  bg-green/10 text-green border border-green/20 font-mono">
-                          SuperGrok
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            setTestingCliType('grok');
-                            const res = await executeCliTest('grok', 'Explain what Stage0 is in one sentence.');
-                            setCliTestOutput((prev) => ({ ...prev, grok: res.output }));
-                            setTestingCliType(null);
-                          }}
-                          disabled={testingCliType === 'grok'}
-                          className="px-2.5 py-1  bg-brand/15 hover:bg-brand/25 text-[11px] text-brand border border-brand/40 cursor-pointer"
-                        >
-                          {testingCliType === 'grok' ? 'Testing...' : 'Test CLI'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void detectCli('grok')}
-                          disabled={isDetectingCli}
-                          className="px-2 py-1  bg-surface1 hover:bg-surface2 text-[11px] text-subtext0 hover:text-text border border-surface2 cursor-pointer"
-                        >
-                          Re-scan
-                        </button>
-                      </div>
-                      {cliTestOutput.grok && (
-                        <div className="mt-2 p-2 bg-surface0 border border-surface1  font-mono text-[10px] text-subtext1 max-h-24 overflow-y-auto whitespace-pre-wrap">
-                          {cliTestOutput.grok}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between gap-3 text-xs">
-                      <div>
-                        <span className="text-yellow font-semibold">SuperGrok / GrokBuild CLI not detected.</span>
-                        <span className="text-subtext0 block text-[11px]">Install SuperGrok CLI to use SuperGrok / X Premium+ subscription.</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void navigator.clipboard.writeText('irm https://x.ai/cli/install.ps1 | iex');
-                          setCopiedCode(true);
-                          setTimeout(() => setCopiedCode(false), 2000);
-                        }}
-                        className="px-2.5 py-1  bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 cursor-pointer shrink-0"
-                      >
-                        {copiedCode ? 'Copied!' : 'Copy Install Command'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : activeProviderPreset.requiresApiKey || activeProviderPreset.supportedAuthModes?.includes('api_key') ? (
-                /* Standard Developer API Key Field */
-                <div className="p-3 bg-base/60 border border-surface1 ">
+              {activeProviderPreset.requiresApiKey ? (
+                <div className="p-3 bg-base/60 border border-surface1">
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-semibold text-text">
                       API Secret Key <span className="text-red">*</span>
@@ -1204,8 +845,8 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                     <input
                       type={showApiKey ? 'text' : 'password'}
                       value={apiKeyDraft}
-                      onChange={(e) => {
-                        const value = e.target.value;
+                      onChange={(event) => {
+                        const value = event.target.value;
                         setApiKeyDraft(value);
                         if (onUpdateAiConfig) onUpdateAiConfig({ apiKey: value });
                       }}
@@ -1215,36 +856,23 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           setApiKeyDraft('');
                         }
                       }}
-                      placeholder={
-                        hasSavedApiKey
-                          ? 'Key saved securely. Enter a new key to replace it.'
-                          : 'sk-..., gsk_..., or developer token'
-                      }
-                      className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 "
+                      placeholder={hasSavedApiKey ? 'Key saved securely. Enter a new key to replace it.' : 'Paste your provider API key'}
+                      className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-2.5 p-1 text-subtext0 hover:text-text cursor-pointer"
-                      title={showApiKey ? 'Hide secret key' : 'Show secret key'}
-                    >
+                    <button type="button" onClick={() => setShowApiKey(!showApiKey)} className="absolute right-2.5 p-1 text-subtext0 hover:text-text cursor-pointer" title={showApiKey ? 'Hide secret key' : 'Show secret key'}>
                       {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
-                  <button type="button" disabled={isCheckingApiKey} onClick={() => void loadApiKeyForProvider(aiConfig.provider)} className="mt-2 border border-surface1 px-2.5 py-1 text-[11px] disabled:opacity-40" title="Your OS may request keyring access. This does not refresh models or send an inference request.">{isCheckingApiKey ? 'Checking…' : 'Check saved API key'}</button>
+                  <button type="button" disabled={isCheckingApiKey} onClick={() => void loadApiKeyForProvider(aiConfig.provider)} className="mt-2 border border-surface1 px-2.5 py-1 text-[11px] disabled:opacity-40" title="Checks only whether a key is saved in the OS keyring.">{isCheckingApiKey ? 'Checking…' : 'Check saved API key'}</button>
                   {apiKeyCheckError && <p role="alert" className="mt-2 text-red">{apiKeyCheckError}</p>}
                 </div>
               ) : (
-                /* Ollama Local Informational Box */
-                <div className="p-3 bg-base/60 border border-surface1  flex items-center gap-2.5 text-xs text-subtext0">
+                <div className="p-3 bg-base/60 border border-surface1 flex items-center gap-2.5 text-xs text-subtext0">
                   <ShieldCheck className="w-4 h-4 text-green shrink-0" />
-                  <span>
-                    Ollama runs offline on your local machine (http://localhost:11434). No API key or cloud subscription required.
-                  </span>
+                  <span>Ollama runs locally on this machine (http://localhost:11434) and does not need an API key.</span>
                 </div>
               )}
             </div>
-
             {/* SECTION 2: MODEL SELECTION & INFERENCE PARAMETERS */}
             {(() => {
               const currentDynamic = dynamicModels[aiConfig.provider];
@@ -1275,7 +903,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="text-xs font-semibold text-text">Model</label>
-                      {!isSubscriptionMode && <button type="button" disabled={isFetchingDynamicModels || !!apiKeyDraft.trim()} onClick={() => void fetchDynamicModels(aiConfig)} className="text-[11px] text-subtext0 hover:text-text disabled:opacity-40" title="Explicitly refresh models using saved credentials. Your OS may request keyring access. Apply key changes first.">{isFetchingDynamicModels ? 'Refreshing…' : 'Refresh models'}</button>}
+                      <button type="button" disabled={isFetchingDynamicModels || !!apiKeyDraft.trim()} onClick={() => void fetchDynamicModels(aiConfig)} className="text-[11px] text-subtext0 hover:text-text disabled:opacity-40" title="Refresh models using saved API credentials. Apply key changes first.">{isFetchingDynamicModels ? 'Refreshing…' : 'Refresh models'}</button>
                     </div>
                     <CustomSelect
                       value={aiConfig.model}
@@ -2019,25 +1647,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 </div>
               )}
 
-              {getProviderAuthModes(setupProviderId).length > 1 && (
-                <div>
-                  <label htmlFor="llm-provider-auth" className="block text-[11px] font-semibold text-subtext0 mb-1">Connection method</label>
-                  <select
-                    id="llm-provider-auth"
-                    value={setupAuthMode || ''}
-                    onChange={(event) => setSetupAuthMode((event.target.value || undefined) as AiConfig['authMode'])}
-                    className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2"
-                  >
-                    {getProviderAuthModes(setupProviderId).map((mode) => (
-                      <option key={mode} value={mode}>
-                        {mode === 'api_key' ? 'API key' : mode === 'subscription_oauth' ? 'Subscription sign-in' : 'CLI bridge'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {setupAuthMode === 'api_key' && setupProviderId !== 'ollama' && (
+              {setupProviderId !== 'ollama' && (
                 <div>
                   <label htmlFor="llm-provider-api-key" className="block text-[11px] font-semibold text-subtext0 mb-1">API key</label>
                   <input

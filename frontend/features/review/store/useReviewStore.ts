@@ -57,7 +57,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     set({ isStarting: true, error: null });
     try {
       const run = await invoke<ReviewRun>('start_ai_review', { request: {
-        sessionId, provider: config.provider, authMode: config.authMode || 'api_key',
+        sessionId, provider: config.provider, authMode: 'api_key',
         model: config.model, baseUrl: config.baseUrl, reviewerRole: config.reviewerRole,
         instructions: config.customInstructions, allowRemote,
         reasoningEffort: config.reasoningEffort || null, fastMode: config.fastMode === true,

@@ -3,6 +3,5 @@ export type AiProviderId =
   | 'anthropic'
   | 'gemini'
   | 'xai_grok'
-  | 'github_copilot'
   | 'ollama'
   | 'custom';

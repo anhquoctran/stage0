@@ -19,7 +19,7 @@ fn apply_keys(
         .collect::<BTreeMap<_, _>>();
     let valid_provider = |provider: &str| matches!(
         provider,
-        "openai" | "anthropic" | "github_copilot" | "gemini" | "xai_grok" | "ollama" | "custom"
+        "openai" | "anthropic" | "gemini" | "xai_grok" | "ollama" | "custom"
     );
     if keys.len() + removals.len() > 7
         || keys.iter().any(|(provider, key)| {

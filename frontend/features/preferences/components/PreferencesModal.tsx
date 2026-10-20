@@ -24,6 +24,7 @@ import { type ThemeMode } from '../../../core/types/ThemeMode';
 import { GitCredentialsTab } from '../../credentials/components/GitCredentialsTab';
 import { AiMcpTab } from '../../ai/components/AiMcpTab';
 import { BotReviewersTab } from '../../ai/components/BotReviewersTab';
+import { ExternalAgentsTab } from '../../ai/components/ExternalAgentsTab';
 import { SandboxTab } from '../../ai/components/SandboxTab';
 import { GitBinaryTab } from '../../git/components/GitBinaryTab';
 import { GuardrailsTab } from '../../ai/components/GuardrailsTab';
@@ -120,11 +121,18 @@ const SETTINGS_TREE: TreeCategory[] = [
         keywords: ['mcp', 'protocol', 'servers', 'stdio', 'sse', 'tools'],
       },
       {
-        id: 'ai-reviewers',
+        id: 'ai-external-agents',
         label: 'External Agents',
-        title: 'External Agents & Reviewer Bots',
-        description: 'View, add, and remove bots and agents connected for automated pull/virtual MR reviews.',
-        keywords: ['agents', 'reviewers', 'bots', 'code review', 'persona'],
+        title: 'External Agents',
+        description: 'Find, add, sign in to, and remove agents through the Agent Client Protocol.',
+        keywords: ['agents', 'acp', 'registry', 'subscription', 'cloud'],
+      },
+      {
+        id: 'ai-reviewers',
+        label: 'Reviewer Bots',
+        title: 'Reviewer Bots',
+        description: 'Configure reviewer roles and supplemental instructions for code reviews.',
+        keywords: ['reviewers', 'bots', 'code review', 'persona'],
       },
       {
         id: 'ai-sandbox',
@@ -623,7 +631,7 @@ export const PreferencesModal: React.FC = () => {
 
     setDraftShowInlineBlame(true);
     setDraftSandboxType('in_memory');
-    aiDraft.replace({ aiConfig: { ...DEFAULT_AI_CONFIG }, mcpServers: DEFAULT_MCP_SERVERS, guardrailPolicy: DEFAULT_GUARDRAIL_POLICY, globalReviewers: DEFAULT_BOT_REVIEWERS });
+    aiDraft.replace({ aiConfig: { ...DEFAULT_AI_CONFIG }, mcpServers: DEFAULT_MCP_SERVERS, guardrailPolicy: DEFAULT_GUARDRAIL_POLICY, globalReviewers: DEFAULT_BOT_REVIEWERS, externalAgents: [] });
 
     setShowResetConfirm(false);
     showToast('Reset all draft settings to defaults (click Apply to save)');
@@ -1221,8 +1229,22 @@ export const PreferencesModal: React.FC = () => {
                 >
                   <button
                     type="button"
-                    onClick={() => setActiveTab('ai-reviewers')}
+                    onClick={() => setActiveTab('ai-external-agents')}
                     className="px-3 py-1.5  bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+                  >
+                    <span>Configure</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </SettingRow>
+
+                <SettingRow
+                  title="Reviewer Bots"
+                  description="Configure review roles and their additional instructions."
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ai-reviewers')}
+                    className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
                   >
                     <span>Configure</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -1354,7 +1376,22 @@ export const PreferencesModal: React.FC = () => {
               </div>
             )}
 
-            {/* VIEW: EXTERNAL AGENTS / BOT REVIEWERS */}
+            {/* VIEW: EXTERNAL AGENTS */}
+            {currentTabId === 'ai-external-agents' && (
+              <div className="animate-in fade-in duration-100 space-y-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ai-overview')}
+                  className="inline-flex items-center gap-1.5 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+                  <span>Back to AI overview</span>
+                </button>
+                <ExternalAgentsTab draftSettings={aiDraft} />
+              </div>
+            )}
+
+            {/* VIEW: REVIEWER BOTS */}
             {currentTabId === 'ai-reviewers' && (
               <div className="animate-in fade-in duration-100 space-y-4">
                 <button

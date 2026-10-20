@@ -16,14 +16,10 @@ mod ollama_tag_item;
 use ollama_tag_item::OllamaTagItem;
 mod ollama_tags_response;
 use ollama_tags_response::OllamaTagsResponse;
-mod copilot_model_item;
-use copilot_model_item::CopilotModelItem;
-mod copilot_model_list_response;
-use copilot_model_list_response::CopilotModelListResponse;
 
 use std::time::Duration;
 
-/// Fetch real-time available models from AI providers (OpenAI, Anthropic, Google, xAI, Copilot, Ollama)
+/// Fetch real-time available models from built-in API-key providers and local Ollama.
 pub async fn fetch_provider_models(
     provider: &str,
     api_key: Option<&str>,
@@ -35,9 +31,8 @@ pub async fn fetch_provider_models(
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
     // Resolve key from param or OS Keyring
-    let resolved_key = if matches!(provider, "ollama" | "github_copilot") {
-        // Local model discovery needs no credential; Copilot resolves its own
-        // subscription token below. Do not read either credential unnecessarily.
+    let resolved_key = if provider == "ollama" {
+        // Local model discovery needs no credential.
         None
     } else if let Some(k) = api_key.filter(|k| !k.trim().is_empty()) {
         Some(k.to_string())
@@ -491,75 +486,6 @@ pub async fn fetch_provider_models(
                         description: Some("Local Ollama Model".to_string()),
                     });
                 }
-            }
-
-            Ok(list)
-        }
-
-        "github_copilot" => {
-            // Check if Copilot session token can be obtained
-            let status = crate::features::ai::copilot::check_copilot_auth_status().await;
-            if !status.connected {
-                return Err(
-                    "GitHub Copilot is not connected. Sign in via Device Flow first.".to_string(),
-                );
-            }
-
-            let gh_token = crate::features::credentials::get_ai_key("github_copilot")
-                .map_err(|_| "Copilot token not found in keyring".to_string())?;
-
-            let session =
-                crate::features::ai::copilot::get_internal_copilot_token(&gh_token).await?;
-
-            let url = "https://api.individual.githubcopilot.com/models";
-            let resp = client
-                .get(url)
-                .header("Authorization", format!("Bearer {}", session.token))
-                .header("Editor-Version", "vscode/1.96.0")
-                .send()
-                .await;
-
-            let mut list = Vec::new();
-            if let Ok(r) = resp {
-                if r.status().is_success() {
-                    if let Ok(data) = r.json::<CopilotModelListResponse>().await {
-                        if let Some(items) = data.data {
-                            for item in items {
-                                list.push(DynamicModelInfo {
-                                    id: item.id.clone(),
-                                    name: item.name.unwrap_or(item.id),
-                                    description: Some(
-                                        "GitHub Copilot Subscription Model".to_string(),
-                                    ),
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-
-            if list.is_empty() {
-                // Default models supported by Copilot
-                list.push(DynamicModelInfo {
-                    id: "gpt-4o".to_string(),
-                    name: "GPT-4o (Copilot)".to_string(),
-                    description: Some("OpenAI Flagship on Copilot".to_string()),
-                });
-                list.push(DynamicModelInfo {
-                    id: "claude-3.5-sonnet".to_string(),
-                    name: "Claude 3.5 Sonnet (Copilot)".to_string(),
-                    description: Some("Anthropic Coding on Copilot".to_string()),
-                });
-                list.push(DynamicModelInfo {
-                    id: "o3-mini".to_string(),
-                    name: "o3-mini (Copilot)".to_string(),
-                    description: Some("OpenAI Reasoning on Copilot".to_string()),
-                });
-                list.push(DynamicModelInfo {
-                    id: "gpt-4o-mini".to_string(),
-                    name: "GPT-4o Mini (Copilot)".to_string(),
-                    description: Some("Lightweight Copilot".to_string()),
-                });
             }
 
             Ok(list)

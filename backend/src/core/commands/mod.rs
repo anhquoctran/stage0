@@ -2,7 +2,6 @@ mod window;
 pub use crate::features::about::commands::*;
 pub use crate::features::ai::commands::*;
 pub use crate::features::ai::preferences::*;
-pub use crate::features::ai::codex_auth::commands::*;
 pub use crate::features::review::commands::*;
 pub use crate::features::review::connectors::commands::*;
 pub use crate::features::credentials::commands::*;

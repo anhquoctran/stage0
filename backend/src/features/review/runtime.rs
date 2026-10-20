@@ -51,14 +51,13 @@ fn build_system_prompt(config: &ReviewRequest) -> String {
 pub async fn run(
     app: AppHandle,
     config: ReviewRequest,
-    subscription_token: Option<zeroize::Zeroizing<String>>,
     mut run: ReviewRun,
     context: Arc<Mutex<ReviewContext>>,
     cancel: Arc<AtomicBool>,
 ) {
     let database = app.state::<Database>();
     let outcome = tokio::select! {
-        result=execute(&database,&config,subscription_token,&mut run,&context)=>result,
+        result=execute(&database,&config,&mut run,&context)=>result,
         _=wait_cancel(cancel)=>Err("Review cancelled. An already-sent provider request may still be billed.".into()),
         _=tokio::time::sleep(Duration::from_secs(300))=>Err("Review deadline exceeded; results are incomplete.".into()),
     };
@@ -85,11 +84,10 @@ async fn wait_cancel(cancel: Arc<AtomicBool>) {
 async fn execute(
     db: &Database,
     config: &ReviewRequest,
-    subscription_token: Option<zeroize::Zeroizing<String>>,
     run: &mut ReviewRun,
     context: &Arc<Mutex<ReviewContext>>,
 ) -> Result<(), String> {
-    let adapter = NativeModelAdapter::new(config, subscription_token)?;
+    let adapter = NativeModelAdapter::new(config)?;
     execute_with_adapter(db, config, run, context, &adapter).await
 }
 
@@ -444,43 +442,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn subscription_http_stream_restores_calls_and_matching_continuation() {
-        let reasoning = json!({"id":"rs_fixture","type":"reasoning","encrypted_content":"opaque-signature","summary":[]});
-        let call = json!({"id":"fc_fixture","type":"function_call","status":"completed","call_id":"call_fixture","name":"get_diff","arguments":"{}"});
-        let (url, requests) = server(vec![json!({"fixtureSseEvents":[
-            {"type":"response.output_item.done","output_index":0,"item":reasoning},
-            {"type":"response.output_item.done","output_index":1,"item":call},
-            {"type":"response.completed","response":{"status":"completed","output":[],"usage":{"total_tokens":12}}}
-        ]})]).await;
-        let mut cfg = config("https://api.openai.com/v1".into());
-        cfg.provider = "openai".into();
-        cfg.auth_mode = "subscription_oauth".into();
-        cfg.model = "gpt-6-luna".into();
-        cfg.allow_remote = true;
-        let mut history = provider::initial_history("openai", "Source-free fixture");
-        let body = provider::payload(&cfg, "Fixture policy", &history, &[], 512);
-        // The local fixture exercises the same HTTP/SSE transport without a
-        // real account, keyring access, repository egress or model charges.
-        let response = provider::request(&cfg, &url, &body, Some("fixture-oauth-token"))
-            .await
-            .unwrap();
-        let (calls, usage) = provider::decode("openai", &response, &mut history).unwrap();
-        assert_eq!(calls.len(), 1);
-        assert_eq!(usage, 12);
-        assert_eq!(calls[0].name, "get_diff");
-        provider::append_results(
-            "openai",
-            &mut history,
-            &[(calls[0].clone(), json!({"result":"fixture"}))],
-        );
-        let continuation = provider::payload(&cfg, "Fixture policy", &history, &[], 512);
-        assert_eq!(continuation["input"][2], reasoning);
-        assert_eq!(continuation["input"][3], call);
-        assert_eq!(continuation["input"][4]["call_id"], "call_fixture");
-        assert_eq!(requests.await.unwrap()[0], body);
-    }
-
-    #[tokio::test]
     async fn real_http_tool_loop_validates_evidence_redacts_context_and_persists_findings() {
         let repo = TestRepo::new();
         let (mut run, ctx) = repo.review();
@@ -494,7 +455,6 @@ mod tests {
         let result = execute(
             &db,
             &config(url),
-            None,
             &mut run,
             &Arc::new(Mutex::new(ctx)),
         )
@@ -540,7 +500,6 @@ mod tests {
         let result = execute(
             &db,
             &config(url),
-            None,
             &mut run,
             &Arc::new(Mutex::new(ctx)),
         )
@@ -571,7 +530,6 @@ mod tests {
         let result = execute(
             &db,
             &config(url),
-            None,
             &mut run,
             &Arc::new(Mutex::new(ctx)),
         )
@@ -600,7 +558,6 @@ mod tests {
             &config(url.clone()),
             &format!("{url}/api/chat"),
             &json!({}),
-            None
         )
         .await
         .is_ok());
@@ -610,7 +567,6 @@ mod tests {
             &config(url.clone()),
             &format!("{url}/api/chat"),
             &json!({}),
-            None
         )
         .await
         .unwrap_err()
@@ -640,7 +596,6 @@ mod tests {
         let result = execute(
             &db,
             &config(url),
-            None,
             &mut run,
             &Arc::new(Mutex::new(ctx)),
         )
@@ -668,7 +623,6 @@ mod tests {
         let result = execute(
             &db,
             &config(url),
-            None,
             &mut run,
             &Arc::new(Mutex::new(ctx)),
         )
@@ -686,7 +640,6 @@ mod tests {
         let result = execute(
             &db,
             &config(url),
-            None,
             &mut run,
             &Arc::new(Mutex::new(ctx)),
         )
@@ -709,7 +662,6 @@ mod tests {
         let result = execute(
             &db,
             &config("http://127.0.0.1:1".into()),
-            None,
             &mut run,
             &Arc::new(Mutex::new(ctx)),
         )
@@ -741,7 +693,6 @@ mod tests {
         let result = execute(
             &db,
             &config("http://127.0.0.1:1".into()),
-            None,
             &mut run,
             &Arc::new(Mutex::new(ctx)),
         )
@@ -775,7 +726,6 @@ mod tests {
         let result = execute(
             &db,
             &config(url),
-            None,
             &mut run,
             &Arc::new(Mutex::new(ctx)),
         )

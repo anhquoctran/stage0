@@ -39,12 +39,8 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
     {
         return Err("Invalid model or instruction length".into());
     }
-    let subscription_auth = config.auth_mode == "subscription_oauth";
-    if config.provider != "ollama"
-        && config.auth_mode != "api_key"
-        && !(subscription_auth && config.provider == "openai")
-    {
-        return Err("Native review supports API-key authentication, local Ollama, or ChatGPT subscription sign-in for OpenAI. CLI bridges are not supported.".into());
+    if config.auth_mode != "api_key" {
+        return Err("Built-in providers require API-key authentication. Use External Agents for cloud subscription sign-in.".into());
     }
     let url =
         reqwest::Url::parse(config.base_url.trim()).map_err(|_| "Invalid provider base URL")?;
@@ -67,9 +63,6 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
         );
     }
     let root = url.as_str().trim_end_matches('/');
-    if subscription_auth && root != OPENAI_API_BASE_URL {
-        return Err("ChatGPT subscription sign-in can only be used with the official OpenAI Responses API endpoint".into());
-    }
     if let Some(effort) = config.reasoning_effort.as_deref() {
         if config.provider != "openai"
             || root != OPENAI_API_BASE_URL
@@ -139,25 +132,11 @@ pub fn payload(
                     })
                 })
                 .collect::<Vec<_>>();
-            let mut input = Vec::with_capacity(history.len() + 1);
-            if config.auth_mode == "subscription_oauth" {
-                input.push(
-                    json!({"type":"additional_tools","role":"developer","tools":tool_definitions}),
-                );
-            }
-            input.extend_from_slice(history);
-            let mut body = if config.auth_mode == "subscription_oauth" {
-                // Sign in with ChatGPT plan usage requires HTTP/SSE, store:false,
-                // and rejects max_output_tokens. Its fixed local review budget
-                // remains enforced by the coordinator and response-size cap.
-                json!({"model":config.model,"instructions":system,"input":input,"store":false,"stream":true,"include":["reasoning.encrypted_content"],"parallel_tool_calls":false,"tool_choice":"required"})
-            } else {
-                json!({"model":config.model,"instructions":system,"input":input,"store":false,"include":["reasoning.encrypted_content"],"max_output_tokens":max_tokens,"parallel_tool_calls":false,"tool_choice":"required","tools":tool_definitions})
-            };
+            let mut body = json!({"model":config.model,"instructions":system,"input":history,"store":false,"include":["reasoning.encrypted_content"],"max_output_tokens":max_tokens,"parallel_tool_calls":false,"tool_choice":"required","tools":tool_definitions});
             if let Some(effort) = config.reasoning_effort.as_deref() {
                 body["reasoning"] = json!({"effort": effort});
             }
-            if config.fast_mode && config.auth_mode != "subscription_oauth" {
+            if config.fast_mode {
                 body["service_tier"] = json!("fast");
             }
             body
@@ -194,7 +173,6 @@ pub async fn request(
     config: &ReviewRequest,
     url: &str,
     body: &Value,
-    subscription_token: Option<&str>,
 ) -> Result<Value, String> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(60))
@@ -202,30 +180,6 @@ pub async fn request(
         .build()
         .map_err(|_| "Could not initialize provider client")?;
     let mut request = client.post(url).json(body);
-    if config.auth_mode == "subscription_oauth" {
-        let token = subscription_token.ok_or("ChatGPT subscription session is unavailable")?;
-        request = request.bearer_auth(token);
-        let response = request.send().await.map_err(|_| {
-            "ChatGPT subscription request failed or timed out; check your connection and sign-in"
-        })?;
-        let status = response.status();
-        if !status.is_success() {
-            return Err(format!("ChatGPT subscription endpoint returned HTTP {}. Check the selected account, model access and plan usage limits.", status.as_u16()));
-        }
-        let mut bytes = Vec::new();
-        let mut response = response;
-        while let Some(chunk) = response
-            .chunk()
-            .await
-            .map_err(|_| "ChatGPT subscription response stream was interrupted")?
-        {
-            if bytes.len() + chunk.len() > 512 * 1024 {
-                return Err("ChatGPT subscription response exceeded the safety limit".into());
-            }
-            bytes.extend_from_slice(&chunk);
-        }
-        return super::responses_stream::decode(&bytes);
-    }
     if config.provider != "ollama" {
         let key = Zeroizing::new(
             crate::features::credentials::get_ai_key(&config.provider).map_err(|_| {
@@ -576,34 +530,17 @@ mod tests {
     #[test]
     fn tool_call_policy_matches_the_configured_provider_and_model() {
         let tools = super::super::schemas::tools();
-        for auth_mode in ["api_key", "subscription_oauth"] {
-            let mut cfg = config("openai", "https://api.openai.com/v1");
-            cfg.auth_mode = auth_mode.into();
-            let request = payload(
-                &cfg,
-                "policy",
-                &initial_history("openai", "fixture"),
-                &tools,
-                2048,
-            );
-            assert_eq!(request["tool_choice"], "required");
-            assert_eq!(request["parallel_tool_calls"], false);
-            if auth_mode == "subscription_oauth" {
-                assert_eq!(request["stream"], true);
-                assert_eq!(request["store"], false);
-                assert_eq!(request["include"], json!(["reasoning.encrypted_content"]));
-                assert!(request.get("tools").is_none());
-                assert!(request["input"]
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .any(|item| { item["type"] == "additional_tools" }));
-            } else {
-                assert!(request["tools"]
-                    .as_array()
-                    .is_some_and(|tools| !tools.is_empty()));
-            }
-        }
+        let cfg = config("openai", "https://api.openai.com/v1");
+        let request = payload(
+            &cfg,
+            "policy",
+            &initial_history("openai", "fixture"),
+            &tools,
+            2048,
+        );
+        assert_eq!(request["tool_choice"], "required");
+        assert_eq!(request["parallel_tool_calls"], false);
+        assert!(request["tools"].as_array().is_some_and(|tools| !tools.is_empty()));
 
         let mut legacy_anthropic = config("anthropic", "https://api.anthropic.com/v1");
         legacy_anthropic.model = "claude-haiku-4-5-20251001".into();

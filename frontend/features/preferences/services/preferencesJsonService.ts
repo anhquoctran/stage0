@@ -128,9 +128,18 @@ export const preferencesJsonService = new PreferencesJsonService();
 function merge(target: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> {
   const output = { ...target };
   for (const [key, value] of Object.entries(patch)) {
+    if (isDeleteMarker(value)) {
+      delete output[key];
+      continue;
+    }
     if (value && typeof value === 'object' && !Array.isArray(value) && output[key] && typeof output[key] === 'object' && !Array.isArray(output[key])) {
       output[key] = merge(output[key] as Record<string, unknown>, value as Record<string, unknown>);
     } else output[key] = value;
   }
   return output;
+}
+
+function isDeleteMarker(value: unknown): boolean {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+    && Object.keys(value).length === 1 && (value as Record<string, unknown>).$stage0Delete === true;
 }

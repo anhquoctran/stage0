@@ -1,15 +1,11 @@
 import { type AiConfig } from './AiConfig';
 import { type AiModelPreset } from './AiModelPreset';
 import { type McpServerConfig } from './McpServerConfig';
-import { type CliDetectionResult } from './CliDetectionResult';
-import { type CopilotDeviceCodeResponse } from './CopilotDeviceCodeResponse';
-import { type CopilotAuthStatus } from './CopilotAuthStatus';
-import { type GoogleAuthStatus } from './GoogleAuthStatus';
-import { type ChatGptAuthStatus } from './ChatGptAuthStatus';
 import { type GuardrailMode } from './GuardrailMode';
 import { type GuardrailPolicy } from './GuardrailPolicy';
 import { type GuardrailAuditEvent } from './GuardrailAuditEvent';
 import { type GuardrailEvaluationResult } from './GuardrailEvaluationResult';
+import type { AcpAgentConfig } from './AcpAgentConfig';
 
 export interface AiMcpState {
   aiConfig: AiConfig;
@@ -27,34 +23,6 @@ export interface AiMcpState {
   isFetchingDynamicModels: boolean;
   dynamicModelError: string | null;
   fetchDynamicModels: (configOverride?: AiConfig) => Promise<{ success: boolean; count: number; error?: string }>;
-
-  // Cloud Subscription & CLI Bridge State
-  copilotStatus: CopilotAuthStatus | null;
-  googleAuthStatus: GoogleAuthStatus | null;
-  chatgptAuthStatus: ChatGptAuthStatus | null;
-  cliStatus: Record<string, CliDetectionResult | null>;
-  isDetectingCli: boolean;
-  isConnectingSubscription: boolean;
-  isCheckingSubscription: boolean;
-  copilotDeviceCode: CopilotDeviceCodeResponse | null;
-
-  // Cloud Subscription & CLI Bridge Actions
-  detectCli: (cliType: string) => Promise<CliDetectionResult | null>;
-  executeCliTest: (cliType: string, prompt?: string) => Promise<{ success: boolean; output: string }>;
-  startCopilotFlow: () => Promise<CopilotDeviceCodeResponse | null>;
-  pollCopilotToken: (deviceCode: string) => Promise<{ status: string; error?: string }>;
-  checkCopilotStatus: () => Promise<CopilotAuthStatus>;
-  disconnectCopilot: () => Promise<void>;
-  startGoogleOAuth: () => Promise<void>;
-  checkGoogleAuthStatus: () => Promise<GoogleAuthStatus>;
-  disconnectGoogleOAuth: () => Promise<void>;
-  startChatGptOAuth: (profileId?: string) => Promise<void>;
-  checkChatGptAuthStatus: () => Promise<ChatGptAuthStatus>;
-  loadSavedChatGptAuth: () => Promise<void>;
-  disconnectChatGptOAuth: (profileId: string) => Promise<void>;
-  cancelChatGptOAuth: () => Promise<void>;
-  refreshChatGptSession: (profileId: string) => Promise<void>;
-  clearCopilotDeviceCode: () => void;
 
   // AI Configuration Actions
   updateAiConfig: (partial: Partial<AiConfig>) => void;
@@ -75,6 +43,8 @@ export interface AiMcpState {
 
   // AI & MCP Security Guardrails Actions
   guardrailPolicy: GuardrailPolicy;
+  externalAgents: AcpAgentConfig[];
+  updateExternalAgents: (agents: AcpAgentConfig[]) => void;
   guardrailAuditLog: GuardrailAuditEvent[];
   isGuardrailLoading: boolean;
   loadGuardrailPolicy: () => Promise<void>;

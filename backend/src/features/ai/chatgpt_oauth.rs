@@ -204,64 +204,6 @@ pub async fn disconnect_chatgpt_subscription(
     runtime.snapshot(&catalog)
 }
 
-/// Loads the explicitly active ChatGPT plan session for the native review runtime.
-/// The access token is never returned over IPC and is zeroized when the run ends.
-pub(crate) async fn review_access_token() -> Result<zeroize::Zeroizing<String>, String> {
-    let mut runtime = AUTH.lock().await;
-    if runtime.pending.is_some() {
-        return Err("Finish or cancel the pending ChatGPT sign-in before starting a review.".into());
-    }
-
-    let mut catalog = AuthCatalog::load()?;
-    let active_id = catalog
-        .active
-        .clone()
-        .ok_or("No active ChatGPT sign-in. Open Preferences → AI → LLM Providers and check the saved sign-in.")?;
-    let profile = catalog
-        .profiles
-        .iter()
-        .find(|profile| profile.id == active_id)
-        .cloned()
-        .ok_or("The active ChatGPT sign-in is unavailable. Check saved sign-ins in AI Preferences.")?;
-    let mut session = profile
-        .session()?
-        .ok_or("No saved ChatGPT session. Sign in from AI Preferences before starting a review.")?;
-
-    if !["resource.invoke", "chatgpt.tokens.use.direct"]
-        .iter()
-        .all(|scope| session.scopes.iter().any(|granted| granted == scope))
-    {
-        return Err("This ChatGPT sign-in does not have direct plan-usage permission. Reauthorize the account in AI Preferences.".into());
-    }
-
-    if session.expires_at <= chrono::Utc::now().timestamp() + 90 {
-        match flow::refresh(&profile, session).await {
-            Ok(refreshed) => {
-                catalog.commit(profile, &refreshed)?;
-                session = refreshed;
-                runtime.phase = "signed_in".into();
-                runtime.error = None;
-            }
-            Err(error) => {
-                if error == flow::REAUTHORIZE {
-                    runtime.forget_session(&active_id);
-                    catalog.clear_session(&active_id)?;
-                }
-                runtime.phase = "failed".into();
-                runtime.error = Some(error.clone());
-                return Err(error);
-            }
-        }
-    }
-
-    if !session.plan_usage() {
-        return Err("The ChatGPT session has expired or lacks plan-usage permission. Reauthorize it in AI Preferences.".into());
-    }
-    let token = zeroize::Zeroizing::new(session.access_token.clone());
-    runtime.snapshot_with_session(&catalog, Some(&session));
-    Ok(token)
-}
-
 // The general-purpose chat dispatcher still uses a separate adapter. Keep it
 // explicit rather than accidentally passing SIWC credentials to Chat Completions.
 pub async fn chat_chatgpt_subscription(

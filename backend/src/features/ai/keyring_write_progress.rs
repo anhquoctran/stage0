@@ -95,6 +95,7 @@ impl KeyringWriteProgress {
     }
 }
 
+#[cfg(test)]
 pub(crate) fn read_item<T>(
     kind: &'static str,
     layout: &'static str,
