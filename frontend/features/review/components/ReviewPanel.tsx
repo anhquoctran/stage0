@@ -20,6 +20,7 @@ export const ReviewPanel: React.FC = () => {
   const { isOpen, sessionId, runs, detail, error, isStarting, isPublishing, activeRuns, syncActive, close, load, start, cancel, publish } = useReviewStore();
   const config = useAiMcpStore((state) => state.aiConfig);
   const dynamicModels = useAiMcpStore((state) => state.dynamicModels);
+  const externalAgents = useAiMcpStore((state) => state.externalAgents);
   const session = useVirtualMrStore((state) => state.sessions.find((item) => item.id === sessionId) || null);
   const globalReviewers = useBotReviewersStore((state) => state.globalReviewers);
   const repoCustomReviewers = useBotReviewersStore((state) => state.repoCustomReviewers);
@@ -46,11 +47,13 @@ export const ReviewPanel: React.FC = () => {
     ? selectedReviewer.provider
     : config.provider;
   const reviewConfig: ReviewBotConfig = selectedReviewer
-    ? resolveReviewBotConfig(config, selectedReviewer, dynamicModels[reviewerProvider as keyof typeof dynamicModels] || [])
+    ? resolveReviewBotConfig(config, selectedReviewer, dynamicModels[reviewerProvider as keyof typeof dynamicModels] || [], externalAgents)
     : { ...config, reviewerRole: 'custom', customInstructions: config.reviewerInstructions };
-  const compatible = AI_PROVIDERS.some((provider) => provider.id === reviewConfig.provider);
+  const compatible = reviewConfig.executionMode === 'acp'
+    ? Boolean(reviewConfig.acpAgent)
+    : AI_PROVIDERS.some((provider) => provider.id === reviewConfig.provider);
 
-  useEffect(() => { setAllowRemote(false); }, [reviewConfig.provider, reviewConfig.model, reviewConfig.baseUrl, effectiveReviewerId, sessionId]);
+  useEffect(() => { setAllowRemote(false); }, [reviewConfig.provider, reviewConfig.model, reviewConfig.baseUrl, reviewConfig.acpAgent?.id, effectiveReviewerId, sessionId]);
   useEffect(() => {
     setSelectedReviewerId(reviewerProfiles[0]?.id || GLOBAL_REVIEWER_ID);
   }, [sessionId, reviewerProfiles]);
@@ -96,7 +99,9 @@ export const ReviewPanel: React.FC = () => {
                 { value: GLOBAL_REVIEWER_ID, label: `Global AI preferences (${config.model})` },
                 ...reviewerProfiles.map((bot) => ({
                   value: bot.id,
-                  label: `${bot.name} · ${bot.model && bot.model !== 'global_default'
+                  label: bot.acpAgentId
+                    ? `${bot.name} · ACP: ${externalAgents.find((agent) => agent.id === bot.acpAgentId)?.name || 'Agent unavailable'}`
+                    : `${bot.name} · ${bot.model && bot.model !== 'global_default'
                     ? bot.model
                     : bot.provider && bot.provider !== 'global_default'
                       ? AI_PROVIDERS.find((provider) => provider.id === bot.provider)?.defaultModel || config.model
@@ -110,19 +115,19 @@ export const ReviewPanel: React.FC = () => {
               dropdownWidth="w-full"
               align="left"
             />}
-            <p>{selectedReviewer ? <>Reviewer: <strong>{selectedReviewer.name}</strong> · </> : null}Provider: <strong>{reviewConfig.provider}</strong> · Model: <span className="font-mono">{reviewConfig.model}</span>{reviewConfig.reasoningEffort && <> · Reasoning: <strong>{reviewConfig.reasoningEffort}</strong></>}{reviewConfig.fastMode && <> · <strong>Fast mode</strong></>}</p>
-            <p className="break-all text-subtext0">Endpoint: {reviewConfig.baseUrl}</p>
+            <p>{selectedReviewer ? <>Reviewer: <strong>{selectedReviewer.name}</strong> · </> : null}{reviewConfig.executionMode === 'acp' ? <>ACP agent: <strong>{reviewConfig.acpAgent?.name || 'Unavailable'}</strong></> : <>Provider: <strong>{reviewConfig.provider}</strong> · Model: <span className="font-mono">{reviewConfig.model}</span>{reviewConfig.reasoningEffort && <> · Reasoning: <strong>{reviewConfig.reasoningEffort}</strong></>}{reviewConfig.fastMode && <> · <strong>Fast mode</strong></>}</>}</p>
+            {reviewConfig.executionMode === 'acp' ? <p className="text-subtext0">Agent: {reviewConfig.acpAgent?.name || 'Not installed'} · configured in AI Preferences → External Agents</p> : <p className="break-all text-subtext0">Endpoint: {reviewConfig.baseUrl}</p>}
             {selectedReviewer && <p className="text-subtext0">This run uses the selected reviewer’s instructions and model profile.</p>}
             <p className="text-subtext0">Reads committed Git snapshots only. It can create inline discussions, reply to user comments, and resolve threads with changed-line evidence. It cannot modify code, approve, or merge. Discussion actions are saved to this local Virtual MR.</p>
-            <p className="text-subtext0">Reviews use fixed safety budgets (12 turns, 48 tool calls and a 64,000-token reported-usage cap), independent of chat auto-summary preferences. API-key requests also cap requested output at 2,048 tokens per turn.</p>
-            {!compatible && <p role="alert" className="text-yellow">Choose a built-in provider with an API key or local Ollama for code reviews. Cloud subscription agents are managed separately in AI → External Agents.</p>}
+            <p className="text-subtext0">Reviews use fixed safety budgets (12 turns, 48 tool calls and a 64,000-token reported-usage cap), independent of chat auto-summary preferences. ACP agent turns use a structured Stage0 tool-call bridge; reported token usage may not be available.</p>
+            {!compatible && <p role="alert" className="text-yellow">{reviewConfig.executionMode === 'acp' ? 'The selected ACP agent is not installed. Reinstall it or update this reviewer profile.' : 'Choose a built-in provider with an API key or local Ollama for code reviews.'}</p>}
             <button type="button" className="text-primary underline" onClick={() => { close(); usePreferencesStore.getState().openPreferences('ai-providers'); }}>AI Preferences</button>
-            {reviewConfig.provider !== 'ollama' && <label className="flex gap-2 items-start">
+            {(reviewConfig.executionMode === 'acp' || reviewConfig.provider !== 'ollama') && <label className="flex gap-2 items-start">
               <input type="checkbox" checked={allowRemote} onChange={(event) => setAllowRemote(event.target.checked)} className="accent-primary mt-0.5" />
-              <span>I allow eligible tracked source to be sent to {reviewConfig.provider}. Sensitive files are excluded and matching secret lines are redacted, but automatic detection cannot identify every secret.</span>
+              <span>I allow eligible tracked source to be sent to {reviewConfig.executionMode === 'acp' ? `ACP agent ${reviewConfig.acpAgent?.name || ''}` : reviewConfig.provider}. Sensitive files are excluded and matching secret lines are redacted, but automatic detection cannot identify every secret.</span>
             </label>}
             <div className="flex gap-2 pt-1">
-              <button type="button" disabled={!compatible || isStarting || hasRunning || (reviewConfig.provider !== 'ollama' && !allowRemote)} onClick={() => void start(reviewConfig, allowRemote, selectedReviewer ? { id: selectedReviewer.id, name: selectedReviewer.name } : undefined)} className="bg-primary text-on-accent px-3 py-2 font-semibold disabled:opacity-40">{isStarting ? 'Capturing snapshot…' : selectedReviewer ? `Review as ${selectedReviewer.name}` : 'Start new review'}</button>
+              <button type="button" disabled={!compatible || isStarting || hasRunning || ((reviewConfig.executionMode === 'acp' || reviewConfig.provider !== 'ollama') && !allowRemote)} onClick={() => void start(reviewConfig, allowRemote, selectedReviewer ? { id: selectedReviewer.id, name: selectedReviewer.name } : undefined)} className="bg-primary text-on-accent px-3 py-2 font-semibold disabled:opacity-40">{isStarting ? 'Capturing snapshot…' : selectedReviewer ? `Review as ${selectedReviewer.name}` : 'Start new review'}</button>
               {running && <button type="button" onClick={() => void cancel()} className="border border-surface1 px-3 py-2">Cancel review</button>}
               {running && <button type="button" onClick={close} className="border border-surface1 px-3 py-2">Run in background</button>}
             </div>

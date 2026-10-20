@@ -427,6 +427,8 @@ mod tests {
             model: "fixture-model".into(),
             reasoning_effort: None,
             fast_mode: false,
+            execution_mode: "provider".into(),
+            acp_agent: None,
             reviewer_id: None,
             reviewer_name: None,
             reviewer_role: None,

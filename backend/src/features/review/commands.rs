@@ -5,6 +5,7 @@ use super::{
 };
 use crate::{
     core::db::Database,
+    features::ai::acp::AcpAgentConfig,
     features::sandbox::{guardrails::GuardrailsEngine, SandboxManager},
 };
 use serde_json::{json, Value};
@@ -42,7 +43,7 @@ pub async fn test_ai_review_provider(request: ReviewRequest) -> Result<Value, St
 }
 
 #[tauri::command]
-pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<ReviewRun, String> {
+pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Result<ReviewRun, String> {
     if request.reviewer_id.as_deref().is_some_and(|id| id.len() > 200)
         || request.reviewer_name.as_deref().is_some_and(|name| name.len() > 200)
     {
@@ -55,10 +56,29 @@ pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<R
     {
         return Err("Unsupported reviewer role".into());
     }
-    let endpoint = provider::endpoint(&request)?;
-    if request.provider != "ollama" && !crate::features::credentials::ai_key_exists(&request.provider)? {
-        return Err("Configure an API key in Preferences before starting a review".into());
-    }
+    let (endpoint, run_provider, run_model) = match request.execution_mode.as_str() {
+        "provider" => {
+            if request.acp_agent.is_some() {
+                return Err("A built-in provider review cannot include an ACP agent".into());
+            }
+            let endpoint = provider::endpoint(&request)?;
+            if request.provider != "ollama" && !crate::features::credentials::ai_key_exists(&request.provider)? {
+                return Err("Configure an API key in Preferences before starting a review".into());
+            }
+            (endpoint, request.provider.clone(), request.model.clone())
+        }
+        "acp" => {
+            let requested_id = request.acp_agent.as_ref().map(|agent| agent.id.as_str())
+                .ok_or("Select an installed ACP agent for this reviewer")?;
+            let agent = resolve_saved_review_agent(&app, requested_id)?;
+            if !request.allow_remote {
+                return Err("Explicit consent is required before sending the review snapshot to an ACP agent".into());
+            }
+            request.acp_agent = Some(agent.clone());
+            (format!("acp://{}", agent.id), "acp".into(), agent.name.clone())
+        }
+        _ => return Err("Unsupported review execution mode".into()),
+    };
     let session_id = request.session_id.clone();
     let (repo, base, head) = {
         let db = app.state::<Database>();
@@ -82,8 +102,8 @@ pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<R
     let run = ReviewRun {
         id: id.clone(),
         session_id: session_id.clone(),
-        provider: request.provider.clone(),
-        model: request.model.clone(),
+        provider: run_provider,
+        model: run_model,
         reviewer_id: request.reviewer_id.clone(),
         reviewer_name: request.reviewer_name.clone(),
         endpoint,
@@ -106,10 +126,12 @@ pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<R
             "review-v1:{:x}",
             Sha256::digest(
                 format!(
-                    "{}{}{}",
+                    "{}{}{}{}{}",
                     super::runtime::SYSTEM,
                     request.instructions,
-                    policy
+                    policy,
+                    request.execution_mode,
+                    request.acp_agent.as_ref().map(|agent| format!("{}@{}", agent.id, agent.version.as_deref().unwrap_or_default())).unwrap_or_default(),
                 )
                 .as_bytes()
             )
@@ -143,6 +165,27 @@ pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<R
         }
     });
     Ok(run)
+}
+
+/// Never launch a process from command/args supplied by the webview. Resolve
+/// the selected ID against the committed preferences document, then validate
+/// and use that saved configuration.
+fn resolve_saved_review_agent(app: &AppHandle, requested_id: &str) -> Result<AcpAgentConfig, String> {
+    let settings = app.state::<crate::features::preferences::PreferencesManager>()
+        .read()?
+        .settings
+        .ok_or("Could not load saved ACP agent configuration")?;
+    let agents = settings.pointer("/ai/externalAgents")
+        .and_then(Value::as_array)
+        .ok_or("No ACP agents are saved in Preferences")?;
+    let saved = agents.iter()
+        .find(|agent| agent.get("id").and_then(Value::as_str) == Some(requested_id))
+        .cloned()
+        .ok_or("The selected ACP agent is not installed in Preferences")?;
+    let agent: AcpAgentConfig = serde_json::from_value(saved)
+        .map_err(|_| "The saved ACP agent configuration is invalid")?;
+    crate::features::ai::acp::validate_review_agent_config(&agent)?;
+    Ok(agent)
 }
 
 #[tauri::command]

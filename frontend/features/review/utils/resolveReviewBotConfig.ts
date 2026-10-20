@@ -2,6 +2,7 @@ import type { AiConfig } from '../../ai/types/AiConfig';
 import type { AiModelPreset } from '../../ai/types/AiModelPreset';
 import type { BotReviewer } from '../../virtual-mr/types/BotReviewer';
 import type { ReviewBotConfig } from '../types/ReviewBotConfig';
+import type { AcpAgentConfig } from '../../ai/types/AcpAgentConfig';
 import { AI_PROVIDERS } from '../../ai/constants/aiPresets';
 import { resolveAiModelPreset } from '../../ai/utils/resolveAiModelPreset';
 
@@ -9,7 +10,19 @@ export function resolveReviewBotConfig(
   globalConfig: AiConfig,
   reviewer: BotReviewer,
   dynamicModels: AiModelPreset[] = [],
+  externalAgents: AcpAgentConfig[] = [],
 ): ReviewBotConfig {
+  if (reviewer.acpAgentId) {
+    return {
+      ...globalConfig,
+      reviewerRole: reviewer.category,
+      customInstructions: reviewer.customInstructions,
+      executionMode: 'acp',
+      acpAgent: externalAgents.find((agent) => agent.id === reviewer.acpAgentId),
+      allowAcpSourceTransfer: reviewer.allowAcpSourceTransfer === true,
+    };
+  }
+
   const provider = reviewer.provider && reviewer.provider !== 'global_default'
     ? reviewer.provider as AiConfig['provider']
     : globalConfig.provider;
@@ -48,6 +61,7 @@ export function resolveReviewBotConfig(
     baseUrl,
     reviewerRole: reviewer.category,
     customInstructions: reviewer.customInstructions,
+    executionMode: 'provider',
     reasoningEffort,
     fastMode: capabilities?.supportsFastMode === true && reviewer.fastMode === true,
   };
