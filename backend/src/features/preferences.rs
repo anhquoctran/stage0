@@ -111,6 +111,95 @@ impl PreferencesManager {
         }
     }
 
+    pub fn legacy_git_credentials(&self) -> Result<(Option<Vec<Value>>, String), String> {
+        let path = self.file_path();
+        reject_symlink(&path)?;
+        let content = read_limited(&path)?;
+        let value: Value = parse_to_serde_value(&content, &strict_jsonc_options())
+            .map_err(|error| format_parse_error(&error))?;
+        let mut found = false;
+        let mut credentials = Vec::new();
+        if let Some(object) = value.as_object() {
+            for (key, value) in object {
+                if key.eq_ignore_ascii_case("gitCredentials") {
+                    found = true;
+                    if let Some(records) = value.as_array() {
+                        credentials.extend(records.iter().cloned());
+                    }
+                }
+            }
+        }
+        Ok((found.then_some(credentials), revision(&content)))
+    }
+
+    pub fn remove_legacy_git_credentials(
+        &self,
+        expected_revision: String,
+    ) -> Result<PreferencesDocument, String> {
+        let _guard = self
+            .write_lock
+            .lock()
+            .map_err(|_| "Preferences service is unavailable".to_string())?;
+        let _process_guard = PROCESS_PREFERENCES_WRITE_LOCK
+            .lock()
+            .map_err(|_| "Preferences service is unavailable".to_string())?;
+        let _process_lock = self.acquire_process_lock()?;
+        let path = self.file_path();
+        reject_symlink(&path)?;
+        let current = read_limited(&path)?;
+        if revision(&current) != expected_revision {
+            return Err(
+                "Preferences changed while Git credentials were being migrated. Retry the migration."
+                    .into(),
+            );
+        }
+        let root = CstRootNode::parse(&current, &strict_jsonc_options())
+            .map_err(|error| format_parse_error(&error))?;
+        let properties = root
+            .object_value()
+            .map(|object| object.properties())
+            .unwrap_or_default();
+        let mut removed = false;
+        for property in properties {
+            let is_git_credentials = property
+                .name()
+                .and_then(|name| name.decoded_value().ok())
+                .is_some_and(|name| name.eq_ignore_ascii_case("gitCredentials"));
+            if is_git_credentials {
+                property.remove();
+                removed = true;
+            }
+        }
+        if !removed {
+            let settings = parse_and_validate(&current)?;
+            return Ok(document(path, current, false, settings));
+        }
+
+        let content = root.to_string();
+        let parsed = parse_and_validate(&content);
+        if parse_and_validate(&current).is_ok() {
+            atomic_write(
+                &self.directory.join(LAST_KNOWN_GOOD_FILE),
+                current.as_bytes(),
+            )?;
+        }
+        atomic_write(&path, content.as_bytes())?;
+        let settings = match parsed {
+            Ok(settings) => {
+                let _ = atomic_write(
+                    &self.directory.join(LAST_KNOWN_GOOD_FILE),
+                    content.as_bytes(),
+                );
+                settings
+            }
+            Err(error) => {
+                let recovery = self.recovery_settings();
+                return Ok(document_with_error(path, content, recovery, error));
+            }
+        };
+        Ok(document(path, content, false, settings))
+    }
+
     fn recovery_settings(&self) -> Value {
         let backup = self.directory.join(LAST_KNOWN_GOOD_FILE);
         let _ = reject_symlink(&backup);
@@ -128,6 +217,7 @@ impl PreferencesManager {
         expected_revision: String,
     ) -> Result<PreferencesDocument, String> {
         let value = parse_and_validate(&content)?;
+        reject_git_credentials(&value, "")?;
         reject_secrets(&value, "")?;
         let _guard = self
             .write_lock
@@ -171,6 +261,7 @@ impl PreferencesManager {
         if !patch.is_object() {
             return Err("Preferences updates must be a JSON object".into());
         }
+        reject_git_credentials(&patch, "")?;
         let _guard = self
             .write_lock
             .lock()
@@ -193,6 +284,7 @@ impl PreferencesManager {
         merge_object(&object, patch.as_object().unwrap())?;
         let content = root.to_string();
         let value = parse_and_validate(&content)?;
+        reject_git_credentials(&value, "")?;
         reject_secrets(&value, "")?;
         if patch.get("git").is_some() {
             validate_runtime_preferences(&value)?;
@@ -243,41 +335,6 @@ impl PreferencesManager {
         ))
     }
 
-    pub fn merge_legacy_credentials(
-        &self,
-        records: Vec<Value>,
-    ) -> Result<PreferencesDocument, String> {
-        if records.is_empty() {
-            return self.read();
-        }
-        let current = self.read()?;
-        let mut settings = current.settings.clone().ok_or_else(|| {
-            "Preferences JSONC is invalid; credential metadata was not migrated".to_string()
-        })?;
-        let existing = settings
-            .get("gitCredentials")
-            .and_then(Value::as_array)
-            .cloned()
-            .unwrap_or_default();
-        let mut merged = existing;
-        let ids = merged
-            .iter()
-            .filter_map(|record| record.get("id").and_then(Value::as_str).map(str::to_string))
-            .collect::<std::collections::HashSet<_>>();
-        for record in records {
-            let Some(id) = record.get("id").and_then(Value::as_str) else {
-                continue;
-            };
-            if !ids.contains(id) {
-                merged.push(record);
-            }
-        }
-        settings["gitCredentials"] = Value::Array(merged);
-        self.patch(
-            serde_json::json!({ "gitCredentials": settings["gitCredentials"] }),
-            current.revision,
-        )
-    }
 }
 
 fn document(path: PathBuf, content: String, migrated: bool, _value: Value) -> PreferencesDocument {
@@ -403,7 +460,6 @@ fn parse_and_validate(content: &str) -> Result<Value, String> {
         "sandbox",
         "git",
         "notifications",
-        "gitCredentials",
     ] {
         if value.get(key).is_none() {
             return Err(format!("Preferences are missing required field '{key}'"));
@@ -535,14 +591,16 @@ fn validate_schema(value: &Value) -> Result<(), String> {
         validate_optional_bool(channels, "guardrails", "notifications.channels")?;
     }
 
-    let credentials = value["gitCredentials"]
-        .as_array()
-        .ok_or("gitCredentials must be an array")?;
-    if credentials.len() > 10_000 {
-        return Err("gitCredentials cannot contain more than 10,000 entries".into());
-    }
-    for (index, credential) in credentials.iter().enumerate() {
-        validate_git_credential(credential, index)?;
+    if let Some(credentials) = value.get("gitCredentials") {
+        let credentials = credentials
+            .as_array()
+            .ok_or("gitCredentials must be an array")?;
+        if credentials.len() > 10_000 {
+            return Err("gitCredentials cannot contain more than 10,000 entries".into());
+        }
+        for (index, credential) in credentials.iter().enumerate() {
+            validate_git_credential(credential, index)?;
+        }
     }
     Ok(())
 }
@@ -933,6 +991,34 @@ fn reject_secrets(value: &Value, path: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn reject_git_credentials(value: &Value, path: &str) -> Result<(), String> {
+    match value {
+        Value::Object(items) => {
+            for (key, child) in items {
+                if key.eq_ignore_ascii_case("gitCredentials") {
+                    return Err(
+                        "Git credentials are managed in Preferences and cannot be edited in preferences.json."
+                            .into(),
+                    );
+                }
+                let next = if path.is_empty() {
+                    format!("{key}.")
+                } else {
+                    format!("{path}{key}.")
+                };
+                reject_git_credentials(child, &next)?;
+            }
+        }
+        Value::Array(items) => {
+            for child in items {
+                reject_git_credentials(child, path)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
 fn looks_like_secret(value: &str) -> bool {
     ["sk-", "ghp_", "github_pat_", "glpat-", "xoxb-", "xoxp-"]
         .iter()
@@ -952,7 +1038,6 @@ fn sanitize_legacy(value: Value) -> Map<String, Value> {
         "sandbox",
         "git",
         "notifications",
-        "gitCredentials",
     ] {
         if let Some(value) = root.get(key) {
             out.insert(key.into(), sanitize_value(value));
@@ -1186,54 +1271,20 @@ pub async fn initialize_preferences(
         (Ok(Some(id)), Ok(Some(path))) => Some((id, path)),
         _ => None,
     };
-    let legacy_credentials = db
-        .get_legacy_git_credentials()
-        .map_err(|_| {
-            "Legacy Git credential metadata could not be loaded for migration".to_string()
-        })?
-        .into_iter()
-        .map(|credential| {
-            serde_json::json!({
-                "id": credential.id,
-                "provider": credential.provider,
-                "server_url": credential.server_url,
-                "account_name": credential.account_name,
-                "token_type": credential.token_type,
-                "label": credential.label,
-                "source": credential.source,
-                "helper_name": credential.helper_name,
-                "created_at": credential.created_at,
-                "updated_at": credential.updated_at,
-            })
-        })
-        .collect::<Vec<_>>();
-    let mut legacy = legacy;
-    if let Some(object) = legacy.as_object_mut() {
-        if object
-            .get("gitCredentials")
-            .and_then(Value::as_array)
-            .map_or(true, Vec::is_empty)
-        {
-            object.insert(
-                "gitCredentials".into(),
-                Value::Array(legacy_credentials.clone()),
-            );
-        }
-    }
+    let legacy_credentials = legacy
+        .get("gitCredentials")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
     let manager = app.state::<PreferencesManager>();
-    let initialized = manager.initialize(legacy, git)?;
-    if initialized.validation_error.is_some() {
-        if let Some(settings) = initialized.settings.as_ref() {
-            apply_runtime_preferences(&app, settings);
-        }
-        return Ok(initialized);
+    manager.initialize(legacy, git)?;
+    migrate_git_credentials_to_sqlite(&app, legacy_credentials)?;
+    let document = manager.read()?;
+    if let Some(settings) = document.settings.as_ref() {
+        apply_runtime_preferences(&app, settings);
     }
-    let document = manager.merge_legacy_credentials(legacy_credentials)?;
-    let value: Value = parse_to_serde_value(&document.content, &strict_jsonc_options())
-        .map_err(|error| format_parse_error(&error))?;
-    apply_runtime_preferences(&app, &value);
     db.compact_git_credentials_metadata().map_err(|_| {
-        "Git credential metadata could not be migrated into preferences.json".to_string()
+        "Legacy Git credential references could not be compacted in SQLite".to_string()
     })?;
     db.delete_settings(&["git_binary_id", "git_binary_path"])
         .map_err(|_| "Legacy Git preference values could not be removed from SQLite".to_string())?;
@@ -1243,7 +1294,39 @@ pub async fn initialize_preferences(
 
 #[tauri::command]
 pub async fn load_preferences_json(app: AppHandle) -> Result<PreferencesDocument, String> {
+    migrate_git_credentials_to_sqlite(&app, Vec::new())?;
     app.state::<PreferencesManager>().read()
+}
+
+fn migrate_git_credentials_to_sqlite(
+    app: &AppHandle,
+    mut additional_records: Vec<Value>,
+) -> Result<(), String> {
+    let manager = app.state::<PreferencesManager>();
+    let db = app.state::<crate::core::db::Database>();
+    let (file_records, revision) = manager.legacy_git_credentials()?;
+    let had_file_records = file_records.is_some();
+    if let Some(mut file_records) = file_records {
+        additional_records.append(&mut file_records);
+    }
+
+    for value in additional_records {
+        let Ok(record) = serde_json::from_value::<
+            crate::features::credentials::GitCredentialPreferenceRecord,
+        >(value)
+        else {
+            // A malformed legacy record is never copied into the database or exposed by the editor.
+            continue;
+        };
+        db.upsert_git_credential_metadata(&record).map_err(|_| {
+            "Git credential metadata could not be migrated to SQLite".to_string()
+        })?;
+    }
+
+    if had_file_records {
+        manager.remove_legacy_git_credentials(revision)?;
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -1253,6 +1336,7 @@ pub async fn save_preferences_json(
     expected_revision: String,
 ) -> Result<PreferencesDocument, String> {
     let settings = parse_and_validate(&content)?;
+    reject_git_credentials(&settings, "")?;
     validate_runtime_preferences(&settings)?;
     let saved = app
         .state::<PreferencesManager>()

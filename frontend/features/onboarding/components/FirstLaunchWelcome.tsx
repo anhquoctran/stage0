@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { Sparkles } from '../../../common/components/icons/Sparkles';
 import { X } from '../../../common/components/icons/X';
@@ -62,6 +63,10 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
     onComplete();
   };
 
+  const minimizeWindow = () => {
+    void invoke('window_minimize').catch((error) => console.warn('Minimize error:', error));
+  };
+
   useEffect(() => {
     skipRef.current?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -104,6 +109,11 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   return (
     <div className="fixed inset-0 z-[200] bg-base text-text">
       <div
+        data-tauri-drag-region
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 z-[5] h-14 cursor-move"
+      />
+      <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
@@ -111,16 +121,29 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
         aria-describedby="first-launch-description"
         className="grid h-full w-full grid-cols-1 overflow-hidden md:grid-cols-[1.05fr_0.95fr]"
       >
-        <button
-          ref={skipRef}
-          type="button"
-          onClick={finish}
-          aria-label="Close welcome guide"
-          title="Close welcome guide"
-          className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center border border-transparent text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary sm:right-6 sm:top-6"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <div className="absolute right-4 top-4 z-10 flex items-center sm:right-6 sm:top-6">
+          <button
+            type="button"
+            onClick={minimizeWindow}
+            aria-label="Minimize window"
+            title="Minimize window"
+            className="flex h-10 w-10 items-center justify-center border border-transparent text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M2 6h8" stroke="currentColor" strokeWidth="1.25" />
+            </svg>
+          </button>
+          <button
+            ref={skipRef}
+            type="button"
+            onClick={finish}
+            aria-label="Close welcome guide"
+            title="Close welcome guide"
+            className="flex h-10 w-10 items-center justify-center border border-transparent text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
         <section className="flex min-h-0 flex-col overflow-y-auto px-6 py-8 sm:px-10 sm:py-10 lg:px-16 lg:py-14">
           <div className="flex items-center gap-3">

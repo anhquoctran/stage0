@@ -710,7 +710,6 @@ pub async fn get_clone_remote_refs(
         let credential_lease = match credential_id.as_deref() {
             Some(id) => Some(prepare_clone_credential(
                 &app.state::<Database>(),
-                &app.state::<crate::features::preferences::PreferencesManager>(),
                 id,
                 url,
             )?),
@@ -782,8 +781,7 @@ pub async fn clone_repository(
         let credential_lease = match credential_id.as_deref() {
             Some(id) => {
                 let db = app.state::<Database>();
-                let preferences = app.state::<crate::features::preferences::PreferencesManager>();
-                Some(prepare_clone_credential(&db, &preferences, id, trimmed_url)?)
+                Some(prepare_clone_credential(&db, id, trimmed_url)?)
             }
             None => None,
         };
@@ -856,19 +854,14 @@ pub async fn clone_repository(
 
 fn prepare_clone_credential(
     db: &Database,
-    preferences: &crate::features::preferences::PreferencesManager,
     credential_id: &str,
     remote_url: &str,
 ) -> Result<CloneCredentialLease, String> {
     let target_origin = crate::features::credentials::https_origin(remote_url)?;
-    let document = preferences.read()?;
-    let settings = document.settings.ok_or_else(|| "preferences.json is invalid; Git credentials cannot be used".to_string())?;
-    let records = settings.get("gitCredentials").and_then(serde_json::Value::as_array)
-        .ok_or_else(|| "Git credential metadata is unavailable".to_string())?;
-    let credential = records.iter().find(|record| record.get("id").and_then(serde_json::Value::as_str) == Some(credential_id))
-        .cloned().ok_or_else(|| "The selected Git credential is no longer available. Refresh the list and try again.".to_string())?;
-    let credential: crate::features::credentials::GitCredentialPreferenceRecord = serde_json::from_value(credential)
-        .map_err(|_| "The selected Git credential metadata is invalid".to_string())?;
+    let credential = db
+        .get_git_credential_metadata(credential_id)
+        .map_err(|_| "The selected Git credential metadata could not be loaded from SQLite".to_string())?
+        .ok_or_else(|| "The selected Git credential is no longer available. Refresh the list and try again.".to_string())?;
     let token_ref = db.get_git_credential_token_ref(credential_id)
         .map_err(|_| "The selected Git credential keychain mapping is unavailable".to_string())?
         .ok_or_else(|| "The selected Git credential keychain mapping is unavailable".to_string())?;

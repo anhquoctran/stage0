@@ -240,19 +240,37 @@ impl Database {
             .collect::<Result<_, _>>()?;
         drop(stmt);
 
-        let is_legacy_metadata_table = columns.iter().any(|column| column == "provider");
-        if is_legacy_metadata_table && !columns.iter().any(|column| column == "source") {
-            conn.execute(
-                "ALTER TABLE git_credentials ADD COLUMN source TEXT NOT NULL DEFAULT 'stage0';",
-                [],
-            )?;
+        if !columns.iter().any(|column| column == "provider") {
+            return Ok(());
         }
-        if is_legacy_metadata_table && !columns.iter().any(|column| column == "helper_name") {
-            conn.execute(
-                "ALTER TABLE git_credentials ADD COLUMN helper_name TEXT;",
-                [],
-            )?;
+
+        for (name, definition) in [
+            ("server_url", "TEXT NOT NULL DEFAULT ''"),
+            ("account_name", "TEXT NOT NULL DEFAULT ''"),
+            ("token_type", "TEXT NOT NULL DEFAULT ''"),
+            ("label", "TEXT"),
+            ("source", "TEXT NOT NULL DEFAULT 'stage0'"),
+            ("helper_name", "TEXT"),
+            ("created_at", "TEXT NOT NULL DEFAULT ''"),
+            ("updated_at", "TEXT NOT NULL DEFAULT ''"),
+        ] {
+            if !columns.iter().any(|column| column == name) {
+                conn.execute(
+                    &format!("ALTER TABLE git_credentials ADD COLUMN {name} {definition};"),
+                    [],
+                )?;
+            }
         }
+
+        // Older builds kept credential metadata in this table. Copy it to the
+        // dedicated SQLite metadata table before the reference table is compacted.
+        conn.execute(
+            "INSERT OR IGNORE INTO git_credential_metadata
+                (id, provider, server_url, account_name, token_type, label, source, helper_name, created_at, updated_at)
+             SELECT id, provider, server_url, account_name, token_type, label, source, helper_name, created_at, updated_at
+             FROM git_credentials WHERE provider IS NOT NULL AND provider <> '';",
+            [],
+        )?;
         Ok(())
     }
 
@@ -410,10 +428,15 @@ mod tests {
     }
 
     #[test]
-    fn legacy_git_credential_metadata_is_migrated_then_compacted_without_losing_refs() {
+    fn legacy_git_credential_metadata_is_migrated_to_sqlite_before_refs_are_compacted() {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch(
-            "CREATE TABLE git_credentials (
+            "CREATE TABLE git_credential_metadata (
+                id TEXT PRIMARY KEY, provider TEXT NOT NULL, server_url TEXT NOT NULL,
+                account_name TEXT NOT NULL, token_type TEXT NOT NULL, label TEXT,
+                source TEXT NOT NULL, helper_name TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+            );
+            CREATE TABLE git_credentials (
                 id TEXT PRIMARY KEY, token_ref TEXT NOT NULL UNIQUE, provider TEXT NOT NULL,
                 server_url TEXT NOT NULL, account_name TEXT NOT NULL, token_type TEXT NOT NULL,
                 label TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
@@ -435,6 +458,15 @@ mod tests {
         let db = Database(Mutex::new(conn));
         db.compact_git_credentials_metadata().unwrap();
         db.compact_git_credentials_metadata().unwrap();
+        let (provider, account_name): (String, String) = db
+            .conn()
+            .query_row(
+                "SELECT provider, account_name FROM git_credential_metadata WHERE id = 'credential-id'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!((provider.as_str(), account_name.as_str()), ("github", "alice"));
         let (id, token_ref): (String, String) = db
             .conn()
             .query_row("SELECT id, token_ref FROM git_credentials", [], |row| {

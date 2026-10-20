@@ -61,33 +61,13 @@ pub fn schedule_system_git_credential_rescan(app: &AppHandle) {
             let db = app.state::<crate::core::db::Database>();
             let repo_paths = db.get_all_repository_paths().ok()?;
             let discovery = discover_system_git_credentials(&repo_paths);
-            let preferences = app.state::<crate::features::preferences::PreferencesManager>();
-            let mut synced = false;
-            for _ in 0..2 {
-                let current = preferences.read().ok()?;
-                let settings = current.settings?;
-                let mut records = settings.get("gitCredentials")?.as_array()?.clone();
-                if discovery.complete {
-                    records.retain(|record| record.get("source").and_then(serde_json::Value::as_str) != Some("system_global"));
-                }
-                let existing_ids = records.iter().filter_map(|record| record.get("id").and_then(serde_json::Value::as_str).map(str::to_string)).collect::<HashSet<_>>();
-                for credential in &discovery.credentials {
-                    let record = serde_json::json!({
-                        "id": credential.id, "provider": credential.provider, "server_url": credential.server_url,
-                        "account_name": credential.account_name, "token_type": credential.token_type,
-                        "label": credential.label, "source": credential.source, "helper_name": credential.helper_name,
-                        "created_at": credential.created_at, "updated_at": credential.updated_at,
-                    });
-                    if !existing_ids.contains(&credential.id) { records.push(record); }
-                    db.upsert_git_credential_ref(&credential.id, &credential.token_ref).ok()?;
-                }
-                match preferences.patch(serde_json::json!({ "gitCredentials": records }), current.revision) {
-                    Ok(_) => { synced = true; break; }
-                    Err(error) if error.contains("changed outside") => continue,
-                    Err(_) => break,
-                }
+            if discovery.complete {
+                db.delete_git_credentials_by_source("system_global").ok()?;
             }
-            if !synced { return None; }
+            for credential in &discovery.credentials {
+                let record = GitCredentialPreferenceRecord::from(credential);
+                db.upsert_git_credential(&record, &credential.token_ref).ok()?;
+            }
             Some(())
         })();
         if scan_result.is_some() {
@@ -125,8 +105,8 @@ pub fn schedule_system_git_credential_rescan(app: &AppHandle) {
 }
 
 /// Finds credentials already available to Git for remotes in repositories
-/// Stage0 has recorded. Only metadata is returned; helper passwords are
-/// discarded from memory and never written to the Stage0 database.
+/// Stage0 has recorded. Non-secret metadata is saved in SQLite; helper
+/// passwords are discarded from memory and never written to the Stage0 database.
 pub fn discover_system_git_credentials(repo_paths: &[String]) -> SystemGitCredentialDiscovery {
     let git_bin = crate::features::git::runner::get_active_git_path();
     let mut discovered = HashMap::<String, GitCredentialMeta>::new();

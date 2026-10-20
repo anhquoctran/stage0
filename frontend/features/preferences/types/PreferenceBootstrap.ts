@@ -7,6 +7,5 @@ export interface PreferenceBootstrap {
   sandbox?: Record<string, unknown>;
   git?: Record<string, unknown>;
   notifications?: Record<string, unknown>;
-  gitCredentials?: unknown[];
   [key: string]: unknown;
 }
