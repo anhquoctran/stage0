@@ -33,9 +33,10 @@ import { GitCommit } from '../../../common/components/icons/GitCommit';
 import { Terminal } from '../../../common/components/icons/Terminal';
 import { Code2 } from '../../../common/components/icons/Code2';
 import { Folder } from '../../../common/components/icons/Folder';
-import { FolderDown } from '../../../common/components/icons/FolderDown';
+import { FolderGit2 } from '../../../common/components/icons/FolderGit2';
 import { FolderX } from '../../../common/components/icons/FolderX';
 import { FolderCog } from '../../../common/components/icons/FolderCog';
+import { Monitor } from '../../../common/components/icons/Monitor';
 import { Trash2 } from '../../../common/components/icons/Trash2';
 import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
 import { HeartPulse } from '../../../common/components/icons/HeartPulse';
@@ -412,7 +413,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <FolderOpen className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <Monitor className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Open in New Window...</span>
                 </div>
               </button>
@@ -429,7 +430,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
                 className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <FolderDown className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+                  <FolderGit2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
                   <span>Clone...</span>
                 </div>
                 <span className="text-[10px] text-subtext0 font-mono">
