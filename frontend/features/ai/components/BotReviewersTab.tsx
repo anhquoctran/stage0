@@ -38,10 +38,15 @@ const BOT_PROVIDER_OPTIONS: CustomSelectOption<string>[] = [
   { value: 'global_default', label: 'Global Default (from AI tab)' },
   ...AI_PROVIDERS.map((provider) => ({ value: provider.id, label: provider.name })),
 ];
+const BOT_EXECUTION_OPTIONS: CustomSelectOption<'provider' | 'acp'>[] = [
+  { value: 'provider', label: 'Built-in LLM provider' },
+  { value: 'acp', label: 'ACP Agent' },
+];
 
 export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } = {}) => {
-  const { aiConfig: committedAiConfig, dynamicModels } = useAiMcpStore();
+  const { aiConfig: committedAiConfig, dynamicModels, externalAgents: committedExternalAgents } = useAiMcpStore();
   const globalAiConfig = draftSettings?.aiConfig || committedAiConfig;
+  const externalAgents = draftSettings?.externalAgents || committedExternalAgents;
   const {
     globalReviewers,
     addGlobalReviewer,
@@ -65,6 +70,9 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
   const [formCategory, setFormCategory] = useState<BotCategory>('custom');
   const [formEmoji, setFormEmoji] = useState('🤖');
   const [formInstructions, setFormInstructions] = useState('');
+  const [formExecutionMode, setFormExecutionMode] = useState<'provider' | 'acp'>('provider');
+  const [formAcpAgentId, setFormAcpAgentId] = useState('');
+  const [formAllowAcpSourceTransfer, setFormAllowAcpSourceTransfer] = useState(false);
   const [formProvider, setFormProvider] = useState<string>('global_default');
   const [formModel, setFormModel] = useState<string>('global_default');
   const [isCustomModel, setIsCustomModel] = useState(false);
@@ -151,6 +159,9 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
     setFormCategory('custom');
     setFormEmoji('🤖');
     setFormInstructions('');
+    setFormExecutionMode('provider');
+    setFormAcpAgentId(externalAgents[0]?.id || '');
+    setFormAllowAcpSourceTransfer(false);
     setFormProvider('global_default');
     setFormModel('global_default');
     setIsCustomModel(false);
@@ -169,6 +180,9 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
     setFormCategory(bot.category);
     setFormEmoji(bot.avatarEmoji);
     setFormInstructions(bot.customInstructions || '');
+    setFormExecutionMode(bot.acpAgentId ? 'acp' : 'provider');
+    setFormAcpAgentId(bot.acpAgentId || externalAgents[0]?.id || '');
+    setFormAllowAcpSourceTransfer(bot.allowAcpSourceTransfer === true);
     setFormProvider(bot.provider || 'global_default');
     setFormModel(bot.model || 'global_default');
     setIsCustomModel(false);
@@ -189,6 +203,8 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
       customInstructions: bot.customInstructions,
       provider: bot.provider,
       model: bot.model,
+      acpAgentId: bot.acpAgentId,
+      allowAcpSourceTransfer: bot.allowAcpSourceTransfer,
       temperature: bot.temperature,
       reasoningEffort: bot.reasoningEffort,
       fastMode: bot.fastMode,
@@ -203,14 +219,19 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
       setFormError('Bot name is required');
       return;
     }
-    if (!formModel.trim()) {
+    if (formExecutionMode === 'provider' && !formModel.trim()) {
       setFormError('Select a model or enter a custom model ID');
       return;
     }
-    const savedReasoningEffort = !inheritsGlobalModel && executionModel?.reasoningEfforts?.includes(formReasoningEffort as AiReasoningEffort)
+    if (formExecutionMode === 'acp' && !externalAgents.some((agent) => agent.id === formAcpAgentId)) {
+      setFormError('Choose an installed ACP agent. Add one in AI Preferences → External Agents first.');
+      return;
+    }
+    const acpMode = formExecutionMode === 'acp';
+    const savedReasoningEffort = !acpMode && !inheritsGlobalModel && executionModel?.reasoningEfforts?.includes(formReasoningEffort as AiReasoningEffort)
       ? formReasoningEffort
       : undefined;
-    const savedFastMode = inheritsGlobalModel
+    const savedFastMode = acpMode ? undefined : inheritsGlobalModel
       ? undefined
       : executionModel?.supportsFastMode === true
         ? formFastMode
@@ -224,8 +245,10 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
         category: formCategory,
         avatarEmoji: formEmoji,
         customInstructions: formInstructions.trim(),
-        provider: formProvider,
-        model: formModel.trim(),
+        provider: acpMode ? 'global_default' : formProvider,
+        model: acpMode ? 'global_default' : formModel.trim(),
+        acpAgentId: acpMode ? formAcpAgentId : undefined,
+        allowAcpSourceTransfer: acpMode ? formAllowAcpSourceTransfer : undefined,
         temperature: formTemp,
         reasoningEffort: savedReasoningEffort,
         fastMode: savedFastMode,
@@ -238,8 +261,10 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
         category: formCategory,
         avatarEmoji: formEmoji,
         customInstructions: formInstructions.trim(),
-        provider: formProvider,
-        model: formModel.trim(),
+        provider: acpMode ? 'global_default' : formProvider,
+        model: acpMode ? 'global_default' : formModel.trim(),
+        acpAgentId: acpMode ? formAcpAgentId : undefined,
+        allowAcpSourceTransfer: acpMode ? formAllowAcpSourceTransfer : undefined,
         temperature: formTemp,
         reasoningEffort: savedReasoningEffort,
         fastMode: savedFastMode,
@@ -497,13 +522,16 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                     <span className="text-surface2">|</span>
 
                     <span className="font-mono text-subtext0/80">
-                      Model:{' '}
+                      {bot.acpAgentId ? 'ACP agent: ' : 'Model: '}
                       <strong className="text-text font-normal">
-                        {bot.model === 'global_default' || !bot.model
-                          ? 'Global Default'
-                          : bot.model}
+                        {bot.acpAgentId
+                          ? externalAgents.find((agent) => agent.id === bot.acpAgentId)?.name || 'Agent unavailable'
+                          : bot.model === 'global_default' || !bot.model ? 'Global Default' : bot.model}
                       </strong>
                     </span>
+                    {bot.acpAgentId && !bot.allowAcpSourceTransfer && (
+                      <span className="font-mono text-yellow">ACP source consent required</span>
+                    )}
 
                     {bot.temperature !== undefined && (
                       <span className="font-mono text-subtext0/80">
@@ -716,8 +744,27 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
               {/* Model & Execution Parameters */}
               <div className="p-3 bg-surface0/30 border border-surface0  space-y-3">
                 <span className="text-[11px] font-bold text-text uppercase tracking-wider block">
-                  Model &amp; Execution Override (Optional)
+                  Execution &amp; Model
                 </span>
+                <div>
+                  <label className="block text-[10px] text-subtext0 mb-1">Execution engine</label>
+                  <CustomSelect
+                    value={formExecutionMode}
+                    options={BOT_EXECUTION_OPTIONS}
+                    onChange={(mode) => {
+                      setFormExecutionMode(mode);
+                      setFormReasoningEffort(undefined);
+                      setFormFastMode(false);
+                      if (mode === 'acp' && !formAcpAgentId) setFormAcpAgentId(externalAgents[0]?.id || '');
+                    }}
+                    className="w-full"
+                    buttonClassName="w-full"
+                    dropdownWidth="w-full"
+                    align="left"
+                    aria-label="Reviewer execution engine"
+                  />
+                </div>
+                {formExecutionMode === 'provider' ? <>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[10px] text-subtext0 mb-1">Provider</label>
@@ -822,6 +869,32 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                     />
                   )}
                 </div>
+                </> : <div className="space-y-3 border border-surface0 bg-crust/50 p-3">
+                  <div>
+                    <label className="block text-[10px] text-subtext0 mb-1">Installed ACP agent</label>
+                    {externalAgents.length > 0 ? <CustomSelect
+                      value={formAcpAgentId}
+                      options={externalAgents.map((agent) => ({
+                        value: agent.id,
+                        label: `${agent.name}${agent.version ? ` · ${agent.version}` : ''}`,
+                        description: agent.description || agent.source,
+                      }))}
+                      onChange={setFormAcpAgentId}
+                      searchable
+                      searchPlaceholder="Search installed agents…"
+                      className="w-full"
+                      buttonClassName="w-full"
+                      dropdownWidth="w-full"
+                      align="left"
+                      aria-label="ACP reviewer agent"
+                    /> : <p className="border border-yellow/40 bg-yellow/5 p-2 text-[10px] text-yellow">No ACP agents are installed. Add one in AI Preferences → External Agents.</p>}
+                  </div>
+                  <label className="flex items-start gap-2 text-[10px] text-subtext0">
+                    <input type="checkbox" checked={formAllowAcpSourceTransfer} onChange={(event) => setFormAllowAcpSourceTransfer(event.target.checked)} className="mt-0.5 accent-brand" />
+                    <span>I allow this ACP agent to receive eligible changed-file diffs and review context. Sensitive paths are excluded and matching secret lines are redacted, but detection cannot catch every secret. This consent is used for automatic reviews assigned to this bot.</span>
+                  </label>
+                  <p className="text-[10px] text-subtext0">Stage0 still validates tool requests, finding evidence, and changed-line coordinates. The agent runs outside the repository directory; its own runtime and policies are managed by its publisher.</p>
+                </div>}
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t border-surface0">

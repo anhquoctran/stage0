@@ -872,6 +872,7 @@ fn validate_reviewer(value: &Value, index: usize) -> Result<(), String> {
     validate_optional_bool(reviewer, "enabled", &path)?;
     validate_optional_string(reviewer, "provider", &path, 128, false)?;
     validate_optional_string(reviewer, "model", &path, 512, false)?;
+    validate_optional_string(reviewer, "acpAgentId", &path, 200, false)?;
     validate_optional_number(reviewer, "temperature", &path, 0.0, 2.0)?;
     validate_optional_enum(
         reviewer,
@@ -880,6 +881,7 @@ fn validate_reviewer(value: &Value, index: usize) -> Result<(), String> {
         &["none", "minimal", "low", "medium", "high", "xhigh", "max"],
     )?;
     validate_optional_bool(reviewer, "fastMode", &path)?;
+    validate_optional_bool(reviewer, "allowAcpSourceTransfer", &path)?;
     validate_optional_bool(reviewer, "isBuiltin", &path)?;
     Ok(())
 }
@@ -1470,6 +1472,23 @@ mod tests {
             "gitCredentials": []
         });
         assert!(validate_schema(&valid).is_ok());
+
+        let mut acp_reviewer = valid.clone();
+        acp_reviewer["reviewers"] = json!([{
+            "id": "custom-bot-acp-reviewer",
+            "name": "ACP Reviewer",
+            "tagline": "ACP tool-based review",
+            "description": "Reviews through a configured ACP agent",
+            "category": "security",
+            "avatarEmoji": "🔍",
+            "customInstructions": "",
+            "enabled": true,
+            "provider": "global_default",
+            "model": "global_default",
+            "acpAgentId": "codex-acp",
+            "allowAcpSourceTransfer": true
+        }]);
+        assert!(validate_schema(&acp_reviewer).is_ok());
 
         let mut wrong_type = valid.clone();
         wrong_type["general"]["showInlineBlame"] = json!("true");

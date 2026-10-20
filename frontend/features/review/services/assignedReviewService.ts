@@ -40,11 +40,26 @@ function configForReviewer(reviewer: BotReviewer) {
   const reviewerProvider = reviewer.provider && reviewer.provider !== 'global_default'
     ? reviewer.provider as keyof typeof aiState.dynamicModels
     : aiState.aiConfig.provider;
-  return resolveReviewBotConfig(
+  const config = resolveReviewBotConfig(
     aiState.aiConfig,
     reviewer,
     aiState.dynamicModels[reviewerProvider] || [],
+    aiState.externalAgents,
   );
+  if (reviewer.acpAgentId && !config.acpAgent) {
+    throw new Error(`ACP agent for reviewer “${reviewer.name}” is no longer installed. Update or remove this reviewer profile.`);
+  }
+  return config;
+}
+
+function sourceTransferAllowed(config: ReturnType<typeof configForReviewer>): boolean {
+  if (config.executionMode === 'acp') {
+    if (!config.allowAcpSourceTransfer) {
+      throw new Error('Source sharing is not enabled for this ACP reviewer. Edit the reviewer and explicitly allow eligible source to be sent to its agent.');
+    }
+    return true;
+  }
+  return config.provider !== 'ollama';
 }
 
 export async function startAssignedReviewForSession(sessionId: string): Promise<ReviewRun | null> {
@@ -54,7 +69,7 @@ export async function startAssignedReviewForSession(sessionId: string): Promise<
   return useReviewStore.getState().startForSession(
     sessionId,
     config,
-    config.provider !== 'ollama',
+    sourceTransferAllowed(config),
     { id: assigned.id, name: assigned.name },
   );
 }
@@ -132,7 +147,7 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
         const run = await useReviewStore.getState().startForSession(
           sessionId,
           config,
-          config.provider !== 'ollama',
+          sourceTransferAllowed(config),
           { id: reviewer.id, name: reviewer.name },
           generateDescription,
         );

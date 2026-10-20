@@ -22,6 +22,7 @@ import type { CustomSelectOption } from '../../../common/types/CustomSelectOptio
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../store/useGitStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
+import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
 import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
 import { BOT_CATEGORIES } from '../../ai/constants/botPresets';
 import { type BotCategory } from '../../virtual-mr/types/BotCategory';
@@ -61,6 +62,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
   } = useVirtualMrStore();
 
   const { setIsPreferencesOpen } = usePreferencesStore();
+  const externalAgents = useAiMcpStore((state) => state.externalAgents);
   const {
     globalReviewers,
     repoActiveBotIds,
@@ -126,6 +128,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
   const [repoBotCategory, setRepoBotCategory] = useState<BotCategory>('custom');
   const [repoBotEmoji, setRepoBotEmoji] = useState('🤖');
   const [repoBotInstructions, setRepoBotInstructions] = useState('');
+  const [repoBotExecutionMode, setRepoBotExecutionMode] = useState<'provider' | 'acp'>('provider');
+  const [repoBotAcpAgentId, setRepoBotAcpAgentId] = useState('');
+  const [repoBotAllowAcpSourceTransfer, setRepoBotAllowAcpSourceTransfer] = useState(false);
 
   const currentRepoId = currentRepo?.id || '';
 
@@ -151,6 +156,10 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
   const handleSaveRepoCustomBot = (e: React.FormEvent) => {
     e.preventDefault();
     if (!repoBotName.trim() || !currentRepoId) return;
+    if (repoBotExecutionMode === 'acp' && !externalAgents.some((agent) => agent.id === repoBotAcpAgentId)) {
+      showToast('Choose an installed ACP agent first.');
+      return;
+    }
 
     addRepoCustomReviewer(currentRepoId, {
       name: repoBotName.trim(),
@@ -159,6 +168,10 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
       category: repoBotCategory,
       avatarEmoji: repoBotEmoji,
       customInstructions: repoBotInstructions.trim(),
+      provider: repoBotExecutionMode === 'acp' ? 'global_default' : undefined,
+      model: repoBotExecutionMode === 'acp' ? 'global_default' : undefined,
+      acpAgentId: repoBotExecutionMode === 'acp' ? repoBotAcpAgentId : undefined,
+      allowAcpSourceTransfer: repoBotExecutionMode === 'acp' ? repoBotAllowAcpSourceTransfer : undefined,
       enabled: true,
       isBuiltin: false,
     });
@@ -170,6 +183,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
     setRepoBotCategory('custom');
     setRepoBotEmoji('🤖');
     setRepoBotInstructions('');
+    setRepoBotExecutionMode('provider');
+    setRepoBotAcpAgentId('');
+    setRepoBotAllowAcpSourceTransfer(false);
     showToast(`Added repo reviewer: ${repoBotName.trim()}`);
   };
 
@@ -1307,6 +1323,55 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                         </div>
                       </div>
 
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] text-subtext0 mb-1">Execution engine</label>
+                          <CustomSelect
+                            value={repoBotExecutionMode}
+                            options={[
+                              { value: 'provider', label: 'Global LLM provider' },
+                              { value: 'acp', label: 'ACP Agent' },
+                            ]}
+                            onChange={(mode) => {
+                              setRepoBotExecutionMode(mode as 'provider' | 'acp');
+                              if (mode === 'acp' && !repoBotAcpAgentId) setRepoBotAcpAgentId(externalAgents[0]?.id || '');
+                            }}
+                            className="w-full"
+                            buttonClassName="w-full"
+                            dropdownWidth="w-full"
+                            align="left"
+                            aria-label="Repository reviewer execution engine"
+                          />
+                        </div>
+                        {repoBotExecutionMode === 'acp' && <div>
+                          <label className="block text-[10px] text-subtext0 mb-1">Installed ACP agent</label>
+                          {externalAgents.length > 0 ? <CustomSelect
+                            value={repoBotAcpAgentId}
+                            options={externalAgents.map((agent) => ({
+                              value: agent.id,
+                              label: `${agent.name}${agent.version ? ` · ${agent.version}` : ''}`,
+                              description: agent.description || agent.source,
+                            }))}
+                            onChange={setRepoBotAcpAgentId}
+                            searchable
+                            searchPlaceholder="Search installed agents…"
+                            className="w-full"
+                            buttonClassName="w-full"
+                            dropdownWidth="w-full"
+                            align="left"
+                            aria-label="Repository ACP reviewer agent"
+                          /> : <p className="border border-yellow/40 bg-yellow/5 p-2 text-[10px] text-yellow">Install an agent in AI Preferences → External Agents first.</p>}
+                        </div>}
+                      </div>
+
+                      {repoBotExecutionMode === 'acp' && <div className="space-y-2 border border-surface0 bg-surface0/20 p-2.5">
+                        <label className="flex items-start gap-2 text-[10px] text-subtext0">
+                          <input type="checkbox" checked={repoBotAllowAcpSourceTransfer} onChange={(event) => setRepoBotAllowAcpSourceTransfer(event.target.checked)} className="mt-0.5 accent-accent" />
+                          <span>I allow this ACP agent to receive eligible changed-file diffs and review context. Sensitive paths are excluded and matching secret lines are redacted, but detection cannot catch every secret. This consent is used for automatic reviews assigned to this bot.</span>
+                        </label>
+                        <p className="text-[10px] text-subtext0">Stage0 validates tool requests and finding evidence; the agent runs outside the repository directory.</p>
+                      </div>}
+
                       <div>
                         <label className="block text-[10px] text-subtext0 mb-1">
                           Stage0 System Prompt · {BOT_CATEGORIES.find((category) => category.id === repoBotCategory)?.label} · read-only
@@ -1370,6 +1435,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                                   <span className="text-[10px] text-subtext0 font-mono truncate block">
                                     {bot.tagline}
                                   </span>
+                                  <span className="text-[10px] text-accent font-mono truncate block">
+                                    {bot.acpAgentId ? `ACP · ${externalAgents.find((agent) => agent.id === bot.acpAgentId)?.name || 'Agent unavailable'}${bot.allowAcpSourceTransfer ? '' : ' · source consent required'}` : 'Built-in LLM provider'}
+                                  </span>
                                 </div>
                               </div>
                               <p className="text-[11px] text-subtext0 line-clamp-2 mt-1">
@@ -1430,6 +1498,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
                                   </div>
                                   <span className="text-[10px] text-subtext0 font-mono truncate block">
                                     {bot.tagline}
+                                  </span>
+                                  <span className="text-[10px] text-accent font-mono truncate block">
+                                    {bot.acpAgentId ? `ACP · ${externalAgents.find((agent) => agent.id === bot.acpAgentId)?.name || 'Agent unavailable'}${bot.allowAcpSourceTransfer ? '' : ' · source consent required'}` : 'Built-in LLM provider'}
                                   </span>
                                 </div>
                               </div>

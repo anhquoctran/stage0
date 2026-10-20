@@ -35,6 +35,9 @@ function normalizeReviewer(value: unknown): BotReviewer | null {
       : '';
   delete persisted.systemPrompt;
 
+  if (typeof persisted.acpAgentId !== 'string') delete persisted.acpAgentId;
+  if (typeof persisted.allowAcpSourceTransfer !== 'boolean') delete persisted.allowAcpSourceTransfer;
+
   return { ...persisted, customInstructions } as unknown as BotReviewer;
 }
 

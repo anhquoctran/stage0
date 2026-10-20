@@ -3,6 +3,7 @@ pub mod connectors;
 pub mod context;
 pub mod coordinator;
 pub mod model_adapter;
+mod acp_model_adapter;
 mod native_model_adapter;
 pub mod persistence;
 pub mod provider;

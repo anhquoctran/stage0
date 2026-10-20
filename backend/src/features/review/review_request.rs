@@ -9,6 +9,10 @@ pub struct ReviewRequest {
     pub reasoning_effort: Option<String>,
     #[serde(default)]
     pub fast_mode: bool,
+    #[serde(default = "default_execution_mode")]
+    pub execution_mode: String,
+    #[serde(default)]
+    pub acp_agent: Option<crate::features::ai::acp::AcpAgentConfig>,
     #[serde(default)]
     pub reviewer_id: Option<String>,
     #[serde(default)]
@@ -20,4 +24,8 @@ pub struct ReviewRequest {
     pub allow_remote: bool,
     #[serde(default)]
     pub generate_description: bool,
+}
+
+fn default_execution_mode() -> String {
+    "provider".into()
 }

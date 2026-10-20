@@ -102,8 +102,20 @@ async fn execute(
     run: &mut ReviewRun,
     context: &Arc<Mutex<ReviewContext>>,
 ) -> Result<(), String> {
-    let adapter = NativeModelAdapter::new(config)?;
-    execute_with_adapter(db, config, run, context, &adapter).await
+    match config.execution_mode.as_str() {
+        "provider" => {
+            let adapter = NativeModelAdapter::new(config)?;
+            execute_with_adapter(db, config, run, context, &adapter).await
+        }
+        "acp" => {
+            let agent = config.acp_agent.clone().ok_or("The selected ACP reviewer agent is unavailable")?;
+            let adapter = super::acp_model_adapter::AcpModelAdapter::new(agent);
+            let result = execute_with_adapter(db, config, run, context, &adapter).await;
+            adapter.close().await;
+            result
+        }
+        _ => Err("Unsupported review execution mode".into()),
+    }
 }
 
 async fn execute_with_adapter(
@@ -224,7 +236,7 @@ async fn execute_with_adapter(
         if calls.is_empty() {
             if !has_refusal && !recovered_missing_tool_call && run.turns < 12 {
                 let reminder = "Your previous response did not invoke a tool and is not a review result. Continue the sandboxed review now: call one supplied snapshot or discussion tool; do not answer in prose. If the investigation is complete, call submit_review with the summary and findings.";
-                if config.provider == "gemini" {
+                if config.execution_mode != "acp" && config.provider == "gemini" {
                     history.push(json!({"role":"user","parts":[{"text":reminder}]}));
                 } else {
                     history.push(json!({"role":"user","content":reminder}));
@@ -798,6 +810,8 @@ mod tests {
             model: "fixture".into(),
             reasoning_effort: None,
             fast_mode: false,
+            execution_mode: "provider".into(),
+            acp_agent: None,
             reviewer_id: None,
             reviewer_name: None,
             reviewer_role: None,
