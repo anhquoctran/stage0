@@ -5,6 +5,7 @@ export interface AcpAgentConfig {
   description?: string;
   source: 'registry' | 'custom';
   command: string;
+  launchMode?: 'binary';
   args: string[];
 }
 
@@ -18,5 +19,7 @@ export interface AcpRegistryAgent {
   repository?: string;
   license?: string;
   licenseUrl?: string;
-  distribution: Record<string, unknown>;
+  distribution: Record<string, unknown> & {
+    binary?: Record<string, unknown>;
+  };
 }

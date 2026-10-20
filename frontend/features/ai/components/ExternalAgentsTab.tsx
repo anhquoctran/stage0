@@ -14,29 +14,86 @@ import { useGitStore } from '../../git/store/useGitStore';
 
 type AuthMethod = { id: string; name?: string; description?: string; type?: string };
 type Filter = 'all' | 'installed' | 'not-installed';
+type AcpRegistryResponse = { agents: AcpRegistryAgent[]; supportedBinaryTarget?: string | null };
 
-function canInstallFromRegistry(agent: AcpRegistryAgent): boolean {
-  return Boolean(agent.distribution.npx || agent.distribution.uvx);
+function canInstallFromRegistry(agent: AcpRegistryAgent, binaryTarget?: string): boolean {
+  const binary = binaryTarget ? agent.distribution.binary?.[binaryTarget] : undefined;
+  let binaryAvailable = false;
+  if (binary && typeof binary === 'object') {
+    const archive = (binary as Record<string, unknown>).archive;
+    const command = (binary as Record<string, unknown>).cmd;
+    if (typeof archive === 'string' && typeof command === 'string' && command.toLowerCase().endsWith('.exe')) {
+      try {
+        const archiveUrl = new URL(archive);
+        binaryAvailable = archiveUrl.protocol === 'https:' && archiveUrl.pathname.toLowerCase().endsWith('.zip');
+      } catch {
+        binaryAvailable = false;
+      }
+    }
+  }
+  return Boolean(agent.distribution.npx || agent.distribution.uvx || binaryAvailable);
 }
 
 function isRegistryIconUrl(icon?: string): icon is string {
   if (!icon) return false;
   try {
     const url = new URL(icon);
-    return url.protocol === 'https:' && url.hostname === 'cdn.agentclientprotocol.com' && url.pathname.startsWith('/registry/v1/');
+    return url.protocol === 'https:'
+      && url.hostname === 'cdn.agentclientprotocol.com'
+      && /^\/registry\/v1\/[a-zA-Z0-9._-]+\/[a-z0-9-]+\.svg$/.test(url.pathname)
+      && !url.search
+      && !url.hash;
   } catch {
     return false;
   }
 }
 
+const registryIconCache = new Map<string, Promise<string>>();
+
+function fetchRegistryIcon(iconUrl: string): Promise<string> {
+  let cached = registryIconCache.get(iconUrl);
+  if (!cached) {
+    cached = invoke<string>('acp_fetch_registry_icon', { iconUrl }).catch((error: unknown) => {
+      registryIconCache.delete(iconUrl);
+      throw error;
+    });
+    registryIconCache.set(iconUrl, cached);
+  }
+  return cached;
+}
+
 function AgentIcon({ icon }: { icon?: string }) {
   const iconUrl = isRegistryIconUrl(icon) ? icon : undefined;
-  const [failed, setFailed] = useState(false);
+  const [iconData, setIconData] = useState<{ sourceUrl: string; dataUrl: string }>();
+  const [loadedDataUrl, setLoadedDataUrl] = useState<string>();
+  const [failedSourceUrl, setFailedSourceUrl] = useState<string>();
 
-  useEffect(() => setFailed(false), [iconUrl]);
+  useEffect(() => {
+    let cancelled = false;
+    if (!iconUrl) return () => { cancelled = true; };
+    void fetchRegistryIcon(iconUrl)
+      .then((dataUrl) => { if (!cancelled) setIconData({ sourceUrl: iconUrl, dataUrl }); })
+      .catch(() => { if (!cancelled) setFailedSourceUrl(iconUrl); });
+    return () => { cancelled = true; };
+  }, [iconUrl]);
 
-  if (!iconUrl || failed) return <Bot aria-hidden="true" className="h-4 w-4 shrink-0 text-subtext0" />;
-  return <img src={iconUrl} alt="" aria-hidden="true" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-4 w-4 shrink-0 object-contain" />;
+  const dataUrl = iconData && iconData.sourceUrl === iconUrl ? iconData.dataUrl : undefined;
+  if (!iconUrl || failedSourceUrl === iconUrl || !dataUrl) return <Bot aria-hidden="true" className="h-4 w-4 shrink-0 text-subtext0" />;
+
+  const iconMask = `url("${dataUrl}")`;
+  return <>
+    <img src={dataUrl} alt="" aria-hidden="true" onLoad={() => setLoadedDataUrl(dataUrl)} onError={() => setFailedSourceUrl(iconUrl)} className="hidden" />
+    {loadedDataUrl === dataUrl ? <span aria-hidden="true" className="h-4 w-4 shrink-0 bg-subtext0" style={{
+      maskImage: iconMask,
+      WebkitMaskImage: iconMask,
+      maskRepeat: 'no-repeat',
+      WebkitMaskRepeat: 'no-repeat',
+      maskPosition: 'center',
+      WebkitMaskPosition: 'center',
+      maskSize: 'contain',
+      WebkitMaskSize: 'contain',
+    }} /> : <Bot aria-hidden="true" className="h-4 w-4 shrink-0 text-subtext0" />}
+  </>;
 }
 
 function Modal({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
@@ -59,6 +116,7 @@ export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings 
   const externalAgents = draftSettings?.externalAgents ?? store.externalAgents;
   const updateExternalAgents = draftSettings?.updateExternalAgents ?? store.updateExternalAgents;
   const [registry, setRegistry] = useState<AcpRegistryAgent[]>([]);
+  const [supportedBinaryTarget, setSupportedBinaryTarget] = useState<string | undefined>();
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -82,8 +140,8 @@ export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    invoke<{ agents: AcpRegistryAgent[] }>('acp_fetch_registry')
-      .then((result) => { if (!cancelled) { setRegistry(result.agents); setError(null); } })
+    invoke<AcpRegistryResponse>('acp_fetch_registry')
+      .then((result) => { if (!cancelled) { setRegistry(result.agents); setSupportedBinaryTarget(result.supportedBinaryTarget ?? undefined); setError(null); } })
       .catch((cause) => { if (!cancelled) setError(String(cause)); })
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
@@ -178,7 +236,7 @@ export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings 
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => setIsCustomOpen(true)} className="flex items-center gap-1.5 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0"><Plus className="h-3.5 w-3.5" /> Add custom</button>
-          <button type="button" disabled={isLoading} onClick={() => { setError(null); setIsLoading(true); void invoke<{ agents: AcpRegistryAgent[] }>('acp_fetch_registry').then((result) => setRegistry(result.agents)).catch((cause) => setError(String(cause))).finally(() => setIsLoading(false)); }} className="flex items-center gap-1.5 border border-surface1 px-2.5 py-1.5 text-xs text-subtext0 hover:text-text disabled:opacity-50"><RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh</button>
+          <button type="button" disabled={isLoading} onClick={() => { setError(null); setIsLoading(true); void invoke<AcpRegistryResponse>('acp_fetch_registry').then((result) => { setRegistry(result.agents); setSupportedBinaryTarget(result.supportedBinaryTarget ?? undefined); }).catch((cause) => setError(String(cause))).finally(() => setIsLoading(false)); }} className="flex items-center gap-1.5 border border-surface1 px-2.5 py-1.5 text-xs text-subtext0 hover:text-text disabled:opacity-50"><RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh</button>
         </div>
       </div>
 
@@ -190,7 +248,7 @@ export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings 
           <Search className="h-3.5 w-3.5" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search ACP Registry…" className="w-full bg-transparent text-xs text-text outline-none placeholder:text-subtext0" />
         </label>
         <div className="flex border border-surface1 text-xs">
-          {([['all', 'All'], ['installed', 'Added'], ['not-installed', 'Not added']] as const).map(([id, label]) => (
+          {([['all', 'All'], ['installed', 'Installed'], ['not-installed', 'Not Installed']] as const).map(([id, label]) => (
             <button key={id} type="button" onClick={() => setFilter(id)} className={`border-r border-surface1 px-3 py-1.5 last:border-r-0 ${filter === id ? 'bg-surface1 text-text' : 'text-subtext0 hover:text-text'}`}>{label}</button>
           ))}
         </div>
@@ -206,32 +264,32 @@ export const ExternalAgentsTab: React.FC<AiSettingsTabProps> = ({ draftSettings 
           const name = isCustom ? (item as AcpAgentConfig).name : (item as AcpRegistryAgent).name;
           const version = isCustom ? undefined : (item as AcpRegistryAgent).version;
           const description = isCustom ? (item as AcpAgentConfig).command : (item as AcpRegistryAgent).description;
-          const installable = !isCustom && canInstallFromRegistry(entry!);
+          const installable = !isCustom && canInstallFromRegistry(entry!, supportedBinaryTarget);
           return (
             <article key={`${isCustom ? 'custom' : 'registry'}-${item.id}`} className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <button type="button" onClick={() => installed ? openDetails(installed, entry) : setError(installable ? 'Add this agent first to configure or send a prompt.' : 'This Registry entry is a platform binary, which Stage0 cannot install in this build.')} className="min-w-0 flex-1 text-left">
-                <span className="flex items-center gap-2 text-sm font-medium"><AgentIcon icon={entry?.icon} /> <span className="truncate">{name}</span>{version && <span className="text-xs text-subtext0">v{version}</span>}{installed && <span className="border border-green/40 px-1.5 py-0.5 text-[10px] text-green">Added</span>}</span>
+              <button type="button" onClick={() => installed ? openDetails(installed, entry) : setError(installable ? 'Install this agent first to configure or send a prompt.' : 'This Registry entry has no supported package for this platform.')} className="min-w-0 flex-1 text-left">
+                <span className="flex items-center gap-2 text-sm font-medium"><AgentIcon icon={entry?.icon} /> <span className="truncate">{name}</span>{version && <span className="text-xs text-subtext0">v{version}</span>}{installed && <span className="border border-green/40 px-1.5 py-0.5 text-[10px] text-green">Installed</span>}</span>
                 <span className="mt-1 block truncate text-[11px] text-subtext0">{description}</span>
               </button>
               {installed ? <button type="button" onClick={() => openDetails(installed, entry)} className="shrink-0 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0">Manage</button>
-                : installable ? <button type="button" disabled={busyId === item.id || !isTauri()} onClick={() => void install(entry!)} className="shrink-0 border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand hover:bg-brand/15 disabled:opacity-45">{busyId === item.id ? 'Adding…' : 'Add'}</button>
-                  : <span className="shrink-0 text-[10px] text-subtext0">Binary package unavailable</span>}
+                : installable ? <button type="button" disabled={busyId === item.id || !isTauri()} onClick={() => void install(entry!)} className="shrink-0 border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand hover:bg-brand/15 disabled:opacity-45">{busyId === item.id ? 'Installing…' : 'Install'}</button>
+                  : <span className="shrink-0 text-[10px] text-subtext0">No package for this platform</span>}
             </article>
           );
         })}
       </div>
-      <p className="text-[11px] text-subtext0">Adding an <code className="font-mono">npx</code> or <code className="font-mono">uvx</code> agent saves its launch config; the package downloads on first launch. Removing it deletes that config, while its local package cache may remain. ACP Registry entries distributed only as native binaries are listed but cannot be added here yet.</p>
+      <p className="text-[11px] text-subtext0">Installing an <code className="font-mono">npx</code> or <code className="font-mono">uvx</code> agent saves its launch config; the package downloads on first launch. Windows x64 ZIP agents are downloaded into Stage0’s local data folder. Uninstalling removes the launch config; downloaded package files may remain.</p>
 
       {detailAgent && <Modal title={detailAgent.name} onClose={() => { setDetailAgent(null); setDetailRegistryEntry(null); }}>
           <div className="space-y-4">
           {error && <p role="status" className="border border-yellow/40 bg-yellow/5 px-3 py-2 text-xs text-yellow">{error}</p>}
           {notice && <p role="status" className="border border-green/40 bg-green/5 px-3 py-2 text-xs text-green">{notice}</p>}
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><p className="text-sm font-semibold">{detailAgent.name}{detailAgent.version ? ` · ${detailAgent.version}` : ''}</p><p className="mt-1 text-xs text-subtext0">{detailAgent.description || 'Custom ACP agent'} · {detailAgent.command} {detailAgent.args.join(' ')}</p></div>
-            <button type="button" onClick={() => setRemovePending(true)} className="flex items-center gap-1.5 border border-red/40 px-2.5 py-1.5 text-xs text-red hover:bg-red/10"><Trash2 className="h-3.5 w-3.5" /> Remove</button>
+            <div><p className="text-sm font-semibold">{detailAgent.name}{detailAgent.version ? ` · ${detailAgent.version}` : ''}</p><p className="mt-1 text-xs text-subtext0">{detailAgent.description || 'Custom ACP agent'} · {detailAgent.launchMode === 'binary' ? 'Windows x64 binary' : `${detailAgent.command} ${detailAgent.args.join(' ')}`}</p></div>
+            <button type="button" onClick={() => setRemovePending(true)} className="flex items-center gap-1.5 border border-red/40 px-2.5 py-1.5 text-xs text-red hover:bg-red/10"><Trash2 className="h-3.5 w-3.5" /> Uninstall</button>
           </div>
           {detailRegistryEntry?.website && <a href={detailRegistryEntry.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-brand hover:underline">Agent website <ExternalLink className="h-3 w-3" /></a>}
-          {removePending && <div className="flex flex-wrap items-center justify-between gap-2 border border-red/40 bg-red/5 p-3 text-xs"><span>Remove this launch config from Stage0? Its package cache may remain on this computer.</span><div className="flex gap-2"><button type="button" onClick={() => setRemovePending(false)} className="border border-surface2 px-2.5 py-1.5">Keep</button><button type="button" onClick={removeAgent} className="border border-red/50 px-2.5 py-1.5 text-red">Remove from Stage0</button></div></div>}
+          {removePending && <div className="flex flex-wrap items-center justify-between gap-2 border border-red/40 bg-red/5 p-3 text-xs"><span>Uninstall this launch config from Stage0? Its package cache may remain on this computer.</span><div className="flex gap-2"><button type="button" onClick={() => setRemovePending(false)} className="border border-surface2 px-2.5 py-1.5">Keep</button><button type="button" onClick={removeAgent} className="border border-red/50 px-2.5 py-1.5 text-red">Uninstall</button></div></div>}
           <section className="space-y-2 border-t border-surface1 pt-4">
             <h3 className="text-xs font-semibold">Sign in with ACP</h3>
             <p className="text-[11px] text-subtext0">The agent stores its own account session. Stage0 does not read or save subscription credentials.</p>
