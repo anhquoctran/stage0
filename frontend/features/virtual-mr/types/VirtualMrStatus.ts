@@ -1,1 +1,1 @@
-export type VirtualMrStatus = 'open' | 'approved' | 'closed';
+export type VirtualMrStatus = 'open' | 'resolved' | 'closed';

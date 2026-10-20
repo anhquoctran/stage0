@@ -26,6 +26,11 @@ export interface VirtualMrSearchSuggestion {
   detail?: string;
 }
 
+export interface VirtualMrSearchHighlight {
+  text: string;
+  isFilter: boolean;
+}
+
 const SEARCH_FIELDS: SearchFieldDefinition[] = [
   { key: 'author', label: 'Author', description: 'Filter by MR author' },
   { key: 'assignee', label: 'Assignee', description: 'Filter by assignee' },
@@ -34,10 +39,46 @@ const SEARCH_FIELDS: SearchFieldDefinition[] = [
   { key: 'label', label: 'Label', description: 'Filter by repository label' },
   { key: 'base', label: 'Base branch', description: 'Filter by target branch' },
   { key: 'head', label: 'Compare branch', description: 'Filter by source branch' },
-  { key: 'is', label: 'Status', description: 'Filter by open, resolved, or approved status' },
+  { key: 'is', label: 'Status', description: 'Filter by open, resolved, or closed status' },
   { key: 'has', label: 'Has', description: 'Filter by discussions, reviewers, or labels' },
   { key: 'no', label: 'Without', description: 'Filter by missing assignee, reviewer, or label' },
 ];
+
+export const getVirtualMrSearchHighlights = (query: string): VirtualMrSearchHighlight[] => {
+  const knownFields = new Set(SEARCH_FIELDS.map(({ key }) => key));
+  const segments: VirtualMrSearchHighlight[] = [];
+  let tokenStart = 0;
+  let insideQuotes = false;
+  let escaping = false;
+
+  const addToken = (end: number) => {
+    if (end <= tokenStart) return;
+    const text = query.slice(tokenStart, end);
+    const separator = text.indexOf(':');
+    const field = separator > 0 ? text.slice(0, separator).toLocaleLowerCase() : '';
+    segments.push({ text, isFilter: knownFields.has(field as SearchField) });
+  };
+
+  for (let index = 0; index < query.length; index += 1) {
+    const character = query[index];
+    if (escaping) {
+      escaping = false;
+    } else if (character === '\\' && insideQuotes) {
+      escaping = true;
+    } else if (character === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (/\s/.test(character) && !insideQuotes) {
+      addToken(index);
+      const whitespaceStart = index;
+      while (index + 1 < query.length && /\s/.test(query[index + 1])) index += 1;
+      segments.push({ text: query.slice(whitespaceStart, index + 1), isFilter: false });
+      tokenStart = index + 1;
+    }
+  }
+
+  addToken(query.length);
+  return segments;
+};
 
 const searchableText = (session: VirtualMrSession): string => [
   session.title,
@@ -99,9 +140,7 @@ const matchesField = (session: VirtualMrSession, field: SearchField, value: stri
     case 'head':
       return session.compareBranch.toLocaleLowerCase().includes(query);
     case 'is':
-      if (query === 'open') return session.status !== 'closed';
-      if (query === 'approved') return session.status === 'approved';
-      if (query === 'closed' || query === 'resolved') return session.status === 'closed';
+      if (query === 'open' || query === 'resolved' || query === 'closed') return session.status === query;
       return false;
     case 'has':
       if (query === 'discussion' || query === 'discussions') return session.discussions.length > 0;
@@ -157,7 +196,7 @@ const valuesForField = (field: SearchField, sessions: VirtualMrSession[]) => {
     case 'head':
       return uniqueValues(sessions.map((session) => session.compareBranch)).map((value) => ({ value, detail: 'Source branch' }));
     case 'is':
-      return ['open', 'resolved', 'approved'].map((value) => ({ value, detail: 'MR status' }));
+      return ['open', 'resolved', 'closed'].map((value) => ({ value, detail: 'MR status' }));
     case 'has':
       return [
         { value: 'discussion', detail: 'Has discussions' },

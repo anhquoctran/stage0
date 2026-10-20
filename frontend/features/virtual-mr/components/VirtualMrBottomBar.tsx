@@ -19,6 +19,7 @@ export const VirtualMrBottomBar: React.FC = () => {
 
   const unresolvedDiscussions = session.discussions.filter((d) => !d.isResolved);
   const unresolvedCount = unresolvedDiscussions.length;
+  const approvedReviewers = session.reviewers.filter((reviewer) => reviewer.reviewStatus === 'approved').length;
 
   const handleCloseRequest = async () => {
     await updateSessionStatus(session.id, 'closed');
@@ -26,7 +27,7 @@ export const VirtualMrBottomBar: React.FC = () => {
   };
 
   const handleReopenRequest = async () => {
-    await updateSessionStatus(session.id, 'open');
+    await useVirtualMrStore.getState().resetReviewerReviews(session.id);
     showToast(`Virtual MR #${session.title} reopened`);
   };
 
@@ -35,13 +36,13 @@ export const VirtualMrBottomBar: React.FC = () => {
       {/* Left: MR Status, Branch Flow & AI Auditor State */}
       <div className="flex items-center gap-4 max-xl:gap-2 min-w-0 flex-1">
         {/* Status Badge */}
-        {session.status === 'approved' ? (
+        {session.status === 'resolved' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-300 shrink-0 shadow-xs"
-            title="Saved approval status. No evidence-backed AI review is recorded."
+            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 shrink-0 shadow-xs"
+            title="All assigned reviewers approved and all discussions are resolved."
           >
-            <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-            <span>Approved</span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span>Resolved</span>
           </div>
         ) : session.status === 'closed' ? (
           <div
@@ -74,7 +75,7 @@ export const VirtualMrBottomBar: React.FC = () => {
         </div>
 
         {/* AI Auditor Review Status Indicator */}
-        <div className="flex items-center gap-2 pl-3 max-xl:pl-2 border-l border-surface0/60 hidden md:flex" title={unresolvedCount > 0 ? `${unresolvedCount} open discussion${unresolvedCount > 1 ? 's' : ''}` : 'No evidence-backed approval recorded'}>
+        <div className="flex items-center gap-2 pl-3 max-xl:pl-2 border-l border-surface0/60 hidden md:flex" title={unresolvedCount > 0 ? `${unresolvedCount} open discussion${unresolvedCount > 1 ? 's' : ''}` : `${approvedReviewers} of ${session.reviewers.length} reviewers approved`}>
           {unresolvedCount > 0 ? (
             <div className="flex items-center gap-1.5 text-xs text-amber-300 font-medium">
               <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -83,7 +84,7 @@ export const VirtualMrBottomBar: React.FC = () => {
           ) : (
             <div className="flex items-center gap-1.5 text-xs text-subtext0 font-medium">
               <Bot className="w-3.5 h-3.5 text-accent shrink-0" />
-              <span className="max-xl:hidden">No evidence-backed approval recorded</span>
+              <span className="max-xl:hidden">{session.reviewers.length ? `${approvedReviewers}/${session.reviewers.length} reviewers approved` : 'No reviewers assigned'}</span>
             </div>
           )}
         </div>
@@ -92,12 +93,12 @@ export const VirtualMrBottomBar: React.FC = () => {
       {/* Right: Large Prominent Close / Reopen Button */}
       <div className="flex items-center gap-3 shrink-0">
         {/* Prominent Large Close / Reopen Request Button */}
-        {session.status === 'closed' ? (
+        {session.status !== 'open' ? (
           <button
             type="button"
             onClick={handleReopenRequest}
             className="flex items-center gap-2 px-3 xl:px-6 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
-            title="Reopen this Virtual MR request"
+            title={`Reopen this ${session.status === 'resolved' ? 'resolved' : 'manually closed'} Virtual MR`}
           >
             <RotateCcw className="w-4 h-4 text-white stroke-[2.5]" />
             <span className="max-sm:hidden">Reopen request</span>

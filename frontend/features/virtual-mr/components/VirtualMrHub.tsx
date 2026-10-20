@@ -27,6 +27,7 @@ export const VirtualMrHub: React.FC = () => {
   const { currentRepo, showToast, diffPayload, branches, setBranchComparison } = useGitStore();
   const {
     getActiveSession,
+    consumeDescriptionEditRequest,
     updateSessionDetails,
     updateSessionBranches,
     assignReviewerBot,
@@ -68,12 +69,12 @@ export const VirtualMrHub: React.FC = () => {
       (desc.includes('Review code changes') || desc.includes('Check security'))
     );
 
-  // Description inline edit - default enabled to allow entering content immediately
+  // Existing MRs open in preview. New MRs request the editor once after creation.
   const [descValue, setDescValue] = useState(() => {
     const raw = session?.description || '';
     return isLegacyBoilerplate(raw) ? '' : raw;
   });
-  const [isEditingDesc, setIsEditingDesc] = useState(true);
+  const [isEditingDesc, setIsEditingDesc] = useState(false);
 
   // Dropdown states
   const [showReviewerDropdown, setShowReviewerDropdown] = useState(false);
@@ -111,15 +112,18 @@ export const VirtualMrHub: React.FC = () => {
   };
 
   useEffect(() => {
-    if (session) {
-      setEditTitle(session.title);
-      if (isLegacyBoilerplate(session.description)) {
-        updateSessionDetails(session.id, session.title, '');
-        setDescValue('');
-      } else {
-        setDescValue(session.description || '');
-      }
-      setIsEditingDesc(true);
+    if (!session) return;
+    setEditTitle(session.title);
+    setIsEditingDesc(consumeDescriptionEditRequest(session.id));
+  }, [session?.id, consumeDescriptionEditRequest]);
+
+  useEffect(() => {
+    if (!session) return;
+    if (isLegacyBoilerplate(session.description)) {
+      updateSessionDetails(session.id, session.title, '');
+      setDescValue('');
+    } else {
+      setDescValue(session.description || '');
     }
   }, [session?.id, session?.description]);
 
@@ -164,9 +168,7 @@ export const VirtualMrHub: React.FC = () => {
   const handleSaveDesc = async () => {
     await updateSessionDetails(session.id, session.title, descValue);
     showToast('Description saved');
-    if (descValue.trim()) {
-      setIsEditingDesc(false);
-    }
+    setIsEditingDesc(false);
   };
 
   const handleGenerateDescription = () => {
@@ -222,13 +224,13 @@ export const VirtualMrHub: React.FC = () => {
       <div className="px-4 py-2.5 flex items-center justify-between gap-4 border-b border-surface0/60 bg-crust/30">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           {/* Read-only MR Status Badge */}
-          {session.status === 'approved' ? (
+          {session.status === 'resolved' ? (
             <div
-              className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-300 select-none shadow-xs shrink-0"
-              title="Approved by AI Reviewer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 select-none shadow-xs shrink-0"
+              title="All reviewers approved and all discussions are resolved"
             >
-              <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-              <span>Approved by AI</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>Resolved</span>
             </div>
           ) : session.status === 'closed' ? (
             <div
@@ -530,7 +532,7 @@ export const VirtualMrHub: React.FC = () => {
           <div className="p-3.5  bg-mantle border border-surface0 space-y-2">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-xs text-subtext1">Description</span>
-              {session.description && !isEditingDesc ? (
+              {!isEditingDesc ? (
                 <button
                   type="button"
                   onClick={() => setIsEditingDesc(true)}
@@ -538,7 +540,7 @@ export const VirtualMrHub: React.FC = () => {
                 >
                   Edit Markdown
                 </button>
-              ) : session.description && isEditingDesc ? (
+              ) : session.description ? (
                 <button
                   type="button"
                   onClick={() => setIsEditingDesc(false)}
@@ -560,10 +562,10 @@ export const VirtualMrHub: React.FC = () => {
                   onGenerateDraft={handleGenerateDescription}
                   onSubmit={handleSaveDesc}
                   submitLabel="Save Description"
-                  onCancel={session.description ? () => {
+                  onCancel={() => {
                     setDescValue(session.description);
                     setIsEditingDesc(false);
-                  } : undefined}
+                  }}
                   cancelLabel="Cancel"
                 />
               </div>
