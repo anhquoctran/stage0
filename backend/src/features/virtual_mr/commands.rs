@@ -50,6 +50,15 @@ pub async fn get_commits_between_refs(
 }
 
 #[tauri::command]
+pub async fn get_git_ref_sha(repo_path: String, reference: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::features::git::runner::resolve_ref(&repo_path, &reference).map(|(sha, _)| sha)
+    })
+    .await
+    .map_err(|e| format!("Task execution failed: {}", e))?
+}
+
+#[tauri::command]
 pub async fn get_git_user_identity_cmd(repo_path: String) -> Result<(String, String), String> {
     tauri::async_runtime::spawn_blocking(move || get_git_user_identity(&repo_path))
         .await
@@ -181,8 +190,8 @@ pub async fn verify_mr_discussion(
     verified_by_bot: String,
     pass: bool,
 ) -> Result<(), String> {
-    // A client-supplied boolean is not verification evidence. Keep this legacy
-    // command fail-closed: read-only findings do not authorize verification.
+    // A client-supplied boolean is not verification evidence. The sandboxed
+    // review runtime validates current-snapshot evidence before resolving.
     let _ = (app, discussion_id, verification_status, verified_by_bot, pass);
     crate::features::ai::review_availability::require_review_runtime()
 }

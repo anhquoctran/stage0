@@ -1,7 +1,7 @@
 pub const AI_REVIEW_UNAVAILABLE: &str =
-    "Automatic AI fix re-verification is not available yet. Use the read-only AI review panel; no verification or approval was recorded.";
+    "Client-supplied AI verification is not accepted. Run the sandboxed AI review so its discussion action can be validated against the current diff.";
 
-/// Read-only review findings never authorize verification or approval writes.
+/// Legacy commands have no snapshot and evidence context, so they cannot authorize verification.
 pub fn require_review_runtime() -> Result<(), String> {
     Err(AI_REVIEW_UNAVAILABLE.to_string())
 }

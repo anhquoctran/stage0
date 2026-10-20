@@ -302,6 +302,7 @@ pub fn run() {
             commands::save_virtual_mr_session,
             commands::delete_virtual_mr_session,
             commands::get_commits_between_refs,
+            commands::get_git_ref_sha,
             commands::get_git_user_identity_cmd,
             // Discussions & Comments
             commands::list_mr_discussions,

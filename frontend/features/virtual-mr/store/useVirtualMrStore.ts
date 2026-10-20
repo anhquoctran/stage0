@@ -838,6 +838,8 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       };
       return { reviewers: [...session.reviewers, newReviewer] };
     });
+    void import('../../review/services/assignedReviewService')
+      .then(({ reReviewAssignedSession }) => reReviewAssignedSession(sessionId));
   },
 
   removeReviewerBot: async (sessionId, agentId) => {
@@ -1082,6 +1084,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       sessions: sessions.map((s) => (s.id === sessionId ? { ...s, discussions: [...s.discussions, newDisc] } : s)),
     });
 
+    let saved = false;
     try {
       await invoke('create_mr_discussion', {
         discussion: {
@@ -1114,8 +1117,13 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
           updated_at: now,
         },
       });
+      saved = true;
     } catch (e) {
       console.error('Failed to create discussion in db:', e);
+    }
+    if (saved) {
+      void import('../../review/services/assignedReviewService')
+        .then(({ reReviewAssignedSession }) => reReviewAssignedSession(sessionId));
     }
   },
 
@@ -1145,6 +1153,8 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
 
     set({ sessions: updated });
 
+    const targetSessionId = sessions.find((session) => session.discussions.some((discussion) => discussion.id === discussionId))?.id;
+    let saved = false;
     try {
       await invoke('add_mr_comment', {
         comment: {
@@ -1160,8 +1170,13 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
           updated_at: now,
         },
       });
+      saved = true;
     } catch (e) {
       console.error('Failed to add comment in db:', e);
+    }
+    if (saved && authorType === 'user' && targetSessionId) {
+      void import('../../review/services/assignedReviewService')
+        .then(({ reReviewAssignedSession }) => reReviewAssignedSession(targetSessionId));
     }
   },
 
@@ -1198,10 +1213,19 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     }
   },
 
-  // Native read-only findings do not authorize automatic fix verification.
-  // In particular, zero discussions is not proof of a successful review.
-  reverifyDiscussionFix: async () => { throw new Error(AI_REVIEW_UNAVAILABLE); },
-  triggerIncrementalReReview: async () => { throw new Error(AI_REVIEW_UNAVAILABLE); },
+  // Re-review the committed Virtual MR snapshot; the model may resolve only
+  // with exact changed-line evidence validated by the backend.
+  reverifyDiscussionFix: async (discussionId) => {
+    const session = get().sessions.find((item) => item.discussions.some((discussion) => discussion.id === discussionId));
+    if (!session) return false;
+    const { startAssignedReviewForSession } = await import('../../review/services/assignedReviewService');
+    try { return Boolean(await startAssignedReviewForSession(session.id)); }
+    catch { return false; }
+  },
+  triggerIncrementalReReview: async (sessionId) => {
+    const { reReviewAssignedSession } = await import('../../review/services/assignedReviewService');
+    await reReviewAssignedSession(sessionId);
+  },
   refreshDiscussions: async (sessionId) => {
     const repoId = get().currentRepoId;
     const items = await invoke<DbDiscussion[]>('list_mr_discussions', { sessionId });

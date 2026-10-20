@@ -6,6 +6,12 @@ import type { ReviewRunDetail } from '../types/ReviewRunDetail';
 import type { ReviewBotConfig } from '../types/ReviewBotConfig';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 
+const startingSessionIds = new Set<string>();
+
+export function isReviewStartingForSession(sessionId: string): boolean {
+  return startingSessionIds.has(sessionId);
+}
+
 let loadVersion = 0;
 const message = (error: unknown) => error instanceof Error ? error.message : String(error);
 
@@ -18,6 +24,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     await Promise.all(Object.keys(get().activeRuns).map(async (id) => {
       try {
         const detail = await invoke<ReviewRunDetail>('get_ai_review', { runId: id });
+        const finished = detail.run.status !== 'running' && Boolean(get().activeRuns[id]);
         set((state) => {
           if (!state.activeRuns[id]) return state;
           const activeRuns = { ...state.activeRuns };
@@ -28,6 +35,11 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
             ...(state.sessionId === detail.run.sessionId ? { runs: state.runs.map((run) => run.id === id ? detail.run : run) } : {}),
           };
         });
+        if (finished) {
+          await useVirtualMrStore.getState().refreshDiscussions(detail.run.sessionId);
+          const { flushQueuedReReviewAfterActive } = await import('../services/assignedReviewService');
+          void flushQueuedReReviewAfterActive(detail.run.sessionId);
+        }
       } catch (error) { if (get().isOpen) set({ error: message(error) }); }
     }));
   },
@@ -53,7 +65,13 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   },
   start: async (config: ReviewBotConfig, allowRemote, reviewer) => {
     const sessionId = get().sessionId;
-    if (!sessionId || get().isStarting) return;
+    if (!sessionId) return;
+    try { await get().startForSession(sessionId, config, allowRemote, reviewer); }
+    catch { /* The store records the error for the open review panel. */ }
+  },
+  startForSession: async (sessionId, config, allowRemote, reviewer) => {
+    if (startingSessionIds.has(sessionId) || Object.values(get().activeRuns).some((run) => run.sessionId === sessionId && run.status === 'running')) return null;
+    startingSessionIds.add(sessionId);
     set({ isStarting: true, error: null });
     try {
       const run = await invoke<ReviewRun>('start_ai_review', { request: {
@@ -64,12 +82,19 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         reviewerId: reviewer?.id || null, reviewerName: reviewer?.name || null,
       } });
       set((state) => ({ activeRuns: { ...state.activeRuns, [run.id]: run } }));
-      if (get().sessionId === sessionId) {
+      if (get().isOpen && get().sessionId === sessionId) {
         loadVersion++;
         set({ detail: { run, events: [] }, runs: [run, ...get().runs.filter((item) => item.id !== run.id)] });
       }
-    } catch (error) { if (get().sessionId === sessionId) set({ error: message(error) }); }
-    finally { set({ isStarting: false }); }
+      return run;
+    } catch (error) {
+      if (get().isOpen && get().sessionId === sessionId) set({ error: message(error) });
+      throw error;
+    }
+    finally {
+      startingSessionIds.delete(sessionId);
+      set({ isStarting: startingSessionIds.size > 0 });
+    }
   },
   cancel: async () => {
     const run = get().detail?.run;

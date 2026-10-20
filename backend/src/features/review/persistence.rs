@@ -3,6 +3,21 @@ use crate::core::db::Database;
 use rusqlite::params;
 use serde_json::{json, Value};
 
+pub enum ReviewDiscussionAction {
+    Reply { discussion_id: String, target_comment_id: String, body: String },
+    Resolve {
+        discussion_id: String,
+        target_comment_id: String,
+        file_path: String,
+        side: String,
+        start_line: usize,
+        end_line: usize,
+        evidence: String,
+        body: String,
+        reverted_commit_id: Option<String>,
+    },
+}
+
 impl Database {
     pub fn save_review_run(&self, run: &ReviewRun) -> Result<(), String> {
         let payload = serde_json::to_string(run).map_err(|_| "Could not serialize review run")?;
@@ -60,11 +75,21 @@ impl Database {
             .map_err(|e| e.to_string())
     }
     pub fn publish_review(&self, run: &ReviewRun) -> Result<(), String> {
+        self.publish_review_actions(run, &[])
+    }
+
+    pub fn publish_review_actions(
+        &self,
+        run: &ReviewRun,
+        actions: &[ReviewDiscussionAction],
+    ) -> Result<(), String> {
         if !matches!(run.status.as_str(), "completed" | "partial") {
             return Err("Only finished review findings may be published".into());
         }
         let mut conn = self.conn();
         let tx = conn.transaction().map_err(|e| e.to_string())?;
+        let reviewer = run.reviewer_name.as_deref().unwrap_or(&run.model);
+        let author_name = format!("Stage0 AI ({reviewer})");
         for (index, finding) in run.findings.iter().enumerate() {
             let id = format!("review-{}-{index}", run.id);
             let sha = if finding.side == "base" {
@@ -77,9 +102,64 @@ impl Database {
             } else {
                 "right"
             };
-            let body=format!("**[{}] {}**\n\n{}\n\nEvidence from `{}` lines {}–{}:\n\n```\n{}\n```\n\nReview run `{}` · {} · {}. This is a model finding, not an approval.",finding.severity,finding.title,finding.body,sha,finding.start_line,finding.end_line,finding.evidence,run.id,run.provider,run.model);
+            let body=format!("**[{}] {}**\n\n{}\n\nEvidence from `{}` lines {}–{}:\n\n```\n{}\n```\n\nReview run `{}` · {} · {}. This is a model finding, not an approval.",finding.severity,finding.title,super::security::redact(&finding.body),sha,finding.start_line,finding.end_line,finding.evidence,run.id,run.provider,run.model);
             tx.execute("INSERT OR IGNORE INTO virtual_mr_discussions(id,session_id,file_path,diff_side,line_number,commit_id,is_resolved,resolve_type,verification_status,created_at) VALUES(?1,?2,?3,?4,?5,?6,0,'manual','none',?7)",params![id,run.session_id,finding.file_path,side,finding.start_line as i64,sha,run.started_at]).map_err(|e|e.to_string())?;
-            tx.execute("INSERT OR IGNORE INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,review_action,created_at,updated_at) VALUES(?1,?2,'ai_agent',?3,?4,?5,'comment',?6,?6)",params![format!("{id}-comment"),id,run.id,format!("Stage0 AI ({})",run.model),body,run.started_at]).map_err(|e|e.to_string())?;
+            tx.execute("INSERT OR IGNORE INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,review_action,created_at,updated_at) VALUES(?1,?2,'ai_agent',?3,?4,?5,'comment',?6,?6)",params![format!("{id}-comment"),id,run.id,author_name,body,run.started_at]).map_err(|e|e.to_string())?;
+        }
+        for (index, action) in actions.iter().enumerate() {
+            match action {
+                ReviewDiscussionAction::Reply { discussion_id, target_comment_id, body } => {
+                    let (session_id, is_resolved, latest_id, latest_author): (String, bool, Option<String>, Option<String>) = tx.query_row(
+                        "SELECT d.session_id, d.is_resolved, (SELECT c.id FROM virtual_mr_comments c WHERE c.discussion_id=d.id ORDER BY c.rowid DESC LIMIT 1), (SELECT c.author_type FROM virtual_mr_comments c WHERE c.discussion_id=d.id ORDER BY c.rowid DESC LIMIT 1) FROM virtual_mr_discussions d WHERE d.id=?1",
+                        [discussion_id],
+                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+                    ).map_err(|_| "Discussion was removed before the AI reply could be posted")?;
+                    if session_id != run.session_id || is_resolved || latest_author.as_deref() != Some("user") || latest_id.as_deref() != Some(target_comment_id.as_str()) {
+                        return Err("AI can reply only to the latest unanswered user comment in an open discussion".into());
+                    }
+                    let now = chrono::Utc::now().to_rfc3339();
+                    tx.execute(
+                        "INSERT OR IGNORE INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,review_action,created_at,updated_at) VALUES(?1,?2,'ai_agent',?3,?4,?5,'comment',?6,?6)",
+                        params![format!("review-{}-reply-{index}", run.id), discussion_id, run.id, author_name, super::security::redact(body), now],
+                    ).map_err(|e| e.to_string())?;
+                }
+                ReviewDiscussionAction::Resolve { discussion_id, target_comment_id, file_path, side, start_line, end_line, evidence, body, reverted_commit_id } => {
+                    let (session_id, stored_path, is_resolved, latest_id): (String, Option<String>, bool, Option<String>) = tx.query_row(
+                        "SELECT d.session_id, d.file_path, d.is_resolved, (SELECT c.id FROM virtual_mr_comments c WHERE c.discussion_id=d.id ORDER BY c.rowid DESC LIMIT 1) FROM virtual_mr_discussions d WHERE d.id=?1",
+                        [discussion_id],
+                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+                    ).map_err(|_| "Discussion was removed before automatic resolution")?;
+                    if session_id != run.session_id || is_resolved || stored_path.as_deref() != Some(file_path.as_str()) || latest_id.as_deref() != Some(target_comment_id.as_str()) {
+                        return Err("AI can resolve only an open discussion on the same changed file".into());
+                    }
+                    let now = chrono::Utc::now().to_rfc3339();
+                    let verification = if let Some(original_sha) = reverted_commit_id {
+                        format!(
+                            "Verified that the current head of `{file_path}` matches the MR base, and that its branch-only contents from the previously reviewed commit `{original_sha}` are no longer present. Current head evidence, lines {start_line}–{end_line}:\n\n```\n{evidence}\n```"
+                        )
+                    } else {
+                        format!(
+                            "Verified against `{file_path}` lines {start_line}–{end_line} on the `{side}` side:\n\n```\n{evidence}\n```"
+                        )
+                    };
+                    let resolution = format!(
+                        "**Resolved by AI review**\n\n{}\n\n{}",
+                        super::security::redact(body),
+                        verification,
+                    );
+                    tx.execute(
+                        "INSERT OR IGNORE INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,review_action,created_at,updated_at) VALUES(?1,?2,'ai_agent',?3,?4,?5,'comment',?6,?6)",
+                        params![format!("review-{}-resolve-{index}", run.id), discussion_id, run.id, author_name, resolution, now],
+                    ).map_err(|e| e.to_string())?;
+                    let changed = tx.execute(
+                        "UPDATE virtual_mr_discussions SET is_resolved=1, resolve_type='ai_verified', resolved_by=?1, resolved_at=CURRENT_TIMESTAMP, verification_status='pass', verified_by_bot=?1, verified_at=CURRENT_TIMESTAMP WHERE id=?2 AND session_id=?3 AND is_resolved=0",
+                        params![author_name, discussion_id, run.session_id],
+                    ).map_err(|e| e.to_string())?;
+                    if changed != 1 {
+                        return Err("Discussion changed before automatic resolution could be committed".into());
+                    }
+                }
+            }
         }
         let mut saved = run.clone();
         saved.published = true;
