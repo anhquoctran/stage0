@@ -30,6 +30,7 @@ import { AiModelExecutionOptions } from './AiModelExecutionOptions';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import { AI_PROVIDERS, MCP_PRESET_TEMPLATES, DEFAULT_AI_CONFIG } from '../constants/aiPresets';
+import { isLikelySecretMcpEnvValue, isSecretMcpEnvName } from '../utils/listSecretMcpEnv';
 import { resolveAiModelPreset } from '../utils/resolveAiModelPreset';
 import { type AiConfig } from '../types/AiConfig';
 import { type AiProviderId } from '../types/AiProviderId';
@@ -227,7 +228,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   const [serverCommand, setServerCommand] = useState('');
   const [serverArgsStr, setServerArgsStr] = useState('');
   const [serverUrl, setServerUrl] = useState('');
-  const [serverEnvPairs, setServerEnvPairs] = useState<{ key: string; value: string }[]>([]);
+  const [serverEnvPairs, setServerEnvPairs] = useState<Array<{ key: string; value: string; secretConfigured?: boolean; savedKey?: string }>>([]);
   const [formError, setFormError] = useState<string | null>(null);
 
   // Import / Export JSON Dialog State
@@ -282,7 +283,10 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     setServerArgsStr(server.args.join(' '));
     setServerUrl(server.url || '');
     setServerEnvPairs(
-      Object.entries(server.env).map(([k, v]) => ({ key: k, value: v }))
+      [
+        ...Object.entries(server.env).map(([key, value]) => ({ key, value })),
+        ...(server.secretEnvKeys || []).filter((key) => !(key in server.env)).map((key) => ({ key, value: '', secretConfigured: true, savedKey: key })),
+      ]
     );
     setIsServerFormOpen(true);
   };
@@ -313,9 +317,19 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       .filter((s) => s.length > 0);
 
     const envMap: Record<string, string> = {};
+    const secretEnvKeys = new Set<string>();
     for (const pair of serverEnvPairs) {
       if (pair.key.trim()) {
-        envMap[pair.key.trim()] = pair.value.trim();
+        const key = pair.key.trim();
+        const value = pair.value.trim();
+        const keepsSavedSecret = pair.secretConfigured && pair.savedKey === key;
+        const isSecret = keepsSavedSecret || isSecretMcpEnvName(key) || isLikelySecretMcpEnvValue(value);
+        if (isSecret) {
+          if (value) envMap[key] = value;
+          if (value || keepsSavedSecret) secretEnvKeys.add(key);
+        } else {
+          envMap[key] = value;
+        }
       }
     }
 
@@ -328,6 +342,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         args: parsedArgs,
         url: serverType !== 'stdio' ? serverUrl.trim() : undefined,
         env: envMap,
+        secretEnvKeys: [...secretEnvKeys],
       });
     } else {
       addMcpServer({
@@ -338,6 +353,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
         args: parsedArgs,
         url: serverType !== 'stdio' ? serverUrl.trim() : undefined,
         env: envMap,
+        secretEnvKeys: [...secretEnvKeys],
         enabled: true,
       });
     }
@@ -1352,7 +1368,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 </div>
 
                 <p className="text-[10px] text-subtext0 mb-2">
-                  Server URLs and values are saved in local app preferences and included in configuration exports; do not embed credentials or enter passwords, API keys, or other secrets here.
+                  Secret-named variables are stored in your OS keychain and never included in preferences or exports. Leave a saved secret blank to keep it unchanged; enter a new value to replace it.
                 </p>
 
                 {serverEnvPairs.length > 0 ? (
@@ -1371,14 +1387,14 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                           className="flex-1 px-2.5 py-1 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none"
                         />
                         <input
-                          type="text"
+                          type={isSecretMcpEnvName(pair.key) || isLikelySecretMcpEnvValue(pair.value) || pair.secretConfigured ? 'password' : 'text'}
                           value={pair.value}
                           onChange={(e) => {
                             const copy = [...serverEnvPairs];
                             copy[idx].value = e.target.value;
                             setServerEnvPairs(copy);
                           }}
-                          placeholder="value"
+                          placeholder={pair.secretConfigured && pair.savedKey === pair.key ? 'Saved in OS Keychain · blank keeps current value' : 'value'}
                           className="flex-1 px-2.5 py-1 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none"
                         />
                         <button

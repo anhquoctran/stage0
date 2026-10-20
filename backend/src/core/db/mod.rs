@@ -195,7 +195,10 @@ impl Database {
         conn.execute_batch(SCHEMA_SQL)?;
         // Durable runs survive application restarts, but their in-flight model
         // calls cannot be resumed safely without an explicit replay policy.
-        conn.execute("UPDATE ai_review_runs SET status='interrupted' WHERE status='running'", [])?;
+        conn.execute(
+            "UPDATE ai_review_runs SET status='interrupted' WHERE status='running'",
+            [],
+        )?;
         Self::migrate_discussions_fingerprint(&conn)?;
         Self::migrate_git_credentials(&conn)?;
 
@@ -237,19 +240,41 @@ impl Database {
             .collect::<Result<_, _>>()?;
         drop(stmt);
 
-        if !columns.iter().any(|column| column == "source") {
+        let is_legacy_metadata_table = columns.iter().any(|column| column == "provider");
+        if is_legacy_metadata_table && !columns.iter().any(|column| column == "source") {
             conn.execute(
                 "ALTER TABLE git_credentials ADD COLUMN source TEXT NOT NULL DEFAULT 'stage0';",
                 [],
             )?;
         }
-        if !columns.iter().any(|column| column == "helper_name") {
+        if is_legacy_metadata_table && !columns.iter().any(|column| column == "helper_name") {
             conn.execute(
                 "ALTER TABLE git_credentials ADD COLUMN helper_name TEXT;",
                 [],
             )?;
         }
         Ok(())
+    }
+
+    pub fn compact_git_credentials_metadata(&self) -> Result<(), rusqlite::Error> {
+        let mut conn = self.conn();
+        let mut stmt = conn.prepare("PRAGMA table_info(git_credentials);")?;
+        let columns: Vec<String> = stmt
+            .query_map([], |row| row.get(1))?
+            .collect::<Result<_, _>>()?;
+        drop(stmt);
+        if !columns.iter().any(|column| column == "provider") {
+            return Ok(());
+        }
+        let tx = conn.transaction()?;
+        tx.execute_batch(
+            "CREATE TABLE git_credentials_refs_new (id TEXT PRIMARY KEY, token_ref TEXT NOT NULL UNIQUE);
+             INSERT OR REPLACE INTO git_credentials_refs_new (id, token_ref) SELECT id, token_ref FROM git_credentials;
+             DROP TABLE git_credentials;
+             ALTER TABLE git_credentials_refs_new RENAME TO git_credentials;
+             CREATE INDEX IF NOT EXISTS idx_git_credentials_token_ref ON git_credentials(token_ref);",
+        )?;
+        tx.commit()
     }
 
     #[inline]
@@ -278,6 +303,18 @@ impl Database {
             params![key, value],
         )?;
         Ok(())
+    }
+
+    pub fn delete_settings(&self, keys: &[&str]) -> Result<(), rusqlite::Error> {
+        let mut conn = self.conn();
+        let tx = conn.transaction()?;
+        {
+            let mut stmt = tx.prepare_cached("DELETE FROM app_settings WHERE key = ?1;")?;
+            for key in keys {
+                stmt.execute(params![key])?;
+            }
+        }
+        tx.commit()
     }
 
     pub fn set_settings_atomic(&self, values: &[(&str, &str)]) -> Result<(), rusqlite::Error> {
@@ -325,6 +362,34 @@ mod tests {
     }
 
     #[test]
+    fn preference_secret_mapping_persists_only_opaque_keychain_references() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA_SQL).unwrap();
+        let db = Database(Mutex::new(conn));
+        db.upsert_preference_secret_ref("mcp_server/git-context", "st0_pref_random-ref")
+            .unwrap();
+        assert_eq!(
+            db.get_preference_secret_ref("mcp_server/git-context")
+                .unwrap()
+                .as_deref(),
+            Some("st0_pref_random-ref")
+        );
+        db.upsert_preference_secret_ref("mcp_server/git-context", "st0_pref_replaced-ref")
+            .unwrap();
+        assert_eq!(
+            db.delete_preference_secret_ref("mcp_server/git-context")
+                .unwrap()
+                .as_deref(),
+            Some("st0_pref_replaced-ref")
+        );
+        assert_eq!(
+            db.get_preference_secret_ref("mcp_server/git-context")
+                .unwrap(),
+            None
+        );
+    }
+
+    #[test]
     fn discussion_fingerprint_migration_adds_missing_columns() {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch("CREATE TABLE virtual_mr_discussions (id TEXT PRIMARY KEY);")
@@ -345,6 +410,80 @@ mod tests {
     }
 
     #[test]
+    fn legacy_git_credential_metadata_is_migrated_then_compacted_without_losing_refs() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE git_credentials (
+                id TEXT PRIMARY KEY, token_ref TEXT NOT NULL UNIQUE, provider TEXT NOT NULL,
+                server_url TEXT NOT NULL, account_name TEXT NOT NULL, token_type TEXT NOT NULL,
+                label TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+            );
+            INSERT INTO git_credentials (id, token_ref, provider, server_url, account_name, token_type, created_at, updated_at)
+            VALUES ('credential-id', 'keychain-ref', 'github', 'https://github.com', 'alice', 'pat', 'created', 'updated');",
+        ).unwrap();
+
+        Database::migrate_git_credentials(&conn).unwrap();
+        let migrated_source: String = conn
+            .query_row(
+                "SELECT source FROM git_credentials WHERE id = 'credential-id'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(migrated_source, "stage0");
+
+        let db = Database(Mutex::new(conn));
+        db.compact_git_credentials_metadata().unwrap();
+        db.compact_git_credentials_metadata().unwrap();
+        let (id, token_ref): (String, String) = db
+            .conn()
+            .query_row("SELECT id, token_ref FROM git_credentials", [], |row| {
+                Ok((row.get(0)?, row.get(1)?))
+            })
+            .unwrap();
+        assert_eq!(
+            (id.as_str(), token_ref.as_str()),
+            ("credential-id", "keychain-ref")
+        );
+        let columns: Vec<String> = db
+            .conn()
+            .prepare("PRAGMA table_info(git_credentials)")
+            .unwrap()
+            .query_map([], |row| row.get(1))
+            .unwrap()
+            .collect::<Result<_, _>>()
+            .unwrap();
+        assert_eq!(columns, vec!["id", "token_ref"]);
+    }
+
+    #[test]
+    fn failed_git_credential_compaction_keeps_legacy_table_and_row() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE git_credentials (
+                id TEXT PRIMARY KEY, token_ref TEXT NOT NULL UNIQUE, provider TEXT NOT NULL
+            );
+            INSERT INTO git_credentials VALUES ('credential-id', 'keychain-ref', 'github');
+            CREATE TABLE git_credentials_refs_new (id TEXT PRIMARY KEY, token_ref TEXT NOT NULL UNIQUE);",
+        ).unwrap();
+        let db = Database(Mutex::new(conn));
+
+        assert!(db.compact_git_credentials_metadata().is_err());
+        let (provider, token_ref): (String, String) = db
+            .conn()
+            .query_row(
+                "SELECT provider, token_ref FROM git_credentials WHERE id = 'credential-id'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(
+            (provider.as_str(), token_ref.as_str()),
+            ("github", "keychain-ref")
+        );
+    }
+
+    #[test]
     fn atomic_settings_writes_roll_back_together_on_failure() {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch(SCHEMA_SQL).unwrap();
@@ -359,6 +498,27 @@ mod tests {
             .set_settings_atomic(&[("first", "1"), ("fail", "2")])
             .is_err());
         assert_eq!(db.get_setting("first").unwrap(), None);
+    }
+
+    #[test]
+    fn legacy_preferences_can_be_removed_without_touching_other_settings() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA_SQL).unwrap();
+        let db = Database(Mutex::new(conn));
+        db.set_setting("git_binary_id", "custom").unwrap();
+        db.set_setting("git_binary_path", "/tools/git").unwrap();
+        db.set_setting("unrelated_runtime_value", "keep").unwrap();
+
+        db.delete_settings(&["git_binary_id", "git_binary_path"])
+            .unwrap();
+        assert_eq!(db.get_setting("git_binary_id").unwrap(), None);
+        assert_eq!(db.get_setting("git_binary_path").unwrap(), None);
+        assert_eq!(
+            db.get_setting("unrelated_runtime_value")
+                .unwrap()
+                .as_deref(),
+            Some("keep")
+        );
     }
 
     #[test]

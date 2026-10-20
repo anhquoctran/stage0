@@ -44,6 +44,7 @@ import type { PreferenceTab } from '../types/PreferenceTab';
 import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 import { SettingRow } from './SettingRow';
 import { ZedSwitch } from './ZedSwitch';
+import { PreferencesJsonEditor } from './PreferencesJsonEditor';
 
 // Tree view hierarchy matching Zed's structure
 const SETTINGS_TREE: TreeCategory[] = [
@@ -226,13 +227,11 @@ export const PreferencesModal: React.FC = () => {
     isUnderline: storedIsUnderline,
     lineSpacing: storedLineSpacing,
     enableLigatures: storedEnableLigatures,
-    updateViewerFontSettings,
     showInlineBlame: storedShowInlineBlame,
-    setShowInlineBlame: storeSetShowInlineBlame,
   } = usePreferencesStore();
 
-  const { themeMode: storedThemeMode, setThemeMode: storeSetThemeMode } = useThemeStore();
-  const { activeSandboxType: storedSandboxType, setActiveSandbox: storeSetActiveSandbox, showToast } = useGitStore();
+  const { themeMode: storedThemeMode } = useThemeStore();
+  const { activeSandboxType: storedSandboxType, showToast } = useGitStore();
   const [aiDraftStore] = useState(() => createAiPreferencesDraft(captureAiPreferences()));
   const aiDraft = aiDraftStore();
   const [aiBaseline, setAiBaseline] = useState(captureAiPreferences);
@@ -246,13 +245,13 @@ export const PreferencesModal: React.FC = () => {
   const {
     activeBinaryId: storedGitBinaryId,
     activeBinaryPath: storedGitBinaryPath,
-    setActiveBinary: storeSetActiveBinary,
     fetchActiveBinary,
   } = useGitBinaryStore();
 
 
 
   const [activeTab, setActiveTab] = useState<PreferenceTab | null>(null);
+  const [isJsonEditorOpen, setIsJsonEditorOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Expanded parent categories in tree (all collapsed by default)
@@ -521,24 +520,48 @@ export const PreferencesModal: React.FC = () => {
     setIsApplying(true);
     setApplyError(null);
     try {
-      const committedAi = await commitAiPreferences(aiDraftStore.getState(), aiBaseline);
-      aiDraftStore.getState().replace(committedAi);
-      setAiBaseline(committedAi);
-      storeSetThemeMode(draftThemeMode);
-      applyThemeToDocument(resolveTheme(draftThemeMode));
-
       const fontSettings: ViewerFontSettings = {
         fontFamily: draftFontFamily, fontSize: draftFontSize,
         isBold: draftIsBold, isItalic: draftIsItalic, isUnderline: draftIsUnderline,
         lineSpacing: draftLineSpacing, enableLigatures: draftEnableLigatures,
       };
-      updateViewerFontSettings(fontSettings);
+      const additionalPreferences: Record<string, unknown> = {};
+      const appearancePatch: Record<string, unknown> = {};
+      if (draftThemeMode !== savedBaseline.themeMode) appearancePatch.themeMode = draftThemeMode;
+      const fontChanged = (Object.keys(fontSettings) as Array<keyof ViewerFontSettings>)
+        .some((key) => fontSettings[key] !== savedBaseline[key]);
+      if (fontChanged) appearancePatch.viewerFont = fontSettings;
+      if (Object.keys(appearancePatch).length) additionalPreferences.appearance = appearancePatch;
+      if (draftShowInlineBlame !== savedBaseline.showInlineBlame) {
+        additionalPreferences.general = { showInlineBlame: draftShowInlineBlame };
+      }
+      if (draftSandboxType !== savedBaseline.sandboxType) additionalPreferences.sandbox = { type: draftSandboxType };
+      if (draftGitBinaryId !== savedBaseline.gitBinaryId || draftGitBinaryPath !== savedBaseline.gitBinaryPath) {
+        additionalPreferences.git = { binaryId: draftGitBinaryId, binaryPath: draftGitBinaryPath };
+      }
+      const committedAi = await commitAiPreferences(aiDraftStore.getState(), aiBaseline, additionalPreferences);
+      aiDraftStore.getState().replace(committedAi);
+      setAiBaseline(committedAi);
+      const resolvedTheme = resolveTheme(draftThemeMode);
+      useThemeStore.setState({ themeMode: draftThemeMode, theme: resolvedTheme });
+      applyThemeToDocument(resolvedTheme);
+      usePreferencesStore.setState({ ...fontSettings, showInlineBlame: draftShowInlineBlame });
       applyViewerFontToDocument(fontSettings);
-      storeSetShowInlineBlame(draftShowInlineBlame);
-      if (draftSandboxType !== savedBaseline.sandboxType) await storeSetActiveSandbox(draftSandboxType);
-
-      const needsRestart = draftGitBinaryId !== savedBaseline.gitBinaryId;
-      if (needsRestart) await storeSetActiveBinary(draftGitBinaryId, draftGitBinaryPath);
+      const needsRestart = draftGitBinaryId !== savedBaseline.gitBinaryId || draftGitBinaryPath !== savedBaseline.gitBinaryPath;
+      const sandboxChanged = draftSandboxType !== savedBaseline.sandboxType;
+      useGitStore.setState({ activeSandboxType: draftSandboxType });
+      if (sandboxChanged) {
+        const label = draftSandboxType === 'in_memory' ? 'In-Memory Sandbox' : draftSandboxType === 'local_worktree' ? 'Local Worktree Sandbox' : 'Docker Container Sandbox';
+        showToast(`Switched active sandbox to: ${label}`);
+        void useGitStore.getState().refreshDiff();
+      }
+      useGitBinaryStore.setState((state) => ({
+        activeBinaryId: draftGitBinaryId,
+        activeBinaryPath: draftGitBinaryPath,
+        binaries: state.binaries.map((binary) => ({ ...binary, is_active: binary.id === draftGitBinaryId })),
+        error: null,
+        isLoading: false,
+      }));
       setSavedBaseline({
         themeMode: draftThemeMode, fontFamily: draftFontFamily, fontSize: draftFontSize,
         isBold: draftIsBold, isItalic: draftIsItalic, isUnderline: draftIsUnderline,
@@ -652,6 +675,14 @@ export const PreferencesModal: React.FC = () => {
           <div className="flex h-full items-center">
             <button
               type="button"
+              onClick={() => setIsJsonEditorOpen(true)}
+              className="mr-2 rounded border border-surface0 px-2.5 py-1 text-[11px] text-subtext1 hover:bg-surface0 hover:text-text"
+              title="Edit the app preferences JSONC file"
+            >
+              Edit in preferences.json
+            </button>
+            <button
+              type="button"
               onClick={handleCancel}
               className="flex h-full w-11 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0/70 transition-colors cursor-pointer"
               title="Close (Esc)"
@@ -661,6 +692,8 @@ export const PreferencesModal: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {isJsonEditorOpen && <PreferencesJsonEditor onClose={() => setIsJsonEditorOpen(false)} />}
 
         {/* Modal Main Body (Tree Sidebar + Content Pane) */}
         <div className="flex-1 flex overflow-hidden">

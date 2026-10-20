@@ -1,195 +1,153 @@
 use crate::core::db::Database;
 use rusqlite::params;
 
-pub struct GitCredentialRecord {
-    pub server_url: String,
-    pub account_name: String,
-    pub token_ref: String,
-    pub token_type: String,
-    pub source: String,
-}
-
 impl Database {
-    pub fn insert_git_credential(
+    /// Stores no secret value: only the stable preference secret ID and its OS-keychain reference.
+    pub fn get_preference_secret_ref(
         &self,
         id: &str,
-        provider: &str,
-        server_url: &str,
-        account_name: &str,
-        token_ref: &str,
-        token_type: &str,
-        label: Option<&str>,
-    ) -> Result<(), rusqlite::Error> {
-        let conn = self.conn();
-        let mut stmt = conn.prepare_cached(
-            "INSERT INTO git_credentials (id, provider, server_url, account_name, token_ref, token_type, label, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);",
-        )?;
-        stmt.execute(params![
-            id,
-            provider,
-            server_url,
-            account_name,
-            token_ref,
-            token_type,
-            label
-        ])?;
-        Ok(())
-    }
-
-    pub fn get_all_git_credentials(
-        &self,
-    ) -> Result<Vec<crate::features::credentials::GitCredentialMeta>, rusqlite::Error> {
-        let conn = self.conn();
-        let mut stmt = conn.prepare_cached(
-            "SELECT id, provider, server_url, account_name, token_ref, token_type, label, source, helper_name, created_at, updated_at
-             FROM git_credentials
-             ORDER BY created_at DESC;",
-        )?;
-
-        let rows = stmt.query_map([], |row| {
-            let token_ref: String = row.get(4)?;
-            let source: String = row.get(7)?;
-            let is_in_keyring = source == "system_global"
-                || crate::features::credentials::exists_in_keyring(&token_ref);
-            Ok(crate::features::credentials::GitCredentialMeta {
-                id: row.get(0)?,
-                provider: row.get(1)?,
-                server_url: row.get(2)?,
-                account_name: row.get(3)?,
-                token_ref,
-                token_type: row.get(5)?,
-                label: row.get(6)?,
-                source,
-                helper_name: row.get(8)?,
-                created_at: row.get(9)?,
-                updated_at: row.get(10)?,
-                is_in_keyring,
-            })
-        })?;
-
-        let mut list = Vec::new();
-        for r in rows {
-            list.push(r?);
-        }
-        Ok(list)
-    }
-
-    pub fn get_git_credential_for_clone(
-        &self,
-        id: &str,
-    ) -> Result<Option<GitCredentialRecord>, rusqlite::Error> {
-        let conn = self.conn();
-        match conn.query_row(
-            "SELECT server_url, account_name, token_ref, token_type, source
-             FROM git_credentials WHERE id = ?1;",
+    ) -> Result<Option<String>, rusqlite::Error> {
+        match self.conn().query_row(
+            "SELECT keychain_ref FROM preference_secret_refs WHERE id = ?1",
             params![id],
-            |row| {
-                Ok(GitCredentialRecord {
-                    server_url: row.get(0)?,
-                    account_name: row.get(1)?,
-                    token_ref: row.get(2)?,
-                    token_type: row.get(3)?,
-                    source: row.get(4)?,
-                })
-            },
+            |row| row.get(0),
         ) {
-            Ok(credential) => Ok(Some(credential)),
+            Ok(value) => Ok(Some(value)),
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
             Err(error) => Err(error),
         }
     }
 
-    pub fn sync_system_git_credentials(
+    pub fn upsert_preference_secret_ref(
         &self,
-        credentials: &[crate::features::credentials::GitCredentialMeta],
-        scan_complete: bool,
+        id: &str,
+        keychain_ref: &str,
     ) -> Result<(), rusqlite::Error> {
+        self.conn().execute(
+            "INSERT INTO preference_secret_refs (id, keychain_ref) VALUES (?1, ?2)
+             ON CONFLICT(id) DO UPDATE SET keychain_ref = excluded.keychain_ref;",
+            params![id, keychain_ref],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_preference_secret_ref(
+        &self,
+        id: &str,
+    ) -> Result<Option<String>, rusqlite::Error> {
         let mut conn = self.conn();
-        let tx = conn.transaction()?;
-        if scan_complete {
-            tx.execute(
-                "DELETE FROM git_credentials WHERE source = 'system_global';",
-                [],
-            )?;
+        let reference = match conn.query_row(
+            "SELECT keychain_ref FROM preference_secret_refs WHERE id = ?1",
+            params![id],
+            |row| row.get(0),
+        ) {
+            Ok(value) => Some(value),
+            Err(rusqlite::Error::QueryReturnedNoRows) => None,
+            Err(error) => return Err(error),
+        };
+        if reference.is_some() {
+            let tx = conn.transaction()?;
+            tx.execute("DELETE FROM preference_secret_refs WHERE id = ?1", params![id])?;
+            tx.commit()?;
         }
-        for credential in credentials {
-            tx.execute(
-                "INSERT INTO git_credentials (id, provider, server_url, account_name, token_ref, token_type, label, source, helper_name, created_at, updated_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'system_global', ?8, ?9, ?10)
-                 ON CONFLICT(id) DO UPDATE SET
-                    provider = excluded.provider,
-                    server_url = excluded.server_url,
-                    account_name = excluded.account_name,
-                    token_ref = excluded.token_ref,
-                    token_type = excluded.token_type,
-                    label = excluded.label,
-                    source = excluded.source,
-                    helper_name = excluded.helper_name,
-                    updated_at = excluded.updated_at;",
-                params![
-                    credential.id,
-                    credential.provider,
-                    credential.server_url,
-                    credential.account_name,
-                    credential.token_ref,
-                    credential.token_type,
-                    credential.label,
-                    credential.helper_name,
-                    credential.created_at,
-                    credential.updated_at,
-                ],
-            )?;
+        Ok(reference)
+    }
+
+    /// Reads old metadata only during the one-time migration into preferences.json.
+    pub fn get_legacy_git_credentials(
+        &self,
+    ) -> Result<Vec<crate::features::credentials::GitCredentialMeta>, rusqlite::Error> {
+        let conn = self.conn();
+        let mut columns = conn.prepare("PRAGMA table_info(git_credentials);")?;
+        let names: Vec<String> = columns
+            .query_map([], |row| row.get(1))?
+            .collect::<Result<_, _>>()?;
+        drop(columns);
+        if !names.iter().any(|column| column == "provider") {
+            return Ok(Vec::new());
         }
-        tx.commit()
+
+        let mut stmt = conn.prepare_cached(
+            "SELECT id, provider, server_url, account_name, token_ref, token_type, label, source, helper_name, created_at, updated_at
+             FROM git_credentials ORDER BY created_at DESC;",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            let token_ref: String = row.get(4)?;
+            let source: String = row.get(7)?;
+            Ok(crate::features::credentials::GitCredentialMeta {
+                id: row.get(0)?,
+                provider: row.get(1)?,
+                server_url: row.get(2)?,
+                account_name: row.get(3)?,
+                // Migration only needs public metadata and must not trigger one keychain prompt per record.
+                token_ref,
+                token_type: row.get(5)?,
+                label: row.get(6)?,
+                source: source.clone(),
+                helper_name: row.get(8)?,
+                created_at: row.get(9)?,
+                updated_at: row.get(10)?,
+                is_in_keyring: source == "system_global",
+            })
+        })?;
+        rows.collect()
+    }
+
+    /// SQLite stores only this non-secret ID-to-keychain-reference mapping.
+    pub fn insert_git_credential_ref(
+        &self,
+        id: &str,
+        token_ref: &str,
+    ) -> Result<(), rusqlite::Error> {
+        self.conn().execute(
+            "INSERT INTO git_credentials (id, token_ref) VALUES (?1, ?2);",
+            params![id, token_ref],
+        )?;
+        Ok(())
+    }
+
+    pub fn upsert_git_credential_ref(
+        &self,
+        id: &str,
+        token_ref: &str,
+    ) -> Result<(), rusqlite::Error> {
+        self.conn().execute(
+            "INSERT INTO git_credentials (id, token_ref) VALUES (?1, ?2)
+             ON CONFLICT(id) DO UPDATE SET token_ref = excluded.token_ref;",
+            params![id, token_ref],
+        )?;
+        Ok(())
     }
 
     pub fn delete_git_credential(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
         let mut conn = self.conn();
-        let token_ref: Option<String> = match conn.query_row(
-            "SELECT token_ref FROM git_credentials WHERE id = ?1;",
+        let token_ref = match conn.query_row(
+            "SELECT token_ref FROM git_credentials WHERE id = ?1",
             params![id],
             |row| row.get(0),
         ) {
-            Ok(token_ref) => Some(token_ref),
+            Ok(value) => Some(value),
             Err(rusqlite::Error::QueryReturnedNoRows) => None,
             Err(error) => return Err(error),
         };
-
-        if let Some(token_ref) = token_ref {
+        if token_ref.is_some() {
             let tx = conn.transaction()?;
-            tx.execute("DELETE FROM git_credentials WHERE id = ?1;", params![id])?;
+            tx.execute("DELETE FROM git_credentials WHERE id = ?1", params![id])?;
             tx.commit()?;
-            Ok(Some(token_ref))
-        } else {
-            Ok(None)
         }
+        Ok(token_ref)
     }
 
     pub fn get_git_credential_token_ref(
         &self,
         id: &str,
     ) -> Result<Option<String>, rusqlite::Error> {
-        let conn = self.conn();
-        match conn.query_row(
-            "SELECT token_ref FROM git_credentials WHERE id = ?1;",
+        match self.conn().query_row(
+            "SELECT token_ref FROM git_credentials WHERE id = ?1",
             params![id],
             |row| row.get(0),
         ) {
-            Ok(token_ref) => Ok(Some(token_ref)),
-            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(error) => Err(error),
-        }
-    }
-
-    pub fn get_git_credential_source(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
-        let conn = self.conn();
-        match conn.query_row(
-            "SELECT source FROM git_credentials WHERE id = ?1;",
-            params![id],
-            |row| row.get(0),
-        ) {
-            Ok(source) => Ok(Some(source)),
+            Ok(value) => Ok(Some(value)),
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
             Err(error) => Err(error),
         }

@@ -99,7 +99,10 @@ test('review panel requires renewed remote consent after changing endpoints and 
     '../../../common/utils/dateTime': { formatDateTime: (value) => value },
     '../store/useReviewStore': { useReviewStore: () => state },
     '../../ai/store/useAiMcpStore': { useAiMcpStore: (selector) => selector({ aiConfig: ai }) },
+    '../../ai/constants/aiPresets': { AI_PROVIDERS: [{ id: 'anthropic' }] },
     '../../preferences/store/usePreferencesStore': { usePreferencesStore: { getState: () => ({ openPreferences: (tab) => { preference = tab; } }) } },
+    '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: (selector) => selector({ sessions: [{ id: 'a', repoId: 'repo-a', reviewers: [] }] }) },
+    '../../ai/store/useBotReviewersStore': { useBotReviewersStore: (selector) => selector({ globalReviewers: [], repoCustomReviewers: {} }) },
   });
   try {
     const nodes = async () => componentNodes(await harness.render(ReviewPanel));

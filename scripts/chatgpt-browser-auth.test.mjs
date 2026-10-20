@@ -90,7 +90,7 @@ test('browser card never starts login on render, exposes saved profiles and keep
   const button = (items, label) => items.find((node) => node.type === 'button' && node.props.children.flat(Infinity).includes(label));
   try {
     let items = await nodes(); assert.deepEqual(calls, [['metadata']]);
-    assert.match(JSON.stringify(items), /No Codex CLI/); assert.match(JSON.stringify(items), /not yet connected/);
+    assert.match(JSON.stringify(items), /No Codex CLI/); assert.match(JSON.stringify(items), /explicitly start an AI code review/);
     await button(items, 'Check saved sign-in').props.onClick(); assert.deepEqual(calls.at(-1), ['unlock']);
     items.find((node) => node.type === select).props.onChange(profile.id); items = await nodes();
     await button(items, 'Continue with ChatGPT').props.onClick(); assert.deepEqual(calls.at(-1), ['start', profile.id]);
@@ -106,5 +106,5 @@ test('default subscription UI uses direct browser auth and preserves Codex only 
   assert.match(source, /<details[\s\S]*?Advanced: Codex-managed device code[\s\S]*?<ChatGptDeviceCodeCard/);
   const backend = readFileSync(new URL('../backend/src/features/ai/chatgpt_oauth.rs', import.meta.url), 'utf8');
   assert.doesNotMatch(backend, /Command::|CODEX_HOME|openai_subscription|chat\/completions|PENDING_CHATGPT_VERIFIER/);
-  assert.match(backend, /No inference request was sent/);
+  assert.match(backend, /general AI chat adapter is not connected to Responses API yet/);
 });

@@ -4,6 +4,7 @@ pub mod credentials;
 pub mod git;
 pub mod notifications;
 pub mod performance;
+pub mod preferences;
 pub mod review;
 pub mod sandbox;
 pub mod virtual_mr;

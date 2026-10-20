@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "general": {
+    "showInlineBlame": true,
+    "streamResponse": true,
+    "enableCodeReviewAssist": true
+  },
+  "appearance": {
+    "themeMode": "system",
+    "viewerFont": {
+      "fontFamily": "Fira Code",
+      "fontSize": 13,
+      "isBold": false,
+      "isItalic": false,
+      "isUnderline": false,
+      "lineSpacing": 1.5,
+      "enableLigatures": true
+    }
+  },
+  "ai": {},
+  "reviewers": [],
+  "sandbox": {
+    "type": "in_memory"
+  },
+  "git": {
+    "binaryId": "system-default",
+    "binaryPath": "git"
+  },
+  "notifications": {
+    "channels": {
+      "aiReview": true,
+      "gitSync": true,
+      "guardrails": true
+    }
+  },
+  "gitCredentials": []
+}

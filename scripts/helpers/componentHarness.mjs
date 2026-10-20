@@ -6,7 +6,61 @@ export function loadWithMocks(url, dependencies) {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React },
   });
   const exports = {};
-  new Function('require', 'exports', outputText)((id) => dependencies[id], exports);
+  new Function('require', 'exports', outputText)((id) => {
+    if (Object.hasOwn(dependencies, id)) return dependencies[id];
+    if (id.endsWith('/listSecretMcpEnv')) {
+      const isSecretMcpEnvName = (name) => /(token|secret|password|credential|api[_-]?key)/i.test(name);
+      const isLikelySecretMcpEnvValue = (value) => /^(sk-|ghp_|github_pat_|glpat-|xox[bp]-)/i.test(value.trim());
+      const listSecretMcpEnv = (servers) => servers.flatMap((server) => {
+        return Object.entries(server.env ?? {})
+          .filter(([name, value]) => value.trim() && (isSecretMcpEnvName(name) || isLikelySecretMcpEnvValue(value)))
+          .map(([name]) => `${server.name}.${name}`);
+      });
+      const publicMcpEnv = (env, secretEnvKeys = []) => {
+        const secretNames = new Set(secretEnvKeys);
+        return Object.fromEntries(Object.entries(env).filter(([name, value]) =>
+          !secretNames.has(name) && !isSecretMcpEnvName(name) && !isLikelySecretMcpEnvValue(value)
+        ));
+      };
+      return { listSecretMcpEnv, publicMcpEnv, isSecretMcpEnvName, isLikelySecretMcpEnvValue };
+    }
+    if (id.endsWith('/preferencesJsonService')) {
+      let settings = globalThis.window?.__STAGE0_PREFERENCES__ ?? {};
+      let revision = 'fixture-0';
+      const document = () => ({ content: JSON.stringify(settings), revision, path: 'fixture', migrated: false, settings });
+      const merge = (target, patch) => {
+        const output = { ...target };
+        for (const [key, value] of Object.entries(patch)) {
+          output[key] = value && typeof value === 'object' && !Array.isArray(value) && output[key] && typeof output[key] === 'object' && !Array.isArray(output[key])
+            ? merge(output[key], value)
+            : value;
+        }
+        return output;
+      };
+      return { preferencesJsonService: {
+        load: async () => document(),
+        patch: async (patch) => {
+          settings = merge(settings, patch);
+          revision = `fixture-${Date.now()}`;
+          if (globalThis.window) globalThis.window.__STAGE0_PREFERENCES__ = settings;
+          return document();
+        },
+        saveText: async (content) => {
+          settings = JSON.parse(content);
+          revision = `fixture-${Date.now()}`;
+          if (globalThis.window) globalThis.window.__STAGE0_PREFERENCES__ = settings;
+          return document();
+        },
+        reset: async () => {
+          settings = {};
+          revision = `fixture-${Date.now()}`;
+          if (globalThis.window) globalThis.window.__STAGE0_PREFERENCES__ = settings;
+          return document();
+        },
+      } };
+    }
+    return dependencies[id];
+  }, exports);
   return exports;
 }
 

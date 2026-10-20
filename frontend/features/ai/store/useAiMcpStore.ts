@@ -18,6 +18,8 @@ import { DEFAULT_AI_CONFIG, DEFAULT_MCP_SERVERS, AI_PROVIDERS } from '../constan
 import type { AiMcpState } from '../types/AiMcpState';
 import { MCP_TRANSPORT_UNAVAILABLE } from '../constants/runtimeAvailability';
 import { resetMcpVerification } from '../utils/resetMcpVerification';
+import { preferencesJsonService } from '../../preferences/services/preferencesJsonService';
+import { listSecretMcpEnv, publicMcpEnv } from '../utils/listSecretMcpEnv';
 
 const STORAGE_KEY = 'stage0_ai_mcp_config';
 const LEGACY_DEFAULT_AI_SYSTEM_PROMPT = `You are an expert software engineer and code reviewer embedded in Stage0 Git Reviewer.
@@ -77,7 +79,13 @@ function loadPersistedState(): {
   }
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const bootstrap = window.__STAGE0_PREFERENCES__;
+    // An empty AI section is still authoritative when native bootstrap has
+    // loaded preferences.json. Falling back to localStorage here can resurrect
+    // stale settings and create a second source of truth.
+    const raw = bootstrap !== undefined
+      ? JSON.stringify(bootstrap.ai ?? {})
+      : localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       const legacyKey = parsed.aiConfig?.apiKey;
@@ -87,12 +95,12 @@ function loadPersistedState(): {
       // supplemental instructions for global reviews.
       const legacySystemPrompt = savedAiConfig.systemPrompt;
       delete savedAiConfig.systemPrompt;
-      if (typeof savedAiConfig.reviewerInstructions !== 'string') {
-        savedAiConfig.reviewerInstructions = typeof legacySystemPrompt === 'string'
+      if (typeof savedAiConfig.reviewerInstructions !== 'string' || !savedAiConfig.reviewerInstructions.trim()) {
+        if (typeof legacySystemPrompt === 'string'
           && legacySystemPrompt.trim()
-          && legacySystemPrompt !== LEGACY_DEFAULT_AI_SYSTEM_PROMPT
-          ? legacySystemPrompt
-          : '';
+          && legacySystemPrompt !== LEGACY_DEFAULT_AI_SYSTEM_PROMPT) {
+          savedAiConfig.reviewerInstructions = legacySystemPrompt;
+        }
       }
       const loadedAiConfig: AiConfig = {
         ...DEFAULT_AI_CONFIG,
@@ -164,20 +172,27 @@ function persistState(
   guardrailPolicy?: GuardrailPolicy
 ) {
   if (typeof window === 'undefined') return;
-  try {
-    // Strip apiKey before saving to localStorage to prevent plaintext secret leakage
-    const sanitizedAiConfig: AiConfig = { ...aiConfig, apiKey: '' };
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        aiConfig: sanitizedAiConfig,
-        mcpServers: mcpServers.map(resetMcpVerification),
-        guardrailPolicy: guardrailPolicy || DEFAULT_GUARDRAIL_POLICY,
-      })
-    );
-  } catch (err) {
-    console.error('Failed to save AI & MCP settings:', err);
+  if (listSecretMcpEnv(mcpServers).length) {
+    console.warn('MCP preferences were not saved because secret environment variables must be moved to the OS keychain first.');
+    return;
   }
+  const sanitizedAiConfig = { ...aiConfig } as Partial<AiConfig>;
+  delete sanitizedAiConfig.apiKey;
+  const persistedServers = mcpServers.map((server) => {
+    const clean = resetMcpVerification(server);
+    const env = Object.fromEntries(Object.entries(clean.env ?? {}).filter(([key, value]) =>
+      !/(token|secret|password|credential|api[_-]?key)/i.test(key) &&
+      !/^(sk-|ghp_|github_pat_|glpat-|xox[bp]-)/i.test(value.trim())
+    ));
+    return { ...clean, env };
+  });
+  void preferencesJsonService.patch({
+    ai: {
+      aiConfig: sanitizedAiConfig,
+      mcpServers: persistedServers,
+      guardrailPolicy: guardrailPolicy || DEFAULT_GUARDRAIL_POLICY,
+    },
+  }).catch((error) => console.error('Could not save preferences.json:', error));
 }
 
 const initialState = loadPersistedState();
@@ -846,18 +861,19 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     };
 
     for (const server of mcpServers) {
+      const env = publicMcpEnv(server.env ?? {}, server.secretEnvKeys ?? []);
       if (server.type !== 'stdio') {
         exportObj.mcpServers[server.name] = {
           type: server.type,
           url: server.url,
-          env: Object.keys(server.env).length > 0 ? server.env : undefined,
+          env: Object.keys(env).length > 0 ? env : undefined,
         };
       } else {
         exportObj.mcpServers[server.name] = {
           type: 'stdio',
           command: server.command,
           args: server.args,
-          env: Object.keys(server.env).length > 0 ? server.env : undefined,
+          env: Object.keys(env).length > 0 ? env : undefined,
         };
       }
     }
@@ -953,6 +969,24 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   },
 }));
 
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('stage0-preferences-updated', (event) => {
+    const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
+    const configured = settings?.ai;
+    if (!configured || Object.keys(configured).length === 0) return;
+    const aiConfig = configured.aiConfig && typeof configured.aiConfig === 'object'
+      ? { ...DEFAULT_AI_CONFIG, ...(configured.aiConfig as Partial<AiConfig>), apiKey: '' }
+      : useAiMcpStore.getState().aiConfig;
+    const mcpServers = Array.isArray(configured.mcpServers)
+      ? configured.mcpServers.map((server) => resetMcpVerification(server as McpServerConfig))
+      : useAiMcpStore.getState().mcpServers;
+    const guardrailPolicy = configured.guardrailPolicy && typeof configured.guardrailPolicy === 'object'
+      ? { ...DEFAULT_GUARDRAIL_POLICY, ...(configured.guardrailPolicy as Partial<GuardrailPolicy>) }
+      : useAiMcpStore.getState().guardrailPolicy;
+    useAiMcpStore.setState({ aiConfig, mcpServers, guardrailPolicy, aiTestResult: null });
+  });
+}
+
 function getLocalOllamaEndpoint(baseUrl: string): string | null {
   try {
     const url = new URL(baseUrl);
@@ -974,14 +1008,19 @@ function getLocalOllamaEndpoint(baseUrl: string): string | null {
 }
 
 // Safely defer background hydration to avoid blocking module evaluation on startup
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && typeof window.setTimeout === 'function') {
   window.setTimeout(() => {
     if (isTauri()) {
       // Rehydrate the last committed policy before reading native state. Reading
       // the fresh backend's balanced default first would erase saved preferences.
       void (async () => {
         try {
-          await invoke('commit_ai_preferences', { apiKeys: {}, policy: initialState.guardrailPolicy });
+          await invoke('commit_ai_preferences', {
+            apiKeys: {},
+            policy: initialState.guardrailPolicy,
+            mcpEnvSecrets: {},
+            mcpEnvRemovals: {},
+          });
           await useAiMcpStore.getState().loadGuardrailPolicy();
         } catch {
           console.warn('Could not restore the saved guardrail policy; saved preferences were retained.');

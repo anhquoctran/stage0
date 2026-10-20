@@ -7,6 +7,7 @@ pub use crate::features::review::commands::*;
 pub use crate::features::review::connectors::commands::*;
 pub use crate::features::credentials::commands::*;
 pub use crate::features::git::commands::*;
+pub use crate::features::preferences::*;
 pub use crate::features::sandbox::commands::*;
 pub use crate::features::virtual_mr::commands::*;
 pub use window::*;

@@ -139,6 +139,11 @@ pub fn run() {
         .manage(notifications::NotificationRuntime::default())
         .setup(|app| {
             let handle = app.handle();
+            let preferences_dir = handle.path().app_data_dir()
+                .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            let preferences = features::preferences::PreferencesManager::new(preferences_dir)
+                .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
+            app.manage(preferences);
             let db = Database::init(handle)
                 .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
 
@@ -150,7 +155,6 @@ pub fn run() {
             }
 
             app.manage(db);
-            credentials::schedule_system_git_credential_rescan(handle);
 
             if let Some(window) = app.get_webview_window("main") {
                 app.state::<WindowManagerState>().register_welcome_window("main", true);
@@ -240,6 +244,11 @@ pub fn run() {
             commands::get_keyring_info,
             commands::store_ai_api_key,
             commands::commit_ai_preferences,
+            commands::initialize_preferences,
+            commands::load_preferences_json,
+            commands::save_preferences_json,
+            commands::patch_preferences,
+            commands::reset_preferences_json,
             commands::has_ai_api_key,
             commands::delete_ai_api_key,
             commands::ai_detect_cli,
