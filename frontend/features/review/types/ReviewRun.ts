@@ -1,5 +1,6 @@
 import type { ReviewSnapshot } from './ReviewSnapshot';
 import type { ReviewFinding } from './ReviewFinding';
+import type { ReviewRetryState } from './ReviewRetryState';
 
 export type ReviewDecision = 'approve' | 'request_changes' | 'comment';
 
@@ -17,6 +18,7 @@ export interface ReviewRun {
   decision: ReviewDecision | null;
   generatedDescription?: string;
   error: string | null;
+  retry?: ReviewRetryState;
   findings: ReviewFinding[];
   inspectedFiles: string[];
   turns: number;

@@ -155,6 +155,7 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
         decision: None,
         generated_description: None,
         error: None,
+        retry: None,
         findings: vec![],
         inspected_files: vec![],
         turns: 0,

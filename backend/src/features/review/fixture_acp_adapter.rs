@@ -74,6 +74,14 @@ impl ReviewModelAdapter for FixtureAcpAdapter {
         self.codec.recover_decode_error(error, history)
     }
 
+    fn response_failure(&self, response: &Value) -> Option<super::ReviewModelFailure> {
+        self.codec.response_failure(response)
+    }
+
+    fn append_request_retry(&self, history: &mut Vec<Value>) {
+        self.codec.append_request_retry(history)
+    }
+
     fn append_results(&self, history: &mut Vec<Value>, results: &[(ReviewToolCall, Value)]) {
         self.codec.append_results(history, results)
     }

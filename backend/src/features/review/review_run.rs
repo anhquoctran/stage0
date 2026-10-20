@@ -1,4 +1,4 @@
-use super::{ReviewFinding, ReviewSnapshot};
+use super::{ReviewFinding, ReviewRetryState, ReviewSnapshot};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -22,6 +22,8 @@ pub struct ReviewRun {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub generated_description: Option<String>,
     pub error: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retry: Option<ReviewRetryState>,
     pub findings: Vec<ReviewFinding>,
     pub inspected_files: Vec<String>,
     pub turns: usize,
@@ -36,6 +38,7 @@ pub struct ReviewRun {
 
 impl ReviewRun {
     pub fn finish(&mut self, outcome: Result<(), String>) {
+        self.retry = None;
         if let Err(error) = outcome {
             self.status = if error.starts_with("Review cancelled") {
                 "cancelled"

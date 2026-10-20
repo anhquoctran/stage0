@@ -147,6 +147,7 @@ export const ReviewPanel: React.FC = () => {
               <p className="break-all text-subtext0">Run endpoint: {run.endpoint}</p>
               <p className="font-mono text-[11px] break-all">{run.snapshot.repoPath}<br />base {run.snapshot.baseSha}<br />head {run.snapshot.headSha}<br />merge-base {run.snapshot.mergeBaseSha}</p>
               <p className="text-subtext0">{run.inspectedFiles.length} inspected paths · {run.snapshot.changedFiles.length} eligible changed paths · {run.snapshot.excludedFiles.length} excluded · {run.turns}/128 turns · {run.toolCalls}/256 tool calls · {run.usageTokens} reported tokens</p>
+              {run.retry && <p role="status" className="border border-yellow/40 bg-yellow/5 p-2 text-yellow">{run.retry.reason === 'rate_limit' ? 'The agent’s provider is rate limiting requests' : 'The agent’s provider is temporarily unavailable'}{run.retry.httpStatus ? ` (HTTP ${run.retry.httpStatus})` : ''}. Waiting before retry {run.retry.attempt}/{run.retry.maxAttempts}. Next attempt: {formatDateTime(run.retry.retryAt)}. You can cancel the review while it waits.</p>}
               {(run.status === 'partial' || run.status === 'incomplete') && <p className="text-yellow">Incomplete coverage. Some source was excluded, redacted, unread, or a tool/budget limit was reached. Do not interpret zero findings as approval.</p>}
               {run.error && <p role="alert" className="text-red whitespace-pre-wrap">{run.error}</p>}
               <p className="whitespace-pre-wrap select-text">{run.summary}</p>

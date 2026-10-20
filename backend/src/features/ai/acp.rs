@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use sha2::{Digest, Sha256};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
-use std::{path::{Component, Path, PathBuf}, process::Stdio, time::Duration};
+use std::{path::{Path, PathBuf}, process::Stdio, time::Duration};
 use tauri::{command, AppHandle, Manager};
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
@@ -10,9 +9,13 @@ use tokio::{
 };
 
 pub mod review_config;
+mod archive_format;
+mod binary_archive;
+mod binary_download;
+mod binary_install;
+mod binary_platform;
 
 const REGISTRY_URL: &str = "https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json";
-const MAX_BINARY_ARCHIVE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_REGISTRY_ICON_BYTES: usize = 128 * 1024;
 const AUTH_STATUS_UPDATE_METHOD: &str = "_auth/status_update";
 const AUTH_STATUS_WAIT: Duration = Duration::from_secs(5);
@@ -58,11 +61,7 @@ pub struct AcpAgentConfig {
     pub args: Vec<String>,
 }
 
-#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
-fn supported_binary_target() -> Option<String> { Some("windows-x86_64".into()) }
-
-#[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]
-fn supported_binary_target() -> Option<String> { None }
+fn supported_binary_target() -> Option<String> { binary_platform::current_target() }
 
 #[derive(Deserialize)]
 struct RegistryPayload {
@@ -203,136 +202,10 @@ pub async fn acp_prepare_registry_agent(app: AppHandle, agent_id: String) -> Res
 }
 
 async fn prepare_registry_binary_agent(app: &AppHandle, agent: AcpRegistryAgent) -> Result<AcpAgentConfig, String> {
-    let target = supported_binary_target().ok_or("ACP Registry binary installation is currently supported on Windows x64 only")?;
-    let binary = agent.distribution.get("binary").and_then(|value| value.get(&target))
-        .ok_or("No ACP Registry binary is available for this platform")?;
-    let archive_url = binary.get("archive").and_then(Value::as_str).ok_or("ACP Registry binary has no archive URL")?;
-    let command = binary.get("cmd").and_then(Value::as_str).ok_or("ACP Registry binary has no launch command")?;
-    let relative_command = safe_windows_binary_command(command)?;
-    let args = parse_registry_binary_args(binary.get("args"))?;
-    let expected_sha256 = match binary.get("sha256") {
-        Some(value) => Some(value.as_str().ok_or("ACP Registry binary SHA-256 checksum is invalid")?),
-        None => None,
-    };
-
     let data_dir = app.path().app_local_data_dir().map_err(|_| "Could not locate Stage0's local data directory")?;
-    let agent_dir = data_dir.join("external-agents").join(&agent.id);
-    tokio::fs::create_dir_all(&agent_dir).await.map_err(|_| "Could not create the ACP agent install directory")?;
-
-    let install_dir = agent_dir.join(format!("install-{}", uuid::Uuid::new_v4()));
-    let staging_dir = agent_dir.join(format!(".stage-{}", uuid::Uuid::new_v4()));
-    let archive_path = staging_dir.join("agent.zip");
-    let extracted_dir = staging_dir.join("extracted");
-
-    let result: Result<PathBuf, String> = async {
-        tokio::fs::create_dir_all(&extracted_dir).await.map_err(|_| "Could not prepare the ACP agent extraction directory")?;
-        download_binary_archive(archive_url, &archive_path, expected_sha256).await?;
-        extract_windows_zip(&archive_path, &extracted_dir).await?;
-        let staged_command = extracted_dir.join(&relative_command);
-        if !staged_command.is_file() {
-            return Err("The ACP Registry binary archive does not contain its declared Windows executable".into());
-        }
-        tokio::fs::rename(&extracted_dir, &install_dir).await.map_err(|_| "Could not finalize the ACP agent installation")?;
-        Ok(install_dir.join(&relative_command))
-    }.await;
-    let _ = tokio::fs::remove_dir_all(&staging_dir).await;
-    let command_path = result?;
-
-    Ok(AcpAgentConfig {
-        id: agent.id,
-        name: agent.name,
-        version: Some(agent.version),
-        description: Some(agent.description),
-        source: "registry".into(),
-        command: command_path.to_string_lossy().into_owned(),
-        launch_mode: Some("binary".into()),
-        args,
-    })
+    binary_install::install(&data_dir, agent).await
 }
 
-fn safe_windows_binary_command(value: &str) -> Result<PathBuf, String> {
-    let normalized = value.replace('/', "\\");
-    let relative = normalized.strip_prefix(".\\").unwrap_or(&normalized);
-    if relative.is_empty() || relative.starts_with('\\') || relative.contains(':') || relative.chars().any(char::is_control) {
-        return Err("ACP Registry returned an unsafe Windows binary command".into());
-    }
-    let path = PathBuf::from(relative);
-    if path.components().any(|component| !matches!(component, Component::Normal(_)))
-        || !path.extension().and_then(|extension| extension.to_str()).is_some_and(|extension| extension.eq_ignore_ascii_case("exe"))
-    {
-        return Err("ACP Registry Windows binaries must launch a relative .exe file".into());
-    }
-    Ok(path)
-}
-
-fn parse_registry_binary_args(value: Option<&Value>) -> Result<Vec<String>, String> {
-    let Some(value) = value else { return Ok(Vec::new()); };
-    let args = value.as_array().ok_or("ACP Registry binary args are invalid")?;
-    if args.len() > 64 { return Err("ACP Registry binary has too many launch arguments".into()); }
-    args.iter().map(|arg| {
-        let arg = arg.as_str().ok_or("ACP Registry binary argument is invalid")?;
-        if arg.len() > 2048 || arg.chars().any(char::is_control) {
-            return Err("ACP Registry binary argument is invalid".into());
-        }
-        Ok(arg.to_owned())
-    }).collect()
-}
-
-async fn download_binary_archive(url: &str, destination: &Path, expected_sha256: Option<&str>) -> Result<(), String> {
-    let parsed_url = reqwest::Url::parse(url).map_err(|_| "ACP Registry returned an invalid binary archive URL")?;
-    if parsed_url.scheme() != "https" || !parsed_url.path().to_ascii_lowercase().ends_with(".zip") {
-        return Err("Windows ACP Registry binary archives must use an HTTPS ZIP URL".into());
-    }
-    if let Some(expected) = expected_sha256 {
-        if expected.len() != 64 || !expected.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-            return Err("ACP Registry returned an invalid SHA-256 checksum".into());
-        }
-    }
-
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(300))
-        .redirect(reqwest::redirect::Policy::limited(3))
-        .build()
-        .map_err(|_| "Could not initialize the ACP binary download client")?;
-    let mut response = client.get(parsed_url).send().await.map_err(|_| "Could not download the ACP Registry binary")?;
-    if !response.status().is_success() { return Err(format!("ACP binary download returned HTTP {}", response.status().as_u16())); }
-    if response.url().scheme() != "https" { return Err("ACP binary download redirected to a non-HTTPS URL".into()); }
-    if response.content_length().is_some_and(|length| length > MAX_BINARY_ARCHIVE_BYTES) {
-        return Err("ACP Registry binary archive exceeds the 512 MB limit".into());
-    }
-
-    let mut file = tokio::fs::File::create(destination).await.map_err(|_| "Could not create the ACP binary archive file")?;
-    let mut hasher = Sha256::new();
-    let mut total = 0u64;
-    while let Some(chunk) = response.chunk().await.map_err(|_| "Could not read the ACP binary download")? {
-        total = total.saturating_add(chunk.len() as u64);
-        if total > MAX_BINARY_ARCHIVE_BYTES { return Err("ACP Registry binary archive exceeds the 512 MB limit".into()); }
-        hasher.update(&chunk);
-        tokio::io::AsyncWriteExt::write_all(&mut file, &chunk).await.map_err(|_| "Could not save the ACP binary archive")?;
-    }
-    if total == 0 { return Err("ACP Registry returned an empty binary archive".into()); }
-    tokio::io::AsyncWriteExt::flush(&mut file).await.map_err(|_| "Could not finish saving the ACP binary archive")?;
-
-    if let Some(expected) = expected_sha256 {
-        let actual = format!("{:x}", hasher.finalize());
-        if !actual.eq_ignore_ascii_case(expected) { return Err("ACP Registry binary archive failed its SHA-256 check".into()); }
-    }
-    Ok(())
-}
-
-async fn extract_windows_zip(archive: &Path, destination: &Path) -> Result<(), String> {
-    const EXTRACT_SCRIPT: &str = "$ErrorActionPreference = 'Stop'; Add-Type -AssemblyName System.IO.Compression.FileSystem; $zip = [System.IO.Compression.ZipFile]::OpenRead($env:STAGE0_ACP_ARCHIVE); try { if ($zip.Entries.Count -gt 10000) { throw 'Archive contains too many files' }; $total = 0L; foreach ($entry in $zip.Entries) { if ($entry.Length -gt 1073741824 - $total) { throw 'Expanded archive exceeds 1 GB' }; $total += $entry.Length } } finally { $zip.Dispose() }; [System.IO.Compression.ZipFile]::ExtractToDirectory($env:STAGE0_ACP_ARCHIVE, $env:STAGE0_ACP_DESTINATION)";
-    let output = Command::new("powershell.exe")
-        .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", EXTRACT_SCRIPT])
-        .env("STAGE0_ACP_ARCHIVE", archive)
-        .env("STAGE0_ACP_DESTINATION", destination)
-        .output().await.map_err(|_| "Could not start PowerShell to extract the ACP agent archive")?;
-    if !output.status.success() {
-        let detail = String::from_utf8_lossy(&output.stderr).trim().chars().take(300).collect::<String>();
-        return Err(if detail.is_empty() { "Could not extract the ACP agent ZIP archive".into() } else { format!("Could not extract the ACP agent ZIP archive: {detail}") });
-    }
-    Ok(())
-}
 
 fn safe_package_name(value: &str) -> bool {
     !value.is_empty() && value.len() <= 250 && value.bytes().all(|byte| {
@@ -378,14 +251,11 @@ fn validate_config(config: &AcpAgentConfig) -> Result<(), String> {
     }
     if config.source == "registry" {
         if config.launch_mode.as_deref() == Some("binary") {
-            #[cfg(target_os = "windows")]
             if !Path::new(&config.command).is_absolute()
-                || !Path::new(&config.command).extension().and_then(|extension| extension.to_str()).is_some_and(|extension| extension.eq_ignore_ascii_case("exe"))
+                || (cfg!(target_os = "windows") && !binary_platform::is_windows_executable(Path::new(&config.command)))
             {
-                return Err("ACP Registry binary command must be an absolute Windows executable path".into());
+                return Err("ACP Registry binary command must be an absolute executable path (.exe on Windows)".into());
             }
-            #[cfg(not(target_os = "windows"))]
-            return Err("ACP Registry binary agents installed for Windows cannot run on this platform".into());
         } else if !matches!(config.command.as_str(), "npx" | "uvx") {
             return Err("Unsupported ACP Registry launch command".into());
         }
@@ -609,6 +479,36 @@ mod tests {
     use super::review_config::filter_review_config_options;
     use serde_json::json;
 
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn review_transport_preserves_agent_error_text_and_stop_reason() {
+        // A local ACP fixture reproduces the actual Codex bridge behavior:
+        // the provider error arrives as agent_message_chunk + end_turn.
+        let script = r#"
+while IFS= read -r request; do
+  case "$request" in
+    *'"method":"initialize"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":0,"result":{"protocolVersion":1}}' ;;
+    *'"method":"session/new"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"sessionId":"fixture"}}' ;;
+    *'"method":"session/prompt"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","method":"session/update","params":{"sessionId":"fixture","update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"exceeded retry limit, last status: 429 Too Many Requests"}}}}' ;
+      printf '%s\n' '{"jsonrpc":"2.0","id":2,"result":{"stopReason":"end_turn"}}' ;;
+  esac
+done
+"#.lines().map(str::trim).collect::<Vec<_>>().join(" ");
+        let config = super::AcpAgentConfig {
+            id: "fixture".into(), name: "Fixture".into(), version: None,
+            description: None, source: "custom".into(), command: "/bin/sh".into(),
+            launch_mode: None, args: vec!["-c".into(), script.into()],
+        };
+        let mut session = tokio::time::timeout(std::time::Duration::from_secs(5), super::AcpAgentReviewSession::start(&config, &serde_json::Value::Null)).await.unwrap().unwrap();
+        let response = tokio::time::timeout(std::time::Duration::from_secs(5), session.prompt_turn(&json!({"history":[]}))).await.unwrap().unwrap();
+        assert_eq!(response["stopReason"], "end_turn");
+        assert_eq!(response["output"], "exceeded retry limit, last status: 429 Too Many Requests");
+        session.close().await;
+    }
+
     #[test]
     fn auth_status_exposes_only_bounded_account_identity_fields() {
         let status = sanitize_auth_status(&json!({
@@ -821,7 +721,7 @@ impl AcpAgentReviewSession {
         }
     }
 
-    pub async fn prompt_turn(&mut self, turn: &Value) -> Result<String, String> {
+    pub async fn prompt_turn(&mut self, turn: &Value) -> Result<Value, String> {
         let turn_json = serde_json::to_string(turn).map_err(|_| "Could not encode ACP review turn")?;
         let prompt = if turn["continuation"] == true {
             format!(
@@ -859,9 +759,9 @@ impl AcpAgentReviewSession {
             }
             if message.get("id").and_then(Value::as_u64) == Some(request_id) {
                 if let Some(error) = message.get("error") {
-                    return Err(error.get("message").and_then(Value::as_str).unwrap_or("ACP review prompt failed").chars().take(400).collect());
+                    return Ok(json!({"output":output,"error":error}));
                 }
-                return if output.trim().is_empty() { Err("ACP agent completed without a text response".into()) } else { Ok(output) };
+                return Ok(json!({"output":output,"stopReason":message["result"]["stopReason"]}));
             }
         }
     }

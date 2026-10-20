@@ -16,28 +16,11 @@ import type { AcpAgentConfig, AcpRegistryAgent } from '../types/AcpAgentConfig';
 import type { AcpAgentConnectionInfo } from '../types/AcpAgentConnectionInfo';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import { useGitStore } from '../../git/store/useGitStore';
+import { registryUnavailableReason } from '../utils/acpRegistryAvailability';
 
 type AuthMethod = { id: string; name?: string; description?: string; type?: string };
 type Filter = 'all' | 'installed' | 'not-installed';
 type AcpRegistryResponse = { agents: AcpRegistryAgent[]; supportedBinaryTarget?: string | null };
-
-function canInstallFromRegistry(agent: AcpRegistryAgent, binaryTarget?: string): boolean {
-  const binary = binaryTarget ? agent.distribution.binary?.[binaryTarget] : undefined;
-  let binaryAvailable = false;
-  if (binary && typeof binary === 'object') {
-    const archive = (binary as Record<string, unknown>).archive;
-    const command = (binary as Record<string, unknown>).cmd;
-    if (typeof archive === 'string' && typeof command === 'string' && command.toLowerCase().endsWith('.exe')) {
-      try {
-        const archiveUrl = new URL(archive);
-        binaryAvailable = archiveUrl.protocol === 'https:' && archiveUrl.pathname.toLowerCase().endsWith('.zip');
-      } catch {
-        binaryAvailable = false;
-      }
-    }
-  }
-  return Boolean(agent.distribution.npx || agent.distribution.uvx || binaryAvailable);
-}
 
 function isRegistryIconUrl(icon?: string): icon is string {
   if (!icon) return false;
@@ -352,31 +335,32 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({ draftSetti
           const name = isCustom ? (item as AcpAgentConfig).name : (item as AcpRegistryAgent).name;
           const version = isCustom ? undefined : (item as AcpRegistryAgent).version;
           const description = isCustom ? (item as AcpAgentConfig).command : (item as AcpRegistryAgent).description;
-          const installable = !isCustom && canInstallFromRegistry(entry!, supportedBinaryTarget);
+          const unavailableReason = entry ? registryUnavailableReason(entry, supportedBinaryTarget) : undefined;
+          const installable = !isCustom && !unavailableReason;
           return (
             <article key={`${isCustom ? 'custom' : 'registry'}-${item.id}`} className="py-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <button type="button" onClick={() => installed ? openDetails(installed, entry) : setError(installable ? 'Install this agent first to configure or send a prompt.' : 'This Registry entry has no supported package for this platform.')} className="min-w-0 flex-1 text-left">
+                <button type="button" onClick={() => installed ? openDetails(installed, entry) : setError(installable ? 'Install this agent first to configure or send a prompt.' : unavailableReason || 'No compatible registry package.')} className="min-w-0 flex-1 text-left">
                   <span className="flex items-center gap-2 text-sm font-medium"><AgentIcon icon={entry?.icon} /> <span className="truncate">{name}</span>{version && <span className="text-xs text-subtext0">v{version}</span>}{installed && <span className="border border-green/40 px-1.5 py-0.5 text-[10px] text-green">Installed</span>}</span>
                   <span className="mt-1 block truncate text-[11px] text-subtext0">{description}</span>
                 </button>
                 {installed ? <button type="button" onClick={() => openDetails(installed, entry)} className="shrink-0 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0">Manage</button>
                   : installable ? <button type="button" disabled={busyId === item.id || !isTauri()} onClick={() => void install(entry!)} className="shrink-0 border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand hover:bg-brand/15 disabled:opacity-45">{busyId === item.id ? 'Installing…' : 'Install'}</button>
-                    : <span className="shrink-0 text-[10px] text-subtext0">No package for this platform</span>}
+                    : <span title={unavailableReason} className="shrink-0 max-w-48 text-right text-[10px] text-subtext0">{unavailableReason}</span>}
               </div>
               {entry && <AcpRegistryProjectInfo entry={entry} distribution={registryDistribution(entry)} />}
             </article>
           );
         })}
       </div>
-      <p className="text-[11px] text-subtext0">Installing an <code className="font-mono">npx</code> or <code className="font-mono">uvx</code> agent saves its launch config; the package downloads on first launch. Windows x64 ZIP agents are downloaded into Stage0’s local data folder. Uninstalling removes the launch config; downloaded package files may remain.</p>
+      <p className="text-[11px] text-subtext0">Installing an <code className="font-mono">npx</code> or <code className="font-mono">uvx</code> agent saves its launch config; the package downloads on first launch. Native packages for {supportedBinaryTarget || 'this platform'} are downloaded and extracted into Stage0’s local data folder. Uninstalling removes the launch config; downloaded package files may remain.</p>
 
       {detailAgent && <Modal title={detailAgent.name} onClose={() => { setDetailAgent(null); setDetailRegistryEntry(null); }}>
           <div className="space-y-4">
           {error && <p role="status" className="border border-yellow/40 bg-yellow/5 px-3 py-2 text-xs text-yellow">{error}</p>}
           {notice && <p role="status" className="border border-green/40 bg-green/5 px-3 py-2 text-xs text-green">{notice}</p>}
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><p className="text-sm font-semibold">{detailAgent.name}{detailAgent.version ? ` · ${detailAgent.version}` : ''}</p><p className="mt-1 text-xs text-subtext0">{detailAgent.description || 'Custom ACP agent'} · {detailAgent.launchMode === 'binary' ? 'Windows x64 binary' : `${detailAgent.command} ${detailAgent.args.join(' ')}`}</p></div>
+            <div><p className="text-sm font-semibold">{detailAgent.name}{detailAgent.version ? ` · ${detailAgent.version}` : ''}</p><p className="mt-1 text-xs text-subtext0">{detailAgent.description || 'Custom ACP agent'} · {detailAgent.launchMode === 'binary' ? `Native binary · ${detailAgent.command}` : `${detailAgent.command} ${detailAgent.args.join(' ')}`}</p></div>
             <button type="button" onClick={() => setRemovePending(true)} className="flex items-center gap-1.5 border border-red/40 px-2.5 py-1.5 text-xs text-red hover:bg-red/10"><Trash2 className="h-3.5 w-3.5" /> Uninstall</button>
           </div>
           {detailRegistryEntry ? <section className="space-y-3 border border-surface1 bg-base/40 p-3">
