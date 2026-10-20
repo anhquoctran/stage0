@@ -9,8 +9,8 @@ import { isLikelySecretMcpEnvValue, isSecretMcpEnvName } from '../utils/listSecr
 import { preferencesJsonService } from '../../preferences/services/preferencesJsonService';
 
 export function captureAiPreferences(): AiPreferencesSnapshot {
-  const { aiConfig, mcpServers, guardrailPolicy } = useAiMcpStore.getState();
-  return cleanAiSnapshot({ aiConfig, mcpServers, guardrailPolicy, globalReviewers: useBotReviewersStore.getState().globalReviewers });
+  const { aiConfig, mcpServers, guardrailPolicy, externalAgents } = useAiMcpStore.getState();
+  return cleanAiSnapshot({ aiConfig, mcpServers, guardrailPolicy, globalReviewers: useBotReviewersStore.getState().globalReviewers, externalAgents });
 }
 
 let committing = false;
@@ -57,11 +57,13 @@ export async function commitAiPreferences(
     previous = await preferencesJsonService.load();
     const persistedAiConfig = { ...snapshot.aiConfig } as Record<string, unknown>;
     delete persistedAiConfig.apiKey;
+    persistedAiConfig.authMode = { $stage0Delete: true };
+    persistedAiConfig.cliType = { $stage0Delete: true };
     // One JSONC patch commits AI plus the dialog's other app preferences and reviewers.
     // Runtime Zustand state is published only after the keyring batch also succeeds.
     committed = await preferencesJsonService.patch({
       ...additionalPreferences,
-      ai: { aiConfig: persistedAiConfig, mcpServers: persistedMcpServers, guardrailPolicy: snapshot.guardrailPolicy },
+      ai: { aiConfig: persistedAiConfig, mcpServers: persistedMcpServers, guardrailPolicy: snapshot.guardrailPolicy, externalAgents: snapshot.externalAgents },
       reviewers: snapshot.globalReviewers,
     });
     let configured: Partial<Record<AiProviderId, boolean>> = {};
@@ -76,6 +78,7 @@ export async function commitAiPreferences(
     }
     const committedSnapshot = cleanAiSnapshot({ ...snapshot, mcpServers: persistedMcpServers });
     useAiMcpStore.setState((state) => ({ aiConfig: snapshot.aiConfig, mcpServers: persistedMcpServers, guardrailPolicy: snapshot.guardrailPolicy,
+      externalAgents: snapshot.externalAgents,
       apiKeysConfigured: { ...state.apiKeysConfigured, ...configured }, aiTestResult: null }));
     useBotReviewersStore.setState({ globalReviewers: snapshot.globalReviewers });
     return committedSnapshot;

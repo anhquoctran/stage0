@@ -9,6 +9,7 @@ export type PreferenceTab =
   | 'ai'
   | 'ai-overview'
   | 'ai-providers'
+  | 'ai-external-agents'
   | 'ai-mcp'
   | 'ai-reviewers'
   | 'ai-sandbox'

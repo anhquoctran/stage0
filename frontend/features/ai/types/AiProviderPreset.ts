@@ -1,6 +1,5 @@
 import type { AiProviderId } from './AiProviderId';
 import type { AiModelPreset } from './AiModelPreset';
-import type { AiAuthMode } from './AiAuthMode';
 
 export interface AiProviderPreset {
   id: AiProviderId;
@@ -11,5 +10,4 @@ export interface AiProviderPreset {
   models: AiModelPreset[];
   requiresApiKey: boolean;
   docUrl: string;
-  supportedAuthModes?: AiAuthMode[];
 }

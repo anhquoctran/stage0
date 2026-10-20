@@ -1,23 +1,17 @@
 use super::{model_adapter::ReviewModelAdapter, provider, ReviewRequest, ReviewToolCall};
 use serde_json::Value;
 use std::{future::Future, pin::Pin};
-use zeroize::Zeroizing;
 
 pub struct NativeModelAdapter {
     config: ReviewRequest,
     endpoint: String,
-    subscription_token: Option<Zeroizing<String>>,
 }
 
 impl NativeModelAdapter {
-    pub fn new(
-        config: &ReviewRequest,
-        subscription_token: Option<Zeroizing<String>>,
-    ) -> Result<Self, String> {
+    pub fn new(config: &ReviewRequest) -> Result<Self, String> {
         Ok(Self {
             endpoint: provider::endpoint(config)?,
             config: config.clone(),
-            subscription_token,
         })
     }
 }
@@ -37,7 +31,6 @@ impl ReviewModelAdapter for NativeModelAdapter {
             &self.config,
             &self.endpoint,
             body,
-            self.subscription_token.as_ref().map(|token| token.as_str()),
         ))
     }
     fn decode(

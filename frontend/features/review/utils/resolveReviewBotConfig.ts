@@ -44,8 +44,6 @@ export function resolveReviewBotConfig(
   return {
     ...globalConfig,
     provider,
-    authMode: provider === globalConfig.provider ? globalConfig.authMode : 'api_key',
-    cliType: undefined,
     model,
     baseUrl,
     reviewerRole: reviewer.category,

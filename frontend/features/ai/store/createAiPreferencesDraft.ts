@@ -70,6 +70,7 @@ export function createAiPreferencesDraft(initial: AiPreferencesSnapshot) {
       : { type: server.type, url: server.url, env: server.env }])) }, null, 2),
     updateGuardrailPolicy: async (partial) => set({ guardrailPolicy: { ...get().guardrailPolicy, ...structuredClone(partial) } }),
     resetGuardrailPolicy: async (mode) => set({ guardrailPolicy: guardrailPreset(mode) }),
+    updateExternalAgents: (agents) => set({ externalAgents: structuredClone(agents) }),
     addGlobalReviewer: (bot) => { const nextId = id(); set({ globalReviewers: [...get().globalReviewers, { ...structuredClone(bot), id: nextId, isBuiltin: false }] }); return nextId; },
     updateGlobalReviewer: (id, partial) => set({ globalReviewers: get().globalReviewers.map((bot) => bot.id === id ? { ...bot, ...structuredClone(partial) } : bot) }),
     deleteGlobalReviewer: (id) => set({ globalReviewers: get().globalReviewers.filter((bot) => bot.id !== id) }),

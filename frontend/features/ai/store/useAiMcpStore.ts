@@ -5,12 +5,6 @@ import { activeProviderSettings, configuredProviderIds, providerSettingsFor, rem
 import { type AiModelPreset } from '../types/AiModelPreset';
 import { type McpServerConfig } from '../types/McpServerConfig';
 import { type McpConfigFileFormat } from '../types/McpConfigFileFormat';
-import { type CliDetectionResult } from '../types/CliDetectionResult';
-import { type CopilotDeviceCodeResponse } from '../types/CopilotDeviceCodeResponse';
-import { type CopilotAuthStatus } from '../types/CopilotAuthStatus';
-import { type GoogleAuthStatus } from '../types/GoogleAuthStatus';
-import { type ChatGptAuthStatus } from '../types/ChatGptAuthStatus';
-import { type UnifiedAiChatResponse } from '../types/UnifiedAiChatResponse';
 import { type GuardrailPolicy } from '../types/GuardrailPolicy';
 import { type GuardrailAuditEvent } from '../types/GuardrailAuditEvent';
 import { type GuardrailEvaluationResult } from '../types/GuardrailEvaluationResult';
@@ -21,6 +15,7 @@ import { MCP_TRANSPORT_UNAVAILABLE } from '../constants/runtimeAvailability';
 import { resetMcpVerification } from '../utils/resetMcpVerification';
 import { preferencesJsonService } from '../../preferences/services/preferencesJsonService';
 import { listSecretMcpEnv, publicMcpEnv } from '../utils/listSecretMcpEnv';
+import type { AcpAgentConfig } from '../types/AcpAgentConfig';
 
 const STORAGE_KEY = 'stage0_ai_mcp_config';
 const LEGACY_DEFAULT_AI_SYSTEM_PROMPT = `You are an expert software engineer and code reviewer embedded in Stage0 Git Reviewer.
@@ -32,6 +27,22 @@ When reviewing git diffs:
 
 function normalizeLoadedAiConfig(saved?: Partial<AiConfig>): AiConfig {
   const loaded: AiConfig = { ...DEFAULT_AI_CONFIG, ...(saved || {}), apiKey: '' };
+  if (!AI_PROVIDERS.some((provider) => provider.id === loaded.provider)) {
+    loaded.provider = DEFAULT_AI_CONFIG.provider;
+    loaded.model = DEFAULT_AI_CONFIG.model;
+    loaded.baseUrl = DEFAULT_AI_CONFIG.baseUrl;
+  }
+  delete (loaded as AiConfig & { authMode?: unknown }).authMode;
+  delete (loaded as AiConfig & { cliType?: unknown }).cliType;
+  if (loaded.providerSettings) {
+    delete (loaded.providerSettings as Record<string, unknown>).github_copilot;
+    for (const settings of Object.values(loaded.providerSettings)) {
+      if (settings) {
+        delete (settings as typeof settings & { authMode?: unknown }).authMode;
+        delete (settings as typeof settings & { cliType?: unknown }).cliType;
+      }
+    }
+  }
   loaded.configuredProviders = Array.isArray(saved?.configuredProviders)
     ? configuredProviderIds(loaded)
     : saved && Object.keys(saved).length
@@ -39,53 +50,18 @@ function normalizeLoadedAiConfig(saved?: Partial<AiConfig>): AiConfig {
       : [];
   return loaded;
 }
-let chatGptEpoch = 0;
-let chatGptPoll = 0;
-
-function publicChatGptStatus(value: ChatGptAuthStatus): ChatGptAuthStatus {
-  if (!value || typeof value.connected !== 'boolean' || !['pending', 'signed_in', 'signed_out', 'failed', 'cancelled'].includes(value.phase || '') || !Array.isArray(value.profiles)) throw new Error('Invalid ChatGPT browser authentication status.');
-  return {
-    connected: value.connected, phase: value.phase,
-    account_email: typeof value.account_email === 'string' ? value.account_email : undefined,
-    error: typeof value.error === 'string' ? value.error : undefined,
-    attempt_id: value.phase === 'pending' && typeof value.attempt_id === 'string' ? value.attempt_id : null,
-    active_profile_id: typeof value.active_profile_id === 'string' ? value.active_profile_id : null,
-    plan_usage_enabled: value.connected && value.plan_usage_enabled === true,
-    credentials_loaded: value.credentials_loaded === true,
-    profiles: value.profiles.slice(0, 12).filter((profile) => typeof profile.id === 'string' && typeof profile.label === 'string').map((profile) => ({ id: profile.id, label: profile.label, email: typeof profile.email === 'string' ? profile.email : null, signed_in: profile.signed_in === true })),
-  };
-}
-
-async function chatGptAction(command: string, args: Record<string, unknown> | undefined, set: (value: Partial<AiMcpState>) => void, get: () => AiMcpState): Promise<void> {
-  if (get().isConnectingSubscription) return;
-  const epoch = ++chatGptEpoch;
-  set({ isConnectingSubscription: true });
-  try {
-    if (!isTauri()) throw new Error('ChatGPT browser sign-in requires the native Stage0 app. No Codex CLI is required.');
-    const status = publicChatGptStatus(await invoke<ChatGptAuthStatus>(command, args));
-    if (epoch === chatGptEpoch) set({ chatgptAuthStatus: status });
-  } catch (error) {
-    const previous = get().chatgptAuthStatus;
-    let recovered: ChatGptAuthStatus = { ...previous, connected: false, plan_usage_enabled: false, phase: previous?.phase === 'pending' ? 'pending' : 'failed', attempt_id: previous?.phase === 'pending' ? previous.attempt_id : null };
-    // A failed action can have partially completed (for example local sign-out).
-    // Re-read metadata only; never retry authorization or restore an old connected flag.
-    if (isTauri() && epoch === chatGptEpoch) {
-      try { recovered = publicChatGptStatus(await invoke<ChatGptAuthStatus>('chatgpt_oauth_check_status')); } catch {}
-    }
-    if (epoch === chatGptEpoch) set({ chatgptAuthStatus: { ...recovered, error: String(error) } });
-  } finally { if (epoch === chatGptEpoch) set({ isConnectingSubscription: false }); }
-}
-
 function loadPersistedState(): {
   aiConfig: AiConfig;
   mcpServers: McpServerConfig[];
   guardrailPolicy: GuardrailPolicy;
+  externalAgents: AcpAgentConfig[];
 } {
   if (typeof window === 'undefined') {
     return {
       aiConfig: DEFAULT_AI_CONFIG,
       mcpServers: DEFAULT_MCP_SERVERS,
       guardrailPolicy: DEFAULT_GUARDRAIL_POLICY,
+      externalAgents: [],
     };
   }
 
@@ -132,15 +108,19 @@ function loadPersistedState(): {
             aiConfig: loadedAiConfig,
             mcpServers: loadedMcpServers,
             guardrailPolicy: loadedGuardrailPolicy,
+            externalAgents: Array.isArray(parsed.externalAgents) ? parsed.externalAgents : [],
           }));
         } catch {
           localStorage.removeItem(STORAGE_KEY);
         }
 
-        if (isTauri()) {
-          const providerToMigrate = loadedAiConfig.provider || DEFAULT_AI_CONFIG.provider;
+        const legacyKeyProvider = typeof savedAiConfig.provider === 'string'
+          && AI_PROVIDERS.some((provider) => provider.id === savedAiConfig.provider)
+          ? savedAiConfig.provider as AiConfig['provider']
+          : savedAiConfig.provider === undefined ? DEFAULT_AI_CONFIG.provider : null;
+        if (isTauri() && legacyKeyProvider) {
           void invoke('store_ai_api_key', {
-            provider: providerToMigrate,
+            provider: legacyKeyProvider,
             apiKey: legacyKey.trim(),
           }).catch(() => {
             console.warn('A previously saved API key could not be moved to the OS credential store. Please enter it again.');
@@ -160,6 +140,7 @@ function loadPersistedState(): {
         aiConfig: loadedAiConfig,
         mcpServers: loadedMcpServers,
         guardrailPolicy: loadedGuardrailPolicy,
+        externalAgents: Array.isArray(parsed.externalAgents) ? parsed.externalAgents.filter((agent: AcpAgentConfig) => agent && typeof agent.id === 'string' && typeof agent.name === 'string' && typeof agent.command === 'string' && Array.isArray(agent.args)) : [],
       };
     }
   } catch (err) {
@@ -170,13 +151,15 @@ function loadPersistedState(): {
     aiConfig: DEFAULT_AI_CONFIG,
     mcpServers: DEFAULT_MCP_SERVERS,
     guardrailPolicy: DEFAULT_GUARDRAIL_POLICY,
+    externalAgents: [],
   };
 }
 
 function persistState(
   aiConfig: AiConfig,
   mcpServers: McpServerConfig[],
-  guardrailPolicy?: GuardrailPolicy
+  guardrailPolicy?: GuardrailPolicy,
+  externalAgents: AcpAgentConfig[] = []
 ) {
   if (typeof window === 'undefined') return;
   if (listSecretMcpEnv(mcpServers).length) {
@@ -185,6 +168,9 @@ function persistState(
   }
   const sanitizedAiConfig = { ...aiConfig } as Partial<AiConfig>;
   delete sanitizedAiConfig.apiKey;
+  const persistedAiConfig = sanitizedAiConfig as Record<string, unknown>;
+  persistedAiConfig.authMode = { $stage0Delete: true };
+  persistedAiConfig.cliType = { $stage0Delete: true };
   const persistedServers = mcpServers.map((server) => {
     const clean = resetMcpVerification(server);
     const env = Object.fromEntries(Object.entries(clean.env ?? {}).filter(([key, value]) =>
@@ -195,9 +181,10 @@ function persistState(
   });
   void preferencesJsonService.patch({
     ai: {
-      aiConfig: sanitizedAiConfig,
+      aiConfig: persistedAiConfig,
       mcpServers: persistedServers,
       guardrailPolicy: guardrailPolicy || DEFAULT_GUARDRAIL_POLICY,
+      externalAgents,
     },
   }).catch((error) => console.error('Could not save preferences.json:', error));
 }
@@ -211,6 +198,11 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   apiKeyCheckError: null,
   mcpServers: initialState.mcpServers,
   guardrailPolicy: initialState.guardrailPolicy,
+  externalAgents: initialState.externalAgents,
+  updateExternalAgents: (agents) => {
+    set({ externalAgents: agents });
+    persistState(get().aiConfig, get().mcpServers, get().guardrailPolicy, agents);
+  },
   guardrailAuditLog: [],
   isGuardrailLoading: false,
   isTestingAi: false,
@@ -222,16 +214,6 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   isFetchingDynamicModels: false,
   dynamicModelError: null,
 
-  // Cloud Subscription & CLI Bridge State
-  copilotStatus: null,
-  googleAuthStatus: null,
-  chatgptAuthStatus: null,
-  cliStatus: {},
-  isDetectingCli: false,
-  isConnectingSubscription: false,
-  isCheckingSubscription: false,
-  copilotDeviceCode: null,
-
   setActiveSubTab: (tab) => set({ activeSubTab: tab }),
 
   updateAiConfig: (partial) => {
@@ -241,7 +223,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       ...safePartial,
       apiKey: '',
     };
-    if (['authMode', 'cliType', 'model', 'baseUrl', 'reasoningEffort', 'fastMode'].some((key) => key in safePartial)
+    if (['model', 'baseUrl', 'reasoningEffort', 'fastMode'].some((key) => key in safePartial)
       && configuredProviderIds(nextConfig).includes(nextConfig.provider)) {
       nextConfig.providerSettings = {
         ...nextConfig.providerSettings,
@@ -250,7 +232,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     }
     const keyToSave = typeof apiKey === 'string' ? apiKey.trim() : '';
     set({ aiConfig: nextConfig, aiTestResult: null });
-    persistState(nextConfig, get().mcpServers, get().guardrailPolicy);
+    persistState(nextConfig, get().mcpServers, get().guardrailPolicy, get().externalAgents);
 
     // Plaintext is sent only to the OS keyring and never retained in Zustand.
     if (keyToSave && isTauri()) {
@@ -275,7 +257,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       aiTestResult: null,
       apiKeysConfigured: { ...get().apiKeysConfigured, [currentProvider]: false },
     });
-    persistState(DEFAULT_AI_CONFIG, get().mcpServers);
+    persistState(DEFAULT_AI_CONFIG, get().mcpServers, get().guardrailPolicy, get().externalAgents);
     if (isTauri()) {
       void invoke('delete_ai_api_key', { provider: currentProvider }).catch(() => {});
     }
@@ -310,7 +292,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       apiKey: '',
     };
     set({ aiConfig: nextConfig, aiTestResult: null });
-    persistState(nextConfig, get().mcpServers);
+    persistState(nextConfig, get().mcpServers, get().guardrailPolicy, get().externalAgents);
 
     // Selecting a provider never reads secrets or contacts a model endpoint.
   },
@@ -322,82 +304,6 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     const startTime = Date.now();
 
     try {
-      // 1. Subscription & CLI Bridge checks
-      if (aiConfig.authMode === 'cli_bridge') {
-        const cliType =
-          aiConfig.cliType ||
-          (aiConfig.provider === 'github_copilot'
-            ? 'gh_copilot'
-            : aiConfig.provider === 'gemini'
-            ? 'gcloud'
-            : aiConfig.provider === 'xai_grok'
-            ? 'grok'
-            : 'claude');
-        if (isTauri()) {
-          const res = await invoke<{
-            success: boolean;
-            output: string;
-            duration_ms: number;
-            error?: string;
-          }>('ai_execute_cli', {
-            cliType,
-            prompt: 'Explain what Stage0 Virtual MR is in one concise sentence.',
-            repoPath: null,
-          });
-          const latency = res.duration_ms || (Date.now() - startTime);
-          if (res.success) {
-            const successRes = {
-              success: true,
-              message: `CLI Bridge connected (${cliType}, ${latency}ms). Output: "${res.output.trim().slice(0, 140)}"`,
-              timestamp: Date.now(),
-            };
-            set({ isTestingAi: false, aiTestResult: successRes });
-            return successRes;
-          } else {
-            const errRes = {
-              success: false,
-              message: res.error || 'CLI execution failed',
-              timestamp: Date.now(),
-            };
-            set({ isTestingAi: false, aiTestResult: errRes });
-            return errRes;
-          }
-        }
-      }
-
-      if (aiConfig.authMode === 'subscription_oauth') {
-        if (isTauri()) {
-          const res = await invoke<UnifiedAiChatResponse>('ai_chat_dispatch', {
-            req: {
-              provider: aiConfig.provider,
-              auth_mode: 'subscription_oauth',
-              model: aiConfig.model,
-              prompt: 'Verify AI connection for Stage0 Virtual MR review.',
-              system_prompt: 'Respond with a short one-sentence confirmation.',
-              repo_path: null,
-            },
-          });
-          const latency = res.duration_ms || (Date.now() - startTime);
-          if (res.success) {
-            const successRes = {
-              success: true,
-              message: `Verified subscription connection (${res.provider_used}, ${latency}ms): "${res.content.trim().slice(0, 140)}"`,
-              timestamp: Date.now(),
-            };
-            set({ isTestingAi: false, aiTestResult: successRes });
-            return successRes;
-          } else {
-            const errRes = {
-              success: false,
-              message: res.error || 'Subscription check failed',
-              timestamp: Date.now(),
-            };
-            set({ isTestingAi: false, aiTestResult: errRes });
-            return errRes;
-          }
-        }
-      }
-
       // 2. Validation for providers requiring API Key
       if (
         aiConfig.provider !== 'ollama' &&
@@ -475,7 +381,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
         const result = await invoke<{ success: boolean; message: string }>('test_ai_review_provider', {
           request: {
             sessionId: 'connection-check', provider: aiConfig.provider,
-            authMode: aiConfig.authMode || 'api_key', model: aiConfig.model,
+            authMode: 'api_key', model: aiConfig.model,
             baseUrl: aiConfig.baseUrl, instructions: '', allowRemote: true,
             reasoningEffort: aiConfig.reasoningEffort || null, fastMode: aiConfig.fastMode === true,
           },
@@ -510,188 +416,6 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   },
 
   clearAiTestResult: () => set({ aiTestResult: null }),
-
-  detectCli: async (cliType: string) => {
-    set({ isDetectingCli: true });
-    try {
-      if (isTauri()) {
-        const res = await invoke<CliDetectionResult>('ai_detect_cli', { cliType });
-        set((state) => ({
-          cliStatus: { ...state.cliStatus, [cliType]: res },
-          isDetectingCli: false,
-        }));
-        return res;
-      }
-      return null;
-    } catch (e) {
-      console.warn(`Failed to detect CLI ${cliType}:`, e);
-      set({ isDetectingCli: false });
-      return null;
-    }
-  },
-
-  executeCliTest: async (cliType: string, prompt?: string) => {
-    try {
-      if (isTauri()) {
-        const res = await invoke<{ success: boolean; output: string; error?: string }>('ai_execute_cli', {
-          cliType,
-          prompt: prompt || 'Explain what Stage0 Virtual MR is in one concise sentence.',
-          repoPath: null,
-        });
-        return { success: res.success, output: res.success ? res.output : (res.error || 'Failed') };
-      }
-      return { success: false, output: 'Tauri environment not available' };
-    } catch (e) {
-      return { success: false, output: String(e) };
-    }
-  },
-
-  startCopilotFlow: async () => {
-    set({ isConnectingSubscription: true });
-    try {
-      if (isTauri()) {
-        const res = await invoke<CopilotDeviceCodeResponse>('copilot_start_device_flow', { clientId: null });
-        set({ copilotDeviceCode: res, isConnectingSubscription: false });
-        return res;
-      } else {
-        alert('GitHub Copilot authentication requires the Stage0 desktop app (Tauri) to store the session token in the OS keyring.');
-        set({ isConnectingSubscription: false });
-        return null;
-      }
-    } catch (e) {
-      console.error('Failed to start Copilot device flow:', e);
-      set({ isConnectingSubscription: false });
-      return null;
-    }
-  },
-
-  pollCopilotToken: async (deviceCode: string) => {
-    try {
-      if (isTauri()) {
-        const res = await invoke<{ status: string; access_token?: string; error_message?: string }>('copilot_poll_token', {
-          deviceCode,
-          clientId: null,
-        });
-        if (res.status === 'authorized') {
-          set({ copilotDeviceCode: null });
-          await get().checkCopilotStatus();
-        }
-        return { status: res.status, error: res.error_message };
-      }
-      return { status: 'error', error: 'Tauri environment not available' };
-    } catch (e) {
-      return { status: 'error', error: String(e) };
-    }
-  },
-
-  checkCopilotStatus: async () => {
-    if (get().isCheckingSubscription) return get().copilotStatus || { connected: false, has_subscription: false };
-    set({ isCheckingSubscription: true });
-    try {
-      if (isTauri()) {
-        const status = await invoke<CopilotAuthStatus>('copilot_check_status');
-        set({ copilotStatus: status });
-        return status;
-      }
-      const mock: CopilotAuthStatus = { connected: false, has_subscription: false };
-      return mock;
-    } catch (e) {
-      const errStatus: CopilotAuthStatus = { connected: false, has_subscription: false, error: String(e) };
-      set({ copilotStatus: errStatus });
-      return errStatus;
-    } finally { set({ isCheckingSubscription: false }); }
-  },
-
-  disconnectCopilot: async () => {
-    try {
-      if (isTauri()) {
-        await invoke('copilot_disconnect');
-        set({ copilotStatus: { connected: false, has_subscription: false } });
-      }
-    } catch (e) {
-      console.error('Failed to disconnect Copilot:', e);
-    }
-  },
-
-  startGoogleOAuth: async () => {
-    set({ isConnectingSubscription: true });
-    try {
-      if (isTauri()) {
-        const res = await invoke<{ auth_url: string; state: string; port: number }>('google_oauth_start', {
-          clientId: null,
-        });
-        await invoke('open_external_url', { url: res.auth_url }).catch(() => {});
-        // The browser callback stores credentials. Do not poll the keyring;
-        // the user can explicitly check the saved sign-in after returning.
-      } else {
-        alert('Google AI Studio OAuth sign-in requires the Stage0 desktop app (Tauri).');
-      }
-    } catch (e) {
-      console.error('Failed to start Google OAuth:', e);
-    } finally {
-      set({ isConnectingSubscription: false });
-    }
-  },
-
-  checkGoogleAuthStatus: async () => {
-    if (get().isCheckingSubscription) return get().googleAuthStatus || { connected: false, auth_method: 'none' };
-    set({ isCheckingSubscription: true });
-    try {
-      if (isTauri()) {
-        const status = await invoke<GoogleAuthStatus>('google_oauth_check_status');
-        set({ googleAuthStatus: status });
-        return status;
-      }
-      const mock: GoogleAuthStatus = { connected: false, auth_method: 'none' };
-      return mock;
-    } catch (e) {
-      const errStatus: GoogleAuthStatus = { connected: false, auth_method: 'none', error: String(e) };
-      set({ googleAuthStatus: errStatus });
-      return errStatus;
-    } finally { set({ isCheckingSubscription: false }); }
-  },
-
-  disconnectGoogleOAuth: async () => {
-    try {
-      if (isTauri()) {
-        await invoke('google_oauth_disconnect');
-        set({ googleAuthStatus: { connected: false, auth_method: 'none' } });
-      }
-    } catch (e) {
-      console.error('Failed to disconnect Google OAuth:', e);
-    }
-  },
-
-  startChatGptOAuth: (profileId) => chatGptAction('chatgpt_oauth_start', { profileId: profileId || null }, set, get),
-
-  checkChatGptAuthStatus: async () => {
-    const epoch = chatGptEpoch; const sequence = ++chatGptPoll;
-    if (get().isConnectingSubscription) return get().chatgptAuthStatus || { connected: false };
-    try {
-      if (isTauri()) {
-        const status = publicChatGptStatus(await invoke<ChatGptAuthStatus>('chatgpt_oauth_check_status'));
-        if (epoch === chatGptEpoch && sequence === chatGptPoll && !get().isConnectingSubscription) set({ chatgptAuthStatus: status });
-        return status;
-      }
-      const mock: ChatGptAuthStatus = { connected: false };
-      return mock;
-    } catch (e) {
-      const errStatus: ChatGptAuthStatus = { connected: false, error: String(e) };
-      if (epoch === chatGptEpoch && sequence === chatGptPoll) set({ chatgptAuthStatus: errStatus });
-      return errStatus;
-    }
-  },
-
-  loadSavedChatGptAuth: () => chatGptAction('chatgpt_oauth_load_saved', undefined, set, get),
-
-  disconnectChatGptOAuth: (profileId) => chatGptAction('chatgpt_oauth_disconnect', { profileId }, set, get),
-  refreshChatGptSession: (profileId) => chatGptAction('chatgpt_oauth_refresh', { profileId }, set, get),
-  cancelChatGptOAuth: async () => {
-    const attemptId = get().chatgptAuthStatus?.attempt_id;
-    if (attemptId) await chatGptAction('chatgpt_oauth_cancel', { attemptId }, set, get);
-  },
-
-  clearCopilotDeviceCode: () => set({ copilotDeviceCode: null }),
 
   fetchDynamicModels: async (configOverride) => {
     if (get().isFetchingDynamicModels) return { success: false, count: 0, error: 'A model refresh is already in progress.' };
@@ -752,7 +476,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     });
     const nextServers = [...get().mcpServers, newServer];
     set({ mcpServers: nextServers });
-    persistState(get().aiConfig, nextServers);
+    persistState(get().aiConfig, nextServers, get().guardrailPolicy, get().externalAgents);
   },
 
   updateMcpServer: (id, updates) => {
@@ -760,13 +484,13 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       s.id === id ? resetMcpVerification({ ...s, ...updates }) : s
     );
     set({ mcpServers: nextServers });
-    persistState(get().aiConfig, nextServers);
+    persistState(get().aiConfig, nextServers, get().guardrailPolicy, get().externalAgents);
   },
 
   deleteMcpServer: (id) => {
     const nextServers = get().mcpServers.filter((s) => s.id !== id);
     set({ mcpServers: nextServers });
-    persistState(get().aiConfig, nextServers);
+    persistState(get().aiConfig, nextServers, get().guardrailPolicy, get().externalAgents);
   },
 
   toggleMcpServer: (id) => {
@@ -774,7 +498,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       s.id === id ? resetMcpVerification({ ...s, enabled: !s.enabled }) : s
     );
     set({ mcpServers: nextServers });
-    persistState(get().aiConfig, nextServers);
+    persistState(get().aiConfig, nextServers, get().guardrailPolicy, get().externalAgents);
   },
 
   testMcpServer: async (id) => {
@@ -795,7 +519,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       testMessage: message,
     } : item);
     set({ mcpServers: nextServers });
-    persistState(get().aiConfig, nextServers, get().guardrailPolicy);
+    persistState(get().aiConfig, get().mcpServers, get().guardrailPolicy, get().externalAgents);
     return { success: false, message };
   },
 
@@ -857,7 +581,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       }
 
       set({ mcpServers: currentServers });
-      persistState(get().aiConfig, currentServers);
+      persistState(get().aiConfig, currentServers, get().guardrailPolicy, get().externalAgents);
       return { success: true, count: importedCount };
     } catch (e: unknown) {
       return {
@@ -903,7 +627,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       const backendPolicy = await invoke<GuardrailPolicy>('get_guardrail_policy');
       if (backendPolicy) {
         set({ guardrailPolicy: backendPolicy });
-        persistState(get().aiConfig, get().mcpServers, backendPolicy);
+        persistState(get().aiConfig, get().mcpServers, backendPolicy, get().externalAgents);
       }
     } catch (err) {
       console.warn('Failed to load guardrail policy from backend:', err);
@@ -915,7 +639,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
   updateGuardrailPolicy: async (partial) => {
     const nextPolicy: GuardrailPolicy = { ...get().guardrailPolicy, ...partial };
     set({ guardrailPolicy: nextPolicy });
-    persistState(get().aiConfig, get().mcpServers, nextPolicy);
+    persistState(get().aiConfig, get().mcpServers, nextPolicy, get().externalAgents);
     if (isTauri()) {
       try {
         await invoke('update_guardrail_policy', { policy: nextPolicy });
@@ -930,7 +654,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       try {
         const resetPolicy = await invoke<GuardrailPolicy>('reset_guardrail_policy', { mode });
         set({ guardrailPolicy: resetPolicy });
-        persistState(get().aiConfig, get().mcpServers, resetPolicy);
+        persistState(get().aiConfig, get().mcpServers, resetPolicy, get().externalAgents);
         return;
       } catch (err) {
         console.warn('Failed to reset guardrail policy on backend:', err);
@@ -938,7 +662,7 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     }
     const fallbackPolicy: GuardrailPolicy = { ...DEFAULT_GUARDRAIL_POLICY, mode };
     set({ guardrailPolicy: fallbackPolicy });
-    persistState(get().aiConfig, get().mcpServers, fallbackPolicy);
+    persistState(get().aiConfig, get().mcpServers, fallbackPolicy, get().externalAgents);
   },
 
   loadGuardrailAuditLog: async (limit = 50) => {
@@ -1042,8 +766,6 @@ if (typeof window !== 'undefined' && typeof window.setTimeout === 'function') {
         }
       })();
       void useAiMcpStore.getState().loadGuardrailAuditLog();
-      void useAiMcpStore.getState().detectCli('claude');
-      void useAiMcpStore.getState().detectCli('gh_copilot');
     }
   }, 150);
 }

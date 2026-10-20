@@ -38,7 +38,6 @@ pub fn run() {
 
     let builder = tauri::Builder::default();
     let builder = builder.manage(features::review::coordinator::ReviewCoordinator::default());
-    let builder = builder.manage(features::ai::codex_auth::CodexAuthManager::default());
     #[cfg(not(dev))]
     let builder = builder.register_uri_scheme_protocol("stagezero", |context, request| {
         let uri = request.uri();
@@ -251,28 +250,12 @@ pub fn run() {
             commands::reset_preferences_json,
             commands::has_ai_api_key,
             commands::delete_ai_api_key,
-            commands::ai_detect_cli,
-            commands::ai_execute_cli,
-            commands::copilot_start_device_flow,
-            commands::copilot_poll_token,
-            commands::copilot_check_status,
-            commands::copilot_disconnect,
-            commands::google_oauth_start,
-            commands::google_oauth_check_status,
-            commands::google_oauth_disconnect,
-            commands::chatgpt_oauth_start,
-            commands::chatgpt_oauth_check_status,
-            commands::chatgpt_oauth_load_saved,
-            commands::chatgpt_oauth_disconnect,
-            commands::chatgpt_oauth_cancel,
-            commands::chatgpt_oauth_refresh,
-            commands::chatgpt_device_auth_status,
-            commands::chatgpt_device_auth_start,
-            commands::chatgpt_device_auth_check,
-            commands::chatgpt_device_auth_cancel,
-            commands::chatgpt_device_auth_logout,
             commands::open_external_url,
-            commands::ai_chat_dispatch,
+            features::ai::acp::acp_fetch_registry,
+            features::ai::acp::acp_prepare_registry_agent,
+            features::ai::acp::acp_agent_auth_methods,
+            features::ai::acp::acp_agent_authenticate,
+            features::ai::acp::acp_agent_prompt,
             commands::start_ai_review,
             commands::test_ai_review_provider,
             commands::discover_harness_mcp,
@@ -357,7 +340,6 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|app, event| {
             if matches!(event, tauri::RunEvent::Exit) {
-                app.state::<features::ai::codex_auth::CodexAuthManager>().shutdown();
                 #[cfg(target_os = "linux")]
                 notifications::close_linux_notifications(app);
                 for error in app.state::<SandboxManager>().cleanup_all() {

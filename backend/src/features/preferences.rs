@@ -1116,6 +1116,15 @@ fn sanitize_value(value: &Value) -> Value {
 
 fn merge_object(target: &CstObject, patch: &Map<String, Value>) -> Result<(), String> {
     for (key, value) in patch {
+        let delete_marker = value.as_object().is_some_and(|object| {
+            object.len() == 1 && object.get("$stage0Delete") == Some(&Value::Bool(true))
+        });
+        if delete_marker {
+            if let Some(property) = target.get(key) {
+                property.remove();
+            }
+            continue;
+        }
         let converted = to_cst(value)?;
         match (target.get(key), value.as_object()) {
             (Some(prop), Some(nested)) => match prop.value().and_then(|node| node.as_object()) {

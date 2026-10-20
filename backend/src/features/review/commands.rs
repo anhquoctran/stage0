@@ -15,11 +15,6 @@ use tauri::{AppHandle, Manager};
 #[tauri::command]
 pub async fn test_ai_review_provider(request: ReviewRequest) -> Result<Value, String> {
     let url = provider::endpoint(&request)?;
-    let subscription_token = if request.auth_mode == "subscription_oauth" {
-        Some(crate::features::ai::chatgpt_oauth::review_access_token().await?)
-    } else {
-        None
-    };
     let tools = super::schemas::tools()
         .into_iter()
         .filter(|tool| tool["name"] == "get_diff")
@@ -30,7 +25,6 @@ pub async fn test_ai_review_provider(request: ReviewRequest) -> Result<Value, St
         &request,
         &url,
         &body,
-        subscription_token.as_ref().map(|token| token.as_str()),
     )
     .await?;
     let (calls, usage) = provider::decode(&request.provider, &response, &mut history)?;
@@ -62,15 +56,7 @@ pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<R
         return Err("Unsupported reviewer role".into());
     }
     let endpoint = provider::endpoint(&request)?;
-    let subscription_token = if request.auth_mode == "subscription_oauth" {
-        Some(crate::features::ai::chatgpt_oauth::review_access_token().await?)
-    } else {
-        None
-    };
-    if request.provider != "ollama"
-        && request.auth_mode != "subscription_oauth"
-        && !crate::features::credentials::ai_key_exists(&request.provider)?
-    {
+    if request.provider != "ollama" && !crate::features::credentials::ai_key_exists(&request.provider)? {
         return Err("Configure an API key in Preferences before starting a review".into());
     }
     let session_id = request.session_id.clone();
@@ -139,7 +125,6 @@ pub async fn start_ai_review(app: AppHandle, request: ReviewRequest) -> Result<R
     let worker = tauri::async_runtime::spawn(super::runtime::run(
             worker_app,
             request,
-            subscription_token,
             task_run,
             context,
             cancellation,

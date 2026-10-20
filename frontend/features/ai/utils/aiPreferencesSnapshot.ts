@@ -3,7 +3,7 @@ import type { AiPreferencesEditor } from '../types/AiPreferencesEditor';
 import { resetMcpVerification } from './resetMcpVerification';
 
 export function cleanAiSnapshot(snapshot: AiPreferencesSnapshot): AiPreferencesSnapshot {
-  return structuredClone({ aiConfig: { ...snapshot.aiConfig, apiKey: '' }, mcpServers: snapshot.mcpServers.map(resetMcpVerification), guardrailPolicy: snapshot.guardrailPolicy, globalReviewers: snapshot.globalReviewers });
+  return structuredClone({ aiConfig: { ...snapshot.aiConfig, apiKey: '' }, mcpServers: snapshot.mcpServers.map(resetMcpVerification), guardrailPolicy: snapshot.guardrailPolicy, globalReviewers: snapshot.globalReviewers, externalAgents: snapshot.externalAgents || [] });
 }
 export function aiPreferencesChangeCount(draft: AiPreferencesEditor, baseline: AiPreferencesSnapshot): number {
   const current = cleanAiSnapshot(draft); const saved = cleanAiSnapshot(baseline);
@@ -12,7 +12,7 @@ export function aiPreferencesChangeCount(draft: AiPreferencesEditor, baseline: A
     const field = key as keyof AiPreferencesSnapshot['aiConfig'];
     return !sameValue(current.aiConfig[field], saved.aiConfig[field]);
   }).length;
-  for (const key of ['mcpServers', 'guardrailPolicy', 'globalReviewers'] as const) if (JSON.stringify(current[key]) !== JSON.stringify(saved[key])) count++;
+  for (const key of ['mcpServers', 'guardrailPolicy', 'globalReviewers', 'externalAgents'] as const) if (JSON.stringify(current[key]) !== JSON.stringify(saved[key])) count++;
   count += Object.values(draft.apiKeyDrafts).filter((key) => key?.trim()).length;
   count += draft.apiKeyRemovals.length;
   return count;
@@ -25,7 +25,7 @@ export function mergeAiPreferences(draft: AiPreferencesSnapshot, baseline: AiPre
     if (!sameValue(latest.aiConfig[key], previous.aiConfig[key]) && !sameValue(latest.aiConfig[key], current.aiConfig[key])) throw new Error('AI configuration changed outside this dialog. Cancel and reopen Preferences before retrying.');
     Object.assign(result.aiConfig, { [key]: current.aiConfig[key] });
   }
-  for (const key of ['mcpServers', 'guardrailPolicy', 'globalReviewers'] as const) {
+  for (const key of ['mcpServers', 'guardrailPolicy', 'globalReviewers', 'externalAgents'] as const) {
     if (JSON.stringify(current[key]) === JSON.stringify(previous[key])) continue;
     if (JSON.stringify(latest[key]) !== JSON.stringify(previous[key]) && JSON.stringify(latest[key]) !== JSON.stringify(current[key])) throw new Error('AI preferences changed outside this dialog. Cancel and reopen Preferences before retrying.');
     Object.assign(result, { [key]: current[key] });

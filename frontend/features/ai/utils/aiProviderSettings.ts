@@ -15,8 +15,6 @@ export function configuredProviderIds(config: AiConfig): AiProviderId[] {
 
 export function activeProviderSettings(config: AiConfig): AiProviderSettings {
   return {
-    authMode: config.authMode,
-    cliType: config.cliType,
     model: config.model,
     baseUrl: config.baseUrl,
     reasoningEffort: config.reasoningEffort,

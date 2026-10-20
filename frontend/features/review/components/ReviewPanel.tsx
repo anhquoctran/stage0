@@ -48,9 +48,7 @@ export const ReviewPanel: React.FC = () => {
   const reviewConfig: ReviewBotConfig = selectedReviewer
     ? resolveReviewBotConfig(config, selectedReviewer, dynamicModels[reviewerProvider as keyof typeof dynamicModels] || [])
     : { ...config, reviewerRole: 'custom', customInstructions: config.reviewerInstructions };
-  const usesChatGptSubscription = reviewConfig.provider === 'openai' && reviewConfig.authMode === 'subscription_oauth';
-  const compatible = AI_PROVIDERS.some((provider) => provider.id === reviewConfig.provider && provider.id !== 'github_copilot')
-    && (reviewConfig.provider === 'ollama' || !reviewConfig.authMode || reviewConfig.authMode === 'api_key' || usesChatGptSubscription);
+  const compatible = AI_PROVIDERS.some((provider) => provider.id === reviewConfig.provider);
 
   useEffect(() => { setAllowRemote(false); }, [reviewConfig.provider, reviewConfig.model, reviewConfig.baseUrl, effectiveReviewerId, sessionId]);
   useEffect(() => {
@@ -116,9 +114,8 @@ export const ReviewPanel: React.FC = () => {
             <p className="break-all text-subtext0">Endpoint: {reviewConfig.baseUrl}</p>
             {selectedReviewer && <p className="text-subtext0">This run uses the selected reviewer’s instructions and model profile.</p>}
             <p className="text-subtext0">Reads committed Git snapshots only. No terminal, file writes, auto-resolution or MR approval. A completed review does not prove the code is safe.</p>
-            <p className="text-subtext0">Reviews use fixed safety budgets (12 turns, 48 tool calls and a 64,000-token reported-usage cap), independent of chat auto-summary preferences. API-key requests also cap requested output at 2,048 tokens per turn; ChatGPT subscription uses OpenAI’s streaming Responses API, which does not accept that output-limit field, plus a bounded response-size limit and the account’s plan limits.</p>
-            {usesChatGptSubscription && reviewConfig.fastMode && <p className="text-yellow">Fast mode is not sent for ChatGPT subscription reviews; this run uses the account’s standard Responses API plan usage.</p>}
-            {!compatible && <p role="alert" className="text-yellow">Choose a provider supported by native reviews with an API key, local Ollama, or OpenAI with ChatGPT subscription sign-in. Other CLI/subscription bridges are not supported here.</p>}
+            <p className="text-subtext0">Reviews use fixed safety budgets (12 turns, 48 tool calls and a 64,000-token reported-usage cap), independent of chat auto-summary preferences. API-key requests also cap requested output at 2,048 tokens per turn.</p>
+            {!compatible && <p role="alert" className="text-yellow">Choose a built-in provider with an API key or local Ollama for code reviews. Cloud subscription agents are managed separately in AI → External Agents.</p>}
             <button type="button" className="text-primary underline" onClick={() => { close(); usePreferencesStore.getState().openPreferences('ai-providers'); }}>AI Preferences</button>
             {reviewConfig.provider !== 'ollama' && <label className="flex gap-2 items-start">
               <input type="checkbox" checked={allowRemote} onChange={(event) => setAllowRemote(event.target.checked)} className="accent-primary mt-0.5" />

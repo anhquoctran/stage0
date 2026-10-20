@@ -6,11 +6,10 @@ export const AI_PROVIDERS: AiProviderPreset[] = [
   {
     id: 'openai',
     name: 'OpenAI / ChatGPT',
-    description: 'GPT-6.1 Sol, GPT-6 Astra, GPT-5.6 series (ChatGPT Plus/Pro/Codex or API key)',
+    description: 'GPT-6.1 Sol, GPT-6 Astra and GPT-5.6 series (OpenAI API key)',
     defaultBaseUrl: 'https://api.openai.com/v1',
     defaultModel: 'gpt-6.1-sol',
-    requiresApiKey: false,
-    supportedAuthModes: ['subscription_oauth', 'api_key'],
+    requiresApiKey: true,
     docUrl: 'https://platform.openai.com/api-keys',
     models: [
       { id: 'gpt-6.1-sol', name: 'GPT-6.1 Sol', recommendedFor: 'Flagship Frontier Intelligence & Coding', reasoningEfforts: ['low', 'medium', 'high', 'xhigh', 'max'], supportsFastMode: true },
@@ -30,11 +29,10 @@ export const AI_PROVIDERS: AiProviderPreset[] = [
   {
     id: 'anthropic',
     name: 'Anthropic Claude',
-    description: 'Claude Opus 5.5, Fable 5.1 & Sonnet 5.5 (API key or Claude Code CLI)',
+    description: 'Claude Opus, Sonnet and Haiku models (Anthropic API key)',
     defaultBaseUrl: 'https://api.anthropic.com/v1',
     defaultModel: 'claude-opus-5-5',
     requiresApiKey: true,
-    supportedAuthModes: ['cli_bridge', 'api_key'],
     docUrl: 'https://console.anthropic.com/settings/keys',
     models: [
       { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', recommendedFor: 'Long-running agentic coding and knowledge work' },
@@ -46,29 +44,12 @@ export const AI_PROVIDERS: AiProviderPreset[] = [
     ],
   },
   {
-    id: 'github_copilot',
-    name: 'GitHub Copilot',
-    description: 'Native subscription or gh-copilot CLI (No API key needed)',
-    defaultBaseUrl: 'https://api.individual.githubcopilot.com',
-    defaultModel: 'gpt-4o',
-    requiresApiKey: false,
-    supportedAuthModes: ['subscription_oauth', 'cli_bridge'],
-    docUrl: 'https://github.com/features/copilot',
-    models: [
-      { id: 'gpt-4o', name: 'GPT-4o (Copilot)', recommendedFor: 'Smart Review & Analysis' },
-      { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet (Copilot)', recommendedFor: 'Deep Code Reasoning' },
-      { id: 'o3-mini', name: 'o3-mini (Copilot)', recommendedFor: 'Complex Problem Solving' },
-      { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Copilot)', recommendedFor: 'Ultra-fast & Efficient' },
-    ],
-  },
-  {
     id: 'gemini',
     name: 'Google Gemini',
-    description: 'Gemini 2.0 Flash & 1.5 Pro (API Key or Google AI Pro OAuth)',
+    description: 'Gemini models through Google AI Studio API key',
     defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     defaultModel: 'gemini-2.0-flash',
     requiresApiKey: true,
-    supportedAuthModes: ['subscription_oauth', 'api_key'],
     docUrl: 'https://aistudio.google.com/app/apikey',
     models: [
       { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', recommendedFor: 'Next-Gen Ultra Fast' },
@@ -80,11 +61,10 @@ export const AI_PROVIDERS: AiProviderPreset[] = [
   {
     id: 'xai_grok',
     name: 'SuperGrok',
-    description: 'Grok 4.7 / 3 & GrokBuild CLI (SuperGrok / X Premium+ subscription or xAI API Key)',
+    description: 'Grok models through xAI API key',
     defaultBaseUrl: 'https://api.x.ai/v1',
     defaultModel: 'grok-4.7',
-    requiresApiKey: false,
-    supportedAuthModes: ['cli_bridge', 'subscription_oauth', 'api_key'],
+    requiresApiKey: true,
     docUrl: 'https://x.ai/grok',
     models: [
       { id: 'grok-4.7', name: 'Grok 4.7', recommendedFor: 'State-of-the-Art Coding & Agentic Reasoning' },
