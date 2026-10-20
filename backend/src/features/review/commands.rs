@@ -165,6 +165,9 @@ pub async fn publish_ai_review(app: AppHandle, run_id: String) -> Result<(), Str
         let db=app.state::<Database>();let run=db.get_review_run(&run_id)?;
         let (repo,base,head)={let conn=db.conn();conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&run.session_id],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?))).map_err(|_|"Virtual MR no longer exists")?};
         if repo!=run.snapshot.repo_path||super::context::resolve_snapshot_ref(&repo,&base)?!=run.snapshot.base_sha||super::context::resolve_snapshot_ref(&repo,&head)?!=run.snapshot.head_sha{return Err("Review snapshot is stale. Start a new run before publishing findings.".into());}
+        let guards = Arc::new(GuardrailsEngine::new());
+        let context = super::context::ReviewContext::new(run.snapshot.clone(), guards);
+        context.validate_findings(&run.findings)?;
         db.publish_review(&run)
     }).await.map_err(|_|"Could not publish review findings")?
 }

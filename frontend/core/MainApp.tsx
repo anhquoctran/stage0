@@ -11,6 +11,7 @@ import { type RepoInfo } from '../features/git/types/RepoInfo';
 import { type WindowStartupContext } from '../features/git/types/WindowStartupContext';
 import { FirstLaunchWelcome, shouldShowFirstLaunchWelcome } from '../features/onboarding/components/FirstLaunchWelcome';
 import { isPrimaryAppWindow } from './utils/isPrimaryAppWindow';
+import { reviewAssignedSessionAfterGitChange } from '../features/review/services/assignedReviewService';
 
 export const MainApp: React.FC = () => {
   const { initApp, attachRepoToCurrentWindow, refreshDiff, isInitializing } = useGitStore();
@@ -54,7 +55,10 @@ export const MainApp: React.FC = () => {
         const [stopFsListener, stopOpenListener] = await Promise.all([
           listen<{ repo_path: string }>('repo-fs-changed', (event) => {
             const activePath = useGitStore.getState().currentRepo?.local_path;
-            if (activePath === event.payload.repo_path) refreshDiff();
+            if (activePath === event.payload.repo_path) {
+              refreshDiff();
+              void reviewAssignedSessionAfterGitChange(event.payload.repo_path);
+            }
           }),
           listen<RepoInfo>('repo-open-request', (event) => {
             void attachRepoToCurrentWindow(event.payload);
