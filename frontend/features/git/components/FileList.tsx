@@ -165,8 +165,8 @@ export const FileList: React.FC<FileListProps> = ({
     >
       {/* Sidebar Header */}
       <div className="p-2.5 border-b border-surface0 bg-mantle space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs font-bold uppercase tracking-wider text-subtext1">
               Files Changed
             </span>
@@ -175,7 +175,7 @@ export const FileList: React.FC<FileListProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Flat vs Tree toggle */}
             <div className="flex items-center bg-surface0  p-0.5 gap-0.5">
               <button
@@ -264,7 +264,7 @@ export const FileList: React.FC<FileListProps> = ({
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="p-8 text-center text-xs text-subtext1 space-y-2">
-            <div className="w-5 h-5 border-2 border-blue border-t-transparent  animate-spin mx-auto" />
+            <div className="w-5 h-5 rounded-full border-2 border-blue border-t-transparent animate-spin mx-auto" />
             <p>Analyzing changes...</p>
           </div>
         ) : diffError ? (

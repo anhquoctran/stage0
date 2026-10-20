@@ -17,9 +17,7 @@ import { formatRecentTime } from '@/common/utils/dateTime';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
-import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
-import { useReviewStore } from '../../review/store/useReviewStore';
-import { resolveReviewBotConfig } from '../../review/utils/resolveReviewBotConfig';
+import { startAssignedReviewBatchForSession } from '../../review/services/assignedReviewService';
 import { type BotReviewer } from '../types/BotReviewer';
 import { TabBranchSelector } from '../../git/components/TabBranchSelector';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
@@ -236,41 +234,24 @@ export const NewVirtualMrView: React.FC = () => {
     if (e) e.preventDefault();
     if (!canCreateVirtualMr || isSubmitting) return;
 
-    const selectedReviewer = draftMr.selectedBots
-      .map((botId) => effectiveReviewers.find((bot) => bot.id === botId))
-      .find((bot): bot is BotReviewer => Boolean(bot));
-
     setIsSubmitting(true);
     try {
       const sessionId = await submitNewMrDraft();
       if (!sessionId || draftMr.selectedBots.length === 0) return;
-      if (!selectedReviewer) {
-        showToast('Virtual MR created, but its assigned reviewer could not be loaded.');
-        return;
-      }
-
-      const aiState = useAiMcpStore.getState();
-      const reviewerProvider = selectedReviewer.provider && selectedReviewer.provider !== 'global_default'
-        ? selectedReviewer.provider as keyof typeof aiState.dynamicModels
-        : aiState.aiConfig.provider;
-      const reviewConfig = resolveReviewBotConfig(
-        aiState.aiConfig,
-        selectedReviewer,
-        aiState.dynamicModels[reviewerProvider] || [],
-      );
-
-      // Assigning a reviewer while creating the MR is the request to start its review.
+      // Assigning reviewers while creating the MR also starts the full review batch.
       // Remote providers are allowed here so the flow does not ask for a second confirmation.
-      const reviewStore = useReviewStore.getState();
-      reviewStore.open(sessionId);
-      void reviewStore.start(reviewConfig, reviewConfig.provider !== 'ollama', {
-        id: selectedReviewer.id,
-        name: selectedReviewer.name,
-      }).then(() => {
-        const reviewState = useReviewStore.getState();
-        if (reviewState.sessionId === sessionId && reviewState.error) {
-          useGitStore.getState().showToast(`Virtual MR created, but AI review could not start: ${reviewState.error}`);
+      void startAssignedReviewBatchForSession(sessionId).then((result) => {
+        if (result.failures.length) {
+          useGitStore.getState().showToast(`Virtual MR created. AI review needs attention: ${[result.failures[0], !result.descriptionGenerated ? 'The MR description was not updated.' : ''].filter(Boolean).join(' ')}`);
+        } else if (!result.descriptionGenerated) {
+          useGitStore.getState().showToast(result.hasChanges
+            ? 'Virtual MR created, but no reviewer could generate its description from the available diff.'
+            : 'Virtual MR created, but no changed files were found in its review snapshot.');
+        } else {
+          useGitStore.getState().showToast(`AI review finished for ${result.runs.length} assigned reviewers.`);
         }
+      }).catch((error) => {
+        useGitStore.getState().showToast(`Virtual MR created, but AI review could not start: ${error instanceof Error ? error.message : String(error)}`);
       });
     } finally {
       setIsSubmitting(false);

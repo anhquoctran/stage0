@@ -28,7 +28,6 @@ import { Check } from '../../../common/components/icons/Check';
 import { revealInOs, getAbsoluteFilePath, buildRemoteFileUrl, openRepoInTerminal, openRepoInVsCode, openRepoInExplorer, getOsFileManagerName } from '../../../features/git/utils/fileActions';
 import { isMacOS } from '../../../common/utils/shortcuts';
 import { MainLayoutDiffViewer } from './MainLayoutDiffViewer';
-import { ReviewPanel } from '../../../features/review/components/ReviewPanel';
 
 const DEFAULT_SIDEBAR_WIDTH = 320;
 
@@ -76,8 +75,10 @@ export const MainLayout: React.FC = () => {
     closeRepoSettings,
     repoSettingsActiveTab,
     sessions,
+    activeSessionId,
     draftMr,
     isDraftActive,
+    setIsMrListOpen,
     openNewMrDraft,
     repoSettings,
   } = useVirtualMrStore();
@@ -399,7 +400,7 @@ export const MainLayout: React.FC = () => {
       {currentRepo && <TabBar />}
 
       {/* Virtual MR Details Hub (Only rendered for established MR sessions, not during initial branch comparison) */}
-      {currentRepo && !isDraftActive && sessions.length > 0 && <VirtualMrHub />}
+      {currentRepo && !isDraftActive && activeSessionId && <VirtualMrHub />}
 
       {/* Repository Settings Dialog */}
       <RepositorySettingsModal
@@ -426,8 +427,6 @@ export const MainLayout: React.FC = () => {
       {/* Clone Remote Repository Modal Dialog */}
       <CloneRepoModal />
       <GitTaskDialog />
-      <ReviewPanel />
-
       {/* In-Memory Merge Conflict Banner */}
       <ConflictBanner
         conflictReport={conflictReport}
@@ -456,7 +455,7 @@ export const MainLayout: React.FC = () => {
         {currentRepo ? (
           draftMr && isDraftActive ? (
             <NewVirtualMrView />
-          ) : sessions.length > 0 ? (
+          ) : activeSessionId ? (
             <>
               <FileList
                 files={diffPayload?.files || []}
@@ -498,6 +497,8 @@ export const MainLayout: React.FC = () => {
           ) : (
             <EmptyVirtualMrWorkspace
               onNewMr={() => openNewMrDraft()}
+              onShowSavedMrs={() => setIsMrListOpen(true)}
+              hasSavedMrs={sessions.length > 0}
               repoName={currentRepo.name}
               defaultBaseBranch={repoSettings?.defaultBaseBranch || 'main'}
             />
@@ -508,7 +509,7 @@ export const MainLayout: React.FC = () => {
       </main>
 
       {/* Bottom Action Bar for Active Virtual MR Tab */}
-      {currentRepo && !isDraftActive && sessions.length > 0 && <VirtualMrBottomBar />}
+      {currentRepo && !isDraftActive && activeSessionId && <VirtualMrBottomBar />}
 
       {/* Bottom Status Bar */}
       <StatusBar />

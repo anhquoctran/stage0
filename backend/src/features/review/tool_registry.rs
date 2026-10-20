@@ -9,8 +9,16 @@ pub struct ReviewToolRegistry {
 
 impl ReviewToolRegistry {
     pub fn native() -> Self {
+        Self::native_for_review(false)
+    }
+
+    pub fn native_for_review(allow_description_update: bool) -> Self {
+        let mut native = schemas::tools();
+        if !allow_description_update {
+            native.retain(|tool| tool["name"] != "update_mr_description");
+        }
         Self {
-            native: schemas::tools(),
+            native,
         }
     }
     pub fn definitions(&self) -> &[Value] {

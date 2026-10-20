@@ -103,7 +103,7 @@ export const StatusBar: React.FC = () => {
   }, [isPerformanceMonitorEnabled]);
 
   return (
-    <footer className="h-7 bg-mantle border-t border-surface0/80 px-3 flex items-center justify-between text-[11px] text-subtext1 shrink-0 select-none z-10">
+    <footer className="min-h-7 h-auto bg-mantle border-t border-surface0/80 px-3 py-1 flex items-center justify-between gap-2 text-[11px] text-subtext1 shrink-0 select-none z-10">
       {/* Left: Repository info & Active branch */}
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         {currentRepo ? (
@@ -117,9 +117,9 @@ export const StatusBar: React.FC = () => {
             </div>
 
             {branches?.current && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5  bg-surface0/50 border border-surface1/50 text-text font-mono text-[11px] shrink-0">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-surface0/50 border border-surface1/50 text-text font-mono text-[11px] shrink-0 max-w-[45vw]">
                 <GitBranch className="w-3 h-3 text-blue shrink-0" />
-                <span className="truncate max-w-[200px]">{branches.current}</span>
+                <span className="truncate max-w-[200px] max-xl:max-w-[120px] max-sm:max-w-[18vw]">{branches.current}</span>
               </div>
             )}
           </>
@@ -132,7 +132,7 @@ export const StatusBar: React.FC = () => {
       </div>
 
       {/* Right: Engine, Merge Status, File Counter, View Mode & Shortcuts */}
-      <div className="flex items-center gap-2 shrink-0 ml-auto">
+      <div className="flex items-center gap-2 max-xl:gap-1 shrink-0 ml-auto">
         {currentRepo && (
           <>
             {/* Sandbox Engine Picker */}
@@ -140,10 +140,10 @@ export const StatusBar: React.FC = () => {
               type="button"
               onClick={() => openPreferences('ai-sandbox')}
               className="h-5.5 px-2  bg-surface0/70 hover:bg-surface1 border border-surface1 hover:border-surface2 text-subtext0 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-              title="Configure Sandbox Engine in Preferences"
+              title={`Configure Sandbox Engine in Preferences (${activeSandboxType === 'in_memory' ? 'In-Memory' : activeSandboxType === 'local_worktree' ? 'Worktree' : 'Docker'})`}
             >
               <Box className="w-3 h-3 text-subtext0" />
-              <span className="font-normal text-subtext0">Sandbox:</span>
+              <span className="font-normal text-subtext0 max-xl:hidden">Sandbox:</span>
               <span className="font-medium text-text">
                 {activeSandboxType === 'in_memory'
                   ? 'In-Memory'
@@ -162,12 +162,12 @@ export const StatusBar: React.FC = () => {
                     title={diffError}
                   >
                     <AlertTriangle className="w-3 h-3 text-red shrink-0" />
-                    <span>Compare Failed</span>
+                    <span className="max-lg:hidden">Compare Failed</span>
                   </div>
                 ) : isDiffLoading ? (
-                  <div className="h-5.5 px-2  bg-surface0/60 border border-surface1/60 text-subtext0 flex items-center gap-1.5 font-medium shadow-xs">
+                  <div className="h-5.5 px-2 bg-surface0/60 border border-surface1/60 text-subtext0 flex items-center gap-1.5 font-medium shadow-xs" title="Comparing branches">
                     <Loader2 className="w-3 h-3 animate-spin text-blue shrink-0" />
-                    <span>Comparing...</span>
+                    <span className="max-lg:hidden">Comparing...</span>
                   </div>
                 ) : conflictCheckError ? (
                   <div
@@ -175,22 +175,22 @@ export const StatusBar: React.FC = () => {
                     title={conflictCheckError}
                   >
                     <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
-                    <span>Merge Check Unavailable</span>
+                    <span className="max-lg:hidden">Merge Check Unavailable</span>
                   </div>
                 ) : diffPayload && diffPayload.files.length === 0 ? (
-                  <div className="h-5.5 px-2  bg-surface0/50 border border-surface1/50 text-subtext1 flex items-center gap-1.5 font-medium shadow-xs">
+                  <div className="h-5.5 px-2 bg-surface0/50 border border-surface1/50 text-subtext1 flex items-center gap-1.5 font-medium shadow-xs" title="No Changes">
                     <Info className="w-3 h-3 text-subtext0 shrink-0" />
-                    <span>No Changes</span>
+                    <span className="max-lg:hidden">No Changes</span>
                   </div>
                 ) : conflictReport?.has_conflicts ? (
-                  <div className="h-5.5 px-2  bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs">
+                  <div className="h-5.5 px-2 bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs" title="Conflicts Detected">
                     <AlertTriangle className="w-3 h-3 text-red shrink-0" />
-                    <span>Conflicts Detected</span>
+                    <span className="max-lg:hidden">Conflicts Detected</span>
                   </div>
                 ) : conflictReport ? (
-                  <div className="h-5.5 px-2  bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5 font-medium shadow-xs">
+                  <div className="h-5.5 px-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5 font-medium shadow-xs" title="Clean Merge">
                     <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
-                    <span>Clean Merge</span>
+                    <span className="max-lg:hidden">Clean Merge</span>
                   </div>
                 ) : null}
               </>
@@ -204,11 +204,12 @@ export const StatusBar: React.FC = () => {
               >
                 <FileText className="w-3 h-3 text-subtext0 shrink-0" />
                 <span className="flex items-center gap-1">
-                  <span>File</span>
+                  <span className="max-xl:hidden">File</span>
                   <span className="font-mono font-semibold text-text">
                     {currentFileIndex > 0 ? currentFileIndex : '–'}
                   </span>
-                  <span className="text-subtext0/60 font-light">of</span>
+                  <span className="text-subtext0/60 font-light max-xl:hidden">of</span>
+                  <span className="hidden max-xl:inline">/</span>
                   <span className="font-mono font-semibold text-text">{totalFiles}</span>
                 </span>
               </div>
@@ -232,7 +233,7 @@ export const StatusBar: React.FC = () => {
               ) : (
                 <Rows2 className="w-3 h-3 text-blue shrink-0" />
               )}
-              <span className="capitalize">{viewMode} View</span>
+              <span className="capitalize max-xl:hidden">{viewMode} View</span>
             </button>
 
             {/* Keyboard Shortcuts Hint */}

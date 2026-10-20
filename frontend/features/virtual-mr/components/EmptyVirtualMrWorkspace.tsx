@@ -8,6 +8,8 @@ import type { EmptyVirtualMrWorkspaceProps } from '../types/EmptyVirtualMrWorksp
 
 export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = ({
   onNewMr,
+  onShowSavedMrs,
+  hasSavedMrs = false,
   repoName,
   defaultBaseBranch = 'main',
 }) => {
@@ -23,20 +25,34 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
 
         {/* Title */}
         <h2 className="text-lg font-bold text-text mb-2">
-          No Active Virtual MR Sessions
+          {hasSavedMrs ? 'No Open Virtual MR Tabs' : 'No Active Virtual MR Sessions'}
         </h2>
 
         {/* Subtitle */}
         <p className="text-xs text-subtext0 leading-relaxed mb-6">
           {repoName ? (
             <>
-              All Virtual MR tabs in repository <span className="font-mono text-text font-medium">{repoName}</span> have been closed.
+              {hasSavedMrs
+                ? <>Saved Virtual MRs in <span className="font-mono text-text font-medium">{repoName}</span> are still available.</>
+                : <>All Virtual MR tabs in repository <span className="font-mono text-text font-medium">{repoName}</span> have been closed.</>}
             </>
           ) : (
-            'All Virtual MR tabs have been closed.'
+            hasSavedMrs ? 'Your saved Virtual MRs are still available.' : 'All Virtual MR tabs have been closed.'
           )}{' '}
-          Create a new session to compare diffs, detect merge conflicts in sandbox, and discuss code changes.
+          {hasSavedMrs
+            ? 'Open a saved MR to continue reviewing, or create a new one.'
+            : 'Create a new session to compare diffs, detect merge conflicts in sandbox, and discuss code changes.'}
         </p>
+
+        {hasSavedMrs && onShowSavedMrs && (
+          <button
+            type="button"
+            onClick={onShowSavedMrs}
+            className="mb-3 border border-surface1 bg-surface0 px-4 py-2 text-xs font-semibold text-text hover:bg-surface1"
+          >
+            Browse saved MRs
+          </button>
+        )}
 
         {/* Primary CTA Button */}
         <button

@@ -27,7 +27,11 @@ export interface VirtualMrState {
   // Virtual MR Sessions
   sessions: VirtualMrSession[];
   activeSessionId: string | null;
+  // Closing a workspace tab only affects this transient UI state; the MR stays in SQLite.
+  closedSessionTabIds: string[];
   isLoadingSessions: boolean;
+  isMrListOpen: boolean;
+  setIsMrListOpen: (isOpen: boolean) => void;
   activeMrTab: 'overview' | 'commits' | 'diff';
   setActiveMrTab: (tab: 'overview' | 'commits' | 'diff') => void;
 
@@ -52,6 +56,7 @@ export interface VirtualMrState {
   closeSession: (sessionId: string) => Promise<void>;
   updateSessionStatus: (sessionId: string, status: VirtualMrStatus) => Promise<void>;
   updateSessionDetails: (sessionId: string, title: string, description: string) => Promise<void>;
+  applyReviewGeneratedDescription: (sessionId: string, description: string) => Promise<void>;
   updateSessionBranches: (sessionId: string, base: string, compare: string) => Promise<void>;
   
   // Reviewer & Labels

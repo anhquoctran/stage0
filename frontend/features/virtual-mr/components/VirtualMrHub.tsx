@@ -20,7 +20,8 @@ import { type BotReviewer } from '../types/BotReviewer';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
 import { MarkdownPreview } from '../../../common/components/MarkdownPreview';
 import { TabBranchSelector } from '../../git/components/TabBranchSelector';
-import { useReviewStore } from '../../review/store/useReviewStore';
+import { isReviewStartingForSession, useReviewStore } from '../../review/store/useReviewStore';
+import { startAssignedReviewBatchForSession } from '../../review/services/assignedReviewService';
 
 export const VirtualMrHub: React.FC = () => {
   const { currentRepo, showToast, diffPayload, branches, setBranchComparison } = useGitStore();
@@ -50,6 +51,9 @@ export const VirtualMrHub: React.FC = () => {
   const { reviewers: effectiveReviewers } = useMemo(() => {
     return getEffectiveReviewers(currentRepo?.id, repoSettings?.inheritGlobalAgents);
   }, [currentRepo?.id, repoSettings?.inheritGlobalAgents, getEffectiveReviewers, globalReviewers, repoActiveBotIds, repoCustomReviewers]);
+  const activeReviewRuns = useReviewStore((state) => state.activeRuns);
+  const isReviewStarting = useReviewStore((state) => state.isStarting);
+  const reviewBatches = useReviewStore((state) => state.reviewBatches);
 
   const session = getActiveSession();
 
@@ -120,6 +124,30 @@ export const VirtualMrHub: React.FC = () => {
   }, [session?.id, session?.description]);
 
   if (!currentRepo || !session) return null;
+  const hasAssignedReviewer = session.reviewers.length > 0;
+  const reviewBatch = reviewBatches[session.id];
+  const reviewIsStarting = isReviewStarting && isReviewStartingForSession(session.id);
+  const reviewIsRunning = Object.values(activeReviewRuns).some((run) => run.sessionId === session.id && run.status === 'running');
+
+  const handleStartAiReview = async () => {
+    try {
+      const result = await startAssignedReviewBatchForSession(session.id);
+      if (!result.runs.length && !result.failures.length) {
+        showToast('No assigned AI reviewer is available for this Virtual MR.');
+        return;
+      }
+      const summary = `AI review finished: ${result.runs.length}/${session.reviewers.length} reviewers ran.`;
+      if (result.failures.length) {
+        showToast(`${summary} Needs attention: ${[result.failures[0], !result.descriptionGenerated ? 'The MR description was not updated.' : ''].filter(Boolean).join(' ')}`);
+      } else if (!result.descriptionGenerated) {
+        showToast(result.hasChanges ? `${summary} The MR description could not be generated from the available diff.` : 'No changed files were found in this Virtual MR snapshot.');
+      } else {
+        showToast(`${summary} Review comments were added to the changed files.`);
+      }
+    } catch (error) {
+      showToast(`AI code review could not start: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
 
   const handleStartEditTitle = () => {
     setEditTitle(session.title);
@@ -295,12 +323,19 @@ export const VirtualMrHub: React.FC = () => {
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => useReviewStore.getState().open(session.id)}
-            title="Review a fixed Git snapshot with read-only LLM tools"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white transition-colors font-medium text-xs cursor-pointer shadow-sm disabled:opacity-50"
+            disabled={!hasAssignedReviewer || Boolean(reviewBatch) || reviewIsStarting || reviewIsRunning}
+            onClick={() => void handleStartAiReview()}
+            title={!hasAssignedReviewer ? "Add an AI bot to the Reviewers list to start a review" : reviewBatch ? `Reviewing ${reviewBatch.reviewerName} (${reviewBatch.current}/${reviewBatch.total})` : reviewIsRunning ? "An AI code review is already running" : "Start a review with every assigned AI reviewer"}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white transition-colors font-medium text-xs cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-white" />
-            <span className="text-white">AI code review</span>
+            <RefreshCw className={`w-3.5 h-3.5 text-white ${reviewIsRunning ? 'animate-spin' : ''}`} />
+            <span className="text-white">
+              {reviewBatch
+                ? reviewBatch.phase === 'preparing-description'
+                  ? `Summarizing MR · ${reviewBatch.current}/${reviewBatch.total}`
+                  : `Reviewing ${reviewBatch.reviewerName} · ${reviewBatch.current}/${reviewBatch.total}`
+                : reviewIsStarting ? 'Starting review…' : reviewIsRunning ? 'Review running…' : 'AI code review'}
+            </span>
           </button>
         </div>
       </div>
