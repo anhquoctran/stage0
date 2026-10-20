@@ -252,6 +252,7 @@ pub fn run() {
             commands::delete_ai_api_key,
             commands::open_external_url,
             features::ai::acp::acp_fetch_registry,
+            features::ai::acp::acp_fetch_registry_icon,
             features::ai::acp::acp_prepare_registry_agent,
             features::ai::acp::acp_agent_auth_methods,
             features::ai::acp::acp_agent_authenticate,
