@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { type AiConfig } from '../types/AiConfig';
+import { activeProviderSettings, configuredProviderIds, providerSettingsFor, rememberActiveProviderSettings } from '../utils/aiProviderSettings';
 import { type AiModelPreset } from '../types/AiModelPreset';
 import { type McpServerConfig } from '../types/McpServerConfig';
 import { type McpConfigFileFormat } from '../types/McpConfigFileFormat';
@@ -28,6 +29,16 @@ When reviewing git diffs:
 2. Recommend idiomatic, performant patterns conforming to the language standard.
 3. Be clear, constructive, and concise. Avoid superfluous praise.
 4. Format markdown with code blocks, line references, and actionable improvements.`;
+
+function normalizeLoadedAiConfig(saved?: Partial<AiConfig>): AiConfig {
+  const loaded: AiConfig = { ...DEFAULT_AI_CONFIG, ...(saved || {}), apiKey: '' };
+  loaded.configuredProviders = Array.isArray(saved?.configuredProviders)
+    ? configuredProviderIds(loaded)
+    : saved && Object.keys(saved).length
+      ? configuredProviderIds({ ...loaded, configuredProviders: undefined })
+      : [];
+  return loaded;
+}
 let chatGptEpoch = 0;
 let chatGptPoll = 0;
 
@@ -102,11 +113,7 @@ function loadPersistedState(): {
           savedAiConfig.reviewerInstructions = legacySystemPrompt;
         }
       }
-      const loadedAiConfig: AiConfig = {
-        ...DEFAULT_AI_CONFIG,
-        ...savedAiConfig,
-        apiKey: '', // Never trust or retain plaintext apiKey from localStorage
-      };
+      const loadedAiConfig = normalizeLoadedAiConfig(savedAiConfig);
 
       const loadedGuardrailPolicy: GuardrailPolicy = {
         ...DEFAULT_GUARDRAIL_POLICY,
@@ -234,6 +241,13 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
       ...safePartial,
       apiKey: '',
     };
+    if (['authMode', 'cliType', 'model', 'baseUrl', 'reasoningEffort', 'fastMode'].some((key) => key in safePartial)
+      && configuredProviderIds(nextConfig).includes(nextConfig.provider)) {
+      nextConfig.providerSettings = {
+        ...nextConfig.providerSettings,
+        [nextConfig.provider]: activeProviderSettings(nextConfig),
+      };
+    }
     const keyToSave = typeof apiKey === 'string' ? apiKey.trim() : '';
     set({ aiConfig: nextConfig, aiTestResult: null });
     persistState(nextConfig, get().mcpServers, get().guardrailPolicy);
@@ -286,13 +300,13 @@ export const useAiMcpStore = create<AiMcpState>((set, get) => ({
     const providerPreset = AI_PROVIDERS.find((p) => p.id === providerId);
     if (!providerPreset) return;
 
+    const currentConfig = get().aiConfig;
+    const rememberedConfig = rememberActiveProviderSettings(currentConfig);
+    const nextSettings = providerSettingsFor(rememberedConfig, providerId);
     const nextConfig: AiConfig = {
-      ...get().aiConfig,
+      ...rememberedConfig,
+      ...nextSettings,
       provider: providerId,
-      baseUrl: providerPreset.defaultBaseUrl,
-      model: providerPreset.defaultModel,
-      reasoningEffort: undefined,
-      fastMode: false,
       apiKey: '',
     };
     set({ aiConfig: nextConfig, aiTestResult: null });
@@ -975,7 +989,7 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
     const configured = settings?.ai;
     if (!configured || Object.keys(configured).length === 0) return;
     const aiConfig = configured.aiConfig && typeof configured.aiConfig === 'object'
-      ? { ...DEFAULT_AI_CONFIG, ...(configured.aiConfig as Partial<AiConfig>), apiKey: '' }
+      ? normalizeLoadedAiConfig(configured.aiConfig as Partial<AiConfig>)
       : useAiMcpStore.getState().aiConfig;
     const mcpServers = Array.isArray(configured.mcpServers)
       ? configured.mcpServers.map((server) => resetMcpVerification(server as McpServerConfig))
@@ -1017,6 +1031,7 @@ if (typeof window !== 'undefined' && typeof window.setTimeout === 'function') {
         try {
           await invoke('commit_ai_preferences', {
             apiKeys: {},
+            apiKeyRemovals: [],
             policy: initialState.guardrailPolicy,
             mcpEnvSecrets: {},
             mcpEnvRemovals: {},

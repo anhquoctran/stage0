@@ -117,7 +117,7 @@ export const StatusBar: React.FC = () => {
             </div>
 
             {branches?.current && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-surface0/50 border border-surface1/50 text-text font-mono text-[11px] shrink-0">
+              <div className="flex items-center gap-1.5 px-2 py-0.5  bg-surface0/50 border border-surface1/50 text-text font-mono text-[11px] shrink-0">
                 <GitBranch className="w-3 h-3 text-blue shrink-0" />
                 <span className="truncate max-w-[200px]">{branches.current}</span>
               </div>
@@ -139,7 +139,7 @@ export const StatusBar: React.FC = () => {
             <button
               type="button"
               onClick={() => openPreferences('ai-sandbox')}
-              className="h-5.5 px-2 rounded-md bg-surface0/70 hover:bg-surface1 border border-surface1 hover:border-surface2 text-subtext0 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              className="h-5.5 px-2  bg-surface0/70 hover:bg-surface1 border border-surface1 hover:border-surface2 text-subtext0 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               title="Configure Sandbox Engine in Preferences"
             >
               <Box className="w-3 h-3 text-subtext0" />
@@ -158,37 +158,37 @@ export const StatusBar: React.FC = () => {
               <>
                 {diffError ? (
                   <div
-                    className="h-5.5 px-2 rounded-md bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs"
+                    className="h-5.5 px-2  bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs"
                     title={diffError}
                   >
                     <AlertTriangle className="w-3 h-3 text-red shrink-0" />
                     <span>Compare Failed</span>
                   </div>
                 ) : isDiffLoading ? (
-                  <div className="h-5.5 px-2 rounded-md bg-surface0/60 border border-surface1/60 text-subtext0 flex items-center gap-1.5 font-medium shadow-xs">
+                  <div className="h-5.5 px-2  bg-surface0/60 border border-surface1/60 text-subtext0 flex items-center gap-1.5 font-medium shadow-xs">
                     <Loader2 className="w-3 h-3 animate-spin text-blue shrink-0" />
                     <span>Comparing...</span>
                   </div>
                 ) : conflictCheckError ? (
                   <div
-                    className="h-5.5 px-2 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1.5 font-medium shadow-xs"
+                    className="h-5.5 px-2  bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1.5 font-medium shadow-xs"
                     title={conflictCheckError}
                   >
                     <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
                     <span>Merge Check Unavailable</span>
                   </div>
                 ) : diffPayload && diffPayload.files.length === 0 ? (
-                  <div className="h-5.5 px-2 rounded-md bg-surface0/50 border border-surface1/50 text-subtext1 flex items-center gap-1.5 font-medium shadow-xs">
+                  <div className="h-5.5 px-2  bg-surface0/50 border border-surface1/50 text-subtext1 flex items-center gap-1.5 font-medium shadow-xs">
                     <Info className="w-3 h-3 text-subtext0 shrink-0" />
                     <span>No Changes</span>
                   </div>
                 ) : conflictReport?.has_conflicts ? (
-                  <div className="h-5.5 px-2 rounded-md bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs">
+                  <div className="h-5.5 px-2  bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs">
                     <AlertTriangle className="w-3 h-3 text-red shrink-0" />
                     <span>Conflicts Detected</span>
                   </div>
                 ) : conflictReport ? (
-                  <div className="h-5.5 px-2 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5 font-medium shadow-xs">
+                  <div className="h-5.5 px-2  bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5 font-medium shadow-xs">
                     <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
                     <span>Clean Merge</span>
                   </div>
@@ -199,7 +199,7 @@ export const StatusBar: React.FC = () => {
             {/* File Review Progress Badge */}
             {totalFiles > 0 && (
               <div
-                className="h-5.5 px-2 rounded-md bg-surface0/50 border border-surface1/60 text-subtext0 flex items-center gap-1.5 text-[11px] shadow-xs"
+                className="h-5.5 px-2  bg-surface0/50 border border-surface1/60 text-subtext0 flex items-center gap-1.5 text-[11px] shadow-xs"
                 title={selectedFile ? `Active file: ${selectedFile.path}` : `${totalFiles} total files`}
               >
                 <FileText className="w-3 h-3 text-subtext0 shrink-0" />
@@ -224,7 +224,7 @@ export const StatusBar: React.FC = () => {
             <button
               type="button"
               onClick={() => setViewMode(viewMode === 'split' ? 'unified' : 'split')}
-              className="h-5.5 px-2 rounded-md bg-surface0/40 hover:bg-surface1/70 border border-surface1/40 hover:border-surface2 text-subtext1 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              className="h-5.5 px-2  bg-surface0/40 hover:bg-surface1/70 border border-surface1/40 hover:border-surface2 text-subtext1 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               title={`Click to switch to ${viewMode === 'split' ? 'Unified' : 'Split'} view`}
             >
               {viewMode === 'split' ? (
@@ -240,11 +240,11 @@ export const StatusBar: React.FC = () => {
               <div className="h-3 w-px bg-surface1/80 mr-1" />
               <Keyboard className="w-3 h-3 text-subtext0/60 shrink-0" />
               <span>
-                <kbd className="font-mono bg-surface0/60 px-1 py-0.2 rounded border border-surface1/40 text-subtext1">↑/↓</kbd> Files
+                <kbd className="font-mono bg-surface0/60 px-1 py-0.2  border border-surface1/40 text-subtext1">↑/↓</kbd> Files
               </span>
               <span className="text-surface2">•</span>
               <span>
-                <kbd className="font-mono bg-surface0/60 px-1 py-0.2 rounded border border-surface1/40 text-subtext1">S/U</kbd> View
+                <kbd className="font-mono bg-surface0/60 px-1 py-0.2  border border-surface1/40 text-subtext1">S/U</kbd> View
               </span>
             </div>
           </>
@@ -280,14 +280,14 @@ export const StatusBar: React.FC = () => {
             <div
               id="performance-monitor-tooltip"
               role="tooltip"
-              className="invisible absolute bottom-full right-0 z-50 mb-2 w-72 translate-y-1 rounded-lg border border-surface1 bg-mantle p-3 text-left text-xs text-text opacity-0 shadow-2xl transition-all duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100"
+              className="invisible absolute bottom-full right-0 z-50 mb-2 w-72 translate-y-1  border border-surface1 bg-mantle p-3 text-left text-xs text-text opacity-0 shadow-2xl transition-all duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100"
             >
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <HeartPulse className="h-4 w-4 text-primary" />
                   <span className="font-semibold">Application Performance</span>
                 </div>
-                <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-primary">LIVE</span>
+                <span className=" bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-primary">LIVE</span>
               </div>
 
               {performanceMetricsUnavailable ? (
@@ -295,7 +295,7 @@ export const StatusBar: React.FC = () => {
               ) : (
                 <>
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-md bg-surface0/70 p-2">
+                    <div className=" bg-surface0/70 p-2">
                       <div className="mb-1 text-[10px] text-subtext0">CPU usage</div>
                       <div className="font-mono text-sm font-semibold text-text">
                         {performanceMetrics?.cpuPercent == null
@@ -303,7 +303,7 @@ export const StatusBar: React.FC = () => {
                           : `${performanceMetrics.cpuPercent.toFixed(1)}%`}
                       </div>
                     </div>
-                    <div className="rounded-md bg-surface0/70 p-2">
+                    <div className=" bg-surface0/70 p-2">
                       <div className="mb-1 text-[10px] text-subtext0">Resident memory</div>
                       <div className="font-mono text-sm font-semibold text-text">
                         {performanceMetrics ? formatDetailedMemory(performanceMetrics.memoryBytes) : '—'}
@@ -340,7 +340,7 @@ export const StatusBar: React.FC = () => {
           }}
           aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
           aria-expanded={isHistoryDrawerOpen}
-          className={`relative grid h-6 w-7 place-items-center rounded transition-colors cursor-pointer ${
+          className={`relative grid h-6 w-7 place-items-center  transition-colors cursor-pointer ${
             isHistoryDrawerOpen
               ? 'bg-surface1 text-text'
               : 'text-subtext0 hover:bg-surface0 hover:text-text'
@@ -351,7 +351,7 @@ export const StatusBar: React.FC = () => {
           {unreadCount > 0 && (
             <span
               aria-hidden="true"
-              className="absolute right-1 top-0.5 h-1.5 w-1.5 rounded-full bg-brand ring-1 ring-mantle"
+              className="absolute right-1 top-0.5 h-1.5 w-1.5  bg-brand ring-1 ring-mantle"
             />
           )}
         </button>

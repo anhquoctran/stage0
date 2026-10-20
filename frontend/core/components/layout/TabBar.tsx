@@ -103,19 +103,19 @@ export const TabBar: React.FC = () => {
     switch (status) {
       case 'approved':
         return (
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 font-mono">
+          <span className="text-[10px] px-1.5 py-0.2  bg-emerald-500/20 text-emerald-400 font-mono">
             Approved
           </span>
         );
       case 'closed':
         return (
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-surface2 text-subtext0 font-mono">
+          <span className="text-[10px] px-1.5 py-0.2  bg-surface2 text-subtext0 font-mono">
             Closed
           </span>
         );
       default:
         return (
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-brand/20 text-brand font-mono font-medium">
+          <span className="text-[10px] px-1.5 py-0.2  bg-brand/20 text-brand font-mono font-medium">
             Open
           </span>
         );
@@ -187,7 +187,7 @@ export const TabBar: React.FC = () => {
                   e.stopPropagation();
                   closeSession(session.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ml-1 cursor-pointer shrink-0"
+                className="opacity-0 group-hover:opacity-100 p-0.5  hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ml-1 cursor-pointer shrink-0"
                 title={formatShortcutText('Close Virtual MR (Ctrl+W)')}
               >
                 <X className="w-3 h-3" />
@@ -222,7 +222,7 @@ export const TabBar: React.FC = () => {
             >
               {draftMr.title || 'New Virtual MR'}
             </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-brand/20 text-brand font-mono font-medium">
+            <span className="text-[10px] px-1.5 py-0.2  bg-brand/20 text-brand font-mono font-medium">
               Draft
             </span>
             <button
@@ -231,7 +231,7 @@ export const TabBar: React.FC = () => {
                 e.stopPropagation();
                 closeNewMrDraft();
               }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ml-1 cursor-pointer shrink-0"
+              className="opacity-0 group-hover:opacity-100 p-0.5  hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ml-1 cursor-pointer shrink-0"
               title={formatShortcutText('Close Draft (Ctrl+W)')}
             >
               <X className="w-3 h-3" />
@@ -246,7 +246,7 @@ export const TabBar: React.FC = () => {
         <button
           type="button"
           onClick={() => openNewMrDraft()}
-          className="w-7 h-7 flex items-center justify-center rounded bg-surface1 hover:bg-surface2 text-white transition-colors shrink-0 cursor-pointer shadow-xs"
+          className="w-7 h-7 flex items-center justify-center  bg-surface1 hover:bg-surface2 text-white transition-colors shrink-0 cursor-pointer shadow-xs"
           title={formatShortcutText('New Virtual MR (Ctrl+T)')}
         >
           <Plus className="w-4 h-4 text-white" />

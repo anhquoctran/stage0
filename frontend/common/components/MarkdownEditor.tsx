@@ -120,7 +120,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               type="button"
               onClick={() => insertMarkdown('**', '**', 'bold text')}
               disabled={disabled}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
               title={formatShortcutText('Bold (Ctrl+B)')}
             >
               <Bold className="w-3.5 h-3.5" />
@@ -129,7 +129,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               type="button"
               onClick={() => insertMarkdown('*', '*', 'italic text')}
               disabled={disabled}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
               title={formatShortcutText('Italic (Ctrl+I)')}
             >
               <Italic className="w-3.5 h-3.5" />
@@ -138,7 +138,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               type="button"
               onClick={() => insertMarkdown('### ', '', 'Heading')}
               disabled={disabled}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
               title="Heading"
             >
               <Heading className="w-3.5 h-3.5" />
@@ -150,7 +150,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               type="button"
               onClick={() => insertMarkdown('`', '`', 'code')}
               disabled={disabled}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
               title="Inline code"
             >
               <Code className="w-3.5 h-3.5" />
@@ -159,7 +159,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               type="button"
               onClick={() => insertMarkdown('```\n', '\n```', 'code block')}
               disabled={disabled}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
               title="Code block"
             >
               <SquareCode className="w-3.5 h-3.5" />
@@ -168,7 +168,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               type="button"
               onClick={() => insertMarkdown('> ', '', 'Quote')}
               disabled={disabled}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
               title="Quote"
             >
               <Quote className="w-3.5 h-3.5" />
@@ -180,7 +180,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               type="button"
               onClick={() => insertMarkdown('- ', '', 'List item')}
               disabled={disabled}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
               title="Bullet list"
             >
               <List className="w-3.5 h-3.5" />
@@ -189,7 +189,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               type="button"
               onClick={() => insertMarkdown('1. ', '', 'Numbered item')}
               disabled={disabled}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
               title="Numbered list"
             >
               <ListOrdered className="w-3.5 h-3.5" />
@@ -198,7 +198,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               type="button"
               onClick={() => insertMarkdown('- [ ] ', '', 'Task item')}
               disabled={disabled}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
               title="Task list"
             >
               <CheckSquare className="w-3.5 h-3.5" />
@@ -207,7 +207,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               type="button"
               onClick={() => insertMarkdown('[', '](https://example.com)', 'link text')}
               disabled={disabled}
-              className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
               title={formatShortcutText('Insert link (Ctrl+K)')}
             >
               <Link className="w-3.5 h-3.5" />
@@ -262,7 +262,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 type="button"
                 onClick={onGenerateDraft}
                 disabled={disabled || isSubmitting}
-                className="p-1 rounded text-subtext0 hover:text-purple-300 hover:bg-surface1 active:bg-surface2 transition-colors cursor-pointer disabled:opacity-40"
+                className="p-1  text-subtext0 hover:text-purple-300 hover:bg-surface1 active:bg-surface2 transition-colors cursor-pointer disabled:opacity-40"
                 title="Generate draft from commit metadata (no AI request)"
                 aria-label="Generate draft from commit metadata"
               >

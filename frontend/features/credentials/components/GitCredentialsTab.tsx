@@ -186,7 +186,7 @@ export const GitCredentialsTab: React.FC = () => {
               clearError();
               setFormError(null);
             }}
-            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-none transition-colors cursor-pointer shadow-xs border border-brand"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold  transition-colors cursor-pointer shadow-xs border border-brand"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Credential</span>
@@ -207,7 +207,7 @@ export const GitCredentialsTab: React.FC = () => {
               clearError();
               setFormError(null);
             }}
-            className="p-1 hover:bg-red/20 rounded cursor-pointer"
+            className="p-1 hover:bg-red/20  cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -231,7 +231,7 @@ export const GitCredentialsTab: React.FC = () => {
                 setIsAdding(false);
                 setFormError(null);
               }}
-              className="p-1 text-subtext0 hover:text-text rounded cursor-pointer"
+              className="p-1 text-subtext0 hover:text-text  cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -248,7 +248,7 @@ export const GitCredentialsTab: React.FC = () => {
                   key={p.id}
                   type="button"
                   onClick={() => handleProviderChange(p.id)}
-                  className={`px-2.5 py-2 rounded-lg text-xs font-semibold border transition-all text-center cursor-pointer ${
+                  className={`px-2.5 py-2  text-xs font-semibold border transition-all text-center cursor-pointer ${
                     provider === p.id
                       ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
                       : 'bg-surface0/40 border-surface0/80 text-subtext0 hover:bg-surface0 hover:text-text'
@@ -372,14 +372,14 @@ export const GitCredentialsTab: React.FC = () => {
                 setIsAdding(false);
                 setFormError(null);
               }}
-              className="px-3 py-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+              className="px-3 py-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
+              className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold  transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
             >
               {isLoading ? (
                 <>
@@ -414,7 +414,7 @@ export const GitCredentialsTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsAdding(true)}
-                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-none transition-colors cursor-pointer border border-brand shadow-xs mt-1"
+                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold  transition-colors cursor-pointer border border-brand shadow-xs mt-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add First Credential</span>
@@ -492,7 +492,7 @@ export const GitCredentialsTab: React.FC = () => {
                       type="button"
                       onClick={() => handleVerify(cred.id)}
                       disabled={verifyingId === cred.id}
-                      className="p-1.5 rounded-lg border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
+                      className="p-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
                       title="Verify Secret in OS Keyring"
                     >
                       <RefreshCw
@@ -509,14 +509,14 @@ export const GitCredentialsTab: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleConfirmDelete(cred.id)}
-                        className="px-2 py-0.5 bg-red/20 hover:bg-red/30 text-red text-[11px] font-medium rounded transition-colors cursor-pointer"
+                        className="px-2 py-0.5 bg-red/20 hover:bg-red/30 text-red text-[11px] font-medium  transition-colors cursor-pointer"
                       >
                         Confirm
                       </button>
                       <button
                         type="button"
                         onClick={() => setDeletingId(null)}
-                        className="px-1.5 py-0.5 text-subtext0 hover:text-text text-[11px] rounded transition-colors cursor-pointer"
+                        className="px-1.5 py-0.5 text-subtext0 hover:text-text text-[11px]  transition-colors cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -525,7 +525,7 @@ export const GitCredentialsTab: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setDeletingId(cred.id)}
-                      className="p-1.5 rounded-lg border border-surface1 hover:bg-red/10 text-subtext0 hover:text-red transition-colors cursor-pointer"
+                      className="p-1.5  border border-surface1 hover:bg-red/10 text-subtext0 hover:text-red transition-colors cursor-pointer"
                       title="Delete Stage0 credential and OS Keyring entry"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -545,7 +545,7 @@ export const GitCredentialsTab: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleCopyTokenRef(cred.token_ref, cred.id)}
-                  className="flex items-center gap-1 text-[10px] text-subtext0 hover:text-text px-1.5 py-0.5 rounded hover:bg-surface1 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-[10px] text-subtext0 hover:text-text px-1.5 py-0.5  hover:bg-surface1 transition-colors cursor-pointer"
                   title="Copy tokenized reference key"
                 >
                   {copiedId === cred.id ? (

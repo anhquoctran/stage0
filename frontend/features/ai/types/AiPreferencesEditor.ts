@@ -8,5 +8,7 @@ export type AiPreferencesEditor = AiPreferencesSnapshot & Pick<AiMcpState,
   'testMcpServer' | 'importMcpConfigFile' | 'exportMcpConfigFile' | 'updateGuardrailPolicy' | 'resetGuardrailPolicy'> & Pick<BotReviewersState,
   'addGlobalReviewer' | 'updateGlobalReviewer' | 'deleteGlobalReviewer' | 'toggleGlobalReviewer' | 'resetGlobalReviewers'> & {
     apiKeyDrafts: Partial<Record<AiProviderId, string>>;
+    apiKeyRemovals: AiProviderId[];
+    removeApiKey: (provider: AiProviderId) => void;
     replace: (snapshot: AiPreferencesSnapshot) => void;
   };

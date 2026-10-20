@@ -97,7 +97,7 @@ export const FileList: React.FC<FileListProps> = ({
     if (isConflicted) {
       return (
         <span
-          className="w-4 h-4 rounded text-[10px] font-bold flex items-center justify-center bg-red/20 text-red border border-red/40 conflict-pulse shrink-0"
+          className="w-4 h-4  text-[10px] font-bold flex items-center justify-center bg-red/20 text-red border border-red/40 conflict-pulse shrink-0"
           title="Merge conflict"
         >
           !
@@ -109,7 +109,7 @@ export const FileList: React.FC<FileListProps> = ({
       case 'ADDED':
         return (
           <span
-            className="w-4 h-4 rounded text-[10px] font-bold flex items-center justify-center bg-green/20 text-green border border-green/30 shrink-0"
+            className="w-4 h-4  text-[10px] font-bold flex items-center justify-center bg-green/20 text-green border border-green/30 shrink-0"
             title="Added file"
           >
             A
@@ -118,7 +118,7 @@ export const FileList: React.FC<FileListProps> = ({
       case 'DELETED':
         return (
           <span
-            className="w-4 h-4 rounded text-[10px] font-bold flex items-center justify-center bg-red/20 text-red border border-red/30 shrink-0"
+            className="w-4 h-4  text-[10px] font-bold flex items-center justify-center bg-red/20 text-red border border-red/30 shrink-0"
             title="Deleted file"
           >
             D
@@ -127,7 +127,7 @@ export const FileList: React.FC<FileListProps> = ({
       case 'RENAMED':
         return (
           <span
-            className="w-4 h-4 rounded text-[10px] font-bold flex items-center justify-center bg-mauve/20 text-mauve border border-mauve/30 shrink-0"
+            className="w-4 h-4  text-[10px] font-bold flex items-center justify-center bg-mauve/20 text-mauve border border-mauve/30 shrink-0"
             title="Renamed file"
           >
             R
@@ -136,7 +136,7 @@ export const FileList: React.FC<FileListProps> = ({
       default:
         return (
           <span
-            className="w-4 h-4 rounded text-[10px] font-bold flex items-center justify-center bg-yellow/20 text-yellow border border-yellow/30 shrink-0"
+            className="w-4 h-4  text-[10px] font-bold flex items-center justify-center bg-yellow/20 text-yellow border border-yellow/30 shrink-0"
             title="Modified file"
           >
             M
@@ -170,18 +170,18 @@ export const FileList: React.FC<FileListProps> = ({
             <span className="text-xs font-bold uppercase tracking-wider text-subtext1">
               Files Changed
             </span>
-            <span className="text-xs px-1.5 py-0.2 bg-surface0 text-text rounded-full font-mono font-semibold border border-surface0">
+            <span className="text-xs px-1.5 py-0.2 bg-surface0 text-text  font-mono font-semibold border border-surface0">
               {files.length}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             {/* Flat vs Tree toggle */}
-            <div className="flex items-center bg-surface0 rounded p-0.5 gap-0.5">
+            <div className="flex items-center bg-surface0  p-0.5 gap-0.5">
               <button
                 type="button"
                 onClick={() => setFileListLayout('flat')}
-                className={`p-1 rounded transition-colors ${
+                className={`p-1  transition-colors ${
                   fileListLayout === 'flat'
                     ? 'bg-surface2 text-white'
                     : 'text-white/70 hover:text-white'
@@ -193,7 +193,7 @@ export const FileList: React.FC<FileListProps> = ({
               <button
                 type="button"
                 onClick={() => setFileListLayout('tree')}
-                className={`p-1 rounded transition-colors ${
+                className={`p-1  transition-colors ${
                   fileListLayout === 'tree'
                     ? 'bg-surface2 text-white'
                     : 'text-white/70 hover:text-white'
@@ -225,7 +225,7 @@ export const FileList: React.FC<FileListProps> = ({
             placeholder="Filter files..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-7 py-1 bg-base border border-surface0 rounded text-xs text-text placeholder-subtext0 focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
+            className="w-full pl-8 pr-7 py-1 bg-base border border-surface0  text-xs text-text placeholder-subtext0 focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
           />
           {searchTerm && (
             <button
@@ -253,7 +253,7 @@ export const FileList: React.FC<FileListProps> = ({
               <AlertTriangle className="w-3.5 h-3.5 text-white shrink-0" />
               <span>Show Conflicts Only</span>
             </div>
-            <span className="bg-red-700 text-white px-1.5 py-0.2 rounded-full font-mono text-[10px]">
+            <span className="bg-red-700 text-white px-1.5 py-0.2  font-mono text-[10px]">
               {conflictedCount}
             </span>
           </button>
@@ -264,7 +264,7 @@ export const FileList: React.FC<FileListProps> = ({
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="p-8 text-center text-xs text-subtext1 space-y-2">
-            <div className="w-5 h-5 border-2 border-blue border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="w-5 h-5 border-2 border-blue border-t-transparent  animate-spin mx-auto" />
             <p>Analyzing changes...</p>
           </div>
         ) : diffError ? (

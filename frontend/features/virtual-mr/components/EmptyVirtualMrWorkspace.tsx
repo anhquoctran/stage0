@@ -16,7 +16,7 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
       <div className="max-w-md flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
         {/* Icon Container */}
         <div className="relative mb-6">
-          <div className="relative w-16 h-16 rounded-2xl bg-mantle border border-surface1 flex items-center justify-center text-brand shadow-xl">
+          <div className="relative w-16 h-16  bg-mantle border border-surface1 flex items-center justify-center text-brand shadow-xl">
             <GitPullRequest className="w-8 h-8 text-brand" />
           </div>
         </div>
@@ -42,11 +42,11 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
         <button
           type="button"
           onClick={onNewMr}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-none bg-brand hover:bg-brand/90 active:scale-[0.98] text-on-accent font-semibold text-xs transition-all shadow-lg shadow-brand/20 cursor-pointer mb-4"
+          className="flex items-center gap-2 px-5 py-2.5  bg-brand hover:bg-brand/90 active:scale-[0.98] text-on-accent font-semibold text-xs transition-all shadow-lg shadow-brand/20 cursor-pointer mb-4"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Create Virtual MR</span>
-          <kbd className="ml-1.5 px-1.5 py-0.5 text-[10px] font-mono bg-black/15 rounded text-on-accent/80 border border-black/10">
+          <kbd className="ml-1.5 px-1.5 py-0.5 text-[10px] font-mono bg-black/15  text-on-accent/80 border border-black/10">
             {formatShortcutText('Ctrl+T')}
           </kbd>
         </button>

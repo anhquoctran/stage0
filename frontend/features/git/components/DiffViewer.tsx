@@ -390,7 +390,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-base text-subtext1">
-        <div className="w-8 h-8 border-2 border-blue border-t-transparent rounded-full animate-spin mb-3" />
+        <div className="w-8 h-8 border-2 border-blue border-t-transparent  animate-spin mb-3" />
         <span className="text-sm font-medium text-text">Computing 3-dot MR diff...</span>
         <span className="text-xs text-subtext0 mt-1">Executing git diff and merge-tree simulation</span>
       </div>
@@ -432,7 +432,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   if (!diffPayload) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-base p-8 text-center select-none">
-        <div className="w-16 h-16 rounded-xl bg-mantle border border-surface0 flex items-center justify-center text-blue mb-4 shadow-md">
+        <div className="w-16 h-16  bg-mantle border border-surface0 flex items-center justify-center text-blue mb-4 shadow-md">
           <GitPullRequest className="w-8 h-8" />
         </div>
         <h3 className="text-[1rem] font-bold text-text mb-1">
@@ -479,7 +479,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-base p-8 text-center select-none">
-        <div className="w-16 h-16 rounded-xl bg-mantle border border-surface0 flex items-center justify-center text-subtext1 mb-4 shadow-md">
+        <div className="w-16 h-16  bg-mantle border border-surface0 flex items-center justify-center text-subtext1 mb-4 shadow-md">
           <FileText className="w-8 h-8 text-blue" />
         </div>
         <h3 className="text-[1rem] font-bold text-text mb-1">
@@ -491,20 +491,20 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
         {/* Quick Summary Pill Cards */}
         <div className={`grid ${totalBinaryFiles > 0 ? 'grid-cols-4 max-w-xl' : 'grid-cols-3 max-w-md'} gap-3 w-full mb-6`}>
-          <div className="bg-mantle border border-surface0 rounded-lg p-3 text-center">
+          <div className="bg-mantle border border-surface0  p-3 text-center">
             <div className="text-[10px] uppercase font-bold text-subtext1">Files</div>
             <div className="text-lg font-mono font-bold text-text">{totalFiles}</div>
           </div>
-          <div className="bg-mantle border border-surface0 rounded-lg p-3 text-center">
+          <div className="bg-mantle border border-surface0  p-3 text-center">
             <div className="text-[10px] uppercase font-bold text-subtext1">Additions</div>
             <div className="text-lg font-mono font-bold text-green">+{totalAdditions}</div>
           </div>
-          <div className="bg-mantle border border-surface0 rounded-lg p-3 text-center">
+          <div className="bg-mantle border border-surface0  p-3 text-center">
             <div className="text-[10px] uppercase font-bold text-subtext1">Deletions</div>
             <div className="text-lg font-mono font-bold text-red">-{totalDeletions}</div>
           </div>
           {totalBinaryFiles > 0 && (
-            <div className="bg-mantle border border-surface0 rounded-lg p-3 text-center">
+            <div className="bg-mantle border border-surface0  p-3 text-center">
               <div className="text-[10px] uppercase font-bold text-subtext1">Binary</div>
               <div className="text-lg font-mono font-bold text-amber-400">{totalBinaryFiles}</div>
             </div>
@@ -550,7 +550,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             type="button"
             onClick={handleCopyPath}
             title={formatShortcutText('Copy relative file path (Ctrl+Shift+C)')}
-            className="p-1 text-subtext1 hover:text-text rounded hover:bg-surface1 transition-colors cursor-pointer"
+            className="p-1 text-subtext1 hover:text-text  hover:bg-surface1 transition-colors cursor-pointer"
           >
             {copied ? (
               <Check className="w-3.5 h-3.5 text-green" />
@@ -562,7 +562,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           <FileActionMenu file={selectedFile} />
 
           {selectedFile.is_conflicted && (
-            <div className="flex items-center gap-1 text-[10px] text-red bg-red/20 border border-red/40 px-2 py-0.5 rounded font-bold uppercase conflict-pulse">
+            <div className="flex items-center gap-1 text-[10px] text-red bg-red/20 border border-red/40 px-2 py-0.5  font-bold uppercase conflict-pulse">
               <AlertTriangle className="w-3.5 h-3.5 text-red" />
               <span>Conflict</span>
             </div>
@@ -587,12 +587,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         {/* Center: File Stepper & Conflict Stepper */}
         <div className="flex items-center gap-2">
           {diffPayload && diffPayload.files.length > 1 && (
-            <div className="flex items-center gap-1 bg-surface0 rounded border border-surface0 px-1 py-0.5">
+            <div className="flex items-center gap-1 bg-surface0  border border-surface0 px-1 py-0.5">
               <button
                 type="button"
                 disabled={!hasPrev}
                 onClick={selectPrevFile}
-                className="p-1 text-subtext1 hover:text-text rounded hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                className="p-1 text-subtext1 hover:text-text  hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
                 title="Previous file (Up / k)"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -604,7 +604,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 type="button"
                 disabled={!hasNext}
                 onClick={selectNextFile}
-                className="p-1 text-subtext1 hover:text-text rounded hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                className="p-1 text-subtext1 hover:text-text  hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
                 title="Next file (Down / j)"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -613,12 +613,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           )}
 
           {conflictedFiles.length > 0 && (
-            <div className="flex items-center gap-1 bg-red/15 border border-red/35 rounded px-1.5 py-0.5 shadow-xs">
+            <div className="flex items-center gap-1 bg-red/15 border border-red/35  px-1.5 py-0.5 shadow-xs">
               <AlertTriangle className="w-3.5 h-3.5 text-red shrink-0" />
               <button
                 type="button"
                 onClick={selectPrevConflictFile}
-                className="p-0.5 text-red hover:bg-red/20 rounded transition-colors cursor-pointer"
+                className="p-0.5 text-red hover:bg-red/20  transition-colors cursor-pointer"
                 title="Previous conflict file"
               >
                 <ChevronLeft className="w-3 h-3" />
@@ -636,7 +636,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               <button
                 type="button"
                 onClick={selectNextConflictFile}
-                className="p-0.5 text-red hover:bg-red/20 rounded transition-colors cursor-pointer"
+                className="p-0.5 text-red hover:bg-red/20  transition-colors cursor-pointer"
                 title={formatShortcutText('Next conflict file (Alt+C)')}
               >
                 <ChevronRight className="w-3 h-3" />
@@ -750,7 +750,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       {selectedFile.is_conflicted && (
         <div className="bg-red/10 border-b border-red/30 px-3.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-text select-none shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-1 rounded bg-red/20 text-red border border-red/30 shrink-0">
+            <div className="p-1  bg-red/20 text-red border border-red/30 shrink-0">
               <AlertTriangle className="w-4 h-4" />
             </div>
             <div className="min-w-0">
@@ -759,7 +759,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                   Unmerged Conflict in this file
                 </span>
                 {conflictReport?.details?.find((d) => d.path === selectedFile.path)?.conflict_type && (
-                  <span className="text-[10px] uppercase px-1.5 py-0.2 rounded bg-surface1 text-subtext1 font-bold">
+                  <span className="text-[10px] uppercase px-1.5 py-0.2  bg-surface1 text-subtext1 font-bold">
                     {conflictReport.details.find((d) => d.path === selectedFile.path)?.conflict_type}
                   </span>
                 )}
@@ -848,7 +848,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         >
           {/* Conflict Alert & Quick Summary Card inside Diff View */}
           {!selectedFile.is_binary && selectedFile.is_conflicted && activeConflictPreview && activeConflictPreview.conflict_regions.length > 0 && (
-            <div className="mb-3 border border-red/40 bg-gradient-to-r from-red/15 via-red/10 to-red/5 rounded-lg p-3 shadow-xs">
+            <div className="mb-3 border border-red/40 bg-gradient-to-r from-red/15 via-red/10 to-red/5  p-3 shadow-xs">
               <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-red shrink-0" />
@@ -859,18 +859,18 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 <button
                   type="button"
                   onClick={() => setFileViewTab('conflicts')}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-red text-white text-xs font-bold hover:bg-red/90 transition-colors cursor-pointer shadow-xs"
+                  className="flex items-center gap-1.5 px-2.5 py-1  bg-red text-white text-xs font-bold hover:bg-red/90 transition-colors cursor-pointer shadow-xs"
                 >
                   <GitMerge className="w-3.5 h-3.5" />
                   <span>Open 3-Way Side-by-Side Inspector</span>
                 </button>
               </div>
               <p className="text-[11px] text-subtext1 mb-2 leading-relaxed">
-                Standard git diff only compares against the common ancestor. Both <code className="text-text font-semibold bg-surface0 px-1 py-0.5 rounded border border-surface1">{baseBranch}</code> and <code className="text-text font-semibold bg-surface0 px-1 py-0.5 rounded border border-surface1">{compareBranch}</code> modified overlapping lines in this file:
+                Standard git diff only compares against the common ancestor. Both <code className="text-text font-semibold bg-surface0 px-1 py-0.5  border border-surface1">{baseBranch}</code> and <code className="text-text font-semibold bg-surface0 px-1 py-0.5  border border-surface1">{compareBranch}</code> modified overlapping lines in this file:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono">
                 {activeConflictPreview.conflict_regions.slice(0, 2).map((r, idx) => (
-                  <div key={idx} className="bg-mantle/90 border border-surface0 rounded p-2 text-[11px]">
+                  <div key={idx} className="bg-mantle/90 border border-surface0  p-2 text-[11px]">
                     <div className="text-[10px] font-bold text-red mb-1">
                       Collision Region #{idx + 1} (Lines {r.start_line} – {r.end_line})
                     </div>
@@ -903,7 +903,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               </p>
             </div>
           ) : diffData && hunks.length > 0 ? (
-            <div className="border border-surface0 rounded-lg overflow-hidden bg-base shadow-sm">
+            <div className="border border-surface0  overflow-hidden bg-base shadow-sm">
               <DiffView
                 key={`${selectedFile.path}-${viewMode}-${theme}-${fontFamily}-${fontSize}-${lineSpacing}-${enableLigatures}-${isBold}-${isItalic}-${isUnderline}`}
                 data={diffData}

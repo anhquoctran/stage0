@@ -142,7 +142,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
         <button
           type="button"
           onClick={() => fetchAvailableSandboxes()}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs  border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
           title="Refresh engine availability"
         >
           <RotateCw className="w-3 h-3" />
@@ -152,7 +152,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
 
       {/* Transaction Notice (if uncommitted) */}
       {isPendingCommit && (
-        <div className="px-3 py-2 bg-surface0/50 border border-surface1 rounded text-xs flex items-center justify-between text-subtext1">
+        <div className="px-3 py-2 bg-surface0/50 border border-surface1  text-xs flex items-center justify-between text-subtext1">
           <span>
             Pending change: switch to{' '}
             <strong className="text-text font-mono">{getAdapterName(draftSandboxType)}</strong>
@@ -163,7 +163,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
       )}
 
       {/* Monochrome Adapter Radio List */}
-      <div className="border border-surface0 rounded-lg divide-y divide-surface0/60 overflow-hidden bg-base/30">
+      <div className="border border-surface0  divide-y divide-surface0/60 overflow-hidden bg-base/30">
         {adapters.map((adapter) => {
           const isSelected = draftSandboxType === adapter.id;
           const isCurrent = committedSandboxType === adapter.id;
@@ -189,7 +189,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
               {/* Radio Indicator */}
               <div className="pt-0.5 shrink-0">
                 <div
-                  className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
+                  className={`w-4 h-4  flex items-center justify-center transition-colors ${
                     isSelected
                       ? 'border-4 border-text bg-base'
                       : 'border border-surface2 hover:border-subtext0'
@@ -205,19 +205,19 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                   </span>
 
                   {adapter.defaultBadge && (
-                    <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2 rounded bg-surface0 border border-surface1 uppercase">
+                    <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2  bg-surface0 border border-surface1 uppercase">
                       Default
                     </span>
                   )}
 
                   {adapter.extraBadge && (
-                    <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2 rounded bg-surface0 border border-surface1">
+                    <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2  bg-surface0 border border-surface1">
                       {adapter.extraBadge}
                     </span>
                   )}
 
                   {isCurrent && (
-                    <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2 rounded bg-surface1 border border-surface2">
+                    <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2  bg-surface1 border border-surface2">
                       Active
                     </span>
                   )}
@@ -237,7 +237,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
       </div>
 
       {/* Engine Technical Specifications */}
-      <div className="p-3.5 bg-surface0/20 border border-surface0 rounded-lg text-xs space-y-2">
+      <div className="p-3.5 bg-surface0/20 border border-surface0  text-xs space-y-2">
         <div className="text-[10px] font-bold text-subtext0 uppercase tracking-wider">
           Technical Specifications
         </div>
@@ -275,7 +275,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
 
       {/* Active Instances & Command Execution Section */}
       {committedSandboxType !== 'in_memory' && (
-        <div className="p-3.5 bg-surface0/20 border border-surface0 rounded-lg space-y-3">
+        <div className="p-3.5 bg-surface0/20 border border-surface0  space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs font-semibold text-text block">
@@ -290,14 +290,14 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
               type="button"
               onClick={handleCreateInstance}
               disabled={isSandboxLoading}
-              className="px-2.5 py-1 rounded bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 transition-colors cursor-pointer disabled:opacity-50 font-medium"
+              className="px-2.5 py-1  bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 transition-colors cursor-pointer disabled:opacity-50 font-medium"
             >
               + Provision Instance
             </button>
           </div>
 
           {activeSandboxInstances.length === 0 ? (
-            <div className="p-3 border border-dashed border-surface1 rounded text-center text-xs text-subtext0">
+            <div className="p-3 border border-dashed border-surface1  text-center text-xs text-subtext0">
               No active sandbox instances provisioned.
             </div>
           ) : (
@@ -314,7 +314,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                       setSelectedInstanceId(inst.id);
                     }
                   }}
-                  className={`flex items-center justify-between p-2.5 rounded border text-xs transition-colors cursor-pointer ${
+                  className={`flex items-center justify-between p-2.5  border text-xs transition-colors cursor-pointer ${
                     selectedInstanceId === inst.id ||
                     (activeSandboxInstances.length === 1 && !selectedInstanceId)
                       ? 'bg-surface1 border-surface2'
@@ -324,7 +324,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                   <div className="font-mono space-y-0.5 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-text">{inst.id}</span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-surface0 text-subtext0 uppercase">
+                      <span className="text-[10px] px-1.5 py-0.2  bg-surface0 text-subtext0 uppercase">
                         {inst.adapter_type}
                       </span>
                     </div>
@@ -339,7 +339,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                       e.stopPropagation();
                       destroySandboxInstance(inst.id);
                     }}
-                    className="p-1 rounded text-subtext0 hover:text-text hover:bg-surface2 transition-colors cursor-pointer"
+                    className="p-1  text-subtext0 hover:text-text hover:bg-surface2 transition-colors cursor-pointer"
                     title="Destroy this sandbox instance"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -363,21 +363,21 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                   value={testCmd}
                   onChange={(e) => setTestCmd(e.target.value)}
                   placeholder="e.g. npm test or cargo test"
-                  className="flex-1 bg-base border border-surface1 rounded px-3 py-1.5 text-xs font-mono text-text focus:outline-none focus:border-surface2"
+                  className="flex-1 bg-base border border-surface1  px-3 py-1.5 text-xs font-mono text-text focus:outline-none focus:border-surface2"
                 />
 
                 <button
                   type="button"
                   onClick={handleRunCommand}
                   disabled={cmdRunning}
-                  className="px-3 py-1.5 rounded bg-surface1 hover:bg-surface2 text-text text-xs font-medium border border-surface2 transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-3 py-1.5  bg-surface1 hover:bg-surface2 text-text text-xs font-medium border border-surface2 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {cmdRunning ? 'Running...' : 'Run'}
                 </button>
               </div>
 
               {cmdOutput && (
-                <div className="mt-2 bg-crust border border-surface0 rounded p-3 text-xs font-mono space-y-1.5">
+                <div className="mt-2 bg-crust border border-surface0  p-3 text-xs font-mono space-y-1.5">
                   <div className="flex items-center justify-between text-[10px] text-subtext0 border-b border-surface0/60 pb-1">
                     <span>Exit code: {cmdOutput.exitCode}</span>
                     <span>{cmdOutput.durationMs}ms</span>

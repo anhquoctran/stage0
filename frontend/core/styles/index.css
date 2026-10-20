@@ -298,7 +298,7 @@ code, kbd, samp, pre {
 
 ::-webkit-scrollbar-thumb {
   background: var(--ctp-surface1);
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -608,14 +608,14 @@ button.btn-primary:disabled {
   background-color: var(--ctp-surface0);
   color: var(--ctp-text);
   padding: 0.15em 0.35em;
-  border-radius: 3px;
+  border-radius: 0;
   border: 1px solid var(--ctp-surface1);
 }
 
 .markdown-preview pre {
   background-color: var(--ctp-crust);
   border: 1px solid var(--ctp-surface0);
-  border-radius: 4px;
+  border-radius: 0;
   padding: 0.65em 0.85em;
   margin-top: 0.4em;
   margin-bottom: 0.4em;

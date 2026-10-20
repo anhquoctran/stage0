@@ -12,16 +12,31 @@ import { guardrailPreset } from '../utils/guardrailPreset';
 export function createAiPreferencesDraft(initial: AiPreferencesSnapshot) {
   const id = () => `draft-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
   return create<AiPreferencesEditor>((set, get) => ({
-    ...structuredClone(initial), apiKeyDrafts: {},
-    replace: (snapshot) => set({ ...structuredClone(snapshot), apiKeyDrafts: {} }),
+    ...structuredClone(initial), apiKeyDrafts: {}, apiKeyRemovals: [],
+    replace: (snapshot) => set({ ...structuredClone(snapshot), apiKeyDrafts: {}, apiKeyRemovals: [] }),
+    removeApiKey: (provider) => {
+      const old = get();
+      const apiKeyDrafts = { ...old.apiKeyDrafts };
+      delete apiKeyDrafts[provider];
+      set({
+        apiKeyDrafts,
+        apiKeyRemovals: old.apiKeyRemovals.includes(provider) ? old.apiKeyRemovals : [...old.apiKeyRemovals, provider],
+        ...(old.aiConfig.provider === provider ? { aiConfig: { ...old.aiConfig, apiKey: '' } } : {}),
+      });
+    },
     updateAiConfig: (partial) => {
       const old = get(); const provider = partial.provider || old.aiConfig.provider;
       const apiKeyDrafts = { ...old.apiKeyDrafts };
-      if (partial.apiKey !== undefined && provider === old.aiConfig.provider) {
-        if (partial.apiKey.trim()) apiKeyDrafts[provider] = partial.apiKey;
-        else delete apiKeyDrafts[provider];
+      let apiKeyRemovals = old.apiKeyRemovals;
+      if (partial.apiKey !== undefined) {
+        if (partial.apiKey.trim()) {
+          apiKeyDrafts[provider] = partial.apiKey;
+          apiKeyRemovals = apiKeyRemovals.filter((id) => id !== provider);
+        } else if (provider === old.aiConfig.provider) {
+          delete apiKeyDrafts[provider];
+        }
       }
-      set({ apiKeyDrafts, aiConfig: { ...old.aiConfig, ...partial, apiKey: apiKeyDrafts[provider] || '' } });
+      set({ apiKeyDrafts, apiKeyRemovals, aiConfig: { ...old.aiConfig, ...partial, apiKey: apiKeyDrafts[provider] || '' } });
     },
     addMcpServer: (server) => set({ mcpServers: [...get().mcpServers, resetMcpVerification({ ...structuredClone(server), id: id() })] }),
     updateMcpServer: (id, partial) => set({ mcpServers: get().mcpServers.map((server) => server.id === id ? resetMcpVerification({ ...server, ...structuredClone(partial) }) : server) }),
