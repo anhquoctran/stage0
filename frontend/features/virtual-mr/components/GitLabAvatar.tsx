@@ -1,14 +1,6 @@
 import React from 'react';
 import { Bot } from '../../../common/components/icons/Bot';
-
-interface GitLabAvatarProps {
-  name: string;
-  email?: string;
-  avatarUrl?: string;
-  isAiAgent?: boolean;
-  size?: 'xs' | 'sm' | 'md' | 'lg';
-  className?: string;
-}
+import type { GitLabAvatarProps } from '../types/GitLabAvatarProps';
 
 // GitLab authentic identicon color pairs (foreground & dark background)
 const GITLAB_IDENTICON_PALETTES = [

@@ -1,35 +1,13 @@
 import type { VirtualMrSession } from '../types/VirtualMrSession';
 
-type SearchField =
-  | 'author'
-  | 'assignee'
-  | 'reviewer'
-  | 'approved-by'
-  | 'label'
-  | 'base'
-  | 'head'
-  | 'is'
-  | 'has'
-  | 'no';
+import type { SearchField } from '../types/SearchField';
+import type { SearchFieldDefinition } from '../types/SearchFieldDefinition';
+import type { VirtualMrSearchSuggestion } from '../types/VirtualMrSearchSuggestion';
+import type { VirtualMrSearchHighlight } from '../types/VirtualMrSearchHighlight';
 
-interface SearchFieldDefinition {
-  key: SearchField;
-  label: string;
-  description: string;
-}
-
-export interface VirtualMrSearchSuggestion {
-  kind: 'field' | 'value';
-  field: SearchField;
-  value: string;
-  label: string;
-  detail?: string;
-}
-
-export interface VirtualMrSearchHighlight {
-  text: string;
-  isFilter: boolean;
-}
+export type { VirtualMrSearchSuggestion } from '../types/VirtualMrSearchSuggestion';
+export type { VirtualMrSearchHighlight } from '../types/VirtualMrSearchHighlight';
+export type { SearchField } from '../types/SearchField';
 
 const SEARCH_FIELDS: SearchFieldDefinition[] = [
   { key: 'author', label: 'Author', description: 'Filter by MR author' },

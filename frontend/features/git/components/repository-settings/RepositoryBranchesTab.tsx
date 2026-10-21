@@ -1,0 +1,272 @@
+import React, { useState } from 'react';
+import { GitBranch } from '../../../../common/components/icons/GitBranch';
+import { Tag } from '../../../../common/components/icons/Tag';
+import { Plus } from '../../../../common/components/icons/Plus';
+import { Trash2 } from '../../../../common/components/icons/Trash2';
+import { CustomSelect } from '../../../../common/components/CustomSelect';
+import type { CustomSelectOption } from '../../../../common/types/CustomSelectOption';
+import { useGitStore } from '../../store/useGitStore';
+import { useVirtualMrStore } from '../../../virtual-mr/store/useVirtualMrStore';
+
+export const RepositoryBranchesTab: React.FC<{
+  defaultBaseBranch: string;
+  setDefaultBaseBranch: (branch: string) => void;
+}> = ({ defaultBaseBranch, setDefaultBaseBranch }) => {
+  const { currentRepo, branches, fetchBranches, showToast } = useGitStore();
+  const { tags, createTag, deleteTag, createBranch, deleteBranch } = useVirtualMrStore();
+
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagMessage, setNewTagMessage] = useState('');
+
+  const [isAddingBranch, setIsAddingBranch] = useState(false);
+  const [newBranchName, setNewBranchName] = useState('');
+  const [newBranchBase, setNewBranchBase] = useState('HEAD');
+
+  const baseBranchOptions: CustomSelectOption<string>[] = Array.from(
+    new Set([...(branches?.local || []), ...(branches?.remote || [])])
+  ).map((branch) => ({ value: branch, label: branch }));
+
+  const newBranchBaseOptions: CustomSelectOption<string>[] = [
+    { value: 'HEAD', label: 'From HEAD' },
+    ...(branches?.local || []).map((branch) => ({
+      value: branch,
+      label: `From ${branch}`,
+    })),
+  ];
+
+  const handleCreateBranch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBranchName.trim() || !currentRepo) return;
+    try {
+      await createBranch(newBranchName.trim(), newBranchBase === 'HEAD' ? undefined : newBranchBase);
+      await fetchBranches(currentRepo.local_path);
+      showToast(`Branch created: ${newBranchName}`);
+      setNewBranchName('');
+      setIsAddingBranch(false);
+    } catch (err: any) {
+      showToast(`Failed to create branch: ${err}`);
+    }
+  };
+
+  const handleCreateTag = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTagName.trim()) return;
+    try {
+      await createTag(newTagName.trim(), 'HEAD', newTagMessage.trim() || undefined);
+      showToast(`Tag created: ${newTagName}`);
+      setNewTagName('');
+      setNewTagMessage('');
+      setIsAddingTag(false);
+    } catch (err: any) {
+      showToast(`Failed to create tag: ${err}`);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-[1rem] text-text font-medium">Branches &amp; Tags</h3>
+        <p className="text-xs text-subtext0 mt-0.5">
+          Manage default branch configuration, create new branches, and manage tags
+        </p>
+      </div>
+
+      {/* DEFAULT BASE BRANCH */}
+      <div className="p-4 bg-crust border border-surface0 space-y-2">
+        <label className="block text-xs font-medium text-text">Default Base Branch for Virtual MR</label>
+        <p className="text-xs text-subtext0">
+          The default target branch automatically selected when opening a new Virtual MR in this repository.
+        </p>
+        <CustomSelect
+          value={defaultBaseBranch}
+          options={baseBranchOptions}
+          onChange={setDefaultBaseBranch}
+          className="mt-1 w-64"
+          buttonClassName="w-full"
+          dropdownWidth="w-full"
+          align="left"
+          placeholder="Select a branch…"
+          aria-label="Default Base Branch for Virtual MR"
+        />
+      </div>
+
+      {/* BRANCHES MANAGEMENT */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold text-xs text-text flex items-center gap-1.5">
+            <GitBranch className="w-3.5 h-3.5 text-subtext0" />
+            <span>Local Branches ({branches?.local.length || 0})</span>
+          </span>
+          <button
+            onClick={() => setIsAddingBranch(true)}
+            className="px-2.5 py-1 bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer"
+          >
+            <Plus className="w-3 h-3" />
+            <span>New Branch</span>
+          </button>
+        </div>
+
+        {isAddingBranch && (
+          <form
+            onSubmit={handleCreateBranch}
+            className="p-3 bg-crust border border-surface0 flex items-center gap-2 text-xs"
+          >
+            <input
+              type="text"
+              required
+              placeholder="New branch name (e.g. feat/checkout)"
+              value={newBranchName}
+              onChange={(e) => setNewBranchName(e.target.value)}
+              className="flex-1 px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none"
+            />
+            <CustomSelect
+              value={newBranchBase}
+              options={newBranchBaseOptions}
+              onChange={setNewBranchBase}
+              className="shrink-0"
+              buttonClassName="min-w-36"
+              dropdownWidth="w-56"
+              align="left"
+              aria-label="New branch base"
+            />
+            <button
+              type="submit"
+              className="px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
+            >
+              Create
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAddingBranch(false)}
+              className="px-2 py-1.5 bg-surface0 cursor-pointer"
+            >
+              Cancel
+            </button>
+          </form>
+        )}
+
+        <div className="max-h-40 overflow-y-auto divide-y divide-surface0 border border-surface0 bg-crust/50">
+          {(branches?.local || []).map((b) => (
+            <div key={b} className="px-3 py-2 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-mono">{b}</span>
+                {b === branches?.current && (
+                  <span className="text-[10px] px-1.5 py-0.2 bg-surface1 text-text font-mono border border-surface2/40">
+                    current HEAD
+                  </span>
+                )}
+                {b === defaultBaseBranch && (
+                  <span className="text-[10px] px-1.5 py-0.2 bg-surface1 text-subtext0 font-mono border border-surface2/40">
+                    default base
+                  </span>
+                )}
+              </div>
+              {b !== branches?.current && currentRepo && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm(`Are you sure you want to delete branch '${b}'?`)) {
+                      deleteBranch(b, true);
+                      fetchBranches(currentRepo.local_path);
+                    }
+                  }}
+                  className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
+                  title="Delete branch"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* TAGS MANAGEMENT */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold text-xs text-text flex items-center gap-1.5">
+            <Tag className="w-3.5 h-3.5 text-subtext0" />
+            <span>Release Tags ({tags.length})</span>
+          </span>
+          <button
+            onClick={() => setIsAddingTag(true)}
+            className="px-2.5 py-1 bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer"
+          >
+            <Plus className="w-3 h-3" />
+            <span>Create Tag</span>
+          </button>
+        </div>
+
+        {isAddingTag && (
+          <form
+            onSubmit={handleCreateTag}
+            className="p-3 bg-crust border border-surface0 space-y-2 text-xs"
+          >
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                required
+                placeholder="Tag name (e.g. v1.0.0)"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                className="px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none"
+              />
+              <input
+                type="text"
+                placeholder="Annotated message"
+                value={newTagMessage}
+                onChange={(e) => setNewTagMessage(e.target.value)}
+                className="px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsAddingTag(false)}
+                className="px-3 py-1 bg-surface0 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
+              >
+                Create Tag
+              </button>
+            </div>
+          </form>
+        )}
+
+        <div className="max-h-40 overflow-y-auto divide-y divide-surface0 border border-surface0 bg-crust/50">
+          {tags.length === 0 ? (
+            <div className="p-4 text-center text-subtext0 text-xs">No tags found</div>
+          ) : (
+            tags.map((t) => (
+              <div key={t.name} className="px-3 py-2 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono font-medium text-text">{t.name}</span>
+                  <span className="font-mono text-[11px] text-subtext0">{t.commit_hash}</span>
+                  {t.message && <span className="text-subtext1 italic truncate max-w-xs">{t.message}</span>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm(`Are you sure you want to delete tag '${t.name}'?`)) {
+                      deleteTag(t.name);
+                    }
+                  }}
+                  className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
+                  title="Delete tag"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+

@@ -7,22 +7,19 @@ import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
 import { Info } from '../../../common/components/icons/Info';
 import { GitCommit } from '../../../common/components/icons/GitCommit';
 import { FileCode } from '../../../common/components/icons/FileCode';
-import { Bot } from '../../../common/components/icons/Bot';
-import { Tag } from '../../../common/components/icons/Tag';
 import { X } from '../../../common/components/icons/X';
 import { Loader2 } from '../../../common/components/icons/Loader2';
-import { Plus } from '../../../common/components/icons/Plus';
-import { Check } from '../../../common/components/icons/Check';
 import { formatRecentTime } from '@/common/utils/dateTime';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { startAssignedReviewBatchForSession } from '../../review/services/assignedReviewService';
-import { type BotReviewer } from '../types/BotReviewer';
 import { TabBranchSelector } from '../../git/components/TabBranchSelector';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
 import { FileList } from '../../git/components/FileList';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
+import { NewVirtualMrReviewersSection } from './NewVirtualMrReviewersSection';
+import { NewVirtualMrLabelsSection } from './NewVirtualMrLabelsSection';
 import { NewVirtualMrViewDiffViewer } from './NewVirtualMrViewDiffViewer';
 
 export const NewVirtualMrView: React.FC = () => {
@@ -464,273 +461,36 @@ export const NewVirtualMrView: React.FC = () => {
 
                 {/* Sidebar Configuration (Bots & Labels) + Create Action */}
                 <div className="w-72 shrink-0 space-y-3">
-                  {/* Reviewers Section (GitHub/GitLab style) */}
-                  <div className="relative p-3 border border-surface1 bg-mantle/70 space-y-2 select-none" ref={botDropdownRef}>
-                    <div className="flex items-center justify-between">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-subtext1 flex items-center gap-1.5">
-                        <Bot className="w-3.5 h-3.5 text-brand" />
-                        <span>Reviewers</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={toggleReviewerDropdown}
-                        className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer"
-                        title="Assign Reviewer Bots"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                  {/* Reviewers Section */}
+                  <NewVirtualMrReviewersSection
+                    selectedBots={draftMr.selectedBots}
+                    effectiveReviewers={effectiveReviewers}
+                    isLoadingReviewerOptions={isLoadingReviewerOptions}
+                    showBotDropdown={showBotDropdown}
+                    setShowBotDropdown={setShowBotDropdown}
+                    onToggleReviewerDropdown={toggleReviewerDropdown}
+                    onToggleBot={handleToggleBot}
+                    onRemoveBot={handleRemoveBot}
+                    botDropdownRef={botDropdownRef}
+                  />
 
-                    {/* Selected Reviewers Chips or Empty State */}
-                    {draftMr.selectedBots.length === 0 ? (
-                      <div className="text-xs text-subtext0/70 italic py-0.5">
-                        No reviewers requested
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-1.5 pt-0.5">
-                          {draftMr.selectedBots.map((botId) => {
-                            const bot = effectiveReviewers.find((b: BotReviewer) => b.id === botId);
-                            if (!bot) return null;
-                            return (
-                              <div
-                                key={bot.id}
-                                className="flex items-center gap-1.5 px-2 py-0.5 bg-brand/10 border border-brand/20 text-brand text-xs font-medium"
-                              >
-                                <span>{bot.avatarEmoji}</span>
-                                <span className="truncate max-w-[130px]">{bot.name}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveBot(bot.id)}
-                                  className="text-brand/60 hover:text-red hover:bg-surface0 transition-colors cursor-pointer ml-0.5"
-                                  title={`Remove ${bot.name}`}
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <p className="text-[10px] leading-relaxed text-subtext0">
-                          Creating this MR starts a review with the first selected reviewer. Eligible tracked source may be sent to its configured provider.
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Reviewer Dropdown Popover */}
-                    {showBotDropdown && (
-                      <div className="absolute top-full right-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100">
-                        <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between">
-                          <span>Assign AI Reviewer</span>
-                          <button
-                            type="button"
-                            onClick={() => setShowBotDropdown(false)}
-                            className="text-subtext0 hover:text-text cursor-pointer"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                        <div className="max-h-56 overflow-y-auto divide-y divide-surface0/60">
-                          {isLoadingReviewerOptions ? (
-                            <div className="px-3 py-6 text-center text-xs text-subtext0/70 italic">
-                              Loading reviewers...
-                            </div>
-                          ) : effectiveReviewers.length === 0 ? (
-                            <div className="px-3 py-6 text-center text-xs text-subtext0/70 italic">
-                              No AI reviewers available
-                            </div>
-                          ) : (
-                            effectiveReviewers.map((bot: BotReviewer) => {
-                              const isAssigned = draftMr.selectedBots.includes(bot.id);
-                              return (
-                                <button
-                                  key={bot.id}
-                                  type="button"
-                                  onClick={() => handleToggleBot(bot.id)}
-                                  className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors cursor-pointer ${
-                                    isAssigned ? 'bg-brand/10 text-brand' : 'hover:bg-surface0 text-text'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2 min-w-0 pr-2">
-                                    <span className="text-[1rem] shrink-0">{bot.avatarEmoji}</span>
-                                    <div className="truncate">
-                                      <div className="text-xs font-medium truncate">{bot.name}</div>
-                                      <div className="text-[10px] text-subtext0 truncate">{bot.tagline}</div>
-                                    </div>
-                                  </div>
-                                  {isAssigned && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Labels Section (GitHub/GitLab style) */}
-                  <div className="relative p-3 border border-surface1 bg-mantle/70 space-y-2 select-none" ref={labelDropdownRef}>
-                    <div className="flex items-center justify-between">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-subtext1 flex items-center gap-1.5">
-                        <Tag className="w-3.5 h-3.5 text-teal" />
-                        <span>Labels</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={toggleLabelDropdown}
-                        className="p-1 text-subtext0 hover:text-teal hover:bg-surface0 transition-colors cursor-pointer"
-                        title="Edit Labels"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    {/* Selected Labels Chips or Empty State */}
-                    {draftMr.selectedLabels.length === 0 ? (
-                      <div className="text-xs text-subtext0/70 italic py-0.5">
-                        None yet
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-1.5 pt-0.5">
-                        {draftMr.selectedLabels.map((lblId) => {
-                          const lbl = repoLabels.find((l) => l.id === lblId);
-                          if (!lbl) return null;
-                          return (
-                            <div
-                              key={lbl.id}
-                              className="flex items-center gap-1 px-2 py-0.5 text-xs font-mono font-medium border"
-                              style={{
-                                backgroundColor: `${lbl.color}20`,
-                                borderColor: `${lbl.color}40`,
-                                color: lbl.color,
-                              }}
-                            >
-                              <span className="truncate max-w-[120px]">{lbl.name}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveLabel(lbl.id)}
-                                className="hover:opacity-100 opacity-60 transition-opacity cursor-pointer ml-0.5"
-                                title={`Remove ${lbl.name}`}
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Label Dropdown Popover */}
-                    {showLabelDropdown && (
-                      <div className="absolute top-full right-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100">
-                        <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between">
-                          <span>Apply Labels</span>
-                          <button
-                            type="button"
-                            onClick={() => setShowLabelDropdown(false)}
-                            className="text-subtext0 hover:text-text cursor-pointer"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-
-                        {/* Filter / Create input */}
-                        <div className="p-2 bg-base/40 border-b border-surface0/60 space-y-1.5">
-                          <div className="relative">
-                            <input
-                              type="text"
-                              placeholder="Filter or type to add..."
-                              value={labelSearch}
-                              onChange={(e) => setLabelSearch(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleCreateAndSelectLabel();
-                                }
-                              }}
-                              className="w-full px-2.5 py-1 bg-mantle border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-none focus:border-brand font-mono"
-                              autoFocus
-                            />
-                          </div>
-
-                          {/* Color picker presets if typing a new label */}
-                          {labelSearch.trim() && !repoLabels.some((l) => l.name.toLowerCase() === labelSearch.trim().toLowerCase()) && (
-                            <div className="flex items-center justify-between pt-1">
-                              <span className="text-[10px] text-subtext0">Color:</span>
-                              <div className="flex items-center gap-1">
-                                {['#3b82f6', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'].map((color) => (
-                                  <button
-                                    key={color}
-                                    type="button"
-                                    onClick={() => setNewLabelColor(color)}
-                                    className={`w-3.5 h-3.5 border transition-transform cursor-pointer ${
-                                      newLabelColor === color ? 'scale-125 border-white' : 'border-transparent hover:scale-110'
-                                    }`}
-                                    style={{ backgroundColor: color }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Label Items List */}
-                        <div className="max-h-48 overflow-y-auto divide-y divide-surface0/40">
-                          {isLoadingLabelOptions ? (
-                            <div className="px-3 py-3 text-center text-xs text-subtext0/70">
-                              Loading labels...
-                            </div>
-                          ) : (
-                            <>
-                              {/* Create new label action button if search input doesn't match existing */}
-                              {labelSearch.trim() && !repoLabels.some((l) => l.name.toLowerCase() === labelSearch.trim().toLowerCase()) && (
-                                <button
-                                  type="button"
-                                  onClick={handleCreateAndSelectLabel}
-                                  className="w-full px-3 py-2 flex items-center gap-2 hover:bg-surface0 text-left text-xs text-brand transition-colors cursor-pointer font-medium"
-                                >
-                                  <Plus className="w-3.5 h-3.5 shrink-0" />
-                                  <span className="truncate">Create label <strong>"{labelSearch.trim()}"</strong></span>
-                                </button>
-                              )}
-
-                              {/* Existing labels */}
-                              {repoLabels
-                                .filter((lbl) => lbl.name.toLowerCase().includes(labelSearch.toLowerCase()))
-                                .map((lbl) => {
-                                  const isSelected = draftMr.selectedLabels.includes(lbl.id);
-                                  return (
-                                    <button
-                                      key={lbl.id}
-                                      type="button"
-                                      onClick={() => handleToggleLabel(lbl.id)}
-                                      className={`w-full px-3 py-1.5 flex items-center justify-between text-left text-xs font-mono transition-colors cursor-pointer ${
-                                        isSelected ? 'bg-surface0 text-text' : 'hover:bg-surface0/60 text-subtext0'
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-2 truncate pr-2">
-                                        <span
-                                          className="w-2.5 h-2.5 shrink-0"
-                                          style={{ backgroundColor: lbl.color }}
-                                        />
-                                        <span className="truncate">{lbl.name}</span>
-                                      </div>
-                                      {isSelected && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
-                                    </button>
-                                  );
-                                })}
-
-                              {repoLabels.length === 0 && !labelSearch.trim() && (
-                                <div className="px-3 py-3 text-xs text-subtext0/70 italic text-center">
-                                  No labels yet. Type above to create one.
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  {/* Labels Section */}
+                  <NewVirtualMrLabelsSection
+                    selectedLabels={draftMr.selectedLabels}
+                    repoLabels={repoLabels}
+                    isLoadingLabelOptions={isLoadingLabelOptions}
+                    showLabelDropdown={showLabelDropdown}
+                    setShowLabelDropdown={setShowLabelDropdown}
+                    onToggleLabelDropdown={toggleLabelDropdown}
+                    onToggleLabel={handleToggleLabel}
+                    onRemoveLabel={handleRemoveLabel}
+                    labelSearch={labelSearch}
+                    setLabelSearch={setLabelSearch}
+                    newLabelColor={newLabelColor}
+                    setNewLabelColor={setNewLabelColor}
+                    handleCreateAndSelectLabel={handleCreateAndSelectLabel}
+                    labelDropdownRef={labelDropdownRef}
+                  />
 
                   {/* Create Button */}
                   <div className="flex items-center gap-2 pt-1">

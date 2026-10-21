@@ -3,9 +3,7 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 import { Cable } from '../../../common/components/icons/Cable';
 import { Plus } from '../../../common/components/icons/Plus';
 import { Trash2 } from '../../../common/components/icons/Trash2';
-import { Check } from '../../../common/components/icons/Check';
 import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
-import { Copy } from '../../../common/components/icons/Copy';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Eye } from '../../../common/components/icons/Eye';
@@ -19,13 +17,19 @@ import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { X } from '../../../common/components/icons/X';
 import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
 import { Edit3 } from '../../../common/components/icons/Edit3';
-import { Bot } from '../../../common/components/icons/Bot';
+import { CustomSelect } from '../../../common/components/CustomSelect';
+import { AiModelExecutionOptions } from './AiModelExecutionOptions';
+import { McpServerModal } from './McpServerModal';
+import { McpJsonModal } from './McpJsonModal';
+import { ProviderSetupModal } from './ProviderSetupModal';
+import { ProviderDeleteModal } from './ProviderDeleteModal';
+import { MAX_TOKEN_OPTIONS, PROMPT_ROLE_OPTIONS, openUrlInBrowser } from '../constants/aiMcpConstants';
 import { Sparkles } from '../../../common/components/icons/Sparkles';
+import { Bot } from '../../../common/components/icons/Bot';
 import { Zap } from '../../../common/components/icons/Zap';
 import { HardDrive } from '../../../common/components/icons/HardDrive';
 import { Cog } from '../../../common/components/icons/Cog';
-import { CustomSelect } from '../../../common/components/CustomSelect';
-import { AiModelExecutionOptions } from './AiModelExecutionOptions';
+
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import { AI_PROVIDERS, MCP_PRESET_TEMPLATES, DEFAULT_AI_CONFIG } from '../constants/aiPresets';
@@ -38,28 +42,8 @@ import { type McpServerConfig } from '../types/McpServerConfig';
 import { type McpServerType } from '../types/McpServerType';
 import type { AiMcpTabProps } from '../types/AiMcpTabProps';
 import { HarnessConnectionsPanel } from '../../review/components/HarnessConnectionsPanel';
-import { BOT_CATEGORIES } from '../constants/botPresets';
 import type { BotCategory } from '../../virtual-mr/types/BotCategory';
 import { getBotRolePrompt } from '../utils/botRolePrompts';
-
-const MAX_TOKEN_OPTIONS: CustomSelectOption<string>[] = [
-  { value: '1024', label: '1,024 Tokens (Compact)' },
-  { value: '2048', label: '2,048 Tokens (Standard)' },
-  { value: '4096', label: '4,096 Tokens (Recommended for Diffs)' },
-  { value: '8192', label: '8,192 Tokens (Large MR Review)' },
-  { value: '16384', label: '16,384 Tokens (Deep Reasoning / Extended)' },
-];
-
-const MCP_SERVER_TYPE_OPTIONS: CustomSelectOption<McpServerType>[] = [
-  { value: 'stdio', label: 'stdio (Command / Subprocess)' },
-  { value: 'http', label: 'Streamable HTTP (MCP 2025-11-25 discovery)' },
-  { value: 'sse', label: 'Legacy HTTP+SSE (configuration only)' },
-];
-
-const PROMPT_ROLE_OPTIONS: CustomSelectOption<BotCategory>[] = BOT_CATEGORIES.map((category) => ({
-  value: category.id,
-  label: category.label,
-}));
 
 const getProviderIcon = (providerId: string) => {
   switch (providerId) {
@@ -77,18 +61,6 @@ const getProviderIcon = (providerId: string) => {
     default:
       return Cog;
   }
-};
-
-const openUrlInBrowser = async (url: string) => {
-  if (isTauri()) {
-    try {
-      await invoke('open_external_url', { url });
-      return;
-    } catch {
-      // fallback
-    }
-  }
-  window.open(url, '_blank');
 };
 
 export const AiMcpTab: React.FC<AiMcpTabProps> = ({
@@ -218,11 +190,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 
   // Import / Export JSON Dialog State
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
-  const [jsonTab, setJsonTab] = useState<'export' | 'import'>('export');
-  const [jsonInput, setJsonInput] = useState('');
-  const [jsonFeedback, setJsonFeedback] = useState<{ success?: boolean; text: string } | null>(null);
-  const [copiedJson, setCopiedJson] = useState(false);
-
   const activeProviderPreset =
     AI_PROVIDERS.find((p) => p.id === aiConfig.provider) || AI_PROVIDERS[0];
   const configuredProviderList = configuredProviderIds(aiConfig);
@@ -354,38 +321,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       await testMcpServer(id);
     } finally {
       setTestingServerId(null);
-    }
-  };
-
-  const handleCopyJson = () => {
-    const jsonStr = exportMcpConfigFile();
-    navigator.clipboard.writeText(jsonStr);
-    setCopiedJson(true);
-    setTimeout(() => setCopiedJson(false), 2000);
-  };
-
-  const handleImportJson = () => {
-    setJsonFeedback(null);
-    if (!jsonInput.trim()) {
-      setJsonFeedback({ success: false, text: 'Please paste valid JSON configuration first.' });
-      return;
-    }
-
-    const res = importMcpConfigFile(jsonInput.trim());
-    if (res.success) {
-      setJsonFeedback({
-        success: true,
-        text: `Successfully imported ${res.count} MCP server(s)!`,
-      });
-      setTimeout(() => {
-        setIsJsonModalOpen(false);
-        setJsonFeedback(null);
-      }, 1500);
-    } else {
-      setJsonFeedback({
-        success: false,
-        text: res.error || 'Failed to import JSON.',
-      });
     }
   };
 
@@ -1118,8 +1053,6 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  setJsonTab('export');
-                  setJsonFeedback(null);
                   setIsJsonModalOpen(true);
                 }}
                 className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
@@ -1159,221 +1092,27 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
           </div>
 
           {/* Add / Edit Server Drawer / Form */}
-          {isServerFormOpen && (
-            <form
-              onSubmit={handleSaveServer}
-              className="p-4 bg-surface0/60 border border-surface1 space-y-4 animate-in fade-in zoom-in-98 duration-150"
-            >
-              <div className="flex items-center justify-between pb-2 border-b border-surface1/60">
-                <span className="text-xs font-bold text-text flex items-center gap-1.5">
-                  <Cable className="w-3.5 h-3.5 text-subtext0" />
-                  {editingServerId ? 'Edit MCP Server' : 'Add New MCP Server'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsServerFormOpen(false)}
-                  className="p-1 text-subtext0 hover:text-text  cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {formError && (
-                <div className="p-2.5 bg-red/10 border border-red/30 text-xs text-red flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{formError}</span>
-                </div>
-              )}
-
-              <div className="grid grid-cols-3 gap-3">
-                {/* Server Name */}
-                <div className="col-span-2">
-                  <label className="block text-[11px] font-medium text-subtext0 mb-1">
-                    Server Name <span className="text-red">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={serverName}
-                    onChange={(e) => setServerName(e.target.value)}
-                    placeholder="e.g. Git Context, Workspace Filesystem"
-                    required
-                    className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                  />
-                </div>
-
-                {/* Transport Type */}
-                <div>
-                  <label className="block text-[11px] font-medium text-subtext0 mb-1">
-                    Transport Protocol
-                  </label>
-                  <CustomSelect
-                    value={serverType}
-                    options={MCP_SERVER_TYPE_OPTIONS}
-                    onChange={setServerType}
-                    className="w-full"
-                    buttonClassName="w-full"
-                    dropdownWidth="w-full"
-                    align="left"
-                    aria-label="Transport Protocol"
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-[11px] font-medium text-subtext0 mb-1">
-                  Description <span className="text-subtext0/60 font-normal">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={serverDesc}
-                  onChange={(e) => setServerDesc(e.target.value)}
-                  placeholder="e.g. Provides read access to git branches and diff graphs"
-                  className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                />
-              </div>
-
-              {/* Stdio Commands & Args */}
-              {serverType === 'stdio' ? (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-medium text-subtext0 mb-1">
-                        Executable Command <span className="text-red">*</span>
-                      </label>
-                      <div className="relative flex items-center">
-                        <Terminal className="w-3.5 h-3.5 text-subtext0 absolute left-2.5" />
-                        <input
-                          type="text"
-                          value={serverCommand}
-                          onChange={(e) => setServerCommand(e.target.value)}
-                          placeholder="npx, uvx, docker, python"
-                          required
-                          className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="col-span-2">
-                      <label className="block text-[11px] font-medium text-subtext0 mb-1">
-                        Arguments (space-separated)
-                      </label>
-                      <input
-                        type="text"
-                        value={serverArgsStr}
-                        onChange={(e) => setServerArgsStr(e.target.value)}
-                        placeholder="-y @modelcontextprotocol/server-filesystem ."
-                        className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* HTTP endpoint */
-                <div>
-                  <label className="block text-[11px] font-medium text-subtext0 mb-1">
-                    {serverType === 'http' ? 'Streamable HTTP Endpoint URL' : 'Legacy SSE Endpoint URL'} <span className="text-red">*</span>
-                  </label>
-                  <div className="relative flex items-center">
-                    <Globe className="w-3.5 h-3.5 text-subtext0 absolute left-2.5" />
-                    <input
-                      type="url"
-                      value={serverUrl}
-                      onChange={(e) => setServerUrl(e.target.value)}
-                      placeholder={serverType === 'http' ? 'http://localhost:8000/mcp' : 'http://localhost:8000/sse'}
-                      required
-                      className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Environment Variables (Key-Value) */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[11px] font-medium text-subtext0">
-                    Environment Variables
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setServerEnvPairs([...serverEnvPairs, { key: '', value: '' }])
-                    }
-                    className="flex items-center gap-1 text-[10px] text-subtext0 hover:text-text px-2 py-0.5  hover:bg-surface1 transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>Add Variable</span>
-                  </button>
-                </div>
-
-                <p className="text-[10px] text-subtext0 mb-2">
-                  Secret-named variables are stored in your OS keychain and never included in preferences or exports. Leave a saved secret blank to keep it unchanged; enter a new value to replace it.
-                </p>
-
-                {serverEnvPairs.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {serverEnvPairs.map((pair, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={pair.key}
-                          onChange={(e) => {
-                            const copy = [...serverEnvPairs];
-                            copy[idx].key = e.target.value;
-                            setServerEnvPairs(copy);
-                          }}
-                          placeholder="VARIABLE_NAME"
-                          className="flex-1 px-2.5 py-1 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none"
-                        />
-                        <input
-                          type={isSecretMcpEnvName(pair.key) || isLikelySecretMcpEnvValue(pair.value) || pair.secretConfigured ? 'password' : 'text'}
-                          value={pair.value}
-                          onChange={(e) => {
-                            const copy = [...serverEnvPairs];
-                            copy[idx].value = e.target.value;
-                            setServerEnvPairs(copy);
-                          }}
-                          placeholder={pair.secretConfigured && pair.savedKey === pair.key ? 'Saved in OS Keychain · blank keeps current value' : 'value'}
-                          className="flex-1 px-2.5 py-1 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setServerEnvPairs(serverEnvPairs.filter((_, i) => i !== idx));
-                          }}
-                          className="p-1 text-subtext0 hover:text-red  cursor-pointer"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-2 bg-base/40 border border-surface1/60 text-[11px] text-subtext0 italic">
-                    No custom environment variables configured.
-                  </div>
-                )}
-              </div>
-
-              {/* Form Action Buttons */}
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface1/60">
-                <button
-                  type="button"
-                  onClick={() => setIsServerFormOpen(false)}
-                  className="px-3 py-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold  transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
-                >
-                  <Check className="w-3.5 h-3.5 text-on-accent" />
-                  <span>{editingServerId ? 'Save Changes' : 'Register Server'}</span>
-                </button>
-              </div>
-            </form>
-          )}
+          <McpServerModal
+            isOpen={isServerFormOpen}
+            onClose={() => setIsServerFormOpen(false)}
+            onSave={handleSaveServer}
+            editingServerId={editingServerId}
+            formError={formError}
+            serverName={serverName}
+            setServerName={setServerName}
+            serverType={serverType}
+            setServerType={setServerType}
+            serverDesc={serverDesc}
+            setServerDesc={setServerDesc}
+            serverCommand={serverCommand}
+            setServerCommand={setServerCommand}
+            serverArgsStr={serverArgsStr}
+            setServerArgsStr={setServerArgsStr}
+            serverUrl={serverUrl}
+            setServerUrl={setServerUrl}
+            serverEnvPairs={serverEnvPairs}
+            setServerEnvPairs={setServerEnvPairs}
+          />
 
           {/* Servers Cards List */}
           <div className="space-y-2.5">
@@ -1605,285 +1344,41 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       )}
 
       {/* MODAL: ADD / EDIT LLM PROVIDER */}
-      {isProviderSetupOpen && (
-        <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
-          <form onSubmit={handleSaveProviderSetup} className="bg-mantle border border-surface0 w-full max-w-xl shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150">
-            <div data-tauri-drag-region className="flex items-center justify-between pb-2 border-b border-surface0 cursor-default">
-              <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
-                <Sparkles className="w-4 h-4 text-brand" />
-                <span>
-                  <h4 className="text-sm font-bold text-text">Add LLM provider</h4>
-                  <span className="block text-[10px] text-subtext0 mt-0.5">Choose a provider and save its connection details.</span>
-                </span>
-              </div>
-              <button type="button" onClick={() => setIsProviderSetupOpen(false)} className="p-1 text-subtext0 hover:text-text  cursor-pointer" aria-label="Close provider form">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      <ProviderSetupModal
+        isOpen={isProviderSetupOpen}
+        onClose={() => setIsProviderSetupOpen(false)}
+        setupProviderId={setupProviderId}
+        setupProviderName={setupProviderName}
+        setSetupProviderName={setSetupProviderName}
+        setupApiKey={setupApiKey}
+        setSetupApiKey={setSetupApiKey}
+        setupBaseUrl={setupBaseUrl}
+        setSetupBaseUrl={setSetupBaseUrl}
+        setupModel={setupModel}
+        setSetupModel={setSetupModel}
+        providerSetupError={providerSetupError}
+        loadProviderSetup={loadProviderSetup}
+        handleSaveProviderSetup={handleSaveProviderSetup}
+        availableProviderList={availableProviderList}
+        getProviderDisplayName={getProviderDisplayName}
+        hasProviderApiKey={hasProviderApiKey}
+      />
 
-            <div className="space-y-3">
-              <div>
-                <label htmlFor="llm-provider-select" className="block text-[11px] font-semibold text-subtext0 mb-1">Provider</label>
-                <CustomSelect<AiProviderId>
-                  id="llm-provider-select"
-                  value={setupProviderId}
-                  onChange={loadProviderSetup}
-                  options={availableProviderList.map((provider) => ({
-                    value: provider.id,
-                    label: getProviderDisplayName(provider.id),
-                  }))}
-                  className="w-full"
-                  buttonClassName="w-full px-3 py-2"
-                  dropdownWidth="w-full"
-                  align="left"
-                  aria-label="Provider"
-                />
-              </div>
+      <ProviderDeleteModal
+        providerToDelete={providerToDelete}
+        onClose={() => setProviderToDelete(null)}
+        onConfirm={confirmRemoveProvider}
+        isDeletingProvider={isDeletingProvider}
+        providerDeleteError={providerDeleteError}
+        getProviderDisplayName={getProviderDisplayName}
+      />
 
-              {setupProviderId === 'custom' && (
-                <div>
-                  <label htmlFor="llm-provider-name" className="block text-[11px] font-semibold text-subtext0 mb-1">Display name</label>
-                  <input
-                    id="llm-provider-name"
-                    value={setupProviderName}
-                    onChange={(event) => setSetupProviderName(event.target.value)}
-                    placeholder="e.g. OpenRouter, DeepSeek, LM Studio"
-                    className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                  />
-                </div>
-              )}
-
-              {setupProviderId !== 'ollama' && (
-                <div>
-                  <label htmlFor="llm-provider-api-key" className="block text-[11px] font-semibold text-subtext0 mb-1">API key</label>
-                  <input
-                    id="llm-provider-api-key"
-                    type="password"
-                    autoComplete="new-password"
-                    value={setupApiKey}
-                    onChange={(event) => setSetupApiKey(event.target.value)}
-                    placeholder={hasProviderApiKey(setupProviderId) ? 'Saved securely · leave empty to keep' : 'Paste your API key'}
-                    className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                  />
-                  <p className="text-[9px] text-subtext0 mt-1">On Apply, the key is saved securely and never written to preferences.json.</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="llm-provider-base-url" className="block text-[11px] font-semibold text-subtext0 mb-1">API base URL</label>
-                  <input
-                    id="llm-provider-base-url"
-                    type="url"
-                    value={setupBaseUrl}
-                    onChange={(event) => setSetupBaseUrl(event.target.value)}
-                    placeholder="https://api.example.com/v1"
-                    className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="llm-provider-model" className="block text-[11px] font-semibold text-subtext0 mb-1">Model ID</label>
-                  <input
-                    id="llm-provider-model"
-                    value={setupModel}
-                    onChange={(event) => setSetupModel(event.target.value)}
-                    placeholder="model-name"
-                    className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {providerSetupError && (
-              <div role="alert" className="flex items-center gap-2 p-2.5 bg-red/10 border border-red/30 text-red text-[11px]">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{providerSetupError}</span>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-surface0">
-              <button type="button" onClick={() => setIsProviderSetupOpen(false)} className="px-3 py-1.5 border border-surface1 text-subtext0 hover:text-text hover:bg-surface0 text-xs transition cursor-pointer">
-                Cancel
-              </button>
-              <button type="submit" className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-brand text-base text-xs font-semibold hover:brightness-110 transition cursor-pointer">
-                <Check className="w-3.5 h-3.5" />
-                <span>Save provider</span>
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {providerToDelete && (
-        <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
-          <div role="alertdialog" aria-modal="true" aria-labelledby="remove-provider-title" className="w-full max-w-md bg-mantle border border-surface0 shadow-2xl p-5 space-y-4">
-            <div className="flex items-start gap-3">
-              <span className="w-9 h-9 shrink-0 border border-red/40 bg-red/10 text-red flex items-center justify-center">
-                <Trash2 className="w-4 h-4" />
-              </span>
-              <div>
-                <h4 id="remove-provider-title" className="text-sm font-bold text-text">Remove {getProviderDisplayName(providerToDelete)}?</h4>
-                <p className="text-[11px] leading-relaxed text-subtext0 mt-1">
-                  This removes its provider entry and all saved connection settings. The saved API key in the OS credential store will also be deleted. In Preferences, the removal takes effect when you apply your changes.
-                </p>
-              </div>
-            </div>
-
-            {providerDeleteError && (
-              <div role="alert" className="flex items-center gap-2 p-2.5 bg-red/10 border border-red/30 text-red text-[11px]">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{providerDeleteError}</span>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-surface0">
-              <button type="button" disabled={isDeletingProvider} onClick={() => setProviderToDelete(null)} className="px-3 py-1.5 border border-surface1 text-subtext0 hover:text-text hover:bg-surface0 text-xs transition cursor-pointer disabled:opacity-50">
-                Cancel
-              </button>
-              <button type="button" disabled={isDeletingProvider} onClick={() => void confirmRemoveProvider()} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red text-base text-xs font-semibold hover:brightness-110 transition cursor-pointer disabled:opacity-50">
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>{isDeletingProvider ? 'Removing…' : 'Remove provider'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: IMPORT / EXPORT MCP CONFIG JSON */}
-      {isJsonModalOpen && (
-        <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-mantle border border-surface0 w-full max-w-2xl shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150">
-            <div
-              data-tauri-drag-region
-              className="flex items-center justify-between pb-2 border-b border-surface0 cursor-default"
-            >
-              <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
-                <FileJson className="w-4 h-4 text-subtext0" />
-                <h4 className="text-sm font-bold text-text">MCP JSON Configuration</h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsJsonModalOpen(false)}
-                className="p-1 text-subtext0 hover:text-text  cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Sub-tab: Export vs Import */}
-            <div className="flex items-center gap-2 border-b border-surface0 pb-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setJsonTab('export');
-                  setJsonFeedback(null);
-                }}
-                className={`px-3 py-1.5 text-xs font-semibold cursor-pointer border ${
-                  jsonTab === 'export'
-                    ? 'bg-surface1 border-surface2 text-text'
-                    : 'border-transparent text-subtext0 hover:text-text'
-                }`}
-              >
-                Export JSON (Claude Desktop / VSCode compatible)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setJsonTab('import');
-                  setJsonFeedback(null);
-                }}
-                className={`px-3 py-1.5 text-xs font-semibold cursor-pointer border ${
-                  jsonTab === 'import'
-                    ? 'bg-surface1 border-surface2 text-text'
-                    : 'border-transparent text-subtext0 hover:text-text'
-                }`}
-              >
-                Import JSON
-              </button>
-            </div>
-
-            {jsonTab === 'export' ? (
-              <div className="space-y-3">
-                <p className="text-[11px] text-subtext0">
-                  Copy this JSON into your <code>claude_desktop_config.json</code> or VS Code MCP
-                  configuration to synchronize servers:
-                </p>
-                <pre className="p-3 bg-base border border-surface0 text-xs font-mono overflow-auto max-h-60 text-text select-all">
-                  {exportMcpConfigFile()}
-                </pre>
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={handleCopyJson}
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold  transition-colors cursor-pointer border border-surface2 shadow-xs"
-                  >
-                    {copiedJson ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-text" />
-                        <span className="text-text">Copied to Clipboard!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy JSON</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-[11px] text-subtext0">
-                  Paste standard <code>{`{ "mcpServers": { ... } }`}</code> configuration to import
-                  servers directly into Stage0:
-                </p>
-                <textarea
-                  rows={8}
-                  value={jsonInput}
-                  onChange={(e) => setJsonInput(e.target.value)}
-                  placeholder={`{\n  "mcpServers": {\n    "filesystem": {\n      "command": "npx",\n      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]\n    }\n  }\n}`}
-                  className="w-full p-3 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
-                />
-
-                {jsonFeedback && (
-                  <div
-                    className={`p-2.5 border text-xs flex items-center gap-2 ${
-                      jsonFeedback.success
-                        ? 'bg-surface1 border-surface2 text-text'
-                        : 'bg-surface1 border-surface2 text-subtext0'
-                    }`}
-                  >
-                    {jsonFeedback.success ? (
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                    )}
-                    <span>{jsonFeedback.text}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsJsonModalOpen(false)}
-                    className="px-3 py-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleImportJson}
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold  transition-colors cursor-pointer border border-surface2 shadow-xs"
-                  >
-                    <Check className="w-3.5 h-3.5 text-text" />
-                    <span>Import Config</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <McpJsonModal
+        isOpen={isJsonModalOpen}
+        onClose={() => setIsJsonModalOpen(false)}
+        exportMcpConfigFile={exportMcpConfigFile}
+        importMcpConfigFile={importMcpConfigFile}
+      />
     </div>
   );
 };

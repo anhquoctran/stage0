@@ -13,7 +13,7 @@ export const MrDiscussionBoard: React.FC<{ session: VirtualMrSession }> = ({ ses
     </div>
     {session.discussions.length === 0 ? (
       <div className="p-8 text-center text-subtext0 text-xs bg-surface0/20 border border-surface0/60">
-        No discussions yet. Click on any line number in the diff to start a discussion.
+        No discussions yet. Start a discussion by commenting on a line of code or on the markdown editor below.
       </div>
     ) : (
       <div className="space-y-4">

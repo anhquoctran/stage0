@@ -8,6 +8,31 @@ export function loadWithMocks(url, dependencies) {
   const exports = {};
   new Function('require', 'exports', outputText)((id) => {
     if (Object.hasOwn(dependencies, id)) return dependencies[id];
+    if (id === 'zustand') {
+      return {
+        create: (initializer) => {
+          let state = {};
+          const set = (updater) => { state = typeof updater === 'function' ? updater(state) : { ...state, ...updater }; };
+          const get = () => state;
+          const store = (selector) => (selector ? selector(state) : state);
+          store.getState = get;
+          store.setState = set;
+          store.subscribe = () => () => {};
+          try { if (typeof initializer === 'function') state = initializer(set, get, store) ?? {}; } catch {}
+          return store;
+        },
+      };
+    }
+    if (id.startsWith('.') && !id.endsWith('/preferencesJsonService') && !id.endsWith('/listSecretMcpEnv')) {
+      for (const ext of ['', '.tsx', '.ts', '/index.tsx', '/index.ts']) {
+        try {
+          const candidate = new URL(id + ext, url);
+          if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+            return loadWithMocks(candidate, dependencies);
+          }
+        } catch {}
+      }
+    }
     if (id.endsWith('/listSecretMcpEnv')) {
       const isSecretMcpEnvName = (name) => /(token|secret|password|credential|api[_-]?key)/i.test(name);
       const isLikelySecretMcpEnvValue = (value) => /^(sk-|ghp_|github_pat_|glpat-|xox[bp]-)/i.test(value.trim());

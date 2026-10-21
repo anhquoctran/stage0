@@ -1,14 +1,9 @@
 import type { ReviewRun } from './ReviewRun';
 import type { ReviewRunDetail } from './ReviewRunDetail';
 import type { ReviewBotConfig } from './ReviewBotConfig';
+import type { ReviewBatchProgress } from './ReviewBatchProgress';
 
-export interface ReviewBatchProgress {
-  current: number;
-  total: number;
-  completed: number;
-  reviewerName: string;
-  phase: 'preparing-description' | 'reviewing';
-}
+export type { ReviewBatchProgress } from './ReviewBatchProgress';
 
 export interface ReviewState {
   isOpen: boolean;
