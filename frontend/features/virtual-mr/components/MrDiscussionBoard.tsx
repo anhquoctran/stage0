@@ -1,13 +1,14 @@
 import React from 'react';
 import type { VirtualMrSession } from '../types/VirtualMrSession';
 import { DiscussionThread } from './DiscussionThread';
+import { isResolvableDiscussion } from '../utils/discussionResolvable';
 
 export const MrDiscussionBoard: React.FC<{ session: VirtualMrSession }> = ({ session }) => (
   <div className="space-y-4" aria-label="MR discussion board">
     <div className="flex items-center justify-between pb-2 border-b border-surface0">
       <h3 className="text-xs font-semibold text-text">Discussions ({session.discussions.length})</h3>
       <span className="text-[11px] text-subtext0">
-        {session.discussions.filter((d) => !d.isResolved).length} unresolved
+        {session.discussions.filter((d) => isResolvableDiscussion(d) && !d.isResolved).length} unresolved
       </span>
     </div>
     {session.discussions.length === 0 ? (

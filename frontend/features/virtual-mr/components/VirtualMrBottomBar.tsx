@@ -8,6 +8,7 @@ import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
+import { isResolvableDiscussion } from '../utils/discussionResolvable';
 
 export const VirtualMrBottomBar: React.FC = () => {
   const { currentRepo, showToast } = useGitStore();
@@ -17,7 +18,7 @@ export const VirtualMrBottomBar: React.FC = () => {
 
   if (!currentRepo || !session) return null;
 
-  const unresolvedDiscussions = session.discussions.filter((d) => !d.isResolved);
+  const unresolvedDiscussions = session.discussions.filter((d) => isResolvableDiscussion(d) && !d.isResolved);
   const unresolvedCount = unresolvedDiscussions.length;
   const approvedReviewers = session.reviewers.filter((reviewer) => reviewer.reviewStatus === 'approved').length;
 
