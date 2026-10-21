@@ -12,21 +12,30 @@ fn apply_keys(
     removals: &[String],
     read: impl Fn(&str) -> Result<Option<String>, String>,
     write: impl Fn(&str, Option<&str>) -> Result<(), String>,
-) -> Result<(BTreeMap<String, bool>, BTreeMap<String, Option<Zeroizing<String>>>), String> {
+) -> Result<
+    (
+        BTreeMap<String, bool>,
+        BTreeMap<String, Option<Zeroizing<String>>>,
+    ),
+    String,
+> {
     let mut changes = keys
         .iter()
         .map(|(provider, key)| (provider.clone(), Some(Zeroizing::new(key.to_string()))))
         .collect::<BTreeMap<_, _>>();
-    let valid_provider = |provider: &str| matches!(
-        provider,
-        "openai" | "anthropic" | "gemini" | "xai_grok" | "ollama" | "custom"
-    );
+    let valid_provider = |provider: &str| {
+        matches!(
+            provider,
+            "openai" | "anthropic" | "gemini" | "xai_grok" | "ollama" | "custom"
+        )
+    };
     if keys.len() + removals.len() > 7
         || keys.iter().any(|(provider, key)| {
-            !valid_provider(provider) || key.trim().is_empty()
-                || key.len() > 8192
+            !valid_provider(provider) || key.trim().is_empty() || key.len() > 8192
         })
-        || removals.iter().any(|provider| !valid_provider(provider) || keys.contains_key(provider))
+        || removals
+            .iter()
+            .any(|provider| !valid_provider(provider) || keys.contains_key(provider))
         || removals.iter().collect::<BTreeSet<_>>().len() != removals.len()
     {
         return Err("Invalid AI provider key changes. Nothing was saved.".into());
@@ -37,7 +46,8 @@ fn apply_keys(
     for provider in removals {
         changes.insert(provider.clone(), None);
     }
-    let mut progress = KeyringWriteProgress::new("ai_api_key_batch", "native_single", changes.len());
+    let mut progress =
+        KeyringWriteProgress::new("ai_api_key_batch", "native_single", changes.len());
     progress.stage("read_previous_keys");
     let mut previous = BTreeMap::new();
     for provider in changes.keys() {
@@ -47,7 +57,9 @@ fn apply_keys(
     for (provider, key) in &changes {
         changed.push(provider);
         if progress
-            .write_item("api_key", || write(provider, key.as_deref().map(|value| value.trim())))
+            .write_item("api_key", || {
+                write(provider, key.as_deref().map(|value| value.trim()))
+            })
             .is_err()
         {
             let mut restored = true;
@@ -66,7 +78,10 @@ fn apply_keys(
     }
     progress.commit();
     Ok((
-        changes.iter().map(|(provider, key)| (provider.clone(), key.is_some())).collect(),
+        changes
+            .iter()
+            .map(|(provider, key)| (provider.clone(), key.is_some()))
+            .collect(),
         previous,
     ))
 }
@@ -113,8 +128,9 @@ pub fn resolve_mcp_server_env(
             .get_preference_secret_ref(&id)
             .map_err(|_| "Could not read the MCP credential mapping")?;
         match reference {
-            Some(reference) => crate::features::credentials::retrieve_preference_secret(&reference)
-                .map(Some),
+            Some(reference) => {
+                crate::features::credentials::retrieve_preference_secret(&reference).map(Some)
+            }
             None => Ok(None),
         }
     })
@@ -145,8 +161,7 @@ fn resolve_mcp_env_with_record(
         return Ok(resolved);
     }
     let record = Zeroizing::new(
-        read(server_id)?
-            .ok_or("The MCP server has no saved OS-keychain credential record.")?,
+        read(server_id)?.ok_or("The MCP server has no saved OS-keychain credential record.")?,
     );
     if record.len() > 2_048 {
         return Err("The saved MCP credential record exceeds the supported size limit.".into());
@@ -155,7 +170,11 @@ fn resolve_mcp_env_with_record(
         Ok(values) => values,
         Err(_) => return Err("The saved MCP credential record is invalid.".into()),
     };
-    if values.len() > 256 || values.iter().any(|(name, value)| !valid_env_name(name) || value.len() > 16_384) {
+    if values.len() > 256
+        || values
+            .iter()
+            .any(|(name, value)| !valid_env_name(name) || value.len() > 16_384)
+    {
         for value in values.values_mut() {
             zeroize::Zeroize::zeroize(value);
         }
@@ -219,9 +238,14 @@ fn apply_mcp_env_changes(
             None => BTreeMap::new(),
         };
         if env.len() > 256
-            || env.iter().any(|(name, value)| !valid_env_name(name) || value.len() > 16_384)
+            || env
+                .iter()
+                .any(|(name, value)| !valid_env_name(name) || value.len() > 16_384)
         {
-            return Err("The saved MCP credential record is outside supported limits; nothing was changed.".into());
+            return Err(
+                "The saved MCP credential record is outside supported limits; nothing was changed."
+                    .into(),
+            );
         }
         if let Some(names) = removals.get(server_id) {
             for name in names {
@@ -241,7 +265,9 @@ fn apply_mcp_env_changes(
                     .map_err(|_| "MCP credentials could not be encoded; nothing was changed")?,
             );
             if encoded.len() > 2_048 {
-                return Err("MCP credentials for one server exceed the OS-keychain-safe size limit.".into());
+                return Err(
+                    "MCP credentials for one server exceed the OS-keychain-safe size limit.".into(),
+                );
             }
             total_bytes = total_bytes.saturating_add(encoded.len());
             Some(encoded)
@@ -406,177 +432,4 @@ pub async fn commit_ai_preferences(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use std::cell::RefCell;
-
-    #[test]
-    fn mcp_runtime_resolver_returns_only_declared_keychain_values_to_native_callers() {
-        let public_env = BTreeMap::from([("LOG_LEVEL".to_string(), "debug".to_string())]);
-        let resolved = resolve_mcp_env_with_record(
-            "server-a",
-            &public_env,
-            &["GITHUB_TOKEN".to_string()],
-            |server_id| {
-                assert_eq!(server_id, "server-a");
-                Ok(Some(r#"{"GITHUB_TOKEN":"private-token","OTHER_SECRET":"not-requested"}"#.into()))
-            },
-        )
-        .unwrap();
-        assert_eq!(resolved["LOG_LEVEL"].as_str(), "debug");
-        assert_eq!(resolved["GITHUB_TOKEN"].as_str(), "private-token");
-        assert!(!resolved.contains_key("OTHER_SECRET"));
-    }
-
-    #[test]
-    fn mcp_runtime_resolver_fails_closed_when_a_secret_is_missing() {
-        let error = resolve_mcp_env_with_record(
-            "server-a",
-            &BTreeMap::new(),
-            &["GITHUB_TOKEN".to_string()],
-            |_| Ok(Some(r#"{"OTHER_SECRET":"private-token"}"#.into())),
-        )
-        .unwrap_err();
-        assert!(error.contains("missing from the OS keychain"));
-        assert!(!error.contains("private-token"));
-    }
-
-    #[test]
-    fn mcp_secret_batch_uses_one_keychain_record_per_server_and_removes_selected_names() {
-        let saved = RefCell::new(BTreeMap::from([(
-            "server-a".to_string(),
-            r#"{"API_TOKEN":"old-secret","LOG_LEVEL":"info"}"#.to_string(),
-        )]));
-        let updates = BTreeMap::from([
-            (
-                "server-a".to_string(),
-                BTreeMap::from([("API_TOKEN".to_string(), Zeroizing::new("new-secret".to_string()))]),
-            ),
-            (
-                "server-b".to_string(),
-                BTreeMap::from([("API_KEY".to_string(), Zeroizing::new("second-secret".to_string()))]),
-            ),
-        ]);
-        let removals = BTreeMap::from([("server-a".to_string(), vec!["LOG_LEVEL".to_string()])]);
-        apply_mcp_env_changes(
-            &updates,
-            &removals,
-            |server_id| Ok(saved.borrow().get(server_id).cloned()),
-            |id, value| {
-                let server_id = id.strip_prefix("mcp_server/").unwrap();
-                if let Some(value) = value {
-                    saved.borrow_mut().insert(server_id.into(), value.into());
-                } else {
-                    saved.borrow_mut().remove(server_id);
-                }
-                Ok(())
-            },
-        )
-        .unwrap();
-        let saved = saved.into_inner();
-        let server_a: BTreeMap<String, String> = serde_json::from_str(&saved["server-a"]).unwrap();
-        let server_b: BTreeMap<String, String> = serde_json::from_str(&saved["server-b"]).unwrap();
-        assert_eq!(server_a, BTreeMap::from([("API_TOKEN".into(), "new-secret".into())]));
-        assert_eq!(server_b, BTreeMap::from([("API_KEY".into(), "second-secret".into())]));
-    }
-
-    #[test]
-    fn mcp_secret_batch_rolls_back_all_servers_if_a_keychain_write_fails() {
-        let original = BTreeMap::from([
-            ("server-a".to_string(), r#"{"TOKEN":"old-a"}"#.to_string()),
-            ("server-b".to_string(), r#"{"TOKEN":"old-b"}"#.to_string()),
-        ]);
-        let saved = RefCell::new(original.clone());
-        let failed = RefCell::new(false);
-        let updates = BTreeMap::from([
-            ("server-a".to_string(), BTreeMap::from([("TOKEN".to_string(), Zeroizing::new("new-a".to_string()))])),
-            ("server-b".to_string(), BTreeMap::from([("TOKEN".to_string(), Zeroizing::new("reject-this-secret".to_string()))])),
-        ]);
-        let error = apply_mcp_env_changes(
-            &updates,
-            &BTreeMap::new(),
-            |server_id| Ok(saved.borrow().get(server_id).cloned()),
-            |id, value| {
-                let server_id = id.strip_prefix("mcp_server/").unwrap();
-                if value.is_some_and(|secret| secret.contains("reject-this-secret")) && !*failed.borrow() {
-                    *failed.borrow_mut() = true;
-                    return Err("fixture failure".into());
-                }
-                if let Some(value) = value {
-                    saved.borrow_mut().insert(server_id.into(), value.into());
-                } else {
-                    saved.borrow_mut().remove(server_id);
-                }
-                Ok(())
-            },
-        )
-        .unwrap_err();
-        assert!(error.contains("Previous values were restored"));
-        assert!(!error.contains("reject-this-secret"));
-        assert_eq!(*saved.borrow(), original);
-    }
-
-    #[test]
-    fn mcp_secret_batch_rejects_invalid_names_before_keychain_access() {
-        let updates = BTreeMap::from([(
-            "server-a".to_string(),
-            BTreeMap::from([("1BAD_NAME".to_string(), Zeroizing::new("secret".to_string()))]),
-        )]);
-        let result = apply_mcp_env_changes(
-            &updates,
-            &BTreeMap::new(),
-            |_| panic!("invalid secret changes must be rejected before keychain reads"),
-            |_, _| panic!("invalid secret changes must be rejected before keychain writes"),
-        );
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn failed_key_batch_restores_previous_keys_without_returning_or_logging_them() {
-        let saved = RefCell::new(BTreeMap::from([(
-            "openai".to_string(),
-            "previous-secret".to_string(),
-        )]));
-        let failed = RefCell::new(false);
-        let keys = BTreeMap::from([
-            ("openai".into(), Zeroizing::new("replacement".into())),
-            ("xai_grok".into(), Zeroizing::new("reject".into())),
-        ]);
-        let result = apply_keys(
-            &keys,
-            &[],
-            |provider| Ok(saved.borrow().get(provider).cloned()),
-            |provider, key| {
-                if key == Some("reject") && !*failed.borrow() {
-                    *failed.borrow_mut() = true;
-                    return Err("test".into());
-                }
-                if let Some(key) = key {
-                    saved.borrow_mut().insert(provider.into(), key.into());
-                } else {
-                    saved.borrow_mut().remove(provider);
-                }
-                Ok(())
-            },
-        );
-        assert!(result.unwrap_err().contains("Previous keys were restored"));
-        assert_eq!(
-            *saved.borrow(),
-            BTreeMap::from([("openai".into(), "previous-secret".into())])
-        );
-    }
-    #[test]
-    fn reserved_auth_credentials_cannot_be_modified_through_preferences() {
-        let keys = BTreeMap::from([(
-            "openai_subscription".into(),
-            Zeroizing::new("not-an-api-key".into()),
-        )]);
-        assert!(apply_keys(
-            &keys,
-            &[],
-            |_| panic!("must not read"),
-            |_, _| panic!("must not write")
-        )
-        .is_err());
-    }
-}
+mod tests;

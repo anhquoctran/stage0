@@ -31,8 +31,8 @@ test('bundled application source contains no Vietnamese copy', () => {
 });
 
 test('clone URL validation uses English copy and a stable Git message locale', () => {
-  const source = fs.readFileSync(path.join(projectRoot, 'backend/src/features/git/ops.rs'), 'utf8');
-  const validation = source.slice(source.indexOf('pub fn check_git_remote_url('), source.indexOf('\n#[cfg(test)]', source.indexOf('pub fn check_git_remote_url(')));
+  const source = fs.readFileSync(path.join(projectRoot, 'backend/src/features/git/ops/remotes.rs'), 'utf8');
+  const validation = source.slice(source.indexOf('pub fn check_git_remote_url('));
   assert.ok(validation.includes('Repository is valid and ready to clone.'));
   assert.ok(validation.includes('Please enter a repository URL.'));
   assert.ok(validation.includes('cmd.env("LC_ALL", "C")'));

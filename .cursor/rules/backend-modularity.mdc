@@ -1,0 +1,23 @@
+---
+description: Keep Stage0 Rust modules cohesive, bounded, and behavior preserving
+globs: backend/src/**/*.rs
+alwaysApply: false
+---
+
+# Backend module maintenance
+
+- Follow `AGENTS.md` and `docs/architecture/backend_maintenance.md`.
+- Aim for 300 lines per file; reassess at 400; never exceed the enforced 500-line
+  budget. Tests and comments count. Split tests by scenario when needed.
+- Put new code in its feature and the module owning that behavior: commands,
+  validation, storage, transport, or a specific workflow.
+- Keep facades and public paths stable. Prefer explicit imports; Tauri command
+  glob exports must retain generated companion macros used by registration.
+- Example: add remote URL policy in `features/git/ops/remote_url.rs`, with an
+  export from `ops.rs`; avoid adding it to the Git command or clone UI modules.
+- Preserve transaction/lock lifetimes, side-effect order, error propagation,
+  cancellation, redaction, consent, bounds, platform guards, and IPC events.
+- For review actions, preserve fatal run errors separately from tool rejections.
+- Do not lower safety budgets or remove tests to simplify an extraction.
+- Run `pnpm check:architecture`, appropriate Rust/Node tests, and `cargo check`.
+  Keep architecture knowledge current when moving ownership.
