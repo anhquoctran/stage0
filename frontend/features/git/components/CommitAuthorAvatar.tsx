@@ -48,7 +48,7 @@ export const CommitAuthorAvatar: React.FC<CommitAuthorAvatarProps> = ({ name, em
 
   return (
     <span
-      className="shrink-0 overflow-hidden  border border-surface1 bg-surface0"
+      className="shrink-0 overflow-hidden rounded-full border border-surface1 bg-surface0"
       style={{ width: size, height: size }}
     >
       {hasGravatar ? (

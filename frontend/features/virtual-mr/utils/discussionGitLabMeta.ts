@@ -102,3 +102,4 @@ export function formatGitLabTime(dateInput: string): string {
   const years = Math.floor(seconds / (365 * 86400));
   return years === 1 ? '1 year ago' : `${years} years ago`;
 }
+

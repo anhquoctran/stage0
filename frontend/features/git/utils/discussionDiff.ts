@@ -18,7 +18,7 @@ export function getDiffCodeSnippet(hunks: string[], side: 'left' | 'right', line
       const old = line[0] !== '+';
       const current = line[0] !== '-';
       if ((side === 'left' && old) || (side === 'right' && current)) {
-        rows.push({ number: side === 'left' ? oldLine : newLine, text: line.slice(1).replace(/\r$/, '') });
+        rows.push({ number: side === 'left' ? oldLine : newLine, text: `${line[0]}${line.slice(1).replace(/\r$/, '')}` });
       }
       if (old) oldLine++;
       if (current) newLine++;

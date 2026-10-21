@@ -111,3 +111,4 @@ export const GitLabAvatar: React.FC<GitLabAvatarProps> = ({
     </div>
   );
 };
+
