@@ -1,9 +1,4 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { X } from '../../../common/components/icons/X';
-import { RotateCcw } from '../../../common/components/icons/RotateCcw';
-import { Check } from '../../../common/components/icons/Check';
-import { AlertCircle } from '../../../common/components/icons/AlertCircle';
-import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
 import { usePreferencesStore, applyViewerFontToDocument, DEFAULT_VIEWER_FONT_SETTINGS } from '../store/usePreferencesStore';
 import { type ViewerFontSettings } from '../types/ViewerFontSettings';
 import { useThemeStore, resolveTheme, applyThemeToDocument } from '../../../core/store/useThemeStore';
@@ -40,6 +35,13 @@ import { PreferencesNavTree } from './PreferencesNavTree';
 import { PreferencesTabHeader } from './PreferencesTabHeader';
 import { PreferencesAiDisclaimer } from './PreferencesAiDisclaimer';
 import { PreferencesRestartModal } from './PreferencesRestartModal';
+import { PreferencesResetModal } from './PreferencesResetModal';
+import { PreferencesModalTopBar } from './PreferencesModalTopBar';
+import { PreferencesModalFooter } from './PreferencesModalFooter';
+import { PreferencesBackButton } from './PreferencesBackButton';
+import { filterSettingsTree } from '../utils/filterSettingsTree';
+import { countUnsavedPreferences } from '../utils/countUnsavedPreferences';
+import { findSettingChildItem } from '../utils/findSettingChildItem';
 
 // Helper to normalize legacy tab strings
 const normalizeTab = (tab?: string): PreferenceTab => {
@@ -263,20 +265,23 @@ export const PreferencesModal: React.FC = () => {
 
   // Unsaved count calculation
   const totalUnsaved = useMemo(() => {
-    let count = 0;
-    if (draftShowInlineBlame !== savedBaseline.showInlineBlame) count++;
-    count += aiPreferencesChangeCount(aiDraft, aiBaseline);
-    if (draftThemeMode !== savedBaseline.themeMode) count++;
-    if (draftFontFamily !== savedBaseline.fontFamily) count++;
-    if (draftFontSize !== savedBaseline.fontSize) count++;
-    if (draftIsBold !== savedBaseline.isBold) count++;
-    if (draftIsItalic !== savedBaseline.isItalic) count++;
-    if (draftIsUnderline !== savedBaseline.isUnderline) count++;
-    if (draftLineSpacing !== savedBaseline.lineSpacing) count++;
-    if (draftEnableLigatures !== savedBaseline.enableLigatures) count++;
-    if (draftSandboxType !== savedBaseline.sandboxType) count++;
-    if (draftGitBinaryId !== savedBaseline.gitBinaryId) count++;
-    return count;
+    return countUnsavedPreferences(
+      {
+        showInlineBlame: draftShowInlineBlame,
+        themeMode: draftThemeMode,
+        fontFamily: draftFontFamily,
+        fontSize: draftFontSize,
+        isBold: draftIsBold,
+        isItalic: draftIsItalic,
+        isUnderline: draftIsUnderline,
+        lineSpacing: draftLineSpacing,
+        enableLigatures: draftEnableLigatures,
+        sandboxType: draftSandboxType,
+        gitBinaryId: draftGitBinaryId,
+      },
+      savedBaseline,
+      aiPreferencesChangeCount(aiDraft, aiBaseline)
+    );
   }, [
     draftShowInlineBlame,
     draftAiConfig,
@@ -300,28 +305,7 @@ export const PreferencesModal: React.FC = () => {
   useEffect(() => { if (hasUnsavedChanges) setIsApplied(false); }, [hasUnsavedChanges, aiDraft]);
 
   // Filter tree categories based on search
-  const filteredTree = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return SETTINGS_TREE;
-
-    return SETTINGS_TREE.map((group) => {
-      const groupMatches = group.label.toLowerCase().includes(q);
-      const matchingChildren = group.children.filter((child) => {
-        return (
-          groupMatches ||
-          child.label.toLowerCase().includes(q) ||
-          child.title.toLowerCase().includes(q) ||
-          child.description.toLowerCase().includes(q) ||
-          child.keywords.some((k) => k.toLowerCase().includes(q))
-        );
-      });
-
-      return {
-        ...group,
-        children: matchingChildren,
-      };
-    }).filter((group) => group.children.length > 0);
-  }, [searchQuery]);
+  const filteredTree = useMemo(() => filterSettingsTree(searchQuery), [searchQuery]);
 
   // Auto-expand groups when searching
   useEffect(() => {
@@ -336,14 +320,7 @@ export const PreferencesModal: React.FC = () => {
 
   // Current active child metadata
   const currentChildItem = useMemo(() => {
-    if (!activeTab) return null;
-    const norm = normalizeTab(activeTab);
-    for (const group of SETTINGS_TREE) {
-      for (const child of group.children) {
-        if (child.id === norm) return child;
-      }
-    }
-    return null;
+    return findSettingChildItem(activeTab ? normalizeTab(activeTab) : null);
   }, [activeTab]);
 
   // Commit changes
@@ -516,31 +493,10 @@ export const PreferencesModal: React.FC = () => {
       >
         {/* Top Window Bar */}
         <fieldset disabled={isApplying} className="contents">
-        <div className="h-10 pl-4 pr-0 bg-crust border-b border-surface0/80 flex items-center justify-between shrink-0 select-none">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold tracking-tight text-text">Preferences</span>
-          </div>
-
-          <div className="flex h-full items-center">
-            <button
-              type="button"
-              onClick={() => setIsJsonEditorOpen(true)}
-              className="mr-2 border border-surface0 px-2.5 py-1 text-[11px] text-subtext1 hover:bg-surface0 hover:text-text cursor-pointer"
-              title="Edit the app preferences JSONC file"
-            >
-              Edit in preferences.json
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="flex h-full w-11 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0/70 transition-colors cursor-pointer"
-              title="Close (Esc)"
-              aria-label="Close Preferences"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <PreferencesModalTopBar
+          onOpenJsonEditor={() => setIsJsonEditorOpen(true)}
+          onClose={handleCancel}
+        />
 
         {/* Modal Main Area: Nav sidebar + Content Area */}
         <div className="flex-1 flex overflow-hidden">
@@ -669,14 +625,7 @@ export const PreferencesModal: React.FC = () => {
             {/* VIEW: REVIEWER BOTS */}
             {currentTabId === 'ai-reviewers' && (
               <div className="animate-in fade-in duration-100 space-y-4">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('ai-overview')}
-                  className="inline-flex items-center gap-1.5 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-                  <span>Back to AI overview</span>
-                </button>
+                <PreferencesBackButton onClick={() => setActiveTab('ai-overview')} />
                 <BotReviewersTab draftSettings={aiDraft} />
               </div>
             )}
@@ -684,14 +633,7 @@ export const PreferencesModal: React.FC = () => {
             {/* VIEW: SANDBOX */}
             {currentTabId === 'ai-sandbox' && (
               <div className="animate-in fade-in duration-100 space-y-4">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('ai-overview')}
-                  className="inline-flex items-center gap-1.5 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-                  <span>Back to AI overview</span>
-                </button>
+                <PreferencesBackButton onClick={() => setActiveTab('ai-overview')} />
                 <SandboxTab
                   draftSandboxType={draftSandboxType}
                   onSelectAdapter={setDraftSandboxType}
@@ -733,73 +675,18 @@ export const PreferencesModal: React.FC = () => {
         </div>
 
         {/* Footer: Reset on left, Cancel, Apply, OK on right */}
-        {applyError && <p role="alert" className="px-6 py-2 text-xs text-red break-words">{applyError}</p>}
-        <div className="px-6 py-3 border-t border-surface0/60 flex items-center justify-between bg-crust/80 select-none shrink-0">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setShowResetConfirm(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-surface0 hover:bg-surface0/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
-              title="Reset all settings to application defaults"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Reset to default</span>
-            </button>
-
-            {totalUnsaved > 0 && (
-              <span className="flex items-center gap-1.5 text-[11px] font-mono text-subtext0 font-medium">
-                <span className="w-1.5 h-1.5 bg-subtext0" />
-                <span>{totalUnsaved} unsaved</span>
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="px-4 py-1.5 border border-surface0 hover:bg-surface0/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium"
-              title="Close without saving (Esc)"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              onClick={handleApply}
-              disabled={isApplying || !hasUnsavedChanges}
-              className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all border ${
-                isApplied
-                  ? 'bg-green/10 border-green/30 text-green'
-                  : canCommitPreferences
-                    ? 'bg-surface0 hover:bg-surface1 border-surface1 text-text shadow-xs cursor-pointer'
-                    : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'
-              }`}
-            >
-              {isApplied ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Applied</span>
-                </>
-              ) : (
-                <span>{isApplying ? 'Applying…' : 'Apply'}</span>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleOk}
-              disabled={isApplying}
-              className={`px-4 py-1.5 text-xs font-semibold transition-colors border ${
-                !isApplying
-                  ? 'bg-surface0 hover:bg-surface1 border-surface1 text-text cursor-pointer shadow-xs'
-                  : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'
-              }`}
-            >
-              OK
-            </button>
-          </div>
-        </div>
+        <PreferencesModalFooter
+          applyError={applyError}
+          totalUnsaved={totalUnsaved}
+          hasUnsavedChanges={hasUnsavedChanges}
+          canCommitPreferences={canCommitPreferences}
+          isApplying={isApplying}
+          isApplied={isApplied}
+          onResetDefaultsPrompt={() => setShowResetConfirm(true)}
+          onCancel={handleCancel}
+          onApply={handleApply}
+          onOk={handleOk}
+        />
         </fieldset>
       </div>
 
@@ -811,39 +698,11 @@ export const PreferencesModal: React.FC = () => {
       )}
 
       {/* Reset Confirmation Dialog */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-[var(--backdrop-modal)] backdrop-blur-xs animate-in fade-in duration-100">
-          <div
-            className="w-full max-w-md bg-mantle border border-surface0 shadow-2xl p-5 flex flex-col gap-3 text-text"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-2.5 text-text">
-              <AlertCircle className="w-5 h-5 text-subtext0 shrink-0" />
-              <h3 className="text-sm font-bold">Reset All Preferences?</h3>
-            </div>
-            <p className="text-xs text-subtext0 leading-relaxed">
-              This will restore all theme, font typography, inline blame, and AI configurations
-              back to default values.
-            </p>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowResetConfirm(false)}
-                className="px-3 py-1.5 text-xs text-subtext0 hover:text-text hover:bg-surface0/50 border border-surface0 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleResetDefaults}
-                className="px-3.5 py-1.5 text-xs bg-surface0 hover:bg-surface1 text-text border border-surface1 font-semibold transition-colors cursor-pointer"
-              >
-                Reset to Defaults
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PreferencesResetModal
+        isOpen={showResetConfirm}
+        onCancel={() => setShowResetConfirm(false)}
+        onConfirm={handleResetDefaults}
+      />
 
       {/* Restart Prompt for Git Binary */}
       <PreferencesRestartModal
