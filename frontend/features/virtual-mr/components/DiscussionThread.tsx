@@ -10,7 +10,7 @@ import type { VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
 import type { VirtualMrSession } from '../types/VirtualMrSession';
 import type { VirtualMrComment } from '../types/VirtualMrComment';
 import type { DiscussionReference } from '../types/DiscussionReference';
-import { buildDiscussionQuote, getDiscussionComments, parseDiscussionReference } from '../utils/discussionReferences';
+import { buildDiscussionQuote, getDiscussionComments, parseDiscussionReference, isResolvableDiscussion } from '../utils/discussionReferences';
 import { DiscussionReferenceDialog } from './DiscussionReferenceDialog';
 import { getDiscussionMentionOptions } from '../utils/discussionMentions';
 import { parseMentionReference } from '../../../common/utils/mentions';
@@ -215,8 +215,9 @@ export const DiscussionThread: React.FC<{
 }> = ({ session, discussion }) => {
   const { replyToDiscussion, resolveDiscussion, createDiscussion } = useVirtualMrStore();
   const { showToast } = useGitStore();
+  const isResolvable = isResolvableDiscussion(discussion);
   const [isReplying, setIsReplying] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(discussion.isResolved);
+  const [isCollapsed, setIsCollapsed] = useState(isResolvable ? discussion.isResolved : false);
   const [body, setBody] = useState('');
   const [targetId, setTargetId] = useState(discussion.id);
   const [resolveThread, setResolveThread] = useState(false);
@@ -243,6 +244,7 @@ export const DiscussionThread: React.FC<{
   };
 
   const handleToggleResolve = async () => {
+    if (!isResolvable) return;
     try {
       if (resolveDiscussion) {
         await resolveDiscussion(discussion.id, !discussion.isResolved);
@@ -262,7 +264,7 @@ export const DiscussionThread: React.FC<{
         await createDiscussion(session.id, { initialComment: body.trim() });
       } else {
         await replyToDiscussion(targetId, body.trim());
-        if (andResolve && !discussion.isResolved && resolveDiscussion) {
+        if (isResolvable && andResolve && !discussion.isResolved && resolveDiscussion) {
           await resolveDiscussion(discussion.id, true);
         }
       }
@@ -364,7 +366,7 @@ export const DiscussionThread: React.FC<{
       {/* 2. The GitLab Discussion Box / Card (No rounded style - sharp borders) */}
       <div
         className={`border bg-mantle overflow-hidden shadow-xs transition-colors ${
-          discussion.isResolved ? 'border-surface1/60 opacity-95' : 'border-surface1'
+          isResolvable && discussion.isResolved ? 'border-surface1/60 opacity-95' : 'border-surface1'
         }`}
       >
         {/* Optional Diff Code Snippet Context Preview (if on diff) */}
@@ -415,7 +417,7 @@ export const DiscussionThread: React.FC<{
                       </span>
                     ))}
 
-                    {discussion.isResolved && (
+                    {isResolvable && discussion.isResolved && (
                       <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 select-none">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -608,7 +610,7 @@ export const DiscussionThread: React.FC<{
 
               {/* Below editor: Resolve thread checkbox & action buttons (No rounded style) */}
               <div className="space-y-2.5 pt-0.5">
-                {!discussion.isResolved && targetId === discussion.id && (
+                {isResolvable && !discussion.isResolved && targetId === discussion.id && (
                   <label className="inline-flex items-center gap-2 text-xs text-text cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -661,14 +663,16 @@ export const DiscussionThread: React.FC<{
                 <span className="text-[10px] text-subtext0/70 font-mono">r</span>
               </button>
 
-              <button
-                type="button"
-                onClick={handleToggleResolve}
-                className="px-3 py-1.5 border border-surface1 bg-surface0 hover:bg-surface1 text-text text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer shrink-0"
-                title={discussion.isResolved ? 'Reopen this thread' : 'Mark this thread as resolved'}
-              >
-                <span>{discussion.isResolved ? 'Reopen thread' : 'Resolve thread'}</span>
-              </button>
+              {isResolvable && (
+                <button
+                  type="button"
+                  onClick={handleToggleResolve}
+                  className="px-3 py-1.5 border border-surface1 bg-surface0 hover:bg-surface1 text-text text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer shrink-0"
+                  title={discussion.isResolved ? 'Reopen this thread' : 'Mark this thread as resolved'}
+                >
+                  <span>{discussion.isResolved ? 'Reopen thread' : 'Resolve thread'}</span>
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -25,3 +25,17 @@ export function buildDiscussionQuote(discussion: VirtualMrDiscussion, comment?: 
   const body = (source?.body ?? '').replace(/\r\n?/g, '\n').split('\n').map((line) => `> ${line}`).join('\n');
   return `> [${label}](#mr-${kind}/${encodeURIComponent(id)})\n>\n${body}\n\n`;
 }
+
+/**
+ * Determines whether a discussion thread represents a code review discussion on a specific code line/diff
+ * that can be resolved.
+ *
+ * General discussions (MR-level discussion threads not interacting with any code line)
+ * are informational conversations and do not have resolve capabilities or block MR resolution.
+ */
+export function isResolvableDiscussion(
+  discussion?: Pick<VirtualMrDiscussion, 'filePath' | 'lineNumber'> | null
+): boolean {
+  if (!discussion) return false;
+  return Boolean(discussion.filePath && discussion.filePath.trim().length > 0);
+}

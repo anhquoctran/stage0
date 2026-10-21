@@ -313,6 +313,7 @@ pub fn run() {
             commands::resolve_mr_discussion,
             commands::verify_mr_discussion,
             commands::reanchor_file_discussions,
+            commands::save_mr_image_attachment,
             // Sandbox Synchronization & Tool Bridge
             commands::sync_active_sandbox,
             commands::get_sandbox_tool_schemas,

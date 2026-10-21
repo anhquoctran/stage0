@@ -17,6 +17,8 @@ import { formatShortcutText } from '../utils/shortcuts';
 import type { MarkdownEditorProps } from '../types/MarkdownEditorProps';
 import { formatMention, getMentionQuery } from '../utils/mentions';
 import type { MentionOption } from '../types/MentionOption';
+import { isAllowedImage, processAndSaveImage } from '../utils/imageAttachment';
+import { notificationService } from '../../features/notifications/services/notificationService';
 
 export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   value,
@@ -44,6 +46,10 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const [mentionCaret, setMentionCaret] = useState(0);
   const [isMentionFocused, setIsMentionFocused] = useState(false);
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [attachmentWarning, setAttachmentWarning] = useState<string | null>(null);
+  const [isAttaching, setIsAttaching] = useState(false);
   const mentionQuery = mentionOptions.length && !disabled && !isSubmitting && isMentionFocused && activeTab === 'write'
     ? getMentionQuery(value, mentionCaret) : null;
   const suggestions = mentionQuery ? mentionOptions.filter((item) =>
@@ -84,6 +90,98 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       const cursorEnd = cursorStart + selectedText.length;
       textarea.setSelectionRange(cursorStart, cursorEnd);
     }, 0);
+  };
+
+  const insertImageMarkdown = (markdownSnippet: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      onChange(value ? `${value}\n\n${markdownSnippet}` : markdownSnippet);
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentVal = textarea.value;
+
+    const prefix = start > 0 && currentVal[start - 1] !== '\n' ? '\n' : '';
+    const suffix = end < currentVal.length && currentVal[end] !== '\n' ? '\n' : '';
+    const replacement = `${prefix}${markdownSnippet}${suffix}`;
+    const nextVal = currentVal.substring(0, start) + replacement + currentVal.substring(end);
+    onChange(nextVal);
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const nextCursor = start + replacement.length;
+      textarea.setSelectionRange(nextCursor, nextCursor);
+    });
+  };
+
+  const handleImageFiles = async (files: FileList | File[]) => {
+    if (disabled || isSubmitting) return;
+    const fileArray = Array.from(files);
+    if (fileArray.length === 0) return;
+
+    let hasRejected = false;
+    setIsAttaching(true);
+
+    try {
+      for (const file of fileArray) {
+        if (!isAllowedImage(file)) {
+          hasRejected = true;
+          continue;
+        }
+
+        const saved = await processAndSaveImage(file);
+        if (saved) {
+          const markdownImg = `![${file.name || 'image'}](${saved.dataUrl})`;
+          insertImageMarkdown(markdownImg);
+        } else {
+          hasRejected = true;
+        }
+      }
+
+      if (hasRejected) {
+        const msg = 'Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.';
+        setAttachmentWarning(msg);
+        notificationService.notify({
+          title: 'Unsupported file type',
+          body: msg,
+          level: 'warning',
+          channel: 'guardrails',
+        });
+        setTimeout(() => setAttachmentWarning(null), 5000);
+      }
+    } finally {
+      setIsAttaching(false);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (disabled || isSubmitting) return;
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+
+    const files = Array.from(clipboardData.files);
+    const imageItems = Array.from(clipboardData.items).filter(
+      (item) => item.kind === 'file' && item.type.startsWith('image/')
+    );
+
+    if (files.length > 0 || imageItems.length > 0) {
+      const targetFiles: File[] = [];
+      if (files.length > 0) {
+        targetFiles.push(...files);
+      } else {
+        for (const item of imageItems) {
+          const file = item.getAsFile();
+          if (file) targetFiles.push(file);
+        }
+      }
+
+      if (targetFiles.length > 0) {
+        e.preventDefault();
+        handleImageFiles(targetFiles);
+      }
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -289,13 +387,28 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               </svg>
             </button>
 
-            {/* Attach file */}
+            {/* Attach image */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml"
+              multiple
+              className="hidden"
+              data-testid="image-attachment-input"
+              onChange={(e) => {
+                if (e.target.files) {
+                  handleImageFiles(e.target.files);
+                  e.target.value = '';
+                }
+              }}
+            />
             <button
               type="button"
-              onClick={() => insertMarkdown('![alt text](', ')', 'image-url')}
-              disabled={disabled}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={disabled || isSubmitting || isAttaching}
               className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Attach a file"
+              title="Attach images (PNG, JPG, GIF, WebP, SVG)"
+              aria-label="Attach images"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
@@ -320,7 +433,36 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       </div>
 
       {/* Editor Body: Textarea OR MarkdownPreview */}
-      <div className="bg-crust/40">
+      <div
+        className="bg-crust/40 relative"
+        onDragOver={(e) => {
+          if (disabled || isSubmitting) return;
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDraggingOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDraggingOver(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDraggingOver(false);
+          if (disabled || isSubmitting) return;
+          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleImageFiles(e.dataTransfer.files);
+          }
+        }}
+      >
+        {isDraggingOver && (
+          <div className="absolute inset-0 bg-blue/15 border-2 border-dashed border-blue flex flex-col items-center justify-center pointer-events-none z-20 text-xs font-semibold text-blue gap-1 backdrop-blur-xs">
+            <span>Drop images here to attach</span>
+            <span className="text-[10px] text-blue/80 font-normal">PNG, JPG, GIF, WebP, SVG</span>
+          </div>
+        )}
+
         {activeTab === 'write' ? (
           <>
             <textarea
@@ -340,7 +482,8 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               onFocus={(e) => { setIsMentionFocused(true); setMentionCaret(e.currentTarget.selectionStart); }}
               onBlur={() => setIsMentionFocused(false)}
               onKeyDown={handleKeyDown}
-              placeholder={placeholder || 'Write a comment or drag your files here...'}
+              onPaste={handlePaste}
+              placeholder={placeholder || 'Write a comment, paste, or drop images here...'}
               autoFocus={autoFocus}
               disabled={disabled || isSubmitting}
               role={mentionOptions.length ? 'combobox' : undefined}
@@ -351,16 +494,6 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               style={{ minHeight, maxHeight }}
               className="w-full p-3 bg-base/50 text-text text-xs font-mono placeholder:text-subtext0/60 focus:outline-none transition-colors resize-y leading-relaxed border-0"
             />
-
-            {/* Bottom Sub-bar matching GitLab: "Switch to rich text editing" & "M+" */}
-            <div className="flex items-center justify-between px-3 py-1.5 border-t border-surface0/60 bg-mantle/40 text-[11px] text-subtext0 select-none">
-              <span className="text-subtext0 hover:text-blue hover:underline cursor-pointer">
-                Switch to rich text editing
-              </span>
-              <span className="font-mono text-[10px] px-1 py-0.2 border border-surface1 text-subtext0 bg-surface0/50" title="GitLab Flavored Markdown supported">
-                M+
-              </span>
-            </div>
 
             {suggestions.length > 0 && (
               <div id={mentionListId} role="listbox" aria-label="Mention a participant" className="mt-1 max-h-40 overflow-y-auto border border-surface1 bg-mantle shadow-lg">
@@ -375,6 +508,27 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                     <span className="shrink-0 text-[10px] text-subtext0">{option.kind === 'reviewer' ? 'AI reviewer' : 'Assignee'}</span>
                   </button>
                 ))}
+              </div>
+            )}
+
+            {attachmentWarning && (
+              <div className="px-3 py-1.5 bg-yellow-900/30 border-t border-yellow-700/50 text-yellow-200 text-[11px] flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-400 shrink-0">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span>{attachmentWarning}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAttachmentWarning(null)}
+                  className="text-yellow-400 hover:text-yellow-100 ml-2 font-bold cursor-pointer"
+                  title="Dismiss warning"
+                >
+                  ×
+                </button>
               </div>
             )}
           </>

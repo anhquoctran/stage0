@@ -22,6 +22,7 @@ import type { DbDiscussion } from '../types/DbDiscussion';
 import { fromDbDiscussion } from '../utils/fromDbDiscussion';
 import { enqueueSessionWrite, flushSessionWrites, pendingSessionSnapshot, saveSessionSnapshot } from '../services/sessionPersistence';
 import { hasVirtualMrActivity } from '../utils/virtualMrActivity';
+import { isResolvableDiscussion } from '../utils/discussionResolvable';
 
 let draftBranchRequestVersion = 0;
 let repoDataRequestVersion = 0;
@@ -810,7 +811,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
         ? { ...reviewer, reviewStatus }
         : reviewer);
       const allReviewersApproved = reviewers.length > 0 && reviewers.every((reviewer) => reviewer.reviewStatus === 'approved');
-      const hasOpenDiscussions = session.discussions.some((discussion) => !discussion.isResolved);
+      const hasOpenDiscussions = session.discussions.some((discussion) => isResolvableDiscussion(discussion) && !discussion.isResolved);
       const status = reviewStatus === 'reviewing'
         ? (session.status === 'resolved' ? 'open' : session.status)
         : session.status === 'closed'
@@ -845,7 +846,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     const session = get().sessions.find((item) => item.id === sessionId);
     if (!session || session.status !== 'open' || session.reviewers.length === 0) return;
     if (session.reviewers.some((reviewer) => reviewer.reviewStatus !== 'approved')) return;
-    if (session.discussions.some((discussion) => !discussion.isResolved)) return;
+    if (session.discussions.some((discussion) => isResolvableDiscussion(discussion) && !discussion.isResolved)) return;
     await get().updateSessionStatus(sessionId, 'resolved');
   },
 
