@@ -169,6 +169,7 @@ mod tests {
 
         let disc = VirtualMrDiscussionDb {
             id: "disc-1".to_string(),
+            code_snippet: None,
             session_id: "s1".to_string(),
             file_path: Some("src/main.rs".to_string()),
             diff_side: Some("right".to_string()),
@@ -200,6 +201,7 @@ mod tests {
 
         let disc = VirtualMrDiscussionDb {
             id: "disc-2".to_string(),
+            code_snippet: None,
             session_id: "s1".to_string(),
             file_path: Some("src/main.rs".to_string()),
             diff_side: Some("right".to_string()),

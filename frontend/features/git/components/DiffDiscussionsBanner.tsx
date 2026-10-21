@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { MessageSquare } from '../../../common/components/icons/MessageSquare';
 import { Bot } from '../../../common/components/icons/Bot';
 import { User } from '../../../common/components/icons/User';
@@ -6,18 +6,17 @@ import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { ExternalLink } from '../../../common/components/icons/ExternalLink';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { Plus } from '../../../common/components/icons/Plus';
-import { Send } from '../../../common/components/icons/Send';
 import { X } from '../../../common/components/icons/X';
 import { ChevronDown } from '../../../common/components/icons/ChevronDown';
 import { ChevronRight } from '../../../common/components/icons/ChevronRight';
 import { Code2 } from '../../../common/components/icons/Code2';
-import { formatTime } from '@/common/utils/dateTime';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../store/useGitStore';
 import { openFileInEditor } from '../utils/fileActions';
 import { type ReviewActionType } from '../../virtual-mr/types/ReviewActionType';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
-import { MarkdownPreview } from '../../../common/components/MarkdownPreview';
+import { DiscussionThread } from '../../virtual-mr/components/DiscussionThread';
+import { getDiscussionMentionOptions } from '../../virtual-mr/utils/discussionMentions';
 import type { DiffDiscussionsBannerProps } from '../types/DiffDiscussionsBannerProps';
 import { AI_REVIEW_UNAVAILABLE } from '../../ai/constants/runtimeAvailability';
 
@@ -26,7 +25,6 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
   const {
     getActiveSession,
     createDiscussion,
-    replyToDiscussion,
     resolveDiscussion,
   } = useVirtualMrStore();
 
@@ -34,8 +32,9 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [targetLine, setTargetLine] = useState<number>(1);
   const [commentText, setCommentText] = useState('');
+  const [isPostingDiscussion, setIsPostingDiscussion] = useState(false);
+  const postingDiscussionRef = useRef(false);
   const commentAction: ReviewActionType = 'comment';
-  const [replyInputs, setReplyInputs] = useState<{ [discId: string]: string }>({});
   const [collapsedDiscIds, setCollapsedDiscIds] = useState<{ [discId: string]: boolean }>({});
 
   if (!session || !currentRepo) return null;
@@ -53,28 +52,26 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
 
   const handleCreateDiscussion = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!commentText.trim()) return;
-
-    await createDiscussion(session.id, {
-      filePath: selectedFile.path,
-      lineNumber: targetLine || 1,
-      diffSide: 'right',
-      initialComment: commentText.trim(),
-      reviewAction: commentAction,
-    });
-
-    setCommentText('');
-    setIsAddingComment(false);
-    showToast('Review comment added');
-  };
-
-  const handleReply = async (discId: string) => {
-    const text = replyInputs[discId]?.trim();
-    if (!text) return;
-
-    await replyToDiscussion(discId, text);
-    setReplyInputs((prev) => ({ ...prev, [discId]: '' }));
-    showToast('Reply posted');
+    if (!commentText.trim() || postingDiscussionRef.current) return;
+    postingDiscussionRef.current = true;
+    setIsPostingDiscussion(true);
+    try {
+      await createDiscussion(session.id, {
+        filePath: selectedFile.path,
+        lineNumber: targetLine || 1,
+        diffSide: 'right',
+        initialComment: commentText.trim(),
+        reviewAction: commentAction,
+      });
+      setCommentText('');
+      setIsAddingComment(false);
+      showToast('Review comment added', 'success');
+    } catch (error) {
+      showToast(`Could not post discussion: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    } finally {
+      postingDiscussionRef.current = false;
+      setIsPostingDiscussion(false);
+    }
   };
 
   const toggleCollapse = (id: string) => {
@@ -155,6 +152,7 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
 
           <MarkdownEditor
             value={commentText}
+            mentionOptions={getDiscussionMentionOptions(session)}
             onChange={setCommentText}
             placeholder="Enter review comment (Markdown supported)..."
             rows={3}
@@ -162,6 +160,8 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
             showActions={true}
             onSubmit={handleCreateDiscussion}
             submitLabel="Submit Comment"
+            disabled={isPostingDiscussion}
+            isSubmitting={isPostingDiscussion}
             onCancel={() => setIsAddingComment(false)}
             cancelLabel="Cancel"
           />
@@ -170,8 +170,8 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
 
       {/* DISCUSSIONS LIST */}
       {fileDiscussions.map((disc) => {
-        const firstComment = disc.comments[0];
-        const isCollapsed = collapsedDiscIds[disc.id] || disc.isResolved;
+        const firstComment = disc.rootComment;
+        const isCollapsed = collapsedDiscIds[disc.id] ?? disc.isResolved;
 
         return (
           <div
@@ -275,55 +275,7 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
             {/* THREAD BODY & REPLIES */}
             {!isCollapsed && (
               <div className="p-3.5 space-y-3">
-                {/* First Comment Body */}
-                <div className="text-xs text-text pl-1 leading-relaxed">
-                  <MarkdownPreview content={firstComment?.body || ''} />
-                </div>
-
-                {/* Replies */}
-                {disc.comments.slice(1).map((rep) => (
-                  <div key={rep.id} className="ml-4 pl-3 border-l-2 border-surface1 py-1 space-y-1">
-                    <div className="flex items-center gap-2 text-[11px]">
-                      {rep.authorType === 'ai_agent' ? (
-                        <Bot className="w-3 h-3 text-purple-400" />
-                      ) : (
-                        <User className="w-3 h-3 text-accent" />
-                      )}
-                      <span className="font-semibold text-text">{rep.authorName}</span>
-                      <span className="text-subtext0 font-mono text-[10px]">
-                        {formatTime(rep.createdAt)}
-                      </span>
-                    </div>
-                    <div className="text-xs text-text pl-1 leading-relaxed">
-                      <MarkdownPreview content={rep.body} />
-                    </div>
-                  </div>
-                ))}
-
-                {/* Reply Form */}
-                <div className="flex items-center gap-2 pt-1 border-t border-surface0/60">
-                  <input
-                    type="text"
-                    placeholder="Reply to this discussion..."
-                    value={replyInputs[disc.id] || ''}
-                    onChange={(e) => setReplyInputs({ ...replyInputs, [disc.id]: e.target.value })}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleReply(disc.id);
-                      }
-                    }}
-                    className="flex-1 px-3 py-1  bg-surface0 border border-surface1 text-text text-xs focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleReply(disc.id)}
-                    className="px-3 py-1  bg-surface1 hover:bg-surface2 text-text font-medium text-xs flex items-center gap-1 cursor-pointer"
-                  >
-                    <Send className="w-3 h-3" />
-                    <span>Reply</span>
-                  </button>
-                </div>
+                <DiscussionThread key={disc.id} session={session} discussion={disc} />
               </div>
             )}
           </div>

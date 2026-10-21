@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
+import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
+import { ChevronRight } from '../../../common/components/icons/ChevronRight';
 import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
 import { Loader2 } from '../../../common/components/icons/Loader2';
@@ -34,6 +36,12 @@ const SORT_OPTIONS: CustomSelectOption<MrSort>[] = [
   { value: 'title', label: 'Title' },
 ];
 
+const PAGE_SIZE_OPTIONS: CustomSelectOption<string>[] = [
+  { value: '20', label: '20 / page' },
+  { value: '50', label: '50 / page' },
+  { value: '100', label: '100 / page' },
+];
+
 const hasStatus = (session: VirtualMrSession, status: Exclude<MrFilter, 'all'>) => session.status === status;
 
 const SearchSuggestionIcon: React.FC<{ field: VirtualMrSearchSuggestion['field'] }> = ({ field }) => {
@@ -64,11 +72,14 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
   const [sortBy, setSortBy] = useState<MrSort>('updated');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState('20');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchCaret, setSearchCaret] = useState(0);
   const [searchScrollLeft, setSearchScrollLeft] = useState(0);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isMrListOpen) return;
@@ -105,6 +116,24 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [activeFilter, searchTerm, sessions, sortBy, sortDirection]);
+
+  const pageCount = Math.max(1, Math.ceil(visibleSessions.length / Number(pageSize)));
+  const page = Math.min(currentPage, pageCount);
+  const pageOffset = (page - 1) * Number(pageSize);
+  const pagedSessions = visibleSessions.slice(pageOffset, pageOffset + Number(pageSize));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [currentRepo?.id, activeFilter, searchTerm, sortBy, sortDirection, pageSize]);
+
+  useEffect(() => {
+    // Keep navigation valid when an MR is removed or changes status.
+    setCurrentPage((previous) => Math.min(previous, pageCount));
+  }, [pageCount]);
+
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = 0;
+  }, [page, currentRepo?.id, activeFilter, searchTerm, sortBy, sortDirection, pageSize]);
 
   const searchSuggestions = useMemo(
     () => isSearchFocused
@@ -381,7 +410,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto">
           {isLoadingSessions ? (
             <div className="flex items-center justify-center gap-2 py-14 text-xs text-subtext0">
               <Loader2 className="h-4 w-4 animate-spin text-brand" />
@@ -389,7 +418,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
             </div>
           ) : visibleSessions.length > 0 ? (
             <div className="divide-y divide-surface0">
-              {visibleSessions.map((session) => {
+              {pagedSessions.map((session) => {
                 const statusLabel = session.status[0].toUpperCase() + session.status.slice(1);
                 const updatedLabel = formatRecentTime(session.updatedAt) || 'Unknown';
 
@@ -473,9 +502,49 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
           )}
         </div>
 
-        <footer className="flex items-center justify-between gap-3 border-t border-surface0 px-5 py-2 text-[10px] text-subtext0">
-          <span>Showing {visibleSessions.length} of {counts[activeFilter]}</span>
-          <span>Select an MR to reopen its review workspace</span>
+        <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-surface0 px-5 py-2 text-[10px] text-subtext0">
+          <span role="status">
+            {isLoadingSessions
+              ? 'Loading merge requests…'
+              : `Showing ${visibleSessions.length ? pageOffset + 1 : 0}–${pageOffset + pagedSessions.length} of ${visibleSessions.length}`}
+          </span>
+          <div className="flex items-center gap-3">
+            <CustomSelect
+              value={pageSize}
+              onChange={setPageSize}
+              options={PAGE_SIZE_OPTIONS}
+              disabled={isLoadingSessions}
+              buttonClassName="min-w-[104px]"
+              menuClassName="!top-auto bottom-full !mt-0 mb-1.5"
+              dropdownWidth="w-32"
+              aria-label="Merge requests per page"
+            />
+            {pageCount > 1 && (
+              <nav className="flex items-center gap-1" aria-label="Merge request pagination">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(page - 1)}
+                  disabled={isLoadingSessions || page === 1}
+                  aria-label="Previous page"
+                  title="Previous page"
+                  className="flex h-7 w-7 items-center justify-center border border-surface1 text-text hover:bg-surface0 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  <ChevronLeft className="h-3 w-3" />
+                </button>
+                <span className="px-2 tabular-nums">Page {page} of {pageCount}</span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(page + 1)}
+                  disabled={isLoadingSessions || page === pageCount}
+                  aria-label="Next page"
+                  title="Next page"
+                  className="flex h-7 w-7 items-center justify-center border border-surface1 text-text hover:bg-surface0 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  <ChevronRight className="h-3 w-3" />
+                </button>
+              </nav>
+            )}
+          </div>
         </footer>
       </section>
     </div>

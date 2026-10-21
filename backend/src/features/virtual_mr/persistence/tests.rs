@@ -43,6 +43,42 @@ fn reviewer() -> VirtualMrReviewerDb {
 }
 
 #[test]
+fn inline_discussion_snapshot_and_replies_survive_database_reopen() {
+    let path = std::env::temp_dir().join(format!("stage0-inline-discussion-{}.db", uuid::Uuid::new_v4()));
+    let discussion: super::VirtualMrDiscussionDb = serde_json::from_value(serde_json::json!({
+        "id":"inline", "session_id":"mr-a", "file_path":"src/old.ts", "diff_side":"left", "line_number":30,
+        "commit_id":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "code_snippet":{"startLine":28,"selectedLine":30,"lines":["before","","removed <value> & text"]},
+        "is_resolved":false,"resolve_type":"manual","verification_status":"none","created_at":"2026-10-21T00:00:00Z"
+    })).unwrap();
+    let root: super::VirtualMrCommentDb = serde_json::from_value(serde_json::json!({
+        "id":"root", "discussion_id":"inline", "author_type":"user", "author_id":"user@example.test", "author_name":"User",
+        "body":"Review this deleted line", "created_at":"2026-10-21T00:00:00Z", "updated_at":"2026-10-21T00:00:00Z"
+    })).unwrap();
+    {
+        let conn = Connection::open(&path).unwrap(); seed(&conn);
+        let db = Database(Mutex::new(conn));
+        db.save_virtual_mr_session(&session("mr-a", "repo-a")).unwrap();
+        db.create_discussion(&discussion, &root).unwrap();
+        let mut reply = root.clone(); reply.id = "reply".into(); reply.body = "Reply keeps the same anchor".into();
+        db.add_comment(&reply).unwrap();
+    }
+    {
+        let db = Database(Mutex::new(Connection::open(&path).unwrap()));
+        let loaded = db.list_discussions("mr-a").unwrap().remove(0);
+        assert_eq!(loaded.file_path.as_deref(), Some("src/old.ts"));
+        assert_eq!(loaded.diff_side.as_deref(), Some("left"));
+        assert_eq!(loaded.line_number, Some(30));
+        assert_eq!(loaded.commit_id, discussion.commit_id);
+        let snippet = loaded.code_snippet.unwrap();
+        assert_eq!(snippet.start_line, 28);
+        assert_eq!(snippet.selected_line, Some(30));
+        assert_eq!(snippet.lines, ["before", "", "removed <value> & text"]);
+        assert_eq!(loaded.comments.iter().map(|comment| comment.id.as_str()).collect::<Vec<_>>(), ["root", "reply"]);
+    }
+    std::fs::remove_file(path).unwrap();
+}
+
+#[test]
 fn reviewers_and_labels_survive_database_reopen_and_removal() {
     let path = std::env::temp_dir().join(format!("stage0-mr-metadata-{}.db", uuid::Uuid::new_v4()));
     let mut expected = session("mr-a", "repo-a");

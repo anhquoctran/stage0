@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { XCircle } from '@/common/components/icons';
 import { Bot } from '../../../common/components/icons/Bot';
@@ -12,7 +12,7 @@ import { GitCommit } from '../../../common/components/icons/GitCommit';
 import { MessageSquare } from '../../../common/components/icons/MessageSquare';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
-import { formatDateTime, formatTime } from '@/common/utils/dateTime';
+import { formatDateTime } from '@/common/utils/dateTime';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
@@ -22,6 +22,8 @@ import { MarkdownPreview } from '../../../common/components/MarkdownPreview';
 import { TabBranchSelector } from '../../git/components/TabBranchSelector';
 import { isReviewStartingForSession, useReviewStore } from '../../review/store/useReviewStore';
 import { startAssignedReviewBatchForSession } from '../../review/services/assignedReviewService';
+import { MrDiscussionBoard } from './MrDiscussionBoard';
+import { getDiscussionMentionOptions } from '../utils/discussionMentions';
 
 export const VirtualMrHub: React.FC = () => {
   const { currentRepo, showToast, diffPayload, branches, setBranchComparison } = useGitStore();
@@ -82,6 +84,8 @@ export const VirtualMrHub: React.FC = () => {
   const [isLoadingReviewerOptions, setIsLoadingReviewerOptions] = useState(false);
   const [isLoadingLabelOptions, setIsLoadingLabelOptions] = useState(false);
   const [newGeneralComment, setNewGeneralComment] = useState('');
+  const [isPostingDiscussion, setIsPostingDiscussion] = useState(false);
+  const postingDiscussionRef = useRef(false);
 
   const toggleReviewerDropdown = async () => {
     const willOpen = !showReviewerDropdown;
@@ -195,12 +199,19 @@ export const VirtualMrHub: React.FC = () => {
   };
 
   const handleAddGeneralComment = async () => {
-    if (!newGeneralComment.trim()) return;
-    await createDiscussion(session.id, {
-      initialComment: newGeneralComment.trim(),
-    });
-    setNewGeneralComment('');
-    showToast('Comment posted');
+    if (!newGeneralComment.trim() || postingDiscussionRef.current) return;
+    postingDiscussionRef.current = true;
+    setIsPostingDiscussion(true);
+    try {
+      await createDiscussion(session.id, { initialComment: newGeneralComment.trim() });
+      setNewGeneralComment('');
+      showToast('Discussion posted', 'success');
+    } catch (error) {
+      showToast(`Could not post discussion: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    } finally {
+      postingDiscussionRef.current = false;
+      setIsPostingDiscussion(false);
+    }
   };
 
   const handleBranchChange = async (
@@ -583,39 +594,7 @@ export const VirtualMrHub: React.FC = () => {
 
           {/* General Discussions Timeline */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-xs text-text">
-                General Discussions ({session.discussions.filter((d) => !d.filePath).length})
-              </span>
-            </div>
-
-            {/* General comments list */}
-            {session.discussions
-              .filter((d) => !d.filePath)
-              .map((disc) => (
-                <div key={disc.id} className="p-3  bg-mantle border border-surface0 space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-subtext0">
-                    <span className="font-medium text-text">{disc.comments[0]?.authorName}</span>
-                    <span>{formatTime(disc.createdAt)}</span>
-                  </div>
-                  <div className="text-xs text-text pl-1">
-                    <MarkdownPreview content={disc.comments[0]?.body} />
-                  </div>
-                  
-                  {/* Replies */}
-                  {disc.comments.slice(1).map((rep) => (
-                    <div key={rep.id} className="ml-4 pl-3 border-l-2 border-surface0 py-1 space-y-1">
-                      <div className="flex items-center gap-2 text-[11px]">
-                        <span className="font-medium text-text">{rep.authorName}</span>
-                        <span className="text-subtext0">{formatTime(rep.createdAt)}</span>
-                      </div>
-                      <div className="text-xs text-text pl-1">
-                        <MarkdownPreview content={rep.body} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
+            <MrDiscussionBoard session={session} />
 
             {/* Add general comment */}
             <div className="space-y-1.5 pt-1">
@@ -624,6 +603,7 @@ export const VirtualMrHub: React.FC = () => {
               </span>
               <MarkdownEditor
                 value={newGeneralComment}
+                mentionOptions={getDiscussionMentionOptions(session)}
                 onChange={setNewGeneralComment}
                 placeholder="Write your comment here to start discussion..."
                 rows={3}
@@ -631,6 +611,8 @@ export const VirtualMrHub: React.FC = () => {
                 showActions={true}
                 onSubmit={handleAddGeneralComment}
                 submitLabel="Post Comment"
+                disabled={isPostingDiscussion}
+                isSubmitting={isPostingDiscussion}
               />
             </div>
           </div>

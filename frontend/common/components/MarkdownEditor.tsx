@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useId, useState, useRef } from 'react';
 import { Bold } from './icons/Bold';
 import { Italic } from './icons/Italic';
 import { Heading } from './icons/Heading';
@@ -15,6 +15,8 @@ import { Sparkles } from './icons/Sparkles';
 import { MarkdownPreview } from './MarkdownPreview';
 import { formatShortcutText } from '../utils/shortcuts';
 import type { MarkdownEditorProps } from '../types/MarkdownEditorProps';
+import { formatMention, getMentionQuery } from '../utils/mentions';
+import type { MentionOption } from '../types/MentionOption';
 
 export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   value,
@@ -34,9 +36,34 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   isSubmitting = false,
   onGenerateDraft,
   extraActions,
+  mentionOptions = [],
 }) => {
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mentionListId = useId();
+  const [mentionCaret, setMentionCaret] = useState(0);
+  const [isMentionFocused, setIsMentionFocused] = useState(false);
+  const [activeMentionIndex, setActiveMentionIndex] = useState(0);
+  const mentionQuery = mentionOptions.length && !disabled && !isSubmitting && isMentionFocused && activeTab === 'write'
+    ? getMentionQuery(value, mentionCaret) : null;
+  const suggestions = mentionQuery ? mentionOptions.filter((item) =>
+    `${item.label} ${item.id}`.toLocaleLowerCase().includes(mentionQuery.query)) : [];
+  const selectedMentionIndex = Math.min(activeMentionIndex, Math.max(0, suggestions.length - 1));
+
+  const applyMention = (option: MentionOption) => {
+    if (!mentionQuery) return;
+    const inserted = formatMention(option);
+    const after = value.slice(mentionQuery.end);
+    const separator = /^[\s.,;:!?)]/.test(after) ? '' : ' ';
+    const nextCaret = mentionQuery.start + inserted.length + separator.length;
+    onChange(`${value.slice(0, mentionQuery.start)}${inserted}${separator}${after}`);
+    setIsMentionFocused(false);
+    setMentionCaret(nextCaret);
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(nextCaret, nextCaret);
+    });
+  };
 
   const insertMarkdown = (prefix: string, suffix = '', defaultText = '') => {
     const textarea = textareaRef.current;
@@ -60,6 +87,22 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (disabled || isSubmitting) return;
+    if (suggestions.length) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveMentionIndex((selectedMentionIndex + (e.key === 'ArrowDown' ? 1 : -1) + suggestions.length) % suggestions.length);
+        return;
+      }
+      if ((e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.shiftKey) || e.key === 'Tab') {
+        e.preventDefault();
+        applyMention(suggestions[selectedMentionIndex]);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault(); e.stopPropagation(); setIsMentionFocused(false); return;
+      }
+    }
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     const modifier = isMac ? e.metaKey : e.ctrlKey;
 
@@ -223,18 +266,51 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       {/* Editor Body: Textarea OR MarkdownPreview */}
       <div className="p-2.5 bg-crust/30">
         {activeTab === 'write' ? (
+          <>
           <textarea
             ref={textareaRef}
             rows={rows}
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              onChange(e.target.value);
+              setMentionCaret(e.target.selectionStart);
+              setActiveMentionIndex(0);
+              setIsMentionFocused(true);
+            }}
+            onSelect={(e) => {
+              setMentionCaret(e.currentTarget.selectionStart);
+              if (e.currentTarget.selectionStart !== e.currentTarget.selectionEnd) setIsMentionFocused(false);
+            }}
+            onFocus={(e) => { setIsMentionFocused(true); setMentionCaret(e.currentTarget.selectionStart); }}
+            onBlur={() => setIsMentionFocused(false)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             autoFocus={autoFocus}
-            disabled={disabled}
+            disabled={disabled || isSubmitting}
+            role={mentionOptions.length ? 'combobox' : undefined}
+            aria-autocomplete={mentionOptions.length ? 'list' : undefined}
+            aria-expanded={mentionOptions.length ? suggestions.length > 0 : undefined}
+            aria-controls={suggestions.length ? mentionListId : undefined}
+            aria-activedescendant={suggestions.length ? `${mentionListId}-${selectedMentionIndex}` : undefined}
             style={{ minHeight, maxHeight }}
             className="w-full p-2 bg-base border border-surface1 text-text text-xs font-mono placeholder:text-subtext0/60 focus:outline-none focus:border-brand transition-colors resize-y leading-relaxed"
           />
+          {suggestions.length > 0 && (
+            <div id={mentionListId} role="listbox" aria-label="Mention a participant" className="mt-1 max-h-40 overflow-y-auto border border-surface1 bg-mantle shadow-lg">
+              {suggestions.map((option, index) => (
+                <button key={`${option.kind}:${option.id}`} type="button" role="option" id={`${mentionListId}-${index}`} title={option.id}
+                  aria-selected={selectedMentionIndex === index} onMouseDown={(e) => e.preventDefault()} onClick={() => applyMention(option)}
+                  className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs ${selectedMentionIndex === index ? 'bg-surface1 text-text' : 'text-subtext1 hover:bg-surface0'}`}>
+                  <span className="min-w-0 truncate font-medium">@{option.label}
+                    {mentionOptions.some((other) => other.id !== option.id && other.kind === option.kind && other.label === option.label)
+                      && <span className="ml-2 font-mono text-[10px] font-normal text-subtext0">{option.id}</span>}
+                  </span>
+                  <span className="shrink-0 text-[10px] text-subtext0">{option.kind === 'reviewer' ? 'AI reviewer' : 'Assignee'}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          </>
         ) : (
           <div
             style={{ minHeight, maxHeight }}
@@ -251,6 +327,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           <div className="flex items-center gap-2 text-[10px] text-subtext0 font-mono">
             {showActions && (
               <span>
+                {mentionOptions.length > 0 && <span>Type @ to mention · </span>}
                 Tip: Press <kbd className="px-1 py-0.5 bg-surface0 border border-surface1">Ctrl</kbd> + <kbd className="px-1 py-0.5 bg-surface0 border border-surface1">Enter</kbd> to submit
               </span>
             )}

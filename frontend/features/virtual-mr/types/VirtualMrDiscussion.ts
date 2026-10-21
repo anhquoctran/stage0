@@ -1,6 +1,7 @@
 import type { ResolveType } from './ResolveType';
 import type { VerificationStatus } from './VerificationStatus';
 import type { VirtualMrComment } from './VirtualMrComment';
+import type { DiscussionCodeSnippet } from './DiscussionCodeSnippet';
 
 export interface VirtualMrDiscussion {
   id: string;
@@ -9,6 +10,7 @@ export interface VirtualMrDiscussion {
   diffSide?: 'left' | 'right' | null;
   lineNumber?: number | null;
   commitId?: string | null;
+  codeSnippet?: DiscussionCodeSnippet | null;
   contentHash?: string | null;
   contextBefore?: string | null;
   contextAfter?: string | null;
@@ -19,6 +21,7 @@ export interface VirtualMrDiscussion {
   verificationStatus?: VerificationStatus | 'outdated';
   verifiedByBot?: string | null;
   verifiedAt?: string | null;
-  comments: VirtualMrComment[];
+  rootComment: VirtualMrComment | null;
+  children: VirtualMrComment[];
   createdAt: string;
 }

@@ -9,6 +9,8 @@ pub struct VirtualMrDiscussionDb {
     pub line_number: Option<i64>,
     pub commit_id: Option<String>,
     #[serde(default)]
+    pub code_snippet: Option<super::DiscussionCodeSnippet>,
+    #[serde(default)]
     pub content_hash: Option<String>,
     #[serde(default)]
     pub context_before: Option<String>,

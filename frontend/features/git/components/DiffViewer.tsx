@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { DiffView, DiffModeEnum } from '@git-diff-view/react';
+import { ReviewableDiff } from './ReviewableDiff';
 import { Columns2 } from '../../../common/components/icons/Columns2';
 import { Rows2 } from '../../../common/components/icons/Rows2';
 import { Copy } from '../../../common/components/icons/Copy';
@@ -902,19 +902,17 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 Use the file actions above to reveal it and inspect it with an external application.
               </p>
             </div>
-          ) : diffData && hunks.length > 0 ? (
+          ) : diffData && hunks.length > 0 && diffPayload ? (
             <div className="border border-surface0  overflow-hidden bg-base shadow-sm">
-              <DiffView
+              <ReviewableDiff
                 key={`${selectedFile.path}-${viewMode}-${theme}-${fontFamily}-${fontSize}-${lineSpacing}-${enableLigatures}-${isBold}-${isItalic}-${isUnderline}`}
                 data={diffData}
-                className="diff-viewer-container"
-                diffViewMode={
-                  viewMode === 'split' ? DiffModeEnum.Split : DiffModeEnum.Unified
-                }
-                diffViewTheme={theme === 'mocha' ? 'dark' : 'light'}
-                diffViewHighlight={true}
-                diffViewWrap={false}
-                diffViewFontSize={fontSize}
+                filePath={selectedFile.path}
+                oldCommit={diffPayload.merge_base_commit ?? diffPayload.base_commit}
+                newCommit={diffPayload.compare_commit}
+                viewMode={viewMode}
+                theme={theme === 'mocha' ? 'dark' : 'light'}
+                fontSize={fontSize}
               />
             </div>
           ) : (

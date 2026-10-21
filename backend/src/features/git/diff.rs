@@ -13,6 +13,7 @@ const DIFF_TRUNCATION_NOTICE: &str =
 pub fn get_mr_diff(repo_path: &str, base: &str, compare: &str) -> Result<MrDiffPayload, String> {
     let (base_commit, effective_base) = resolve_ref(repo_path, base)?;
     let (compare_commit, effective_compare) = resolve_ref(repo_path, compare)?;
+    let merge_base_commit = run_git_strict(repo_path, &["merge-base", &base_commit, &compare_commit])?.trim().to_owned();
 
     let three_dot = format!("{}...{}", effective_base, effective_compare);
 
@@ -115,6 +116,7 @@ pub fn get_mr_diff(repo_path: &str, base: &str, compare: &str) -> Result<MrDiffP
 
     Ok(MrDiffPayload {
         base_commit,
+        merge_base_commit,
         compare_commit,
         files,
         raw_diff,

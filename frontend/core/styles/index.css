@@ -691,6 +691,25 @@ button.btn-primary:disabled {
   opacity: 0.85;
 }
 
+.markdown-preview a[href^="#mr-mention/"] {
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-brand) 15%, transparent);
+  padding: 1px 4px;
+  color: var(--color-brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.reviewable-diff .diff-line-old-num,
+.reviewable-diff .diff-line-new-num,
+.reviewable-diff .diff-line-num {
+  cursor: pointer;
+}
+
+.reviewable-diff .diff-add-widget {
+  background: var(--color-brand) !important;
+}
+
 .markdown-preview hr {
   border: 0;
   border-top: 1px solid var(--ctp-surface0);
