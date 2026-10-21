@@ -646,7 +646,7 @@ fn sanitize_agent_info(value: &Value) -> Option<Value> {
 }
 
 #[command]
-pub async fn acp_agent_authenticate(config: AcpAgentConfig, method_id: String) -> Result<(), String> {
+pub async fn acp_agent_authenticate(config: AcpAgentConfig, method_id: String) -> Result<Value, String> {
     if method_id.trim().is_empty() || method_id.len() > 200 { return Err("Invalid ACP authentication method".into()); }
     let mut process = AcpProcess::start(&config, None).await?;
     let result = async {
@@ -658,7 +658,7 @@ pub async fn acp_agent_authenticate(config: AcpAgentConfig, method_id: String) -
             return Err("This login method requires an interactive terminal, which this client does not advertise".into());
         }
         process.request(1, "authenticate", json!({"methodId":method_id})).await?;
-        Ok(())
+        Ok(json!({"authStatus": process.auth_status.clone()}))
     }.await;
     process.close().await;
     result

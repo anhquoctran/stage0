@@ -20,6 +20,7 @@ import type { AcpAgentConnectionInfo } from '../types/AcpAgentConnectionInfo';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { registryUnavailableReason } from '../utils/acpRegistryAvailability';
+import { forgetAgentSignIn, getLastSuccessfulSignIn, saveLastSuccessfulSignIn, type AcpLastSuccessfulSignIn } from '../utils/acpAuthHistory';
 
 
 
@@ -86,6 +87,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({ draftSetti
   const [reportedAgentInfo, setReportedAgentInfo] = useState<AcpAgentConnectionInfo['agentInfo']>(null);
   const [selectedAuthMethod, setSelectedAuthMethod] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(false);
+  const [lastSuccessfulSignIn, setLastSuccessfulSignIn] = useState<AcpLastSuccessfulSignIn | null>(null);
   const [prompt, setPrompt] = useState('What can you help me with?');
   const [response, setResponse] = useState('');
   const [isSendingPrompt, setIsSendingPrompt] = useState(false);
@@ -170,18 +172,37 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({ draftSetti
   };
 
   const openDetails = (agent: AcpAgentConfig, entry?: AcpRegistryAgent) => {
-    setDetailAgent(agent); setDetailRegistryEntry(entry ?? null); setAuthMethods([]); setAuthStatus(null); setSupportsAuthStatus(false); setReportedAgentInfo(null); setSelectedAuthMethod(''); setPrompt('What can you help me with?'); setResponse(''); setRemovePending(false); setError(null); setNotice(null);
+    setDetailAgent(agent); setDetailRegistryEntry(entry ?? null); setAuthMethods([]); setAuthStatus(null); setSupportsAuthStatus(false); setReportedAgentInfo(null); setSelectedAuthMethod(''); setLastSuccessfulSignIn(getLastSuccessfulSignIn(agent)); setPrompt('What can you help me with?'); setResponse(''); setRemovePending(false); setError(null); setNotice(null);
     setIsCheckingAuth(isTauri());
   };
 
   const signIn = async () => {
     if (!detailAgent || !selectedAuthMethod) return;
-    setBusyId(detailAgent.id); setError(null); setNotice(null);
+    setBusyId(detailAgent.id); setError(null);
     try {
-      await invoke('acp_agent_authenticate', { config: detailAgent, methodId: selectedAuthMethod });
+      const method = authMethods.find((item) => item.id === selectedAuthMethod);
+      const isGoogleSignIn = /google/i.test(`${method?.name || ''} ${method?.id || selectedAuthMethod}`);
+      setNotice(isGoogleSignIn
+        ? 'Starting Google sign-in. Antigravity should open your default browser if a new login is needed…'
+        : 'Starting the agent sign-in flow…');
+      const result = await invoke<{ authStatus: AcpAgentConnectionInfo['authStatus'] }>('acp_agent_authenticate', { config: detailAgent, methodId: selectedAuthMethod });
+      const completed: AcpLastSuccessfulSignIn = {
+        completedAt: new Date().toISOString(),
+        methodId: selectedAuthMethod,
+        methodLabel: method?.name || selectedAuthMethod,
+        agentVersion: detailAgent.version,
+      };
+      setLastSuccessfulSignIn(completed);
+      const saved = saveLastSuccessfulSignIn(detailAgent, completed);
       setNotice('Sign-in completed. Refreshing the agent-reported account status…');
-      await refreshAgentConnection(detailAgent);
-      setNotice('Sign-in completed. The agent manages its own account session.');
+      const refreshed = await refreshAgentConnection(detailAgent);
+      const reportedStatus = refreshed?.authStatus ?? result?.authStatus ?? null;
+      if (reportedStatus) setAuthStatus(reportedStatus);
+      setNotice(reportedStatus
+        ? 'Sign-in completed. The account details shown here are reported by the agent.'
+        : saved
+          ? 'Sign-in completed. This agent does not provide account details over ACP; Stage0 saved the sign-in result on this device.'
+          : 'Sign-in completed, but Stage0 could not save the local sign-in confirmation. This agent does not provide account details over ACP.');
     } catch (cause) { setError(String(cause)); }
     finally { setBusyId(null); }
   };
@@ -212,6 +233,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({ draftSetti
 
   const removeAgent = () => {
     if (!detailAgent) return;
+    forgetAgentSignIn(detailAgent.id);
     updateExternalAgents(externalAgents.filter((agent) => agent.id !== detailAgent.id));
     setDetailAgent(null); setDetailRegistryEntry(null); setRemovePending(false);
   };
@@ -318,13 +340,18 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({ draftSetti
           <section className="space-y-2 border-t border-surface1 pt-4">
             <h3 className="text-xs font-semibold">Account & sign-in</h3>
             <p className="text-[11px] text-subtext0">Stage0 checks the agent automatically when this window opens. Account details come only from the agent; Stage0 never reads or stores its credentials.</p>
-            <div role="status" aria-live="polite" className={`border px-3 py-2 text-xs ${authStatus?.kind === 'none' ? 'border-yellow/40 bg-yellow/5 text-yellow' : authStatus ? 'border-green/40 bg-green/5 text-green' : 'border-surface1 bg-base/40 text-subtext0'}`}>
+            <div role="status" aria-live="polite" className={`border px-3 py-2 text-xs ${authStatus?.kind === 'none' ? 'border-yellow/40 bg-yellow/5 text-yellow' : authStatus ? 'border-green/40 bg-green/5 text-green' : lastSuccessfulSignIn ? 'border-brand/40 bg-brand/5 text-text' : 'border-surface1 bg-base/40 text-subtext0'}`}>
               {isCheckingAuth ? 'Checking account and sign-in methods…' : authStatus ? <div className="space-y-0.5">
                 <p className="font-medium">{authStatus.kind === 'none' ? 'Not signed in' : authStatus.label}</p>
                 {authStatus.account?.email && <p>{authStatus.account.email}</p>}
                 {authStatus.account?.organization && <p>Organization: {authStatus.account.organization}</p>}
                 {authStatus.account?.plan && <p>Plan: {authStatus.account.plan}</p>}
                 {authStatus.detail && <p>{authStatus.detail}</p>}
+                {authStatus.kind === 'none' && lastSuccessfulSignIn && <p>A previous sign-in completed via {lastSuccessfulSignIn.methodLabel} on {new Date(lastSuccessfulSignIn.completedAt).toLocaleString()}, but this agent now reports that it is signed out.</p>}
+              </div> : lastSuccessfulSignIn ? <div className="space-y-0.5">
+                <p className="font-medium">Last sign-in completed</p>
+                <p>{lastSuccessfulSignIn.methodLabel} · {new Date(lastSuccessfulSignIn.completedAt).toLocaleString()}</p>
+                <p>This is a saved result from this device, not a live account check. The agent does not report account identity or current sign-in status over ACP.</p>
               </div> : supportsAuthStatus
                 ? 'This agent supports account status reporting but has not reported an account yet.'
                 : 'Account status is not reported by this agent over ACP; Stage0 cannot determine whether it is signed in.'}
