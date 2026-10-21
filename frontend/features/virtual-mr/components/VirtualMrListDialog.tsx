@@ -19,6 +19,7 @@ import { formatDateTime, formatRecentTime } from '../../../common/utils/dateTime
 import { useGitStore } from '../../git/store/useGitStore';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import type { VirtualMrSession } from '../types/VirtualMrSession';
+import * as botStoreModule from '../../ai/store/useBotReviewersStore';
 import {
   getVirtualMrSearchHighlights,
   getVirtualMrSearchSuggestions,
@@ -54,6 +55,97 @@ const SearchSuggestionIcon: React.FC<{ field: VirtualMrSearchSuggestion['field']
   return <Search className="h-3.5 w-3.5" />;
 };
 
+// GitLab authentic identicon color pairs (foreground & dark background)
+const GITLAB_IDENTICON_PALETTES = [
+  { fg: '#e24329', bg: '#3a1b24' },
+  { fg: '#a27be8', bg: '#28193f' },
+  { fg: '#3f98e6', bg: '#102742' },
+  { fg: '#2da160', bg: '#0f2f1e' },
+  { fg: '#df8e1d', bg: '#34230d' },
+  { fg: '#1ea9b0', bg: '#0b2b2f' },
+  { fg: '#d0537d', bg: '#391a2b' },
+  { fg: '#6b4fbb', bg: '#22153b' },
+];
+
+function stringHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+const MrUserAvatar: React.FC<{
+  name: string;
+  email?: string;
+  avatarUrl?: string;
+  size?: 'xs' | 'sm';
+}> = ({ name, email, avatarUrl, size = 'sm' }) => {
+  const sizeClass = size === 'xs' ? 'w-4 h-4 text-[9px]' : 'w-5 h-5 text-[10px]';
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className={`${sizeClass} rounded-full object-cover shrink-0 ring-1 ring-surface1`}
+      />
+    );
+  }
+
+  const seed = email || name || 'user';
+  const hash = stringHash(seed);
+  const palette = GITLAB_IDENTICON_PALETTES[hash % GITLAB_IDENTICON_PALETTES.length];
+
+  const rects: React.ReactNode[] = [];
+  const cellSize = 10;
+
+  for (let y = 0; y < 5; y++) {
+    for (let x = 0; x < 5; x++) {
+      const sourceCol = x > 2 ? 4 - x : x;
+      const bitIndex = y * 3 + sourceCol;
+      const isFilled = ((hash >> bitIndex) & 1) === 1;
+
+      if (isFilled) {
+        rects.push(
+          <rect
+            key={`${x}-${y}`}
+            x={x * cellSize}
+            y={y * cellSize}
+            width={cellSize}
+            height={cellSize}
+            fill={palette.fg}
+          />
+        );
+      }
+    }
+  }
+
+  return (
+    <div
+      className={`${sizeClass} rounded-full overflow-hidden shrink-0 ring-1 ring-surface1 shadow-xs`}
+      title={name}
+    >
+      <svg
+        viewBox="0 0 50 50"
+        className="w-full h-full"
+        style={{ backgroundColor: palette.bg }}
+      >
+        {rects}
+      </svg>
+    </div>
+  );
+};
+
+const BOT_DEFAULT_EMOJIS: Record<string, string> = {
+  security: '🛡️',
+  performance: '⚡',
+  architecture: '🏛️',
+  style: '🎨',
+  test: '🧪',
+  documentation: '📚',
+};
+
 interface VirtualMrListDialogProps {
   inline?: boolean;
 }
@@ -81,6 +173,15 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  // Optional global reviewer bots metadata
+  const globalReviewers = useMemo(() => {
+    try {
+      return botStoreModule?.useBotReviewersStore?.getState?.()?.globalReviewers || [];
+    } catch {
+      return [];
+    }
+  }, []);
+
   useEffect(() => {
     if (!isMrListOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -89,6 +190,20 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isMrListOpen, setIsMrListOpen]);
+
+  // Compute persistent sequence map for MR IDs (!1, !2, !3...) based on repository creation order
+  const sessionSequenceMap = useMemo(() => {
+    const sorted = [...sessions].sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime() || 0;
+      const timeB = new Date(b.createdAt).getTime() || 0;
+      return timeA - timeB || a.id.localeCompare(b.id);
+    });
+    const map = new Map<string, number>();
+    sorted.forEach((session, index) => {
+      map.set(session.id, index + 1);
+    });
+    return map;
+  }, [sessions]);
 
   const counts = useMemo(() => ({
     open: sessions.filter((session) => hasStatus(session, 'open')).length,
@@ -103,59 +218,68 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
       return matchesVirtualMrSearch(session, searchTerm);
     });
 
-    return filtered.sort((left, right) => {
-      const leftCreated = Date.parse(left.createdAt) || 0;
-      const rightCreated = Date.parse(right.createdAt) || 0;
-      const leftUpdated = Date.parse(left.updatedAt) || leftCreated;
-      const rightUpdated = Date.parse(right.updatedAt) || rightCreated;
-      const comparison = sortBy === 'title'
-        ? left.title.localeCompare(right.title)
-        : sortBy === 'created'
-          ? leftCreated - rightCreated
-          : leftUpdated - rightUpdated;
+    return filtered.sort((first, second) => {
+      let comparison = 0;
+      if (sortBy === 'title') {
+        comparison = first.title.localeCompare(second.title, undefined, { sensitivity: 'base' });
+      } else {
+        const firstTime = new Date(sortBy === 'created' ? first.createdAt : first.updatedAt).getTime() || 0;
+        const secondTime = new Date(sortBy === 'created' ? second.createdAt : second.updatedAt).getTime() || 0;
+        comparison = firstTime - secondTime;
+      }
+
+      if (comparison === 0) comparison = first.id.localeCompare(second.id);
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [activeFilter, searchTerm, sessions, sortBy, sortDirection]);
+  }, [activeFilter, sessions, searchTerm, sortBy, sortDirection]);
 
-  const pageCount = Math.max(1, Math.ceil(visibleSessions.length / Number(pageSize)));
+  const parsedPageSize = parseInt(pageSize, 10) || 20;
+  const pageCount = Math.max(1, Math.ceil(visibleSessions.length / parsedPageSize));
   const page = Math.min(currentPage, pageCount);
-  const pageOffset = (page - 1) * Number(pageSize);
-  const pagedSessions = visibleSessions.slice(pageOffset, pageOffset + Number(pageSize));
+  const pageOffset = (page - 1) * parsedPageSize;
+  const pagedSessions = useMemo(() => visibleSessions.slice(pageOffset, pageOffset + parsedPageSize), [visibleSessions, pageOffset, parsedPageSize]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [currentRepo?.id, activeFilter, searchTerm, sortBy, sortDirection, pageSize]);
+  }, [activeFilter, searchTerm, sortBy, sortDirection, pageSize, currentRepo?.id]);
 
   useEffect(() => {
-    // Keep navigation valid when an MR is removed or changes status.
-    setCurrentPage((previous) => Math.min(previous, pageCount));
-  }, [pageCount]);
+    if (currentPage > pageCount) setCurrentPage(pageCount);
+  }, [currentPage, pageCount]);
 
   useEffect(() => {
-    if (listRef.current) listRef.current.scrollTop = 0;
-  }, [page, currentRepo?.id, activeFilter, searchTerm, sortBy, sortDirection, pageSize]);
+    listRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+  }, [page]);
+
+  const searchHighlights = useMemo(
+    () => getVirtualMrSearchHighlights(searchTerm),
+    [searchTerm]
+  );
 
   const searchSuggestions = useMemo(
     () => isSearchFocused
       ? getVirtualMrSearchSuggestions(searchTerm, searchCaret, sessions)
       : [],
-    [isSearchFocused, searchCaret, searchTerm, sessions],
+    [isSearchFocused, searchCaret, searchTerm, sessions]
   );
-  const searchHighlights = useMemo(() => getVirtualMrSearchHighlights(searchTerm), [searchTerm]);
 
   useEffect(() => {
     setActiveSuggestionIndex(0);
-  }, [isSearchFocused, searchCaret, searchTerm]);
+  }, [searchSuggestions.length, searchTerm]);
 
   if ((!inline && !isMrListOpen) || !currentRepo) return null;
 
   const handleSelect = async (sessionId: string) => {
     const session = sessions.find((item) => item.id === sessionId);
     if (!session) return;
-    switchSession(session.id);
-    setIsMrListOpen(false);
-    await setBranchComparison(session.baseBranch, session.compareBranch);
-    showToast(`Opened Virtual MR: ${session.title}`);
+    try {
+      await setBranchComparison(session.baseBranch, session.compareBranch);
+      switchSession(sessionId);
+      setIsMrListOpen(false);
+      showToast(`Opened Virtual MR: ${session.title}`);
+    } catch (error) {
+      showToast(`Could not open branches for ${session.title}: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    }
   };
 
   const filters: { id: MrFilter; label: string }[] = [
@@ -248,7 +372,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                 setIsMrListOpen(false);
                 void openNewMrDraft();
               }}
-              className="flex items-center gap-1.5 bg-primary px-2.5 py-1.5 text-xs font-semibold text-on-accent hover:bg-primary/90"
+              className="flex items-center gap-1.5 bg-primary px-2.5 py-1.5 text-xs font-semibold text-on-accent hover:bg-primary/90 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Create Merge Request</span>
@@ -257,7 +381,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
               <button
                 type="button"
                 onClick={() => setIsMrListOpen(false)}
-                className="shrink-0 p-1 text-subtext0 hover:bg-surface0 hover:text-text"
+                className="shrink-0 p-1 text-subtext0 hover:bg-surface0 hover:text-text cursor-pointer"
                 title="Close merge request list"
               >
                 <X className="h-4 w-4" />
@@ -276,9 +400,9 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                 role="tab"
                 aria-selected={activeFilter === filter.id}
                 onClick={() => setActiveFilter(filter.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors cursor-pointer ${
                   activeFilter === filter.id
-                    ? 'bg-surface2 text-text'
+                    ? 'bg-surface2 text-text font-semibold'
                     : 'text-subtext1 hover:bg-surface0 hover:text-text'
                 }`}
               >
@@ -349,7 +473,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                   id={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestions`}
                   className="absolute left-0 top-full z-[120] mt-1 max-h-80 w-[min(26rem,calc(100vw-2rem))] overflow-y-auto border border-surface1 bg-surface0 py-1 text-left shadow-xl"
                   role="listbox"
-                  aria-label="Search syntax suggestions"
+                  aria-label="Search suggestions"
                 >
                   {searchSuggestions.map((suggestion, index) => (
                     <button
@@ -358,10 +482,11 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                       type="button"
                       role="option"
                       aria-selected={activeSuggestionIndex === index}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onMouseEnter={() => setActiveSuggestionIndex(index)}
-                      onClick={() => applySearchSuggestion(suggestion)}
-                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs ${
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        applySearchSuggestion(suggestion);
+                      }}
+                      className={`flex w-full items-center gap-2.5 px-3 py-2 text-xs transition-colors cursor-pointer ${
                         activeSuggestionIndex === index
                           ? 'bg-surface2 text-text'
                           : 'text-subtext1 hover:bg-surface1 hover:text-text'
@@ -399,7 +524,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
             <button
               type="button"
               onClick={() => setSortDirection((direction) => direction === 'asc' ? 'desc' : 'asc')}
-              className="flex h-full w-8 shrink-0 items-center justify-center border-l border-surface1 bg-surface0 text-text hover:bg-surface1 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand"
+              className="flex h-full w-8 shrink-0 items-center justify-center border-l border-surface1 bg-surface0 text-text hover:bg-surface1 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand cursor-pointer"
               aria-label={`Switch to ${sortDirection === 'asc' ? 'descending' : 'ascending'} order`}
               title={`${sortDirection === 'asc' ? 'Ascending' : 'Descending'} order`}
             >
@@ -420,21 +545,24 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
             <div className="divide-y divide-surface0">
               {pagedSessions.map((session) => {
                 const statusLabel = session.status[0].toUpperCase() + session.status.slice(1);
-                const updatedLabel = formatRecentTime(session.updatedAt) || 'Unknown';
+                const updatedLabel = formatRecentTime(session.updatedAt) || 'just now';
+                const createdLabel = formatRecentTime(session.createdAt) || 'just now';
+                const sequenceNumber = sessionSequenceMap.get(session.id) ?? 1;
 
                 return (
                   <button
                     key={session.id}
                     type="button"
                     onClick={() => handleSelect(session.id)}
-                    className="group flex w-full items-start justify-between gap-4 px-5 py-3.5 text-left hover:bg-surface0/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+                    className="group flex w-full items-center justify-between gap-4 px-5 py-3 text-left hover:bg-surface0/60 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand cursor-pointer"
                   >
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      {/* Top line: Title (bold) + Status Badge + Assigned Labels */}
                       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="truncate text-sm font-semibold text-text group-hover:text-brand" title={session.title}>
+                        <span className="truncate text-sm font-bold text-text group-hover:text-brand" title={session.title}>
                           {session.title}
                         </span>
-                        <span className={`inline-flex shrink-0 items-center gap-1 border px-1.5 py-0.5 text-[10px] ${
+                        <span className={`inline-flex shrink-0 items-center gap-1 border px-1.5 py-0.5 text-[10px] font-semibold select-none ${
                           session.status === 'closed'
                             ? 'border-surface1 bg-surface0 text-subtext1'
                             : session.status === 'resolved'
@@ -444,32 +572,101 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                           {session.status === 'resolved' ? <CheckCircle2 className="h-3 w-3" /> : null}
                           {statusLabel}
                         </span>
-                      </div>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-subtext1">
-                        <span className="max-w-full truncate" title={`${session.compareBranch} → ${session.baseBranch}`}>
-                          {session.compareBranch} <span className="text-subtext0">→</span> {session.baseBranch}
-                        </span>
+
+                        {/* Assigned labels */}
                         {session.labels.map((label) => (
-                          <span key={label.id} className="border border-surface1 px-1.5 py-0.5 text-[10px] text-subtext0">
+                          <span
+                            key={label.id}
+                            className="border border-surface1 bg-surface0/60 px-1.5 py-0.5 text-[10px] font-medium text-subtext0 select-none"
+                          >
                             {label.name}
                           </span>
                         ))}
                       </div>
-                      {session.description.trim() && (
-                        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-subtext0">
-                          {session.description.replace(/[#*`>\[\]()]/g, '').replace(/\s+/g, ' ').trim()}
-                        </p>
-                      )}
+
+                      {/* Bottom line: Sequence ID, Created Time, Creator + Avatar, Source Branch -> Target Branch */}
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-subtext0">
+                        {/* Friendly MR ID (sequence) */}
+                        <span className="font-mono font-semibold text-subtext1">
+                          !{sequenceNumber}
+                        </span>
+
+                        <span className="select-none text-surface2">·</span>
+
+                        {/* Friendly created timestamp & Creator + avatar */}
+                        <div className="flex items-center gap-1.5">
+                          <span>created {createdLabel} by</span>
+                          <MrUserAvatar
+                            name={session.assignee.name}
+                            email={session.assignee.email}
+                            avatarUrl={session.assignee.avatarUrl}
+                            size="xs"
+                          />
+                          <span className="font-medium text-subtext1">{session.assignee.name}</span>
+                        </div>
+
+                        <span className="select-none text-surface2">·</span>
+
+                        {/* Source branch -> target branch */}
+                        <div className="flex items-center gap-1 font-mono text-[11px] text-subtext1">
+                          <span className="max-w-[220px] truncate" title={session.compareBranch}>
+                            {session.compareBranch}
+                          </span>
+                          <span className="text-subtext0">→</span>
+                          <span className="max-w-[220px] truncate" title={session.baseBranch}>
+                            {session.baseBranch}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex shrink-0 flex-col items-end gap-2 text-[11px] text-subtext0">
-                      <time dateTime={session.updatedAt} title={formatDateTime(session.updatedAt)}>
-                        {updatedLabel}
+                    {/* Right side: Reviewer bot icons, Assignee icon, Discussions count, Friendly updated timestamp */}
+                    <div className="flex shrink-0 items-center gap-4 text-xs text-subtext0">
+                      {/* Reviewer bot icons */}
+                      {session.reviewers.length > 0 && (
+                        <div className="flex items-center -space-x-1" title={`${session.reviewers.length} reviewer bot(s)`}>
+                          {session.reviewers.map((rev) => {
+                            const bot = globalReviewers.find((b) => b.id === rev.agentId);
+                            const emoji = bot?.avatarEmoji || BOT_DEFAULT_EMOJIS[rev.agentId] || '🤖';
+                            return (
+                              <span
+                                key={rev.agentId}
+                                className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 ring-2 ring-mantle flex items-center justify-center text-[10px] shrink-0"
+                                title={`${rev.agentName} (AI Reviewer)`}
+                              >
+                                {emoji}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Assignee icon */}
+                      <div title={`Assignee: ${session.assignee.name}`}>
+                        <MrUserAvatar
+                          name={session.assignee.name}
+                          email={session.assignee.email}
+                          avatarUrl={session.assignee.avatarUrl}
+                          size="sm"
+                        />
+                      </div>
+
+                      {/* Discussions count */}
+                      {session.discussions.length > 0 && (
+                        <span className="inline-flex items-center gap-1 font-mono text-[11px]" title={`${session.discussions.length} discussion(s)`}>
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          {session.discussions.length}
+                        </span>
+                      )}
+
+                      {/* Friendly updated timestamp */}
+                      <time
+                        dateTime={session.updatedAt}
+                        title={formatDateTime(session.updatedAt)}
+                        className="text-right text-[11px] text-subtext0 min-w-[70px]"
+                      >
+                        updated {updatedLabel}
                       </time>
-                      <span className="inline-flex items-center gap-1" title={`${session.discussions.length} discussions`}>
-                        <MessageSquare className="h-3 w-3" />
-                        {session.discussions.length}
-                      </span>
                     </div>
                   </button>
                 );
@@ -493,7 +690,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                     setIsMrListOpen(false);
                     void openNewMrDraft();
                   }}
-                  className="mt-4 border border-brand bg-brand px-3 py-1.5 text-xs font-semibold text-on-accent hover:bg-brand/90"
+                  className="mt-4 border border-brand bg-brand px-3 py-1.5 text-xs font-semibold text-on-accent hover:bg-brand/90 cursor-pointer"
                 >
                   Create Virtual MR
                 </button>
@@ -527,7 +724,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                   disabled={isLoadingSessions || page === 1}
                   aria-label="Previous page"
                   title="Previous page"
-                  className="flex h-7 w-7 items-center justify-center border border-surface1 text-text hover:bg-surface0 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-35"
+                  className="flex h-7 w-7 items-center justify-center border border-surface1 text-text hover:bg-surface0 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-35 cursor-pointer"
                 >
                   <ChevronLeft className="h-3 w-3" />
                 </button>
@@ -538,7 +735,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                   disabled={isLoadingSessions || page === pageCount}
                   aria-label="Next page"
                   title="Next page"
-                  className="flex h-7 w-7 items-center justify-center border border-surface1 text-text hover:bg-surface0 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-35"
+                  className="flex h-7 w-7 items-center justify-center border border-surface1 text-text hover:bg-surface0 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-35 cursor-pointer"
                 >
                   <ChevronRight className="h-3 w-3" />
                 </button>

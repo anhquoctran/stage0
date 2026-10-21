@@ -664,6 +664,10 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
     }
   },
 
+  openMrListView: () => {
+    set({ activeSessionId: null, isDraftActive: false, isMrListOpen: false });
+  },
+
   activateDraftMr: () => {
     const { draftMr } = get();
     set({ isDraftActive: true, activeSessionId: null });

@@ -56,6 +56,7 @@ export interface VirtualMrState {
   closeNewMrDraft: () => void;
   submitNewMrDraft: () => Promise<string>;
   activateDraftMr: () => void;
+  openMrListView: () => void;
   switchSession: (sessionId: string) => void;
   closeSession: (sessionId: string) => Promise<void>;
   updateSessionStatus: (sessionId: string, status: VirtualMrStatus) => Promise<void>;
