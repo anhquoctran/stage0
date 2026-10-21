@@ -3,7 +3,7 @@ import { ExternalLink } from '../../../common/components/icons/ExternalLink';
 
 export const AcpRegistryAbout: React.FC = () => (
   <details className="relative text-[11px] text-subtext0">
-    <summary className="cursor-pointer select-none font-medium text-subtext0 hover:text-text focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand">
+    <summary className="cursor-pointer select-none font-medium text-subtext0 hover:text-text focus-visible:outline focus-visible:outline-brand">
       About ACP &amp; its Registry
     </summary>
     <div className="mt-2 grid gap-2 sm:grid-cols-2">
