@@ -12,6 +12,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
   branches,
   onChange,
   disabled = false,
+  title,
   className,
   maxWidthClass,
   buttonClassName,
@@ -75,7 +76,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
         type="button"
         disabled={disabled || !branches}
         onClick={() => setIsOpen(!isOpen)}
-        title={`${roleLabel}: ${value || 'Select branch'}`}
+        title={title || `${roleLabel}: ${value || 'Select branch'}`}
         className={`inline-flex items-center gap-2 px-2.5 py-1 text-left transition-colors min-w-[110px] border ${
           maxWidthClass || 'max-w-[360px]'
         } ${
@@ -84,7 +85,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
             : 'bg-base/70 hover:bg-surface0 border-surface0 hover:border-surface1 text-text cursor-pointer'
         } ${buttonClassName || ''}`}
       >
-        <GitBranch className="w-3.5 h-3.5 shrink-0 text-brand" />
+        <GitBranch className={`w-3.5 h-3.5 shrink-0 ${disabled || !branches ? 'text-subtext0' : 'text-brand'}`} />
         <span className="truncate font-mono text-xs font-medium text-text leading-tight">
           {value || (isSource ? 'compare...' : 'base...')}
         </span>

@@ -8,6 +8,7 @@ export interface TabBranchSelectorProps {
   } | null;
   onChange: (branch: string) => void;
   disabled?: boolean;
+  title?: string;
   className?: string;
   maxWidthClass?: string;
   buttonClassName?: string;

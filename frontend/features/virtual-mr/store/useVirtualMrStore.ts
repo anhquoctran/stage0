@@ -21,6 +21,7 @@ import { AI_REVIEW_UNAVAILABLE } from '../../ai/constants/runtimeAvailability';
 import type { DbDiscussion } from '../types/DbDiscussion';
 import { fromDbDiscussion } from '../utils/fromDbDiscussion';
 import { enqueueSessionWrite, flushSessionWrites, pendingSessionSnapshot, saveSessionSnapshot } from '../services/sessionPersistence';
+import { hasVirtualMrActivity } from '../utils/virtualMrActivity';
 
 let draftBranchRequestVersion = 0;
 let repoDataRequestVersion = 0;
@@ -878,6 +879,21 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   },
 
   updateSessionBranches: async (sessionId, base, compare) => {
+    const targetSession = get().sessions.find((s) => s.id === sessionId);
+    if (!targetSession) return;
+
+    const isActivityPresent =
+      typeof hasVirtualMrActivity === 'function'
+        ? hasVirtualMrActivity(targetSession)
+        : Boolean(
+            targetSession.discussions?.length ||
+            targetSession.reviewers?.some((r) => r.reviewStatus && r.reviewStatus !== 'pending')
+          );
+
+    if (isActivityPresent) {
+      useGitStore.getState().showToast('Cannot change branches after discussions or reviews have started in this Virtual MR', 'warning');
+      return;
+    }
     const { currentRepoPath } = get();
     let commits: VirtualMrCommit[] = [];
     if (currentRepoPath) {

@@ -6,6 +6,7 @@ import { loadWithMocks } from './helpers/componentHarness.mjs';
 const require = createRequire(import.meta.url);
 const { create } = require('zustand');
 const { fromDbDiscussion } = loadWithMocks(new URL('../frontend/features/virtual-mr/utils/fromDbDiscussion.ts', import.meta.url), {});
+const { hasVirtualMrActivity } = loadWithMocks(new URL('../frontend/features/virtual-mr/utils/virtualMrActivity.ts', import.meta.url), {});
 const labels = [
   { id: 'bug', repo_id: 'repo-a', name: 'Bug', color: '#ff0000' },
   { id: 'feature', repo_id: 'repo-a', name: 'Feature', color: '#0000ff' },
@@ -88,6 +89,7 @@ async function fixture(beforeSave = async () => {}) {
     '../types/virtualMr': { AVAILABLE_AI_BOTS: [], PRESET_REPO_LABELS: [] },
     '../../ai/constants/runtimeAvailability': {},
     '../utils/fromDbDiscussion': { fromDbDiscussion },
+    '../utils/virtualMrActivity': { hasVirtualMrActivity },
     '../services/sessionPersistence': persistence,
   });
   const reload = () => store.getState().loadRepoData('repo-a', '/fixture/a', ['main', 'feature']);
