@@ -9,7 +9,6 @@ import { Loader2 } from '../../../common/components/icons/Loader2';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../../../features/git/store/useGitStore';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
-import { VirtualMrListDialog } from '../../../features/virtual-mr/components/VirtualMrListDialog';
 
 export const TabBar: React.FC = () => {
   const {
@@ -25,8 +24,7 @@ export const TabBar: React.FC = () => {
     closedSessionTabIds,
     draftMr,
     isDraftActive,
-    isMrListOpen,
-    setIsMrListOpen,
+    openMrListView,
     switchSession,
     closeSession,
     openNewMrDraft,
@@ -37,6 +35,7 @@ export const TabBar: React.FC = () => {
     () => sessions.filter((session) => !closedSessionTabIds.includes(session.id)),
     [sessions, closedSessionTabIds]
   );
+  const isMrListActive = !activeSessionId && !isDraftActive;
 
   const handleSwitchSession = async (sessionId: string) => {
     const session = sessions.find((s) => s.id === sessionId);
@@ -110,24 +109,26 @@ export const TabBar: React.FC = () => {
   };
 
   return (
-    <>
-      <div className="h-10 border-b border-surface0 bg-crust flex items-center px-2 select-none overflow-x-auto no-scrollbar gap-1 text-xs relative z-30">
-        <button
-          type="button"
-          onClick={() => setIsMrListOpen(true)}
-          className={`flex h-8 shrink-0 items-center gap-1.5 border-t border-x px-2.5 transition-colors ${
-            isMrListOpen
-              ? 'bg-mantle border-surface1 text-text'
-              : 'border-transparent text-subtext0 hover:bg-surface0/50 hover:text-text'
-          }`}
-          title="Browse saved merge requests for this repository"
-        >
-          <List className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">MRs</span>
-          <span className="font-mono text-[10px]">{sessions.length}</span>
-        </button>
+    <div className="h-10 border-b border-surface0 bg-crust flex items-center px-2 select-none overflow-x-auto no-scrollbar gap-1 text-xs relative z-30">
+      <button
+        type="button"
+        onClick={() => openMrListView()}
+        className={`relative flex h-8 shrink-0 items-center gap-1.5 border-t border-x px-2.5 transition-colors cursor-pointer ${
+          isMrListActive
+            ? 'bg-mantle border-surface1 text-text font-medium shadow-xs'
+            : 'border-transparent text-subtext0 hover:bg-surface0/50 hover:text-text'
+        }`}
+        title="Browse saved merge requests for this repository"
+      >
+        <List className={`h-3.5 w-3.5 ${isMrListActive ? 'text-brand' : 'text-subtext0'}`} />
+        <span className="hidden sm:inline">MRs</span>
+        <span className="font-mono text-[10px]">{sessions.length}</span>
+        {isMrListActive && (
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />
+        )}
+      </button>
 
-        <div className="flex items-center gap-1.5 flex-1 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-1.5 flex-1 overflow-x-auto no-scrollbar">
         {/* Existing Session Tabs */}
         {visibleSessions.map((session) => {
           const isActive = session.id === activeSessionId && !isDraftActive;
@@ -259,8 +260,6 @@ export const TabBar: React.FC = () => {
           <Plus className="w-4 h-4 text-white" />
         </button>
       </div>
-      </div>
-      <VirtualMrListDialog />
-    </>
+    </div>
   );
 };

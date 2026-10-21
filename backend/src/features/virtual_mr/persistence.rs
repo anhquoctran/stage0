@@ -482,7 +482,7 @@ impl Database {
         let conn = self.conn();
         if is_resolved {
             let mut stmt = conn.prepare_cached(
-                "UPDATE virtual_mr_discussions SET is_resolved = 1, resolve_type = ?1, resolved_by = ?2, resolved_at = CURRENT_TIMESTAMP WHERE id = ?3;",
+                "UPDATE virtual_mr_discussions SET is_resolved = 1, resolve_type = ?1, resolved_by = ?2, resolved_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now') WHERE id = ?3;",
             )?;
             stmt.execute(params![resolve_type, resolved_by, discussion_id])?;
         } else {
@@ -508,10 +508,10 @@ impl Database {
                     is_resolved = 1,
                     resolve_type = 'ai_verified',
                     resolved_by = ?1,
-                    resolved_at = CURRENT_TIMESTAMP,
+                    resolved_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now'),
                     verification_status = ?2,
                     verified_by_bot = ?1,
-                    verified_at = CURRENT_TIMESTAMP
+                    verified_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
                  WHERE id = ?3;",
             )?;
             stmt.execute(params![verified_by_bot, verification_status, discussion_id])?;
@@ -520,7 +520,7 @@ impl Database {
                 "UPDATE virtual_mr_discussions SET
                     verification_status = ?1,
                     verified_by_bot = ?2,
-                    verified_at = CURRENT_TIMESTAMP
+                    verified_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
                  WHERE id = ?3;",
             )?;
             stmt.execute(params![verification_status, verified_by_bot, discussion_id])?;
