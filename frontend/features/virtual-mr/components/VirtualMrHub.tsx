@@ -12,6 +12,7 @@ import { GitCommit } from '../../../common/components/icons/GitCommit';
 import { MessageSquare } from '../../../common/components/icons/MessageSquare';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
+import { Lock } from '../../../common/components/icons/Lock';
 import { formatDateTime } from '@/common/utils/dateTime';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { useGitStore } from '../../git/store/useGitStore';
@@ -24,6 +25,7 @@ import { isReviewStartingForSession, useReviewStore } from '../../review/store/u
 import { startAssignedReviewBatchForSession } from '../../review/services/assignedReviewService';
 import { MrDiscussionBoard } from './MrDiscussionBoard';
 import { getDiscussionMentionOptions } from '../utils/discussionMentions';
+import { hasVirtualMrActivity } from '../utils/virtualMrActivity';
 
 export const VirtualMrHub: React.FC = () => {
   const { currentRepo, showToast, diffPayload, branches, setBranchComparison } = useGitStore();
@@ -136,6 +138,9 @@ export const VirtualMrHub: React.FC = () => {
   const reviewBatch = reviewBatches[session.id];
   const reviewIsStarting = isReviewStarting && isReviewStartingForSession(session.id);
   const reviewIsRunning = Object.values(activeReviewRuns).some((run) => run.sessionId === session.id && run.status === 'running');
+  const isReviewOngoing = Boolean(reviewBatch) || reviewIsStarting || reviewIsRunning;
+  const isBranchLocked = hasVirtualMrActivity(session, { isReviewOngoing });
+  const branchLockedReason = 'Cannot change branches once discussions or reviews have started in this Virtual MR';
 
   const handleStartAiReview = async () => {
     try {
@@ -219,6 +224,10 @@ export const VirtualMrHub: React.FC = () => {
     newBase: string,
     newCompare: string
   ) => {
+    if (isBranchLocked) {
+      showToast('Cannot change branches after discussions or reviews have started in this Virtual MR', 'warning');
+      return;
+    }
     await updateSessionBranches(sessionId, newBase, newCompare);
     await setBranchComparison(newBase, newCompare);
   };
@@ -228,6 +237,10 @@ export const VirtualMrHub: React.FC = () => {
     currentBase: string,
     currentCompare: string
   ) => {
+    if (isBranchLocked) {
+      showToast('Cannot change branches after discussions or reviews have started in this Virtual MR', 'warning');
+      return;
+    }
     await handleBranchChange(sessionId, currentCompare, currentBase);
   };
 
@@ -309,10 +322,29 @@ export const VirtualMrHub: React.FC = () => {
           )}
 
           {/* Branch Selector for Active Virtual MR */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1  bg-surface0/60 border border-surface1/60 shrink-0">
-            <span className="text-[10px] text-subtext0 uppercase font-mono tracking-wider font-semibold mr-0.5">Branch:</span>
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1 border shrink-0 transition-colors ${
+              isBranchLocked
+                ? 'bg-surface0/30 border-surface0/50'
+                : 'bg-surface0/60 border-surface1/60'
+            }`}
+            title={isBranchLocked ? branchLockedReason : undefined}
+          >
+            <div className="flex items-center gap-1 mr-0.5">
+              {isBranchLocked && (
+                <Lock
+                  className="w-3 h-3 text-subtext0 shrink-0"
+                  title={branchLockedReason}
+                />
+              )}
+              <span className="text-[10px] text-subtext0 uppercase font-mono tracking-wider font-semibold">
+                Branch:
+              </span>
+            </div>
             <TabBranchSelector
               roleType="source"
+              disabled={isBranchLocked}
+              title={isBranchLocked ? branchLockedReason : undefined}
               value={session.compareBranch}
               branches={branches}
               onChange={(branch) => handleBranchChange(session.id, session.baseBranch, branch)}
@@ -320,13 +352,20 @@ export const VirtualMrHub: React.FC = () => {
             <button
               type="button"
               onClick={() => handleSwapBranches(session.id, session.baseBranch, session.compareBranch)}
-              title="Swap Compare and Base branches"
-              className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 border border-transparent hover:border-surface0 transition-colors cursor-pointer"
+              disabled={isBranchLocked}
+              title={isBranchLocked ? branchLockedReason : "Swap Compare and Base branches"}
+              className={`p-1 border border-transparent transition-colors ${
+                isBranchLocked
+                  ? 'text-subtext0/30 cursor-not-allowed'
+                  : 'text-subtext0 hover:text-brand hover:bg-surface0 hover:border-surface0 cursor-pointer'
+              }`}
             >
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
             <TabBranchSelector
               roleType="target"
+              disabled={isBranchLocked}
+              title={isBranchLocked ? branchLockedReason : undefined}
               value={session.baseBranch}
               branches={branches}
               onChange={(branch) => handleBranchChange(session.id, branch, session.compareBranch)}
@@ -598,9 +637,6 @@ export const VirtualMrHub: React.FC = () => {
 
             {/* Add general comment */}
             <div className="space-y-1.5 pt-1">
-              <span className="text-[11px] font-semibold text-subtext0 block">
-                MR Discussion
-              </span>
               <MarkdownEditor
                 value={newGeneralComment}
                 mentionOptions={getDiscussionMentionOptions(session)}

@@ -1,10 +1,10 @@
 {
   "name": "Stage0",
   "author": "Anh Quoc Tran",
-  "packageVersion": "0.1.9",
-  "gitCommit": "7089eed",
+  "packageVersion": "0.1.10",
+  "gitCommit": "24b547d",
   "arch": "amd64",
-  "version": "0.1.9+7089eed.windows.amd64",
+  "version": "0.1.10+24b547d.windows.amd64",
   "releaseDate": "2026-10-21",
   "currentYear": "2026",
   "copyright": "Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",
