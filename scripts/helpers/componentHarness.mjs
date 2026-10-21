@@ -137,5 +137,12 @@ export function componentHarness() {
 
 export function componentNodes(node) {
   if (!node || typeof node !== 'object') return [];
-  return [node, ...[node.props?.children].flat(Infinity).flatMap(componentNodes)];
+  const children = [node.props?.children].flat(Infinity).flatMap(componentNodes);
+  if (typeof node.type === 'function') {
+    try {
+      const rendered = node.type(node.props ?? {});
+      if (rendered) return [node, ...componentNodes(rendered), ...children];
+    } catch {}
+  }
+  return [node, ...children];
 }
