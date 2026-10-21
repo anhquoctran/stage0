@@ -15,28 +15,10 @@ import { DiscussionReferenceDialog } from './DiscussionReferenceDialog';
 import { getDiscussionMentionOptions } from '../utils/discussionMentions';
 import { parseMentionReference } from '../../../common/utils/mentions';
 import * as codeContextModule from './DiscussionCodeContext';
+import { GitLabAvatar } from './GitLabAvatar';
 
 const DiscussionCodeContext = codeContextModule?.DiscussionCodeContext || (() => null);
 
-// GitLab authentic identicon color pairs (foreground & dark background)
-const GITLAB_IDENTICON_PALETTES = [
-  { fg: '#e24329', bg: '#3a1b24' }, // Red / Pink
-  { fg: '#a27be8', bg: '#28193f' }, // Purple
-  { fg: '#3f98e6', bg: '#102742' }, // Blue
-  { fg: '#2da160', bg: '#0f2f1e' }, // Green
-  { fg: '#df8e1d', bg: '#34230d' }, // Amber / Orange
-  { fg: '#1ea9b0', bg: '#0b2b2f' }, // Teal / Cyan
-  { fg: '#d0537d', bg: '#391a2b' }, // Magenta
-  { fg: '#6b4fbb', bg: '#22153b' }, // Violet
-];
-
-function stringHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash);
-}
 
 /**
  * Derives a GitLab style handle (@handle) from full name or authorId.
@@ -132,82 +114,6 @@ function formatGitLabTime(dateInput: string): string {
   return years === 1 ? '1 year ago' : `${years} years ago`;
 }
 
-/**
- * GitLab 5x5 Symmetric Identicon Component (Circular avatar)
- */
-const GitLabIdenticon: React.FC<{
-  name: string;
-  email?: string;
-  avatarUrl?: string;
-  isAiAgent?: boolean;
-  size?: 'sm' | 'md';
-}> = ({ name, email, avatarUrl, isAiAgent = false, size = 'md' }) => {
-  const sizeClass = size === 'sm' ? 'w-6 h-6' : 'w-8 h-8';
-
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className={`${sizeClass} rounded-full object-cover shrink-0 ring-1 ring-surface1`}
-      />
-    );
-  }
-
-  if (isAiAgent) {
-    return (
-      <div
-        className={`${sizeClass} rounded-full bg-purple-500/20 text-purple-300 ring-1 ring-purple-500/40 flex items-center justify-center shrink-0 font-bold text-[10px]`}
-        title={`${name} (AI Reviewer)`}
-      >
-        AI
-      </div>
-    );
-  }
-
-  const seed = email || name || 'user';
-  const hash = stringHash(seed);
-  const palette = GITLAB_IDENTICON_PALETTES[hash % GITLAB_IDENTICON_PALETTES.length];
-
-  const rects: React.ReactNode[] = [];
-  const cellSize = 10;
-
-  for (let y = 0; y < 5; y++) {
-    for (let x = 0; x < 5; x++) {
-      const sourceCol = x > 2 ? 4 - x : x;
-      const bitIndex = y * 3 + sourceCol;
-      const isFilled = ((hash >> bitIndex) & 1) === 1;
-
-      if (isFilled) {
-        rects.push(
-          <rect
-            key={`${x}-${y}`}
-            x={x * cellSize}
-            y={y * cellSize}
-            width={cellSize}
-            height={cellSize}
-            fill={palette.fg}
-          />
-        );
-      }
-    }
-  }
-
-  return (
-    <div
-      className={`${sizeClass} rounded-full overflow-hidden shrink-0 ring-1 ring-surface1 shadow-xs`}
-      title={name}
-    >
-      <svg
-        viewBox="0 0 50 50"
-        className="w-full h-full"
-        style={{ backgroundColor: palette.bg }}
-      >
-        {rects}
-      </svg>
-    </div>
-  );
-};
 
 export const DiscussionThread: React.FC<{
   session: VirtualMrSession;
@@ -319,7 +225,7 @@ export const DiscussionThread: React.FC<{
       {/* 1. Outer GitLab Thread Summary Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2 min-w-0">
-          <GitLabIdenticon
+          <GitLabAvatar
             name={rootAuthorName}
             email={rootComment?.authorId}
             avatarUrl={rootComment?.authorAvatar}
@@ -378,7 +284,7 @@ export const DiscussionThread: React.FC<{
         {rootComment && (
           <div className="p-3.5 text-xs text-text transition-colors bg-mantle">
             <div className="flex gap-3">
-              <GitLabIdenticon
+              <GitLabAvatar
                 name={rootComment.authorName}
                 email={rootComment.authorId}
                 avatarUrl={rootComment.authorAvatar}
@@ -500,7 +406,7 @@ export const DiscussionThread: React.FC<{
 
                     return (
                       <div key={reply.id} className="group relative flex gap-3 text-xs text-text transition-colors">
-                        <GitLabIdenticon
+                        <GitLabAvatar
                           name={reply.authorName}
                           email={reply.authorId}
                           avatarUrl={reply.authorAvatar}

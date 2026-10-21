@@ -2,13 +2,21 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { invoke } from '@tauri-apps/api/core';
 import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
 import { ChevronRight } from '../../../common/components/icons/ChevronRight';
-import { Copy } from '../../../common/components/icons/Copy';
 import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { RotateCw } from '../../../common/components/icons/RotateCw';
 import { Search } from '../../../common/components/icons/Search';
 import { X } from '../../../common/components/icons/X';
 import { formatDateTime } from '@/common/utils/dateTime';
 import { CommitAuthorAvatar } from './CommitAuthorAvatar';
+import { GitGraphCommitDetails } from './GitGraphCommitDetails';
+import {
+    LANE_STEP,
+    ROW_HEIGHT,
+    LANE_COLORS,
+    laneX,
+    referenceColor,
+    copyTextToClipboard,
+} from '../constants/gitGraphConstants';
 import { useGitStore } from '../store/useGitStore';
 import type { GitGraphModalProps } from '../types/GitGraphModalProps';
 import type { GitGraph } from '../types/GitGraph';
@@ -16,59 +24,6 @@ import type { CommitMessageSearchResult } from '../types/CommitMessageSearchResu
 import type { CommitContextMenuState } from '../types/CommitContextMenuState';
 import type { GraphRowLayout } from '../types/GraphRowLayout';
 import { CommitHashContextMenu } from './CommitHashContextMenu';
-
-const LANE_STEP = 18;
-
-const NODE_X_OFFSET = 12;
-
-const ROW_HEIGHT = 36;
-
-const LANE_COLORS = [
-    'var(--color-brand)',
-    'var(--color-blue)',
-    'var(--color-teal)',
-    'var(--color-green)',
-    'var(--color-peach)',
-    'var(--color-mauve)',
-    'var(--color-sky)',
-    'var(--color-yellow)',
-];
-
-function laneX(lane: number) {
-    return NODE_X_OFFSET + lane * LANE_STEP;
-}
-
-function referenceColor(reference: string) {
-    const branchName = reference.replace(/^HEAD -> /, '');
-    let hash = 0x811c9dc5;
-    for (const character of branchName) {
-        hash ^= character.codePointAt(0) ?? 0;
-        hash = Math.imul(hash, 0x01000193);
-    }
-    return LANE_COLORS[(hash >>> 0) % LANE_COLORS.length];
-}
-
-async function copyTextToClipboard(value: string) {
-    try {
-        if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(value);
-            return;
-        }
-    } catch {
-        // Some desktop webviews reject Clipboard API access; try the legacy path.
-    }
-
-    const textarea = document.createElement('textarea');
-    textarea.value = value;
-    textarea.setAttribute('readonly', '');
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    const copied = document.execCommand('copy');
-    textarea.remove();
-    if (!copied) throw new Error('Clipboard access was denied');
-}
 
 export const GitGraphModal: React.FC<GitGraphModalProps> = ({
     isOpen,
@@ -887,164 +842,14 @@ export const GitGraphModal: React.FC<GitGraphModalProps> = ({
                         )}
                     </div>
 
-                    <aside className="flex w-[min(36%,440px)] min-w-[300px] shrink-0 flex-col border-l border-surface0 bg-base/40">
-                        {selectedCommit ? (
-                            <>
-                                <div className="shrink-0 border-b border-surface0 px-4 py-3">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <h3 className="text-[11px] font-bold uppercase tracking-wider text-subtext0">
-                                            Commit details
-                                        </h3>
-                                        <span className="shrink-0 font-mono text-[10px] text-subtext0">
-                                            {selectedCommit.short_hash}
-                                        </span>
-                                    </div>
-                                    <p className="mt-2 break-words text-sm font-semibold leading-5 text-text">
-                                        {selectedCommit.subject ||
-                                            '(no commit message)'}
-                                    </p>
-                                    {selectedCommit.refs.length > 0 && (
-                                        <div className="mt-2 flex flex-wrap gap-1">
-                                            {selectedCommit.refs.map(
-                                                (reference) => (
-                                                    <span
-                                                        key={reference}
-                                                        style={{
-                                                            color: referenceColor(
-                                                                reference,
-                                                            ),
-                                                            borderColor:
-                                                                referenceColor(
-                                                                    reference,
-                                                                ),
-                                                            backgroundColor: `color-mix(in srgb, ${referenceColor(reference)} 12%, var(--color-surface0))`,
-                                                        }}
-                                                        className="max-w-full truncate border px-1.5 py-0.5 font-mono text-[10px]"
-                                                    >
-                                                        {reference}
-                                                    </span>
-                                                ),
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="min-h-0 flex-1 overflow-auto px-4 py-3">
-                                    <dl className="space-y-3 text-xs">
-                                        <div>
-                                            <dt className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-                                                Author
-                                            </dt>
-                                            <dd className="mt-2 flex min-w-0 items-center gap-3 text-text">
-                                                <CommitAuthorAvatar
-                                                    name={
-                                                        selectedCommit.author_name ||
-                                                        'Unknown'
-                                                    }
-                                                    email={
-                                                        selectedCommit.author_email
-                                                    }
-                                                />
-                                                <span className="min-w-0 break-words">
-                                                    {selectedCommit.author_name ||
-                                                        'Unknown'}
-                                                    {selectedCommit.author_email && (
-                                                        <span className="block break-all text-subtext0">
-                                                            {
-                                                                selectedCommit.author_email
-                                                            }
-                                                        </span>
-                                                    )}
-                                                </span>
-                                            </dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-                                                Date
-                                            </dt>
-                                            <dd className="mt-0.5 text-text">
-                                                {formatDateTime(
-                                                    selectedCommit.authored_date,
-                                                ) || '—'}
-                                            </dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-                                                Commit
-                                            </dt>
-                                            <dd className="mt-0.5 flex min-w-0 items-start gap-2 font-mono text-[11px] text-text">
-                                                <span className="min-w-0 flex-1 break-all">
-                                                    {selectedCommit.hash}
-                                                </span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        void handleCopyCommitHash(
-                                                            selectedCommit.hash,
-                                                        )
-                                                    }
-                                                    aria-label="Copy commit hash"
-                                                    title="Copy commit hash"
-                                                    className="flex h-6 w-6 shrink-0 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
-                                                >
-                                                    <Copy className="h-3.5 w-3.5" />
-                                                </button>
-                                            </dd>
-                                        </div>
-                                        <div>
-                                            <dt className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-                                                Parents
-                                            </dt>
-                                            <dd className="mt-0.5 space-y-1 font-mono text-[10px] text-text">
-                                                {selectedCommit.parents.length >
-                                                0 ? (
-                                                    selectedCommit.parents.map(
-                                                        (parent) => (
-                                                            <div
-                                                                key={parent}
-                                                                className="break-all"
-                                                            >
-                                                                {parent}
-                                                            </div>
-                                                        ),
-                                                    )
-                                                ) : (
-                                                    <span className="text-subtext0">
-                                                        Root commit
-                                                    </span>
-                                                )}
-                                            </dd>
-                                        </div>
-                                    </dl>
-
-                                    <div className="mt-5 border-t border-surface0 pt-3">
-                                        <h4 className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-                                            Commit message
-                                        </h4>
-                                        <pre className="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] leading-5 text-text select-text">
-                                            {isLoadingCommitMessage
-                                                ? 'Loading commit message…'
-                                                : commitMessageError
-                                                  ? `Could not load commit message: ${commitMessageError}`
-                                                  : selectedCommitMessage ||
-                                                    '(empty message)'}
-                                        </pre>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-                                <GitBranch className="h-5 w-5 text-subtext1" />
-                                <p className="mt-2 text-xs font-semibold text-text">
-                                    Select a commit
-                                </p>
-                                <p className="mt-1 text-[11px] leading-4 text-subtext0">
-                                    Commit message, author, parents, and refs
-                                    will appear here.
-                                </p>
-                            </div>
-                        )}
-                    </aside>
+                    <GitGraphCommitDetails
+                        selectedCommit={selectedCommit}
+                        selectedCommitMessage={selectedCommitMessage}
+                        isLoadingCommitMessage={isLoadingCommitMessage}
+                        commitMessageError={commitMessageError}
+                        handleCopyCommitHash={handleCopyCommitHash}
+                        referenceColor={referenceColor}
+                    />
                 </div>
 
                 <footer className="flex shrink-0 items-center justify-between border-t border-surface0 px-5 py-2.5 text-[10px] text-subtext0">

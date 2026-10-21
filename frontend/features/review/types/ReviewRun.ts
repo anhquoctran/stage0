@@ -1,8 +1,9 @@
 import type { ReviewSnapshot } from './ReviewSnapshot';
 import type { ReviewFinding } from './ReviewFinding';
 import type { ReviewRetryState } from './ReviewRetryState';
+import type { ReviewDecision } from './ReviewDecision';
 
-export type ReviewDecision = 'approve' | 'request_changes' | 'comment';
+export type { ReviewDecision } from './ReviewDecision';
 
 export interface ReviewRun {
   id: string;

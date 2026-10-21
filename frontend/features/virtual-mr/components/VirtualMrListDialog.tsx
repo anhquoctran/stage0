@@ -3,7 +3,6 @@ import { CustomSelect } from '../../../common/components/CustomSelect';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
 import { ChevronRight } from '../../../common/components/icons/ChevronRight';
-import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
 import { Loader2 } from '../../../common/components/icons/Loader2';
 import { MessageSquare } from '../../../common/components/icons/MessageSquare';
@@ -11,8 +10,6 @@ import { Plus } from '../../../common/components/icons/Plus';
 import { Search } from '../../../common/components/icons/Search';
 import { SortAscending } from '../../../common/components/icons/SortAscending';
 import { SortDescending } from '../../../common/components/icons/SortDescending';
-import { Tag } from '../../../common/components/icons/Tag';
-import { User } from '../../../common/components/icons/User';
 import { X } from '../../../common/components/icons/X';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { formatDateTime, formatRecentTime } from '../../../common/utils/dateTime';
@@ -26,10 +23,12 @@ import {
   matchesVirtualMrSearch,
   type VirtualMrSearchSuggestion,
 } from '../utils/virtualMrSearch';
-
-type MrFilter = 'open' | 'resolved' | 'closed' | 'all';
-type MrSort = 'updated' | 'created' | 'title';
-type SortDirection = 'asc' | 'desc';
+import type { MrFilter } from '../types/MrFilter';
+import type { MrSort } from '../types/MrSort';
+import type { SortDirection } from '../types/SortDirection';
+import type { VirtualMrListDialogProps } from '../types/VirtualMrListDialogProps';
+import { SearchSuggestionIcon } from './SearchSuggestionIcon';
+import { GitLabAvatar } from './GitLabAvatar';
 
 const SORT_OPTIONS: CustomSelectOption<MrSort>[] = [
   { value: 'updated', label: 'Recently updated' },
@@ -45,98 +44,6 @@ const PAGE_SIZE_OPTIONS: CustomSelectOption<string>[] = [
 
 const hasStatus = (session: VirtualMrSession, status: Exclude<MrFilter, 'all'>) => session.status === status;
 
-const SearchSuggestionIcon: React.FC<{ field: VirtualMrSearchSuggestion['field'] }> = ({ field }) => {
-  if (field === 'author' || field === 'assignee') return <User className="h-3.5 w-3.5" />;
-  if (field === 'reviewer' || field === 'approved-by') return <GitPullRequest className="h-3.5 w-3.5" />;
-  if (field === 'label') return <Tag className="h-3.5 w-3.5" />;
-  if (field === 'base' || field === 'head') return <GitBranch className="h-3.5 w-3.5" />;
-  if (field === 'is') return <CheckCircle2 className="h-3.5 w-3.5" />;
-  if (field === 'has' || field === 'no') return <MessageSquare className="h-3.5 w-3.5" />;
-  return <Search className="h-3.5 w-3.5" />;
-};
-
-// GitLab authentic identicon color pairs (foreground & dark background)
-const GITLAB_IDENTICON_PALETTES = [
-  { fg: '#e24329', bg: '#3a1b24' },
-  { fg: '#a27be8', bg: '#28193f' },
-  { fg: '#3f98e6', bg: '#102742' },
-  { fg: '#2da160', bg: '#0f2f1e' },
-  { fg: '#df8e1d', bg: '#34230d' },
-  { fg: '#1ea9b0', bg: '#0b2b2f' },
-  { fg: '#d0537d', bg: '#391a2b' },
-  { fg: '#6b4fbb', bg: '#22153b' },
-];
-
-function stringHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash);
-}
-
-const MrUserAvatar: React.FC<{
-  name: string;
-  email?: string;
-  avatarUrl?: string;
-  size?: 'xs' | 'sm';
-}> = ({ name, email, avatarUrl, size = 'sm' }) => {
-  const sizeClass = size === 'xs' ? 'w-4 h-4 text-[9px]' : 'w-5 h-5 text-[10px]';
-
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className={`${sizeClass} rounded-full object-cover shrink-0 ring-1 ring-surface1`}
-      />
-    );
-  }
-
-  const seed = email || name || 'user';
-  const hash = stringHash(seed);
-  const palette = GITLAB_IDENTICON_PALETTES[hash % GITLAB_IDENTICON_PALETTES.length];
-
-  const rects: React.ReactNode[] = [];
-  const cellSize = 10;
-
-  for (let y = 0; y < 5; y++) {
-    for (let x = 0; x < 5; x++) {
-      const sourceCol = x > 2 ? 4 - x : x;
-      const bitIndex = y * 3 + sourceCol;
-      const isFilled = ((hash >> bitIndex) & 1) === 1;
-
-      if (isFilled) {
-        rects.push(
-          <rect
-            key={`${x}-${y}`}
-            x={x * cellSize}
-            y={y * cellSize}
-            width={cellSize}
-            height={cellSize}
-            fill={palette.fg}
-          />
-        );
-      }
-    }
-  }
-
-  return (
-    <div
-      className={`${sizeClass} rounded-full overflow-hidden shrink-0 ring-1 ring-surface1 shadow-xs`}
-      title={name}
-    >
-      <svg
-        viewBox="0 0 50 50"
-        className="w-full h-full"
-        style={{ backgroundColor: palette.bg }}
-      >
-        {rects}
-      </svg>
-    </div>
-  );
-};
-
 const BOT_DEFAULT_EMOJIS: Record<string, string> = {
   security: '🛡️',
   performance: '⚡',
@@ -145,10 +52,6 @@ const BOT_DEFAULT_EMOJIS: Record<string, string> = {
   test: '🧪',
   documentation: '📚',
 };
-
-interface VirtualMrListDialogProps {
-  inline?: boolean;
-}
 
 export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline = false }) => {
   const { currentRepo, showToast, setBranchComparison } = useGitStore();
@@ -596,7 +499,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                         {/* Friendly created timestamp & Creator + avatar */}
                         <div className="flex items-center gap-1.5">
                           <span>created {createdLabel} by</span>
-                          <MrUserAvatar
+                          <GitLabAvatar
                             name={session.assignee.name}
                             email={session.assignee.email}
                             avatarUrl={session.assignee.avatarUrl}
@@ -643,7 +546,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
 
                       {/* Assignee icon */}
                       <div title={`Assignee: ${session.assignee.name}`}>
-                        <MrUserAvatar
+                        <GitLabAvatar
                           name={session.assignee.name}
                           email={session.assignee.email}
                           avatarUrl={session.assignee.avatarUrl}

@@ -1,3 +1,9 @@
+import type { AuthMethod } from '../types/AuthMethod';
+import type { ExternalAgentsFilter as Filter } from '../types/ExternalAgentsFilter';
+import type { AcpRegistryResponse } from '../types/AcpRegistryResponse';
+import type { ExternalAgentsTabProps } from '../types/ExternalAgentsTabProps';
+import { AgentIcon } from './AgentIcon';
+import { ExternalAgentsModal as Modal } from './ExternalAgentsModal';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { Search } from '../../../common/components/icons/Search';
@@ -5,36 +11,17 @@ import { Plus } from '../../../common/components/icons/Plus';
 import { Trash2 } from '../../../common/components/icons/Trash2';
 import { ExternalLink } from '../../../common/components/icons/ExternalLink';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
-import { X } from '../../../common/components/icons/X';
-import { Bot } from '../../../common/components/icons/Bot';
 import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { AcpRegistryAbout } from './AcpRegistryAbout';
 import { AcpRegistryProjectInfo } from './AcpRegistryProjectInfo';
-import type { AiSettingsTabProps } from '../types/AiSettingsTabProps';
 import type { AcpAgentConfig, AcpRegistryAgent } from '../types/AcpAgentConfig';
 import type { AcpAgentConnectionInfo } from '../types/AcpAgentConnectionInfo';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { registryUnavailableReason } from '../utils/acpRegistryAvailability';
 
-type AuthMethod = { id: string; name?: string; description?: string; type?: string };
-type Filter = 'all' | 'installed' | 'not-installed';
-type AcpRegistryResponse = { agents: AcpRegistryAgent[]; supportedBinaryTarget?: string | null };
 
-function isRegistryIconUrl(icon?: string): icon is string {
-  if (!icon) return false;
-  try {
-    const url = new URL(icon);
-    return url.protocol === 'https:'
-      && url.hostname === 'cdn.agentclientprotocol.com'
-      && /^\/registry\/v1\/[a-zA-Z0-9._-]+\/[a-z0-9-]+\.svg$/.test(url.pathname)
-      && !url.search
-      && !url.hash;
-  } catch {
-    return false;
-  }
-}
 
 function safeProjectUrl(value?: string): string | undefined {
   if (!value) return undefined;
@@ -77,69 +64,6 @@ function isProtocolAuthMethod(method?: AuthMethod): boolean {
   return !method?.type || method.type === 'agent';
 }
 
-const registryIconCache = new Map<string, Promise<string>>();
-
-function fetchRegistryIcon(iconUrl: string): Promise<string> {
-  let cached = registryIconCache.get(iconUrl);
-  if (!cached) {
-    cached = invoke<string>('acp_fetch_registry_icon', { iconUrl }).catch((error: unknown) => {
-      registryIconCache.delete(iconUrl);
-      throw error;
-    });
-    registryIconCache.set(iconUrl, cached);
-  }
-  return cached;
-}
-
-function AgentIcon({ icon }: { icon?: string }) {
-  const iconUrl = isRegistryIconUrl(icon) ? icon : undefined;
-  const [iconData, setIconData] = useState<{ sourceUrl: string; dataUrl: string }>();
-  const [loadedDataUrl, setLoadedDataUrl] = useState<string>();
-  const [failedSourceUrl, setFailedSourceUrl] = useState<string>();
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!iconUrl) return () => { cancelled = true; };
-    void fetchRegistryIcon(iconUrl)
-      .then((dataUrl) => { if (!cancelled) setIconData({ sourceUrl: iconUrl, dataUrl }); })
-      .catch(() => { if (!cancelled) setFailedSourceUrl(iconUrl); });
-    return () => { cancelled = true; };
-  }, [iconUrl]);
-
-  const dataUrl = iconData && iconData.sourceUrl === iconUrl ? iconData.dataUrl : undefined;
-  if (!iconUrl || failedSourceUrl === iconUrl || !dataUrl) return <Bot aria-hidden="true" className="h-4 w-4 shrink-0 text-subtext0" />;
-
-  const iconMask = `url("${dataUrl}")`;
-  return <>
-    <img src={dataUrl} alt="" aria-hidden="true" onLoad={() => setLoadedDataUrl(dataUrl)} onError={() => setFailedSourceUrl(iconUrl)} className="hidden" />
-    {loadedDataUrl === dataUrl ? <span aria-hidden="true" className="h-4 w-4 shrink-0 bg-subtext0" style={{
-      maskImage: iconMask,
-      WebkitMaskImage: iconMask,
-      maskRepeat: 'no-repeat',
-      WebkitMaskRepeat: 'no-repeat',
-      maskPosition: 'center',
-      WebkitMaskPosition: 'center',
-      maskSize: 'contain',
-      WebkitMaskSize: 'contain',
-    }} /> : <Bot aria-hidden="true" className="h-4 w-4 shrink-0 text-subtext0" />}
-  </>;
-}
-
-function Modal({ children, onClose, title }: { children: React.ReactNode; onClose: () => void; title: string }) {
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section role="dialog" aria-modal="true" aria-label={title} className="w-full max-w-2xl border border-surface2 bg-mantle text-text shadow-2xl">
-        <header className="flex items-center justify-between border-b border-surface1 px-4 py-3">
-          <h2 className="text-sm font-semibold">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="border border-transparent p-1 text-subtext0 hover:border-surface2 hover:text-text"><X className="h-4 w-4" /></button>
-        </header>
-        <div className="max-h-[75vh] overflow-y-auto p-4">{children}</div>
-      </section>
-    </div>
-  );
-}
-
-type ExternalAgentsTabProps = AiSettingsTabProps & { onBackToOverview?: () => void };
 
 export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({ draftSettings, onBackToOverview } = {}) => {
   const store = useAiMcpStore();
