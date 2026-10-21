@@ -236,34 +236,7 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
 
               let discussions: VirtualMrDiscussion[] = [];
               if (discRes.status === 'fulfilled' && discRes.value) {
-                discussions = discRes.value.map((d: any) => ({
-                  id: d.id,
-                  sessionId: d.session_id,
-                  filePath: d.file_path,
-                  diffSide: d.diff_side,
-                  lineNumber: d.line_number,
-                  commitId: d.commit_id,
-                  isResolved: Boolean(d.is_resolved),
-                  resolveType: d.resolve_type || 'manual',
-                  resolvedBy: d.resolved_by,
-                  resolvedAt: d.resolved_at,
-                  verificationStatus: d.verification_status || 'none',
-                  verifiedByBot: d.verified_by_bot,
-                  verifiedAt: d.verified_at,
-                  createdAt: d.created_at,
-                  comments: (d.comments || []).map((c: any) => ({
-                    id: c.id,
-                    discussionId: c.discussion_id,
-                    authorType: c.author_type,
-                    authorId: c.author_id,
-                    authorName: c.author_name,
-                    authorAvatar: c.author_avatar,
-                    body: c.body,
-                    reviewAction: c.review_action,
-                    createdAt: c.created_at,
-                    updatedAt: c.updated_at,
-                  })),
-                }));
+                discussions = discRes.value.map(fromDbDiscussion);
               }
 
               let commits: VirtualMrCommit[] = [];
@@ -1195,10 +1168,11 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
   createDiscussion: async (sessionId, payload) => {
     const { sessions } = get();
     const targetSession = sessions.find((s) => s.id === sessionId);
-    if (!targetSession) return;
+    if (!targetSession) throw new Error('The target MR is no longer available.');
+    if (!payload.initialComment.trim()) throw new Error('A discussion cannot be empty.');
 
-    const discId = `disc-${Date.now()}`;
-    const commentId = `comm-${Date.now()}`;
+    const discId = `disc-${crypto.randomUUID()}`;
+    const commentId = `comm-${crypto.randomUUID()}`;
     const now = new Date().toISOString();
 
     const newComment: VirtualMrComment = {
@@ -1219,17 +1193,15 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
       filePath: payload.filePath || null,
       diffSide: payload.diffSide || null,
       lineNumber: payload.lineNumber || null,
+      commitId: payload.commitId || null,
+      codeSnippet: payload.codeSnippet || null,
       isResolved: false,
       resolveType: 'manual',
-      comments: [newComment],
+      rootComment: newComment,
+      children: [],
       createdAt: now,
     };
 
-    set({
-      sessions: sessions.map((s) => (s.id === sessionId ? { ...s, discussions: [...s.discussions, newDisc] } : s)),
-    });
-
-    let saved = false;
     try {
       await invoke('create_mr_discussion', {
         discussion: {
@@ -1238,7 +1210,8 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
           file_path: newDisc.filePath,
           diff_side: newDisc.diffSide,
           line_number: newDisc.lineNumber,
-          commit_id: null,
+          commit_id: newDisc.commitId,
+          code_snippet: newDisc.codeSnippet,
           is_resolved: false,
           resolve_type: 'manual',
           resolved_by: null,
@@ -1262,53 +1235,41 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
           updated_at: now,
         },
       });
-      saved = true;
     } catch (e) {
       console.error('Failed to create discussion in db:', e);
+      throw e;
     }
-    if (saved) {
-      await get().invalidateReviewerApprovals(sessionId);
-      void import('../../review/services/assignedReviewService')
-        .then(({ reReviewAssignedSession }) => reReviewAssignedSession(sessionId));
-    }
+    set((state) => ({
+      sessions: state.sessions.map((s) => s.id === sessionId
+        ? { ...s, discussions: s.discussions.some((d) => d.id === discId) ? s.discussions : [...s.discussions, newDisc] } : s),
+    }));
+    await get().invalidateReviewerApprovals(sessionId);
+    void import('../../review/services/assignedReviewService')
+      .then(({ reReviewAssignedSession }) => reReviewAssignedSession(sessionId))
+      .catch((error) => console.warn('Could not re-review the new discussion:', error));
   },
 
   replyToDiscussion: async (discussionId, body, reviewAction, authorType = 'user', authorName) => {
     const { sessions } = get();
-    const commentId = `comm-${Date.now()}`;
+    const targetSession = sessions.find((s) => s.discussions.some((d) => d.id === discussionId));
+    if (!targetSession) throw new Error('The target discussion is no longer available.');
+    if (!body.trim()) throw new Error('A reply cannot be empty.');
+    const commentId = `comm-${crypto.randomUUID()}`;
     const now = new Date().toISOString();
-
-    const updated = sessions.map((s) => ({
-      ...s,
-      discussions: s.discussions.map((d) => {
-        if (d.id !== discussionId) return d;
-        const newComm: VirtualMrComment = {
-          id: commentId,
-          discussionId,
-          authorType,
-          authorId: authorType === 'ai_agent' ? 'ai-bot' : s.assignee.email,
-          authorName: authorName || (authorType === 'ai_agent' ? 'Security Bot' : s.assignee.name),
-          body,
-          reviewAction,
-          createdAt: now,
-          updatedAt: now,
-        };
-        return { ...d, comments: [...d.comments, newComm] };
-      }),
-    }));
-
-    set({ sessions: updated });
-
-    const targetSessionId = sessions.find((session) => session.discussions.some((discussion) => discussion.id === discussionId))?.id;
-    let saved = false;
+    const newComm: VirtualMrComment = {
+      id: commentId, discussionId, authorType,
+      authorId: authorType === 'ai_agent' ? 'ai-bot' : targetSession.assignee.email,
+      authorName: authorName || (authorType === 'ai_agent' ? 'Security Bot' : targetSession.assignee.name),
+      body, reviewAction, createdAt: now, updatedAt: now,
+    };
     try {
       await invoke('add_mr_comment', {
         comment: {
           id: commentId,
           discussion_id: discussionId,
           author_type: authorType,
-          author_id: authorType === 'ai_agent' ? 'ai-bot' : 'local-user',
-          author_name: authorName || (authorType === 'ai_agent' ? 'Security Bot' : 'Local User'),
+          author_id: newComm.authorId,
+          author_name: newComm.authorName,
           author_avatar: null,
           body,
           review_action: reviewAction || null,
@@ -1316,14 +1277,20 @@ export const useVirtualMrStore = create<VirtualMrState>((set, get) => ({
           updated_at: now,
         },
       });
-      saved = true;
     } catch (e) {
       console.error('Failed to add comment in db:', e);
+      throw e;
     }
-    if (saved && authorType === 'user' && targetSessionId) {
-      await get().invalidateReviewerApprovals(targetSessionId);
+    set((state) => ({ sessions: state.sessions.map((s) => ({
+      ...s,
+      discussions: s.discussions.map((d) => d.id === discussionId
+        ? { ...d, children: d.children.some((c) => c.id === commentId) ? d.children : [...d.children, newComm] } : d),
+    })) }));
+    if (authorType === 'user') {
+      await get().invalidateReviewerApprovals(targetSession.id);
       void import('../../review/services/assignedReviewService')
-        .then(({ reReviewAssignedSession }) => reReviewAssignedSession(targetSessionId));
+        .then(({ reReviewAssignedSession }) => reReviewAssignedSession(targetSession.id))
+        .catch((error) => console.warn('Could not re-review the reply:', error));
     }
   },
 

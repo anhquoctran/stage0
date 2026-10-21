@@ -20,6 +20,7 @@ pub mod runtime;
 pub mod schemas;
 pub mod security;
 mod tool_registry;
+mod mentions;
 pub use review_finding::ReviewFinding;
 pub use review_request::ReviewRequest;
 pub use review_run::ReviewRun;

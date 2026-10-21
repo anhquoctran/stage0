@@ -1,4 +1,5 @@
 import React from 'react';
+import type { MentionOption } from './MentionOption';
 
 export interface MarkdownEditorProps {
   value: string;
@@ -18,4 +19,5 @@ export interface MarkdownEditorProps {
   isSubmitting?: boolean;
   onGenerateDraft?: () => void;
   extraActions?: React.ReactNode;
+  mentionOptions?: MentionOption[];
 }

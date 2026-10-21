@@ -272,6 +272,9 @@ impl Database {
                 [],
             )?;
         }
+        if !columns.iter().any(|c| c == "code_snippet") {
+            conn.execute("ALTER TABLE virtual_mr_discussions ADD COLUMN code_snippet TEXT;", [])?;
+        }
         Ok(())
     }
 
@@ -467,6 +470,7 @@ mod tests {
         assert!(columns.iter().any(|column| column == "content_hash"));
         assert!(columns.iter().any(|column| column == "context_before"));
         assert!(columns.iter().any(|column| column == "context_after"));
+        assert!(columns.iter().any(|column| column == "code_snippet"));
     }
 
     #[test]

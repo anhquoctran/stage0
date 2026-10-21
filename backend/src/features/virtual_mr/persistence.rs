@@ -4,6 +4,8 @@ mod virtual_mr_session_save_outcome;
 pub use virtual_mr_session_save_outcome::VirtualMrSessionSaveOutcome;
 mod virtual_mr_reviewer_db;
 pub use virtual_mr_reviewer_db::VirtualMrReviewerDb;
+mod discussion_code_snippet;
+pub use discussion_code_snippet::DiscussionCodeSnippet;
 mod virtual_mr_comment_db;
 pub use virtual_mr_comment_db::VirtualMrCommentDb;
 mod virtual_mr_discussion_db;
@@ -256,7 +258,7 @@ impl Database {
                  FROM virtual_mr_comments c
                  JOIN virtual_mr_discussions d ON c.discussion_id = d.id
                  WHERE d.session_id = ?1
-                 ORDER BY c.created_at ASC;",
+                 ORDER BY c.rowid ASC;",
             )?;
             let c_rows = c_stmt.query_map(params![session_id], |crow| {
                 Ok(VirtualMrCommentDb {
@@ -287,7 +289,7 @@ impl Database {
             "SELECT id, session_id, file_path, diff_side, line_number, commit_id,
                     content_hash, context_before, context_after,
                     is_resolved, resolve_type, resolved_by, resolved_at,
-                    verification_status, verified_by_bot, verified_at, created_at
+                    verification_status, verified_by_bot, verified_at, created_at, code_snippet
              FROM virtual_mr_discussions WHERE session_id = ?1 ORDER BY created_at ASC;",
         )?;
 
@@ -310,6 +312,7 @@ impl Database {
                 row.get::<_, Option<String>>(14)?,
                 row.get::<_, Option<String>>(15)?,
                 row.get::<_, String>(16)?,
+                row.get::<_, Option<String>>(17)?,
             ))
         })?;
 
@@ -333,6 +336,7 @@ impl Database {
                 vbot,
                 vat,
                 cat,
+                code_snippet,
             ) = d?;
             let comments = comments_map.remove(&id).unwrap_or_default();
 
@@ -343,6 +347,7 @@ impl Database {
                 diff_side: side,
                 line_number: lnum,
                 commit_id: cid,
+                code_snippet: code_snippet.and_then(|value| serde_json::from_str(&value).ok()),
                 content_hash: chash,
                 context_before: cbefore,
                 context_after: cafter,
@@ -415,18 +420,20 @@ impl Database {
         let mut conn = self.conn();
         let tx = conn.transaction()?;
 
+        let code_snippet = d.code_snippet.as_ref().map(serde_json::to_string).transpose()
+            .map_err(|error| rusqlite::Error::ToSqlConversionFailure(Box::new(error)))?;
         tx.execute(
             "INSERT INTO virtual_mr_discussions (
                 id, session_id, file_path, diff_side, line_number, commit_id,
                 content_hash, context_before, context_after,
                 is_resolved, resolve_type, resolved_by, resolved_at,
-                verification_status, verified_by_bot, verified_at, created_at
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, CURRENT_TIMESTAMP);",
+                verification_status, verified_by_bot, verified_at, created_at, code_snippet
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, CURRENT_TIMESTAMP, ?17);",
             params![
                 d.id, d.session_id, d.file_path, d.diff_side, d.line_number, d.commit_id,
                 d.content_hash, d.context_before, d.context_after,
                 d.is_resolved, d.resolve_type, d.resolved_by, d.resolved_at,
-                d.verification_status, d.verified_by_bot, d.verified_at
+                d.verification_status, d.verified_by_bot, d.verified_at, code_snippet
             ],
         )?;
 

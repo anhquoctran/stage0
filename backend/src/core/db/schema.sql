@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS virtual_mr_discussions (
     content_hash TEXT,
     context_before TEXT,
     context_after TEXT,
+    code_snippet TEXT,
     is_resolved BOOLEAN DEFAULT 0,
     resolve_type TEXT DEFAULT 'manual',
     resolved_by TEXT,

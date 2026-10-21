@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { marked } from 'marked';
 import { sanitizeHtml } from '../utils/sanitizeHtml';
 import type { MarkdownPreviewProps } from '../types/MarkdownPreviewProps';
+import { parseMentionReference } from '../utils/mentions';
 
 export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   content,
@@ -29,6 +30,10 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
   return (
     <div
       className={`markdown-preview text-xs text-text leading-relaxed select-text ${className}`}
+      onClick={(event) => {
+        const link = (event.target as HTMLElement).closest?.('a');
+        if (parseMentionReference(link?.getAttribute('href') ?? '')) event.preventDefault();
+      }}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

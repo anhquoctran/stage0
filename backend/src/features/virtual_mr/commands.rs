@@ -115,6 +115,26 @@ pub async fn create_mr_discussion(
     tauri::async_runtime::spawn_blocking(move || {
         let db = app.state::<Database>();
 
+        if let Some(snippet) = &mut discussion.code_snippet {
+            let line = discussion.line_number.ok_or("A code snippet requires a selected line")?;
+            if snippet.start_line < 1 || snippet.lines.is_empty() || snippet.lines.len() > 15
+                || snippet.lines.iter().any(|line| line.len() > 8192)
+                || snippet.lines.iter().map(String::len).sum::<usize>() > 32768
+                || line < snippet.start_line || line >= snippet.start_line + snippet.lines.len() as i64
+                || discussion.file_path.is_none() || !matches!(discussion.diff_side.as_deref(), Some("left" | "right"))
+            {
+                return Err("Invalid discussion code snippet".into());
+            }
+            snippet.selected_line = Some(line);
+            // Anchor to the selected diff snapshot, including old-side deleted lines.
+            let content = snippet.lines.join("\n");
+            let (hash, before, after) = crate::features::git::anchor::extract_line_fingerprint(
+                &content, (line - snippet.start_line + 1) as usize,
+            );
+            discussion.content_hash = Some(hash);
+            discussion.context_before = before;
+            discussion.context_after = after;
+        }
         // Automatically extract line fingerprint from source file if not provided.
         if discussion.content_hash.is_none() {
             if let (Some(ref file_path), Some(line_num)) =

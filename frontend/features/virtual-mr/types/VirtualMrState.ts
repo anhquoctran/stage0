@@ -8,6 +8,7 @@ import { type ReviewActionType } from './ReviewActionType';
 import { type ResolveType } from './ResolveType';
 import { type NewMrDraft } from './NewMrDraft';
 import { type ReviewerState } from './ReviewerState';
+import type { DiscussionCodeSnippet } from './DiscussionCodeSnippet';
 
 export interface VirtualMrState {
   // Repository-scoped State
@@ -100,6 +101,8 @@ export interface VirtualMrState {
       filePath?: string;
       lineNumber?: number;
       diffSide?: 'left' | 'right';
+      commitId?: string;
+      codeSnippet?: DiscussionCodeSnippet;
       initialComment: string;
       reviewAction?: ReviewActionType;
     }

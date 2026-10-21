@@ -104,6 +104,7 @@ impl Database {
         let mut conn = self.conn();
         let tx = conn.transaction().map_err(|e| e.to_string())?;
         let reviewer = run.reviewer_name.as_deref().unwrap_or(&run.model);
+        let author_id = run.reviewer_id.as_deref().unwrap_or(&run.id);
         let author_name = format!("Stage0 AI ({reviewer})");
         for (index, finding) in run.findings.iter().enumerate() {
             let id = format!("review-{}-{index}", run.id);
@@ -119,23 +120,30 @@ impl Database {
             };
             let body=format!("**[{}] {}**\n\n{}\n\nEvidence from `{}` lines {}–{}:\n\n```\n{}\n```\n\nReview run `{}` · {} · {}. This is a model finding, not an approval.",finding.severity,finding.title,super::security::redact(&finding.body),sha,finding.start_line,finding.end_line,finding.evidence,run.id,run.provider,run.model);
             tx.execute("INSERT OR IGNORE INTO virtual_mr_discussions(id,session_id,file_path,diff_side,line_number,commit_id,is_resolved,resolve_type,verification_status,created_at) VALUES(?1,?2,?3,?4,?5,?6,0,'manual','none',?7)",params![id,run.session_id,finding.file_path,side,finding.start_line as i64,sha,run.started_at]).map_err(|e|e.to_string())?;
-            tx.execute("INSERT OR IGNORE INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,review_action,created_at,updated_at) VALUES(?1,?2,'ai_agent',?3,?4,?5,'comment',?6,?6)",params![format!("{id}-comment"),id,run.id,author_name,body,run.started_at]).map_err(|e|e.to_string())?;
+            tx.execute("INSERT OR IGNORE INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,review_action,created_at,updated_at) VALUES(?1,?2,'ai_agent',?3,?4,?5,'comment',?6,?6)",params![format!("{id}-comment"),id,author_id,author_name,body,run.started_at]).map_err(|e|e.to_string())?;
         }
         for (index, action) in actions.iter().enumerate() {
             match action {
                 ReviewDiscussionAction::Reply { discussion_id, target_comment_id, body } => {
-                    let (session_id, is_resolved, latest_id, latest_author): (String, bool, Option<String>, Option<String>) = tx.query_row(
-                        "SELECT d.session_id, d.is_resolved, (SELECT c.id FROM virtual_mr_comments c WHERE c.discussion_id=d.id ORDER BY c.rowid DESC LIMIT 1), (SELECT c.author_type FROM virtual_mr_comments c WHERE c.discussion_id=d.id ORDER BY c.rowid DESC LIMIT 1) FROM virtual_mr_discussions d WHERE d.id=?1",
+                    let (session_id, is_resolved, latest_id): (String, bool, Option<String>) = tx.query_row(
+                        "SELECT d.session_id, d.is_resolved, (SELECT c.id FROM virtual_mr_comments c WHERE c.discussion_id=d.id ORDER BY c.rowid DESC LIMIT 1) FROM virtual_mr_discussions d WHERE d.id=?1",
                         [discussion_id],
-                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
                     ).map_err(|_| "Discussion was removed before the AI reply could be posted")?;
-                    if session_id != run.session_id || is_resolved || latest_author.as_deref() != Some("user") || latest_id.as_deref() != Some(target_comment_id.as_str()) {
-                        return Err("AI can reply only to the latest unanswered user comment in an open discussion".into());
+                    if session_id != run.session_id || is_resolved || latest_id.as_deref() != Some(target_comment_id.as_str()) {
+                        return Err("The discussion changed before the AI reply could be posted".into());
+                    }
+                    let (kind, id, previous_body): (String, String, String) = tx.query_row(
+                        "SELECT author_type,author_id,body FROM virtual_mr_comments WHERE id=?1", [target_comment_id],
+                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                    ).map_err(|error| error.to_string())?;
+                    if !super::mentions::can_reply_to_comment(&tx, &run.session_id, run.reviewer_id.as_deref(), &kind, &id, &previous_body) {
+                        return Err("AI reply requires an unanswered user comment or a direct mention from another reviewer".into());
                     }
                     let now = chrono::Utc::now().to_rfc3339();
                     tx.execute(
                         "INSERT OR IGNORE INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,review_action,created_at,updated_at) VALUES(?1,?2,'ai_agent',?3,?4,?5,'comment',?6,?6)",
-                        params![format!("review-{}-reply-{index}", run.id), discussion_id, run.id, author_name, super::security::redact(body), now],
+                        params![format!("review-{}-reply-{index}", run.id), discussion_id, author_id, author_name, super::security::redact(body), now],
                     ).map_err(|e| e.to_string())?;
                 }
                 ReviewDiscussionAction::Resolve { discussion_id, target_comment_id, file_path, side, start_line, end_line, evidence, body, reverted_commit_id } => {
@@ -164,7 +172,7 @@ impl Database {
                     );
                     tx.execute(
                         "INSERT OR IGNORE INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,review_action,created_at,updated_at) VALUES(?1,?2,'ai_agent',?3,?4,?5,'comment',?6,?6)",
-                        params![format!("review-{}-resolve-{index}", run.id), discussion_id, run.id, author_name, resolution, now],
+                        params![format!("review-{}-resolve-{index}", run.id), discussion_id, author_id, author_name, resolution, now],
                     ).map_err(|e| e.to_string())?;
                     let changed = tx.execute(
                         "UPDATE virtual_mr_discussions SET is_resolved=1, resolve_type='ai_verified', resolved_by=?1, resolved_at=CURRENT_TIMESTAMP, verification_status='pass', verified_by_bot=?1, verified_at=CURRENT_TIMESTAMP WHERE id=?2 AND session_id=?3 AND is_resolved=0",
@@ -257,6 +265,35 @@ pub(crate) fn test_database(run: &ReviewRun) -> Database {
 mod tests {
     use super::*;
     use crate::features::review::{test_repo::TestRepo, ReviewFinding};
+    #[test]
+    fn mentions_allow_peer_replies_with_stable_author_identity_and_reject_stale_targets() {
+        let repo = TestRepo::new();
+        let (mut run, _) = repo.review();
+        run.reviewer_id = Some("b".into());
+        run.reviewer_name = Some("Bot B".into());
+        run.status = "completed".into();
+        run.decision = Some("comment".into());
+        let db = test_database(&run);
+        db.save_review_run(&run).unwrap();
+        db.conn().execute_batch("INSERT INTO virtual_mr_session_reviewers(session_id,agent_id,agent_name) VALUES('session','a','Bot A'),('session','b','Bot B'); INSERT INTO virtual_mr_discussions(id,session_id) VALUES('thread','session'); INSERT INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,created_at,updated_at) VALUES('root','thread','ai_agent','a','Bot A','[@Bot B](#mr-mention/reviewer/b) please check this','2099-01-01','2099-01-01');").unwrap();
+        let reply = |target: &str| ReviewDiscussionAction::Reply {
+            discussion_id: "thread".into(), target_comment_id: target.into(),
+            body: "[@Alice](#mr-mention/assignee/alice%40test) verified the concern.".into(),
+        };
+        assert!(db.publish_review_actions(&run, &[reply("missing")]).is_err());
+        db.publish_review_actions(&run, &[reply("root")]).unwrap();
+        let discussions = db.list_discussions("session").unwrap();
+        assert_eq!(discussions[0].comments.len(), 2);
+        assert_eq!(discussions[0].comments[0].id, "root");
+        assert_eq!(discussions[0].comments[1].author_id, "b");
+        assert!(discussions[0].comments[1].body.contains("#mr-mention/assignee/alice%40test"));
+        assert!(db.publish_review_actions(&run, &[reply("root")]).is_err());
+        // A different timestamp representation must not reorder the actual conversation.
+        db.conn().execute("INSERT INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,created_at,updated_at) VALUES('new-user','thread','user','alice@test','Alice','New question','2000-01-01','2000-01-01')", []).unwrap();
+        assert_eq!(db.list_discussions("session").unwrap()[0].comments.last().unwrap().id, "new-user");
+        assert!(db.publish_review_actions(&run, &[reply("root")]).is_err());
+    }
+
     #[test]
     fn durable_state_and_idempotent_publishing_never_approve_or_resolve() {
         let repo = TestRepo::new();
