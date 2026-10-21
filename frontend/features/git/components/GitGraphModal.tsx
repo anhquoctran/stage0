@@ -1,19 +1,13 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
-import { ChevronRight } from '../../../common/components/icons/ChevronRight';
-import { GitBranch } from '../../../common/components/icons/GitBranch';
-import { RotateCw } from '../../../common/components/icons/RotateCw';
-import { Search } from '../../../common/components/icons/Search';
-import { X } from '../../../common/components/icons/X';
-import { formatDateTime } from '@/common/utils/dateTime';
-import { CommitAuthorAvatar } from './CommitAuthorAvatar';
 import { GitGraphCommitDetails } from './GitGraphCommitDetails';
+import { CommitHashContextMenu } from './CommitHashContextMenu';
+import { GitGraphHeader } from './git-graph/GitGraphHeader';
+import { GitGraphSearchToolbar } from './git-graph/GitGraphSearchToolbar';
+import { GitGraphTable } from './git-graph/GitGraphTable';
+import { GitGraphFooter } from './git-graph/GitGraphFooter';
 import {
     LANE_STEP,
-    ROW_HEIGHT,
-    LANE_COLORS,
-    laneX,
     referenceColor,
     copyTextToClipboard,
 } from '../constants/gitGraphConstants';
@@ -23,7 +17,6 @@ import type { GitGraph } from '../types/GitGraph';
 import type { CommitMessageSearchResult } from '../types/CommitMessageSearchResult';
 import type { CommitContextMenuState } from '../types/CommitContextMenuState';
 import type { GraphRowLayout } from '../types/GraphRowLayout';
-import { CommitHashContextMenu } from './CommitHashContextMenu';
 
 export const GitGraphModal: React.FC<GitGraphModalProps> = ({
     isOpen,
@@ -393,6 +386,16 @@ export const GitGraphModal: React.FC<GitGraphModalProps> = ({
         displayedCommitIndexes.length === 0 &&
         isSearchingCommitMessages;
 
+    const counterText = searchText && !isSearchEligible
+        ? '3+'
+        : isSearchDebouncing
+          ? '…/…'
+          : hasSearchFilter
+            ? isSearchingCommitMessages && matchingCommitIndexes.length === 0
+                ? '…/…'
+                : `${currentMatchIndex >= 0 ? currentMatchIndex + 1 : 0}/${matchingCommitIndexes.length}`
+            : null;
+
     return (
         <div
             className="fixed inset-x-0 bottom-0 top-8.5 z-50 flex items-center justify-center bg-crust/75 p-4 backdrop-blur-xs animate-in fade-in duration-150"
@@ -406,441 +409,56 @@ export const GitGraphModal: React.FC<GitGraphModalProps> = ({
                 aria-labelledby="git-graph-title"
                 className="flex h-[82vh] max-h-[calc(100vh-5rem)] w-[96vw] max-w-[1600px] flex-col overflow-hidden border border-surface0 bg-mantle shadow-2xl animate-in zoom-in-95 duration-150"
             >
-                <header className="flex shrink-0 items-center justify-between border-b border-surface0 bg-base/60 px-5 py-3.5">
-                    <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-surface1 bg-surface0 text-brand">
-                            <GitBranch className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0">
-                            <h2
-                                id="git-graph-title"
-                                className="text-sm font-bold text-text"
-                            >
-                                Git Graph
-                            </h2>
-                            <p className="truncate text-[11px] text-subtext0">
-                                Current branch:{' '}
-                                <span className="font-mono font-semibold text-text">
-                                    {graph?.branch || 'Loading…'}
-                                </span>
-                                {graph?.is_detached && (
-                                    <span className="ml-1">(detached)</span>
-                                )}
-                            </p>
-                        </div>
-                    </div>
+                <GitGraphHeader
+                    branch={graph?.branch}
+                    isDetached={graph?.is_detached}
+                    isLoading={isLoading}
+                    onRefresh={() => setRefreshToken((token) => token + 1)}
+                    onClose={onClose}
+                />
 
-                    <div className="flex shrink-0 items-center gap-1">
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setRefreshToken((token) => token + 1)
-                            }
-                            disabled={isLoading}
-                            aria-label="Refresh Git Graph"
-                            title="Refresh Git Graph"
-                            className="flex h-8 w-8 items-center justify-center text-subtext0 transition-colors hover:bg-surface0 hover:text-text disabled:opacity-40"
-                        >
-                            <RotateCw
-                                className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
-                            />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            aria-label="Close Git Graph"
-                            title="Close (Esc)"
-                            className="flex h-8 w-8 items-center justify-center text-subtext0 transition-colors hover:bg-surface0 hover:text-text"
-                        >
-                            <X className="h-4 w-4" />
-                        </button>
-                    </div>
-                </header>
-
-                <div className="flex shrink-0 items-center gap-1.5 border-b border-surface0 px-3 py-2">
-                    <label className="flex min-w-0 flex-1 items-center gap-2 border border-surface1 bg-crust px-2.5 py-1.5 text-subtext0 focus-within:border-brand">
-                        <Search className="h-3.5 w-3.5 shrink-0" />
-                        <input
-                            type="search"
-                            value={query}
-                            onChange={(event) => {
-                                setQuery(event.target.value);
-                                setActiveMatchIndex(0);
-                            }}
-                            onKeyDown={handleSearchKeyDown}
-                            placeholder="Search commits by message, subject, author name or email, branch name, tag refs, hash…"
-                            aria-label="Search commits"
-                            className="git-graph-search-input min-w-0 flex-1 bg-transparent text-xs text-text outline-none placeholder:text-subtext0"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setCaseSensitive((value) => !value);
-                                setActiveMatchIndex(0);
-                            }}
-                            aria-pressed={caseSensitive}
-                            title={
-                                caseSensitive
-                                    ? 'Case-sensitive search on'
-                                    : 'Match case'
-                            }
-                            className={`px-1 text-[10px] font-semibold transition-colors ${caseSensitive ? 'text-brand' : 'text-subtext0 hover:text-text'}`}
-                        >
-                            Aa
-                        </button>
-                    </label>
-                    <button
-                        type="button"
-                        onClick={() => navigateMatches(-1)}
-                        disabled={
-                            isSearchDebouncing || !matchingCommitIndexes.length
-                        }
-                        aria-label="Previous search result"
-                        title="Previous match (Shift+Enter)"
-                        className="flex h-7 w-6 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text disabled:opacity-35"
-                    >
-                        <ChevronLeft className="h-3 w-3" />
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => navigateMatches(1)}
-                        disabled={
-                            isSearchDebouncing || !matchingCommitIndexes.length
-                        }
-                        aria-label="Next search result"
-                        title="Next match (Enter)"
-                        className="flex h-7 w-6 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text disabled:opacity-35"
-                    >
-                        <ChevronRight className="h-3 w-3" />
-                    </button>
-                    <span
-                        className="w-12 text-center text-[10px] tabular-nums text-subtext0"
-                        aria-live="polite"
-                        title={messageSearchError || undefined}
-                    >
-                        {searchText && !isSearchEligible
-                            ? '3+'
-                            : isSearchDebouncing
-                              ? '…/…'
-                              : hasSearchFilter
-                                ? isSearchingCommitMessages &&
-                                  matchingCommitIndexes.length === 0
-                                    ? '…/…'
-                                    : `${currentMatchIndex >= 0 ? currentMatchIndex + 1 : 0}/${matchingCommitIndexes.length}`
-                                : null}
-                    </span>
-                </div>
+                <GitGraphSearchToolbar
+                    query={query}
+                    setQuery={setQuery}
+                    caseSensitive={caseSensitive}
+                    setCaseSensitive={setCaseSensitive}
+                    setActiveMatchIndex={setActiveMatchIndex}
+                    onKeyDown={handleSearchKeyDown}
+                    navigateMatches={navigateMatches}
+                    canNavigate={!isSearchDebouncing && matchingCommitIndexes.length > 0}
+                    counterText={counterText}
+                    messageSearchError={messageSearchError}
+                />
 
                 <div className="flex min-h-0 flex-1 overflow-hidden">
-                    <div className="min-w-0 flex-1 overflow-auto">
-                        {isLoading || (!graph && !error) ? (
-                            <div className="flex h-48 items-center justify-center gap-2 text-xs text-subtext0">
-                                <RotateCw className="h-4 w-4 animate-spin" />
-                                Loading commit graph…
-                            </div>
-                        ) : error ? (
-                            <div className="m-4 border border-red bg-red px-4 py-3 text-xs text-white">
-                                Could not load the Git graph: {error}
-                            </div>
-                        ) : hasSearchFilter &&
-                          displayedCommitIndexes.length === 0 ? (
-                            <div className="flex h-48 flex-col items-center justify-center gap-2 px-6 text-center">
-                                {isSearchingWithoutMetadataMatches ? (
-                                    <>
-                                        <RotateCw className="h-5 w-5 animate-spin text-subtext1" />
-                                        <p className="text-sm font-semibold text-text">
-                                            Searching commits…
-                                        </p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Search className="h-6 w-6 text-subtext1" />
-                                        <p className="text-sm font-semibold text-text">
-                                            No matching commits
-                                        </p>
-                                        <p className="break-words text-xs text-subtext0">
-                                            No commits match “{query.trim()}”.
-                                            Try another search term.
-                                        </p>
-                                    </>
-                                )}
-                            </div>
-                        ) : !hasSearchFilter && commits.length === 0 ? (
-                            <div className="flex h-48 flex-col items-center justify-center gap-2 text-center">
-                                <GitBranch className="h-6 w-6 text-subtext1" />
-                                <p className="text-sm font-semibold text-text">
-                                    No commits yet
-                                </p>
-                                <p className="text-xs text-subtext0">
-                                    The current branch does not have any commits
-                                    to display.
-                                </p>
-                            </div>
-                        ) : (
-                            <table className="w-full min-w-[920px] table-fixed border-collapse text-xs">
-                                <colgroup>
-                                    <col style={{ width: graphWidth }} />
-                                    <col />
-                                    <col style={{ width: 178 }} />
-                                    <col style={{ width: 150 }} />
-                                    <col style={{ width: 92 }} />
-                                </colgroup>
-                                <thead className="sticky top-0 z-10 bg-mantle text-left text-[11px] font-semibold text-subtext1 shadow-sm">
-                                    <tr className="h-8 border-b border-surface0">
-                                        <th className="px-3">Graph</th>
-                                        <th className="px-2">Description</th>
-                                        <th className="px-2">Date</th>
-                                        <th className="px-2">Author</th>
-                                        <th className="px-2">Commit</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {displayedCommitIndexes.map((index) => {
-                                        const commit = commits[index];
-                                        const row = graphLayout.rows[index];
-                                        const color =
-                                            LANE_COLORS[
-                                                row.lane % LANE_COLORS.length
-                                            ];
-                                        const isMatch =
-                                            matchingCommitIndexes.includes(
-                                                index,
-                                            );
-                                        const isActiveMatch =
-                                            currentMatchCommit?.hash ===
-                                            commit.hash;
-
-                                        return (
-                                            <tr
-                                                key={commit.hash}
-                                                ref={(element) => {
-                                                    if (element)
-                                                        commitRows.current.set(
-                                                            commit.hash,
-                                                            element,
-                                                        );
-                                                    else
-                                                        commitRows.current.delete(
-                                                            commit.hash,
-                                                        );
-                                                }}
-                                                onClick={() =>
-                                                    setSelectedCommitHash(
-                                                        commit.hash,
-                                                    )
-                                                }
-                                                onContextMenu={(event) => {
-                                                    event.preventDefault();
-                                                    setSelectedCommitHash(
-                                                        commit.hash,
-                                                    );
-                                                    setCommitContextMenu({
-                                                        x: event.clientX,
-                                                        y: event.clientY,
-                                                        hash: commit.hash,
-                                                    });
-                                                }}
-                                                onKeyDown={(event) => {
-                                                    if (
-                                                        event.key === 'Enter' ||
-                                                        event.key === ' '
-                                                    ) {
-                                                        event.preventDefault();
-                                                        setSelectedCommitHash(
-                                                            commit.hash,
-                                                        );
-                                                    }
-                                                }}
-                                                aria-selected={
-                                                    selectedCommitHash ===
-                                                    commit.hash
-                                                }
-                                                tabIndex={0}
-                                                className={`h-9 cursor-pointer border-b border-surface0/50 outline-none transition-colors hover:bg-surface0/70 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-brand ${
-                                                    selectedCommitHash ===
-                                                    commit.hash
-                                                        ? 'bg-brand/20'
-                                                        : isActiveMatch
-                                                          ? 'bg-brand/15'
-                                                          : isMatch
-                                                            ? 'bg-brand/10'
-                                                            : ''
-                                                }`}
-                                            >
-                                                <td className="px-3 py-0">
-                                                    <svg
-                                                        width={graphWidth - 24}
-                                                        height={ROW_HEIGHT}
-                                                        viewBox={`0 0 ${graphWidth - 24} ${ROW_HEIGHT}`}
-                                                        role="img"
-                                                        aria-label={`Commit graph lane ${row.lane + 1}`}
-                                                        className="block"
-                                                    >
-                                                        {hasSearchFilter ? (
-                                                            <circle
-                                                                cx={laneX(
-                                                                    row.lane,
-                                                                )}
-                                                                cy="18"
-                                                                r="4"
-                                                                fill={color}
-                                                            />
-                                                        ) : (
-                                                            <>
-                                                                {row.throughLanes.map(
-                                                                    (lane) => (
-                                                                        <path
-                                                                            key={`through-${lane}`}
-                                                                            d={`M ${laneX(lane)} 0 V ${ROW_HEIGHT}`}
-                                                                            fill="none"
-                                                                            stroke={
-                                                                                LANE_COLORS[
-                                                                                    lane %
-                                                                                        LANE_COLORS.length
-                                                                                ]
-                                                                            }
-                                                                            strokeWidth="2"
-                                                                        />
-                                                                    ),
-                                                                )}
-                                                                {row.hasIncomingEdge && (
-                                                                    <path
-                                                                        d={`M ${laneX(row.lane)} 0 V 18`}
-                                                                        fill="none"
-                                                                        stroke={
-                                                                            color
-                                                                        }
-                                                                        strokeWidth="2"
-                                                                    />
-                                                                )}
-                                                                {row.parentLanes.map(
-                                                                    (
-                                                                        parentLane,
-                                                                        parentIndex,
-                                                                    ) => {
-                                                                        const startX =
-                                                                            laneX(
-                                                                                row.lane,
-                                                                            );
-                                                                        const endX =
-                                                                            laneX(
-                                                                                parentLane,
-                                                                            );
-                                                                        const path =
-                                                                            startX ===
-                                                                            endX
-                                                                                ? `M ${startX} 18 V ${ROW_HEIGHT}`
-                                                                                : `M ${startX} 18 C ${startX} 27, ${endX} 27, ${endX} ${ROW_HEIGHT}`;
-                                                                        return (
-                                                                            <path
-                                                                                key={`parent-${parentIndex}-${parentLane}`}
-                                                                                d={
-                                                                                    path
-                                                                                }
-                                                                                fill="none"
-                                                                                stroke={
-                                                                                    LANE_COLORS[
-                                                                                        parentLane %
-                                                                                            LANE_COLORS.length
-                                                                                    ]
-                                                                                }
-                                                                                strokeWidth="2"
-                                                                            />
-                                                                        );
-                                                                    },
-                                                                )}
-                                                                <circle
-                                                                    cx={laneX(
-                                                                        row.lane,
-                                                                    )}
-                                                                    cy="18"
-                                                                    r="3.5"
-                                                                    fill={color}
-                                                                />
-                                                            </>
-                                                        )}
-                                                    </svg>
-                                                </td>
-                                                <td className="overflow-hidden px-2 py-0">
-                                                    <div className="flex min-w-0 items-center gap-1.5">
-                                                        {commit.refs.map(
-                                                            (reference) => (
-                                                                <span
-                                                                    key={
-                                                                        reference
-                                                                    }
-                                                                    title={
-                                                                        reference
-                                                                    }
-                                                                    style={{
-                                                                        color: referenceColor(
-                                                                            reference,
-                                                                        ),
-                                                                        borderColor:
-                                                                            referenceColor(
-                                                                                reference,
-                                                                            ),
-                                                                        backgroundColor: `color-mix(in srgb, ${referenceColor(reference)} 12%, var(--color-surface0))`,
-                                                                    }}
-                                                                    className="max-w-48 shrink-0 truncate border px-1.5 py-0.5 font-mono text-[10px]"
-                                                                >
-                                                                    {reference}
-                                                                </span>
-                                                            ),
-                                                        )}
-                                                        <span
-                                                            className="truncate text-text"
-                                                            title={
-                                                                commit.subject
-                                                            }
-                                                        >
-                                                            {commit.subject ||
-                                                                '(no commit message)'}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td
-                                                    className="truncate px-2 py-0 text-subtext1"
-                                                    title={commit.authored_date}
-                                                >
-                                                    {formatDateTime(
-                                                        commit.authored_date,
-                                                    ) || '—'}
-                                                </td>
-                                                <td
-                                                    className="overflow-hidden px-2 py-0 text-subtext1"
-                                                    title={commit.author_name}
-                                                >
-                                                    <div className="flex min-w-0 items-center gap-1.5">
-                                                        <CommitAuthorAvatar
-                                                            name={
-                                                                commit.author_name ||
-                                                                'Unknown'
-                                                            }
-                                                            email={
-                                                                commit.author_email
-                                                            }
-                                                            size={22}
-                                                        />
-                                                        <span className="truncate">
-                                                            {commit.author_name ||
-                                                                'Unknown'}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td
-                                                    className="px-2 py-0 font-mono text-subtext1"
-                                                    title={commit.hash}
-                                                >
-                                                    {commit.short_hash}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
+                    <GitGraphTable
+                        graph={graph}
+                        error={error}
+                        isLoading={isLoading}
+                        hasSearchFilter={hasSearchFilter}
+                        isSearchingWithoutMetadataMatches={isSearchingWithoutMetadataMatches}
+                        query={query}
+                        graphWidth={graphWidth}
+                        commits={commits}
+                        displayedCommitIndexes={displayedCommitIndexes}
+                        matchingCommitIndexes={matchingCommitIndexes}
+                        currentMatchCommit={currentMatchCommit}
+                        selectedCommitHash={selectedCommitHash}
+                        graphLayout={graphLayout}
+                        onSelectCommit={(hash) => setSelectedCommitHash(hash)}
+                        onContextMenu={(event, hash) => {
+                            setSelectedCommitHash(hash);
+                            setCommitContextMenu({
+                                x: event.clientX,
+                                y: event.clientY,
+                                hash,
+                            });
+                        }}
+                        onRowRef={(hash, element) => {
+                            if (element) commitRows.current.set(hash, element);
+                            else commitRows.current.delete(hash);
+                        }}
+                    />
 
                     <GitGraphCommitDetails
                         selectedCommit={selectedCommit}
@@ -852,19 +470,13 @@ export const GitGraphModal: React.FC<GitGraphModalProps> = ({
                     />
                 </div>
 
-                <footer className="flex shrink-0 items-center justify-between border-t border-surface0 px-5 py-2.5 text-[10px] text-subtext0">
-                    <span>
-                        {hasSearchFilter
-                            ? `${displayedCommitIndexes.length} search result${displayedCommitIndexes.length === 1 ? '' : 's'}`
-                            : graph?.truncated
-                              ? 'Showing the latest 200 commits'
-                              : `${commits.length} commits`}
-                        {' · '}Read-only history for the checked-out branch.
-                    </span>
-                    <span>
-                        Press Enter to find next · Shift+Enter to find previous
-                    </span>
-                </footer>
+                <GitGraphFooter
+                    hasSearchFilter={hasSearchFilter}
+                    displayedCount={displayedCommitIndexes.length}
+                    isTruncated={graph?.truncated}
+                    totalCount={commits.length}
+                />
+
                 {commitContextMenu && (
                     <CommitHashContextMenu
                         menu={commitContextMenu}
