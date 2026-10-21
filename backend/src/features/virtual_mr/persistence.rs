@@ -428,7 +428,7 @@ impl Database {
                 content_hash, context_before, context_after,
                 is_resolved, resolve_type, resolved_by, resolved_at,
                 verification_status, verified_by_bot, verified_at, created_at, code_snippet
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, CURRENT_TIMESTAMP, ?17);",
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), ?17);",
             params![
                 d.id, d.session_id, d.file_path, d.diff_side, d.line_number, d.commit_id,
                 d.content_hash, d.context_before, d.context_after,
@@ -440,7 +440,7 @@ impl Database {
         tx.execute(
             "INSERT INTO virtual_mr_comments (
                 id, discussion_id, author_type, author_id, author_name, author_avatar, body, review_action, created_at, updated_at
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);",
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), strftime('%Y-%m-%dT%H:%M:%SZ', 'now'));",
             params![
                 first_comment.id, first_comment.discussion_id, first_comment.author_type,
                 first_comment.author_id, first_comment.author_name, first_comment.author_avatar,
@@ -457,7 +457,7 @@ impl Database {
         let mut stmt = conn.prepare_cached(
             "INSERT INTO virtual_mr_comments (
                 id, discussion_id, author_type, author_id, author_name, author_avatar, body, review_action, created_at, updated_at
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);",
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), strftime('%Y-%m-%dT%H:%M:%SZ', 'now'));",
         )?;
         stmt.execute(params![
             c.id,

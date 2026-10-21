@@ -6,6 +6,12 @@ dayjs.extend(utc);
 
 function validDate(value: DateInput) {
   if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(trimmed)) {
+      return dayjs.utc(trimmed);
+    }
+  }
   const date = dayjs(value);
   return date.isValid() ? date : null;
 }
