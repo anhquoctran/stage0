@@ -19,7 +19,7 @@ export const AcpRegistryProjectInfo: React.FC<AcpRegistryProjectInfoProps> = ({ 
 
   return (
     <details className="ml-6 mt-1 max-w-3xl text-[10px] text-subtext0">
-      <summary className="w-fit cursor-pointer select-none hover:text-text focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand">
+      <summary className="w-fit cursor-pointer select-none hover:text-text focus-visible:outline focus-visible:outline-brand">
         Project information <span className="text-subtext0">· Registry metadata</span>
       </summary>
       <div className="mt-2 grid gap-x-3 gap-y-1 border-l border-surface1 pl-3 sm:grid-cols-[90px_minmax(0,1fr)]">
