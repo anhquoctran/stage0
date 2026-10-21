@@ -24,6 +24,13 @@ Use `frontend/common/utils/dateTime.ts` for displayed dates and times; it treats
 numeric timestamps as milliseconds, with explicit Unix-second helpers for Git.
 Keep ISO serialization for persistence and IPC separate from display formatting.
 
+The backend's implementation boundaries and safety contracts are documented in
+[backend maintenance](backend_maintenance.md). `pnpm check:architecture` checks
+source ownership and a 500-line budget for every application Rust file, including
+test modules and `backend/build.rs`. Start reviewing module boundaries at 400
+lines and aim for 300. These checks also run before production build metadata
+changes; see the [refactor report](backend_refactor_analysis.md) for measurements.
+
 When adding a feature, keep its UI, state, types and backend handlers together
 under the corresponding feature directory. Put code in `common` only when more
 than one feature uses it without depending on feature-specific state.

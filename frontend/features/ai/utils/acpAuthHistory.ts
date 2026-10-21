@@ -1,13 +1,8 @@
 import type { AcpAgentConfig } from '../types/AcpAgentConfig';
+import type { AcpLastSuccessfulSignIn } from '../types/AcpLastSuccessfulSignIn';
+export type { AcpLastSuccessfulSignIn } from '../types/AcpLastSuccessfulSignIn';
 
 const STORAGE_KEY = 'stage0_acp_auth_history';
-
-export interface AcpLastSuccessfulSignIn {
-  completedAt: string;
-  methodId: string;
-  methodLabel: string;
-  agentVersion?: string;
-}
 
 type AuthHistory = Record<string, AcpLastSuccessfulSignIn>;
 

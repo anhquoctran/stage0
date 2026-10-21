@@ -70,6 +70,15 @@ ${BOLD}Output Artifacts:${RESET}
   process.exit(0);
 }
 
+const architectureCheck = spawnSync(process.execPath, [path.join(__dirname, 'check-architecture.mjs')], {
+  cwd: ROOT_DIR,
+  stdio: 'inherit',
+});
+if (architectureCheck.error || architectureCheck.status !== 0) {
+  console.error('Architecture checks failed. Fix module ownership or file size before building.');
+  process.exit(architectureCheck.status || 1);
+}
+
 const versionBump = bumpProjectPatchVersion(ROOT_DIR);
 console.log(`Project version bumped: ${versionBump.previousVersion} -> ${versionBump.version}`);
 const releaseInfo = syncAllMetadata({
