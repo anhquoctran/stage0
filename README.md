@@ -49,8 +49,6 @@ Runs continue when the panel is closed, are reachable from the status bar, and s
 
 CLI/subscription connectivity paths remain separate from this native review runtime. The **External MCP / CLI connectors** panel prepares integration with explicit, source-free MCP Streamable HTTP discovery (pinned revision `2025-11-25`) and a non-executing CLI PATH preflight. Discovery supports JSON/SSE responses, paginated tool catalogs and temporary-session cleanup, but does not attach or call external tools. Stdio launch, legacy HTTP+SSE, newer MCP revisions, OAuth/authenticated MCP and actual CLI review execution are not enabled. Local configuration validation still performs no network/process operation, and imported/restored verification claims are cleared. See [external connector preparation](docs/architecture/external_harness_connectors.md) for the model-adapter boundary, structured CLI contract and remaining attachment gates.
 
-ChatGPT subscription sign-in opens the system browser directly, with no Codex CLI requirement. It uses PKCE, verified OpenID Connect identity and OS-keyring credentials, with separate saved account/workspace registrations. This is authentication-only, not subscription inference or an API-key replacement. See [ChatGPT browser authentication](docs/architecture/chatgpt_browser_auth.md). The [Codex-managed device-code flow](docs/architecture/chatgpt_device_auth.md) remains a separate advanced option requiring the Codex CLI.
-
 AI settings in Preferences share the dialog's Apply/OK/Cancel draft transaction,
 including provider configuration, pending API-key replacements, MCP definitions,
 external agents and guardrail policy. Authentication and execution/check actions
