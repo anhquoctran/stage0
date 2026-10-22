@@ -26,10 +26,12 @@ import { startAssignedReviewBatchForSession } from '../../review/services/assign
 import { MrDiscussionBoard } from './MrDiscussionBoard';
 import { getDiscussionMentionOptions } from '../utils/discussionMentions';
 import { hasVirtualMrActivity } from '../utils/virtualMrActivity';
+import { formatMrFriendlyId, getMrSequenceNumber } from '../utils/virtualMrSequence';
 
 export const VirtualMrHub: React.FC = () => {
   const { currentRepo, showToast, diffPayload, branches, setBranchComparison } = useGitStore();
   const {
+    sessions,
     getActiveSession,
     consumeDescriptionEditRequest,
     updateSessionDetails,
@@ -61,6 +63,10 @@ export const VirtualMrHub: React.FC = () => {
   const reviewBatches = useReviewStore((state) => state.reviewBatches);
 
   const session = getActiveSession();
+  const sequenceNumber = useMemo(() => {
+    if (!session) return 1;
+    return getMrSequenceNumber(sessions, session.id);
+  }, [sessions, session?.id]);
 
   // Title inline edit
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -275,6 +281,14 @@ export const VirtualMrHub: React.FC = () => {
               <span>Open</span>
             </div>
           )}
+
+          {/* Friendly MR Sequence ID */}
+          <span
+            className="font-mono text-xs font-bold text-subtext0 shrink-0"
+            title={`Virtual MR ${formatMrFriendlyId(sequenceNumber)}`}
+          >
+            {formatMrFriendlyId(sequenceNumber)}
+          </span>
 
           {/* Title */}
           {isEditingTitle ? (
