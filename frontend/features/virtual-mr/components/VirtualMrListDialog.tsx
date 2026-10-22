@@ -27,6 +27,7 @@ import type { MrFilter } from '../types/MrFilter';
 import type { MrSort } from '../types/MrSort';
 import type { SortDirection } from '../types/SortDirection';
 import type { VirtualMrListDialogProps } from '../types/VirtualMrListDialogProps';
+import { buildMrSequenceMap } from '../utils/virtualMrSequence';
 import { SearchSuggestionIcon } from './SearchSuggestionIcon';
 import { GitLabAvatar } from './GitLabAvatar';
 
@@ -95,18 +96,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
   }, [isMrListOpen, setIsMrListOpen]);
 
   // Compute persistent sequence map for MR IDs (!1, !2, !3...) based on repository creation order
-  const sessionSequenceMap = useMemo(() => {
-    const sorted = [...sessions].sort((a, b) => {
-      const timeA = new Date(a.createdAt).getTime() || 0;
-      const timeB = new Date(b.createdAt).getTime() || 0;
-      return timeA - timeB || a.id.localeCompare(b.id);
-    });
-    const map = new Map<string, number>();
-    sorted.forEach((session, index) => {
-      map.set(session.id, index + 1);
-    });
-    return map;
-  }, [sessions]);
+  const sessionSequenceMap = useMemo(() => buildMrSequenceMap(sessions), [sessions]);
 
   const counts = useMemo(() => ({
     open: sessions.filter((session) => hasStatus(session, 'open')).length,
