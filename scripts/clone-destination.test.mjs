@@ -2,15 +2,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import ts from 'typescript';
+import { componentNodes, loadWithMocks } from './helpers/componentHarness.mjs';
 
 function load(relative, dependencies = {}) {
-  const { outputText } = ts.transpileModule(fs.readFileSync(new URL(relative, import.meta.url), 'utf8'), {
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React },
-  });
-  const exports = {};
-  new Function('require', 'exports', outputText)((id) => dependencies[id], exports);
-  return exports;
+  return loadWithMocks(new URL(relative, import.meta.url), dependencies);
 }
 const helpers = load('../frontend/features/git/utils/cloneDestination.ts');
 
@@ -65,8 +60,8 @@ test('native joining preserves Unix roots, Windows drive roots and UNC paths', a
 });
 
 test('clone form defaults to native home rather than a previously stored directory', () => {
-  const source = fs.readFileSync(new URL('../frontend/features/git/components/CloneRepoModal.tsx', import.meta.url), 'utf8');
-  assert.ok(source.includes('homeDir().then('));
+  const source = fs.readFileSync(new URL('../frontend/features/git/hooks/useCloneRepository.ts', import.meta.url), 'utf8');
+  assert.match(source, /homeDir\(\)\s*\.then\(/);
   assert.ok(source.includes('current || directory'));
   assert.ok(source.includes('if (!repoNameEdited) {'));
   assert.ok(source.includes('extractCloneRepoName(val)'));
@@ -135,13 +130,7 @@ test('destination input displays the full joined path and submits that exact pat
     }
   }
   function find(predicate, node = tree) {
-    if (!node || typeof node !== 'object') return null;
-    if (predicate(node)) return node;
-    for (const child of [node.props?.children].flat(Infinity)) {
-      const result = find(predicate, child);
-      if (result) return result;
-    }
-    return null;
+    return componentNodes(node).find(predicate) ?? null;
   }
   const destination = () => find((node) => node.props?.['aria-label'] === 'Destination Directory');
   const url = () => find((node) => node.type === 'input' && node.props?.autoFocus);

@@ -1,24 +1,12 @@
-import React, { useId, useState, useRef } from 'react';
-import { Bold } from './icons/Bold';
-import { Italic } from './icons/Italic';
-import { Heading } from './icons/Heading';
-import { Code } from './icons/Code';
-import { SquareCode } from './icons/SquareCode';
-import { Quote } from './icons/Quote';
-import { List } from './icons/List';
-import { ListOrdered } from './icons/ListOrdered';
-import { CheckSquare } from './icons/CheckSquare';
-import { Link } from './icons/Link';
-import { Eye } from './icons/Eye';
-import { PenLine } from './icons/PenLine';
-import { Sparkles } from './icons/Sparkles';
-import { MarkdownPreview } from './MarkdownPreview';
-import { formatShortcutText } from '../utils/shortcuts';
+import React, { useId, useRef, useState } from 'react';
 import type { MarkdownEditorProps } from '../types/MarkdownEditorProps';
-import { formatMention, getMentionQuery } from '../utils/mentions';
 import type { MentionOption } from '../types/MentionOption';
-import { isAllowedImage, processAndSaveImage } from '../utils/imageAttachment';
-import { notificationService } from '../../features/notifications/services/notificationService';
+import { formatMention, getMentionQuery } from '../utils/mentions';
+import { MarkdownFooterActions } from './markdown-editor/MarkdownFooterActions';
+import { MarkdownMentionPopup } from './markdown-editor/MarkdownMentionPopup';
+import { MarkdownToolbar } from './markdown-editor/MarkdownToolbar';
+import { useMarkdownImageDrop } from './markdown-editor/useMarkdownImageDrop';
+import { MarkdownPreview } from './MarkdownPreview';
 
 export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   value,
@@ -46,14 +34,25 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const [mentionCaret, setMentionCaret] = useState(0);
   const [isMentionFocused, setIsMentionFocused] = useState(false);
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [attachmentWarning, setAttachmentWarning] = useState<string | null>(null);
-  const [isAttaching, setIsAttaching] = useState(false);
-  const mentionQuery = mentionOptions.length && !disabled && !isSubmitting && isMentionFocused && activeTab === 'write'
-    ? getMentionQuery(value, mentionCaret) : null;
-  const suggestions = mentionQuery ? mentionOptions.filter((item) =>
-    `${item.label} ${item.id}`.toLocaleLowerCase().includes(mentionQuery.query)) : [];
+  const {
+    fileInputRef,
+    isDraggingOver,
+    setIsDraggingOver,
+    attachmentWarning,
+    setAttachmentWarning,
+    isAttaching,
+    handleImageFiles,
+    handlePaste,
+  } = useMarkdownImageDrop(textareaRef, value, onChange, disabled, isSubmitting);
+  const mentionQuery =
+    mentionOptions.length && !disabled && !isSubmitting && isMentionFocused && activeTab === 'write'
+      ? getMentionQuery(value, mentionCaret)
+      : null;
+  const suggestions = mentionQuery
+    ? mentionOptions.filter((item) =>
+        `${item.label} ${item.id}`.toLocaleLowerCase().includes(mentionQuery.query)
+      )
+    : [];
   const selectedMentionIndex = Math.min(activeMentionIndex, Math.max(0, suggestions.length - 1));
 
   const applyMention = (option: MentionOption) => {
@@ -92,104 +91,15 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     }, 0);
   };
 
-  const insertImageMarkdown = (markdownSnippet: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) {
-      onChange(value ? `${value}\n\n${markdownSnippet}` : markdownSnippet);
-      return;
-    }
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const currentVal = textarea.value;
-
-    const prefix = start > 0 && currentVal[start - 1] !== '\n' ? '\n' : '';
-    const suffix = end < currentVal.length && currentVal[end] !== '\n' ? '\n' : '';
-    const replacement = `${prefix}${markdownSnippet}${suffix}`;
-    const nextVal = currentVal.substring(0, start) + replacement + currentVal.substring(end);
-    onChange(nextVal);
-
-    requestAnimationFrame(() => {
-      textarea.focus();
-      const nextCursor = start + replacement.length;
-      textarea.setSelectionRange(nextCursor, nextCursor);
-    });
-  };
-
-  const handleImageFiles = async (files: FileList | File[]) => {
-    if (disabled || isSubmitting) return;
-    const fileArray = Array.from(files);
-    if (fileArray.length === 0) return;
-
-    let hasRejected = false;
-    setIsAttaching(true);
-
-    try {
-      for (const file of fileArray) {
-        if (!isAllowedImage(file)) {
-          hasRejected = true;
-          continue;
-        }
-
-        const saved = await processAndSaveImage(file);
-        if (saved) {
-          const markdownImg = `![${file.name || 'image'}](${saved.dataUrl})`;
-          insertImageMarkdown(markdownImg);
-        } else {
-          hasRejected = true;
-        }
-      }
-
-      if (hasRejected) {
-        const msg = 'Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.';
-        setAttachmentWarning(msg);
-        notificationService.notify({
-          title: 'Unsupported file type',
-          body: msg,
-          level: 'warning',
-          channel: 'guardrails',
-        });
-        setTimeout(() => setAttachmentWarning(null), 5000);
-      }
-    } finally {
-      setIsAttaching(false);
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    if (disabled || isSubmitting) return;
-    const clipboardData = e.clipboardData;
-    if (!clipboardData) return;
-
-    const files = Array.from(clipboardData.files);
-    const imageItems = Array.from(clipboardData.items).filter(
-      (item) => item.kind === 'file' && item.type.startsWith('image/')
-    );
-
-    if (files.length > 0 || imageItems.length > 0) {
-      const targetFiles: File[] = [];
-      if (files.length > 0) {
-        targetFiles.push(...files);
-      } else {
-        for (const item of imageItems) {
-          const file = item.getAsFile();
-          if (file) targetFiles.push(file);
-        }
-      }
-
-      if (targetFiles.length > 0) {
-        e.preventDefault();
-        handleImageFiles(targetFiles);
-      }
-    }
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (disabled || isSubmitting) return;
     if (suggestions.length) {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
-        setActiveMentionIndex((selectedMentionIndex + (e.key === 'ArrowDown' ? 1 : -1) + suggestions.length) % suggestions.length);
+        setActiveMentionIndex(
+          (selectedMentionIndex + (e.key === 'ArrowDown' ? 1 : -1) + suggestions.length) %
+            suggestions.length
+        );
         return;
       }
       if ((e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.shiftKey) || e.key === 'Tab') {
@@ -198,7 +108,10 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         return;
       }
       if (e.key === 'Escape') {
-        e.preventDefault(); e.stopPropagation(); setIsMentionFocused(false); return;
+        e.preventDefault();
+        e.stopPropagation();
+        setIsMentionFocused(false);
+        return;
       }
     }
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -220,217 +133,20 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   };
 
   return (
-    <div className={`border border-surface1 bg-mantle text-xs space-y-0 overflow-hidden focus-within:border-blue focus-within:ring-1 focus-within:ring-blue/30 transition-all ${className}`}>
+    <div
+      className={`border border-surface1 bg-mantle text-xs space-y-0 overflow-hidden focus-within:border-blue focus-within:ring-1 focus-within:ring-blue/30 transition-all ${className}`}
+    >
       {/* Top Header: Tabs (Write / Preview) & GitLab Formatting Toolbar */}
-      <div className="flex items-center justify-between border-b border-surface1 bg-surface0/60 px-2 py-1 gap-1 flex-wrap select-none">
-        {/* Write / Preview Tab Switcher */}
-        <div className="flex items-center gap-1 pr-1 border-r border-surface1">
-          <button
-            type="button"
-            onClick={() => setActiveTab('write')}
-            className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors ${
-              activeTab === 'write'
-                ? 'bg-surface2 text-text shadow-xs font-semibold'
-                : 'text-subtext0 hover:text-text hover:bg-surface1'
-            }`}
-            title="Write"
-          >
-            <PenLine className="w-3.5 h-3.5" />
-            <span>Write</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('preview')}
-            className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors ${
-              activeTab === 'preview'
-                ? 'bg-surface2 text-text shadow-xs font-semibold'
-                : 'text-subtext0 hover:text-text hover:bg-surface1'
-            }`}
-            title="Preview Markdown"
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Preview</span>
-          </button>
-        </div>
-
-        {/* Toolbar (Only available in Write tab) matching GitLab screenshot */}
-        {activeTab === 'write' ? (
-          <div className="flex items-center gap-0.5 flex-wrap">
-            {/* Insert suggestion */}
-            <button
-              type="button"
-              onClick={() => insertMarkdown('```suggestion\n', '\n```', '// proposed change')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Insert suggestion"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="9" y1="13" x2="15" y2="13" />
-                <line x1="12" y1="10" x2="12" y2="16" />
-              </svg>
-            </button>
-
-            <span className="w-px h-3 bg-surface1 mx-0.5" />
-
-            <button
-              type="button"
-              onClick={() => insertMarkdown('**', '**', 'bold text')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title={formatShortcutText('Bold (Ctrl+B)')}
-            >
-              <Bold className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => insertMarkdown('*', '*', 'italic text')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title={formatShortcutText('Italic (Ctrl+I)')}
-            >
-              <Italic className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => insertMarkdown('~~', '~~', 'strikethrough text')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 font-bold text-xs w-5 text-center leading-none"
-              title="Strikethrough"
-            >
-              <s>S</s>
-            </button>
-
-            <span className="w-px h-3 bg-surface1 mx-0.5" />
-
-            <button
-              type="button"
-              onClick={() => insertMarkdown('### ', '', 'Heading')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Heading"
-            >
-              <Heading className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => insertMarkdown('`', '`', 'code')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Inline code"
-            >
-              <Code className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => insertMarkdown('[', '](https://example.com)', 'link text')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title={formatShortcutText('Insert link (Ctrl+K)')}
-            >
-              <Link className="w-3.5 h-3.5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => insertMarkdown('- ', '', 'List item')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Bullet list"
-            >
-              <List className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => insertMarkdown('1. ', '', 'Numbered item')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Numbered list"
-            >
-              <ListOrdered className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => insertMarkdown('- [ ] ', '', 'Task item')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Task list"
-            >
-              <CheckSquare className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => insertMarkdown('> ', '', 'Quote')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Quote"
-            >
-              <Quote className="h-3.5 w-3.5" />
-            </button>
-
-            {/* Table */}
-            <button
-              type="button"
-              onClick={() => insertMarkdown('| Header 1 | Header 2 |\n| --- | --- |\n| Cell 1 | Cell 2 |\n', '', '')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Insert table"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="18" height="18" x="3" y="3" />
-                <path d="M3 9h18" />
-                <path d="M3 15h18" />
-                <path d="M9 3v18" />
-                <path d="M15 3v18" />
-              </svg>
-            </button>
-
-            {/* Attach image */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml"
-              multiple
-              className="hidden"
-              data-testid="image-attachment-input"
-              onChange={(e) => {
-                if (e.target.files) {
-                  handleImageFiles(e.target.files);
-                  e.target.value = '';
-                }
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={disabled || isSubmitting || isAttaching}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Attach images (PNG, JPG, GIF, WebP, SVG)"
-              aria-label="Attach images"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-              </svg>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => insertMarkdown('```\n', '\n```', 'code block')}
-              disabled={disabled}
-              className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
-              title="Code block"
-            >
-              <SquareCode className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ) : (
-          <span className="text-[11px] text-subtext0 font-mono italic">
-            Preview Markdown
-          </span>
-        )}
-      </div>
+      <MarkdownToolbar
+        setActiveTab={setActiveTab}
+        activeTab={activeTab}
+        insertMarkdown={insertMarkdown}
+        disabled={disabled}
+        fileInputRef={fileInputRef}
+        handleImageFiles={handleImageFiles}
+        isSubmitting={isSubmitting}
+        isAttaching={isAttaching}
+      />
 
       {/* Editor Body: Textarea OR MarkdownPreview */}
       <div
@@ -477,9 +193,13 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               }}
               onSelect={(e) => {
                 setMentionCaret(e.currentTarget.selectionStart);
-                if (e.currentTarget.selectionStart !== e.currentTarget.selectionEnd) setIsMentionFocused(false);
+                if (e.currentTarget.selectionStart !== e.currentTarget.selectionEnd)
+                  setIsMentionFocused(false);
               }}
-              onFocus={(e) => { setIsMentionFocused(true); setMentionCaret(e.currentTarget.selectionStart); }}
+              onFocus={(e) => {
+                setIsMentionFocused(true);
+                setMentionCaret(e.currentTarget.selectionStart);
+              }}
               onBlur={() => setIsMentionFocused(false)}
               onKeyDown={handleKeyDown}
               onPaste={handlePaste}
@@ -490,31 +210,37 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               aria-autocomplete={mentionOptions.length ? 'list' : undefined}
               aria-expanded={mentionOptions.length ? suggestions.length > 0 : undefined}
               aria-controls={suggestions.length ? mentionListId : undefined}
-              aria-activedescendant={suggestions.length ? `${mentionListId}-${selectedMentionIndex}` : undefined}
+              aria-activedescendant={
+                suggestions.length ? `${mentionListId}-${selectedMentionIndex}` : undefined
+              }
               style={{ minHeight, maxHeight }}
               className="w-full p-3 bg-base/50 text-text text-xs font-mono placeholder:text-subtext0/60 focus:outline-none transition-colors resize-y leading-relaxed border-0"
             />
 
             {suggestions.length > 0 && (
-              <div id={mentionListId} role="listbox" aria-label="Mention a participant" className="mt-1 max-h-40 overflow-y-auto border border-surface1 bg-mantle shadow-lg">
-                {suggestions.map((option, index) => (
-                  <button key={`${option.kind}:${option.id}`} type="button" role="option" id={`${mentionListId}-${index}`} title={option.id}
-                    aria-selected={selectedMentionIndex === index} onMouseDown={(e) => e.preventDefault()} onClick={() => applyMention(option)}
-                    className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs ${selectedMentionIndex === index ? 'bg-surface1 text-text' : 'text-subtext1 hover:bg-surface0'}`}>
-                    <span className="min-w-0 truncate font-medium">@{option.label}
-                      {mentionOptions.some((other) => other.id !== option.id && other.kind === option.kind && other.label === option.label)
-                        && <span className="ml-2 font-mono text-[10px] font-normal text-subtext0">{option.id}</span>}
-                    </span>
-                    <span className="shrink-0 text-[10px] text-subtext0">{option.kind === 'reviewer' ? 'AI reviewer' : 'Assignee'}</span>
-                  </button>
-                ))}
-              </div>
+              <MarkdownMentionPopup
+                mentionListId={mentionListId}
+                suggestions={suggestions}
+                selectedMentionIndex={selectedMentionIndex}
+                applyMention={applyMention}
+                mentionOptions={mentionOptions}
+              />
             )}
 
             {attachmentWarning && (
               <div className="px-3 py-1.5 bg-yellow-900/30 border-t border-yellow-700/50 text-yellow-200 text-[11px] flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-400 shrink-0">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-yellow-400 shrink-0"
+                  >
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="8" x2="12" y2="12" />
                     <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -544,55 +270,19 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
       {/* Action Bar / Bottom Bar */}
       {(showActions || onGenerateDraft) && (
-        <div className="flex items-center justify-between px-3 py-2 border-t border-surface1 bg-base/50 gap-2 select-none">
-          <div className="flex items-center gap-2 text-[10px] text-subtext0 font-mono">
-            {showActions && (
-              <span>
-                {mentionOptions.length > 0 && <span>Type @ to mention · </span>}
-                Tip: Press <kbd className="px-1 py-0.5 bg-surface0 border border-surface1">Ctrl</kbd> + <kbd className="px-1 py-0.5 bg-surface0 border border-surface1">Enter</kbd> to submit
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {onGenerateDraft && (
-              <button
-                type="button"
-                onClick={onGenerateDraft}
-                disabled={disabled || isSubmitting}
-                className="p-1 text-subtext0 hover:text-purple-300 hover:bg-surface1 active:bg-surface2 transition-colors cursor-pointer disabled:opacity-40"
-                title="Generate draft from commit metadata (no AI request)"
-                aria-label="Generate draft from commit metadata"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {extraActions}
-
-            {showActions && onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                disabled={isSubmitting}
-                className="px-3 py-1 bg-surface1 hover:bg-surface2 active:bg-surface0 text-white text-xs transition-colors cursor-pointer"
-              >
-                {cancelLabel}
-              </button>
-            )}
-
-            {showActions && onSubmit && (
-              <button
-                type="button"
-                onClick={onSubmit}
-                disabled={isSubmitting || !value.trim()}
-                className="px-4 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? 'Submitting...' : submitLabel}
-              </button>
-            )}
-          </div>
-        </div>
+        <MarkdownFooterActions
+          showActions={showActions}
+          mentionOptions={mentionOptions}
+          onGenerateDraft={onGenerateDraft}
+          disabled={disabled}
+          isSubmitting={isSubmitting}
+          extraActions={extraActions}
+          onCancel={onCancel}
+          cancelLabel={cancelLabel}
+          onSubmit={onSubmit}
+          value={value}
+          submitLabel={submitLabel}
+        />
       )}
     </div>
   );

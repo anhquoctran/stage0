@@ -26,7 +26,7 @@ test('application entry points expose no updater UI, IPC, release endpoint or fe
     assert.doesNotMatch(source(path), /useUpdateStore|UpdatesTab|UpdateModal|check_updates|softwareUpdates|open_updates|open_preferences_updates|updates-check|check_for_update|download_update|install_update|downloadcenter\.quoctran\.space|(?:features\/|mod )updates/);
   }
   assert.doesNotMatch(source('backend/Cargo.toml'), /^(?:semver|futures-util)\s*=/m);
-  assert.match(source('frontend/features/preferences/components/PreferencesModal.tsx'), /SETTINGS_TREE\.some[\s\S]*?: 'ai-overview'/);
+  assert.match(source('frontend/features/preferences/utils/normalizePreferenceTab.ts'), /SETTINGS_TREE\.some[\s\S]*?: 'ai-overview'/);
 });
 
 test('mounting the main window initializes repositories and notifications without scheduling update work', async () => {

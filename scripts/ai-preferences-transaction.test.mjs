@@ -294,8 +294,8 @@ test('Cancel, close and Escape discard AI-only drafts, and committing blocks ove
 });
 
 test('all AI settings tabs receive draft editors; no standalone persistence or keyring writes exist in the draft factory', () => {
-  const modal = readFileSync(url('features/preferences/components/PreferencesModal.tsx'), 'utf8');
-  assert.match(modal, /<GuardrailsTab draftSettings=\{aiDraft\}/); assert.match(modal, /<BotReviewersTab draftSettings=\{aiDraft\}/);
+  const modal = readFileSync(url('features/preferences/components/PreferencesTabContainer.tsx'), 'utf8');
+  assert.match(modal, /<GuardrailsTab\s+draftSettings=\{aiDraft\}/); assert.match(modal, /<BotReviewersTab\s+draftSettings=\{aiDraft\}/);
   assert.equal((modal.match(/draftSettings=\{aiDraft\}/g) || []).length, 4);
   assert.match(modal, /isPendingCommit=\{draftSandboxType !== savedBaseline.sandboxType\}/);
   const source = readFileSync(url('features/ai/store/createAiPreferencesDraft.ts'), 'utf8');

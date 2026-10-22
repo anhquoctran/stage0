@@ -1,307 +1,50 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { homeDir } from '@tauri-apps/api/path';
-import { Download } from '../../../common/components/icons/Download';
-import { X } from '../../../common/components/icons/X';
-import { Folder } from '../../../common/components/icons/Folder';
-import { FolderOpen } from '../../../common/components/icons/FolderOpen';
-import { Globe } from '../../../common/components/icons/Globe';
-import { Terminal } from '../../../common/components/icons/Terminal';
+import React from 'react';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { Download } from '../../../common/components/icons/Download';
 import { Loader2 } from '../../../common/components/icons/Loader2';
-import { Check } from '../../../common/components/icons/Check';
-import { CustomSelect } from '../../../common/components/CustomSelect';
+import { Terminal } from '../../../common/components/icons/Terminal';
+import { X } from '../../../common/components/icons/X';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
-import { useGitStore } from '../store/useGitStore';
-import { useGitTaskStore } from '../store/useGitTaskStore';
-import { useGitCredentialsStore } from '../../credentials/store/useGitCredentialsStore';
-import type { UrlValidationStatus } from '../types/UrlValidationStatus';
+import { useCloneRepository } from '../hooks/useCloneRepository';
+import { isSafeCloneRepoName } from '../utils/cloneDestination';
+import { previewCloneCommand, validateCloneOptions } from '../utils/cloneOptions';
+import { CloneCredentialsSection } from './clone/CloneCredentialsSection';
+import { CloneDestinationSection } from './clone/CloneDestinationSection';
+import { CloneUrlInputSection } from './clone/CloneUrlInputSection';
 import { CloneOptionsForm } from './CloneOptionsForm';
-import { createCloneOptions, validateCloneOptions, previewCloneCommand } from '../utils/cloneOptions';
-import { extractCloneRepoName, isSafeCloneRepoName } from '../utils/cloneDestination';
-import { resolveCloneDestination } from '../services/resolveCloneDestination';
-import type { RemoteCloneRefs } from '../types/RemoteCloneRefs';
 
 export const CloneRepoModal: React.FC = () => {
   const {
     isCloneModalOpen,
-    setIsCloneModalOpen,
-    cloneRepo,
-    pickCloneFolder,
-  } = useGitStore();
-  const credentials = useGitCredentialsStore((state) => state.credentials);
-  const credentialsLoading = useGitCredentialsStore((state) => state.isLoading);
-  const fetchCredentials = useGitCredentialsStore((state) => state.fetchCredentials);
-
-  const [remoteUrl, setRemoteUrl] = useState('');
-  const [parentDir, setParentDir] = useState('');
-  const [repoName, setRepoName] = useState('');
-  const [repoNameEdited, setRepoNameEdited] = useState(false);
-  const [destinationPath, setDestinationPath] = useState('');
-  const [cloneOptions, setCloneOptions] = useState(createCloneOptions);
-  const isCloning = useGitTaskStore((state) => state.tasks.some(
-    (task) => task.operation === 'clone' && task.status === 'running'
-  ));
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [useSavedCredential, setUseSavedCredential] = useState(false);
-  const [selectedCredentialId, setSelectedCredentialId] = useState('');
-
-  // URL Validation State
-  const [urlStatus, setUrlStatus] = useState<UrlValidationStatus>('idle');
-  const [urlMessage, setUrlMessage] = useState<string | null>(null);
-  const [remoteRefs, setRemoteRefs] = useState<RemoteCloneRefs | null>(null);
-
-  const remoteOrigin = useMemo(() => {
-    try {
-      const parsed = new URL(remoteUrl.trim());
-      return parsed.protocol === 'https:' && !parsed.username && !parsed.password
-        ? parsed.origin
-        : null;
-    } catch {
-      return null;
-    }
-  }, [remoteUrl]);
-
-  const credentialOptions = useMemo(() => {
-    return credentials.filter((credential) => {
-      if (
-        !credential.is_in_keyring ||
-        credential.token_type === 'ssh_key' ||
-        !['stage0', 'system_global'].includes(credential.source)
-      ) {
-        return false;
-      }
-      try {
-        const credentialUrl = new URL(credential.server_url);
-        return (
-          credentialUrl.protocol === 'https:' &&
-          (!remoteOrigin || credentialUrl.origin === remoteOrigin)
-        );
-      } catch {
-        return false;
-      }
-    });
-  }, [credentials, remoteOrigin]);
-
-  const selectedCredential = credentialOptions.find(
-    (credential) => credential.id === selectedCredentialId
-  );
-  const hasSelectedCredential = useSavedCredential && !!selectedCredential && !!remoteOrigin;
-  const isSshRemote = /^git@|^ssh:\/\//i.test(remoteUrl.trim());
-
-  useEffect(() => {
-    if (!isCloneModalOpen) return;
-    void fetchCredentials();
-    let disposed = false;
-    let unlisten: (() => void) | undefined;
-    void listen('git-credentials-updated', () => {
-      void fetchCredentials();
-    }).then((stopListening) => {
-      if (disposed) stopListening();
-      else unlisten = stopListening;
-    }).catch((error) => {
-      console.warn('[CloneRepoModal] Could not subscribe to credential refresh:', error);
-    });
-    return () => {
-      disposed = true;
-      unlisten?.();
-    };
-  }, [isCloneModalOpen, fetchCredentials]);
-
-  useEffect(() => {
-    if (!isCloneModalOpen) {
-      setUseSavedCredential(false);
-      setSelectedCredentialId('');
-    }
-  }, [isCloneModalOpen]);
-
-  useEffect(() => {
-    if (!isCloneModalOpen) return;
-    let disposed = false;
-    void homeDir().then((directory) => {
-      // A late home lookup must not replace a folder the user has chosen.
-      if (!disposed) setParentDir((current) => current || directory);
-    }).catch(() => {
-      if (!disposed) setErrorMessage('Could not resolve your home directory. Please choose a destination with Browse.');
-    });
-    return () => { disposed = true; };
-  }, [isCloneModalOpen]);
-
-  useEffect(() => {
-    if (isSshRemote) {
-      setUseSavedCredential(false);
-      setSelectedCredentialId('');
-    }
-  }, [isSshRemote]);
-
-  useEffect(() => {
-    if (!remoteOrigin || !selectedCredentialId) return;
-    const credential = credentials.find((item) => item.id === selectedCredentialId);
-    if (!credential) {
-      if (!credentialsLoading) setSelectedCredentialId('');
-      return;
-    }
-    try {
-      if (new URL(credential.server_url).origin !== remoteOrigin) {
-        setSelectedCredentialId('');
-      }
-    } catch {
-      setSelectedCredentialId('');
-    }
-  }, [credentials, credentialsLoading, remoteOrigin, selectedCredentialId]);
-
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setRemoteUrl(val);
-    setRemoteRefs(null);
-    setCloneOptions((current) => ({ ...current, branch: '' }));
-    setErrorMessage(null);
-    if (!repoNameEdited) {
-      const inferred = extractCloneRepoName(val);
-      if (inferred !== repoName) setDestinationPath('');
-      setRepoName(inferred);
-    }
-  };
-
-  // Debounce 1s then validate URL format and remote availability
-  useEffect(() => {
-    let disposed = false;
-    setRemoteRefs(null);
-    setCloneOptions((current) => current.branch ? { ...current, branch: '' } : current);
-    const trimmed = remoteUrl.trim();
-    if (!isCloneModalOpen || !trimmed) {
-      setUrlStatus('idle');
-      setUrlMessage(null);
-      return;
-    }
-
-    if (useSavedCredential && !hasSelectedCredential) {
-      setUrlStatus('idle');
-      setUrlMessage('Select an HTTPS credential to check access and load branches and tags.');
-      return;
-    }
-
-    const isBasicFormat =
-      trimmed.startsWith('https://') ||
-      trimmed.startsWith('http://') ||
-      trimmed.startsWith('git@') ||
-      trimmed.startsWith('ssh://');
-
-    if (!isBasicFormat) {
-      setUrlStatus('invalid');
-      setUrlMessage('Invalid URL format (must start with https://, git@ or ssh://)');
-      return;
-    }
-
-    setUrlStatus('validating');
-    setUrlMessage('Checking repository and loading branches and tags...');
-
-    const timer = setTimeout(async () => {
-      try {
-        const refs = await invoke<RemoteCloneRefs>('get_clone_remote_refs', {
-          url: trimmed, credentialId: useSavedCredential ? selectedCredentialId : null,
-        });
-        if (disposed) return;
-        setRemoteRefs(refs);
-        setUrlStatus('valid');
-        setUrlMessage('Repository is valid and ready to clone.');
-      } catch (err: unknown) {
-        if (disposed) return;
-        setUrlStatus('invalid');
-        setUrlMessage(typeof err === 'string' ? err : 'Repository does not exist or is inaccessible.');
-      }
-    }, 1000);
-
-    return () => { disposed = true; clearTimeout(timer); };
-  }, [isCloneModalOpen, remoteUrl, hasSelectedCredential, useSavedCredential, selectedCredentialId]);
-
-  // Close on Escape
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isCloneModalOpen && !isCloning) {
-        setIsCloneModalOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isCloneModalOpen, isCloning, setIsCloneModalOpen]);
-
-  // Native path APIs handle Windows drive roots / UNC and Unix roots correctly.
-  useEffect(() => {
-    let disposed = false;
-    setDestinationPath('');
-    void resolveCloneDestination(parentDir, repoName).then((destination) => {
-      if (!disposed) setDestinationPath(destination);
-    }).catch(() => {
-      if (!disposed) setErrorMessage('Could not resolve the destination path. Please choose a folder with Browse.');
-    });
-    return () => { disposed = true; };
-  }, [parentDir, repoName]);
-
-  const handleBrowseFolder = async () => {
-    const folder = await pickCloneFolder();
-    if (folder) {
-      setParentDir(folder);
-      if (folder !== parentDir) setDestinationPath('');
-      setErrorMessage(null);
-    }
-  };
-
-  const handleClose = () => {
-    if (isCloning) return;
-    setIsCloneModalOpen(false);
-    setErrorMessage(null);
-    setUrlStatus('idle');
-    setUrlMessage(null);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!remoteUrl.trim()) {
-      setErrorMessage('Please enter a valid repository URL.');
-      return;
-    }
-    if (useSavedCredential && !remoteOrigin) {
-      setErrorMessage('Saved Git credentials can only be used with HTTPS repository URLs.');
-      return;
-    }
-    if (useSavedCredential && !selectedCredential) {
-      setErrorMessage('Select a saved Git credential, or turn off the credential option to clone without one.');
-      return;
-    }
-    if (urlStatus === 'invalid') {
-      setErrorMessage(urlMessage || 'Repository URL is invalid or inaccessible.');
-      return;
-    }
-    if (!destinationPath.trim()) {
-      setErrorMessage('Please select a destination folder.');
-      return;
-    }
-
-    const optionsError = validateCloneOptions(cloneOptions);
-    if (optionsError) { setErrorMessage(optionsError); return; }
-
-    setErrorMessage(null);
-    // The store owns execution and reports errors to the task dialog even after
-    // this form closes or the user puts the operation in the background.
-    void cloneRepo(
-      remoteUrl.trim(), destinationPath.trim(),
-      useSavedCredential ? selectedCredential?.id : undefined, cloneOptions
-    ).catch(() => {});
-    setIsCloneModalOpen(false);
-    setRemoteUrl('');
-    setRepoName('');
-    setRepoNameEdited(false);
-    setParentDir('');
-    setDestinationPath('');
-    setUrlStatus('idle');
-    setUrlMessage(null);
-    setRemoteRefs(null);
-    setUseSavedCredential(false);
-    setSelectedCredentialId('');
-    setCloneOptions(createCloneOptions());
-  };
+    credentialsLoading,
+    remoteUrl,
+    parentDir,
+    repoName,
+    setRepoName,
+    setRepoNameEdited,
+    destinationPath,
+    setDestinationPath,
+    cloneOptions,
+    setCloneOptions,
+    isCloning,
+    errorMessage,
+    setErrorMessage,
+    useSavedCredential,
+    setUseSavedCredential,
+    selectedCredentialId,
+    setSelectedCredentialId,
+    urlStatus,
+    urlMessage,
+    remoteRefs,
+    remoteOrigin,
+    credentialOptions,
+    selectedCredential,
+    isSshRemote,
+    handleUrlChange,
+    handleBrowseFolder,
+    handleClose,
+    handleSubmit,
+  } = useCloneRepository();
 
   if (!isCloneModalOpen) return null;
 
@@ -350,212 +93,97 @@ export const CloneRepoModal: React.FC = () => {
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="min-h-0 flex flex-col">
           <div className="min-h-0 overflow-y-auto p-5 space-y-4">
-          {/* Error Banner */}
-          {errorMessage && (
-            <div className="p-3 bg-red/10 border border-red/30 flex items-start gap-2.5 text-red text-xs animate-in fade-in duration-150">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <div className="flex-1 break-words font-mono text-[11px] leading-relaxed">
-                {errorMessage}
+            {/* Error Banner */}
+            {errorMessage && (
+              <div className="p-3 bg-red/10 border border-red/30 flex items-start gap-2.5 text-red text-xs animate-in fade-in duration-150">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="flex-1 break-words font-mono text-[11px] leading-relaxed">
+                  {errorMessage}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Remote URL Field */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-medium text-text">
-                Repository URL <span className="text-red">*</span>
+            {/* Remote URL Field */}
+            <CloneUrlInputSection
+              urlStatus={urlStatus}
+              isCloning={isCloning}
+              remoteUrl={remoteUrl}
+              handleUrlChange={handleUrlChange}
+              urlMessage={urlMessage}
+            />
+
+            {/* Optional one-time HTTPS credential */}
+            <CloneCredentialsSection
+              useSavedCredential={useSavedCredential}
+              isCloning={isCloning}
+              isSshRemote={isSshRemote}
+              setUseSavedCredential={setUseSavedCredential}
+              setErrorMessage={setErrorMessage}
+              selectedCredentialId={selectedCredentialId}
+              credentialsLoading={credentialsLoading}
+              credentialOptions={credentialOptions}
+              credentialSelectOptions={credentialSelectOptions}
+              setSelectedCredentialId={setSelectedCredentialId}
+              remoteOrigin={remoteOrigin}
+            />
+
+            {/* Local Destination Folder */}
+            <CloneDestinationSection
+              isCloning={isCloning}
+              destinationPath={destinationPath}
+              parentDir={parentDir}
+              handleBrowseFolder={handleBrowseFolder}
+            />
+
+            {/* Repository Folder Name */}
+            <div>
+              <label className="block text-xs font-medium text-text mb-1.5">
+                Target Folder Name
               </label>
-              {urlStatus === 'validating' && (
-                <span className="text-[11px] text-blue flex items-center gap-1 font-normal animate-pulse">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Checking...
-                </span>
-              )}
-            </div>
-            <div className="relative">
-              <Globe
-                className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
-                  urlStatus === 'invalid'
-                    ? 'text-red'
-                    : urlStatus === 'valid'
-                    ? 'text-green'
-                    : 'text-subtext0'
-                }`}
-              />
               <input
                 type="text"
-                autoFocus
                 disabled={isCloning}
-                value={remoteUrl}
-                onChange={handleUrlChange}
-                placeholder="https://github.com/owner/repository.git or git@github.com:owner/repo.git"
-                className={`w-full pl-9 pr-9 py-2 bg-surface0 border text-xs placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 ${
-                  urlStatus === 'invalid'
-                    ? 'border-red text-red focus:border-red focus:ring-1 focus:ring-red'
-                    : urlStatus === 'valid'
-                    ? 'border-green text-text focus:border-green focus:ring-1 focus:ring-green'
-                    : 'border-surface1 text-text focus:border-blue focus:ring-1 focus:ring-blue'
-                }`}
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                {urlStatus === 'validating' && (
-                  <Loader2 className="w-4 h-4 text-blue animate-spin" />
-                )}
-                {urlStatus === 'valid' && (
-                  <Check className="w-4 h-4 text-green" />
-                )}
-                {urlStatus === 'invalid' && (
-                  <AlertCircle className="w-4 h-4 text-red" />
-                )}
-              </div>
-            </div>
-
-            {/* Validation Message Below Input */}
-            {urlStatus === 'invalid' && (
-              <p className="text-[11px] text-red mt-1.5 flex items-start gap-1.5 animate-in fade-in duration-150">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-red" />
-                <span className="leading-tight font-mono">{urlMessage}</span>
-              </p>
-            )}
-            {urlStatus === 'valid' && (
-              <p className="text-[11px] text-green mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
-                <Check className="w-3.5 h-3.5 shrink-0 text-green" />
-                <span className="leading-tight">{urlMessage}</span>
-              </p>
-            )}
-            {urlStatus === 'validating' && (
-              <p className="text-[11px] text-subtext0 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-150">
-                <Loader2 className="w-3 h-3 shrink-0 animate-spin text-blue" />
-                <span className="leading-tight">{urlMessage}</span>
-              </p>
-            )}
-            {urlStatus === 'idle' && (
-              <p className="text-[10px] text-subtext0 mt-1">
-                {urlMessage || 'Supports HTTPS and SSH URLs from GitHub, GitLab, Bitbucket, or self-hosted Git'}
-              </p>
-            )}
-          </div>
-
-          {/* Optional one-time HTTPS credential */}
-          <div className="border border-surface1 bg-surface0/40 p-3 space-y-2.5">
-            <label className="flex items-center gap-2 text-xs font-medium text-text cursor-pointer">
-              <input
-                type="checkbox"
-                checked={useSavedCredential}
-                disabled={isCloning || isSshRemote}
-                onChange={(event) => {
-                  setUseSavedCredential(event.target.checked);
-                  setErrorMessage(null);
+                value={repoName}
+                onChange={(e) => {
+                  if (e.target.value !== repoName) setDestinationPath('');
+                  setRepoName(e.target.value);
+                  setRepoNameEdited(true);
                 }}
-                className="accent-brand"
+                placeholder="e.g. my-project"
+                className="w-full px-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60"
               />
-              <span>Use a saved HTTPS credential (optional)</span>
-            </label>
-            {isSshRemote && (
-              <p className="pl-5 text-[10px] text-subtext0">
-                SSH cloning uses your existing Git/SSH setup. Stage0 credential selection is HTTPS-only.
-              </p>
-            )}
-            {useSavedCredential && (
-              <div className="pl-5 space-y-1.5">
-                <CustomSelect
-                  value={selectedCredentialId}
-                  disabled={isCloning || credentialsLoading || credentialOptions.length === 0}
-                  options={credentialSelectOptions}
-                  onChange={(credentialId) => {
-                    setSelectedCredentialId(credentialId);
-                    setErrorMessage(null);
-                  }}
-                  className="w-full"
-                  buttonClassName="w-full py-2"
-                  dropdownWidth="w-full"
-                  align="left"
-                  placeholder={credentialsLoading ? 'Loading saved credentials...' : 'Select a credential'}
-                  aria-label="Saved Git credential"
-                />
-                <p className="text-[10px] text-subtext0">
-                  {remoteOrigin
-                    ? credentialOptions.length > 0
-                      ? 'Only credentials for this HTTPS host are listed. The secret is used for this clone only.'
-                      : 'No saved credential matches this HTTPS host. Add one in Preferences or scan a known remote.'
-                    : isSshRemote
-                      ? 'SSH cloning uses your existing Git/SSH setup. Stage0 credential selection is HTTPS-only.'
-                      : 'Saved credentials are available for HTTPS repositories only.'}
+              {repoName && !isSafeCloneRepoName(repoName) && (
+                <p role="alert" className="mt-1 text-[11px] text-red">
+                  Use a single folder name with letters, numbers, dots, underscores or hyphens.
+                  Paths and reserved device names are not allowed.
                 </p>
+              )}
+            </div>
+
+            {/* Resolved Path Preview */}
+            {destinationPath && (
+              <div className="bg-surface0/60 border border-surface1/60 p-3 text-[11px]">
+                <span className="text-subtext0 block mb-0.5">Cloning into:</span>
+                <code className="text-blue font-mono font-medium break-all select-all">
+                  {destinationPath}
+                </code>
               </div>
             )}
-          </div>
 
-          {/* Local Destination Folder */}
-          <div>
-            <label className="block text-xs font-medium text-text mb-1.5">
-              Destination Directory <span className="text-red">*</span>
-            </label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Folder className="w-4 h-4 text-subtext0 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  disabled={isCloning}
-                  readOnly
-                  aria-label="Destination Directory"
-                  value={destinationPath || parentDir}
-                  placeholder="Home directory + repository name"
-                  className="w-full pl-9 pr-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60"
-                />
-              </div>
-              <button
-                type="button"
-                disabled={isCloning}
-                onClick={handleBrowseFolder}
-                title="Choose a parent folder for the repository"
-                className="px-3.5 py-2 bg-surface1 hover:bg-surface2 text-text border border-surface2 text-xs font-medium transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
-              >
-                <FolderOpen className="w-3.5 h-3.5 text-blue" />
-                <span>Browse...</span>
-              </button>
-            </div>
-            <p className="mt-1 text-[10px] text-subtext0">Full clone destination: home directory + repository name. Browse changes the parent folder.</p>
-          </div>
-
-          {/* Repository Folder Name */}
-          <div>
-            <label className="block text-xs font-medium text-text mb-1.5">
-              Target Folder Name
-            </label>
-            <input
-              type="text"
+            {/* Command Preview Box */}
+            <CloneOptionsForm
+              options={cloneOptions}
+              onChange={setCloneOptions}
               disabled={isCloning}
-              value={repoName}
-              onChange={(e) => { if (e.target.value !== repoName) setDestinationPath(''); setRepoName(e.target.value); setRepoNameEdited(true); }}
-              placeholder="e.g. my-project"
-              className="w-full px-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60"
+              remoteRefs={remoteRefs}
+              refsLoading={urlStatus === 'validating'}
             />
-            {repoName && !isSafeCloneRepoName(repoName) && (
-              <p role="alert" className="mt-1 text-[11px] text-red">Use a single folder name with letters, numbers, dots, underscores or hyphens. Paths and reserved device names are not allowed.</p>
-            )}
-          </div>
-
-          {/* Resolved Path Preview */}
-          {destinationPath && (
-            <div className="bg-surface0/60 border border-surface1/60 p-3 text-[11px]">
-              <span className="text-subtext0 block mb-0.5">Cloning into:</span>
-              <code className="text-blue font-mono font-medium break-all select-all">
-                {destinationPath}
-              </code>
+            <div className="bg-surface0/40 border border-surface1/40 p-2.5 flex items-center gap-2 text-[11px] text-subtext0 font-mono overflow-x-auto">
+              <Terminal className="w-3.5 h-3.5 text-peach shrink-0" />
+              <span className="whitespace-pre-wrap break-all select-text">
+                {previewCloneCommand(remoteUrl, destinationPath, cloneOptions)}
+              </span>
             </div>
-          )}
-
-          {/* Command Preview Box */}
-          <CloneOptionsForm options={cloneOptions} onChange={setCloneOptions} disabled={isCloning}
-            remoteRefs={remoteRefs} refsLoading={urlStatus === 'validating'} />
-          <div className="bg-surface0/40 border border-surface1/40 p-2.5 flex items-center gap-2 text-[11px] text-subtext0 font-mono overflow-x-auto">
-            <Terminal className="w-3.5 h-3.5 text-peach shrink-0" />
-            <span className="whitespace-pre-wrap break-all select-text">
-              {previewCloneCommand(remoteUrl, destinationPath, cloneOptions)}
-            </span>
-          </div>
           </div>
 
           {/* Footer Actions */}

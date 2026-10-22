@@ -1,0 +1,26 @@
+---
+description: Preserve Stage0 frontend contracts while keeping feature modules small
+globs: frontend/**/*.ts,frontend/**/*.tsx
+alwaysApply: false
+---
+
+# Frontend modularity
+
+- Read `docs/architecture/frontend_maintenance.md` and `feature_layout.md` first.
+- Keep each module with its owning feature. `common` is for feature-independent reuse.
+- Aim for 100–300 lines, review boundaries at 400, never exceed 450 physical lines.
+- One component or type owner per file; put component props in a sibling props file.
+- Split by named behavior, not arbitrary line ranges. Keep root hooks/components stable.
+- Example: clone URL presentation belongs in `components/clone/CloneUrlInputSection.tsx`;
+  async destination/ref validation belongs in `hooks/useCloneRepository.ts`.
+- Never create a second Zustand store to split a domain. Compose typed slices into
+  the existing root store and preserve selector/action identity and initialization.
+- Keep request epochs, listener cleanup, transactions, consent, secret redaction,
+  guardrails, cancellation, error paths and IPC ordering with their workflow owner.
+- Preserve React keys at the caller when extracting an item rendered by `map`.
+- Keep structural moves separate from product changes. Do not remove test assertions.
+- Tests must resolve mocks by module identity and traverse extracted components,
+  not depend on an old relative import path or JSX living in a facade.
+- Run `pnpm typecheck`, `pnpm check:architecture` and relevant Node tests. Production
+  builds bump versions: use direct Vite checks unless packaging is requested.
+- Update the maintenance map and record baseline failures separately from regressions.

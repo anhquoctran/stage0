@@ -2,12 +2,15 @@
 
 > **Date**: 2026-10-22  
 > **Target Scope**: Frontend codebase (`frontend/` directory, 567 TypeScript/TSX files)  
-> **Status**: Ready for Agent Execution  
+> **Status**: Implemented — verification caveats recorded in section 7
 > **Companion Document**: [Feature Layout](feature_layout.md) · [Backend Refactor Report](backend_refactor_analysis.md) · [AGENTS.md](../../AGENTS.md)
 
 ---
 
 ## 1. Executive Summary & Size Distribution
+
+This section and the inventory below preserve the **starting audit**. See section 7
+for implementation measurements and the maintenance map for current ownership.
 
 A comprehensive audit of the Stage0 frontend codebase identified **24 files exceeding 400 lines**, with **14 files exceeding 500 lines** (the maximum threshold enforced for backend Rust files and recommended target for frontend maintainability).
 
@@ -187,21 +190,21 @@ flowchart LR
 ```
 
 ### Execution Checklist for Next Agent:
-- [ ] **Wave 1: Zustand Slices**
-  - [ ] Split `useGitStore.ts` into 5 domain slices in `features/git/store/slices/`.
-  - [ ] Split `useAiMcpStore.ts` into 4 domain slices + `aiMcpPersistence.ts`.
-  - [ ] Verify `pnpm typecheck` and `pnpm check:architecture`.
-- [ ] **Wave 2: Complex Views**
-  - [ ] Extract `usePreferencesDraft` from `PreferencesModal.tsx`.
-  - [ ] Extract `VirtualMrHeader`, `VirtualMrMetadataBar`, and sub-tabs from `VirtualMrHub.tsx`.
-  - [ ] Extract `NewVirtualMrHeader` and form sections from `NewVirtualMrView.tsx`.
-  - [ ] Extract `VirtualMrSearchBox` and `VirtualMrListItem` from `VirtualMrListDialog.tsx`.
-- [ ] **Wave 3: Feature Modals & Viewers**
-  - [ ] Extract `MarkdownToolbar` and `useMarkdownImageDrop` from `MarkdownEditor.tsx`.
-  - [ ] Extract `CloneUrlInputSection` and `CloneDestinationSection` from `CloneRepoModal.tsx`.
-  - [ ] Extract `BlameToolbar` and `BlameLinesTable` from `BlameViewer.tsx`.
-  - [ ] Extract `DiscussionCommentCard` and `DiscussionReplyBox` from `DiscussionThread.tsx`.
-  - [ ] Extract `AddGitCredentialModal` and `GitCredentialCard` from `GitCredentialsTab.tsx`.
+- [x] **Wave 1: Zustand Slices**
+  - [x] Split `useGitStore.ts` into 5 domain slices plus a dedicated sync slice in `features/git/store/slices/`.
+  - [x] Split `useAiMcpStore.ts` into 4 domain slices + `aiMcpPersistence.ts`.
+  - [x] Verify `pnpm typecheck` and `pnpm check:architecture`.
+- [x] **Wave 2: Complex Views**
+  - [x] Extract `usePreferencesDraft` from `PreferencesModal.tsx`.
+  - [x] Extract `VirtualMrHeader`, `VirtualMrMetadataBar`, and sub-tabs from `VirtualMrHub.tsx`.
+  - [x] Extract `NewVirtualMrHeader` and form sections from `NewVirtualMrView.tsx`.
+  - [x] Extract `VirtualMrSearchBox` and `VirtualMrListItem` from `VirtualMrListDialog.tsx`.
+- [x] **Wave 3: Feature Modals & Viewers**
+  - [x] Extract `MarkdownToolbar` and `useMarkdownImageDrop` from `MarkdownEditor.tsx`.
+  - [x] Extract `CloneUrlInputSection` and `CloneDestinationSection` from `CloneRepoModal.tsx`.
+  - [x] Extract `BlameToolbar` and `BlameLinesTable` from `BlameViewer.tsx`.
+  - [x] Extract `DiscussionCommentCard` and `DiscussionReplyBox` from `DiscussionThread.tsx`.
+  - [x] Extract `AddGitCredentialModal` and `GitCredentialCard` from `GitCredentialsTab.tsx`.
 
 ---
 
@@ -225,21 +228,76 @@ cargo check --manifest-path backend/Cargo.toml
 
 ---
 
-## 6. Verification Commands
+## 7. Implementation checkpoint (2026-10-22)
 
-Run after completing any refactoring step:
+All three execution waves and all 24 inventory targets have been addressed. The
+frontend now has **693 TypeScript files**, largest **445/450 physical lines**;
+only **5** files remain at or above the 400-line review threshold (previously 24).
+There are no size exceptions. Root hooks and component exports remain stable.
 
-```powershell
-# 1. Check architecture and source ownership limits
-pnpm check:architecture
+| Original target | Before | After |
+|---|---:|---:|
+| [features/git/store/useGitStore.ts](../../frontend/features/git/store/useGitStore.ts) | 895 | 18 |
+| [features/ai/store/useAiMcpStore.ts](../../frontend/features/ai/store/useAiMcpStore.ts) | 771 | 72 |
+| [features/preferences/components/PreferencesModal.tsx](../../frontend/features/preferences/components/PreferencesModal.tsx) | 716 | 190 |
+| [features/virtual-mr/components/VirtualMrHub.tsx](../../frontend/features/virtual-mr/components/VirtualMrHub.tsx) | 704 | 334 |
+| [features/virtual-mr/components/NewVirtualMrView.tsx](../../frontend/features/virtual-mr/components/NewVirtualMrView.tsx) | 664 | 429 |
+| [features/ai/components/AiMcpTab.tsx](../../frontend/features/ai/components/AiMcpTab.tsx) | 661 | 338 |
+| [features/virtual-mr/components/VirtualMrListDialog.tsx](../../frontend/features/virtual-mr/components/VirtualMrListDialog.tsx) | 642 | 426 |
+| [features/git/components/CloneRepoModal.tsx](../../frontend/features/git/components/CloneRepoModal.tsx) | 612 | 240 |
+| [features/git/components/repository-settings/RepositoryAgentsTab.tsx](../../frontend/features/git/components/repository-settings/RepositoryAgentsTab.tsx) | 609 | 386 |
+| [common/components/MarkdownEditor.tsx](../../frontend/common/components/MarkdownEditor.tsx) | 601 | 291 |
+| [features/virtual-mr/components/DiscussionThread.tsx](../../frontend/features/virtual-mr/components/DiscussionThread.tsx) | 596 | 308 |
+| [features/git/components/BlameViewer.tsx](../../frontend/features/git/components/BlameViewer.tsx) | 581 | 226 |
+| [features/credentials/components/GitCredentialsTab.tsx](../../frontend/features/credentials/components/GitCredentialsTab.tsx) | 570 | 263 |
+| [core/components/layout/MainLayout.tsx](../../frontend/core/components/layout/MainLayout.tsx) | 535 | 184 |
+| [features/git/components/GitGraphModal.tsx](../../frontend/features/git/components/GitGraphModal.tsx) | 490 | 157 |
+| [features/ai/components/BotReviewerModal.tsx](../../frontend/features/ai/components/BotReviewerModal.tsx) | 481 | 321 |
+| [features/git/components/GitBinaryTab.tsx](../../frontend/features/git/components/GitBinaryTab.tsx) | 461 | 344 |
+| [core/components/layout/menu-bar/MenuBarRepositoryMenu.tsx](../../frontend/core/components/layout/menu-bar/MenuBarRepositoryMenu.tsx) | 457 | 323 |
+| [features/git/components/ConflictViewer.tsx](../../frontend/features/git/components/ConflictViewer.tsx) | 448 | 378 |
+| [features/ai/components/AiMcpProviderDetailsModal.tsx](../../frontend/features/ai/components/AiMcpProviderDetailsModal.tsx) | 437 | 344 |
+| [features/git/components/FileList.tsx](../../frontend/features/git/components/FileList.tsx) | 425 | 342 |
+| [features/ai/components/SandboxTab.tsx](../../frontend/features/ai/components/SandboxTab.tsx) | 408 | 311 |
+| [features/ai/components/ExternalAgentsTab.tsx](../../frontend/features/ai/components/ExternalAgentsTab.tsx) | 402 | 422 |
+| [features/virtual-mr/store/useVirtualMrStore.ts](../../frontend/features/virtual-mr/store/useVirtualMrStore.ts) | 401 | 19 |
 
-# 2. Check TypeScript types
-pnpm typecheck
+### Boundary decisions
 
-# 3. Check virtual MR and feature tests
-node --test scripts/virtual-mr-branch-lock.test.mjs scripts/virtual-mr-discussions.test.mjs scripts/virtual-mr-metadata.test.mjs scripts/virtual-mr-pagination.test.mjs scripts/virtual-mr-sequence.test.mjs
+- Git uses six slices rather than five: sync is an independent bounded workflow,
+  separate from repository lifecycle. Its shared diff invalidation epoch remains
+  shared with lifecycle operations. AI uses four slices and a persistence service.
+- Preferences additionally separates the ordered Apply action from draft state.
+  AI tab state separates MCP form/secret validation from provider coordination.
+- Existing graph, tree, reviewer/label and endpoint components were reused where
+  already separated. Smaller inventory targets received named functional extracts
+  (binary table/detection, file filters, conflict controls, sandbox and ACP cards,
+  repository sync/open submenus), not duplicate versions of existing controls.
+- Component props have separate owners. React map keys remain at caller sites.
+  New view boundaries retain callbacks, refs, conditional mounting and consent.
+- Root line-count sketches were estimates, not reasons to fragment cohesive
+  orchestration further. Every production file is under the enforced 450 limit.
 
-# 4. Check backend Cargo compilation (if any types or IPC schemas were touched)
-cargo check --manifest-path backend/Cargo.toml
-```
+### Verification and known failures
 
+- `pnpm typecheck`, `pnpm check:architecture`, `git diff --check` and
+  `cargo check --manifest-path backend/Cargo.toml` pass.
+- Full Node baseline: **181 total / 163 pass / 18 fail**. After refactor: **185
+  total / 167 pass / the same 18 fail**. No new failing test names. Existing
+  assertions were retained; source-layout assertions now read the implementation
+  owner and fixture loaders resolve canonical module identities/automatic JSX.
+- Four new tests cover physical-line enforcement, lifecycle/diff invalidation,
+  overlapping diff requests, and AI/MCP secret persistence. All pass.
+- An additional AST audit compared all **155** original Git/AI/MR root state
+  fields and actions with their extracted implementations; no implementation
+  differences after shared-epoch-name and formatting normalization.
+- Isolated Vite production compilation passes without version/release metadata
+  changes. Mixed static/dynamic imports and large-chunk warnings remain.
+- No backend behavior or IPC schema changes. Verification ran on macOS; native
+  visual interactions, real accounts/providers and Windows/Linux runtime behavior
+  have not been exercised. The 18 baseline failures remain visible follow-up work,
+  not a claim that the entire suite is green.
+
+Current responsibilities, invariants and failure groups are documented in
+[frontend maintenance](frontend_maintenance.md). `AGENTS.md` and
+`.cursor/rules/frontend-modularity.mdc` direct future agents there.

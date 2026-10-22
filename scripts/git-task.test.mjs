@@ -1,18 +1,14 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import test from 'node:test';
-import ts from 'typescript';
+import { loadWithMocks } from './helpers/componentHarness.mjs';
 
 const require = createRequire(import.meta.url);
 function loadStore(relativePath, overrides = {}) {
-  const source = fs.readFileSync(new URL(relativePath, import.meta.url), 'utf8');
-  const { outputText } = ts.transpileModule(source, {
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
+  return loadWithMocks(new URL(relativePath, import.meta.url), {
+    zustand: require('zustand'),
+    ...overrides,
   });
-  const exports = {};
-  new Function('require', 'exports', outputText)((id) => overrides[id] ?? require(id), exports);
-  return exports;
 }
 
 const { useGitTaskStore: tasks } = loadStore('../frontend/features/git/store/useGitTaskStore.ts');

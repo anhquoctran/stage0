@@ -1,17 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
-import { Search } from '../../../common/components/icons/Search';
-import { X } from '../../../common/components/icons/X';
-import { List } from '../../../common/components/icons/List';
-import { FolderTree } from '../../../common/components/icons/FolderTree';
+import { ChevronDown } from '../../../common/components/icons/ChevronDown';
+import { ChevronRight } from '../../../common/components/icons/ChevronRight';
 import { Folder } from '../../../common/components/icons/Folder';
 import { FolderOpen } from '../../../common/components/icons/FolderOpen';
-import { ChevronRight } from '../../../common/components/icons/ChevronRight';
-import { ChevronDown } from '../../../common/components/icons/ChevronDown';
-import { type ChangedFile } from '../types/ChangedFile';
 import { useGitStore } from '../store/useGitStore';
-import { FileContextMenu } from './FileContextMenu';
+import { type ChangedFile } from '../types/ChangedFile';
 import type { FileListProps } from '../types/FileListProps';
+import { FileListFilterBar } from './file-list/FileListFilterBar';
+import { FileContextMenu } from './FileContextMenu';
 
 export const FileList: React.FC<FileListProps> = ({
   files,
@@ -49,8 +46,7 @@ export const FileList: React.FC<FileListProps> = ({
     return files.filter((file) => {
       const matchesSearch =
         file.path.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (file.old_path &&
-          file.old_path.toLowerCase().includes(searchTerm.toLowerCase()));
+        (file.old_path && file.old_path.toLowerCase().includes(searchTerm.toLowerCase()));
       if (!matchesSearch) return false;
       if (filterConflictedOnly && !file.is_conflicted) return false;
       return true;
@@ -164,101 +160,19 @@ export const FileList: React.FC<FileListProps> = ({
       }`}
     >
       {/* Sidebar Header */}
-      <div className="p-2.5 border-b border-surface0 bg-mantle space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs font-bold uppercase tracking-wider text-subtext1">
-              Files Changed
-            </span>
-            <span className="text-xs px-1.5 py-0.2 bg-surface0 text-text  font-mono font-semibold border border-surface0">
-              {files.length}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Flat vs Tree toggle */}
-            <div className="flex items-center bg-surface0  p-0.5 gap-0.5">
-              <button
-                type="button"
-                onClick={() => setFileListLayout('flat')}
-                className={`p-1  transition-colors ${
-                  fileListLayout === 'flat'
-                    ? 'bg-surface2 text-white'
-                    : 'text-white/70 hover:text-white'
-                }`}
-                title="Flat list view"
-              >
-                <List className="w-3.5 h-3.5 text-white" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setFileListLayout('tree')}
-                className={`p-1  transition-colors ${
-                  fileListLayout === 'tree'
-                    ? 'bg-surface2 text-white'
-                    : 'text-white/70 hover:text-white'
-                }`}
-                title="Tree folder view"
-              >
-                <FolderTree className="w-3.5 h-3.5 text-white" />
-              </button>
-            </div>
-
-            {/* Total Lines Changed */}
-            <div className="flex items-center gap-1.5 text-[11px] font-mono font-semibold">
-              {binaryCount > 0 && (
-                <span className="text-amber-400" title={`${binaryCount} binary file${binaryCount === 1 ? '' : 's'}; diff preview is not supported`}>
-                  {binaryCount} BIN
-                </span>
-              )}
-              <span className="text-green">+{totalAdditions}</span>
-              <span className="text-red">-{totalDeletions}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Search Input */}
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-subtext1" />
-          <input
-            type="text"
-            placeholder="Filter files..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-7 py-1 bg-base border border-surface0  text-xs text-text placeholder-subtext0 focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
-          />
-          {searchTerm && (
-            <button
-              type="button"
-              onClick={() => setSearchTerm('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-subtext1 hover:text-text"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-
-        {/* Conflict Quick Filter Pill */}
-        {conflictedCount > 0 && (
-          <button
-            type="button"
-            onClick={() => setFilterConflictedOnly(!filterConflictedOnly)}
-            className={`w-full flex items-center justify-between px-2.5 py-1 text-xs font-semibold transition-colors ${
-              filterConflictedOnly
-                ? 'bg-red-600 text-white'
-                : 'bg-surface1 text-white hover:bg-surface2'
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-white shrink-0" />
-              <span>Show Conflicts Only</span>
-            </div>
-            <span className="bg-red-700 text-white px-1.5 py-0.2  font-mono text-[10px]">
-              {conflictedCount}
-            </span>
-          </button>
-        )}
-      </div>
+      <FileListFilterBar
+        files={files}
+        setFileListLayout={setFileListLayout}
+        fileListLayout={fileListLayout}
+        binaryCount={binaryCount}
+        totalAdditions={totalAdditions}
+        totalDeletions={totalDeletions}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        conflictedCount={conflictedCount}
+        setFilterConflictedOnly={setFilterConflictedOnly}
+        filterConflictedOnly={filterConflictedOnly}
+      />
 
       {/* File List Content */}
       <div className="flex-1 overflow-y-auto">
@@ -268,16 +182,17 @@ export const FileList: React.FC<FileListProps> = ({
             <p>Analyzing changes...</p>
           </div>
         ) : diffError ? (
-          <div className="p-6 flex flex-col items-center gap-2 text-center text-xs text-red" title={diffError}>
+          <div
+            className="p-6 flex flex-col items-center gap-2 text-center text-xs text-red"
+            title={diffError}
+          >
             <AlertTriangle className="w-4 h-4" />
             <span>Comparison unavailable</span>
             <span className="text-subtext0">See the details in the comparison view.</span>
           </div>
         ) : filteredFiles.length === 0 ? (
           <div className="p-6 text-center text-xs text-subtext0">
-            {searchTerm
-              ? 'No files match search query'
-              : 'No file changes between branches'}
+            {searchTerm ? 'No files match search query' : 'No file changes between branches'}
           </div>
         ) : fileListLayout === 'flat' ? (
           /* Flat File List */
@@ -301,29 +216,28 @@ export const FileList: React.FC<FileListProps> = ({
                   <div className="flex items-center gap-2 min-w-0">
                     {getStatusBadge(file.status, file.is_conflicted)}
                     {file.is_binary && (
-                      <span className="shrink-0 text-[9px] font-bold text-amber-400" title="Binary file; diff preview is not supported">
+                      <span
+                        className="shrink-0 text-[9px] font-bold text-amber-400"
+                        title="Binary file; diff preview is not supported"
+                      >
                         BIN
                       </span>
                     )}
                     <div className="min-w-0 font-mono leading-tight">
                       {dir && (
-                        <span className="text-subtext1 text-[11px] block truncate">
-                          {dir}
-                        </span>
+                        <span className="text-subtext1 text-[11px] block truncate">{dir}</span>
                       )}
-                      <span className={`truncate font-medium block ${isSelected ? 'text-text' : 'text-text'}`}>
+                      <span
+                        className={`truncate font-medium block ${isSelected ? 'text-text' : 'text-text'}`}
+                      >
                         {fileName}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1.5 text-[11px] font-mono shrink-0">
-                    {file.additions > 0 && (
-                      <span className="text-green">+{file.additions}</span>
-                    )}
-                    {file.deletions > 0 && (
-                      <span className="text-red">-{file.deletions}</span>
-                    )}
+                    {file.additions > 0 && <span className="text-green">+{file.additions}</span>}
+                    {file.deletions > 0 && <span className="text-red">-{file.deletions}</span>}
                   </div>
                 </button>
               );
@@ -382,7 +296,10 @@ export const FileList: React.FC<FileListProps> = ({
                             <div className="flex items-center gap-2 min-w-0">
                               {getStatusBadge(file.status, file.is_conflicted)}
                               {file.is_binary && (
-                                <span className="shrink-0 text-[9px] font-bold text-amber-400" title="Binary file; diff preview is not supported">
+                                <span
+                                  className="shrink-0 text-[9px] font-bold text-amber-400"
+                                  title="Binary file; diff preview is not supported"
+                                >
                                   BIN
                                 </span>
                               )}

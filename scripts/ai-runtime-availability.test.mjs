@@ -195,7 +195,7 @@ test('backend verification IPC is fail-closed, and metadata templates are not la
     assert.match(command, /require_review_runtime\(\)\?/);
     assert.ok(command.indexOf('require_review_runtime()') < command.indexOf('app.state::<Database>()'));
   }
-  for (const file of ['VirtualMrHub.tsx', 'NewVirtualMrView.tsx']) {
+  for (const file of ['hub/VirtualMrOverviewTab.tsx', 'new-mr/NewVirtualMrFormSection.tsx']) {
     const component = readFileSync(new URL(`../frontend/features/virtual-mr/components/${file}`, import.meta.url), 'utf8');
     assert.doesNotMatch(component, /AI generated draft|Generated description with AI/);
     assert.match(component, /onGenerateDraft=/);
