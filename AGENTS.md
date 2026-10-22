@@ -1,6 +1,7 @@
 # Stage0 agent guidance
 
 Read [feature layout](docs/architecture/feature_layout.md) before adding modules.
+For frontend work, consult the [frontend refactor report](docs/architecture/frontend_refactor_analysis.md).
 For backend work, consult [backend maintenance](docs/architecture/backend_maintenance.md)
 and the measured [refactor report](docs/architecture/backend_refactor_analysis.md).
 
