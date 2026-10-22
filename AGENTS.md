@@ -2,6 +2,9 @@
 
 Read [feature layout](docs/architecture/feature_layout.md) before adding modules.
 For frontend work, consult the [frontend refactor report](docs/architecture/frontend_refactor_analysis.md).
+Use the [frontend maintenance map](docs/architecture/frontend_maintenance.md) for
+current component, hook and slice ownership. Frontend TypeScript files have an
+enforced 450-physical-line limit; aim for 100–300 and review boundaries at 400.
 For backend work, consult [backend maintenance](docs/architecture/backend_maintenance.md)
 and the measured [refactor report](docs/architecture/backend_refactor_analysis.md).
 

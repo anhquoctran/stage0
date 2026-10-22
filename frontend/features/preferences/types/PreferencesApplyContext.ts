@@ -1,0 +1,34 @@
+import type { Dispatch, RefObject, SetStateAction } from 'react';
+import type { StoreApi, UseBoundStore } from 'zustand';
+import { type ThemeMode } from '../../../core/types/ThemeMode';
+import type { AiPreferencesEditor } from '../../ai/types/AiPreferencesEditor';
+import type { AiPreferencesSnapshot } from '../../ai/types/AiPreferencesSnapshot';
+import type { GitState } from '../../git/types/GitState';
+import { type SandboxType } from '../../git/types/SandboxType';
+import type { PreferencesBaseline } from './PreferencesBaseline';
+
+export interface PreferencesApplyContext {
+  applyingRef: RefObject<boolean>;
+  setIsApplying: Dispatch<SetStateAction<boolean>>;
+  setApplyError: Dispatch<SetStateAction<string | null>>;
+  draftFontFamily: string;
+  draftFontSize: number;
+  draftIsBold: boolean;
+  draftIsItalic: boolean;
+  draftIsUnderline: boolean;
+  draftLineSpacing: number;
+  draftEnableLigatures: boolean;
+  draftThemeMode: ThemeMode;
+  savedBaseline: PreferencesBaseline;
+  draftShowInlineBlame: boolean;
+  draftSandboxType: SandboxType;
+  draftGitBinaryId: string;
+  draftGitBinaryPath: string;
+  aiDraftStore: UseBoundStore<StoreApi<AiPreferencesEditor>>;
+  aiBaseline: AiPreferencesSnapshot;
+  setAiBaseline: Dispatch<SetStateAction<AiPreferencesSnapshot>>;
+  showToast: (msg: string, level?: GitState['toastLevel']) => void;
+  setSavedBaseline: Dispatch<SetStateAction<PreferencesBaseline>>;
+  setIsApplied: Dispatch<SetStateAction<boolean>>;
+  setShowRestartPrompt: Dispatch<SetStateAction<boolean>>;
+}

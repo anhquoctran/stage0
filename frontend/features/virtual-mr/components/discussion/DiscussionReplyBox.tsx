@@ -1,0 +1,141 @@
+import { CustomSelect } from '../../../../common/components/CustomSelect';
+import { MarkdownEditor } from '../../../../common/components/MarkdownEditor';
+import { getDiscussionMentionOptions } from '../../utils/discussionMentions';
+import type { DiscussionReplyBoxProps } from './DiscussionReplyBoxProps';
+
+export function DiscussionReplyBox({
+  isReplying,
+  targetId,
+  setTargetId,
+  isSubmitting,
+  discussion,
+  rootComment,
+  session,
+  body,
+  setBody,
+  submit,
+  resolveThread,
+  isResolvable,
+  setResolveThread,
+  setIsReplying,
+  setIsCollapsed,
+  handleToggleResolve,
+}: DiscussionReplyBoxProps) {
+  return (
+    <div className="border-t border-surface0/80 p-3.5 bg-surface0/20">
+      {isReplying ? (
+        <div className="space-y-3 animate-in fade-in duration-100">
+          {/* Destination selector: hidden from visible UI as replies automatically target this thread */}
+          <div className="hidden" aria-hidden="true">
+            <CustomSelect
+              value={targetId}
+              onChange={setTargetId}
+              disabled={isSubmitting}
+              searchable
+              options={[
+                {
+                  value: discussion.id,
+                  label: `This thread · ${rootComment?.body.slice(0, 60) || discussion.id}`,
+                },
+                { value: 'new', label: 'New general discussion' },
+                ...session.discussions
+                  .filter((item) => item.id !== discussion.id)
+                  .map((item) => ({
+                    value: item.id,
+                    label: `${item.filePath ? `${item.filePath}:${item.lineNumber ?? 1}` : 'General'} · ${item.rootComment?.body.slice(0, 60) || item.id}`,
+                    description: item.id,
+                  })),
+              ]}
+              aria-label="Reply destination"
+              className="min-w-0 flex-1"
+              buttonClassName="w-full"
+              dropdownWidth="w-full"
+              align="left"
+            />
+          </div>
+
+          {/* GitLab Markdown Editor */}
+          <MarkdownEditor
+            value={body}
+            onChange={setBody}
+            rows={4}
+            minHeight="110px"
+            autoFocus
+            mentionOptions={getDiscussionMentionOptions(session)}
+            placeholder="Write a comment or drag your files here…"
+            showActions={false}
+            onSubmit={() => submit(resolveThread)}
+            disabled={isSubmitting}
+            isSubmitting={isSubmitting}
+          />
+
+          {/* Below editor: Resolve thread checkbox & action buttons (No rounded style) */}
+          <div className="space-y-2.5 pt-0.5">
+            {isResolvable && !discussion.isResolved && targetId === discussion.id && (
+              <label className="inline-flex items-center gap-2 text-xs text-text cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={resolveThread}
+                  onChange={(e) => setResolveThread(e.target.checked)}
+                  className="border border-surface1 bg-crust text-blue focus:ring-0 cursor-pointer w-4 h-4"
+                />
+                <span>Resolve thread</span>
+              </label>
+            )}
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => submit(resolveThread)}
+                disabled={isSubmitting || !body.trim()}
+                className="px-4 py-1.5 bg-blue hover:bg-blue/90 text-crust font-semibold text-xs shadow-xs disabled:opacity-50 transition-colors cursor-pointer"
+              >
+                {targetId === 'new' ? 'Start Discussion' : 'Add comment now'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsReplying(false);
+                  setBody('');
+                  setResolveThread(false);
+                }}
+                disabled={isSubmitting}
+                className="px-3.5 py-1.5 border border-surface1 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setTargetId(discussion.id);
+              setIsReplying(true);
+              setIsCollapsed(false);
+            }}
+            aria-label={`Reply to discussion ${discussion.id}`}
+            className="flex-1 text-left px-3 py-1.5 border border-surface1 bg-crust/50 hover:bg-crust hover:border-surface2 text-subtext0 hover:text-subtext1 text-xs transition-all cursor-text flex items-center justify-between shadow-inner"
+          >
+            <span>Reply...</span>
+            <span className="text-[10px] text-subtext0/70 font-mono">r</span>
+          </button>
+
+          {isResolvable && (
+            <button
+              type="button"
+              onClick={handleToggleResolve}
+              className="px-3 py-1.5 border border-surface1 bg-surface0 hover:bg-surface1 text-text text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer shrink-0"
+              title={discussion.isResolved ? 'Reopen this thread' : 'Mark this thread as resolved'}
+            >
+              <span>{discussion.isResolved ? 'Reopen thread' : 'Resolve thread'}</span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

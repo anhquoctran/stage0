@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { GitBranch } from '../../../common/components/icons/GitBranch';
-import { RefreshCw } from '../../../common/components/icons/RefreshCw';
-import { Check } from '../../../common/components/icons/Check';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
+import { Check } from '../../../common/components/icons/Check';
 import { FolderOpen } from '../../../common/components/icons/FolderOpen';
-import { Copy } from '../../../common/components/icons/Copy';
-import { Terminal } from '../../../common/components/icons/Terminal';
-import { Package } from '../../../common/components/icons/Package';
+import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { HardDrive } from '../../../common/components/icons/HardDrive';
 import { Info } from '../../../common/components/icons/Info';
-import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
+import { Package } from '../../../common/components/icons/Package';
 import { Plus } from '../../../common/components/icons/Plus';
+import { RefreshCw } from '../../../common/components/icons/RefreshCw';
+import { Terminal } from '../../../common/components/icons/Terminal';
 import { useGitBinaryStore } from '../store/useGitBinaryStore';
 import type { GitBinaryInfo } from '../types/GitBinaryInfo';
 import type { GitBinaryTabProps } from '../types/GitBinaryTabProps';
+import { GitBinaryDetectionCard } from './git-binary/GitBinaryDetectionCard';
+import { GitBinaryListTable } from './git-binary/GitBinaryListTable';
 
 export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
   draftBinaryId,
@@ -22,14 +22,8 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
   committedBinaryId,
   committedBinaryPath,
 }) => {
-  const {
-    binaries,
-    isScanning,
-    error,
-    scanBinaries,
-    validateCustomBinary,
-    pickGitExecutable,
-  } = useGitBinaryStore();
+  const { binaries, isScanning, error, scanBinaries, validateCustomBinary, pickGitExecutable } =
+    useGitBinaryStore();
 
   const [customPath, setCustomPath] = useState('');
   const [customError, setCustomError] = useState<string | null>(null);
@@ -58,15 +52,22 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
 
   // Active binary item
   const committedBinary = useMemo(() => {
-    return allBinaries.find((b) => b.id === committedBinaryId || b.path === committedBinaryPath) || allBinaries[0];
+    return (
+      allBinaries.find((b) => b.id === committedBinaryId || b.path === committedBinaryPath) ||
+      allBinaries[0]
+    );
   }, [allBinaries, committedBinaryId, committedBinaryPath]);
 
   // Selected draft item
   const selectedDraftBinary = useMemo(() => {
-    return allBinaries.find((b) => b.id === draftBinaryId || b.path === draftBinaryPath) || committedBinary;
+    return (
+      allBinaries.find((b) => b.id === draftBinaryId || b.path === draftBinaryPath) ||
+      committedBinary
+    );
   }, [allBinaries, draftBinaryId, draftBinaryPath, committedBinary]);
 
-  const isPendingRestart = draftBinaryId !== committedBinaryId || draftBinaryPath !== committedBinaryPath;
+  const isPendingRestart =
+    draftBinaryId !== committedBinaryId || draftBinaryPath !== committedBinaryPath;
 
   const handleCopyPath = (path: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -180,7 +181,8 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
             <span>Git Executable Binary</span>
           </h3>
           <p className="text-xs text-subtext0 mt-0.5 leading-relaxed">
-            Choose between app-bundled Git or system-installed binaries for diffing, merge previews, and sandboxes. Exactly one binary is active at any time.
+            Choose between app-bundled Git or system-installed binaries for diffing, merge previews,
+            and sandboxes. Exactly one binary is active at any time.
           </p>
         </div>
 
@@ -201,57 +203,25 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
         <div className="p-3.5 bg-peach/10 border border-peach/30 flex items-start gap-3">
           <Info className="w-4 h-4 text-peach shrink-0 mt-0.5" />
           <div className="text-xs">
-            <div className="font-semibold text-text">
-              Restart Required upon Applying
-            </div>
+            <div className="font-semibold text-text">Restart Required upon Applying</div>
             <div className="text-subtext0 mt-0.5 leading-relaxed">
-              You selected <span className="font-mono text-text font-semibold">{selectedDraftBinary?.name}</span>. Clicking <span className="font-semibold text-text">Apply</span> or <span className="font-semibold text-text">OK</span> will save this setting and prompt an application restart to switch all internal Git processes cleanly.
+              You selected{' '}
+              <span className="font-mono text-text font-semibold">{selectedDraftBinary?.name}</span>
+              . Clicking <span className="font-semibold text-text">Apply</span> or{' '}
+              <span className="font-semibold text-text">OK</span> will save this setting and prompt
+              an application restart to switch all internal Git processes cleanly.
             </div>
           </div>
         </div>
       )}
 
       {/* Current Active Binary Info Card */}
-      <div className="p-4 bg-surface0/60 border border-surface1 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-subtext0 flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-green" />
-            Currently Active in Process
-          </span>
-          {committedBinary && getSourceBadge(committedBinary.source)}
-        </div>
-        {committedBinary ? (
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <div className="min-w-0">
-              <div className="text-xs font-semibold text-text flex items-center gap-2">
-                <span>{committedBinary.name}</span>
-                <span className="font-mono text-[11px] px-1.5 py-0.2 bg-surface1 text-text border border-surface2">
-                  {committedBinary.version || 'unknown version'}
-                </span>
-              </div>
-              <div className="font-mono text-[11px] text-subtext0 truncate mt-1">
-                {committedBinary.path}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={(e) => handleCopyPath(committedBinary.path, e)}
-              className="p-1.5 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer shrink-0"
-              title="Copy active Git binary path"
-            >
-              {copiedPath === committedBinary.path ? (
-                <Check className="w-3.5 h-3.5 text-green" />
-              ) : (
-                <Copy className="w-3.5 h-3.5" />
-              )}
-            </button>
-          </div>
-        ) : (
-          <div className="text-xs text-subtext0">
-            System Default (PATH: git)
-          </div>
-        )}
-      </div>
+      <GitBinaryDetectionCard
+        committedBinary={committedBinary}
+        getSourceBadge={getSourceBadge}
+        handleCopyPath={handleCopyPath}
+        copiedPath={copiedPath}
+      />
 
       {/* Discovered Git Binaries List */}
       <div className="space-y-3">
@@ -259,9 +229,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
           <span className="text-xs font-bold text-text">
             Available Git Executables ({allBinaries.length})
           </span>
-          <span className="text-[11px] text-subtext0">
-            Select one active binary
-          </span>
+          <span className="text-[11px] text-subtext0">Select one active binary</span>
         </div>
 
         {error && (
@@ -284,101 +252,18 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
             No Git binaries found on your system. You can manually specify a custom path below.
           </div>
         ) : (
-          <div className="border border-surface1 overflow-hidden">
-            <div className="max-h-72 overflow-auto">
-              <table className="w-full min-w-[900px] text-left text-xs">
-                <thead className="sticky top-0 z-10 bg-mantle text-[10px] uppercase tracking-wider text-subtext0">
-                  <tr className="border-b border-surface1">
-                    <th scope="col" className="w-10 px-3 py-2" aria-label="Select" />
-                    <th scope="col" className="px-3 py-2 font-semibold">Git Binary</th>
-                    <th scope="col" className="px-3 py-2 font-semibold">Version</th>
-                    <th scope="col" className="px-3 py-2 font-semibold">Path</th>
-                    <th scope="col" className="px-3 py-2 font-semibold">Source</th>
-                    <th scope="col" className="px-3 py-2 font-semibold">Status</th>
-                    <th scope="col" className="w-10 px-3 py-2" aria-label="Actions" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface0/70">
-                  {allBinaries.map((binary) => {
-                    const isSelected = binary.id === draftBinaryId || binary.path === draftBinaryPath;
-                    const isCurrentlyActive = binary.id === committedBinaryId || binary.path === committedBinaryPath;
-
-                    return (
-                      <tr
-                        key={binary.id}
-                        onClick={() => onSelectBinary(binary.id, binary.path)}
-                        className={`group cursor-pointer transition-colors ${
-                          isSelected
-                            ? 'bg-brand/10'
-                            : 'bg-surface0/20 hover:bg-surface0/70'
-                        }`}
-                      >
-                        <td className="px-3 py-2.5">
-                          <input
-                            type="radio"
-                            name="active-git-binary"
-                            checked={isSelected}
-                            onChange={() => onSelectBinary(binary.id, binary.path)}
-                            onClick={(event) => event.stopPropagation()}
-                            aria-label={`Select ${binary.name}`}
-                            className="h-4 w-4 accent-violet-500 cursor-pointer"
-                          />
-                        </td>
-                        <td className="max-w-[280px] px-3 py-2.5">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="shrink-0">{getSourceIcon(binary.source)}</span>
-                            <span className={`truncate ${isSelected ? 'font-bold text-text' : 'font-semibold text-text'}`}>
-                              {binary.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <span className="font-mono text-[11px] text-subtext1 whitespace-nowrap">
-                            {binary.version || 'Version unknown'}
-                          </span>
-                        </td>
-                        <td className="max-w-[420px] px-3 py-2.5">
-                          <span className="block truncate font-mono text-[11px] text-subtext0" title={binary.path}>
-                            {binary.path}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap">
-                          {getSourceBadge(binary.source)}
-                        </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap">
-                          {isCurrentlyActive ? (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-green/15 text-green border border-green/30">
-                              Active
-                            </span>
-                          ) : isSelected ? (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-peach/15 text-peach border border-peach/30">
-                              Selected
-                            </span>
-                          ) : (
-                            <span className="text-subtext0">—</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <button
-                            type="button"
-                            onClick={(event) => handleCopyPath(binary.path, event)}
-                            className="p-1.5 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
-                            title="Copy binary path to clipboard"
-                          >
-                            {copiedPath === binary.path ? (
-                              <Check className="w-3.5 h-3.5 text-green" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <GitBinaryListTable
+            allBinaries={allBinaries}
+            draftBinaryId={draftBinaryId}
+            draftBinaryPath={draftBinaryPath}
+            committedBinaryId={committedBinaryId}
+            committedBinaryPath={committedBinaryPath}
+            onSelectBinary={onSelectBinary}
+            getSourceIcon={getSourceIcon}
+            getSourceBadge={getSourceBadge}
+            handleCopyPath={handleCopyPath}
+            copiedPath={copiedPath}
+          />
         )}
       </div>
 
@@ -396,9 +281,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
         ) : (
           <div className="p-4 bg-surface0/40 border border-surface1 space-y-3 animate-in fade-in duration-100">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-text">
-                Specify Custom Git Executable
-              </span>
+              <span className="text-xs font-bold text-text">Specify Custom Git Executable</span>
               <button
                 type="button"
                 onClick={() => {

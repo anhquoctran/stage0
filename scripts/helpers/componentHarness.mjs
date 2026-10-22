@@ -1,13 +1,32 @@
 import fs from 'node:fs';
 import ts from 'typescript';
 
-export function loadWithMocks(url, dependencies) {
+export function loadWithMocks(url, dependencies, context) {
+  context ??= {
+    mocks: new Map(Object.entries(dependencies).filter(([id]) => id.startsWith('.') || id.startsWith('@/'))
+      .map(([id, value]) => [resolveModule(id, url), value])),
+    cache: new Map(),
+  };
+  if (context.cache.has(url.href)) return context.cache.get(url.href);
   const { outputText } = ts.transpileModule(fs.readFileSync(url, 'utf8'), {
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React },
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
   });
   const exports = {};
+  context.cache.set(url.href, exports);
   new Function('require', 'exports', outputText)((id) => {
-    if (Object.hasOwn(dependencies, id)) return dependencies[id];
+    if (id === 'react/jsx-runtime' && dependencies.react) {
+      const react = dependencies.react.default ?? dependencies.react;
+      const element = (type, props, key) => {
+        const { children, ...attributes } = props ?? {};
+        return react.createElement(type, { ...attributes, ...(key === undefined ? {} : { key }) },
+          ...(Array.isArray(children) ? children : children === undefined ? [] : [children]));
+      };
+      return { jsx: element, jsxs: element, Fragment: react.Fragment };
+    }
+    if (id.startsWith('.') || id.startsWith('@/')) {
+      const mock = resolveModule(id, url);
+      if (context.mocks.has(mock)) return context.mocks.get(mock);
+    } else if (Object.hasOwn(dependencies, id)) return dependencies[id];
     if (id === 'zustand') {
       return {
         create: (initializer) => {
@@ -23,12 +42,14 @@ export function loadWithMocks(url, dependencies) {
         },
       };
     }
-    if (id.startsWith('.') && !id.endsWith('/preferencesJsonService') && !id.endsWith('/listSecretMcpEnv')) {
+    if ((id.startsWith('.') || id.startsWith('@/')) && !id.endsWith('/preferencesJsonService') && !id.endsWith('/listSecretMcpEnv')) {
       for (const ext of ['', '.tsx', '.ts', '/index.tsx', '/index.ts']) {
         try {
-          const candidate = new URL(id + ext, url);
+          const candidate = id.startsWith('@/')
+            ? new URL(`../../frontend/${id.slice(2)}${ext}`, import.meta.url)
+            : new URL(id + ext, url);
           if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-            return loadWithMocks(candidate, dependencies);
+            return loadWithMocks(candidate, dependencies, context);
           }
         } catch {}
       }
@@ -87,6 +108,12 @@ export function loadWithMocks(url, dependencies) {
     return dependencies[id];
   }, exports);
   return exports;
+}
+
+function resolveModule(id, url) {
+  return (id.startsWith('@/')
+    ? new URL(`../../frontend/${id.slice(2)}`, import.meta.url)
+    : new URL(id, url)).href.replace(/\.(tsx?|m?js)$/, '').replace(/\/index$/, '');
 }
 
 export function componentHarness() {

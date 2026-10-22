@@ -1,41 +1,23 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { TopBar } from './TopBar';
-import { StatusBar } from './StatusBar';
-import { FileList } from '../../../features/git/components/FileList';
-import { ConflictBanner } from '../../../features/git/components/ConflictBanner';
-import { PreferencesModal } from '../../../features/preferences/components/PreferencesModal';
-import { PullFromModal } from '../../../features/git/components/PullFromModal';
-import { RebaseFromModal } from '../../../features/git/components/RebaseFromModal';
-import { MergeFromModal } from '../../../features/git/components/MergeFromModal';
-import { RemoteUrlFromModal } from '../../../features/git/components/RemoteUrlFromModal';
-import { CloneRepoModal } from '../../../features/git/components/CloneRepoModal';
-import { GitTaskDialog } from '../../../features/git/components/GitTaskDialog';
-import { WelcomeScreen } from './WelcomeScreen';
-import { TabBar } from './TabBar';
-import { VirtualMrHub } from '../../../features/virtual-mr/components/VirtualMrHub';
-import { EmptyVirtualMrWorkspace } from '../../../features/virtual-mr/components/EmptyVirtualMrWorkspace';
-import { VirtualMrListDialog } from '../../../features/virtual-mr/components/VirtualMrListDialog';
-import { VirtualMrBottomBar } from '../../../features/virtual-mr/components/VirtualMrBottomBar';
-import { NotificationDrawer } from '../../../features/notifications/components/NotificationDrawer';
-import { NewVirtualMrView } from '../../../features/virtual-mr/components/NewVirtualMrView';
-import { RepositorySettingsModal } from '../../../features/git/components/RepositorySettingsModal';
-import { useGitStore } from '../../../features/git/store/useGitStore';
-import { usePreferencesStore } from '../../../features/preferences/store/usePreferencesStore';
-import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
-import { usePerformanceMonitorStore } from '../../../features/performance/store/usePerformanceMonitorStore';
-import { X } from '../../../common/components/icons/X';
+import React from 'react';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Check } from '../../../common/components/icons/Check';
 import { Info } from '../../../common/components/icons/Info';
-import { revealInOs, getAbsoluteFilePath, buildRemoteFileUrl, openRepoInTerminal, openRepoInVsCode, openRepoInExplorer, getOsFileManagerName } from '../../../features/git/utils/fileActions';
-import { isMacOS } from '../../../common/utils/shortcuts';
+import { X } from '../../../common/components/icons/X';
+import { ConflictBanner } from '../../../features/git/components/ConflictBanner';
+import { FileList } from '../../../features/git/components/FileList';
+import { NotificationDrawer } from '../../../features/notifications/components/NotificationDrawer';
+import { EmptyVirtualMrWorkspace } from '../../../features/virtual-mr/components/EmptyVirtualMrWorkspace';
+import { NewVirtualMrView } from '../../../features/virtual-mr/components/NewVirtualMrView';
+import { VirtualMrBottomBar } from '../../../features/virtual-mr/components/VirtualMrBottomBar';
+import { VirtualMrHub } from '../../../features/virtual-mr/components/VirtualMrHub';
+import { VirtualMrListDialog } from '../../../features/virtual-mr/components/VirtualMrListDialog';
+import { useMainLayoutCoordination } from '../hooks/useMainLayoutCoordination';
 import { MainLayoutDiffViewer } from './MainLayoutDiffViewer';
-
-const DEFAULT_SIDEBAR_WIDTH = 320;
-
-const MIN_SIDEBAR_WIDTH = 220;
-
-const MAX_SIDEBAR_WIDTH = 640;
+import { MainLayoutModals } from './MainLayoutModals';
+import { StatusBar } from './StatusBar';
+import { TabBar } from './TabBar';
+import { TopBar } from './TopBar';
+import { WelcomeScreen } from './WelcomeScreen';
 
 export const MainLayout: React.FC = () => {
   const {
@@ -48,32 +30,10 @@ export const MainLayout: React.FC = () => {
     error,
     clearError,
     selectFile,
-    selectNextFile,
-    selectPrevFile,
-    selectNextConflictFile,
     setViewMode,
-    refreshDiff,
-    runSync,
-    setIsPullFromOpen,
-    setIsMergeFromOpen,
-    setIsRebaseFromOpen,
     openRepoDialog,
-    setIsCloneModalOpen,
-    remoteUrl,
-    compareBranch,
-    baseBranch,
-    branches,
     toastMessage,
     toastLevel,
-    showToast,
-    setIsRemoteUrlFromOpen,
-    setTargetFileForUrl,
-  } = useGitStore();
-
-  const { setIsPreferencesOpen, showInlineBlame, toggleInlineBlame } =
-    usePreferencesStore();
-
-  const {
     isRepoSettingsOpen,
     closeRepoSettings,
     repoSettingsActiveTab,
@@ -84,315 +44,12 @@ export const MainLayout: React.FC = () => {
     isDraftActive,
     openNewMrDraft,
     repoSettings,
-  } = useVirtualMrStore();
-
-  // Load Virtual MR data when repo changes or branches are fetched
-  useEffect(() => {
-    if (currentRepo) {
-      const allBranches = branches
-        ? [...(branches.local || []), ...(branches.remote || [])]
-        : [];
-      useVirtualMrStore.getState().loadRepoData(
-        currentRepo.id,
-        currentRepo.local_path,
-        allBranches,
-        baseBranch || undefined
-      );
-    }
-  }, [currentRepo?.id, currentRepo?.local_path, Boolean(branches)]);
-
-  const fileManagerName = getOsFileManagerName();
-
-  // Resizable Sidebar State with LocalStorage Persistence
-  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('stage0_sidebar_width');
-      if (saved) {
-        const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed) && parsed >= MIN_SIDEBAR_WIDTH && parsed <= MAX_SIDEBAR_WIDTH) {
-          return parsed;
-        }
-      }
-    } catch {
-      // ignore storage access errors
-    }
-    return DEFAULT_SIDEBAR_WIDTH;
-  });
-
-  const [isResizing, setIsResizing] = useState(false);
-  const isResizingRef = useRef(false);
-
-  const startResizing = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizingRef.current = true;
-    setIsResizing(true);
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!isResizingRef.current) return;
-      const newWidth = Math.min(
-        Math.max(moveEvent.clientX, MIN_SIDEBAR_WIDTH),
-        MAX_SIDEBAR_WIDTH
-      );
-      setSidebarWidth(newWidth);
-    };
-
-    const handleMouseUp = () => {
-      isResizingRef.current = false;
-      setIsResizing(false);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-
-      setSidebarWidth((latestWidth) => {
-        try {
-          localStorage.setItem('stage0_sidebar_width', String(latestWidth));
-        } catch {
-          // ignore
-        }
-        return latestWidth;
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-  }, []);
-
-  const resetSidebarWidth = () => {
-    setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);
-    try {
-      localStorage.setItem('stage0_sidebar_width', String(DEFAULT_SIDEBAR_WIDTH));
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleSelectConflictFile = (filePath: string) => {
-    if (!diffPayload) return;
-    const normalized = filePath.replace(/\\/g, '/').toLowerCase();
-    const file = diffPayload.files.find((f) => {
-      const fNorm = f.path.replace(/\\/g, '/').toLowerCase();
-      return (
-        f.path === filePath ||
-        fNorm === normalized ||
-        fNorm.endsWith(normalized) ||
-        normalized.endsWith(fNorm)
-      );
-    });
-    if (file) {
-      selectFile(file);
-    }
-  };
-
-  // Global Keyboard Shortcuts (Like GitKraken / Sublime Merge / Fork)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // macOS routes this accelerator through the native View > Performance menu.
-      if (
-        !isMacOS() &&
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        !e.altKey &&
-        (e.key === 'F12' || e.code === 'F12')
-      ) {
-        e.preventDefault();
-        usePerformanceMonitorStore.getState().toggle();
-        return;
-      }
-
-      // Don't intercept if user is typing in an input
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      ) {
-        return;
-      }
-
-      const isPreferencesShortcut =
-        (e.ctrlKey || e.metaKey) &&
-        (e.key === ',' || (e.shiftKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT')));
-      if (isPreferencesShortcut) {
-        e.preventDefault();
-        setIsPreferencesOpen(true);
-        return;
-      }
-
-      const isCloneShortcut =
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        (e.key.toLowerCase() === 'o' || e.code === 'KeyO');
-      if (isCloneShortcut) {
-        e.preventDefault();
-        setIsCloneModalOpen(true);
-        return;
-      }
-
-      if (!currentRepo) return;
-
-      if (e.altKey && !e.ctrlKey && !e.shiftKey && (e.key.toLowerCase() === 'c' || e.code === 'KeyC')) {
-        e.preventDefault();
-        selectNextConflictFile();
-      } else if (e.key === 'ArrowDown' || e.key === 'j') {
-        e.preventDefault();
-        selectNextFile();
-      } else if (e.key === 'ArrowUp' || e.key === 'k') {
-        e.preventDefault();
-        selectPrevFile();
-      } else if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        (e.key.toLowerCase() === 'f' || e.code === 'KeyF')
-      ) {
-        e.preventDefault();
-        runSync('fetch');
-      } else if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        (e.key.toLowerCase() === 'p' || e.code === 'KeyP')
-      ) {
-        e.preventDefault();
-        runSync('pull');
-      } else if (
-        (e.ctrlKey || e.metaKey) &&
-        e.altKey &&
-        (e.key.toLowerCase() === 'p' || e.code === 'KeyP')
-      ) {
-        e.preventDefault();
-        setIsPullFromOpen(true);
-      } else if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        (e.key.toLowerCase() === 'm' || e.code === 'KeyM')
-      ) {
-        e.preventDefault();
-        runSync('merge');
-      } else if (
-        (e.ctrlKey || e.metaKey) &&
-        e.altKey &&
-        (e.key.toLowerCase() === 'm' || e.code === 'KeyM')
-      ) {
-        e.preventDefault();
-        setIsMergeFromOpen(true);
-      } else if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        (e.key.toLowerCase() === 'r' || e.code === 'KeyR')
-      ) {
-        e.preventDefault();
-        runSync('rebase');
-      } else if (
-        (e.ctrlKey || e.metaKey) &&
-        e.altKey &&
-        (e.key.toLowerCase() === 'r' || e.code === 'KeyR')
-      ) {
-        e.preventDefault();
-        setIsRebaseFromOpen(true);
-      } else if (e.key === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        setViewMode('split');
-      } else if (e.key === 'u' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        setViewMode('unified');
-      } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'r') {
-        e.preventDefault();
-        refreshDiff();
-      } else if (e.shiftKey && e.altKey && (e.key.toLowerCase() === 'r' || e.code === 'KeyR')) {
-        // Shift+Alt+R: Open current file in OS File Explorer
-        if (currentRepo && selectedFile) {
-          e.preventDefault();
-          revealInOs(currentRepo.local_path, selectedFile.path)
-            .then(() => showToast(`Revealed file in ${fileManagerName}`))
-            .catch((err) => showToast(`Failed to open ${fileManagerName}: ${err}`));
-        }
-      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key.toLowerCase() === 'c' || e.code === 'KeyC')) {
-        // Ctrl+Shift+C: Copy relative path
-        if (selectedFile) {
-          e.preventDefault();
-          navigator.clipboard.writeText(selectedFile.path);
-          showToast(`Copied relative path: ${selectedFile.path}`);
-        }
-      } else if (e.shiftKey && e.altKey && (e.key.toLowerCase() === 'c' || e.code === 'KeyC')) {
-        // Shift+Alt+C: Copy absolute path
-        if (currentRepo && selectedFile) {
-          e.preventDefault();
-          const abs = getAbsoluteFilePath(currentRepo.local_path, selectedFile.path);
-          navigator.clipboard.writeText(abs);
-          showToast('Copied absolute path to clipboard');
-        }
-      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key.toLowerCase() === 'u' || e.code === 'KeyU')) {
-        // Ctrl+Shift+U: Copy remote file URL
-        if (selectedFile) {
-          e.preventDefault();
-          const effectiveRemote = remoteUrl || (currentRepo ? `https://github.com/${currentRepo.name}` : '');
-          if (effectiveRemote) {
-            const ref = compareBranch || 'main';
-            const url = buildRemoteFileUrl(effectiveRemote, ref, selectedFile.path);
-            navigator.clipboard.writeText(url);
-            showToast(`Copied remote file URL (${ref})`);
-          } else {
-            showToast('No remote URL configured');
-          }
-        }
-      } else if ((e.ctrlKey || e.metaKey) && e.altKey && (e.key.toLowerCase() === 'u' || e.code === 'KeyU')) {
-        // Ctrl+Alt+U: Copy remote file URL from...
-        if (selectedFile) {
-          e.preventDefault();
-          setTargetFileForUrl(selectedFile);
-          setIsRemoteUrlFromOpen(true);
-        }
-      } else if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'b' || e.code === 'KeyB')) {
-        // Alt+Shift+B: Toggle inline git blame
-        e.preventDefault();
-        toggleInlineBlame();
-        showToast(showInlineBlame ? 'Disabled inline git blame' : 'Enabled inline git blame');
-      } else if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT')) {
-        // Alt+Shift+T: Open repository in default terminal
-        if (currentRepo) {
-          e.preventDefault();
-          openRepoInTerminal(currentRepo.local_path)
-            .then(() => showToast('Opened repository in terminal'))
-            .catch((err) => showToast(`Failed to open terminal: ${err}`));
-        }
-      } else if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'v' || e.code === 'KeyV')) {
-        // Alt+Shift+V: Open repository in VS Code
-        if (currentRepo) {
-          e.preventDefault();
-          openRepoInVsCode(currentRepo.local_path)
-            .then(() => showToast('Opened repository in VS Code'))
-            .catch((err) => showToast(`Failed to open VS Code: ${err}`));
-        }
-      } else if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'e' || e.code === 'KeyE')) {
-        // Alt+Shift+E: Open repository in OS File Explorer / Finder / File Manager
-        if (currentRepo) {
-          e.preventDefault();
-          openRepoInExplorer(currentRepo.local_path)
-            .then(() => showToast(`Opened repository in ${fileManagerName}`))
-            .catch((err) => showToast(`Failed to open ${fileManagerName}: ${err}`));
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    currentRepo,
-    selectNextFile,
-    selectPrevFile,
-    setViewMode,
-    refreshDiff,
-    setIsPreferencesOpen,
-    setIsCloneModalOpen,
-    runSync,
-    setIsPullFromOpen,
-    setIsMergeFromOpen,
-    setIsRebaseFromOpen,
-    selectedFile,
-    toggleInlineBlame,
-    showInlineBlame,
-    showToast,
-    setTargetFileForUrl,
-    setIsRemoteUrlFromOpen,
-  ]);
+    sidebarWidth,
+    isResizing,
+    startResizing,
+    resetSidebarWidth,
+    handleSelectConflictFile,
+  } = useMainLayoutCoordination();
 
   return (
     <div className="relative flex flex-col h-full w-full flex-1 overflow-hidden bg-crust text-text font-sans">
@@ -405,31 +62,11 @@ export const MainLayout: React.FC = () => {
       {/* Virtual MR Details Hub (Only rendered for established MR sessions, not during initial branch comparison) */}
       {currentRepo && !isDraftActive && activeSessionId && <VirtualMrHub />}
 
-      {/* Repository Settings Dialog */}
-      <RepositorySettingsModal
-        isOpen={isRepoSettingsOpen}
-        onClose={closeRepoSettings}
-        initialTab={repoSettingsActiveTab}
+      <MainLayoutModals
+        isRepoSettingsOpen={isRepoSettingsOpen}
+        closeRepoSettings={closeRepoSettings}
+        repoSettingsActiveTab={repoSettingsActiveTab}
       />
-
-      {/* Preferences Modal Dialog */}
-      <PreferencesModal />
-
-      {/* Pull From Remote Modal Dialog */}
-      <PullFromModal />
-
-      {/* Rebase From Branch Modal Dialog */}
-      <RebaseFromModal />
-
-      {/* Merge From Branch Modal Dialog */}
-      <MergeFromModal />
-
-      {/* Remote URL From Branch/Commit Modal Dialog */}
-      <RemoteUrlFromModal />
-
-      {/* Clone Remote Repository Modal Dialog */}
-      <CloneRepoModal />
-      <GitTaskDialog />
       {/* In-Memory Merge Conflict Banner */}
       <ConflictBanner
         conflictReport={conflictReport}
@@ -486,7 +123,13 @@ export const MainLayout: React.FC = () => {
                 />
               </div>
 
-              <React.Suspense fallback={<div className="flex-1 grid place-items-center text-subtext0 text-xs">Loading diff viewer…</div>}>
+              <React.Suspense
+                fallback={
+                  <div className="flex-1 grid place-items-center text-subtext0 text-xs">
+                    Loading diff viewer…
+                  </div>
+                }
+              >
                 <MainLayoutDiffViewer
                   selectedFile={selectedFile}
                   diffPayload={diffPayload}
@@ -497,16 +140,14 @@ export const MainLayout: React.FC = () => {
                 />
               </React.Suspense>
             </>
+          ) : isLoadingSessions || sessions.length > 0 ? (
+            <VirtualMrListDialog inline />
           ) : (
-            isLoadingSessions || sessions.length > 0 ? (
-              <VirtualMrListDialog inline />
-            ) : (
-              <EmptyVirtualMrWorkspace
-                onNewMr={() => openNewMrDraft()}
-                repoName={currentRepo.name}
-                defaultBaseBranch={repoSettings?.defaultBaseBranch || 'main'}
-              />
-            )
+            <EmptyVirtualMrWorkspace
+              onNewMr={() => openNewMrDraft()}
+              repoName={currentRepo.name}
+              defaultBaseBranch={repoSettings?.defaultBaseBranch || 'main'}
+            />
           )
         ) : (
           <WelcomeScreen />
@@ -522,11 +163,19 @@ export const MainLayout: React.FC = () => {
 
       {/* Global Feedback Toast */}
       {toastMessage && (
-        <div role={toastLevel === 'error' ? 'alert' : 'status'} className="fixed bottom-10 right-6 z-50 bg-mantle border border-surface1 text-text text-xs px-3.5 py-2 shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
-          {toastLevel === 'error' || toastLevel === 'warning'
-            ? <AlertCircle className={`w-3.5 h-3.5 shrink-0 ${toastLevel === 'error' ? 'text-red' : 'text-yellow'}`} />
-            : toastLevel === 'info' ? <Info className="w-3.5 h-3.5 text-primary shrink-0" />
-              : <Check className="w-3.5 h-3.5 text-green shrink-0" />}
+        <div
+          role={toastLevel === 'error' ? 'alert' : 'status'}
+          className="fixed bottom-10 right-6 z-50 bg-mantle border border-surface1 text-text text-xs px-3.5 py-2 shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150"
+        >
+          {toastLevel === 'error' || toastLevel === 'warning' ? (
+            <AlertCircle
+              className={`w-3.5 h-3.5 shrink-0 ${toastLevel === 'error' ? 'text-red' : 'text-yellow'}`}
+            />
+          ) : toastLevel === 'info' ? (
+            <Info className="w-3.5 h-3.5 text-primary shrink-0" />
+          ) : (
+            <Check className="w-3.5 h-3.5 text-green shrink-0" />
+          )}
           <span className="font-medium">{toastMessage}</span>
         </div>
       )}

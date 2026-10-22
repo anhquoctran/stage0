@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { RotateCw } from '../../../common/components/icons/RotateCw';
-import { Trash2 } from '../../../common/components/icons/Trash2';
 import { useGitStore } from '../../git/store/useGitStore';
 import { type SandboxType } from '../../git/types/SandboxType';
 import type { SandboxTabProps } from '../types/SandboxTabProps';
+import { SandboxConfigForm } from './sandbox/SandboxConfigForm';
+import { SandboxInstanceCard } from './sandbox/SandboxInstanceCard';
 
 export const SandboxTab: React.FC<SandboxTabProps> = ({
   draftSandboxType,
@@ -131,9 +132,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-surface0">
         <div>
-          <h3 className="text-sm font-bold text-text">
-            Sandbox Engine
-          </h3>
+          <h3 className="text-sm font-bold text-text">Sandbox Engine</h3>
           <p className="text-[11px] text-subtext0 mt-0.5">
             Select the branch evaluation and test isolation environment
           </p>
@@ -155,86 +154,20 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
         <div className="px-3 py-2 bg-surface0/50 border border-surface1  text-xs flex items-center justify-between text-subtext1">
           <span>
             Pending change: switch to{' '}
-            <strong className="text-text font-mono">{getAdapterName(draftSandboxType)}</strong>
-            . Click <strong>Apply</strong> or <strong>OK</strong> to commit.
+            <strong className="text-text font-mono">{getAdapterName(draftSandboxType)}</strong>.
+            Click <strong>Apply</strong> or <strong>OK</strong> to commit.
           </span>
           <span className="text-[10px] text-subtext0 font-mono uppercase">Uncommitted</span>
         </div>
       )}
 
       {/* Monochrome Adapter Radio List */}
-      <div className="border border-surface0  divide-y divide-surface0/60 overflow-hidden bg-base/30">
-        {adapters.map((adapter) => {
-          const isSelected = draftSandboxType === adapter.id;
-          const isCurrent = committedSandboxType === adapter.id;
-
-          return (
-            <div
-              key={adapter.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => onSelectAdapter(adapter.id)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onSelectAdapter(adapter.id);
-                }
-              }}
-              className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 select-none ${
-                isSelected
-                  ? 'bg-surface0/60'
-                  : 'hover:bg-surface0/30'
-              }`}
-            >
-              {/* Radio Indicator */}
-              <div className="pt-0.5 shrink-0">
-                <div
-                  className={`w-4 h-4  flex items-center justify-center transition-colors ${
-                    isSelected
-                      ? 'border-4 border-text bg-base'
-                      : 'border border-surface2 hover:border-subtext0'
-                  }`}
-                />
-              </div>
-
-              {/* Text Information */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-semibold text-text">
-                    {adapter.title}
-                  </span>
-
-                  {adapter.defaultBadge && (
-                    <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2  bg-surface0 border border-surface1 uppercase">
-                      Default
-                    </span>
-                  )}
-
-                  {adapter.extraBadge && (
-                    <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2  bg-surface0 border border-surface1">
-                      {adapter.extraBadge}
-                    </span>
-                  )}
-
-                  {isCurrent && (
-                    <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2  bg-surface1 border border-surface2">
-                      Active
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-[11px] text-subtext0 mt-1 leading-relaxed">
-                  {adapter.description}
-                </p>
-
-                <div className="text-[10px] font-mono text-subtext0/70 mt-1.5">
-                  {adapter.specs}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <SandboxConfigForm
+        adapters={adapters}
+        draftSandboxType={draftSandboxType}
+        committedSandboxType={committedSandboxType}
+        onSelectAdapter={onSelectAdapter}
+      />
 
       {/* Engine Technical Specifications */}
       <div className="p-3.5 bg-surface0/20 border border-surface0  text-xs space-y-2">
@@ -248,8 +181,8 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
               {draftSandboxType === 'in_memory'
                 ? 'RAM (None)'
                 : draftSandboxType === 'local_worktree'
-                ? 'Worktree'
-                : 'Container'}
+                  ? 'Worktree'
+                  : 'Container'}
             </span>
           </div>
           <div>
@@ -303,48 +236,14 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
           ) : (
             <div className="space-y-1.5">
               {activeSandboxInstances.map((inst) => (
-                <div
+                <SandboxInstanceCard
                   key={inst.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelectedInstanceId(inst.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedInstanceId(inst.id);
-                    }
-                  }}
-                  className={`flex items-center justify-between p-2.5  border text-xs transition-colors cursor-pointer ${
-                    selectedInstanceId === inst.id ||
-                    (activeSandboxInstances.length === 1 && !selectedInstanceId)
-                      ? 'bg-surface1 border-surface2'
-                      : 'bg-base/40 border-surface0 hover:border-surface1'
-                  }`}
-                >
-                  <div className="font-mono space-y-0.5 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-text">{inst.id}</span>
-                      <span className="text-[10px] px-1.5 py-0.2  bg-surface0 text-subtext0 uppercase">
-                        {inst.adapter_type}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-subtext0 truncate">
-                      {inst.worktree_path || inst.container_id || inst.repo_path}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      destroySandboxInstance(inst.id);
-                    }}
-                    className="p-1  text-subtext0 hover:text-text hover:bg-surface2 transition-colors cursor-pointer"
-                    title="Destroy this sandbox instance"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                  inst={inst}
+                  setSelectedInstanceId={setSelectedInstanceId}
+                  selectedInstanceId={selectedInstanceId}
+                  activeSandboxInstances={activeSandboxInstances}
+                  destroySandboxInstance={destroySandboxInstance}
+                />
               ))}
             </div>
           )}
@@ -352,7 +251,10 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
           {/* Minimal Terminal Command Runner */}
           {activeSandboxInstances.length > 0 && (
             <div className="pt-2 border-t border-surface0/60 space-y-2">
-              <label htmlFor="sandbox-command-input" className="text-[11px] font-semibold text-text block">
+              <label
+                htmlFor="sandbox-command-input"
+                className="text-[11px] font-semibold text-text block"
+              >
                 Execute Command
               </label>
 
@@ -384,7 +286,8 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                   </div>
                   {cmdOutput.outputTruncated && (
                     <div className="text-yellow text-[10px]">
-                      Output limit reached; the process was stopped. Recreate the Docker sandbox if it was active.
+                      Output limit reached; the process was stopped. Recreate the Docker sandbox if
+                      it was active.
                     </div>
                   )}
                   {cmdOutput.stdout && (

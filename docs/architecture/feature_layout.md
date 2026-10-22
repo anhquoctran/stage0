@@ -34,3 +34,9 @@ changes; see the [refactor report](backend_refactor_analysis.md) for measurement
 When adding a feature, keep its UI, state, types and backend handlers together
 under the corresponding feature directory. Put code in `common` only when more
 than one feature uses it without depending on feature-specific state.
+
+The [frontend maintenance map](frontend_maintenance.md) documents component,
+hook, transaction and store-slice ownership. `pnpm check:architecture` also
+enforces a 450-physical-line budget for every frontend TypeScript file. Preserve
+the public root hooks/components when extracting named behavior; begin reviewing
+boundaries at 400 lines and aim for 100–300.
