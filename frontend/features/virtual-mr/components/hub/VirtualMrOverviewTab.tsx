@@ -4,7 +4,8 @@ import { MarkdownPreview } from '../../../../common/components/MarkdownPreview';
 import { useGitStore } from '../../../git/store/useGitStore';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { getDiscussionMentionOptions } from '../../utils/discussionMentions';
-import { MrDiscussionBoard } from '../MrDiscussionBoard';
+import { VirtualMrActivityTimeline } from '../overview/VirtualMrActivityTimeline';
+import { VirtualMrMergeDetails } from '../overview/VirtualMrMergeDetails';
 import type { VirtualMrOverviewTabProps } from './VirtualMrOverviewTabProps';
 
 export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ session }) => {
@@ -91,10 +92,19 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
   };
 
   return (
-    <div className="flex-1 h-full overflow-y-auto p-6 bg-crust/30">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="flex-1 h-full overflow-y-auto px-6 py-6 bg-crust/30 w-full">
+      <div className="w-full space-y-6">
+        {/* Merge Details Card */}
+        <VirtualMrMergeDetails session={session} />
+
         {/* Description Section */}
-        <div className="p-4 rounded-sm bg-mantle border border-surface0 space-y-3">
+        <div
+          className={
+            isEditingDesc
+              ? 'p-4 rounded-sm bg-mantle border border-surface0 space-y-3'
+              : 'space-y-2'
+          }
+        >
           <div className="flex items-center justify-between border-b border-surface0/60 pb-2">
             <span className="font-semibold text-xs text-text">Description</span>
             {!isEditingDesc ? (
@@ -136,7 +146,7 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
               />
             </div>
           ) : (
-            <div className="p-3 bg-surface0/30 border border-surface0/60 leading-relaxed rounded-sm">
+            <div className="pt-1 leading-relaxed text-xs">
               <MarkdownPreview
                 content={session.description}
                 emptyPlaceholder="No description provided for this Virtual MR."
@@ -145,35 +155,27 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
           )}
         </div>
 
-        {/* General Discussions Timeline */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-surface0 pb-2">
-            <h3 className="font-semibold text-xs text-text">
-              Discussions ({session.discussions.length})
-            </h3>
-          </div>
+        {/* Activity Section (Timeline of events + discussions) */}
+        <div className="pt-2">
+          <VirtualMrActivityTimeline session={session} />
+        </div>
 
-          <MrDiscussionBoard session={session} />
-
-          {/* Add General Comment */}
-          <div className="pt-2">
-            <div className="p-4 rounded-sm bg-mantle border border-surface0 space-y-2">
-              <span className="font-semibold text-xs text-text">Leave a Comment</span>
-              <MarkdownEditor
-                value={newGeneralComment}
-                mentionOptions={getDiscussionMentionOptions(session)}
-                onChange={setNewGeneralComment}
-                placeholder="Write your comment or mention a reviewer with @..."
-                rows={4}
-                minHeight="100px"
-                showActions={true}
-                onSubmit={handleAddGeneralComment}
-                submitLabel="Post Comment"
-                disabled={isPostingDiscussion}
-                isSubmitting={isPostingDiscussion}
-              />
-            </div>
-          </div>
+        {/* Leave a Comment Box */}
+        <div className="p-4 rounded-sm bg-mantle border border-surface0 space-y-2">
+          <span className="font-semibold text-xs text-text">Leave a Comment</span>
+          <MarkdownEditor
+            value={newGeneralComment}
+            mentionOptions={getDiscussionMentionOptions(session)}
+            onChange={setNewGeneralComment}
+            placeholder="Write your comment or mention a reviewer with @..."
+            rows={4}
+            minHeight="100px"
+            showActions={true}
+            onSubmit={handleAddGeneralComment}
+            submitLabel="Post Comment"
+            disabled={isPostingDiscussion}
+            isSubmitting={isPostingDiscussion}
+          />
         </div>
       </div>
     </div>

@@ -7,6 +7,4 @@ export interface DiscussionCommentCardProps {
   session: VirtualMrSession;
   isResolvable: boolean;
   discussion: VirtualMrDiscussion;
-  quote: (comment?: VirtualMrComment) => void;
-  isSubmitting: boolean;
 }

@@ -3,6 +3,7 @@ import type { VirtualMrReviewer } from './VirtualMrReviewer';
 import type { RepoLabel } from './RepoLabel';
 import type { VirtualMrDiscussion } from './VirtualMrDiscussion';
 import type { VirtualMrCommit } from './VirtualMrCommit';
+import type { VirtualMrTitleChange } from './VirtualMrTitleChange';
 
 export interface VirtualMrSession {
   id: string;
@@ -24,4 +25,6 @@ export interface VirtualMrSession {
   isPinned: boolean;
   createdAt: string;
   updatedAt: string;
+  descriptionUpdatedAt?: string;
+  titleHistory?: VirtualMrTitleChange[];
 }

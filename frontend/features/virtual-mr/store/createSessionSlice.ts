@@ -10,6 +10,7 @@ persistSession,
 updateSessionMetadata,
 } from '../utils/virtualMrSessionHelpers';
 import { createSessionReviewerActions } from './createSessionReviewerActions';
+import { recordSessionTitleChange } from '../utils/virtualMrTitleHistory';
 
 export const createSessionSlice = (
   set: (
@@ -87,7 +88,20 @@ export const createSessionSlice = (
   updateSessionDetails: async (sessionId: string, title: string, description: string) => {
     const { sessions, currentRepoId } = get();
     const updated = sessions.map((s) =>
-      s.id === sessionId ? { ...s, title, description, updatedAt: new Date().toISOString() } : s
+      s.id === sessionId
+        ? {
+            ...s,
+            title,
+            description,
+            titleHistory:
+              s.title !== title
+                ? recordSessionTitleChange(sessionId, s.title, title, s.assignee.name)
+                : s.titleHistory,
+            updatedAt: new Date().toISOString(),
+            descriptionUpdatedAt:
+              s.description !== description ? new Date().toISOString() : s.descriptionUpdatedAt,
+          }
+        : s
     );
     set({ sessions: updated });
 
@@ -107,7 +121,12 @@ export const createSessionSlice = (
     set((state) => ({
       sessions: state.sessions.map((session) =>
         session.id === sessionId && session.description !== description
-          ? { ...session, description, updatedAt: new Date().toISOString() }
+          ? {
+              ...session,
+              description,
+              updatedAt: new Date().toISOString(),
+              descriptionUpdatedAt: new Date().toISOString(),
+            }
           : session
       ),
     }));

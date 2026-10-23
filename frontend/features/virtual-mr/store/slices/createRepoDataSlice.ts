@@ -10,6 +10,7 @@ import { type VirtualMrSession } from '../../types/VirtualMrSession';
 import type { VirtualMrState } from '../../types/VirtualMrState';
 import { type VirtualMrStatus } from '../../types/VirtualMrStatus';
 import { fromDbDiscussion } from '../../utils/fromDbDiscussion';
+import { loadSessionTitleHistory } from '../../utils/virtualMrTitleHistory';
 
 let repoDataRequestVersion = 0;
 let repoMetadataRequestVersion = 0;
@@ -201,6 +202,7 @@ export const createRepoDataSlice: StateCreator<
                 isPinned: Boolean(ds.is_pinned),
                 createdAt: ds.created_at,
                 updatedAt: ds.updated_at,
+                titleHistory: loadSessionTitleHistory(ds.id),
               };
             })
           );

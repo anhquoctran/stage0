@@ -1,5 +1,5 @@
 import { MarkdownPreview } from '../../../../common/components/MarkdownPreview';
-import { Quote } from '../../../../common/components/icons/Quote';
+
 import {
   formatGitLabTime,
   getAuthorBadges,
@@ -13,8 +13,6 @@ export function DiscussionCommentCard({
   session,
   isResolvable,
   discussion,
-  quote,
-  isSubmitting,
 }: DiscussionCommentCardProps) {
   return (
     <div className="p-3.5 text-xs text-text transition-colors bg-mantle rounded-sm">
@@ -34,7 +32,10 @@ export function DiscussionCommentCard({
                 {rootComment.authorName}
               </span>
               <span className="text-subtext0 text-xs font-normal">
-                {getAuthorHandle(rootComment.authorName, rootComment.authorId)}
+                {getAuthorHandle(
+                  rootComment.authorName,
+                  rootComment.authorId || session?.assignee?.email
+                )}
               </span>
               <span className="text-subtext0 select-none">·</span>
               <time dateTime={rootComment.createdAt} className="text-subtext0 text-xs">
@@ -42,18 +43,13 @@ export function DiscussionCommentCard({
               </time>
             </div>
 
-            {/* Badges & Quote */}
+            {/* Badges */}
             <div className="flex items-center gap-1.5 shrink-0">
-              {/* Clear Root Discussion Tag */}
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold border border-blue/40 bg-blue/10 text-blue select-none">
-                Root Discussion
-              </span>
-
               {getAuthorBadges(rootComment.authorName, rootComment.authorType, session).map(
                 (badge) => (
                   <span
                     key={badge}
-                    className="px-1.5 py-0.5 text-[10px] font-semibold border border-surface2 bg-surface1/60 text-subtext1 select-none"
+                    className="px-1.5 py-0.5 text-[10px] font-semibold border border-surface2 bg-surface1/60 text-subtext1 select-none rounded-sm"
                   >
                     {badge}
                   </span>
@@ -61,7 +57,7 @@ export function DiscussionCommentCard({
               )}
 
               {isResolvable && discussion.isResolved && (
-                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 select-none">
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 select-none rounded-sm">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="12"
@@ -78,17 +74,6 @@ export function DiscussionCommentCard({
                   <span>Resolved</span>
                 </span>
               )}
-
-              <button
-                type="button"
-                onClick={() => quote(rootComment)}
-                disabled={isSubmitting}
-                className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
-                aria-label={`Quote comment ${rootComment.id}`}
-                title={`Quote comment ${rootComment.id}`}
-              >
-                <Quote className="h-3 w-3" />
-              </button>
             </div>
           </div>
 

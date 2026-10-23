@@ -60,8 +60,8 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
   }, [runs]);
 
   return (
-    <div className="flex-1 h-full overflow-y-auto p-6 bg-crust/30">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="flex-1 h-full overflow-y-auto px-6 py-6 bg-crust/30 w-full">
+      <div className="w-full space-y-6">
         {/* Top Controls Toolbar */}
         <div className="p-3.5 rounded-sm bg-mantle border border-surface0 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
@@ -195,4 +195,3 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
     </div>
   );
 };
-

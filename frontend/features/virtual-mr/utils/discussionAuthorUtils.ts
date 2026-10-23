@@ -6,8 +6,13 @@ import type { VirtualMrSession } from '../types/VirtualMrSession';
  */
 export function getAuthorHandle(name: string, authorId?: string): string {
   if (authorId && authorId.includes('@')) {
-    const localPart = authorId.split('@')[0];
-    if (localPart && localPart !== 'user') return `@${localPart}`;
+    const localPart = authorId.split('@')[0].trim().toLowerCase();
+    if (localPart) return `@${localPart}`;
+  }
+
+  if (name && name.includes('@')) {
+    const localPart = name.split('@')[0].trim().toLowerCase();
+    if (localPart) return `@${localPart}`;
   }
 
   const normalized = name
