@@ -1,20 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { getOsFileManagerName } from '../../../features/git/utils/fileActions';
+import React, { useEffect, useRef, useState } from 'react';
+import { formatShortcutText } from '../../../common/utils/shortcuts';
+import { AboutModal } from '../../../features/about/components/AboutModal';
 import { useGitStore } from '../../../features/git/store/useGitStore';
+import { getOsFileManagerName } from '../../../features/git/utils/fileActions';
+import { usePerformanceMonitorStore } from '../../../features/performance/store/usePerformanceMonitorStore';
 import { usePreferencesStore } from '../../../features/preferences/store/usePreferencesStore';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
-import { usePerformanceMonitorStore } from '../../../features/performance/store/usePerformanceMonitorStore';
-import { AboutModal } from '../../../features/about/components/AboutModal';
-import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
-import { formatShortcutText } from '../../../common/utils/shortcuts';
-import { MenuBarFileMenu } from './menu-bar/MenuBarFileMenu';
-import { MenuBarEditMenu } from './menu-bar/MenuBarEditMenu';
-import { MenuBarViewMenu } from './menu-bar/MenuBarViewMenu';
-import { MenuBarRepositoryMenu } from './menu-bar/MenuBarRepositoryMenu';
-import { MenuBarHelpMenu } from './menu-bar/MenuBarHelpMenu';
 import type { MenuBarProps } from '../../types/MenuBarProps';
+import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
+import { MenuBarEditMenu } from './menu-bar/MenuBarEditMenu';
+import { MenuBarFileMenu } from './menu-bar/MenuBarFileMenu';
+import { MenuBarHelpMenu } from './menu-bar/MenuBarHelpMenu';
+import { MenuBarRepositoryMenu } from './menu-bar/MenuBarRepositoryMenu';
+import { MenuBarViewMenu } from './menu-bar/MenuBarViewMenu';
+import { useNativeMenuActions } from './useNativeMenuActions';
 
 export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
   const { openRepoSettings, openNewMrDraft } = useVirtualMrStore();
@@ -135,132 +135,25 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
   }, [isMac, openRepoDialog, setIsPreferencesOpen, setIsCloneModalOpen]);
 
   // Listen to native macOS menu events from Tauri
-  useEffect(() => {
-    let isDisposed = false;
-    let unlistenFn: (() => void) | undefined;
-
-    listen<string>('menu-action', (event) => {
-      if (isDisposed) return;
-
-      if (event.payload.startsWith('recent_repo_')) {
-        const repositoryId = event.payload.slice('recent_repo_'.length);
-        const repository = useGitStore
-          .getState()
-          .recentRepos.find((repo) => repo.id === repositoryId);
-        if (repository) {
-          void useGitStore.getState().selectRepo(repository);
-        }
-        return;
-      }
-
-      switch (event.payload) {
-        case 'open_repo':
-          openRepoDialog();
-          break;
-        case 'open_repo_new_window':
-          openRepoDialog(true);
-          break;
-        case 'new_window':
-          void invoke('create_new_window');
-          break;
-        case 'close_window':
-          void invoke('window_close');
-          break;
-        case 'clone_repo':
-          setIsCloneModalOpen(true);
-          break;
-        case 'close_repo':
-          closeRepo();
-          break;
-        case 'preferences':
-          setIsPreferencesOpen(true);
-          break;
-        case 'new_mr':
-          openNewMrDraft();
-          break;
-        case 'fetch':
-          runSync('fetch');
-          break;
-        case 'pull':
-          runSync('pull');
-          break;
-        case 'pull_from':
-          setIsPullFromOpen(true);
-          break;
-        case 'merge':
-          runSync('merge');
-          break;
-        case 'merge_from':
-          setIsMergeFromOpen(true);
-          break;
-        case 'rebase':
-          runSync('rebase');
-          break;
-        case 'rebase_from':
-          setIsRebaseFromOpen(true);
-          break;
-        case 'view_git_graph':
-          setIsGitGraphOpen(true);
-          break;
-        case 'repo_settings':
-          openRepoSettings('remotes');
-          break;
-        case 'view_split':
-          setViewMode('split');
-          break;
-        case 'view_unified':
-          setViewMode('unified');
-          break;
-        case 'toggle_blame':
-          toggleFileBlame();
-          break;
-        case 'toggle_inline_blame':
-          toggleInlineBlame();
-          break;
-        case 'toggle_perf_monitor':
-          togglePerformanceMonitor();
-          break;
-        case 'shortcuts':
-          setShowShortcutsModal(true);
-          break;
-        case 'open_webview_devtools':
-          void invoke('open_webview_devtools');
-          break;
-        case 'about':
-          setShowAboutModal(true);
-          break;
-        default:
-          break;
-      }
-    }).then((unlisten) => {
-      if (isDisposed) {
-        unlisten();
-      } else {
-        unlistenFn = unlisten;
-      }
-    }).catch(() => {});
-
-    return () => {
-      isDisposed = true;
-      if (unlistenFn) unlistenFn();
-    };
-  }, [
+  const {} = useNativeMenuActions({
     openRepoDialog,
     setIsCloneModalOpen,
     closeRepo,
     setIsPreferencesOpen,
     openNewMrDraft,
     runSync,
-    openRepoSettings,
-    setViewMode,
     setIsPullFromOpen,
     setIsMergeFromOpen,
     setIsRebaseFromOpen,
     setIsGitGraphOpen,
+    openRepoSettings,
+    setViewMode,
     toggleFileBlame,
     toggleInlineBlame,
     togglePerformanceMonitor,
-  ]);
+    setShowShortcutsModal,
+    setShowAboutModal,
+  });
 
   return (
     <>
@@ -326,10 +219,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
       />
 
       {/* About Modal */}
-      <AboutModal
-        isOpen={showAboutModal}
-        onClose={() => setShowAboutModal(false)}
-      />
+      <AboutModal isOpen={showAboutModal} onClose={() => setShowAboutModal(false)} />
     </>
   );
 };

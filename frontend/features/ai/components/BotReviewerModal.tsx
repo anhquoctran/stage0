@@ -3,115 +3,64 @@ import { CustomSelect } from '../../../common/components/CustomSelect';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Bot } from '../../../common/components/icons/Bot';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
-import type { BotCategory } from '../../virtual-mr/types/BotCategory';
 import {
   BOT_CATEGORY_OPTIONS,
   CUSTOM_MODEL_OPTION,
   EMOJI_PRESETS,
 } from '../constants/botReviewerConstants';
-import type { AcpAgentConfig } from '../types/AcpAgentConfig';
-import type { AcpReviewConfigOverrides } from '../types/AcpReviewConfigOverrides';
-import type { AiConfig } from '../types/AiConfig';
-import type { AiModelPreset } from '../types/AiModelPreset';
-import type { AiProviderPreset } from '../types/AiProviderPreset';
-import type { AiReasoningEffort } from '../types/AiReasoningEffort';
+import type { BotReviewerModalProps } from './BotReviewerModalProps';
 import { BotExecutionModelForm } from './reviewer-bot/BotExecutionModelForm';
 import { BotPromptConfigForm } from './reviewer-bot/BotPromptConfigForm';
 
-export const BotReviewerModal: React.FC<{
-  isOpen: boolean;
-  editingBotId: string | null;
-  formName: string;
-  setFormName: (val: string) => void;
-  formTagline: string;
-  setFormTagline: (val: string) => void;
-  formDesc: string;
-  setFormDesc: (val: string) => void;
-  formCategory: BotCategory;
-  setFormCategory: (val: BotCategory) => void;
-  formEmoji: string;
-  setFormEmoji: (val: string) => void;
-  formInstructions: string;
-  setFormInstructions: (val: string) => void;
-  formExecutionMode: 'provider' | 'acp';
-  setFormExecutionMode: (val: 'provider' | 'acp') => void;
-  formAcpAgentId: string;
-  setFormAcpAgentId: (val: string) => void;
-  formAllowAcpSourceTransfer: boolean;
-  setFormAllowAcpSourceTransfer: (val: boolean) => void;
-  formAcpConfigOptions: AcpReviewConfigOverrides;
-  setFormAcpConfigOptions: React.Dispatch<React.SetStateAction<AcpReviewConfigOverrides>>;
-  formProvider: string;
-  setFormProvider: (val: string) => void;
-  formModel: string;
-  setFormModel: (val: string) => void;
-  isCustomModel: boolean;
-  setIsCustomModel: (val: boolean) => void;
-  formTemp: number;
-  setFormTemp: (val: number) => void;
-  formReasoningEffort: AiReasoningEffort | undefined;
-  setFormReasoningEffort: (val: AiReasoningEffort | undefined) => void;
-  formFastMode: boolean;
-  setFormFastMode: (val: boolean) => void;
-  formError: string | null;
-  externalAgents: AcpAgentConfig[];
-  globalAiConfig: AiConfig;
-  providerPreset: AiProviderPreset | undefined;
-  effectiveProvider: string;
-  inheritsGlobalModel: boolean;
-  availableModels: AiModelPreset[];
-  executionModel: AiModelPreset | undefined;
-  executionBaseUrl: string;
-  dynamicModels: Record<string, AiModelPreset[]>;
-  onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
-}> = ({
-  isOpen,
-  editingBotId,
-  formName,
-  setFormName,
-  formTagline,
-  setFormTagline,
-  formDesc,
-  setFormDesc,
-  formCategory,
-  setFormCategory,
-  formEmoji,
-  setFormEmoji,
-  formInstructions,
-  setFormInstructions,
-  formExecutionMode,
-  setFormExecutionMode,
-  formAcpAgentId,
-  setFormAcpAgentId,
-  formAllowAcpSourceTransfer,
-  setFormAllowAcpSourceTransfer,
-  formAcpConfigOptions,
-  setFormAcpConfigOptions,
-  formProvider,
-  setFormProvider,
-  formModel,
-  setFormModel,
-  isCustomModel,
-  setIsCustomModel,
-  formTemp,
-  setFormTemp,
-  formReasoningEffort,
-  setFormReasoningEffort,
-  formFastMode,
-  setFormFastMode,
-  formError,
-  externalAgents,
-  globalAiConfig,
-  providerPreset,
-  effectiveProvider,
-  inheritsGlobalModel,
-  availableModels,
-  executionModel,
-  executionBaseUrl,
-  dynamicModels,
-  onClose,
-  onSubmit,
+export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
+  dialog: { isOpen, editingBotId, formError, onClose, onSubmit },
+  identity: {
+    formName,
+    setFormName,
+    formTagline,
+    setFormTagline,
+    formDesc,
+    setFormDesc,
+    formCategory,
+    setFormCategory,
+    formEmoji,
+    setFormEmoji,
+    formInstructions,
+    setFormInstructions,
+  },
+  execution: {
+    formExecutionMode,
+    setFormExecutionMode,
+    formAcpAgentId,
+    setFormAcpAgentId,
+    formAllowAcpSourceTransfer,
+    setFormAllowAcpSourceTransfer,
+    formAcpConfigOptions,
+    setFormAcpConfigOptions,
+    formProvider,
+    setFormProvider,
+    formModel,
+    setFormModel,
+    isCustomModel,
+    setIsCustomModel,
+    formTemp,
+    setFormTemp,
+    formReasoningEffort,
+    setFormReasoningEffort,
+    formFastMode,
+    setFormFastMode,
+  },
+  catalog: {
+    externalAgents,
+    globalAiConfig,
+    providerPreset,
+    effectiveProvider,
+    inheritsGlobalModel,
+    availableModels,
+    executionModel,
+    executionBaseUrl,
+    dynamicModels,
+  },
 }) => {
   if (!isOpen) return null;
 
@@ -266,37 +215,42 @@ export const BotReviewerModal: React.FC<{
 
           {/* Model & Execution Parameters */}
           <BotExecutionModelForm
-            formExecutionMode={formExecutionMode}
-            setFormExecutionMode={setFormExecutionMode}
-            setFormReasoningEffort={setFormReasoningEffort}
-            setFormFastMode={setFormFastMode}
-            formProvider={formProvider}
-            setFormProvider={setFormProvider}
-            setIsCustomModel={setIsCustomModel}
-            setFormModel={setFormModel}
-            isCustomModel={isCustomModel}
-            formModel={formModel}
-            modelOptions={modelOptions}
-            availableModels={availableModels}
-            globalAiConfig={globalAiConfig}
-            providerPreset={providerPreset}
-            effectiveProvider={effectiveProvider}
-            executionBaseUrl={executionBaseUrl}
-            dynamicModels={dynamicModels}
-            formReasoningEffort={formReasoningEffort}
-            formTemp={formTemp}
-            setFormTemp={setFormTemp}
-            parseFloat={parseFloat}
-            inheritsGlobalModel={inheritsGlobalModel}
-            executionModel={executionModel}
-            formFastMode={formFastMode}
-            externalAgents={externalAgents}
-            formAcpAgentId={formAcpAgentId}
-            setFormAcpAgentId={setFormAcpAgentId}
-            setFormAcpConfigOptions={setFormAcpConfigOptions}
-            formAcpConfigOptions={formAcpConfigOptions}
-            formAllowAcpSourceTransfer={formAllowAcpSourceTransfer}
-            setFormAllowAcpSourceTransfer={setFormAllowAcpSourceTransfer}
+            execution={{
+              formExecutionMode: formExecutionMode,
+              setFormExecutionMode: setFormExecutionMode,
+              setFormReasoningEffort: setFormReasoningEffort,
+              setFormFastMode: setFormFastMode,
+              formProvider: formProvider,
+              setFormProvider: setFormProvider,
+              setIsCustomModel: setIsCustomModel,
+              setFormModel: setFormModel,
+              isCustomModel: isCustomModel,
+              formModel: formModel,
+              formReasoningEffort: formReasoningEffort,
+              formTemp: formTemp,
+              setFormTemp: setFormTemp,
+              formFastMode: formFastMode,
+            }}
+            catalog={{
+              modelOptions: modelOptions,
+              availableModels: availableModels,
+              globalAiConfig: globalAiConfig,
+              providerPreset: providerPreset,
+              effectiveProvider: effectiveProvider,
+              executionBaseUrl: executionBaseUrl,
+              dynamicModels: dynamicModels,
+              inheritsGlobalModel: inheritsGlobalModel,
+              executionModel: executionModel,
+            }}
+            acp={{
+              externalAgents: externalAgents,
+              formAcpAgentId: formAcpAgentId,
+              setFormAcpAgentId: setFormAcpAgentId,
+              setFormAcpConfigOptions: setFormAcpConfigOptions,
+              formAcpConfigOptions: formAcpConfigOptions,
+              formAllowAcpSourceTransfer: formAllowAcpSourceTransfer,
+              setFormAllowAcpSourceTransfer: setFormAllowAcpSourceTransfer,
+            }}
           />
 
           <div className="flex justify-end gap-2 pt-2 border-t border-surface0">

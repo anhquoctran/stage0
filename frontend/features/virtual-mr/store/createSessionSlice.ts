@@ -1,22 +1,20 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useGitStore } from '../../git/store/useGitStore';
-import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
-import { type ReviewerState } from '../types/ReviewerState';
-import { type VirtualMrReviewer } from '../types/VirtualMrReviewer';
 import { type VirtualMrCommit } from '../types/VirtualMrCommit';
-import { type VirtualMrStatus } from '../types/VirtualMrStatus';
-import { AVAILABLE_AI_BOTS } from '../types/virtualMr';
-import { hasVirtualMrActivity } from '../utils/virtualMrActivity';
-import { isResolvableDiscussion } from '../utils/discussionResolvable';
-import {
-  persistSession,
-  updateSessionMetadata,
-  openExistingVirtualMr,
-} from '../utils/virtualMrSessionHelpers';
 import type { VirtualMrState } from '../types/VirtualMrState';
+import { type VirtualMrStatus } from '../types/VirtualMrStatus';
+import { hasVirtualMrActivity } from '../utils/virtualMrActivity';
+import {
+openExistingVirtualMr,
+persistSession,
+updateSessionMetadata,
+} from '../utils/virtualMrSessionHelpers';
+import { createSessionReviewerActions } from './createSessionReviewerActions';
 
 export const createSessionSlice = (
-  set: (partial: Partial<VirtualMrState> | ((state: VirtualMrState) => Partial<VirtualMrState>)) => void,
+  set: (
+    partial: Partial<VirtualMrState> | ((state: VirtualMrState) => Partial<VirtualMrState>)
+  ) => void,
   get: () => VirtualMrState
 ) => ({
   switchSession: (sessionId: string) => {
@@ -47,14 +45,20 @@ export const createSessionSlice = (
       }
     }
 
-    set({ closedSessionTabIds: closedTabs, activeSessionId: nextActive, isDraftActive: nextDraftActive });
+    set({
+      closedSessionTabIds: closedTabs,
+      activeSessionId: nextActive,
+      isDraftActive: nextDraftActive,
+    });
 
     if (nextDraftActive && draftMr) {
       get().activateDraftMr();
     } else if (nextActive) {
       const nextSession = sessions.find((s) => s.id === nextActive);
       if (nextSession) {
-        useGitStore.getState().setBranchComparison(nextSession.baseBranch, nextSession.compareBranch);
+        useGitStore
+          .getState()
+          .setBranchComparison(nextSession.baseBranch, nextSession.compareBranch);
       }
     }
   },
@@ -78,79 +82,7 @@ export const createSessionSlice = (
     }
   },
 
-  setReviewerReviewStatus: async (sessionId: string, agentId: string, reviewStatus: ReviewerState) => {
-    await updateSessionMetadata(
-      sessionId,
-      (session) => {
-        const current = session.reviewers.find((reviewer) => reviewer.agentId === agentId);
-        if (!current) return null;
-        const reviewers = session.reviewers.map((reviewer) =>
-          reviewer.agentId === agentId ? { ...reviewer, reviewStatus } : reviewer
-        );
-        const allReviewersApproved =
-          reviewers.length > 0 &&
-          reviewers.every((reviewer) => reviewer.reviewStatus === 'approved');
-        const hasOpenDiscussions = session.discussions.some(
-          (discussion) => isResolvableDiscussion(discussion) && !discussion.isResolved
-        );
-        const status =
-          reviewStatus === 'reviewing'
-            ? session.status === 'resolved'
-              ? 'open'
-              : session.status
-            : session.status === 'closed'
-            ? 'closed'
-            : allReviewersApproved && !hasOpenDiscussions
-            ? 'resolved'
-            : 'open';
-        if (current.reviewStatus === reviewStatus && session.status === status) return null;
-        return { reviewers, status };
-      },
-      get,
-      set
-    );
-  },
-
-  resetReviewerReviews: async (sessionId: string) => {
-    await updateSessionMetadata(
-      sessionId,
-      (session) => ({
-        status: 'open',
-        reviewers: session.reviewers.map((reviewer) => ({ ...reviewer, reviewStatus: 'pending' })),
-      }),
-      get,
-      set
-    );
-  },
-
-  invalidateReviewerApprovals: async (sessionId: string) => {
-    await updateSessionMetadata(
-      sessionId,
-      (session) => {
-        const status = session.status === 'resolved' ? 'open' : session.status;
-        if (
-          session.reviewers.every((reviewer) => reviewer.reviewStatus === 'pending') &&
-          session.status === status
-        )
-          return null;
-        return {
-          status,
-          reviewers: session.reviewers.map((reviewer) => ({ ...reviewer, reviewStatus: 'pending' })),
-        };
-      },
-      get,
-      set
-    );
-  },
-
-  tryResolveSession: async (sessionId: string) => {
-    const session = get().sessions.find((item) => item.id === sessionId);
-    if (!session || session.status !== 'open' || session.reviewers.length === 0) return;
-    if (session.reviewers.some((reviewer) => reviewer.reviewStatus !== 'approved')) return;
-    if (session.discussions.some((discussion) => isResolvableDiscussion(discussion) && !discussion.isResolved))
-      return;
-    await get().updateSessionStatus(sessionId, 'resolved');
-  },
+  ...createSessionReviewerActions(set, get),
 
   updateSessionDetails: async (sessionId: string, title: string, description: string) => {
     const { sessions, currentRepoId } = get();
@@ -258,66 +190,6 @@ export const createSessionSlice = (
     }
   },
 
-  assignReviewerBot: async (sessionId: string, botId: string) => {
-    const { currentRepoId } = get();
-    const allBots = [
-      ...useBotReviewersStore.getState().globalReviewers,
-      ...(currentRepoId
-        ? useBotReviewersStore.getState().repoCustomReviewers[currentRepoId] || []
-        : []),
-    ];
-    const bot = allBots.find((b) => b.id === botId) || AVAILABLE_AI_BOTS.find((b) => b.id === botId);
-    if (!bot) return;
-
-    await updateSessionMetadata(
-      sessionId,
-      (session) => {
-        if (session.reviewers.some((r) => r.agentId === botId)) return null;
-        const newReviewer: VirtualMrReviewer = {
-          agentId: bot.id,
-          agentName: bot.name,
-          reviewStatus: 'pending',
-          assignedAt: new Date().toISOString(),
-        };
-        return {
-          status: session.status === 'closed' ? 'closed' : 'open',
-          reviewers: [
-            ...session.reviewers.map((reviewer) => ({
-              ...reviewer,
-              reviewStatus: 'pending' as const,
-            })),
-            newReviewer,
-          ],
-        };
-      },
-      get,
-      set
-    );
-    void import('../../review/services/assignedReviewService').then(
-      ({ reReviewAssignedSession }) => reReviewAssignedSession(sessionId)
-    );
-  },
-
-  removeReviewerBot: async (sessionId: string, agentId: string) => {
-    await updateSessionMetadata(
-      sessionId,
-      (session) => {
-        if (!session.reviewers.some((reviewer) => reviewer.agentId === agentId)) return null;
-        return {
-          status: session.status === 'closed' ? 'closed' : 'open',
-          reviewers: session.reviewers
-            .filter((reviewer) => reviewer.agentId !== agentId)
-            .map((reviewer) => ({ ...reviewer, reviewStatus: 'pending' as const })),
-        };
-      },
-      get,
-      set
-    );
-    void import('../../review/services/assignedReviewService').then(
-      ({ reReviewAssignedSession }) => reReviewAssignedSession(sessionId)
-    );
-  },
-
   toggleSessionLabel: async (sessionId: string, labelId: string) => {
     const { repoLabels } = get();
     const targetLabel = repoLabels.find((l) => l.id === labelId);
@@ -339,4 +211,3 @@ export const createSessionSlice = (
     );
   },
 });
-

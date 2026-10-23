@@ -24,91 +24,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   activeView,
   onBackToOverview,
 }) => {
-  const {
-    apiKeysConfigured,
-    isCheckingApiKey,
-    apiKeyCheckError,
-    mcpServers,
-    isTestingAi,
-    aiTestResult,
-    activeSubTab,
-    setActiveSubTab,
-    loadApiKeyForProvider,
-    testAiConnection,
-    clearAiTestResult,
-    dynamicModels,
-    isFetchingDynamicModels,
-    dynamicModelError,
-    fetchDynamicModels,
-    deleteMcpServer,
-    toggleMcpServer,
-    importMcpConfigFile,
-    exportMcpConfigFile,
-    aiConfig,
-    updateAiConfig,
-    setProvider,
-    resetAiConfig,
-    apiKeyDraft,
-    setApiKeyDraft,
-    isProviderDetailsOpen,
-    isProviderSetupOpen,
-    setIsProviderSetupOpen,
-    setupProviderId,
-    setupProviderName,
-    setSetupProviderName,
-    setupModel,
-    setSetupModel,
-    setupBaseUrl,
-    setSetupBaseUrl,
-    setupApiKey,
-    setSetupApiKey,
-    providerSetupError,
-    providerToDelete,
-    setProviderToDelete,
-    providerDeleteError,
-    setProviderDeleteError,
-    isDeletingProvider,
-    testingServerId,
-    deletingServerId,
-    setDeletingServerId,
-    openProviderDetails,
-    closeProviderDetails,
-    isServerFormOpen,
-    setIsServerFormOpen,
-    editingServerId,
-    serverName,
-    setServerName,
-    serverDesc,
-    setServerDesc,
-    serverType,
-    setServerType,
-    serverCommand,
-    setServerCommand,
-    serverArgsStr,
-    setServerArgsStr,
-    serverUrl,
-    setServerUrl,
-    serverEnvPairs,
-    setServerEnvPairs,
-    formError,
-    isJsonModalOpen,
-    setIsJsonModalOpen,
-    activeProviderPreset,
-    configuredProviderList,
-    availableProviderList,
-    hasSavedApiKey,
-    enabledMcpCount,
-    handleOpenAddServer,
-    handleOpenEditServer,
-    handleSaveServer,
-    handleTestServer,
-    hasProviderApiKey,
-    isProviderConfigured,
-    loadProviderSetup,
-    openAddProvider,
-    handleSaveProviderSetup,
-    confirmRemoveProvider,
-  } = useAiMcpTabState({
+  const state = useAiMcpTabState({
     draftSettings,
     draftAiConfig,
     onUpdateAiConfig,
@@ -121,61 +37,66 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
     <div className="space-y-4">
       <AiMcpTabHeader
         activeView={activeView}
-        activeSubTab={activeSubTab}
+        activeSubTab={state.navigation.activeSubTab}
         onBackToOverview={onBackToOverview}
-        onSelectSubTab={setActiveSubTab}
+        onSelectSubTab={state.navigation.setActiveSubTab}
         activeProviderName={getProviderDisplayName(
-          activeProviderPreset.id,
-          aiConfig.customProviderName
+          state.provider.activeProviderPreset.id,
+          state.provider.aiConfig.customProviderName
         )}
-        activeModel={aiConfig.model}
-        enabledMcpCount={enabledMcpCount}
-        totalMcpCount={mcpServers.length}
+        activeModel={state.provider.aiConfig.model}
+        enabledMcpCount={state.mcp.enabledMcpCount}
+        totalMcpCount={state.mcp.mcpServers.length}
       />
 
       {/* VIEW: AI MODEL & PROVIDER CONFIGURATION */}
       {(activeView === 'providers' ||
-        (!activeView && (activeSubTab === 'ai' || activeSubTab === 'guardrails'))) && (
+        (!activeView &&
+          (state.navigation.activeSubTab === 'ai' ||
+            state.navigation.activeSubTab === 'guardrails'))) && (
         <div className="space-y-4 animate-in fade-in duration-100">
           <AiMcpProviderTable
-            configuredProviders={configuredProviderList}
-            activeProviderId={aiConfig.provider}
-            availableProviderList={availableProviderList}
-            aiConfig={aiConfig}
-            onOpenAddProvider={openAddProvider}
-            onOpenProviderDetails={openProviderDetails}
-            onSelectProvider={setProvider}
+            configuredProviders={state.provider.configuredProviderList}
+            activeProviderId={state.provider.aiConfig.provider}
+            availableProviderList={state.provider.availableProviderList}
+            aiConfig={state.provider.aiConfig}
+            onOpenAddProvider={state.setup.openAddProvider}
+            onOpenProviderDetails={state.details.openProviderDetails}
+            onSelectProvider={state.provider.setProvider}
             onRequestDeleteProvider={(id) => {
-              setProviderDeleteError(null);
-              setProviderToDelete(id);
+              state.removal.setProviderDeleteError(null);
+              state.removal.setProviderToDelete(id);
             }}
-            isProviderConfigured={isProviderConfigured}
+            isProviderConfigured={state.setup.isProviderConfigured}
           />
 
           <AiMcpProviderDetailsModal
-            isOpen={isProviderDetailsOpen}
-            onClose={closeProviderDetails}
-            aiConfig={aiConfig}
-            activeProviderPreset={activeProviderPreset}
-            apiKeyDraft={apiKeyDraft}
-            setApiKeyDraft={setApiKeyDraft}
-            hasSavedApiKey={hasSavedApiKey}
-            apiKeysConfigured={apiKeysConfigured}
-            isCheckingApiKey={isCheckingApiKey}
-            apiKeyCheckError={apiKeyCheckError}
-            onLoadApiKey={loadApiKeyForProvider}
-            onUpdateAiConfig={updateAiConfig}
-            dynamicModels={dynamicModels}
-            isFetchingDynamicModels={isFetchingDynamicModels}
-            dynamicModelError={dynamicModelError}
-            onFetchDynamicModels={fetchDynamicModels}
+            isOpen={state.details.isProviderDetailsOpen}
+            onClose={state.details.closeProviderDetails}
+            aiConfig={state.provider.aiConfig}
+            activeProviderPreset={state.provider.activeProviderPreset}
+            apiKeyDraft={state.provider.apiKeyDraft}
+            setApiKeyDraft={state.provider.setApiKeyDraft}
+            hasSavedApiKey={state.provider.hasSavedApiKey}
+            apiKeysConfigured={state.provider.apiKeysConfigured}
+            isCheckingApiKey={state.provider.isCheckingApiKey}
+            apiKeyCheckError={state.provider.apiKeyCheckError}
+            onLoadApiKey={state.provider.loadApiKeyForProvider}
+            onUpdateAiConfig={state.provider.updateAiConfig}
+            dynamicModels={state.provider.dynamicModels}
+            isFetchingDynamicModels={state.provider.isFetchingDynamicModels}
+            dynamicModelError={state.provider.dynamicModelError}
+            onFetchDynamicModels={state.provider.fetchDynamicModels}
             onTestConnection={() =>
-              void testAiConnection(aiConfig, hasSavedApiKey || !!apiKeyDraft.trim())
+              void state.provider.testAiConnection(
+                state.provider.aiConfig,
+                state.provider.hasSavedApiKey || !!state.provider.apiKeyDraft.trim()
+              )
             }
-            isTestingAi={isTestingAi}
-            aiTestResult={aiTestResult}
-            onClearTestResult={clearAiTestResult}
-            onResetAiConfig={resetAiConfig}
+            isTestingAi={state.provider.isTestingAi}
+            aiTestResult={state.provider.aiTestResult}
+            onClearTestResult={state.provider.clearAiTestResult}
+            onResetAiConfig={state.provider.resetAiConfig}
             hasDraftSettings={Boolean(draftSettings)}
           />
 
@@ -194,7 +115,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
       )}
 
       {/* SUB-TAB 2: MCP SERVERS (MODEL CONTEXT PROTOCOL) */}
-      {activeSubTab === 'mcp' && (
+      {state.navigation.activeSubTab === 'mcp' && (
         <div className="space-y-4 animate-in fade-in duration-100">
           <HarnessConnectionsPanel draftServers={draftSettings?.mcpServers} />
 
@@ -212,7 +133,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
             <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setIsJsonModalOpen(true)}
+                onClick={() => state.mcp.setIsJsonModalOpen(true)}
                 className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
                 title="Import or Export JSON configuration"
               >
@@ -222,7 +143,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 
               <button
                 type="button"
-                onClick={() => handleOpenAddServer()}
+                onClick={() => state.mcp.handleOpenAddServer()}
                 className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer shadow-xs border border-surface2"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -240,7 +161,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               <button
                 key={preset.name}
                 type="button"
-                onClick={() => handleOpenAddServer(preset)}
+                onClick={() => state.mcp.handleOpenAddServer(preset)}
                 className="flex shrink-0 items-center gap-1 whitespace-nowrap px-2.5 py-1 text-[11px] font-medium bg-surface0 border border-surface1 hover:bg-surface1 text-text transition-colors cursor-pointer"
               >
                 <Plus className="w-3 h-3 text-subtext0" />
@@ -251,87 +172,91 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
 
           {/* Add / Edit Server Drawer / Form */}
           <McpServerModal
-            isOpen={isServerFormOpen}
-            onClose={() => setIsServerFormOpen(false)}
-            onSave={handleSaveServer}
-            editingServerId={editingServerId}
-            formError={formError}
-            serverName={serverName}
-            setServerName={setServerName}
-            serverType={serverType}
-            setServerType={setServerType}
-            serverDesc={serverDesc}
-            setServerDesc={setServerDesc}
-            serverCommand={serverCommand}
-            setServerCommand={setServerCommand}
-            serverArgsStr={serverArgsStr}
-            setServerArgsStr={setServerArgsStr}
-            serverUrl={serverUrl}
-            setServerUrl={setServerUrl}
-            serverEnvPairs={serverEnvPairs}
-            setServerEnvPairs={setServerEnvPairs}
+            isOpen={state.mcp.isServerFormOpen}
+            onClose={() => state.mcp.setIsServerFormOpen(false)}
+            onSave={state.mcp.handleSaveServer}
+            editingServerId={state.mcp.editingServerId}
+            formError={state.mcp.formError}
+            serverName={state.mcp.serverName}
+            setServerName={state.mcp.setServerName}
+            serverType={state.mcp.serverType}
+            setServerType={state.mcp.setServerType}
+            serverDesc={state.mcp.serverDesc}
+            setServerDesc={state.mcp.setServerDesc}
+            serverCommand={state.mcp.serverCommand}
+            setServerCommand={state.mcp.setServerCommand}
+            serverArgsStr={state.mcp.serverArgsStr}
+            setServerArgsStr={state.mcp.setServerArgsStr}
+            serverUrl={state.mcp.serverUrl}
+            setServerUrl={state.mcp.setServerUrl}
+            serverEnvPairs={state.mcp.serverEnvPairs}
+            setServerEnvPairs={state.mcp.setServerEnvPairs}
           />
 
           {/* Servers Cards List */}
           <AiMcpServersList
-            mcpServers={mcpServers}
-            onOpenAddServer={handleOpenAddServer}
-            onOpenEditServer={handleOpenEditServer}
-            onToggleServer={toggleMcpServer}
-            onTestServer={handleTestServer}
-            onDeleteServer={deleteMcpServer}
-            testingServerId={testingServerId}
-            deletingServerId={deletingServerId}
-            setDeletingServerId={setDeletingServerId}
+            mcpServers={state.mcp.mcpServers}
+            onOpenAddServer={state.mcp.handleOpenAddServer}
+            onOpenEditServer={state.mcp.handleOpenEditServer}
+            onToggleServer={state.mcp.toggleMcpServer}
+            onTestServer={state.mcp.handleTestServer}
+            onDeleteServer={state.mcp.deleteMcpServer}
+            testingServerId={state.mcp.testingServerId}
+            deletingServerId={state.mcp.deletingServerId}
+            setDeletingServerId={state.mcp.setDeletingServerId}
           />
         </div>
       )}
 
       {/* SUB-TAB 3: STAGE0 MANAGED ROLE PROMPTS */}
-      {activeSubTab === 'prompts' && (
+      {state.navigation.activeSubTab === 'prompts' && (
         <AiMcpPromptRolesView
-          reviewerInstructions={aiConfig.reviewerInstructions}
+          reviewerInstructions={state.provider.aiConfig.reviewerInstructions}
           onUpdateReviewerInstructions={(reviewerInstructions) =>
-            updateAiConfig({ reviewerInstructions })
+            state.provider.updateAiConfig({ reviewerInstructions })
           }
         />
       )}
 
       {/* MODAL: ADD / EDIT LLM PROVIDER */}
       <ProviderSetupModal
-        isOpen={isProviderSetupOpen}
-        onClose={() => setIsProviderSetupOpen(false)}
-        setupProviderId={setupProviderId}
-        setupProviderName={setupProviderName}
-        setSetupProviderName={setSetupProviderName}
-        setupApiKey={setupApiKey}
-        setSetupApiKey={setSetupApiKey}
-        setupBaseUrl={setupBaseUrl}
-        setSetupBaseUrl={setSetupBaseUrl}
-        setupModel={setupModel}
-        setSetupModel={setSetupModel}
-        providerSetupError={providerSetupError}
-        loadProviderSetup={loadProviderSetup}
-        handleSaveProviderSetup={handleSaveProviderSetup}
-        availableProviderList={availableProviderList}
-        getProviderDisplayName={(id) => getProviderDisplayName(id, aiConfig.customProviderName)}
-        hasProviderApiKey={hasProviderApiKey}
+        isOpen={state.setup.isProviderSetupOpen}
+        onClose={() => state.setup.setIsProviderSetupOpen(false)}
+        setupProviderId={state.setup.setupProviderId}
+        setupProviderName={state.setup.setupProviderName}
+        setSetupProviderName={state.setup.setSetupProviderName}
+        setupApiKey={state.setup.setupApiKey}
+        setSetupApiKey={state.setup.setSetupApiKey}
+        setupBaseUrl={state.setup.setupBaseUrl}
+        setSetupBaseUrl={state.setup.setSetupBaseUrl}
+        setupModel={state.setup.setupModel}
+        setSetupModel={state.setup.setSetupModel}
+        providerSetupError={state.setup.providerSetupError}
+        loadProviderSetup={state.setup.loadProviderSetup}
+        handleSaveProviderSetup={state.setup.handleSaveProviderSetup}
+        availableProviderList={state.provider.availableProviderList}
+        getProviderDisplayName={(id) =>
+          getProviderDisplayName(id, state.provider.aiConfig.customProviderName)
+        }
+        hasProviderApiKey={state.setup.hasProviderApiKey}
       />
 
       <ProviderDeleteModal
-        providerToDelete={providerToDelete}
-        onClose={() => setProviderToDelete(null)}
-        onConfirm={confirmRemoveProvider}
-        isDeletingProvider={isDeletingProvider}
-        providerDeleteError={providerDeleteError}
-        getProviderDisplayName={(id) => getProviderDisplayName(id, aiConfig.customProviderName)}
+        providerToDelete={state.removal.providerToDelete}
+        onClose={() => state.removal.setProviderToDelete(null)}
+        onConfirm={state.removal.confirmRemoveProvider}
+        isDeletingProvider={state.removal.isDeletingProvider}
+        providerDeleteError={state.removal.providerDeleteError}
+        getProviderDisplayName={(id) =>
+          getProviderDisplayName(id, state.provider.aiConfig.customProviderName)
+        }
       />
 
       <McpJsonModal
-        isOpen={isJsonModalOpen}
-        onClose={() => setIsJsonModalOpen(false)}
-        exportMcpConfigFile={exportMcpConfigFile}
-        importMcpConfigFile={importMcpConfigFile}
+        isOpen={state.mcp.isJsonModalOpen}
+        onClose={() => state.mcp.setIsJsonModalOpen(false)}
+        exportMcpConfigFile={state.mcp.exportMcpConfigFile}
+        importMcpConfigFile={state.mcp.importMcpConfigFile}
       />
     </div>
   );

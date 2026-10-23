@@ -26,7 +26,6 @@ export function BlameToolbar({
   statsDropdownRef,
   setIsStatsOpen,
   isStatsOpen,
-  Math,
 }: BlameToolbarProps) {
   return (
     <div className="h-10 border-b border-surface0 bg-base px-3 flex items-center justify-between shrink-0 text-xs gap-3">

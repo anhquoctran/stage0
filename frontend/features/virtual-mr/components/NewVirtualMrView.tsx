@@ -1,17 +1,16 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { Loader2 } from '../../../common/components/icons/Loader2';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
-import { FileList } from '../../git/components/FileList';
 import { useGitStore } from '../../git/store/useGitStore';
-import { startAssignedReviewBatchForSession } from '../../review/services/assignedReviewService';
+import { startNewMrReviewBatch } from '../services/startNewMrReviewBatch';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
-import { NewVirtualMrCommitsList } from './new-mr/NewVirtualMrCommitsList';
+import { createNewMrDescriptionDraft } from '../utils/createNewMrDescriptionDraft';
 import { NewVirtualMrComparisonError } from './new-mr/NewVirtualMrComparisonError';
 import { NewVirtualMrFormSection } from './new-mr/NewVirtualMrFormSection';
 import { NewVirtualMrHeader } from './new-mr/NewVirtualMrHeader';
-import { NewVirtualMrPreviewToolbar } from './new-mr/NewVirtualMrPreviewToolbar';
-import { NewVirtualMrViewDiffViewer } from './NewVirtualMrViewDiffViewer';
+import { NewVirtualMrPreview } from './new-mr/NewVirtualMrPreview';
+import { useNewMrMetadata } from './useNewMrMetadata';
 
 export const NewVirtualMrView: React.FC = () => {
   const {
@@ -63,55 +62,35 @@ export const NewVirtualMrView: React.FC = () => {
 
   const [previewTab, setPreviewTab] = useState<'commits' | 'diff'>('commits');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showBotDropdown, setShowBotDropdown] = useState(false);
-  const [showLabelDropdown, setShowLabelDropdown] = useState(false);
-  const [isLoadingReviewerOptions, setIsLoadingReviewerOptions] = useState(false);
-  const [isLoadingLabelOptions, setIsLoadingLabelOptions] = useState(false);
-  const [labelSearch, setLabelSearch] = useState('');
-  const [newLabelColor, setNewLabelColor] = useState('#3b82f6');
-  const botDropdownRef = useRef<HTMLDivElement>(null);
-  const labelDropdownRef = useRef<HTMLDivElement>(null);
-
-  const toggleReviewerDropdown = async () => {
-    const willOpen = !showBotDropdown;
-    setShowBotDropdown(willOpen);
-    if (!willOpen) return;
-
-    reloadPersistedReviewers();
-    if (!currentRepo?.id) return;
-    setIsLoadingReviewerOptions(true);
-    try {
-      await refreshRepoMetadata(currentRepo.id);
-    } finally {
-      setIsLoadingReviewerOptions(false);
-    }
-  };
-
-  const toggleLabelDropdown = async () => {
-    const willOpen = !showLabelDropdown;
-    setShowLabelDropdown(willOpen);
-    if (!willOpen || !currentRepo?.id) return;
-
-    setIsLoadingLabelOptions(true);
-    try {
-      await refreshRepoMetadata(currentRepo.id);
-    } finally {
-      setIsLoadingLabelOptions(false);
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (botDropdownRef.current && !botDropdownRef.current.contains(e.target as Node)) {
-        setShowBotDropdown(false);
-      }
-      if (labelDropdownRef.current && !labelDropdownRef.current.contains(e.target as Node)) {
-        setShowLabelDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const {
+    isLoadingReviewerOptions,
+    showBotDropdown,
+    setShowBotDropdown,
+    toggleReviewerDropdown,
+    handleToggleBot,
+    handleRemoveBot,
+    botDropdownRef,
+    isLoadingLabelOptions,
+    showLabelDropdown,
+    setShowLabelDropdown,
+    toggleLabelDropdown,
+    handleToggleLabel,
+    handleRemoveLabel,
+    labelSearch,
+    setLabelSearch,
+    newLabelColor,
+    setNewLabelColor,
+    handleCreateAndSelectLabel,
+    labelDropdownRef,
+  } = useNewMrMetadata({
+    reloadPersistedReviewers,
+    currentRepo,
+    refreshRepoMetadata,
+    draftMr,
+    updateDraftMr,
+    repoLabels,
+    createRepoLabel,
+  });
 
   if (!draftMr) return null;
 
@@ -146,79 +125,10 @@ export const NewVirtualMrView: React.FC = () => {
     changeDraftBranches(draftMr.compareBranch, draftMr.baseBranch);
   };
 
-  const handleToggleBot = (botId: string) => {
-    if (!draftMr) return;
-    const exists = draftMr.selectedBots.includes(botId);
-    const updated = exists
-      ? draftMr.selectedBots.filter((id) => id !== botId)
-      : [...draftMr.selectedBots, botId];
-    updateDraftMr({ selectedBots: updated });
-  };
-
-  const handleRemoveBot = (botId: string) => {
-    if (!draftMr) return;
-    updateDraftMr({ selectedBots: draftMr.selectedBots.filter((id) => id !== botId) });
-  };
-
-  const handleToggleLabel = (labelId: string) => {
-    if (!draftMr) return;
-    const exists = draftMr.selectedLabels.includes(labelId);
-    const updated = exists
-      ? draftMr.selectedLabels.filter((id) => id !== labelId)
-      : [...draftMr.selectedLabels, labelId];
-    updateDraftMr({ selectedLabels: updated });
-  };
-
-  const handleRemoveLabel = (labelId: string) => {
-    if (!draftMr) return;
-    updateDraftMr({ selectedLabels: draftMr.selectedLabels.filter((id) => id !== labelId) });
-  };
-
-  const handleCreateAndSelectLabel = async () => {
-    const name = labelSearch.trim();
-    if (!name || !draftMr) return;
-    try {
-      const existing = repoLabels.find((l) => l.name.toLowerCase() === name.toLowerCase());
-      if (existing) {
-        if (!draftMr.selectedLabels.includes(existing.id)) {
-          updateDraftMr({ selectedLabels: [...draftMr.selectedLabels, existing.id] });
-        }
-      } else {
-        const newLbl = await createRepoLabel(name, newLabelColor);
-        if (newLbl) {
-          updateDraftMr({ selectedLabels: [...draftMr.selectedLabels, newLbl.id] });
-        }
-      }
-      setLabelSearch('');
-    } catch (err) {
-      console.error('Failed to create label:', err);
-    }
-  };
-
   const handleGenerateDescription = () => {
     if (!draftMr) return;
 
-    const commitList =
-      draftMr.commits && draftMr.commits.length > 0
-        ? draftMr.commits.map((c) => `- ${c.subject} (\`${c.shortHash}\`)`).join('\n')
-        : diffPayload?.files && diffPayload.files.length > 0
-          ? diffPayload.files
-              .slice(0, 8)
-              .map((f) => `- Modified \`${f.path}\``)
-              .join('\n')
-          : '- Ongoing branch changes';
-
-    const fileList =
-      diffPayload?.files && diffPayload.files.length > 0
-        ? diffPayload.files
-            .slice(0, 10)
-            .map((f) => `- \`${f.path}\` (${(f.status || 'MODIFIED').toLowerCase()})`)
-            .join('\n')
-        : '';
-    const totalFiles = diffPayload?.files?.length || 0;
-    const moreFiles = totalFiles > 10 ? `\n- ...and ${totalFiles - 10} more files` : '';
-
-    const draft = `## Summary\nAutomated virtual merge request for \`${draftMr.compareBranch}\` into \`${draftMr.baseBranch}\`.\n\n### Key Changes\n${commitList}${fileList ? `\n\n### Changed Files (${totalFiles})\n${fileList}${moreFiles}` : ''}\n\n### Testing & Verification\n- [ ] Virtual mergeability verified\n- [ ] Local build & tests pass\n- [ ] AI bot reviews completed\n`;
+    const draft = createNewMrDescriptionDraft(draftMr, diffPayload);
 
     if (draftMr.description.trim() && draftMr.description.trim() !== draft.trim()) {
       if (window.confirm('Replace current description with a draft from commit metadata?')) {
@@ -241,42 +151,7 @@ export const NewVirtualMrView: React.FC = () => {
       if (!sessionId || draftMr.selectedBots.length === 0) return;
       // Assigning reviewers while creating the MR also starts the full review batch.
       // Remote providers are allowed here so the flow does not ask for a second confirmation.
-      void startAssignedReviewBatchForSession(sessionId)
-        .then((result) => {
-          if (result.failures.length) {
-            useGitStore
-              .getState()
-              .showToast(
-                `Virtual MR created. AI review failed or incomplete: ${[result.failures[0], !result.descriptionGenerated ? 'The MR description was not updated.' : 'The MR description was saved.'].join(' ')}`,
-                'warning'
-              );
-          } else if (!result.descriptionGenerated) {
-            useGitStore
-              .getState()
-              .showToast(
-                result.hasChanges
-                  ? 'Virtual MR created, but no reviewer could generate its description from the available diff.'
-                  : 'Virtual MR created, but no changed files were found in its review snapshot.',
-                result.hasChanges ? 'warning' : 'info'
-              );
-          } else {
-            const partial = result.runs.some((run) => run.status === 'partial');
-            useGitStore
-              .getState()
-              .showToast(
-                `AI review ${partial ? 'finished with incomplete coverage' : 'completed'} for ${result.runs.length} assigned reviewers. The MR description was updated.`,
-                partial ? 'warning' : 'success'
-              );
-          }
-        })
-        .catch((error) => {
-          useGitStore
-            .getState()
-            .showToast(
-              `Virtual MR created, but AI review could not start: ${error instanceof Error ? error.message : String(error)}`,
-              'error'
-            );
-        });
+      startNewMrReviewBatch(sessionId);
     } finally {
       setIsSubmitting(false);
     }
@@ -374,53 +249,19 @@ export const NewVirtualMrView: React.FC = () => {
             />
 
             {/* PREVIEW SECTION: COMMITS & DIFF */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Preview Subtab Navigation */}
-              <NewVirtualMrPreviewToolbar
-                setPreviewTab={setPreviewTab}
-                previewTab={previewTab}
-                draftMr={draftMr}
-                diffPayload={diffPayload}
-              />
-
-              {/* Preview Content Area */}
-              <div className="flex-1 flex overflow-hidden">
-                {previewTab === 'commits' ? (
-                  /* COMMITS LIST PREVIEW */
-                  <NewVirtualMrCommitsList
-                    draftMr={draftMr}
-                    changeDraftBranches={changeDraftBranches}
-                  />
-                ) : (
-                  /* FILES CHANGED / DIFF PREVIEW */
-                  <div className="flex-1 flex overflow-hidden relative">
-                    <FileList
-                      files={diffPayload?.files || []}
-                      selectedFile={selectedFile}
-                      onSelectFile={selectFile}
-                      isLoading={isDiffLoading}
-                      width={280}
-                    />
-                    <React.Suspense
-                      fallback={
-                        <div className="flex-1 grid place-items-center text-subtext0 text-xs">
-                          Loading diff viewer…
-                        </div>
-                      }
-                    >
-                      <NewVirtualMrViewDiffViewer
-                        selectedFile={selectedFile}
-                        diffPayload={diffPayload}
-                        viewMode={viewMode}
-                        onToggleViewMode={setViewMode}
-                        isLoading={isDiffLoading}
-                        onOpenRepo={openRepoDialog}
-                      />
-                    </React.Suspense>
-                  </div>
-                )}
-              </div>
-            </div>
+            <NewVirtualMrPreview
+              setPreviewTab={setPreviewTab}
+              previewTab={previewTab}
+              draftMr={draftMr}
+              diffPayload={diffPayload}
+              changeDraftBranches={changeDraftBranches}
+              selectedFile={selectedFile}
+              selectFile={selectFile}
+              isDiffLoading={isDiffLoading}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              openRepoDialog={openRepoDialog}
+            />
           </div>
         )}
       </div>

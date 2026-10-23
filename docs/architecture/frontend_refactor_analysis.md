@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary & Size Distribution
 
-This section and the inventory below preserve the **starting audit**. See section 7
+This section and the inventory below preserve the **starting audit**. See sections 7–8
 for implementation measurements and the maintenance map for current ownership.
 
 A comprehensive audit of the Stage0 frontend codebase identified **24 files exceeding 400 lines**, with **14 files exceeding 500 lines** (the maximum threshold enforced for backend Rust files and recommended target for frontend maintainability).
@@ -301,3 +301,88 @@ There are no size exceptions. Root hooks and component exports remain stable.
 Current responsibilities, invariants and failure groups are documented in
 [frontend maintenance](frontend_maintenance.md). `AGENTS.md` and
 `.cursor/rules/frontend-modularity.mdc` direct future agents there.
+
+## 8. TS/TSX follow-up checkpoint (2026-10-22)
+
+User scope: address all remaining large/complex TypeScript targets, excluding
+stylesheets. The section 7 measurements are historical, not the current inventory.
+All **30** files at 300+ lines in the follow-up baseline were addressed, alongside
+the densely packed review panel. No stylesheet or backend source was changed.
+
+| Measurement | Follow-up baseline | After |
+|---|---:|---:|
+| TS/TSX files | 693 | 794 |
+| Physical lines | 44,617 | 47,425 |
+| Largest file | 445 | 299 |
+| Files at 400+ | 5 | 0 |
+| Files at 300–399 | 25 | 0 |
+
+The extra files are named workflow hooks, action/transport/persistence helpers,
+view sections and their separate props/context types. Healthy small modules were
+not rewritten. The architecture limit remains 450; it was not raised or bypassed.
+
+| Follow-up priority | Before | After |
+|---|---:|---:|
+| `useAiMcpTabState.ts` | 445 | 246 |
+| `usePreferencesDraft.ts` | 445 | 292 |
+| `NewVirtualMrView.tsx` | 429 | 270 |
+| `VirtualMrListDialog.tsx` | 426 | 297 |
+| `ExternalAgentsTab.tsx` | 422 | 285 |
+| `RepositoryAgentsTab.tsx` | 386 | 259 |
+| `createAiConfigSlice.ts` | 378 | 265 |
+| `useCloneRepository.ts` | 355 | 260 |
+| `BotReviewersTab.tsx` | 347 | 280 |
+| `useGitGraphState.ts` | 338 | 177 |
+| `PreferencesJsonEditor.tsx` | 330 | 202 |
+| `BotReviewerModal.tsx` | 321 | 275 |
+| `AcpAgentDetails.tsx` | 357 | 104 |
+| `ReviewPanel.tsx` | 164 (dense) | 240 (readable orchestration) |
+
+### Responsibilities and compatibility
+
+- Provider setup/removal/details, ACP account/prompt/custom registration, MR
+  search/pagination/metadata, clone refs/destination and graph search/details each
+  have an owning workflow. Request epochs, cleanup, native paths and effect order
+  remain with their original workflows.
+- Preferences separates draft-session lifecycle, navigation and dirty counts
+  from transaction coordination. JSONC separates document persistence/conflicts
+  from code-buffer/completion interactions. Apply/OK/Cancel ordering is unchanged.
+- Global/repo bot forms use feature-owned draft models and a generic field-update
+  hook. Reviewer model catalog/capability resolution is separate from saving.
+  Internal bot/ACP props are grouped by dialog/identity/execution/catalog or
+  project/account/prompt/dialog, with all application callers migrated together.
+  Store selector APIs, IPC names/payloads, events and exported entry-point names
+  remain stable; no external SDK contract is introduced.
+- Clone/file-selection and session-reviewer/draft-submission action factories
+  share the existing stores' set/get. Reviewer normalization/persistence and
+  provider connection transport are services, not new stores.
+- Named views now own conflict block/marker rendering, flat/folder lists, binary
+  custom entry, pull options, repo inheritance, repository merge/rebase submenus,
+  review configuration/results and ACP detail sections. React keys remain at the
+  same mapped caller level; focus/refs/consent and conditional mounting are kept.
+- AI/native/ACP guardrails, source-transfer consent, snapshots and backend
+  evidence/publication checks were not loosened. Review UI extraction is not new
+  authority for an external agent.
+
+### Verification
+
+- Typecheck, architecture checks, Cargo check, isolated Vite bundle compilation
+  and whitespace checks pass. Normal packaging/version-bumping scripts were not
+  used. Existing large-chunk and mixed import warnings remain.
+- Full Node baseline: **185 / 167 pass / 18 fail**. Final: **192 / 174 pass /
+  the same 18 fail**, with no added failing test names. Seven added tests cover
+  form updates, reviewer capabilities/consent, clone stale results, ACP account
+  lifecycle, graph lanes, draft-session lifecycle and saved-key transport.
+- Existing assertions were retained. Clone source-layout assertions follow the
+  extracted destination owner. The unchanged failure groups are listed in the
+  [maintenance checkpoint](frontend_maintenance.md#latest-verification-checkpoint-2026-10-22-tstsx-follow-up).
+- An AST comparison confirmed **98** existing state fields/actions unchanged
+  after ignoring parentheses/formatting. Provider connection checking is the one
+  delegated action; its native saved-key/request contract is tested directly.
+- macOS checks only: no Windows/Linux runtime, live account/provider calls or
+  native visual interaction QA. These checks reduce regression risk; they do not
+  claim that the pre-existing failures are fixed or every runtime path was tested.
+
+Use the updated [maintenance map](frontend_maintenance.md) to locate owners. Keep
+structural moves separate from behavior changes and preserve all listed safety
+and transaction contracts when extending these workflows.
