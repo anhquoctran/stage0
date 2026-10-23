@@ -4,15 +4,18 @@ import { Check } from '../../../common/components/icons/Check';
 import { Info } from '../../../common/components/icons/Info';
 import { X } from '../../../common/components/icons/X';
 import { ConflictBanner } from '../../../features/git/components/ConflictBanner';
-import { FileList } from '../../../features/git/components/FileList';
 import { NotificationDrawer } from '../../../features/notifications/components/NotificationDrawer';
 import { EmptyVirtualMrWorkspace } from '../../../features/virtual-mr/components/EmptyVirtualMrWorkspace';
+import { VirtualMrCommitsTab } from '../../../features/virtual-mr/components/hub/VirtualMrCommitsTab';
+import { VirtualMrOverviewTab } from '../../../features/virtual-mr/components/hub/VirtualMrOverviewTab';
+import { VirtualMrReviewsTab } from '../../../features/virtual-mr/components/hub/VirtualMrReviewsTab';
 import { NewVirtualMrView } from '../../../features/virtual-mr/components/NewVirtualMrView';
 import { VirtualMrBottomBar } from '../../../features/virtual-mr/components/VirtualMrBottomBar';
 import { VirtualMrHub } from '../../../features/virtual-mr/components/VirtualMrHub';
 import { VirtualMrListDialog } from '../../../features/virtual-mr/components/VirtualMrListDialog';
+import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
 import { useMainLayoutCoordination } from '../hooks/useMainLayoutCoordination';
-import { MainLayoutDiffViewer } from './MainLayoutDiffViewer';
+import { MainLayoutDiffWorkspace } from './MainLayoutDiffWorkspace';
 import { MainLayoutModals } from './MainLayoutModals';
 import { StatusBar } from './StatusBar';
 import { TabBar } from './TabBar';
@@ -50,6 +53,9 @@ export const MainLayout: React.FC = () => {
     resetSidebarWidth,
     handleSelectConflictFile,
   } = useMainLayoutCoordination();
+
+  const activeMrTab = useVirtualMrStore((state) => state.activeMrTab);
+  const currentSession = sessions.find((s) => s.id === activeSessionId) || null;
 
   return (
     <div className="relative flex flex-col h-full w-full flex-1 overflow-hidden bg-crust text-text font-sans">
@@ -95,51 +101,28 @@ export const MainLayout: React.FC = () => {
         {currentRepo ? (
           draftMr && isDraftActive ? (
             <NewVirtualMrView />
-          ) : activeSessionId ? (
-            <>
-              <FileList
-                files={diffPayload?.files || []}
+          ) : activeSessionId && currentSession ? (
+            activeMrTab === 'overview' ? (
+              <VirtualMrOverviewTab session={currentSession} />
+            ) : activeMrTab === 'commits' ? (
+              <VirtualMrCommitsTab session={currentSession} />
+            ) : activeMrTab === 'reviews' ? (
+              <VirtualMrReviewsTab session={currentSession} />
+            ) : (
+              <MainLayoutDiffWorkspace
+                diffPayload={diffPayload}
                 selectedFile={selectedFile}
-                onSelectFile={selectFile}
-                isLoading={isDiffLoading}
-                width={sidebarWidth}
+                selectFile={selectFile}
+                isDiffLoading={isDiffLoading}
+                sidebarWidth={sidebarWidth}
+                isResizing={isResizing}
+                startResizing={startResizing}
+                resetSidebarWidth={resetSidebarWidth}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                openRepoDialog={openRepoDialog}
               />
-
-              {/* Draggable Resizer Splitter between Sidebar and DiffViewer */}
-              <div
-                role="separator"
-                aria-orientation="vertical"
-                title="Drag to resize sidebar (double-click to reset)"
-                onMouseDown={startResizing}
-                onDoubleClick={resetSidebarWidth}
-                className={`w-1.5 -ml-1 relative z-20 cursor-col-resize hover:bg-blue/40 transition-colors flex items-center justify-center select-none group ${
-                  isResizing ? 'bg-blue' : 'bg-transparent'
-                }`}
-              >
-                <div
-                  className={`w-0.5 h-7 rounded-sm transition-colors ${
-                    isResizing ? 'bg-crust' : 'bg-surface2 group-hover:bg-blue'
-                  }`}
-                />
-              </div>
-
-              <React.Suspense
-                fallback={
-                  <div className="flex-1 grid place-items-center text-subtext0 text-xs">
-                    Loading diff viewer…
-                  </div>
-                }
-              >
-                <MainLayoutDiffViewer
-                  selectedFile={selectedFile}
-                  diffPayload={diffPayload}
-                  viewMode={viewMode}
-                  onToggleViewMode={setViewMode}
-                  isLoading={isDiffLoading}
-                  onOpenRepo={openRepoDialog}
-                />
-              </React.Suspense>
-            </>
+            )
           ) : isLoadingSessions || sessions.length > 0 ? (
             <VirtualMrListDialog inline />
           ) : (

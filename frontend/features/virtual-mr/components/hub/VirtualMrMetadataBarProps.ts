@@ -20,7 +20,7 @@ export interface VirtualMrMetadataBarProps {
   isLoadingLabelOptions: boolean;
   repoLabels: RepoLabel[];
   toggleSessionLabel: (sessionId: string, labelId: string) => Promise<void>;
-  setActiveMrTab: (tab: 'overview' | 'commits' | 'diff') => void;
-  activeMrTab: 'overview' | 'commits' | 'diff';
+  setActiveMrTab: (tab: 'overview' | 'commits' | 'reviews' | 'diff') => void;
+  activeMrTab: 'overview' | 'commits' | 'reviews' | 'diff';
   diffPayload: MrDiffPayload | null;
 }

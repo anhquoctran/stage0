@@ -209,6 +209,18 @@ export function VirtualMrMetadataBar({
         </button>
         <button
           type="button"
+          onClick={() => setActiveMrTab('reviews')}
+          className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer rounded-sm ${
+            activeMrTab === 'reviews'
+              ? 'bg-surface2 text-white font-medium shadow-2xs'
+              : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
+          }`}
+        >
+          <Bot className="w-3 h-3 text-white" />
+          <span>Bot Reviews</span>
+        </button>
+        <button
+          type="button"
           onClick={() => setActiveMrTab('diff')}
           className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer rounded-sm ${
             activeMrTab === 'diff'
