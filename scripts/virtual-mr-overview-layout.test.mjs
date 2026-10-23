@@ -171,3 +171,27 @@ test('VirtualMrMetadataBar contains AI Reviews tab and NOT Pipelines or Bot Revi
   assert.doesNotMatch(metadataBarSource, />Bot Reviews</);
 });
 
+test('opening a repo does not auto-open any last MR and defaults to MR list', () => {
+  const repoDataSliceSource = readFileSync(
+    new URL('../frontend/features/virtual-mr/store/slices/createRepoDataSlice.ts', import.meta.url),
+    'utf-8'
+  );
+
+  // Must not force activeSessionId = openTabs[0].id on load
+  assert.doesNotMatch(repoDataSliceSource, /activeSessionId\s*=\s*openTabs\[0\]\.id/);
+
+  // Must set activeSessionId: null and close tabs on repoChanged
+  assert.match(repoDataSliceSource, /repoChanged/);
+  assert.match(repoDataSliceSource, /activeSessionId\s*=\s*null/);
+  assert.match(repoDataSliceSource, /closedSessionTabIds\s*=\s*sessions\.map/);
+  assert.match(repoDataSliceSource, /completedRepoKey/);
+  assert.match(repoDataSliceSource, /resetRepoData/);
+
+  const coordSource = readFileSync(
+    new URL('../frontend/core/components/hooks/useMainLayoutCoordination.ts', import.meta.url),
+    'utf-8'
+  );
+  assert.match(coordSource, /resetRepoData/);
+});
+
+

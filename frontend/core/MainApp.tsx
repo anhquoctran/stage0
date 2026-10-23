@@ -118,7 +118,7 @@ export const MainApp: React.FC = () => {
     <div
       className={clsx(
         'flex flex-col h-screen w-screen overflow-hidden box-border bg-crust select-none transition-all duration-150',
-        hideCustomFrame ? 'border-0' : 'border border-[#313244]'
+        hideCustomFrame ? 'border-0' : 'border border-surface0'
       )}
     >
       <MainLayout />

@@ -14,6 +14,7 @@ import { loadSessionTitleHistory } from '../../utils/virtualMrTitleHistory';
 
 let repoDataRequestVersion = 0;
 let repoMetadataRequestVersion = 0;
+let completedRepoKey: string | null = null;
 export const createRepoDataSlice: StateCreator<
   VirtualMrState,
   [],
@@ -28,6 +29,7 @@ export const createRepoDataSlice: StateCreator<
     | 'tags'
     | 'loadRepoData'
     | 'refreshRepoMetadata'
+    | 'resetRepoData'
   >
 > = (set, get) => ({
   currentRepoId: null,
@@ -49,7 +51,8 @@ export const createRepoDataSlice: StateCreator<
     defaultBase?: string
   ) => {
     const requestVersion = ++repoDataRequestVersion;
-    const repoChanged = get().currentRepoId !== repoId || get().currentRepoPath !== repoPath;
+    const repoKey = `${repoId}:${repoPath}`;
+    const repoChanged = completedRepoKey !== repoKey;
     set({
       currentRepoId: repoId,
       currentRepoPath: repoPath,
@@ -212,15 +215,29 @@ export const createRepoDataSlice: StateCreator<
       }
 
       if (requestVersion !== repoDataRequestVersion) return;
-      const closedSessionTabIds = get().closedSessionTabIds;
-      const openTabs = sessions.filter((session) => !closedSessionTabIds.includes(session.id));
+      let closedSessionTabIds = get().closedSessionTabIds;
       let activeSessionId = get().activeSessionId;
-      if (openTabs.length > 0) {
-        if (!activeSessionId || !openTabs.some((s) => s.id === activeSessionId)) {
-          activeSessionId = openTabs[0].id;
-        }
-      } else {
+
+      if (repoChanged) {
+        // When opening a repo, do not auto-open any last MR;
+        // keep activeSessionId null so the MR list view is displayed,
+        // and close tabs initially so the user can open what they want.
+        closedSessionTabIds = sessions.map((s) => s.id);
+        completedRepoKey = repoKey;
         activeSessionId = null;
+      } else {
+        const sessionIds = new Set(sessions.map((s) => s.id));
+        const previouslyOpen = new Set(
+          get()
+            .sessions.filter((s) => !get().closedSessionTabIds.includes(s.id))
+            .map((s) => s.id)
+        );
+        closedSessionTabIds = sessions
+          .filter((s) => !previouslyOpen.has(s.id))
+          .map((s) => s.id);
+        if (activeSessionId && !sessionIds.has(activeSessionId)) {
+          activeSessionId = null;
+        }
       }
 
       set({
@@ -228,6 +245,7 @@ export const createRepoDataSlice: StateCreator<
         repoLabels: labels,
         sessions,
         activeSessionId,
+        closedSessionTabIds,
         isLoadingSessions: false,
       });
 
@@ -281,5 +299,25 @@ export const createRepoDataSlice: StateCreator<
     }
 
     if (Object.keys(updates).length > 0) set(updates);
+  },
+
+  resetRepoData: () => {
+    completedRepoKey = null;
+    set({
+      currentRepoId: null,
+      currentRepoPath: null,
+      repoSettings: null,
+      repoLabels: [],
+      sessions: [],
+      activeSessionId: null,
+      pendingDescriptionEditSessionId: null,
+      closedSessionTabIds: [],
+      isMrListOpen: false,
+      draftMr: null,
+      isDraftActive: false,
+      remotesDetailed: [],
+      tags: [],
+      isLoadingSessions: false,
+    });
   },
 });

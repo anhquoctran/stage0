@@ -1,4 +1,5 @@
 import React from 'react';
+import type { MarkdownActiveFormats } from '../../types/MarkdownActiveFormats';
 
 export interface MarkdownToolbarProps {
   setActiveTab: React.Dispatch<React.SetStateAction<'write' | 'preview'>>;
@@ -9,4 +10,5 @@ export interface MarkdownToolbarProps {
   handleImageFiles: (files: FileList | File[]) => Promise<void>;
   isSubmitting: boolean;
   isAttaching: boolean;
+  activeFormats?: MarkdownActiveFormats;
 }

@@ -1,4 +1,5 @@
-import React, { useId, useRef, useState } from 'react';
+import React, { useId, useMemo, useRef, useState } from 'react';
+import { getMarkdownFormattingAtCaret } from '../utils/markdownFormatting';
 import type { MarkdownEditorProps } from '../types/MarkdownEditorProps';
 import type { MentionOption } from '../types/MentionOption';
 import { formatMention, getMentionQuery } from '../utils/mentions';
@@ -12,9 +13,9 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   value,
   onChange,
   placeholder = '',
-  rows = 4,
-  minHeight = '100px',
-  maxHeight = '320px',
+  rows = 8,
+  minHeight = '180px',
+  maxHeight = '650px',
   autoFocus = false,
   disabled = false,
   className = '',
@@ -34,6 +35,11 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const [mentionCaret, setMentionCaret] = useState(0);
   const [isMentionFocused, setIsMentionFocused] = useState(false);
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
+  const [selectionRange, setSelectionRange] = useState({ start: 0, end: 0 });
+
+  const activeFormats = useMemo(() => {
+    return getMarkdownFormattingAtCaret(value, selectionRange.start, selectionRange.end);
+  }, [value, selectionRange.start, selectionRange.end]);
   const {
     fileInputRef,
     isDraggingOver,
@@ -88,6 +94,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       const cursorStart = start + prefix.length;
       const cursorEnd = cursorStart + selectedText.length;
       textarea.setSelectionRange(cursorStart, cursorEnd);
+      setSelectionRange({ start: cursorStart, end: cursorEnd });
     }, 0);
   };
 
@@ -146,6 +153,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         handleImageFiles={handleImageFiles}
         isSubmitting={isSubmitting}
         isAttaching={isAttaching}
+        activeFormats={activeFormats}
       />
 
       {/* Editor Body: Textarea OR MarkdownPreview */}
@@ -188,17 +196,41 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               onChange={(e) => {
                 onChange(e.target.value);
                 setMentionCaret(e.target.selectionStart);
+                setSelectionRange({
+                  start: e.target.selectionStart,
+                  end: e.target.selectionEnd,
+                });
                 setActiveMentionIndex(0);
                 setIsMentionFocused(true);
               }}
               onSelect={(e) => {
                 setMentionCaret(e.currentTarget.selectionStart);
+                setSelectionRange({
+                  start: e.currentTarget.selectionStart,
+                  end: e.currentTarget.selectionEnd,
+                });
                 if (e.currentTarget.selectionStart !== e.currentTarget.selectionEnd)
                   setIsMentionFocused(false);
               }}
               onFocus={(e) => {
                 setIsMentionFocused(true);
                 setMentionCaret(e.currentTarget.selectionStart);
+                setSelectionRange({
+                  start: e.currentTarget.selectionStart,
+                  end: e.currentTarget.selectionEnd,
+                });
+              }}
+              onKeyUp={(e) => {
+                setSelectionRange({
+                  start: e.currentTarget.selectionStart,
+                  end: e.currentTarget.selectionEnd,
+                });
+              }}
+              onClick={(e) => {
+                setSelectionRange({
+                  start: e.currentTarget.selectionStart,
+                  end: e.currentTarget.selectionEnd,
+                });
               }}
               onBlur={() => setIsMentionFocused(false)}
               onKeyDown={handleKeyDown}

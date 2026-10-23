@@ -58,8 +58,9 @@ export function DiscussionReplyBox({
           <MarkdownEditor
             value={body}
             onChange={setBody}
-            rows={4}
-            minHeight="110px"
+            rows={6}
+            minHeight="150px"
+            maxHeight="500px"
             autoFocus
             mentionOptions={getDiscussionMentionOptions(session)}
             placeholder="Write a comment or drag your files here…"
@@ -118,10 +119,9 @@ export function DiscussionReplyBox({
               setIsCollapsed(false);
             }}
             aria-label={`Reply to discussion ${discussion.id}`}
-            className="flex-1 text-left px-3 py-1.5 border border-surface1 bg-crust/50 hover:bg-crust hover:border-surface2 text-subtext0 hover:text-subtext1 text-xs transition-all cursor-text flex items-center justify-between shadow-inner rounded-sm"
+            className="flex-1 text-left px-3 py-1.5 border border-surface1 bg-crust/50 hover:bg-crust hover:border-surface2 text-subtext0 hover:text-subtext1 text-xs transition-all cursor-text flex items-center shadow-inner rounded-sm"
           >
             <span>Reply...</span>
-            <span className="text-[10px] text-subtext0/70 font-mono">r</span>
           </button>
 
           {isResolvable && (
