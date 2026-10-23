@@ -22,7 +22,15 @@ export function MarkdownToolbar({
   handleImageFiles,
   isSubmitting,
   isAttaching,
+  activeFormats,
 }: MarkdownToolbarProps) {
+  const getButtonClass = (isActive = false, extra = '') =>
+    `p-1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm ${
+      isActive
+        ? 'bg-surface2 text-accent font-semibold shadow-xs'
+        : 'text-subtext0 hover:text-text hover:bg-surface1'
+    } ${extra}`.trim();
+
   return (
     <div className="flex items-center justify-between border-b border-surface1 bg-surface0/60 px-2 py-1 gap-1 flex-wrap select-none rounded-sm">
       {/* Write / Preview Tab Switcher */}
@@ -56,7 +64,7 @@ export function MarkdownToolbar({
         </button>
       </div>
 
-      {/* Toolbar (Only available in Write tab) matching GitLab screenshot */}
+      {/* Toolbar (Only available in Write tab) matching GitLab formatting */}
       {activeTab === 'write' ? (
         <div className="flex items-center gap-0.5 flex-wrap">
           {/* Insert suggestion */}
@@ -64,7 +72,8 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('```suggestion\n', '\n```', '// proposed change')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.suggestion)}
+            className={getButtonClass(Boolean(activeFormats?.suggestion))}
             title="Insert suggestion"
           >
             <svg
@@ -86,29 +95,37 @@ export function MarkdownToolbar({
 
           <span className="w-px h-3 bg-surface1 mx-0.5" />
 
+          {/* Bold */}
           <button
             type="button"
             onClick={() => insertMarkdown('**', '**', 'bold text')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.bold)}
+            className={getButtonClass(Boolean(activeFormats?.bold))}
             title={formatShortcutText('Bold (Ctrl+B)')}
           >
             <Bold className="w-3.5 h-3.5" />
           </button>
+
+          {/* Italic */}
           <button
             type="button"
             onClick={() => insertMarkdown('*', '*', 'italic text')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.italic)}
+            className={getButtonClass(Boolean(activeFormats?.italic))}
             title={formatShortcutText('Italic (Ctrl+I)')}
           >
             <Italic className="w-3.5 h-3.5" />
           </button>
+
+          {/* Strikethrough */}
           <button
             type="button"
             onClick={() => insertMarkdown('~~', '~~', 'strikethrough text')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 font-bold text-xs w-5 text-center leading-none rounded-sm"
+            aria-pressed={Boolean(activeFormats?.strike)}
+            className={getButtonClass(Boolean(activeFormats?.strike), 'font-bold text-xs w-5 text-center leading-none')}
             title="Strikethrough"
           >
             <s>S</s>
@@ -116,66 +133,85 @@ export function MarkdownToolbar({
 
           <span className="w-px h-3 bg-surface1 mx-0.5" />
 
+          {/* Heading */}
           <button
             type="button"
             onClick={() => insertMarkdown('### ', '', 'Heading')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.heading)}
+            className={getButtonClass(Boolean(activeFormats?.heading))}
             title="Heading"
           >
             <Heading className="w-3.5 h-3.5" />
           </button>
+
+          {/* Inline code */}
           <button
             type="button"
             onClick={() => insertMarkdown('`', '`', 'code')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.code)}
+            className={getButtonClass(Boolean(activeFormats?.code))}
             title="Inline code"
           >
             <Code className="w-3.5 h-3.5" />
           </button>
+
+          {/* Link */}
           <button
             type="button"
             onClick={() => insertMarkdown('[', '](https://example.com)', 'link text')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.link)}
+            className={getButtonClass(Boolean(activeFormats?.link))}
             title={formatShortcutText('Insert link (Ctrl+K)')}
           >
             <Link className="w-3.5 h-3.5" />
           </button>
 
+          {/* Bullet List */}
           <button
             type="button"
             onClick={() => insertMarkdown('- ', '', 'List item')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.bulletList)}
+            className={getButtonClass(Boolean(activeFormats?.bulletList))}
             title="Bullet list"
           >
             <List className="w-3.5 h-3.5" />
           </button>
+
+          {/* Numbered List */}
           <button
             type="button"
             onClick={() => insertMarkdown('1. ', '', 'Numbered item')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.numberList)}
+            className={getButtonClass(Boolean(activeFormats?.numberList))}
             title="Numbered list"
           >
             <ListOrdered className="w-3.5 h-3.5" />
           </button>
+
+          {/* Task List */}
           <button
             type="button"
             onClick={() => insertMarkdown('- [ ] ', '', 'Task item')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.taskList)}
+            className={getButtonClass(Boolean(activeFormats?.taskList))}
             title="Task list"
           >
             <CheckSquare className="w-3.5 h-3.5" />
           </button>
+
+          {/* Quote */}
           <button
             type="button"
             onClick={() => insertMarkdown('> ', '', 'Quote')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.quote)}
+            className={getButtonClass(Boolean(activeFormats?.quote))}
             title="Quote"
           >
             <Quote className="h-3.5 w-3.5" />
@@ -192,7 +228,8 @@ export function MarkdownToolbar({
               )
             }
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.table)}
+            className={getButtonClass(Boolean(activeFormats?.table))}
             title="Insert table"
           >
             <svg
@@ -250,11 +287,13 @@ export function MarkdownToolbar({
             </svg>
           </button>
 
+          {/* Code block */}
           <button
             type="button"
             onClick={() => insertMarkdown('```\n', '\n```', 'code block')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
+            aria-pressed={Boolean(activeFormats?.codeBlock)}
+            className={getButtonClass(Boolean(activeFormats?.codeBlock))}
             title="Code block"
           >
             <SquareCode className="w-3.5 h-3.5" />

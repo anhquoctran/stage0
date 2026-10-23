@@ -61,6 +61,8 @@ export function useMainLayoutCoordination() {
       useVirtualMrStore
         .getState()
         .loadRepoData(currentRepo.id, currentRepo.local_path, allBranches, baseBranch || undefined);
+    } else {
+      useVirtualMrStore.getState().resetRepoData();
     }
   }, [currentRepo?.id, currentRepo?.local_path, Boolean(branches)]);
 

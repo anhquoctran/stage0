@@ -82,8 +82,9 @@ export const InlineDiscussionComposer: React.FC<{
           onDraftChange?.(value);
         }}
         autoFocus
-        rows={4}
-        minHeight="100px"
+        rows={6}
+        minHeight="150px"
+        maxHeight="500px"
         mentionOptions={getDiscussionMentionOptions(session)}
         placeholder="Write a comment or drag your files here…"
         showActions={false}

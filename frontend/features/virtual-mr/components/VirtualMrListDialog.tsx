@@ -139,7 +139,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
     <div
       className={
         inline
-          ? 'flex h-full min-h-0 w-full flex-col bg-crust'
+          ? 'flex h-full min-h-0 w-full flex-col bg-mantle'
           : 'fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-8'
       }
       role={inline ? undefined : 'presentation'}
@@ -154,8 +154,8 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
       <section
         aria-labelledby="virtual-mr-list-title"
         aria-modal={inline ? undefined : true}
-        className={`flex w-full flex-col border border-surface1 bg-mantle text-text ${
-          inline ? 'min-h-0 flex-1' : 'max-w-5xl max-h-[calc(100vh-4rem)] shadow-2xl'
+        className={`flex w-full flex-col bg-mantle text-text ${
+          inline ? 'min-h-0 flex-1' : 'border border-surface1 max-w-5xl max-h-[calc(100vh-4rem)] shadow-2xl rounded-sm'
         }`}
         role={inline ? 'region' : 'dialog'}
       >

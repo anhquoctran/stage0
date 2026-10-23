@@ -22,20 +22,26 @@ export function VirtualMrMetadataBar({
   return (
     <div className="px-4 py-1.5 flex items-center justify-between gap-4 bg-mantle text-xs border-b border-surface0/40 rounded-sm">
       {/* 4 WORKSPACE TABS */}
-      <div className="flex items-center gap-1 bg-crust p-0.5 shrink-0 rounded-sm">
+      <div className="flex items-center gap-1 bg-crust p-0.5 shrink-0 rounded-sm border border-surface0/50">
         <button
           type="button"
           onClick={() => setActiveMrTab('overview')}
           className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer rounded-sm ${
             activeMrTab === 'overview'
-              ? 'bg-surface2 text-white font-medium shadow-2xs'
-              : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
+              ? 'bg-surface2 text-text font-semibold shadow-2xs'
+              : 'text-subtext0 hover:text-text hover:bg-surface0/60'
           }`}
         >
-          <MessageSquare className="w-3.5 h-3.5 text-white" />
+          <MessageSquare className="w-3.5 h-3.5" />
           <span>Overview</span>
           {session.discussions.length > 0 && (
-            <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] bg-surface1 text-subtext0 font-mono">
+            <span
+              className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                activeMrTab === 'overview'
+                  ? 'bg-surface1 text-text'
+                  : 'bg-surface0 text-subtext0'
+              }`}
+            >
               {session.discussions.length}
             </span>
           )}
@@ -46,14 +52,20 @@ export function VirtualMrMetadataBar({
           onClick={() => setActiveMrTab('commits')}
           className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer rounded-sm ${
             activeMrTab === 'commits'
-              ? 'bg-surface2 text-white font-medium shadow-2xs'
-              : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
+              ? 'bg-surface2 text-text font-semibold shadow-2xs'
+              : 'text-subtext0 hover:text-text hover:bg-surface0/60'
           }`}
         >
-          <GitCommit className="w-3.5 h-3.5 text-white" />
+          <GitCommit className="w-3.5 h-3.5" />
           <span>Commits</span>
           {session.commits.length > 0 && (
-            <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] bg-surface1 text-subtext0 font-mono">
+            <span
+              className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                activeMrTab === 'commits'
+                  ? 'bg-surface1 text-text'
+                  : 'bg-surface0 text-subtext0'
+              }`}
+            >
               {session.commits.length}
             </span>
           )}
@@ -64,14 +76,20 @@ export function VirtualMrMetadataBar({
           onClick={() => setActiveMrTab('reviews')}
           className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer rounded-sm ${
             activeMrTab === 'reviews'
-              ? 'bg-surface2 text-white font-medium shadow-2xs'
-              : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
+              ? 'bg-surface2 text-text font-semibold shadow-2xs'
+              : 'text-subtext0 hover:text-text hover:bg-surface0/60'
           }`}
         >
-          <Bot className="w-3.5 h-3.5 text-white" />
+          <Bot className="w-3.5 h-3.5" />
           <span>AI Reviews</span>
           {session.reviewers.length > 0 && (
-            <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] bg-purple-500/20 text-purple-300 font-mono">
+            <span
+              className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                activeMrTab === 'reviews'
+                  ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold'
+                  : 'bg-surface0 text-subtext0'
+              }`}
+            >
               {session.reviewers.length}
             </span>
           )}
@@ -82,13 +100,19 @@ export function VirtualMrMetadataBar({
           onClick={() => setActiveMrTab('diff')}
           className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer rounded-sm ${
             activeMrTab === 'diff'
-              ? 'bg-surface2 text-white font-medium shadow-2xs'
-              : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
+              ? 'bg-surface2 text-text font-semibold shadow-2xs'
+              : 'text-subtext0 hover:text-text hover:bg-surface0/60'
           }`}
         >
-          <FileCode className="w-3.5 h-3.5 text-white" />
+          <FileCode className="w-3.5 h-3.5" />
           <span>Changes</span>
-          <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] bg-surface1 text-subtext0 font-mono">
+          <span
+            className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              activeMrTab === 'diff'
+                ? 'bg-surface1 text-text'
+                : 'bg-surface0 text-subtext0'
+            }`}
+          >
             {diffPayload?.files.length || 0}
           </span>
         </button>
@@ -108,10 +132,10 @@ export function VirtualMrMetadataBar({
         <button
           type="button"
           onClick={() => void toggleLabelDropdown()}
-          className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+          className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-subtext0 hover:text-text cursor-pointer"
           title="Toggle Labels"
         >
-          <Plus className="w-3 h-3 text-white" />
+          <Plus className="w-3 h-3" />
         </button>
 
         {/* Label Dropdown */}

@@ -93,10 +93,10 @@ export function VirtualMrHeader({
             <button
               type="button"
               onClick={() => setIsEditingTitle(false)}
-              className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+              className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-subtext0 hover:text-text cursor-pointer"
               title="Cancel"
             >
-              <X className="w-4 h-4 text-white" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         ) : (
@@ -105,10 +105,10 @@ export function VirtualMrHeader({
             <button
               type="button"
               onClick={handleStartEditTitle}
-              className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+              className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-subtext0 hover:text-text cursor-pointer"
               title="Edit title"
             >
-              <Edit2 className="w-3.5 h-3.5 text-white" />
+              <Edit2 className="w-3.5 h-3.5" />
             </button>
           </div>
         )}

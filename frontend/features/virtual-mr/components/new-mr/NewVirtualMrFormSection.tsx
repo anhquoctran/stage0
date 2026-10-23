@@ -54,7 +54,9 @@ export function NewVirtualMrFormSection({
               value={draftMr.description}
               onChange={(description) => updateDraftMr({ description })}
               placeholder="Write your description or notes here..."
-              minHeight="110px"
+              rows={10}
+              minHeight="260px"
+              maxHeight="650px"
               onGenerateDraft={handleGenerateDescription}
             />
           </div>
