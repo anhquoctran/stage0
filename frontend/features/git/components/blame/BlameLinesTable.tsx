@@ -11,7 +11,7 @@ export function BlameLinesTable({
   enableLigatures,
 }: BlameLinesTableProps) {
   return (
-    <div className="border border-surface0  overflow-hidden bg-base shadow-xs text-xs font-mono">
+    <div className="border border-surface0 rounded-sm overflow-hidden bg-base shadow-xs text-xs font-mono">
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b border-surface0 bg-mantle text-[10px] text-subtext0 uppercase font-sans font-bold select-none">
@@ -41,7 +41,7 @@ export function BlameLinesTable({
                     <button
                       type="button"
                       onClick={() => commit && setSelectedCommit(commit)}
-                      className="font-mono text-[11px] text-subtext1 hover:text-text hover:underline cursor-pointer flex items-center gap-1"
+                      className="font-mono text-[11px] text-subtext1 hover:text-text hover:underline cursor-pointer flex items-center gap-1 rounded-sm"
                       title={`Click to inspect commit ${shortSha}: ${commit?.summary || ''}`}
                     >
                       <GitCommit className="w-3 h-3 text-subtext0 shrink-0" />

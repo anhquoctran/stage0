@@ -61,7 +61,7 @@ export const DiffToolbar: React.FC<{
   const dirPath = pathParts.join('/');
 
   return (
-    <div className="min-h-11 h-auto border-b border-surface0 bg-mantle px-3.5 py-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 shrink-0 relative z-20">
+    <div className="min-h-11 h-auto border-b border-surface0 bg-mantle px-3.5 py-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 shrink-0 relative z-20 rounded-sm">
       {/* Left: Breadcrumbs & Copy Path */}
       <div className="flex items-center gap-2.5 min-w-0 flex-[1_1_320px]">
         <FileCode className="w-4 h-4 text-blue shrink-0" />
@@ -85,7 +85,7 @@ export const DiffToolbar: React.FC<{
           type="button"
           onClick={onCopyPath}
           title={formatShortcutText('Copy relative file path (Ctrl+Shift+C)')}
-          className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors cursor-pointer"
+          className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors cursor-pointer rounded-sm"
         >
           {copied ? (
             <Check className="w-3.5 h-3.5 text-green" />
@@ -97,7 +97,7 @@ export const DiffToolbar: React.FC<{
         <FileActionMenu file={selectedFile} />
 
         {selectedFile.is_conflicted && (
-          <div className="flex items-center gap-1 text-[10px] text-red bg-red/20 border border-red/40 px-2 py-0.5 font-bold uppercase conflict-pulse">
+          <div className="flex items-center gap-1 text-[10px] text-red bg-red/20 border border-red/40 px-2 py-0.5 font-bold uppercase conflict-pulse rounded-sm">
             <AlertTriangle className="w-3.5 h-3.5 text-red" />
             <span>Conflict</span>
           </div>
@@ -122,12 +122,12 @@ export const DiffToolbar: React.FC<{
       {/* Center: File Stepper & Conflict Stepper */}
       <div className="flex items-center gap-2 shrink-0 max-xl:ml-auto">
         {diffPayload && diffPayload.files.length > 1 && (
-          <div className="flex items-center gap-1 bg-surface0 border border-surface0 px-1 py-0.5">
+          <div className="flex items-center gap-1 bg-surface0 border border-surface0 px-1 py-0.5 rounded-sm">
             <button
               type="button"
               disabled={!hasPrev}
               onClick={selectPrevFile}
-              className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+              className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer rounded-sm"
               title="Previous file (Up / k)"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -139,7 +139,7 @@ export const DiffToolbar: React.FC<{
               type="button"
               disabled={!hasNext}
               onClick={selectNextFile}
-              className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+              className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer rounded-sm"
               title="Next file (Down / j)"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -148,12 +148,12 @@ export const DiffToolbar: React.FC<{
         )}
 
         {conflictedFiles.length > 0 && (
-          <div className="flex items-center gap-1 bg-red/15 border border-red/35 px-1.5 py-0.5 shadow-xs">
+          <div className="flex items-center gap-1 bg-red/15 border border-red/35 px-1.5 py-0.5 shadow-xs rounded-sm">
             <AlertTriangle className="w-3.5 h-3.5 text-red shrink-0" />
             <button
               type="button"
               onClick={selectPrevConflictFile}
-              className="p-0.5 text-red hover:bg-red/20 transition-colors cursor-pointer"
+              className="p-0.5 text-red hover:bg-red/20 transition-colors cursor-pointer rounded-sm"
               title="Previous conflict file"
             >
               <ChevronLeft className="w-3 h-3" />
@@ -161,7 +161,7 @@ export const DiffToolbar: React.FC<{
             <button
               type="button"
               onClick={selectNextConflictFile}
-              className="text-[11px] font-mono font-bold text-red hover:underline px-0.5 cursor-pointer"
+              className="text-[11px] font-mono font-bold text-red hover:underline px-0.5 cursor-pointer rounded-sm"
               title={formatShortcutText('Jump to next conflict file (Alt+C)')}
             >
               {selectedFile?.is_conflicted && currentConflictIndex !== -1
@@ -171,7 +171,7 @@ export const DiffToolbar: React.FC<{
             <button
               type="button"
               onClick={selectNextConflictFile}
-              className="p-0.5 text-red hover:bg-red/20 transition-colors cursor-pointer"
+              className="p-0.5 text-red hover:bg-red/20 transition-colors cursor-pointer rounded-sm"
               title={formatShortcutText('Next conflict file (Alt+C)')}
             >
               <ChevronRight className="w-3 h-3" />
@@ -183,12 +183,12 @@ export const DiffToolbar: React.FC<{
       {/* Right: View Mode Toggle & Diff/Blame Switcher */}
       <div className="flex items-center gap-2 shrink-0 max-xl:basis-full max-xl:flex-wrap max-xl:justify-end max-xl:gap-y-1.5">
         {/* Diff / Blame / Conflict Tab Switcher */}
-        <div className="flex items-center bg-surface0 p-0.5 gap-0.5">
+        <div className="flex items-center bg-surface0 p-0.5 gap-0.5 rounded-sm">
           {selectedFile?.is_conflicted && !selectedFile.is_binary && (
             <button
               type="button"
               onClick={() => setFileViewTab('conflicts')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer rounded-sm ${
                 fileViewTab === 'conflicts'
                   ? 'bg-red-600 text-white shadow-xs'
                   : 'bg-surface1 text-white hover:bg-surface2'
@@ -203,7 +203,7 @@ export const DiffToolbar: React.FC<{
           <button
             type="button"
             onClick={() => setFileViewTab('diff')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer rounded-sm ${
               fileViewTab === 'diff'
                 ? 'bg-surface2 text-white shadow-xs'
                 : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
@@ -217,7 +217,7 @@ export const DiffToolbar: React.FC<{
             <button
               type="button"
               onClick={() => setFileViewTab('blame')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer rounded-sm ${
                 fileViewTab === 'blame'
                   ? 'bg-surface2 text-white shadow-xs'
                   : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
@@ -232,11 +232,11 @@ export const DiffToolbar: React.FC<{
 
         {/* Split / Unified Segmented Control (only when in Diff mode) */}
         {fileViewTab === 'diff' && (
-          <div className="flex items-center bg-surface0 p-0.5 gap-0.5">
+          <div className="flex items-center bg-surface0 p-0.5 gap-0.5 rounded-sm">
             <button
               type="button"
               onClick={() => onToggleViewMode('split')}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer rounded-sm ${
                 viewMode === 'split'
                   ? 'bg-surface2 text-white shadow-xs'
                   : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
@@ -249,7 +249,7 @@ export const DiffToolbar: React.FC<{
             <button
               type="button"
               onClick={() => onToggleViewMode('unified')}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer rounded-sm ${
                 viewMode === 'unified'
                   ? 'bg-surface2 text-white shadow-xs'
                   : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
@@ -267,7 +267,7 @@ export const DiffToolbar: React.FC<{
           <button
             type="button"
             onClick={toggleInlineBlame}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer rounded-sm ${
               showInlineBlame
                 ? 'bg-surface2 text-white shadow-xs'
                 : 'bg-surface1 text-white/80 hover:text-white hover:bg-surface2'

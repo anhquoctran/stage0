@@ -41,7 +41,7 @@ export function VirtualMrPaginationToolbar({
               disabled={isLoadingSessions || page === 1}
               aria-label="Previous page"
               title="Previous page"
-              className="flex h-7 w-7 items-center justify-center border border-surface1 text-text hover:bg-surface0 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-35 cursor-pointer"
+              className="flex h-7 w-7 items-center justify-center border border-surface1 text-text hover:bg-surface0 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-35 cursor-pointer rounded-sm"
             >
               <ChevronLeft className="h-3 w-3" />
             </button>
@@ -54,7 +54,7 @@ export function VirtualMrPaginationToolbar({
               disabled={isLoadingSessions || page === pageCount}
               aria-label="Next page"
               title="Next page"
-              className="flex h-7 w-7 items-center justify-center border border-surface1 text-text hover:bg-surface0 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-35 cursor-pointer"
+              className="flex h-7 w-7 items-center justify-center border border-surface1 text-text hover:bg-surface0 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-35 cursor-pointer rounded-sm"
             >
               <ChevronRight className="h-3 w-3" />
             </button>

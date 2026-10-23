@@ -7,7 +7,7 @@ export const TopBarRepoBadge: React.FC = () => {
 
   if (!currentRepo) {
     return (
-      <div className="flex items-center gap-2.5 px-3.5 h-12 bg-surface0 text-subtext0 text-xs select-none shrink-0">
+      <div className="flex items-center gap-2.5 px-3.5 h-12 bg-surface0 text-subtext0 text-xs select-none shrink-0 rounded-sm">
         <FolderGit2 className="w-4 h-4 text-subtext0 shrink-0" />
         <span>No Repository Opened</span>
       </div>
@@ -16,7 +16,7 @@ export const TopBarRepoBadge: React.FC = () => {
 
   return (
     <div
-      className="flex items-center gap-3 px-3.5 h-12 bg-surface0 text-left max-w-[260px] select-none shrink-0"
+      className="flex items-center gap-3 px-3.5 h-12 bg-surface0 text-left max-w-[260px] select-none shrink-0 rounded-sm"
       title={currentRepo.local_path}
     >
       <FolderGit2 className="w-5 h-5 text-primary shrink-0" />

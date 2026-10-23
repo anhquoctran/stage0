@@ -61,14 +61,14 @@ export function AcpAgentDetails({
           <button
             type="button"
             onClick={() => setRemovePending(true)}
-            className="flex items-center gap-1.5 border border-red/40 px-2.5 py-1.5 text-xs text-red hover:bg-red/10"
+            className="flex items-center gap-1.5 border border-red/40 px-2.5 py-1.5 text-xs text-red hover:bg-red/10 rounded-sm"
           >
             <Trash2 className="h-3.5 w-3.5" /> Uninstall
           </button>
         </div>
         <AcpAgentProjectInfo project={project} />
         {removePending && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border border-red/40 bg-red/5 p-3 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2 border border-red/40 bg-red/5 p-3 text-xs rounded-sm">
             <span>
               Uninstall this launch config from Stage0? Its package cache may remain on this
               computer.
@@ -77,14 +77,14 @@ export function AcpAgentDetails({
               <button
                 type="button"
                 onClick={() => setRemovePending(false)}
-                className="border border-surface2 px-2.5 py-1.5"
+                className="border border-surface2 px-2.5 py-1.5 rounded-sm"
               >
                 Keep
               </button>
               <button
                 type="button"
                 onClick={removeAgent}
-                className="border border-red/50 px-2.5 py-1.5 text-red"
+                className="border border-red/50 px-2.5 py-1.5 text-red rounded-sm"
               >
                 Uninstall
               </button>

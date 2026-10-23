@@ -12,7 +12,7 @@ export function MarkdownMentionPopup({
       id={mentionListId}
       role="listbox"
       aria-label="Mention a participant"
-      className="mt-1 max-h-40 overflow-y-auto border border-surface1 bg-mantle shadow-lg"
+      className="mt-1 max-h-40 overflow-y-auto border border-surface1 bg-mantle shadow-lg rounded-sm"
     >
       {suggestions.map((option, index) => (
         <button
@@ -24,7 +24,7 @@ export function MarkdownMentionPopup({
           aria-selected={selectedMentionIndex === index}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyMention(option)}
-          className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs ${selectedMentionIndex === index ? 'bg-surface1 text-text' : 'text-subtext1 hover:bg-surface0'}`}
+          className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs rounded-sm ${selectedMentionIndex === index ? 'bg-surface1 text-text' : 'text-subtext1 hover:bg-surface0'}`}
         >
           <span className="min-w-0 truncate font-medium">
             @{option.label}

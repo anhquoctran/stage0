@@ -159,7 +159,7 @@ export function CustomSelect<T extends string>({
         aria-expanded={isOpen}
         aria-label={ariaLabel || selectedOption?.label || placeholder}
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
-        className={`flex items-center justify-between gap-2.5 px-3 py-1.5  border text-xs transition-colors cursor-pointer select-none focus:outline-none focus:border-brand/70 focus:ring-1 focus:ring-brand/30 ${
+        className={`flex items-center justify-between gap-2.5 px-3 py-1.5 rounded-sm border text-xs transition-colors cursor-pointer select-none focus:outline-none focus:border-brand/70 focus:ring-1 focus:ring-brand/30 ${
           disabled
             ? 'bg-crust/50 border-surface0/50 text-subtext0 cursor-not-allowed opacity-60'
             : isOpen
@@ -184,12 +184,12 @@ export function CustomSelect<T extends string>({
         <div
           className={`absolute ${
             align === 'left' ? 'left-0' : 'right-0'
-          } top-full mt-1.5 ${dropdownWidth} bg-mantle border border-surface0  shadow-2xl z-50 py-1 overflow-hidden animate-in fade-in duration-100 ${menuClassName}`}
+          } top-full mt-1.5 ${dropdownWidth} bg-mantle border border-surface0 rounded-sm shadow-2xl z-50 py-1 overflow-hidden animate-in fade-in duration-100 ${menuClassName}`}
         >
-          {searchable && <div className="px-2 py-1 border-b border-surface0">
+          {searchable && <div className="px-2 py-1 border-b border-surface0 rounded-sm">
             <input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)}
               aria-label={searchPlaceholder} placeholder={searchPlaceholder}
-              className="w-full px-2 py-1.5 bg-base border border-surface1 text-xs text-text outline-none focus:border-brand" />
+              className="w-full px-2 py-1.5 bg-base border border-surface1 text-xs text-text outline-none focus:border-brand rounded-sm" />
           </div>}
           <div ref={listRef} role="listbox" aria-labelledby={selectId} className="max-h-60 overflow-y-auto overscroll-contain">
           {visibleOptions.map((option, idx) => {
@@ -201,7 +201,7 @@ export function CustomSelect<T extends string>({
             return (
               <React.Fragment key={`${option.group ?? ''}:${option.value}`}>
                 {showGroupLabel && (
-                  <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-subtext0 border-t border-surface0 first:border-t-0">
+                  <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-subtext0 border-t border-surface0 first:border-t-0 rounded-sm">
                     {option.group}
                   </div>
                 )}
@@ -211,7 +211,7 @@ export function CustomSelect<T extends string>({
                   aria-disabled={option.disabled || undefined}
                   onClick={() => !option.disabled && handleSelect(option.value)}
                   onMouseEnter={() => !option.disabled && setHighlightedIndex(idx)}
-                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs transition-colors select-none ${
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs transition-colors select-none rounded-sm ${
                     option.disabled
                       ? 'text-subtext0/50 cursor-not-allowed'
                       : isHighlighted
@@ -228,7 +228,7 @@ export function CustomSelect<T extends string>({
                         {option.label}
                       </span>
                       {option.badge && (
-                        <span className="text-[10px] px-1.5 py-0.2  font-mono font-normal bg-brand/15 text-brand border border-brand/30">
+                        <span className="text-[10px] px-1.5 py-0.2 rounded-sm font-mono font-normal bg-brand/15 text-brand border border-brand/30">
                           {option.badge}
                         </span>
                       )}

@@ -73,14 +73,14 @@ export const McpServerModal: React.FC<{
         <button
           type="button"
           onClick={onClose}
-          className="p-1 text-subtext0 hover:text-text cursor-pointer"
+          className="p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
         >
           <X className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {formError && (
-        <div className="p-2.5 bg-red/10 border border-red/30 text-xs text-red flex items-center gap-2">
+        <div className="p-2.5 bg-red/10 border border-red/30 text-xs text-red flex items-center gap-2 rounded-sm">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{formError}</span>
         </div>
@@ -98,7 +98,7 @@ export const McpServerModal: React.FC<{
             onChange={(e) => setServerName(e.target.value)}
             placeholder="e.g. Git Context, Workspace Filesystem"
             required
-            className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+            className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
           />
         </div>
 
@@ -130,7 +130,7 @@ export const McpServerModal: React.FC<{
           value={serverDesc}
           onChange={(e) => setServerDesc(e.target.value)}
           placeholder="e.g. Provides read access to git branches and diff graphs"
-          className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+          className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
         />
       </div>
 
@@ -150,7 +150,7 @@ export const McpServerModal: React.FC<{
                   onChange={(e) => setServerCommand(e.target.value)}
                   placeholder="npx, uvx, docker, python"
                   required
-                  className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                  className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
                 />
               </div>
             </div>
@@ -164,7 +164,7 @@ export const McpServerModal: React.FC<{
                 value={serverArgsStr}
                 onChange={(e) => setServerArgsStr(e.target.value)}
                 placeholder="-y @modelcontextprotocol/server-filesystem ."
-                className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
               />
             </div>
           </div>
@@ -183,7 +183,7 @@ export const McpServerModal: React.FC<{
               onChange={(e) => setServerUrl(e.target.value)}
               placeholder={serverType === 'http' ? 'http://localhost:8000/mcp' : 'http://localhost:8000/sse'}
               required
-              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
         </div>
@@ -200,7 +200,7 @@ export const McpServerModal: React.FC<{
             onClick={() =>
               setServerEnvPairs([...serverEnvPairs, { key: '', value: '' }])
             }
-            className="flex items-center gap-1 text-[10px] text-subtext0 hover:text-text px-2 py-0.5 hover:bg-surface1 transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-[10px] text-subtext0 hover:text-text px-2 py-0.5 hover:bg-surface1 transition-colors cursor-pointer rounded-sm"
           >
             <Plus className="w-3 h-3" />
             <span>Add Variable</span>
@@ -224,7 +224,7 @@ export const McpServerModal: React.FC<{
                     setServerEnvPairs(copy);
                   }}
                   placeholder="VARIABLE_NAME"
-                  className="flex-1 px-2.5 py-1 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none"
+                  className="flex-1 px-2.5 py-1 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none rounded-sm"
                 />
                 <input
                   type={isSecretMcpEnvName(pair.key) || isLikelySecretMcpEnvValue(pair.value) || pair.secretConfigured ? 'password' : 'text'}
@@ -235,14 +235,14 @@ export const McpServerModal: React.FC<{
                     setServerEnvPairs(copy);
                   }}
                   placeholder={pair.secretConfigured && pair.savedKey === pair.key ? 'Saved in OS Keychain · blank keeps current value' : 'value'}
-                  className="flex-1 px-2.5 py-1 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none"
+                  className="flex-1 px-2.5 py-1 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none rounded-sm"
                 />
                 <button
                   type="button"
                   onClick={() => {
                     setServerEnvPairs(serverEnvPairs.filter((_, i) => i !== idx));
                   }}
-                  className="p-1 text-subtext0 hover:text-red cursor-pointer"
+                  className="p-1 text-subtext0 hover:text-red cursor-pointer rounded-sm"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -250,24 +250,24 @@ export const McpServerModal: React.FC<{
             ))}
           </div>
         ) : (
-          <div className="p-2 bg-base/40 border border-surface1/60 text-[11px] text-subtext0 italic">
+          <div className="p-2 bg-base/40 border border-surface1/60 text-[11px] text-subtext0 italic rounded-sm">
             No custom environment variables configured.
           </div>
         )}
       </div>
 
       {/* Form Action Buttons */}
-      <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface1/60">
+      <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface1/60 rounded-sm">
         <button
           type="button"
           onClick={onClose}
-          className="px-3 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+          className="px-3 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded-sm"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
+          className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5 rounded-sm"
         >
           <Check className="w-3.5 h-3.5 text-on-accent" />
           <span>{editingServerId ? 'Save Changes' : 'Register Server'}</span>

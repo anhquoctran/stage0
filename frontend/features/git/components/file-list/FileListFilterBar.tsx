@@ -19,24 +19,24 @@ export function FileListFilterBar({
   filterConflictedOnly,
 }: FileListFilterBarProps) {
   return (
-    <div className="p-2.5 border-b border-surface0 bg-mantle space-y-2">
+    <div className="p-2.5 border-b border-surface0 bg-mantle space-y-2 rounded-sm">
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-xs font-bold uppercase tracking-wider text-subtext1">
             Files Changed
           </span>
-          <span className="text-xs px-1.5 py-0.2 bg-surface0 text-text  font-mono font-semibold border border-surface0">
+          <span className="text-xs px-1.5 py-0.2 bg-surface0 text-text rounded-sm font-mono font-semibold border border-surface0">
             {files.length}
           </span>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           {/* Flat vs Tree toggle */}
-          <div className="flex items-center bg-surface0  p-0.5 gap-0.5">
+          <div className="flex items-center bg-surface0 rounded-sm p-0.5 gap-0.5">
             <button
               type="button"
               onClick={() => setFileListLayout('flat')}
-              className={`p-1  transition-colors ${
+              className={`p-1 rounded-sm transition-colors ${
                 fileListLayout === 'flat'
                   ? 'bg-surface2 text-white'
                   : 'text-white/70 hover:text-white'
@@ -48,7 +48,7 @@ export function FileListFilterBar({
             <button
               type="button"
               onClick={() => setFileListLayout('tree')}
-              className={`p-1  transition-colors ${
+              className={`p-1 rounded-sm transition-colors ${
                 fileListLayout === 'tree'
                   ? 'bg-surface2 text-white'
                   : 'text-white/70 hover:text-white'
@@ -83,13 +83,13 @@ export function FileListFilterBar({
           placeholder="Filter files..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-8 pr-7 py-1 bg-base border border-surface0  text-xs text-text placeholder-subtext0 focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
+          className="w-full pl-8 pr-7 py-1 bg-base border border-surface0 rounded-sm text-xs text-text placeholder-subtext0 focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
         />
         {searchTerm && (
           <button
             type="button"
             onClick={() => setSearchTerm('')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-subtext1 hover:text-text"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-subtext1 hover:text-text rounded-sm"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -101,7 +101,7 @@ export function FileListFilterBar({
         <button
           type="button"
           onClick={() => setFilterConflictedOnly(!filterConflictedOnly)}
-          className={`w-full flex items-center justify-between px-2.5 py-1 text-xs font-semibold transition-colors ${
+          className={`w-full flex items-center justify-between px-2.5 py-1 text-xs font-semibold transition-colors rounded-sm ${
             filterConflictedOnly
               ? 'bg-red-600 text-white'
               : 'bg-surface1 text-white hover:bg-surface2'
@@ -111,7 +111,7 @@ export function FileListFilterBar({
             <AlertTriangle className="w-3.5 h-3.5 text-white shrink-0" />
             <span>Show Conflicts Only</span>
           </div>
-          <span className="bg-red-700 text-white px-1.5 py-0.2  font-mono text-[10px]">
+          <span className="bg-red-700 text-white px-1.5 py-0.2 rounded-sm font-mono text-[10px]">
             {conflictedCount}
           </span>
         </button>

@@ -51,8 +51,8 @@ export const McpJsonModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-mantle border border-surface0 w-full max-w-2xl shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4 rounded-sm">
+      <div className="bg-mantle border border-surface0 w-full max-w-2xl shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150 rounded-sm">
         <div
           data-tauri-drag-region
           className="flex items-center justify-between pb-2 border-b border-surface0 cursor-default"
@@ -64,21 +64,21 @@ export const McpJsonModal: React.FC<{
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-subtext0 hover:text-text cursor-pointer"
+            className="p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Sub-tab: Export vs Import */}
-        <div className="flex items-center gap-2 border-b border-surface0 pb-2">
+        <div className="flex items-center gap-2 border-b border-surface0 pb-2 rounded-sm">
           <button
             type="button"
             onClick={() => {
               setJsonTab('export');
               setJsonFeedback(null);
             }}
-            className={`px-3 py-1.5 text-xs font-semibold cursor-pointer border ${
+            className={`px-3 py-1.5 text-xs font-semibold cursor-pointer border rounded-sm ${
               jsonTab === 'export'
                 ? 'bg-surface1 border-surface2 text-text'
                 : 'border-transparent text-subtext0 hover:text-text'
@@ -92,7 +92,7 @@ export const McpJsonModal: React.FC<{
               setJsonTab('import');
               setJsonFeedback(null);
             }}
-            className={`px-3 py-1.5 text-xs font-semibold cursor-pointer border ${
+            className={`px-3 py-1.5 text-xs font-semibold cursor-pointer border rounded-sm ${
               jsonTab === 'import'
                 ? 'bg-surface1 border-surface2 text-text'
                 : 'border-transparent text-subtext0 hover:text-text'
@@ -115,7 +115,7 @@ export const McpJsonModal: React.FC<{
               <button
                 type="button"
                 onClick={handleCopyJson}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer border border-surface2 shadow-xs"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer border border-surface2 shadow-xs rounded-sm"
               >
                 {copiedJson ? (
                   <>
@@ -142,12 +142,12 @@ export const McpJsonModal: React.FC<{
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
               placeholder={`{\n  "mcpServers": {\n    "filesystem": {\n      "command": "npx",\n      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]\n    }\n  }\n}`}
-              className="w-full p-3 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+              className="w-full p-3 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
 
             {jsonFeedback && (
               <div
-                className={`p-2.5 border text-xs flex items-center gap-2 ${
+                className={`p-2.5 border text-xs flex items-center gap-2 rounded-sm ${
                   jsonFeedback.success
                     ? 'bg-surface1 border-surface2 text-text'
                     : 'bg-surface1 border-surface2 text-subtext0'
@@ -166,14 +166,14 @@ export const McpJsonModal: React.FC<{
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                className="px-3 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded-sm"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleImportJson}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer border border-surface2 shadow-xs"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer border border-surface2 shadow-xs rounded-sm"
               >
                 <Check className="w-3.5 h-3.5 text-text" />
                 <span>Import Config</span>

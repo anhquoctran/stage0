@@ -30,12 +30,12 @@ export function VirtualMrMetadataBar({
   diffPayload,
 }: VirtualMrMetadataBarProps) {
   return (
-    <div className="px-4 py-2 flex items-center justify-between gap-4 bg-mantle text-xs border-b border-surface0/40">
+    <div className="px-4 py-2 flex items-center justify-between gap-4 bg-mantle text-xs border-b border-surface0/40 rounded-sm">
       <div className="flex items-center gap-6 flex-wrap">
         {/* Assignee */}
         <div className="flex items-center gap-2">
           <span className="text-subtext0">Assignee:</span>
-          <div className="flex items-center gap-1.5 px-2 py-0.5  bg-surface0 font-medium">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-surface0 font-medium">
             <User className="w-3 h-3 text-accent" />
             <span>{session.assignee.name}</span>
             <span className="text-[10px] text-subtext0 font-mono">(Local)</span>
@@ -49,14 +49,14 @@ export function VirtualMrMetadataBar({
             {session.reviewers.map((rev) => (
               <div
                 key={rev.agentId}
-                className="flex items-center gap-1 px-2 py-0.5  bg-purple-500/10 border border-purple-500/20 text-purple-300 text-[11px]"
+                className="flex items-center gap-1 px-2 py-0.5 rounded-sm bg-purple-500/10 border border-purple-500/20 text-purple-300 text-[11px]"
               >
                 <Bot className="w-3 h-3" />
                 <span>{rev.agentName}</span>
                 <button
                   type="button"
                   onClick={() => removeReviewerBot(session.id, rev.agentId)}
-                  className="hover:text-red-400 cursor-pointer ml-0.5"
+                  className="hover:text-red-400 cursor-pointer ml-0.5 rounded-sm"
                 >
                   <X className="w-2.5 h-2.5" />
                 </button>
@@ -65,7 +65,7 @@ export function VirtualMrMetadataBar({
             <button
               type="button"
               onClick={toggleReviewerDropdown}
-              className="p-1  bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+              className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-white cursor-pointer"
               title="Add AI Reviewer Bot"
             >
               <Plus className="w-3 h-3 text-white" />
@@ -74,7 +74,7 @@ export function VirtualMrMetadataBar({
 
           {/* Reviewer Dropdown */}
           {showReviewerDropdown && (
-            <div className="absolute top-full left-16 mt-1 w-60  bg-crust border border-surface0 shadow-xl py-1 z-50">
+            <div className="absolute top-full left-16 mt-1 w-60 rounded-sm bg-crust border border-surface0 shadow-xl py-1 z-50">
               <div className="px-3 py-1.5 text-[11px] font-semibold text-subtext0 uppercase tracking-wider">
                 Select AI Reviewer Bot
               </div>
@@ -94,7 +94,7 @@ export function VirtualMrMetadataBar({
                         assignReviewerBot(session.id, bot.id);
                         setShowReviewerDropdown(false);
                       }}
-                      className="w-full px-3 py-1.5 flex items-center justify-between text-left hover:bg-surface0 disabled:opacity-40 cursor-pointer"
+                      className="w-full px-3 py-1.5 flex items-center justify-between text-left hover:bg-surface0 disabled:opacity-40 cursor-pointer rounded-sm"
                     >
                       <div className="flex items-center gap-2">
                         <span>{bot.avatarEmoji}</span>
@@ -119,7 +119,7 @@ export function VirtualMrMetadataBar({
             {session.labels.map((lbl) => (
               <span
                 key={lbl.id}
-                className="px-2 py-0.5  text-[10px] font-medium text-white shadow-2xs"
+                className="px-2 py-0.5 rounded-sm text-[10px] font-medium text-white shadow-2xs"
                 style={{ backgroundColor: lbl.color }}
               >
                 {lbl.name}
@@ -128,7 +128,7 @@ export function VirtualMrMetadataBar({
             <button
               type="button"
               onClick={toggleLabelDropdown}
-              className="p-1  bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+              className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-white cursor-pointer"
               title="Manage Labels"
             >
               <Plus className="w-3 h-3 text-white" />
@@ -137,15 +137,15 @@ export function VirtualMrMetadataBar({
 
           {/* Label Dropdown */}
           {showLabelDropdown && (
-            <div className="absolute top-full left-14 mt-1 w-56  bg-crust border border-surface0 shadow-xl py-1 z-50">
-              <div className="px-3 py-1.5 flex items-center justify-between text-[11px] font-semibold text-subtext0 uppercase tracking-wider border-b border-surface0/60">
+            <div className="absolute top-full left-14 mt-1 w-56 rounded-sm bg-crust border border-surface0 shadow-xl py-1 z-50">
+              <div className="px-3 py-1.5 flex items-center justify-between text-[11px] font-semibold text-subtext0 uppercase tracking-wider border-b border-surface0/60 rounded-sm">
                 <span>Toggle Labels</span>
                 <button
                   onClick={() => {
                     setShowLabelDropdown(false);
                     openRepoSettings('labels');
                   }}
-                  className="text-accent hover:underline text-[10px] lowercase"
+                  className="text-accent hover:underline text-[10px] lowercase rounded-sm"
                 >
                   manage
                 </button>
@@ -161,11 +161,11 @@ export function VirtualMrMetadataBar({
                         key={lbl.id}
                         type="button"
                         onClick={() => toggleSessionLabel(session.id, lbl.id)}
-                        className="w-full px-3 py-1.5 flex items-center justify-between text-left hover:bg-surface0 cursor-pointer"
+                        className="w-full px-3 py-1.5 flex items-center justify-between text-left hover:bg-surface0 cursor-pointer rounded-sm"
                       >
                         <div className="flex items-center gap-2">
                           <span
-                            className="w-2.5 h-2.5  shrink-0"
+                            className="w-2.5 h-2.5 rounded-sm shrink-0"
                             style={{ backgroundColor: lbl.color }}
                           />
                           <span className="text-xs">{lbl.name}</span>
@@ -182,11 +182,11 @@ export function VirtualMrMetadataBar({
       </div>
 
       {/* SUB-TABS NAVIGATION */}
-      <div className="flex items-center gap-1 bg-crust p-0.5 shrink-0">
+      <div className="flex items-center gap-1 bg-crust p-0.5 shrink-0 rounded-sm">
         <button
           type="button"
           onClick={() => setActiveMrTab('overview')}
-          className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer rounded-sm ${
             activeMrTab === 'overview'
               ? 'bg-surface2 text-white font-medium shadow-2xs'
               : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
@@ -198,7 +198,7 @@ export function VirtualMrMetadataBar({
         <button
           type="button"
           onClick={() => setActiveMrTab('commits')}
-          className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer rounded-sm ${
             activeMrTab === 'commits'
               ? 'bg-surface2 text-white font-medium shadow-2xs'
               : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
@@ -210,7 +210,7 @@ export function VirtualMrMetadataBar({
         <button
           type="button"
           onClick={() => setActiveMrTab('diff')}
-          className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3 py-1 text-xs transition-colors flex items-center gap-1.5 cursor-pointer rounded-sm ${
             activeMrTab === 'diff'
               ? 'bg-surface2 text-white font-medium shadow-2xs'
               : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'

@@ -100,7 +100,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-mantle border border-surface0 w-full max-w-2xl shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-mantle border border-surface0 w-full max-w-2xl shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto rounded-sm">
         <div className="flex items-center justify-between border-b border-surface0 pb-3">
           <h4 className="text-sm font-bold text-text flex items-center gap-2">
             <Bot className="w-4 h-4 text-brand" />
@@ -109,14 +109,14 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-subtext0 hover:text-text cursor-pointer"
+            className="text-subtext0 hover:text-text cursor-pointer rounded-sm"
           >
             ✕
           </button>
         </div>
 
         {formError && (
-          <div className="p-2.5 bg-red/10 border border-red/20 text-red text-xs flex items-center gap-2">
+          <div className="p-2.5 bg-red/10 border border-red/20 text-red text-xs flex items-center gap-2 rounded-sm">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{formError}</span>
           </div>
@@ -134,7 +134,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
                   maxLength={4}
                   value={formEmoji}
                   onChange={(e) => setFormEmoji(e.target.value)}
-                  className="w-12 h-9 text-center text-lg bg-surface0 border border-surface1 text-text focus:outline-none focus:border-brand"
+                  className="w-12 h-9 text-center text-lg bg-surface0 border border-surface1 text-text focus:outline-none focus:border-brand rounded-sm"
                 />
                 <div className="flex gap-1 flex-wrap max-w-[80px]">
                   {EMOJI_PRESETS.slice(0, 6).map((em) => (
@@ -142,7 +142,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
                       key={em}
                       type="button"
                       onClick={() => setFormEmoji(em)}
-                      className="hover:scale-125 transition-transform text-xs cursor-pointer"
+                      className="hover:scale-125 transition-transform text-xs cursor-pointer rounded-sm"
                     >
                       {em}
                     </button>
@@ -161,7 +161,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
                 placeholder="e.g. Accessibility Auditor"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand"
+                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand rounded-sm"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
                 placeholder="e.g. WCAG 2.1 & Screen Reader Compliance"
                 value={formTagline}
                 onChange={(e) => setFormTagline(e.target.value)}
-                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand"
+                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand rounded-sm"
               />
             </div>
 
@@ -202,7 +202,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
               placeholder="Short explanation of what this bot checks in code reviews..."
               value={formDesc}
               onChange={(e) => setFormDesc(e.target.value)}
-              className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand"
+              className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand rounded-sm"
             />
           </div>
 
@@ -253,17 +253,17 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
             }}
           />
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-surface0">
+          <div className="flex justify-end gap-2 pt-2 border-t border-surface0 rounded-sm">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs transition-colors cursor-pointer"
+              className="px-4 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs transition-colors cursor-pointer rounded-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-xs"
+              className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-xs rounded-sm"
             >
               {editingBotId ? 'Update Bot' : 'Create Bot'}
             </button>

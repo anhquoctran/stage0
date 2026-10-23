@@ -10,7 +10,7 @@ export function GitBinaryDetectionCard({
   copiedPath,
 }: GitBinaryDetectionCardProps) {
   return (
-    <div className="p-4 bg-surface0/60 border border-surface1 space-y-2">
+    <div className="p-4 bg-surface0/60 border border-surface1 space-y-2 rounded-sm">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-wider text-subtext0 flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-green" />
@@ -34,7 +34,7 @@ export function GitBinaryDetectionCard({
           <button
             type="button"
             onClick={(e) => handleCopyPath(committedBinary.path, e)}
-            className="p-1.5 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer shrink-0"
+            className="p-1.5 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer shrink-0 rounded-sm"
             title="Copy active Git binary path"
           >
             {copiedPath === committedBinary.path ? (

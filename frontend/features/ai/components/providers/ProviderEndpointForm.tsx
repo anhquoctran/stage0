@@ -20,7 +20,7 @@ export function ProviderEndpointForm({
                   baseUrl: activeProviderPreset.defaultBaseUrl,
                 })
               }
-              className="text-[10px] text-subtext0 hover:text-text underline cursor-pointer"
+              className="text-[10px] text-subtext0 hover:text-text underline cursor-pointer rounded-sm"
             >
               Reset default ({activeProviderPreset.defaultBaseUrl})
             </button>
@@ -44,7 +44,7 @@ export function ProviderEndpointForm({
             });
           }}
           placeholder="https://api.openai.com/v1"
-          className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+          className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
         />
       </div>
 

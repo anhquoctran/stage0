@@ -11,10 +11,10 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
   repoName,
   defaultBaseBranch,
 }) => (
-  <div className="flex flex-1 flex-col items-center justify-center bg-crust p-8 text-center font-sans select-none">
+  <div className="flex flex-1 flex-col items-center justify-center bg-crust p-8 text-center font-sans select-none rounded-sm">
     <div className="flex max-w-md flex-col items-center animate-in fade-in zoom-in-95 duration-200">
       <div className="relative mb-6">
-        <div className="flex h-16 w-16 items-center justify-center border border-surface1 bg-mantle text-brand shadow-xl">
+        <div className="flex h-16 w-16 items-center justify-center border border-surface1 bg-mantle text-brand shadow-xl rounded-sm">
           <GitPullRequest className="h-8 w-8 text-brand" />
         </div>
       </div>
@@ -28,7 +28,7 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
       <button
         type="button"
         onClick={onNewMr}
-        className="mb-4 flex items-center gap-2 bg-brand px-5 py-2.5 text-xs font-semibold text-on-accent shadow-lg shadow-brand/20 transition-all hover:bg-brand/90 active:scale-[0.98]"
+        className="mb-4 flex items-center gap-2 bg-brand px-5 py-2.5 text-xs font-semibold text-on-accent shadow-lg shadow-brand/20 transition-all hover:bg-brand/90 active:scale-[0.98] rounded-sm"
       >
         <Plus className="h-4 w-4 stroke-[2.5]" />
         <span>Create Virtual MR</span>
@@ -37,7 +37,7 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
         </kbd>
       </button>
 
-      <div className="flex items-center gap-4 border-t border-surface0/60 pt-4 text-[11px] text-subtext1">
+      <div className="flex items-center gap-4 border-t border-surface0/60 pt-4 text-[11px] text-subtext1 rounded-sm">
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5 text-brand" />
           <span>Local code review</span>

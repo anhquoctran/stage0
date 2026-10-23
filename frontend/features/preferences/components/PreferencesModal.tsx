@@ -84,7 +84,7 @@ export const PreferencesModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--backdrop-modal)] backdrop-blur-xs animate-in fade-in duration-150 select-none">
       <div
-        className="relative w-full max-w-5xl h-[760px] max-h-[92vh] bg-mantle border border-surface0 shadow-2xl flex flex-col overflow-hidden text-text"
+        className="relative w-full max-w-5xl h-[760px] max-h-[92vh] bg-mantle border border-surface0 shadow-2xl flex flex-col overflow-hidden text-text rounded-sm"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Window Bar */}

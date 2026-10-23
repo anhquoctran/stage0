@@ -50,7 +50,7 @@ export function BotExecutionModelForm({
   },
 }: BotExecutionModelFormProps) {
   return (
-    <div className="p-3 bg-surface0/30 border border-surface0 space-y-3">
+    <div className="p-3 bg-surface0/30 border border-surface0 space-y-3 rounded-sm">
       <span className="text-[11px] font-bold text-text uppercase tracking-wider block">
         Execution &amp; Model
       </span>
@@ -155,7 +155,7 @@ export function BotExecutionModelForm({
                   value={formModel}
                   onChange={(e) => setFormModel(e.target.value)}
                   placeholder="Enter custom model ID"
-                  className="mt-2 w-full px-2 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand font-mono"
+                  className="mt-2 w-full px-2 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand font-mono rounded-sm"
                 />
               )}
             </div>
@@ -171,7 +171,7 @@ export function BotExecutionModelForm({
                 step={0.1}
                 value={formTemp}
                 onChange={(e) => setFormTemp(parseFloat(e.target.value))}
-                className="w-full mt-2 cursor-pointer"
+                className="w-full mt-2 cursor-pointer rounded-sm"
               />
             </div>
           </div>
@@ -196,7 +196,7 @@ export function BotExecutionModelForm({
           </div>
         </>
       ) : (
-        <div className="space-y-3 border border-surface0 bg-crust/50 p-3">
+        <div className="space-y-3 border border-surface0 bg-crust/50 p-3 rounded-sm">
           <div>
             <label className="block text-[10px] text-subtext0 mb-1">Installed ACP agent</label>
             {externalAgents.length > 0 ? (

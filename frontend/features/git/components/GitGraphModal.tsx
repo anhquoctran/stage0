@@ -65,7 +65,7 @@ export const GitGraphModal: React.FC<GitGraphModalProps> = ({ isOpen, repoPath, 
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 top-8.5 z-50 flex items-center justify-center bg-crust/75 p-4 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-x-0 bottom-0 top-8.5 z-50 flex items-center justify-center bg-crust/75 p-4 backdrop-blur-xs animate-in fade-in duration-150 rounded-sm"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}

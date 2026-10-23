@@ -28,7 +28,7 @@ export function AcpAgentAccountSection({
       <div
         role="status"
         aria-live="polite"
-        className={`border px-3 py-2 text-xs ${authStatus?.kind === 'none' ? 'border-yellow/40 bg-yellow/5 text-yellow' : authStatus ? 'border-green/40 bg-green/5 text-green' : lastSuccessfulSignIn ? 'border-brand/40 bg-brand/5 text-text' : 'border-surface1 bg-base/40 text-subtext0'}`}
+        className={`border px-3 py-2 text-xs rounded-sm ${authStatus?.kind === 'none' ? 'border-yellow/40 bg-yellow/5 text-yellow' : authStatus ? 'border-green/40 bg-green/5 text-green' : lastSuccessfulSignIn ? 'border-brand/40 bg-brand/5 text-text' : 'border-surface1 bg-base/40 text-subtext0'}`}
       >
         {isCheckingAuth ? (
           'Checking account and sign-in methods…'
@@ -89,7 +89,7 @@ export function AcpAgentAccountSection({
             type="button"
             disabled={busyId === agentId || !isTauri() || !isProtocolAuthMethod(selectedAuthOption)}
             onClick={() => void signIn()}
-            className="border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand disabled:opacity-50"
+            className="border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand disabled:opacity-50 rounded-sm"
           >
             {busyId === agentId
               ? 'Connecting…'

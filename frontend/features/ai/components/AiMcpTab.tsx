@@ -105,7 +105,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               <button
                 type="button"
                 onClick={onNavigateToGuardrails}
-                className="text-xs text-subtext0 hover:text-text underline cursor-pointer"
+                className="text-xs text-subtext0 hover:text-text underline cursor-pointer rounded-sm"
               >
                 Configure AI Security Guardrails &amp; Execution Policies →
               </button>
@@ -134,7 +134,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               <button
                 type="button"
                 onClick={() => state.mcp.setIsJsonModalOpen(true)}
-                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded-sm"
                 title="Import or Export JSON configuration"
               >
                 <FileJson className="w-3.5 h-3.5" />
@@ -144,7 +144,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               <button
                 type="button"
                 onClick={() => state.mcp.handleOpenAddServer()}
-                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer shadow-xs border border-surface2"
+                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer shadow-xs border border-surface2 rounded-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add MCP Server</span>
@@ -153,7 +153,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
           </div>
 
           {/* Quick Preset Templates Bar */}
-          <div className="p-2.5 bg-surface0/20 border border-surface0/80 flex flex-wrap items-center gap-2">
+          <div className="p-2.5 bg-surface0/20 border border-surface0/80 flex flex-wrap items-center gap-2 rounded-sm">
             <span className="shrink-0 text-[10px] font-bold text-subtext0 uppercase tracking-wider">
               Quick Add Presets:
             </span>
@@ -162,7 +162,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 key={preset.name}
                 type="button"
                 onClick={() => state.mcp.handleOpenAddServer(preset)}
-                className="flex shrink-0 items-center gap-1 whitespace-nowrap px-2.5 py-1 text-[11px] font-medium bg-surface0 border border-surface1 hover:bg-surface1 text-text transition-colors cursor-pointer"
+                className="flex shrink-0 items-center gap-1 whitespace-nowrap px-2.5 py-1 text-[11px] font-medium bg-surface0 border border-surface1 hover:bg-surface1 text-text transition-colors cursor-pointer rounded-sm"
               >
                 <Plus className="w-3 h-3 text-subtext0" />
                 <span>{preset.name}</span>

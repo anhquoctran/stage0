@@ -14,7 +14,7 @@ export function RepositoryBotItem({
     <div
       key={bot.id}
       onClick={() => toggleRepoActiveBotId(currentRepoId, bot.id)}
-      className={`p-3 border space-y-2 flex flex-col justify-between cursor-pointer transition-all ${
+      className={`p-3 border space-y-2 flex flex-col justify-between cursor-pointer transition-all rounded-sm ${
         isChecked
           ? 'bg-surface0/30 border-surface1 shadow-xs'
           : 'bg-crust border-surface0/50 opacity-60'
@@ -71,7 +71,7 @@ export function RepositoryBotItem({
               e.stopPropagation();
               deleteRepoCustomReviewer(currentRepoId, bot.id);
             }}
-            className="text-subtext0 hover:text-red-400 p-0.5 cursor-pointer"
+            className="text-subtext0 hover:text-red-400 p-0.5 cursor-pointer rounded-sm"
             title="Delete repo-exclusive bot"
           >
             <Trash2 className="w-3 h-3" />

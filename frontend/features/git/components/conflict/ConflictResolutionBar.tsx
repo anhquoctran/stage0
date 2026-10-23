@@ -21,10 +21,10 @@ export function ConflictResolutionBar({
   onSwitchToDiff,
 }: ConflictResolutionBarProps) {
   return (
-    <div className="bg-gradient-to-r from-red/15 via-red/10 to-red/5 border-b border-red/30 px-4 py-3 shrink-0">
+    <div className="bg-gradient-to-r from-red/15 via-red/10 to-red/5 border-b border-red/30 px-4 py-3 shrink-0 rounded-sm">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="p-2 bg-red/20 text-red  border border-red/40 shrink-0 mt-0.5">
+          <div className="p-2 bg-red/20 text-red rounded-sm border border-red/40 shrink-0 mt-0.5">
             <ShieldAlert className="w-5 h-5 text-red" />
           </div>
           <div className="min-w-0">
@@ -32,7 +32,7 @@ export function ConflictResolutionBar({
               <span className="text-xs font-bold uppercase tracking-wider text-red">
                 Conflict Inspection
               </span>
-              <span className="text-[11px] px-2 py-0.5  bg-red/25 text-red font-mono font-bold border border-red/40">
+              <span className="text-[11px] px-2 py-0.5 rounded-sm bg-red/25 text-red font-mono font-bold border border-red/40">
                 {regions.length > 0
                   ? `${regions.length} conflict block${regions.length > 1 ? 's' : ''}`
                   : activeConflictPreview?.conflict_type || 'Unmerged conflict'}
@@ -55,7 +55,7 @@ export function ConflictResolutionBar({
             <button
               type="button"
               onClick={handleOpenInVsCode}
-              className="flex items-center gap-1.5 px-3 py-1.5  bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
               title="Open this file directly in Visual Studio Code"
             >
               <Code2 className="w-3.5 h-3.5 text-subtext0" />
@@ -66,7 +66,7 @@ export function ConflictResolutionBar({
           <button
             type="button"
             onClick={handleRevealInOs}
-            className="p-1.5  bg-surface0 hover:bg-surface1 border border-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
+            className="p-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
             title={`Reveal in ${fileManagerName}`}
           >
             <FolderOpen className="w-3.5 h-3.5" />
@@ -78,7 +78,7 @@ export function ConflictResolutionBar({
               fetchConflictPreview();
               refreshDiff();
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5  bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
             title={formatShortcutText('Refresh virtual conflict analysis (Ctrl+R)')}
           >
             <RotateCw className="w-3.5 h-3.5 text-subtext0" />
@@ -89,7 +89,7 @@ export function ConflictResolutionBar({
             <button
               type="button"
               onClick={onSwitchToDiff}
-              className="flex items-center gap-1.5 px-3 py-1.5  bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer"
               title="Switch back to regular Diff View"
             >
               <FileCode className="w-3.5 h-3.5 text-blue" />

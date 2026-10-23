@@ -61,16 +61,16 @@ export const CloneRepoModal: React.FC = () => {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-x-0 bottom-0 top-8.5 z-50 flex items-center justify-center bg-crust/80 backdrop-blur-xs p-4 select-none animate-in fade-in duration-150"
+      className="fixed inset-x-0 bottom-0 top-8.5 z-50 flex items-center justify-center bg-crust/80 backdrop-blur-xs p-4 select-none animate-in fade-in duration-150 rounded-sm"
     >
-      <div className="bg-mantle border border-surface1 shadow-2xl w-full max-w-2xl max-h-full overflow-hidden flex flex-col">
+      <div className="bg-mantle border border-surface1 shadow-2xl w-full max-w-2xl max-h-full overflow-hidden flex flex-col rounded-sm">
         {/* Header */}
         <div
           data-tauri-drag-region
-          className="px-5 py-4 border-b border-surface0 flex shrink-0 items-center justify-between bg-base/50 cursor-default"
+          className="px-5 py-4 border-b border-surface0 flex shrink-0 items-center justify-between bg-base/50 cursor-default rounded-sm"
         >
           <div data-tauri-drag-region className="flex items-center gap-2.5 pointer-events-none">
-            <div className="p-2 bg-blue/10 text-blue border border-blue/20">
+            <div className="p-2 bg-blue/10 text-blue border border-blue/20 rounded-sm">
               <Download className="w-4 h-4" />
             </div>
             <div>
@@ -84,7 +84,7 @@ export const CloneRepoModal: React.FC = () => {
             type="button"
             disabled={isCloning}
             onClick={handleClose}
-            className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors disabled:opacity-40 cursor-pointer"
+            className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors disabled:opacity-40 cursor-pointer rounded-sm"
           >
             <X className="w-4 h-4" />
           </button>
@@ -95,7 +95,7 @@ export const CloneRepoModal: React.FC = () => {
           <div className="min-h-0 overflow-y-auto p-5 space-y-4">
             {/* Error Banner */}
             {errorMessage && (
-              <div className="p-3 bg-red/10 border border-red/30 flex items-start gap-2.5 text-red text-xs animate-in fade-in duration-150">
+              <div className="p-3 bg-red/10 border border-red/30 flex items-start gap-2.5 text-red text-xs animate-in fade-in duration-150 rounded-sm">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <div className="flex-1 break-words font-mono text-[11px] leading-relaxed">
                   {errorMessage}
@@ -150,7 +150,7 @@ export const CloneRepoModal: React.FC = () => {
                   setRepoNameEdited(true);
                 }}
                 placeholder="e.g. my-project"
-                className="w-full px-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60"
+                className="w-full px-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 rounded-sm"
               />
               {repoName && !isSafeCloneRepoName(repoName) && (
                 <p role="alert" className="mt-1 text-[11px] text-red">
@@ -162,7 +162,7 @@ export const CloneRepoModal: React.FC = () => {
 
             {/* Resolved Path Preview */}
             {destinationPath && (
-              <div className="bg-surface0/60 border border-surface1/60 p-3 text-[11px]">
+              <div className="bg-surface0/60 border border-surface1/60 p-3 text-[11px] rounded-sm">
                 <span className="text-subtext0 block mb-0.5">Cloning into:</span>
                 <code className="text-blue font-mono font-medium break-all select-all">
                   {destinationPath}
@@ -178,7 +178,7 @@ export const CloneRepoModal: React.FC = () => {
               remoteRefs={remoteRefs}
               refsLoading={urlStatus === 'validating'}
             />
-            <div className="bg-surface0/40 border border-surface1/40 p-2.5 flex items-center gap-2 text-[11px] text-subtext0 font-mono overflow-x-auto">
+            <div className="bg-surface0/40 border border-surface1/40 p-2.5 flex items-center gap-2 text-[11px] text-subtext0 font-mono overflow-x-auto rounded-sm">
               <Terminal className="w-3.5 h-3.5 text-peach shrink-0" />
               <span className="whitespace-pre-wrap break-all select-text">
                 {previewCloneCommand(remoteUrl, destinationPath, cloneOptions)}
@@ -187,7 +187,7 @@ export const CloneRepoModal: React.FC = () => {
           </div>
 
           {/* Footer Actions */}
-          <div className="px-5 py-3 shrink-0 border-t border-surface0 flex items-center justify-between">
+          <div className="px-5 py-3 shrink-0 border-t border-surface0 flex items-center justify-between rounded-sm">
             <div className="text-[11px] text-subtext0">
               {isCloning && (
                 <span className="flex items-center gap-1.5 text-blue">
@@ -202,7 +202,7 @@ export const CloneRepoModal: React.FC = () => {
                 type="button"
                 disabled={isCloning}
                 onClick={handleClose}
-                className="px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-subtext1 hover:text-text text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
+                className="px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-subtext1 hover:text-text text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 rounded-sm"
               >
                 Cancel
               </button>
@@ -217,7 +217,7 @@ export const CloneRepoModal: React.FC = () => {
                   !!validateCloneOptions(cloneOptions) ||
                   !destinationPath.trim()
                 }
-                className="flex items-center gap-2 px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs shadow-md shadow-brand/20 border border-brand transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="flex items-center gap-2 px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs shadow-md shadow-brand/20 border border-brand transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:pointer-events-none rounded-sm"
               >
                 {isCloning ? (
                   <>

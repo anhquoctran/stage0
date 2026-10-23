@@ -57,7 +57,7 @@ export const StatusBarPerformanceMonitor: React.FC = () => {
 
   return (
     <div
-      className="group relative flex h-5.5 items-center gap-2 border-l border-surface1/80 pl-2 text-[10px] text-subtext1 cursor-help focus-visible:outline-none"
+      className="group relative flex h-5.5 items-center gap-2 border-l border-surface1/80 pl-2 text-[10px] text-subtext1 cursor-help focus-visible:outline-none rounded-sm"
       tabIndex={0}
       aria-label="Performance monitor details"
       aria-describedby="performance-monitor-tooltip"
@@ -89,7 +89,7 @@ export const StatusBarPerformanceMonitor: React.FC = () => {
       <div
         id="performance-monitor-tooltip"
         role="tooltip"
-        className="invisible absolute bottom-full right-0 z-50 mb-2 w-72 translate-y-1 border border-surface1 bg-mantle p-3 text-left text-xs text-text opacity-0 shadow-2xl transition-all duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100"
+        className="invisible absolute bottom-full right-0 z-50 mb-2 w-72 translate-y-1 border border-surface1 bg-mantle p-3 text-left text-xs text-text opacity-0 shadow-2xl transition-all duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 rounded-sm"
       >
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -106,7 +106,7 @@ export const StatusBarPerformanceMonitor: React.FC = () => {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-surface0/70 p-2">
+              <div className="bg-surface0/70 p-2 rounded-sm">
                 <div className="mb-1 text-[10px] text-subtext0">CPU usage</div>
                 <div className="font-mono text-sm font-semibold text-text">
                   {performanceMetrics?.cpuPercent == null
@@ -116,7 +116,7 @@ export const StatusBarPerformanceMonitor: React.FC = () => {
                     : `${performanceMetrics.cpuPercent.toFixed(1)}%`}
                 </div>
               </div>
-              <div className="bg-surface0/70 p-2">
+              <div className="bg-surface0/70 p-2 rounded-sm">
                 <div className="mb-1 text-[10px] text-subtext0">Resident memory</div>
                 <div className="font-mono text-sm font-semibold text-text">
                   {performanceMetrics ? formatDetailedMemory(performanceMetrics.memoryBytes) : '—'}

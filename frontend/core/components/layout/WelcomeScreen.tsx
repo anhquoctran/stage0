@@ -96,7 +96,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   }, [recentList, selectRepo, isMac, setIsPreferencesOpen]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-base px-6 py-12 select-none overflow-y-auto">
+    <div className="flex-1 flex flex-col items-center justify-center bg-base px-6 py-12 select-none overflow-y-auto rounded-sm">
       {/* Zed-style Centered Container */}
       <div className="w-full max-w-lg flex flex-col">
         {/* Header: Logo and Title side-by-side (Zed style) */}
@@ -128,7 +128,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               tabIndex={0}
               onClick={handleOpenLocal}
               onKeyDown={(e) => e.key === 'Enter' && handleOpenLocal()}
-              className="group flex items-center justify-between py-1.5 px-2 -mx-2  hover:bg-surface0/60 transition-colors cursor-pointer text-xs"
+              className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-sm hover:bg-surface0/60 transition-colors cursor-pointer text-xs"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <Folder className="w-4 h-4 text-subtext0 group-hover:text-text transition-colors shrink-0" />
@@ -147,7 +147,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               tabIndex={0}
               onClick={handleClone}
               onKeyDown={(e) => e.key === 'Enter' && handleClone()}
-              className="group flex items-center justify-between py-1.5 px-2 -mx-2  hover:bg-surface0/60 transition-colors cursor-pointer text-xs"
+              className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-sm hover:bg-surface0/60 transition-colors cursor-pointer text-xs"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <Download className="w-4 h-4 text-subtext0 group-hover:text-text transition-colors shrink-0" />
@@ -166,7 +166,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               tabIndex={0}
               onClick={() => setIsPreferencesOpen(true)}
               onKeyDown={(e) => e.key === 'Enter' && setIsPreferencesOpen(true)}
-              className="group flex items-center justify-between py-1.5 px-2 -mx-2  hover:bg-surface0/60 transition-colors cursor-pointer text-xs"
+              className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-sm hover:bg-surface0/60 transition-colors cursor-pointer text-xs"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <Cog className="w-4 h-4 text-subtext0 group-hover:text-text transition-colors shrink-0" />
@@ -190,7 +190,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               <button
                 type="button"
                 onClick={clearRecentRepos}
-                className="text-[10px] lowercase text-subtext0/70 hover:text-red transition-colors cursor-pointer px-1 py-0.5  hover:bg-surface0"
+                className="text-[10px] lowercase text-subtext0/70 hover:text-red transition-colors cursor-pointer px-1 py-0.5 rounded-sm hover:bg-surface0"
                 title="Clear all recent repositories"
               >
                 clear all
@@ -211,7 +211,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   tabIndex={0}
                   onClick={() => selectRepo(repo)}
                   onKeyDown={(e) => e.key === 'Enter' && selectRepo(repo)}
-                  className="group flex items-center justify-between py-1.5 px-2 -mx-2  hover:bg-surface0/60 transition-colors cursor-pointer text-xs"
+                  className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-sm hover:bg-surface0/60 transition-colors cursor-pointer text-xs"
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-3">
                     <Folder className="w-4 h-4 text-subtext0 group-hover:text-text transition-colors shrink-0" />
@@ -230,7 +230,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                         e.stopPropagation();
                         removeRecentRepo(repo.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-0.5  text-subtext0 hover:text-red transition-all cursor-pointer"
+                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded-sm text-subtext0 hover:text-red transition-all cursor-pointer"
                       title="Remove from recents"
                     >
                       <X className="w-3 h-3" />
@@ -246,15 +246,15 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         </div>
 
         {/* Footer info: Version and Copyright */}
-        <div className="mt-8 pt-4 border-t border-surface0/60 flex flex-col items-center gap-2 text-[11px] text-subtext0 text-center select-none">
+        <div className="mt-8 pt-4 border-t border-surface0/60 flex flex-col items-center gap-2 text-[11px] text-subtext0 text-center select-none rounded-sm">
           <button
             type="button"
             onClick={() => setShowAboutModal(true)}
-            className="hover:text-text transition-colors cursor-pointer flex items-center justify-center gap-1.5 group"
+            className="hover:text-text transition-colors cursor-pointer flex items-center justify-center gap-1.5 group rounded-sm"
             title="View About Stage0"
           >
             <span className="font-semibold text-text">{about.name}</span>
-            <span className="font-mono text-subtext0 bg-surface0 px-1.5 py-0.5  text-[10px] group-hover:bg-surface1 group-hover:text-text transition-colors">
+            <span className="font-mono text-subtext0 bg-surface0 px-1.5 py-0.5 rounded-sm text-[10px] group-hover:bg-surface1 group-hover:text-text transition-colors">
               v{about.version}
             </span>
           </button>

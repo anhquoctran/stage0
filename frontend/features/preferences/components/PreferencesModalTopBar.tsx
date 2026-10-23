@@ -15,7 +15,7 @@ export const PreferencesModalTopBar: React.FC<{
         <button
           type="button"
           onClick={onOpenJsonEditor}
-          className="mr-2 border border-surface0 px-2.5 py-1 text-[11px] text-subtext1 hover:bg-surface0 hover:text-text cursor-pointer"
+          className="mr-2 border border-surface0 px-2.5 py-1 text-[11px] text-subtext1 hover:bg-surface0 hover:text-text cursor-pointer rounded-sm"
           title="Edit the app preferences JSONC file"
         >
           Edit in preferences.json
@@ -23,7 +23,7 @@ export const PreferencesModalTopBar: React.FC<{
         <button
           type="button"
           onClick={onClose}
-          className="flex h-full w-11 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0/70 transition-colors cursor-pointer"
+          className="flex h-full w-11 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0/70 transition-colors cursor-pointer rounded-sm"
           title="Close (Esc)"
           aria-label="Close Preferences"
         >

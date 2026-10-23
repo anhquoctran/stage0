@@ -22,7 +22,7 @@ export const AcpRegistryProjectInfo: React.FC<AcpRegistryProjectInfoProps> = ({ 
       <summary className="w-fit cursor-pointer select-none hover:text-text focus-visible:outline focus-visible:outline-brand">
         Project information <span className="text-subtext0">· Registry metadata</span>
       </summary>
-      <div className="mt-2 grid gap-x-3 gap-y-1 border-l border-surface1 pl-3 sm:grid-cols-[90px_minmax(0,1fr)]">
+      <div className="mt-2 grid gap-x-3 gap-y-1 border-l border-surface1 pl-3 sm:grid-cols-[90px_minmax(0,1fr)] rounded-sm">
         <span>Project ID</span><code className="break-all text-text">{entry.id}</code>
         <span>Version</span><span className="text-text">{entry.version || 'Not provided'}</span>
         <span>License</span><span className="text-text">{entry.license || 'Not provided'}{licenseUrl && <> · <a href={licenseUrl} target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">Details <ExternalLink className="inline h-3 w-3" /></a></>}</span>

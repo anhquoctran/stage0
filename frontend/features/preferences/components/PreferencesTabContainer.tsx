@@ -61,7 +61,7 @@ export function PreferencesTabContainer({
 }: PreferencesTabContainerProps) {
   return (
     <div
-      className={`flex-1 overflow-y-auto ${currentTabId === 'ai-external-agents' ? 'px-5 py-4' : 'p-8'} bg-base flex flex-col`}
+      className={`flex-1 overflow-y-auto rounded-sm ${currentTabId === 'ai-external-agents' ? 'px-5 py-4' : 'p-8'} bg-base flex flex-col`}
     >
       {/* Header Description */}
       <PreferencesTabHeader

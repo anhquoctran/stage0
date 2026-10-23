@@ -3,7 +3,7 @@ import type { VirtualMrCommitsTabProps } from './VirtualMrCommitsTabProps';
 
 export function VirtualMrCommitsTab({ session }: VirtualMrCommitsTabProps) {
   return (
-    <div className="p-4 bg-crust/50 border-b border-surface0 max-h-72 overflow-y-auto space-y-2">
+    <div className="p-4 bg-crust/50 border-b border-surface0 max-h-72 overflow-y-auto space-y-2 rounded-sm">
       {session.commits.length === 0 ? (
         <div className="p-6 text-center text-subtext0 text-xs">
           No commits unique to {session.compareBranch} relative to {session.baseBranch}.
@@ -12,7 +12,7 @@ export function VirtualMrCommitsTab({ session }: VirtualMrCommitsTabProps) {
         session.commits.map((c) => (
           <div
             key={c.hash}
-            className="p-3  bg-mantle border border-surface0 flex items-center justify-between gap-4"
+            className="p-3 rounded-sm bg-mantle border border-surface0 flex items-center justify-between gap-4"
           >
             <div className="space-y-1 min-w-0">
               <div className="font-medium text-xs text-text truncate">{c.subject}</div>
@@ -22,7 +22,7 @@ export function VirtualMrCommitsTab({ session }: VirtualMrCommitsTabProps) {
               </div>
             </div>
             <div className="text-right shrink-0">
-              <span className="px-2 py-0.5  bg-surface0 font-mono text-[11px] text-subtext0">
+              <span className="px-2 py-0.5 rounded-sm bg-surface0 font-mono text-[11px] text-subtext0">
                 {c.shortHash}
               </span>
             </div>

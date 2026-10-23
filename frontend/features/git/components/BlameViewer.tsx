@@ -169,24 +169,24 @@ export const BlameViewer: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-auto bg-base p-2">
+      <div className="flex-1 overflow-auto bg-base p-2 rounded-sm">
         {isBlameLoading ? (
           <div className="flex flex-col items-center justify-center h-64 text-subtext1 text-xs space-y-2">
-            <div className="w-6 h-6 border-2 border-subtext0 border-t-text  animate-spin" />
+            <div className="w-6 h-6 border-2 border-subtext0 border-t-text rounded-sm animate-spin" />
             <span className="font-medium text-text">Loading Git Blame...</span>
             <span className="text-[11px] text-subtext0">
               Running git blame for {selectedFile.path}
             </span>
           </div>
         ) : blameError ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center p-6 bg-mantle border border-surface0 ">
+          <div className="flex flex-col items-center justify-center h-64 text-center p-6 bg-mantle border border-surface0  rounded-sm">
             <Info className="w-8 h-8 text-subtext0 mb-2" />
             <h4 className="text-sm font-bold text-text mb-1">Failed to Blame File</h4>
             <p className="text-xs text-subtext0 font-mono max-w-md mb-4 break-all">{blameError}</p>
             <button
               type="button"
               onClick={() => fetchFileBlame()}
-              className="px-3.5 py-1.5  bg-surface1 hover:bg-surface2 text-text text-xs font-medium border border-surface2 transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 rounded-sm bg-surface1 hover:bg-surface2 text-text text-xs font-medium border border-surface2 transition-colors cursor-pointer"
             >
               Try Again
             </button>

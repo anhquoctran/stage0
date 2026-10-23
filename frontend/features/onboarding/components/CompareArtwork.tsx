@@ -4,8 +4,8 @@ import { Code2 } from '../../../common/components/icons/Code2';
 import { Sparkles } from '../../../common/components/icons/Sparkles';
 
 export const CompareArtwork: React.FC = () => (
-  <div className="w-full max-w-[25rem] border border-surface1 bg-base shadow-xl overflow-hidden">
-    <div className="flex items-center justify-between border-b border-surface0 bg-mantle px-4 py-3">
+  <div className="w-full max-w-[25rem] border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
+    <div className="flex items-center justify-between border-b border-surface0 bg-mantle px-4 py-3 rounded-sm">
       <div className="flex items-center gap-2 text-xs font-semibold text-text">
         <ArrowLeftRight className="h-3.5 w-3.5 text-primary" />
         Branch comparison
@@ -18,7 +18,7 @@ export const CompareArtwork: React.FC = () => (
         { name: 'src/auth/provider.ts', kind: 'Conflict likely', additions: 2, deletions: 2 },
         { name: 'tests/session.test.ts', kind: 'Added', additions: 8, deletions: 0 },
       ].map((file) => (
-        <div key={file.name} className="border border-surface0 bg-mantle px-3 py-2.5">
+        <div key={file.name} className="border border-surface0 bg-mantle px-3 py-2.5 rounded-sm">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2 text-[11px] font-mono text-text">
               <Code2 className="h-3 w-3 shrink-0 text-subtext0" />
@@ -33,7 +33,7 @@ export const CompareArtwork: React.FC = () => (
         </div>
       ))}
     </div>
-    <div className="flex items-center gap-2 border-t border-surface0 px-4 py-3 text-[11px] text-subtext1">
+    <div className="flex items-center gap-2 border-t border-surface0 px-4 py-3 text-[11px] text-subtext1 rounded-sm">
       <Sparkles className="h-3.5 w-3.5 text-primary" />
       Inspect each change before merging
     </div>

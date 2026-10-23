@@ -50,7 +50,7 @@ export function AddGitCredentialModal({
             setIsAdding(false);
             setFormError(null);
           }}
-          className="p-1 text-subtext0 hover:text-text  cursor-pointer"
+          className="p-1 text-subtext0 hover:text-text rounded-sm cursor-pointer"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -65,7 +65,7 @@ export function AddGitCredentialModal({
               key={p.id}
               type="button"
               onClick={() => handleProviderChange(p.id)}
-              className={`px-2.5 py-2  text-xs font-semibold border transition-all text-center cursor-pointer ${
+              className={`px-2.5 py-2 rounded-sm text-xs font-semibold border transition-all text-center cursor-pointer ${
                 provider === p.id
                   ? 'bg-surface1 border-surface2 text-text shadow-xs ring-1 ring-surface2'
                   : 'bg-surface0/40 border-surface0/80 text-subtext0 hover:bg-surface0 hover:text-text'
@@ -90,7 +90,7 @@ export function AddGitCredentialModal({
               value={serverUrl}
               onChange={(e) => setServerUrl(e.target.value)}
               placeholder="https://github.com"
-              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
         </div>
@@ -108,7 +108,7 @@ export function AddGitCredentialModal({
               onChange={(e) => setAccountName(e.target.value)}
               placeholder="e.g. octocat, john.doe"
               required
-              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
         </div>
@@ -144,7 +144,7 @@ export function AddGitCredentialModal({
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="e.g. Work PAT, Personal GitHub"
-              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
         </div>
@@ -166,12 +166,12 @@ export function AddGitCredentialModal({
             onChange={(e) => setSecret(e.target.value)}
             placeholder="ghp_..., glpat-..., or account password"
             required
-            className="w-full pl-8 pr-9 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+            className="w-full pl-8 pr-9 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
           />
           <button
             type="button"
             onClick={() => setShowSecret(!showSecret)}
-            className="absolute right-2.5 p-1 text-subtext0 hover:text-text cursor-pointer"
+            className="absolute right-2.5 p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
             title={showSecret ? 'Hide secret' : 'Show secret'}
           >
             {showSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -180,21 +180,21 @@ export function AddGitCredentialModal({
       </div>
 
       {/* Form Actions */}
-      <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface1/60">
+      <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface1/60 rounded-sm">
         <button
           type="button"
           onClick={() => {
             setIsAdding(false);
             setFormError(null);
           }}
-          className="px-3 py-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+          className="px-3 py-1.5 rounded-sm border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold  transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
+          className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-sm transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5"
         >
           {isLoading ? (
             <>

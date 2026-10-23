@@ -27,7 +27,7 @@ export const GitGraphSearchToolbar: React.FC<{
     messageSearchError,
 }) => {
     return (
-        <div className="flex shrink-0 items-center gap-1.5 border-b border-surface0 px-3 py-2">
+        <div className="flex shrink-0 items-center gap-1.5 border-b border-surface0 px-3 py-2 rounded-sm">
             <label className="flex min-w-0 flex-1 items-center gap-2 border border-surface1 bg-crust px-2.5 py-1.5 text-subtext0 focus-within:border-brand">
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <input
@@ -40,7 +40,7 @@ export const GitGraphSearchToolbar: React.FC<{
                     onKeyDown={onKeyDown}
                     placeholder="Search commits by message, subject, author name or email, branch name, tag refs, hash…"
                     aria-label="Search commits"
-                    className="git-graph-search-input min-w-0 flex-1 bg-transparent text-xs text-text outline-none placeholder:text-subtext0"
+                    className="git-graph-search-input min-w-0 flex-1 bg-transparent text-xs text-text outline-none placeholder:text-subtext0 rounded-sm"
                 />
                 <button
                     type="button"
@@ -54,7 +54,7 @@ export const GitGraphSearchToolbar: React.FC<{
                             ? 'Case-sensitive search on'
                             : 'Match case'
                     }
-                    className={`px-1 text-[10px] font-semibold transition-colors ${caseSensitive ? 'text-brand' : 'text-subtext0 hover:text-text'}`}
+                    className={`px-1 text-[10px] font-semibold transition-colors rounded-sm ${caseSensitive ? 'text-brand' : 'text-subtext0 hover:text-text'}`}
                 >
                     Aa
                 </button>
@@ -65,7 +65,7 @@ export const GitGraphSearchToolbar: React.FC<{
                 disabled={!canNavigate}
                 aria-label="Previous search result"
                 title="Previous match (Shift+Enter)"
-                className="flex h-7 w-6 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text disabled:opacity-35"
+                className="flex h-7 w-6 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text disabled:opacity-35 rounded-sm"
             >
                 <ChevronLeft className="h-3 w-3" />
             </button>
@@ -75,7 +75,7 @@ export const GitGraphSearchToolbar: React.FC<{
                 disabled={!canNavigate}
                 aria-label="Next search result"
                 title="Next match (Enter)"
-                className="flex h-7 w-6 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text disabled:opacity-35"
+                className="flex h-7 w-6 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text disabled:opacity-35 rounded-sm"
             >
                 <ChevronRight className="h-3 w-3" />
             </button>

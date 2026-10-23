@@ -15,13 +15,13 @@ export function AcpAgentPromptSection({
         rows={3}
         value={prompt}
         onChange={(event) => setPrompt(event.target.value)}
-        className="w-full resize-y border border-surface1 bg-base px-2.5 py-2 text-xs outline-none focus:border-surface2"
+        className="w-full resize-y border border-surface1 bg-base px-2.5 py-2 text-xs outline-none focus:border-surface2 rounded-sm"
       />
       <button
         type="button"
         disabled={isSendingPrompt || !prompt.trim() || !isTauri()}
         onClick={() => void sendPrompt()}
-        className="border border-surface2 px-3 py-1.5 text-xs disabled:opacity-50"
+        className="border border-surface2 px-3 py-1.5 text-xs disabled:opacity-50 rounded-sm"
       >
         {isSendingPrompt ? 'Waiting for agent…' : 'Send prompt'}
       </button>

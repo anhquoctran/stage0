@@ -25,7 +25,7 @@ export function ReviewConfigurationSection({
   cancel,
 }: ReviewConfigurationSectionProps) {
   return (
-    <div className="border border-surface1 bg-base p-3 space-y-2 text-xs">
+    <div className="border border-surface1 bg-base p-3 space-y-2 text-xs rounded-sm">
       {session && (
         <CustomSelect
           value={effectiveReviewerId}
@@ -128,7 +128,7 @@ export function ReviewConfigurationSection({
       )}
       <button
         type="button"
-        className="text-primary underline"
+        className="text-primary underline rounded-sm"
         onClick={() => {
           close();
           usePreferencesStore.getState().openPreferences('ai-providers');
@@ -173,7 +173,7 @@ export function ReviewConfigurationSection({
                 : undefined
             )
           }
-          className="bg-primary text-on-accent px-3 py-2 font-semibold disabled:opacity-40"
+          className="bg-primary text-on-accent px-3 py-2 font-semibold disabled:opacity-40 rounded-sm"
         >
           {isStarting
             ? 'Capturing snapshot…'
@@ -185,13 +185,13 @@ export function ReviewConfigurationSection({
           <button
             type="button"
             onClick={() => void cancel()}
-            className="border border-surface1 px-3 py-2"
+            className="border border-surface1 px-3 py-2 rounded-sm"
           >
             Cancel review
           </button>
         )}
         {running && (
-          <button type="button" onClick={close} className="border border-surface1 px-3 py-2">
+          <button type="button" onClick={close} className="border border-surface1 px-3 py-2 rounded-sm">
             Run in background
           </button>
         )}

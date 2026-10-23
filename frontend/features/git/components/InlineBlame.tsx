@@ -116,7 +116,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
         e.stopPropagation();
         setIsCardOpen(!isCardOpen);
       }}
-      className="inline-blame-badge relative ml-8 inline-flex items-center gap-1.5 px-1.5 py-0.5  text-[11px] font-mono text-subtext0/45 hover:text-subtext1 select-none cursor-pointer transition-colors duration-150 align-baseline group/blame"
+      className="inline-blame-badge relative ml-8 inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[11px] font-mono text-subtext0/45 hover:text-subtext1 select-none cursor-pointer transition-colors duration-150 align-baseline group/blame"
       title="Click or hover to inspect commit details"
     >
       <GitCommit className="w-3 h-3 text-subtext0/35 group-hover/blame:text-subtext1 shrink-0 transition-colors" />
@@ -145,7 +145,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
         <div
           ref={cardRef}
           onClick={(e) => e.stopPropagation()}
-          className="absolute left-0 top-full mt-1.5 w-84 bg-mantle border border-surface1 shadow-2xl  p-3 z-50 text-left text-xs font-sans text-text select-text animate-in fade-in zoom-in-95 duration-100"
+          className="absolute left-0 top-full mt-1.5 w-84 bg-mantle border border-surface1 shadow-2xl rounded-sm p-3 z-50 text-left text-xs font-sans text-text select-text animate-in fade-in zoom-in-95 duration-100"
         >
           {/* Header: Commit SHA & Web Link */}
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-surface0 text-[11px]">
@@ -158,7 +158,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
                 <button
                   type="button"
                   onClick={handleCopySha}
-                  className="p-1 hover:bg-surface0  text-subtext0 hover:text-text transition-colors cursor-pointer"
+                  className="p-1 hover:bg-surface0 rounded-sm text-subtext0 hover:text-text transition-colors cursor-pointer"
                   title="Copy full commit SHA"
                 >
                   {copiedSha ? (
@@ -176,7 +176,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
                   href={remoteCommitUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 px-1.5 py-0.5  hover:bg-surface0 text-[10px] text-subtext0 hover:text-text transition-colors"
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm hover:bg-surface0 text-[10px] text-subtext0 hover:text-text transition-colors"
                   title="Open commit in web browser"
                 >
                   <span>Remote</span>
@@ -192,7 +192,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
           {/* Author Details */}
           <div className="space-y-1 mb-2.5">
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5  bg-surface0 border border-surface1 flex items-center justify-center text-[10px] font-bold text-text shrink-0 uppercase">
+              <div className="w-5 h-5 rounded-sm bg-surface0 border border-surface1 flex items-center justify-center text-[10px] font-bold text-text shrink-0 uppercase">
                 {commit.author ? commit.author.charAt(0) : 'U'}
               </div>
               <div className="min-w-0 flex-1">
@@ -220,7 +220,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
           </div>
 
           {/* Commit Message Box */}
-          <div className="bg-surface0/60 border border-surface0  p-2 text-xs font-mono text-text whitespace-pre-wrap break-words max-h-32 overflow-y-auto mb-2.5 select-text">
+          <div className="bg-surface0/60 border border-surface0 rounded-sm p-2 text-xs font-mono text-text whitespace-pre-wrap break-words max-h-32 overflow-y-auto mb-2.5 select-text">
             {commit.summary || (isUncommitted ? 'Uncommitted changes in working copy' : 'No commit message')}
           </div>
 
@@ -229,7 +229,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
             <button
               type="button"
               onClick={handleCopyMsg}
-              className="flex items-center gap-1 px-2 py-1  hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2 py-1 rounded-sm hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
             >
               {copiedMsg ? <Check className="w-3 h-3 text-green" /> : <Copy className="w-3 h-3" />}
               <span>Copy Message</span>
@@ -243,7 +243,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
                   setIsCardOpen(false);
                   onOpenFullBlame();
                 }}
-                className="flex items-center gap-1 px-2 py-1  bg-surface0 hover:bg-surface1 text-text transition-colors cursor-pointer font-medium"
+                className="flex items-center gap-1 px-2 py-1 rounded-sm bg-surface0 hover:bg-surface1 text-text transition-colors cursor-pointer font-medium"
                 title="Open full file blame table"
               >
                 <History className="w-3 h-3 text-subtext0" />

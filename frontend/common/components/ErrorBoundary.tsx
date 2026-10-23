@@ -32,8 +32,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.state.hasError) {
       return (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#11111b] text-[#cdd6f4] p-6 select-none font-sans">
-          <div className="w-full max-w-lg bg-[#181825] border border-red-500/40  p-6 shadow-2xl flex flex-col items-center text-center">
-            <div className="w-14 h-14  bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 mb-4">
+          <div className="w-full max-w-lg bg-[#181825] border border-red-500/40 rounded-sm p-6 shadow-2xl flex flex-col items-center text-center">
+            <div className="w-14 h-14 rounded-sm bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 mb-4">
               <AlertTriangle className="w-7 h-7" />
             </div>
 
@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </p>
 
             {this.state.error && (
-              <div className="w-full bg-[#11111b] border border-[#313244]  p-3 mb-4 text-left overflow-auto max-h-48 font-mono text-[11px] text-red-300">
+              <div className="w-full bg-[#11111b] border border-[#313244] rounded-sm p-3 mb-4 text-left overflow-auto max-h-48 font-mono text-[11px] text-red-300">
                 <div className="font-bold mb-1">{this.state.error.name}: {this.state.error.message}</div>
                 {this.state.error.stack && (
                   <pre className="text-[10px] text-[#a6adc8] whitespace-pre-wrap">{this.state.error.stack}</pre>
@@ -57,14 +57,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="px-4 py-2  bg-[#313244] hover:bg-[#45475a] text-xs font-medium text-[#cdd6f4] transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-sm bg-[#313244] hover:bg-[#45475a] text-xs font-medium text-[#cdd6f4] transition-colors cursor-pointer"
               >
                 Try Again
               </button>
               <button
                 type="button"
                 onClick={this.handleReload}
-                className="px-4 py-2  bg-brand hover:bg-brand/90 text-xs font-semibold text-on-accent flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-brand/20"
+                className="px-4 py-2 rounded-sm bg-brand hover:bg-brand/90 text-xs font-semibold text-on-accent flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-brand/20"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Reload Application

@@ -18,7 +18,7 @@ export function RepositoryBotInheritanceCards({
       {/* Option 1: Inherit Global (Default) */}
       <div
         onClick={() => setInheritAgents(true)}
-        className={`p-3.5 border cursor-pointer transition-all flex flex-col justify-between ${
+        className={`p-3.5 border cursor-pointer transition-all flex flex-col justify-between rounded-sm ${
           inheritAgents
             ? 'bg-brand/5 border-brand/60 shadow-xs'
             : 'bg-crust border-surface0 hover:border-surface1 opacity-80'
@@ -57,7 +57,7 @@ export function RepositoryBotInheritanceCards({
               onClose();
               setIsPreferencesOpen(true);
             }}
-            className="text-[11px] text-subtext0 hover:text-text flex items-center gap-1 cursor-pointer hover:underline"
+            className="text-[11px] text-subtext0 hover:text-text flex items-center gap-1 cursor-pointer hover:underline rounded-sm"
             title="Open App Preferences modal"
           >
             <span>Open Preferences</span>
@@ -69,7 +69,7 @@ export function RepositoryBotInheritanceCards({
       {/* Option 2: Custom for this Repo */}
       <div
         onClick={() => setInheritAgents(false)}
-        className={`p-3.5 border cursor-pointer transition-all flex flex-col justify-between ${
+        className={`p-3.5 border cursor-pointer transition-all flex flex-col justify-between rounded-sm ${
           !inheritAgents
             ? 'bg-accent/5 border-accent/60 shadow-xs'
             : 'bg-crust border-surface0 hover:border-surface1 opacity-80'
@@ -109,7 +109,7 @@ export function RepositoryBotInheritanceCards({
                 resetRepoToGlobal(currentRepoId);
                 showToast('Reset bot selections to global defaults');
               }}
-              className="text-[11px] text-subtext0 hover:text-text flex items-center gap-1 cursor-pointer"
+              className="text-[11px] text-subtext0 hover:text-text flex items-center gap-1 cursor-pointer rounded-sm"
               title="Reset to global active selection"
             >
               <RotateCcw className="w-3 h-3" />

@@ -20,7 +20,7 @@ export function SandboxInstanceCard({
           setSelectedInstanceId(inst.id);
         }
       }}
-      className={`flex items-center justify-between p-2.5  border text-xs transition-colors cursor-pointer ${
+      className={`flex items-center justify-between p-2.5 rounded-sm border text-xs transition-colors cursor-pointer ${
         selectedInstanceId === inst.id ||
         (activeSandboxInstances.length === 1 && !selectedInstanceId)
           ? 'bg-surface1 border-surface2'
@@ -30,7 +30,7 @@ export function SandboxInstanceCard({
       <div className="font-mono space-y-0.5 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-text">{inst.id}</span>
-          <span className="text-[10px] px-1.5 py-0.2  bg-surface0 text-subtext0 uppercase">
+          <span className="text-[10px] px-1.5 py-0.2 rounded-sm bg-surface0 text-subtext0 uppercase">
             {inst.adapter_type}
           </span>
         </div>
@@ -45,7 +45,7 @@ export function SandboxInstanceCard({
           e.stopPropagation();
           destroySandboxInstance(inst.id);
         }}
-        className="p-1  text-subtext0 hover:text-text hover:bg-surface2 transition-colors cursor-pointer"
+        className="p-1 rounded-sm text-subtext0 hover:text-text hover:bg-surface2 transition-colors cursor-pointer"
         title="Destroy this sandbox instance"
       >
         <Trash2 className="w-3.5 h-3.5" />

@@ -64,7 +64,7 @@ export const NotificationsTab: React.FC = () => {
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-5  border border-surface1/70 bg-mantle p-3.5 shadow-xs">
+      <div className="flex items-center justify-between gap-5 rounded-sm border border-surface1/70 bg-mantle p-3.5 shadow-xs">
         <div className="min-w-0">
           <h4 className="text-xs font-semibold text-text">Preview the notification toast</h4>
           <p className="mt-1 text-[11px] leading-relaxed text-subtext0">
@@ -81,7 +81,7 @@ export const NotificationsTab: React.FC = () => {
           onClick={() => void handleTestNotification()}
           disabled={!canTestNotifications || isTesting}
           title={canTestNotifications ? 'Show a test notification without saving it' : 'Available in the desktop app'}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5  border border-brand bg-brand px-3 text-xs font-semibold text-on-accent shadow-xs transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-sm border border-brand bg-brand px-3 text-xs font-semibold text-on-accent shadow-xs transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Sparkles className={`h-3.5 w-3.5 ${isTesting ? 'animate-pulse' : ''}`} />
           {isTesting ? 'Sending…' : 'Test Toast'}
@@ -92,7 +92,7 @@ export const NotificationsTab: React.FC = () => {
         {categories.map(({ key, title, description, icon: Icon }) => (
           <div
             key={key}
-            className="flex items-center justify-between gap-6 border-b border-surface0/40 py-3"
+            className="flex items-center justify-between gap-6 border-b border-surface0/40 py-3 rounded-sm"
           >
             <div className="min-w-0 flex-1 pr-2">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-text">

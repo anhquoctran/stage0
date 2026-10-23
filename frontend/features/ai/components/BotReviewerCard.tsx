@@ -32,7 +32,7 @@ export const BotReviewerCard: React.FC<{
 
   return (
     <div
-      className={`p-4 bg-surface0/30 border transition-all ${
+      className={`p-4 bg-surface0/30 border transition-all rounded-sm ${
         bot.enabled
           ? 'border-surface0 hover:border-surface1'
           : 'border-surface0/50 opacity-65 bg-surface0/10'
@@ -95,7 +95,7 @@ export const BotReviewerCard: React.FC<{
           <button
             type="button"
             onClick={onTogglePrompt}
-            className="flex items-center gap-1 hover:text-text cursor-pointer font-medium text-brand"
+            className="flex items-center gap-1 hover:text-text cursor-pointer font-medium text-brand rounded-sm"
           >
             {isPromptExpanded ? (
               <>
@@ -143,7 +143,7 @@ export const BotReviewerCard: React.FC<{
           <button
             type="button"
             onClick={() => onCloneBot(bot)}
-            className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+            className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
             title="Clone this reviewer bot"
           >
             <Copy className="w-3.5 h-3.5" />
@@ -151,7 +151,7 @@ export const BotReviewerCard: React.FC<{
           <button
             type="button"
             onClick={() => onOpenEdit(bot)}
-            className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+            className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
             title="Edit bot settings and prompt"
           >
             <Edit2 className="w-3.5 h-3.5" />
@@ -160,7 +160,7 @@ export const BotReviewerCard: React.FC<{
             <button
               type="button"
               onClick={() => onDeleteBot(bot.id)}
-              className="p-1.5 hover:bg-red/20 text-subtext0 hover:text-red transition-colors cursor-pointer"
+              className="p-1.5 hover:bg-red/20 text-subtext0 hover:text-red transition-colors cursor-pointer rounded-sm"
               title="Delete custom bot"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -171,7 +171,7 @@ export const BotReviewerCard: React.FC<{
 
       {/* Expanded Prompt Viewer */}
       {isPromptExpanded && (
-        <div className="mt-3 p-3 bg-crust border border-surface0/80 space-y-1.5 animate-in fade-in duration-150">
+        <div className="mt-3 p-3 bg-crust border border-surface0/80 space-y-1.5 animate-in fade-in duration-150 rounded-sm">
           <div className="flex items-center justify-between text-[11px] text-subtext0 font-mono">
             <span>STAGE0 ROLE PROMPT · {getCategoryInfo(bot.category).label.toUpperCase()}</span>
             <span>{getBotRolePrompt(bot.category).length} characters</span>

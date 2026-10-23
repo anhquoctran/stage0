@@ -167,9 +167,9 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
           inline={inline}
         />
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-surface0 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-surface0 px-5 py-3 rounded-sm">
           <div
-            className="flex items-center gap-1 border border-surface1 bg-crust p-0.5"
+            className="flex items-center gap-1 border border-surface1 bg-crust p-0.5 rounded-sm"
             role="tablist"
             aria-label="Filter merge requests"
           >
@@ -181,7 +181,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                 role="tab"
                 aria-selected={activeFilter === filter.id}
                 onClick={() => setActiveFilter(filter.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors cursor-pointer rounded-sm ${
                   activeFilter === filter.id
                     ? 'bg-surface2 text-text font-semibold'
                     : 'text-subtext1 hover:bg-surface0 hover:text-text'
@@ -270,7 +270,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                     setIsMrListOpen(false);
                     void openNewMrDraft();
                   }}
-                  className="mt-4 border border-brand bg-brand px-3 py-1.5 text-xs font-semibold text-on-accent hover:bg-brand/90 cursor-pointer"
+                  className="mt-4 border border-brand bg-brand px-3 py-1.5 text-xs font-semibold text-on-accent hover:bg-brand/90 cursor-pointer rounded-sm"
                 >
                   Create Virtual MR
                 </button>

@@ -21,7 +21,7 @@ export const StatusBarCompareStatus: React.FC<{
   if (diffError) {
     return (
       <div
-        className="h-5.5 px-2 bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs"
+        className="h-5.5 px-2 bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs rounded-sm"
         title={diffError}
       >
         <AlertTriangle className="w-3 h-3 text-red shrink-0" />
@@ -33,7 +33,7 @@ export const StatusBarCompareStatus: React.FC<{
   if (isDiffLoading) {
     return (
       <div
-        className="h-5.5 px-2 bg-surface0/60 border border-surface1/60 text-subtext0 flex items-center gap-1.5 font-medium shadow-xs"
+        className="h-5.5 px-2 bg-surface0/60 border border-surface1/60 text-subtext0 flex items-center gap-1.5 font-medium shadow-xs rounded-sm"
         title="Comparing branches"
       >
         <Loader2 className="w-3 h-3 animate-spin text-blue shrink-0" />
@@ -45,7 +45,7 @@ export const StatusBarCompareStatus: React.FC<{
   if (conflictCheckError) {
     return (
       <div
-        className="h-5.5 px-2 bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1.5 font-medium shadow-xs"
+        className="h-5.5 px-2 bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1.5 font-medium shadow-xs rounded-sm"
         title={conflictCheckError}
       >
         <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
@@ -57,7 +57,7 @@ export const StatusBarCompareStatus: React.FC<{
   if (diffPayload && diffPayload.files.length === 0) {
     return (
       <div
-        className="h-5.5 px-2 bg-surface0/50 border border-surface1/50 text-subtext1 flex items-center gap-1.5 font-medium shadow-xs"
+        className="h-5.5 px-2 bg-surface0/50 border border-surface1/50 text-subtext1 flex items-center gap-1.5 font-medium shadow-xs rounded-sm"
         title="No Changes"
       >
         <Info className="w-3 h-3 text-subtext0 shrink-0" />
@@ -69,7 +69,7 @@ export const StatusBarCompareStatus: React.FC<{
   if (conflictReport?.has_conflicts) {
     return (
       <div
-        className="h-5.5 px-2 bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs"
+        className="h-5.5 px-2 bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs rounded-sm"
         title="Conflicts Detected"
       >
         <AlertTriangle className="w-3 h-3 text-red shrink-0" />
@@ -81,7 +81,7 @@ export const StatusBarCompareStatus: React.FC<{
   if (conflictReport) {
     return (
       <div
-        className="h-5.5 px-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5 font-medium shadow-xs"
+        className="h-5.5 px-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5 font-medium shadow-xs rounded-sm"
         title="Clean Merge"
       >
         <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />

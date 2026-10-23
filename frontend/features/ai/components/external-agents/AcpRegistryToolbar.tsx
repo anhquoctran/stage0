@@ -15,7 +15,7 @@ export function AcpRegistryToolbar({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search ACP Registry…"
-          className="w-full bg-transparent text-xs text-text outline-none placeholder:text-subtext0"
+          className="w-full bg-transparent text-xs text-text outline-none placeholder:text-subtext0 rounded-sm"
         />
       </label>
       <div className="flex border border-surface1 text-xs">
@@ -30,7 +30,7 @@ export function AcpRegistryToolbar({
             key={id}
             type="button"
             onClick={() => setFilter(id)}
-            className={`border-r border-surface1 px-3 py-1.5 last:border-r-0 ${filter === id ? 'bg-surface1 text-text' : 'text-subtext0 hover:text-text'}`}
+            className={`border-r border-surface1 px-3 py-1.5 last:border-r-0 rounded-sm ${filter === id ? 'bg-surface1 text-text' : 'text-subtext0 hover:text-text'}`}
           >
             {label}
           </button>

@@ -75,7 +75,7 @@ export const MainLayout: React.FC = () => {
 
       {/* Global Error Banner */}
       {error && (
-        <div className="bg-red/15 border-b border-red/30 px-4 py-2 flex items-center justify-between text-text text-xs shrink-0 z-10">
+        <div className="bg-red/15 border-b border-red/30 px-4 py-2 flex items-center justify-between text-text text-xs shrink-0 z-10 rounded-sm">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-red shrink-0" />
             <span className="font-mono text-red font-medium">{error}</span>
@@ -83,7 +83,7 @@ export const MainLayout: React.FC = () => {
           <button
             type="button"
             onClick={clearError}
-            className="p-1 hover:bg-red/20  text-red hover:text-text transition-colors cursor-pointer"
+            className="p-1 hover:bg-red/20 rounded-sm text-red hover:text-text transition-colors cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -117,7 +117,7 @@ export const MainLayout: React.FC = () => {
                 }`}
               >
                 <div
-                  className={`w-0.5 h-7  transition-colors ${
+                  className={`w-0.5 h-7 rounded-sm transition-colors ${
                     isResizing ? 'bg-crust' : 'bg-surface2 group-hover:bg-blue'
                   }`}
                 />
@@ -165,7 +165,7 @@ export const MainLayout: React.FC = () => {
       {toastMessage && (
         <div
           role={toastLevel === 'error' ? 'alert' : 'status'}
-          className="fixed bottom-10 right-6 z-50 bg-mantle border border-surface1 text-text text-xs px-3.5 py-2 shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150"
+          className="fixed bottom-10 right-6 z-50 bg-mantle border border-surface1 text-text text-xs px-3.5 py-2 shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150 rounded-sm"
         >
           {toastLevel === 'error' || toastLevel === 'warning' ? (
             <AlertCircle

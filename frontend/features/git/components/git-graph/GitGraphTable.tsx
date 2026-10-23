@@ -50,7 +50,7 @@ export const GitGraphTable: React.FC<{
                     Loading commit graph…
                 </div>
             ) : error ? (
-                <div className="m-4 border border-red bg-red px-4 py-3 text-xs text-white">
+                <div className="m-4 border border-red bg-red px-4 py-3 text-xs text-white rounded-sm">
                     Could not load the Git graph: {error}
                 </div>
             ) : hasSearchFilter && displayedCommitIndexes.length === 0 ? (

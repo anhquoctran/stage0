@@ -33,9 +33,9 @@ export const DiffConflictNotificationBar: React.FC<{
   const detail = conflictReport?.details?.find((d) => d.path === selectedFile.path);
 
   return (
-    <div className="bg-red/10 border-b border-red/30 px-3.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-text select-none shrink-0">
+    <div className="bg-red/10 border-b border-red/30 px-3.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-text select-none shrink-0 rounded-sm">
       <div className="flex items-center gap-2.5 min-w-0">
-        <div className="p-1 bg-red/20 text-red border border-red/30 shrink-0">
+        <div className="p-1 bg-red/20 text-red border border-red/30 shrink-0 rounded-sm">
           <AlertTriangle className="w-4 h-4" />
         </div>
         <div className="min-w-0">
@@ -67,7 +67,7 @@ export const DiffConflictNotificationBar: React.FC<{
             <button
               type="button"
               onClick={onSwitchToConflicts}
-              className="flex items-center gap-1.5 px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold transition-colors cursor-pointer text-xs shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold transition-colors cursor-pointer text-xs shadow-xs rounded-sm"
               title="Inspect 3-way collision blocks side-by-side"
             >
               <GitMerge className="w-3.5 h-3.5 text-white" />
@@ -79,7 +79,7 @@ export const DiffConflictNotificationBar: React.FC<{
             <button
               type="button"
               onClick={onScrollToFirstConflict}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-semibold transition-colors cursor-pointer text-xs shadow-xs"
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-semibold transition-colors cursor-pointer text-xs shadow-xs rounded-sm"
               title="Scroll directly to conflict marker or first conflict change in this file"
             >
               <ArrowDown className="w-3.5 h-3.5 text-white" />
@@ -99,7 +99,7 @@ export const DiffConflictNotificationBar: React.FC<{
                 onShowToast(`Failed to open in VS Code: ${err}`);
               }
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs"
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs rounded-sm"
             title="Open this file directly in Visual Studio Code to resolve conflict"
           >
             <Code2 className="w-3.5 h-3.5 text-white" />
@@ -110,7 +110,7 @@ export const DiffConflictNotificationBar: React.FC<{
         <button
           type="button"
           onClick={onRefreshDiff}
-          className="flex items-center gap-1.5 px-2 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs"
+          className="flex items-center gap-1.5 px-2 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs rounded-sm"
           title={formatShortcutText('Re-check diff after resolving conflict in external tool (Ctrl+R)')}
         >
           <RotateCw className="w-3 h-3 text-white" />

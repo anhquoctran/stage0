@@ -50,7 +50,7 @@ export const MenuBarRepositoryMenu: React.FC<{
         disabled={!currentRepo}
         onClick={onToggle}
         onMouseEnter={() => currentRepo && onHover()}
-        className={`px-2.5 py-1 text-xs font-normal transition-colors ${
+        className={`px-2.5 py-1 text-xs font-normal transition-colors rounded-sm ${
           !currentRepo
             ? 'text-subtext0/50 cursor-not-allowed'
             : isOpen
@@ -62,7 +62,7 @@ export const MenuBarRepositoryMenu: React.FC<{
       </button>
 
       {currentRepo && isOpen && (
-        <div className="absolute left-0 top-full mt-0.5 w-68 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+        <div className="absolute left-0 top-full mt-0.5 w-68 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs rounded-sm">
           {/* New Virtual MR */}
           <button
             type="button"
@@ -72,7 +72,7 @@ export const MenuBarRepositoryMenu: React.FC<{
               openNewMrDraft();
             }}
             onMouseEnter={() => setActiveSubmenu(null)}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <GitPullRequest className="w-3.5 h-3.5 text-brand group-hover:text-brand transition-colors" />
@@ -123,7 +123,7 @@ export const MenuBarRepositoryMenu: React.FC<{
               swapBranches();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <ArrowLeftRight className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -138,7 +138,7 @@ export const MenuBarRepositoryMenu: React.FC<{
               refreshDiff();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <GitCompare className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -169,7 +169,7 @@ export const MenuBarRepositoryMenu: React.FC<{
               onClose();
               openRepoSettings('remotes');
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <FolderCog className="w-3.5 h-3.5 text-accent group-hover:text-text transition-colors" />

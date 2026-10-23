@@ -9,7 +9,7 @@ export const SettingRow: React.FC<SettingRowProps> = ({
 }) => {
   return (
     <div
-      className={`py-3 flex items-center justify-between gap-6 ${borderBottom ? 'border-b border-surface0/40' : ''
+      className={`py-3 flex items-center justify-between gap-6 rounded-sm ${borderBottom ? 'border-b border-surface0/40' : ''
         }`}
     >
       <div className="min-w-0 flex-1 pr-2">

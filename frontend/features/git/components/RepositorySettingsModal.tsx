@@ -65,13 +65,13 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
       onClick={onClose}
     >
       <div
-        className="w-full max-w-4xl bg-base border border-surface0 shadow-2xl flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-4xl bg-base border border-surface0 shadow-2xl flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150 rounded-sm"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="px-6 py-4 border-b border-surface0 flex items-center justify-between bg-crust">
+        <div className="px-6 py-4 border-b border-surface0 flex items-center justify-between bg-crust rounded-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-surface0 text-text">
+            <div className="p-2 bg-surface0 text-text rounded-sm">
               <FolderCog className="w-5 h-5 text-brand" />
             </div>
             <div>
@@ -91,7 +91,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
+            className="p-1.5 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />
@@ -101,12 +101,12 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
         {/* BODY (SIDEBAR + CONTENT) */}
         <div className="flex-1 flex overflow-hidden min-h-[480px]">
           {/* TABS SIDEBAR */}
-          <div className="w-52 border-r border-surface0 bg-crust p-3 flex flex-col justify-between shrink-0">
+          <div className="w-52 border-r border-surface0 bg-crust p-3 flex flex-col justify-between shrink-0 rounded-sm">
             <div className="space-y-1">
               <button
                 type="button"
                 onClick={() => setActiveTab('remotes')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
                   activeTab === 'remotes'
                     ? 'bg-surface0 text-text font-medium border-l-2 border-brand'
                     : 'text-subtext0 hover:bg-surface0/50 hover:text-text'
@@ -124,7 +124,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               <button
                 type="button"
                 onClick={() => setActiveTab('branches')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
                   activeTab === 'branches'
                     ? 'bg-surface0 text-text font-medium border-l-2 border-brand'
                     : 'text-subtext0 hover:bg-surface0/50 hover:text-text'
@@ -142,7 +142,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               <button
                 type="button"
                 onClick={() => setActiveTab('labels')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
                   activeTab === 'labels'
                     ? 'bg-surface0 text-text font-medium border-l-2 border-brand'
                     : 'text-subtext0 hover:bg-surface0/50 hover:text-text'
@@ -160,7 +160,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               <button
                 type="button"
                 onClick={() => setActiveTab('agents')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
                   activeTab === 'agents'
                     ? 'bg-surface0 text-text font-medium border-l-2 border-brand'
                     : 'text-subtext0 hover:bg-surface0/50 hover:text-text'
@@ -178,7 +178,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
           </div>
 
           {/* CONTENT AREA */}
-          <div className="flex-1 p-6 overflow-y-auto bg-mantle">
+          <div className="flex-1 p-6 overflow-y-auto bg-mantle rounded-sm">
             {activeTab === 'remotes' && <RepositoryRemotesTab />}
             {activeTab === 'branches' && (
               <RepositoryBranchesTab
@@ -200,19 +200,19 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
         </div>
 
         {/* FOOTER */}
-        <div className="px-6 py-3.5 border-t border-surface0 flex items-center justify-end bg-base/60">
+        <div className="px-6 py-3.5 border-t border-surface0 flex items-center justify-end bg-base/60 rounded-sm">
           <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs transition-colors cursor-pointer border border-surface1"
+              className="px-4 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs transition-colors cursor-pointer border border-surface1 rounded-sm"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveSettings}
-              className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand"
+              className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand rounded-sm"
             >
               Save Settings
             </button>

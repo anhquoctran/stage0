@@ -103,7 +103,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
         <button
           type="button"
           onClick={() => fetchAvailableSandboxes()}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs  border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-sm border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
           title="Refresh engine availability"
         >
           <RotateCw className="w-3 h-3" />
@@ -113,7 +113,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
 
       {/* Transaction Notice (if uncommitted) */}
       {isPendingCommit && (
-        <div className="px-3 py-2 bg-surface0/50 border border-surface1  text-xs flex items-center justify-between text-subtext1">
+        <div className="px-3 py-2 bg-surface0/50 border border-surface1 rounded-sm text-xs flex items-center justify-between text-subtext1">
           <span>
             Pending change: switch to{' '}
             <strong className="text-text font-mono">{getAdapterName(draftSandboxType)}</strong>.
@@ -132,7 +132,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
       />
 
       {/* Engine Technical Specifications */}
-      <div className="p-3.5 bg-surface0/20 border border-surface0  text-xs space-y-2">
+      <div className="p-3.5 bg-surface0/20 border border-surface0 rounded-sm text-xs space-y-2">
         <div className="text-[10px] font-bold text-subtext0 uppercase tracking-wider">
           Technical Specifications
         </div>
@@ -170,7 +170,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
 
       {/* Active Instances & Command Execution Section */}
       {committedSandboxType !== 'in_memory' && (
-        <div className="p-3.5 bg-surface0/20 border border-surface0  space-y-3">
+        <div className="p-3.5 bg-surface0/20 border border-surface0 rounded-sm space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs font-semibold text-text block">
@@ -185,14 +185,14 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
               type="button"
               onClick={handleCreateInstance}
               disabled={isSandboxLoading}
-              className="px-2.5 py-1  bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 transition-colors cursor-pointer disabled:opacity-50 font-medium"
+              className="px-2.5 py-1 rounded-sm bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 transition-colors cursor-pointer disabled:opacity-50 font-medium"
             >
               + Provision Instance
             </button>
           </div>
 
           {activeSandboxInstances.length === 0 ? (
-            <div className="p-3 border border-dashed border-surface1  text-center text-xs text-subtext0">
+            <div className="p-3 border border-dashed border-surface1 rounded-sm text-center text-xs text-subtext0">
               No active sandbox instances provisioned.
             </div>
           ) : (
@@ -227,21 +227,21 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                   value={testCmd}
                   onChange={(e) => setTestCmd(e.target.value)}
                   placeholder="e.g. npm test or cargo test"
-                  className="flex-1 bg-base border border-surface1  px-3 py-1.5 text-xs font-mono text-text focus:outline-none focus:border-surface2"
+                  className="flex-1 bg-base border border-surface1 rounded-sm px-3 py-1.5 text-xs font-mono text-text focus:outline-none focus:border-surface2"
                 />
 
                 <button
                   type="button"
                   onClick={handleRunCommand}
                   disabled={cmdRunning}
-                  className="px-3 py-1.5  bg-surface1 hover:bg-surface2 text-text text-xs font-medium border border-surface2 transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-sm bg-surface1 hover:bg-surface2 text-text text-xs font-medium border border-surface2 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {cmdRunning ? 'Running...' : 'Run'}
                 </button>
               </div>
 
               {cmdOutput && (
-                <div className="mt-2 bg-crust border border-surface0  p-3 text-xs font-mono space-y-1.5">
+                <div className="mt-2 bg-crust border border-surface0 rounded-sm p-3 text-xs font-mono space-y-1.5">
                   <div className="flex items-center justify-between text-[10px] text-subtext0 border-b border-surface0/60 pb-1">
                     <span>Exit code: {cmdOutput.exitCode}</span>
                     <span>{cmdOutput.durationMs}ms</span>

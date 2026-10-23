@@ -25,7 +25,7 @@ export const PreferencesNavTree: React.FC<{
   return (
     <div className="w-60 border-r border-surface0/60 flex flex-col bg-mantle/50 shrink-0">
       {/* Search Input Box */}
-      <div className="p-3 border-b border-surface0/60">
+      <div className="p-3 border-b border-surface0/60 rounded-sm">
         <div className="relative flex items-center">
           <Search className="w-3.5 h-3.5 text-subtext0 absolute left-2.5 pointer-events-none" />
           <input
@@ -39,7 +39,7 @@ export const PreferencesNavTree: React.FC<{
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-2 text-subtext0 hover:text-text cursor-pointer p-0.5"
+              className="absolute right-2 text-subtext0 hover:text-text cursor-pointer p-0.5 rounded-sm"
             >
               <X className="w-3 h-3" />
             </button>
@@ -69,7 +69,7 @@ export const PreferencesNavTree: React.FC<{
                       setActiveTab(group.children[0].id);
                     }
                   }}
-                  className={`w-full flex items-center justify-between px-2 py-1.5 text-xs transition-colors cursor-pointer select-none text-left group ${
+                  className={`w-full flex items-center justify-between px-2 py-1.5 text-xs transition-colors cursor-pointer select-none text-left group rounded-sm ${
                     hasActiveChild ? 'text-text font-semibold' : 'text-subtext1 hover:text-text hover:bg-surface0/30'
                   }`}
                 >
@@ -93,7 +93,7 @@ export const PreferencesNavTree: React.FC<{
                           key={child.id}
                           type="button"
                           onClick={() => setActiveTab(child.id)}
-                          className={`w-full flex items-center justify-between pl-5 pr-2 py-1.5 text-xs transition-colors cursor-pointer text-left ${
+                          className={`w-full flex items-center justify-between pl-5 pr-2 py-1.5 text-xs transition-colors cursor-pointer text-left rounded-sm ${
                             isActive
                               ? 'bg-surface0/90 text-text font-medium shadow-xs'
                               : 'text-subtext0 hover:text-text hover:bg-surface0/50'

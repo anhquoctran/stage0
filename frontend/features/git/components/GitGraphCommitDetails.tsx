@@ -24,7 +24,7 @@ export const GitGraphCommitDetails: React.FC<{
         <aside className="flex w-[min(36%,440px)] min-w-[300px] shrink-0 flex-col border-l border-surface0 bg-base/40">
             {selectedCommit ? (
                 <>
-                    <div className="shrink-0 border-b border-surface0 px-4 py-3">
+                    <div className="shrink-0 border-b border-surface0 px-4 py-3 rounded-sm">
                         <div className="flex items-center justify-between gap-2">
                             <h3 className="text-[11px] font-bold uppercase tracking-wider text-subtext0">
                                 Commit details
@@ -97,7 +97,7 @@ export const GitGraphCommitDetails: React.FC<{
                                         onClick={() => void handleCopyCommitHash(selectedCommit.hash)}
                                         aria-label="Copy commit hash"
                                         title="Copy commit hash"
-                                        className="flex h-6 w-6 shrink-0 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand cursor-pointer"
+                                        className="flex h-6 w-6 shrink-0 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand cursor-pointer rounded-sm"
                                     >
                                         <Copy className="h-3.5 w-3.5" />
                                     </button>

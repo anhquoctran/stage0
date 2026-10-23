@@ -33,7 +33,7 @@ export function VirtualMrListHeader({
             setIsMrListOpen(false);
             void openNewMrDraft();
           }}
-          className="flex items-center gap-1.5 bg-primary px-2.5 py-1.5 text-xs font-semibold text-on-accent hover:bg-primary/90 cursor-pointer"
+          className="flex items-center gap-1.5 bg-primary px-2.5 py-1.5 text-xs font-semibold text-on-accent hover:bg-primary/90 cursor-pointer rounded-sm"
         >
           <Plus className="h-3.5 w-3.5" />
           <span>Create Merge Request</span>
@@ -42,7 +42,7 @@ export function VirtualMrListHeader({
           <button
             type="button"
             onClick={() => setIsMrListOpen(false)}
-            className="shrink-0 p-1 text-subtext0 hover:bg-surface0 hover:text-text cursor-pointer"
+            className="shrink-0 p-1 text-subtext0 hover:bg-surface0 hover:text-text cursor-pointer rounded-sm"
             title="Close merge request list"
           >
             <X className="h-4 w-4" />

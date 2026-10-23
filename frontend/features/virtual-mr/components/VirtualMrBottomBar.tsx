@@ -33,13 +33,13 @@ export const VirtualMrBottomBar: React.FC = () => {
   };
 
   return (
-    <div className="min-h-14 bg-mantle/95 backdrop-blur-xs border-t border-surface0 px-3 xl:px-5 py-2 flex items-center justify-between gap-3 shrink-0 select-none z-20 shadow-md">
+    <div className="min-h-14 bg-mantle/95 backdrop-blur-xs border-t border-surface0 px-3 xl:px-5 py-2 flex items-center justify-between gap-3 shrink-0 select-none z-20 shadow-md rounded-sm">
       {/* Left: MR Status, Branch Flow & AI Auditor State */}
       <div className="flex items-center gap-4 max-xl:gap-2 min-w-0 flex-1">
         {/* Status Badge */}
         {session.status === 'resolved' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 shrink-0 shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 shrink-0 shadow-xs rounded-sm"
             title="All assigned reviewers approved and all discussions are resolved."
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -47,7 +47,7 @@ export const VirtualMrBottomBar: React.FC = () => {
           </div>
         ) : session.status === 'closed' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 shrink-0 shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 shrink-0 shadow-xs"
             title="Virtual MR is Closed"
           >
             <XCircle className="w-3.5 h-3.5 text-subtext1 shrink-0" />
@@ -55,10 +55,10 @@ export const VirtualMrBottomBar: React.FC = () => {
           </div>
         ) : (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0 shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0 shadow-xs"
             title="Virtual MR is Open"
           >
-            <span className="w-2 h-2  bg-emerald-400 animate-pulse shrink-0" />
+            <span className="w-2 h-2 rounded-sm bg-emerald-400 animate-pulse shrink-0" />
             <span>Open</span>
           </div>
         )}
@@ -76,7 +76,7 @@ export const VirtualMrBottomBar: React.FC = () => {
         </div>
 
         {/* AI Auditor Review Status Indicator */}
-        <div className="flex items-center gap-2 pl-3 max-xl:pl-2 border-l border-surface0/60 hidden md:flex" title={unresolvedCount > 0 ? `${unresolvedCount} open discussion${unresolvedCount > 1 ? 's' : ''}` : `${approvedReviewers} of ${session.reviewers.length} reviewers approved`}>
+        <div className="flex items-center gap-2 pl-3 max-xl:pl-2 border-l border-surface0/60 hidden md:flex rounded-sm" title={unresolvedCount > 0 ? `${unresolvedCount} open discussion${unresolvedCount > 1 ? 's' : ''}` : `${approvedReviewers} of ${session.reviewers.length} reviewers approved`}>
           {unresolvedCount > 0 ? (
             <div className="flex items-center gap-1.5 text-xs text-amber-300 font-medium">
               <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -98,7 +98,7 @@ export const VirtualMrBottomBar: React.FC = () => {
           <button
             type="button"
             onClick={handleReopenRequest}
-            className="flex items-center gap-2 px-3 xl:px-6 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
+            className="flex items-center gap-2 px-3 xl:px-6 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer rounded-sm"
             title={`Reopen this ${session.status === 'resolved' ? 'resolved' : 'manually closed'} Virtual MR`}
           >
             <RotateCcw className="w-4 h-4 text-white stroke-[2.5]" />
@@ -108,7 +108,7 @@ export const VirtualMrBottomBar: React.FC = () => {
           <button
             type="button"
             onClick={handleCloseRequest}
-            className="flex items-center gap-2 px-3 xl:px-6 py-2 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer"
+            className="flex items-center gap-2 px-3 xl:px-6 py-2 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer rounded-sm"
             title="Close this Virtual MR request"
           >
             <XCircle className="w-4 h-4 text-white stroke-[2.5]" />

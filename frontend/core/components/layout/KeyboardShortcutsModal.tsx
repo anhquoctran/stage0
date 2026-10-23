@@ -92,7 +92,7 @@ export const KeyboardShortcutsModal: React.FC<{
       onClick={onClose}
     >
       <div
-        className="relative bg-mantle border border-surface0 p-5 sm:p-6 max-w-5xl w-full shadow-2xl animate-in zoom-in-95 duration-150 text-text cursor-default"
+        className="relative bg-mantle border border-surface0 p-5 sm:p-6 max-w-5xl w-full shadow-2xl animate-in zoom-in-95 duration-150 text-text cursor-default rounded-sm"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -107,7 +107,7 @@ export const KeyboardShortcutsModal: React.FC<{
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
             title="Close (Esc)"
           >
             <X className="w-4 h-4" />
@@ -121,7 +121,7 @@ export const KeyboardShortcutsModal: React.FC<{
               key={category.title}
               className="flex flex-col justify-start"
             >
-              <div className="flex items-center gap-2 pb-1.5 mb-2.5 border-b border-surface0/60 text-xs font-semibold text-text">
+              <div className="flex items-center gap-2 pb-1.5 mb-2.5 border-b border-surface0/60 text-xs font-semibold text-text rounded-sm">
                 {category.icon}
                 <span>{category.title}</span>
               </div>
@@ -129,7 +129,7 @@ export const KeyboardShortcutsModal: React.FC<{
                 {category.items.map((item) => (
                   <div
                     key={item.label}
-                    className="flex items-center justify-between gap-3 text-xs py-0.5 px-1 -mx-1 hover:bg-surface0/30 transition-colors group"
+                    className="flex items-center justify-between gap-3 text-xs py-0.5 px-1 -mx-1 hover:bg-surface0/30 transition-colors group rounded-sm"
                   >
                     <span className="text-subtext1 group-hover:text-text transition-colors truncate" title={item.label}>
                       {item.label}
@@ -150,7 +150,7 @@ export const KeyboardShortcutsModal: React.FC<{
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-1.5 bg-surface1 hover:bg-surface2 text-text font-semibold text-xs cursor-pointer transition-colors border border-surface1 hover:border-surface2"
+            className="px-5 py-1.5 bg-surface1 hover:bg-surface2 text-text font-semibold text-xs cursor-pointer transition-colors border border-surface1 hover:border-surface2 rounded-sm"
           >
             Got it
           </button>

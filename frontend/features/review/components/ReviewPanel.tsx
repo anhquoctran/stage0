@@ -116,7 +116,7 @@ export const ReviewPanel: React.FC = () => {
   if (!isOpen) return null;
   return (
     <div
-      className="fixed inset-x-0 top-8.5 bottom-0 z-[140] bg-crust/75 p-4 flex items-center justify-center"
+      className="fixed inset-x-0 top-8.5 bottom-0 z-[140] bg-crust/75 p-4 flex items-center justify-center rounded-sm"
       onKeyDown={(event) => {
         event.stopPropagation();
         if (event.key === 'Escape') {
@@ -144,7 +144,7 @@ export const ReviewPanel: React.FC = () => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-panel-title"
-        className="w-full max-w-5xl max-h-full bg-mantle border border-surface1 shadow-2xl flex flex-col text-text"
+        className="w-full max-w-5xl max-h-full bg-mantle border border-surface1 shadow-2xl flex flex-col text-text rounded-sm"
       >
         <header className="flex items-center justify-between border-b border-surface0 pl-5 shrink-0">
           <h2 id="review-panel-title" className="text-sm font-semibold">
@@ -155,7 +155,7 @@ export const ReviewPanel: React.FC = () => {
             onClick={close}
             aria-label="Close review panel"
             title="Close panel; running review continues in the background"
-            className="w-12 h-12 grid place-items-center hover:bg-surface0"
+            className="w-12 h-12 grid place-items-center hover:bg-surface0 rounded-sm"
           >
             <X className="w-5 h-5" />
           </button>

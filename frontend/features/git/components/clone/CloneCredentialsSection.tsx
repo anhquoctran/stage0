@@ -15,7 +15,7 @@ export function CloneCredentialsSection({
   remoteOrigin,
 }: CloneCredentialsSectionProps) {
   return (
-    <div className="border border-surface1 bg-surface0/40 p-3 space-y-2.5">
+    <div className="border border-surface1 bg-surface0/40 p-3 space-y-2.5 rounded-sm">
       <label className="flex items-center gap-2 text-xs font-medium text-text cursor-pointer">
         <input
           type="checkbox"

@@ -105,7 +105,7 @@ export function GitBinaryListTable({
                     <button
                       type="button"
                       onClick={(event) => handleCopyPath(binary.path, event)}
-                      className="p-1.5 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
+                      className="p-1.5 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
                       title="Copy binary path to clipboard"
                     >
                       {copiedPath === binary.path ? (

@@ -23,7 +23,7 @@ export const PreferencesAiOverviewTab: React.FC<{
         <button
           type="button"
           onClick={() => setActiveTab('ai-providers')}
-          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>Configure</span>
           <ChevronRight className="w-3.5 h-3.5" />
@@ -37,7 +37,7 @@ export const PreferencesAiOverviewTab: React.FC<{
         <button
           type="button"
           onClick={() => setActiveTab('ai-external-agents')}
-          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>Configure</span>
           <ChevronRight className="w-3.5 h-3.5" />
@@ -51,7 +51,7 @@ export const PreferencesAiOverviewTab: React.FC<{
         <button
           type="button"
           onClick={() => setActiveTab('ai-reviewers')}
-          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>Configure</span>
           <ChevronRight className="w-3.5 h-3.5" />
@@ -65,7 +65,7 @@ export const PreferencesAiOverviewTab: React.FC<{
         <button
           type="button"
           onClick={() => setActiveTab('ai-mcp')}
-          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>Configure</span>
           <ChevronRight className="w-3.5 h-3.5" />
@@ -84,7 +84,7 @@ export const PreferencesAiOverviewTab: React.FC<{
         <button
           type="button"
           onClick={() => setActiveTab('ai-mcp')}
-          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>Configure</span>
           <ChevronRight className="w-3.5 h-3.5" />
@@ -98,7 +98,7 @@ export const PreferencesAiOverviewTab: React.FC<{
         <button
           type="button"
           onClick={() => setActiveTab('ai-sandbox')}
-          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>Configure</span>
           <ChevronRight className="w-3.5 h-3.5" />
@@ -112,7 +112,7 @@ export const PreferencesAiOverviewTab: React.FC<{
         <button
           type="button"
           onClick={() => setActiveTab('ai-guardrails')}
-          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium"
+          className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>Configure</span>
           <ChevronRight className="w-3.5 h-3.5" />

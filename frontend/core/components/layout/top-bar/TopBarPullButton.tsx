@@ -34,7 +34,7 @@ export const TopBarPullButton: React.FC<{
         type="button"
         disabled={isSyncing}
         onClick={() => runSync('pull')}
-        className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[54px]"
+        className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[54px] rounded-sm"
         title={shortcut('Pull (Ctrl+Shift+P)')}
       >
         <Download className="w-5 h-5 text-primary shrink-0 transition-colors" />
@@ -47,7 +47,7 @@ export const TopBarPullButton: React.FC<{
         type="button"
         disabled={isSyncing}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="relative flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer"
+        className="relative flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer rounded-sm"
         title={shortcut('Pull options (Ctrl+Alt+P)')}
       >
         <span
@@ -58,8 +58,8 @@ export const TopBarPullButton: React.FC<{
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100">
-          <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0 mb-1">
+        <div className="absolute left-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 rounded-sm">
+          <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0 mb-1 rounded-sm">
             Pull Options
           </div>
           <button
@@ -68,7 +68,7 @@ export const TopBarPullButton: React.FC<{
               setIsOpen(false);
               runSync('pull');
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-left transition-colors cursor-pointer group"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-left transition-colors cursor-pointer group rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Download className="w-3.5 h-3.5 text-current transition-colors" />
@@ -83,7 +83,7 @@ export const TopBarPullButton: React.FC<{
               setIsOpen(false);
               setIsPullFromOpen(true);
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-left transition-colors cursor-pointer group"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-left transition-colors cursor-pointer group rounded-sm"
           >
             <div className="flex items-center gap-2">
               <DownloadCloud className="w-3.5 h-3.5 text-current transition-colors" />

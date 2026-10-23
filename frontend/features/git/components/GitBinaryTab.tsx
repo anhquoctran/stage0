@@ -151,7 +151,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
       {/* Top Section Header */}
-      <div className="flex items-start justify-between pb-3 border-b border-surface0 gap-4">
+      <div className="flex items-start justify-between pb-3 border-b border-surface0 gap-4 rounded-sm">
         <div>
           <h3 className="text-sm font-bold text-text flex items-center gap-2">
             <GitBranch className="w-4 h-4 text-brand" />
@@ -167,7 +167,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
           type="button"
           onClick={() => scanBinaries()}
           disabled={isScanning}
-          className="flex items-center gap-1.5 px-3 py-1.5 border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-all cursor-pointer shrink-0 disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-all cursor-pointer shrink-0 disabled:opacity-50 rounded-sm"
           title="Rescan system paths for available Git binaries"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin text-brand' : ''}`} />
@@ -177,7 +177,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
 
       {/* Restart Notice Banner if user changed selection */}
       {isPendingRestart && (
-        <div className="p-3.5 bg-peach/10 border border-peach/30 flex items-start gap-3">
+        <div className="p-3.5 bg-peach/10 border border-peach/30 flex items-start gap-3 rounded-sm">
           <Info className="w-4 h-4 text-peach shrink-0 mt-0.5" />
           <div className="text-xs">
             <div className="font-semibold text-text">Restart Required upon Applying</div>
@@ -210,14 +210,14 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
         </div>
 
         {error && (
-          <div className="p-3 bg-red/10 border border-red/30 text-red text-xs flex items-center gap-2">
+          <div className="p-3 bg-red/10 border border-red/30 text-red text-xs flex items-center gap-2 rounded-sm">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {isScanning && allBinaries.length === 0 ? (
-          <div className="p-8 border border-dashed border-surface1 flex flex-col items-center justify-center text-center gap-2.5">
+          <div className="p-8 border border-dashed border-surface1 flex flex-col items-center justify-center text-center gap-2.5 rounded-sm">
             <RefreshCw className="w-5 h-5 text-brand animate-spin" />
             <div className="text-xs font-semibold text-text">Scanning for Git Binaries...</div>
             <div className="text-[11px] text-subtext0">
@@ -225,7 +225,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
             </div>
           </div>
         ) : allBinaries.length === 0 ? (
-          <div className="p-6 border border-dashed border-surface1 text-center text-xs text-subtext0">
+          <div className="p-6 border border-dashed border-surface1 text-center text-xs text-subtext0 rounded-sm">
             No Git binaries found on your system. You can manually specify a custom path below.
           </div>
         ) : (

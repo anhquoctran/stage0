@@ -18,7 +18,7 @@ export const StatusBarSandboxEngine: React.FC = () => {
     <button
       type="button"
       onClick={() => openPreferences('ai-sandbox')}
-      className="h-5.5 px-2 bg-surface0/70 hover:bg-surface1 border border-surface1 hover:border-surface2 text-subtext0 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+      className="h-5.5 px-2 bg-surface0/70 hover:bg-surface1 border border-surface1 hover:border-surface2 text-subtext0 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs rounded-sm"
       title={`Configure Sandbox Engine in Preferences (${label})`}
     >
       <Box className="w-3 h-3 text-subtext0" />

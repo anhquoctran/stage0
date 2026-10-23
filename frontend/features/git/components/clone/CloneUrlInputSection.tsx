@@ -41,7 +41,7 @@ export function CloneUrlInputSection({
           value={remoteUrl}
           onChange={handleUrlChange}
           placeholder="https://github.com/owner/repository.git or git@github.com:owner/repo.git"
-          className={`w-full pl-9 pr-9 py-2 bg-surface0 border text-xs placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 ${
+          className={`w-full pl-9 pr-9 py-2 bg-surface0 border text-xs placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 rounded-sm ${
             urlStatus === 'invalid'
               ? 'border-red text-red focus:border-red focus:ring-1 focus:ring-red'
               : urlStatus === 'valid'

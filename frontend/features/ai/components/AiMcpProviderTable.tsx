@@ -31,7 +31,7 @@ export const AiMcpProviderTable: React.FC<{
 }) => {
   return (
     <div className="overflow-hidden border border-surface1 bg-base/60">
-      <div className="flex items-center justify-between gap-3 px-3.5 py-3 border-b border-surface1">
+      <div className="flex items-center justify-between gap-3 px-3.5 py-3 border-b border-surface1 rounded-sm">
         <div>
           <h4 className="text-xs font-bold text-text">Providers</h4>
           <p className="text-[10px] text-subtext0 mt-0.5">
@@ -42,7 +42,7 @@ export const AiMcpProviderTable: React.FC<{
           type="button"
           onClick={onOpenAddProvider}
           disabled={availableProviderList.length === 0}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-brand text-base text-[11px] font-semibold hover:brightness-110 transition cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-brand text-base text-[11px] font-semibold hover:brightness-110 transition cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed rounded-sm"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Add provider</span>
@@ -118,7 +118,7 @@ export const AiMcpProviderTable: React.FC<{
                       <button
                         type="button"
                         onClick={() => onOpenProviderDetails(provider.id)}
-                        className="px-2.5 py-1 border border-surface2 text-[10px] font-semibold text-text hover:bg-surface1 transition cursor-pointer"
+                        className="px-2.5 py-1 border border-surface2 text-[10px] font-semibold text-text hover:bg-surface1 transition cursor-pointer rounded-sm"
                       >
                         Configure
                       </button>
@@ -126,7 +126,7 @@ export const AiMcpProviderTable: React.FC<{
                         <button
                           type="button"
                           onClick={() => onSelectProvider(provider.id)}
-                          className="px-2.5 py-1 border border-surface2 text-[10px] font-semibold text-text hover:bg-surface1 transition cursor-pointer"
+                          className="px-2.5 py-1 border border-surface2 text-[10px] font-semibold text-text hover:bg-surface1 transition cursor-pointer rounded-sm"
                         >
                           Use
                         </button>
@@ -136,7 +136,7 @@ export const AiMcpProviderTable: React.FC<{
                         onClick={() => onRequestDeleteProvider(provider.id)}
                         aria-label={`Remove ${getProviderDisplayName(provider.id, aiConfig.customProviderName)}`}
                         title="Remove provider and saved configuration"
-                        className="inline-flex items-center justify-center w-7 h-7 border border-surface2 text-subtext0 hover:border-red/50 hover:text-red transition cursor-pointer"
+                        className="inline-flex items-center justify-center w-7 h-7 border border-surface2 text-subtext0 hover:border-red/50 hover:text-red transition cursor-pointer rounded-sm"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

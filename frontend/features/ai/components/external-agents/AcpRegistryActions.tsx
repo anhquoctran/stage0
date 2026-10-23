@@ -21,7 +21,7 @@ export function AcpRegistryActions({
         <button
           type="button"
           onClick={onBackToOverview}
-          className="inline-flex items-center gap-1 text-xs text-subtext0 transition-colors hover:text-text"
+          className="inline-flex items-center gap-1 text-xs text-subtext0 transition-colors hover:text-text rounded-sm"
         >
           <ChevronLeft className="h-3.5 w-3.5" /> AI overview
         </button>
@@ -33,7 +33,7 @@ export function AcpRegistryActions({
         <button
           type="button"
           onClick={() => setIsCustomOpen(true)}
-          className="flex items-center gap-1.5 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0"
+          className="flex items-center gap-1.5 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
         >
           <Plus className="h-3.5 w-3.5" /> Add custom
         </button>
@@ -51,7 +51,7 @@ export function AcpRegistryActions({
               .catch((cause) => setError(String(cause)))
               .finally(() => setIsLoading(false));
           }}
-          className="flex items-center gap-1.5 border border-surface1 px-2.5 py-1.5 text-xs text-subtext0 hover:text-text disabled:opacity-50"
+          className="flex items-center gap-1.5 border border-surface1 px-2.5 py-1.5 text-xs text-subtext0 hover:text-text disabled:opacity-50 rounded-sm"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
         </button>

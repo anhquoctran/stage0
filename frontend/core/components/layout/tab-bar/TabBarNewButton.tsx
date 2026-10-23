@@ -9,7 +9,7 @@ export const TabBarNewButton: React.FC<{
     <button
       type="button"
       onClick={onClick}
-      className="w-7 h-7 flex items-center justify-center bg-surface1 hover:bg-surface2 text-white transition-colors shrink-0 cursor-pointer shadow-xs"
+      className="w-7 h-7 flex items-center justify-center bg-surface1 hover:bg-surface2 text-white transition-colors shrink-0 cursor-pointer shadow-xs rounded-sm"
       title={formatShortcutText('New Virtual MR (Ctrl+T)')}
     >
       <Plus className="w-4 h-4 text-white" />

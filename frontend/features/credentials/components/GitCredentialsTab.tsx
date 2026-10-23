@@ -172,7 +172,7 @@ export const GitCredentialsTab: React.FC = () => {
 
       {/* Error Banner */}
       {(error || formError) && (
-        <div className="p-3 bg-red/10 border border-red/30 flex items-center justify-between text-xs text-red">
+        <div className="p-3 bg-red/10 border border-red/30 flex items-center justify-between text-xs text-red rounded-sm">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{formError || error}</span>
@@ -183,7 +183,7 @@ export const GitCredentialsTab: React.FC = () => {
               clearError();
               setFormError(null);
             }}
-            className="p-1 hover:bg-red/20  cursor-pointer"
+            className="p-1 hover:bg-red/20 rounded-sm cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -220,7 +220,7 @@ export const GitCredentialsTab: React.FC = () => {
       {/* CREDENTIALS LIST */}
       <div className="space-y-3">
         {credentials.length === 0 ? (
-          <div className="p-8 border border-dashed border-surface1 text-center space-y-2.5">
+          <div className="p-8 border border-dashed border-surface1 text-center space-y-2.5 rounded-sm">
             <div className="w-10 h-10 bg-surface0 flex items-center justify-center mx-auto text-subtext0">
               <Key className="w-5 h-5" />
             </div>
@@ -235,7 +235,7 @@ export const GitCredentialsTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsAdding(true)}
-                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold  transition-colors cursor-pointer border border-brand shadow-xs mt-1"
+                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-sm transition-colors cursor-pointer border border-brand shadow-xs mt-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add First Credential</span>

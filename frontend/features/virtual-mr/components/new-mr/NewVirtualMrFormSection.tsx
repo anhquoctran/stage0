@@ -36,7 +36,7 @@ export function NewVirtualMrFormSection({
   closeNewMrDraft,
 }: NewVirtualMrFormSectionProps) {
   return (
-    <div className="border-b border-surface0 bg-base/50 p-4 shrink-0 space-y-3">
+    <div className="border-b border-surface0 bg-base/50 p-4 shrink-0 space-y-3 rounded-sm">
       <div className="flex items-start gap-4">
         <div className="flex-1 space-y-2.5">
           {/* Title Input */}
@@ -45,7 +45,7 @@ export function NewVirtualMrFormSection({
             value={draftMr.title}
             onChange={(e) => updateDraftMr({ title: e.target.value })}
             placeholder="Virtual MR Title..."
-            className="w-full px-3 py-1.5 bg-mantle border border-surface1 focus:border-brand text-xs text-text font-medium placeholder:text-subtext0 outline-none transition-colors"
+            className="w-full px-3 py-1.5 bg-mantle border border-surface1 focus:border-brand text-xs text-text font-medium placeholder:text-subtext0 outline-none transition-colors rounded-sm"
           />
 
           {/* Markdown Description */}
@@ -99,7 +99,7 @@ export function NewVirtualMrFormSection({
               type="button"
               onClick={() => handleSubmit()}
               disabled={isSubmitting || !canCreateVirtualMr}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-brand hover:bg-brand/90 active:scale-[0.98] text-on-accent font-bold text-xs shadow-md shadow-brand/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-brand hover:bg-brand/90 active:scale-[0.98] text-on-accent font-bold text-xs shadow-md shadow-brand/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed rounded-sm"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin text-on-accent" />
@@ -112,7 +112,7 @@ export function NewVirtualMrFormSection({
             <button
               type="button"
               onClick={closeNewMrDraft}
-              className="px-3 py-2 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs font-medium transition-colors cursor-pointer border border-surface1/60"
+              className="px-3 py-2 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs font-medium transition-colors cursor-pointer border border-surface1/60 rounded-sm"
             >
               Cancel
             </button>

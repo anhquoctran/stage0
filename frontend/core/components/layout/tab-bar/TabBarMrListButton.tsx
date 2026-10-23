@@ -10,7 +10,7 @@ export const TabBarMrListButton: React.FC<{
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex h-8 shrink-0 items-center gap-1.5 border-t border-x px-2.5 transition-colors cursor-pointer ${
+      className={`relative flex h-8 shrink-0 items-center gap-1.5 border-t border-x px-2.5 transition-colors cursor-pointer rounded-sm ${
         isActive
           ? 'bg-mantle border-surface1 text-text font-medium shadow-xs'
           : 'border-transparent text-subtext0 hover:bg-surface0/50 hover:text-text'

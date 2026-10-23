@@ -172,7 +172,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
       {/* Reviewer Cards List */}
       <div className="space-y-3">
         {filteredBots.length === 0 ? (
-          <div className="p-8 text-center bg-surface0/20 border border-dashed border-surface1 space-y-2">
+          <div className="p-8 text-center bg-surface0/20 border border-dashed border-surface1 space-y-2 rounded-sm">
             <Bot className="w-8 h-8 mx-auto text-subtext0/40" />
             <div className="text-xs text-subtext0 font-medium">
               No reviewer bots found matching your criteria
@@ -184,7 +184,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
                 setSelectedCategory('all');
                 setOnlyEnabled(false);
               }}
-              className="text-xs text-brand hover:underline cursor-pointer"
+              className="text-xs text-brand hover:underline cursor-pointer rounded-sm"
             >
               Clear filters
             </button>

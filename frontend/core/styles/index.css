@@ -162,6 +162,9 @@
 }
 
 @theme {
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
   --color-brand: #b87ff4;
   --color-accent: #b87ff4;
   --color-primary: #b87ff4;
@@ -280,6 +283,27 @@ textarea {
   font-family: inherit;
 }
 
+/* Universal small-rounded defaults for interactive elements */
+button:not([data-tauri-drag-region]):not([aria-label="Minimize"]):not([aria-label="Maximize"]):not([aria-label="Restore Down"]):not([aria-label="Close"]):not(.rounded-none):not(.rounded-full):not([class*="rounded-"]),
+input:not([type="checkbox"]):not([type="radio"]):not(.rounded-none):not(.rounded-full):not([class*="rounded-"]),
+select:not(.rounded-none):not(.rounded-full):not([class*="rounded-"]),
+textarea:not(.rounded-none):not(.rounded-full):not([class*="rounded-"]) {
+  border-radius: var(--radius-sm, 4px);
+}
+
+/* Explicit sharp corners for window title and window controls */
+[data-tauri-drag-region] button[aria-label="Minimize"],
+[data-tauri-drag-region] button[aria-label="Maximize"],
+[data-tauri-drag-region] button[aria-label="Restore Down"],
+[data-tauri-drag-region] button[aria-label="Close"],
+button[aria-label="Minimize"],
+button[aria-label="Maximize"],
+button[aria-label="Restore Down"],
+button[aria-label="Close"] {
+  border-radius: 0 !important;
+}
+
+
 code, kbd, samp, pre {
   font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-variant-ligatures: normal;
@@ -298,7 +322,7 @@ code, kbd, samp, pre {
 
 ::-webkit-scrollbar-thumb {
   background: var(--ctp-surface1);
-  border-radius: 0;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -650,14 +674,14 @@ button.btn-primary:disabled {
   background-color: var(--ctp-surface0);
   color: var(--ctp-text);
   padding: 0.15em 0.35em;
-  border-radius: 0;
+  border-radius: 3px;
   border: 1px solid var(--ctp-surface1);
 }
 
 .markdown-preview pre {
   background-color: var(--ctp-crust);
   border: 1px solid var(--ctp-surface0);
-  border-radius: 0;
+  border-radius: 4px;
   padding: 0.65em 0.85em;
   margin-top: 0.4em;
   margin-bottom: 0.4em;

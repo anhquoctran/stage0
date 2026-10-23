@@ -27,7 +27,7 @@ export const NewVirtualMrReviewersSection: React.FC<{
   botDropdownRef,
 }) => {
   return (
-    <div className="relative p-3 border border-surface1 bg-mantle/70 space-y-2 select-none" ref={botDropdownRef}>
+    <div className="relative p-3 border border-surface1 bg-mantle/70 space-y-2 select-none rounded-sm" ref={botDropdownRef}>
       <div className="flex items-center justify-between">
         <div className="text-[11px] font-bold uppercase tracking-wider text-subtext1 flex items-center gap-1.5">
           <Bot className="w-3.5 h-3.5 text-brand" />
@@ -36,7 +36,7 @@ export const NewVirtualMrReviewersSection: React.FC<{
         <button
           type="button"
           onClick={onToggleReviewerDropdown}
-          className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer"
+          className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
           title="Assign Reviewer Bots"
         >
           <Plus className="w-3.5 h-3.5" />
@@ -57,14 +57,14 @@ export const NewVirtualMrReviewersSection: React.FC<{
               return (
                 <div
                   key={bot.id}
-                  className="flex items-center gap-1.5 px-2 py-0.5 bg-brand/10 border border-brand/20 text-brand text-xs font-medium"
+                  className="flex items-center gap-1.5 px-2 py-0.5 bg-brand/10 border border-brand/20 text-brand text-xs font-medium rounded-sm"
                 >
                   <span>{bot.avatarEmoji}</span>
                   <span className="truncate max-w-[130px]">{bot.name}</span>
                   <button
                     type="button"
                     onClick={() => onRemoveBot(bot.id)}
-                    className="text-brand/60 hover:text-red hover:bg-surface0 transition-colors cursor-pointer ml-0.5"
+                    className="text-brand/60 hover:text-red hover:bg-surface0 transition-colors cursor-pointer ml-0.5 rounded-sm"
                     title={`Remove ${bot.name}`}
                   >
                     <X className="w-3 h-3" />
@@ -81,13 +81,13 @@ export const NewVirtualMrReviewersSection: React.FC<{
 
       {/* Reviewer Dropdown Popover */}
       {showBotDropdown && (
-        <div className="absolute top-full right-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100">
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between">
+        <div className="absolute top-full right-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100 rounded-sm">
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between rounded-sm">
             <span>Assign AI Reviewer</span>
             <button
               type="button"
               onClick={() => setShowBotDropdown(false)}
-              className="text-subtext0 hover:text-text cursor-pointer"
+              className="text-subtext0 hover:text-text cursor-pointer rounded-sm"
             >
               <X className="w-3 h-3" />
             </button>
@@ -109,7 +109,7 @@ export const NewVirtualMrReviewersSection: React.FC<{
                     key={bot.id}
                     type="button"
                     onClick={() => onToggleBot(bot.id)}
-                    className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors cursor-pointer ${
+                    className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors cursor-pointer rounded-sm ${
                       isAssigned ? 'bg-brand/10 text-brand' : 'hover:bg-surface0 text-text'
                     }`}
                   >
