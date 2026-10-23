@@ -89,6 +89,7 @@ export async function executeMenuAction(id: string, callbacks: MenuCallbacks): P
     open_explorer: () => runMenuFileAction(id),
     repo_settings: () => mr.openRepoSettings('remotes'),
     shortcuts: callbacks.onOpenShortcuts,
+    keymaps: () => prefs.openPreferences('general-keymaps'),
     release_notes: callbacks.onOpenReleaseNotes,
     about: callbacks.onOpenAbout,
     open_webview_devtools: () => invoke('open_webview_devtools'),

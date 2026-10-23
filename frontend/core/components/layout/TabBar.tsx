@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../../../features/git/store/useGitStore';
-import { useTabBarShortcuts } from './tab-bar/useTabBarShortcuts';
 import { TabBarMrListButton } from './tab-bar/TabBarMrListButton';
 import { TabBarSessionItem } from './tab-bar/TabBarSessionItem';
 import { TabBarDraftItem } from './tab-bar/TabBarDraftItem';
@@ -42,18 +41,6 @@ export const TabBar: React.FC = () => {
     // Sync with GitStore so DiffViewer updates smoothly
     await setBranchComparison(session.baseBranch, session.compareBranch);
   };
-
-  // Keyboard shortcuts (called before any early return to obey Rules of Hooks)
-  useTabBarShortcuts({
-    enabled: Boolean(currentRepo),
-    visibleSessions,
-    activeSessionId,
-    isDraftActive,
-    onOpenNewDraft: openNewMrDraft,
-    onCloseNewDraft: closeNewMrDraft,
-    onCloseSession: closeSession,
-    onSwitchSession: handleSwitchSession,
-  });
 
   if (!currentRepo) return null;
 

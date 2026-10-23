@@ -6,8 +6,11 @@ import type { AiPreferencesSnapshot } from '../../ai/types/AiPreferencesSnapshot
 import type { GitState } from '../../git/types/GitState';
 import { type SandboxType } from '../../git/types/SandboxType';
 import type { PreferencesBaseline } from './PreferencesBaseline';
+import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings';
 
 export interface PreferencesApplyContext {
+  draftKeymap: KeymapSettings;
+  setDraftKeymap: Dispatch<SetStateAction<KeymapSettings>>;
   applyingRef: RefObject<boolean>;
   setIsApplying: Dispatch<SetStateAction<boolean>>;
   setApplyError: Dispatch<SetStateAction<string | null>>;

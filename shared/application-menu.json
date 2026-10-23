@@ -61,6 +61,7 @@
     "zoom": { "label": "Zoom" },
     "bring_all_to_front": { "label": "Bring All to Front", "native": "bring_all_to_front" },
     "shortcuts": { "label": "Keyboard Shortcuts", "shortcut": "CmdOrCtrl+/", "icon": "Keyboard" },
+    "keymaps": { "label": "Customize Keymap...", "icon": "Keyboard" },
     "open_webview_devtools": { "label": "Developer Tools", "icon": "Code2" },
     "release_notes": { "label": "View release notes", "icon": "FileText" }
   },
@@ -122,7 +123,7 @@
       { "command": "minimize" }, { "command": "zoom" }, { "separator": true }, { "command": "bring_all_to_front" }
     ] },
     { "id": "help_menu", "label": "Help", "items": [
-      { "command": "shortcuts" }, { "command": "open_webview_devtools" }, { "separator": true },
+      { "command": "shortcuts" }, { "command": "keymaps" }, { "command": "open_webview_devtools" }, { "separator": true },
       { "command": "release_notes" }, { "command": "about" }
     ] }
   ]

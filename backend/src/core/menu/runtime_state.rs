@@ -1,15 +1,18 @@
-use super::{definition::definition, flags::MenuFlags, node::MenuNode};
+use super::{definition::definition, flags::MenuFlags, keymap::NativeMenuKeymap, node::MenuNode};
 use crate::core::window_manager::{focused_window, WindowManagerState};
 use std::{collections::HashMap, sync::Mutex};
 use tauri::{menu::MenuItemKind, AppHandle, Manager, WebviewWindow, Wry};
 
 #[derive(Default)]
-pub struct MenuRuntimeState(pub Mutex<HashMap<String, MenuFlags>>);
+pub struct MenuRuntimeState {
+    pub flags: Mutex<HashMap<String, MenuFlags>>,
+    pub keymaps: Mutex<HashMap<String, NativeMenuKeymap>>,
+}
 
 pub fn window_flags(app: &AppHandle, window_label: &str) -> MenuFlags {
     let mut flags = app
         .try_state::<MenuRuntimeState>()
-        .and_then(|state| state.0.lock().ok()?.get(window_label).cloned())
+        .and_then(|state| state.flags.lock().ok()?.get(window_label).cloned())
         .unwrap_or_default();
     // Repository identity is authoritative in the native window manager.
     flags.repository = app
@@ -23,25 +26,33 @@ pub fn sync_repo_dependent_menus_for_window(app: &AppHandle, window_label: &str)
         return;
     }
     if let Some(menu) = app.menu() {
+        let keymap = app
+            .try_state::<MenuRuntimeState>()
+            .and_then(|state| state.keymaps.lock().ok()?.get(window_label).cloned());
         sync_items(
             menu.items().unwrap_or_default(),
             &window_flags(app, window_label),
+            keymap.as_ref(),
         );
     }
 }
 
-fn sync_items(items: Vec<MenuItemKind<Wry>>, flags: &MenuFlags) {
+fn sync_items(items: Vec<MenuItemKind<Wry>>, flags: &MenuFlags, keymap: Option<&NativeMenuKeymap>) {
     for item in items {
         match item {
             MenuItemKind::Submenu(submenu) => {
                 if let Some(requires) = node_requires(&definition().menus, submenu.id().as_ref()) {
                     let _ = submenu.set_enabled(flags.enabled(requires));
                 }
-                sync_items(submenu.items().unwrap_or_default(), flags);
+                sync_items(submenu.items().unwrap_or_default(), flags, keymap);
             }
             MenuItemKind::MenuItem(item) => {
                 if let Some(command) = definition().commands.get(item.id().as_ref()) {
                     let _ = item.set_enabled(flags.enabled(&command.requires));
+                    if let Some(keymap) = keymap {
+                        let _ = item.set_accelerator(keymap.accelerators.get(item.id().as_ref()));
+                        let _ = item.set_text(keymap.title(item.id().as_ref()));
+                    }
                 }
             }
             MenuItemKind::Check(item) => {
@@ -49,6 +60,10 @@ fn sync_items(items: Vec<MenuItemKind<Wry>>, flags: &MenuFlags) {
                     let _ = item.set_enabled(flags.enabled(&command.requires));
                     let _ = item
                         .set_checked(command.checked.as_ref().is_some_and(|key| flags.value(key)));
+                    if let Some(keymap) = keymap {
+                        let _ = item.set_accelerator(keymap.accelerators.get(item.id().as_ref()));
+                        let _ = item.set_text(keymap.title(item.id().as_ref()));
+                    }
                 }
             }
             _ => {}
@@ -69,18 +84,36 @@ fn node_requires<'a>(nodes: &'a [MenuNode], id: &str) -> Option<&'a [String]> {
 }
 
 #[tauri::command]
-pub fn update_application_menu_state(app: AppHandle, window: WebviewWindow, flags: MenuFlags) {
+pub fn update_application_menu_state(
+    app: AppHandle,
+    window: WebviewWindow,
+    flags: MenuFlags,
+    accelerators: Option<HashMap<String, String>>,
+    shortcut_labels: Option<HashMap<String, String>>,
+) -> Result<(), String> {
+    let keymap = accelerators
+        .map(|keys| NativeMenuKeymap::from_input(keys, shortcut_labels.unwrap_or_default()))
+        .transpose()?;
     if let Some(state) = app.try_state::<MenuRuntimeState>() {
-        if let Ok(mut windows) = state.0.lock() {
+        if let Ok(mut windows) = state.flags.lock() {
             windows.insert(window.label().to_owned(), flags);
+        }
+        if let Some(keymap) = keymap {
+            if let Ok(mut windows) = state.keymaps.lock() {
+                windows.insert(window.label().to_owned(), keymap);
+            }
         }
     }
     sync_repo_dependent_menus_for_window(&app, window.label());
+    Ok(())
 }
 
 pub fn forget_window(app: &AppHandle, label: &str) {
     if let Some(state) = app.try_state::<MenuRuntimeState>() {
-        if let Ok(mut windows) = state.0.lock() {
+        if let Ok(mut windows) = state.flags.lock() {
+            windows.remove(label);
+        }
+        if let Ok(mut windows) = state.keymaps.lock() {
             windows.remove(label);
         }
     }

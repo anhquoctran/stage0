@@ -11,9 +11,13 @@ import { applyViewerFontToDocument, usePreferencesStore } from '../store/usePref
 import { applyMarkdownFontToDocument } from '../utils/applyMarkdownFontToDocument';
 import type { PreferencesApplyContext } from '../types/PreferencesApplyContext';
 import { type ViewerFontSettings } from '../types/ViewerFontSettings';
+import { keymapErrors } from '../../../core/services/keymaps/validation';
+import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
 
 // Preserve commit ordering and failure rollback; creating this closure has no side effects.
 export function createPreferencesApplyAction({
+  draftKeymap = DEFAULT_KEYMAP,
+  setDraftKeymap,
   applyingRef,
   setIsApplying,
   setApplyError,
@@ -48,6 +52,8 @@ export function createPreferencesApplyAction({
     setIsApplying(true);
     setApplyError(null);
     try {
+      const errors = ['macos', 'windows', 'linux'].flatMap((platform) => keymapErrors(draftKeymap, platform));
+      if (errors.length) throw new Error([...new Set(errors)].join(' '));
       const fontSettings: ViewerFontSettings = {
         fontFamily: draftFontFamily,
         fontSize: draftFontSize,
@@ -58,6 +64,13 @@ export function createPreferencesApplyAction({
         enableLigatures: draftEnableLigatures,
       };
       const additionalPreferences: Record<string, unknown> = {};
+      const keymapChanged = JSON.stringify(draftKeymap) !== JSON.stringify(savedBaseline.keymap);
+      const currentKeymap = usePreferencesStore.getState().keymap ?? DEFAULT_KEYMAP;
+      if (keymapChanged) {
+        if (JSON.stringify(currentKeymap) !== JSON.stringify(savedBaseline.keymap) && JSON.stringify(currentKeymap) !== JSON.stringify(draftKeymap))
+          throw new Error('Keymap changed in another window or editor. Reopen Preferences before applying your keymap draft');
+        additionalPreferences.keymap = draftKeymap;
+      }
       const appearancePatch: Record<string, unknown> = {};
       if (draftThemeMode !== savedBaseline.themeMode) appearancePatch.themeMode = draftThemeMode;
       const fontChanged = (Object.keys(fontSettings) as Array<keyof ViewerFontSettings>).some(
@@ -104,7 +117,9 @@ export function createPreferencesApplyAction({
       useThemeStore.setState({ themeMode: draftThemeMode, theme: resolvedTheme });
       applyThemeToDocument(resolvedTheme);
       persistThemeMode(draftThemeMode);
+      const committedKeymap = keymapChanged ? draftKeymap : usePreferencesStore.getState().keymap ?? DEFAULT_KEYMAP;
       usePreferencesStore.setState({
+        keymap: committedKeymap,
         ...fontSettings,
         showInlineBlame: draftShowInlineBlame,
         markdownFontFamily: draftMarkdownFontFamily,
@@ -140,6 +155,7 @@ export function createPreferencesApplyAction({
         isLoading: false,
       }));
       setSavedBaseline({
+        keymap: committedKeymap,
         themeMode: draftThemeMode,
         fontFamily: draftFontFamily,
         fontSize: draftFontSize,
@@ -158,6 +174,7 @@ export function createPreferencesApplyAction({
         markdownFontSize: draftMarkdownFontSize,
         markdownHeadingWeight: draftMarkdownHeadingWeight,
       });
+      setDraftKeymap(committedKeymap);
       setIsApplied(true);
       setTimeout(() => setIsApplied(false), 2000);
       showToast('Preferences applied successfully');

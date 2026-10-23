@@ -1,6 +1,7 @@
 export type PreferenceTab =
   | 'general'
   | 'general-settings'
+  | 'general-keymaps'
   | 'appearance'
   | 'appearance-theme'
   | 'appearance-fonts'

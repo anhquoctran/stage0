@@ -17,8 +17,11 @@ import { PreferencesFontTab } from './tabs/PreferencesFontTab';
 import { PreferencesGeneralTab } from './tabs/PreferencesGeneralTab';
 import { PreferencesMarkdownFontTab } from './tabs/PreferencesMarkdownFontTab';
 import { PreferencesThemeTab } from './tabs/PreferencesThemeTab';
+import { PreferencesKeymapTab } from './tabs/PreferencesKeymapTab';
 
 export function PreferencesTabContainer({
+  draftKeymap,
+  setDraftKeymap,
   currentTabId,
   currentChildItem,
   draftShowInlineBlame,
@@ -73,6 +76,7 @@ export function PreferencesTabContainer({
     currentTabId &&
       [
         'general-settings',
+        'general-keymaps',
         'appearance-theme',
         'appearance-fonts',
         'appearance-markdown-font',
@@ -108,7 +112,7 @@ export function PreferencesTabContainer({
           <div className="w-16 h-16 bg-surface0/60 border border-surface1 flex items-center justify-center text-subtext0 mb-4 rounded-sm shadow-xs">
             <Cog className="w-8 h-8 text-subtext1" />
           </div>
-          <h3 className="text-base font-bold text-text mb-1.5">No preference selected</h3>
+          <h3 className="text-base font-bold mb-1.5">No preference selected</h3>
           <p className="text-xs text-subtext0 max-w-sm mb-6 leading-relaxed">
             Select a setting category from the navigation sidebar on the left, or search settings using the search box above.
           </p>
@@ -123,6 +127,7 @@ export function PreferencesTabContainer({
       )}
 
       {/* VIEW: GENERAL SETTINGS */}
+      {currentTabId === 'general-keymaps' && <PreferencesKeymapTab value={draftKeymap} onChange={setDraftKeymap} />}
       {currentTabId === 'general-settings' && (
         <div className="animate-in fade-in duration-100">
           <PreferencesGeneralTab

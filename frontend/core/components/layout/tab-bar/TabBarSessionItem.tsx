@@ -1,7 +1,7 @@
 import React from 'react';
 import { GitPullRequest } from '../../../../common/components/icons/GitPullRequest';
 import { X } from '../../../../common/components/icons/X';
-import { formatShortcutText } from '../../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 import type { VirtualMrSession } from '../../../../features/virtual-mr/types/VirtualMrSession';
 import { TabBarStatusBadge } from './TabBarStatusBadge';
 import { TabBarSessionConflictIndicator } from './TabBarSessionConflictIndicator';
@@ -24,6 +24,7 @@ export const TabBarSessionItem: React.FC<{
   onClose,
 }) => {
   const displayTitle = session.title || `${session.compareBranch} → ${session.baseBranch}`;
+  const { title } = useCommandShortcut();
 
   return (
     <div
@@ -64,7 +65,7 @@ export const TabBarSessionItem: React.FC<{
           onClose();
         }}
         className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ml-1 cursor-pointer shrink-0 rounded-sm"
-        title={formatShortcutText('Close tab. This MR remains saved in this repository. (Ctrl+W)')}
+        title={title('close_tab', 'Close tab. This MR remains saved in this repository.')}
       >
         <X className="w-3 h-3" />
       </button>
@@ -75,4 +76,3 @@ export const TabBarSessionItem: React.FC<{
     </div>
   );
 };
-

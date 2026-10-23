@@ -29,8 +29,9 @@ their application callers migrate together (see report section 8).
 | External agents | `ai/components/ExternalAgentsTab.tsx` coordinates registry/install/details. `useAcpAgentAccount.ts` owns automatic account checks/auth and request epochs; `useAcpAgentPrompt.ts` owns prompt execution; `useCustomAcpAgentForm.ts` owns custom registration. `components/external-agents/` owns project/account/prompt detail sections and keyed cards. Metadata URL filtering remains in `utils/acpRegistryMetadata.ts`. |
 | Review panel | `review/components/ReviewPanel.tsx` retains profile/consent reset, load/poll/focus lifecycle and focus trap. `ReviewConfigurationSection.tsx` renders profile/safety/consent/actions; `ReviewRunSummary.tsx` renders run coverage/publication. Backend tool/evidence/publication checks remain authoritative. |
 | Other settings/viewers | Git binary detection/table, sandbox config/instance, file-list filter and conflict-resolution header live in named child directories. Existing tree/graph/endpoint controls are reused, not duplicated. |
-| Main layout | `core/components/hooks/useMainLayoutCoordination.ts` owns repo/window coordination; `useWorkspaceShortcuts.ts` owns workspace-only navigation/aliases; `useSidebarResizing.ts` owns the splitter. `layout/MainLayoutModals.tsx` composes dialogs; `layout/MainLayoutDiffWorkspace.tsx` composes the diff workspace. |
-| Application menu | `shared/application-menu.json` is the cross-runtime source for command IDs, labels, accelerators, grouping, enable/check keys and OS placement. `core/constants/applicationMenu.ts` exports typed constants/helpers. `layout/menu-bar/ConfiguredMenu.tsx` renders the tree; `menuIcons.ts` maps presentation icons. `layout/useApplicationMenu.ts` owns native listener disposal, macOS state sync and custom keyboard registration. `core/services/applicationMenuActions.ts` is the single native/custom dispatcher; file/text editing have named services. `applicationMenuState.ts` derives flags; `applicationMenuShortcuts.ts` matches exact modifiers and supplies shortcut help. |
+| Main layout | `core/components/hooks/useMainLayoutCoordination.ts` owns repo/window coordination; `useSidebarResizing.ts` owns the splitter. `layout/MainLayoutModals.tsx` composes dialogs; `layout/MainLayoutDiffWorkspace.tsx` composes the diff workspace. |
+| Application menu | `shared/application-menu.json` is the cross-runtime source for command IDs, labels, default accelerators, grouping, enable/check keys and OS placement. `core/constants/applicationMenu.ts` exports typed constants/helpers. `layout/menu-bar/ConfiguredMenu.tsx` renders the tree; `menuIcons.ts` maps presentation icons. `layout/useApplicationMenu.ts` owns native listener disposal, macOS state/keymap sync and the single keyboard registration. `core/services/applicationMenuActions.ts` is the native/custom menu dispatcher; file/text editing have named services. `applicationMenuState.ts` derives flags; `applicationMenuShortcuts.ts` supplies effective shortcut help. |
+| Keymaps | `shared/keymaps.json` owns preset overlays, navigation commands and aliases. `core/services/keymaps/catalog.ts` resolves menu defaults → preset → user overrides; `keystroke.ts` normalizes/records/formats keys; `validation.ts` checks records and context/prefix conflicts; `engine.ts` owns chord lifecycle and scope matching. `context.ts` reads live focus/modal/availability state; `actions.ts` routes menu, MR-tab, conflict and recent-repo commands; `native.ts` selects the single native owner. `core/hooks/useCommandShortcut.ts` supplies live hints. Preferences owns its isolated draft, binding editor and transaction; `usePreferencesStore.keymap` is committed runtime state. See [engine contract](keymaps.md). |
 
 ## Contracts to preserve
 
@@ -55,10 +56,13 @@ their application callers migrate together (see report section 8).
   File/Edit/View/Repository/Help use the same application actions on every OS.
   Custom menu buttons preserve text focus. The dispatcher rechecks live state;
   native enable/check flags are UI availability, not authorization.
-- Menu accelerators have one execution owner: native macOS or the custom capture
-  listener, never both. Keep workspace-only S/U, file navigation, MR tab switching
-  and Ctrl/Cmd+W outside the menu dispatcher. Close Window uses
-  **Ctrl/Cmd+Shift+W** so it cannot close a window when closing an MR tab.
+- Configurable accelerators have one execution owner: eligible native macOS
+  application bindings or the common capture engine, never both. Workspace,
+  welcome, MR-tab navigation and chords use the common engine, including macOS.
+  The old workspace/tab/welcome/inline-blame listeners were removed. Local input,
+  menu arrow navigation, Escape/Tab, Markdown editing and JSONC completions remain
+  intrinsic control behaviors. Close Window defaults to **Ctrl/Cmd+Shift+W**;
+  Close MR Tab defaults to **Ctrl/Cmd+W**, and conflicting remaps are rejected.
 - Maintain UI small-rounded consistency: apply `rounded-sm` (`--radius-sm: 4px`)
   across buttons, inputs, selects, textareas, visual `div` containers (cards, panels,
   dialogs, dropdowns, popovers, banners, toasts) and badges/tags. Preserve existing
@@ -140,3 +144,28 @@ Execution was on macOS only. Browser visual QA was attempted but no browser was
 available to the UI tool; no live native-menu or Windows/Linux visual smoke test
 is claimed. Existing bundle chunk/mixed-import warnings remain. Unrelated dirty
 release metadata and Markdown-font settings edits were preserved.
+
+## Keymaps engine checkpoint (2026-10-23)
+
+Preferences → General → Keymap exposes Stage0, VS Code, JetBrains and GitHub
+Desktop adaptations, per-command alternatives, unbinding, recording, chords and
+reset. Keymap drafts participate in Apply/OK/Cancel and JSONC validation. The
+previous workspace/tab/welcome/inline-blame action listeners were removed;
+intrinsic control editing/navigation stays local. Menu/help/toolbar/context-menu
+hints resolve committed bindings. See [keymaps](keymaps.md) for ownership and
+native single-owner execution details.
+
+- Typecheck, architecture checks, Cargo check, edition-2021 formatting of changed
+  Rust files, whitespace checks and isolated Vite bundle compilation pass.
+- Architecture: **839 frontend files** (largest 410/450), **326 Rust files**
+  (largest 499/500). No size/ownership exceptions or version bumps.
+- Node baseline: **284 tests / 264 pass / 20 fail**. Final: **300 / 280 / 20**;
+  exactly the same failing names. Sixteen new tests cover resolution, conflicts,
+  input/IME/repeat, chords, native ownership, effective help, binding recording,
+  MR tab dispatch and Preferences success/failure/cancellation/concurrent edits.
+  Existing menu and Preferences fixtures gained the APIs used by production;
+  no assertions were removed or skipped.
+- All **177 Rust tests pass**, including five added keymap/native metadata tests.
+- Checks ran on macOS. No live native-window visual QA or Windows/Linux runtime
+  keyboard/OS-reserved-shortcut verification is claimed. Existing Vite chunk and
+  mixed-import warnings remain.

@@ -1,0 +1,71 @@
+{
+  "repeatable": ["next_file", "previous_file", "next_conflict"],
+  "defaults": {
+    "preferences": ["CmdOrCtrl+,", "CmdOrCtrl+Shift+T"],
+    "previous_file": ["ArrowUp", "K"],
+    "next_file": ["ArrowDown", "J"],
+    "view_split": ["CmdOrCtrl+1", "S"],
+    "view_unified": ["CmdOrCtrl+2", "U"]
+  },
+  "commands": {
+    "next_conflict": { "label": "Next conflict file", "scope": "workspace", "keys": ["Alt+C"] },
+    "close_tab": { "label": "Close MR tab / draft", "scope": "tabs", "keys": ["CmdOrCtrl+W"] },
+    "tab_1": { "label": "Switch to MR tab 1", "scope": "tabs", "keys": ["Alt+1"] },
+    "tab_2": { "label": "Switch to MR tab 2", "scope": "tabs", "keys": ["Alt+2"] },
+    "tab_3": { "label": "Switch to MR tab 3", "scope": "tabs", "keys": ["Alt+3"] },
+    "tab_4": { "label": "Switch to MR tab 4", "scope": "tabs", "keys": ["Alt+4"] },
+    "tab_5": { "label": "Switch to MR tab 5", "scope": "tabs", "keys": ["Alt+5"] },
+    "tab_6": { "label": "Switch to MR tab 6", "scope": "tabs", "keys": ["Alt+6"] },
+    "tab_7": { "label": "Switch to MR tab 7", "scope": "tabs", "keys": ["Alt+7"] },
+    "tab_8": { "label": "Switch to MR tab 8", "scope": "tabs", "keys": ["Alt+8"] },
+    "tab_9": { "label": "Switch to MR tab 9", "scope": "tabs", "keys": ["Alt+9"] },
+    "recent_1": { "label": "Open recent repository 1", "scope": "welcome", "keys": ["CmdOrCtrl+1"] },
+    "recent_2": { "label": "Open recent repository 2", "scope": "welcome", "keys": ["CmdOrCtrl+2"] },
+    "recent_3": { "label": "Open recent repository 3", "scope": "welcome", "keys": ["CmdOrCtrl+3"] },
+    "recent_4": { "label": "Open recent repository 4", "scope": "welcome", "keys": ["CmdOrCtrl+4"] },
+    "recent_5": { "label": "Open recent repository 5", "scope": "welcome", "keys": ["CmdOrCtrl+5"] }
+  },
+  "system": {
+    "hide": ["Cmd+H"], "hide_others": ["Cmd+Alt+H"], "quit": ["Cmd+Q"],
+    "minimize": ["Cmd+M"], "fullscreen": ["Ctrl+Cmd+F"]
+  },
+  "presets": [
+    {
+      "id": "stage0", "label": "Stage0", "description": "Original Stage0 shortcuts, including workspace navigation.",
+      "documentation": "", "bindings": {}, "platforms": {}
+    },
+    {
+      "id": "vscode", "label": "Visual Studio Code", "description": "VS Code-inspired settings, terminal and two-step keyboard shortcuts. Other commands retain Stage0 defaults.",
+      "documentation": "https://code.visualstudio.com/docs/reference/default-keybindings",
+      "bindings": { "keymaps": ["CmdOrCtrl+K CmdOrCtrl+S"], "open_terminal": ["Ctrl+Backquote"] }, "platforms": {}
+    },
+    {
+      "id": "jetbrains", "label": "JetBrains / IntelliJ IDEA", "description": "IDEA-inspired settings, update project and file navigation. MR creation uses a separate shortcut.",
+      "documentation": "https://www.jetbrains.com/help/idea/mastering-keyboard-shortcuts.html",
+      "bindings": { "preferences": ["Ctrl+Alt+S"], "repo_settings": [], "pull": ["CmdOrCtrl+T"], "new_mr": ["CmdOrCtrl+Alt+N"], "previous_file": ["Alt+ArrowUp", "ArrowUp", "K"], "next_file": ["Alt+ArrowDown", "ArrowDown", "J"] },
+      "platforms": { "macos": { "preferences": ["Cmd+,"], "previous_file": ["Ctrl+Shift+ArrowUp", "ArrowUp", "K"], "next_file": ["Ctrl+Shift+ArrowDown", "ArrowDown", "J"] } }
+    },
+    {
+      "id": "github-desktop", "label": "GitHub Desktop", "description": "GitHub Desktop-inspired pull, merge, terminal, editor and file-manager actions. Unmatched commands retain Stage0 defaults.",
+      "documentation": "https://docs.github.com/en/desktop/overview/github-desktop-keyboard-shortcuts",
+      "bindings": { "pull": ["CmdOrCtrl+Shift+P"], "merge": ["CmdOrCtrl+Shift+M"], "open_terminal": ["Ctrl+Backquote"], "open_vscode": ["CmdOrCtrl+Shift+A"], "open_explorer": ["CmdOrCtrl+Shift+F"], "fetch": ["CmdOrCtrl+Alt+F"] }, "platforms": {}
+    },
+    {
+      "id": "fork", "label": "Fork", "description": "Fork-inspired fetch, pull, clone, refresh and external tools. macOS uses Fork's Command+Control tool shortcuts; Windows/Linux use Control+Alt. New Window is unassigned to avoid a clone shortcut collision.",
+      "documentation": "https://github.com/fork-dev/Docs#table-of-contents",
+      "bindings": { "preferences": ["CmdOrCtrl+,"], "fetch": ["CmdOrCtrl+Shift+F"], "pull": ["CmdOrCtrl+Shift+L"], "clone_repo": ["CmdOrCtrl+N"], "new_window": [], "refresh_diff": ["F5"], "open_terminal": ["Ctrl+Alt+T"], "open_explorer": ["Ctrl+Alt+O"] },
+      "platforms": { "macos": { "clone_repo": ["Cmd+Shift+N"], "refresh_diff": ["Cmd+R"], "open_terminal": ["Ctrl+Cmd+T"], "open_explorer": ["Ctrl+Cmd+O"] } }
+    },
+    {
+      "id": "sourcetree", "label": "SourceTree", "description": "SourceTree-inspired pull and refresh, plus the macOS terminal shortcut. Other actions retain Stage0 defaults; Windows/Linux use portable adaptations rather than a complete SourceTree emulation.",
+      "documentation": "https://product-downloads.atlassian.com/software/sourcetree/ReleaseNotes/Sourcetree_4.2.18.html",
+      "bindings": { "preferences": ["CmdOrCtrl+,"], "pull": ["CmdOrCtrl+Shift+L"], "refresh_diff": ["F5", "CmdOrCtrl+R"] },
+      "platforms": { "macos": { "refresh_diff": ["Cmd+R"], "open_terminal": ["Ctrl+Cmd+T"] } }
+    },
+    {
+      "id": "gitkraken", "label": "GitKraken", "description": "GitKraken-inspired fetch, terminal, file manager, blame and numbered MR tabs. Colliding diff shortcuts, Clone, Pull and Merge are unassigned to avoid repurposing familiar staging, open-repo, palette or commit-focus keys.",
+      "documentation": "https://help.gitkraken.com/gitkraken-desktop/keyboard-shortcuts/",
+      "bindings": { "preferences": ["CmdOrCtrl+,"], "fetch": ["CmdOrCtrl+L"], "open_terminal": ["Alt+T"], "open_explorer": ["Alt+O"], "open_repo": ["CmdOrCtrl+Shift+O"], "clone_repo": [], "pull": [], "merge": [], "view_blame": ["CmdOrCtrl+Shift+H"], "view_split": [], "view_unified": [], "tab_1": ["CmdOrCtrl+1"], "tab_2": ["CmdOrCtrl+2"], "tab_3": ["CmdOrCtrl+3"], "tab_4": ["CmdOrCtrl+4"], "tab_5": ["CmdOrCtrl+5"], "tab_6": ["CmdOrCtrl+6"], "tab_7": ["CmdOrCtrl+7"], "tab_8": ["CmdOrCtrl+8"], "tab_9": ["CmdOrCtrl+9"] }, "platforms": {}
+    }
+  ]
+}

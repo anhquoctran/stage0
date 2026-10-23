@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Folder } from '../../../common/components/icons/Folder';
 import { Download } from '../../../common/components/icons/Download';
 import { Cog } from '../../../common/components/icons/Cog';
@@ -8,7 +8,7 @@ import { usePreferencesStore } from '../../../features/preferences/store/usePref
 import { AppLogo } from '../../../common/components/AppLogo';
 import { AboutModal } from '../../../features/about/components/AboutModal';
 import { useAboutInfo } from '../../../features/about/hooks/useAboutInfo';
-import { formatShortcutText } from '../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../hooks/useCommandShortcut';
 import type { WelcomeScreenProps } from '../../types/WelcomeScreenProps';
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
@@ -27,12 +27,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   const { setIsPreferencesOpen } = usePreferencesStore();
   const about = useAboutInfo();
   const [showAboutModal, setShowAboutModal] = useState(false);
-
-  const isMac =
-    typeof navigator !== 'undefined' &&
-    /Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
-  const displayedShortcut = (macShortcut: string, otherShortcut: string) =>
-    isMac ? formatShortcutText(macShortcut, true) : otherShortcut;
+  const { shortcut } = useCommandShortcut();
 
   const handleOpenLocal = () => {
     if (onOpenRepo) {
@@ -52,48 +47,6 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
   // Last 5 recent repositories
   const recentList = recentRepos.slice(0, 5);
-
-  // Keyboard navigation matching Zed (Ctrl-1..5 to open recent repos, Ctrl-O to open, etc.)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isMod = isMac ? e.metaKey : e.ctrlKey;
-      if (!isMod) return;
-
-      // Ctrl-1 to Ctrl-5
-      const num = parseInt(e.key, 10);
-      if (!isNaN(num) && num >= 1 && num <= 5) {
-        const targetRepo = recentList[num - 1];
-        if (targetRepo) {
-          e.preventDefault();
-          selectRepo(targetRepo);
-          return;
-        }
-      }
-
-      // Ctrl-O
-      if (e.key.toLowerCase() === 'o' && !e.shiftKey) {
-        e.preventDefault();
-        handleOpenLocal();
-        return;
-      }
-
-      // Ctrl-Shift-O or Ctrl-Shift-C for Clone
-      if (e.shiftKey && (e.key.toLowerCase() === 'o' || e.key.toLowerCase() === 'c')) {
-        e.preventDefault();
-        handleClone();
-        return;
-      }
-
-      // Ctrl-, for Preferences (and Ctrl-Shift-T as fallback)
-      if (e.key === ',' || (e.shiftKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT'))) {
-        e.preventDefault();
-        setIsPreferencesOpen(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [recentList, selectRepo, isMac, setIsPreferencesOpen]);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center bg-base px-6 py-12 select-none overflow-y-auto rounded-sm">
@@ -137,7 +90,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                 </span>
               </div>
               <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors shrink-0">
-                {displayedShortcut('Ctrl+O', 'Ctrl-O')}
+                {shortcut('open_repo')}
               </span>
             </div>
 
@@ -156,7 +109,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                 </span>
               </div>
               <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors shrink-0">
-                {displayedShortcut('Ctrl+Shift+O', 'Ctrl-Shift-O')}
+                {shortcut('clone_repo')}
               </span>
             </div>
 
@@ -175,7 +128,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                 </span>
               </div>
               <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors shrink-0">
-                {displayedShortcut('Ctrl+,', 'Ctrl-,')}
+                {shortcut('preferences')}
               </span>
             </div>
           </div>
@@ -236,7 +189,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                       <X className="w-3 h-3" />
                     </button>
                     <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors">
-                      {displayedShortcut(`Ctrl+${idx + 1}`, `Ctrl-${idx + 1}`)}
+                      {shortcut(`recent_${idx + 1}`)}
                     </span>
                   </div>
                 </div>

@@ -1,5 +1,9 @@
+import { KEYMAP_PRESETS, keymapCatalog } from '../../../core/services/keymaps/catalog';
+
 const PROPERTY_NAMES: Record<string, string[]> = {
-  '': ['schemaVersion', 'general', 'appearance', 'ai', 'reviewers', 'sandbox', 'git', 'notifications'],
+  '': ['schemaVersion', 'keymap', 'general', 'appearance', 'ai', 'reviewers', 'sandbox', 'git', 'notifications'],
+  keymap: ['preset', 'overrides'],
+  'keymap.overrides.[]': ['command', 'keys'],
   general: ['showInlineBlame', 'streamResponse', 'enableCodeReviewAssist'],
   appearance: ['themeMode', 'viewerFont'],
   'appearance.viewerFont': ['fontFamily', 'fontSize', 'isBold', 'isItalic', 'isUnderline', 'lineSpacing', 'enableLigatures'],
@@ -23,6 +27,8 @@ const PROPERTY_NAMES: Record<string, string[]> = {
 };
 
 const VALUE_OPTIONS: Record<string, string[]> = {
+  'keymap.preset': KEYMAP_PRESETS.map((preset) => preset.id),
+  'keymap.overrides.[].command': keymapCatalog().filter((command) => command.editable).map((command) => command.id),
   'appearance.themeMode': ['system', 'dark', 'light'],
   'appearance.viewerFont.fontFamily': ['JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Source Code Pro', 'Hack', 'Iosevka', 'IBM Plex Mono', 'Monaspace', 'Victor Mono', 'Geist Mono'],
   'ai.aiConfig.provider': ['openai', 'anthropic', 'gemini', 'xai_grok', 'ollama', 'custom'],

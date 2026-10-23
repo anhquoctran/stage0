@@ -169,13 +169,18 @@ test('native hook syncs flags, executes each event once and disposes late listen
     '../../../features/git/store/useGitStore': { useGitStore: () => ({}) },
     '../../../features/preferences/store/usePreferencesStore': { usePreferencesStore: () => ({}) },
     '../../../features/performance/store/usePerformanceMonitorStore': { usePerformanceMonitorStore: () => ({}) },
+    '../../../features/virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: () => ({}) },
+    '../../services/keymaps/context': {
+      keymapsBlocked: () => false,
+      keymapContext: () => ({ repository: true, editable: false, interactive: false, blocked: false, flags: { repository: true, idle: true } }),
+    },
     '../../services/applicationMenuState': { getApplicationMenuFlags: () => ({ repository: true }) },
     '../../services/applicationMenuActions': { executeMenuAction: async (id, callbacks) => { calls.push(id); callbacks.onOpenAbout(); } },
   });
   const callbacks = { onOpenAbout: () => calls.push('about-callback') };
   runner.render(useApplicationMenu, callbacks);
   assert.equal(calls[0][0], 'update_application_menu_state');
-  const event = { key: 'p', code: 'KeyP', metaKey: true, ctrlKey: false, shiftKey: true, altKey: false, preventDefault() { throw Error('native shortcut must not dispatch from DOM'); } };
+  const event = { key: 'o', code: 'KeyO', metaKey: true, ctrlKey: false, shiftKey: false, altKey: false, preventDefault() { throw Error('native shortcut must not dispatch from DOM'); } };
   handlers.get('keydown')(event);
   listener({ payload: 'about' });
   assert.deepEqual(calls.slice(1), ['about', 'about-callback']);

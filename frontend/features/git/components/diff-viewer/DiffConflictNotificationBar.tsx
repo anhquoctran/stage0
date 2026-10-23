@@ -5,7 +5,7 @@ import { ArrowDown } from '../../../../common/components/icons/ArrowDown';
 import { VsCode } from '../../../../common/components/icons/VsCode';
 import { RotateCw } from '../../../../common/components/icons/RotateCw';
 import { openFileInEditor } from '../../utils/fileActions';
-import { formatShortcutText } from '../../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../../core/hooks/useCommandShortcut';
 import type { ChangedFile } from '../../types/ChangedFile';
 import type { ConflictReport } from '../../types/ConflictReport';
 import type { ConflictFilePreview } from '../../types/ConflictFilePreview';
@@ -31,6 +31,7 @@ export const DiffConflictNotificationBar: React.FC<{
   onShowToast,
 }) => {
   const detail = conflictReport?.details?.find((d) => d.path === selectedFile.path);
+  const { title: commandTitle } = useCommandShortcut();
 
   return (
     <div className="bg-red/10 border-b border-red/30 px-3.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-text select-none shrink-0 rounded-sm">
@@ -112,7 +113,7 @@ export const DiffConflictNotificationBar: React.FC<{
           type="button"
           onClick={onRefreshDiff}
           className="flex items-center gap-1.5 px-2 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs rounded-sm"
-          title={formatShortcutText('Re-check diff after resolving conflict in external tool (Ctrl+R)')}
+          title={commandTitle('refresh_diff', 'Re-check diff after resolving conflict in external tool')}
         >
           <RotateCw className="w-3 h-3 text-white" />
           <span>Refresh Diff</span>
@@ -121,4 +122,3 @@ export const DiffConflictNotificationBar: React.FC<{
     </div>
   );
 };
-

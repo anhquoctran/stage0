@@ -11,7 +11,6 @@ export function useInlineBlamePortal({
   compareBranch,
   baseBranch,
   fetchFileBlame,
-  toggleFileBlame,
   blamePayload,
   showInlineBlame,
   viewMode,
@@ -26,7 +25,6 @@ export function useInlineBlamePortal({
   compareBranch: string;
   baseBranch: string;
   fetchFileBlame: (path: string, revision: string) => void;
-  toggleFileBlame: () => void;
   blamePayload: FileBlamePayload | null;
   showInlineBlame: boolean;
   viewMode: 'split' | 'unified';
@@ -43,18 +41,6 @@ export function useInlineBlamePortal({
   const [oldBlamePayload, setOldBlamePayload] = useState<FileBlamePayload | null>(null);
   const [portalMount, setPortalMount] = useState<HTMLElement | null>(null);
   const diffContainerRef = useRef<HTMLDivElement>(null);
-
-  // Global Alt+B shortcut to toggle blame
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.key.toLowerCase() === 'b') {
-        e.preventDefault();
-        toggleFileBlame();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleFileBlame]);
 
   // Prefetch git blame for current file in background (for compare revision & base revision)
   useEffect(() => {
@@ -272,4 +258,3 @@ export function useInlineBlamePortal({
     portalMount,
   };
 }
-

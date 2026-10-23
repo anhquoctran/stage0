@@ -1,5 +1,6 @@
 export interface PreferenceBootstrap {
   schemaVersion: number;
+  keymap?: unknown;
   general?: Record<string, unknown>;
   appearance?: Record<string, unknown>;
   ai?: Record<string, unknown>;

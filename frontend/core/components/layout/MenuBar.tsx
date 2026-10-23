@@ -21,7 +21,7 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
     onOpenReleaseNotes: () => setShowReleaseNotesModal(true),
     onOpenAbout: () => setShowAboutModal(true),
   };
-  const { flags, recentRepos } = useApplicationMenu(callbacks);
+  const { flags, recentRepos, chord } = useApplicationMenu(callbacks, showShortcutsModal || showAboutModal || showReleaseNotesModal);
   useEffect(() => {
     if (!flags.repository)
       setActiveMenu((current) => (current === 'repository_menu' ? null : current));
@@ -50,6 +50,9 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
   }, []);
   return (
     <>
+      {chord && <div role="status" className="fixed bottom-9 left-3 z-[110] rounded-sm border border-surface1 bg-mantle px-3 py-2 text-xs text-text shadow-lg">
+        {chord} … <span className="text-subtext0">Waiting for second key · Esc to cancel</span>
+      </div>}
       {!hidden && (
         <nav
           ref={menuBarRef}

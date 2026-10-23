@@ -8,6 +8,9 @@ and Tauri load them directly.
 imports it as constants and Rust embeds the same JSON when building the native
 menu. Platform renderers must not duplicate its application tree or command
 metadata. OS-only App/Services/Window placement is declared in this configuration.
+`shared/keymaps.json` adds navigation commands, default aliases and editor/IDE/Git
+GUI preset overrides. The effective keymap is resolved with user preferences;
+menu defaults are not the runtime source of truth. See [keymaps](keymaps.md).
 
 | Area | Frontend | Backend |
 | --- | --- | --- |

@@ -1,7 +1,7 @@
 import React from 'react';
 import { GitPullRequest } from '../../../../common/components/icons/GitPullRequest';
 import { X } from '../../../../common/components/icons/X';
-import { formatShortcutText } from '../../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 import type { NewMrDraft } from '../../../../features/virtual-mr/types/NewMrDraft';
 
 export const TabBarDraftItem: React.FC<{
@@ -11,6 +11,7 @@ export const TabBarDraftItem: React.FC<{
   onClose: () => void;
 }> = ({ draftMr, isActive, onActivate, onClose }) => {
   const displayTitle = draftMr.title || `${draftMr.compareBranch} → ${draftMr.baseBranch}`;
+  const { title } = useCommandShortcut();
 
   return (
     <div
@@ -42,7 +43,7 @@ export const TabBarDraftItem: React.FC<{
           onClose();
         }}
         className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ml-1 cursor-pointer shrink-0 rounded-sm"
-        title={formatShortcutText('Close Draft (Ctrl+W)')}
+        title={title('close_tab', 'Close Draft')}
       >
         <X className="w-3 h-3" />
       </button>
@@ -52,4 +53,3 @@ export const TabBarDraftItem: React.FC<{
     </div>
   );
 };
-

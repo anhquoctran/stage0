@@ -33,6 +33,7 @@ export const PreferencesModal: React.FC = () => {
       handleResetDefaults,
     },
     ai: { aiDraft, aiBaseline, draftAiConfig, setDraftAiConfig },
+    keymaps: { draftKeymap, setDraftKeymap },
     navigation: {
       activeTab,
       setActiveTab,
@@ -92,6 +93,7 @@ export const PreferencesModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[var(--backdrop-modal)] backdrop-blur-xs animate-in fade-in duration-150 select-none">
       <div
+        role="dialog" aria-modal="true" aria-label="Preferences"
         className="relative w-full max-w-5xl h-[760px] max-h-[calc(100vh-2rem)] bg-mantle border border-surface0 shadow-2xl flex flex-col overflow-hidden text-text rounded-sm"
         onClick={(e) => e.stopPropagation()}
       >
@@ -117,6 +119,8 @@ export const PreferencesModal: React.FC = () => {
 
             {/* Right Column: Settings Content Area */}
             <PreferencesTabContainer
+              draftKeymap={draftKeymap}
+              setDraftKeymap={setDraftKeymap}
               currentTabId={currentTabId}
               currentChildItem={currentChildItem}
               draftShowInlineBlame={draftShowInlineBlame}

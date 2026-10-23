@@ -1,5 +1,9 @@
 {
   "schemaVersion": 1,
+  "keymap": {
+    "preset": "stage0",
+    "overrides": []
+  },
   "general": {
     "showInlineBlame": true,
     "streamResponse": true,

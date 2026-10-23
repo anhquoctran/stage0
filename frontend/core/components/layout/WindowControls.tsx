@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import type { WindowControlsProps } from '../../types/WindowControlsProps';
+import { useCommandShortcut } from '../../hooks/useCommandShortcut';
 
 export const WindowControls: React.FC<WindowControlsProps> = ({
   style = 'auto',
   className = '',
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
+  const { title } = useCommandShortcut();
   const [isMac, setIsMac] = useState(false);
 
   useEffect(() => {
@@ -73,7 +75,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
         <button
           type="button"
           onClick={handleClose}
-          title="Close (⌘W)"
+          title={title('close_window', 'Close')}
           aria-label="Close"
           className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]/70 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs relative"
         >

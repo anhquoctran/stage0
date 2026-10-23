@@ -6,6 +6,9 @@ use super::validation_records::{validate_git_credential, validate_mcp_server, va
 use serde_json::Value;
 
 pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
+    if let Some(keymap) = value.get("keymap") {
+        crate::core::keymaps::validate_settings(keymap)?;
+    }
     let general = object_section(value, "general")?;
     validate_optional_bool(general, "showInlineBlame", "general")?;
     validate_optional_bool(general, "streamResponse", "general")?;

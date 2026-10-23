@@ -6,8 +6,10 @@ import type { AiPreferencesEditor } from '../../ai/types/AiPreferencesEditor';
 import type { AiPreferencesSnapshot } from '../../ai/types/AiPreferencesSnapshot';
 import { type SandboxType } from '../../git/types/SandboxType';
 import type { PreferenceTab } from '../types/PreferenceTab';
+import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings';
 
 export interface PreferencesDraftSessionContext {
+  storedKeymap: KeymapSettings;
   storedThemeMode: ThemeMode;
   storedFontFamily: string;
   storedFontSize: number;

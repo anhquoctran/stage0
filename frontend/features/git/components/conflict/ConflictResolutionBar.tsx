@@ -3,7 +3,7 @@ import { FileCode } from '../../../../common/components/icons/FileCode';
 import { FolderOpen } from '../../../../common/components/icons/FolderOpen';
 import { RotateCw } from '../../../../common/components/icons/RotateCw';
 import { ShieldAlert } from '../../../../common/components/icons/ShieldAlert';
-import { formatShortcutText } from '../../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../../core/hooks/useCommandShortcut';
 import type { ConflictResolutionBarProps } from './ConflictResolutionBarProps';
 
 export function ConflictResolutionBar({
@@ -20,6 +20,7 @@ export function ConflictResolutionBar({
   refreshDiff,
   onSwitchToDiff,
 }: ConflictResolutionBarProps) {
+  const { title: commandTitle } = useCommandShortcut();
   return (
     <div className="bg-gradient-to-r from-red/15 via-red/10 to-red/5 border-b border-red/30 px-4 py-3 shrink-0 rounded-sm">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -79,7 +80,7 @@ export function ConflictResolutionBar({
               refreshDiff();
             }}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-            title={formatShortcutText('Refresh virtual conflict analysis (Ctrl+R)')}
+            title={commandTitle('refresh_diff', 'Refresh virtual conflict analysis')}
           >
             <RotateCw className="w-3.5 h-3.5 text-subtext0" />
             <span>Re-check</span>

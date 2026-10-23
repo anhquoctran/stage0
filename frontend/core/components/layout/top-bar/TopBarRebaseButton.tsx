@@ -5,10 +5,10 @@ import { Play } from '../../../../common/components/icons/Play';
 import { SkipForward } from '../../../../common/components/icons/SkipForward';
 import { Undo2 } from '../../../../common/components/icons/Undo2';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
+import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 
-export const TopBarRebaseButton: React.FC<{
-  shortcut: (value: string) => string;
-}> = ({ shortcut }) => {
+export const TopBarRebaseButton: React.FC = () => {
+  const { shortcut, title } = useCommandShortcut();
   const { isSyncing, runSync, setIsRebaseFromOpen, isRebasing } = useGitStore();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -37,7 +37,7 @@ export const TopBarRebaseButton: React.FC<{
         disabled={isSyncing}
         onClick={() => runSync('rebase')}
         className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[58px] rounded-sm"
-        title={shortcut('Rebase (Ctrl+Shift+R)')}
+        title={title('rebase', 'Rebase')}
       >
         <GitBranch className="w-5 h-5 text-primary shrink-0 transition-colors" />
         <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
@@ -50,7 +50,7 @@ export const TopBarRebaseButton: React.FC<{
         disabled={isSyncing}
         onClick={() => setIsOpen((prev) => !prev)}
         className="relative flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer rounded-sm"
-        title={shortcut('Rebase options (Ctrl+Alt+R)')}
+        title={title('rebase_from', 'Rebase options')}
       >
         <span
           aria-hidden="true"
@@ -76,7 +76,7 @@ export const TopBarRebaseButton: React.FC<{
               <GitBranch className="w-3.5 h-3.5 text-current transition-colors" />
               <span>Rebase</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+R')}</span>
+            <span className="text-[10px] text-subtext0 font-mono">{shortcut('rebase')}</span>
           </button>
 
           <button
@@ -91,7 +91,7 @@ export const TopBarRebaseButton: React.FC<{
               <GitBranch className="w-3.5 h-3.5 text-current transition-colors" />
               <span>Rebase from...</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+R')}</span>
+            <span className="text-[10px] text-subtext0 font-mono">{shortcut('rebase_from')}</span>
           </button>
 
           <div className="my-1 border-t border-surface0" />
@@ -149,4 +149,3 @@ export const TopBarRebaseButton: React.FC<{
     </div>
   );
 };
-
