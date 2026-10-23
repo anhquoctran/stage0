@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 
 export function loadWithMocks(url, dependencies, context) {
+  if (url.pathname.endsWith('.json')) return { default: JSON.parse(fs.readFileSync(url, 'utf8')) };
   context ??= {
     mocks: new Map(Object.entries(dependencies).filter(([id]) => id.startsWith('.') || id.startsWith('@/'))
       .map(([id, value]) => [resolveModule(id, url), value])),

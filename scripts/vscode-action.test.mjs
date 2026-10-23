@@ -65,7 +65,7 @@ test('RepositoryOverviewModal handles VS Code click with try/catch and error toa
 
 test('RepositoryOpenSubmenu handles VS Code click with error toast level', () => {
   const submenuSrc = readFileSync(
-    new URL('../frontend/core/components/layout/menu-bar/RepositoryOpenSubmenu.tsx', import.meta.url),
+    new URL('../frontend/core/services/applicationMenuFileActions.ts', import.meta.url),
     'utf-8'
   );
   assert.match(submenuSrc, /showToast\(msg,\s*['"]error['"]\)/);

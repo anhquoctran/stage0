@@ -29,7 +29,8 @@ their application callers migrate together (see report section 8).
 | External agents | `ai/components/ExternalAgentsTab.tsx` coordinates registry/install/details. `useAcpAgentAccount.ts` owns automatic account checks/auth and request epochs; `useAcpAgentPrompt.ts` owns prompt execution; `useCustomAcpAgentForm.ts` owns custom registration. `components/external-agents/` owns project/account/prompt detail sections and keyed cards. Metadata URL filtering remains in `utils/acpRegistryMetadata.ts`. |
 | Review panel | `review/components/ReviewPanel.tsx` retains profile/consent reset, load/poll/focus lifecycle and focus trap. `ReviewConfigurationSection.tsx` renders profile/safety/consent/actions; `ReviewRunSummary.tsx` renders run coverage/publication. Backend tool/evidence/publication checks remain authoritative. |
 | Other settings/viewers | Git binary detection/table, sandbox config/instance, file-list filter and conflict-resolution header live in named child directories. Existing tree/graph/endpoint controls are reused, not duplicated. |
-| Main layout | `core/components/hooks/useMainLayoutCoordination.ts` owns repo/window coordination; `useWorkspaceShortcuts.ts` owns shortcut registration/cleanup; `useSidebarResizing.ts` owns the splitter. `layout/useNativeMenuActions.ts` owns native-menu listener/disposal. `layout/MainLayoutModals.tsx` composes dialogs; `layout/MainLayoutDiffWorkspace.tsx` composes the diff workspace; named repository submenus own sync/open/merge/rebase presentation. |
+| Main layout | `core/components/hooks/useMainLayoutCoordination.ts` owns repo/window coordination; `useWorkspaceShortcuts.ts` owns workspace-only navigation/aliases; `useSidebarResizing.ts` owns the splitter. `layout/MainLayoutModals.tsx` composes dialogs; `layout/MainLayoutDiffWorkspace.tsx` composes the diff workspace. |
+| Application menu | `shared/application-menu.json` is the cross-runtime source for command IDs, labels, accelerators, grouping, enable/check keys and OS placement. `core/constants/applicationMenu.ts` exports typed constants/helpers. `layout/menu-bar/ConfiguredMenu.tsx` renders the tree; `menuIcons.ts` maps presentation icons. `layout/useApplicationMenu.ts` owns native listener disposal, macOS state sync and custom keyboard registration. `core/services/applicationMenuActions.ts` is the single native/custom dispatcher; file/text editing have named services. `applicationMenuState.ts` derives flags; `applicationMenuShortcuts.ts` matches exact modifiers and supplies shortcut help. |
 
 ## Contracts to preserve
 
@@ -49,6 +50,15 @@ their application callers migrate together (see report section 8).
   owning workflow; do not duplicate state or move callbacks into render side effects.
 - Preserve caller-level React keys when extracting mapped items. Preserve refs,
   accessibility attributes, focus/keyboard handling and conditional mounting.
+- Menu changes must update the shared JSON, not introduce a platform-specific
+  command list in JSX or Rust. macOS retains App/Services/Window roles, while
+  File/Edit/View/Repository/Help use the same application actions on every OS.
+  Custom menu buttons preserve text focus. The dispatcher rechecks live state;
+  native enable/check flags are UI availability, not authorization.
+- Menu accelerators have one execution owner: native macOS or the custom capture
+  listener, never both. Keep workspace-only S/U, file navigation, MR tab switching
+  and Ctrl/Cmd+W outside the menu dispatcher. Close Window uses
+  **Ctrl/Cmd+Shift+W** so it cannot close a window when closing an MR tab.
 - Maintain UI small-rounded consistency: apply `rounded-sm` (`--radius-sm: 4px`)
   across buttons, inputs, selects, textareas, visual `div` containers (cards, panels,
   dialogs, dropdowns, popovers, banners, toasts) and badges/tags. Preserve existing
@@ -101,3 +111,32 @@ plugins and `@` alias, and an isolated temporary output directory.
   follow both hook owners; no assertions were removed or skipped.
 - Verified on the current macOS host. No Windows/Linux execution, live provider
   inference, account/keychain interaction or visual native-window QA was performed.
+
+## Menu unification checkpoint (2026-10-23)
+
+The shared configuration is imported into the frontend and embedded as JSON data
+in the native Rust menu builder; there is no generated code or second menu tree.
+The previous hand-written menu components/submenu props and native action switch
+were removed. Their tracked history remains recoverable in Git.
+
+Recents supports exact-ID open/remove and clear on each platform. File paths
+disambiguate equal repository names. Release Notes, Repository Overview,
+rebase continuation/skip/abort, external tools, layout and theme actions are now
+also available from the macOS menu. Standard editing uses native roles on macOS
+and focused text editing in the custom menu. Native per-window state is restored
+on focus and discarded on window destruction.
+
+Menu checks: frontend typecheck, architecture, Cargo check, all 172 Rust tests,
+and an isolated production bundle pass. Ten new Node menu tests and four Rust
+menu tests cover tree/action parity for all three OS configs, state gates,
+shortcut matching/help, listener cleanup, focus preservation and submenu input.
+Full Node baseline: 269 tests / 248 pass / 21 fail. Final: 279 tests / 259 pass /
+20 fail; no new failures. The old repository-overview JSX-layout assertion now
+checks its owning config/icon registry/dispatcher and passes. Other pre-existing
+auth/preferences/language/mention failures remain; see test output, not the older
+checkpoint's totals, for the current baseline.
+
+Execution was on macOS only. Browser visual QA was attempted but no browser was
+available to the UI tool; no live native-menu or Windows/Linux visual smoke test
+is claimed. Existing bundle chunk/mixed-import warnings remain. Unrelated dirty
+release metadata and Markdown-font settings edits were preserved.

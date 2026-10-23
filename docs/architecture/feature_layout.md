@@ -4,6 +4,11 @@ Both application sources use `common`, `core`, and `features` directories. The
 entry points stay at `frontend/main.tsx` and `backend/src/lib.rs` because Vite
 and Tauri load them directly.
 
+`shared/application-menu.json` is core-owned, cross-runtime data: TypeScript
+imports it as constants and Rust embeds the same JSON when building the native
+menu. Platform renderers must not duplicate its application tree or command
+metadata. OS-only App/Services/Window placement is declared in this configuration.
+
 | Area | Frontend | Backend |
 | --- | --- | --- |
 | `common` | Reusable controls, icons, Markdown rendering/sanitizing and Day.js-based date/time display helpers. | Shared process execution. |

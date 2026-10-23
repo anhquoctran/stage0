@@ -8,6 +8,7 @@ implementation. See [feature layout](feature_layout.md) for shared ownership and
 
 | Area | Module ownership |
 |---|---|
+| Application menu | `core/menu.rs` is the stable IPC/event/recent-list facade. `menu/definition.rs` embeds `shared/application-menu.json`; `command.rs`/`node.rs` own its data types, `flags.rs` owns enable/check state, `native.rs` renders the macOS tree, and `runtime_state.rs` caches flags per window and updates the focused native menu. The window manager remains authoritative for repository presence; destroy events discard cached flags. Tests validate Windows/macOS/Linux configuration parity without claiming execution on those OSes. |
 | JSONC preferences | `preferences.rs` is the facade. `manager.rs` owns read/save/patch/reset and lock lifetimes; `storage.rs` owns secure filesystem operations; `jsonc_patch.rs` preserves CST formatting; `migration.rs` sanitizes legacy settings. |
 | Preference validation | `validation.rs` parses and bounds JSONC; `schema.rs` validates sections; `validation_fields.rs` supplies typed field checks; `validation_records.rs` validates MCP/reviewer records; `secrets.rs` rejects credential material. `runtime_config.rs` validates/applies runtime selections. |
 | AI preference transaction | `ai/preferences.rs` coordinates keychain and runtime application; its tests cover rollback. This is distinct from JSONC disk storage. |
@@ -48,6 +49,11 @@ implementation. See [feature layout](feature_layout.md) for shared ownership and
 6. **Credentials/Git:** retain zeroization, one-time credential cleanup, origin
    matching, subprocess bounds, URL/ref validation, progress, operation leases,
    and cancellation. Keep `cfg` branches for each supported platform.
+7. **Menu:** command IDs and `menu-action` payloads remain stable. The shared JSON
+   owns labels/order/accelerators/conditions; do not add another hard-coded tree.
+   Standard macOS editing/services/window roles stay native. `update_application_menu_state`
+   is window-scoped UI metadata, not authority for Git actions; actual operations
+   retain their backend validation. Recheck fresh frontend state at dispatch too.
 
 ## Size and dependency rules
 

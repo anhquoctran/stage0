@@ -1,0 +1,129 @@
+{
+  "commands": {
+    "about": { "label": "About Stage0", "icon": "Info" },
+    "preferences": { "label": "Preferences...", "shortcut": "CmdOrCtrl+,", "icon": "Cog" },
+    "services": { "label": "Services", "native": "services" },
+    "hide": { "label": "Hide Stage0", "native": "hide" },
+    "hide_others": { "label": "Hide Others", "native": "hide_others" },
+    "show_all": { "label": "Show All", "native": "show_all" },
+    "quit": { "label": "Quit Stage0", "native": "quit" },
+    "new_window": { "label": "New Window", "shortcut": "CmdOrCtrl+Shift+N", "icon": "Columns2" },
+    "open_repo": { "label": "Open...", "shortcut": "CmdOrCtrl+O", "icon": "FolderOpen" },
+    "open_repo_new_window": { "label": "Open in New Window...", "icon": "Monitor" },
+    "clone_repo": { "label": "Clone...", "shortcut": "CmdOrCtrl+Shift+O", "icon": "FolderGit2" },
+    "close_repo": { "label": "Close Repository", "requires": ["repository"], "icon": "FolderX" },
+    "close_window": { "label": "Close Window", "shortcut": "CmdOrCtrl+Shift+W", "icon": "X" },
+    "exit": { "label": "Exit", "shortcut": "Alt+F4", "icon": "Power" },
+    "clear_recent": { "label": "Clear Recently Opened", "requires": ["recents"], "icon": "Trash2" },
+    "undo": { "label": "Undo", "shortcut": "CmdOrCtrl+Z", "native": "undo" },
+    "redo": { "label": "Redo", "shortcut": "CmdOrCtrl+Shift+Z", "native": "redo" },
+    "cut": { "label": "Cut", "shortcut": "CmdOrCtrl+X", "native": "cut" },
+    "copy": { "label": "Copy", "shortcut": "CmdOrCtrl+C", "native": "copy" },
+    "paste": { "label": "Paste", "shortcut": "CmdOrCtrl+V", "native": "paste" },
+    "select_all": { "label": "Select All", "shortcut": "CmdOrCtrl+A", "native": "select_all" },
+    "reveal_file": { "label": "Open in {fileManager}", "shortcut": "Alt+Shift+R", "requires": ["file"], "icon": "FolderOpen" },
+    "view_blame": { "label": "View Git Blame", "shortcut": "Alt+B", "requires": ["textFile"], "icon": "History" },
+    "copy_rel_path": { "label": "Copy Relative Path", "shortcut": "CmdOrCtrl+Shift+C", "requires": ["file"], "icon": "Copy" },
+    "copy_abs_path": { "label": "Copy Absolute Path", "shortcut": "Alt+Shift+C", "requires": ["file"], "icon": "FileText" },
+    "copy_remote_url": { "label": "Copy Remote File URL", "shortcut": "CmdOrCtrl+Shift+U", "requires": ["file"], "icon": "Globe" },
+    "copy_remote_url_from": { "label": "Copy Remote File URL from...", "shortcut": "CmdOrCtrl+Alt+U", "requires": ["file"], "icon": "ExternalLink" },
+    "previous_file": { "label": "Previous File", "requires": ["repository"], "icon": "ArrowUp" },
+    "next_file": { "label": "Next File", "requires": ["repository"], "icon": "ArrowDown" },
+    "view_split": { "label": "Side-by-side (Split)", "shortcut": "CmdOrCtrl+1", "requires": ["repository"], "checked": "split", "icon": "Columns2" },
+    "view_unified": { "label": "Inline (Unified)", "shortcut": "CmdOrCtrl+2", "requires": ["repository"], "checked": "unified", "icon": "Rows2" },
+    "toggle_blame": { "label": "Toggle File Blame", "requires": ["textFile"], "checked": "blame", "icon": "History" },
+    "toggle_inline_blame": { "label": "Toggle Inline Blame", "shortcut": "Alt+Shift+B", "requires": ["repository"], "checked": "inlineBlame", "icon": "GitCommit" },
+    "view_git_graph": { "label": "View Git Graph", "requires": ["repository"], "icon": "GitCommit" },
+    "file_list_flat": { "label": "File List: Flat Layout", "requires": ["repository"], "checked": "flat", "icon": "List" },
+    "file_list_tree": { "label": "File List: Tree Layout", "requires": ["repository"], "checked": "tree", "icon": "FolderTree" },
+    "toggle_theme": { "label": "Toggle Theme", "icon": "SunMoon" },
+    "toggle_perf_monitor": { "label": "Display Perf Monitor", "shortcut": "CmdOrCtrl+Shift+F12", "checked": "performance", "icon": "HeartPulse" },
+    "fullscreen": { "label": "Enter Full Screen", "native": "fullscreen" },
+    "repo_overview": { "label": "Repository Overview...", "shortcut": "CmdOrCtrl+I", "requires": ["repository"], "icon": "Info" },
+    "new_mr": { "label": "New Virtual MR...", "shortcut": "CmdOrCtrl+T", "requires": ["repository"], "icon": "GitPullRequest" },
+    "fetch": { "label": "Fetch (All & Prune)", "shortcut": "CmdOrCtrl+Shift+F", "requires": ["repository", "idle"], "icon": "RefreshCw" },
+    "pull": { "label": "Pull", "shortcut": "CmdOrCtrl+Shift+P", "requires": ["repository", "idle"], "icon": "Download" },
+    "pull_from": { "label": "Pull from...", "shortcut": "CmdOrCtrl+Alt+P", "requires": ["repository", "idle"], "icon": "Download" },
+    "merge": { "label": "Merge Upstream", "shortcut": "CmdOrCtrl+Shift+M", "requires": ["repository", "idle"], "icon": "GitMerge" },
+    "merge_from": { "label": "Merge from...", "shortcut": "CmdOrCtrl+Alt+M", "requires": ["repository", "idle"], "icon": "GitBranch" },
+    "rebase": { "label": "Rebase", "shortcut": "CmdOrCtrl+Shift+R", "requires": ["repository", "idle"], "icon": "GitBranch" },
+    "rebase_from": { "label": "Rebase from...", "shortcut": "CmdOrCtrl+Alt+R", "requires": ["repository", "idle"], "icon": "GitBranch" },
+    "rebase_continue": { "label": "Continue", "requires": ["repository", "idle", "rebasing"], "icon": "Play" },
+    "rebase_skip": { "label": "Skip Commit", "requires": ["repository", "idle", "rebasing"], "icon": "SkipForward" },
+    "rebase_abort": { "label": "Abort", "requires": ["repository", "idle", "rebasing"], "icon": "Undo2" },
+    "swap_branches": { "label": "Swap Base & Compare", "requires": ["repository"], "icon": "ArrowLeftRight" },
+    "refresh_diff": { "label": "Refresh Diff & Conflicts", "shortcut": "CmdOrCtrl+R", "requires": ["repository"], "icon": "GitCompare" },
+    "open_terminal": { "label": "Terminal", "shortcut": "Alt+Shift+T", "requires": ["repository"], "icon": "Terminal" },
+    "open_vscode": { "label": "Visual Studio Code", "shortcut": "Alt+Shift+V", "requires": ["repository"], "icon": "VsCode" },
+    "open_explorer": { "label": "{fileManager}", "shortcut": "Alt+Shift+E", "requires": ["repository"], "icon": "Folder" },
+    "repo_settings": { "label": "Repository Settings...", "shortcut": "CmdOrCtrl+Alt+S", "requires": ["repository"], "icon": "FolderCog" },
+    "minimize": { "label": "Minimize", "native": "minimize" },
+    "zoom": { "label": "Zoom" },
+    "bring_all_to_front": { "label": "Bring All to Front", "native": "bring_all_to_front" },
+    "shortcuts": { "label": "Keyboard Shortcuts", "shortcut": "CmdOrCtrl+/", "icon": "Keyboard" },
+    "open_webview_devtools": { "label": "Developer Tools", "icon": "Code2" },
+    "release_notes": { "label": "View release notes", "icon": "FileText" }
+  },
+  "recent": { "emptyLabel": "No Recent Repositories", "removeLabel": "Remove from Recents" },
+  "menus": [
+    { "id": "application_menu", "label": "Stage0", "platforms": ["macos"], "items": [
+      { "command": "about" }, { "separator": true }, { "command": "preferences" },
+      { "separator": true }, { "command": "services" }, { "separator": true },
+      { "command": "hide" }, { "command": "hide_others" }, { "command": "show_all" },
+      { "separator": true }, { "command": "quit" }
+    ] },
+    { "id": "file_menu", "label": "File", "items": [
+      { "command": "new_window" }, { "command": "open_repo" },
+      { "command": "open_repo_new_window" }, { "command": "clone_repo" },
+      { "id": "open_recent", "label": "Recents", "icon": "Clock", "dynamic": "recentRepositories" },
+      { "separator": true }, { "command": "close_repo" }, { "command": "close_window" },
+      { "separator": true, "platforms": ["windows", "linux"] },
+      { "command": "preferences", "platforms": ["windows", "linux"] },
+      { "separator": true, "platforms": ["windows", "linux"] },
+      { "command": "exit", "platforms": ["windows", "linux"] }
+    ] },
+    { "id": "edit_menu", "label": "Edit", "items": [
+      { "command": "undo" }, { "command": "redo" }, { "separator": true },
+      { "command": "cut" }, { "command": "copy" }, { "command": "paste" }, { "command": "select_all" },
+      { "separator": true }, { "command": "reveal_file" }, { "command": "view_blame" },
+      { "separator": true }, { "command": "copy_rel_path" }, { "command": "copy_abs_path" },
+      { "separator": true }, { "command": "copy_remote_url" }, { "command": "copy_remote_url_from" },
+      { "separator": true }, { "command": "previous_file" }, { "command": "next_file" }
+    ] },
+    { "id": "view_menu", "label": "View", "items": [
+      { "command": "view_split" }, { "command": "view_unified" }, { "separator": true },
+      { "command": "toggle_blame" }, { "command": "toggle_inline_blame" }, { "separator": true },
+      { "command": "view_git_graph" }, { "separator": true },
+      { "command": "file_list_flat" }, { "command": "file_list_tree" }, { "separator": true },
+      { "command": "toggle_theme" }, { "separator": true },
+      { "id": "performance_menu", "label": "Performance", "icon": "HeartPulse", "items": [{ "command": "toggle_perf_monitor" }] },
+      { "separator": true, "platforms": ["macos"] }, { "command": "fullscreen", "platforms": ["macos"] }
+    ] },
+    { "id": "repository_menu", "label": "Repository", "requires": ["repository"], "items": [
+      { "command": "repo_overview" }, { "command": "new_mr" }, { "separator": true },
+      { "id": "repo_sync_menu", "label": "Synchronize", "icon": "RefreshCw", "items": [
+        { "command": "fetch" }, { "command": "pull" }, { "command": "pull_from" }
+      ] },
+      { "id": "repo_merge_menu", "label": "Merge", "icon": "GitMerge", "items": [
+        { "command": "merge" }, { "command": "merge_from" }
+      ] },
+      { "id": "repo_rebase_menu", "label": "Rebase", "icon": "GitBranch", "items": [
+        { "command": "rebase" }, { "command": "rebase_from" }, { "separator": true },
+        { "command": "rebase_continue" }, { "command": "rebase_skip" }, { "command": "rebase_abort" }
+      ] },
+      { "separator": true }, { "command": "swap_branches" }, { "command": "refresh_diff" },
+      { "separator": true },
+      { "id": "repo_open_menu", "label": "Open in", "icon": "ExternalLink", "items": [
+        { "command": "open_terminal" }, { "command": "open_vscode" }, { "command": "open_explorer" }
+      ] },
+      { "separator": true }, { "command": "repo_settings" }
+    ] },
+    { "id": "window_menu", "label": "Window", "platforms": ["macos"], "items": [
+      { "command": "minimize" }, { "command": "zoom" }, { "separator": true }, { "command": "bring_all_to_front" }
+    ] },
+    { "id": "help_menu", "label": "Help", "items": [
+      { "command": "shortcuts" }, { "command": "open_webview_devtools" }, { "separator": true },
+      { "command": "release_notes" }, { "command": "about" }
+    ] }
+  ]
+}

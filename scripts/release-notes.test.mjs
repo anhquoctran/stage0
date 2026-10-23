@@ -4,12 +4,14 @@ import { readFileSync, existsSync } from 'node:fs';
 
 test('MenuBarHelpMenu renders View release notes menu item above About Stage0', () => {
   const menuSrc = readFileSync(
-    new URL('../frontend/core/components/layout/menu-bar/MenuBarHelpMenu.tsx', import.meta.url),
+    new URL('../shared/application-menu.json', import.meta.url),
     'utf-8'
   );
 
-  const releaseNotesIndex = menuSrc.indexOf('View release notes');
-  const aboutIndex = menuSrc.indexOf('About Stage0');
+  const menu = JSON.parse(menuSrc);
+  const help = menu.menus.find((node) => node.id === 'help_menu');
+  const releaseNotesIndex = help.items.findIndex((node) => node.command === 'release_notes');
+  const aboutIndex = help.items.findIndex((node) => node.command === 'about');
 
   assert.ok(releaseNotesIndex !== -1, 'View release notes menu item must exist');
   assert.ok(aboutIndex !== -1, 'About Stage0 menu item must exist');
@@ -17,7 +19,10 @@ test('MenuBarHelpMenu renders View release notes menu item above About Stage0', 
     releaseNotesIndex < aboutIndex,
     'View release notes must be positioned above About Stage0'
   );
-  assert.match(menuSrc, /onOpenReleaseNotes\(\)/);
+  assert.equal(menu.commands.release_notes.label, 'View release notes');
+  assert.equal(menu.commands.about.label, 'About Stage0');
+  const actions = readFileSync(new URL('../frontend/core/services/applicationMenuActions.ts', import.meta.url), 'utf8');
+  assert.match(actions, /release_notes:\s*callbacks.onOpenReleaseNotes/);
 });
 
 test('MenuBar wires showReleaseNotesModal state and mounts ReleaseNotesModal', () => {
@@ -27,7 +32,7 @@ test('MenuBar wires showReleaseNotesModal state and mounts ReleaseNotesModal', (
   );
 
   assert.match(menuBarSrc, /showReleaseNotesModal/);
-  assert.match(menuBarSrc, /onOpenReleaseNotes=\{[^}]*setShowReleaseNotesModal\(true\)\}/);
+  assert.match(menuBarSrc, /onOpenReleaseNotes:\s*\(\)\s*=>\s*setShowReleaseNotesModal\(true\)/);
   assert.match(menuBarSrc, /<ReleaseNotesModal/);
 });
 

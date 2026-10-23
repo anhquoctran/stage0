@@ -25,23 +25,28 @@ test('TopBarRepoOverviewButton uses circle Info icon and triggers modal', () => 
 
 test('MenuBarRepositoryMenu contains Repository Overview action with circle Info icon', () => {
   const menuSrc = readFileSync(
-    new URL('../frontend/core/components/layout/menu-bar/MenuBarRepositoryMenu.tsx', import.meta.url),
+    new URL('../frontend/core/components/layout/menu-bar/menuIcons.ts', import.meta.url),
     'utf-8'
   );
   assert.match(menuSrc, /import\s*\{[^}]*Info[^}]*\}\s*from/);
-  assert.match(menuSrc, /<Info\s+className=/);
-  assert.match(menuSrc, /Repository Overview\.\.\./);
-  assert.match(menuSrc, /setIsRepoOverviewOpen\(true\)/);
-  assert.match(menuSrc, /Ctrl\+I/);
+  assert.match(menuSrc, /Info/);
+  const config = JSON.parse(readFileSync(new URL('../shared/application-menu.json', import.meta.url), 'utf8'));
+  assert.equal(config.commands.repo_overview.icon, 'Info');
+  assert.equal(config.commands.repo_overview.label, 'Repository Overview...');
+  assert.equal(config.commands.repo_overview.shortcut, 'CmdOrCtrl+I');
+  assert.ok(config.menus.find((node) => node.id === 'repository_menu').items.some((node) => node.command === 'repo_overview'));
+  const actions = readFileSync(new URL('../frontend/core/services/applicationMenuActions.ts', import.meta.url), 'utf8');
+  assert.match(actions, /setIsRepoOverviewOpen\(true\)/);
 });
 
 test('useWorkspaceShortcuts handles Ctrl+I shortcut for repository overview', () => {
   const shortcutSrc = readFileSync(
-    new URL('../frontend/core/components/hooks/useWorkspaceShortcuts.ts', import.meta.url),
+    new URL('../frontend/core/services/applicationMenuShortcuts.ts', import.meta.url),
     'utf-8'
   );
-  assert.match(shortcutSrc, /isOverviewShortcut/);
-  assert.match(shortcutSrc, /setIsRepoOverviewOpen\(true\)/);
+  assert.match(shortcutSrc, /menuActionForShortcut/);
+  const actions = readFileSync(new URL('../frontend/core/services/applicationMenuActions.ts', import.meta.url), 'utf8');
+  assert.match(actions, /repo_overview:\s*\(\) => git.setIsRepoOverviewOpen\(true\)/);
 });
 
 test('MainLayoutModals includes RepositoryOverviewModal', () => {
@@ -79,11 +84,13 @@ test('RepositoryOverviewModal uses standard green/blue badges and official VsCod
 
 test('RepositoryOpenSubmenu uses official VsCode icon', () => {
   const submenuSrc = readFileSync(
-    new URL('../frontend/core/components/layout/menu-bar/RepositoryOpenSubmenu.tsx', import.meta.url),
+    new URL('../frontend/core/components/layout/menu-bar/menuIcons.ts', import.meta.url),
     'utf-8'
   );
   assert.match(submenuSrc, /import\s*\{[^}]*VsCode[^}]*\}\s*from/);
-  assert.match(submenuSrc, /<VsCode\s+className=/);
+  assert.match(submenuSrc, /VsCode/);
+  const config = JSON.parse(readFileSync(new URL('../shared/application-menu.json', import.meta.url), 'utf8'));
+  assert.equal(config.commands.open_vscode.icon, 'VsCode');
 });
 
 test('RepositoryOverviewModal leaves TopBar window controls and title row accessible', () => {
@@ -96,6 +103,5 @@ test('RepositoryOverviewModal leaves TopBar window controls and title row access
   assert.match(modalSrc, /z-50/);
   assert.doesNotMatch(modalSrc, /fixed inset-0/);
 });
-
 
 
