@@ -175,7 +175,7 @@ export const MenuBarRepositoryMenu: React.FC<{
           >
             <div className="flex items-center gap-2">
               <Info className="w-3.5 h-3.5 group-hover:text-text transition-colors" />
-              <span>Repository Overview...</span>
+              <span>Repository Information...</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+I')}</span>
           </button>

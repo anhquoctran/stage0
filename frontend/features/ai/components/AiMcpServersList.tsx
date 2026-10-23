@@ -47,7 +47,7 @@ export const AiMcpServersList: React.FC<{
           <button
             type="button"
             onClick={() => onOpenAddServer(MCP_PRESET_TEMPLATES[0])}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer border border-surface2 shadow-xs mt-1 rounded-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer shadow-xs mt-1 rounded-sm"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Default Git MCP Server</span>
@@ -114,7 +114,7 @@ export const AiMcpServersList: React.FC<{
                   <button
                     type="button"
                     onClick={() => onToggleServer(server.id)}
-                    className={`shrink-0 whitespace-nowrap px-2 py-1 text-[11px] font-semibold border transition-all cursor-pointer rounded-sm ${
+                    className={`shrink-0 whitespace-nowrap px-2 py-1 text-[11px] font-semibold transition-all cursor-pointer rounded-sm ${
                       server.enabled
                         ? 'bg-surface1 border-surface2 text-text shadow-xs'
                         : 'bg-surface0/50 border-surface0 text-subtext0 hover:text-text'

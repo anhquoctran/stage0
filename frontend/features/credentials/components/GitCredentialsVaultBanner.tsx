@@ -30,7 +30,7 @@ export function GitCredentialsVaultBanner({
             clearError();
             setFormError(null);
           }}
-          className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-sm transition-colors cursor-pointer shadow-xs border border-brand"
+          className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-sm transition-colors cursor-pointer shadow-xs"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Add Credential</span>

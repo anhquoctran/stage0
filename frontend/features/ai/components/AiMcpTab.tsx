@@ -144,7 +144,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               <button
                 type="button"
                 onClick={() => state.mcp.handleOpenAddServer()}
-                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer shadow-xs border border-surface2 rounded-sm"
+                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer shadow-xs rounded-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add MCP Server</span>
@@ -162,7 +162,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 key={preset.name}
                 type="button"
                 onClick={() => state.mcp.handleOpenAddServer(preset)}
-                className="flex shrink-0 items-center gap-1 whitespace-nowrap px-2.5 py-1 text-[11px] font-medium bg-surface0 border border-surface1 hover:bg-surface1 text-text transition-colors cursor-pointer rounded-sm"
+                className="flex shrink-0 items-center gap-1 whitespace-nowrap px-2.5 py-1 text-[11px] font-medium bg-surface0 hover:bg-surface1 text-text transition-colors cursor-pointer rounded-sm"
               >
                 <Plus className="w-3 h-3 text-subtext0" />
                 <span>{preset.name}</span>
