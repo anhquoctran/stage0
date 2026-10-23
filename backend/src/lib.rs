@@ -86,6 +86,7 @@ pub fn run() {
                     }
                 }
                 WindowEvent::Destroyed => {
+                    menu::forget_window(&window.app_handle(), window.label());
                     if window.label() != notifications::NOTIFICATION_HOST_LABEL {
                         destroy_window(&window.app_handle(), window.label());
                         notifications::close_notification_host_if_unused(
@@ -134,6 +135,7 @@ pub fn run() {
         .manage(WatcherState::new())
         .manage(SandboxManager::new())
         .manage(WindowManagerState::default())
+        .manage(menu::MenuRuntimeState::default())
         .manage(credentials::GitCredentialScanCoordinator::default())
         .manage(notifications::NotificationRuntime::default())
         .setup(|app| {
@@ -212,6 +214,7 @@ pub fn run() {
             commands::delete_recent_repo,
             commands::clear_recent_repos,
             menu::update_recent_repositories_menu,
+            menu::update_application_menu_state,
             commands::get_branches,
             commands::get_current_branch_graph,
             commands::get_git_commit_message,

@@ -6,7 +6,6 @@ export function useTabBarShortcuts({
   visibleSessions,
   activeSessionId,
   isDraftActive,
-  onOpenNewDraft,
   onCloseNewDraft,
   onCloseSession,
   onSwitchSession,
@@ -24,11 +23,8 @@ export function useTabBarShortcuts({
     if (!enabled) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+T: New Virtual MR
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 't' && !e.shiftKey && !e.altKey) {
-        e.preventDefault();
-        onOpenNewDraft();
-      }
+      // Ctrl/Cmd+T belongs to the common application menu; do not run it twice.
+      if (e.defaultPrevented) return;
 
       // Ctrl+W: Close Current Virtual MR / Draft
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'w' && !e.shiftKey && !e.altKey) {
@@ -60,10 +56,8 @@ export function useTabBarShortcuts({
     visibleSessions,
     activeSessionId,
     isDraftActive,
-    onOpenNewDraft,
     onCloseNewDraft,
     onCloseSession,
     onSwitchSession,
   ]);
 }
-
