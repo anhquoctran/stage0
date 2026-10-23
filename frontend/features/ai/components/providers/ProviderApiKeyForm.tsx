@@ -21,7 +21,7 @@ export function ProviderApiKeyForm({
   return (
     <div className="space-y-2.5">
       {activeProviderPreset.requiresApiKey ? (
-        <div className="p-3 bg-base/60 border border-surface1">
+        <div className="p-3 bg-base/60 border border-surface1 rounded-sm">
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-semibold text-text">
               API Secret Key <span className="text-red">*</span>
@@ -50,12 +50,12 @@ export function ProviderApiKeyForm({
                   ? 'Key saved securely. Enter a new key to replace it.'
                   : 'Paste your provider API key'
               }
-              className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+              className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
             <button
               type="button"
               onClick={() => setShowApiKey(!showApiKey)}
-              className="absolute right-2.5 p-1 text-subtext0 hover:text-text cursor-pointer"
+              className="absolute right-2.5 p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
               title={showApiKey ? 'Hide secret key' : 'Show secret key'}
             >
               {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -65,7 +65,7 @@ export function ProviderApiKeyForm({
             type="button"
             disabled={isCheckingApiKey}
             onClick={() => void onLoadApiKey(aiConfig.provider)}
-            className="mt-2 border border-surface1 px-2.5 py-1 text-[11px] disabled:opacity-40"
+            className="mt-2 border border-surface1 px-2.5 py-1 text-[11px] disabled:opacity-40 rounded-sm"
             title="Checks only whether a key is saved in the OS keyring."
           >
             {isCheckingApiKey ? 'Checking…' : 'Check saved API key'}
@@ -77,7 +77,7 @@ export function ProviderApiKeyForm({
           )}
         </div>
       ) : (
-        <div className="p-3 bg-base/60 border border-surface1 flex items-center gap-2.5 text-xs text-subtext0">
+        <div className="p-3 bg-base/60 border border-surface1 flex items-center gap-2.5 text-xs text-subtext0 rounded-sm">
           <ShieldCheck className="w-4 h-4 text-green shrink-0" />
           <span>
             Ollama runs locally on this machine (http://localhost:11434) and does not need an API

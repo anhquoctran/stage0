@@ -69,7 +69,7 @@ export const RepositoryLabelsTab: React.FC = () => {
           <button
             type="button"
             onClick={loadPresetLabels}
-            className="shrink-0 whitespace-nowrap px-2.5 py-1.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer border border-surface1"
+            className="shrink-0 whitespace-nowrap px-2.5 py-1.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer border border-surface1 rounded-sm"
           >
             Load Presets
           </button>
@@ -82,7 +82,7 @@ export const RepositoryLabelsTab: React.FC = () => {
               setLabelFormColor('#3b82f6');
               setIsAddingLabel(true);
             }}
-            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40 rounded-sm"
           >
             <Plus className="w-3.5 h-3.5 shrink-0" />
             <span>New Label</span>
@@ -106,7 +106,7 @@ export const RepositoryLabelsTab: React.FC = () => {
                 setIsAddingLabel(false);
                 setEditingLabelId(null);
               }}
-              className="text-subtext0 hover:text-text cursor-pointer"
+              className="text-subtext0 hover:text-text cursor-pointer rounded-sm"
             >
               <X className="w-4 h-4" />
             </button>
@@ -121,7 +121,7 @@ export const RepositoryLabelsTab: React.FC = () => {
                 placeholder="e.g. priority-high"
                 value={labelFormName}
                 onChange={(e) => setLabelFormName(e.target.value)}
-                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none"
+                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none rounded-sm"
               />
             </div>
             <div className="col-span-2">
@@ -131,7 +131,7 @@ export const RepositoryLabelsTab: React.FC = () => {
                 placeholder="Describe the purpose of this label..."
                 value={labelFormDesc}
                 onChange={(e) => setLabelFormDesc(e.target.value)}
-                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none"
+                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none rounded-sm"
               />
             </div>
           </div>
@@ -144,7 +144,7 @@ export const RepositoryLabelsTab: React.FC = () => {
                 type="color"
                 value={labelFormColor}
                 onChange={(e) => setLabelFormColor(e.target.value)}
-                className="w-8 h-8 border-0 cursor-pointer bg-transparent"
+                className="w-8 h-8 border-0 cursor-pointer bg-transparent rounded-sm"
               />
               <div className="flex items-center gap-1.5 flex-wrap">
                 {COLOR_PRESETS.map((c) => (
@@ -152,7 +152,7 @@ export const RepositoryLabelsTab: React.FC = () => {
                     key={c}
                     type="button"
                     onClick={() => setLabelFormColor(c)}
-                    className="w-6 h-6 border border-surface1 transition-transform hover:scale-110 cursor-pointer"
+                    className="w-6 h-6 border border-surface1 transition-transform hover:scale-110 cursor-pointer rounded-sm"
                     style={{ backgroundColor: c }}
                   />
                 ))}
@@ -167,13 +167,13 @@ export const RepositoryLabelsTab: React.FC = () => {
                 setIsAddingLabel(false);
                 setEditingLabelId(null);
               }}
-              className="px-3 py-1 bg-surface0 text-xs cursor-pointer"
+              className="px-3 py-1 bg-surface0 text-xs cursor-pointer rounded-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
+              className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
             >
               Save Label
             </button>
@@ -243,7 +243,7 @@ export const RepositoryLabelsTab: React.FC = () => {
                             setLabelFormDesc(lbl.description || '');
                             setIsAddingLabel(false);
                           }}
-                          className="p-1.5 text-subtext0 hover:bg-surface1 hover:text-text cursor-pointer"
+                          className="p-1.5 text-subtext0 hover:bg-surface1 hover:text-text cursor-pointer rounded-sm"
                           title={`Edit ${lbl.name}`}
                           aria-label={`Edit ${lbl.name}`}
                         >
@@ -252,7 +252,7 @@ export const RepositoryLabelsTab: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => deleteRepoLabel(lbl.id)}
-                          className="p-1.5 text-subtext0 hover:bg-red-500/20 hover:text-red-400 cursor-pointer"
+                          className="p-1.5 text-subtext0 hover:bg-red-500/20 hover:text-red-400 cursor-pointer rounded-sm"
                           title={`Delete ${lbl.name}`}
                           aria-label={`Delete ${lbl.name}`}
                         >

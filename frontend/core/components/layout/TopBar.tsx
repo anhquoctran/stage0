@@ -22,7 +22,7 @@ export const TopBar: React.FC = () => {
       <TopBarTitleRow isMac={isMac} />
 
       {/* ROW 2: Git Workspace Action Toolbar */}
-      <div className="h-16 bg-mantle border-b border-surface0 px-3.5 flex items-center justify-between shrink-0 select-none relative z-40">
+      <div className="h-16 bg-mantle border-b border-surface0 px-3.5 flex items-center justify-between shrink-0 select-none relative z-40 rounded-sm">
         {/* Left Section: Active Repository + SourceTree Action Ribbon */}
         <div className="flex items-center gap-2 min-w-0">
           <TopBarRepoBadge />

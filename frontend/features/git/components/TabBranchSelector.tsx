@@ -77,7 +77,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
         disabled={disabled || !branches}
         onClick={() => setIsOpen(!isOpen)}
         title={title || `${roleLabel}: ${value || 'Select branch'}`}
-        className={`inline-flex items-center gap-2 px-2.5 py-1 text-left transition-colors min-w-[110px] border ${
+        className={`inline-flex items-center gap-2 px-2.5 py-1 text-left transition-colors min-w-[110px] border rounded-sm ${
           maxWidthClass || 'max-w-[360px]'
         } ${
           disabled || !branches
@@ -93,15 +93,15 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1 min-w-[280px] w-max max-w-sm shadow-2xl bg-mantle border border-surface0 z-[120] overflow-hidden py-1 animate-in fade-in duration-100 text-left">
+        <div className="absolute left-0 top-full mt-1 min-w-[280px] w-max max-w-sm shadow-2xl bg-mantle border border-surface0 z-[120] overflow-hidden py-1 animate-in fade-in duration-100 text-left rounded-sm">
           {/* Header indicator */}
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between">
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between rounded-sm">
             <span>{roleLabel}</span>
             <span className="font-mono text-[9px] text-brand lowercase">MR branch</span>
           </div>
 
           {/* Search box */}
-          <div className="p-2 bg-base/40 border-b border-surface0/60">
+          <div className="p-2 bg-base/40 border-b border-surface0/60 rounded-sm">
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-subtext0" />
               <input
@@ -110,7 +110,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
                 placeholder="Filter branches..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-2.5 py-1 bg-mantle border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-none focus:border-brand font-mono"
+                className="w-full pl-8 pr-2.5 py-1 bg-mantle border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-none focus:border-brand font-mono rounded-sm"
               />
             </div>
           </div>
@@ -118,7 +118,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
           <div className="max-h-56 overflow-y-auto divide-y divide-surface0/60">
             {/* Local Branches */}
             <div className="py-1">
-              <div className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-subtext0 bg-mantle flex items-center gap-1.5">
+              <div className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-subtext0 bg-mantle flex items-center gap-1.5 rounded-sm">
                 <GitBranch className="w-3 h-3 text-brand" />
                 <span>Local Branches ({localBranches.length})</span>
               </div>
@@ -136,7 +136,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
                         onChange(branch);
                         setIsOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-mono transition-colors text-left cursor-pointer ${
+                      className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-mono transition-colors text-left cursor-pointer rounded-sm ${
                         isSelected
                           ? 'bg-brand/10 text-brand font-medium'
                           : 'hover:bg-surface0 text-text'
@@ -160,7 +160,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
             {/* Remote Branches */}
             {remoteBranches.length > 0 && (
               <div className="py-1">
-                <div className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-subtext0 bg-mantle flex items-center gap-1.5">
+                <div className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-subtext0 bg-mantle flex items-center gap-1.5 rounded-sm">
                   <Globe className="w-3 h-3 text-subtext0" />
                   <span>Remote Branches ({remoteBranches.length})</span>
                 </div>
@@ -174,7 +174,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
                         onChange(branch);
                         setIsOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-mono transition-colors text-left cursor-pointer ${
+                      className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-mono transition-colors text-left cursor-pointer rounded-sm ${
                         isSelected
                           ? 'bg-brand/10 text-brand font-medium'
                           : 'hover:bg-surface0 text-text'

@@ -13,15 +13,15 @@ export function ConflictMarkedFileView({
   enableLigatures,
 }: ConflictMarkedFileViewProps) {
   return (
-    <div className="max-w-6xl mx-auto border border-surface0  overflow-hidden bg-mantle shadow-sm">
-      <div className="bg-surface0 px-3.5 py-2 border-b border-surface1 flex items-center justify-between">
+    <div className="max-w-6xl mx-auto border border-surface0 rounded-sm overflow-hidden bg-mantle shadow-sm">
+      <div className="bg-surface0 px-3.5 py-2 border-b border-surface1 flex items-center justify-between rounded-sm">
         <span className="text-xs font-mono font-bold text-text">
           In-Memory 3-Way Merged File: {selectedFile.path}
         </span>
         <button
           type="button"
           onClick={() => handleCopy(activeConflictPreview?.merged_content || '', 'full')}
-          className="flex items-center gap-1 px-2.5 py-1  bg-surface1 hover:bg-surface2 text-xs text-text transition-colors cursor-pointer"
+          className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-surface1 hover:bg-surface2 text-xs text-text transition-colors cursor-pointer"
           title="Copy entire merged file with markers"
         >
           {copiedKey === 'full' ? (
@@ -51,9 +51,9 @@ export function ConflictMarkedFileView({
             return (
               <div
                 key={idx}
-                className="bg-red/25 text-red font-bold px-2 py-1 my-1  border-l-4 border-red flex items-center gap-2"
+                className="bg-red/25 text-red font-bold px-2 py-1 my-1 rounded-sm border-l-4 border-red flex items-center gap-2"
               >
-                <span className="text-[10px] uppercase px-1.5 py-0.5  bg-red text-white">
+                <span className="text-[10px] uppercase px-1.5 py-0.5 rounded-sm bg-red text-white">
                   Target Change
                 </span>
                 <span>{line}</span>
@@ -65,7 +65,7 @@ export function ConflictMarkedFileView({
             return (
               <div
                 key={idx}
-                className="bg-surface1 text-subtext1 font-bold px-2 py-0.5 my-1 border-y border-dashed border-surface2 flex items-center gap-2 text-center justify-center text-[11px]"
+                className="bg-surface1 text-subtext1 font-bold px-2 py-0.5 my-1 border-y border-dashed border-surface2 flex items-center gap-2 text-center justify-center text-[11px] rounded-sm"
               >
                 <span>─── COLLISION BOUNDARY ───</span>
               </div>
@@ -76,9 +76,9 @@ export function ConflictMarkedFileView({
             return (
               <div
                 key={idx}
-                className="bg-blue/25 text-blue font-bold px-2 py-1 my-1  border-l-4 border-blue flex items-center gap-2"
+                className="bg-blue/25 text-blue font-bold px-2 py-1 my-1 rounded-sm border-l-4 border-blue flex items-center gap-2"
               >
-                <span className="text-[10px] uppercase px-1.5 py-0.5  bg-blue text-white">
+                <span className="text-[10px] uppercase px-1.5 py-0.5 rounded-sm bg-blue text-white">
                   Incoming Change
                 </span>
                 <span>{line}</span>
@@ -87,7 +87,7 @@ export function ConflictMarkedFileView({
           }
 
           return (
-            <div key={idx} className="flex hover:bg-surface0/60 px-1 py-0.5">
+            <div key={idx} className="flex hover:bg-surface0/60 px-1 py-0.5 rounded-sm">
               <span className="w-12 text-subtext0 select-none text-right pr-3 shrink-0 text-[11px]">
                 {idx + 1}
               </span>

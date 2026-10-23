@@ -105,13 +105,13 @@ export const AiMcpProviderDetailsModal: React.FC<{
     <>
       {isOpen && (
         <div
-          className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-[var(--backdrop-modal)] backdrop-blur-xs"
+          className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-[var(--backdrop-modal)] backdrop-blur-xs rounded-sm"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
       <div
-        className={`p-4 border border-surface1 space-y-4 ${
+        className={`p-4 border border-surface1 space-y-4 rounded-sm ${
           isOpen
             ? 'fixed inset-x-4 top-12 bottom-4 z-60 mx-auto max-w-4xl overflow-y-auto bg-mantle shadow-2xl'
             : 'hidden'
@@ -160,7 +160,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
             <button
               type="button"
               onClick={onClose}
-              className="p-1 text-subtext0 hover:text-text transition-colors cursor-pointer"
+              className="p-1 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
               aria-label="Close provider details"
             >
               <X className="w-4 h-4" />
@@ -181,7 +181,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
               value={aiConfig.customProviderName || ''}
               onChange={(event) => onUpdateAiConfig({ customProviderName: event.target.value })}
               placeholder="e.g. OpenRouter, DeepSeek, LM Studio"
-              className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+              className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
         )}
@@ -232,7 +232,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
               onClick={onTestConnection}
               disabled={isTestingAi}
               title="Native API tests use saved OS credentials, send no repository source and may incur provider charges. Apply API key changes first."
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer border border-surface2 shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer border border-surface2 shadow-xs rounded-sm"
             >
               {isTestingAi ? (
                 <>
@@ -247,7 +247,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
             <button
               type="button"
               onClick={onResetAiConfig}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs text-subtext0 hover:text-text hover:bg-surface1/40 transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1.5 text-xs text-subtext0 hover:text-text hover:bg-surface1/40 transition-colors cursor-pointer rounded-sm"
               title="Reset provider settings to defaults"
             >
               <RotateCcw className="w-3 h-3" />
@@ -258,7 +258,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
           {/* Inline Test Result */}
           {aiTestResult && (
             <div
-              className={`flex items-center gap-2 px-2.5 py-1 text-xs animate-in fade-in ${
+              className={`flex items-center gap-2 px-2.5 py-1 text-xs animate-in fade-in rounded-sm ${
                 aiTestResult.success
                   ? 'bg-green/10 text-green border border-green/20'
                   : 'bg-red/10 text-red border border-red/20'
@@ -273,7 +273,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
               <button
                 type="button"
                 onClick={onClearTestResult}
-                className="text-subtext0 hover:text-text cursor-pointer ml-1"
+                className="text-subtext0 hover:text-text cursor-pointer ml-1 rounded-sm"
               >
                 <X className="w-3 h-3" />
               </button>

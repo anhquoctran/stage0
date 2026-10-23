@@ -18,16 +18,16 @@ export function VirtualMrOverviewTab({
   isPostingDiscussion,
 }: VirtualMrOverviewTabProps) {
   return (
-    <div className="p-4 bg-crust/50 border-b border-surface0 space-y-4 max-h-80 overflow-y-auto">
+    <div className="p-4 bg-crust/50 border-b border-surface0 space-y-4 max-h-80 overflow-y-auto rounded-sm">
       {/* Description Section */}
-      <div className="p-3.5  bg-mantle border border-surface0 space-y-2">
+      <div className="p-3.5 rounded-sm bg-mantle border border-surface0 space-y-2">
         <div className="flex items-center justify-between">
           <span className="font-semibold text-xs text-subtext1">Description</span>
           {!isEditingDesc ? (
             <button
               type="button"
               onClick={() => setIsEditingDesc(true)}
-              className="text-[11px] text-accent hover:underline cursor-pointer"
+              className="text-[11px] text-accent hover:underline cursor-pointer rounded-sm"
             >
               Edit Markdown
             </button>
@@ -35,7 +35,7 @@ export function VirtualMrOverviewTab({
             <button
               type="button"
               onClick={() => setIsEditingDesc(false)}
-              className="text-[11px] text-subtext0 hover:text-text cursor-pointer"
+              className="text-[11px] text-subtext0 hover:text-text cursor-pointer rounded-sm"
             >
               Preview
             </button>
@@ -61,7 +61,7 @@ export function VirtualMrOverviewTab({
             />
           </div>
         ) : (
-          <div className="p-3 bg-surface0/30 border border-surface0/60 leading-relaxed">
+          <div className="p-3 bg-surface0/30 border border-surface0/60 leading-relaxed rounded-sm">
             <MarkdownPreview
               content={session.description}
               emptyPlaceholder="No description provided for this Virtual MR."

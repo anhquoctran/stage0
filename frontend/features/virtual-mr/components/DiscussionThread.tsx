@@ -155,7 +155,7 @@ export const DiscussionThread: React.FC<{
 
       {/* 2. The GitLab Discussion Box / Card (No rounded style - sharp borders) */}
       <div
-        className={`border bg-mantle overflow-hidden shadow-xs transition-colors ${
+        className={`border bg-mantle overflow-hidden shadow-xs transition-colors rounded-sm ${
           isResolvable && discussion.isResolved
             ? 'border-surface1/60 opacity-95'
             : 'border-surface1'
@@ -180,11 +180,11 @@ export const DiscussionThread: React.FC<{
         {replies.length > 0 && (
           <div className="border-t border-surface0/80">
             {/* Collapse / Expand Replies Bar */}
-            <div className="flex items-center justify-between px-3.5 py-1.5 bg-surface0/30 border-b border-surface0/60">
+            <div className="flex items-center justify-between px-3.5 py-1.5 bg-surface0/30 border-b border-surface0/60 rounded-sm">
               <button
                 type="button"
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="flex items-center gap-1.5 text-xs text-subtext0 hover:text-text font-medium transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 text-xs text-subtext0 hover:text-text font-medium transition-colors cursor-pointer rounded-sm"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -212,7 +212,7 @@ export const DiscussionThread: React.FC<{
 
             {/* Replies List with Left Vertical Thread Connector Line */}
             {!isCollapsed && (
-              <div className="bg-mantle/60 px-3.5 py-3 space-y-3">
+              <div className="bg-mantle/60 px-3.5 py-3 space-y-3 rounded-sm">
                 <div className="ml-2 pl-3.5 border-l-2 border-surface1 space-y-3">
                   {replies.map((reply) => {
                     const handle = getAuthorHandle(reply.authorName, reply.authorId);

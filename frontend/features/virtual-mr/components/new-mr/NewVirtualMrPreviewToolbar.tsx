@@ -9,12 +9,12 @@ export function NewVirtualMrPreviewToolbar({
   diffPayload,
 }: NewVirtualMrPreviewToolbarProps) {
   return (
-    <div className="h-9 border-b border-surface0 bg-crust px-4 flex items-center justify-between shrink-0">
+    <div className="h-9 border-b border-surface0 bg-crust px-4 flex items-center justify-between shrink-0 rounded-sm">
       <div className="flex items-center gap-1 h-full">
         <button
           type="button"
           onClick={() => setPreviewTab('commits')}
-          className={`flex items-center gap-2 px-3 h-full text-xs font-medium transition-colors cursor-pointer border-b-2 ${
+          className={`flex items-center gap-2 px-3 h-full text-xs font-medium transition-colors cursor-pointer border-b-2 rounded-sm ${
             previewTab === 'commits'
               ? 'border-brand text-text bg-mantle'
               : 'border-transparent text-subtext0 hover:text-text hover:bg-surface0/40'
@@ -30,7 +30,7 @@ export function NewVirtualMrPreviewToolbar({
         <button
           type="button"
           onClick={() => setPreviewTab('diff')}
-          className={`flex items-center gap-2 px-3 h-full text-xs font-medium transition-colors cursor-pointer border-b-2 ${
+          className={`flex items-center gap-2 px-3 h-full text-xs font-medium transition-colors cursor-pointer border-b-2 rounded-sm ${
             previewTab === 'diff'
               ? 'border-brand text-text bg-mantle'
               : 'border-transparent text-subtext0 hover:text-text hover:bg-surface0/40'

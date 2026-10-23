@@ -70,7 +70,7 @@ export const InlineDiscussionComposer: React.FC<{
 
   return (
     <div
-      className="space-y-2.5 border-y border-surface1 bg-mantle p-3.5 text-left font-sans text-text shadow-sm"
+      className="space-y-2.5 border-y border-surface1 bg-mantle p-3.5 text-left font-sans text-text shadow-sm rounded-sm"
       onClick={(event) => event.stopPropagation()}
     >
       <DiscussionCodeContext discussion={{ filePath, diffSide: side, lineNumber, commitId, codeSnippet: snippet }} />
@@ -97,7 +97,7 @@ export const InlineDiscussionComposer: React.FC<{
           type="button"
           onClick={submit}
           disabled={isSubmitting || !body.trim()}
-          className="px-4 py-1.5 bg-blue hover:bg-blue/90 text-crust font-semibold text-xs shadow-xs disabled:opacity-50 transition-colors cursor-pointer"
+          className="px-4 py-1.5 bg-blue hover:bg-blue/90 text-crust font-semibold text-xs shadow-xs disabled:opacity-50 transition-colors cursor-pointer rounded-sm"
         >
           Add comment now
         </button>
@@ -106,7 +106,7 @@ export const InlineDiscussionComposer: React.FC<{
           type="button"
           onClick={onClose}
           disabled={isSubmitting}
-          className="px-3.5 py-1.5 border border-surface1 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer"
+          className="px-3.5 py-1.5 border border-surface1 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer rounded-sm"
         >
           Cancel
         </button>

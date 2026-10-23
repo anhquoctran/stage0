@@ -52,7 +52,7 @@ export const BackgroundTaskManager: React.FC = () => {
         aria-controls="background-task-manager"
         title={backgroundTasks.length ? label : 'Background tasks'}
         onClick={() => setBackgroundManagerOpen(!isBackgroundManagerOpen)}
-        className={`relative flex h-6 min-w-7 items-center justify-center gap-1 px-1.5 transition-colors cursor-pointer ${
+        className={`relative flex h-6 min-w-7 items-center justify-center gap-1 px-1.5 transition-colors cursor-pointer rounded-sm ${
           isBackgroundManagerOpen ? 'bg-surface1 text-text' : 'text-subtext0 hover:bg-surface0 hover:text-text'
         }`}
       >
@@ -77,7 +77,7 @@ export const BackgroundTaskManager: React.FC = () => {
               <h2 id="background-task-manager-title" className="text-xs font-semibold">Background tasks</h2>
               {runningCount > 0 && <span className="text-[10px] text-primary">{runningCount} running</span>}
             </div>
-            <button ref={closeRef} type="button" onClick={close} aria-label="Close background manager" className="grid h-9 w-9 place-items-center text-subtext0 hover:bg-surface0 hover:text-text">
+            <button ref={closeRef} type="button" onClick={close} aria-label="Close background manager" className="grid h-9 w-9 place-items-center text-subtext0 hover:bg-surface0 hover:text-text rounded-sm">
               <X className="h-4 w-4" />
             </button>
           </header>

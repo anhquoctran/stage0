@@ -69,9 +69,9 @@ export const MergeFromModal: React.FC = () => {
   const commandPreview = `git merge${noFastForward ? ' --no-ff' : ''}${fastForwardOnly ? ' --ff-only' : ''}${noCommit ? ' --no-commit' : ''}${squash ? ' --squash' : ''} ${selectedBranch || '<branch>'}`;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
-      <div className="bg-mantle border border-surface0 max-w-lg w-full shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
-        <div data-tauri-drag-region className="px-5 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60">
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150 rounded-sm">
+      <div className="bg-mantle border border-surface0 max-w-lg w-full shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150 rounded-sm">
+        <div data-tauri-drag-region className="px-5 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60 rounded-sm">
           <div data-tauri-drag-region className="flex items-center gap-2.5 pointer-events-none">
             <div className="w-7 h-7 bg-surface0 border border-surface1 flex items-center justify-center">
               <GitMerge className="w-4 h-4 text-subtext0" />
@@ -86,7 +86,7 @@ export const MergeFromModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsMergeFromOpen(false)}
-            className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+            className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
             title="Close (Esc)"
           >
             <X className="w-4 h-4" />
@@ -118,7 +118,7 @@ export const MergeFromModal: React.FC = () => {
                 value={selectedBranch}
                 onChange={(event) => setSelectedBranch(event.target.value)}
                 placeholder="e.g. main or origin/main"
-                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-primary font-mono"
+                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-primary font-mono rounded-sm"
               />
             )}
           </div>
@@ -143,13 +143,13 @@ export const MergeFromModal: React.FC = () => {
             </label>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-2 bg-base border border-surface0 text-[10px] text-subtext0 font-mono break-all">
+          <div className="flex items-center gap-2 px-3 py-2 bg-base border border-surface0 text-[10px] text-subtext0 font-mono break-all rounded-sm">
             <span className="shrink-0">$</span><span>{commandPreview}</span>
           </div>
 
           <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={() => setIsMergeFromOpen(false)} className="px-3 py-1.5 text-xs text-subtext1 hover:bg-surface0 transition-colors">Cancel</button>
-            <button type="submit" disabled={isSyncing || !selectedBranch.trim()} className="px-3 py-1.5 bg-primary text-on-accent text-xs font-semibold hover:brightness-110 disabled:opacity-40 transition-colors">
+            <button type="button" onClick={() => setIsMergeFromOpen(false)} className="px-3 py-1.5 text-xs text-subtext1 hover:bg-surface0 transition-colors rounded-sm">Cancel</button>
+            <button type="submit" disabled={isSyncing || !selectedBranch.trim()} className="px-3 py-1.5 bg-primary text-on-accent text-xs font-semibold hover:brightness-110 disabled:opacity-40 transition-colors rounded-sm">
               {isSyncing ? 'Merging…' : 'Merge'}
             </button>
           </div>

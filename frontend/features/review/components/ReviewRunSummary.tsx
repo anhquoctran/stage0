@@ -59,7 +59,7 @@ export function ReviewRunSummary({ run, isPublishing, publish }: ReviewRunSummar
           type="button"
           disabled={run.published || isPublishing}
           onClick={() => void publish()}
-          className="border border-primary text-primary px-3 py-2 disabled:opacity-40"
+          className="border border-primary text-primary px-3 py-2 disabled:opacity-40 rounded-sm"
         >
           {run.published
             ? 'Published to discussions'

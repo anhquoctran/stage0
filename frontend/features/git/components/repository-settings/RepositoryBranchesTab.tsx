@@ -73,7 +73,7 @@ export const RepositoryBranchesTab: React.FC<{
       </div>
 
       {/* DEFAULT BASE BRANCH */}
-      <div className="p-4 bg-crust border border-surface0 space-y-2">
+      <div className="p-4 bg-crust border border-surface0 space-y-2 rounded-sm">
         <label className="block text-xs font-medium text-text">Default Base Branch for Virtual MR</label>
         <p className="text-xs text-subtext0">
           The default target branch automatically selected when opening a new Virtual MR in this repository.
@@ -100,7 +100,7 @@ export const RepositoryBranchesTab: React.FC<{
           </span>
           <button
             onClick={() => setIsAddingBranch(true)}
-            className="px-2.5 py-1 bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer"
+            className="px-2.5 py-1 bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer rounded-sm"
           >
             <Plus className="w-3 h-3" />
             <span>New Branch</span>
@@ -118,7 +118,7 @@ export const RepositoryBranchesTab: React.FC<{
               placeholder="New branch name (e.g. feat/checkout)"
               value={newBranchName}
               onChange={(e) => setNewBranchName(e.target.value)}
-              className="flex-1 px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none"
+              className="flex-1 px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none rounded-sm"
             />
             <CustomSelect
               value={newBranchBase}
@@ -132,14 +132,14 @@ export const RepositoryBranchesTab: React.FC<{
             />
             <button
               type="submit"
-              className="px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
+              className="px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs rounded-sm"
             >
               Create
             </button>
             <button
               type="button"
               onClick={() => setIsAddingBranch(false)}
-              className="px-2 py-1.5 bg-surface0 cursor-pointer"
+              className="px-2 py-1.5 bg-surface0 cursor-pointer rounded-sm"
             >
               Cancel
             </button>
@@ -171,7 +171,7 @@ export const RepositoryBranchesTab: React.FC<{
                       fetchBranches(currentRepo.local_path);
                     }
                   }}
-                  className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
+                  className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer rounded-sm"
                   title="Delete branch"
                 >
                   <Trash2 className="w-3 h-3" />
@@ -191,7 +191,7 @@ export const RepositoryBranchesTab: React.FC<{
           </span>
           <button
             onClick={() => setIsAddingTag(true)}
-            className="px-2.5 py-1 bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer"
+            className="px-2.5 py-1 bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer rounded-sm"
           >
             <Plus className="w-3 h-3" />
             <span>Create Tag</span>
@@ -210,27 +210,27 @@ export const RepositoryBranchesTab: React.FC<{
                 placeholder="Tag name (e.g. v1.0.0)"
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
-                className="px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none"
+                className="px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none rounded-sm"
               />
               <input
                 type="text"
                 placeholder="Annotated message"
                 value={newTagMessage}
                 onChange={(e) => setNewTagMessage(e.target.value)}
-                className="px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none"
+                className="px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none rounded-sm"
               />
             </div>
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setIsAddingTag(false)}
-                className="px-3 py-1 bg-surface0 cursor-pointer"
+                className="px-3 py-1 bg-surface0 cursor-pointer rounded-sm"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs"
+                className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs rounded-sm"
               >
                 Create Tag
               </button>
@@ -256,7 +256,7 @@ export const RepositoryBranchesTab: React.FC<{
                       deleteTag(t.name);
                     }
                   }}
-                  className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
+                  className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer rounded-sm"
                   title="Delete tag"
                 >
                   <Trash2 className="w-3 h-3" />

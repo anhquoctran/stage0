@@ -42,7 +42,7 @@ export const GitGraphHeader: React.FC<{
                     disabled={isLoading}
                     aria-label="Refresh Git Graph"
                     title="Refresh Git Graph"
-                    className="flex h-8 w-8 items-center justify-center text-subtext0 transition-colors hover:bg-surface0 hover:text-text disabled:opacity-40"
+                    className="flex h-8 w-8 items-center justify-center text-subtext0 transition-colors hover:bg-surface0 hover:text-text disabled:opacity-40 rounded-sm"
                 >
                     <RotateCw
                         className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
@@ -53,7 +53,7 @@ export const GitGraphHeader: React.FC<{
                     onClick={onClose}
                     aria-label="Close Git Graph"
                     title="Close (Esc)"
-                    className="flex h-8 w-8 items-center justify-center text-subtext0 transition-colors hover:bg-surface0 hover:text-text"
+                    className="flex h-8 w-8 items-center justify-center text-subtext0 transition-colors hover:bg-surface0 hover:text-text rounded-sm"
                 >
                     <X className="h-4 w-4" />
                 </button>

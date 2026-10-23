@@ -14,7 +14,7 @@ export const StatusBarFileProgress: React.FC = () => {
 
   return (
     <div
-      className="h-5.5 px-2 bg-surface0/50 border border-surface1/60 text-subtext0 flex items-center gap-1.5 text-[11px] shadow-xs"
+      className="h-5.5 px-2 bg-surface0/50 border border-surface1/60 text-subtext0 flex items-center gap-1.5 text-[11px] shadow-xs rounded-sm"
       title={selectedFile ? `Active file: ${selectedFile.path}` : `${totalFiles} total files`}
     >
       <FileText className="w-3 h-3 text-subtext0 shrink-0" />

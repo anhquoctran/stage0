@@ -214,7 +214,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 suggestions.length ? `${mentionListId}-${selectedMentionIndex}` : undefined
               }
               style={{ minHeight, maxHeight }}
-              className="w-full p-3 bg-base/50 text-text text-xs font-mono placeholder:text-subtext0/60 focus:outline-none transition-colors resize-y leading-relaxed border-0"
+              className="w-full p-3 bg-base/50 text-text text-xs font-mono placeholder:text-subtext0/60 focus:outline-none transition-colors resize-y leading-relaxed border-0 rounded-sm"
             />
 
             {suggestions.length > 0 && (
@@ -228,7 +228,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             )}
 
             {attachmentWarning && (
-              <div className="px-3 py-1.5 bg-yellow-900/30 border-t border-yellow-700/50 text-yellow-200 text-[11px] flex items-center justify-between">
+              <div className="px-3 py-1.5 bg-yellow-900/30 border-t border-yellow-700/50 text-yellow-200 text-[11px] flex items-center justify-between rounded-sm">
                 <div className="flex items-center gap-1.5">
                   <svg
                     width="13"
@@ -250,7 +250,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 <button
                   type="button"
                   onClick={() => setAttachmentWarning(null)}
-                  className="text-yellow-400 hover:text-yellow-100 ml-2 font-bold cursor-pointer"
+                  className="text-yellow-400 hover:text-yellow-100 ml-2 font-bold cursor-pointer rounded-sm"
                   title="Dismiss warning"
                 >
                   ×
@@ -261,7 +261,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         ) : (
           <div
             style={{ minHeight, maxHeight }}
-            className="w-full p-3 bg-base border-0 overflow-y-auto"
+            className="w-full p-3 bg-base border-0 overflow-y-auto rounded-sm"
           >
             <MarkdownPreview content={value} emptyPlaceholder="No content to preview" />
           </div>

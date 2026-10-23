@@ -111,12 +111,12 @@ export const RemoteUrlFromModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-mantle border border-surface0 w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-150 overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4 rounded-sm">
+      <div className="bg-mantle border border-surface0 w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-150 overflow-hidden flex flex-col max-h-[85vh] rounded-sm">
         {/* Header */}
         <div
           data-tauri-drag-region
-          className="flex items-center justify-between px-4 py-3 border-b border-surface0 bg-base cursor-default"
+          className="flex items-center justify-between px-4 py-3 border-b border-surface0 bg-base cursor-default rounded-sm"
         >
           <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
             <Globe className="w-4 h-4 text-subtext0" />
@@ -125,7 +125,7 @@ export const RemoteUrlFromModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsRemoteUrlFromOpen(false)}
-            className="p-1  text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
+            className="p-1 rounded-sm text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -134,7 +134,7 @@ export const RemoteUrlFromModal: React.FC = () => {
         {/* Content */}
         <div className="p-4 space-y-4 overflow-y-auto">
           {/* File path banner */}
-          <div className="bg-surface0/60 border border-surface0 px-3 py-2 flex items-center justify-between gap-2 font-mono text-xs">
+          <div className="bg-surface0/60 border border-surface0 px-3 py-2 flex items-center justify-between gap-2 font-mono text-xs rounded-sm">
             <div className="min-w-0 truncate">
               <span className="text-subtext0 text-[10px] block uppercase font-sans font-bold">Target File</span>
               <span className="text-text font-semibold truncate block">{file ? file.path : 'No file selected'}</span>
@@ -162,7 +162,7 @@ export const RemoteUrlFromModal: React.FC = () => {
                   return (
                     <div
                       key={item.key}
-                      className="border border-surface0 bg-surface0/30 hover:bg-surface0/80 transition-colors p-2.5 flex items-center justify-between gap-3 group"
+                      className="border border-surface0 bg-surface0/30 hover:bg-surface0/80 transition-colors p-2.5 flex items-center justify-between gap-3 group rounded-sm"
                     >
                       <div className="flex items-start gap-2.5 min-w-0 flex-1">
                         <div className="mt-0.5 shrink-0">{item.icon}</div>
@@ -182,7 +182,7 @@ export const RemoteUrlFromModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleCopy(item.url, item.key)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium  transition-colors shrink-0 cursor-pointer ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-sm transition-colors shrink-0 cursor-pointer ${
                           isCopied
                             ? 'bg-surface2 text-text font-bold'
                             : 'bg-surface1 hover:bg-surface2 text-text'
@@ -216,13 +216,13 @@ export const RemoteUrlFromModal: React.FC = () => {
                     value={customRef}
                     onChange={(e) => setCustomRef(e.target.value)}
                     placeholder="e.g. develop, v1.2.0, or commit hash..."
-                    className="flex-1 px-3 py-1.5 bg-base border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-hidden focus:border-surface2 font-mono"
+                    className="flex-1 px-3 py-1.5 bg-base border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-hidden focus:border-surface2 font-mono rounded-sm"
                   />
                   <button
                     type="button"
                     disabled={!customUrl}
                     onClick={() => handleCopy(customUrl, 'custom')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-surface1 hover:bg-surface2 text-text border border-surface2  transition-colors disabled:opacity-40 cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-surface1 hover:bg-surface2 text-text border border-surface2 rounded-sm transition-colors disabled:opacity-40 cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>Copy Custom URL</span>
@@ -239,11 +239,11 @@ export const RemoteUrlFromModal: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end px-4 py-2.5 border-t border-surface0 bg-base">
+        <div className="flex items-center justify-end px-4 py-2.5 border-t border-surface0 bg-base rounded-sm">
           <button
             type="button"
             onClick={() => setIsRemoteUrlFromOpen(false)}
-            className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text font-medium text-xs  transition-colors cursor-pointer"
+            className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text font-medium text-xs rounded-sm transition-colors cursor-pointer"
           >
             Close
           </button>

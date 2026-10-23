@@ -45,7 +45,7 @@ export const GitTaskDialog: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-8.5 z-[150] flex items-center justify-center bg-crust/60 p-4" onKeyDown={handleKeyDown}>
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-[150] flex items-center justify-center bg-crust/60 p-4 rounded-sm" onKeyDown={handleKeyDown}>
       <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="git-task-title" className="max-h-full w-full max-w-[420px] overflow-y-auto border border-surface1 bg-mantle text-text shadow-2xl">
         <div className="flex items-center justify-between border-b border-surface0 pl-4">
           <div className="flex min-w-0 items-center gap-2 py-3">
@@ -54,7 +54,7 @@ export const GitTaskDialog: React.FC = () => {
               : <CheckCircle2 className="h-4 w-4 text-green" />}
             <h3 id="git-task-title" className="truncate text-sm font-semibold">{task.title}</h3>
           </div>
-          <button type="button" onClick={close} aria-label={isRunning ? 'Run in background' : 'Dismiss task'} className="flex h-10 w-10 shrink-0 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text">
+          <button type="button" onClick={close} aria-label={isRunning ? 'Run in background' : 'Dismiss task'} className="flex h-10 w-10 shrink-0 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text rounded-sm">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -63,10 +63,10 @@ export const GitTaskDialog: React.FC = () => {
           <GitTaskProgress task={task} />
           {isRunning && <p className="text-[11px] text-subtext0">You can continue working while this task runs in the background.</p>}
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-surface0 px-4 py-3">
-          <button type="button" disabled={isRunning} title={isRunning ? 'Available when the task finishes. Use Run in background to hide progress.' : 'Dismiss this result'} onClick={() => dismissTask(task.id)} className="border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0 disabled:cursor-not-allowed disabled:opacity-40">Dismiss</button>
-          {isRunning ? <button type="button" onClick={() => runInBackground(task.id)} className="bg-primary px-3 py-1.5 text-xs font-semibold text-on-accent hover:brightness-110">Run in background</button>
-            : task.resultRepository && <button type="button" onClick={() => { void useGitStore.getState().selectRepo(task.resultRepository!); dismissTask(task.id); }} className="bg-primary px-3 py-1.5 text-xs font-semibold text-on-accent hover:brightness-110">Open repository</button>}
+        <div className="flex items-center justify-end gap-2 border-t border-surface0 px-4 py-3 rounded-sm">
+          <button type="button" disabled={isRunning} title={isRunning ? 'Available when the task finishes. Use Run in background to hide progress.' : 'Dismiss this result'} onClick={() => dismissTask(task.id)} className="border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0 disabled:cursor-not-allowed disabled:opacity-40 rounded-sm">Dismiss</button>
+          {isRunning ? <button type="button" onClick={() => runInBackground(task.id)} className="bg-primary px-3 py-1.5 text-xs font-semibold text-on-accent hover:brightness-110 rounded-sm">Run in background</button>
+            : task.resultRepository && <button type="button" onClick={() => { void useGitStore.getState().selectRepo(task.resultRepository!); dismissTask(task.id); }} className="bg-primary px-3 py-1.5 text-xs font-semibold text-on-accent hover:brightness-110 rounded-sm">Open repository</button>}
         </div>
       </div>
     </div>

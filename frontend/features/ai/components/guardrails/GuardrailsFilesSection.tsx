@@ -28,7 +28,7 @@ export const GuardrailsFilesSection: React.FC<{
   onToggleConfirmationWrites,
 }) => {
   return (
-    <div className="p-4 bg-surface0/60 border border-surface1 space-y-4">
+    <div className="p-4 bg-surface0/60 border border-surface1 space-y-4 rounded-sm">
       <h4 className="text-xs font-bold text-text">
         Workspace & Sensitive File Shield
       </h4>
@@ -37,7 +37,7 @@ export const GuardrailsFilesSection: React.FC<{
         <label className="text-[11px] font-medium text-subtext0">
           Protected Sensitive File Patterns (Access Blocked)
         </label>
-        <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center">
+        <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center rounded-sm">
           {sensitivePatterns.map((pat) => (
             <span
               key={pat}
@@ -47,7 +47,7 @@ export const GuardrailsFilesSection: React.FC<{
               <button
                 type="button"
                 onClick={() => onRemoveSensitivePattern(pat)}
-                className="opacity-70 hover:opacity-100 cursor-pointer"
+                className="opacity-70 hover:opacity-100 cursor-pointer rounded-sm"
                 title="Remove"
               >
                 <X className="w-3 h-3" />
@@ -62,12 +62,12 @@ export const GuardrailsFilesSection: React.FC<{
             value={newSensitivePattern}
             onChange={(e) => setNewSensitivePattern(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), onAddSensitivePattern())}
-            className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 text-text font-mono focus:outline-none focus:border-surface2"
+            className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 text-text font-mono focus:outline-none focus:border-surface2 rounded-sm"
           />
           <button
             type="button"
             onClick={onAddSensitivePattern}
-            className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 cursor-pointer transition"
+            className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 cursor-pointer transition rounded-sm"
           >
             <Plus className="w-3 h-3" />
             <span>Add Sensitive Pattern</span>
@@ -75,7 +75,7 @@ export const GuardrailsFilesSection: React.FC<{
         </div>
       </div>
 
-      <div className="pt-2 border-t border-surface1 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="pt-2 border-t border-surface1 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-sm">
         <div className="flex-1">
           <label className="text-[11px] font-medium text-subtext0 block">
             Max File Read Line Range: <span className="text-text font-mono font-bold">{maxFileReadLines} lines</span>
@@ -87,7 +87,7 @@ export const GuardrailsFilesSection: React.FC<{
             step={250}
             value={maxFileReadLines}
             onChange={(e) => onUpdateMaxFileReadLines(Number(e.target.value))}
-            className="w-full mt-2 cursor-pointer"
+            className="w-full mt-2 cursor-pointer rounded-sm"
           />
         </div>
 

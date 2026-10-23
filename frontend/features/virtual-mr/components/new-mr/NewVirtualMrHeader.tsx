@@ -26,7 +26,7 @@ export function NewVirtualMrHeader({
   conflictReport,
 }: NewVirtualMrHeaderProps) {
   return (
-    <div className="border-b border-surface0 bg-crust/50 px-5 py-3 shrink-0 space-y-2.5">
+    <div className="border-b border-surface0 bg-crust/50 px-5 py-3 shrink-0 space-y-2.5 rounded-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 bg-brand/10 border border-brand/20 flex items-center justify-center text-brand">
@@ -48,7 +48,7 @@ export function NewVirtualMrHeader({
         <button
           type="button"
           onClick={closeNewMrDraft}
-          className="p-1.5 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
+          className="p-1.5 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
           title={formatShortcutText('Cancel & close comparison (Esc / Ctrl+W)')}
         >
           <X className="w-4 h-4" />
@@ -56,7 +56,7 @@ export function NewVirtualMrHeader({
       </div>
 
       {/* Branch Comparator Ribbon (GitHub / GitLab Inspired) */}
-      <div className="flex items-center justify-between flex-wrap gap-3 px-3.5 py-2 bg-base/50 border border-surface0">
+      <div className="flex items-center justify-between flex-wrap gap-3 px-3.5 py-2 bg-base/50 border border-surface0 rounded-sm">
         {/* Branch Selectors */}
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* Base Branch */}
@@ -75,7 +75,7 @@ export function NewVirtualMrHeader({
           <button
             type="button"
             onClick={handleSwapBranches}
-            className="p-1.5 text-subtext0 hover:text-brand hover:bg-surface0 border border-transparent hover:border-surface0 transition-colors cursor-pointer"
+            className="p-1.5 text-subtext0 hover:text-brand hover:bg-surface0 border border-transparent hover:border-surface0 transition-colors cursor-pointer rounded-sm"
             title="Swap Base and Compare branches"
           >
             <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -97,30 +97,30 @@ export function NewVirtualMrHeader({
         {/* Mergeability Status Indicator (Matches Stage0 Status Palette) */}
         <div className="flex items-center gap-2">
           {diffError ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red bg-red/10 border border-red/25">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red bg-red/10 border border-red/25 rounded-sm">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
               <span>Comparison failed</span>
             </div>
           ) : isDiffLoading ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext1 bg-surface0/40 border border-surface0">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext1 bg-surface0/40 border border-surface0 rounded-sm">
               <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
               <span>Comparing branches…</span>
             </div>
           ) : conflictCheckError ? (
             <div
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-text bg-yellow/10 border border-yellow/25"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-text bg-yellow/10 border border-yellow/25 rounded-sm"
               title={conflictCheckError}
             >
               <AlertTriangle className="w-3.5 h-3.5 text-yellow shrink-0" />
               <span>Mergeability check unavailable</span>
             </div>
           ) : noFileChanges ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext0 bg-surface0/60 border border-surface0">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext0 bg-surface0/60 border border-surface0 rounded-sm">
               <Info className="w-3.5 h-3.5 text-subtext0 shrink-0" />
               <span>{isIdentical ? 'Same commit · no changes' : 'No file changes'}</span>
             </div>
           ) : hasConflicts ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red bg-red/10 border border-red/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red bg-red/10 border border-red/20 rounded-sm">
               <AlertTriangle className="w-3.5 h-3.5 text-red shrink-0" />
               <span>
                 Can't automatically merge ({conflictCount}{' '}
@@ -128,12 +128,12 @@ export function NewVirtualMrHeader({
               </span>
             </div>
           ) : conflictReport ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-white bg-[#238636]">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-white bg-[#238636] rounded-sm">
               <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0" />
               <span>Able to merge. These branches can be automatically merged.</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext0 bg-surface0/40 border border-surface0">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext0 bg-surface0/40 border border-surface0 rounded-sm">
               <Info className="w-3.5 h-3.5 shrink-0" />
               <span>Mergeability not checked</span>
             </div>

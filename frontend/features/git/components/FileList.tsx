@@ -91,7 +91,7 @@ export const FileList: React.FC<FileListProps> = ({
     if (isConflicted) {
       return (
         <span
-          className="w-4 h-4  text-[10px] font-bold flex items-center justify-center bg-red/20 text-red border border-red/40 conflict-pulse shrink-0"
+          className="w-4 h-4 rounded-sm text-[10px] font-bold flex items-center justify-center bg-red/20 text-red border border-red/40 conflict-pulse shrink-0"
           title="Merge conflict"
         >
           !
@@ -103,7 +103,7 @@ export const FileList: React.FC<FileListProps> = ({
       case 'ADDED':
         return (
           <span
-            className="w-4 h-4  text-[10px] font-bold flex items-center justify-center bg-green/20 text-green border border-green/30 shrink-0"
+            className="w-4 h-4 rounded-sm text-[10px] font-bold flex items-center justify-center bg-green/20 text-green border border-green/30 shrink-0"
             title="Added file"
           >
             A
@@ -112,7 +112,7 @@ export const FileList: React.FC<FileListProps> = ({
       case 'DELETED':
         return (
           <span
-            className="w-4 h-4  text-[10px] font-bold flex items-center justify-center bg-red/20 text-red border border-red/30 shrink-0"
+            className="w-4 h-4 rounded-sm text-[10px] font-bold flex items-center justify-center bg-red/20 text-red border border-red/30 shrink-0"
             title="Deleted file"
           >
             D
@@ -121,7 +121,7 @@ export const FileList: React.FC<FileListProps> = ({
       case 'RENAMED':
         return (
           <span
-            className="w-4 h-4  text-[10px] font-bold flex items-center justify-center bg-mauve/20 text-mauve border border-mauve/30 shrink-0"
+            className="w-4 h-4 rounded-sm text-[10px] font-bold flex items-center justify-center bg-mauve/20 text-mauve border border-mauve/30 shrink-0"
             title="Renamed file"
           >
             R
@@ -130,7 +130,7 @@ export const FileList: React.FC<FileListProps> = ({
       default:
         return (
           <span
-            className="w-4 h-4  text-[10px] font-bold flex items-center justify-center bg-yellow/20 text-yellow border border-yellow/30 shrink-0"
+            className="w-4 h-4 rounded-sm text-[10px] font-bold flex items-center justify-center bg-yellow/20 text-yellow border border-yellow/30 shrink-0"
             title="Modified file"
           >
             M

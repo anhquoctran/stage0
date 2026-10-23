@@ -38,14 +38,14 @@ export const DiscussionReferenceDialog: React.FC<{
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-6"
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Quoted source" tabIndex={-1}
-        className="max-h-[80vh] w-full max-w-2xl overflow-y-auto border border-surface1 bg-mantle p-4 text-text shadow-2xl">
+        className="max-h-[80vh] w-full max-w-2xl overflow-y-auto border border-surface1 bg-mantle p-4 text-text shadow-2xl rounded-sm">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-sm font-semibold">Quoted {comment ? 'comment' : 'discussion'}</h3>
             <p className="break-all font-mono text-[10px] text-subtext0">{comment?.id ?? discussion.id}</p>
             {discussion.filePath && <p className="mt-1 break-all text-xs text-subtext0">{discussion.filePath}{discussion.lineNumber ? `:${discussion.lineNumber}` : ''}</p>}
           </div>
-          <button type="button" onClick={onClose} aria-label="Close quoted source" className="p-1 text-subtext0 hover:bg-surface0 hover:text-text">
+          <button type="button" onClick={onClose} aria-label="Close quoted source" className="p-1 text-subtext0 hover:bg-surface0 hover:text-text rounded-sm">
             <X className="h-4 w-4" />
           </button>
         </div>

@@ -47,7 +47,7 @@ export const AiMcpPromptRolesView: React.FC<{
             value={reviewerInstructions}
             onChange={(event) => onUpdateReviewerInstructions(event.target.value)}
             placeholder="Add extra guidance for reviews started with Global AI Preferences..."
-            className="w-full p-3 bg-base border border-surface1 text-xs text-text font-mono leading-relaxed placeholder:text-subtext0 focus:outline-none focus:border-surface2 select-text"
+            className="w-full p-3 bg-base border border-surface1 text-xs text-text font-mono leading-relaxed placeholder:text-subtext0 focus:outline-none focus:border-surface2 select-text rounded-sm"
           />
         </div>
       </div>

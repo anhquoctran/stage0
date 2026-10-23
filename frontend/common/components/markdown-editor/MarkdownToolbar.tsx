@@ -24,13 +24,13 @@ export function MarkdownToolbar({
   isAttaching,
 }: MarkdownToolbarProps) {
   return (
-    <div className="flex items-center justify-between border-b border-surface1 bg-surface0/60 px-2 py-1 gap-1 flex-wrap select-none">
+    <div className="flex items-center justify-between border-b border-surface1 bg-surface0/60 px-2 py-1 gap-1 flex-wrap select-none rounded-sm">
       {/* Write / Preview Tab Switcher */}
-      <div className="flex items-center gap-1 pr-1 border-r border-surface1">
+      <div className="flex items-center gap-1 pr-1 border-r border-surface1 rounded-sm">
         <button
           type="button"
           onClick={() => setActiveTab('write')}
-          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors ${
+          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors rounded-sm ${
             activeTab === 'write'
               ? 'bg-surface2 text-text shadow-xs font-semibold'
               : 'text-subtext0 hover:text-text hover:bg-surface1'
@@ -44,7 +44,7 @@ export function MarkdownToolbar({
         <button
           type="button"
           onClick={() => setActiveTab('preview')}
-          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors ${
+          className={`flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors rounded-sm ${
             activeTab === 'preview'
               ? 'bg-surface2 text-text shadow-xs font-semibold'
               : 'text-subtext0 hover:text-text hover:bg-surface1'
@@ -64,7 +64,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('```suggestion\n', '\n```', '// proposed change')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title="Insert suggestion"
           >
             <svg
@@ -90,7 +90,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('**', '**', 'bold text')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title={formatShortcutText('Bold (Ctrl+B)')}
           >
             <Bold className="w-3.5 h-3.5" />
@@ -99,7 +99,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('*', '*', 'italic text')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title={formatShortcutText('Italic (Ctrl+I)')}
           >
             <Italic className="w-3.5 h-3.5" />
@@ -108,7 +108,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('~~', '~~', 'strikethrough text')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 font-bold text-xs w-5 text-center leading-none"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 font-bold text-xs w-5 text-center leading-none rounded-sm"
             title="Strikethrough"
           >
             <s>S</s>
@@ -120,7 +120,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('### ', '', 'Heading')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title="Heading"
           >
             <Heading className="w-3.5 h-3.5" />
@@ -129,7 +129,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('`', '`', 'code')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title="Inline code"
           >
             <Code className="w-3.5 h-3.5" />
@@ -138,7 +138,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('[', '](https://example.com)', 'link text')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title={formatShortcutText('Insert link (Ctrl+K)')}
           >
             <Link className="w-3.5 h-3.5" />
@@ -148,7 +148,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('- ', '', 'List item')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title="Bullet list"
           >
             <List className="w-3.5 h-3.5" />
@@ -157,7 +157,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('1. ', '', 'Numbered item')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title="Numbered list"
           >
             <ListOrdered className="w-3.5 h-3.5" />
@@ -166,7 +166,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('- [ ] ', '', 'Task item')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title="Task list"
           >
             <CheckSquare className="w-3.5 h-3.5" />
@@ -175,7 +175,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('> ', '', 'Quote')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title="Quote"
           >
             <Quote className="h-3.5 w-3.5" />
@@ -192,7 +192,7 @@ export function MarkdownToolbar({
               )
             }
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title="Insert table"
           >
             <svg
@@ -219,7 +219,7 @@ export function MarkdownToolbar({
             type="file"
             accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml"
             multiple
-            className="hidden"
+            className="hidden rounded-sm"
             data-testid="image-attachment-input"
             onChange={(e) => {
               if (e.target.files) {
@@ -232,7 +232,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || isSubmitting || isAttaching}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title="Attach images (PNG, JPG, GIF, WebP, SVG)"
             aria-label="Attach images"
           >
@@ -254,7 +254,7 @@ export function MarkdownToolbar({
             type="button"
             onClick={() => insertMarkdown('```\n', '\n```', 'code block')}
             disabled={disabled}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
             title="Code block"
           >
             <SquareCode className="w-3.5 h-3.5" />

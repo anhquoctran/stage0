@@ -19,7 +19,7 @@ export function VirtualMrListItem({
       key={session.id}
       type="button"
       onClick={() => handleSelect(session.id)}
-      className="group flex w-full items-center justify-between gap-4 px-5 py-3 text-left hover:bg-surface0/60 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand cursor-pointer"
+      className="group flex w-full items-center justify-between gap-4 px-5 py-3 text-left hover:bg-surface0/60 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand cursor-pointer rounded-sm"
     >
       <div className="min-w-0 flex-1 space-y-1.5">
         {/* Top line: Title (bold) + Status Badge + Assigned Labels */}

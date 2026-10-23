@@ -100,7 +100,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         title="File actions (Reveal in Explorer, Copy paths, Copy remote URL)"
-        className={`flex items-center gap-1 px-2 py-1 text-xs font-medium  transition-colors border cursor-pointer ${
+        className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-sm transition-colors border cursor-pointer ${
           isOpen
             ? 'bg-surface1 text-text border-surface2'
             : 'bg-surface0 border-surface0 text-subtext1 hover:text-text hover:bg-surface1'
@@ -112,15 +112,15 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-72 shadow-2xl bg-mantle border border-surface0 py-1 z-50 text-xs animate-in fade-in duration-100">
-          <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/70 mb-1 truncate">
+        <div className="absolute left-0 top-full mt-1.5 w-72 shadow-2xl bg-mantle border border-surface0 py-1 z-50 text-xs animate-in fade-in duration-100 rounded-sm">
+          <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/70 mb-1 truncate rounded-sm">
             {file.path.split('/').pop() || file.path}
           </div>
 
           <button
             type="button"
             onClick={handleReveal}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
           >
             <div className="flex items-center gap-2">
               <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
@@ -133,7 +133,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
             <button
               type="button"
               onClick={handleViewBlame}
-              className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
+              className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
             >
               <div className="flex items-center gap-2">
                 <History className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
@@ -148,7 +148,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           <button
             type="button"
             onClick={handleCopyRelative}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Copy className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
@@ -160,7 +160,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           <button
             type="button"
             onClick={handleCopyAbsolute}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
           >
             <div className="flex items-center gap-2">
               <FileText className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
@@ -174,7 +174,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           <button
             type="button"
             onClick={handleCopyRemoteUrl}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Globe className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
@@ -186,7 +186,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           <button
             type="button"
             onClick={handleCopyRemoteUrlFrom}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
           >
             <div className="flex items-center gap-2">
               <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />

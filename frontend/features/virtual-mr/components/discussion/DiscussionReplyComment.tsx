@@ -52,7 +52,7 @@ export function DiscussionReplyComment({
               type="button"
               onClick={() => quote(reply)}
               disabled={isSubmitting}
-              className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer"
+              className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
               aria-label={`Quote comment ${reply.id}`}
               title={`Quote comment ${reply.id}`}
             >

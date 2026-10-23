@@ -91,14 +91,14 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
       />
 
       {/* Sub-bar: Display Mode Switcher & Block Stepper */}
-      <div className="h-10 bg-mantle border-b border-surface0 px-4 flex items-center justify-between shrink-0">
+      <div className="h-10 bg-mantle border-b border-surface0 px-4 flex items-center justify-between shrink-0 rounded-sm">
         <div className="flex items-center gap-2">
           {/* Display Mode Switcher */}
-          <div className="flex items-center bg-surface0  p-0.5 border border-surface0">
+          <div className="flex items-center bg-surface0 rounded-sm p-0.5 border border-surface0">
             <button
               type="button"
               onClick={() => setDisplayMode('blocks')}
-              className={`flex items-center gap-1.5 px-2.5 py-1  text-xs font-semibold transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold transition-colors cursor-pointer ${
                 displayMode === 'blocks'
                   ? 'bg-surface2 text-text shadow-xs'
                   : 'text-subtext1 hover:text-text'
@@ -112,7 +112,7 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
             <button
               type="button"
               onClick={() => setDisplayMode('file')}
-              className={`flex items-center gap-1.5 px-2.5 py-1  text-xs font-semibold transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold transition-colors cursor-pointer ${
                 displayMode === 'file'
                   ? 'bg-surface2 text-text shadow-xs'
                   : 'text-subtext1 hover:text-text'
@@ -131,12 +131,12 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
 
         {/* Region Stepper (when multiple conflict blocks exist) */}
         {regions.length > 1 && displayMode === 'blocks' && (
-          <div className="flex items-center gap-1 bg-surface0  border border-surface0 px-1 py-0.5">
+          <div className="flex items-center gap-1 bg-surface0 rounded-sm border border-surface0 px-1 py-0.5">
             <button
               type="button"
               disabled={activeRegionIndex === 0}
               onClick={() => setActiveRegionIndex((prev) => Math.max(0, prev - 1))}
-              className="p-1 text-subtext1 hover:text-text  hover:bg-surface1 transition-colors disabled:opacity-30 cursor-pointer"
+              className="p-1 text-subtext1 hover:text-text rounded-sm hover:bg-surface1 transition-colors disabled:opacity-30 cursor-pointer"
               title="Previous conflict block"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -148,7 +148,7 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
               type="button"
               disabled={activeRegionIndex === regions.length - 1}
               onClick={() => setActiveRegionIndex((prev) => Math.min(regions.length - 1, prev + 1))}
-              className="p-1 text-subtext1 hover:text-text  hover:bg-surface1 transition-colors disabled:opacity-30 cursor-pointer"
+              className="p-1 text-subtext1 hover:text-text rounded-sm hover:bg-surface1 transition-colors disabled:opacity-30 cursor-pointer"
               title="Next conflict block"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -158,14 +158,14 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-auto p-4 bg-base">
+      <div className="flex-1 overflow-auto p-4 bg-base rounded-sm">
         {isConflictLoading ? (
           <div className="flex flex-col items-center justify-center h-64 text-subtext1 space-y-3">
-            <div className="w-6 h-6 border-2 border-red border-t-transparent  animate-spin" />
+            <div className="w-6 h-6 border-2 border-red border-t-transparent rounded-sm animate-spin" />
             <p className="text-xs font-medium">Computing 3-way in-memory collision...</p>
           </div>
         ) : conflictPreviewError ? (
-          <div className="p-6 bg-red/10 border border-red/30  text-xs text-red space-y-2">
+          <div className="p-6 bg-red/10 border border-red/30 rounded-sm text-xs text-red space-y-2">
             <p className="font-bold flex items-center gap-1.5">
               <AlertTriangle className="w-4 h-4" />
               Failed to load conflict preview

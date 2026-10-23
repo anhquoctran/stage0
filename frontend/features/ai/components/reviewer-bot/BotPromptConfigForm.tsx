@@ -27,7 +27,7 @@ export function BotPromptConfigForm({
         value={formInstructions}
         onChange={(e) => setFormInstructions(e.target.value)}
         placeholder="Add bot-specific review guidance. This is combined with the read-only Stage0 role prompt."
-        className="w-full px-3 py-2 bg-surface0 border border-surface1 text-xs font-mono text-text focus:outline-none focus:border-brand leading-relaxed"
+        className="w-full px-3 py-2 bg-surface0 border border-surface1 text-xs font-mono text-text focus:outline-none focus:border-brand leading-relaxed rounded-sm"
       />
     </div>
   );

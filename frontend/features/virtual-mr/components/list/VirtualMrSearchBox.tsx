@@ -78,7 +78,7 @@ export function VirtualMrSearchBox({
               }
               onKeyDown={handleSearchKeyDown}
               placeholder="Search MRs or type to filter…"
-              className="mr-list-search-input absolute inset-0 h-full w-full min-w-0 bg-transparent text-xs leading-4 text-transparent caret-text placeholder:text-subtext0 focus:outline-none selection:bg-brand/50 selection:text-text"
+              className="mr-list-search-input absolute inset-0 h-full w-full min-w-0 bg-transparent text-xs leading-4 text-transparent caret-text placeholder:text-subtext0 focus:outline-none selection:bg-brand/50 selection:text-text rounded-sm"
               aria-label="Search merge requests"
               aria-autocomplete="list"
               aria-controls={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestions`}
@@ -94,7 +94,7 @@ export function VirtualMrSearchBox({
         {searchSuggestions.length > 0 && (
           <div
             id={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestions`}
-            className="absolute left-0 top-full z-[120] mt-1 max-h-80 w-[min(26rem,calc(100vw-2rem))] overflow-y-auto border border-surface1 bg-surface0 py-1 text-left shadow-xl"
+            className="absolute left-0 top-full z-[120] mt-1 max-h-80 w-[min(26rem,calc(100vw-2rem))] overflow-y-auto border border-surface1 bg-surface0 py-1 text-left shadow-xl rounded-sm"
             role="listbox"
             aria-label="Search suggestions"
           >
@@ -109,7 +109,7 @@ export function VirtualMrSearchBox({
                   event.preventDefault();
                   applySearchSuggestion(suggestion);
                 }}
-                className={`flex w-full items-center gap-2.5 px-3 py-2 text-xs transition-colors cursor-pointer ${
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-xs transition-colors cursor-pointer rounded-sm ${
                   activeSuggestionIndex === index
                     ? 'bg-surface2 text-text'
                     : 'text-subtext1 hover:bg-surface1 hover:text-text'
@@ -145,7 +145,7 @@ export function VirtualMrSearchBox({
       <button
         type="button"
         onClick={() => setSortDirection((direction) => (direction === 'asc' ? 'desc' : 'asc'))}
-        className="flex h-full w-8 shrink-0 items-center justify-center border-l border-surface1 bg-surface0 text-text hover:bg-surface1 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand cursor-pointer"
+        className="flex h-full w-8 shrink-0 items-center justify-center border-l border-surface1 bg-surface0 text-text hover:bg-surface1 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand cursor-pointer rounded-sm"
         aria-label={`Switch to ${sortDirection === 'asc' ? 'descending' : 'ascending'} order`}
         title={`${sortDirection === 'asc' ? 'Ascending' : 'Descending'} order`}
       >

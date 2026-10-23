@@ -10,7 +10,7 @@ export const BotReviewersResetModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-mantle border border-surface0 w-full max-w-md shadow-2xl p-5 space-y-4">
+      <div className="bg-mantle border border-surface0 w-full max-w-md shadow-2xl p-5 space-y-4 rounded-sm">
         <div className="flex items-center gap-3 text-yellow">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <h4 className="text-sm font-bold text-text">Reset Default Bot Reviewers?</h4>
@@ -22,14 +22,14 @@ export const BotReviewersResetModal: React.FC<{
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs cursor-pointer"
+            className="px-3 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs cursor-pointer rounded-sm"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="px-4 py-1.5 bg-yellow hover:brightness-95 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
+            className="px-4 py-1.5 bg-yellow hover:brightness-95 text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
           >
             Reset to Defaults
           </button>

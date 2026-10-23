@@ -48,7 +48,7 @@ export const GuardrailsCommandSection: React.FC<{
   onUpdateRateLimit,
 }) => {
   return (
-    <div className="p-4 bg-surface0/60 border border-surface1 space-y-4">
+    <div className="p-4 bg-surface0/60 border border-surface1 space-y-4 rounded-sm">
       <h4 className="text-xs font-bold text-text">
         Terminal Command Execution Guardrails
       </h4>
@@ -58,7 +58,7 @@ export const GuardrailsCommandSection: React.FC<{
         <label className="text-[11px] font-medium text-subtext0">
           Whitelisted Toolchain Executables
         </label>
-        <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center">
+        <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center rounded-sm">
           {allowedCommands.map((cmd) => (
             <span
               key={cmd}
@@ -68,7 +68,7 @@ export const GuardrailsCommandSection: React.FC<{
               <button
                 type="button"
                 onClick={() => onRemoveAllowedCmd(cmd)}
-                className="opacity-70 hover:opacity-100 cursor-pointer"
+                className="opacity-70 hover:opacity-100 cursor-pointer rounded-sm"
                 title="Remove"
               >
                 <X className="w-3 h-3" />
@@ -83,12 +83,12 @@ export const GuardrailsCommandSection: React.FC<{
             value={newAllowedCmd}
             onChange={(e) => setNewAllowedCmd(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), onAddAllowedCmd())}
-            className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 text-text font-mono focus:outline-none focus:border-surface2"
+            className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 text-text font-mono focus:outline-none focus:border-surface2 rounded-sm"
           />
           <button
             type="button"
             onClick={onAddAllowedCmd}
-            className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 cursor-pointer transition"
+            className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 cursor-pointer transition rounded-sm"
           >
             <Plus className="w-3 h-3" />
             <span>Add Command</span>
@@ -101,7 +101,7 @@ export const GuardrailsCommandSection: React.FC<{
         <label className="text-[11px] font-medium text-red">
           Explicitly Blocked Destructive Commands (Hard Deny)
         </label>
-        <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center">
+        <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center rounded-sm">
           {blockedCommands.map((cmd) => (
             <span
               key={cmd}
@@ -111,7 +111,7 @@ export const GuardrailsCommandSection: React.FC<{
               <button
                 type="button"
                 onClick={() => onRemoveBlockedCmd(cmd)}
-                className="opacity-70 hover:opacity-100 cursor-pointer"
+                className="opacity-70 hover:opacity-100 cursor-pointer rounded-sm"
                 title="Remove"
               >
                 <X className="w-3 h-3" />
@@ -126,12 +126,12 @@ export const GuardrailsCommandSection: React.FC<{
             value={newBlockedCmd}
             onChange={(e) => setNewBlockedCmd(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), onAddBlockedCmd())}
-            className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 text-text font-mono focus:outline-none focus:border-surface2"
+            className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 text-text font-mono focus:outline-none focus:border-surface2 rounded-sm"
           />
           <button
             type="button"
             onClick={onAddBlockedCmd}
-            className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 cursor-pointer transition"
+            className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 cursor-pointer transition rounded-sm"
           >
             <Plus className="w-3 h-3" />
             <span>Add Blocked</span>
@@ -144,7 +144,7 @@ export const GuardrailsCommandSection: React.FC<{
         <label className="text-[11px] font-medium text-yellow">
           Blocked Shell Injection & Malicious Patterns
         </label>
-        <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center">
+        <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center rounded-sm">
           {blockedPatterns.map((pat) => (
             <span
               key={pat}
@@ -154,7 +154,7 @@ export const GuardrailsCommandSection: React.FC<{
               <button
                 type="button"
                 onClick={() => onRemoveBlockedPattern(pat)}
-                className="opacity-70 hover:opacity-100 cursor-pointer"
+                className="opacity-70 hover:opacity-100 cursor-pointer rounded-sm"
                 title="Remove"
               >
                 <X className="w-3 h-3" />
@@ -169,12 +169,12 @@ export const GuardrailsCommandSection: React.FC<{
             value={newBlockedPattern}
             onChange={(e) => setNewBlockedPattern(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), onAddBlockedPattern())}
-            className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 text-text font-mono focus:outline-none focus:border-surface2"
+            className="flex-1 px-2.5 py-1 text-xs bg-base border border-surface1 text-text font-mono focus:outline-none focus:border-surface2 rounded-sm"
           />
           <button
             type="button"
             onClick={onAddBlockedPattern}
-            className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 cursor-pointer transition"
+            className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 cursor-pointer transition rounded-sm"
           >
             <Plus className="w-3 h-3" />
             <span>Add Pattern</span>
@@ -183,7 +183,7 @@ export const GuardrailsCommandSection: React.FC<{
       </div>
 
       {/* Numerical Execution Limits */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-surface1">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-surface1 rounded-sm">
         <div>
           <label className="text-[11px] font-medium text-subtext0 block">
             Max Execution Timeout: <span className="text-text font-mono font-bold">{maxTimeout}s</span>
@@ -195,7 +195,7 @@ export const GuardrailsCommandSection: React.FC<{
             step={5}
             value={maxTimeout}
             onChange={(e) => onUpdateTimeout(Number(e.target.value))}
-            className="w-full mt-2 cursor-pointer"
+            className="w-full mt-2 cursor-pointer rounded-sm"
           />
         </div>
 
@@ -210,7 +210,7 @@ export const GuardrailsCommandSection: React.FC<{
             step={16384}
             value={maxOutputBytes}
             onChange={(e) => onUpdateOutputBytes(Number(e.target.value))}
-            className="w-full mt-2 cursor-pointer"
+            className="w-full mt-2 cursor-pointer rounded-sm"
           />
         </div>
 
@@ -225,7 +225,7 @@ export const GuardrailsCommandSection: React.FC<{
             step={5}
             value={rateLimit}
             onChange={(e) => onUpdateRateLimit(Number(e.target.value))}
-            className="w-full mt-2 cursor-pointer"
+            className="w-full mt-2 cursor-pointer rounded-sm"
           />
         </div>
       </div>

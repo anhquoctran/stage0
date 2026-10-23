@@ -36,7 +36,7 @@ export const HarnessConnectionsPanel: React.FC<HarnessConnectionsPanelProps> = (
           {server.type === 'http' && !pendingCommit ? <>
             <p className="font-mono text-[11px] text-subtext0 break-all">{server.url}</p>
             <label className="flex items-start gap-2"><input type="checkbox" disabled={!server.enabled || current?.status === 'discovering'} checked={!!consent[server.id]} onChange={(event) => setConsent((value) => ({ ...value, [server.id]: event.target.checked }))} className="accent-primary mt-0.5" /><span>Allow source-free network discovery at this endpoint. No tool will be called or enabled.</span></label>
-            <button type="button" disabled={!server.enabled || !consent[server.id] || current?.status === 'discovering'} onClick={() => { setConsent((value) => ({ ...value, [server.id]: false })); void discover(server, true); }} className="border border-surface1 px-3 py-1.5 disabled:opacity-40">{current?.status === 'discovering' ? 'Discovering…' : 'Discover tools'}</button>
+            <button type="button" disabled={!server.enabled || !consent[server.id] || current?.status === 'discovering'} onClick={() => { setConsent((value) => ({ ...value, [server.id]: false })); void discover(server, true); }} className="border border-surface1 px-3 py-1.5 disabled:opacity-40 rounded-sm">{current?.status === 'discovering' ? 'Discovering…' : 'Discover tools'}</button>
             {current?.error && <p role="alert" className="text-red whitespace-pre-wrap break-words">{current.error}</p>}
             {current?.report && <div className="space-y-1" role="status">
               <p>{current.report.tools.length} tools discovered from {current.report.serverName} / {current.report.serverVersion}. Not attached to harness.</p>
@@ -49,7 +49,7 @@ export const HarnessConnectionsPanel: React.FC<HarnessConnectionsPanelProps> = (
       <section className="border-t border-surface0 pt-3 space-y-2">
         <p className="font-semibold">CLI harness preflight (no execution)</p>
         <CustomSelect value={cliType} onChange={setCliType} options={CLI_OPTIONS} aria-label="CLI for harness preflight" className="w-full" buttonClassName="w-full" dropdownWidth="w-full" align="left" />
-        <button type="button" disabled={isInspectingCli} onClick={() => void inspectCli(cliType)} className="border border-surface1 px-3 py-1.5 disabled:opacity-40">{isInspectingCli ? 'Inspecting PATH…' : 'Inspect executable'}</button>
+        <button type="button" disabled={isInspectingCli} onClick={() => void inspectCli(cliType)} className="border border-surface1 px-3 py-1.5 disabled:opacity-40 rounded-sm">{isInspectingCli ? 'Inspecting PATH…' : 'Inspect executable'}</button>
         {cliError && <p role="alert" className="text-red">{cliError}</p>}
         {cli?.cliType === cliType && <div role="status" className="space-y-1 text-subtext0"><p>{cli.executableFound ? 'Executable found' : 'Executable not found'} · not attached</p><p className="font-mono break-all">{cli.executablePath}</p><p>{cli.message}</p><p>Required wrapper contract: <code>{cli.requiredProtocol}</code></p></div>}
       </section>

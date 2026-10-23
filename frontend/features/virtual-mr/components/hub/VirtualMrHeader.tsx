@@ -31,12 +31,12 @@ export function VirtualMrHeader({
   handleStartAiReview,
 }: VirtualMrHeaderProps) {
   return (
-    <div className="px-4 py-2.5 flex items-center justify-between gap-4 border-b border-surface0/60 bg-crust/30">
+    <div className="px-4 py-2.5 flex items-center justify-between gap-4 border-b border-surface0/60 bg-crust/30 rounded-sm">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         {/* Read-only MR Status Badge */}
         {session.status === 'resolved' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 select-none shadow-xs shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 select-none shadow-xs shrink-0 rounded-sm"
             title="All reviewers approved and all discussions are resolved"
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -44,7 +44,7 @@ export function VirtualMrHeader({
           </div>
         ) : session.status === 'closed' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 select-none shadow-xs shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 select-none shadow-xs shrink-0"
             title="Virtual MR is Closed"
           >
             <XCircle className="w-3.5 h-3.5 text-subtext1 shrink-0" />
@@ -52,10 +52,10 @@ export function VirtualMrHeader({
           </div>
         ) : (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1  text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 select-none shadow-xs shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 select-none shadow-xs shrink-0"
             title="Virtual MR is Open"
           >
-            <span className="w-2 h-2  bg-emerald-400 animate-pulse shrink-0" />
+            <span className="w-2 h-2 rounded-sm bg-emerald-400 animate-pulse shrink-0" />
             <span>Open</span>
           </div>
         )}
@@ -79,13 +79,13 @@ export function VirtualMrHeader({
                 if (e.key === 'Enter') handleSaveTitle();
                 if (e.key === 'Escape') setIsEditingTitle(false);
               }}
-              className="flex-1 px-2.5 py-1  bg-surface0 border border-surface1 text-text text-sm font-semibold focus:outline-none"
+              className="flex-1 px-2.5 py-1 rounded-sm bg-surface0 border border-surface1 text-text text-sm font-semibold focus:outline-none"
               autoFocus
             />
             <button
               type="button"
               onClick={handleSaveTitle}
-              className="p-1  bg-brand hover:bg-brand/90 text-on-accent cursor-pointer shadow-xs"
+              className="p-1 rounded-sm bg-brand hover:bg-brand/90 text-on-accent cursor-pointer shadow-xs"
               title="Save"
             >
               <Check className="w-4 h-4" />
@@ -93,7 +93,7 @@ export function VirtualMrHeader({
             <button
               type="button"
               onClick={() => setIsEditingTitle(false)}
-              className="p-1  bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+              className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-white cursor-pointer"
               title="Cancel"
             >
               <X className="w-4 h-4 text-white" />
@@ -105,7 +105,7 @@ export function VirtualMrHeader({
             <button
               type="button"
               onClick={handleStartEditTitle}
-              className="p-1  bg-surface1 hover:bg-surface2 text-white cursor-pointer"
+              className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-white cursor-pointer"
               title="Edit title"
             >
               <Edit2 className="w-3.5 h-3.5 text-white" />
@@ -115,7 +115,7 @@ export function VirtualMrHeader({
 
         {/* Branch Selector for Active Virtual MR */}
         <div
-          className={`flex items-center gap-1.5 px-2.5 py-1 border shrink-0 transition-colors ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 border shrink-0 transition-colors rounded-sm ${
             isBranchLocked
               ? 'bg-surface0/30 border-surface0/50'
               : 'bg-surface0/60 border-surface1/60'
@@ -145,7 +145,7 @@ export function VirtualMrHeader({
             }
             disabled={isBranchLocked}
             title={isBranchLocked ? branchLockedReason : 'Swap Compare and Base branches'}
-            className={`p-1 border border-transparent transition-colors ${
+            className={`p-1 border border-transparent transition-colors rounded-sm ${
               isBranchLocked
                 ? 'text-subtext0/30 cursor-not-allowed'
                 : 'text-subtext0 hover:text-brand hover:bg-surface0 hover:border-surface0 cursor-pointer'
@@ -181,7 +181,7 @@ export function VirtualMrHeader({
                   ? 'An AI code review is already running'
                   : 'Start a review with every assigned AI reviewer'
           }
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white transition-colors font-medium text-xs cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white transition-colors font-medium text-xs cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed rounded-sm"
         >
           <RefreshCw
             className={`w-3.5 h-3.5 text-white ${reviewIsRunning ? 'animate-spin' : ''}`}

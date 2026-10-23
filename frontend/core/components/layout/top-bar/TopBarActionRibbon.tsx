@@ -41,7 +41,7 @@ export const TopBarActionRibbon: React.FC<{
           type="button"
           disabled={isSyncing}
           onClick={() => runSync('fetch')}
-          className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
+          className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group rounded-sm"
           title={shortcut('git fetch --all --prune (Ctrl+Shift+F)')}
         >
           <RefreshCw
@@ -67,7 +67,7 @@ export const TopBarActionRibbon: React.FC<{
         <button
           type="button"
           onClick={() => setIsGitGraphOpen(true)}
-          className="h-12 min-w-[58px] px-1.5 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors cursor-pointer group"
+          className="h-12 min-w-[58px] px-1.5 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors cursor-pointer group rounded-sm"
           title="Show Git Graph for the checked-out branch"
         >
           <GitCommit className="w-5 h-5 text-primary shrink-0 transition-colors" />
@@ -81,7 +81,7 @@ export const TopBarActionRibbon: React.FC<{
           type="button"
           disabled={isSyncing}
           onClick={refreshDiff}
-          className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
+          className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group rounded-sm"
           title={shortcut('Refresh MR diff & conflict simulation (Ctrl+R)')}
         >
           <RotateCw className="w-5 h-5 text-primary shrink-0 transition-colors" />
@@ -95,7 +95,7 @@ export const TopBarActionRibbon: React.FC<{
           type="button"
           disabled={!currentRepo}
           onClick={() => openRepoSettings('remotes')}
-          className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group"
+          className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group rounded-sm"
           title={shortcut('Repository Settings (Ctrl+Alt+S)')}
         >
           <FolderCog className="w-5 h-5 text-primary shrink-0 transition-colors" />

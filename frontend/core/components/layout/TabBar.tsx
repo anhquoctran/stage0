@@ -58,7 +58,7 @@ export const TabBar: React.FC = () => {
   if (!currentRepo) return null;
 
   return (
-    <div className="h-10 border-b border-surface0 bg-crust flex items-center px-2 select-none overflow-x-auto no-scrollbar gap-1 text-xs relative z-30">
+    <div className="h-10 border-b border-surface0 bg-crust flex items-center px-2 select-none overflow-x-auto no-scrollbar gap-1 text-xs relative z-30 rounded-sm">
       <TabBarMrListButton
         isActive={isMrListActive}
         sessionCount={sessions.length}

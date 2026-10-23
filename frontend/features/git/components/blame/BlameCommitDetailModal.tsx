@@ -17,10 +17,10 @@ export function BlameCommitDetailModal({
   handleCopyCommitUrl,
 }: BlameCommitDetailModalProps) {
   return (
-    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4 rounded-sm">
       <div
         ref={commitModalRef}
-        className="bg-mantle border border-surface0  w-full max-w-lg shadow-2xl p-4 animate-in zoom-in-95 duration-100 flex flex-col space-y-3.5 select-none"
+        className="bg-mantle border border-surface0 rounded-sm w-full max-w-lg shadow-2xl p-4 animate-in zoom-in-95 duration-100 flex flex-col space-y-3.5 select-none"
       >
         {/* Header */}
         <div
@@ -34,14 +34,14 @@ export function BlameCommitDetailModal({
           <button
             type="button"
             onClick={() => setSelectedCommit(null)}
-            className="p-1  text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
+            className="p-1 rounded-sm text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Commit Message */}
-        <div className="bg-base border border-surface0  p-3">
+        <div className="bg-base border border-surface0 rounded-sm p-3">
           <div className="text-[10px] uppercase font-bold text-subtext0 mb-1">Commit Message</div>
           <p className="text-xs text-text font-medium whitespace-pre-wrap leading-relaxed">
             {selectedCommit.summary}
@@ -51,7 +51,7 @@ export function BlameCommitDetailModal({
         {/* Commit Metadata Grid */}
         <div className="space-y-2 text-xs">
           {/* Full SHA */}
-          <div className="flex items-center justify-between gap-2 p-2 bg-surface0/40  border border-surface0/60 font-mono">
+          <div className="flex items-center justify-between gap-2 p-2 bg-surface0/40 rounded-sm border border-surface0/60 font-mono">
             <div className="min-w-0 flex-1 truncate">
               <span className="text-[10px] uppercase block font-sans text-subtext0 font-bold">
                 SHA
@@ -63,7 +63,7 @@ export function BlameCommitDetailModal({
             <button
               type="button"
               onClick={() => handleCopySha(selectedCommit.commit_id)}
-              className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs  transition-colors shrink-0 cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs rounded-sm transition-colors shrink-0 cursor-pointer"
               title="Copy full SHA"
             >
               {copiedSha ? (
@@ -76,7 +76,7 @@ export function BlameCommitDetailModal({
           </div>
 
           {/* Author Info */}
-          <div className="flex items-start gap-2 p-2 bg-surface0/20  border border-surface0/40">
+          <div className="flex items-start gap-2 p-2 bg-surface0/20 rounded-sm border border-surface0/40">
             <User className="w-4 h-4 text-subtext0 mt-0.5 shrink-0" />
             <div className="min-w-0 flex-1">
               <div className="font-semibold text-text">{selectedCommit.author}</div>
@@ -87,7 +87,7 @@ export function BlameCommitDetailModal({
           </div>
 
           {/* Date Info */}
-          <div className="flex items-start gap-2 p-2 bg-surface0/20  border border-surface0/40">
+          <div className="flex items-start gap-2 p-2 bg-surface0/20 rounded-sm border border-surface0/40">
             <Clock className="w-4 h-4 text-subtext0 mt-0.5 shrink-0" />
             <div className="min-w-0 flex-1">
               <div className="font-semibold text-text">
@@ -105,7 +105,7 @@ export function BlameCommitDetailModal({
           <button
             type="button"
             onClick={() => handleCopyCommitUrl(selectedCommit.commit_id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs  transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs rounded-sm transition-colors cursor-pointer"
           >
             <ExternalLink className="w-3.5 h-3.5 text-subtext0" />
             <span>Copy Remote Link</span>
@@ -114,7 +114,7 @@ export function BlameCommitDetailModal({
           <button
             type="button"
             onClick={() => setSelectedCommit(null)}
-            className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold  transition-colors cursor-pointer"
+            className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-sm transition-colors cursor-pointer"
           >
             Close
           </button>

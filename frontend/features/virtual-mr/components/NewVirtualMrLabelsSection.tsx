@@ -37,7 +37,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
   labelDropdownRef,
 }) => {
   return (
-    <div className="relative p-3 border border-surface1 bg-mantle/70 space-y-2 select-none" ref={labelDropdownRef}>
+    <div className="relative p-3 border border-surface1 bg-mantle/70 space-y-2 select-none rounded-sm" ref={labelDropdownRef}>
       <div className="flex items-center justify-between">
         <div className="text-[11px] font-bold uppercase tracking-wider text-subtext1 flex items-center gap-1.5">
           <Tag className="w-3.5 h-3.5 text-teal" />
@@ -46,7 +46,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
         <button
           type="button"
           onClick={onToggleLabelDropdown}
-          className="p-1 text-subtext0 hover:text-teal hover:bg-surface0 transition-colors cursor-pointer"
+          className="p-1 text-subtext0 hover:text-teal hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
           title="Edit Labels"
         >
           <Plus className="w-3.5 h-3.5" />
@@ -66,7 +66,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
             return (
               <div
                 key={lbl.id}
-                className="flex items-center gap-1 px-2 py-0.5 text-xs font-mono font-medium border"
+                className="flex items-center gap-1 px-2 py-0.5 text-xs font-mono font-medium border rounded-sm"
                 style={{
                   backgroundColor: `${lbl.color}20`,
                   borderColor: `${lbl.color}40`,
@@ -77,7 +77,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
                 <button
                   type="button"
                   onClick={() => onRemoveLabel(lbl.id)}
-                  className="hover:opacity-100 opacity-60 transition-opacity cursor-pointer ml-0.5"
+                  className="hover:opacity-100 opacity-60 transition-opacity cursor-pointer ml-0.5 rounded-sm"
                   title={`Remove ${lbl.name}`}
                 >
                   <X className="w-3 h-3" />
@@ -90,20 +90,20 @@ export const NewVirtualMrLabelsSection: React.FC<{
 
       {/* Label Dropdown Popover */}
       {showLabelDropdown && (
-        <div className="absolute top-full right-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100">
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between">
+        <div className="absolute top-full right-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100 rounded-sm">
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between rounded-sm">
             <span>Apply Labels</span>
             <button
               type="button"
               onClick={() => setShowLabelDropdown(false)}
-              className="text-subtext0 hover:text-text cursor-pointer"
+              className="text-subtext0 hover:text-text cursor-pointer rounded-sm"
             >
               <X className="w-3 h-3" />
             </button>
           </div>
 
           {/* Filter / Create input */}
-          <div className="p-2 bg-base/40 border-b border-surface0/60 space-y-1.5">
+          <div className="p-2 bg-base/40 border-b border-surface0/60 space-y-1.5 rounded-sm">
             <div className="relative">
               <input
                 type="text"
@@ -116,7 +116,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
                     handleCreateAndSelectLabel();
                   }
                 }}
-                className="w-full px-2.5 py-1 bg-mantle border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-none focus:border-brand font-mono"
+                className="w-full px-2.5 py-1 bg-mantle border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-none focus:border-brand font-mono rounded-sm"
                 autoFocus
               />
             </div>
@@ -131,7 +131,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
                       key={color}
                       type="button"
                       onClick={() => setNewLabelColor(color)}
-                      className={`w-3.5 h-3.5 border transition-transform cursor-pointer ${
+                      className={`w-3.5 h-3.5 border transition-transform cursor-pointer rounded-sm ${
                         newLabelColor === color ? 'scale-125 border-white' : 'border-transparent hover:scale-110'
                       }`}
                       style={{ backgroundColor: color }}
@@ -155,7 +155,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
                   <button
                     type="button"
                     onClick={handleCreateAndSelectLabel}
-                    className="w-full px-3 py-2 flex items-center gap-2 hover:bg-surface0 text-left text-xs text-brand transition-colors cursor-pointer font-medium"
+                    className="w-full px-3 py-2 flex items-center gap-2 hover:bg-surface0 text-left text-xs text-brand transition-colors cursor-pointer font-medium rounded-sm"
                   >
                     <Plus className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">Create label <strong>"{labelSearch.trim()}"</strong></span>
@@ -172,7 +172,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
                         key={lbl.id}
                         type="button"
                         onClick={() => onToggleLabel(lbl.id)}
-                        className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors cursor-pointer ${
+                        className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors cursor-pointer rounded-sm ${
                           isSelected ? 'bg-surface0 font-medium' : 'hover:bg-surface0/50'
                         }`}
                       >

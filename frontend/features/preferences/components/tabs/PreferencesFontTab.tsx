@@ -73,7 +73,7 @@ export const PreferencesFontTab: React.FC<{
           <button
             type="button"
             onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
-            className="w-full flex items-center justify-between px-3 py-1.5 border border-surface0 bg-crust hover:bg-base text-text text-xs transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 border border-surface0 bg-crust hover:bg-base text-text text-xs transition-colors cursor-pointer rounded-sm"
           >
             <span
               className="truncate font-semibold"
@@ -89,8 +89,8 @@ export const PreferencesFontTab: React.FC<{
           </button>
 
           {isFontDropdownOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-72 bg-mantle border border-surface0 shadow-2xl z-50 overflow-hidden flex flex-col max-h-72">
-              <div className="p-2 border-b border-surface0 bg-crust sticky top-0 z-10 flex items-center gap-2">
+            <div className="absolute right-0 top-full mt-1.5 w-72 bg-mantle border border-surface0 shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 rounded-sm">
+              <div className="p-2 border-b border-surface0 bg-crust sticky top-0 z-10 flex items-center gap-2 rounded-sm">
                 <Search className="w-3 h-3 text-subtext0 shrink-0 ml-1" />
                 <input
                   ref={fontSearchInputRef}
@@ -98,7 +98,7 @@ export const PreferencesFontTab: React.FC<{
                   placeholder="Filter monospace fonts..."
                   value={fontSearchQuery}
                   onChange={(e) => setFontSearchQuery(e.target.value)}
-                  className="w-full bg-surface0 border border-surface1 px-2 py-1 text-xs text-text placeholder:text-subtext0 focus:outline-hidden"
+                  className="w-full bg-surface0 border border-surface1 px-2 py-1 text-xs text-text placeholder:text-subtext0 focus:outline-hidden rounded-sm"
                   autoFocus
                 />
               </div>
@@ -122,7 +122,7 @@ export const PreferencesFontTab: React.FC<{
                           setDraftEnableLigatures(font.ligaturesSupport);
                           setIsFontDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer ${
+                        className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
                           isSelected
                             ? 'bg-surface0 text-text font-semibold'
                             : 'hover:bg-base text-subtext1 hover:text-text'
@@ -181,13 +181,13 @@ export const PreferencesFontTab: React.FC<{
                 Math.max(10, Math.min(24, parseInt(e.target.value) || 13))
               )
             }
-            className="w-16 px-2.5 py-1.5 bg-crust border border-surface0 text-xs text-text focus:outline-hidden focus:border-surface1 font-mono text-center"
+            className="w-16 px-2.5 py-1.5 bg-crust border border-surface0 text-xs text-text focus:outline-hidden focus:border-surface1 font-mono text-center rounded-sm"
           />
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => setDraftFontSize((prev) => Math.max(10, prev - 1))}
-              className="px-2 py-1 border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold"
+              className="px-2 py-1 border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold rounded-sm"
               title="Decrease font size"
             >
               -
@@ -195,7 +195,7 @@ export const PreferencesFontTab: React.FC<{
             <button
               type="button"
               onClick={() => setDraftFontSize((prev) => Math.min(24, prev + 1))}
-              className="px-2 py-1 border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold"
+              className="px-2 py-1 border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold rounded-sm"
               title="Increase font size"
             >
               +
@@ -209,11 +209,11 @@ export const PreferencesFontTab: React.FC<{
         title="Font Weight & Emphasis"
         description="Apply Bold, Italic, or Underline formatting to diff text."
       >
-        <div className="flex items-center gap-1 bg-crust p-0.5 border border-surface0">
+        <div className="flex items-center gap-1 bg-crust p-0.5 border border-surface0 rounded-sm">
           <button
             type="button"
             onClick={() => setDraftIsBold(!draftIsBold)}
-            className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer ${
+            className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer rounded-sm ${
               draftIsBold
                 ? 'bg-surface0 text-text font-bold shadow-xs'
                 : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
@@ -227,7 +227,7 @@ export const PreferencesFontTab: React.FC<{
           <button
             type="button"
             onClick={() => setDraftIsItalic(!draftIsItalic)}
-            className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer ${
+            className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer rounded-sm ${
               draftIsItalic
                 ? 'bg-surface0 text-text font-bold italic shadow-xs'
                 : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
@@ -241,7 +241,7 @@ export const PreferencesFontTab: React.FC<{
           <button
             type="button"
             onClick={() => setDraftIsUnderline(!draftIsUnderline)}
-            className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer ${
+            className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer rounded-sm ${
               draftIsUnderline
                 ? 'bg-surface0 text-text font-bold underline shadow-xs'
                 : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
@@ -267,7 +267,7 @@ export const PreferencesFontTab: React.FC<{
             step="0.05"
             value={draftLineSpacing}
             onChange={(e) => setDraftLineSpacing(parseFloat(e.target.value))}
-            className="w-full accent-brand cursor-pointer"
+            className="w-full accent-brand cursor-pointer rounded-sm"
           />
           <span className="text-xs font-mono text-text shrink-0 w-10 text-right">
             {draftLineSpacing.toFixed(2)}x

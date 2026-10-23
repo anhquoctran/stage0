@@ -25,7 +25,7 @@ export const MenuBarHelpMenu: React.FC<{
         type="button"
         onClick={onToggle}
         onMouseEnter={onHover}
-        className={`px-2.5 py-1 text-xs font-normal transition-colors cursor-pointer ${
+        className={`px-2.5 py-1 text-xs font-normal transition-colors cursor-pointer rounded-sm ${
           isOpen
             ? 'bg-surface1 text-text'
             : 'text-subtext1 hover:text-text hover:bg-surface0'
@@ -35,14 +35,14 @@ export const MenuBarHelpMenu: React.FC<{
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-0.5 w-60 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+        <div className="absolute left-0 top-full mt-0.5 w-60 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs rounded-sm">
           <button
             type="button"
             onClick={() => {
               onClose();
               onOpenShortcuts();
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Keyboard className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -56,7 +56,7 @@ export const MenuBarHelpMenu: React.FC<{
               onClose();
               void invoke('open_webview_devtools');
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Code2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -72,7 +72,7 @@ export const MenuBarHelpMenu: React.FC<{
               onClose();
               onOpenAbout();
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Info className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />

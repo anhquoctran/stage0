@@ -16,7 +16,7 @@ export const DiffEmptyOverview: React.FC<{
   if (totalFiles === 0) {
     const sameCommit = diffPayload.base_commit === diffPayload.compare_commit;
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-base p-8 text-center select-none">
+      <div className="flex-1 flex flex-col items-center justify-center bg-base p-8 text-center select-none rounded-sm">
         <div className="w-14 h-14 bg-surface0/60 border border-surface1 flex items-center justify-center text-subtext1 mb-4">
           <GitBranch className="w-6 h-6" />
         </div>
@@ -36,8 +36,8 @@ export const DiffEmptyOverview: React.FC<{
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-base p-8 text-center select-none">
-      <div className="w-16 h-16 bg-mantle border border-surface0 flex items-center justify-center text-subtext1 mb-4 shadow-md">
+    <div className="flex-1 flex flex-col items-center justify-center bg-base p-8 text-center select-none rounded-sm">
+      <div className="w-16 h-16 bg-mantle border border-surface0 flex items-center justify-center text-subtext1 mb-4 shadow-md rounded-sm">
         <FileText className="w-8 h-8 text-blue" />
       </div>
       <h3 className="text-[1rem] font-bold text-text mb-1">
@@ -49,20 +49,20 @@ export const DiffEmptyOverview: React.FC<{
 
       {/* Quick Summary Pill Cards */}
       <div className={`grid ${totalBinaryFiles > 0 ? 'grid-cols-4 max-w-xl' : 'grid-cols-3 max-w-md'} gap-3 w-full mb-6`}>
-        <div className="bg-mantle border border-surface0 p-3 text-center">
+        <div className="bg-mantle border border-surface0 p-3 text-center rounded-sm">
           <div className="text-[10px] uppercase font-bold text-subtext1">Files</div>
           <div className="text-lg font-mono font-bold text-text">{totalFiles}</div>
         </div>
-        <div className="bg-mantle border border-surface0 p-3 text-center">
+        <div className="bg-mantle border border-surface0 p-3 text-center rounded-sm">
           <div className="text-[10px] uppercase font-bold text-subtext1">Additions</div>
           <div className="text-lg font-mono font-bold text-green">+{totalAdditions}</div>
         </div>
-        <div className="bg-mantle border border-surface0 p-3 text-center">
+        <div className="bg-mantle border border-surface0 p-3 text-center rounded-sm">
           <div className="text-[10px] uppercase font-bold text-subtext1">Deletions</div>
           <div className="text-lg font-mono font-bold text-red">-{totalDeletions}</div>
         </div>
         {totalBinaryFiles > 0 && (
-          <div className="bg-mantle border border-surface0 p-3 text-center">
+          <div className="bg-mantle border border-surface0 p-3 text-center rounded-sm">
             <div className="text-[10px] uppercase font-bold text-subtext1">Binary</div>
             <div className="text-lg font-mono font-bold text-amber-400">{totalBinaryFiles}</div>
           </div>

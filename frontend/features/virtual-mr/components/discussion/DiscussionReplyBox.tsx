@@ -22,7 +22,7 @@ export function DiscussionReplyBox({
   handleToggleResolve,
 }: DiscussionReplyBoxProps) {
   return (
-    <div className="border-t border-surface0/80 p-3.5 bg-surface0/20">
+    <div className="border-t border-surface0/80 p-3.5 bg-surface0/20 rounded-sm">
       {isReplying ? (
         <div className="space-y-3 animate-in fade-in duration-100">
           {/* Destination selector: hidden from visible UI as replies automatically target this thread */}
@@ -88,7 +88,7 @@ export function DiscussionReplyBox({
                 type="button"
                 onClick={() => submit(resolveThread)}
                 disabled={isSubmitting || !body.trim()}
-                className="px-4 py-1.5 bg-blue hover:bg-blue/90 text-crust font-semibold text-xs shadow-xs disabled:opacity-50 transition-colors cursor-pointer"
+                className="px-4 py-1.5 bg-blue hover:bg-blue/90 text-crust font-semibold text-xs shadow-xs disabled:opacity-50 transition-colors cursor-pointer rounded-sm"
               >
                 {targetId === 'new' ? 'Start Discussion' : 'Add comment now'}
               </button>
@@ -101,7 +101,7 @@ export function DiscussionReplyBox({
                   setResolveThread(false);
                 }}
                 disabled={isSubmitting}
-                className="px-3.5 py-1.5 border border-surface1 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer"
+                className="px-3.5 py-1.5 border border-surface1 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer rounded-sm"
               >
                 Cancel
               </button>
@@ -118,7 +118,7 @@ export function DiscussionReplyBox({
               setIsCollapsed(false);
             }}
             aria-label={`Reply to discussion ${discussion.id}`}
-            className="flex-1 text-left px-3 py-1.5 border border-surface1 bg-crust/50 hover:bg-crust hover:border-surface2 text-subtext0 hover:text-subtext1 text-xs transition-all cursor-text flex items-center justify-between shadow-inner"
+            className="flex-1 text-left px-3 py-1.5 border border-surface1 bg-crust/50 hover:bg-crust hover:border-surface2 text-subtext0 hover:text-subtext1 text-xs transition-all cursor-text flex items-center justify-between shadow-inner rounded-sm"
           >
             <span>Reply...</span>
             <span className="text-[10px] text-subtext0/70 font-mono">r</span>
@@ -128,7 +128,7 @@ export function DiscussionReplyBox({
             <button
               type="button"
               onClick={handleToggleResolve}
-              className="px-3 py-1.5 border border-surface1 bg-surface0 hover:bg-surface1 text-text text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer shrink-0"
+              className="px-3 py-1.5 border border-surface1 bg-surface0 hover:bg-surface1 text-text text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer shrink-0 rounded-sm"
               title={discussion.isResolved ? 'Reopen this thread' : 'Mark this thread as resolved'}
             >
               <span>{discussion.isResolved ? 'Reopen thread' : 'Resolve thread'}</span>

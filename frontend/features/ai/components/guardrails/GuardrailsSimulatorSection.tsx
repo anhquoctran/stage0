@@ -29,7 +29,7 @@ export const GuardrailsSimulatorSection: React.FC<{
   onSetScenario,
 }) => {
   return (
-    <div className="p-4 bg-surface0/60 border border-surface1 space-y-4">
+    <div className="p-4 bg-surface0/60 border border-surface1 space-y-4 rounded-sm">
       <div className="flex items-center justify-between">
         <div>
           <h4 className="text-xs font-bold text-text">Live Policy Simulator & Dry-Run</h4>
@@ -42,35 +42,35 @@ export const GuardrailsSimulatorSection: React.FC<{
         <button
           type="button"
           onClick={() => onSetScenario('safe_test')}
-          className="px-2.5 py-1 text-[11px] bg-green/10 hover:bg-green/20 text-green border border-green/30 cursor-pointer transition font-mono font-medium"
+          className="px-2.5 py-1 text-[11px] bg-green/10 hover:bg-green/20 text-green border border-green/30 cursor-pointer transition font-mono font-medium rounded-sm"
         >
           Safe: `cargo test`
         </button>
         <button
           type="button"
           onClick={() => onSetScenario('dangerous_rm')}
-          className="px-2.5 py-1 text-[11px] bg-red/10 hover:bg-red/20 text-red border border-red/30 cursor-pointer transition font-mono font-medium"
+          className="px-2.5 py-1 text-[11px] bg-red/10 hover:bg-red/20 text-red border border-red/30 cursor-pointer transition font-mono font-medium rounded-sm"
         >
           Dangerous: `rm -rf /`
         </button>
         <button
           type="button"
           onClick={() => onSetScenario('sensitive_env')}
-          className="px-2.5 py-1 text-[11px] bg-mauve/10 hover:bg-mauve/20 text-mauve border border-mauve/30 cursor-pointer transition font-mono font-medium"
+          className="px-2.5 py-1 text-[11px] bg-mauve/10 hover:bg-mauve/20 text-mauve border border-mauve/30 cursor-pointer transition font-mono font-medium rounded-sm"
         >
           Sensitive: `.env.production`
         </button>
         <button
           type="button"
           onClick={() => onSetScenario('pipe_injection')}
-          className="px-2.5 py-1 text-[11px] bg-yellow/10 hover:bg-yellow/20 text-yellow border border-yellow/30 cursor-pointer transition font-mono font-medium"
+          className="px-2.5 py-1 text-[11px] bg-yellow/10 hover:bg-yellow/20 text-yellow border border-yellow/30 cursor-pointer transition font-mono font-medium rounded-sm"
         >
           Injection: `npm test | sh`
         </button>
         <button
           type="button"
           onClick={() => onSetScenario('large_read')}
-          className="px-2.5 py-1 text-[11px] bg-surface0 hover:bg-surface1 text-text border border-surface1 cursor-pointer transition font-mono font-medium"
+          className="px-2.5 py-1 text-[11px] bg-surface0 hover:bg-surface1 text-text border border-surface1 cursor-pointer transition font-mono font-medium rounded-sm"
         >
           Exceeded: 8,000 Lines
         </button>
@@ -96,7 +96,7 @@ export const GuardrailsSimulatorSection: React.FC<{
             value={simArgsText}
             onChange={(e) => setSimArgsText(e.target.value)}
             placeholder="Tool arguments JSON"
-            className="w-full p-2.5 bg-base border border-surface1 font-mono text-xs text-text focus:outline-none focus:border-surface2"
+            className="w-full p-2.5 bg-base border border-surface1 font-mono text-xs text-text focus:outline-none focus:border-surface2 rounded-sm"
           />
 
           {simError && (
@@ -108,14 +108,14 @@ export const GuardrailsSimulatorSection: React.FC<{
             onClick={onRunSimulation}
             disabled={isSimulating || isPendingCommit}
             title={isPendingCommit ? 'Apply or OK to save policy changes before testing the active policy' : 'Tests the committed policy; audit actions take effect immediately'}
-            className="px-3.5 py-1.5 text-xs font-semibold bg-green/15 hover:bg-green/25 text-green border border-green/30 cursor-pointer transition shadow-sm"
+            className="px-3.5 py-1.5 text-xs font-semibold bg-green/15 hover:bg-green/25 text-green border border-green/30 cursor-pointer transition shadow-sm rounded-sm"
           >
             <span>{isSimulating ? 'Evaluating...' : 'Simulate Policy Check'}</span>
           </button>
         </div>
 
         {/* Verdict Card */}
-        <div className="p-3 bg-base border border-surface1 flex flex-col justify-between">
+        <div className="p-3 bg-base border border-surface1 flex flex-col justify-between rounded-sm">
           <div>
             <div className="text-[11px] font-bold text-subtext0 uppercase tracking-wider mb-2">
               Simulation Verdict
@@ -155,7 +155,7 @@ export const GuardrailsSimulatorSection: React.FC<{
                     {simResult.violations.map((v, i) => (
                       <div
                         key={i}
-                        className="p-2 text-[11px] bg-surface0 border border-surface1 space-y-0.5"
+                        className="p-2 text-[11px] bg-surface0 border border-surface1 space-y-0.5 rounded-sm"
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-mono font-bold text-red">{v.rule}</span>

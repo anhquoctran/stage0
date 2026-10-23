@@ -33,7 +33,7 @@ export function AcpAgentCard({
                     : unavailableReason || 'No compatible registry package.'
                 )
           }
-          className="min-w-0 flex-1 text-left"
+          className="min-w-0 flex-1 text-left rounded-sm"
         >
           <span className="flex items-center gap-2 text-sm font-medium">
             <AgentIcon icon={entry?.icon} /> <span className="truncate">{name}</span>
@@ -50,7 +50,7 @@ export function AcpAgentCard({
           <button
             type="button"
             onClick={() => openDetails(installed, entry)}
-            className="shrink-0 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0"
+            className="shrink-0 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
           >
             Manage
           </button>
@@ -59,7 +59,7 @@ export function AcpAgentCard({
             type="button"
             disabled={busyId === item.id || !isTauri()}
             onClick={() => void install(entry!)}
-            className="shrink-0 border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand hover:bg-brand/15 disabled:opacity-45"
+            className="shrink-0 border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand hover:bg-brand/15 disabled:opacity-45 rounded-sm"
           >
             {busyId === item.id ? 'Installing…' : 'Install'}
           </button>

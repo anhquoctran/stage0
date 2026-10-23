@@ -23,7 +23,7 @@ export function ProviderModelForm({
             type="button"
             disabled={isFetchingDynamicModels || !!apiKeyDraft.trim()}
             onClick={() => void onFetchDynamicModels(aiConfig)}
-            className="text-[11px] text-subtext0 hover:text-text disabled:opacity-40"
+            className="text-[11px] text-subtext0 hover:text-text disabled:opacity-40 rounded-sm"
             title="Refresh models using saved API credentials. Apply key changes first."
           >
             {isFetchingDynamicModels ? 'Refreshing…' : 'Refresh models'}
@@ -68,7 +68,7 @@ export function ProviderModelForm({
             step="0.05"
             value={aiConfig.temperature}
             onChange={(e) => onUpdateAiConfig({ temperature: parseFloat(e.target.value) })}
-            className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-text"
+            className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-text rounded-sm"
           />
         </div>
 

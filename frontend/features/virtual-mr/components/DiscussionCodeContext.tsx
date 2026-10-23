@@ -78,7 +78,7 @@ export const DiscussionCodeContext: React.FC<{
   return (
     <div className="overflow-hidden border border-surface1 bg-crust text-xs font-sans">
       {/* File Path Header matching GitLab style */}
-      <div className="flex items-center justify-between border-b border-surface1 bg-mantle/80 px-3.5 py-1.5">
+      <div className="flex items-center justify-between border-b border-surface1 bg-mantle/80 px-3.5 py-1.5 rounded-sm">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-semibold text-text truncate font-mono text-xs" title={discussion.filePath}>
             {discussion.filePath}
@@ -86,7 +86,7 @@ export const DiscussionCodeContext: React.FC<{
           <button
             type="button"
             onClick={handleCopyPath}
-            className="p-1 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
+            className="p-1 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
             title="Copy file path"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -102,7 +102,7 @@ export const DiscussionCodeContext: React.FC<{
 
       {/* Code diff lines preview */}
       {parsedLines.length > 0 ? (
-        <div className="overflow-x-auto py-0.5 select-text bg-[#181825]" aria-label="Discussion code snippet">
+        <div className="overflow-x-auto py-0.5 select-text bg-[#181825] rounded-sm" aria-label="Discussion code snippet">
           <table className="w-full border-collapse font-mono text-[11px] leading-5">
             <tbody>
               {parsedLines.map((row, idx) => {

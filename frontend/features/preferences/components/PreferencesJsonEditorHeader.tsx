@@ -36,7 +36,7 @@ export function PreferencesJsonEditorHeader({
         <button
           type="button"
           onClick={() => void handleClose()}
-          className=" border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0"
+          className="border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
         >
           Back to Preferences
         </button>

@@ -143,7 +143,7 @@ export const RepositoryAgentsTab: React.FC<{
             <button
               type="button"
               onClick={() => setIsAddingRepoBot(true)}
-              className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs transition-colors cursor-pointer border border-surface2/40"
+              className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs transition-colors cursor-pointer border border-surface2/40 rounded-sm"
             >
               <Plus className="w-3 h-3" />
               <span>Add Repo Bot</span>
@@ -188,7 +188,7 @@ export const RepositoryAgentsTab: React.FC<{
               .map((bot) => (
                 <div
                   key={bot.id}
-                  className="p-3 bg-crust border border-surface0 space-y-2 flex flex-col justify-between hover:border-surface1 transition-colors"
+                  className="p-3 bg-crust border border-surface0 space-y-2 flex flex-col justify-between hover:border-surface1 transition-colors rounded-sm"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">

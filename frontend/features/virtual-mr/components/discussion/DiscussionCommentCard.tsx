@@ -17,7 +17,7 @@ export function DiscussionCommentCard({
   isSubmitting,
 }: DiscussionCommentCardProps) {
   return (
-    <div className="p-3.5 text-xs text-text transition-colors bg-mantle">
+    <div className="p-3.5 text-xs text-text transition-colors bg-mantle rounded-sm">
       <div className="flex gap-3">
         <GitLabAvatar
           name={rootComment.authorName}
@@ -83,7 +83,7 @@ export function DiscussionCommentCard({
                 type="button"
                 onClick={() => quote(rootComment)}
                 disabled={isSubmitting}
-                className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer"
+                className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
                 aria-label={`Quote comment ${rootComment.id}`}
                 title={`Quote comment ${rootComment.id}`}
               >

@@ -85,7 +85,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
 
   if (!agent) return null;
   return (
-    <div className="space-y-2 border border-surface0 bg-crust/40 p-3">
+    <div className="space-y-2 border border-surface0 bg-crust/40 p-3 rounded-sm">
       <div>
         <h4 className="text-[11px] font-semibold text-text">Agent model &amp; execution options</h4>
         <p className="mt-0.5 text-[10px] text-subtext0">Loaded from this agent’s ACP session. “Agent default” leaves that setting under the agent’s control.</p>
@@ -93,7 +93,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
       {loading && <p className="text-[10px] text-subtext0" role="status">Loading options from {agent.name}…</p>}
       {error && <div className="flex flex-wrap items-center justify-between gap-2 text-[10px]" role="status">
         <p className="text-red">Could not load ACP options: {error} The agent’s own defaults can still be used.</p>
-        <button type="button" onClick={() => setRetryKey((key) => key + 1)} className="shrink-0 border border-surface1 px-2 py-1 text-subtext0 hover:text-text">Retry</button>
+        <button type="button" onClick={() => setRetryKey((key) => key + 1)} className="shrink-0 border border-surface1 px-2 py-1 text-subtext0 hover:text-text rounded-sm">Retry</button>
       </div>}
       {!loading && !error && options.length === 0 && <p className="text-[10px] text-subtext0">This agent does not expose model, reasoning, or Fast mode options through ACP. It will use its configured defaults.</p>}
       {options.map((option) => {

@@ -240,7 +240,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         <div
           ref={diffContainerRef}
           onClick={handleDiffClick}
-          className="flex-1 overflow-auto bg-base p-2 relative"
+          className="flex-1 overflow-auto bg-base p-2 relative rounded-sm"
         >
           {/* Conflict Alert & Quick Summary Card inside Diff View */}
           {!selectedFile.is_binary && selectedFile.is_conflicted && activeConflictPreview && activeConflictPreview.conflict_regions.length > 0 && (
@@ -257,7 +257,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           {selectedFile.is_binary ? (
             <DiffBinaryPlaceholder />
           ) : diffData && hunks.length > 0 && diffPayload ? (
-            <div className="border border-surface0 overflow-hidden bg-base shadow-sm">
+            <div className="border border-surface0 overflow-hidden bg-base shadow-sm rounded-sm">
               <ReviewableDiff
                 key={`${selectedFile.path}-${viewMode}-${theme}-${fontFamily}-${fontSize}-${lineSpacing}-${enableLigatures}-${isBold}-${isItalic}-${isUnderline}`}
                 data={diffData}

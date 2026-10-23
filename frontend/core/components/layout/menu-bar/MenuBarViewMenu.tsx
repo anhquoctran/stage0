@@ -53,7 +53,7 @@ export const MenuBarViewMenu: React.FC<{
         type="button"
         onClick={onToggle}
         onMouseEnter={onHover}
-        className={`px-2.5 py-1 text-xs font-normal transition-colors cursor-pointer ${
+        className={`px-2.5 py-1 text-xs font-normal transition-colors cursor-pointer rounded-sm ${
           isOpen
             ? 'bg-surface1 text-text'
             : 'text-subtext1 hover:text-text hover:bg-surface0'
@@ -63,7 +63,7 @@ export const MenuBarViewMenu: React.FC<{
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-0.5 w-64 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+        <div className="absolute left-0 top-full mt-0.5 w-64 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs rounded-sm">
           {currentRepo && (
             <>
               <button
@@ -72,7 +72,7 @@ export const MenuBarViewMenu: React.FC<{
                   setViewMode('split');
                   onClose();
                 }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
               >
                 <div className="flex items-center gap-2">
                   <Columns2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -90,7 +90,7 @@ export const MenuBarViewMenu: React.FC<{
                   setViewMode('unified');
                   onClose();
                 }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
               >
                 <div className="flex items-center gap-2">
                   <Rows2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -110,7 +110,7 @@ export const MenuBarViewMenu: React.FC<{
                   toggleFileBlame();
                   onClose();
                 }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
               >
                 <div className="flex items-center gap-2">
                   <History className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -128,7 +128,7 @@ export const MenuBarViewMenu: React.FC<{
                   toggleInlineBlame();
                   onClose();
                 }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
               >
                 <div className="flex items-center gap-2">
                   <GitCommit className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -148,7 +148,7 @@ export const MenuBarViewMenu: React.FC<{
                   setIsGitGraphOpen(true);
                   onClose();
                 }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
               >
                 <div className="flex items-center gap-2">
                   <GitCommit className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -164,7 +164,7 @@ export const MenuBarViewMenu: React.FC<{
                   setFileListLayout('flat');
                   onClose();
                 }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
               >
                 <div className="flex items-center gap-2">
                   <List className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -179,7 +179,7 @@ export const MenuBarViewMenu: React.FC<{
                   setFileListLayout('tree');
                   onClose();
                 }}
-                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
               >
                 <div className="flex items-center gap-2">
                   <FolderTree className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -198,7 +198,7 @@ export const MenuBarViewMenu: React.FC<{
               toggleTheme();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <SunMoon className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -219,7 +219,7 @@ export const MenuBarViewMenu: React.FC<{
             <button
               type="button"
               onClick={() => setShowPerformanceSubmenu((prev) => !prev)}
-              className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+              className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
               aria-haspopup="menu"
               aria-expanded={showPerformanceSubmenu}
             >
@@ -231,7 +231,7 @@ export const MenuBarViewMenu: React.FC<{
             </button>
 
             {showPerformanceSubmenu && (
-              <div className="absolute left-full top-0 w-60 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+              <div className="absolute left-full top-0 w-60 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs rounded-sm">
                 <button
                   type="button"
                   role="menuitemcheckbox"
@@ -240,7 +240,7 @@ export const MenuBarViewMenu: React.FC<{
                     togglePerformanceMonitor();
                     onClose();
                   }}
-                  className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+                  className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
                 >
                   <div className="flex items-center gap-2">
                     <HeartPulse className="w-3.5 h-3.5 text-primary group-hover:text-primary transition-colors" />

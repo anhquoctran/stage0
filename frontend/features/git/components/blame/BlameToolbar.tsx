@@ -28,7 +28,7 @@ export function BlameToolbar({
   isStatsOpen,
 }: BlameToolbarProps) {
   return (
-    <div className="h-10 border-b border-surface0 bg-base px-3 flex items-center justify-between shrink-0 text-xs gap-3">
+    <div className="h-10 border-b border-surface0 bg-base px-3 flex items-center justify-between shrink-0 text-xs gap-3 rounded-sm">
       {/* Left: Revision Selector & Whitespace Toggle */}
       <div className="flex items-center gap-2 min-w-0">
         {/* Revision Selector */}
@@ -36,7 +36,7 @@ export function BlameToolbar({
           <button
             type="button"
             onClick={() => setIsRevisionDropdownOpen(!isRevisionDropdownOpen)}
-            className="flex items-center gap-1.5 px-2.5 py-1  bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
             title="Select branch or revision to blame"
           >
             <GitBranch className="w-3.5 h-3.5 text-subtext0 shrink-0" />
@@ -47,8 +47,8 @@ export function BlameToolbar({
           </button>
 
           {isRevisionDropdownOpen && (
-            <div className="absolute left-0 top-full mt-1 w-64 shadow-2xl bg-mantle border border-surface0 py-1 z-50  text-xs animate-in fade-in duration-75">
-              <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/60 mb-1">
+            <div className="absolute left-0 top-full mt-1 w-64 shadow-2xl bg-mantle border border-surface0 py-1 z-50 rounded-sm text-xs animate-in fade-in duration-75">
+              <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/60 mb-1 rounded-sm">
                 Blame Revision
               </div>
 
@@ -59,7 +59,7 @@ export function BlameToolbar({
                     setBlameRevision(compareBranch);
                     setIsRevisionDropdownOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer rounded-sm ${
                     blameRevision === compareBranch
                       ? 'bg-surface0 text-text font-semibold'
                       : 'text-text'
@@ -77,7 +77,7 @@ export function BlameToolbar({
                     setBlameRevision(baseBranch);
                     setIsRevisionDropdownOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer rounded-sm ${
                     blameRevision === baseBranch
                       ? 'bg-surface0 text-text font-semibold'
                       : 'text-text'
@@ -94,7 +94,7 @@ export function BlameToolbar({
                   setBlameRevision('HEAD');
                   setIsRevisionDropdownOpen(false);
                 }}
-                className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer ${
+                className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer rounded-sm ${
                   blameRevision === 'HEAD' ? 'bg-surface0 text-text font-semibold' : 'text-text'
                 }`}
               >
@@ -117,7 +117,7 @@ export function BlameToolbar({
                           setBlameRevision(b);
                           setIsRevisionDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer ${
+                        className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer rounded-sm ${
                           blameRevision === b ? 'bg-surface0 text-text font-semibold' : 'text-text'
                         }`}
                       >
@@ -134,7 +134,7 @@ export function BlameToolbar({
 
         {/* Ignore Whitespace Toggle (-w) */}
         <label
-          className="flex items-center gap-1.5 px-2.5 py-1  bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
           title="Ignore whitespace changes when attributing lines (-w)"
         >
           <input
@@ -151,7 +151,7 @@ export function BlameToolbar({
           type="button"
           onClick={() => fetchFileBlame()}
           disabled={isBlameLoading}
-          className="p-1.5  bg-mantle hover:bg-surface0 border border-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer disabled:opacity-40"
+          className="p-1.5 rounded-sm bg-mantle hover:bg-surface0 border border-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer disabled:opacity-40"
           title="Refresh Git Blame"
         >
           <RotateCw className={`w-3.5 h-3.5 ${isBlameLoading ? 'animate-spin' : ''}`} />
@@ -168,13 +168,13 @@ export function BlameToolbar({
             placeholder="Search blame (code, author, commit)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-7 pr-6 py-1 w-56 text-xs bg-mantle border border-surface0  text-text placeholder-subtext0 focus:outline-none focus:border-surface2 transition-colors font-mono"
+            className="pl-7 pr-6 py-1 w-56 text-xs bg-mantle border border-surface0 rounded-sm text-text placeholder-subtext0 focus:outline-none focus:border-surface2 transition-colors font-mono"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-1.5 p-0.5 text-subtext0 hover:text-text  cursor-pointer"
+              className="absolute right-1.5 p-0.5 text-subtext0 hover:text-text rounded-sm cursor-pointer"
             >
               <X className="w-3 h-3" />
             </button>
@@ -187,7 +187,7 @@ export function BlameToolbar({
             <button
               type="button"
               onClick={() => setIsStatsOpen(!isStatsOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1  bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
               title="View contributor breakdown"
             >
               <Users className="w-3.5 h-3.5 text-subtext0 shrink-0" />
@@ -200,7 +200,7 @@ export function BlameToolbar({
             </button>
 
             {isStatsOpen && (
-              <div className="absolute right-0 top-full mt-1 w-72 shadow-2xl bg-mantle border border-surface0 py-2 px-3 z-50  text-xs animate-in fade-in duration-75">
+              <div className="absolute right-0 top-full mt-1 w-72 shadow-2xl bg-mantle border border-surface0 py-2 px-3 z-50 rounded-sm text-xs animate-in fade-in duration-75">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/60 pb-1 mb-2">
                   Line Attribution Breakdown
                 </div>
@@ -218,9 +218,9 @@ export function BlameToolbar({
                           {st.line_count} ({st.percentage}%)
                         </span>
                       </div>
-                      <div className="w-full bg-surface0 h-1.5  overflow-hidden">
+                      <div className="w-full bg-surface0 h-1.5 rounded-sm overflow-hidden">
                         <div
-                          className="bg-subtext1 h-full  transition-all duration-300"
+                          className="bg-subtext1 h-full rounded-sm transition-all duration-300"
                           style={{
                             width: `${Math.min(100, Math.max(2, st.percentage))}%`,
                           }}

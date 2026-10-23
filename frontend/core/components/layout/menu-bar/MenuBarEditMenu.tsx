@@ -43,7 +43,7 @@ export const MenuBarEditMenu: React.FC<{
         disabled={!currentRepo}
         onClick={onToggle}
         onMouseEnter={() => currentRepo && onHover()}
-        className={`px-2.5 py-1 text-xs font-normal transition-colors ${
+        className={`px-2.5 py-1 text-xs font-normal transition-colors rounded-sm ${
           !currentRepo
             ? 'text-subtext0/50 cursor-not-allowed'
             : isOpen
@@ -55,7 +55,7 @@ export const MenuBarEditMenu: React.FC<{
       </button>
 
       {currentRepo && isOpen && (
-        <div className="absolute left-0 top-full mt-0.5 w-68 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+        <div className="absolute left-0 top-full mt-0.5 w-68 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs rounded-sm">
           <button
             type="button"
             disabled={!currentRepo || !selectedFile}
@@ -70,7 +70,7 @@ export const MenuBarEditMenu: React.FC<{
                 }
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <FolderOpen className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -89,7 +89,7 @@ export const MenuBarEditMenu: React.FC<{
                 fetchFileBlame(selectedFile.path);
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <History className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -110,7 +110,7 @@ export const MenuBarEditMenu: React.FC<{
                 showToast(`Copied relative path: ${selectedFile.path}`);
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Copy className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -130,7 +130,7 @@ export const MenuBarEditMenu: React.FC<{
                 showToast('Copied absolute path to clipboard');
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <FileText className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -158,7 +158,7 @@ export const MenuBarEditMenu: React.FC<{
                 }
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Globe className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -177,7 +177,7 @@ export const MenuBarEditMenu: React.FC<{
                 setIsRemoteUrlFromOpen(true);
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <ExternalLink className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -195,7 +195,7 @@ export const MenuBarEditMenu: React.FC<{
               selectPrevFile();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <ArrowUp className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -211,7 +211,7 @@ export const MenuBarEditMenu: React.FC<{
               selectNextFile();
               onClose();
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <ArrowDown className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />

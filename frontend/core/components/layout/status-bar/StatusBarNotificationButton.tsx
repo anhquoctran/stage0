@@ -15,7 +15,7 @@ export const StatusBarNotificationButton: React.FC = () => {
       }}
       aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
       aria-expanded={isHistoryDrawerOpen}
-      className={`relative grid h-6 w-7 place-items-center transition-colors cursor-pointer ${
+      className={`relative grid h-6 w-7 place-items-center transition-colors cursor-pointer rounded-sm ${
         isHistoryDrawerOpen
           ? 'bg-surface1 text-text'
           : 'text-subtext0 hover:bg-surface0 hover:text-text'

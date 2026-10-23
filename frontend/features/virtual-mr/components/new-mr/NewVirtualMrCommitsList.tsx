@@ -28,7 +28,7 @@ export function NewVirtualMrCommitsList({
           <button
             type="button"
             onClick={() => void changeDraftBranches(draftMr.baseBranch, draftMr.compareBranch)}
-            className="mt-1 px-3 py-1.5 bg-surface0 hover:bg-surface1 border border-surface1 text-text transition-colors cursor-pointer"
+            className="mt-1 px-3 py-1.5 bg-surface0 hover:bg-surface1 border border-surface1 text-text transition-colors cursor-pointer rounded-sm"
           >
             Retry loading commits
           </button>
@@ -41,7 +41,7 @@ export function NewVirtualMrCommitsList({
         draftMr.commits.map((c) => (
           <div
             key={c.hash}
-            className="flex items-center justify-between p-3 border border-surface0/80 bg-base hover:border-surface1 hover:bg-surface0/30 transition-all shadow-xs"
+            className="flex items-center justify-between p-3 border border-surface0/80 bg-base hover:border-surface1 hover:bg-surface0/30 transition-all shadow-xs rounded-sm"
           >
             <div className="flex items-center gap-3 min-w-0 flex-1 pr-3">
               <div className="w-7 h-7 bg-brand/10 border border-brand/20 flex items-center justify-center text-brand shrink-0">

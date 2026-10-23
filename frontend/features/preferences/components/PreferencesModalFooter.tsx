@@ -32,12 +32,12 @@ export const PreferencesModalFooter: React.FC<{
           {applyError}
         </p>
       )}
-      <div className="px-6 py-3 border-t border-surface0/60 flex items-center justify-between bg-crust/80 select-none shrink-0">
+      <div className="px-6 py-3 border-t border-surface0/60 flex items-center justify-between bg-crust/80 select-none shrink-0 rounded-sm">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onResetDefaultsPrompt}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-surface0 hover:bg-surface0/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-surface0 hover:bg-surface0/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded-sm"
             title="Reset all settings to application defaults"
           >
             <RotateCcw className="w-3 h-3" />
@@ -56,7 +56,7 @@ export const PreferencesModalFooter: React.FC<{
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-1.5 border border-surface0 hover:bg-surface0/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium"
+            className="px-4 py-1.5 border border-surface0 hover:bg-surface0/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium rounded-sm"
             title="Close without saving (Esc)"
           >
             Cancel
@@ -66,7 +66,7 @@ export const PreferencesModalFooter: React.FC<{
             type="button"
             onClick={onApply}
             disabled={isApplying || !hasUnsavedChanges}
-            className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all border ${
+            className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all border rounded-sm ${
               isApplied
                 ? 'bg-green/10 border-green/30 text-green'
                 : canCommitPreferences
@@ -88,7 +88,7 @@ export const PreferencesModalFooter: React.FC<{
             type="button"
             onClick={onOk}
             disabled={isApplying}
-            className={`px-4 py-1.5 text-xs font-semibold transition-colors border ${
+            className={`px-4 py-1.5 text-xs font-semibold transition-colors border rounded-sm ${
               !isApplying
                 ? 'bg-surface0 hover:bg-surface1 border-surface1 text-text cursor-pointer shadow-xs'
                 : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'

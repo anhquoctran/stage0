@@ -193,7 +193,7 @@ export const NewVirtualMrView: React.FC = () => {
           /* IDENTICAL BRANCHES EMPTY STATE */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none">
             <div className="max-w-md flex flex-col items-center animate-in fade-in zoom-in-95 duration-150">
-              <div className="w-12 h-12 bg-surface0 border border-surface1 flex items-center justify-center text-subtext0 mb-4 shadow-sm">
+              <div className="w-12 h-12 bg-surface0 border border-surface1 flex items-center justify-center text-subtext0 mb-4 shadow-sm rounded-sm">
                 <GitBranch className="w-6 h-6 text-subtext1" />
               </div>
               <h2 className="text-sm font-semibold text-text mb-1.5">

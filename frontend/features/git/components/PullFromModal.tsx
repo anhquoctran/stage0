@@ -82,15 +82,15 @@ export const PullFromModal: React.FC = () => {
   }));
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
-      <div className="bg-mantle border border-surface0 max-w-lg w-full shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/75 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150 rounded-sm">
+      <div className="bg-mantle border border-surface0 max-w-lg w-full shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150 rounded-sm">
         {/* Modal Header */}
         <div
           data-tauri-drag-region
-          className="px-5 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60 cursor-default"
+          className="px-5 py-3.5 border-b border-surface0 flex items-center justify-between bg-base/60 cursor-default rounded-sm"
         >
           <div data-tauri-drag-region className="flex items-center gap-2.5 pointer-events-none">
-            <div className="w-7 h-7 bg-surface0 border border-surface1 flex items-center justify-center text-text shadow-xs">
+            <div className="w-7 h-7 bg-surface0 border border-surface1 flex items-center justify-center text-text shadow-xs rounded-sm">
               <Download className="w-4 h-4 text-subtext0" />
             </div>
             <div>
@@ -107,7 +107,7 @@ export const PullFromModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsPullFromOpen(false)}
-            className="p-1.5  hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+            className="p-1.5 rounded-sm hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
             title="Close (Esc)"
           >
             <X className="w-4 h-4" />
@@ -158,7 +158,7 @@ export const PullFromModal: React.FC = () => {
                   value={selectedBranch}
                   onChange={(e) => setSelectedBranch(e.target.value)}
                   placeholder="e.g. main, master"
-                  className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 font-mono"
+                  className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 font-mono rounded-sm"
                 />
               )}
             </div>
@@ -177,7 +177,7 @@ export const PullFromModal: React.FC = () => {
           />
 
           {/* Command Preview */}
-          <div className="p-2.5 bg-base/80 border border-surface0/80 space-y-1">
+          <div className="p-2.5 bg-base/80 border border-surface0/80 space-y-1 rounded-sm">
             <span className="text-[10px] font-bold uppercase tracking-wider text-subtext0 flex items-center gap-1.5">
               <Terminal className="w-3 h-3" />
               <span>Command to Execute:</span>
@@ -186,11 +186,11 @@ export const PullFromModal: React.FC = () => {
           </div>
 
           {/* Footer Action Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-surface0/80">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-surface0/80 rounded-sm">
             <button
               type="button"
               onClick={() => setIsPullFromOpen(false)}
-              className="px-4 py-1.5  border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
+              className="px-4 py-1.5 rounded-sm border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -198,7 +198,7 @@ export const PullFromModal: React.FC = () => {
             <button
               type="submit"
               disabled={isSyncing || !selectedBranch.trim()}
-              className="flex items-center gap-1.5 px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand disabled:opacity-50"
+              className="flex items-center gap-1.5 px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand disabled:opacity-50 rounded-sm"
             >
               {isSyncing ? (
                 <>

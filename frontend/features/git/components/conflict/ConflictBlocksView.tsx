@@ -18,12 +18,12 @@ export function ConflictBlocksView({
       {regions.map((region, idx) => (
         <div
           key={`conflict-block-${region.start_line}-${region.end_line}`}
-          className="border border-red/40  overflow-hidden shadow-md bg-mantle"
+          className="border border-red/40 rounded-sm overflow-hidden shadow-md bg-mantle"
         >
           {/* Block Header Banner */}
-          <div className="bg-red/15 border-b border-red/30 px-3.5 py-2 flex items-center justify-between gap-2">
+          <div className="bg-red/15 border-b border-red/30 px-3.5 py-2 flex items-center justify-between gap-2 rounded-sm">
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5  bg-red text-white text-[10px] font-bold uppercase tracking-wider">
+              <span className="px-2 py-0.5 rounded-sm bg-red text-white text-[10px] font-bold uppercase tracking-wider">
                 Conflict Block #{idx + 1}
               </span>
               <span className="text-xs font-mono text-text font-semibold">
@@ -40,13 +40,13 @@ export function ConflictBlocksView({
           <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-surface0">
             {/* Left Column: Target Branch (Base) */}
             <div className="flex flex-col min-w-0 bg-red/5">
-              <div className="bg-surface0/90 border-b border-surface0 px-3 py-1.5 flex items-center justify-between">
+              <div className="bg-surface0/90 border-b border-surface0 px-3 py-1.5 flex items-center justify-between rounded-sm">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="w-2 h-2  bg-red shrink-0" />
+                  <span className="w-2 h-2 rounded-sm bg-red shrink-0" />
                   <span className="text-xs font-bold text-red uppercase tracking-wider">
                     Current / Target
                   </span>
-                  <code className="text-[11px] font-mono text-text bg-surface1 px-1.5 py-0.5  truncate max-w-[200px]">
+                  <code className="text-[11px] font-mono text-text bg-surface1 px-1.5 py-0.5 rounded-sm truncate max-w-[200px]">
                     {baseBranch}
                   </code>
                 </div>
@@ -54,7 +54,7 @@ export function ConflictBlocksView({
                 <button
                   type="button"
                   onClick={() => handleCopy(region.base_code, `base-${idx}`)}
-                  className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer"
+                  className="p-1 rounded-sm text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer"
                   title="Copy target branch code"
                 >
                   {copiedKey === `base-${idx}` ? (
@@ -82,13 +82,13 @@ export function ConflictBlocksView({
 
             {/* Right Column: Source Branch (Compare) */}
             <div className="flex flex-col min-w-0 bg-blue/5">
-              <div className="bg-surface0/90 border-b border-surface0 px-3 py-1.5 flex items-center justify-between">
+              <div className="bg-surface0/90 border-b border-surface0 px-3 py-1.5 flex items-center justify-between rounded-sm">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="w-2 h-2  bg-blue shrink-0" />
+                  <span className="w-2 h-2 rounded-sm bg-blue shrink-0" />
                   <span className="text-xs font-bold text-blue uppercase tracking-wider">
                     Incoming / Source
                   </span>
-                  <code className="text-[11px] font-mono text-text bg-surface1 px-1.5 py-0.5  truncate max-w-[200px]">
+                  <code className="text-[11px] font-mono text-text bg-surface1 px-1.5 py-0.5 rounded-sm truncate max-w-[200px]">
                     {compareBranch}
                   </code>
                 </div>
@@ -96,7 +96,7 @@ export function ConflictBlocksView({
                 <button
                   type="button"
                   onClick={() => handleCopy(region.compare_code, `compare-${idx}`)}
-                  className="p-1  text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer"
+                  className="p-1 rounded-sm text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer"
                   title="Copy incoming branch code"
                 >
                   {copiedKey === `compare-${idx}` ? (

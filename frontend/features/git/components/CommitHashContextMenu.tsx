@@ -38,13 +38,13 @@ export const CommitHashContextMenu: React.FC<{
             role="menu"
             aria-label="Commit actions"
             style={{ left, top }}
-            className="fixed z-[60] w-[210px] border border-surface1 bg-mantle py-1 shadow-xl"
+            className="fixed z-[60] w-[210px] border border-surface1 bg-mantle py-1 shadow-xl rounded-sm"
         >
             <button
                 type="button"
                 role="menuitem"
                 onClick={() => onCopy(menu.hash)}
-                className="flex h-8 w-full items-center gap-2 px-3 text-left text-xs text-text hover:bg-surface0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-brand"
+                className="flex h-8 w-full items-center gap-2 px-3 text-left text-xs text-text hover:bg-surface0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-brand rounded-sm"
             >
                 <Copy className="h-3.5 w-3.5 text-subtext0" />
                 Copy Commit Hash

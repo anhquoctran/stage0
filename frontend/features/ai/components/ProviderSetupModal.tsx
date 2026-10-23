@@ -46,7 +46,7 @@ export const ProviderSetupModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-x-0 bottom-0 top-8.5 z-60 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4 rounded-sm">
       <form onSubmit={handleSaveProviderSetup} className="bg-mantle border border-surface0 w-full max-w-xl shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-150">
         <div data-tauri-drag-region className="flex items-center justify-between pb-2 border-b border-surface0 cursor-default">
           <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
@@ -56,7 +56,7 @@ export const ProviderSetupModal: React.FC<{
               <span className="block text-[10px] text-subtext0 mt-0.5">Choose a provider and save its connection details.</span>
             </span>
           </div>
-          <button type="button" onClick={onClose} className="p-1 text-subtext0 hover:text-text cursor-pointer" aria-label="Close provider form">
+          <button type="button" onClick={onClose} className="p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm" aria-label="Close provider form">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -88,7 +88,7 @@ export const ProviderSetupModal: React.FC<{
                 value={setupProviderName}
                 onChange={(event) => setSetupProviderName(event.target.value)}
                 placeholder="e.g. OpenRouter, DeepSeek, LM Studio"
-                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
               />
             </div>
           )}
@@ -103,7 +103,7 @@ export const ProviderSetupModal: React.FC<{
                 value={setupApiKey}
                 onChange={(event) => setSetupApiKey(event.target.value)}
                 placeholder={hasProviderApiKey(setupProviderId) ? 'Saved securely · leave empty to keep' : 'Paste your API key'}
-                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
               />
               <p className="text-[9px] text-subtext0 mt-1">On Apply, the key is saved securely and never written to preferences.json.</p>
             </div>
@@ -118,7 +118,7 @@ export const ProviderSetupModal: React.FC<{
                 value={setupBaseUrl}
                 onChange={(event) => setSetupBaseUrl(event.target.value)}
                 placeholder="https://api.example.com/v1"
-                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
               />
             </div>
             <div>
@@ -128,24 +128,24 @@ export const ProviderSetupModal: React.FC<{
                 value={setupModel}
                 onChange={(event) => setSetupModel(event.target.value)}
                 placeholder="model-name"
-                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2"
+                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
               />
             </div>
           </div>
         </div>
 
         {providerSetupError && (
-          <div role="alert" className="flex items-center gap-2 p-2.5 bg-red/10 border border-red/30 text-red text-[11px]">
+          <div role="alert" className="flex items-center gap-2 p-2.5 bg-red/10 border border-red/30 text-red text-[11px] rounded-sm">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             <span>{providerSetupError}</span>
           </div>
         )}
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-surface0">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 border border-surface1 text-subtext0 hover:text-text hover:bg-surface0 text-xs transition cursor-pointer">
+        <div className="flex justify-end gap-2 pt-2 border-t border-surface0 rounded-sm">
+          <button type="button" onClick={onClose} className="px-3 py-1.5 border border-surface1 text-subtext0 hover:text-text hover:bg-surface0 text-xs transition cursor-pointer rounded-sm">
             Cancel
           </button>
-          <button type="submit" className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-brand text-base text-xs font-semibold hover:brightness-110 transition cursor-pointer">
+          <button type="submit" className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-brand text-base text-xs font-semibold hover:brightness-110 transition cursor-pointer rounded-sm">
             <Check className="w-3.5 h-3.5" />
             <span>Save provider</span>
           </button>

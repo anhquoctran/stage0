@@ -66,14 +66,14 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
     >
       <div
         data-tauri-drag-region
-        className="relative bg-base border border-surface0 p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-150 cursor-default text-text overflow-hidden"
+        className="relative bg-base border border-surface0 p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-150 cursor-default text-text overflow-hidden rounded-sm"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button Top Right */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-0 top-0 flex h-11 w-12 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer"
+          className="absolute right-0 top-0 flex h-11 w-12 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
           title="Close (Esc)"
           aria-label="Close About dialog"
         >
@@ -91,7 +91,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           </p>
 
           {/* Primary Version Badge */}
-          <div className="mt-3 flex items-center gap-1.5 bg-mantle border border-surface0 px-2.5 py-1">
+          <div className="mt-3 flex items-center gap-1.5 bg-mantle border border-surface0 px-2.5 py-1 rounded-sm">
             <span className="text-[10px] text-subtext0 uppercase font-mono tracking-wider">Version</span>
             <code className="text-xs font-mono font-medium text-subtext0 px-1">
               {about.version}
@@ -99,7 +99,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             <button
               type="button"
               onClick={handleCopyVersion}
-              className="ml-1 p-0.5 text-subtext0 hover:text-text transition-colors cursor-pointer"
+              className="ml-1 p-0.5 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
               title="Copy version string"
             >
               {copiedVersion ? (
@@ -114,21 +114,21 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Detailed Metadata Grid */}
-        <div className="bg-mantle border border-surface0 p-3.5 mb-4 text-xs space-y-2">
+        <div className="bg-mantle border border-surface0 p-3.5 mb-4 text-xs space-y-2 rounded-sm">
           {/* Author */}
-          <div className="flex items-center justify-between py-0.5 border-b border-surface0 pb-1.5">
+          <div className="flex items-center justify-between py-0.5 border-b border-surface0 pb-1.5 rounded-sm">
             <span className="text-subtext0 font-medium">Author</span>
             <span className="text-text font-semibold">{about.author}</span>
           </div>
 
           {/* Release Date */}
-          <div className="flex items-center justify-between py-0.5 border-b border-surface0 pb-1.5">
+          <div className="flex items-center justify-between py-0.5 border-b border-surface0 pb-1.5 rounded-sm">
             <span className="text-subtext0 font-medium">Release Date</span>
             <span className="font-mono text-text font-medium">{about.releaseDate}</span>
           </div>
 
           {/* Architecture & Git SHA */}
-          <div className="flex items-center justify-between py-0.5 border-b border-surface0 pb-1.5">
+          <div className="flex items-center justify-between py-0.5 border-b border-surface0 pb-1.5 rounded-sm">
             <span className="text-subtext0 font-medium">Architecture / Commit</span>
             <div className="flex items-center gap-2">
               <span className="font-mono bg-surface0 px-1.5 py-0.5 text-[11px] text-subtext1">
@@ -154,12 +154,12 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         </p>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-surface0">
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-surface0 rounded-sm">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleCopyDiagnosticInfo}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-subtext1 hover:text-text text-xs transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-subtext1 hover:text-text text-xs transition-colors cursor-pointer rounded-sm"
               title="Copy system and version information"
             >
               {copiedAll ? (
@@ -179,7 +179,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-1.5 bg-brand hover:brightness-105 text-on-accent font-semibold text-xs transition-all shadow-md cursor-pointer"
+            className="px-5 py-1.5 bg-brand hover:brightness-105 text-on-accent font-semibold text-xs transition-all shadow-md cursor-pointer rounded-sm"
           >
             Close
           </button>

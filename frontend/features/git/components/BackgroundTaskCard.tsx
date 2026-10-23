@@ -37,11 +37,11 @@ export const BackgroundTaskCard: React.FC<BackgroundTaskCardProps> = ({ task }) 
         </time>
         {!isRunning && (
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => dismissTask(task.id)} className="border border-surface1 px-2 py-1 text-[11px] hover:bg-surface0">
+            <button type="button" onClick={() => dismissTask(task.id)} className="border border-surface1 px-2 py-1 text-[11px] hover:bg-surface0 rounded-sm">
               Dismiss
             </button>
             {task.resultRepository && (
-              <button type="button" onClick={openRepository} className="bg-primary px-2 py-1 text-[11px] font-semibold text-on-accent hover:brightness-110">
+              <button type="button" onClick={openRepository} className="bg-primary px-2 py-1 text-[11px] font-semibold text-on-accent hover:brightness-110 rounded-sm">
                 Open repository
               </button>
             )}

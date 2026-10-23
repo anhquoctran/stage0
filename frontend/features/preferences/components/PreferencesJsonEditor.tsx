@@ -62,13 +62,13 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
               id="preferences-json-schema"
               disabled
               value={PREFERENCES_SCHEMA_URI}
-              className="w-[min(34vw,420px)]  border border-surface0 bg-crust px-2 py-1 text-[10px] text-overlay1 disabled:opacity-80"
+              className="w-[min(34vw,420px)] rounded-sm border border-surface0 bg-crust px-2 py-1 text-[10px] text-overlay1 disabled:opacity-80"
             />
             {saveState === 'conflict' && (
               <button
                 type="button"
                 onClick={() => void reload()}
-                className=" border border-surface1 px-2 py-1 hover:bg-surface0"
+                className="border border-surface1 px-2 py-1 hover:bg-surface0 rounded-sm"
               >
                 Reload latest
               </button>
@@ -76,13 +76,13 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
             <button
               type="button"
               onClick={() => void handleRestoreDefaults()}
-              className=" border border-surface1 px-2 py-1 hover:bg-surface0"
+              className="border border-surface1 px-2 py-1 hover:bg-surface0 rounded-sm"
             >
               Restore defaults
             </button>
           </div>
         </div>
-        <div className="flex min-h-0 flex-1 overflow-hidden  border border-surface0 bg-crust focus-within:border-primary">
+        <div className="flex min-h-0 flex-1 overflow-hidden rounded-sm border border-surface0 bg-crust focus-within:border-primary">
           <div
             aria-hidden="true"
             className="relative w-14 shrink-0 overflow-hidden border-r border-surface0 bg-mantle text-right text-overlay0 select-none"
@@ -162,14 +162,14 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
               onScroll={(event) => syncScroll(event.currentTarget)}
               spellCheck={false}
               aria-label="Preferences JSONC source"
-              className="absolute inset-0 h-full w-full resize-none overflow-auto whitespace-pre bg-transparent px-3 py-3 text-transparent caret-primary outline-none selection:bg-primary/25"
+              className="absolute inset-0 h-full w-full resize-none overflow-auto whitespace-pre bg-transparent px-3 py-3 text-transparent caret-primary outline-none selection:bg-primary/25 rounded-sm"
               style={{ ...fontStyle, WebkitTextFillColor: 'transparent', tabSize: 2 }}
             />
             {completion && completionPosition && (
               <div
                 role="listbox"
                 aria-label="JSONC completions"
-                className="absolute z-20 max-h-52 overflow-y-auto  border border-surface1 bg-mantle py-1 shadow-xl"
+                className="absolute z-20 max-h-52 overflow-y-auto rounded-sm border border-surface1 bg-mantle py-1 shadow-xl"
                 style={completionPosition}
               >
                 {completion.items.map((item, index) => (
@@ -178,7 +178,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
                     type="button"
                     role="option"
                     aria-selected={index === completionIndex}
-                    className={`flex w-full items-center justify-between gap-4 px-3 py-1.5 text-left text-xs ${index === completionIndex ? 'bg-surface0 text-text' : 'text-subtext1 hover:bg-surface0/70 hover:text-text'}`}
+                    className={`flex w-full items-center justify-between gap-4 px-3 py-1.5 text-left text-xs rounded-sm ${index === completionIndex ? 'bg-surface0 text-text' : 'text-subtext1 hover:bg-surface0/70 hover:text-text'}`}
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => applyCompletion(item)}
                   >

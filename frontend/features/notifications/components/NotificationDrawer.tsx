@@ -36,7 +36,7 @@ export const NotificationDrawer: React.FC = () => {
         tabIndex={-1}
         aria-label="Close notifications"
         onClick={() => setHistoryDrawerOpen(false)}
-        className="absolute inset-0 h-full w-full cursor-default bg-crust/25"
+        className="absolute inset-0 h-full w-full cursor-default bg-crust/25 rounded-sm"
       />
 
       <aside
@@ -59,7 +59,7 @@ export const NotificationDrawer: React.FC = () => {
               type="button"
               onClick={markAllAsRead}
               disabled={unreadCount === 0}
-              className=" px-2 py-1 text-[11px] text-subtext0 transition-colors hover:bg-surface0 hover:text-text disabled:cursor-not-allowed disabled:opacity-40"
+              className="px-2 py-1 text-[11px] text-subtext0 transition-colors hover:bg-surface0 hover:text-text disabled:cursor-not-allowed disabled:opacity-40 rounded-sm"
             >
               Mark all read
             </button>
@@ -69,7 +69,7 @@ export const NotificationDrawer: React.FC = () => {
               disabled={notifications.length === 0}
               aria-label="Clear all notifications"
               title="Clear all notifications"
-              className="grid h-7 w-7 place-items-center  text-subtext0 transition-colors hover:bg-red/10 hover:text-red disabled:cursor-not-allowed disabled:opacity-40"
+              className="grid h-7 w-7 place-items-center rounded-sm text-subtext0 transition-colors hover:bg-red/10 hover:text-red disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -77,7 +77,7 @@ export const NotificationDrawer: React.FC = () => {
               type="button"
               onClick={() => setHistoryDrawerOpen(false)}
               aria-label="Close notifications"
-              className="grid h-7 w-7 place-items-center  text-subtext0 transition-colors hover:bg-surface0 hover:text-text"
+              className="grid h-7 w-7 place-items-center rounded-sm text-subtext0 transition-colors hover:bg-surface0 hover:text-text"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -102,7 +102,7 @@ export const NotificationDrawer: React.FC = () => {
                           {notification.title}
                         </h3>
                         {!notification.isRead && (
-                          <span aria-label="Unread" className="mt-1 h-1.5 w-1.5 shrink-0  bg-primary" />
+                          <span aria-label="Unread" className="mt-1 h-1.5 w-1.5 shrink-0 rounded-sm bg-primary" />
                         )}
                       </div>
                       <p className="mt-1 whitespace-pre-wrap break-words text-[11px] leading-relaxed text-subtext0">
@@ -119,7 +119,7 @@ export const NotificationDrawer: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => markAsRead(notification.id)}
-                            className="inline-flex items-center gap-1  px-1.5 py-1 text-[10px] text-subtext0 transition-colors hover:bg-surface1 hover:text-text"
+                            className="inline-flex items-center gap-1 rounded-sm px-1.5 py-1 text-[10px] text-subtext0 transition-colors hover:bg-surface1 hover:text-text"
                           >
                             <Check className="h-3 w-3" />
                             Mark read

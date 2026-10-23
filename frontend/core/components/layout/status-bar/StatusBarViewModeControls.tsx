@@ -17,7 +17,7 @@ export const StatusBarViewModeControls: React.FC<{
       <button
         type="button"
         onClick={() => setViewMode(viewMode === 'split' ? 'unified' : 'split')}
-        className="h-5.5 px-2 bg-surface0/40 hover:bg-surface1/70 border border-surface1/40 hover:border-surface2 text-subtext1 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+        className="h-5.5 px-2 bg-surface0/40 hover:bg-surface1/70 border border-surface1/40 hover:border-surface2 text-subtext1 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs rounded-sm"
         title={`Click to switch to ${viewMode === 'split' ? 'Unified' : 'Split'} view`}
       >
         {viewMode === 'split' ? (

@@ -42,7 +42,7 @@ export function RepositoryCustomBotForm({
         <button
           type="button"
           onClick={() => setIsAddingRepoBot(false)}
-          className="text-subtext0 hover:text-text cursor-pointer"
+          className="text-subtext0 hover:text-text cursor-pointer rounded-sm"
         >
           ✕
         </button>
@@ -56,7 +56,7 @@ export function RepositoryCustomBotForm({
             maxLength={4}
             value={repoBotEmoji}
             onChange={(e) => setRepoBotEmoji(e.target.value)}
-            className="w-12 h-8 text-center text-[1rem] bg-surface0 border border-surface1 text-text"
+            className="w-12 h-8 text-center text-[1rem] bg-surface0 border border-surface1 text-text rounded-sm"
           />
         </div>
         <div className="col-span-3">
@@ -67,7 +67,7 @@ export function RepositoryCustomBotForm({
             placeholder="e.g. Migration Linter"
             value={repoBotName}
             onChange={(e) => setRepoBotName(e.target.value)}
-            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 text-xs text-text"
+            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 text-xs text-text rounded-sm"
           />
         </div>
       </div>
@@ -80,7 +80,7 @@ export function RepositoryCustomBotForm({
             placeholder="e.g. Database schema backwards compatibility"
             value={repoBotTagline}
             onChange={(e) => setRepoBotTagline(e.target.value)}
-            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 text-xs text-text"
+            className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 text-xs text-text rounded-sm"
           />
         </div>
         <div>
@@ -160,7 +160,7 @@ export function RepositoryCustomBotForm({
       )}
 
       {repoBotExecutionMode === 'acp' && (
-        <div className="space-y-2 border border-surface0 bg-surface0/20 p-2.5">
+        <div className="space-y-2 border border-surface0 bg-surface0/20 p-2.5 rounded-sm">
           <label className="flex items-start gap-2 text-[10px] text-subtext0">
             <input
               type="checkbox"
@@ -198,7 +198,7 @@ export function RepositoryCustomBotForm({
           value={repoBotInstructions}
           onChange={(e) => setRepoBotInstructions(e.target.value)}
           placeholder="Add bot-specific review guidance for this repository..."
-          className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 text-xs font-mono text-text"
+          className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 text-xs font-mono text-text rounded-sm"
         />
       </div>
 
@@ -206,13 +206,13 @@ export function RepositoryCustomBotForm({
         <button
           type="button"
           onClick={() => setIsAddingRepoBot(false)}
-          className="px-3 py-1 bg-surface0 text-xs cursor-pointer"
+          className="px-3 py-1 bg-surface0 text-xs cursor-pointer rounded-sm"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-1 bg-accent text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
+          className="px-4 py-1 bg-accent text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
         >
           Save Bot
         </button>

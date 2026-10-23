@@ -100,7 +100,7 @@ export const RepositoryRemotesTab: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsAddingRemote(true)}
-          className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40"
+          className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40 rounded-sm"
         >
           <Plus className="w-3.5 h-3.5 shrink-0" />
           <span>Add Remote</span>
@@ -117,7 +117,7 @@ export const RepositoryRemotesTab: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsAddingRemote(false)}
-              className="text-subtext0 hover:text-text cursor-pointer"
+              className="text-subtext0 hover:text-text cursor-pointer rounded-sm"
             >
               <X className="w-4 h-4" />
             </button>
@@ -131,7 +131,7 @@ export const RepositoryRemotesTab: React.FC = () => {
                 placeholder="e.g. upstream"
                 value={newRemoteName}
                 onChange={(e) => setNewRemoteName(e.target.value)}
-                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent"
+                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent rounded-sm"
               />
             </div>
             <div className="col-span-2">
@@ -142,7 +142,7 @@ export const RepositoryRemotesTab: React.FC = () => {
                 placeholder="https://github.com/org/repo.git"
                 value={newRemoteUrl}
                 onChange={(e) => setNewRemoteUrl(e.target.value)}
-                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent"
+                className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent rounded-sm"
               />
             </div>
           </div>
@@ -150,13 +150,13 @@ export const RepositoryRemotesTab: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsAddingRemote(false)}
-              className="px-3 py-1 bg-surface0 hover:bg-surface1 text-xs cursor-pointer"
+              className="px-3 py-1 bg-surface0 hover:bg-surface1 text-xs cursor-pointer rounded-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
+              className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
             >
               Add
             </button>
@@ -166,14 +166,14 @@ export const RepositoryRemotesTab: React.FC = () => {
 
       <div className="space-y-3">
         {remotesDetailed.length === 0 ? (
-          <div className="p-8 text-center border border-dashed border-surface0 text-subtext0 text-xs">
+          <div className="p-8 text-center border border-dashed border-surface0 text-subtext0 text-xs rounded-sm">
             No remotes configured for this repository yet.
           </div>
         ) : (
           remotesDetailed.map((rem) => (
             <div
               key={rem.name}
-              className="p-4 bg-crust border border-surface0 space-y-2.5"
+              className="p-4 bg-crust border border-surface0 space-y-2.5 rounded-sm"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -187,7 +187,7 @@ export const RepositoryRemotesTab: React.FC = () => {
                     type="button"
                     onClick={() => handleTestRemote(rem.name, rem.fetch_url)}
                     disabled={testingRemoteName === rem.name}
-                    className="px-2.5 py-1 bg-surface0 hover:bg-surface1 text-xs font-mono text-subtext0 hover:text-text transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-2.5 py-1 bg-surface0 hover:bg-surface1 text-xs font-mono text-subtext0 hover:text-text transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 rounded-sm"
                   >
                     <RefreshCw
                       className={`w-3 h-3 ${testingRemoteName === rem.name ? 'animate-spin' : ''}`}
@@ -200,7 +200,7 @@ export const RepositoryRemotesTab: React.FC = () => {
                       setEditingRemoteName(rem.name);
                       setEditingRemoteUrl(rem.fetch_url);
                     }}
-                    className="p-1 hover:bg-surface1 text-subtext0 hover:text-text cursor-pointer"
+                    className="p-1 hover:bg-surface1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
                     title="Edit URL"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -212,7 +212,7 @@ export const RepositoryRemotesTab: React.FC = () => {
                         removeRemote(rem.name);
                       }
                     }}
-                    className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer"
+                    className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer rounded-sm"
                     title="Remove Remote"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -226,19 +226,19 @@ export const RepositoryRemotesTab: React.FC = () => {
                     type="text"
                     value={editingRemoteUrl}
                     onChange={(e) => setEditingRemoteUrl(e.target.value)}
-                    className="flex-1 px-3 py-1 bg-surface0 border border-surface1 text-xs font-mono text-text focus:outline-none"
+                    className="flex-1 px-3 py-1 bg-surface0 border border-surface1 text-xs font-mono text-text focus:outline-none rounded-sm"
                   />
                   <button
                     type="button"
                     onClick={() => handleSaveRemoteUrl(rem.name)}
-                    className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs"
+                    className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
                   >
                     Save
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditingRemoteName(null)}
-                    className="px-2 py-1 bg-surface0 text-xs cursor-pointer"
+                    className="px-2 py-1 bg-surface0 text-xs cursor-pointer rounded-sm"
                   >
                     Cancel
                   </button>
@@ -260,7 +260,7 @@ export const RepositoryRemotesTab: React.FC = () => {
 
               {remoteTestResult[rem.name] && (
                 <div
-                  className={`p-2 text-[11px] font-mono flex items-center gap-2 ${
+                  className={`p-2 text-[11px] font-mono flex items-center gap-2 rounded-sm ${
                     remoteTestResult[rem.name].success
                       ? 'bg-green-700 text-white'
                       : 'bg-[#8b0000] text-white'

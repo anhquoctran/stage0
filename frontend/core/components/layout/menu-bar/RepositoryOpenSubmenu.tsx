@@ -28,7 +28,7 @@ export function RepositoryOpenSubmenu({
       <button
         type="button"
         disabled={!currentRepo}
-        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer"
+        className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
       >
         <div className="flex items-center gap-2">
           <ExternalLink className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -38,7 +38,7 @@ export function RepositoryOpenSubmenu({
       </button>
 
       {activeSubmenu === 'open' && currentRepo && (
-        <div className="absolute left-full top-0 ml-0.5 w-60 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs">
+        <div className="absolute left-full top-0 ml-0.5 w-60 shadow-2xl bg-mantle border border-surface0 py-1.5 z-50 text-xs rounded-sm">
           <button
             type="button"
             onClick={async () => {
@@ -50,7 +50,7 @@ export function RepositoryOpenSubmenu({
                 showToast(`Failed to open terminal: ${err}`);
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Terminal className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -70,7 +70,7 @@ export function RepositoryOpenSubmenu({
                 showToast(`Failed to open VS Code: ${err}`);
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Code2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
@@ -90,7 +90,7 @@ export function RepositoryOpenSubmenu({
                 showToast(`Failed to open ${fileManagerName}: ${err}`);
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Folder className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
