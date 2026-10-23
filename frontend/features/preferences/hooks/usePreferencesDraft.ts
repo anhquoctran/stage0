@@ -13,6 +13,8 @@ import { DEFAULT_GUARDRAIL_POLICY } from '../../ai/types/guardrails';
 import { useGitBinaryStore } from '../../git/store/useGitBinaryStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { createPreferencesApplyAction } from '../services/createPreferencesApplyAction';
+import { DEFAULT_MARKDOWN_FONT_SETTINGS } from '../constants/markdownFonts';
+import { applyMarkdownFontToDocument } from '../utils/applyMarkdownFontToDocument';
 import {
   applyViewerFontToDocument,
   DEFAULT_VIEWER_FONT_SETTINGS,
@@ -37,6 +39,10 @@ export function usePreferencesDraft() {
     lineSpacing: storedLineSpacing,
     enableLigatures: storedEnableLigatures,
     showInlineBlame: storedShowInlineBlame,
+    markdownFontFamily: storedMarkdownFontFamily,
+    markdownCodeFontFamily: storedMarkdownCodeFontFamily,
+    markdownFontSize: storedMarkdownFontSize,
+    markdownHeadingFontWeight: storedMarkdownHeadingWeight,
   } = usePreferencesStore();
 
   const { themeMode: storedThemeMode } = useThemeStore();
@@ -91,6 +97,10 @@ export function usePreferencesDraft() {
     storedGitBinaryId,
     storedGitBinaryPath,
     storedAiConfig,
+    storedMarkdownFontFamily,
+    storedMarkdownCodeFontFamily,
+    storedMarkdownFontSize,
+    storedMarkdownHeadingWeight,
     isPreferencesOpen,
     aiDraftStore,
     setAiBaseline,
@@ -127,6 +137,10 @@ export function usePreferencesDraft() {
     draftIsUnderline: session.draftIsUnderline,
     draftLineSpacing: session.draftLineSpacing,
     draftEnableLigatures: session.draftEnableLigatures,
+    draftMarkdownFontFamily: session.draftMarkdownFontFamily,
+    draftMarkdownCodeFontFamily: session.draftMarkdownCodeFontFamily,
+    draftMarkdownFontSize: session.draftMarkdownFontSize,
+    draftMarkdownHeadingWeight: session.draftMarkdownHeadingWeight,
     draftThemeMode: session.draftThemeMode,
     savedBaseline: session.savedBaseline,
     draftShowInlineBlame: session.draftShowInlineBlame,
@@ -166,6 +180,12 @@ export function usePreferencesDraft() {
       enableLigatures: session.savedBaseline.enableLigatures,
     };
     applyViewerFontToDocument(fontSettings);
+    applyMarkdownFontToDocument({
+      fontFamily: session.savedBaseline.markdownFontFamily,
+      codeFontFamily: session.savedBaseline.markdownCodeFontFamily,
+      fontSize: session.savedBaseline.markdownFontSize,
+      headingFontWeight: session.savedBaseline.markdownHeadingWeight,
+    });
 
     setIsPreferencesOpen(false);
   };
@@ -183,6 +203,12 @@ export function usePreferencesDraft() {
     session.setDraftEnableLigatures(DEFAULT_VIEWER_FONT_SETTINGS.enableLigatures);
     applyViewerFontToDocument(DEFAULT_VIEWER_FONT_SETTINGS);
 
+    session.setDraftMarkdownFontFamily(DEFAULT_MARKDOWN_FONT_SETTINGS.fontFamily);
+    session.setDraftMarkdownCodeFontFamily(DEFAULT_MARKDOWN_FONT_SETTINGS.codeFontFamily);
+    session.setDraftMarkdownFontSize(DEFAULT_MARKDOWN_FONT_SETTINGS.fontSize);
+    session.setDraftMarkdownHeadingWeight(DEFAULT_MARKDOWN_FONT_SETTINGS.headingFontWeight);
+    applyMarkdownFontToDocument(DEFAULT_MARKDOWN_FONT_SETTINGS);
+
     session.setDraftShowInlineBlame(true);
     session.setDraftSandboxType('in_memory');
     aiDraft.replace({
@@ -196,24 +222,6 @@ export function usePreferencesDraft() {
     session.setShowResetConfirm(false);
     showToast('Reset all draft settings to defaults (click Apply to save)');
   };
-
-  // Keyboard navigation
-  useEffect(() => {
-    if (!isPreferencesOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (session.showResetConfirm) {
-          session.setShowResetConfirm(false);
-          return;
-        }
-        handleCancel();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPreferencesOpen, session.showResetConfirm, handleCancel]);
 
   return {
     transaction: {
@@ -267,6 +275,14 @@ export function usePreferencesDraft() {
       setDraftLineSpacing: session.setDraftLineSpacing,
       draftEnableLigatures: session.draftEnableLigatures,
       setDraftEnableLigatures: session.setDraftEnableLigatures,
+      draftMarkdownFontFamily: session.draftMarkdownFontFamily,
+      setDraftMarkdownFontFamily: session.setDraftMarkdownFontFamily,
+      draftMarkdownCodeFontFamily: session.draftMarkdownCodeFontFamily,
+      setDraftMarkdownCodeFontFamily: session.setDraftMarkdownCodeFontFamily,
+      draftMarkdownFontSize: session.draftMarkdownFontSize,
+      setDraftMarkdownFontSize: session.setDraftMarkdownFontSize,
+      draftMarkdownHeadingWeight: session.draftMarkdownHeadingWeight,
+      setDraftMarkdownHeadingWeight: session.setDraftMarkdownHeadingWeight,
     },
     diff: {
       draftDiffViewMode: session.draftDiffViewMode,

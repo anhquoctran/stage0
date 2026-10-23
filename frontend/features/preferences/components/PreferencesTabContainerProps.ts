@@ -35,6 +35,14 @@ export interface PreferencesTabContainerProps {
   setDraftLineSpacing: React.Dispatch<React.SetStateAction<number>>;
   draftEnableLigatures: boolean;
   setDraftEnableLigatures: React.Dispatch<React.SetStateAction<boolean>>;
+  draftMarkdownFontFamily: string;
+  setDraftMarkdownFontFamily: React.Dispatch<React.SetStateAction<string>>;
+  draftMarkdownCodeFontFamily: string;
+  setDraftMarkdownCodeFontFamily: React.Dispatch<React.SetStateAction<string>>;
+  draftMarkdownFontSize: number;
+  setDraftMarkdownFontSize: React.Dispatch<React.SetStateAction<number>>;
+  draftMarkdownHeadingWeight: number;
+  setDraftMarkdownHeadingWeight: React.Dispatch<React.SetStateAction<number>>;
   draftDiffViewMode: 'split' | 'unified';
   setDraftDiffViewMode: React.Dispatch<React.SetStateAction<'split' | 'unified'>>;
   draftIgnoreWhitespace: boolean;

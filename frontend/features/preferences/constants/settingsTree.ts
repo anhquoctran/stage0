@@ -33,6 +33,13 @@ export const SETTINGS_TREE: TreeCategory[] = [
         description: 'Font family, font size, weight, line height, and ligature rendering for editor panes.',
         keywords: ['font', 'family', 'size', 'ligatures', 'bold', 'italic', 'underline', 'spacing', 'typography'],
       },
+      {
+        id: 'appearance-markdown-font',
+        label: 'Markdown Font',
+        title: 'Markdown Preview Font',
+        description: 'Configure font family, code block font, size, and heading weight for markdown preview rendering.',
+        keywords: ['markdown', 'preview', 'font', 'heading', 'weight', 'code', 'typography'],
+      },
     ],
   },
   {
@@ -137,4 +144,3 @@ export const SETTINGS_TREE: TreeCategory[] = [
     ],
   },
 ];
-

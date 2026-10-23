@@ -19,6 +19,10 @@ export function usePreferencesDraftSession({
   storedGitBinaryId,
   storedGitBinaryPath,
   storedAiConfig,
+  storedMarkdownFontFamily,
+  storedMarkdownCodeFontFamily,
+  storedMarkdownFontSize,
+  storedMarkdownHeadingWeight,
   isPreferencesOpen,
   aiDraftStore,
   setAiBaseline,
@@ -45,6 +49,14 @@ export function usePreferencesDraftSession({
   const [draftLineSpacing, setDraftLineSpacing] = useState(storedLineSpacing);
 
   const [draftEnableLigatures, setDraftEnableLigatures] = useState(storedEnableLigatures);
+
+  const [draftMarkdownFontFamily, setDraftMarkdownFontFamily] = useState(storedMarkdownFontFamily);
+
+  const [draftMarkdownCodeFontFamily, setDraftMarkdownCodeFontFamily] = useState(storedMarkdownCodeFontFamily);
+
+  const [draftMarkdownFontSize, setDraftMarkdownFontSize] = useState(storedMarkdownFontSize);
+
+  const [draftMarkdownHeadingWeight, setDraftMarkdownHeadingWeight] = useState(storedMarkdownHeadingWeight);
 
   const [draftDiffViewMode, setDraftDiffViewMode] = useState<'split' | 'unified'>('split');
 
@@ -74,6 +86,10 @@ export function usePreferencesDraftSession({
     aiConfig: { ...storedAiConfig },
     gitBinaryId: storedGitBinaryId,
     gitBinaryPath: storedGitBinaryPath,
+    markdownFontFamily: storedMarkdownFontFamily,
+    markdownCodeFontFamily: storedMarkdownCodeFontFamily,
+    markdownFontSize: storedMarkdownFontSize,
+    markdownHeadingWeight: storedMarkdownHeadingWeight,
   });
 
   const [isApplied, setIsApplied] = useState(false);
@@ -98,6 +114,11 @@ export function usePreferencesDraftSession({
         setDraftEnableLigatures(storedEnableLigatures);
         setDraftShowInlineBlame(storedShowInlineBlame);
         setDraftSandboxType(storedSandboxType);
+        setDraftMarkdownFontFamily(storedMarkdownFontFamily);
+        setDraftMarkdownCodeFontFamily(storedMarkdownCodeFontFamily);
+        setDraftMarkdownFontSize(storedMarkdownFontSize);
+        setDraftMarkdownHeadingWeight(storedMarkdownHeadingWeight);
+
         const snapshot = captureAiPreferences();
         aiDraftStore.getState().replace(snapshot);
         setAiBaseline(snapshot);
@@ -119,6 +140,10 @@ export function usePreferencesDraftSession({
           aiConfig: { ...storedAiConfig },
           gitBinaryId: storedGitBinaryId,
           gitBinaryPath: storedGitBinaryPath,
+          markdownFontFamily: storedMarkdownFontFamily,
+          markdownCodeFontFamily: storedMarkdownCodeFontFamily,
+          markdownFontSize: storedMarkdownFontSize,
+          markdownHeadingWeight: storedMarkdownHeadingWeight,
         });
 
         fetchActiveBinary().then((res) => {
@@ -159,6 +184,10 @@ export function usePreferencesDraftSession({
     storedAiConfig,
     storedGitBinaryId,
     storedGitBinaryPath,
+    storedMarkdownFontFamily,
+    storedMarkdownCodeFontFamily,
+    storedMarkdownFontSize,
+    storedMarkdownHeadingWeight,
     fetchActiveBinary,
   ]);
 
@@ -172,6 +201,10 @@ export function usePreferencesDraftSession({
     draftIsUnderline,
     draftLineSpacing,
     draftEnableLigatures,
+    draftMarkdownFontFamily,
+    draftMarkdownCodeFontFamily,
+    draftMarkdownFontSize,
+    draftMarkdownHeadingWeight,
     draftSandboxType,
     draftGitBinaryId,
     savedBaseline,
@@ -187,6 +220,10 @@ export function usePreferencesDraftSession({
     setDraftIsUnderline,
     setDraftLineSpacing,
     setDraftEnableLigatures,
+    setDraftMarkdownFontFamily,
+    setDraftMarkdownCodeFontFamily,
+    setDraftMarkdownFontSize,
+    setDraftMarkdownHeadingWeight,
     setDraftShowInlineBlame,
     setDraftSandboxType,
     setShowResetConfirm,

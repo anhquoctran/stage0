@@ -6,6 +6,7 @@ import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { getDiscussionMentionOptions } from '../../utils/discussionMentions';
 import { VirtualMrActivityTimeline } from '../overview/VirtualMrActivityTimeline';
 import { VirtualMrMergeDetails } from '../overview/VirtualMrMergeDetails';
+import { VirtualMrOverviewSidebar } from '../overview/VirtualMrOverviewSidebar';
 import type { VirtualMrOverviewTabProps } from './VirtualMrOverviewTabProps';
 
 export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ session }) => {
@@ -92,90 +93,98 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
   };
 
   return (
-    <div className="flex-1 h-full overflow-y-auto px-6 py-6 bg-crust/30 w-full">
-      <div className="w-full space-y-6">
-        {/* Merge Details Card */}
-        <VirtualMrMergeDetails session={session} />
+    <div className="flex-1 h-full overflow-y-auto bg-crust/30 w-full">
+      <div className="w-full flex flex-col lg:flex-row min-h-full">
+        {/* Main Column */}
+        <div className="flex-1 min-w-0 p-6 space-y-6">
+          {/* Merge Details Card */}
+          <VirtualMrMergeDetails session={session} />
 
-        {/* Description Section */}
-        <div
-          className={
-            isEditingDesc
-              ? 'p-4 rounded-sm bg-mantle border border-surface0 space-y-3'
-              : 'space-y-2'
-          }
-        >
-          <div className="flex items-center justify-between border-b border-surface0/60 pb-2">
-            <span className="font-semibold text-xs text-text">Description</span>
-            {!isEditingDesc ? (
-              <button
-                type="button"
-                onClick={() => setIsEditingDesc(true)}
-                className="text-xs text-primary hover:underline cursor-pointer rounded-sm"
-              >
-                Edit Description
-              </button>
-            ) : session.description ? (
-              <button
-                type="button"
-                onClick={() => setIsEditingDesc(false)}
-                className="text-xs text-subtext0 hover:text-text cursor-pointer rounded-sm"
-              >
-                Cancel Edit
-              </button>
-            ) : null}
+          {/* Description Section */}
+          <div
+            className={
+              isEditingDesc
+                ? 'p-4 rounded-sm bg-mantle border border-surface0 space-y-3'
+                : 'space-y-2'
+            }
+          >
+            <div className="flex items-center justify-between border-b border-surface0/60 pb-2">
+              <span className="font-semibold text-xs text-text">Description</span>
+              {!isEditingDesc ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingDesc(true)}
+                  className="text-xs text-primary hover:underline cursor-pointer rounded-sm"
+                >
+                  Edit Description
+                </button>
+              ) : session.description ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingDesc(false)}
+                  className="text-xs text-subtext0 hover:text-text cursor-pointer rounded-sm"
+                >
+                  Cancel Edit
+                </button>
+              ) : null}
+            </div>
+
+            {isEditingDesc ? (
+              <div className="space-y-2">
+                <MarkdownEditor
+                  value={descValue}
+                  onChange={setDescValue}
+                  placeholder="Enter MR overview, motivations, or checklist..."
+                  rows={6}
+                  minHeight="140px"
+                  showActions={true}
+                  onGenerateDraft={handleGenerateDescription}
+                  onSubmit={handleSaveDesc}
+                  submitLabel="Save Description"
+                  onCancel={() => {
+                    setDescValue(session.description);
+                    setIsEditingDesc(false);
+                  }}
+                  cancelLabel="Cancel"
+                />
+              </div>
+            ) : (
+              <div className="pt-1 leading-relaxed text-xs">
+                <MarkdownPreview
+                  content={session.description}
+                  emptyPlaceholder="No description provided for this Virtual MR."
+                />
+              </div>
+            )}
           </div>
 
-          {isEditingDesc ? (
-            <div className="space-y-2">
-              <MarkdownEditor
-                value={descValue}
-                onChange={setDescValue}
-                placeholder="Enter MR overview, motivations, or checklist..."
-                rows={6}
-                minHeight="140px"
-                showActions={true}
-                onGenerateDraft={handleGenerateDescription}
-                onSubmit={handleSaveDesc}
-                submitLabel="Save Description"
-                onCancel={() => {
-                  setDescValue(session.description);
-                  setIsEditingDesc(false);
-                }}
-                cancelLabel="Cancel"
-              />
-            </div>
-          ) : (
-            <div className="pt-1 leading-relaxed text-xs">
-              <MarkdownPreview
-                content={session.description}
-                emptyPlaceholder="No description provided for this Virtual MR."
-              />
-            </div>
-          )}
+          {/* Activity Section (Timeline of events + discussions) */}
+          <div className="pt-2">
+            <VirtualMrActivityTimeline session={session} />
+          </div>
+
+          {/* Leave a Comment Box */}
+          <div className="p-4 rounded-sm bg-mantle border border-surface0 space-y-2">
+            <span className="font-semibold text-xs text-text">Leave a Comment</span>
+            <MarkdownEditor
+              value={newGeneralComment}
+              mentionOptions={getDiscussionMentionOptions(session)}
+              onChange={setNewGeneralComment}
+              placeholder="Write your comment or mention a reviewer with @..."
+              rows={4}
+              minHeight="100px"
+              showActions={true}
+              onSubmit={handleAddGeneralComment}
+              submitLabel="Post Comment"
+              disabled={isPostingDiscussion}
+              isSubmitting={isPostingDiscussion}
+            />
+          </div>
         </div>
 
-        {/* Activity Section (Timeline of events + discussions) */}
-        <div className="pt-2">
-          <VirtualMrActivityTimeline session={session} />
-        </div>
-
-        {/* Leave a Comment Box */}
-        <div className="p-4 rounded-sm bg-mantle border border-surface0 space-y-2">
-          <span className="font-semibold text-xs text-text">Leave a Comment</span>
-          <MarkdownEditor
-            value={newGeneralComment}
-            mentionOptions={getDiscussionMentionOptions(session)}
-            onChange={setNewGeneralComment}
-            placeholder="Write your comment or mention a reviewer with @..."
-            rows={4}
-            minHeight="100px"
-            showActions={true}
-            onSubmit={handleAddGeneralComment}
-            submitLabel="Post Comment"
-            disabled={isPostingDiscussion}
-            isSubmitting={isPostingDiscussion}
-          />
+        {/* Right Sidebar (Metadata: Assignee, Reviewers, Labels, Participants) */}
+        <div className="w-full lg:w-72 xl:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-surface0/60 bg-mantle/30 p-5">
+          <VirtualMrOverviewSidebar session={session} />
         </div>
       </div>
     </div>

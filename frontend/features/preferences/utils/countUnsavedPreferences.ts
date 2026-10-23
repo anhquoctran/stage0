@@ -13,6 +13,10 @@ export function countUnsavedPreferences(
     enableLigatures: boolean;
     sandboxType: string;
     gitBinaryId: string;
+    markdownFontFamily?: string;
+    markdownCodeFontFamily?: string;
+    markdownFontSize?: number;
+    markdownHeadingWeight?: number;
   },
   baseline: PreferencesBaseline,
   aiChangeCount: number
@@ -29,6 +33,9 @@ export function countUnsavedPreferences(
   if (draft.enableLigatures !== baseline.enableLigatures) count++;
   if (draft.sandboxType !== baseline.sandboxType) count++;
   if (draft.gitBinaryId !== baseline.gitBinaryId) count++;
+  if (draft.markdownFontFamily !== undefined && draft.markdownFontFamily !== baseline.markdownFontFamily) count++;
+  if (draft.markdownCodeFontFamily !== undefined && draft.markdownCodeFontFamily !== baseline.markdownCodeFontFamily) count++;
+  if (draft.markdownFontSize !== undefined && draft.markdownFontSize !== baseline.markdownFontSize) count++;
+  if (draft.markdownHeadingWeight !== undefined && draft.markdownHeadingWeight !== baseline.markdownHeadingWeight) count++;
   return count;
 }
-

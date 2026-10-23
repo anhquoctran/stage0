@@ -62,6 +62,14 @@ export const PreferencesModal: React.FC = () => {
       setDraftLineSpacing,
       draftEnableLigatures,
       setDraftEnableLigatures,
+      draftMarkdownFontFamily,
+      setDraftMarkdownFontFamily,
+      draftMarkdownCodeFontFamily,
+      setDraftMarkdownCodeFontFamily,
+      draftMarkdownFontSize,
+      setDraftMarkdownFontSize,
+      draftMarkdownHeadingWeight,
+      setDraftMarkdownHeadingWeight,
     },
     diff: {
       draftDiffViewMode,
@@ -134,6 +142,14 @@ export const PreferencesModal: React.FC = () => {
               setDraftLineSpacing={setDraftLineSpacing}
               draftEnableLigatures={draftEnableLigatures}
               setDraftEnableLigatures={setDraftEnableLigatures}
+              draftMarkdownFontFamily={draftMarkdownFontFamily}
+              setDraftMarkdownFontFamily={setDraftMarkdownFontFamily}
+              draftMarkdownCodeFontFamily={draftMarkdownCodeFontFamily}
+              setDraftMarkdownCodeFontFamily={setDraftMarkdownCodeFontFamily}
+              draftMarkdownFontSize={draftMarkdownFontSize}
+              setDraftMarkdownFontSize={setDraftMarkdownFontSize}
+              draftMarkdownHeadingWeight={draftMarkdownHeadingWeight}
+              setDraftMarkdownHeadingWeight={setDraftMarkdownHeadingWeight}
               draftDiffViewMode={draftDiffViewMode}
               setDraftDiffViewMode={setDraftDiffViewMode}
               draftIgnoreWhitespace={draftIgnoreWhitespace}

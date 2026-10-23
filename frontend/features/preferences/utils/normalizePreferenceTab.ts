@@ -14,6 +14,9 @@ export const normalizeTab = (tab?: string): PreferenceTab => {
       return 'appearance-theme';
     case 'fonts':
       return 'appearance-fonts';
+    case 'markdown-font':
+    case 'markdown':
+      return 'appearance-markdown-font';
     case 'editor':
       return 'editor-diff';
     case 'ai':

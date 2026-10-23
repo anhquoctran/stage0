@@ -418,51 +418,98 @@ code, kbd, samp, pre {
 }
 
 /* Catppuccin Syntax Highlighting */
-.diff-tailwindcss-wrapper .hljs {
+.diff-tailwindcss-wrapper .hljs,
+.markdown-preview .hljs {
   color: var(--ctp-text) !important;
+  background: transparent !important;
+}
+
+.diff-tailwindcss-wrapper .hljs {
   background: var(--ctp-base) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-keyword,
 .diff-tailwindcss-wrapper .hljs-doctag,
 .diff-tailwindcss-wrapper .hljs-meta .hljs-keyword,
-.diff-tailwindcss-wrapper .hljs-template-tag {
+.diff-tailwindcss-wrapper .hljs-template-tag,
+.markdown-preview .hljs-keyword,
+.markdown-preview .hljs-doctag,
+.markdown-preview .hljs-meta .hljs-keyword,
+.markdown-preview .hljs-template-tag {
   color: var(--ctp-mauve) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-title,
 .diff-tailwindcss-wrapper .hljs-title.class_,
-.diff-tailwindcss-wrapper .hljs-title.function_ {
+.diff-tailwindcss-wrapper .hljs-title.function_,
+.markdown-preview .hljs-title,
+.markdown-preview .hljs-title.class_,
+.markdown-preview .hljs-title.function_ {
   color: var(--ctp-blue) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-string,
 .diff-tailwindcss-wrapper .hljs-regexp,
-.diff-tailwindcss-wrapper .hljs-meta .hljs-string {
+.diff-tailwindcss-wrapper .hljs-meta .hljs-string,
+.markdown-preview .hljs-string,
+.markdown-preview .hljs-regexp,
+.markdown-preview .hljs-meta .hljs-string {
   color: var(--ctp-green) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-number,
 .diff-tailwindcss-wrapper .hljs-literal,
 .diff-tailwindcss-wrapper .hljs-attr,
-.diff-tailwindcss-wrapper .hljs-attribute {
+.diff-tailwindcss-wrapper .hljs-attribute,
+.markdown-preview .hljs-number,
+.markdown-preview .hljs-literal,
+.markdown-preview .hljs-attr,
+.markdown-preview .hljs-attribute {
   color: var(--ctp-peach) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-built_in,
 .diff-tailwindcss-wrapper .hljs-symbol,
-.diff-tailwindcss-wrapper .hljs-type {
+.diff-tailwindcss-wrapper .hljs-type,
+.markdown-preview .hljs-built_in,
+.markdown-preview .hljs-symbol,
+.markdown-preview .hljs-type {
   color: var(--ctp-yellow) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-comment,
-.diff-tailwindcss-wrapper .hljs-code {
+.diff-tailwindcss-wrapper .hljs-code,
+.markdown-preview .hljs-comment,
+.markdown-preview .hljs-code {
   color: var(--ctp-overlay0) !important;
   font-style: italic;
 }
 
-.diff-tailwindcss-wrapper .hljs-variable {
+.diff-tailwindcss-wrapper .hljs-variable,
+.markdown-preview .hljs-variable {
   color: var(--ctp-rosewater) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-meta,
+.markdown-preview .hljs-meta {
+  color: var(--ctp-teal) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-punctuation,
+.markdown-preview .hljs-punctuation,
+.diff-tailwindcss-wrapper .hljs-operator,
+.markdown-preview .hljs-operator {
+  color: var(--ctp-subtext0) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-property,
+.markdown-preview .hljs-property {
+  color: var(--ctp-sapphire) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-params,
+.markdown-preview .hljs-params {
+  color: var(--ctp-subtext1) !important;
 }
 
 /* Smooth pulsing for conflict indicators */
@@ -627,6 +674,8 @@ button.btn-primary:disabled {
 /* Markdown Content Rendering Styles */
 .markdown-preview {
   word-break: break-word;
+  font-family: var(--markdown-font-family, inherit);
+  font-size: var(--markdown-font-size, 0.75rem);
 }
 .markdown-preview > *:first-child {
   margin-top: 0 !important;
@@ -637,9 +686,11 @@ button.btn-primary:disabled {
 .markdown-preview h1,
 .markdown-preview h2,
 .markdown-preview h3,
-.markdown-preview h4 {
+.markdown-preview h4,
+.markdown-preview h5,
+.markdown-preview h6 {
   color: var(--ctp-text);
-  font-weight: 700;
+  font-weight: var(--markdown-heading-weight, 600);
   margin-top: 0.8em;
   margin-bottom: 0.3em;
   line-height: 1.3;
@@ -673,7 +724,7 @@ button.btn-primary:disabled {
 }
 
 .markdown-preview code {
-  font-family: monospace;
+  font-family: var(--markdown-code-font-family, var(--viewer-font-family, monospace));
   font-size: 0.9em;
   background-color: var(--ctp-surface0);
   color: var(--ctp-text);
@@ -692,6 +743,7 @@ button.btn-primary:disabled {
   overflow-x: auto;
 }
 .markdown-preview pre code {
+  font-family: var(--markdown-code-font-family, var(--viewer-font-family, monospace));
   background-color: transparent;
   border: none;
   padding: 0;
