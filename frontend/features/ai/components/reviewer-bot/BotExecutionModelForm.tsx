@@ -171,7 +171,7 @@ export function BotExecutionModelForm({
                 step={0.1}
                 value={formTemp}
                 onChange={(e) => setFormTemp(parseFloat(e.target.value))}
-                className="w-full mt-2 cursor-pointer rounded-sm"
+                className="w-full mt-2 cursor-pointer rounded-sm accent-brand"
               />
             </div>
           </div>

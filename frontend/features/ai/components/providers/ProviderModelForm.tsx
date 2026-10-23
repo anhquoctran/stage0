@@ -68,7 +68,7 @@ export function ProviderModelForm({
             step="0.05"
             value={aiConfig.temperature}
             onChange={(e) => onUpdateAiConfig({ temperature: parseFloat(e.target.value) })}
-            className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-text rounded-sm"
+            className="w-full h-1.5 bg-surface1 appearance-none cursor-pointer accent-brand rounded-sm"
           />
         </div>
 

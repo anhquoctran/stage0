@@ -18,6 +18,7 @@ import { invoke, isTauri } from '@tauri-apps/api/core';
 import type { PreferenceBootstrap } from './features/preferences/types/PreferenceBootstrap';
 import type { PreferencesDocument } from './features/preferences/types/PreferencesDocument';
 import { isLikelySecretMcpEnvValue, isSecretMcpEnvName } from './features/ai/utils/listSecretMcpEnv';
+import { initExternalLinkInterceptor } from './common/utils/openUrl';
 import './core/styles/index.css';
 
 const LEGACY_KEYS = [
@@ -119,6 +120,7 @@ When reviewing git diffs:
 }
 
 async function startApp() {
+  initExternalLinkInterceptor();
   const legacy = buildLegacyPreferences();
   const legacyRawAi = readLegacyJson('stage0_ai_mcp_config') as Record<string, unknown> | undefined;
   const legacyRawAiConfig = legacyRawAi?.aiConfig as Record<string, unknown> | undefined;

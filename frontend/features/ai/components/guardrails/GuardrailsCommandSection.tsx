@@ -62,13 +62,13 @@ export const GuardrailsCommandSection: React.FC<{
           {allowedCommands.map((cmd) => (
             <span
               key={cmd}
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-green/10 text-green border border-green/30 font-mono font-medium"
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-emerald-600 text-white font-mono font-medium rounded-sm shadow-xs"
             >
               <span>{cmd}</span>
               <button
                 type="button"
                 onClick={() => onRemoveAllowedCmd(cmd)}
-                className="opacity-70 hover:opacity-100 cursor-pointer rounded-sm"
+                className="text-white/80 hover:text-white cursor-pointer rounded-sm ml-0.5 transition-colors"
                 title="Remove"
               >
                 <X className="w-3 h-3" />
@@ -105,13 +105,13 @@ export const GuardrailsCommandSection: React.FC<{
           {blockedCommands.map((cmd) => (
             <span
               key={cmd}
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-red/10 text-red border border-red/30 font-mono font-medium"
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-red-600 text-white font-mono font-medium rounded-sm shadow-xs"
             >
               <span>{cmd}</span>
               <button
                 type="button"
                 onClick={() => onRemoveBlockedCmd(cmd)}
-                className="opacity-70 hover:opacity-100 cursor-pointer rounded-sm"
+                className="text-white/80 hover:text-white cursor-pointer rounded-sm ml-0.5 transition-colors"
                 title="Remove"
               >
                 <X className="w-3 h-3" />
@@ -148,13 +148,13 @@ export const GuardrailsCommandSection: React.FC<{
           {blockedPatterns.map((pat) => (
             <span
               key={pat}
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-yellow/10 text-yellow border border-yellow/30 font-mono font-medium"
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-amber-600 text-white font-mono font-medium rounded-sm shadow-xs"
             >
               <span>{pat}</span>
               <button
                 type="button"
                 onClick={() => onRemoveBlockedPattern(pat)}
-                className="opacity-70 hover:opacity-100 cursor-pointer rounded-sm"
+                className="text-white/80 hover:text-white cursor-pointer rounded-sm ml-0.5 transition-colors"
                 title="Remove"
               >
                 <X className="w-3 h-3" />
@@ -195,7 +195,7 @@ export const GuardrailsCommandSection: React.FC<{
             step={5}
             value={maxTimeout}
             onChange={(e) => onUpdateTimeout(Number(e.target.value))}
-            className="w-full mt-2 cursor-pointer rounded-sm"
+            className="w-full mt-2 cursor-pointer rounded-sm accent-brand"
           />
         </div>
 
@@ -210,7 +210,7 @@ export const GuardrailsCommandSection: React.FC<{
             step={16384}
             value={maxOutputBytes}
             onChange={(e) => onUpdateOutputBytes(Number(e.target.value))}
-            className="w-full mt-2 cursor-pointer rounded-sm"
+            className="w-full mt-2 cursor-pointer rounded-sm accent-brand"
           />
         </div>
 
@@ -225,7 +225,7 @@ export const GuardrailsCommandSection: React.FC<{
             step={5}
             value={rateLimit}
             onChange={(e) => onUpdateRateLimit(Number(e.target.value))}
-            className="w-full mt-2 cursor-pointer rounded-sm"
+            className="w-full mt-2 cursor-pointer rounded-sm accent-brand"
           />
         </div>
       </div>

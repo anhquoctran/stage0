@@ -39,7 +39,7 @@ export function AcpAgentCard({
             <AgentIcon icon={entry?.icon} /> <span className="truncate">{name}</span>
             {version && <span className="text-xs text-subtext0">v{version}</span>}
             {installed && (
-              <span className="border border-green/40 px-1.5 py-0.5 text-[10px] text-green">
+              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded-sm shadow-xs">
                 Installed
               </span>
             )}
@@ -50,7 +50,7 @@ export function AcpAgentCard({
           <button
             type="button"
             onClick={() => openDetails(installed, entry)}
-            className="shrink-0 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
+            className="shrink-0 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
           >
             Manage
           </button>
@@ -59,7 +59,7 @@ export function AcpAgentCard({
             type="button"
             disabled={busyId === item.id || !isTauri()}
             onClick={() => void install(entry!)}
-            className="shrink-0 border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand hover:bg-brand/15 disabled:opacity-45 rounded-sm"
+            className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white rounded-sm shadow-xs transition-colors cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
           >
             {busyId === item.id ? 'Installing…' : 'Install'}
           </button>

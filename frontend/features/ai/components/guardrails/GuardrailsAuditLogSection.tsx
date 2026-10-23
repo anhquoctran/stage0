@@ -38,11 +38,11 @@ export const GuardrailsAuditLogSection: React.FC<{
               <div key={event.id} className="p-2.5 hover:bg-surface1/30 transition flex flex-col md:flex-row md:items-center justify-between gap-2 rounded-sm">
                 <div className="flex items-start md:items-center gap-2.5">
                   {event.allowed ? (
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-green/10 text-green border border-green/30 font-mono">
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 text-white font-mono rounded-sm shadow-xs">
                       PASS
                     </span>
                   ) : (
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red/10 text-red border border-red/30 font-mono">
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white font-mono rounded-sm shadow-xs">
                       BLOCK
                     </span>
                   )}
