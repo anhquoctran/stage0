@@ -42,6 +42,12 @@ their application callers migrate together (see report section 8).
 - Preferences drafts remain drafts until Apply/OK; Cancel restores previews and
   discards drafts. The existing native/keychain and JSON rollback logic remains
   authoritative. Account sign-in and other immediate actions are not transactions.
+- Markdown typography lives in `appearance.markdownFont`. Its `editorFontFamily`
+  is independent of preview `fontFamily` and code-block `codeFontFamily`, with
+  a backward-compatible Fira Code default. The draft session, dirty counter,
+  commit action and Cancel/reset must carry every Markdown field together.
+  `applyMarkdownFontToDocument.ts` publishes `--markdown-editor-font-family` for
+  all shared Markdown editor textareas; the font tab reuses `CustomSelect`.
 - Never serialize API keys or secret MCP environment values into preferences.
   Do not add background keychain reads, model discovery or account sign-in.
 - Keep review consent, ACP/native guardrails, source filtering, immutable Git
@@ -169,3 +175,20 @@ native single-owner execution details.
 - Checks ran on macOS. No live native-window visual QA or Windows/Linux runtime
   keyboard/OS-reserved-shortcut verification is claimed. Existing Vite chunk and
   mixed-import warnings remain.
+
+## Git GUI keymap presets (2026-10-24)
+
+The catalog now has seven presets, adding Fork, SourceTree and GitKraken through
+`shared/keymaps.json`, without new keyboard listeners or runtime branches. The
+Preferences picker and JSONC completions discover the catalog automatically;
+Preferences search includes the new product names. Platform adaptations and
+deliberately unassigned conflicting bindings are documented in [keymaps](keymaps.md).
+Existing custom overrides and Apply/OK/Cancel behavior remain unchanged.
+
+Thirteen added tests pin the platform mappings, safe collision resolution,
+persisted preset IDs, user overrides, picker/search and JSONC completions.
+Typecheck, architecture, Cargo check and all four Rust keymap tests pass; the
+latter resolve/validate every preset for all three desktop configurations.
+Full Node suite: **313 tests / 293 pass / the same 20 baseline failures** (before:
+300 / 280 / 20), with no new failing names. Checks ran on macOS; no Windows/Linux
+native keyboard or visual QA is claimed. No ownership boundaries moved.

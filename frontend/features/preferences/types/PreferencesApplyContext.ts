@@ -23,6 +23,7 @@ export interface PreferencesApplyContext {
   draftEnableLigatures: boolean;
   draftMarkdownFontFamily: string;
   draftMarkdownCodeFontFamily: string;
+  draftMarkdownEditorFontFamily: string;
   draftMarkdownFontSize: number;
   draftMarkdownHeadingWeight: number;
   draftThemeMode: ThemeMode;

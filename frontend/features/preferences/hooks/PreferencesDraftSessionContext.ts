@@ -25,6 +25,7 @@ export interface PreferencesDraftSessionContext {
   storedAiConfig: AiConfig;
   storedMarkdownFontFamily: string;
   storedMarkdownCodeFontFamily: string;
+  storedMarkdownEditorFontFamily: string;
   storedMarkdownFontSize: number;
   storedMarkdownHeadingWeight: number;
   isPreferencesOpen: boolean;

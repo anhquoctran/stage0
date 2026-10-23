@@ -67,6 +67,8 @@ export const PreferencesModal: React.FC = () => {
       setDraftMarkdownFontFamily,
       draftMarkdownCodeFontFamily,
       setDraftMarkdownCodeFontFamily,
+      draftMarkdownEditorFontFamily,
+      setDraftMarkdownEditorFontFamily,
       draftMarkdownFontSize,
       setDraftMarkdownFontSize,
       draftMarkdownHeadingWeight,
@@ -150,6 +152,8 @@ export const PreferencesModal: React.FC = () => {
               setDraftMarkdownFontFamily={setDraftMarkdownFontFamily}
               draftMarkdownCodeFontFamily={draftMarkdownCodeFontFamily}
               setDraftMarkdownCodeFontFamily={setDraftMarkdownCodeFontFamily}
+              draftMarkdownEditorFontFamily={draftMarkdownEditorFontFamily}
+              setDraftMarkdownEditorFontFamily={setDraftMarkdownEditorFontFamily}
               draftMarkdownFontSize={draftMarkdownFontSize}
               setDraftMarkdownFontSize={setDraftMarkdownFontSize}
               draftMarkdownHeadingWeight={draftMarkdownHeadingWeight}

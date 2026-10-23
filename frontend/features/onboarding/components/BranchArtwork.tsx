@@ -3,7 +3,7 @@ import { GitCompare } from '../../../common/components/icons/GitCompare';
 import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
 
 export const BranchArtwork: React.FC = () => (
-  <div className="relative w-full max-w-[25rem] aspect-[1.35] border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
+  <div className="relative w-full max-w-100 aspect-[1.35] border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
     <div className="absolute inset-0 opacity-60" style={{ backgroundImage: 'radial-gradient(var(--ctp-surface1) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
     <svg className="absolute inset-0 h-full w-full" viewBox="0 0 400 296" fill="none" aria-hidden="true">
       <path d="M75 75H135C162 75 158 128 194 128H327" stroke="var(--ctp-overlay1)" strokeWidth="3" />

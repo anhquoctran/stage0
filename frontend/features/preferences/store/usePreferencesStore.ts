@@ -128,6 +128,7 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   ...initialSettings,
   markdownFontFamily: initialMarkdownSettings.fontFamily,
   markdownCodeFontFamily: initialMarkdownSettings.codeFontFamily,
+  markdownEditorFontFamily: initialMarkdownSettings.editorFontFamily,
   markdownFontSize: initialMarkdownSettings.fontSize,
   markdownHeadingFontWeight: initialMarkdownSettings.headingFontWeight,
   isPreferencesOpen: false,
@@ -188,6 +189,7 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     const updated: MarkdownFontSettings = {
       fontFamily: partial.fontFamily ?? current.markdownFontFamily,
       codeFontFamily: partial.codeFontFamily ?? current.markdownCodeFontFamily,
+      editorFontFamily: partial.editorFontFamily ?? current.markdownEditorFontFamily,
       fontSize: partial.fontSize ?? current.markdownFontSize,
       headingFontWeight: partial.headingFontWeight ?? current.markdownHeadingFontWeight,
     };
@@ -196,6 +198,7 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     set({
       markdownFontFamily: updated.fontFamily,
       markdownCodeFontFamily: updated.codeFontFamily,
+      markdownEditorFontFamily: updated.editorFontFamily,
       markdownFontSize: updated.fontSize,
       markdownHeadingFontWeight: updated.headingFontWeight,
     });
@@ -212,6 +215,7 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     set({
       markdownFontFamily: DEFAULT_MARKDOWN_FONT_SETTINGS.fontFamily,
       markdownCodeFontFamily: DEFAULT_MARKDOWN_FONT_SETTINGS.codeFontFamily,
+      markdownEditorFontFamily: DEFAULT_MARKDOWN_FONT_SETTINGS.editorFontFamily,
       markdownFontSize: DEFAULT_MARKDOWN_FONT_SETTINGS.fontSize,
       markdownHeadingFontWeight: DEFAULT_MARKDOWN_FONT_SETTINGS.headingFontWeight,
     });
@@ -242,6 +246,7 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
       usePreferencesStore.setState({
         markdownFontFamily: nextMd.fontFamily,
         markdownCodeFontFamily: nextMd.codeFontFamily,
+        markdownEditorFontFamily: nextMd.editorFontFamily,
         markdownFontSize: nextMd.fontSize,
         markdownHeadingFontWeight: nextMd.headingFontWeight,
       });

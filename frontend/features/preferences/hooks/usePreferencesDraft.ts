@@ -43,6 +43,7 @@ export function usePreferencesDraft() {
     showInlineBlame: storedShowInlineBlame,
     markdownFontFamily: storedMarkdownFontFamily,
     markdownCodeFontFamily: storedMarkdownCodeFontFamily,
+    markdownEditorFontFamily: storedMarkdownEditorFontFamily,
     markdownFontSize: storedMarkdownFontSize,
     markdownHeadingFontWeight: storedMarkdownHeadingWeight,
   } = usePreferencesStore();
@@ -102,6 +103,7 @@ export function usePreferencesDraft() {
     storedAiConfig,
     storedMarkdownFontFamily,
     storedMarkdownCodeFontFamily,
+    storedMarkdownEditorFontFamily,
     storedMarkdownFontSize,
     storedMarkdownHeadingWeight,
     isPreferencesOpen,
@@ -144,6 +146,7 @@ export function usePreferencesDraft() {
     draftEnableLigatures: session.draftEnableLigatures,
     draftMarkdownFontFamily: session.draftMarkdownFontFamily,
     draftMarkdownCodeFontFamily: session.draftMarkdownCodeFontFamily,
+    draftMarkdownEditorFontFamily: session.draftMarkdownEditorFontFamily,
     draftMarkdownFontSize: session.draftMarkdownFontSize,
     draftMarkdownHeadingWeight: session.draftMarkdownHeadingWeight,
     draftThemeMode: session.draftThemeMode,
@@ -188,6 +191,7 @@ export function usePreferencesDraft() {
     applyMarkdownFontToDocument({
       fontFamily: session.savedBaseline.markdownFontFamily,
       codeFontFamily: session.savedBaseline.markdownCodeFontFamily,
+      editorFontFamily: session.savedBaseline.markdownEditorFontFamily,
       fontSize: session.savedBaseline.markdownFontSize,
       headingFontWeight: session.savedBaseline.markdownHeadingWeight,
     });
@@ -211,6 +215,7 @@ export function usePreferencesDraft() {
 
     session.setDraftMarkdownFontFamily(DEFAULT_MARKDOWN_FONT_SETTINGS.fontFamily);
     session.setDraftMarkdownCodeFontFamily(DEFAULT_MARKDOWN_FONT_SETTINGS.codeFontFamily);
+    session.setDraftMarkdownEditorFontFamily(DEFAULT_MARKDOWN_FONT_SETTINGS.editorFontFamily);
     session.setDraftMarkdownFontSize(DEFAULT_MARKDOWN_FONT_SETTINGS.fontSize);
     session.setDraftMarkdownHeadingWeight(DEFAULT_MARKDOWN_FONT_SETTINGS.headingFontWeight);
     applyMarkdownFontToDocument(DEFAULT_MARKDOWN_FONT_SETTINGS);
@@ -286,6 +291,8 @@ export function usePreferencesDraft() {
       setDraftMarkdownFontFamily: session.setDraftMarkdownFontFamily,
       draftMarkdownCodeFontFamily: session.draftMarkdownCodeFontFamily,
       setDraftMarkdownCodeFontFamily: session.setDraftMarkdownCodeFontFamily,
+      draftMarkdownEditorFontFamily: session.draftMarkdownEditorFontFamily,
+      setDraftMarkdownEditorFontFamily: session.setDraftMarkdownEditorFontFamily,
       draftMarkdownFontSize: session.draftMarkdownFontSize,
       setDraftMarkdownFontSize: session.setDraftMarkdownFontSize,
       draftMarkdownHeadingWeight: session.draftMarkdownHeadingWeight,

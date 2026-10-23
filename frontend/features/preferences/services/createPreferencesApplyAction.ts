@@ -30,6 +30,7 @@ export function createPreferencesApplyAction({
   draftEnableLigatures,
   draftMarkdownFontFamily,
   draftMarkdownCodeFontFamily,
+  draftMarkdownEditorFontFamily,
   draftMarkdownFontSize,
   draftMarkdownHeadingWeight,
   draftThemeMode,
@@ -81,12 +82,14 @@ export function createPreferencesApplyAction({
       const markdownFontSettings = {
         fontFamily: draftMarkdownFontFamily,
         codeFontFamily: draftMarkdownCodeFontFamily,
+        editorFontFamily: draftMarkdownEditorFontFamily,
         fontSize: draftMarkdownFontSize,
         headingFontWeight: draftMarkdownHeadingWeight,
       };
       const markdownFontChanged =
         draftMarkdownFontFamily !== savedBaseline.markdownFontFamily ||
         draftMarkdownCodeFontFamily !== savedBaseline.markdownCodeFontFamily ||
+        draftMarkdownEditorFontFamily !== savedBaseline.markdownEditorFontFamily ||
         draftMarkdownFontSize !== savedBaseline.markdownFontSize ||
         draftMarkdownHeadingWeight !== savedBaseline.markdownHeadingWeight;
       if (markdownFontChanged) appearancePatch.markdownFont = markdownFontSettings;
@@ -124,6 +127,7 @@ export function createPreferencesApplyAction({
         showInlineBlame: draftShowInlineBlame,
         markdownFontFamily: draftMarkdownFontFamily,
         markdownCodeFontFamily: draftMarkdownCodeFontFamily,
+        markdownEditorFontFamily: draftMarkdownEditorFontFamily,
         markdownFontSize: draftMarkdownFontSize,
         markdownHeadingFontWeight: draftMarkdownHeadingWeight,
       });
@@ -171,6 +175,7 @@ export function createPreferencesApplyAction({
         gitBinaryPath: draftGitBinaryPath,
         markdownFontFamily: draftMarkdownFontFamily,
         markdownCodeFontFamily: draftMarkdownCodeFontFamily,
+        markdownEditorFontFamily: draftMarkdownEditorFontFamily,
         markdownFontSize: draftMarkdownFontSize,
         markdownHeadingWeight: draftMarkdownHeadingWeight,
       });

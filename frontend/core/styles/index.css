@@ -592,6 +592,10 @@ select:focus-visible {
 
 .markdown-editor textarea:focus,
 .markdown-editor textarea:focus-visible,
+.markdown-editor-textarea {
+  font-family: var(--markdown-editor-font-family, var(--viewer-font-family, monospace));
+}
+
 .markdown-editor-textarea:focus,
 .markdown-editor-textarea:focus-visible,
 .mr-list-search-input:focus-visible {

@@ -111,11 +111,11 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-base text-text">
+    <div className="fixed inset-0 z-200 bg-base text-text">
       <div
         data-tauri-drag-region
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 z-[5] h-14 cursor-move"
+        className="absolute inset-x-0 top-0 z-5 h-14 cursor-move"
       />
       <div
         ref={dialogRef}
@@ -132,7 +132,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
               onClick={minimizeWindow}
               aria-label="Minimize window"
               title="Minimize window"
-              className="flex h-10 w-10 items-center justify-center border border-transparent text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary rounded-sm"
+              className="flex h-10 w-10 items-center justify-center text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline  focus-visible:outline-primary rounded-sm"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                 <path d="M2 6h8" stroke="currentColor" strokeWidth="1.25" />
@@ -144,7 +144,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
               onClick={finish}
               aria-label="Close welcome guide"
               title="Close welcome guide"
-              className="flex h-10 w-10 items-center justify-center border border-transparent text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary rounded-sm"
+              className="flex h-10 w-10 items-center justify-center text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-primary rounded-sm"
             >
               <X className="h-4 w-4" />
             </button>
@@ -201,7 +201,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
 
             <div className="flex items-center justify-between gap-3">
               {activeSlide > 0 ? (
-                <button type="button" onClick={() => setActiveSlide((slide) => slide - 1)} className="h-10 border border-surface1 px-4 text-xs font-medium text-subtext1 transition-colors hover:bg-surface0 hover:text-text rounded-sm">Back</button>
+                <button type="button" onClick={() => setActiveSlide((slide) => slide - 1)} className="h-10 px-4 text-xs font-medium text-subtext1 transition-colors hover:bg-surface0 hover:text-text rounded-sm">Back</button>
               ) : (
                 <span className="text-[11px] text-subtext0">A quick 3-step tour</span>
               )}
@@ -211,7 +211,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={cloneRepository} className="hidden h-10 border border-surface1 px-3 text-xs font-medium text-subtext1 transition-colors hover:bg-surface0 hover:text-text sm:inline-flex sm:items-center rounded-sm">Clone a repository</button>
+                  <button type="button" onClick={cloneRepository} className="hidden h-10 px-3 text-xs font-medium text-subtext1 transition-colors hover:bg-surface0 hover:text-text sm:inline-flex sm:items-center rounded-sm">Clone a repository</button>
                   <button type="button" onClick={openRepository} className="flex h-10 items-center gap-2 bg-primary px-4 text-xs font-semibold text-on-accent transition-colors hover:brightness-110 rounded-sm">
                     Open a repository <ArrowRight className="h-3.5 w-3.5" />
                   </button>

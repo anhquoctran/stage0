@@ -5,6 +5,15 @@ export function applyMarkdownFontToDocument(settings: MarkdownFontSettings) {
 
   const root = document.documentElement;
 
+  if (settings.editorFontFamily) {
+    root.style.setProperty(
+      '--markdown-editor-font-family',
+      `"${settings.editorFontFamily}", var(--viewer-font-family, monospace)`
+    );
+  } else {
+    root.style.removeProperty('--markdown-editor-font-family');
+  }
+
   if (settings.fontFamily) {
     root.style.setProperty(
       '--markdown-font-family',
@@ -35,4 +44,3 @@ export function applyMarkdownFontToDocument(settings: MarkdownFontSettings) {
     root.style.removeProperty('--markdown-heading-weight');
   }
 }
-

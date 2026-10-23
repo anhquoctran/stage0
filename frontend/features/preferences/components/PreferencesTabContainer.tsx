@@ -51,6 +51,8 @@ export function PreferencesTabContainer({
   setDraftMarkdownFontFamily,
   draftMarkdownCodeFontFamily,
   setDraftMarkdownCodeFontFamily,
+  draftMarkdownEditorFontFamily,
+  setDraftMarkdownEditorFontFamily,
   draftMarkdownFontSize,
   setDraftMarkdownFontSize,
   draftMarkdownHeadingWeight,
@@ -182,6 +184,8 @@ export function PreferencesTabContainer({
             setDraftMarkdownFontFamily={setDraftMarkdownFontFamily}
             draftMarkdownCodeFontFamily={draftMarkdownCodeFontFamily}
             setDraftMarkdownCodeFontFamily={setDraftMarkdownCodeFontFamily}
+            draftMarkdownEditorFontFamily={draftMarkdownEditorFontFamily}
+            setDraftMarkdownEditorFontFamily={setDraftMarkdownEditorFontFamily}
             draftMarkdownFontSize={draftMarkdownFontSize}
             setDraftMarkdownFontSize={setDraftMarkdownFontSize}
             draftMarkdownHeadingWeight={draftMarkdownHeadingWeight}
