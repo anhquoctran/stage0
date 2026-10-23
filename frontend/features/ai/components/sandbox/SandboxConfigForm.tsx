@@ -1,3 +1,4 @@
+import { Radio } from '../../../../common/components/Radio';
 import type { SandboxConfigFormProps } from './SandboxConfigFormProps';
 
 export function SandboxConfigForm({
@@ -29,13 +30,12 @@ export function SandboxConfigForm({
             }`}
           >
             {/* Radio Indicator */}
-            <div className="pt-0.5 shrink-0">
-              <div
-                className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors ${
-                  isSelected
-                    ? 'border-4 border-text bg-base'
-                    : 'border border-surface2 hover:border-subtext0'
-                }`}
+            <div className="pt-0.5 shrink-0 pointer-events-none">
+              <Radio
+                checked={isSelected}
+                name="sandbox-adapter"
+                readOnly
+                aria-label={`Select ${adapter.title}`}
               />
             </div>
 

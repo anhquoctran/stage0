@@ -34,9 +34,9 @@ pub async fn list_git_credentials(app: AppHandle) -> Result<Vec<GitCredentialMet
         .map_err(|_| "Git credential metadata could not be loaded from SQLite".to_string())?
         .into_iter()
         .map(|record| {
-            let token_ref = db
-                .get_git_credential_token_ref(&record.id)
-                .map_err(|_| "Git credential keychain references could not be loaded".to_string())?;
+            let token_ref = db.get_git_credential_token_ref(&record.id).map_err(|_| {
+                "Git credential keychain references could not be loaded".to_string()
+            })?;
             Ok(output_meta(record, token_ref))
         })
         .collect()
@@ -83,7 +83,9 @@ pub async fn save_git_credential(
     let db = app.state::<Database>();
     if db.upsert_git_credential(&record, &token_ref).is_err() {
         let _ = crate::features::credentials::delete_secret(&token_ref);
-        return Err("Git credential metadata and keychain mapping could not be saved to SQLite".into());
+        return Err(
+            "Git credential metadata and keychain mapping could not be saved to SQLite".into(),
+        );
     }
 
     let _ = app.emit("git-credentials-updated", ());
@@ -116,7 +118,8 @@ pub async fn delete_git_credential(app: AppHandle, id: String) -> Result<(), Str
     }
 
     if db.delete_git_credential(&id).is_err() {
-        if let (Some(reference), Some(secret)) = (token_ref.as_deref(), previous_secret.as_deref()) {
+        if let (Some(reference), Some(secret)) = (token_ref.as_deref(), previous_secret.as_deref())
+        {
             let _ = crate::features::credentials::store_secret(reference, secret);
         }
         return Err(

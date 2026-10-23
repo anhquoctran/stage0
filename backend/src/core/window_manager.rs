@@ -32,24 +32,17 @@ use crate::core::db::Database;
 use crate::features::git::watcher::WatcherState;
 
 pub const fn default_window_size() -> (f64, f64) {
-    #[cfg(target_os = "windows")]
-    {
-        (1024.0, 680.0)
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-        (1280.0, 800.0)
-    }
+    (1280.0, 840.0)
 }
 
 pub const fn minimum_window_size() -> (f64, f64) {
     #[cfg(target_os = "macos")]
     {
-        (640.0, 500.0)
+        (1024.0, 768.0)
     }
     #[cfg(not(target_os = "macos"))]
     {
-        (1024.0, 680.0)
+        (1120.0, 800.0)
     }
 }
 

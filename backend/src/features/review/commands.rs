@@ -25,12 +25,7 @@ pub async fn test_ai_review_provider(request: ReviewRequest) -> Result<Value, St
         .collect::<Vec<_>>();
     let mut history = provider::initial_history(&request.provider, "Connectivity check only. Call get_diff with empty arguments. No repository or source code is attached. Do not answer in plain text.");
     let body = provider::payload(&request, "Verify client-side function calling by calling the supplied get_diff tool. No tool will actually be executed.", &history, &tools, 512);
-    let response = provider::request(
-        &request,
-        &url,
-        &body,
-    )
-    .await?;
+    let response = provider::request(&request, &url, &body).await?;
     let (calls, usage) = provider::decode(&request.provider, &response, &mut history)?;
     if calls.len() != 1
         || calls[0].name != "get_diff"
@@ -46,9 +41,18 @@ pub async fn test_ai_review_provider(request: ReviewRequest) -> Result<Value, St
 }
 
 #[tauri::command]
-pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Result<ReviewRun, String> {
-    if request.reviewer_id.as_deref().is_some_and(|id| id.len() > 200)
-        || request.reviewer_name.as_deref().is_some_and(|name| name.len() > 200)
+pub async fn start_ai_review(
+    app: AppHandle,
+    mut request: ReviewRequest,
+) -> Result<ReviewRun, String> {
+    if request
+        .reviewer_id
+        .as_deref()
+        .is_some_and(|id| id.len() > 200)
+        || request
+            .reviewer_name
+            .as_deref()
+            .is_some_and(|name| name.len() > 200)
     {
         return Err("Reviewer identity exceeds the supported length".into());
     }
@@ -62,10 +66,14 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
     let (endpoint, run_provider, run_model) = match request.execution_mode.as_str() {
         "provider" => {
             if request.acp_agent.is_some() || request.acp_config_options.is_some() {
-                return Err("A built-in provider review cannot include ACP agent configuration".into());
+                return Err(
+                    "A built-in provider review cannot include ACP agent configuration".into(),
+                );
             }
             let endpoint = provider::endpoint(&request)?;
-            if request.provider != "ollama" && !crate::features::credentials::ai_key_exists(&request.provider)? {
+            if request.provider != "ollama"
+                && !crate::features::credentials::ai_key_exists(&request.provider)?
+            {
                 return Err("Configure an API key in Preferences before starting a review".into());
             }
             (endpoint, request.provider.clone(), request.model.clone())
@@ -74,14 +82,21 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
             if let Some(options) = request.acp_config_options.as_ref() {
                 crate::features::ai::acp::validate_review_config_overrides(options)?;
             }
-            let requested_id = request.acp_agent.as_ref().map(|agent| agent.id.as_str())
+            let requested_id = request
+                .acp_agent
+                .as_ref()
+                .map(|agent| agent.id.as_str())
                 .ok_or("Select an installed ACP agent for this reviewer")?;
             let agent = resolve_saved_review_agent(&app, requested_id)?;
             if !request.allow_remote {
                 return Err("Explicit consent is required before sending the review snapshot to an ACP agent".into());
             }
             request.acp_agent = Some(agent.clone());
-            (format!("acp://{}", agent.id), "acp".into(), agent.name.clone())
+            (
+                format!("acp://{}", agent.id),
+                "acp".into(),
+                agent.name.clone(),
+            )
         }
         _ => return Err("Unsupported review execution mode".into()),
     };
@@ -174,7 +189,15 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
                     request.instructions,
                     policy,
                     request.execution_mode,
-                    request.acp_agent.as_ref().map(|agent| format!("{}@{}", agent.id, agent.version.as_deref().unwrap_or_default())).unwrap_or_default(),
+                    request
+                        .acp_agent
+                        .as_ref()
+                        .map(|agent| format!(
+                            "{}@{}",
+                            agent.id,
+                            agent.version.as_deref().unwrap_or_default()
+                        ))
+                        .unwrap_or_default(),
                 )
                 .as_bytes()
             )
@@ -203,7 +226,7 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
     let task_run = run.clone();
     tauri::async_runtime::spawn(async move {
         let worker_app = task_app.clone();
-    let worker = tauri::async_runtime::spawn(super::runtime::run(
+        let worker = tauri::async_runtime::spawn(super::runtime::run(
             worker_app,
             request,
             task_run,
@@ -232,15 +255,21 @@ pub async fn start_ai_review(app: AppHandle, mut request: ReviewRequest) -> Resu
 /// Never launch a process from command/args supplied by the webview. Resolve
 /// the selected ID against the committed preferences document, then validate
 /// and use that saved configuration.
-fn resolve_saved_review_agent(app: &AppHandle, requested_id: &str) -> Result<AcpAgentConfig, String> {
-    let settings = app.state::<crate::features::preferences::PreferencesManager>()
+fn resolve_saved_review_agent(
+    app: &AppHandle,
+    requested_id: &str,
+) -> Result<AcpAgentConfig, String> {
+    let settings = app
+        .state::<crate::features::preferences::PreferencesManager>()
         .read()?
         .settings
         .ok_or("Could not load saved ACP agent configuration")?;
-    let agents = settings.pointer("/ai/externalAgents")
+    let agents = settings
+        .pointer("/ai/externalAgents")
         .and_then(Value::as_array)
         .ok_or("No ACP agents are saved in Preferences")?;
-    let saved = agents.iter()
+    let saved = agents
+        .iter()
         .find(|agent| agent.get("id").and_then(Value::as_str) == Some(requested_id))
         .cloned()
         .ok_or("The selected ACP agent is not installed in Preferences")?;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Keyboard } from '../../../../common/components/icons/Keyboard';
 import { Code2 } from '../../../../common/components/icons/Code2';
+import { FileText } from '../../../../common/components/icons/FileText';
 import { Info } from '../../../../common/components/icons/Info';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -10,6 +11,7 @@ export const MenuBarHelpMenu: React.FC<{
   onHover: () => void;
   onClose: () => void;
   onOpenShortcuts: () => void;
+  onOpenReleaseNotes: () => void;
   onOpenAbout: () => void;
 }> = ({
   isOpen,
@@ -17,6 +19,7 @@ export const MenuBarHelpMenu: React.FC<{
   onHover,
   onClose,
   onOpenShortcuts,
+  onOpenReleaseNotes,
   onOpenAbout,
 }) => {
   return (
@@ -70,6 +73,20 @@ export const MenuBarHelpMenu: React.FC<{
             type="button"
             onClick={() => {
               onClose();
+              onOpenReleaseNotes();
+            }}
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
+          >
+            <div className="flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+              <span>View release notes</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
               onOpenAbout();
             }}
             className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
@@ -84,4 +101,3 @@ export const MenuBarHelpMenu: React.FC<{
     </div>
   );
 };
-

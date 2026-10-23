@@ -97,18 +97,20 @@ impl ReviewModelAdapter for AcpModelAdapter {
                     self.agent.version.as_deref().map(|version| super::debug_log::safe_label(version, 80)).unwrap_or_else(|| "unknown".into()),
                     self.config_options.as_object().map_or(0, serde_json::Map::len)
                 ));
-                *session = Some(match AcpAgentReviewSession::start(&self.agent, &self.config_options).await {
-                    Ok(session) => session,
-                    Err(error) => {
-                        super::debug_log::log(format_args!(
+                *session = Some(
+                    match AcpAgentReviewSession::start(&self.agent, &self.config_options).await {
+                        Ok(session) => session,
+                        Err(error) => {
+                            super::debug_log::log(format_args!(
                             "event=acp_session_start_failed agent_id={} elapsed_ms={} error_class={}",
                             super::debug_log::safe_label(&self.agent.id, 100),
                             started.elapsed().as_millis(),
                             super::debug_log::error_class(&error)
                         ));
-                        return Err(error);
-                    }
-                });
+                            return Err(error);
+                        }
+                    },
+                );
                 super::debug_log::log(format_args!(
                     "event=acp_session_ready agent_id={} elapsed_ms={}",
                     super::debug_log::safe_label(&self.agent.id, 100),
@@ -176,7 +178,9 @@ impl ReviewModelAdapter for AcpModelAdapter {
         let document = trimmed
             .strip_prefix("```")
             .and_then(|fenced| fenced.split_once('\n'))
-            .filter(|(language, _)| language.trim().is_empty() || language.trim().eq_ignore_ascii_case("json"))
+            .filter(|(language, _)| {
+                language.trim().is_empty() || language.trim().eq_ignore_ascii_case("json")
+            })
             .and_then(|(_, document)| document.trim_end().strip_suffix("```"))
             .map(str::trim)
             .unwrap_or(trimmed);
@@ -256,16 +260,19 @@ mod tests {
     use serde_json::json;
 
     fn adapter() -> AcpModelAdapter {
-        AcpModelAdapter::new(AcpAgentConfig {
-            id: "test-agent".into(),
-            name: "Test Agent".into(),
-            version: None,
-            description: None,
-            source: "custom".into(),
-            command: "agent".into(),
-            launch_mode: None,
-            args: vec![],
-        }, serde_json::Value::Null)
+        AcpModelAdapter::new(
+            AcpAgentConfig {
+                id: "test-agent".into(),
+                name: "Test Agent".into(),
+                version: None,
+                description: None,
+                source: "custom".into(),
+                command: "agent".into(),
+                launch_mode: None,
+                args: vec![],
+            },
+            serde_json::Value::Null,
+        )
     }
 
     #[test]
@@ -296,11 +303,16 @@ mod tests {
         assert!(adapter.request_size(&next) < first.to_string().len());
 
         let mut history = next["history"].as_array().unwrap().clone();
-        adapter.sent_history_items.store(history.len(), Ordering::Release);
+        adapter
+            .sent_history_items
+            .store(history.len(), Ordering::Release);
         adapter.append_request_retry(&mut history);
         let retry = adapter.turn_for_session(&json!({"history":history}));
         assert_eq!(retry["messages"].as_array().unwrap().len(), 1);
-        assert!(retry["messages"][0]["content"].as_str().unwrap().contains("client waited"));
+        assert!(retry["messages"][0]["content"]
+            .as_str()
+            .unwrap()
+            .contains("client waited"));
         assert!(!retry.to_string().contains("new tool result"));
     }
 
@@ -335,8 +347,12 @@ mod tests {
     fn a_complete_json_fence_keeps_the_same_closed_envelope_validation() {
         let adapter = adapter();
         for language in ["", "json", "JSON\r"] {
-            let text = format!("```{language}\n{{\"calls\":[{{\"name\":\"get_diff\",\"arguments\":{{}}}}]}}\n```");
-            let (calls, _) = adapter.decode(&json!({"output":text}), &mut vec![]).unwrap();
+            let text = format!(
+                "```{language}\n{{\"calls\":[{{\"name\":\"get_diff\",\"arguments\":{{}}}}]}}\n```"
+            );
+            let (calls, _) = adapter
+                .decode(&json!({"output":text}), &mut vec![])
+                .unwrap();
             assert_eq!(calls[0].name, "get_diff");
         }
         for text in [

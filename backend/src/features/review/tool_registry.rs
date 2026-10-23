@@ -17,9 +17,7 @@ impl ReviewToolRegistry {
         if !allow_description_update {
             native.retain(|tool| tool["name"] != "update_mr_description");
         }
-        Self {
-            native,
-        }
+        Self { native }
     }
     pub fn definitions(&self) -> &[Value] {
         &self.native

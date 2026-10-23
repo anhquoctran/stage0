@@ -636,6 +636,10 @@ select:focus-visible {
   box-shadow: none !important;
 }
 
+input[type="radio"] {
+  border-radius: 9999px !important;
+}
+
 input[type="checkbox"]:checked,
 input[type="radio"]:checked {
   accent-color: var(--color-brand) !important;
@@ -816,4 +820,27 @@ button.btn-primary:disabled {
 .markdown-preview input[type="checkbox"] {
   margin-right: 0.4em;
   accent-color: var(--color-brand);
+}
+
+.markdown-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--ctp-surface0);
+  margin: 0.75em auto;
+  display: block;
+}
+
+.markdown-preview kbd {
+  display: inline-block;
+  padding: 0.15em 0.4em;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85em;
+  line-height: 1.2;
+  color: var(--ctp-text);
+  background-color: var(--ctp-surface0);
+  border: 1px solid var(--ctp-surface1);
+  border-bottom: 2px solid var(--ctp-surface2);
+  border-radius: var(--radius-sm, 4px);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }

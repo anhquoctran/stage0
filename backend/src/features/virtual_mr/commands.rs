@@ -3,8 +3,8 @@ use crate::features::git::ops::{get_commits_between, get_git_user_identity, GitC
 use crate::features::virtual_mr::persistence::{
     VirtualMrCommentDb, VirtualMrDiscussionDb, VirtualMrSessionDb, VirtualMrSessionSaveOutcome,
 };
-use std::io::Read;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
+use std::io::Read;
 use std::path::Path;
 use tauri::{AppHandle, Manager};
 
@@ -117,12 +117,18 @@ pub async fn create_mr_discussion(
         let db = app.state::<Database>();
 
         if let Some(snippet) = &mut discussion.code_snippet {
-            let line = discussion.line_number.ok_or("A code snippet requires a selected line")?;
-            if snippet.start_line < 1 || snippet.lines.is_empty() || snippet.lines.len() > 15
+            let line = discussion
+                .line_number
+                .ok_or("A code snippet requires a selected line")?;
+            if snippet.start_line < 1
+                || snippet.lines.is_empty()
+                || snippet.lines.len() > 15
                 || snippet.lines.iter().any(|line| line.len() > 8192)
                 || snippet.lines.iter().map(String::len).sum::<usize>() > 32768
-                || line < snippet.start_line || line >= snippet.start_line + snippet.lines.len() as i64
-                || discussion.file_path.is_none() || !matches!(discussion.diff_side.as_deref(), Some("left" | "right"))
+                || line < snippet.start_line
+                || line >= snippet.start_line + snippet.lines.len() as i64
+                || discussion.file_path.is_none()
+                || !matches!(discussion.diff_side.as_deref(), Some("left" | "right"))
             {
                 return Err("Invalid discussion code snippet".into());
             }
@@ -130,7 +136,8 @@ pub async fn create_mr_discussion(
             // Anchor to the selected diff snapshot, including old-side deleted lines.
             let content = snippet.lines.join("\n");
             let (hash, before, after) = crate::features::git::anchor::extract_line_fingerprint(
-                &content, (line - snippet.start_line + 1) as usize,
+                &content,
+                (line - snippet.start_line + 1) as usize,
             );
             discussion.content_hash = Some(hash);
             discussion.context_before = before;
@@ -268,7 +275,6 @@ pub async fn reanchor_file_discussions(
     .map_err(|e| format!("Task execution failed: {}", e))?
 }
 
-
 // ===========================================================================
 // MR Image Attachments & Temp Storage
 // ===========================================================================
@@ -365,7 +371,10 @@ pub async fn save_mr_image_attachment(
 
         let tmp_root = match app.path().app_data_dir() {
             Ok(dir) => dir.join("tmp").join("attachments"),
-            Err(_) => std::env::temp_dir().join("stage0").join("tmp").join("attachments"),
+            Err(_) => std::env::temp_dir()
+                .join("stage0")
+                .join("tmp")
+                .join("attachments"),
         };
 
         std::fs::create_dir_all(&tmp_root)
@@ -435,15 +444,28 @@ mod discussion_file_tests {
         assert!(super::validate_and_normalize_image_mime("anim.gif", "image/gif").is_ok());
 
         assert!(super::validate_and_normalize_image_mime("doc.pdf", "application/pdf").is_err());
-        assert!(super::validate_and_normalize_image_mime("run.exe", "application/x-msdownload").is_err());
-        assert!(super::validate_and_normalize_image_mime("script.sh", "text/x-shellscript").is_err());
-        assert!(super::validate_and_normalize_image_mime("archive.zip", "application/zip").is_err());
+        assert!(
+            super::validate_and_normalize_image_mime("run.exe", "application/x-msdownload")
+                .is_err()
+        );
+        assert!(
+            super::validate_and_normalize_image_mime("script.sh", "text/x-shellscript").is_err()
+        );
+        assert!(
+            super::validate_and_normalize_image_mime("archive.zip", "application/zip").is_err()
+        );
     }
 
     #[test]
     fn sanitizes_image_filenames_safely() {
-        assert_eq!(super::sanitize_attachment_filename("../../../etc/passwd.png"), "etc_passwd.png");
-        assert_eq!(super::sanitize_attachment_filename("my cool photo (1).png"), "my_cool_photo__1_.png");
+        assert_eq!(
+            super::sanitize_attachment_filename("../../../etc/passwd.png"),
+            "etc_passwd.png"
+        );
+        assert_eq!(
+            super::sanitize_attachment_filename("my cool photo (1).png"),
+            "my_cool_photo__1_.png"
+        );
         assert_eq!(super::sanitize_attachment_filename("..."), "attachment");
     }
 }

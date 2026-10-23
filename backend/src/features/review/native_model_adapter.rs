@@ -27,11 +27,7 @@ impl ReviewModelAdapter for NativeModelAdapter {
         &'a self,
         body: &'a Value,
     ) -> Pin<Box<dyn Future<Output = Result<Value, String>> + Send + 'a>> {
-        Box::pin(provider::request(
-            &self.config,
-            &self.endpoint,
-            body,
-        ))
+        Box::pin(provider::request(&self.config, &self.endpoint, body))
     }
     fn decode(
         &self,

@@ -1,3 +1,4 @@
+import { Radio } from '../../../../common/components/Radio';
 import { Check } from '../../../../common/components/icons/Check';
 import { Copy } from '../../../../common/components/icons/Copy';
 import type { GitBinaryListTableProps } from './GitBinaryListTableProps';
@@ -54,14 +55,12 @@ export function GitBinaryListTable({
                   }`}
                 >
                   <td className="px-3 py-2.5">
-                    <input
-                      type="radio"
+                    <Radio
                       name="active-git-binary"
                       checked={isSelected}
                       onChange={() => onSelectBinary(binary.id, binary.path)}
                       onClick={(event) => event.stopPropagation()}
                       aria-label={`Select ${binary.name}`}
-                      className="h-4 w-4 accent-violet-500 cursor-pointer"
                     />
                   </td>
                   <td className="max-w-[280px] px-3 py-2.5">
