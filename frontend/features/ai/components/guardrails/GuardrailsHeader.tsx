@@ -23,12 +23,12 @@ export const GuardrailsHeader: React.FC<{
           <div>
             <h4 className="text-sm font-bold text-text">AI Security Guardrails & Policy Enforcement</h4>
             <span
-              className={`inline-block mt-1 text-[10px] font-mono px-2 py-0.5 font-semibold border uppercase ${
+              className={`inline-block mt-1 text-[10px] font-mono px-2 py-0.5 font-semibold uppercase rounded-sm shadow-xs ${
                 activeMode === 'balanced'
-                  ? 'bg-green/10 text-green border-green/30'
+                  ? 'bg-emerald-600 text-white'
                   : activeMode === 'strict'
-                  ? 'bg-red/10 text-red border-red/30'
-                  : 'bg-yellow/10 text-yellow border-yellow/30'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-amber-600 text-white'
               }`}
             >
               {isDraft ? 'Draft' : 'Active'}: {activeMode.toUpperCase()}

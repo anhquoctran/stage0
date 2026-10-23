@@ -636,6 +636,10 @@ select:focus-visible {
   box-shadow: none !important;
 }
 
+input[type="range"] {
+  accent-color: var(--color-brand) !important;
+}
+
 input[type="radio"] {
   border-radius: 9999px !important;
 }

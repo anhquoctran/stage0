@@ -41,13 +41,13 @@ export const GuardrailsFilesSection: React.FC<{
           {sensitivePatterns.map((pat) => (
             <span
               key={pat}
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-mauve/10 text-mauve border border-mauve/30 font-mono font-medium"
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs bg-purple-600 text-white font-mono font-medium rounded-sm shadow-xs"
             >
               <span>{pat}</span>
               <button
                 type="button"
                 onClick={() => onRemoveSensitivePattern(pat)}
-                className="opacity-70 hover:opacity-100 cursor-pointer rounded-sm"
+                className="text-white/80 hover:text-white cursor-pointer rounded-sm ml-0.5 transition-colors"
                 title="Remove"
               >
                 <X className="w-3 h-3" />
@@ -75,9 +75,10 @@ export const GuardrailsFilesSection: React.FC<{
         </div>
       </div>
 
-      <div className="pt-2 border-t border-surface1 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-sm">
-        <div className="flex-1">
-          <label className="text-[11px] font-medium text-subtext0 block">
+      {/* Max File Read Slider */}
+      <div className="pt-3 border-t border-surface1">
+        <div className="max-w-md">
+          <label className="text-[11px] font-medium text-subtext0 block whitespace-nowrap">
             Max File Read Line Range: <span className="text-text font-mono font-bold">{maxFileReadLines} lines</span>
           </label>
           <input
@@ -87,35 +88,39 @@ export const GuardrailsFilesSection: React.FC<{
             step={250}
             value={maxFileReadLines}
             onChange={(e) => onUpdateMaxFileReadLines(Number(e.target.value))}
-            className="w-full mt-2 cursor-pointer rounded-sm"
+            className="w-full mt-2 cursor-pointer rounded-sm accent-brand"
           />
         </div>
+      </div>
 
+      {/* Terminal Confirmation Checkboxes */}
+      <div className="pt-3 border-t border-surface1 space-y-2.5">
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
             id="confirm-commands-chk"
             checked={requireConfirmationCommands}
             onChange={(e) => onToggleConfirmationCommands(e.target.checked)}
-            className="border-surface2 text-green focus:ring-0 cursor-pointer"
+            className="rounded-sm border-surface2 text-brand focus:ring-0 cursor-pointer accent-brand"
           />
           <label htmlFor="confirm-commands-chk" className="text-xs text-text cursor-pointer select-none">
             Require confirmation for all terminal commands
           </label>
         </div>
+
         <div className="flex items-start gap-2">
           <input
             type="checkbox"
             id="confirm-writes-chk"
             checked={requireConfirmationWrites}
             onChange={(e) => onToggleConfirmationWrites(e.target.checked)}
-            className="mt-0.5 border-surface2 text-green focus:ring-0 cursor-pointer"
+            className="mt-0.5 rounded-sm border-surface2 text-brand focus:ring-0 cursor-pointer accent-brand"
           />
           <div>
             <label htmlFor="confirm-writes-chk" className="text-xs text-text cursor-pointer select-none">
               Require confirmation for terminal tools that may write files
             </label>
-            <p className="mt-1 text-[10px] text-subtext0">
+            <p className="mt-0.5 text-[10px] text-subtext0">
               No approval dialog is available yet, so commands requiring confirmation are blocked rather than paused.
             </p>
           </div>
@@ -124,4 +129,3 @@ export const GuardrailsFilesSection: React.FC<{
     </div>
   );
 };
-

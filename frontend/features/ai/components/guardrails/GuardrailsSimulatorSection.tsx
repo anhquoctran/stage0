@@ -42,35 +42,35 @@ export const GuardrailsSimulatorSection: React.FC<{
         <button
           type="button"
           onClick={() => onSetScenario('safe_test')}
-          className="px-2.5 py-1 text-[11px] bg-green/10 hover:bg-green/20 text-green border border-green/30 cursor-pointer transition font-mono font-medium rounded-sm"
+          className="px-2.5 py-1 text-[11px] bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer transition font-mono font-medium rounded-sm shadow-xs"
         >
           Safe: `cargo test`
         </button>
         <button
           type="button"
           onClick={() => onSetScenario('dangerous_rm')}
-          className="px-2.5 py-1 text-[11px] bg-red/10 hover:bg-red/20 text-red border border-red/30 cursor-pointer transition font-mono font-medium rounded-sm"
+          className="px-2.5 py-1 text-[11px] bg-red-600 hover:bg-red-500 text-white cursor-pointer transition font-mono font-medium rounded-sm shadow-xs"
         >
           Dangerous: `rm -rf /`
         </button>
         <button
           type="button"
           onClick={() => onSetScenario('sensitive_env')}
-          className="px-2.5 py-1 text-[11px] bg-mauve/10 hover:bg-mauve/20 text-mauve border border-mauve/30 cursor-pointer transition font-mono font-medium rounded-sm"
+          className="px-2.5 py-1 text-[11px] bg-purple-600 hover:bg-purple-500 text-white cursor-pointer transition font-mono font-medium rounded-sm shadow-xs"
         >
           Sensitive: `.env.production`
         </button>
         <button
           type="button"
           onClick={() => onSetScenario('pipe_injection')}
-          className="px-2.5 py-1 text-[11px] bg-yellow/10 hover:bg-yellow/20 text-yellow border border-yellow/30 cursor-pointer transition font-mono font-medium rounded-sm"
+          className="px-2.5 py-1 text-[11px] bg-amber-600 hover:bg-amber-500 text-white cursor-pointer transition font-mono font-medium rounded-sm shadow-xs"
         >
           Injection: `npm test | sh`
         </button>
         <button
           type="button"
           onClick={() => onSetScenario('large_read')}
-          className="px-2.5 py-1 text-[11px] bg-surface0 hover:bg-surface1 text-text border border-surface1 cursor-pointer transition font-mono font-medium rounded-sm"
+          className="px-2.5 py-1 text-[11px] bg-surface1 hover:bg-surface2 text-text cursor-pointer transition font-mono font-medium rounded-sm shadow-xs"
         >
           Exceeded: 8,000 Lines
         </button>
@@ -108,7 +108,7 @@ export const GuardrailsSimulatorSection: React.FC<{
             onClick={onRunSimulation}
             disabled={isSimulating || isPendingCommit}
             title={isPendingCommit ? 'Apply or OK to save policy changes before testing the active policy' : 'Tests the committed policy; audit actions take effect immediately'}
-            className="px-3.5 py-1.5 text-xs font-semibold bg-green/15 hover:bg-green/25 text-green border border-green/30 cursor-pointer transition shadow-sm rounded-sm"
+            className="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer transition shadow-xs rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>{isSimulating ? 'Evaluating...' : 'Simulate Policy Check'}</span>
           </button>
@@ -126,19 +126,19 @@ export const GuardrailsSimulatorSection: React.FC<{
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {simResult.allowed ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-green/10 text-green border border-green/30">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-emerald-600 text-white rounded-sm shadow-xs">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         ALLOWED
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-red/10 text-red border border-red/30">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold bg-red-600 text-white rounded-sm shadow-xs">
                         <AlertCircle className="w-3.5 h-3.5" />
                         BLOCKED
                       </span>
                     )}
 
                     {simResult.requires_confirmation && (
-                      <span className="px-2 py-0.5 text-[10px] bg-yellow/10 text-yellow border border-yellow/30 font-semibold">
+                      <span className="px-2 py-0.5 text-[10px] bg-amber-600 text-white font-semibold rounded-sm shadow-xs">
                         CONFIRMATION REQUIRED
                       </span>
                     )}

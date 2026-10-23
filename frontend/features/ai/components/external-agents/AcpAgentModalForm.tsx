@@ -64,7 +64,7 @@ export function AcpAgentModalForm({
           </button>
           <button
             type="submit"
-            className="border border-brand/50 bg-brand/10 px-3 py-1.5 text-xs text-brand rounded-sm"
+            className="px-3 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white rounded-sm shadow-xs transition-colors cursor-pointer"
           >
             Add agent
           </button>
