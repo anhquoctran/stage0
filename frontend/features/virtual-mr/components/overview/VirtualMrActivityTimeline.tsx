@@ -150,7 +150,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
               <span className="text-text mr-1.5">
                 {diff.prefix}
                 {diff.oldDiff ? (
-                  <span className="bg-red-500/20 text-red-300 border border-red-500/30 px-1.5 py-0.5 rounded-sm">
+                  <span className="bg-red-600 text-white px-1.5 py-0.5 rounded-sm">
                     {diff.oldDiff}
                   </span>
                 ) : null}
@@ -160,7 +160,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
               <span className="text-text mr-1.5">
                 {diff.prefix}
                 {diff.newDiff ? (
-                  <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded-sm">
+                  <span className="bg-emerald-600 text-white px-1.5 py-0.5 rounded-sm">
                     {diff.newDiff}
                   </span>
                 ) : null}

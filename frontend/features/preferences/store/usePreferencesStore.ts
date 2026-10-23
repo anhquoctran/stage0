@@ -1,11 +1,14 @@
 import { create } from 'zustand';
 import { SUPPORTED_FONTS } from '../constants/fonts';
+import { DEFAULT_MARKDOWN_FONT_SETTINGS } from '../constants/markdownFonts';
 import type { ViewerFontSettings } from '../types/ViewerFontSettings';
+import type { MarkdownFontSettings } from '../types/MarkdownFontSettings';
 import type { PreferencesState } from '../types/PreferencesState';
 import { preferencesJsonService } from '../services/preferencesJsonService';
+import { applyMarkdownFontToDocument } from '../utils/applyMarkdownFontToDocument';
 
 const STORAGE_KEY = 'stage0_viewer_font_settings';
-
+const MARKDOWN_FONT_STORAGE_KEY = 'stage0_markdown_font_settings';
 const INLINE_BLAME_STORAGE_KEY = 'stage0_show_inline_blame';
 
 export const DEFAULT_VIEWER_FONT_SETTINGS: ViewerFontSettings = {
@@ -78,9 +81,35 @@ function getInitialSettings(): ViewerFontSettings {
   return DEFAULT_VIEWER_FONT_SETTINGS;
 }
 
+function getInitialMarkdownFontSettings(): MarkdownFontSettings {
+  if (typeof window === 'undefined') return DEFAULT_MARKDOWN_FONT_SETTINGS;
+
+  const configured = window.__STAGE0_PREFERENCES__?.appearance?.markdownFont;
+  if (configured && typeof configured === 'object') {
+    return { ...DEFAULT_MARKDOWN_FONT_SETTINGS, ...(configured as Partial<MarkdownFontSettings>) };
+  }
+
+  try {
+    const saved = localStorage.getItem(MARKDOWN_FONT_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...DEFAULT_MARKDOWN_FONT_SETTINGS,
+        ...parsed,
+      };
+    }
+  } catch (err) {
+    console.warn('Failed to parse saved markdown font settings:', err);
+  }
+
+  return DEFAULT_MARKDOWN_FONT_SETTINGS;
+}
+
 const initialSettings = getInitialSettings();
+const initialMarkdownSettings = getInitialMarkdownFontSettings();
 
 applyViewerFontToDocument(initialSettings);
+applyMarkdownFontToDocument(initialMarkdownSettings);
 
 function getInitialInlineBlame(): boolean {
   if (typeof window === 'undefined') return true;
@@ -96,6 +125,10 @@ function getInitialInlineBlame(): boolean {
 
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   ...initialSettings,
+  markdownFontFamily: initialMarkdownSettings.fontFamily,
+  markdownCodeFontFamily: initialMarkdownSettings.codeFontFamily,
+  markdownFontSize: initialMarkdownSettings.fontSize,
+  markdownHeadingFontWeight: initialMarkdownSettings.headingFontWeight,
   isPreferencesOpen: false,
   initialPreferencesTab: null,
   showInlineBlame: getInitialInlineBlame(),
@@ -147,20 +180,72 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     set(DEFAULT_VIEWER_FONT_SETTINGS);
     void preferencesJsonService.patch({ appearance: { viewerFont: DEFAULT_VIEWER_FONT_SETTINGS } }).catch((error) => console.error('Could not save preferences.json:', error));
   },
+
+  updateMarkdownFontSettings: (partial: Partial<MarkdownFontSettings>) => {
+    const current = get();
+    const updated: MarkdownFontSettings = {
+      fontFamily: partial.fontFamily ?? current.markdownFontFamily,
+      codeFontFamily: partial.codeFontFamily ?? current.markdownCodeFontFamily,
+      fontSize: partial.fontSize ?? current.markdownFontSize,
+      headingFontWeight: partial.headingFontWeight ?? current.markdownHeadingFontWeight,
+    };
+
+    applyMarkdownFontToDocument(updated);
+    set({
+      markdownFontFamily: updated.fontFamily,
+      markdownCodeFontFamily: updated.codeFontFamily,
+      markdownFontSize: updated.fontSize,
+      markdownHeadingFontWeight: updated.headingFontWeight,
+    });
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(MARKDOWN_FONT_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+    }
+    void preferencesJsonService.patch({ appearance: { markdownFont: updated } }).catch((error) => console.error('Could not save preferences.json:', error));
+  },
+
+  resetMarkdownFontSettings: () => {
+    applyMarkdownFontToDocument(DEFAULT_MARKDOWN_FONT_SETTINGS);
+    set({
+      markdownFontFamily: DEFAULT_MARKDOWN_FONT_SETTINGS.fontFamily,
+      markdownCodeFontFamily: DEFAULT_MARKDOWN_FONT_SETTINGS.codeFontFamily,
+      markdownFontSize: DEFAULT_MARKDOWN_FONT_SETTINGS.fontSize,
+      markdownHeadingFontWeight: DEFAULT_MARKDOWN_FONT_SETTINGS.headingFontWeight,
+    });
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(MARKDOWN_FONT_STORAGE_KEY, JSON.stringify(DEFAULT_MARKDOWN_FONT_SETTINGS));
+      } catch {}
+    }
+    void preferencesJsonService.patch({ appearance: { markdownFont: DEFAULT_MARKDOWN_FONT_SETTINGS } }).catch((error) => console.error('Could not save preferences.json:', error));
+  },
 }));
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('stage0-preferences-updated', (event) => {
     const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
     const font = settings?.appearance?.viewerFont;
+    const mdFont = settings?.appearance?.markdownFont;
     const general = settings?.general;
     if (font && typeof font === 'object') {
       const next = { ...DEFAULT_VIEWER_FONT_SETTINGS, ...(font as Partial<ViewerFontSettings>) };
       applyViewerFontToDocument(next);
       usePreferencesStore.setState(next);
     }
+    if (mdFont && typeof mdFont === 'object') {
+      const nextMd = { ...DEFAULT_MARKDOWN_FONT_SETTINGS, ...(mdFont as Partial<MarkdownFontSettings>) };
+      applyMarkdownFontToDocument(nextMd);
+      usePreferencesStore.setState({
+        markdownFontFamily: nextMd.fontFamily,
+        markdownCodeFontFamily: nextMd.codeFontFamily,
+        markdownFontSize: nextMd.fontSize,
+        markdownHeadingFontWeight: nextMd.headingFontWeight,
+      });
+    }
     if (typeof general?.showInlineBlame === 'boolean') usePreferencesStore.setState({ showInlineBlame: general.showInlineBlame });
   });
 }
 
 export type { ViewerFontSettings } from '../types/ViewerFontSettings';
+export type { MarkdownFontSettings } from '../types/MarkdownFontSettings';

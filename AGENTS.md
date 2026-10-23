@@ -47,6 +47,11 @@ and the measured [refactor report](docs/architecture/backend_refactor_analysis.m
   - Window title bar and Tauri drag region (`TopBarTitleRow.tsx`).
   - Windows-style window controls (Minimize, Maximize, Close in `WindowControls.tsx`
     must use `rounded-none`; macOS traffic lights must use `rounded-full`).
+- Diff styling across UI components:
+  - Always use solid backgrounds and NO border for diff elements.
+  - Deletions / old values: solid red (`bg-red-600 text-white`), no border, no strikethrough unless requested.
+  - Additions / new values: solid light green (`bg-emerald-600 text-white`), no border.
+  - Keep small rounded corners (`rounded-sm`) and compact padding (`px-1.5 py-0.5`).
 
 ## Verification and handoff
 

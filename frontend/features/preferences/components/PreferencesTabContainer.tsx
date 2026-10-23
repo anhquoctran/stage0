@@ -14,6 +14,7 @@ import { PreferencesAiOverviewTab } from './tabs/PreferencesAiOverviewTab';
 import { PreferencesDiffTab } from './tabs/PreferencesDiffTab';
 import { PreferencesFontTab } from './tabs/PreferencesFontTab';
 import { PreferencesGeneralTab } from './tabs/PreferencesGeneralTab';
+import { PreferencesMarkdownFontTab } from './tabs/PreferencesMarkdownFontTab';
 import { PreferencesThemeTab } from './tabs/PreferencesThemeTab';
 
 export function PreferencesTabContainer({
@@ -42,6 +43,14 @@ export function PreferencesTabContainer({
   setDraftLineSpacing,
   draftEnableLigatures,
   setDraftEnableLigatures,
+  draftMarkdownFontFamily,
+  setDraftMarkdownFontFamily,
+  draftMarkdownCodeFontFamily,
+  setDraftMarkdownCodeFontFamily,
+  draftMarkdownFontSize,
+  setDraftMarkdownFontSize,
+  draftMarkdownHeadingWeight,
+  setDraftMarkdownHeadingWeight,
   draftDiffViewMode,
   setDraftDiffViewMode,
   draftIgnoreWhitespace,
@@ -112,6 +121,24 @@ export function PreferencesTabContainer({
             setDraftLineSpacing={setDraftLineSpacing}
             draftEnableLigatures={draftEnableLigatures}
             setDraftEnableLigatures={setDraftEnableLigatures}
+          />
+        </div>
+      )}
+
+      {/* VIEW: APPEARANCE - MARKDOWN FONT */}
+      {currentTabId === 'appearance-markdown-font' && (
+        <div className="animate-in fade-in duration-100">
+          <PreferencesMarkdownFontTab
+            draftMarkdownFontFamily={draftMarkdownFontFamily}
+            setDraftMarkdownFontFamily={setDraftMarkdownFontFamily}
+            draftMarkdownCodeFontFamily={draftMarkdownCodeFontFamily}
+            setDraftMarkdownCodeFontFamily={setDraftMarkdownCodeFontFamily}
+            draftMarkdownFontSize={draftMarkdownFontSize}
+            setDraftMarkdownFontSize={setDraftMarkdownFontSize}
+            draftMarkdownHeadingWeight={draftMarkdownHeadingWeight}
+            setDraftMarkdownHeadingWeight={setDraftMarkdownHeadingWeight}
+            editorFontFamily={draftFontFamily}
+            editorFontSize={draftFontSize}
           />
         </div>
       )}

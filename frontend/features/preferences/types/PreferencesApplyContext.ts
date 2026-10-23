@@ -18,6 +18,10 @@ export interface PreferencesApplyContext {
   draftIsUnderline: boolean;
   draftLineSpacing: number;
   draftEnableLigatures: boolean;
+  draftMarkdownFontFamily: string;
+  draftMarkdownCodeFontFamily: string;
+  draftMarkdownFontSize: number;
+  draftMarkdownHeadingWeight: number;
   draftThemeMode: ThemeMode;
   savedBaseline: PreferencesBaseline;
   draftShowInlineBlame: boolean;

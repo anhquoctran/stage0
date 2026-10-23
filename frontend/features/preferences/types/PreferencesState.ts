@@ -1,3 +1,4 @@
+import type { MarkdownFontSettings } from './MarkdownFontSettings';
 import type { ViewerFontSettings } from './ViewerFontSettings';
 
 export interface PreferencesState extends ViewerFontSettings {
@@ -11,4 +12,10 @@ export interface PreferencesState extends ViewerFontSettings {
   showInlineBlame: boolean;
   setShowInlineBlame: (show: boolean) => void;
   toggleInlineBlame: () => void;
+  markdownFontFamily: string;
+  markdownCodeFontFamily: string;
+  markdownFontSize: number;
+  markdownHeadingFontWeight: number;
+  updateMarkdownFontSettings: (settings: Partial<MarkdownFontSettings>) => void;
+  resetMarkdownFontSettings: () => void;
 }

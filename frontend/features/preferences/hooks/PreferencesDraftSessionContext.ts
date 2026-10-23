@@ -21,6 +21,10 @@ export interface PreferencesDraftSessionContext {
   storedGitBinaryId: string;
   storedGitBinaryPath: string;
   storedAiConfig: AiConfig;
+  storedMarkdownFontFamily: string;
+  storedMarkdownCodeFontFamily: string;
+  storedMarkdownFontSize: number;
+  storedMarkdownHeadingWeight: number;
   isPreferencesOpen: boolean;
   aiDraftStore: UseBoundStore<StoreApi<AiPreferencesEditor>>;
   setAiBaseline: Dispatch<SetStateAction<AiPreferencesSnapshot>>;

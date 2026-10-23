@@ -16,4 +16,8 @@ export interface PreferencesBaseline {
   aiConfig: AiConfig;
   gitBinaryId: string;
   gitBinaryPath: string;
+  markdownFontFamily: string;
+  markdownCodeFontFamily: string;
+  markdownFontSize: number;
+  markdownHeadingWeight: number;
 }

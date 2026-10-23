@@ -7,6 +7,7 @@ import { commitAiPreferences } from '../../ai/services/commitAiPreferences';
 import { useGitBinaryStore } from '../../git/store/useGitBinaryStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { applyViewerFontToDocument, usePreferencesStore } from '../store/usePreferencesStore';
+import { applyMarkdownFontToDocument } from '../utils/applyMarkdownFontToDocument';
 import type { PreferencesApplyContext } from '../types/PreferencesApplyContext';
 import { type ViewerFontSettings } from '../types/ViewerFontSettings';
 
@@ -22,6 +23,10 @@ export function createPreferencesApplyAction({
   draftIsUnderline,
   draftLineSpacing,
   draftEnableLigatures,
+  draftMarkdownFontFamily,
+  draftMarkdownCodeFontFamily,
+  draftMarkdownFontSize,
+  draftMarkdownHeadingWeight,
   draftThemeMode,
   savedBaseline,
   draftShowInlineBlame,
@@ -58,6 +63,20 @@ export function createPreferencesApplyAction({
         (key) => fontSettings[key] !== savedBaseline[key]
       );
       if (fontChanged) appearancePatch.viewerFont = fontSettings;
+
+      const markdownFontSettings = {
+        fontFamily: draftMarkdownFontFamily,
+        codeFontFamily: draftMarkdownCodeFontFamily,
+        fontSize: draftMarkdownFontSize,
+        headingFontWeight: draftMarkdownHeadingWeight,
+      };
+      const markdownFontChanged =
+        draftMarkdownFontFamily !== savedBaseline.markdownFontFamily ||
+        draftMarkdownCodeFontFamily !== savedBaseline.markdownCodeFontFamily ||
+        draftMarkdownFontSize !== savedBaseline.markdownFontSize ||
+        draftMarkdownHeadingWeight !== savedBaseline.markdownHeadingWeight;
+      if (markdownFontChanged) appearancePatch.markdownFont = markdownFontSettings;
+
       if (Object.keys(appearancePatch).length) additionalPreferences.appearance = appearancePatch;
       if (draftShowInlineBlame !== savedBaseline.showInlineBlame) {
         additionalPreferences.general = { showInlineBlame: draftShowInlineBlame };
@@ -86,8 +105,13 @@ export function createPreferencesApplyAction({
       usePreferencesStore.setState({
         ...fontSettings,
         showInlineBlame: draftShowInlineBlame,
+        markdownFontFamily: draftMarkdownFontFamily,
+        markdownCodeFontFamily: draftMarkdownCodeFontFamily,
+        markdownFontSize: draftMarkdownFontSize,
+        markdownHeadingFontWeight: draftMarkdownHeadingWeight,
       });
       applyViewerFontToDocument(fontSettings);
+      applyMarkdownFontToDocument(markdownFontSettings);
       const needsRestart =
         draftGitBinaryId !== savedBaseline.gitBinaryId ||
         draftGitBinaryPath !== savedBaseline.gitBinaryPath;
@@ -127,6 +151,10 @@ export function createPreferencesApplyAction({
         aiConfig: committedAi.aiConfig,
         gitBinaryId: draftGitBinaryId,
         gitBinaryPath: draftGitBinaryPath,
+        markdownFontFamily: draftMarkdownFontFamily,
+        markdownCodeFontFamily: draftMarkdownCodeFontFamily,
+        markdownFontSize: draftMarkdownFontSize,
+        markdownHeadingWeight: draftMarkdownHeadingWeight,
       });
       setIsApplied(true);
       setTimeout(() => setIsApplied(false), 2000);
