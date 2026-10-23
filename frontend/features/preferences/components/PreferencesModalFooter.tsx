@@ -70,7 +70,7 @@ export const PreferencesModalFooter: React.FC<{
               isApplied
                 ? 'bg-green/10 border-green/30 text-green'
                 : canCommitPreferences
-                  ? 'bg-purple-600 hover:bg-purple-500 text-text shadow-xs cursor-pointer'
+                  ? 'btn-primary cursor-pointer'
                   : 'bg-transparent text-subtext0 opacity-40 cursor-not-allowed'
             }`}
           >
@@ -101,4 +101,3 @@ export const PreferencesModalFooter: React.FC<{
     </>
   );
 };
-

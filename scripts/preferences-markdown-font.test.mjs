@@ -20,6 +20,7 @@ const { countUnsavedPreferences } = loadWithMocks(
 test('DEFAULT_MARKDOWN_FONT_SETTINGS has expected Zed-style defaults', () => {
   assert.equal(DEFAULT_MARKDOWN_FONT_SETTINGS.fontFamily, 'Arial');
   assert.equal(DEFAULT_MARKDOWN_FONT_SETTINGS.codeFontFamily, 'Fira Code');
+  assert.equal(DEFAULT_MARKDOWN_FONT_SETTINGS.editorFontFamily, 'Fira Code');
   assert.equal(DEFAULT_MARKDOWN_FONT_SETTINGS.fontSize, 14);
   assert.equal(DEFAULT_MARKDOWN_FONT_SETTINGS.headingFontWeight, 600);
 });
@@ -40,12 +41,14 @@ test('applyMarkdownFontToDocument sets CSS custom properties on documentElement'
     applyMarkdownFontToDocument({
       fontFamily: 'Inter',
       codeFontFamily: 'JetBrains Mono',
+      editorFontFamily: 'Consolas',
       fontSize: 16,
       headingFontWeight: 700,
     });
 
     assert.ok(props.get('--markdown-font-family').includes('Inter'));
     assert.ok(props.get('--markdown-code-font-family').includes('JetBrains Mono'));
+    assert.ok(props.get('--markdown-editor-font-family').includes('Consolas'));
     assert.equal(props.get('--markdown-font-size'), '16px');
     assert.equal(props.get('--markdown-heading-weight'), '700');
 
@@ -53,12 +56,14 @@ test('applyMarkdownFontToDocument sets CSS custom properties on documentElement'
     applyMarkdownFontToDocument({
       fontFamily: '',
       codeFontFamily: '',
+      editorFontFamily: '',
       fontSize: 0,
       headingFontWeight: 0,
     });
 
     assert.equal(props.has('--markdown-font-family'), false);
     assert.equal(props.has('--markdown-code-font-family'), false);
+    assert.equal(props.has('--markdown-editor-font-family'), false);
     assert.equal(props.has('--markdown-font-size'), false);
     assert.equal(props.has('--markdown-heading-weight'), false);
   } finally {
@@ -81,6 +86,7 @@ test('countUnsavedPreferences participates in markdown font change detection', (
     gitBinaryId: 'bundled',
     markdownFontFamily: 'Arial',
     markdownCodeFontFamily: 'Fira Code',
+    markdownEditorFontFamily: 'Fira Code',
     markdownFontSize: 14,
     markdownHeadingWeight: 600,
   };
@@ -93,6 +99,9 @@ test('countUnsavedPreferences participates in markdown font change detection', (
 
   // Change code font family
   assert.equal(countUnsavedPreferences({ ...draft, markdownCodeFontFamily: 'Hack' }, baseline, 0), 1);
+
+  // Change font size
+  assert.equal(countUnsavedPreferences({ ...draft, markdownEditorFontFamily: 'Consolas' }, baseline, 0), 1);
 
   // Change font size
   assert.equal(countUnsavedPreferences({ ...draft, markdownFontSize: 16 }, baseline, 0), 1);
@@ -116,4 +125,3 @@ test('countUnsavedPreferences participates in markdown font change detection', (
     4
   );
 });
-

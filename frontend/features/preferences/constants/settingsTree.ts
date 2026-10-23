@@ -41,9 +41,9 @@ export const SETTINGS_TREE: TreeCategory[] = [
       {
         id: 'appearance-markdown-font',
         label: 'Markdown Font',
-        title: 'Markdown Preview Font',
-        description: 'Configure font family, code block font, size, and heading weight for markdown preview rendering.',
-        keywords: ['markdown', 'preview', 'font', 'heading', 'weight', 'code', 'typography'],
+        title: 'Markdown Font & Typography',
+        description: 'Configure fonts for the Markdown editor, rendered preview, and code blocks, plus preview size and heading weight.',
+        keywords: ['markdown', 'preview', 'editor', 'font', 'heading', 'weight', 'code', 'typography'],
       },
     ],
   },

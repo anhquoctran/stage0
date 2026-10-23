@@ -4,7 +4,7 @@ import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
 
 export const ReviewArtwork: React.FC = () => (
-  <div className="w-full max-w-[25rem] border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
+  <div className="w-full max-w-100 border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
     <div className="flex items-center justify-between border-b border-surface0 bg-mantle px-4 py-3 rounded-sm">
       <div className="flex items-center gap-2 text-xs font-semibold text-text">
         <GitPullRequest className="h-4 w-4 text-primary" />

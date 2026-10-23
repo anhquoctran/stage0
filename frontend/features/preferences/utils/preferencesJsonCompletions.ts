@@ -1,11 +1,13 @@
 import { KEYMAP_PRESETS, keymapCatalog } from '../../../core/services/keymaps/catalog';
+import { MARKDOWN_CODE_FONTS, MARKDOWN_EDITOR_FONTS, MARKDOWN_PROSE_FONTS } from '../constants/markdownFonts';
 
 const PROPERTY_NAMES: Record<string, string[]> = {
   '': ['schemaVersion', 'keymap', 'general', 'appearance', 'ai', 'reviewers', 'sandbox', 'git', 'notifications'],
   keymap: ['preset', 'overrides'],
   'keymap.overrides.[]': ['command', 'keys'],
   general: ['showInlineBlame', 'streamResponse', 'enableCodeReviewAssist'],
-  appearance: ['themeMode', 'viewerFont'],
+  appearance: ['themeMode', 'viewerFont', 'markdownFont'],
+  'appearance.markdownFont': ['fontFamily', 'codeFontFamily', 'editorFontFamily', 'fontSize', 'headingFontWeight'],
   'appearance.viewerFont': ['fontFamily', 'fontSize', 'isBold', 'isItalic', 'isUnderline', 'lineSpacing', 'enableLigatures'],
   ai: ['aiConfig', 'mcpServers', 'guardrailPolicy', 'externalAgents'],
   'ai.aiConfig': ['provider', 'model', 'baseUrl', 'temperature', 'reasoningEffort', 'fastMode', 'maxTokens', 'reviewerInstructions', 'streamResponse', 'enableCodeReviewAssist', 'providerSettings', 'customProviderName'],
@@ -30,6 +32,9 @@ const VALUE_OPTIONS: Record<string, string[]> = {
   'keymap.preset': KEYMAP_PRESETS.map((preset) => preset.id),
   'keymap.overrides.[].command': keymapCatalog().filter((command) => command.editable).map((command) => command.id),
   'appearance.themeMode': ['system', 'dark', 'light'],
+  'appearance.markdownFont.fontFamily': MARKDOWN_PROSE_FONTS,
+  'appearance.markdownFont.codeFontFamily': MARKDOWN_CODE_FONTS,
+  'appearance.markdownFont.editorFontFamily': MARKDOWN_EDITOR_FONTS,
   'appearance.viewerFont.fontFamily': ['JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Source Code Pro', 'Hack', 'Iosevka', 'IBM Plex Mono', 'Monaspace', 'Victor Mono', 'Geist Mono'],
   'ai.aiConfig.provider': ['openai', 'anthropic', 'gemini', 'xai_grok', 'ollama', 'custom'],
   'ai.aiConfig.reasoningEffort': ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
@@ -54,6 +59,8 @@ const BOOLEAN_PROPERTIES = new Set([
 const NUMBER_OPTIONS: Record<string, string[]> = {
   schemaVersion: ['1'],
   'appearance.viewerFont.fontSize': ['12', '13', '14', '16'],
+  'appearance.markdownFont.fontSize': ['12', '14', '16'],
+  'appearance.markdownFont.headingFontWeight': ['400', '500', '600', '700'],
   'appearance.viewerFont.lineSpacing': ['1', '1.25', '1.5', '1.75', '2'],
   'ai.aiConfig.temperature': ['0', '0.2', '0.7', '1'],
   'ai.aiConfig.maxTokens': ['2048', '4096', '8192'],

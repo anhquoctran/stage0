@@ -42,6 +42,8 @@ export interface PreferencesTabContainerProps {
   setDraftMarkdownFontFamily: React.Dispatch<React.SetStateAction<string>>;
   draftMarkdownCodeFontFamily: string;
   setDraftMarkdownCodeFontFamily: React.Dispatch<React.SetStateAction<string>>;
+  draftMarkdownEditorFontFamily: string;
+  setDraftMarkdownEditorFontFamily: React.Dispatch<React.SetStateAction<string>>;
   draftMarkdownFontSize: number;
   setDraftMarkdownFontSize: React.Dispatch<React.SetStateAction<number>>;
   draftMarkdownHeadingWeight: number;

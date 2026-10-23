@@ -20,6 +20,7 @@ export interface PreferencesBaseline {
   gitBinaryPath: string;
   markdownFontFamily: string;
   markdownCodeFontFamily: string;
+  markdownEditorFontFamily: string;
   markdownFontSize: number;
   markdownHeadingWeight: number;
 }

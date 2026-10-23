@@ -66,3 +66,12 @@ test('JSON Schema metadata is hidden from the editable buffer while nested user 
   assert.match(hidden, /"schemaVersion": 1/);
   assert.match(hidden, /"\$schema": "user-data"/);
 });
+
+test('JSONC completion includes Markdown editor fonts and preview settings', () => {
+  const source = '{"appearance":{"markdownFont":{';
+  const completion = getPreferencesJsonCompletions(source, source.length, true);
+  assert.deepEqual(completion.items.map((item) => item.label).sort(),
+    ['fontFamily', 'codeFontFamily', 'editorFontFamily', 'fontSize', 'headingFontWeight'].sort());
+  const font = '{"appearance":{"markdownFont":{"editorFontFamily":"Fir';
+  assert.deepEqual(getPreferencesJsonCompletions(font, font.length).items.map((item) => item.label), ['Fira Code']);
+});

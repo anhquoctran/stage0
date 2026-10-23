@@ -16,6 +16,7 @@ export interface PreferencesState extends ViewerFontSettings {
   toggleInlineBlame: () => void;
   markdownFontFamily: string;
   markdownCodeFontFamily: string;
+  markdownEditorFontFamily: string;
   markdownFontSize: number;
   markdownHeadingFontWeight: number;
   updateMarkdownFontSettings: (settings: Partial<MarkdownFontSettings>) => void;

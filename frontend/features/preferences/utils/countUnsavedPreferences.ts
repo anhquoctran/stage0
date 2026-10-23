@@ -15,6 +15,7 @@ export function countUnsavedPreferences(
     gitBinaryId: string;
     markdownFontFamily?: string;
     markdownCodeFontFamily?: string;
+    markdownEditorFontFamily?: string;
     markdownFontSize?: number;
     markdownHeadingWeight?: number;
   },
@@ -35,6 +36,7 @@ export function countUnsavedPreferences(
   if (draft.gitBinaryId !== baseline.gitBinaryId) count++;
   if (draft.markdownFontFamily !== undefined && draft.markdownFontFamily !== baseline.markdownFontFamily) count++;
   if (draft.markdownCodeFontFamily !== undefined && draft.markdownCodeFontFamily !== baseline.markdownCodeFontFamily) count++;
+  if (draft.markdownEditorFontFamily !== undefined && draft.markdownEditorFontFamily !== baseline.markdownEditorFontFamily) count++;
   if (draft.markdownFontSize !== undefined && draft.markdownFontSize !== baseline.markdownFontSize) count++;
   if (draft.markdownHeadingWeight !== undefined && draft.markdownHeadingWeight !== baseline.markdownHeadingWeight) count++;
   return count;

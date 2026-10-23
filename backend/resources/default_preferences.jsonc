@@ -11,6 +11,13 @@
   },
   "appearance": {
     "themeMode": "system",
+    "markdownFont": {
+      "fontFamily": "Arial",
+      "codeFontFamily": "Fira Code",
+      "editorFontFamily": "Fira Code",
+      "fontSize": 14,
+      "headingFontWeight": 600
+    },
     "viewerFont": {
       "fontFamily": "Fira Code",
       "fontSize": 13,

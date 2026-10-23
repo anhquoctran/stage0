@@ -4,7 +4,7 @@ import { Code2 } from '../../../common/components/icons/Code2';
 import { Sparkles } from '../../../common/components/icons/Sparkles';
 
 export const CompareArtwork: React.FC = () => (
-  <div className="w-full max-w-[25rem] border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
+  <div className="w-full max-w-100 border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
     <div className="flex items-center justify-between border-b border-surface0 bg-mantle px-4 py-3 rounded-sm">
       <div className="flex items-center gap-2 text-xs font-semibold text-text">
         <ArrowLeftRight className="h-3.5 w-3.5 text-primary" />

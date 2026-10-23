@@ -23,6 +23,7 @@ export function usePreferencesDraftSession({
   storedAiConfig,
   storedMarkdownFontFamily,
   storedMarkdownCodeFontFamily,
+  storedMarkdownEditorFontFamily,
   storedMarkdownFontSize,
   storedMarkdownHeadingWeight,
   isPreferencesOpen,
@@ -56,6 +57,8 @@ export function usePreferencesDraftSession({
   const [draftMarkdownFontFamily, setDraftMarkdownFontFamily] = useState(storedMarkdownFontFamily);
 
   const [draftMarkdownCodeFontFamily, setDraftMarkdownCodeFontFamily] = useState(storedMarkdownCodeFontFamily);
+
+  const [draftMarkdownEditorFontFamily, setDraftMarkdownEditorFontFamily] = useState(storedMarkdownEditorFontFamily);
 
   const [draftMarkdownFontSize, setDraftMarkdownFontSize] = useState(storedMarkdownFontSize);
 
@@ -92,6 +95,7 @@ export function usePreferencesDraftSession({
     gitBinaryPath: storedGitBinaryPath,
     markdownFontFamily: storedMarkdownFontFamily,
     markdownCodeFontFamily: storedMarkdownCodeFontFamily,
+    markdownEditorFontFamily: storedMarkdownEditorFontFamily,
     markdownFontSize: storedMarkdownFontSize,
     markdownHeadingWeight: storedMarkdownHeadingWeight,
   });
@@ -121,6 +125,7 @@ export function usePreferencesDraftSession({
         setDraftSandboxType(storedSandboxType);
         setDraftMarkdownFontFamily(storedMarkdownFontFamily);
         setDraftMarkdownCodeFontFamily(storedMarkdownCodeFontFamily);
+        setDraftMarkdownEditorFontFamily(storedMarkdownEditorFontFamily);
         setDraftMarkdownFontSize(storedMarkdownFontSize);
         setDraftMarkdownHeadingWeight(storedMarkdownHeadingWeight);
 
@@ -148,6 +153,7 @@ export function usePreferencesDraftSession({
           gitBinaryPath: storedGitBinaryPath,
           markdownFontFamily: storedMarkdownFontFamily,
           markdownCodeFontFamily: storedMarkdownCodeFontFamily,
+          markdownEditorFontFamily: storedMarkdownEditorFontFamily,
           markdownFontSize: storedMarkdownFontSize,
           markdownHeadingWeight: storedMarkdownHeadingWeight,
         });
@@ -193,6 +199,7 @@ export function usePreferencesDraftSession({
     storedGitBinaryPath,
     storedMarkdownFontFamily,
     storedMarkdownCodeFontFamily,
+    storedMarkdownEditorFontFamily,
     storedMarkdownFontSize,
     storedMarkdownHeadingWeight,
     fetchActiveBinary,
@@ -212,6 +219,7 @@ export function usePreferencesDraftSession({
     draftEnableLigatures,
     draftMarkdownFontFamily,
     draftMarkdownCodeFontFamily,
+    draftMarkdownEditorFontFamily,
     draftMarkdownFontSize,
     draftMarkdownHeadingWeight,
     draftSandboxType,
@@ -231,6 +239,7 @@ export function usePreferencesDraftSession({
     setDraftEnableLigatures,
     setDraftMarkdownFontFamily,
     setDraftMarkdownCodeFontFamily,
+    setDraftMarkdownEditorFontFamily,
     setDraftMarkdownFontSize,
     setDraftMarkdownHeadingWeight,
     setDraftShowInlineBlame,
