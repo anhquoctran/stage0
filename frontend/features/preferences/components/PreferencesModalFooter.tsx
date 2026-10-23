@@ -66,12 +66,12 @@ export const PreferencesModalFooter: React.FC<{
             type="button"
             onClick={onApply}
             disabled={isApplying || !hasUnsavedChanges}
-            className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all border rounded-sm ${
+            className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all rounded-sm ${
               isApplied
                 ? 'bg-green/10 border-green/30 text-green'
                 : canCommitPreferences
-                  ? 'bg-surface0 hover:bg-surface1 border-surface1 text-text shadow-xs cursor-pointer'
-                  : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'
+                  ? 'bg-surface0 hover:bg-surface1 text-text shadow-xs cursor-pointer'
+                  : 'bg-transparent text-subtext0 opacity-40 cursor-not-allowed'
             }`}
           >
             {isApplied ? (
@@ -88,10 +88,10 @@ export const PreferencesModalFooter: React.FC<{
             type="button"
             onClick={onOk}
             disabled={isApplying}
-            className={`px-4 py-1.5 text-xs font-semibold transition-colors border rounded-sm ${
+            className={`px-4 py-1.5 text-xs font-semibold transition-colors rounded-sm ${
               !isApplying
-                ? 'bg-surface0 hover:bg-surface1 border-surface1 text-text cursor-pointer shadow-xs'
-                : 'bg-transparent border-transparent text-subtext0 opacity-40 cursor-not-allowed'
+                ? 'bg-surface0 hover:bg-surface1 text-text cursor-pointer shadow-xs'
+                : 'bg-transparent text-subtext0 opacity-40 cursor-not-allowed'
             }`}
           >
             OK
