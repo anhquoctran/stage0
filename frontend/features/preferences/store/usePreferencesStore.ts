@@ -6,6 +6,7 @@ import type { MarkdownFontSettings } from '../types/MarkdownFontSettings';
 import type { PreferencesState } from '../types/PreferencesState';
 import { preferencesJsonService } from '../services/preferencesJsonService';
 import { applyMarkdownFontToDocument } from '../utils/applyMarkdownFontToDocument';
+import { readKeymap } from '../../../core/services/keymaps/validation';
 
 const STORAGE_KEY = 'stage0_viewer_font_settings';
 const MARKDOWN_FONT_STORAGE_KEY = 'stage0_markdown_font_settings';
@@ -132,6 +133,7 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   isPreferencesOpen: false,
   initialPreferencesTab: null,
   showInlineBlame: getInitialInlineBlame(),
+  keymap: readKeymap(typeof window === 'undefined' ? undefined : window.__STAGE0_PREFERENCES__?.keymap),
 
   setIsPreferencesOpen: (open: boolean) =>
     set({
@@ -228,6 +230,7 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
     const font = settings?.appearance?.viewerFont;
     const mdFont = settings?.appearance?.markdownFont;
     const general = settings?.general;
+    usePreferencesStore.setState({ keymap: readKeymap(settings?.keymap) });
     if (font && typeof font === 'object') {
       const next = { ...DEFAULT_VIEWER_FONT_SETTINGS, ...(font as Partial<ViewerFontSettings>) };
       applyViewerFontToDocument(next);

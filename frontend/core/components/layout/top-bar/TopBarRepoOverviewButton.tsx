@@ -1,10 +1,10 @@
 import React from 'react';
 import { Info } from '../../../../common/components/icons/Info';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
+import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 
-export const TopBarRepoOverviewButton: React.FC<{
-  shortcut: (value: string) => string;
-}> = ({ shortcut }) => {
+export const TopBarRepoOverviewButton: React.FC = () => {
+  const { title } = useCommandShortcut();
   const { currentRepo, setIsRepoOverviewOpen } = useGitStore();
 
   if (!currentRepo) return null;
@@ -14,7 +14,7 @@ export const TopBarRepoOverviewButton: React.FC<{
       type="button"
       onClick={() => setIsRepoOverviewOpen(true)}
       className="h-12 min-w-[58px] px-2.5 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors cursor-pointer group rounded-sm"
-      title={shortcut('Repository Information (Ctrl+I)')}
+      title={title('repo_overview', 'Repository Information')}
       aria-label="Repository Information"
     >
       <Info className="w-5 h-5 text-primary shrink-0 transition-colors" />
@@ -24,4 +24,3 @@ export const TopBarRepoOverviewButton: React.FC<{
     </button>
   );
 };
-

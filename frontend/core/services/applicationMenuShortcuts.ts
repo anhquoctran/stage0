@@ -4,48 +4,35 @@ import {
   menuLabel,
   menuNodesForPlatform,
 } from '../constants/applicationMenu';
-import { formatShortcutText } from '../../common/utils/shortcuts';
 import type { MenuNode } from '../types/menu/MenuNode';
+import { DEFAULT_KEYMAP, resolveKeymap } from './keymaps/catalog';
+import { eventStroke, normalizeShortcut, formatKeybinding } from './keymaps/keystroke';
+import type { KeymapSettings } from '../types/keymaps/KeymapSettings';
 
 export function matchesMenuShortcut(event: KeyboardEvent, shortcut: string, mac: boolean): boolean {
-  const parts = shortcut.toLowerCase().split('+');
-  const key = parts.pop()!;
-  const primary = parts.includes('cmdorctrl');
-  if (
-    event.ctrlKey !== (parts.includes('ctrl') || (primary && !mac)) ||
-    event.metaKey !== (parts.includes('cmd') || (primary && mac)) ||
-    event.altKey !== parts.includes('alt') ||
-    event.shiftKey !== parts.includes('shift')
-  )
-    return false;
-  return (
-    event.key.toLowerCase() === key ||
-    event.code.toLowerCase() === `key${key}` ||
-    event.code.toLowerCase() === `digit${key}` ||
-    (key === '/' && event.code === 'Slash')
-  );
+  try { return eventStroke(event, mac) === normalizeShortcut(shortcut, mac); }
+  catch { return false; }
 }
 
-export function menuActionForShortcut(event: KeyboardEvent, mac: boolean): string | undefined {
-  return Object.entries(MENU_COMMANDS).find(
-    ([, command]) =>
+export function menuActionForShortcut(event: KeyboardEvent, mac: boolean, settings = DEFAULT_KEYMAP): string | undefined {
+  return resolveKeymap(settings, mac ? 'macos' : 'windows').find(
+    (command) =>
       // Native editing shortcuts stay with the text control/browser on Windows/Linux.
-      !command.native && command.shortcut && matchesMenuShortcut(event, command.shortcut, mac)
-  )?.[0];
+      command.editable && Object.hasOwn(MENU_COMMANDS, command.id) && command.keys.some((key) => matchesMenuShortcut(event, key, mac))
+  )?.id;
 }
 
-export function getMenuShortcutCategories(platform: string, fileManager: string) {
+export function getMenuShortcutCategories(platform: string, fileManager: string, settings: KeymapSettings = DEFAULT_KEYMAP) {
+  const resolved = resolveKeymap(settings, platform);
+  const keys = (id: string) => resolved.find((command) => command.id === id)?.keys.map((key) => formatKeybinding(key, platform === 'macos')).join(' / ');
   const collect = (nodes: MenuNode[]): { label: string; keys: string }[] =>
     menuNodesForPlatform(nodes, platform).flatMap((node) => {
       const command = node.command ? MENU_COMMANDS[node.command] : undefined;
-      return command?.shortcut
+      return command && node.command && keys(node.command)
         ? [
             {
               label: menuLabel(command.label, fileManager),
-              keys: formatShortcutText(command.shortcut, platform === 'macos').replaceAll(
-                'CmdOrCtrl',
-                'Ctrl'
-              ),
+              keys: keys(node.command)!,
             },
           ]
         : collect(node.items || []);
@@ -56,13 +43,7 @@ export function getMenuShortcutCategories(platform: string, fileManager: string)
     .concat([
       {
         title: 'Workspace navigation',
-        items: [
-          { label: 'Close MR tab / draft', keys: platform === 'macos' ? '⌘ + W' : 'Ctrl+W' },
-          { label: 'Switch MR tab', keys: 'Alt+1…9' },
-          { label: 'Next / previous file', keys: 'Down / J · Up / K' },
-          { label: 'Next conflict', keys: formatShortcutText('Alt+C', platform === 'macos') },
-          { label: 'Split / unified diff', keys: 'S / U' },
-        ],
+        items: resolved.filter((command) => !Object.hasOwn(MENU_COMMANDS, command.id) && command.keys.length).map((command) => ({ label: command.label, keys: keys(command.id)! })),
       },
     ]);
 }

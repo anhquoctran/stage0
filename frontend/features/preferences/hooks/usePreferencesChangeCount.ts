@@ -10,7 +10,7 @@ export function usePreferencesChangeCount({
   draftAiConfig,
 }: PreferencesChangeCountContext) {
   const totalUnsaved = useMemo(() => {
-    return countUnsavedPreferences(
+    return (JSON.stringify(session.draftKeymap) !== JSON.stringify(session.savedBaseline.keymap) ? 1 : 0) + countUnsavedPreferences(
       {
         showInlineBlame: session.draftShowInlineBlame,
         themeMode: session.draftThemeMode,
@@ -28,6 +28,7 @@ export function usePreferencesChangeCount({
       aiPreferencesChangeCount(aiDraft, aiBaseline)
     );
   }, [
+    session.draftKeymap,
     session.draftShowInlineBlame,
     draftAiConfig,
     session.draftThemeMode,

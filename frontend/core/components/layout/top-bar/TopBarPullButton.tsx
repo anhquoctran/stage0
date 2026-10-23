@@ -3,10 +3,10 @@ import { Download } from '../../../../common/components/icons/Download';
 import { DownloadCloud } from '../../../../common/components/icons/DownloadCloud';
 import { ChevronDown } from '../../../../common/components/icons/ChevronDown';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
+import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 
-export const TopBarPullButton: React.FC<{
-  shortcut: (value: string) => string;
-}> = ({ shortcut }) => {
+export const TopBarPullButton: React.FC = () => {
+  const { shortcut, title } = useCommandShortcut();
   const { isSyncing, runSync, setIsPullFromOpen } = useGitStore();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -35,7 +35,7 @@ export const TopBarPullButton: React.FC<{
         disabled={isSyncing}
         onClick={() => runSync('pull')}
         className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[54px] rounded-sm"
-        title={shortcut('Pull (Ctrl+Shift+P)')}
+        title={title('pull', 'Pull')}
       >
         <Download className="w-5 h-5 text-primary shrink-0 transition-colors" />
         <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
@@ -48,7 +48,7 @@ export const TopBarPullButton: React.FC<{
         disabled={isSyncing}
         onClick={() => setIsOpen((prev) => !prev)}
         className="relative flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer rounded-sm"
-        title={shortcut('Pull options (Ctrl+Alt+P)')}
+        title={title('pull_from', 'Pull options')}
       >
         <span
           aria-hidden="true"
@@ -74,7 +74,7 @@ export const TopBarPullButton: React.FC<{
               <Download className="w-3.5 h-3.5 text-current transition-colors" />
               <span>Pull</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Shift+P')}</span>
+            <span className="text-[10px] text-subtext0 font-mono">{shortcut('pull')}</span>
           </button>
 
           <button
@@ -89,11 +89,10 @@ export const TopBarPullButton: React.FC<{
               <DownloadCloud className="w-3.5 h-3.5 text-current transition-colors" />
               <span>Pull from...</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+P')}</span>
+            <span className="text-[10px] text-subtext0 font-mono">{shortcut('pull_from')}</span>
           </button>
         </div>
       )}
     </div>
   );
 };
-

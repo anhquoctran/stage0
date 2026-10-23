@@ -9,7 +9,7 @@ import { ChevronDown } from '../../../common/components/icons/ChevronDown';
 import { History } from '../../../common/components/icons/History';
 import { useGitStore } from '../store/useGitStore';
 import { revealInOs, getAbsoluteFilePath, buildRemoteFileUrl } from '../utils/fileActions';
-import { formatShortcutText } from '../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../core/hooks/useCommandShortcut';
 import type { FileActionMenuProps } from '../types/FileActionMenuProps';
 
 export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className = '' }) => {
@@ -26,6 +26,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
   } = useGitStore();
 
   const [isOpen, setIsOpen] = useState(false);
+  const { shortcut } = useCommandShortcut();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -126,7 +127,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Open in File Explorer</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Shift+Alt+R')}</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('reveal_file')}</span>
           </button>
 
           {!file.is_binary && (
@@ -139,7 +140,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
                 <History className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
                 <span>View Git Blame</span>
               </div>
-              <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Alt+B')}</span>
+              <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('view_blame')}</span>
             </button>
           )}
 
@@ -154,7 +155,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <Copy className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Relative Path</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Ctrl+Shift+C')}</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('copy_rel_path')}</span>
           </button>
 
           <button
@@ -166,7 +167,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <FileText className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Absolute Path</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Shift+Alt+C')}</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('copy_abs_path')}</span>
           </button>
 
           <div className="my-1 border-t border-surface0" />
@@ -180,7 +181,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <Globe className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Remote File URL</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Ctrl+Shift+U')}</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('copy_remote_url')}</span>
           </button>
 
           <button
@@ -192,7 +193,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
               <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Remote File URL from...</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">{formatShortcutText('Ctrl+Alt+U')}</span>
+            <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('copy_remote_url_from')}</span>
           </button>
         </div>
       )}

@@ -8,8 +8,11 @@ import { type SandboxType } from '../../git/types/SandboxType';
 import type { PreferenceTab } from '../types/PreferenceTab';
 import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 import type { TreeChildItem } from '../types/TreeChildItem';
+import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings';
 
 export interface PreferencesTabContainerProps {
+  draftKeymap: KeymapSettings;
+  setDraftKeymap: React.Dispatch<React.SetStateAction<KeymapSettings>>;
   currentTabId: PreferenceTab | null;
   currentChildItem: TreeChildItem | null;
   draftShowInlineBlame: boolean;

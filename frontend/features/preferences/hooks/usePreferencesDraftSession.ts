@@ -4,8 +4,10 @@ import { captureAiPreferences } from '../../ai/services/commitAiPreferences';
 import { type SandboxType } from '../../git/types/SandboxType';
 import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 import type { PreferencesDraftSessionContext } from './PreferencesDraftSessionContext';
+import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
 
 export function usePreferencesDraftSession({
+  storedKeymap = DEFAULT_KEYMAP,
   storedThemeMode,
   storedFontFamily,
   storedFontSize,
@@ -32,6 +34,7 @@ export function usePreferencesDraftSession({
   setActiveTab,
   setExpandedGroups,
 }: PreferencesDraftSessionContext) {
+  const [draftKeymap, setDraftKeymap] = useState(storedKeymap);
   const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
 
   const [draftThemeId, setDraftThemeId] = useState('catppuccin-mocha');
@@ -73,6 +76,7 @@ export function usePreferencesDraftSession({
   const [draftGitBinaryPath, setDraftGitBinaryPath] = useState(storedGitBinaryPath);
 
   const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
+    keymap: storedKeymap,
     themeMode: storedThemeMode,
     fontFamily: storedFontFamily,
     fontSize: storedFontSize,
@@ -104,6 +108,7 @@ export function usePreferencesDraftSession({
     if (isPreferencesOpen) {
       if (!wasOpenRef.current) {
         wasOpenRef.current = true;
+        setDraftKeymap(storedKeymap);
         setDraftThemeMode(storedThemeMode);
         setDraftFontFamily(storedFontFamily);
         setDraftFontSize(storedFontSize);
@@ -127,6 +132,7 @@ export function usePreferencesDraftSession({
         setDraftGitBinaryPath(storedGitBinaryPath);
 
         setSavedBaseline({
+          keymap: storedKeymap,
           themeMode: storedThemeMode,
           fontFamily: storedFontFamily,
           fontSize: storedFontSize,
@@ -171,6 +177,7 @@ export function usePreferencesDraftSession({
     }
   }, [
     isPreferencesOpen,
+    storedKeymap,
     storedThemeMode,
     storedFontFamily,
     storedFontSize,
@@ -192,6 +199,8 @@ export function usePreferencesDraftSession({
   ]);
 
   return {
+    draftKeymap,
+    setDraftKeymap,
     draftShowInlineBlame,
     draftThemeMode,
     draftFontFamily,

@@ -41,18 +41,14 @@ fn build_node(
         }
         let enabled = flags.enabled(&command.requires);
         if let Some(key) = &command.checked {
-            let mut builder = CheckMenuItemBuilder::with_id(id, title)
+            let builder = CheckMenuItemBuilder::with_id(id, title)
                 .enabled(enabled)
                 .checked(flags.value(key));
-            if let Some(shortcut) = &command.shortcut {
-                builder = builder.accelerator(shortcut);
-            }
             return Ok(MenuItemKind::Check(builder.build(app)?));
         }
-        let mut builder = MenuItemBuilder::with_id(id, title).enabled(enabled);
-        if let Some(shortcut) = &command.shortcut {
-            builder = builder.accelerator(shortcut);
-        }
+        // Remappable accelerators are installed from the hydrated window keymap,
+        // never from stale defaults while preferences are still loading.
+        let builder = MenuItemBuilder::with_id(id, title).enabled(enabled);
         return Ok(MenuItemKind::MenuItem(builder.build(app)?));
     }
     let submenu = Submenu::with_id(

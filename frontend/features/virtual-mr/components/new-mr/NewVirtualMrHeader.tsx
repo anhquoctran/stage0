@@ -5,7 +5,7 @@ import { GitPullRequest } from '../../../../common/components/icons/GitPullReque
 import { Info } from '../../../../common/components/icons/Info';
 import { Loader2 } from '../../../../common/components/icons/Loader2';
 import { X } from '../../../../common/components/icons/X';
-import { formatShortcutText } from '../../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../../core/hooks/useCommandShortcut';
 import { TabBranchSelector } from '../../../git/components/TabBranchSelector';
 import type { NewVirtualMrHeaderProps } from './NewVirtualMrHeaderProps';
 
@@ -25,6 +25,7 @@ export function NewVirtualMrHeader({
   conflictCount,
   conflictReport,
 }: NewVirtualMrHeaderProps) {
+  const { title: commandTitle } = useCommandShortcut();
   return (
     <div className="border-b border-surface0 bg-crust/50 px-5 py-3 shrink-0 space-y-2.5 rounded-sm">
       <div className="flex items-center justify-between">
@@ -49,7 +50,7 @@ export function NewVirtualMrHeader({
           type="button"
           onClick={closeNewMrDraft}
           className="p-1.5 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
-          title={formatShortcutText('Cancel & close comparison (Esc / Ctrl+W)')}
+          title={commandTitle('close_tab', 'Cancel & close comparison')}
         >
           <X className="w-4 h-4" />
         </button>

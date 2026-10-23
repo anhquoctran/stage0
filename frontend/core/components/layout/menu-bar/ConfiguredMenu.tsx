@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Check } from '../../../../common/components/icons/Check';
 import { ChevronRight } from '../../../../common/components/icons/ChevronRight';
-import { formatShortcutText } from '../../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 import {
   MENU_COMMANDS,
   RECENT_MENU,
@@ -14,6 +14,7 @@ import type { MenuNode } from '../../../types/menu/MenuNode';
 import { menuIcons } from './menuIcons';
 
 export function ConfiguredMenu(props: ConfiguredMenuProps) {
+  const { shortcut } = useCommandShortcut();
   const { node, flags, platform, fileManager, execute, onClose, recentRepos } = props;
   const [hovered, setHovered] = useState(false);
   const [activeChild, setActiveChild] = useState<string | null>(null);
@@ -81,12 +82,9 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
             </span>
           )}
         </span>
-        {command?.shortcut && (
+        {node.command && shortcut(node.command) && (
           <span className="font-mono text-[10px] text-subtext0">
-            {formatShortcutText(command.shortcut, platform === 'macos').replaceAll(
-              'CmdOrCtrl',
-              'Ctrl'
-            )}
+            {shortcut(node.command)}
           </span>
         )}
         {checked && <Check className="h-3.5 w-3.5" />}

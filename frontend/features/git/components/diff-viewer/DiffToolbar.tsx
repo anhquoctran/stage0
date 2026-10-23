@@ -10,7 +10,7 @@ import { ChevronRight } from '../../../../common/components/icons/ChevronRight';
 import { History } from '../../../../common/components/icons/History';
 import { GitCommit } from '../../../../common/components/icons/GitCommit';
 import { GitMerge } from '../../../../common/components/icons/GitMerge';
-import { formatShortcutText } from '../../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../../core/hooks/useCommandShortcut';
 import { FileActionMenu } from '../FileActionMenu';
 import type { ChangedFile } from '../../types/ChangedFile';
 import type { MrDiffPayload } from '../../types/MrDiffPayload';
@@ -57,6 +57,7 @@ export const DiffToolbar: React.FC<{
   selectNextConflictFile,
 }) => {
   const pathParts = selectedFile.path.split('/');
+  const { title: commandTitle } = useCommandShortcut();
   const fileName = pathParts.pop();
   const dirPath = pathParts.join('/');
 
@@ -84,7 +85,7 @@ export const DiffToolbar: React.FC<{
         <button
           type="button"
           onClick={onCopyPath}
-          title={formatShortcutText('Copy relative file path (Ctrl+Shift+C)')}
+          title={commandTitle('copy_rel_path', 'Copy relative file path')}
           className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors cursor-pointer rounded-sm"
         >
           {copied ? (
@@ -128,7 +129,7 @@ export const DiffToolbar: React.FC<{
               disabled={!hasPrev}
               onClick={selectPrevFile}
               className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer rounded-sm"
-              title="Previous file (Up / k)"
+              title={commandTitle('previous_file', 'Previous file')}
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
@@ -140,7 +141,7 @@ export const DiffToolbar: React.FC<{
               disabled={!hasNext}
               onClick={selectNextFile}
               className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer rounded-sm"
-              title="Next file (Down / j)"
+              title={commandTitle('next_file', 'Next file')}
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -162,17 +163,17 @@ export const DiffToolbar: React.FC<{
               type="button"
               onClick={selectNextConflictFile}
               className="text-[11px] font-mono font-bold text-red hover:underline px-0.5 cursor-pointer rounded-sm"
-              title={formatShortcutText('Jump to next conflict file (Alt+C)')}
+              title={commandTitle('next_conflict', 'Jump to next conflict file')}
             >
               {selectedFile?.is_conflicted && currentConflictIndex !== -1
                 ? `Conflict ${currentConflictIndex + 1}/${conflictedFiles.length}`
-                : formatShortcutText(`${conflictedFiles.length} Conflict${conflictedFiles.length > 1 ? 's' : ''} (Alt+C)`)}
+                : commandTitle('next_conflict', `${conflictedFiles.length} Conflict${conflictedFiles.length > 1 ? 's' : ''}`)}
             </button>
             <button
               type="button"
               onClick={selectNextConflictFile}
               className="p-0.5 text-red hover:bg-red/20 transition-colors cursor-pointer rounded-sm"
-              title={formatShortcutText('Next conflict file (Alt+C)')}
+              title={commandTitle('next_conflict', 'Next conflict file')}
             >
               <ChevronRight className="w-3 h-3" />
             </button>
@@ -222,7 +223,7 @@ export const DiffToolbar: React.FC<{
                   ? 'bg-surface2 text-white shadow-xs'
                   : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
               }`}
-              title={formatShortcutText('Inspect line-by-line git blame (Alt+B)')}
+              title={commandTitle('view_blame', 'Inspect line-by-line git blame')}
             >
               <History className="w-3.5 h-3.5 text-white" />
               <span className="max-md:hidden">Blame</span>
@@ -272,7 +273,7 @@ export const DiffToolbar: React.FC<{
                 ? 'bg-surface2 text-white shadow-xs'
                 : 'bg-surface1 text-white/80 hover:text-white hover:bg-surface2'
             }`}
-            title={formatShortcutText(`Toggle inline git blame on active line (Alt+Shift+B) - ${showInlineBlame ? 'Active' : 'Disabled'}`)}
+            title={commandTitle('toggle_inline_blame', `Toggle inline git blame on active line - ${showInlineBlame ? 'Active' : 'Disabled'}`)}
           >
             <GitCommit className="w-3.5 h-3.5 text-white" />
             <span className="max-md:hidden">Inline Blame</span>
@@ -282,4 +283,3 @@ export const DiffToolbar: React.FC<{
     </div>
   );
 };
-

@@ -7,6 +7,11 @@ export const SETTINGS_TREE: TreeCategory[] = [
     label: 'General',
     children: [
       {
+        id: 'general-keymaps', label: 'Keymap', title: 'Keymap & Keyboard Shortcuts',
+        description: 'Choose a familiar preset or customize Stage0 commands and navigation.',
+        keywords: ['keymap', 'keyboard', 'shortcuts', 'bindings', 'vscode', 'jetbrains', 'github desktop', 'fork', 'sourcetree', 'source tree', 'gitkraken', 'git kraken'],
+      },
+      {
         id: 'general-settings',
         label: 'General Settings',
         title: 'General Settings',

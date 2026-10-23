@@ -3,14 +3,16 @@ import { GitPullRequest } from '../../../common/components/icons/GitPullRequest'
 import { Plus } from '../../../common/components/icons/Plus';
 import { Sparkles } from '../../../common/components/icons/Sparkles';
 import { FolderGit2 } from '../../../common/components/icons/FolderGit2';
-import { formatShortcutText } from '../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../core/hooks/useCommandShortcut';
 import type { EmptyVirtualMrWorkspaceProps } from '../types/EmptyVirtualMrWorkspaceProps';
 
 export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = ({
   onNewMr,
   repoName,
   defaultBaseBranch,
-}) => (
+}) => {
+  const { shortcut } = useCommandShortcut();
+  return (
   <div className="flex flex-1 flex-col items-center justify-center bg-crust p-8 text-center font-sans select-none rounded-sm">
     <div className="flex max-w-md flex-col items-center animate-in fade-in zoom-in-95 duration-200">
       <div className="relative mb-6">
@@ -33,7 +35,7 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
         <Plus className="h-4 w-4 stroke-[2.5]" />
         <span>Create Virtual MR</span>
         <kbd className="ml-1.5 border border-black/10 bg-black/15 px-1.5 py-0.5 font-mono text-[10px] text-on-accent/80">
-          {formatShortcutText('Ctrl+T')}
+          {shortcut('new_mr')}
         </kbd>
       </button>
 
@@ -50,4 +52,5 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
       </div>
     </div>
   </div>
-);
+  );
+};

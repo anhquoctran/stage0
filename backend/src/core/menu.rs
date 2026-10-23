@@ -1,6 +1,7 @@
 mod command;
-mod definition;
+pub(crate) mod definition;
 mod flags;
+mod keymap;
 mod native;
 mod node;
 mod runtime_state;

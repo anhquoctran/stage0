@@ -149,3 +149,30 @@ fn command_metadata_only_uses_supported_gates_roles_and_unique_shortcuts() {
         }
     }
 }
+
+#[test]
+fn window_keymaps_validate_inputs_and_keep_webview_owned_shortcuts_visible() {
+    use super::keymap::NativeMenuKeymap;
+    use std::collections::HashMap;
+    let keymap = NativeMenuKeymap::from_input(
+        HashMap::from([("open_repo".into(), "Cmd+O".into())]),
+        HashMap::from([
+            ("keymaps".into(), "⌘+K ⌘+S".into()),
+            ("open_repo".into(), "⌘+O".into()),
+        ]),
+    )
+    .unwrap();
+    assert_eq!(keymap.title("open_repo"), "Open...");
+    assert_eq!(keymap.title("keymaps"), "Customize Keymap...  (⌘+K ⌘+S)");
+    for (id, key) in [
+        ("copy", "Cmd+F8"),
+        ("unknown", "Cmd+F8"),
+        ("fetch", "Ctrl+K Ctrl+S"),
+    ] {
+        assert!(NativeMenuKeymap::from_input(
+            HashMap::from([(id.into(), key.into())]),
+            HashMap::new()
+        )
+        .is_err());
+    }
+}

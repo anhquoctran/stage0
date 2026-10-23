@@ -1,7 +1,7 @@
 import React from 'react';
 import { SettingRow } from '../SettingRow';
 import { ZedSwitch } from '../ZedSwitch';
-import { formatShortcutText } from '../../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../../core/hooks/useCommandShortcut';
 import type { AiConfig } from '../../../ai/types/AiConfig';
 
 export const PreferencesGeneralTab: React.FC<{
@@ -17,12 +17,13 @@ export const PreferencesGeneralTab: React.FC<{
   setDraftAiConfig,
   showToast,
 }) => {
+  const { title: commandTitle } = useCommandShortcut();
   return (
     <div className="space-y-1">
       <SettingRow
         title="Inline Git Blame"
-        description={formatShortcutText(
-          'Show commit author, relative time, and summary annotation at the end of the active line in diff view (Alt+Shift+B).'
+        description={commandTitle('toggle_inline_blame',
+          'Show commit author, relative time, and summary annotation at the end of the active line in diff view.'
         )}
       >
         <ZedSwitch
@@ -72,4 +73,3 @@ export const PreferencesGeneralTab: React.FC<{
     </div>
   );
 };
-

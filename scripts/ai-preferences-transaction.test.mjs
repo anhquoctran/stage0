@@ -200,7 +200,7 @@ function dialogFixture(commitHandler) {
   const useGitStore = Object.assign(() => gitState, { getState: () => gitState, setState: (value) => Object.assign(gitState, typeof value === 'function' ? value(gitState) : value) });
   const gitBinaryState = { activeBinaryId: 'system', activeBinaryPath: 'git', binaries: [], fetchActiveBinary: async () => ({ id: 'system', path: 'git' }) };
   const useGitBinaryStore = Object.assign(() => gitBinaryState, { getState: () => gitBinaryState, setState: (value) => Object.assign(gitBinaryState, typeof value === 'function' ? value(gitBinaryState) : value) });
-  const usePreferencesStore = Object.assign(() => preferences, { setState: (value) => Object.assign(preferences, typeof value === 'function' ? value(preferences) : value) });
+  const usePreferencesStore = Object.assign(() => preferences, { getState: () => preferences, setState: (value) => Object.assign(preferences, typeof value === 'function' ? value(preferences) : value) });
   const dependencies = {
     react: harness.react,
     '../store/usePreferencesStore': { usePreferencesStore, checkFontLigaturesSupport: () => true, applyViewerFontToDocument() {}, DEFAULT_VIEWER_FONT_SETTINGS: preferences },

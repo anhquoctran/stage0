@@ -1,8 +1,10 @@
 import { type ThemeMode } from '../../../core/types/ThemeMode';
 import { type AiConfig } from '../../ai/types/AiConfig';
 import { type SandboxType } from '../../git/types/SandboxType';
+import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings';
 
 export interface PreferencesBaseline {
+  keymap: KeymapSettings;
   themeMode: ThemeMode;
   fontFamily: string;
   fontSize: number;

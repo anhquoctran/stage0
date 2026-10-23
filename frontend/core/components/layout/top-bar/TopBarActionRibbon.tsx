@@ -8,10 +8,10 @@ import { useVirtualMrStore } from '../../../../features/virtual-mr/store/useVirt
 import { TopBarPullButton } from './TopBarPullButton';
 import { TopBarMergeButton } from './TopBarMergeButton';
 import { TopBarRebaseButton } from './TopBarRebaseButton';
+import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 
-export const TopBarActionRibbon: React.FC<{
-  shortcut: (value: string) => string;
-}> = ({ shortcut }) => {
+export const TopBarActionRibbon: React.FC = () => {
+  const { title } = useCommandShortcut();
   const { openRepoSettings } = useVirtualMrStore();
   const {
     currentRepo,
@@ -42,7 +42,7 @@ export const TopBarActionRibbon: React.FC<{
           disabled={isSyncing}
           onClick={() => runSync('fetch')}
           className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group rounded-sm"
-          title={shortcut('git fetch --all --prune (Ctrl+Shift+F)')}
+          title={title('fetch', 'git fetch --all --prune')}
         >
           <RefreshCw
             className={`w-5 h-5 text-primary shrink-0 transition-colors ${
@@ -55,13 +55,13 @@ export const TopBarActionRibbon: React.FC<{
         </button>
 
         {/* PULL SPLIT BUTTON */}
-        <TopBarPullButton shortcut={shortcut} />
+        <TopBarPullButton />
 
         {/* MERGE SPLIT BUTTON */}
         <TopBarMergeButton />
 
         {/* REBASE SPLIT BUTTON */}
-        <TopBarRebaseButton shortcut={shortcut} />
+        <TopBarRebaseButton />
 
         {/* CURRENT BRANCH GRAPH */}
         <button
@@ -82,7 +82,7 @@ export const TopBarActionRibbon: React.FC<{
           disabled={isSyncing}
           onClick={refreshDiff}
           className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group rounded-sm"
-          title={shortcut('Refresh MR diff & conflict simulation (Ctrl+R)')}
+          title={title('refresh_diff', 'Refresh MR diff & conflict simulation')}
         >
           <RotateCw className="w-5 h-5 text-primary shrink-0 transition-colors" />
           <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
@@ -96,7 +96,7 @@ export const TopBarActionRibbon: React.FC<{
           disabled={!currentRepo}
           onClick={() => openRepoSettings('remotes')}
           className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group rounded-sm"
-          title={shortcut('Repository Settings (Ctrl+Alt+S)')}
+          title={title('repo_settings', 'Repository Settings')}
         >
           <Cog className="w-5 h-5 text-primary shrink-0 transition-colors" />
           <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors whitespace-nowrap">
@@ -107,4 +107,3 @@ export const TopBarActionRibbon: React.FC<{
     </>
   );
 };
-

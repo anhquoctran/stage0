@@ -3,11 +3,13 @@ import { Keyboard } from '../../../common/components/icons/Keyboard';
 import { X } from '../../../common/components/icons/X';
 import { getMenuShortcutCategories } from '../../services/applicationMenuShortcuts';
 import { getOsFileManagerName } from '../../../features/git/utils/fileActions';
+import { usePreferencesStore } from '../../../features/preferences/store/usePreferencesStore';
 
 export const KeyboardShortcutsModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
 }> = ({ isOpen, onClose }) => {
+  const { keymap, openPreferences } = usePreferencesStore();
   if (!isOpen) return null;
 
   const isMac =
@@ -20,7 +22,7 @@ export const KeyboardShortcutsModal: React.FC<{
     : /Win/i.test(navigator.platform || navigator.userAgent)
       ? 'windows'
       : 'linux';
-  const shortcutCategories = getMenuShortcutCategories(platform, fileManagerName);
+  const shortcutCategories = getMenuShortcutCategories(platform, fileManagerName, keymap);
 
   return (
     <div
@@ -28,6 +30,7 @@ export const KeyboardShortcutsModal: React.FC<{
       onClick={onClose}
     >
       <div
+        role="dialog" aria-modal="true" aria-label="Keyboard Shortcuts"
         className="relative bg-mantle border border-surface0 p-5 sm:p-6 max-w-5xl w-full shadow-2xl animate-in zoom-in-95 duration-150 text-text cursor-default rounded-sm"
         onClick={(e) => e.stopPropagation()}
       >
@@ -82,7 +85,7 @@ export const KeyboardShortcutsModal: React.FC<{
 
         {/* Footer */}
         <div className="pt-3 border-t border-surface0 flex items-center justify-between">
-          <span className="text-[11px] text-subtext0 font-mono">Press Esc to close</span>
+          <button type="button" className="rounded-sm px-2 py-1 text-xs text-brand hover:bg-surface0" onClick={() => { onClose(); openPreferences('general-keymaps'); }}>Customize keymap…</button>
           <button
             type="button"
             onClick={onClose}

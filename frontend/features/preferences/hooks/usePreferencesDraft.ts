@@ -24,10 +24,12 @@ import { type ViewerFontSettings } from '../types/ViewerFontSettings';
 import { usePreferencesChangeCount } from './usePreferencesChangeCount';
 import { usePreferencesDraftSession } from './usePreferencesDraftSession';
 import { usePreferencesNavigation } from './usePreferencesNavigation';
+import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
 
 export function usePreferencesDraft() {
   const {
     isPreferencesOpen,
+    keymap: storedKeymap,
     setIsPreferencesOpen,
     initialPreferencesTab,
     setInitialPreferencesTab,
@@ -84,6 +86,7 @@ export function usePreferencesDraft() {
   const [isJsonEditorOpen, setIsJsonEditorOpen] = useState(false);
 
   const session = usePreferencesDraftSession({
+    storedKeymap,
     storedThemeMode,
     storedFontFamily,
     storedFontSize,
@@ -127,6 +130,8 @@ export function usePreferencesDraft() {
 
   // Commit changes
   const handleApply = createPreferencesApplyAction({
+    draftKeymap: session.draftKeymap,
+    setDraftKeymap: session.setDraftKeymap,
     applyingRef,
     setIsApplying,
     setApplyError,
@@ -191,6 +196,7 @@ export function usePreferencesDraft() {
   };
 
   const handleResetDefaults = () => {
+    session.setDraftKeymap(structuredClone(DEFAULT_KEYMAP));
     session.setDraftThemeMode('system');
     applyThemeToDocument(resolveTheme('system'));
 
@@ -246,6 +252,7 @@ export function usePreferencesDraft() {
       handleResetDefaults,
     },
     ai: { aiDraft, aiBaseline, draftAiConfig, setDraftAiConfig },
+    keymaps: { draftKeymap: session.draftKeymap, setDraftKeymap: session.setDraftKeymap },
     navigation: {
       activeTab,
       setActiveTab,

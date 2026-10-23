@@ -12,7 +12,7 @@ import { RotateCw } from '../../../common/components/icons/RotateCw';
 import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
 import { useGitStore } from '../store/useGitStore';
 import { openRepoInTerminal, openRepoInVsCode, openFileInEditor, revealInOs, getOsFileManagerName } from '../utils/fileActions';
-import { formatShortcutText } from '../../../common/utils/shortcuts';
+import { useCommandShortcut } from '../../../core/hooks/useCommandShortcut';
 import type { ConflictBannerProps } from '../types/ConflictBannerProps';
 
 export const ConflictBanner: React.FC<ConflictBannerProps> = ({
@@ -20,6 +20,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
   onSelectConflictFile,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const { title: commandTitle } = useCommandShortcut();
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
 
   const { currentRepo, baseBranch, compareBranch, refreshDiff, showToast } =
@@ -89,7 +90,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                   }
                 }}
                 className="text-[11px] px-2 py-0.5 rounded-sm bg-red/25 hover:bg-red/35 text-red font-mono font-bold border border-red/40 conflict-pulse cursor-pointer transition-colors"
-                title={formatShortcutText('Click to jump directly to first conflicted file (Alt+C)')}
+                title={commandTitle('next_conflict', 'Click to jump directly to first conflicted file')}
               >
                 {conflictedCount > 0 ? `${conflictedCount} file(s) in conflict` : 'In-memory conflict'}
               </button>
@@ -120,7 +121,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                   }
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-                title={formatShortcutText('Open repository in Visual Studio Code (Alt+Shift+V)')}
+                title={commandTitle('open_vscode', 'Open repository in Visual Studio Code')}
               >
                 <VsCode className="w-3.5 h-3.5 text-[#007acc]" />
                 <span>Open in VS Code</span>
@@ -137,7 +138,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                   }
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-                title={formatShortcutText('Open repository in Default Terminal (Alt+Shift+T)')}
+                title={commandTitle('open_terminal', 'Open repository in Default Terminal')}
               >
                 <Terminal className="w-3.5 h-3.5 text-subtext0" />
                 <span>Terminal</span>
@@ -149,7 +150,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
             type="button"
             onClick={refreshDiff}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-            title={formatShortcutText('Refresh virtual diff and re-check conflicts (Ctrl+R)')}
+            title={commandTitle('refresh_diff', 'Refresh virtual diff and re-check conflicts')}
           >
             <RotateCw className="w-3.5 h-3.5 text-subtext0" />
             <span>Re-check</span>
