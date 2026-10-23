@@ -137,7 +137,10 @@ export const DiscussionThread: React.FC<{
   };
 
   const rootAuthorName = rootComment?.authorName || 'Reviewer';
-  const rootAuthorHandle = getAuthorHandle(rootAuthorName, rootComment?.authorId);
+  const rootAuthorHandle = getAuthorHandle(
+    rootAuthorName,
+    rootComment?.authorId || session?.assignee?.email
+  );
   const threadRelativeTime = formatGitLabTime(discussion.createdAt || rootComment?.createdAt || '');
 
   return (
@@ -171,8 +174,6 @@ export const DiscussionThread: React.FC<{
             session={session}
             isResolvable={isResolvable}
             discussion={discussion}
-            quote={quote}
-            isSubmitting={isSubmitting}
           />
         )}
 
@@ -215,7 +216,10 @@ export const DiscussionThread: React.FC<{
               <div className="bg-mantle/60 px-3.5 py-3 space-y-3 rounded-sm">
                 <div className="ml-2 pl-3.5 border-l-2 border-surface1 space-y-3">
                   {replies.map((reply) => {
-                    const handle = getAuthorHandle(reply.authorName, reply.authorId);
+                    const handle = getAuthorHandle(
+                      reply.authorName,
+                      reply.authorId || session?.assignee?.email
+                    );
                     const badges = getAuthorBadges(reply.authorName, reply.authorType, session);
                     const relativeTime = formatGitLabTime(reply.createdAt);
 

@@ -5,8 +5,8 @@ import type { VirtualMrCommitsTabProps } from './VirtualMrCommitsTabProps';
 
 export const VirtualMrCommitsTab: React.FC<VirtualMrCommitsTabProps> = ({ session }) => {
   return (
-    <div className="flex-1 h-full overflow-y-auto p-6 bg-crust/30">
-      <div className="max-w-5xl mx-auto space-y-4">
+    <div className="flex-1 h-full overflow-y-auto px-6 py-6 bg-crust/30 w-full">
+      <div className="w-full space-y-4">
         <div className="flex items-center justify-between border-b border-surface0 pb-2">
           <h3 className="font-semibold text-xs text-text flex items-center gap-2">
             <GitCommit className="w-4 h-4 text-primary" />

@@ -35,14 +35,14 @@ export function DiscussionReplyComment({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="px-1.5 py-0.5 text-[10px] font-medium border border-surface1 bg-surface0/50 text-subtext0 select-none">
+            <span className="px-1.5 py-0.5 text-[10px] font-medium border border-surface1 bg-surface0/50 text-subtext0 select-none rounded-sm">
               Reply
             </span>
 
             {badges.map((badge) => (
               <span
                 key={badge}
-                className="px-1.5 py-0.5 text-[10px] font-semibold border border-surface2 bg-surface1/60 text-subtext1 select-none"
+                className="px-1.5 py-0.5 text-[10px] font-semibold border border-surface2 bg-surface1/60 text-subtext1 select-none rounded-sm"
               >
                 {badge}
               </span>

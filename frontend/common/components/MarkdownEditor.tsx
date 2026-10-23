@@ -134,7 +134,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   return (
     <div
-      className={`border border-surface1 bg-mantle text-xs space-y-0 overflow-hidden focus-within:border-blue focus-within:ring-1 focus-within:ring-blue/30 transition-all ${className}`}
+      className={`markdown-editor border border-surface1 bg-mantle text-xs space-y-0 overflow-hidden rounded-sm focus-within:border-brand focus-within:ring-1 focus-within:ring-brand/30 transition-all ${className}`}
     >
       {/* Top Header: Tabs (Write / Preview) & GitLab Formatting Toolbar */}
       <MarkdownToolbar
@@ -214,7 +214,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 suggestions.length ? `${mentionListId}-${selectedMentionIndex}` : undefined
               }
               style={{ minHeight, maxHeight }}
-              className="w-full p-3 bg-base/50 text-text text-xs font-mono placeholder:text-subtext0/60 focus:outline-none transition-colors resize-y leading-relaxed border-0 rounded-sm"
+              className="markdown-editor-textarea w-full p-3 bg-base/50 text-text text-xs font-mono placeholder:text-subtext0/60 focus:outline-none transition-colors resize-y leading-relaxed border-0"
             />
 
             {suggestions.length > 0 && (

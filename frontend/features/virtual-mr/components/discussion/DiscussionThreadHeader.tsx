@@ -38,7 +38,7 @@ export function DiscussionThreadHeader({
       {/* Right side: Line number badge and Quote Discussion Button */}
       <div className="flex items-center gap-2">
         {discussion.lineNumber && (
-          <span className="font-mono text-[10px] text-subtext0 bg-surface0 border border-surface1 px-2 py-0.5">
+          <span className="font-mono text-[10px] text-subtext0 bg-surface0 border border-surface1 px-2 py-0.5 rounded-sm">
             Line {discussion.lineNumber}
           </span>
         )}

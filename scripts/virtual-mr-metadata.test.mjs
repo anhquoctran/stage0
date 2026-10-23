@@ -251,3 +251,41 @@ test('closing an MR workspace tab during a queued selection keeps the saved MR',
   assert.equal(store.getState().sessions[0].id, 'mr');
   assert.equal(store.getState().sessions[0].reviewers[0].agentId, 'bot-1');
 });
+
+
+test('updateSessionDetails tracks title history when title changes', async () => {
+  const { store } = await fixture();
+  const storage = new Map();
+  const mockLocalStorage = {
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, val) => storage.set(key, String(val)),
+    removeItem: (key) => storage.delete(key),
+    clear: () => storage.clear(),
+  };
+  globalThis.localStorage = mockLocalStorage;
+  try {
+    const session = store.getState().sessions[0];
+    assert.equal(session.title, 'Fixture MR');
+
+    await store.getState().updateSessionDetails(session.id, 'New Title 1', session.description);
+    const updated = store.getState().sessions.find((s) => s.id === session.id);
+    assert.equal(updated.title, 'New Title 1');
+    assert.equal(updated.titleHistory.length, 1);
+    assert.equal(updated.titleHistory[0].oldTitle, 'Fixture MR');
+    assert.equal(updated.titleHistory[0].newTitle, 'New Title 1');
+
+    // Updating without changing title should not append to history
+    await store.getState().updateSessionDetails(session.id, 'New Title 1', 'New Description');
+    const updated2 = store.getState().sessions.find((s) => s.id === session.id);
+    assert.equal(updated2.titleHistory.length, 1);
+
+    // Updating title again should append to history
+    await store.getState().updateSessionDetails(session.id, 'New Title 2', 'New Description');
+    const updated3 = store.getState().sessions.find((s) => s.id === session.id);
+    assert.equal(updated3.titleHistory.length, 2);
+    assert.equal(updated3.titleHistory[1].oldTitle, 'New Title 1');
+    assert.equal(updated3.titleHistory[1].newTitle, 'New Title 2');
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
