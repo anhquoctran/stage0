@@ -1,5 +1,6 @@
 import {
   applyThemeToDocument,
+  persistThemeMode,
   resolveTheme,
   useThemeStore,
 } from '../../../core/store/useThemeStore';
@@ -102,6 +103,7 @@ export function createPreferencesApplyAction({
       const resolvedTheme = resolveTheme(draftThemeMode);
       useThemeStore.setState({ themeMode: draftThemeMode, theme: resolvedTheme });
       applyThemeToDocument(resolvedTheme);
+      persistThemeMode(draftThemeMode);
       usePreferencesStore.setState({
         ...fontSettings,
         showInlineBlame: draftShowInlineBlame,

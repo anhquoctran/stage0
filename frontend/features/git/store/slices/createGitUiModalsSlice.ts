@@ -22,7 +22,9 @@ export const createGitUiModalsSlice: StateCreator<
     | 'setIsGitGraphOpen'
     | 'setIsRemoteUrlFromOpen'
     | 'isCloneModalOpen'
+    | 'isRepoOverviewOpen'
     | 'setIsCloneModalOpen'
+    | 'setIsRepoOverviewOpen'
     | 'setTargetFileForUrl'
   >
 > = (set, get) => ({
@@ -63,7 +65,11 @@ export const createGitUiModalsSlice: StateCreator<
 
   isCloneModalOpen: false,
 
+  isRepoOverviewOpen: false,
+
   setIsCloneModalOpen: (open) => set({ isCloneModalOpen: open }),
+
+  setIsRepoOverviewOpen: (open) => set({ isRepoOverviewOpen: open }),
 
   setTargetFileForUrl: (file) => set({ targetFileForUrl: file }),
 });

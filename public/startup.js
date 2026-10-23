@@ -37,6 +37,13 @@ window.__stage0_has_error__ = false;
   root.classList.add(isLight ? 'mocha-light' : 'mocha');
   if (isLight) root.classList.add('latte');
   root.style.colorScheme = isLight ? 'light' : 'dark';
+  if (isLight) {
+    root.style.setProperty('--splash-bg', '#dce0e8');
+    root.style.setProperty('--splash-text', '#3b3e53');
+  } else {
+    root.style.setProperty('--splash-bg', '#11111b');
+    root.style.setProperty('--splash-text', '#cdd6f4');
+  }
 })();
 
 window.addEventListener('error', function () {

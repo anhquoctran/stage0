@@ -2,7 +2,7 @@ import React from 'react';
 import { RefreshCw } from '../../../../common/components/icons/RefreshCw';
 import { GitCommit } from '../../../../common/components/icons/GitCommit';
 import { RotateCw } from '../../../../common/components/icons/RotateCw';
-import { FolderCog } from '../../../../common/components/icons/FolderCog';
+import { Cog } from '../../../../common/components/icons/Cog';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
 import { useVirtualMrStore } from '../../../../features/virtual-mr/store/useVirtualMrStore';
 import { TopBarPullButton } from './TopBarPullButton';
@@ -98,7 +98,7 @@ export const TopBarActionRibbon: React.FC<{
           className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group rounded-sm"
           title={shortcut('Repository Settings (Ctrl+Alt+S)')}
         >
-          <FolderCog className="w-5 h-5 text-primary shrink-0 transition-colors" />
+          <Cog className="w-5 h-5 text-primary shrink-0 transition-colors" />
           <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors whitespace-nowrap">
             Repo Settings
           </span>

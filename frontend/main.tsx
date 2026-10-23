@@ -21,7 +21,7 @@ import { isLikelySecretMcpEnvValue, isSecretMcpEnvName } from './features/ai/uti
 import './core/styles/index.css';
 
 const LEGACY_KEYS = [
-  'stage0_catppuccin_theme_mode', 'stage0_catppuccin_theme',
+  'stage0_catppuccin_theme',
   'stage0_viewer_font_settings', 'stage0_show_inline_blame',
   'stage0_ai_mcp_config', 'stage0_global_bot_reviewers',
   'stage0_notification_settings',
@@ -188,6 +188,12 @@ async function startApp() {
     window.__STAGE0_PREFERENCES_PATH__ = 'browser storage';
   }
   window.__STAGE0_PREFERENCES__ = preferences;
+  const startupThemeMode = preferences?.appearance?.themeMode;
+  if (startupThemeMode === 'light' || startupThemeMode === 'dark' || startupThemeMode === 'system') {
+    try {
+      localStorage.setItem('stage0_catppuccin_theme_mode', startupThemeMode);
+    } catch (_) {}
+  }
 
   const [{ default: App }, { ErrorBoundary }] = await Promise.all([
     import('./core/App'),

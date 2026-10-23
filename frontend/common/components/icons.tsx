@@ -95,5 +95,6 @@ export { Underline } from './icons/Underline';
 export { Undo2 } from './icons/Undo2';
 export { User } from './icons/User';
 export { Users } from './icons/Users';
+export { VsCode } from './icons/VsCode';
 export { X } from './icons/X';
 export { Zap } from './icons/Zap';

@@ -11,7 +11,7 @@ export const PreferencesNavTree: React.FC<{
   filteredTree: TreeCategory[];
   expandedGroups: Record<string, boolean>;
   toggleGroup: (groupId: string) => void;
-  currentTabId: PreferenceTab;
+  currentTabId: PreferenceTab | null;
   setActiveTab: (tab: PreferenceTab) => void;
 }> = ({
   searchQuery,
@@ -56,7 +56,7 @@ export const PreferencesNavTree: React.FC<{
         ) : (
           filteredTree.map((group) => {
             const isExpanded = expandedGroups[group.id] ?? false;
-            const hasActiveChild = group.children.some((c) => c.id === currentTabId);
+            const hasActiveChild = Boolean(currentTabId && group.children.some((c) => c.id === currentTabId));
 
             return (
               <div key={group.id} className="space-y-0.5">
@@ -70,7 +70,7 @@ export const PreferencesNavTree: React.FC<{
                     }
                   }}
                   className={`w-full flex items-center justify-between px-2 py-1.5 text-xs transition-colors cursor-pointer select-none text-left group rounded-sm ${
-                    hasActiveChild ? 'text-text font-semibold' : 'text-subtext1 hover:text-text hover:bg-surface0/30'
+                    hasActiveChild ? 'text-text font-medium' : 'text-subtext1 hover:text-text hover:bg-surface0/30'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">

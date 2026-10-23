@@ -1,5 +1,5 @@
 import { ChevronRight } from '../../../../common/components/icons/ChevronRight';
-import { Code2 } from '../../../../common/components/icons/Code2';
+import { VsCode } from '../../../../common/components/icons/VsCode';
 import { ExternalLink } from '../../../../common/components/icons/ExternalLink';
 import { Folder } from '../../../../common/components/icons/Folder';
 import { Terminal } from '../../../../common/components/icons/Terminal';
@@ -65,15 +65,16 @@ export function RepositoryOpenSubmenu({
               onClose();
               try {
                 await openRepoInVsCode(currentRepo.local_path);
-                showToast('Opened repository in VS Code');
+                showToast('Opened repository in VS Code', 'success');
               } catch (err) {
-                showToast(`Failed to open VS Code: ${err}`);
+                const msg = err instanceof Error ? err.message : String(err);
+                showToast(msg, 'error');
               }
             }}
             className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
-              <Code2 className="w-3.5 h-3.5 text-subtext0 group-hover:text-text transition-colors" />
+              <VsCode className="w-3.5 h-3.5 text-[#007acc] group-hover:brightness-110 transition-all shrink-0" />
               <span>Visual Studio Code</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono">{shortcut('Alt+Shift+V')}</span>

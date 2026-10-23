@@ -31,9 +31,10 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
   const handleOpenInIde = async (line?: number | null) => {
     try {
       await openFileInEditor(currentRepo.local_path, selectedFile.path, line || undefined);
-      showToast(`Opened ${selectedFile.path}${line ? ` at line ${line}` : ''} in VS Code`);
+      showToast(`Opened ${selectedFile.path}${line ? ` at line ${line}` : ''} in VS Code`, 'success');
     } catch (err: any) {
-      showToast(`Failed to open in IDE: ${err}`);
+      const msg = err instanceof Error ? err.message : String(err?.message || err);
+      showToast(msg, 'error');
     }
   };
 

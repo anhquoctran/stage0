@@ -25,9 +25,9 @@ const SORT_OPTIONS: CustomSelectOption<MrSort>[] = [
 ];
 
 const PAGE_SIZE_OPTIONS: CustomSelectOption<string>[] = [
-  { value: '20', label: '20 / page' },
-  { value: '50', label: '50 / page' },
-  { value: '100', label: '100 / page' },
+  { value: '20', label: '20 items / page' },
+  { value: '50', label: '50 items / page' },
+  { value: '100', label: '100 items / page' },
 ];
 
 const BOT_DEFAULT_EMOJIS: Record<string, string> = {

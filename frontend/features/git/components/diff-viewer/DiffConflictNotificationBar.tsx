@@ -2,7 +2,7 @@ import React from 'react';
 import { AlertTriangle } from '../../../../common/components/icons/AlertTriangle';
 import { GitMerge } from '../../../../common/components/icons/GitMerge';
 import { ArrowDown } from '../../../../common/components/icons/ArrowDown';
-import { Code2 } from '../../../../common/components/icons/Code2';
+import { VsCode } from '../../../../common/components/icons/VsCode';
 import { RotateCw } from '../../../../common/components/icons/RotateCw';
 import { openFileInEditor } from '../../utils/fileActions';
 import { formatShortcutText } from '../../../../common/utils/shortcuts';
@@ -19,7 +19,7 @@ export const DiffConflictNotificationBar: React.FC<{
   onSwitchToConflicts: () => void;
   onScrollToFirstConflict: () => void;
   onRefreshDiff: () => void;
-  onShowToast: (msg: string) => void;
+  onShowToast: (msg: string, level?: 'info' | 'success' | 'error') => void;
 }> = ({
   selectedFile,
   conflictReport,
@@ -94,15 +94,16 @@ export const DiffConflictNotificationBar: React.FC<{
             onClick={async () => {
               try {
                 await openFileInEditor(currentRepo.local_path, selectedFile.path);
-                onShowToast(`Opened ${selectedFile.path} in VS Code`);
+                onShowToast(`Opened ${selectedFile.path} in VS Code`, 'success');
               } catch (err) {
-                onShowToast(`Failed to open in VS Code: ${err}`);
+                const msg = err instanceof Error ? err.message : String(err);
+                onShowToast(msg, 'error');
               }
             }}
             className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs rounded-sm"
             title="Open this file directly in Visual Studio Code to resolve conflict"
           >
-            <Code2 className="w-3.5 h-3.5 text-white" />
+            <VsCode className="w-3.5 h-3.5 text-[#007acc]" />
             <span>Resolve in VS Code</span>
           </button>
         )}

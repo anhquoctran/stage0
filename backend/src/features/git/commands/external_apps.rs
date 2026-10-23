@@ -1,3 +1,5 @@
+use super::vscode_launcher::{launch_vscode, VsCodeTarget};
+
 #[tauri::command]
 pub async fn reveal_file_in_os(repo_path: String, file_path: String) -> Result<(), String> {
     let full_path = crate::features::git::resolve_safe_repo_path(&repo_path, &file_path)?;
@@ -83,79 +85,7 @@ pub async fn open_repo_in(
                 Ok(())
             }
         }
-        "vscode" => {
-            #[cfg(target_os = "windows")]
-            {
-                let win_path = canonical_repo.to_string_lossy().replace('/', "\\");
-                let mut launched = false;
-
-                let mut candidates = Vec::new();
-                if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
-                    candidates.push(
-                        std::path::PathBuf::from(local_appdata)
-                            .join("Programs\\Microsoft VS Code\\Code.exe"),
-                    );
-                }
-                if let Ok(prog_files) = std::env::var("PROGRAMFILES") {
-                    candidates.push(
-                        std::path::PathBuf::from(prog_files).join("Microsoft VS Code\\Code.exe"),
-                    );
-                }
-                if let Ok(prog_x86) = std::env::var("ProgramFiles(x86)") {
-                    candidates.push(
-                        std::path::PathBuf::from(prog_x86).join("Microsoft VS Code\\Code.exe"),
-                    );
-                }
-
-                for cand in candidates {
-                    if cand.exists()
-                        && std::process::Command::new(&cand)
-                            .arg(&win_path)
-                            .spawn()
-                            .is_ok()
-                    {
-                        launched = true;
-                        break;
-                    }
-                }
-
-                if !launched
-                    && std::process::Command::new("code.exe")
-                        .arg(&win_path)
-                        .spawn()
-                        .is_ok()
-                {
-                    launched = true;
-                }
-
-                if !launched {
-                    return Err("Failed to launch Visual Studio Code. Please ensure 'Code.exe' is in your PATH or VS Code is installed.".to_string());
-                }
-                Ok(())
-            }
-            #[cfg(target_os = "macos")]
-            {
-                let res = std::process::Command::new("code")
-                    .arg(&canonical_repo)
-                    .spawn();
-                if res.is_err() {
-                    std::process::Command::new("open")
-                        .args(&["-a", "Visual Studio Code"])
-                        .arg(&canonical_repo)
-                        .spawn()
-                        .map_err(|e| format!("Failed to open VS Code: {}", e))?;
-                }
-                Ok(())
-            }
-            #[cfg(not(any(target_os = "windows", target_os = "macos")))]
-            {
-                std::process::Command::new("code")
-                    .arg(&canonical_repo)
-                    .spawn()
-                    .map_err(|e| format!("Failed to open VS Code: {}", e))?;
-                Ok(())
-            }
-        }
+        "vscode" => launch_vscode(VsCodeTarget::Repo(&canonical_repo)),
         "terminal" => {
             #[cfg(target_os = "windows")]
             {
@@ -249,93 +179,8 @@ pub async fn open_file_in_editor(
     line_number: Option<i64>,
 ) -> Result<(), String> {
     let full_path = crate::features::git::resolve_safe_repo_path(&repo_path, &file_path)?;
-    #[cfg(target_os = "windows")]
-    {
-        let win_path = full_path.to_string_lossy().to_string().replace('/', "\\");
-        let target_str = match line_number {
-            Some(line) => format!("{}:{}", win_path, line),
-            None => win_path,
-        };
-
-        let mut launched = false;
-        let mut candidates = Vec::new();
-        if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
-            candidates.push(
-                std::path::PathBuf::from(local_appdata)
-                    .join("Programs\\Microsoft VS Code\\Code.exe"),
-            );
-        }
-        if let Ok(prog_files) = std::env::var("PROGRAMFILES") {
-            candidates
-                .push(std::path::PathBuf::from(prog_files).join("Microsoft VS Code\\Code.exe"));
-        }
-        if let Ok(prog_x86) = std::env::var("ProgramFiles(x86)") {
-            candidates.push(std::path::PathBuf::from(prog_x86).join("Microsoft VS Code\\Code.exe"));
-        }
-
-        for cand in candidates {
-            if cand.exists()
-                && std::process::Command::new(&cand)
-                    .arg("-g")
-                    .arg(&target_str)
-                    .spawn()
-                    .is_ok()
-            {
-                launched = true;
-                break;
-            }
-        }
-
-        if !launched
-            && std::process::Command::new("code.exe")
-                .arg("-g")
-                .arg(&target_str)
-                .spawn()
-                .is_ok()
-        {
-            launched = true;
-        }
-
-        if !launched {
-            return Err(
-                "Failed to launch Visual Studio Code. Please ensure 'Code.exe' is in your PATH."
-                    .to_string(),
-            );
-        }
-        Ok(())
-    }
-    #[cfg(target_os = "macos")]
-    {
-        let base_str = full_path.to_str().unwrap_or(&file_path);
-        let target_str = match line_number {
-            Some(line) => format!("{}:{}", base_str, line),
-            None => base_str.to_string(),
-        };
-
-        let res = std::process::Command::new("code")
-            .arg("-g")
-            .arg(&target_str)
-            .spawn();
-        if res.is_err() {
-            std::process::Command::new("open")
-                .args(&["-a", "Visual Studio Code", base_str])
-                .spawn()
-                .map_err(|e| format!("Failed to open VS Code: {}", e))?;
-        }
-        Ok(())
-    }
-    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
-    {
-        let base_str = full_path.to_str().unwrap_or(&file_path);
-        let target_str = match line_number {
-            Some(line) => format!("{}:{}", base_str, line),
-            None => base_str.to_string(),
-        };
-        std::process::Command::new("code")
-            .arg("-g")
-            .arg(&target_str)
-            .spawn()
-            .map_err(|e| format!("Failed to open VS Code: {}", e))?;
-        Ok(())
-    }
+    launch_vscode(VsCodeTarget::File {
+        path: &full_path,
+        line: line_number,
+    })
 }
