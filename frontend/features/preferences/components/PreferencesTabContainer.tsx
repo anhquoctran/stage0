@@ -1,3 +1,4 @@
+import { Cog } from '../../../common/components/icons/Cog';
 import { AiMcpTab } from '../../ai/components/AiMcpTab';
 import { BotReviewersTab } from '../../ai/components/BotReviewersTab';
 import { ExternalAgentsTab } from '../../ai/components/ExternalAgentsTab';
@@ -68,15 +69,58 @@ export function PreferencesTabContainer({
   setDraftGitBinaryId,
   setDraftGitBinaryPath,
 }: PreferencesTabContainerProps) {
+  const isKnownTab = Boolean(
+    currentTabId &&
+      [
+        'general-settings',
+        'appearance-theme',
+        'appearance-fonts',
+        'appearance-markdown-font',
+        'editor-diff',
+        'ai-guardrails',
+        'ai-overview',
+        'ai-providers',
+        'ai-mcp',
+        'ai-external-agents',
+        'ai-reviewers',
+        'ai-sandbox',
+        'git-binary',
+        'git-credentials',
+        'notifications-settings',
+      ].includes(currentTabId)
+  );
+
   return (
     <div
       className={`flex-1 overflow-y-auto rounded-sm ${currentTabId === 'ai-external-agents' ? 'px-5 py-4' : 'p-8'} bg-base flex flex-col`}
     >
       {/* Header Description */}
-      <PreferencesTabHeader
-        title={currentChildItem?.title}
-        description={currentChildItem?.description}
-      />
+      {isKnownTab && (
+        <PreferencesTabHeader
+          title={currentChildItem?.title}
+          description={currentChildItem?.description}
+        />
+      )}
+
+      {/* PLACEHOLDER SCREEN: When no setting tab is selected */}
+      {!isKnownTab && (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none animate-in fade-in duration-150">
+          <div className="w-16 h-16 bg-surface0/60 border border-surface1 flex items-center justify-center text-subtext0 mb-4 rounded-sm shadow-xs">
+            <Cog className="w-8 h-8 text-subtext1" />
+          </div>
+          <h3 className="text-base font-bold text-text mb-1.5">No preference selected</h3>
+          <p className="text-xs text-subtext0 max-w-sm mb-6 leading-relaxed">
+            Select a setting category from the navigation sidebar on the left, or search settings using the search box above.
+          </p>
+          {/* <button
+            type="button"
+            onClick={() => setActiveTab('general-settings')}
+            className="px-3.5 py-2 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-sm transition-all active:scale-[0.98] cursor-pointer shadow-xs"
+          >
+            Open General Settings
+          </button> */}
+        </div>
+      )}
 
       {/* VIEW: GENERAL SETTINGS */}
       {currentTabId === 'general-settings' && (

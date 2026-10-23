@@ -3,7 +3,7 @@ import { ChevronDown } from '../../../common/components/icons/ChevronDown';
 import { ChevronUp } from '../../../common/components/icons/ChevronUp';
 import { FileWarning } from '../../../common/components/icons/FileWarning';
 import { ShieldAlert } from '../../../common/components/icons/ShieldAlert';
-import { Code2 } from '../../../common/components/icons/Code2';
+import { VsCode } from '../../../common/components/icons/VsCode';
 import { Terminal } from '../../../common/components/icons/Terminal';
 import { FolderOpen } from '../../../common/components/icons/FolderOpen';
 import { Copy } from '../../../common/components/icons/Copy';
@@ -50,9 +50,10 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
     if (!currentRepo) return;
     try {
       await openFileInEditor(currentRepo.local_path, filePath);
-      showToast(`Opened ${filePath} in VS Code`);
+      showToast(`Opened ${filePath} in VS Code`, 'success');
     } catch (err) {
-      showToast(`Failed to open in VS Code: ${err}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast(msg, 'error');
     }
   };
 
@@ -112,15 +113,16 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                 onClick={async () => {
                   try {
                     await openRepoInVsCode(currentRepo.local_path);
-                    showToast('Opened repository in VS Code');
+                    showToast('Opened repository in VS Code', 'success');
                   } catch (err) {
-                    showToast(`Failed to open VS Code: ${err}`);
+                    const msg = err instanceof Error ? err.message : String(err);
+                    showToast(msg, 'error');
                   }
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
                 title={formatShortcutText('Open repository in Visual Studio Code (Alt+Shift+V)')}
               >
-                <Code2 className="w-3.5 h-3.5 text-subtext0" />
+                <VsCode className="w-3.5 h-3.5 text-[#007acc]" />
                 <span>Open in VS Code</span>
               </button>
 
@@ -267,7 +269,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                         className="p-1 rounded-sm hover:bg-surface1 text-subtext0 hover:text-text transition-colors"
                         title="Open file in Visual Studio Code to resolve"
                       >
-                        <Code2 className="w-3.5 h-3.5" />
+                        <VsCode className="w-3.5 h-3.5 text-[#007acc]" />
                       </button>
                       <button
                         type="button"

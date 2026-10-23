@@ -39,18 +39,36 @@ export function applyThemeToDocument(theme: CatppuccinTheme) {
   document.body.style.color = 'var(--ctp-text)';
 }
 
+export function persistThemeMode(mode: ThemeMode) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(STORAGE_KEY, mode);
+  } catch (_) {
+    // Ignore storage quota or disabled localStorage errors
+  }
+}
+
 function getInitialThemeMode(): ThemeMode {
   if (typeof window === 'undefined') return 'system';
   const configured = window.__STAGE0_PREFERENCES__?.appearance?.themeMode;
-  if (configured === 'system' || configured === 'dark' || configured === 'light') return configured;
+  if (configured === 'system' || configured === 'dark' || configured === 'light') {
+    persistThemeMode(configured);
+    return configured;
+  }
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved === 'system' || saved === 'dark' || saved === 'light') {
     return saved as ThemeMode;
   }
   // Migration fallback from older key
   const oldTheme = localStorage.getItem('stage0_catppuccin_theme');
-  if (oldTheme === 'mocha-light') return 'light';
-  if (oldTheme === 'mocha') return 'dark';
+  if (oldTheme === 'mocha-light') {
+    persistThemeMode('light');
+    return 'light';
+  }
+  if (oldTheme === 'mocha') {
+    persistThemeMode('dark');
+    return 'dark';
+  }
   // Fresh installs follow the operating system until the user chooses a mode.
   return 'system';
 }
@@ -68,6 +86,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   setThemeMode: (mode: ThemeMode) => {
     const resolved = resolveTheme(mode);
     applyThemeToDocument(resolved);
+    persistThemeMode(mode);
     set({ themeMode: mode, theme: resolved });
     void preferencesJsonService.patch({ appearance: { themeMode: mode } }).catch((error) => console.error('Could not save preferences.json:', error));
   },
@@ -75,6 +94,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   setTheme: (theme: CatppuccinTheme) => {
     const mode: ThemeMode = theme === 'mocha-light' ? 'light' : 'dark';
     applyThemeToDocument(theme);
+    persistThemeMode(mode);
     set({ themeMode: mode, theme });
     void preferencesJsonService.patch({ appearance: { themeMode: mode } }).catch((error) => console.error('Could not save preferences.json:', error));
   },
@@ -110,6 +130,7 @@ if (typeof window !== 'undefined') {
     if (mode === 'system' || mode === 'dark' || mode === 'light') {
       const theme = resolveTheme(mode);
       applyThemeToDocument(theme);
+      persistThemeMode(mode);
       useThemeStore.setState({ themeMode: mode, theme });
     }
   });

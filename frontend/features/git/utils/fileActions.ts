@@ -102,8 +102,33 @@ export async function openRepoInExplorer(repoPath: string): Promise<void> {
 /**
  * Opens repository in Visual Studio Code
  */
+export function formatFriendlyVsCodeError(err: unknown): string {
+  const rawMsg = err instanceof Error ? err.message : String(err || '');
+  const lower = rawMsg.toLowerCase();
+  if (
+    lower.includes('not installed') ||
+    lower.includes('failed to launch') ||
+    lower.includes('not found') ||
+    lower.includes('path') ||
+    lower.includes('applications') ||
+    lower.includes('snap') ||
+    lower.includes('flatpak') ||
+    lower.includes('no such file')
+  ) {
+    if (rawMsg.includes('Visual Studio Code is not installed') || rawMsg.includes('Please install VS Code')) {
+      return rawMsg.replace(/^Error:\s*/i, '');
+    }
+    return 'Visual Studio Code is not installed or not configured in system PATH. Please install VS Code or add "code" to PATH.';
+  }
+  return `Failed to open Visual Studio Code: ${rawMsg}`;
+}
+
 export async function openRepoInVsCode(repoPath: string): Promise<void> {
-  await openRepoIn(repoPath, 'vscode');
+  try {
+    await openRepoIn(repoPath, 'vscode');
+  } catch (err) {
+    throw new Error(formatFriendlyVsCodeError(err));
+  }
 }
 
 /**
@@ -121,11 +146,15 @@ export async function openFileInEditor(
   filePath: string,
   lineNumber?: number
 ): Promise<void> {
-  await invoke('open_file_in_editor', {
-    repoPath,
-    filePath,
-    lineNumber: lineNumber || null,
-  });
+  try {
+    await invoke('open_file_in_editor', {
+      repoPath,
+      filePath,
+      lineNumber: lineNumber || null,
+    });
+  } catch (err) {
+    throw new Error(formatFriendlyVsCodeError(err));
+  }
 }
 
 /**

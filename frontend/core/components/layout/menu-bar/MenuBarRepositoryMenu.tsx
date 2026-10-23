@@ -1,8 +1,9 @@
 import React from 'react';
 import { ArrowLeftRight } from '../../../../common/components/icons/ArrowLeftRight';
-import { FolderCog } from '../../../../common/components/icons/FolderCog';
+import { Cog } from '../../../../common/components/icons/Cog';
 import { GitCompare } from '../../../../common/components/icons/GitCompare';
 import { GitPullRequest } from '../../../../common/components/icons/GitPullRequest';
+import { Info } from '../../../../common/components/icons/Info';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
 import { useVirtualMrStore } from '../../../../features/virtual-mr/store/useVirtualMrStore';
 import { RepositoryMergeSubmenu } from './RepositoryMergeSubmenu';
@@ -41,6 +42,7 @@ export const MenuBarRepositoryMenu: React.FC<{
     swapBranches,
     refreshDiff,
     showToast,
+    setIsRepoOverviewOpen,
   } = useGitStore();
 
   return (
@@ -167,13 +169,31 @@ export const MenuBarRepositoryMenu: React.FC<{
             disabled={!currentRepo}
             onClick={() => {
               onClose();
+              setIsRepoOverviewOpen(true);
+            }}
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
+          >
+            <div className="flex items-center gap-2">
+              <Info className="w-3.5 h-3.5 group-hover:text-text transition-colors" />
+              <span>Repository Overview...</span>
+            </div>
+            <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+I')}</span>
+          </button>
+
+          <div className="my-1 border-t border-surface0" />
+
+          <button
+            type="button"
+            disabled={!currentRepo}
+            onClick={() => {
+              onClose();
               openRepoSettings('remotes');
             }}
             className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors disabled:opacity-40 disabled:hover:bg-transparent group cursor-pointer rounded-sm"
           >
             <div className="flex items-center gap-2">
-              <FolderCog className="w-3.5 h-3.5 text-accent group-hover:text-text transition-colors" />
-              <span className="font-medium text-accent">Repository Settings...</span>
+              <Cog className="w-3.5 h-3.5 text-accent group-hover:text-text transition-colors" />
+              <span>Repository Settings...</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono">{shortcut('Ctrl+Alt+S')}</span>
           </button>

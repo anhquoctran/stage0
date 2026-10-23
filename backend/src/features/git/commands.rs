@@ -9,6 +9,7 @@ mod repo_validation;
 mod repository;
 mod settings;
 mod sync;
+mod vscode_launcher;
 
 pub use clone::*;
 pub use external_apps::*;

@@ -9,6 +9,7 @@ import {
   revealInOs,
 } from '../../../features/git/utils/fileActions';
 import { usePerformanceMonitorStore } from '../../../features/performance/store/usePerformanceMonitorStore';
+import { useGitStore } from '../../../features/git/store/useGitStore';
 import type { WorkspaceShortcutsContext } from './WorkspaceShortcutsContext';
 
 export function useWorkspaceShortcuts({
@@ -74,6 +75,17 @@ export function useWorkspaceShortcuts({
       }
 
       if (!currentRepo) return;
+
+      const isOverviewShortcut =
+        (e.ctrlKey || e.metaKey) &&
+        !e.shiftKey &&
+        !e.altKey &&
+        (e.key.toLowerCase() === 'i' || e.code === 'KeyI');
+      if (isOverviewShortcut) {
+        e.preventDefault();
+        useGitStore.getState().setIsRepoOverviewOpen(true);
+        return;
+      }
 
       if (
         e.altKey &&
@@ -225,8 +237,11 @@ export function useWorkspaceShortcuts({
         if (currentRepo) {
           e.preventDefault();
           openRepoInVsCode(currentRepo.local_path)
-            .then(() => showToast('Opened repository in VS Code'))
-            .catch((err) => showToast(`Failed to open VS Code: ${err}`));
+            .then(() => showToast('Opened repository in VS Code', 'success'))
+            .catch((err) => {
+              const msg = err instanceof Error ? err.message : String(err);
+              showToast(msg, 'error');
+            });
         }
       } else if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'e' || e.code === 'KeyE')) {
         // Alt+Shift+E: Open repository in OS File Explorer / Finder / File Manager

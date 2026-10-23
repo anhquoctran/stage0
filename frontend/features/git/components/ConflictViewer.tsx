@@ -56,9 +56,10 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
     if (!currentRepo) return;
     try {
       await openFileInEditor(currentRepo.local_path, selectedFile.path);
-      showToast(`Opened ${selectedFile.path} in VS Code`);
+      showToast(`Opened ${selectedFile.path} in VS Code`, 'success');
     } catch (err) {
-      showToast(`Failed to open in VS Code: ${err}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      showToast(msg, 'error');
     }
   };
 

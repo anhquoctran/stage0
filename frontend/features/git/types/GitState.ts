@@ -66,6 +66,7 @@ export interface GitState {
   isGitGraphOpen: boolean;
   isRemoteUrlFromOpen: boolean;
   isCloneModalOpen: boolean;
+  isRepoOverviewOpen: boolean;
   targetFileForUrl: ChangedFile | null;
   setIsPullFromOpen: (open: boolean) => void;
   setIsMergeFromOpen: (open: boolean) => void;
@@ -73,6 +74,7 @@ export interface GitState {
   setIsGitGraphOpen: (open: boolean) => void;
   setIsRemoteUrlFromOpen: (open: boolean) => void;
   setIsCloneModalOpen: (open: boolean) => void;
+  setIsRepoOverviewOpen: (open: boolean) => void;
   cloneRepo: (url: string, targetPath: string, credentialId?: string, options?: CloneOptions) => Promise<RepoInfo | null>;
   pickCloneFolder: () => Promise<string | null>;
   setTargetFileForUrl: (file: ChangedFile | null) => void;

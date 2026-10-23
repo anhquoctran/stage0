@@ -4,6 +4,7 @@ import { MergeFromModal } from '../../../features/git/components/MergeFromModal'
 import { PullFromModal } from '../../../features/git/components/PullFromModal';
 import { RebaseFromModal } from '../../../features/git/components/RebaseFromModal';
 import { RemoteUrlFromModal } from '../../../features/git/components/RemoteUrlFromModal';
+import { RepositoryOverviewModal } from '../../../features/git/components/RepositoryOverviewModal';
 import { RepositorySettingsModal } from '../../../features/git/components/RepositorySettingsModal';
 import { PreferencesModal } from '../../../features/preferences/components/PreferencesModal';
 import type { MainLayoutModalsProps } from './MainLayoutModalsProps';
@@ -39,6 +40,9 @@ export function MainLayoutModals({
 
       {/* Clone Remote Repository Modal Dialog */}
       <CloneRepoModal />
+      {/* Repository Overview Modal Dialog */}
+      <RepositoryOverviewModal />
+
       <GitTaskDialog />
     </>
   );

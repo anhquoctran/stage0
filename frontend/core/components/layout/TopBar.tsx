@@ -6,6 +6,7 @@ import { TopBarTitleRow } from './top-bar/TopBarTitleRow';
 import { TopBarRepoBadge } from './top-bar/TopBarRepoBadge';
 import { TopBarActionRibbon } from './top-bar/TopBarActionRibbon';
 import { TopBarRebasingBanner } from './top-bar/TopBarRebasingBanner';
+import { TopBarRepoOverviewButton } from './top-bar/TopBarRepoOverviewButton';
 
 export const TopBar: React.FC = () => {
   const { currentRepo, isGitGraphOpen, setIsGitGraphOpen } = useGitStore();
@@ -32,6 +33,7 @@ export const TopBar: React.FC = () => {
         {/* Right Section: Sync Status & Rebase in-progress strip */}
         <div className="flex items-center gap-2.5 shrink-0">
           <TopBarRebasingBanner />
+          <TopBarRepoOverviewButton shortcut={shortcut} />
         </div>
       </div>
 

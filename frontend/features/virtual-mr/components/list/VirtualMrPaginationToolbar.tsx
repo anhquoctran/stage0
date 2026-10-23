@@ -30,7 +30,7 @@ export function VirtualMrPaginationToolbar({
           disabled={isLoadingSessions}
           buttonClassName="min-w-[104px]"
           menuClassName="!top-auto bottom-full !mt-0 mb-1.5"
-          dropdownWidth="w-32"
+          dropdownWidth="w-48"
           aria-label="Merge requests per page"
         />
         {pageCount > 1 && (

@@ -111,7 +111,7 @@ export const PreferencesModal: React.FC = () => {
               filteredTree={filteredTree}
               expandedGroups={expandedGroups}
               toggleGroup={toggleGroup}
-              currentTabId={currentTabId || 'ai-overview'}
+              currentTabId={currentTabId}
               setActiveTab={setActiveTab}
             />
 
