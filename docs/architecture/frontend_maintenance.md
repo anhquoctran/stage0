@@ -49,6 +49,11 @@ their application callers migrate together (see report section 8).
   owning workflow; do not duplicate state or move callbacks into render side effects.
 - Preserve caller-level React keys when extracting mapped items. Preserve refs,
   accessibility attributes, focus/keyboard handling and conditional mounting.
+- Maintain UI small-rounded consistency: apply `rounded-sm` (`--radius-sm: 4px`)
+  across buttons, inputs, selects, textareas, visual `div` containers (cards, panels,
+  dialogs, dropdowns, popovers, banners, toasts) and badges/tags. Preserve existing
+  `rounded-full` or custom radii. Keep main window roots, window title bar drag
+  regions, and Windows-style window controls unrounded (`rounded-none`).
 
 ## Budgets and verification
 

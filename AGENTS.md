@@ -35,6 +35,19 @@ and the measured [refactor report](docs/architecture/backend_refactor_analysis.m
   tests and move their imports/paths with their owner; never remove assertions
   just to make a refactor pass.
 
+## UI styling contracts
+
+- Apply small rounded corners (`rounded-sm` / `--radius-sm: 4px`) across UI elements:
+  all buttons (`button`), inputs (`input`, `select`, `textarea`), visual containers
+  (`div` cards, panels, popovers, dropdowns, modal dialogs, toasts, banners), and badges/tags.
+- Preserve existing rounded styling: do not strip or overwrite elements that already
+  have explicit rounding (e.g. `rounded-full` for avatars, badges, or circular status dots).
+- Keep system window boundaries sharp (`rounded-none` or unrounded):
+  - Main application window root frame (`MainLayout.tsx`) and viewport root.
+  - Window title bar and Tauri drag region (`TopBarTitleRow.tsx`).
+  - Windows-style window controls (Minimize, Maximize, Close in `WindowControls.tsx`
+    must use `rounded-none`; macOS traffic lights must use `rounded-full`).
+
 ## Verification and handoff
 
 - Run `pnpm check:architecture`, relevant Node/Rust tests, and `cargo check
