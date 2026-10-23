@@ -35,8 +35,8 @@ export interface VirtualMrState {
   isLoadingSessions: boolean;
   isMrListOpen: boolean;
   setIsMrListOpen: (isOpen: boolean) => void;
-  activeMrTab: 'overview' | 'commits' | 'diff';
-  setActiveMrTab: (tab: 'overview' | 'commits' | 'diff') => void;
+  activeMrTab: 'overview' | 'commits' | 'reviews' | 'diff';
+  setActiveMrTab: (tab: 'overview' | 'commits' | 'reviews' | 'diff') => void;
 
   // Draft Virtual MR Creation (GitHub / GitLab compare workflow)
   draftMr: NewMrDraft | null;

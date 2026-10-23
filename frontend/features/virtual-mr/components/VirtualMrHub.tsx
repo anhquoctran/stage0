@@ -1,15 +1,13 @@
-import React,{ useEffect,useMemo,useRef,useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { useGitStore } from '../../git/store/useGitStore';
-import { isReviewStartingForSession,useReviewStore } from '../../review/store/useReviewStore';
+import { isReviewStartingForSession, useReviewStore } from '../../review/store/useReviewStore';
 import { createStartMrReviewAction } from '../services/createStartMrReviewAction';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { hasVirtualMrActivity } from '../utils/virtualMrActivity';
 import { getMrSequenceNumber } from '../utils/virtualMrSequence';
-import { VirtualMrCommitsTab } from './hub/VirtualMrCommitsTab';
 import { VirtualMrHeader } from './hub/VirtualMrHeader';
 import { VirtualMrMetadataBar } from './hub/VirtualMrMetadataBar';
-import { VirtualMrOverviewTab } from './hub/VirtualMrOverviewTab';
 import { useMrMetadataDropdowns } from './useMrMetadataDropdowns';
 
 export const VirtualMrHub: React.FC = () => {
@@ -17,7 +15,6 @@ export const VirtualMrHub: React.FC = () => {
   const {
     sessions,
     getActiveSession,
-    consumeDescriptionEditRequest,
     updateSessionDetails,
     updateSessionBranches,
     assignReviewerBot,
@@ -26,7 +23,6 @@ export const VirtualMrHub: React.FC = () => {
     repoLabels,
     activeMrTab,
     setActiveMrTab,
-    createDiscussion,
     openRepoSettings,
     repoSettings,
     refreshRepoMetadata,
@@ -39,6 +35,7 @@ export const VirtualMrHub: React.FC = () => {
     repoCustomReviewers,
     reloadPersistedReviewers,
   } = useBotReviewersStore();
+
   const { reviewers: effectiveReviewers } = useMemo(() => {
     return getEffectiveReviewers(currentRepo?.id, repoSettings?.inheritGlobalAgents);
   }, [
@@ -49,6 +46,7 @@ export const VirtualMrHub: React.FC = () => {
     repoActiveBotIds,
     repoCustomReviewers,
   ]);
+
   const activeReviewRuns = useReviewStore((state) => state.activeRuns);
   const isReviewStarting = useReviewStore((state) => state.isStarting);
   const reviewBatches = useReviewStore((state) => state.reviewBatches);
@@ -63,20 +61,6 @@ export const VirtualMrHub: React.FC = () => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState('');
 
-  const isLegacyBoilerplate = (desc?: string) =>
-    Boolean(
-      desc &&
-        desc.includes('Virtual MR comparing') &&
-        (desc.includes('Review code changes') || desc.includes('Check security'))
-    );
-
-  // Existing MRs open in preview. New MRs request the editor once after creation.
-  const [descValue, setDescValue] = useState(() => {
-    const raw = session?.description || '';
-    return isLegacyBoilerplate(raw) ? '' : raw;
-  });
-  const [isEditingDesc, setIsEditingDesc] = useState(false);
-
   // Dropdown states
   const {
     toggleReviewerDropdown,
@@ -89,27 +73,13 @@ export const VirtualMrHub: React.FC = () => {
     isLoadingLabelOptions,
   } = useMrMetadataDropdowns({ reloadPersistedReviewers, currentRepo, refreshRepoMetadata });
 
-  const [newGeneralComment, setNewGeneralComment] = useState('');
-  const [isPostingDiscussion, setIsPostingDiscussion] = useState(false);
-  const postingDiscussionRef = useRef(false);
-
   useEffect(() => {
     if (!session) return;
     setEditTitle(session.title);
-    setIsEditingDesc(consumeDescriptionEditRequest(session.id));
-  }, [session?.id, consumeDescriptionEditRequest]);
-
-  useEffect(() => {
-    if (!session) return;
-    if (isLegacyBoilerplate(session.description)) {
-      updateSessionDetails(session.id, session.title, '');
-      setDescValue('');
-    } else {
-      setDescValue(session.description || '');
-    }
-  }, [session?.id, session?.description]);
+  }, [session?.id, session?.title]);
 
   if (!currentRepo || !session) return null;
+
   const hasAssignedReviewer = session.reviewers.length > 0;
   const reviewBatch = reviewBatches[session.id];
   const reviewIsStarting = isReviewStarting && isReviewStartingForSession(session.id);
@@ -121,7 +91,10 @@ export const VirtualMrHub: React.FC = () => {
   const branchLockedReason =
     'Cannot change branches once discussions or reviews have started in this Virtual MR';
 
-  const handleStartAiReview = createStartMrReviewAction(session, showToast);
+  const handleStartAiReview = async () => {
+    setActiveMrTab('reviews');
+    await createStartMrReviewAction(session, showToast)();
+  };
 
   const handleStartEditTitle = () => {
     setEditTitle(session.title);
@@ -133,52 +106,6 @@ export const VirtualMrHub: React.FC = () => {
     await updateSessionDetails(session.id, editTitle.trim(), session.description);
     setIsEditingTitle(false);
     showToast('Title updated');
-  };
-
-  const handleSaveDesc = async () => {
-    await updateSessionDetails(session.id, session.title, descValue);
-    showToast('Description saved');
-    setIsEditingDesc(false);
-  };
-
-  const handleGenerateDescription = () => {
-    if (!session) return;
-    setIsEditingDesc(true);
-    const commitList =
-      session.commits.length > 0
-        ? session.commits.map((c) => `- ${c.subject} (\`${c.shortHash}\`)`).join('\n')
-        : '- Ongoing changes between branches';
-
-    const draft = `## Summary\nAutomated overview for \`${session.compareBranch}\` → \`${session.baseBranch}\`.\n\n### Key Changes\n${commitList}\n\n### Testing & Verification\n- [ ] AI review checks verified\n- [ ] Local build & tests pass\n`;
-
-    if (descValue.trim() && descValue.trim() !== draft.trim()) {
-      if (window.confirm('Replace current description with a draft from commit metadata?')) {
-        setDescValue(draft);
-        showToast('Generated description from commit metadata. No AI request was sent.');
-      }
-    } else {
-      setDescValue(draft);
-      showToast('Generated description from commit metadata. No AI request was sent.');
-    }
-  };
-
-  const handleAddGeneralComment = async () => {
-    if (!newGeneralComment.trim() || postingDiscussionRef.current) return;
-    postingDiscussionRef.current = true;
-    setIsPostingDiscussion(true);
-    try {
-      await createDiscussion(session.id, { initialComment: newGeneralComment.trim() });
-      setNewGeneralComment('');
-      showToast('Discussion posted', 'success');
-    } catch (error) {
-      showToast(
-        `Could not post discussion: ${error instanceof Error ? error.message : String(error)}`,
-        'error'
-      );
-    } finally {
-      postingDiscussionRef.current = false;
-      setIsPostingDiscussion(false);
-    }
   };
 
   const handleBranchChange = async (sessionId: string, newBase: string, newCompare: string) => {
@@ -209,7 +136,7 @@ export const VirtualMrHub: React.FC = () => {
   };
 
   return (
-    <div className="border-b border-surface0 bg-mantle text-text text-xs">
+    <div className="border-b border-surface0 bg-mantle text-text text-xs shrink-0">
       {/* TOP HEADER: TITLE & STATUS & ACTIONS */}
       <VirtualMrHeader
         session={session}
@@ -232,7 +159,7 @@ export const VirtualMrHub: React.FC = () => {
         handleStartAiReview={handleStartAiReview}
       />
 
-      {/* METADATA BAR: ASSIGNEE, REVIEWERS, LABELS */}
+      {/* METADATA BAR: ASSIGNEE, REVIEWERS, LABELS, 4 WORKSPACE TABS */}
       <VirtualMrMetadataBar
         session={session}
         removeReviewerBot={removeReviewerBot}
@@ -253,26 +180,6 @@ export const VirtualMrHub: React.FC = () => {
         activeMrTab={activeMrTab}
         diffPayload={diffPayload}
       />
-
-      {/* EXPANDABLE TAB CONTENT: OVERVIEW & COMMITS */}
-      {activeMrTab === 'overview' && (
-        <VirtualMrOverviewTab
-          isEditingDesc={isEditingDesc}
-          setIsEditingDesc={setIsEditingDesc}
-          session={session}
-          descValue={descValue}
-          setDescValue={setDescValue}
-          handleGenerateDescription={handleGenerateDescription}
-          handleSaveDesc={handleSaveDesc}
-          newGeneralComment={newGeneralComment}
-          setNewGeneralComment={setNewGeneralComment}
-          handleAddGeneralComment={handleAddGeneralComment}
-          isPostingDiscussion={isPostingDiscussion}
-        />
-      )}
-
-      {/* EXPANDABLE TAB CONTENT: COMMITS */}
-      {activeMrTab === 'commits' && <VirtualMrCommitsTab session={session} />}
     </div>
   );
 };
