@@ -1,15 +1,12 @@
-import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { homeDir } from '@tauri-apps/api/path';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGitCredentialsStore } from '../../credentials/store/useGitCredentialsStore';
-import { resolveCloneDestination } from '../services/resolveCloneDestination';
 import { useGitStore } from '../store/useGitStore';
 import { useGitTaskStore } from '../store/useGitTaskStore';
-import type { RemoteCloneRefs } from '../types/RemoteCloneRefs';
-import type { UrlValidationStatus } from '../types/UrlValidationStatus';
 import { extractCloneRepoName } from '../utils/cloneDestination';
 import { createCloneOptions, validateCloneOptions } from '../utils/cloneOptions';
+import { useCloneDestination } from './useCloneDestination';
+import { useCloneRemoteRefs } from './useCloneRemoteRefs';
 
 export function useCloneRepository() {
   const { isCloneModalOpen, setIsCloneModalOpen, cloneRepo, pickCloneFolder } = useGitStore();
@@ -18,10 +15,7 @@ export function useCloneRepository() {
   const fetchCredentials = useGitCredentialsStore((state) => state.fetchCredentials);
 
   const [remoteUrl, setRemoteUrl] = useState('');
-  const [parentDir, setParentDir] = useState('');
-  const [repoName, setRepoName] = useState('');
-  const [repoNameEdited, setRepoNameEdited] = useState(false);
-  const [destinationPath, setDestinationPath] = useState('');
+
   const [cloneOptions, setCloneOptions] = useState(createCloneOptions);
   const isCloning = useGitTaskStore((state) =>
     state.tasks.some((task) => task.operation === 'clone' && task.status === 'running')
@@ -31,9 +25,6 @@ export function useCloneRepository() {
   const [selectedCredentialId, setSelectedCredentialId] = useState('');
 
   // URL Validation State
-  const [urlStatus, setUrlStatus] = useState<UrlValidationStatus>('idle');
-  const [urlMessage, setUrlMessage] = useState<string | null>(null);
-  const [remoteRefs, setRemoteRefs] = useState<RemoteCloneRefs | null>(null);
 
   const remoteOrigin = useMemo(() => {
     try {
@@ -101,24 +92,17 @@ export function useCloneRepository() {
     }
   }, [isCloneModalOpen]);
 
-  useEffect(() => {
-    if (!isCloneModalOpen) return;
-    let disposed = false;
-    void homeDir()
-      .then((directory) => {
-        // A late home lookup must not replace a folder the user has chosen.
-        if (!disposed) setParentDir((current) => current || directory);
-      })
-      .catch(() => {
-        if (!disposed)
-          setErrorMessage(
-            'Could not resolve your home directory. Please choose a destination with Browse.'
-          );
-      });
-    return () => {
-      disposed = true;
-    };
-  }, [isCloneModalOpen]);
+  const {
+    repoNameEdited,
+    repoName,
+    setDestinationPath,
+    setRepoName,
+    destinationPath,
+    setRepoNameEdited,
+    setParentDir,
+    parentDir,
+    handleBrowseFolder,
+  } = useCloneDestination({ isCloneModalOpen, setErrorMessage, pickCloneFolder });
 
   useEffect(() => {
     if (isSshRemote) {
@@ -157,68 +141,15 @@ export function useCloneRepository() {
   };
 
   // Debounce 1s then validate URL format and remote availability
-  useEffect(() => {
-    let disposed = false;
-    setRemoteRefs(null);
-    setCloneOptions((current) => (current.branch ? { ...current, branch: '' } : current));
-    const trimmed = remoteUrl.trim();
-    if (!isCloneModalOpen || !trimmed) {
-      setUrlStatus('idle');
-      setUrlMessage(null);
-      return;
-    }
-
-    if (useSavedCredential && !hasSelectedCredential) {
-      setUrlStatus('idle');
-      setUrlMessage('Select an HTTPS credential to check access and load branches and tags.');
-      return;
-    }
-
-    const isBasicFormat =
-      trimmed.startsWith('https://') ||
-      trimmed.startsWith('http://') ||
-      trimmed.startsWith('git@') ||
-      trimmed.startsWith('ssh://');
-
-    if (!isBasicFormat) {
-      setUrlStatus('invalid');
-      setUrlMessage('Invalid URL format (must start with https://, git@ or ssh://)');
-      return;
-    }
-
-    setUrlStatus('validating');
-    setUrlMessage('Checking repository and loading branches and tags...');
-
-    const timer = setTimeout(async () => {
-      try {
-        const refs = await invoke<RemoteCloneRefs>('get_clone_remote_refs', {
-          url: trimmed,
-          credentialId: useSavedCredential ? selectedCredentialId : null,
-        });
-        if (disposed) return;
-        setRemoteRefs(refs);
-        setUrlStatus('valid');
-        setUrlMessage('Repository is valid and ready to clone.');
-      } catch (err: unknown) {
-        if (disposed) return;
-        setUrlStatus('invalid');
-        setUrlMessage(
-          typeof err === 'string' ? err : 'Repository does not exist or is inaccessible.'
-        );
-      }
-    }, 1000);
-
-    return () => {
-      disposed = true;
-      clearTimeout(timer);
-    };
-  }, [
-    isCloneModalOpen,
-    remoteUrl,
-    hasSelectedCredential,
-    useSavedCredential,
-    selectedCredentialId,
-  ]);
+  const { setRemoteRefs, setUrlStatus, setUrlMessage, urlStatus, urlMessage, remoteRefs } =
+    useCloneRemoteRefs({
+      setCloneOptions,
+      remoteUrl,
+      isCloneModalOpen,
+      useSavedCredential,
+      hasSelectedCredential,
+      selectedCredentialId,
+    });
 
   // Close on Escape
   useEffect(() => {
@@ -232,32 +163,6 @@ export function useCloneRepository() {
   }, [isCloneModalOpen, isCloning, setIsCloneModalOpen]);
 
   // Native path APIs handle Windows drive roots / UNC and Unix roots correctly.
-  useEffect(() => {
-    let disposed = false;
-    setDestinationPath('');
-    void resolveCloneDestination(parentDir, repoName)
-      .then((destination) => {
-        if (!disposed) setDestinationPath(destination);
-      })
-      .catch(() => {
-        if (!disposed)
-          setErrorMessage(
-            'Could not resolve the destination path. Please choose a folder with Browse.'
-          );
-      });
-    return () => {
-      disposed = true;
-    };
-  }, [parentDir, repoName]);
-
-  const handleBrowseFolder = async () => {
-    const folder = await pickCloneFolder();
-    if (folder) {
-      setParentDir(folder);
-      if (folder !== parentDir) setDestinationPath('');
-      setErrorMessage(null);
-    }
-  };
 
   const handleClose = () => {
     if (isCloning) return;

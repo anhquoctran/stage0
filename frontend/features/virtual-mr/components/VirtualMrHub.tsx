@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React,{ useEffect,useMemo,useRef,useState } from 'react';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { useGitStore } from '../../git/store/useGitStore';
-import { startAssignedReviewBatchForSession } from '../../review/services/assignedReviewService';
-import { isReviewStartingForSession, useReviewStore } from '../../review/store/useReviewStore';
+import { isReviewStartingForSession,useReviewStore } from '../../review/store/useReviewStore';
+import { createStartMrReviewAction } from '../services/createStartMrReviewAction';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { hasVirtualMrActivity } from '../utils/virtualMrActivity';
 import { getMrSequenceNumber } from '../utils/virtualMrSequence';
@@ -10,6 +10,7 @@ import { VirtualMrCommitsTab } from './hub/VirtualMrCommitsTab';
 import { VirtualMrHeader } from './hub/VirtualMrHeader';
 import { VirtualMrMetadataBar } from './hub/VirtualMrMetadataBar';
 import { VirtualMrOverviewTab } from './hub/VirtualMrOverviewTab';
+import { useMrMetadataDropdowns } from './useMrMetadataDropdowns';
 
 export const VirtualMrHub: React.FC = () => {
   const { currentRepo, showToast, diffPayload, branches, setBranchComparison } = useGitStore();
@@ -77,41 +78,20 @@ export const VirtualMrHub: React.FC = () => {
   const [isEditingDesc, setIsEditingDesc] = useState(false);
 
   // Dropdown states
-  const [showReviewerDropdown, setShowReviewerDropdown] = useState(false);
-  const [showLabelDropdown, setShowLabelDropdown] = useState(false);
-  const [isLoadingReviewerOptions, setIsLoadingReviewerOptions] = useState(false);
-  const [isLoadingLabelOptions, setIsLoadingLabelOptions] = useState(false);
+  const {
+    toggleReviewerDropdown,
+    showReviewerDropdown,
+    isLoadingReviewerOptions,
+    setShowReviewerDropdown,
+    toggleLabelDropdown,
+    showLabelDropdown,
+    setShowLabelDropdown,
+    isLoadingLabelOptions,
+  } = useMrMetadataDropdowns({ reloadPersistedReviewers, currentRepo, refreshRepoMetadata });
+
   const [newGeneralComment, setNewGeneralComment] = useState('');
   const [isPostingDiscussion, setIsPostingDiscussion] = useState(false);
   const postingDiscussionRef = useRef(false);
-
-  const toggleReviewerDropdown = async () => {
-    const willOpen = !showReviewerDropdown;
-    setShowReviewerDropdown(willOpen);
-    if (!willOpen) return;
-
-    reloadPersistedReviewers();
-    if (!currentRepo?.id) return;
-    setIsLoadingReviewerOptions(true);
-    try {
-      await refreshRepoMetadata(currentRepo.id);
-    } finally {
-      setIsLoadingReviewerOptions(false);
-    }
-  };
-
-  const toggleLabelDropdown = async () => {
-    const willOpen = !showLabelDropdown;
-    setShowLabelDropdown(willOpen);
-    if (!willOpen || !currentRepo?.id) return;
-
-    setIsLoadingLabelOptions(true);
-    try {
-      await refreshRepoMetadata(currentRepo.id);
-    } finally {
-      setIsLoadingLabelOptions(false);
-    }
-  };
 
   useEffect(() => {
     if (!session) return;
@@ -141,43 +121,7 @@ export const VirtualMrHub: React.FC = () => {
   const branchLockedReason =
     'Cannot change branches once discussions or reviews have started in this Virtual MR';
 
-  const handleStartAiReview = async () => {
-    try {
-      const result = await startAssignedReviewBatchForSession(session.id);
-      if (!result.runs.length && !result.failures.length) {
-        showToast('No assigned AI reviewer is available for this Virtual MR.', 'warning');
-        return;
-      }
-      const completed = result.runs.filter(
-        (run) => run.status === 'completed' || run.status === 'partial'
-      ).length;
-      const summary = `${completed}/${session.reviewers.length} reviewers finished.`;
-      if (result.failures.length) {
-        showToast(
-          `AI review ${completed ? 'incomplete' : 'failed'}. ${summary} ${[result.failures[0], !result.descriptionGenerated ? 'The MR description was not updated.' : 'The MR description was saved.'].join(' ')}`,
-          completed ? 'warning' : 'error'
-        );
-      } else if (!result.descriptionGenerated) {
-        showToast(
-          result.hasChanges
-            ? `${summary} The MR description could not be generated from the available diff.`
-            : 'No changed files were found in this Virtual MR snapshot.',
-          result.hasChanges ? 'warning' : 'info'
-        );
-      } else {
-        const partial = result.runs.some((run) => run.status === 'partial');
-        showToast(
-          `AI review ${partial ? 'finished with incomplete coverage' : 'completed'}. ${summary} The MR description was updated.`,
-          partial ? 'warning' : 'success'
-        );
-      }
-    } catch (error) {
-      showToast(
-        `AI code review could not start: ${error instanceof Error ? error.message : String(error)}`,
-        'error'
-      );
-    }
-  };
+  const handleStartAiReview = createStartMrReviewAction(session, showToast);
 
   const handleStartEditTitle = () => {
     setEditTitle(session.title);

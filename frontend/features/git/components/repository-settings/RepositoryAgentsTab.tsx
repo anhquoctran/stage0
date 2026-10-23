@@ -1,21 +1,20 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Check } from '../../../../common/components/icons/Check';
-import { ExternalLink } from '../../../../common/components/icons/ExternalLink';
 import { Plus } from '../../../../common/components/icons/Plus';
-import { RotateCcw } from '../../../../common/components/icons/RotateCcw';
 import { Shield } from '../../../../common/components/icons/Shield';
 import { ShieldCheck } from '../../../../common/components/icons/ShieldCheck';
 import type { CustomSelectOption } from '../../../../common/types/CustomSelectOption';
 import { BOT_CATEGORIES } from '../../../ai/constants/botPresets';
 import { useAiMcpStore } from '../../../ai/store/useAiMcpStore';
 import { useBotReviewersStore } from '../../../ai/store/useBotReviewersStore';
-import type { AcpReviewConfigOverrides } from '../../../ai/types/AcpReviewConfigOverrides';
 import { usePreferencesStore } from '../../../preferences/store/usePreferencesStore';
 import type { BotCategory } from '../../../virtual-mr/types/BotCategory';
 import { useGitStore } from '../../store/useGitStore';
+import { RepositoryBotInheritanceCards } from './RepositoryBotInheritanceCards';
 import { RepositoryBotItem } from './RepositoryBotItem';
 import { RepositoryCustomBotForm } from './RepositoryCustomBotForm';
 import { RepositoryCustomRulesSection } from './RepositoryCustomRulesSection';
+import { useRepositoryBotForm } from './useRepositoryBotForm';
 
 const RULE_SNIPPETS = [
   {
@@ -60,20 +59,6 @@ export const RepositoryAgentsTab: React.FC<{
     resetRepoToGlobal,
   } = useBotReviewersStore();
 
-  const [isAddingRepoBot, setIsAddingRepoBot] = useState(false);
-  const [repoBotName, setRepoBotName] = useState('');
-  const [repoBotTagline, setRepoBotTagline] = useState('');
-  const [repoBotDesc, setRepoBotDesc] = useState('');
-  const [repoBotCategory, setRepoBotCategory] = useState<BotCategory>('custom');
-  const [repoBotEmoji, setRepoBotEmoji] = useState('🤖');
-  const [repoBotInstructions, setRepoBotInstructions] = useState('');
-  const [repoBotExecutionMode, setRepoBotExecutionMode] = useState<'provider' | 'acp'>('provider');
-  const [repoBotAcpAgentId, setRepoBotAcpAgentId] = useState('');
-  const [repoBotAllowAcpSourceTransfer, setRepoBotAllowAcpSourceTransfer] = useState(false);
-  const [repoBotAcpConfigOptions, setRepoBotAcpConfigOptions] = useState<AcpReviewConfigOverrides>(
-    {}
-  );
-
   const currentRepoId = currentRepo?.id || '';
 
   const activeBotSet = useMemo(() => {
@@ -88,47 +73,29 @@ export const RepositoryAgentsTab: React.FC<{
     setCustomRules((prev) => (prev.trim() ? `${prev.trim()}\n\n- ${text}` : `- ${text}`));
   };
 
-  const handleSaveRepoCustomBot = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!repoBotName.trim() || !currentRepoId) return;
-    if (
-      repoBotExecutionMode === 'acp' &&
-      !externalAgents.some((agent) => agent.id === repoBotAcpAgentId)
-    ) {
-      showToast('Choose an installed ACP agent first.');
-      return;
-    }
-
-    addRepoCustomReviewer(currentRepoId, {
-      name: repoBotName.trim(),
-      tagline: repoBotTagline.trim(),
-      description: repoBotDesc.trim(),
-      category: repoBotCategory,
-      avatarEmoji: repoBotEmoji,
-      customInstructions: repoBotInstructions.trim(),
-      provider: repoBotExecutionMode === 'acp' ? 'global_default' : undefined,
-      model: repoBotExecutionMode === 'acp' ? 'global_default' : undefined,
-      acpAgentId: repoBotExecutionMode === 'acp' ? repoBotAcpAgentId : undefined,
-      allowAcpSourceTransfer:
-        repoBotExecutionMode === 'acp' ? repoBotAllowAcpSourceTransfer : undefined,
-      acpConfigOptions: repoBotExecutionMode === 'acp' ? repoBotAcpConfigOptions : undefined,
-      enabled: true,
-      isBuiltin: false,
-    });
-
-    setIsAddingRepoBot(false);
-    setRepoBotName('');
-    setRepoBotTagline('');
-    setRepoBotDesc('');
-    setRepoBotCategory('custom');
-    setRepoBotEmoji('🤖');
-    setRepoBotInstructions('');
-    setRepoBotExecutionMode('provider');
-    setRepoBotAcpAgentId('');
-    setRepoBotAllowAcpSourceTransfer(false);
-    setRepoBotAcpConfigOptions({});
-    showToast(`Added repo reviewer: ${repoBotName.trim()}`);
-  };
+  const {
+    setIsAddingRepoBot,
+    isAddingRepoBot,
+    handleSaveRepoCustomBot,
+    repoBotEmoji,
+    setRepoBotEmoji,
+    repoBotName,
+    setRepoBotName,
+    repoBotTagline,
+    setRepoBotTagline,
+    repoBotCategory,
+    setRepoBotCategory,
+    repoBotExecutionMode,
+    setRepoBotExecutionMode,
+    repoBotAcpAgentId,
+    setRepoBotAcpAgentId,
+    setRepoBotAcpConfigOptions,
+    repoBotAcpConfigOptions,
+    repoBotAllowAcpSourceTransfer,
+    setRepoBotAllowAcpSourceTransfer,
+    repoBotInstructions,
+    setRepoBotInstructions,
+  } = useRepositoryBotForm({ currentRepoId, externalAgents, showToast, addRepoCustomReviewer });
 
   const repoBotCategoryOptions: CustomSelectOption<BotCategory>[] = BOT_CATEGORIES.map(
     (category) => ({ value: category.id, label: category.label })
@@ -148,111 +115,17 @@ export const RepositoryAgentsTab: React.FC<{
       </div>
 
       {/* INHERITANCE MODE SELECTOR CARDS */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Option 1: Inherit Global (Default) */}
-        <div
-          onClick={() => setInheritAgents(true)}
-          className={`p-3.5 border cursor-pointer transition-all flex flex-col justify-between ${
-            inheritAgents
-              ? 'bg-brand/5 border-brand/60 shadow-xs'
-              : 'bg-crust border-surface0 hover:border-surface1 opacity-80'
-          }`}
-        >
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="reviewer-inheritance"
-                  checked={inheritAgents}
-                  onChange={() => setInheritAgents(true)}
-                  className="text-brand focus:ring-0 cursor-pointer"
-                />
-                <span className="font-semibold text-xs text-text">Inherit Global Preferences</span>
-              </div>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 bg-brand/20 text-brand border border-brand/30">
-                Default
-              </span>
-            </div>
-            <p className="text-[11px] text-subtext0 leading-relaxed pl-5">
-              Automatically inherits all active Bot Reviewers and AI model settings configured in
-              App Preferences.
-            </p>
-          </div>
-
-          <div className="pt-2 mt-2 border-t border-surface0/60 pl-5 flex items-center justify-between">
-            <span className="text-[11px] text-brand font-medium">
-              {globalReviewers.filter((b) => b.enabled).length} global bots active
-            </span>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose();
-                setIsPreferencesOpen(true);
-              }}
-              className="text-[11px] text-subtext0 hover:text-text flex items-center gap-1 cursor-pointer hover:underline"
-              title="Open App Preferences modal"
-            >
-              <span>Open Preferences</span>
-              <ExternalLink className="w-3 h-3" />
-            </button>
-          </div>
-        </div>
-
-        {/* Option 2: Custom for this Repo */}
-        <div
-          onClick={() => setInheritAgents(false)}
-          className={`p-3.5 border cursor-pointer transition-all flex flex-col justify-between ${
-            !inheritAgents
-              ? 'bg-accent/5 border-accent/60 shadow-xs'
-              : 'bg-crust border-surface0 hover:border-surface1 opacity-80'
-          }`}
-        >
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="reviewer-inheritance"
-                  checked={!inheritAgents}
-                  onChange={() => setInheritAgents(false)}
-                  className="text-accent focus:ring-0 cursor-pointer"
-                />
-                <span className="font-semibold text-xs text-text">Custom for this Repository</span>
-              </div>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 bg-surface1 text-subtext0 border border-surface2">
-                Isolated
-              </span>
-            </div>
-            <p className="text-[11px] text-subtext0 leading-relaxed pl-5">
-              Override active bots independently for this repository, or add repository-exclusive
-              custom reviewer bots.
-            </p>
-          </div>
-
-          <div className="pt-2 mt-2 border-t border-surface0/60 pl-5 flex items-center justify-between">
-            <span className="text-[11px] text-accent font-medium">
-              {activeBotSet.size} bots enabled for repo
-            </span>
-            {!inheritAgents && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  resetRepoToGlobal(currentRepoId);
-                  showToast('Reset bot selections to global defaults');
-                }}
-                className="text-[11px] text-subtext0 hover:text-text flex items-center gap-1 cursor-pointer"
-                title="Reset to global active selection"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Reset</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      <RepositoryBotInheritanceCards
+        setInheritAgents={setInheritAgents}
+        inheritAgents={inheritAgents}
+        globalReviewers={globalReviewers}
+        onClose={onClose}
+        setIsPreferencesOpen={setIsPreferencesOpen}
+        activeBotSet={activeBotSet}
+        resetRepoToGlobal={resetRepoToGlobal}
+        currentRepoId={currentRepoId}
+        showToast={showToast}
+      />
 
       {/* BOT ROSTER DISPLAY */}
       <div className="space-y-3">

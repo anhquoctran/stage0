@@ -1,19 +1,13 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import type { AcpAgentConfig, AcpRegistryAgent } from '../types/AcpAgentConfig';
-import type { AcpAgentConnectionInfo } from '../types/AcpAgentConnectionInfo';
 import type { AcpRegistryResponse } from '../types/AcpRegistryResponse';
 import type { AuthMethod } from '../types/AuthMethod';
 import type { ExternalAgentsFilter as Filter } from '../types/ExternalAgentsFilter';
 import type { ExternalAgentsTabProps } from '../types/ExternalAgentsTabProps';
-import {
-  forgetAgentSignIn,
-  getLastSuccessfulSignIn,
-  saveLastSuccessfulSignIn,
-  type AcpLastSuccessfulSignIn,
-} from '../utils/acpAuthHistory';
+import { forgetAgentSignIn, getLastSuccessfulSignIn } from '../utils/acpAuthHistory';
 import { registryUnavailableReason } from '../utils/acpRegistryAvailability';
 import { registryDistribution, safeProjectUrl } from '../utils/acpRegistryMetadata';
 import { AcpAgentCard } from './external-agents/AcpAgentCard';
@@ -21,6 +15,9 @@ import { AcpAgentDetails } from './external-agents/AcpAgentDetails';
 import { AcpAgentModalForm } from './external-agents/AcpAgentModalForm';
 import { AcpRegistryActions } from './external-agents/AcpRegistryActions';
 import { AcpRegistryToolbar } from './external-agents/AcpRegistryToolbar';
+import { useAcpAgentAccount } from './useAcpAgentAccount';
+import { useAcpAgentPrompt } from './useAcpAgentPrompt';
+import { useCustomAcpAgentForm } from './useCustomAcpAgentForm';
 
 function isProtocolAuthMethod(method?: AuthMethod): boolean {
   return !method?.type || method.type === 'agent';
@@ -44,25 +41,18 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
   const [notice, setNotice] = useState<string | null>(null);
   const [detailAgent, setDetailAgent] = useState<AcpAgentConfig | null>(null);
   const [detailRegistryEntry, setDetailRegistryEntry] = useState<AcpRegistryAgent | null>(null);
-  const [authMethods, setAuthMethods] = useState<AuthMethod[]>([]);
-  const [authStatus, setAuthStatus] = useState<AcpAgentConnectionInfo['authStatus']>(null);
-  const [supportsAuthStatus, setSupportsAuthStatus] = useState(false);
-  const [reportedAgentInfo, setReportedAgentInfo] =
-    useState<AcpAgentConnectionInfo['agentInfo']>(null);
-  const [selectedAuthMethod, setSelectedAuthMethod] = useState('');
-  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
-  const [lastSuccessfulSignIn, setLastSuccessfulSignIn] = useState<AcpLastSuccessfulSignIn | null>(
-    null
-  );
-  const [prompt, setPrompt] = useState('What can you help me with?');
-  const [response, setResponse] = useState('');
-  const [isSendingPrompt, setIsSendingPrompt] = useState(false);
+  const account = useAcpAgentAccount({ setError, detailAgent, setBusyId, setNotice });
+
+  const promptSession = useAcpAgentPrompt({ detailAgent, setError, currentRepoPath });
+
   const [removePending, setRemovePending] = useState(false);
   const [isCustomOpen, setIsCustomOpen] = useState(false);
-  const [customName, setCustomName] = useState('');
-  const [customCommand, setCustomCommand] = useState('');
-  const [customArgs, setCustomArgs] = useState('');
-  const connectionRequestRef = useRef(0);
+  const customForm = useCustomAcpAgentForm({
+    setError,
+    updateExternalAgents,
+    externalAgents,
+    setIsCustomOpen,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -85,53 +75,6 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
       cancelled = true;
     };
   }, []);
-
-  const applyConnectionInfo = useCallback((info: AcpAgentConnectionInfo) => {
-    setAuthMethods(info.authMethods);
-    setSelectedAuthMethod(info.authMethods[0]?.id || '');
-    setAuthStatus(info.authStatus);
-    setSupportsAuthStatus(info.supportsAuthStatus);
-    setReportedAgentInfo(info.agentInfo);
-  }, []);
-
-  const refreshAgentConnection = useCallback(
-    async (agent: AcpAgentConfig): Promise<AcpAgentConnectionInfo | null> => {
-      const requestId = ++connectionRequestRef.current;
-      setIsCheckingAuth(true);
-      setError(null);
-      try {
-        const info = await invoke<AcpAgentConnectionInfo>('acp_agent_connection_info', {
-          config: agent,
-        });
-        if (requestId === connectionRequestRef.current) applyConnectionInfo(info);
-        return requestId === connectionRequestRef.current ? info : null;
-      } catch (cause) {
-        if (requestId === connectionRequestRef.current) {
-          setAuthMethods([]);
-          setAuthStatus(null);
-          setSupportsAuthStatus(false);
-          setReportedAgentInfo(null);
-          setError(`Could not check this agent's account status: ${String(cause)}`);
-        }
-        return null;
-      } finally {
-        if (requestId === connectionRequestRef.current) setIsCheckingAuth(false);
-      }
-    },
-    [applyConnectionInfo]
-  );
-
-  useEffect(() => {
-    if (!detailAgent) return;
-    setAuthMethods([]);
-    setAuthStatus(null);
-    setSupportsAuthStatus(false);
-    setReportedAgentInfo(null);
-    if (isTauri()) void refreshAgentConnection(detailAgent);
-    return () => {
-      connectionRequestRef.current += 1;
-    };
-  }, [detailAgent, refreshAgentConnection]);
 
   const visibleAgents = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -171,105 +114,18 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
   const openDetails = (agent: AcpAgentConfig, entry?: AcpRegistryAgent) => {
     setDetailAgent(agent);
     setDetailRegistryEntry(entry ?? null);
-    setAuthMethods([]);
-    setAuthStatus(null);
-    setSupportsAuthStatus(false);
-    setReportedAgentInfo(null);
-    setSelectedAuthMethod('');
-    setLastSuccessfulSignIn(getLastSuccessfulSignIn(agent));
-    setPrompt('What can you help me with?');
-    setResponse('');
+    account.setAuthMethods([]);
+    account.setAuthStatus(null);
+    account.setSupportsAuthStatus(false);
+    account.setReportedAgentInfo(null);
+    account.setSelectedAuthMethod('');
+    account.setLastSuccessfulSignIn(getLastSuccessfulSignIn(agent));
+    promptSession.setPrompt('What can you help me with?');
+    promptSession.setResponse('');
     setRemovePending(false);
     setError(null);
     setNotice(null);
-    setIsCheckingAuth(isTauri());
-  };
-
-  const signIn = async () => {
-    if (!detailAgent || !selectedAuthMethod) return;
-    setBusyId(detailAgent.id);
-    setError(null);
-    try {
-      const method = authMethods.find((item) => item.id === selectedAuthMethod);
-      const isGoogleSignIn = /google/i.test(
-        `${method?.name || ''} ${method?.id || selectedAuthMethod}`
-      );
-      setNotice(
-        isGoogleSignIn
-          ? 'Starting Google sign-in. Antigravity should open your default browser if a new login is needed…'
-          : 'Starting the agent sign-in flow…'
-      );
-      const result = await invoke<{ authStatus: AcpAgentConnectionInfo['authStatus'] }>(
-        'acp_agent_authenticate',
-        { config: detailAgent, methodId: selectedAuthMethod }
-      );
-      const completed: AcpLastSuccessfulSignIn = {
-        completedAt: new Date().toISOString(),
-        methodId: selectedAuthMethod,
-        methodLabel: method?.name || selectedAuthMethod,
-        agentVersion: detailAgent.version,
-      };
-      setLastSuccessfulSignIn(completed);
-      const saved = saveLastSuccessfulSignIn(detailAgent, completed);
-      setNotice('Sign-in completed. Refreshing the agent-reported account status…');
-      const refreshed = await refreshAgentConnection(detailAgent);
-      const reportedStatus = refreshed?.authStatus ?? result?.authStatus ?? null;
-      if (reportedStatus) setAuthStatus(reportedStatus);
-      setNotice(
-        reportedStatus
-          ? 'Sign-in completed. The account details shown here are reported by the agent.'
-          : saved
-            ? 'Sign-in completed. This agent does not provide account details over ACP; Stage0 saved the sign-in result on this device.'
-            : 'Sign-in completed, but Stage0 could not save the local sign-in confirmation. This agent does not provide account details over ACP.'
-      );
-    } catch (cause) {
-      setError(String(cause));
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const sendPrompt = async () => {
-    if (!detailAgent || !prompt.trim()) return;
-    setIsSendingPrompt(true);
-    setError(null);
-    setResponse('');
-    try {
-      const result = await invoke<string>('acp_agent_prompt', {
-        config: detailAgent,
-        prompt,
-        cwd: currentRepoPath,
-      });
-      setResponse(result);
-    } catch (cause) {
-      setError(String(cause));
-    } finally {
-      setIsSendingPrompt(false);
-    }
-  };
-
-  const addCustomAgent = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!customName.trim() || !customCommand.trim()) {
-      setError('Name and command are required.');
-      return;
-    }
-    const config: AcpAgentConfig = {
-      id: `custom-${Date.now()}`,
-      name: customName.trim(),
-      source: 'custom',
-      command: customCommand.trim(),
-      args: customArgs
-        .split(/\r?\n/)
-        .map((arg) => arg.trim())
-        .filter(Boolean),
-    };
-    updateExternalAgents([...externalAgents, config]);
-    setCustomName('');
-    setCustomCommand('');
-    setCustomArgs('');
-    setIsCustomOpen(false);
-    setError(null);
+    account.setIsCheckingAuth(isTauri());
   };
 
   const removeAgent = () => {
@@ -283,7 +139,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
 
   const registryConfig = (entry: AcpRegistryAgent) =>
     externalAgents.find((agent) => agent.id === entry.id);
-  const selectedAuthOption = authMethods.find((method) => method.id === selectedAuthMethod);
+
   const projectWebsiteUrl = safeProjectUrl(detailRegistryEntry?.website);
   const projectRepositoryUrl = safeProjectUrl(detailRegistryEntry?.repository);
   const projectLicenseUrl = safeProjectUrl(detailRegistryEntry?.licenseUrl);
@@ -298,7 +154,6 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
         setIsLoading={setIsLoading}
         setRegistry={setRegistry}
         setSupportedBinaryTarget={setSupportedBinaryTarget}
-        String={String}
       />
 
       {error && (
@@ -370,51 +225,59 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
 
       {detailAgent && (
         <AcpAgentDetails
-          detailAgent={detailAgent}
-          setDetailAgent={setDetailAgent}
-          setDetailRegistryEntry={setDetailRegistryEntry}
-          error={error}
-          notice={notice}
-          setRemovePending={setRemovePending}
-          detailRegistryEntry={detailRegistryEntry}
-          projectLicenseUrl={projectLicenseUrl}
-          registryDistribution={registryDistribution}
-          reportedAgentInfo={reportedAgentInfo}
-          projectWebsiteUrl={projectWebsiteUrl}
-          projectRepositoryUrl={projectRepositoryUrl}
-          removePending={removePending}
-          removeAgent={removeAgent}
-          authStatus={authStatus}
-          lastSuccessfulSignIn={lastSuccessfulSignIn}
-          isCheckingAuth={isCheckingAuth}
-          supportsAuthStatus={supportsAuthStatus}
-          authMethods={authMethods}
-          selectedAuthMethod={selectedAuthMethod}
-          setSelectedAuthMethod={setSelectedAuthMethod}
-          busyId={busyId}
-          isProtocolAuthMethod={isProtocolAuthMethod}
-          selectedAuthOption={selectedAuthOption}
-          signIn={signIn}
-          currentRepoPath={currentRepoPath}
-          prompt={prompt}
-          setPrompt={setPrompt}
-          isSendingPrompt={isSendingPrompt}
-          sendPrompt={sendPrompt}
-          response={response}
+          project={{
+            detailAgent: detailAgent,
+            detailRegistryEntry: detailRegistryEntry,
+            projectLicenseUrl: projectLicenseUrl,
+            registryDistribution: registryDistribution,
+            reportedAgentInfo: account.reportedAgentInfo,
+            projectWebsiteUrl: projectWebsiteUrl,
+            projectRepositoryUrl: projectRepositoryUrl,
+          }}
+          dialog={{
+            setDetailAgent: setDetailAgent,
+            setDetailRegistryEntry: setDetailRegistryEntry,
+            error: error,
+            notice: notice,
+            setRemovePending: setRemovePending,
+            removePending: removePending,
+            removeAgent: removeAgent,
+          }}
+          account={{
+            authStatus: account.authStatus,
+            lastSuccessfulSignIn: account.lastSuccessfulSignIn,
+            isCheckingAuth: account.isCheckingAuth,
+            supportsAuthStatus: account.supportsAuthStatus,
+            authMethods: account.authMethods,
+            selectedAuthMethod: account.selectedAuthMethod,
+            setSelectedAuthMethod: account.setSelectedAuthMethod,
+            busyId: busyId,
+            isProtocolAuthMethod: isProtocolAuthMethod,
+            selectedAuthOption: account.selectedAuthOption,
+            signIn: account.signIn,
+          }}
+          promptSession={{
+            currentRepoPath: currentRepoPath,
+            prompt: promptSession.prompt,
+            setPrompt: promptSession.setPrompt,
+            isSendingPrompt: promptSession.isSendingPrompt,
+            sendPrompt: promptSession.sendPrompt,
+            response: promptSession.response,
+          }}
         />
       )}
 
       {isCustomOpen && (
         <AcpAgentModalForm
           setIsCustomOpen={setIsCustomOpen}
-          addCustomAgent={addCustomAgent}
+          addCustomAgent={customForm.addCustomAgent}
           error={error}
-          customName={customName}
-          setCustomName={setCustomName}
-          customCommand={customCommand}
-          setCustomCommand={setCustomCommand}
-          customArgs={customArgs}
-          setCustomArgs={setCustomArgs}
+          customName={customForm.customName}
+          setCustomName={customForm.setCustomName}
+          customCommand={customForm.customCommand}
+          setCustomCommand={customForm.setCustomCommand}
+          customArgs={customForm.customArgs}
+          setCustomArgs={customForm.setCustomArgs}
         />
       )}
     </div>

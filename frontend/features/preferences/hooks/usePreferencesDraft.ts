@@ -1,34 +1,27 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   applyThemeToDocument,
   resolveTheme,
   useThemeStore,
 } from '../../../core/store/useThemeStore';
-import { type ThemeMode } from '../../../core/types/ThemeMode';
 import { DEFAULT_AI_CONFIG, DEFAULT_MCP_SERVERS } from '../../ai/constants/aiPresets';
 import { DEFAULT_BOT_REVIEWERS } from '../../ai/constants/botPresets';
 import { captureAiPreferences } from '../../ai/services/commitAiPreferences';
 import { createAiPreferencesDraft } from '../../ai/store/createAiPreferencesDraft';
 import { type AiConfig } from '../../ai/types/AiConfig';
 import { DEFAULT_GUARDRAIL_POLICY } from '../../ai/types/guardrails';
-import { aiPreferencesChangeCount } from '../../ai/utils/aiPreferencesSnapshot';
 import { useGitBinaryStore } from '../../git/store/useGitBinaryStore';
 import { useGitStore } from '../../git/store/useGitStore';
-import { type SandboxType } from '../../git/types/SandboxType';
-import { SETTINGS_TREE } from '../constants/settingsTree';
 import { createPreferencesApplyAction } from '../services/createPreferencesApplyAction';
 import {
   applyViewerFontToDocument,
   DEFAULT_VIEWER_FONT_SETTINGS,
   usePreferencesStore,
 } from '../store/usePreferencesStore';
-import type { PreferenceTab } from '../types/PreferenceTab';
-import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 import { type ViewerFontSettings } from '../types/ViewerFontSettings';
-import { countUnsavedPreferences } from '../utils/countUnsavedPreferences';
-import { filterSettingsTree } from '../utils/filterSettingsTree';
-import { findSettingChildItem } from '../utils/findSettingChildItem';
-import { normalizeTab } from '../utils/normalizePreferenceTab';
+import { usePreferencesChangeCount } from './usePreferencesChangeCount';
+import { usePreferencesDraftSession } from './usePreferencesDraftSession';
+import { usePreferencesNavigation } from './usePreferencesNavigation';
 
 export function usePreferencesDraft() {
   const {
@@ -66,122 +59,25 @@ export function usePreferencesDraft() {
     fetchActiveBinary,
   } = useGitBinaryStore();
 
-  const [activeTab, setActiveTab] = useState<PreferenceTab | null>(null);
-  const [isJsonEditorOpen, setIsJsonEditorOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-
-  const toggleGroup = (groupId: string) => {
-    setExpandedGroups((prev) => ({
-      ...prev,
-      [groupId]: !prev[groupId],
-    }));
-  };
-
-  // Draft States
-  const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
-  const [draftThemeId, setDraftThemeId] = useState('catppuccin-mocha');
-  const [draftFontFamily, setDraftFontFamily] = useState(storedFontFamily);
-  const [draftFontSize, setDraftFontSize] = useState(storedFontSize);
-  const [draftIsBold, setDraftIsBold] = useState(storedIsBold);
-  const [draftIsItalic, setDraftIsItalic] = useState(storedIsItalic);
-  const [draftIsUnderline, setDraftIsUnderline] = useState(storedIsUnderline);
-  const [draftLineSpacing, setDraftLineSpacing] = useState(storedLineSpacing);
-  const [draftEnableLigatures, setDraftEnableLigatures] = useState(storedEnableLigatures);
-  const [draftDiffViewMode, setDraftDiffViewMode] = useState<'split' | 'unified'>('split');
-  const [draftIgnoreWhitespace, setDraftIgnoreWhitespace] = useState(false);
-  const [draftWordWrap, setDraftWordWrap] = useState(false);
-  const [draftShowInlineBlame, setDraftShowInlineBlame] = useState(storedShowInlineBlame);
-  const [draftSandboxType, setDraftSandboxType] = useState<SandboxType>(storedSandboxType);
-  const [draftGitBinaryId, setDraftGitBinaryId] = useState(storedGitBinaryId);
-  const [draftGitBinaryPath, setDraftGitBinaryPath] = useState(storedGitBinaryPath);
-
-  // Baseline Snapshot (committed values)
-  const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
-    themeMode: storedThemeMode,
-    fontFamily: storedFontFamily,
-    fontSize: storedFontSize,
-    isBold: storedIsBold,
-    isItalic: storedIsItalic,
-    isUnderline: storedIsUnderline,
-    lineSpacing: storedLineSpacing,
-    enableLigatures: storedEnableLigatures,
-    showInlineBlame: storedShowInlineBlame,
-    sandboxType: storedSandboxType,
-    aiConfig: { ...storedAiConfig },
-    gitBinaryId: storedGitBinaryId,
-    gitBinaryPath: storedGitBinaryPath,
+  const {
+    setSearchQuery,
+    setActiveTab,
+    setExpandedGroups,
+    activeTab,
+    searchQuery,
+    expandedGroups,
+    toggleGroup,
+    filteredTree,
+    currentChildItem,
+  } = usePreferencesNavigation({
+    isPreferencesOpen,
+    initialPreferencesTab,
+    setInitialPreferencesTab,
   });
 
-  const [isApplied, setIsApplied] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [showRestartPrompt, setShowRestartPrompt] = useState(false);
+  const [isJsonEditorOpen, setIsJsonEditorOpen] = useState(false);
 
-  const wasOpenRef = useRef(false);
-
-  // Synchronize draft states and baseline whenever modal is opened
-  useEffect(() => {
-    if (isPreferencesOpen) {
-      if (!wasOpenRef.current) {
-        wasOpenRef.current = true;
-        setDraftThemeMode(storedThemeMode);
-        setDraftFontFamily(storedFontFamily);
-        setDraftFontSize(storedFontSize);
-        setDraftIsBold(storedIsBold);
-        setDraftIsItalic(storedIsItalic);
-        setDraftIsUnderline(storedIsUnderline);
-        setDraftLineSpacing(storedLineSpacing);
-        setDraftEnableLigatures(storedEnableLigatures);
-        setDraftShowInlineBlame(storedShowInlineBlame);
-        setDraftSandboxType(storedSandboxType);
-        const snapshot = captureAiPreferences();
-        aiDraftStore.getState().replace(snapshot);
-        setAiBaseline(snapshot);
-        setApplyError(null);
-        setDraftGitBinaryId(storedGitBinaryId);
-        setDraftGitBinaryPath(storedGitBinaryPath);
-
-        setSavedBaseline({
-          themeMode: storedThemeMode,
-          fontFamily: storedFontFamily,
-          fontSize: storedFontSize,
-          isBold: storedIsBold,
-          isItalic: storedIsItalic,
-          isUnderline: storedIsUnderline,
-          lineSpacing: storedLineSpacing,
-          enableLigatures: storedEnableLigatures,
-          showInlineBlame: storedShowInlineBlame,
-          sandboxType: storedSandboxType,
-          aiConfig: { ...storedAiConfig },
-          gitBinaryId: storedGitBinaryId,
-          gitBinaryPath: storedGitBinaryPath,
-        });
-
-        fetchActiveBinary().then((res) => {
-          setDraftGitBinaryId(res.id);
-          setDraftGitBinaryPath(res.path);
-          setSavedBaseline((prev) => ({
-            ...prev,
-            gitBinaryId: res.id,
-            gitBinaryPath: res.path,
-          }));
-        });
-
-        setSearchQuery('');
-        setIsApplied(false);
-        setShowResetConfirm(false);
-        setShowRestartPrompt(false);
-      }
-    } else {
-      if (wasOpenRef.current) {
-        wasOpenRef.current = false;
-        setActiveTab(null);
-        setExpandedGroups({});
-        aiDraftStore.getState().replace(captureAiPreferences());
-      }
-    }
-  }, [
-    isPreferencesOpen,
+  const session = usePreferencesDraftSession({
     storedThemeMode,
     storedFontFamily,
     storedFontSize,
@@ -192,116 +88,58 @@ export function usePreferencesDraft() {
     storedEnableLigatures,
     storedShowInlineBlame,
     storedSandboxType,
-    storedAiConfig,
     storedGitBinaryId,
     storedGitBinaryPath,
+    storedAiConfig,
+    isPreferencesOpen,
+    aiDraftStore,
+    setAiBaseline,
+    setApplyError,
     fetchActiveBinary,
-  ]);
-
-  // Navigate to initial target tab whenever initialPreferencesTab is requested
-  useEffect(() => {
-    if (isPreferencesOpen && initialPreferencesTab) {
-      const target = normalizeTab(initialPreferencesTab);
-      setActiveTab(target);
-      const openGroups: Record<string, boolean> = {};
-      for (const group of SETTINGS_TREE) {
-        if (group.children.some((c) => c.id === target)) {
-          openGroups[group.id] = true;
-          break;
-        }
-      }
-      setExpandedGroups((prev) => ({ ...prev, ...openGroups }));
-      setInitialPreferencesTab(null);
-    }
-  }, [isPreferencesOpen, initialPreferencesTab, setInitialPreferencesTab]);
+    setSearchQuery,
+    setActiveTab,
+    setExpandedGroups,
+  });
 
   // Unsaved count calculation
-  const totalUnsaved = useMemo(() => {
-    return countUnsavedPreferences(
-      {
-        showInlineBlame: draftShowInlineBlame,
-        themeMode: draftThemeMode,
-        fontFamily: draftFontFamily,
-        fontSize: draftFontSize,
-        isBold: draftIsBold,
-        isItalic: draftIsItalic,
-        isUnderline: draftIsUnderline,
-        lineSpacing: draftLineSpacing,
-        enableLigatures: draftEnableLigatures,
-        sandboxType: draftSandboxType,
-        gitBinaryId: draftGitBinaryId,
-      },
-      savedBaseline,
-      aiPreferencesChangeCount(aiDraft, aiBaseline)
-    );
-  }, [
-    draftShowInlineBlame,
-    draftAiConfig,
-    draftThemeMode,
-    draftFontFamily,
-    draftFontSize,
-    draftIsBold,
-    draftIsItalic,
-    draftIsUnderline,
-    draftLineSpacing,
-    draftEnableLigatures,
-    draftSandboxType,
-    draftGitBinaryId,
-    savedBaseline,
+  const { totalUnsaved } = usePreferencesChangeCount({
+    session,
     aiDraft,
     aiBaseline,
-  ]);
+    draftAiConfig,
+  });
 
   const hasUnsavedChanges = totalUnsaved > 0;
   const canCommitPreferences = hasUnsavedChanges && !isApplying;
   useEffect(() => {
-    if (hasUnsavedChanges) setIsApplied(false);
+    if (hasUnsavedChanges) session.setIsApplied(false);
   }, [hasUnsavedChanges, aiDraft]);
-
-  // Filter tree categories based on search
-  const filteredTree = useMemo(() => filterSettingsTree(searchQuery), [searchQuery]);
-
-  // Auto-expand groups when searching
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      const allOpen: Record<string, boolean> = {};
-      filteredTree.forEach((g) => {
-        allOpen[g.id] = true;
-      });
-      setExpandedGroups(allOpen);
-    }
-  }, [searchQuery, filteredTree]);
-
-  // Current active child metadata
-  const currentChildItem = useMemo(() => {
-    return findSettingChildItem(activeTab ? normalizeTab(activeTab) : null);
-  }, [activeTab]);
 
   // Commit changes
   const handleApply = createPreferencesApplyAction({
     applyingRef,
     setIsApplying,
     setApplyError,
-    draftFontFamily,
-    draftFontSize,
-    draftIsBold,
-    draftIsItalic,
-    draftIsUnderline,
-    draftLineSpacing,
-    draftEnableLigatures,
-    draftThemeMode,
-    savedBaseline,
-    draftShowInlineBlame,
-    draftSandboxType,
-    draftGitBinaryId,
-    draftGitBinaryPath,
+    draftFontFamily: session.draftFontFamily,
+    draftFontSize: session.draftFontSize,
+    draftIsBold: session.draftIsBold,
+    draftIsItalic: session.draftIsItalic,
+    draftIsUnderline: session.draftIsUnderline,
+    draftLineSpacing: session.draftLineSpacing,
+    draftEnableLigatures: session.draftEnableLigatures,
+    draftThemeMode: session.draftThemeMode,
+    savedBaseline: session.savedBaseline,
+    draftShowInlineBlame: session.draftShowInlineBlame,
+    draftSandboxType: session.draftSandboxType,
+    draftGitBinaryId: session.draftGitBinaryId,
+    draftGitBinaryPath: session.draftGitBinaryPath,
     aiDraftStore,
     aiBaseline,
     setAiBaseline,
     showToast,
-    setSavedBaseline,
-    setIsApplied,
-    setShowRestartPrompt,
+    setSavedBaseline: session.setSavedBaseline,
+    setIsApplied: session.setIsApplied,
+    setShowRestartPrompt: session.setShowRestartPrompt,
   });
 
   const handleOk = async () => {
@@ -315,17 +153,17 @@ export function usePreferencesDraft() {
   const handleCancel = () => {
     if (applyingRef.current) return;
     aiDraftStore.getState().replace(captureAiPreferences());
-    const resolvedTheme = resolveTheme(savedBaseline.themeMode);
+    const resolvedTheme = resolveTheme(session.savedBaseline.themeMode);
     applyThemeToDocument(resolvedTheme);
 
     const fontSettings: ViewerFontSettings = {
-      fontFamily: savedBaseline.fontFamily,
-      fontSize: savedBaseline.fontSize,
-      isBold: savedBaseline.isBold,
-      isItalic: savedBaseline.isItalic,
-      isUnderline: savedBaseline.isUnderline,
-      lineSpacing: savedBaseline.lineSpacing,
-      enableLigatures: savedBaseline.enableLigatures,
+      fontFamily: session.savedBaseline.fontFamily,
+      fontSize: session.savedBaseline.fontSize,
+      isBold: session.savedBaseline.isBold,
+      isItalic: session.savedBaseline.isItalic,
+      isUnderline: session.savedBaseline.isUnderline,
+      lineSpacing: session.savedBaseline.lineSpacing,
+      enableLigatures: session.savedBaseline.enableLigatures,
     };
     applyViewerFontToDocument(fontSettings);
 
@@ -333,20 +171,20 @@ export function usePreferencesDraft() {
   };
 
   const handleResetDefaults = () => {
-    setDraftThemeMode('system');
+    session.setDraftThemeMode('system');
     applyThemeToDocument(resolveTheme('system'));
 
-    setDraftFontFamily(DEFAULT_VIEWER_FONT_SETTINGS.fontFamily);
-    setDraftFontSize(DEFAULT_VIEWER_FONT_SETTINGS.fontSize);
-    setDraftIsBold(DEFAULT_VIEWER_FONT_SETTINGS.isBold);
-    setDraftIsItalic(DEFAULT_VIEWER_FONT_SETTINGS.isItalic);
-    setDraftIsUnderline(DEFAULT_VIEWER_FONT_SETTINGS.isUnderline);
-    setDraftLineSpacing(DEFAULT_VIEWER_FONT_SETTINGS.lineSpacing);
-    setDraftEnableLigatures(DEFAULT_VIEWER_FONT_SETTINGS.enableLigatures);
+    session.setDraftFontFamily(DEFAULT_VIEWER_FONT_SETTINGS.fontFamily);
+    session.setDraftFontSize(DEFAULT_VIEWER_FONT_SETTINGS.fontSize);
+    session.setDraftIsBold(DEFAULT_VIEWER_FONT_SETTINGS.isBold);
+    session.setDraftIsItalic(DEFAULT_VIEWER_FONT_SETTINGS.isItalic);
+    session.setDraftIsUnderline(DEFAULT_VIEWER_FONT_SETTINGS.isUnderline);
+    session.setDraftLineSpacing(DEFAULT_VIEWER_FONT_SETTINGS.lineSpacing);
+    session.setDraftEnableLigatures(DEFAULT_VIEWER_FONT_SETTINGS.enableLigatures);
     applyViewerFontToDocument(DEFAULT_VIEWER_FONT_SETTINGS);
 
-    setDraftShowInlineBlame(true);
-    setDraftSandboxType('in_memory');
+    session.setDraftShowInlineBlame(true);
+    session.setDraftSandboxType('in_memory');
     aiDraft.replace({
       aiConfig: { ...DEFAULT_AI_CONFIG },
       mcpServers: DEFAULT_MCP_SERVERS,
@@ -355,7 +193,7 @@ export function usePreferencesDraft() {
       externalAgents: [],
     });
 
-    setShowResetConfirm(false);
+    session.setShowResetConfirm(false);
     showToast('Reset all draft settings to defaults (click Apply to save)');
   };
 
@@ -365,8 +203,8 @@ export function usePreferencesDraft() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (showResetConfirm) {
-          setShowResetConfirm(false);
+        if (session.showResetConfirm) {
+          session.setShowResetConfirm(false);
           return;
         }
         handleCancel();
@@ -375,71 +213,80 @@ export function usePreferencesDraft() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPreferencesOpen, showResetConfirm, handleCancel]);
+  }, [isPreferencesOpen, session.showResetConfirm, handleCancel]);
 
   return {
-    isPreferencesOpen,
-    showToast,
-    aiDraft,
-    aiBaseline,
-    draftAiConfig,
-    setDraftAiConfig,
-    isApplying,
-    applyError,
-    activeTab,
-    setActiveTab,
-    isJsonEditorOpen,
-    setIsJsonEditorOpen,
-    searchQuery,
-    setSearchQuery,
-    expandedGroups,
-    toggleGroup,
-    draftThemeMode,
-    setDraftThemeMode,
-    draftThemeId,
-    setDraftThemeId,
-    draftFontFamily,
-    setDraftFontFamily,
-    draftFontSize,
-    setDraftFontSize,
-    draftIsBold,
-    setDraftIsBold,
-    draftIsItalic,
-    setDraftIsItalic,
-    draftIsUnderline,
-    setDraftIsUnderline,
-    draftLineSpacing,
-    setDraftLineSpacing,
-    draftEnableLigatures,
-    setDraftEnableLigatures,
-    draftDiffViewMode,
-    setDraftDiffViewMode,
-    draftIgnoreWhitespace,
-    setDraftIgnoreWhitespace,
-    draftWordWrap,
-    setDraftWordWrap,
-    draftShowInlineBlame,
-    setDraftShowInlineBlame,
-    draftSandboxType,
-    setDraftSandboxType,
-    draftGitBinaryId,
-    setDraftGitBinaryId,
-    draftGitBinaryPath,
-    setDraftGitBinaryPath,
-    savedBaseline,
-    isApplied,
-    showResetConfirm,
-    setShowResetConfirm,
-    showRestartPrompt,
-    setShowRestartPrompt,
-    totalUnsaved,
-    hasUnsavedChanges,
-    canCommitPreferences,
-    filteredTree,
-    currentChildItem,
-    handleApply,
-    handleOk,
-    handleCancel,
-    handleResetDefaults,
+    transaction: {
+      isPreferencesOpen,
+      showToast,
+      isApplying,
+      applyError,
+      isJsonEditorOpen,
+      setIsJsonEditorOpen,
+      savedBaseline: session.savedBaseline,
+      isApplied: session.isApplied,
+      showResetConfirm: session.showResetConfirm,
+      setShowResetConfirm: session.setShowResetConfirm,
+      showRestartPrompt: session.showRestartPrompt,
+      setShowRestartPrompt: session.setShowRestartPrompt,
+      totalUnsaved,
+      hasUnsavedChanges,
+      canCommitPreferences,
+      handleApply,
+      handleOk,
+      handleCancel,
+      handleResetDefaults,
+    },
+    ai: { aiDraft, aiBaseline, draftAiConfig, setDraftAiConfig },
+    navigation: {
+      activeTab,
+      setActiveTab,
+      searchQuery,
+      setSearchQuery,
+      expandedGroups,
+      toggleGroup,
+      filteredTree,
+      currentChildItem,
+    },
+    appearance: {
+      draftThemeMode: session.draftThemeMode,
+      setDraftThemeMode: session.setDraftThemeMode,
+      draftThemeId: session.draftThemeId,
+      setDraftThemeId: session.setDraftThemeId,
+      draftFontFamily: session.draftFontFamily,
+      setDraftFontFamily: session.setDraftFontFamily,
+      draftFontSize: session.draftFontSize,
+      setDraftFontSize: session.setDraftFontSize,
+      draftIsBold: session.draftIsBold,
+      setDraftIsBold: session.setDraftIsBold,
+      draftIsItalic: session.draftIsItalic,
+      setDraftIsItalic: session.setDraftIsItalic,
+      draftIsUnderline: session.draftIsUnderline,
+      setDraftIsUnderline: session.setDraftIsUnderline,
+      draftLineSpacing: session.draftLineSpacing,
+      setDraftLineSpacing: session.setDraftLineSpacing,
+      draftEnableLigatures: session.draftEnableLigatures,
+      setDraftEnableLigatures: session.setDraftEnableLigatures,
+    },
+    diff: {
+      draftDiffViewMode: session.draftDiffViewMode,
+      setDraftDiffViewMode: session.setDraftDiffViewMode,
+      draftIgnoreWhitespace: session.draftIgnoreWhitespace,
+      setDraftIgnoreWhitespace: session.setDraftIgnoreWhitespace,
+      draftWordWrap: session.draftWordWrap,
+      setDraftWordWrap: session.setDraftWordWrap,
+      draftShowInlineBlame: session.draftShowInlineBlame,
+      setDraftShowInlineBlame: session.setDraftShowInlineBlame,
+    },
+    sandbox: {
+      draftSandboxType: session.draftSandboxType,
+      setDraftSandboxType: session.setDraftSandboxType,
+    },
+    git: {
+      draftGitBinaryId: session.draftGitBinaryId,
+      setDraftGitBinaryId: session.setDraftGitBinaryId,
+      draftGitBinaryPath: session.draftGitBinaryPath,
+      setDraftGitBinaryPath: session.setDraftGitBinaryPath,
+    },
   };
 }

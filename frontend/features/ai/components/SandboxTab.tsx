@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { RotateCw } from '../../../common/components/icons/RotateCw';
 import { useGitStore } from '../../git/store/useGitStore';
 import { type SandboxType } from '../../git/types/SandboxType';
 import type { SandboxTabProps } from '../types/SandboxTabProps';
 import { SandboxConfigForm } from './sandbox/SandboxConfigForm';
 import { SandboxInstanceCard } from './sandbox/SandboxInstanceCard';
+import { useSandboxCommand } from './useSandboxCommand';
 
 export const SandboxTab: React.FC<SandboxTabProps> = ({
   draftSandboxType,
@@ -24,64 +25,25 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
     showToast,
   } = useGitStore();
 
-  const [testCmd, setTestCmd] = useState('git status');
-  const [selectedInstanceId, setSelectedInstanceId] = useState<string>('');
-  const [cmdRunning, setCmdRunning] = useState(false);
-  const [cmdOutput, setCmdOutput] = useState<{
-    stdout: string;
-    stderr: string;
-    exitCode: number;
-    durationMs: number;
-    outputTruncated: boolean;
-  } | null>(null);
+  const {
+    handleCreateInstance,
+    setSelectedInstanceId,
+    selectedInstanceId,
+    testCmd,
+    setTestCmd,
+    handleRunCommand,
+    cmdRunning,
+    cmdOutput,
+  } = useSandboxCommand({
+    currentRepo,
+    showToast,
+    isPendingCommit,
+    createSandboxInstance,
+    activeSandboxInstances,
+    executeSandboxCommand,
+  });
 
   const dockerInfo = availableSandboxes.find((s) => s.adapter_type === 'docker');
-
-  const handleCreateInstance = async () => {
-    if (!currentRepo) {
-      showToast('Please open a repository first');
-      return;
-    }
-    if (isPendingCommit) {
-      showToast('Click Apply or OK to commit the new engine before provisioning instances');
-      return;
-    }
-    const inst = await createSandboxInstance();
-    if (inst) {
-      setSelectedInstanceId(inst.id);
-    }
-  };
-
-  const handleRunCommand = async () => {
-    if (!selectedInstanceId && activeSandboxInstances.length > 0) {
-      setSelectedInstanceId(activeSandboxInstances[0].id);
-    }
-    const targetId = selectedInstanceId || activeSandboxInstances[0]?.id;
-    if (!targetId) {
-      showToast('Please create or select an active sandbox instance first');
-      return;
-    }
-
-    const parts = testCmd.trim().split(/\s+/);
-    if (parts.length === 0 || !parts[0]) return;
-
-    setCmdRunning(true);
-    setCmdOutput(null);
-    try {
-      const res = await executeSandboxCommand(targetId, parts[0], parts.slice(1));
-      if (res) {
-        setCmdOutput({
-          stdout: res.stdout,
-          stderr: res.stderr,
-          exitCode: res.exit_code,
-          durationMs: res.duration_ms,
-          outputTruncated: res.output_truncated,
-        });
-      }
-    } finally {
-      setCmdRunning(false);
-    }
-  };
 
   const getAdapterName = (type: SandboxType) => {
     switch (type) {

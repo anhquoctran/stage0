@@ -13,9 +13,6 @@ export function ProviderModelForm({
   dynamicModelError,
   selectedModelInfo,
   onUpdateAiConfig,
-  parseFloat,
-  String,
-  parseInt,
 }: ProviderModelFormProps) {
   return (
     <div className="space-y-3 pt-3 border-t border-surface1/60">

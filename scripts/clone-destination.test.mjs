@@ -60,7 +60,9 @@ test('native joining preserves Unix roots, Windows drive roots and UNC paths', a
 });
 
 test('clone form defaults to native home rather than a previously stored directory', () => {
-  const source = fs.readFileSync(new URL('../frontend/features/git/hooks/useCloneRepository.ts', import.meta.url), 'utf8');
+  const source = ['useCloneRepository', 'useCloneDestination'].map((owner) =>
+    fs.readFileSync(new URL(`../frontend/features/git/hooks/${owner}.ts`, import.meta.url), 'utf8')
+  ).join('\n');
   assert.match(source, /homeDir\(\)\s*\.then\(/);
   assert.ok(source.includes('current || directory'));
   assert.ok(source.includes('if (!repoNameEdited) {'));

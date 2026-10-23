@@ -12,7 +12,4 @@ export interface ProviderModelFormProps {
   dynamicModelError: string | null;
   selectedModelInfo: AiModelPreset | undefined;
   onUpdateAiConfig: (partial: Partial<AiConfig>) => void;
-  parseFloat: (string: string) => number;
-  String: StringConstructor;
-  parseInt: (string: string, radix?: number) => number;
 }

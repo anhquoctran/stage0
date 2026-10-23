@@ -25,5 +25,4 @@ export interface BlameToolbarProps {
   statsDropdownRef: React.RefObject<HTMLDivElement | null>;
   setIsStatsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isStatsOpen: boolean;
-  Math: Math;
 }

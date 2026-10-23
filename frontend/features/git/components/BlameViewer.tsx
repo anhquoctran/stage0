@@ -166,7 +166,6 @@ export const BlameViewer: React.FC = () => {
         statsDropdownRef={statsDropdownRef}
         setIsStatsOpen={setIsStatsOpen}
         isStatsOpen={isStatsOpen}
-        Math={Math}
       />
 
       {/* Main Content Area */}
