@@ -86,10 +86,6 @@ export const TabBar: React.FC = () => {
           );
         })}
 
-        {visibleSessions.length === 0 && !draftMr && (
-          <span className="px-2 text-[11px] italic text-subtext0">No open MR tabs</span>
-        )}
-
         {/* Draft Creation Tab (GitHub / GitLab style) */}
         {draftMr && (
           <TabBarDraftItem

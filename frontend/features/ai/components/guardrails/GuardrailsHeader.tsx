@@ -45,7 +45,7 @@ export const GuardrailsHeader: React.FC<{
             type="button"
             onClick={onRefreshAuditLog}
             disabled={isGuardrailLoading}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 transition cursor-pointer rounded-sm"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-surface1 text-text hover:bg-surface2 transition cursor-pointer rounded-sm"
             title="Refresh audit log"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isGuardrailLoading ? 'animate-spin' : ''}`} />

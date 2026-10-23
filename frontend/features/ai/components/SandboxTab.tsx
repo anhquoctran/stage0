@@ -103,7 +103,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
         <button
           type="button"
           onClick={() => fetchAvailableSandboxes()}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-sm border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-sm hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
           title="Refresh engine availability"
         >
           <RotateCw className="w-3 h-3" />
@@ -113,7 +113,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
 
       {/* Transaction Notice (if uncommitted) */}
       {isPendingCommit && (
-        <div className="px-3 py-2 bg-surface0/50 border border-surface1 rounded-sm text-xs flex items-center justify-between text-subtext1">
+        <div className="px-3 py-2 bg-surface0/50 rounded-sm text-xs flex items-center justify-between text-subtext1">
           <span>
             Pending change: switch to{' '}
             <strong className="text-text font-mono">{getAdapterName(draftSandboxType)}</strong>.

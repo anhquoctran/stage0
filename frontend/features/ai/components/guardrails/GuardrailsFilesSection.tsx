@@ -67,7 +67,7 @@ export const GuardrailsFilesSection: React.FC<{
           <button
             type="button"
             onClick={onAddSensitivePattern}
-            className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 border border-surface2 text-text hover:bg-surface2 cursor-pointer transition rounded-sm"
+            className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 text-text hover:bg-surface2 cursor-pointer transition rounded-sm"
           >
             <Plus className="w-3 h-3" />
             <span>Add Sensitive Pattern</span>

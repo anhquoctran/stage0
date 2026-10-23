@@ -81,7 +81,7 @@ export const NotificationsTab: React.FC = () => {
           onClick={() => void handleTestNotification()}
           disabled={!canTestNotifications || isTesting}
           title={canTestNotifications ? 'Show a test notification without saving it' : 'Available in the desktop app'}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-sm border border-brand bg-brand px-3 text-xs font-semibold text-on-accent shadow-xs transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-sm bg-brand px-3 text-xs font-semibold text-on-accent shadow-xs transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Sparkles className={`h-3.5 w-3.5 ${isTesting ? 'animate-pulse' : ''}`} />
           {isTesting ? 'Sending…' : 'Test Toast'}

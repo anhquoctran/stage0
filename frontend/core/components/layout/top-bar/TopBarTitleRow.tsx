@@ -5,11 +5,13 @@ import { AppLogo } from '../../../../common/components/AppLogo';
 import { MenuBar } from '../MenuBar';
 import { WindowControls } from '../WindowControls';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
+import { useAboutInfo } from '../../../../features/about/hooks/useAboutInfo';
 
 export const TopBarTitleRow: React.FC<{
   isMac: boolean;
 }> = ({ isMac }) => {
   const { currentRepo, baseBranch, compareBranch } = useGitStore();
+  const about = useAboutInfo();
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button, input, select, [role="button"], a')) {
@@ -20,7 +22,7 @@ export const TopBarTitleRow: React.FC<{
 
   const titleText = currentRepo
     ? `${currentRepo.name} — [${compareBranch || '...'} → ${baseBranch || '...'}]`
-    : 'Stage0 — Virtual MR Sandbox';
+    : `Stage0 v${about.packageVersion} — Virtual MR Sandbox`;
 
   return (
     <div
@@ -65,6 +67,13 @@ export const TopBarTitleRow: React.FC<{
             >
               <AppLogo size="sm" />
               <span className="text-xs font-bold tracking-tight text-text">Stage0</span>
+              <span
+                data-tauri-drag-region
+                title={`Stage0 v${about.packageVersion}`}
+                className="text-[10px] font-mono text-subtext0 select-none pointer-events-none"
+              >
+                v{about.packageVersion}
+              </span>
             </div>
 
             <MenuBar />
