@@ -333,6 +333,7 @@ pub fn run() {
             commands::pick_git_executable,
             commands::restart_app,
             commands::get_app_info,
+            commands::get_release_notes,
             // Stage0 toast notifications
             notifications::dispatch_notification,
             notifications::send_test_notification,

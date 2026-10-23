@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import React, { useEffect, useRef, useState } from 'react';
 import { formatShortcutText } from '../../../common/utils/shortcuts';
 import { AboutModal } from '../../../features/about/components/AboutModal';
+import { ReleaseNotesModal } from '../../../features/about/components/ReleaseNotesModal';
 import { useGitStore } from '../../../features/git/store/useGitStore';
 import { getOsFileManagerName } from '../../../features/git/utils/fileActions';
 import { usePerformanceMonitorStore } from '../../../features/performance/store/usePerformanceMonitorStore';
@@ -42,6 +43,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
   const [showPerformanceSubmenu, setShowPerformanceSubmenu] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showReleaseNotesModal, setShowReleaseNotesModal] = useState(false);
 
   const fileManagerName = getOsFileManagerName();
 
@@ -207,6 +209,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
             onHover={() => handleMenuHover('help')}
             onClose={closeMenus}
             onOpenShortcuts={() => setShowShortcutsModal(true)}
+            onOpenReleaseNotes={() => setShowReleaseNotesModal(true)}
             onOpenAbout={() => setShowAboutModal(true)}
           />
         </nav>
@@ -216,6 +219,12 @@ export const MenuBar: React.FC<MenuBarProps> = ({ hidden = false }) => {
       <KeyboardShortcutsModal
         isOpen={showShortcutsModal}
         onClose={() => setShowShortcutsModal(false)}
+      />
+
+      {/* Release Notes Modal */}
+      <ReleaseNotesModal
+        isOpen={showReleaseNotesModal}
+        onClose={() => setShowReleaseNotesModal(false)}
       />
 
       {/* About Modal */}

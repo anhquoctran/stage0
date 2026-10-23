@@ -1,3 +1,4 @@
+import { Radio } from '../../../../common/components/Radio';
 import { ExternalLink } from '../../../../common/components/icons/ExternalLink';
 import { RotateCcw } from '../../../../common/components/icons/RotateCcw';
 import type { RepositoryBotInheritanceCardsProps } from './RepositoryBotInheritanceCardsProps';
@@ -27,12 +28,10 @@ export function RepositoryBotInheritanceCards({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <input
-                type="radio"
+              <Radio
                 name="reviewer-inheritance"
                 checked={inheritAgents}
                 onChange={() => setInheritAgents(true)}
-                className="text-brand focus:ring-0 cursor-pointer"
               />
               <span className="font-semibold text-xs text-text">Inherit Global Preferences</span>
             </div>
@@ -78,12 +77,10 @@ export function RepositoryBotInheritanceCards({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <input
-                type="radio"
+              <Radio
                 name="reviewer-inheritance"
                 checked={!inheritAgents}
                 onChange={() => setInheritAgents(false)}
-                className="text-accent focus:ring-0 cursor-pointer"
               />
               <span className="font-semibold text-xs text-text">Custom for this Repository</span>
             </div>

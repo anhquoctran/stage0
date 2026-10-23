@@ -4,7 +4,11 @@ use rusqlite::params;
 use serde_json::{json, Value};
 
 pub enum ReviewDiscussionAction {
-    Reply { discussion_id: String, target_comment_id: String, body: String },
+    Reply {
+        discussion_id: String,
+        target_comment_id: String,
+        body: String,
+    },
     Resolve {
         discussion_id: String,
         target_comment_id: String,
@@ -124,20 +128,36 @@ impl Database {
         }
         for (index, action) in actions.iter().enumerate() {
             match action {
-                ReviewDiscussionAction::Reply { discussion_id, target_comment_id, body } => {
+                ReviewDiscussionAction::Reply {
+                    discussion_id,
+                    target_comment_id,
+                    body,
+                } => {
                     let (session_id, is_resolved, latest_id): (String, bool, Option<String>) = tx.query_row(
                         "SELECT d.session_id, d.is_resolved, (SELECT c.id FROM virtual_mr_comments c WHERE c.discussion_id=d.id ORDER BY c.rowid DESC LIMIT 1) FROM virtual_mr_discussions d WHERE d.id=?1",
                         [discussion_id],
                         |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
                     ).map_err(|_| "Discussion was removed before the AI reply could be posted")?;
-                    if session_id != run.session_id || is_resolved || latest_id.as_deref() != Some(target_comment_id.as_str()) {
-                        return Err("The discussion changed before the AI reply could be posted".into());
+                    if session_id != run.session_id
+                        || is_resolved
+                        || latest_id.as_deref() != Some(target_comment_id.as_str())
+                    {
+                        return Err(
+                            "The discussion changed before the AI reply could be posted".into()
+                        );
                     }
                     let (kind, id, previous_body): (String, String, String) = tx.query_row(
                         "SELECT author_type,author_id,body FROM virtual_mr_comments WHERE id=?1", [target_comment_id],
                         |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
                     ).map_err(|error| error.to_string())?;
-                    if !super::mentions::can_reply_to_comment(&tx, &run.session_id, run.reviewer_id.as_deref(), &kind, &id, &previous_body) {
+                    if !super::mentions::can_reply_to_comment(
+                        &tx,
+                        &run.session_id,
+                        run.reviewer_id.as_deref(),
+                        &kind,
+                        &id,
+                        &previous_body,
+                    ) {
                         return Err("AI reply requires an unanswered user comment or a direct mention from another reviewer".into());
                     }
                     let now = chrono::Utc::now().to_rfc3339();
@@ -146,14 +166,31 @@ impl Database {
                         params![format!("review-{}-reply-{index}", run.id), discussion_id, author_id, author_name, super::security::redact(body), now],
                     ).map_err(|e| e.to_string())?;
                 }
-                ReviewDiscussionAction::Resolve { discussion_id, target_comment_id, file_path, side, start_line, end_line, evidence, body, reverted_commit_id } => {
+                ReviewDiscussionAction::Resolve {
+                    discussion_id,
+                    target_comment_id,
+                    file_path,
+                    side,
+                    start_line,
+                    end_line,
+                    evidence,
+                    body,
+                    reverted_commit_id,
+                } => {
                     let (session_id, stored_path, is_resolved, latest_id): (String, Option<String>, bool, Option<String>) = tx.query_row(
                         "SELECT d.session_id, d.file_path, d.is_resolved, (SELECT c.id FROM virtual_mr_comments c WHERE c.discussion_id=d.id ORDER BY c.rowid DESC LIMIT 1) FROM virtual_mr_discussions d WHERE d.id=?1",
                         [discussion_id],
                         |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
                     ).map_err(|_| "Discussion was removed before automatic resolution")?;
-                    if session_id != run.session_id || is_resolved || stored_path.as_deref() != Some(file_path.as_str()) || latest_id.as_deref() != Some(target_comment_id.as_str()) {
-                        return Err("AI can resolve only an open discussion on the same changed file".into());
+                    if session_id != run.session_id
+                        || is_resolved
+                        || stored_path.as_deref() != Some(file_path.as_str())
+                        || latest_id.as_deref() != Some(target_comment_id.as_str())
+                    {
+                        return Err(
+                            "AI can resolve only an open discussion on the same changed file"
+                                .into(),
+                        );
                     }
                     let now = chrono::Utc::now().to_rfc3339();
                     let verification = if let Some(original_sha) = reverted_commit_id {
@@ -179,7 +216,10 @@ impl Database {
                         params![author_name, discussion_id, run.session_id],
                     ).map_err(|e| e.to_string())?;
                     if changed != 1 {
-                        return Err("Discussion changed before automatic resolution could be committed".into());
+                        return Err(
+                            "Discussion changed before automatic resolution could be committed"
+                                .into(),
+                        );
                     }
                 }
             }
@@ -198,7 +238,8 @@ impl Database {
                 && unresolved_count == 0
             {
                 "approved"
-            } else if run.decision.as_deref() == Some("request_changes") || !run.findings.is_empty() {
+            } else if run.decision.as_deref() == Some("request_changes") || !run.findings.is_empty()
+            {
                 "changes_requested"
             } else {
                 "commented"
@@ -277,20 +318,32 @@ mod tests {
         db.save_review_run(&run).unwrap();
         db.conn().execute_batch("INSERT INTO virtual_mr_session_reviewers(session_id,agent_id,agent_name) VALUES('session','a','Bot A'),('session','b','Bot B'); INSERT INTO virtual_mr_discussions(id,session_id) VALUES('thread','session'); INSERT INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,created_at,updated_at) VALUES('root','thread','ai_agent','a','Bot A','[@Bot B](#mr-mention/reviewer/b) please check this','2099-01-01','2099-01-01');").unwrap();
         let reply = |target: &str| ReviewDiscussionAction::Reply {
-            discussion_id: "thread".into(), target_comment_id: target.into(),
+            discussion_id: "thread".into(),
+            target_comment_id: target.into(),
             body: "[@Alice](#mr-mention/assignee/alice%40test) verified the concern.".into(),
         };
-        assert!(db.publish_review_actions(&run, &[reply("missing")]).is_err());
+        assert!(db
+            .publish_review_actions(&run, &[reply("missing")])
+            .is_err());
         db.publish_review_actions(&run, &[reply("root")]).unwrap();
         let discussions = db.list_discussions("session").unwrap();
         assert_eq!(discussions[0].comments.len(), 2);
         assert_eq!(discussions[0].comments[0].id, "root");
         assert_eq!(discussions[0].comments[1].author_id, "b");
-        assert!(discussions[0].comments[1].body.contains("#mr-mention/assignee/alice%40test"));
+        assert!(discussions[0].comments[1]
+            .body
+            .contains("#mr-mention/assignee/alice%40test"));
         assert!(db.publish_review_actions(&run, &[reply("root")]).is_err());
         // A different timestamp representation must not reorder the actual conversation.
         db.conn().execute("INSERT INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,created_at,updated_at) VALUES('new-user','thread','user','alice@test','Alice','New question','2000-01-01','2000-01-01')", []).unwrap();
-        assert_eq!(db.list_discussions("session").unwrap()[0].comments.last().unwrap().id, "new-user");
+        assert_eq!(
+            db.list_discussions("session").unwrap()[0]
+                .comments
+                .last()
+                .unwrap()
+                .id,
+            "new-user"
+        );
         assert!(db.publish_review_actions(&run, &[reply("root")]).is_err());
     }
 

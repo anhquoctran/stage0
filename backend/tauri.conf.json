@@ -13,10 +13,10 @@
       {
         "title": "Stage0",
         "label": "main",
-        "width": 1024,
-        "height": 680,
-        "minWidth": 1024,
-        "minHeight": 680,
+        "width": 1280,
+        "height": 840,
+        "minWidth": 1120,
+        "minHeight": 800,
         "decorations": false,
         "shadow": true,
         "titleBarStyle": "Overlay",
@@ -36,6 +36,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "resources": [
+      "../RELEASE_NOTES.md"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

@@ -4,10 +4,7 @@ use rusqlite::params;
 
 impl Database {
     /// Stores no secret value: only the stable preference secret ID and its OS-keychain reference.
-    pub fn get_preference_secret_ref(
-        &self,
-        id: &str,
-    ) -> Result<Option<String>, rusqlite::Error> {
+    pub fn get_preference_secret_ref(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
         match self.conn().query_row(
             "SELECT keychain_ref FROM preference_secret_refs WHERE id = ?1",
             params![id],
@@ -48,7 +45,10 @@ impl Database {
         };
         if reference.is_some() {
             let tx = conn.transaction()?;
-            tx.execute("DELETE FROM preference_secret_refs WHERE id = ?1", params![id])?;
+            tx.execute(
+                "DELETE FROM preference_secret_refs WHERE id = ?1",
+                params![id],
+            )?;
             tx.commit()?;
         }
         Ok(reference)
@@ -200,9 +200,8 @@ impl Database {
         let mut conn = self.conn();
         let tx = conn.transaction()?;
         let ids = {
-            let mut stmt = tx.prepare_cached(
-                "SELECT id FROM git_credential_metadata WHERE source = ?1",
-            )?;
+            let mut stmt =
+                tx.prepare_cached("SELECT id FROM git_credential_metadata WHERE source = ?1")?;
             let rows = stmt.query_map(params![source], |row| row.get::<_, String>(0))?;
             rows.collect::<Result<Vec<_>, _>>()?
         };

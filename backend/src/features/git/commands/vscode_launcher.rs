@@ -3,10 +3,7 @@ use std::process::Command;
 
 pub enum VsCodeTarget<'a> {
     Repo(&'a Path),
-    File {
-        path: &'a Path,
-        line: Option<i64>,
-    },
+    File { path: &'a Path, line: Option<i64> },
 }
 
 impl<'a> VsCodeTarget<'a> {
@@ -61,8 +58,7 @@ pub fn launch_vscode(target: VsCodeTarget) -> Result<(), String> {
     let mut candidates = Vec::new();
     if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
         candidates.push(
-            std::path::PathBuf::from(&local_appdata)
-                .join("Programs\\Microsoft VS Code\\Code.exe"),
+            std::path::PathBuf::from(&local_appdata).join("Programs\\Microsoft VS Code\\Code.exe"),
         );
         candidates.push(
             std::path::PathBuf::from(&local_appdata)
@@ -70,20 +66,14 @@ pub fn launch_vscode(target: VsCodeTarget) -> Result<(), String> {
         );
     }
     if let Ok(prog_files) = std::env::var("PROGRAMFILES") {
-        candidates.push(
-            std::path::PathBuf::from(&prog_files)
-                .join("Microsoft VS Code\\Code.exe"),
-        );
+        candidates.push(std::path::PathBuf::from(&prog_files).join("Microsoft VS Code\\Code.exe"));
         candidates.push(
             std::path::PathBuf::from(&prog_files)
                 .join("Microsoft VS Code Insiders\\Code - Insiders.exe"),
         );
     }
     if let Ok(prog_x86) = std::env::var("ProgramFiles(x86)") {
-        candidates.push(
-            std::path::PathBuf::from(&prog_x86)
-                .join("Microsoft VS Code\\Code.exe"),
-        );
+        candidates.push(std::path::PathBuf::from(&prog_x86).join("Microsoft VS Code\\Code.exe"));
     }
 
     for cand in candidates {
@@ -92,7 +82,13 @@ pub fn launch_vscode(target: VsCodeTarget) -> Result<(), String> {
         }
     }
 
-    for cli_cmd in ["code.cmd", "code.exe", "code", "code-insiders.cmd", "code-insiders.exe"] {
+    for cli_cmd in [
+        "code.cmd",
+        "code.exe",
+        "code",
+        "code-insiders.cmd",
+        "code-insiders.exe",
+    ] {
         if Command::new(cli_cmd).args(&args).spawn().is_ok() {
             return Ok(());
         }
@@ -120,15 +116,14 @@ pub fn launch_vscode(target: VsCodeTarget) -> Result<(), String> {
 
     if let Ok(home) = std::env::var("HOME") {
         let home_path = std::path::PathBuf::from(home);
-        candidates.push(home_path.join(
-            "Applications/Visual Studio Code.app/Contents/Resources/app/bin/code",
-        ));
+        candidates.push(
+            home_path.join("Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"),
+        );
         candidates.push(home_path.join(
             "Applications/Visual Studio Code - Insiders.app/Contents/Resources/app/bin/code",
         ));
-        candidates.push(home_path.join(
-            "Applications/VSCodium.app/Contents/Resources/app/bin/codium",
-        ));
+        candidates
+            .push(home_path.join("Applications/VSCodium.app/Contents/Resources/app/bin/codium"));
     }
 
     // 2. Homebrew and standard CLI paths
@@ -238,4 +233,3 @@ pub fn launch_vscode(target: VsCodeTarget) -> Result<(), String> {
 
     Err("Visual Studio Code is not installed or not found in PATH, Snap, or Flatpak. Please ensure VS Code is installed and available.".to_string())
 }
-
