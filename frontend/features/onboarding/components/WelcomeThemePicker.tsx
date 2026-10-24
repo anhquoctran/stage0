@@ -15,13 +15,13 @@ export function WelcomeThemePicker({ settings, onChange }: Omit<WelcomeSettingsP
       {choices.map(({ mode, label, description, icon: Icon }) => (
         <button key={mode} type="button" aria-pressed={settings.themeMode === mode}
           onClick={() => onChange((previous) => ({ ...previous, themeMode: mode }))}
-          className={`rounded-sm border p-3 text-left transition-colors focus-visible:outline focus-visible:outline-mauve ${
-            settings.themeMode === mode ? 'border-mauve bg-mauve/10 text-text' : 'border-surface0 bg-crust text-subtext1 hover:border-mauve/50'
+          className={`rounded-sm border p-3 text-left transition-colors focus-visible:outline focus-visible:outline-brand ${
+            settings.themeMode === mode ? 'border-brand bg-brand/10 text-text' : 'border-surface0 bg-crust text-subtext1 hover:border-brand/50'
           }`}>
           <span aria-hidden="true" className="mb-3 flex h-16 overflow-hidden rounded-sm border border-surface1/40">
             {(mode === 'system' ? ['light', 'dark'] : [mode]).map((palette) => (
               <span key={palette} className="flex flex-1 flex-col gap-1.5 p-2.5" style={{ backgroundColor: palette === 'light' ? '#eff1f5' : '#1e1e2e' }}>
-                <span className="h-1.5 w-3/4 rounded-sm" style={{ backgroundColor: palette === 'light' ? '#8839ef' : '#cba6f7' }} />
+                <span className="h-1.5 w-3/4 rounded-sm" style={{ backgroundColor: 'var(--color-brand)' }} />
                 <span className="h-1 w-full rounded-sm" style={{ backgroundColor: palette === 'light' ? '#bec4d0' : '#585b70' }} />
                 <span className="h-1 w-2/3 rounded-sm" style={{ backgroundColor: palette === 'light' ? '#bec4d0' : '#585b70' }} />
               </span>
@@ -29,7 +29,7 @@ export function WelcomeThemePicker({ settings, onChange }: Omit<WelcomeSettingsP
           </span>
           <span className="flex items-center gap-2 text-xs font-semibold">
             <Icon className="h-4 w-4 shrink-0" /><span className="flex-1">{label}</span>
-            {settings.themeMode === mode && <Check className="h-3.5 w-3.5 text-mauve" />}
+            {settings.themeMode === mode && <Check className="h-3.5 w-3.5 text-brand" />}
           </span>
           <span className="mt-1 block text-[11px] text-subtext0">{description}</span>
         </button>

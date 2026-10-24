@@ -1,7 +1,7 @@
 import { isTauri } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
-const PRIMARY_ACCENT = '#b87ff4';
+const PRIMARY_ACCENT = '#9333ea';
 let windowsDotIcon: Promise<Uint8Array> | undefined;
 
 async function createWindowsDotIcon(): Promise<Uint8Array> {
@@ -52,4 +52,3 @@ export async function syncUnreadBadge(unreadCount: number): Promise<void> {
     console.warn('[NotificationBadge] Could not update the unread badge:', error);
   }
 }
-

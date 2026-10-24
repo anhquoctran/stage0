@@ -39,6 +39,7 @@ test('onboarding adds explanatory copy and illustrative scenes without claiming 
   assert.ok(scene.includes('Sample workspace'));
   assert.ok(scene.includes('scene.metrics.map'));
   assert.ok(scene.includes('scene.steps.map'));
+  assert.ok(!scene.includes('{index + 1}'), 'Illustrated workflow uses dots, not visible step numbers');
   assert.doesNotMatch(scene, /setInterval|setTimeout|fetch\(|invoke\(/);
   const motion = read('frontend/core/styles/onboarding-artwork.css');
   assert.ok(motion.includes('prefers-reduced-motion: reduce'));

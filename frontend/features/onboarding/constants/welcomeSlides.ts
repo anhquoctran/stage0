@@ -20,11 +20,16 @@ export const WELCOME_SLIDES = [
   {
     id: 'review', eyebrow: 'YOUR REVIEW, READY WHEN YOU ARE', title: 'Keep the conversation together',
     description: 'Save a local Virtual MR with its description, labels, comments, and review notes. Come back to the same review whenever you need it.',
-    caption: 'Next, make Stage0 feel familiar with your own theme, shortcuts, and fonts.',
+    caption: 'Next, connect an LLM provider or ACP agent to enable AI reviews.',
     highlights: [
       { title: 'Keep context close to the code', description: 'Add a description, organize the review with labels, and discuss individual changes in one place.' },
-      { title: 'Pick up where you left off', description: 'Reopen your local merge request to revisit notes. Set up optional AI reviewers in Preferences when you are ready.' },
+      { title: 'Pick up where you left off', description: 'Reopen your local merge request to revisit notes. Configure optional reviewer bots in Preferences when you are ready.' },
     ],
+  },
+  {
+    id: 'ai-setup', eyebrow: 'THE CORE OF YOUR WORKFLOW', title: 'Set up your AI connection',
+    description: 'Connect an LLM provider or add an ACP agent to power the AI review workflow.',
+    caption: 'At least one saved AI setup is required. Appearance and shortcut settings remain optional.',
   },
   {
     id: 'theme', eyebrow: 'YOUR WORKSPACE, YOUR STYLE', title: 'Choose your theme',

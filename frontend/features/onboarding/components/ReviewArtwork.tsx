@@ -29,7 +29,7 @@ export const ReviewArtwork: React.FC = () => (
         <ol className="mt-3 space-y-3">
           {[
             { author: 'You', note: 'What happens when a saved session expires?', color: 'bg-blue' },
-            { author: 'Reviewer', note: 'Keep the expiry check close to session validation.', color: 'bg-mauve' },
+            { author: 'Reviewer', note: 'Keep the expiry check close to session validation.', color: 'bg-brand' },
             { author: 'You', note: 'Add coverage for expired and missing sessions.', color: 'bg-green' },
           ].map((item) => <li key={item.note} className="flex items-start gap-2 rounded-sm">
             <span aria-hidden="true" className={`stage0-welcome-pulse mt-1 h-2 w-2 shrink-0 rounded-full ${item.color}`} />

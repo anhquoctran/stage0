@@ -240,10 +240,11 @@ fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWind
     #[cfg(target_os = "macos")]
     let builder = builder
         // Keep the native macOS title bar controls (traffic lights) on dynamically
-        // created windows, matching the main window configuration. The title bar
+        // created windows, matching the main window's native inset. The title bar
         // remains overlaid so the app can keep its custom title-bar content.
         .decorations(true)
         .title_bar_style(TitleBarStyle::Overlay)
+        .traffic_light_position(tauri::LogicalPosition::new(19.0, 25.0))
         .hidden_title(true);
 
     let (min_width, min_height) = minimum_window_size();

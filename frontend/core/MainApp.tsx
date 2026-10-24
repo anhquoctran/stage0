@@ -12,6 +12,7 @@ import { type WindowStartupContext } from '../features/git/types/WindowStartupCo
 import { FirstLaunchWelcome, shouldShowFirstLaunchWelcome } from '../features/onboarding/components/FirstLaunchWelcome';
 import { isPrimaryAppWindow } from './utils/isPrimaryAppWindow';
 import { reviewAssignedSessionAfterGitChange } from '../features/review/services/assignedReviewService';
+import { installAutoHideScrollbars } from './services/autoHideScrollbars';
 
 export const MainApp: React.FC = () => {
   const { initApp, attachRepoToCurrentWindow, refreshDiff, isInitializing } = useGitStore();
@@ -26,6 +27,8 @@ export const MainApp: React.FC = () => {
     typeof navigator !== 'undefined' &&
     /Mac/i.test(navigator.platform || navigator.userAgent);
   const hideCustomFrame = isFullscreen || (isMaximized && !usesNativeMacFrame);
+
+  useEffect(() => installAutoHideScrollbars(), []);
 
   useEffect(() => {
     if (isInitializing) return;

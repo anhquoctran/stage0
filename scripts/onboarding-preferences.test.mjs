@@ -38,10 +38,10 @@ function fixture() {
 test('welcome includes Theme immediately before Keymaps and keeps all existing steps', () => {
   const { WELCOME_SLIDES } = loadWithMocks(url('features/onboarding/constants/welcomeSlides.ts'), {});
   assert.deepEqual(WELCOME_SLIDES.map((slide) => slide.id),
-    ['welcome', 'compare', 'review', 'theme', 'keymaps', 'ui-font', 'buffer-font', 'markdown-font']);
+    ['welcome', 'compare', 'review', 'ai-setup', 'theme', 'keymaps', 'ui-font', 'buffer-font', 'markdown-font']);
 });
 
-test('every welcome step can be continued and the guide completed without selecting any settings', async (t) => {
+test('appearance and keymap steps remain optional once required AI setup is saved', async (t) => {
   const f = fixture(), runner = componentHarness(), stored = new Map();
   const previousWindow = globalThis.window, previousStorage = globalThis.localStorage;
   globalThis.window = { location: { search: '' }, addEventListener() {}, removeEventListener() {} };
@@ -65,6 +65,8 @@ test('every welcome step can be continued and the guide completed without select
     './ReviewArtwork': { ReviewArtwork: () => null },
     './WelcomeSettingsPanel': { WelcomeSettingsPanel: () => null },
     './WelcomeSettingsPreview': { WelcomeSettingsPreview: () => null },
+    './WelcomeAiSetup': { WelcomeAiSetup: () => null },
+    '../hooks/useOnboardingAiSetup': { useOnboardingAiSetup: () => ({ connections: ['Saved ACP'], busy: false, canFinish: () => true }) },
     '../hooks/useOnboardingPreferences': { useOnboardingPreferences: () => ({
       settings: f.draft, setSettings: () => assert.fail('No settings should be chosen'),
       isSaving: false, saveError: null, reload() {},
@@ -86,15 +88,24 @@ test('every welcome step can be continued and the guide completed without select
     'Do not restore an outer gutter or bounded card around the tour');
   assert.ok(componentNodes(tree).some((node) => node.props.className?.includes('my-auto py-8')),
     'Intro copy should be vertically balanced instead of pinned far above its navigation');
-  for (let slide = 0; slide < 7; slide++) {
-    const next = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.flat().some((child) => typeof child === 'string' && child.trim() === 'Next'));
+  for (let slide = 0; slide < 8; slide++) {
+    const visibleText = componentNodes(tree).map((node) => node.props.children
+      .filter((child) => typeof child === 'string' || typeof child === 'number').join(''));
+    assert.ok(!visibleText.some((text) => /^0?\d+\s*\/\s*0?\d+$/.test(text.trim()) || /-step welcome guide/.test(text)),
+      'Step counters must not be visible on the onboarding screen');
+    const nextLabel = slide === 2 ? "Let's get started" : 'Next';
+    const next = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.flat().some((child) => typeof child === 'string' && child.trim() === nextLabel));
     assert.ok(next, `Step ${slide + 1} must allow Next without choosing anything`);
     assert.ok(!next.props.disabled);
     assert.equal(next.props.ref, undefined, 'Next must not receive automatic focus');
-    assert.ok(!next.props.className.includes('btn-primary'), 'Next must not use the glowing brand button');
-    assert.match(next.props.className, /\bbg-surface0\b/);
-    assert.match(next.props.className, /\btext-text\b/);
-    assert.match(next.props.className, /\bborder-0\b/);
+    if (slide === 2) {
+      assert.ok(next.props.className.includes('btn-primary'), "Let's get started must use the brand button");
+    } else {
+      assert.ok(!next.props.className.includes('btn-primary'), 'Next must not use the glowing brand button');
+      assert.match(next.props.className, /\bbg-surface0\b/);
+      assert.match(next.props.className, /\btext-text\b/);
+      assert.match(next.props.className, /\bborder-0\b/);
+    }
     assert.notEqual(next.props.tabIndex, -1, 'Next remains available to keyboard navigation');
     next.props.onClick(); tree = await render();
   }

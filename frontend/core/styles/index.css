@@ -2,6 +2,7 @@
 @source "../../../index.html";
 @source "../../**/*.{js,ts,jsx,tsx}";
 @import "@git-diff-view/react/styles/diff-view.css";
+@import "overlayscrollbars/overlayscrollbars.css";
 @import "./button-surfaces.css";
 @import "./onboarding-artwork.css";
 
@@ -24,9 +25,9 @@
 .mocha,
 .dark {
   color-scheme: dark;
-  --brand: #b87ff4;
-  --ctp-brand: #b87ff4;
-  --ctp-on-accent: #11111b;
+  --brand: #9333ea;
+  --ctp-brand: #9333ea;
+  --ctp-on-accent: #ffffff;
   --ctp-rosewater: #f5e0dc;
   --ctp-flamingo: #f2cdcd;
   --ctp-pink: #f5c2e7;
@@ -66,8 +67,8 @@
   --backdrop-modal: rgba(0, 0, 0, 0.6);
   --preferences-card-bg: #11111b;
   --preferences-card-border: #313244;
-  --preferences-choice-selected-bg: rgba(203, 166, 247, 0.1);
-  --preferences-choice-selected-border: rgba(203, 166, 247, 0.5);
+  --preferences-choice-selected-bg: rgba(147, 51, 234, 0.1);
+  --preferences-choice-selected-border: rgba(147, 51, 234, 0.5);
   --preferences-danger-bg: #b4233c;
   --preferences-danger-border: #e85d75;
   --preferences-danger-text: #ffffff;
@@ -81,8 +82,8 @@
 .latte,
 .light {
   color-scheme: light;
-  --brand: #b87ff4;
-  --ctp-brand: #b87ff4;
+  --brand: #9333ea;
+  --ctp-brand: #9333ea;
   --ctp-on-accent: #ffffff;
   --ctp-rosewater: #dc8a78;
   --ctp-flamingo: #dd7878;
@@ -123,20 +124,12 @@
   --backdrop-modal: rgba(59, 62, 83, 0.28);
   --preferences-card-bg: #f7f8fb;
   --preferences-card-border: #c7ccd8;
-  --preferences-choice-selected-bg: rgba(136, 57, 239, 0.07);
-  --preferences-choice-selected-border: rgba(136, 57, 239, 0.42);
+  --preferences-choice-selected-bg: rgba(147, 51, 234, 0.07);
+  --preferences-choice-selected-border: rgba(147, 51, 234, 0.42);
   --preferences-danger-bg: #c62845;
   --preferences-danger-border: #a91f38;
   --preferences-danger-text: #ffffff;
   --preferences-danger-icon-bg: rgba(255, 255, 255, 0.16);
-}
-
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .text-brand {
-  color: var(--ctp-mauve);
-}
-
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .border-brand {
-  border-color: var(--ctp-mauve);
 }
 
 :is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext0/50"],
@@ -147,14 +140,14 @@
 }
 
 :is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) :focus-visible {
-  outline-color: var(--ctp-mauve) !important;
+  outline-color: var(--color-brand) !important;
 }
 
 :is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) input:focus-visible,
 :is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) textarea:focus-visible,
 :is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) select:focus-visible {
-  border-color: var(--ctp-mauve) !important;
-  box-shadow: 0 0 0 1px var(--ctp-mauve) !important;
+  border-color: var(--color-brand) !important;
+  box-shadow: 0 0 0 1px var(--color-brand) !important;
 }
 
 :is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) input::placeholder,
@@ -167,9 +160,9 @@
   --radius-xs: 2px;
   --radius-sm: 4px;
   --radius-md: 6px;
-  --color-brand: #b87ff4;
-  --color-accent: #b87ff4;
-  --color-primary: #b87ff4;
+  --color-brand: #9333ea;
+  --color-accent: #9333ea;
+  --color-primary: #9333ea;
   --color-on-accent: var(--ctp-on-accent);
   --color-rosewater: var(--ctp-rosewater);
   --color-flamingo: var(--ctp-flamingo);
@@ -312,27 +305,92 @@ code, kbd, samp, pre {
   font-feature-settings: "liga" 1, "calt" 1;
 }
 
-/* Git GUI Custom Scrollbars */
+/* Native scroll surfaces; ScrollArea provides a consistent overlay on WebKit. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+[data-stage0-scrollbar-visible] {
+  scrollbar-color: color-mix(in srgb, var(--ctp-overlay1) 45%, transparent) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  -webkit-appearance: none;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--ctp-crust);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--ctp-surface1);
-  border-radius: 4px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+  transition: background-color 140ms ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--ctp-surface2);
+*[data-stage0-scrollbar-visible]::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--ctp-overlay1) 45%, transparent);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: color-mix(in srgb, var(--ctp-overlay1) 72%, transparent);
 }
 
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* Fixed dialogs in a scroll area must remain in the window's stacking context. */
+.stage0-scroll-area [data-overlayscrollbars-viewport] {
+  z-index: auto;
+}
+
+.os-theme-stage0 {
+  --os-size: 8px;
+  --os-padding-perpendicular: 2px;
+  --os-padding-axis: 2px;
+  --os-track-bg: transparent;
+  --os-track-bg-hover: transparent;
+  --os-track-bg-active: transparent;
+  --os-handle-border-radius: 999px;
+  --os-handle-bg: color-mix(in srgb, var(--ctp-overlay1) 45%, transparent);
+  --os-handle-bg-hover: color-mix(in srgb, var(--ctp-overlay1) 60%, transparent);
+  --os-handle-bg-active: color-mix(in srgb, var(--ctp-overlay1) 72%, transparent);
+  --os-handle-interactive-area-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-theme-stage0,
+  .os-theme-stage0 .os-scrollbar-handle {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  * {
+    scrollbar-color: auto !important;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: ButtonText !important;
+    border: 0;
+    transition: none;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: Canvas;
+  }
+
+  .os-theme-stage0 {
+    --os-handle-bg: ButtonText;
+    --os-handle-bg-hover: Highlight;
+    --os-handle-bg-active: Highlight;
+  }
 }
 
 /* Diff Viewer & Raw Viewer: Dynamic Font, BIU, Line Spacing & Ligatures via Preferences */
@@ -561,7 +619,7 @@ tr.stage0-active-line > td.diff-line-num {
   }
 }
 
-/* Brand Color #cba6f6 System: Focus Highlight, Border Primary & Primary Buttons */
+/* Purple 600 brand: focus highlights, primary borders and buttons */
 ::selection {
   background-color: color-mix(in srgb, var(--color-brand) 35%, transparent);
   color: #ffffff;
@@ -659,7 +717,7 @@ input[type="radio"]:checked {
 .btn-primary,
 button.btn-primary {
   background-color: var(--color-brand) !important;
-  color: #11111b !important;
+  color: var(--color-on-accent) !important;
   border: 0 !important;
   font-weight: 700;
   box-shadow: 0 2px 8px color-mix(in srgb, var(--color-brand) 25%, transparent);
@@ -668,13 +726,13 @@ button.btn-primary {
 
 .btn-primary:hover:not(:disabled),
 button.btn-primary:hover:not(:disabled) {
-  background-color: #b88ff3 !important;
+  background-color: #7e22ce !important;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand) 35%, transparent);
 }
 
 .btn-primary:active:not(:disabled),
 button.btn-primary:active:not(:disabled) {
-  background-color: #a476ed !important;
+  background-color: #6b21a8 !important;
 }
 
 .btn-primary:disabled,

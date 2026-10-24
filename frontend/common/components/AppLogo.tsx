@@ -3,14 +3,14 @@ import type { AppLogoProps } from '../types/AppLogoProps';
 
 /**
  * AppLogo Component
- * Stage0 Official Brand Logo with brand color #b87ff4
+ * Stage0 official brand logo using Purple 600.
  */
 export const AppLogo: React.FC<AppLogoProps> = ({ size = 'md', className = '' }) => {
   if (size === 'sm') {
     return (
       <div
         title="Stage0"
-        className={`w-5 h-5 rounded-sm bg-[#b87ff4]/15 border border-[#b87ff4]/30 flex items-center justify-center text-[#b87ff4] shrink-0 select-none ${className}`}
+        className={`w-5 h-5 rounded-sm bg-brand/15 border border-brand/30 flex items-center justify-center text-brand shrink-0 select-none ${className}`}
       >
         <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="8" />
@@ -24,7 +24,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ size = 'md', className = '' })
     return (
       <div
         title="Stage0"
-        className={`w-20 h-20 rounded-sm bg-gradient-to-br from-[#b87ff4]/20 via-[#b87ff4]/10 to-surface0 border border-[#b87ff4]/40 flex flex-col items-center justify-center text-[#b87ff4] gap-1.5 shrink-0 select-none ${className}`}
+        className={`w-20 h-20 rounded-sm bg-gradient-to-br from-brand/20 via-brand/10 to-surface0 border border-brand/40 flex flex-col items-center justify-center text-brand gap-1.5 shrink-0 select-none ${className}`}
       >
         <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="8" />
@@ -32,7 +32,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ size = 'md', className = '' })
           <circle cx="12" cy="4" r="1.5" fill="currentColor" />
           <circle cx="12" cy="20" r="1.5" fill="currentColor" />
         </svg>
-        <span className="text-[10px] font-mono font-bold tracking-wider text-[#b87ff4] uppercase">Stage0</span>
+        <span className="text-[10px] font-mono font-bold tracking-wider text-brand uppercase">Stage0</span>
       </div>
     );
   }
@@ -41,7 +41,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ size = 'md', className = '' })
   return (
     <div
       title="Stage0"
-      className={`w-12 h-12 rounded-sm bg-gradient-to-br from-[#b87ff4]/25 to-[#b87ff4]/5 border border-[#b87ff4]/40 flex items-center justify-center text-[#b87ff4] shrink-0 select-none ${className}`}
+      className={`w-12 h-12 rounded-sm bg-gradient-to-br from-brand/25 to-brand/5 border border-brand/40 flex items-center justify-center text-brand shrink-0 select-none ${className}`}
     >
       <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="8" />
