@@ -57,6 +57,37 @@ fn strict_jsonc_accepts_comments_and_trailing_commas_but_not_json5() {
 }
 
 #[test]
+fn ui_font_preferences_are_optional_validated_and_round_trip_through_jsonc() {
+    let mut settings = parse_and_validate(DEFAULT_PREFERENCES).unwrap();
+    assert_eq!(
+        settings["appearance"]["uiFont"]["fontFamily"],
+        "IBM Plex Sans"
+    );
+    settings["appearance"]
+        .as_object_mut()
+        .unwrap()
+        .remove("uiFont");
+    assert!(validate_schema(&settings).is_ok());
+    for invalid in [
+        json!(false),
+        json!({"fontFamily": 42}),
+        json!({"fontFamily": ""}),
+    ] {
+        settings["appearance"]["uiFont"] = invalid;
+        assert!(validate_schema(&settings).is_err());
+    }
+    let root = CstRootNode::parse(DEFAULT_PREFERENCES, &strict_jsonc_options()).unwrap();
+    let patch = json!({"appearance": {"uiFont": {"fontFamily": "Inter"}}});
+    merge_object(&root.object_value().unwrap(), patch.as_object().unwrap()).unwrap();
+    let saved = parse_and_validate(&root.to_string()).unwrap();
+    assert_eq!(saved["appearance"]["uiFont"]["fontFamily"], "Inter");
+    assert_eq!(
+        saved["appearance"]["viewerFont"],
+        settings["appearance"]["viewerFont"]
+    );
+}
+
+#[test]
 fn schema_validation_rejects_wrong_types_ranges_and_malformed_records() {
     let valid = json!({
         "schemaVersion": 1,

@@ -5,6 +5,7 @@ import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings'
 
 export interface PreferencesBaseline {
   keymap: KeymapSettings;
+  uiFontFamily: string;
   themeMode: ThemeMode;
   fontFamily: string;
   fontSize: number;

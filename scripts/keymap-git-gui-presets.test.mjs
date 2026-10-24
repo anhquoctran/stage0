@@ -75,14 +75,19 @@ test('Git GUI presets do not repurpose Push or the legacy Preferences alias', ()
 test('Preferences preset picker, search and JSONC completion expose the new presets', async () => {
   const runner = componentHarness();
   const { PreferencesKeymapTab } = loadWithMocks(url('features/preferences/components/tabs/PreferencesKeymapTab.tsx'), {
-    react: runner.react, '../../../../common/components/CustomSelect': { CustomSelect: () => null },
+    react: runner.react,
+    '../../../../common/components/icons/GitBranch': { GitBranch: () => null },
+    '../../../../common/components/icons/Check': { Check: () => null },
     '../keymaps/KeymapBindingRow': { KeymapBindingRow: () => null },
   });
   let draft = settings('stage0', [{ command: 'fetch', keys: ['CmdOrCtrl+F8'] }]);
   const tree = await runner.render(PreferencesKeymapTab, { value: draft, onChange: (value) => { draft = value; } });
-  const picker = componentNodes(tree).find((node) => node.props.id === 'keymap-preset');
-  for (const preset of ['fork', 'sourcetree', 'gitkraken']) assert.ok(picker.props.options.some((option) => option.value === preset));
-  picker.props.onChange('fork');
+  const nodes = componentNodes(tree);
+  for (const preset of ['fork', 'sourcetree', 'gitkraken']) {
+    const label = KEYMAP_PRESETS.find((item) => item.id === preset).label;
+    assert.ok(nodes.some((node) => node.type === 'button' && node.props.children.flat().some((child) => child?.props?.children?.includes(label))));
+  }
+  nodes.find((node) => node.type === 'button' && node.props.children.flat().some((child) => child?.props?.children?.includes('Fork'))).props.onClick();
   assert.equal(draft.preset, 'fork');
   assert.deepEqual(draft.overrides, [{ command: 'fetch', keys: ['CmdOrCtrl+F8'] }]);
   const { SETTINGS_TREE } = loadWithMocks(url('features/preferences/constants/settingsTree.ts'), {});

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CustomSelect } from '../../../../common/components/CustomSelect';
+import { KeymapPresetPicker } from '../keymaps/KeymapPresetPicker';
 import {
     KEYMAP_PRESETS,
     keymapPlatform,
@@ -39,28 +39,8 @@ export function PreferencesKeymapTab({
     ];
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <label
-                    className="text-xs font-semibold text-text"
-                    htmlFor="keymap-preset"
-                >
-                    Keymap Preset
-                </label>
-                <CustomSelect
-                    id="keymap-preset"
-                    value={value.preset}
-                    align="right"
-                    dropdownWidth="w-80"
-                    options={KEYMAP_PRESETS.map((item) => ({
-                        value: item.id,
-                        label: item.label,
-                        description: item.description,
-                    }))}
-                    onChange={(presetId) =>
-                        onChange({ ...value, preset: presetId })
-                    }
-                />
-            </div>
+            <h3 className="text-xs font-semibold text-text">Keymap Preset</h3>
+            <KeymapPresetPicker value={value} onChange={onChange} />
             <p className="text-xs leading-relaxed text-subtext0">
                 {preset.description} Presets adapt equivalent actions, not every
                 shortcut of the original app. Your custom bindings are kept when

@@ -3,6 +3,7 @@ import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 export function countUnsavedPreferences(
   draft: {
     showInlineBlame: boolean;
+    uiFontFamily?: string;
     themeMode: string;
     fontFamily: string;
     fontSize: number;
@@ -23,6 +24,7 @@ export function countUnsavedPreferences(
   aiChangeCount: number
 ): number {
   let count = aiChangeCount;
+  if (draft.uiFontFamily !== undefined && draft.uiFontFamily !== baseline.uiFontFamily) count++;
   if (draft.showInlineBlame !== baseline.showInlineBlame) count++;
   if (draft.themeMode !== baseline.themeMode) count++;
   if (draft.fontFamily !== baseline.fontFamily) count++;

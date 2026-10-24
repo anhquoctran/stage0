@@ -1,12 +1,14 @@
 import { KEYMAP_PRESETS, keymapCatalog } from '../../../core/services/keymaps/catalog';
 import { MARKDOWN_CODE_FONTS, MARKDOWN_EDITOR_FONTS, MARKDOWN_PROSE_FONTS } from '../constants/markdownFonts';
+import { UI_FONT_FAMILIES } from '../constants/uiFonts';
 
 const PROPERTY_NAMES: Record<string, string[]> = {
   '': ['schemaVersion', 'keymap', 'general', 'appearance', 'ai', 'reviewers', 'sandbox', 'git', 'notifications'],
   keymap: ['preset', 'overrides'],
   'keymap.overrides.[]': ['command', 'keys'],
   general: ['showInlineBlame', 'streamResponse', 'enableCodeReviewAssist'],
-  appearance: ['themeMode', 'viewerFont', 'markdownFont'],
+  appearance: ['themeMode', 'uiFont', 'viewerFont', 'markdownFont'],
+  'appearance.uiFont': ['fontFamily'],
   'appearance.markdownFont': ['fontFamily', 'codeFontFamily', 'editorFontFamily', 'fontSize', 'headingFontWeight'],
   'appearance.viewerFont': ['fontFamily', 'fontSize', 'isBold', 'isItalic', 'isUnderline', 'lineSpacing', 'enableLigatures'],
   ai: ['aiConfig', 'mcpServers', 'guardrailPolicy', 'externalAgents'],
@@ -32,6 +34,7 @@ const VALUE_OPTIONS: Record<string, string[]> = {
   'keymap.preset': KEYMAP_PRESETS.map((preset) => preset.id),
   'keymap.overrides.[].command': keymapCatalog().filter((command) => command.editable).map((command) => command.id),
   'appearance.themeMode': ['system', 'dark', 'light'],
+  'appearance.uiFont.fontFamily': UI_FONT_FAMILIES,
   'appearance.markdownFont.fontFamily': MARKDOWN_PROSE_FONTS,
   'appearance.markdownFont.codeFontFamily': MARKDOWN_CODE_FONTS,
   'appearance.markdownFont.editorFontFamily': MARKDOWN_EDITOR_FONTS,

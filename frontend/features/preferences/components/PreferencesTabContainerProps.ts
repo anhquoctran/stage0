@@ -12,6 +12,8 @@ import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings'
 
 export interface PreferencesTabContainerProps {
   draftKeymap: KeymapSettings;
+  draftUiFontFamily: string;
+  setDraftUiFontFamily: React.Dispatch<React.SetStateAction<string>>;
   setDraftKeymap: React.Dispatch<React.SetStateAction<KeymapSettings>>;
   currentTabId: PreferenceTab | null;
   currentChildItem: TreeChildItem | null;

@@ -39,6 +39,11 @@ export const SETTINGS_TREE: TreeCategory[] = [
         keywords: ['font', 'family', 'size', 'ligatures', 'bold', 'italic', 'underline', 'spacing', 'typography'],
       },
       {
+        id: 'appearance-ui-font', label: 'UI Font', title: 'UI Font',
+        description: 'Choose the font used for menus, navigation, labels, and buttons.',
+        keywords: ['ui', 'interface', 'font', 'family', 'typography', 'menus'],
+      },
+      {
         id: 'appearance-markdown-font',
         label: 'Markdown Font',
         title: 'Markdown Font & Typography',

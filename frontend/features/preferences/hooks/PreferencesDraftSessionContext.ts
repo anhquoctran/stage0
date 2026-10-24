@@ -10,6 +10,7 @@ import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings'
 
 export interface PreferencesDraftSessionContext {
   storedKeymap: KeymapSettings;
+  storedUiFontFamily: string;
   storedThemeMode: ThemeMode;
   storedFontFamily: string;
   storedFontSize: number;

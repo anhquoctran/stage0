@@ -45,6 +45,8 @@ export const PreferencesModal: React.FC = () => {
       currentChildItem,
     },
     appearance: {
+      draftUiFontFamily,
+      setDraftUiFontFamily,
       draftThemeMode,
       setDraftThemeMode,
       draftThemeId,
@@ -121,6 +123,8 @@ export const PreferencesModal: React.FC = () => {
 
             {/* Right Column: Settings Content Area */}
             <PreferencesTabContainer
+              draftUiFontFamily={draftUiFontFamily}
+              setDraftUiFontFamily={setDraftUiFontFamily}
               draftKeymap={draftKeymap}
               setDraftKeymap={setDraftKeymap}
               currentTabId={currentTabId}

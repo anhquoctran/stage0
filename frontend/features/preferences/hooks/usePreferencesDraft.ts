@@ -25,11 +25,14 @@ import { usePreferencesChangeCount } from './usePreferencesChangeCount';
 import { usePreferencesDraftSession } from './usePreferencesDraftSession';
 import { usePreferencesNavigation } from './usePreferencesNavigation';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
+import { DEFAULT_UI_FONT_FAMILY } from '../constants/uiFonts';
+import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
 
 export function usePreferencesDraft() {
   const {
     isPreferencesOpen,
     keymap: storedKeymap,
+    uiFontFamily: storedUiFontFamily,
     setIsPreferencesOpen,
     initialPreferencesTab,
     setInitialPreferencesTab,
@@ -88,6 +91,7 @@ export function usePreferencesDraft() {
 
   const session = usePreferencesDraftSession({
     storedKeymap,
+    storedUiFontFamily,
     storedThemeMode,
     storedFontFamily,
     storedFontSize,
@@ -133,6 +137,7 @@ export function usePreferencesDraft() {
   // Commit changes
   const handleApply = createPreferencesApplyAction({
     draftKeymap: session.draftKeymap,
+    draftUiFontFamily: session.draftUiFontFamily,
     setDraftKeymap: session.setDraftKeymap,
     applyingRef,
     setIsApplying,
@@ -177,6 +182,7 @@ export function usePreferencesDraft() {
     aiDraftStore.getState().replace(captureAiPreferences());
     const resolvedTheme = resolveTheme(session.savedBaseline.themeMode);
     applyThemeToDocument(resolvedTheme);
+    applyUiFontToDocument(session.savedBaseline.uiFontFamily);
 
     const fontSettings: ViewerFontSettings = {
       fontFamily: session.savedBaseline.fontFamily,
@@ -201,6 +207,8 @@ export function usePreferencesDraft() {
 
   const handleResetDefaults = () => {
     session.setDraftKeymap(structuredClone(DEFAULT_KEYMAP));
+    session.setDraftUiFontFamily(DEFAULT_UI_FONT_FAMILY);
+    applyUiFontToDocument(DEFAULT_UI_FONT_FAMILY);
     session.setDraftThemeMode('system');
     applyThemeToDocument(resolveTheme('system'));
 
@@ -269,6 +277,8 @@ export function usePreferencesDraft() {
       currentChildItem,
     },
     appearance: {
+      draftUiFontFamily: session.draftUiFontFamily,
+      setDraftUiFontFamily: session.setDraftUiFontFamily,
       draftThemeMode: session.draftThemeMode,
       setDraftThemeMode: session.setDraftThemeMode,
       draftThemeId: session.draftThemeId,

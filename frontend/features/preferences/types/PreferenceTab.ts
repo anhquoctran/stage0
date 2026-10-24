@@ -5,6 +5,7 @@ export type PreferenceTab =
   | 'appearance'
   | 'appearance-theme'
   | 'appearance-fonts'
+  | 'appearance-ui-font'
   | 'appearance-markdown-font'
   | 'editor'
   | 'editor-diff'
