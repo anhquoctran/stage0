@@ -6,6 +6,7 @@ import type { WelcomeSettingsProps } from '../types/WelcomeSettingsProps';
 import type { ViewerFontSettings } from '../../preferences/types/ViewerFontSettings';
 import type { MarkdownFontSettings } from '../../preferences/types/MarkdownFontSettings';
 import type { SetStateAction } from 'react';
+import { WelcomeThemePicker } from './WelcomeThemePicker';
 
 export function WelcomeSettingsPanel({ step, settings, onChange }: WelcomeSettingsProps) {
   const setViewer = <K extends keyof ViewerFontSettings>(key: K, value: SetStateAction<ViewerFontSettings[K]>) =>
@@ -15,6 +16,7 @@ export function WelcomeSettingsPanel({ step, settings, onChange }: WelcomeSettin
     onChange((previous) => ({ ...previous, markdownFont: { ...previous.markdownFont,
       [key]: typeof value === 'function' ? value(previous.markdownFont[key]) : value } }));
 
+  if (step === 'theme') return <WelcomeThemePicker settings={settings} onChange={onChange} />;
   if (step === 'keymaps') return <KeymapPresetPicker value={settings.keymap}
     onChange={(keymap) => onChange((previous) => ({ ...previous, keymap }))} />;
   if (step === 'ui-font') return <PreferencesUiFontTab value={settings.uiFontFamily}

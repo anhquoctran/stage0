@@ -37,6 +37,12 @@ and the measured [refactor report](docs/architecture/backend_refactor_analysis.m
 
 ## UI styling contracts
 
+- Buttons with an opaque colored/gray fill must have no border, including hover,
+  active, selected and disabled states. Borders are allowed only for transparent,
+  white or black/dark neutral backgrounds (`bg-base`, `bg-mantle`, `bg-crust`).
+  Use `border-0` for filled buttons; keep keyboard focus outlines separate from
+  borders. Use `.btn-solid` for custom/inline opaque fills so the global button
+  surface rule applies. Do not apply this rule to inputs or non-button cards.
 - Apply small rounded corners (`rounded-sm` / `--radius-sm: 4px`) across UI elements:
   all buttons (`button`), inputs (`input`, `select`, `textarea`), visual containers
   (`div` cards, panels, popovers, dropdowns, modal dialogs, toasts, banners), and badges/tags.

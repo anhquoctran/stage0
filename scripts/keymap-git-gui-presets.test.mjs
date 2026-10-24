@@ -76,7 +76,7 @@ test('Preferences preset picker, search and JSONC completion expose the new pres
   const runner = componentHarness();
   const { PreferencesKeymapTab } = loadWithMocks(url('features/preferences/components/tabs/PreferencesKeymapTab.tsx'), {
     react: runner.react,
-    '../../../../common/components/icons/GitBranch': { GitBranch: () => null },
+    '../keymaps/KeymapPresetLogo': { KeymapPresetLogo: () => null },
     '../../../../common/components/icons/Check': { Check: () => null },
     '../keymaps/KeymapBindingRow': { KeymapBindingRow: () => null },
   });

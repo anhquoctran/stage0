@@ -5,11 +5,13 @@ import { DEFAULT_UI_FONT_FAMILY } from '../../preferences/constants/uiFonts';
 import { preferencesJsonService } from '../../preferences/services/preferencesJsonService';
 import { keymapErrors } from '../../../core/services/keymaps/validation';
 import type { OnboardingPreferences } from '../types/OnboardingPreferences';
+import { applyThemeToDocument, persistThemeMode, resolveTheme, useThemeStore } from '../../../core/store/useThemeStore';
 
 export function captureOnboardingPreferences(): OnboardingPreferences {
   const state = usePreferencesStore.getState();
   return structuredClone({
     keymap: state.keymap,
+    themeMode: useThemeStore.getState().themeMode,
     uiFontFamily: state.uiFontFamily ?? DEFAULT_UI_FONT_FAMILY,
     viewerFont: {
       fontFamily: state.fontFamily, fontSize: state.fontSize,
@@ -25,6 +27,7 @@ export function captureOnboardingPreferences(): OnboardingPreferences {
 }
 
 export function previewOnboardingPreferences(settings: OnboardingPreferences): void {
+  applyThemeToDocument(resolveTheme(settings.themeMode));
   applyUiFontToDocument(settings.uiFontFamily);
   applyViewerFontToDocument(settings.viewerFont);
   applyMarkdownFontToDocument(settings.markdownFont);
@@ -52,9 +55,9 @@ export async function saveOnboardingPreferences(draft: OnboardingPreferences, ba
   // Detect edits made elsewhere before the save started; the JSON service handles
   // revision conflicts during the write. Never replace an entire appearance object.
   assertNoConflicts(
-    { keymap: baseline.keymap, uiFontFamily: baseline.uiFontFamily },
-    { keymap: draft.keymap, uiFontFamily: draft.uiFontFamily },
-    { keymap: current.keymap, uiFontFamily: current.uiFontFamily }
+    { keymap: baseline.keymap, themeMode: baseline.themeMode, uiFontFamily: baseline.uiFontFamily },
+    { keymap: draft.keymap, themeMode: draft.themeMode, uiFontFamily: draft.uiFontFamily },
+    { keymap: current.keymap, themeMode: current.themeMode, uiFontFamily: current.uiFontFamily }
   );
   assertNoConflicts(baseline.viewerFont, draft.viewerFont, current.viewerFont);
   assertNoConflicts(baseline.markdownFont, draft.markdownFont, current.markdownFont);
@@ -63,6 +66,8 @@ export async function saveOnboardingPreferences(draft: OnboardingPreferences, ba
   const uiChanged = draft.uiFontFamily !== baseline.uiFontFamily;
   const keymapChanged = JSON.stringify(draft.keymap) !== JSON.stringify(baseline.keymap);
   const appearance: Record<string, unknown> = {};
+  const themeChanged = draft.themeMode !== baseline.themeMode;
+  if (themeChanged) appearance.themeMode = draft.themeMode;
   if (uiChanged) appearance.uiFont = { fontFamily: draft.uiFontFamily };
   if (Object.keys(viewerChanges).length) appearance.viewerFont = viewerChanges;
   if (Object.keys(markdownChanges).length) appearance.markdownFont = markdownChanges;
@@ -71,6 +76,11 @@ export async function saveOnboardingPreferences(draft: OnboardingPreferences, ba
   if (Object.keys(appearance).length) patch.appearance = appearance;
   if (!Object.keys(patch).length) return;
   await preferencesJsonService.patch(patch);
+
+  if (themeChanged) {
+    useThemeStore.setState({ themeMode: draft.themeMode, theme: resolveTheme(draft.themeMode) });
+    persistThemeMode(draft.themeMode);
+  }
 
   // Native saves broadcast their committed settings; the web fallback does not.
   // Merge the same delta into the latest store in either case, after success only.

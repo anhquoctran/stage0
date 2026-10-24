@@ -251,6 +251,7 @@ pub fn run() {
             commands::save_preferences_json,
             commands::patch_preferences,
             commands::reset_preferences_json,
+            commands::list_system_font_families,
             commands::has_ai_api_key,
             commands::delete_ai_api_key,
             commands::open_external_url,

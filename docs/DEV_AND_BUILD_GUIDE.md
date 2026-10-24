@@ -10,18 +10,18 @@ This document provides a comprehensive guide on running the **Development Server
 | :--- | :--- | :--- | :--- |
 | **Windows 10/11** | Node.js >= 20 LTS (`nvm-windows`), pnpm >= 9 | Rust >= 1.77 (`rustup`) | Visual Studio C++ Build Tools, Microsoft Edge WebView2 (pre-installed on Win 10/11) |
 | **macOS** (Apple Silicon & Intel) | Node.js >= 20 LTS (`nvm`), pnpm >= 9 | Rust >= 1.77 (`rustup`) | Xcode Command Line Tools (`xcode-select --install`) |
-| **Linux** (Ubuntu / Debian / Fedora / Arch) | Node.js >= 20 LTS (`nvm`), pnpm >= 9 | Rust >= 1.77 (`rustup`) | `libwebkit2gtk-4.1-dev`, `libssl-dev`, `libsecret-1-dev`, `build-essential`, `pkg-config` |
+| **Linux** (Ubuntu / Debian / Fedora / Arch) | Node.js >= 20 LTS (`nvm`), pnpm >= 9 | Rust >= 1.77 (`rustup`) | `libwebkit2gtk-4.1-dev`, `libssl-dev`, `libsecret-1-dev`, `libfontconfig1-dev`, `libfreetype6-dev`, `build-essential`, `pkg-config` |
 
 ### Quick dependency installation for Linux:
 ```bash
 # Ubuntu / Debian / Pop!_OS
-sudo apt update && sudo apt install -y build-essential pkg-config libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libsecret-1-dev
+sudo apt update && sudo apt install -y build-essential pkg-config libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libsecret-1-dev libfontconfig1-dev libfreetype6-dev
 
 # Fedora
-sudo dnf install webkit2gtk4.1-devel openssl-devel libsecret-devel
+sudo dnf install webkit2gtk4.1-devel openssl-devel libsecret-devel fontconfig-devel freetype-devel
 
 # Arch Linux
-sudo pacman -S webkit2gtk-4.1 openssl libsecret base-devel
+sudo pacman -S webkit2gtk-4.1 openssl libsecret base-devel fontconfig freetype2
 ```
 
 ---

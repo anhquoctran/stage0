@@ -4,6 +4,22 @@ import type { WelcomeSettingsProps } from '../types/WelcomeSettingsProps';
 
 export function WelcomeSettingsPreview({ step, settings }: Omit<WelcomeSettingsProps, 'onChange'>) {
   const platform = keymapPlatform();
+  if (step === 'theme') return <div className="overflow-hidden rounded-sm border border-surface0 bg-base">
+    <div className="flex items-center gap-2 border-b border-surface0 bg-crust px-4 py-3 text-xs text-subtext0">
+      <span className="h-2 w-2 rounded-full bg-mauve" /> Stage0 · Theme preview
+    </div>
+    <div className="flex min-h-48">
+      <div className="w-1/3 space-y-3 border-r border-surface0 bg-mantle p-4 text-xs text-subtext0">
+        <p className="font-semibold text-text">Workspace</p><p>Branches</p><p>Files</p><p>Reviews</p>
+      </div>
+      <div className="flex-1 space-y-4 p-4">
+        <h2 className="text-base font-semibold text-text">Review with clarity</h2>
+        <p className="text-xs leading-relaxed text-subtext1">Your workspace follows the theme you choose.</p>
+        <div className="rounded-sm bg-surface0 p-3 text-xs text-text">main → feature</div>
+        <span className="inline-block rounded-sm bg-mauve/10 px-2 py-1 text-xs text-mauve">Ready to review</span>
+      </div>
+    </div>
+  </div>;
   if (step === 'keymaps') {
     const commands = resolveKeymap(settings.keymap, platform)
       .filter((command) => ['open_repo', 'clone_repo', 'fetch', 'pull', 'preferences'].includes(command.id));

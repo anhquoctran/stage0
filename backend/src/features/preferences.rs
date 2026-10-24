@@ -1,5 +1,6 @@
 //! JSONC preferences: a stable facade over validation, storage and IPC modules.
 mod commands;
+mod fonts;
 mod jsonc_patch;
 mod manager;
 mod migration;
@@ -13,6 +14,7 @@ mod validation_fields;
 mod validation_records;
 
 pub use commands::*;
+pub use fonts::*;
 pub use manager::PreferencesManager;
 pub use preferences_document::PreferencesDocument;
 

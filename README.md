@@ -74,7 +74,7 @@ versions manually; version and build metadata remain available in About.
 
     ```bash
     sudo apt update
-    sudo apt install build-essential pkg-config libwebkit2gtk-4.1-dev libssl-dev libsecret-1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+    sudo apt install build-essential pkg-config libwebkit2gtk-4.1-dev libssl-dev libsecret-1-dev libayatana-appindicator3-dev librsvg2-dev libfontconfig1-dev libfreetype6-dev patchelf
     ```
 
 ## Development

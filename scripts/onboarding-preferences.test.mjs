@@ -12,8 +12,15 @@ function fixture() {
     markdownFontFamily: 'Arial', markdownCodeFontFamily: 'Fira Code', markdownEditorFontFamily: 'Fira Code',
     markdownFontSize: 14, markdownHeadingFontWeight: 600 };
   const patches = [], previews = [];
+  const theme = { themeMode: 'system', theme: 'mocha' }, persistedModes = [];
   let fail = false, paused;
   const service = loadWithMocks(url('features/onboarding/services/onboardingPreferences.ts'), {
+    '../../../core/store/useThemeStore': {
+      useThemeStore: { getState: () => theme, setState: (patch) => Object.assign(theme, patch) },
+      resolveTheme: (mode) => mode === 'light' ? 'mocha-light' : 'mocha',
+      applyThemeToDocument: (value) => previews.push(['theme', value]),
+      persistThemeMode: (mode) => persistedModes.push(mode),
+    },
     '../../preferences/store/usePreferencesStore': { usePreferencesStore: {
       getState: () => prefs, setState: (patch) => Object.assign(prefs, patch),
     }, applyViewerFontToDocument: (settings) => previews.push(['buffer', settings]) },
@@ -24,14 +31,14 @@ function fixture() {
     } } },
   });
   const baseline = service.captureOnboardingPreferences();
-  return { prefs, patches, previews, service, baseline, draft: structuredClone(baseline),
+  return { prefs, theme, persistedModes, patches, previews, service, baseline, draft: structuredClone(baseline),
     fail: () => { fail = true; }, pause: (promise) => { paused = promise; } };
 }
 
-test('welcome includes the three intro slides and four configuration steps', () => {
+test('welcome includes Theme immediately before Keymaps and keeps all existing steps', () => {
   const { WELCOME_SLIDES } = loadWithMocks(url('features/onboarding/constants/welcomeSlides.ts'), {});
   assert.deepEqual(WELCOME_SLIDES.map((slide) => slide.id),
-    ['welcome', 'compare', 'review', 'keymaps', 'ui-font', 'buffer-font', 'markdown-font']);
+    ['welcome', 'compare', 'review', 'theme', 'keymaps', 'ui-font', 'buffer-font', 'markdown-font']);
 });
 
 test('every welcome step can be continued and the guide completed without selecting any settings', async (t) => {
@@ -49,7 +56,6 @@ test('every welcome step can be continued and the guide completed without select
     react: runner.react,
     '@tauri-apps/api/core': { invoke: async () => {} },
     '../../../common/components/icons/ArrowRight': { ArrowRight: () => null },
-    '../../../common/components/icons/Sparkles': { Sparkles: () => null },
     '../../../common/components/icons/X': { X: () => null },
     '../../../common/components/AppLogo': { AppLogo: () => null },
     '../../../common/utils/shortcuts': { isMacOS: () => true },
@@ -67,10 +73,29 @@ test('every welcome step can be continued and the guide completed without select
   });
   const render = () => runner.render(FirstLaunchWelcome, { onComplete: () => { completed++; } });
   let tree = await render();
-  for (let slide = 0; slide < 6; slide++) {
+  const dragRegion = componentNodes(tree).find((node) => Object.hasOwn(node.props, 'data-tauri-drag-region'));
+  assert.ok(dragRegion, 'The title strip must remain draggable');
+  assert.match(dragRegion.props.className, /\bcursor-default\b/);
+  assert.ok(!dragRegion.props.className.includes('cursor-move'),
+    'The onboarding title strip must not leak a move cursor over native window controls');
+  const dialog = componentNodes(tree).find((node) => node.props.role === 'dialog');
+  assert.equal(dialog.props.tabIndex, -1, 'Initial focus belongs to the dialog, not a call-to-action');
+  assert.match(dialog.props.className, /\bh-full\b.*\bw-full\b/);
+  assert.match(dialog.props.className, /\brounded-none\b/, 'Onboarding is the full window, not an inset card');
+  assert.ok(!dialog.props.className.includes('max-w-') && !dialog.props.className.includes('max-h-'),
+    'Do not restore an outer gutter or bounded card around the tour');
+  assert.ok(componentNodes(tree).some((node) => node.props.className?.includes('my-auto py-8')),
+    'Intro copy should be vertically balanced instead of pinned far above its navigation');
+  for (let slide = 0; slide < 7; slide++) {
     const next = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.flat().some((child) => typeof child === 'string' && child.trim() === 'Next'));
     assert.ok(next, `Step ${slide + 1} must allow Next without choosing anything`);
     assert.ok(!next.props.disabled);
+    assert.equal(next.props.ref, undefined, 'Next must not receive automatic focus');
+    assert.ok(!next.props.className.includes('btn-primary'), 'Next must not use the glowing brand button');
+    assert.match(next.props.className, /\bbg-surface0\b/);
+    assert.match(next.props.className, /\btext-text\b/);
+    assert.match(next.props.className, /\bborder-0\b/);
+    assert.notEqual(next.props.tabIndex, -1, 'Next remains available to keyboard navigation');
     next.props.onClick(); tree = await render();
   }
   const skip = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.includes('Skip tour'));
@@ -97,6 +122,67 @@ test('onboarding saves one minimal patch and activates choices only after succes
   assert.deepEqual(f.prefs.keymap.overrides, f.baseline.keymap.overrides);
   assert.equal(f.prefs.markdownFontFamily, 'Arial');
   assert.deepEqual(f.previews.at(-3), ['ui', 'Inter']);
+});
+
+test('theme previews immediately but commits its preference and startup cache only after saving', async () => {
+  const f = fixture(); f.draft.themeMode = 'light';
+  f.service.previewOnboardingPreferences(f.draft);
+  assert.deepEqual(f.previews[0], ['theme', 'mocha-light']);
+  assert.equal(f.theme.themeMode, 'system'); assert.deepEqual(f.persistedModes, []);
+  let release; f.pause(new Promise((resolve) => { release = resolve; }));
+  const pending = f.service.saveOnboardingPreferences(f.draft, f.baseline);
+  assert.deepEqual(f.patches, [{ appearance: { themeMode: 'light' } }]);
+  assert.equal(f.theme.themeMode, 'system');
+  release(); await pending;
+  assert.deepEqual(f.theme, { themeMode: 'light', theme: 'mocha-light' });
+  assert.deepEqual(f.persistedModes, ['light']);
+  assert.equal(f.prefs.fontFamily, 'Fira Code');
+});
+
+test('failed theme saves retain the committed theme and detect conflicts without overwriting external choices', async () => {
+  const f = fixture(); f.draft.themeMode = 'dark'; f.fail();
+  await assert.rejects(f.service.saveOnboardingPreferences(f.draft, f.baseline), /Disk unavailable/);
+  assert.equal(f.theme.themeMode, 'system'); assert.deepEqual(f.persistedModes, []);
+  const conflict = fixture(); conflict.draft.themeMode = 'dark'; conflict.theme.themeMode = 'light';
+  await assert.rejects(conflict.service.saveOnboardingPreferences(conflict.draft, conflict.baseline), /another window/);
+  assert.equal(conflict.theme.themeMode, 'light'); assert.equal(conflict.patches.length, 0);
+  const unrelated = fixture(); unrelated.theme.themeMode = 'light'; unrelated.draft.viewerFont.fontSize = 16;
+  await unrelated.service.saveOnboardingPreferences(unrelated.draft, unrelated.baseline);
+  assert.equal(unrelated.theme.themeMode, 'light');
+  assert.deepEqual(unrelated.patches, [{ appearance: { viewerFont: { fontSize: 16 } } }]);
+});
+
+test('leaving an uncommitted theme preview restores the currently saved theme', () => {
+  const f = fixture(), runner = hookHarness();
+  const { useOnboardingPreferences } = loadWithMocks(url('features/onboarding/hooks/useOnboardingPreferences.ts'), {
+    react: runner.react, '../services/onboardingPreferences': f.service,
+  });
+  let state = runner.render(useOnboardingPreferences);
+  state.setSettings((previous) => ({ ...previous, themeMode: 'light' }));
+  state = runner.render(useOnboardingPreferences);
+  assert.deepEqual(f.previews.at(-4), ['theme', 'mocha-light']);
+  assert.equal(f.theme.themeMode, 'system');
+  runner.cleanup(); assert.deepEqual(f.previews.at(-4), ['theme', 'mocha']);
+  assert.deepEqual(f.persistedModes, []);
+});
+
+test('theme picker offers System, Light and Dark, with System selected by default', async () => {
+  const f = fixture(), runner = componentHarness();
+  const { WelcomeThemePicker } = loadWithMocks(url('features/onboarding/components/WelcomeThemePicker.tsx'), {
+    react: runner.react,
+    '../../../common/components/icons/Monitor': { Monitor: () => null },
+    '../../../common/components/icons/Sun': { Sun: () => null },
+    '../../../common/components/icons/Moon': { Moon: () => null },
+    '../../../common/components/icons/Check': { Check: () => null },
+  });
+  const props = { settings: f.draft, onChange: (next) => { props.settings = next(props.settings); } };
+  let buttons = componentNodes(await runner.render(WelcomeThemePicker, props)).filter((node) => node.type === 'button');
+  assert.equal(buttons.length, 3); assert.equal(buttons[0].props['aria-pressed'], true);
+  buttons[1].props.onClick();
+  buttons = componentNodes(await runner.render(WelcomeThemePicker, props)).filter((node) => node.type === 'button');
+  assert.equal(props.settings.themeMode, 'light'); assert.equal(buttons[1].props['aria-pressed'], true);
+  assert.equal(buttons[0].props['aria-pressed'], false); assert.equal(f.theme.themeMode, 'system');
+  runner.cleanup();
 });
 
 test('unchanged onboarding does not write preferences and failures retain the committed values', async () => {
@@ -137,16 +223,19 @@ test('onboarding hook previews drafts, blocks concurrent saves, reports failures
   runner.cleanup(); assert.equal(f.previews.at(-3)[1], 'IBM Plex Sans');
 });
 
-test('preset buttons show branch icons and names, expose selection, and preserve custom bindings', async () => {
+test('preset buttons show distinct brand logos and names, expose selection, and preserve custom bindings', async () => {
   const runner = componentHarness(); let value = fixture().baseline.keymap;
-  const GitBranch = () => null;
+  const KeymapPresetLogo = () => null;
   const { KeymapPresetPicker } = loadWithMocks(url('features/preferences/components/keymaps/KeymapPresetPicker.tsx'), {
-    react: runner.react, '../../../../common/components/icons/GitBranch': { GitBranch },
+    react: runner.react, './KeymapPresetLogo': { KeymapPresetLogo },
     '../../../../common/components/icons/Check': { Check: () => null },
   });
   let nodes = componentNodes(await runner.render(KeymapPresetPicker, { value, onChange: (next) => { value = next; } }));
   const buttons = nodes.filter((node) => node.type === 'button');
-  assert.equal(buttons.length, 7); assert.equal(nodes.filter((node) => node.type === GitBranch).length, 7);
+  assert.equal(buttons.length, 7);
+  const logos = nodes.filter((node) => node.type === KeymapPresetLogo);
+  assert.equal(logos.length, 7);
+  assert.deepEqual(logos.map((node) => node.props.preset), ['stage0', 'vscode', 'jetbrains', 'github-desktop', 'fork', 'sourcetree', 'gitkraken']);
   assert.equal(buttons.filter((node) => node.props['aria-pressed']).length, 1);
   const fork = buttons.find((node) => node.props.children.some((child) => child?.props?.children?.includes('Fork')));
   fork.props.onClick(); assert.equal(value.preset, 'fork');
