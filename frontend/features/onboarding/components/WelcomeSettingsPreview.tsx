@@ -1,6 +1,9 @@
+import hljs from 'highlight.js';
 import { keymapPlatform, resolveKeymap } from '../../../core/services/keymaps/catalog';
 import { formatKeybinding } from '../../../core/services/keymaps/keystroke';
 import type { WelcomeSettingsProps } from '../types/WelcomeSettingsProps';
+
+const BUFFER_PREVIEW_SOURCE = 'function review(branch) {\n  const ready = branch != null;\n  return ready && branch.isClean;\n}\n\n// Clear code, thoughtful reviews.';
 
 export function WelcomeSettingsPreview({ step, settings }: Omit<WelcomeSettingsProps, 'onChange'>) {
   const platform = keymapPlatform();
@@ -38,7 +41,11 @@ export function WelcomeSettingsPreview({ step, settings }: Omit<WelcomeSettingsP
   }
   if (step === 'buffer-font') return <div className="overflow-hidden rounded-sm border border-surface0 bg-base">
     <div className="border-b border-surface0 px-4 py-3 text-xs text-subtext0">review.ts · Buffer preview</div>
-    <pre className="diff-raw-viewer overflow-x-auto p-4">{'function review(branch) {\n  const ready = branch != null;\n  return ready && branch.isClean;\n}\n\n// Clear code, thoughtful reviews.'}</pre>
+    <pre className="diff-raw-viewer syntax-highlight overflow-x-auto p-4">
+      <code className="hljs language-typescript" dangerouslySetInnerHTML={{
+        __html: hljs.highlight(BUFFER_PREVIEW_SOURCE, { language: 'typescript', ignoreIllegals: true }).value,
+      }} />
+    </pre>
   </div>;
   if (step === 'markdown-font') return <div className="rounded-sm border border-surface0 bg-base p-5">
     <h2 className="mb-3 text-xs text-subtext0">Your merge request</h2>

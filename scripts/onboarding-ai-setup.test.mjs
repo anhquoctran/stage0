@@ -94,22 +94,34 @@ test('Skip, Close, Escape and jumping to the final slide cannot bypass required 
   });
   const render = async () => componentNodes(await runner.render(FirstLaunchWelcome, { onComplete: () => completed++ }));
   const button = (nodes, name) => nodes.find((node) => node.type === 'button' && node.props.children.flat().some((child) => typeof child === 'string' && child.trim() === name));
+  const { WELCOME_SLIDES } = loadWithMocks(url('constants/welcomeSlides.ts'), {});
+  const aiIndex = WELCOME_SLIDES.findIndex((slide) => slide.id === 'ai-setup');
   let nodes = await render();
-  for (let slide = 0; slide < 3; slide++) {
+  for (let slide = 0; slide < aiIndex; slide++) {
     assert.equal(button(nodes, 'Set up AI'), undefined, 'Intro screens must not show a redundant AI setup action');
     assert.equal(button(nodes, 'Skip tour'), undefined, 'Skipping stays unavailable until AI is configured');
     const next = button(nodes, slide === 2 ? "Let's get started" : 'Next');
-    assert.ok(next, 'Every introduction slide must lead toward required AI setup');
+    assert.ok(next && !next.props.disabled, 'Introduction and optional appearance steps stay available before AI setup');
     next.props.onClick(); nodes = await render();
   }
   assert.ok(nodes.some((node) => node.type === 'h1' && node.props.children.includes('Set up your AI connection')));
   assert.equal(button(nodes, 'Next').props.disabled, true); button(nodes, 'Next').props.onClick();
   await nodes.find((node) => node.props['aria-label'] === 'Close welcome guide').props.onClick();
   handlers.get('keydown')({ key: 'Escape', preventDefault() {} });
-  nodes.find((node) => node.props['aria-label']?.startsWith('Go to slide 9:')).props.onClick(); nodes = await render();
-  await button(nodes, 'Open a repository').props.onClick(); nodes = await render();
+  nodes.find((node) => node.props['aria-label']?.startsWith(`Go to slide ${WELCOME_SLIDES.length}:`)).props.onClick(); nodes = await render();
+  assert.equal(button(nodes, 'Open a repository'), undefined, 'The final-step dot must route back to required AI setup');
   assert.equal(stored.size, 0); assert.equal(saves, 0); assert.equal(completed, 0); assert.equal(repoActions, 0);
-  ready = true; nodes = await render(); assert.equal(button(nodes, 'Next').props.disabled, false);
+  for (const action of ['Open a repository', 'Clone a repository']) {
+    ready = true; nodes = await render(); assert.equal(button(nodes, 'Next').props.disabled, false);
+    button(nodes, 'Next').props.onClick(); nodes = await render();
+    assert.ok(nodes.some((node) => node.type === 'h1' && node.props.children.includes('Start with a repository')));
+    assert.ok(button(nodes, 'Open a repository') && button(nodes, 'Clone a repository'));
+    ready = false; nodes = await render();
+    await button(nodes, action).props.onClick(); nodes = await render();
+    assert.ok(nodes.some((node) => node.type === 'h1' && node.props.children.includes('Set up your AI connection')));
+    assert.equal(stored.size, 0); assert.equal(saves, 0); assert.equal(completed, 0); assert.equal(repoActions, 0);
+  }
+  ready = true; nodes = await render();
   await button(nodes, 'Skip tour').props.onClick();
   assert.equal(completed, 1); assert.equal(saves, 1); assert.equal(stored.get('stage0_first_launch_welcome_v1'), 'completed');
 });

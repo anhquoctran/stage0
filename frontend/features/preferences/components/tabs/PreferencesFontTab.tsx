@@ -10,6 +10,7 @@ import { Underline } from '../../../../common/components/icons/Underline';
 import { SUPPORTED_FONTS } from '../../constants/fonts';
 import { formatShortcutText } from '../../../../common/utils/shortcuts';
 import { checkFontLigaturesSupport } from '../../store/usePreferencesStore';
+import { useOutsideDismiss } from '../../../../common/hooks/useOutsideDismiss';
 
 export const PreferencesFontTab: React.FC<{
   draftFontFamily: string;
@@ -45,6 +46,9 @@ export const PreferencesFontTab: React.FC<{
   const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
   const [fontSearchQuery, setFontSearchQuery] = useState('');
   const fontSearchInputRef = useRef<HTMLInputElement>(null);
+  const fontDropdownRef = useRef<HTMLDivElement>(null);
+  const fontButtonRef = useRef<HTMLButtonElement>(null);
+  useOutsideDismiss(fontDropdownRef, isFontDropdownOpen, () => setIsFontDropdownOpen(false));
 
   const filteredFonts = useMemo(() => {
     const q = fontSearchQuery.trim().toLowerCase();
@@ -69,9 +73,23 @@ export const PreferencesFontTab: React.FC<{
         title="Font Family"
         description="Monospace font family used across diff viewers, commit logs, and terminal panels."
       >
-        <div className="relative w-64">
+        <div
+          ref={fontDropdownRef}
+          className="relative w-64"
+          onKeyDown={(event) => {
+            if (isFontDropdownOpen && event.key === 'Escape') {
+              event.preventDefault();
+              event.stopPropagation();
+              setIsFontDropdownOpen(false);
+              fontButtonRef.current?.focus();
+            }
+          }}
+        >
           <button
+            ref={fontButtonRef}
             type="button"
+            aria-label="Buffer Font Family"
+            aria-expanded={isFontDropdownOpen}
             onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
             className="w-full flex items-center justify-between px-3 py-1.5 border border-surface0 bg-crust hover:bg-base text-text text-xs transition-colors cursor-pointer rounded-sm"
           >
@@ -289,4 +307,3 @@ export const PreferencesFontTab: React.FC<{
     </div>
   );
 };
-

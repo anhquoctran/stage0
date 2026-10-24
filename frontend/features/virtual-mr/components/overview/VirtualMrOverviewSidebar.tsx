@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
+import { useOutsideDismiss } from '../../../../common/hooks/useOutsideDismiss';
 import { Check } from '../../../../common/components/icons/Check';
 import { Plus } from '../../../../common/components/icons/Plus';
 import { X } from '../../../../common/components/icons/X';
@@ -91,6 +92,10 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
     setShowLabelDropdown,
     isLoadingLabelOptions,
   } = useMrMetadataDropdowns({ reloadPersistedReviewers, currentRepo, refreshRepoMetadata });
+  const reviewerDropdownRef = useRef<HTMLDivElement>(null);
+  const labelDropdownRef = useRef<HTMLDivElement>(null);
+  useOutsideDismiss(reviewerDropdownRef, showReviewerDropdown, () => setShowReviewerDropdown(false));
+  useOutsideDismiss(labelDropdownRef, showLabelDropdown, () => setShowLabelDropdown(false));
 
   const participants = useMemo(() => getVirtualMrParticipants(session), [session]);
 
@@ -134,7 +139,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
       <div className="border-b border-surface0/60" />
 
       {/* 2. REVIEWERS */}
-      <div className="space-y-2">
+      <div ref={reviewerDropdownRef} className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold text-subtext0 uppercase tracking-wider">
             Reviewers
@@ -231,7 +236,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
       <div className="border-b border-surface0/60" />
 
       {/* 3. LABELS */}
-      <div className="space-y-2">
+      <div ref={labelDropdownRef} className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold text-subtext0 uppercase tracking-wider">
             Labels
@@ -351,4 +356,3 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
     </aside>
   );
 };
-

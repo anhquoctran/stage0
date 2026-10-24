@@ -479,6 +479,7 @@ code, kbd, samp, pre {
 
 /* Catppuccin Syntax Highlighting */
 .diff-tailwindcss-wrapper .hljs,
+.syntax-highlight .hljs,
 .markdown-preview .hljs {
   color: var(--ctp-text) !important;
   background: transparent !important;
@@ -492,6 +493,10 @@ code, kbd, samp, pre {
 .diff-tailwindcss-wrapper .hljs-doctag,
 .diff-tailwindcss-wrapper .hljs-meta .hljs-keyword,
 .diff-tailwindcss-wrapper .hljs-template-tag,
+.syntax-highlight .hljs-keyword,
+.syntax-highlight .hljs-doctag,
+.syntax-highlight .hljs-meta .hljs-keyword,
+.syntax-highlight .hljs-template-tag,
 .markdown-preview .hljs-keyword,
 .markdown-preview .hljs-doctag,
 .markdown-preview .hljs-meta .hljs-keyword,
@@ -502,6 +507,9 @@ code, kbd, samp, pre {
 .diff-tailwindcss-wrapper .hljs-title,
 .diff-tailwindcss-wrapper .hljs-title.class_,
 .diff-tailwindcss-wrapper .hljs-title.function_,
+.syntax-highlight .hljs-title,
+.syntax-highlight .hljs-title.class_,
+.syntax-highlight .hljs-title.function_,
 .markdown-preview .hljs-title,
 .markdown-preview .hljs-title.class_,
 .markdown-preview .hljs-title.function_ {
@@ -511,6 +519,9 @@ code, kbd, samp, pre {
 .diff-tailwindcss-wrapper .hljs-string,
 .diff-tailwindcss-wrapper .hljs-regexp,
 .diff-tailwindcss-wrapper .hljs-meta .hljs-string,
+.syntax-highlight .hljs-string,
+.syntax-highlight .hljs-regexp,
+.syntax-highlight .hljs-meta .hljs-string,
 .markdown-preview .hljs-string,
 .markdown-preview .hljs-regexp,
 .markdown-preview .hljs-meta .hljs-string {
@@ -521,6 +532,10 @@ code, kbd, samp, pre {
 .diff-tailwindcss-wrapper .hljs-literal,
 .diff-tailwindcss-wrapper .hljs-attr,
 .diff-tailwindcss-wrapper .hljs-attribute,
+.syntax-highlight .hljs-number,
+.syntax-highlight .hljs-literal,
+.syntax-highlight .hljs-attr,
+.syntax-highlight .hljs-attribute,
 .markdown-preview .hljs-number,
 .markdown-preview .hljs-literal,
 .markdown-preview .hljs-attr,
@@ -531,6 +546,9 @@ code, kbd, samp, pre {
 .diff-tailwindcss-wrapper .hljs-built_in,
 .diff-tailwindcss-wrapper .hljs-symbol,
 .diff-tailwindcss-wrapper .hljs-type,
+.syntax-highlight .hljs-built_in,
+.syntax-highlight .hljs-symbol,
+.syntax-highlight .hljs-type,
 .markdown-preview .hljs-built_in,
 .markdown-preview .hljs-symbol,
 .markdown-preview .hljs-type {
@@ -539,6 +557,8 @@ code, kbd, samp, pre {
 
 .diff-tailwindcss-wrapper .hljs-comment,
 .diff-tailwindcss-wrapper .hljs-code,
+.syntax-highlight .hljs-comment,
+.syntax-highlight .hljs-code,
 .markdown-preview .hljs-comment,
 .markdown-preview .hljs-code {
   color: var(--ctp-overlay0) !important;
@@ -546,11 +566,13 @@ code, kbd, samp, pre {
 }
 
 .diff-tailwindcss-wrapper .hljs-variable,
+.syntax-highlight .hljs-variable,
 .markdown-preview .hljs-variable {
   color: var(--ctp-rosewater) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-meta,
+.syntax-highlight .hljs-meta,
 .markdown-preview .hljs-meta {
   color: var(--ctp-teal) !important;
 }
@@ -558,16 +580,20 @@ code, kbd, samp, pre {
 .diff-tailwindcss-wrapper .hljs-punctuation,
 .markdown-preview .hljs-punctuation,
 .diff-tailwindcss-wrapper .hljs-operator,
+.syntax-highlight .hljs-punctuation,
+.syntax-highlight .hljs-operator,
 .markdown-preview .hljs-operator {
   color: var(--ctp-subtext0) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-property,
+.syntax-highlight .hljs-property,
 .markdown-preview .hljs-property {
   color: var(--ctp-sapphire) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-params,
+.syntax-highlight .hljs-params,
 .markdown-preview .hljs-params {
   color: var(--ctp-subtext1) !important;
 }

@@ -5,6 +5,7 @@ import { Search } from '../../../common/components/icons/Search';
 import { Check } from '../../../common/components/icons/Check';
 import { Globe } from '../../../common/components/icons/Globe';
 import type { TabBranchSelectorProps } from '../types/TabBranchSelectorProps';
+import { useOutsideDismiss } from '../../../common/hooks/useOutsideDismiss';
 
 export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
   value,
@@ -22,16 +23,9 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
+  useOutsideDismiss(dropdownRef, isOpen, () => setIsOpen(false));
 
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
         setIsOpen(false);
@@ -39,11 +33,9 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen]);

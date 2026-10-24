@@ -35,10 +35,10 @@ function fixture() {
     fail: () => { fail = true; }, pause: (promise) => { paused = promise; } };
 }
 
-test('welcome includes Theme immediately before Keymaps and keeps all existing steps', () => {
+test('welcome keeps Theme before Keymaps and ends with AI setup then Open/Clone', () => {
   const { WELCOME_SLIDES } = loadWithMocks(url('features/onboarding/constants/welcomeSlides.ts'), {});
   assert.deepEqual(WELCOME_SLIDES.map((slide) => slide.id),
-    ['welcome', 'compare', 'review', 'ai-setup', 'theme', 'keymaps', 'ui-font', 'buffer-font', 'markdown-font']);
+    ['welcome', 'compare', 'review', 'theme', 'keymaps', 'ui-font', 'buffer-font', 'markdown-font', 'ai-setup', 'repository']);
 });
 
 test('appearance and keymap steps remain optional once required AI setup is saved', async (t) => {
@@ -74,6 +74,7 @@ test('appearance and keymap steps remain optional once required AI setup is save
     }) },
   });
   const render = () => runner.render(FirstLaunchWelcome, { onComplete: () => { completed++; } });
+  const { WELCOME_SLIDES } = loadWithMocks(url('features/onboarding/constants/welcomeSlides.ts'), {});
   let tree = await render();
   const dragRegion = componentNodes(tree).find((node) => Object.hasOwn(node.props, 'data-tauri-drag-region'));
   assert.ok(dragRegion, 'The title strip must remain draggable');
@@ -88,7 +89,7 @@ test('appearance and keymap steps remain optional once required AI setup is save
     'Do not restore an outer gutter or bounded card around the tour');
   assert.ok(componentNodes(tree).some((node) => node.props.className?.includes('my-auto py-8')),
     'Intro copy should be vertically balanced instead of pinned far above its navigation');
-  for (let slide = 0; slide < 8; slide++) {
+  for (let slide = 0; slide < WELCOME_SLIDES.length - 1; slide++) {
     const visibleText = componentNodes(tree).map((node) => node.props.children
       .filter((child) => typeof child === 'string' || typeof child === 'number').join(''));
     assert.ok(!visibleText.some((text) => /^0?\d+\s*\/\s*0?\d+$/.test(text.trim()) || /-step welcome guide/.test(text)),
@@ -97,6 +98,8 @@ test('appearance and keymap steps remain optional once required AI setup is save
     const next = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.flat().some((child) => typeof child === 'string' && child.trim() === nextLabel));
     assert.ok(next, `Step ${slide + 1} must allow Next without choosing anything`);
     assert.ok(!next.props.disabled);
+    assert.ok(!componentNodes(tree).some((node) => node.type === 'button' &&
+      node.props.children.includes('Open a repository')), 'Repository actions belong to the final step only');
     assert.equal(next.props.ref, undefined, 'Next must not receive automatic focus');
     if (slide === 2) {
       assert.ok(next.props.className.includes('btn-primary'), "Let's get started must use the brand button");
@@ -109,6 +112,14 @@ test('appearance and keymap steps remain optional once required AI setup is save
     assert.notEqual(next.props.tabIndex, -1, 'Next remains available to keyboard navigation');
     next.props.onClick(); tree = await render();
   }
+  const finalNodes = componentNodes(tree);
+  assert.ok(finalNodes.some((node) => node.type === 'h1' && node.props.children.includes('Start with a repository')));
+  assert.ok(finalNodes.some((node) => node.type === 'button' && node.props.children.includes('Open a repository')));
+  const clone = finalNodes.find((node) => node.type === 'button' && node.props.children.includes('Clone a repository'));
+  assert.ok(clone);
+  assert.ok(!clone.props.className.split(/\s+/).includes('hidden'), 'Clone stays available on narrow windows');
+  assert.ok(!finalNodes.some((node) => node.type === 'p' && node.props.children.some((child) =>
+    typeof child === 'string' && child.includes('Optional — everything is already set up.'))));
   const skip = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.includes('Skip tour'));
   await skip.props.onClick();
   assert.equal(completed, 1);

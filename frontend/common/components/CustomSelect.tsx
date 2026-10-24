@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useId, useMemo } from 
 import { ChevronDown } from './icons/ChevronDown';
 import { Check } from './icons/Check';
 import type { CustomSelectProps } from '../types/CustomSelectProps';
+import { useOutsideDismiss } from '../hooks/useOutsideDismiss';
 
 export function CustomSelect<T extends string>({
   id: customId,
@@ -65,19 +66,7 @@ export function CustomSelect<T extends string>({
     listRef.current?.querySelectorAll('[role="option"]')[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
   }, [highlightedIndex]);
 
-  // Close dropdown on click outside
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+  useOutsideDismiss(containerRef, isOpen, () => setIsOpen(false));
 
   // Sync highlighted index when opened
   useEffect(() => {

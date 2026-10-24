@@ -1,5 +1,6 @@
-import { useEffect,useRef,useState } from 'react';
+import { useRef,useState } from 'react';
 import type { NewMrMetadataContext } from './NewMrMetadataContext';
+import { useOutsideDismiss } from '../../../common/hooks/useOutsideDismiss';
 
 export function useNewMrMetadata({
   reloadPersistedReviewers,
@@ -54,18 +55,8 @@ export function useNewMrMetadata({
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (botDropdownRef.current && !botDropdownRef.current.contains(e.target as Node)) {
-        setShowBotDropdown(false);
-      }
-      if (labelDropdownRef.current && !labelDropdownRef.current.contains(e.target as Node)) {
-        setShowLabelDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useOutsideDismiss(botDropdownRef, showBotDropdown, () => setShowBotDropdown(false));
+  useOutsideDismiss(labelDropdownRef, showLabelDropdown, () => setShowLabelDropdown(false));
 
   const handleToggleBot = (botId: string) => {
     if (!draftMr) return;

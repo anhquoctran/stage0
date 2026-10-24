@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+import { useOutsideDismiss } from '../../../../common/hooks/useOutsideDismiss';
 import { Bot } from '../../../../common/components/icons/Bot';
 import { Check } from '../../../../common/components/icons/Check';
 import { FileCode } from '../../../../common/components/icons/FileCode';
@@ -19,6 +21,8 @@ export function VirtualMrMetadataBar({
   activeMrTab,
   diffPayload,
 }: VirtualMrMetadataBarProps) {
+  const labelDropdownRef = useRef<HTMLDivElement>(null);
+  useOutsideDismiss(labelDropdownRef, showLabelDropdown, () => setShowLabelDropdown(false));
   return (
     <div className="px-4 py-1.5 flex items-center justify-between gap-4 bg-mantle text-xs border-b border-surface0/40 rounded-sm">
       {/* 4 WORKSPACE TABS */}
@@ -119,7 +123,7 @@ export function VirtualMrMetadataBar({
       </div>
 
       {/* QUICK LABELS SUMMARY */}
-      <div className="relative flex items-center gap-1.5">
+      <div ref={labelDropdownRef} className="relative flex items-center gap-1.5">
         {session.labels.map((lbl) => (
           <span
             key={lbl.id}

@@ -18,6 +18,7 @@ import { WelcomeAiSetup } from './WelcomeAiSetup';
 import { useOnboardingAiSetup } from '../hooks/useOnboardingAiSetup';
 import { OnboardingPreviewFit } from './OnboardingPreviewFit';
 import { ScrollArea } from '../../../common/components/ScrollArea';
+import { WelcomeRepositoryPreview } from './WelcomeRepositoryPreview';
 
 const ONBOARDING_STORAGE_KEY = 'stage0_first_launch_welcome_v1';
 
@@ -44,11 +45,17 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
     (typeof window !== 'undefined' && window.location.search.includes('platform=mac'));
   const currentSlide = SLIDES[activeSlide];
   const Artwork = ARTWORK[activeSlide];
-  const isSettingsSlide = activeSlide >= ARTWORK.length;
   const isAiSlide = currentSlide.id === 'ai-setup';
+  const isRepositorySlide = currentSlide.id === 'repository';
+  const isSettingsSlide = activeSlide >= ARTWORK.length && !isRepositorySlide;
+  const isAppearanceSlide = isSettingsSlide && !isAiSlide;
   const isBusy = isSaving || aiSetup.busy;
   const requireAiSetup = () => {
     setAiRequired(true); setActiveSlide(AI_SETUP_SLIDE);
+  };
+  const selectSlide = (index: number) => {
+    if (index > AI_SETUP_SLIDE && !aiSetup.canFinish()) { requireAiSetup(); return; }
+    setActiveSlide(index);
   };
 
   const finish = async () => {
@@ -189,7 +196,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
               {isAiSlide ? <div className="mt-5 rounded-sm">
                 {aiRequired && !aiSetup.canFinish() && <p role="alert" className="mb-3 rounded-sm bg-yellow/10 p-3 text-xs leading-5 text-text">Save at least one AI connection and save or discard any AI draft before finishing onboarding.</p>}
                 <WelcomeAiSetup setup={aiSetup} />
-              </div> : isSettingsSlide && <div className="mt-5 rounded-sm max-sm:[&_[data-setting-row]]:flex-col max-sm:[&_[data-setting-row]]:items-stretch">
+              </div> : isAppearanceSlide && <div className="mt-5 rounded-sm max-sm:[&_[data-setting-row]]:flex-col max-sm:[&_[data-setting-row]]:items-stretch">
                 <p className="mb-4 text-xs leading-relaxed text-subtext0">
                   Optional — everything is already set up. Keep the defaults or your saved settings and continue without choosing anything.
                 </p>
@@ -218,7 +225,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                   <button
                     key={slide.title}
                     type="button"
-                    onClick={() => setActiveSlide(index)}
+                    onClick={() => selectSlide(index)}
                     aria-label={`Go to slide ${index + 1}: ${slide.title}`}
                     aria-current={index === activeSlide ? 'step' : undefined}
                     className={`h-1.5 transition-all rounded-sm ${index === activeSlide ? 'w-8 bg-primary' : 'w-3 bg-surface2 hover:bg-subtext0'}`}
@@ -242,12 +249,12 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                 <span aria-hidden="true" />
               )}
               {activeSlide < SLIDES.length - 1 ? (
-                <button type="button" disabled={isAiSlide && !aiSetup.canFinish()} onClick={() => { if (!isAiSlide || aiSetup.canFinish()) setActiveSlide((slide) => slide + 1); }} className={`flex h-10 items-center gap-2 rounded-sm px-4 text-xs font-semibold disabled:opacity-40 ${currentSlide.id === 'review' ? 'btn-primary' : 'border-0 bg-surface0 text-text shadow-none transition-colors hover:bg-surface1'}`}>
+                <button type="button" disabled={isAiSlide && !aiSetup.canFinish()} onClick={() => selectSlide(activeSlide + 1)} className={`flex h-10 items-center gap-2 rounded-sm px-4 text-xs font-semibold disabled:opacity-40 ${currentSlide.id === 'review' ? 'btn-primary' : 'border-0 bg-surface0 text-text shadow-none transition-colors hover:bg-surface1'}`}>
                   {currentSlide.id === 'review' ? "Let's get started" : 'Next'} <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               ) : (
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={cloneRepository} className="hidden h-10 px-3 text-xs font-medium text-subtext1 transition-colors hover:bg-surface0 hover:text-text sm:inline-flex sm:items-center rounded-sm">Clone a repository</button>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <button type="button" onClick={cloneRepository} className="inline-flex h-10 items-center px-3 text-xs font-medium text-subtext1 transition-colors hover:bg-surface0 hover:text-text rounded-sm">Clone a repository</button>
                   <button type="button" onClick={openRepository} className="btn-primary flex h-10 items-center gap-2 px-4 text-xs font-semibold rounded-sm">
                     {isSaving ? 'Saving…' : 'Open a repository'} <ArrowRight className="h-3.5 w-3.5" />
                   </button>
@@ -260,7 +267,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
         <aside className="relative hidden min-h-0 flex-col overflow-hidden bg-crust px-6 pt-6 lg:px-10 md:flex">
           <div className="pointer-events-none absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(var(--ctp-surface1) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
           <OnboardingPreviewFit key={`art-${activeSlide}`}>
-            {isAiSlide ? <div className="space-y-5 rounded-sm">
+            {isRepositorySlide ? <WelcomeRepositoryPreview /> : isAiSlide ? <div className="space-y-5 rounded-sm">
               <p className="text-xs font-semibold uppercase tracking-widest text-brand">AI is at the heart of Stage0</p>
               <h2 className="text-3xl font-semibold text-text">Your model. Your workflow.</h2>
               <p className="text-sm leading-6 text-subtext1">Use a built-in LLM provider, a local Ollama model, or an external ACP agent. One saved setup unlocks the next step.</p>

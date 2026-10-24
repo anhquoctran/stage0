@@ -5,6 +5,7 @@ import { Search } from '../../../common/components/icons/Search';
 import { Check } from '../../../common/components/icons/Check';
 import { Globe } from '../../../common/components/icons/Globe';
 import type { BranchSelectorProps } from '../types/BranchSelectorProps';
+import { useOutsideDismiss } from '../../../common/hooks/useOutsideDismiss';
 
 export const BranchSelector: React.FC<BranchSelectorProps> = ({
   label,
@@ -18,18 +19,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useOutsideDismiss(dropdownRef, isOpen, () => setIsOpen(false));
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
