@@ -13,10 +13,12 @@ import type { PreferencesApplyContext } from '../types/PreferencesApplyContext';
 import { type ViewerFontSettings } from '../types/ViewerFontSettings';
 import { keymapErrors } from '../../../core/services/keymaps/validation';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
+import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
 
 // Preserve commit ordering and failure rollback; creating this closure has no side effects.
 export function createPreferencesApplyAction({
   draftKeymap = DEFAULT_KEYMAP,
+  draftUiFontFamily,
   setDraftKeymap,
   applyingRef,
   setIsApplying,
@@ -73,6 +75,13 @@ export function createPreferencesApplyAction({
         additionalPreferences.keymap = draftKeymap;
       }
       const appearancePatch: Record<string, unknown> = {};
+      const uiFontChanged = draftUiFontFamily !== savedBaseline.uiFontFamily;
+      if (uiFontChanged) {
+        const currentUiFont = usePreferencesStore.getState().uiFontFamily;
+        if (currentUiFont !== savedBaseline.uiFontFamily && currentUiFont !== draftUiFontFamily)
+          throw new Error('UI font changed in another window or editor. Reopen Preferences before applying your UI font draft');
+        appearancePatch.uiFont = { fontFamily: draftUiFontFamily };
+      }
       if (draftThemeMode !== savedBaseline.themeMode) appearancePatch.themeMode = draftThemeMode;
       const fontChanged = (Object.keys(fontSettings) as Array<keyof ViewerFontSettings>).some(
         (key) => fontSettings[key] !== savedBaseline[key]
@@ -121,8 +130,10 @@ export function createPreferencesApplyAction({
       applyThemeToDocument(resolvedTheme);
       persistThemeMode(draftThemeMode);
       const committedKeymap = keymapChanged ? draftKeymap : usePreferencesStore.getState().keymap ?? DEFAULT_KEYMAP;
+      const committedUiFont = uiFontChanged ? draftUiFontFamily : usePreferencesStore.getState().uiFontFamily;
       usePreferencesStore.setState({
         keymap: committedKeymap,
+        uiFontFamily: committedUiFont,
         ...fontSettings,
         showInlineBlame: draftShowInlineBlame,
         markdownFontFamily: draftMarkdownFontFamily,
@@ -132,6 +143,7 @@ export function createPreferencesApplyAction({
         markdownHeadingFontWeight: draftMarkdownHeadingWeight,
       });
       applyViewerFontToDocument(fontSettings);
+      applyUiFontToDocument(committedUiFont);
       applyMarkdownFontToDocument(markdownFontSettings);
       const needsRestart =
         draftGitBinaryId !== savedBaseline.gitBinaryId ||
@@ -160,6 +172,7 @@ export function createPreferencesApplyAction({
       }));
       setSavedBaseline({
         keymap: committedKeymap,
+        uiFontFamily: committedUiFont,
         themeMode: draftThemeMode,
         fontFamily: draftFontFamily,
         fontSize: draftFontSize,

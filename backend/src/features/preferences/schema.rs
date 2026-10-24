@@ -15,6 +15,12 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     validate_optional_bool(general, "enableCodeReviewAssist", "general")?;
 
     let appearance = object_section(value, "appearance")?;
+    if let Some(font) = appearance.get("uiFont") {
+        let font = font
+            .as_object()
+            .ok_or("appearance.uiFont must be an object")?;
+        validate_optional_string(font, "fontFamily", "appearance.uiFont", 128, false)?;
+    }
     if let Some(theme) = appearance.get("themeMode") {
         if !matches!(theme.as_str(), Some("system" | "dark" | "light")) {
             return Err("appearance.themeMode must be 'system', 'dark', or 'light'".into());

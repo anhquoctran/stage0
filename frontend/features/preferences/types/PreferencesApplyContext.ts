@@ -10,6 +10,7 @@ import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings'
 
 export interface PreferencesApplyContext {
   draftKeymap: KeymapSettings;
+  draftUiFontFamily: string;
   setDraftKeymap: Dispatch<SetStateAction<KeymapSettings>>;
   applyingRef: RefObject<boolean>;
   setIsApplying: Dispatch<SetStateAction<boolean>>;

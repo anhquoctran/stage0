@@ -11,6 +11,7 @@
   },
   "appearance": {
     "themeMode": "system",
+    "uiFont": { "fontFamily": "IBM Plex Sans" },
     "markdownFont": {
       "fontFamily": "Arial",
       "codeFontFamily": "Fira Code",

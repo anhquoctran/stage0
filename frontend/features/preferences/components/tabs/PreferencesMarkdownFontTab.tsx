@@ -23,12 +23,14 @@ export const PreferencesMarkdownFontTab: React.FC<{
   setDraftMarkdownHeadingWeight: React.Dispatch<React.SetStateAction<number>>;
   editorFontFamily?: string;
   editorFontSize?: number;
+  showPreview?: boolean;
 }> = ({
   draftMarkdownFontFamily, setDraftMarkdownFontFamily,
   draftMarkdownCodeFontFamily, setDraftMarkdownCodeFontFamily,
   draftMarkdownEditorFontFamily, setDraftMarkdownEditorFontFamily,
   draftMarkdownFontSize, setDraftMarkdownFontSize,
   draftMarkdownHeadingWeight, setDraftMarkdownHeadingWeight,
+  showPreview = true,
 }) => {
   useEffect(() => {
     applyMarkdownFontToDocument({
@@ -125,7 +127,7 @@ export const PreferencesMarkdownFontTab: React.FC<{
           </SettingRow>
         ))}
       </div>
-      <div className="mt-6 pt-4 border-t border-surface0/60 space-y-2">
+      {showPreview && <div className="mt-6 pt-4 border-t border-surface0/60 space-y-2">
         <label htmlFor="markdown-editor-font-preview" className="text-[11px] font-mono uppercase tracking-wider text-subtext0">
           Editor Preview
         </label>
@@ -147,7 +149,7 @@ export const PreferencesMarkdownFontTab: React.FC<{
             <code>{`function previewCodeBlock() {\n  const font = "${draftMarkdownCodeFontFamily}";\n  return font;\n}`}</code>
           </pre>
         </div>
-      </div>
+      </div>}
     </div>
   );
 };

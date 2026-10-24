@@ -18,9 +18,12 @@ import { PreferencesGeneralTab } from './tabs/PreferencesGeneralTab';
 import { PreferencesMarkdownFontTab } from './tabs/PreferencesMarkdownFontTab';
 import { PreferencesThemeTab } from './tabs/PreferencesThemeTab';
 import { PreferencesKeymapTab } from './tabs/PreferencesKeymapTab';
+import { PreferencesUiFontTab } from './tabs/PreferencesUiFontTab';
 
 export function PreferencesTabContainer({
   draftKeymap,
+  draftUiFontFamily,
+  setDraftUiFontFamily,
   setDraftKeymap,
   currentTabId,
   currentChildItem,
@@ -81,6 +84,7 @@ export function PreferencesTabContainer({
         'general-keymaps',
         'appearance-theme',
         'appearance-fonts',
+        'appearance-ui-font',
         'appearance-markdown-font',
         'editor-diff',
         'ai-guardrails',
@@ -155,6 +159,9 @@ export function PreferencesTabContainer({
       )}
 
       {/* VIEW: APPEARANCE - BUFFER FONT */}
+      {currentTabId === 'appearance-ui-font' && (
+        <PreferencesUiFontTab value={draftUiFontFamily} onChange={setDraftUiFontFamily} />
+      )}
       {currentTabId === 'appearance-fonts' && (
         <div className="animate-in fade-in duration-100">
           <PreferencesFontTab

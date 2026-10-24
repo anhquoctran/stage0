@@ -5,9 +5,11 @@ import { type SandboxType } from '../../git/types/SandboxType';
 import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 import type { PreferencesDraftSessionContext } from './PreferencesDraftSessionContext';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
+import { DEFAULT_UI_FONT_FAMILY } from '../constants/uiFonts';
 
 export function usePreferencesDraftSession({
   storedKeymap = DEFAULT_KEYMAP,
+  storedUiFontFamily = DEFAULT_UI_FONT_FAMILY,
   storedThemeMode,
   storedFontFamily,
   storedFontSize,
@@ -36,6 +38,7 @@ export function usePreferencesDraftSession({
   setExpandedGroups,
 }: PreferencesDraftSessionContext) {
   const [draftKeymap, setDraftKeymap] = useState(storedKeymap);
+  const [draftUiFontFamily, setDraftUiFontFamily] = useState(storedUiFontFamily);
   const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
 
   const [draftThemeId, setDraftThemeId] = useState('catppuccin-mocha');
@@ -80,6 +83,7 @@ export function usePreferencesDraftSession({
 
   const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
     keymap: storedKeymap,
+    uiFontFamily: storedUiFontFamily,
     themeMode: storedThemeMode,
     fontFamily: storedFontFamily,
     fontSize: storedFontSize,
@@ -113,6 +117,7 @@ export function usePreferencesDraftSession({
       if (!wasOpenRef.current) {
         wasOpenRef.current = true;
         setDraftKeymap(storedKeymap);
+        setDraftUiFontFamily(storedUiFontFamily);
         setDraftThemeMode(storedThemeMode);
         setDraftFontFamily(storedFontFamily);
         setDraftFontSize(storedFontSize);
@@ -138,6 +143,7 @@ export function usePreferencesDraftSession({
 
         setSavedBaseline({
           keymap: storedKeymap,
+          uiFontFamily: storedUiFontFamily,
           themeMode: storedThemeMode,
           fontFamily: storedFontFamily,
           fontSize: storedFontSize,
@@ -184,6 +190,7 @@ export function usePreferencesDraftSession({
   }, [
     isPreferencesOpen,
     storedKeymap,
+    storedUiFontFamily,
     storedThemeMode,
     storedFontFamily,
     storedFontSize,
@@ -207,6 +214,8 @@ export function usePreferencesDraftSession({
 
   return {
     draftKeymap,
+    draftUiFontFamily,
+    setDraftUiFontFamily,
     setDraftKeymap,
     draftShowInlineBlame,
     draftThemeMode,

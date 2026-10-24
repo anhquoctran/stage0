@@ -7,6 +7,8 @@ import type { PreferencesState } from '../types/PreferencesState';
 import { preferencesJsonService } from '../services/preferencesJsonService';
 import { applyMarkdownFontToDocument } from '../utils/applyMarkdownFontToDocument';
 import { readKeymap } from '../../../core/services/keymaps/validation';
+import { DEFAULT_UI_FONT_FAMILY } from '../constants/uiFonts';
+import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
 
 const STORAGE_KEY = 'stage0_viewer_font_settings';
 const MARKDOWN_FONT_STORAGE_KEY = 'stage0_markdown_font_settings';
@@ -108,9 +110,14 @@ function getInitialMarkdownFontSettings(): MarkdownFontSettings {
 
 const initialSettings = getInitialSettings();
 const initialMarkdownSettings = getInitialMarkdownFontSettings();
+const configuredUiFont = typeof window === 'undefined' ? undefined : window.__STAGE0_PREFERENCES__?.appearance?.uiFont;
+const initialUiFontFamily = configuredUiFont && typeof configuredUiFont === 'object' &&
+  'fontFamily' in configuredUiFont && typeof configuredUiFont.fontFamily === 'string'
+  ? configuredUiFont.fontFamily : DEFAULT_UI_FONT_FAMILY;
 
 applyViewerFontToDocument(initialSettings);
 applyMarkdownFontToDocument(initialMarkdownSettings);
+applyUiFontToDocument(initialUiFontFamily);
 
 function getInitialInlineBlame(): boolean {
   if (typeof window === 'undefined') return true;
@@ -126,6 +133,7 @@ function getInitialInlineBlame(): boolean {
 
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   ...initialSettings,
+  uiFontFamily: initialUiFontFamily,
   markdownFontFamily: initialMarkdownSettings.fontFamily,
   markdownCodeFontFamily: initialMarkdownSettings.codeFontFamily,
   markdownEditorFontFamily: initialMarkdownSettings.editorFontFamily,
@@ -233,6 +241,11 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
     const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
     const font = settings?.appearance?.viewerFont;
     const mdFont = settings?.appearance?.markdownFont;
+    const uiFont = settings?.appearance?.uiFont;
+    const uiFontFamily = uiFont && typeof uiFont === 'object' && 'fontFamily' in uiFont && typeof uiFont.fontFamily === 'string'
+      ? uiFont.fontFamily : DEFAULT_UI_FONT_FAMILY;
+    applyUiFontToDocument(uiFontFamily);
+    usePreferencesStore.setState({ uiFontFamily });
     const general = settings?.general;
     usePreferencesStore.setState({ keymap: readKeymap(settings?.keymap) });
     if (font && typeof font === 'object') {

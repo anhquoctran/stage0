@@ -4,6 +4,7 @@ import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings'
 
 export interface PreferencesState extends ViewerFontSettings {
   keymap: KeymapSettings;
+  uiFontFamily: string;
   isPreferencesOpen: boolean;
   setIsPreferencesOpen: (open: boolean) => void;
   initialPreferencesTab: string | null;

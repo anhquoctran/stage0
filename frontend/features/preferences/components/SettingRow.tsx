@@ -9,6 +9,7 @@ export const SettingRow: React.FC<SettingRowProps> = ({
 }) => {
   return (
     <div
+      data-setting-row
       className={`py-3 flex items-center justify-between gap-6 rounded-sm ${borderBottom ? 'border-b border-surface0/40' : ''
         }`}
     >
