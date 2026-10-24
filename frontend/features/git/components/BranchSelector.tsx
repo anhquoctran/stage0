@@ -94,6 +94,11 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                   return (
                     <button
                       key={`local-${branch}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        onChange(branch);
+                        setIsOpen(false);
+                      }}
                       onClick={() => {
                         onChange(branch);
                         setIsOpen(false);
@@ -133,6 +138,11 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                   return (
                     <button
                       key={`remote-${branch}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        onChange(branch);
+                        setIsOpen(false);
+                      }}
                       onClick={() => {
                         onChange(branch);
                         setIsOpen(false);

@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="./app-icon.svg" alt="Stage0 logo" width="80" height="80" />
+  <img src="./app-icon.svg" alt="Stage0 logo" width="96" height="96" />
 
   # Stage0
 

@@ -13,4 +13,5 @@ export interface MenuFlags {
   flat: boolean;
   tree: boolean;
   performance: boolean;
+  onboarding?: boolean;
 }

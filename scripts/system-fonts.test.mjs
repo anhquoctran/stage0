@@ -17,11 +17,11 @@ test('native font catalog contains only discovered families and real bundled fon
     assert.equal(command, 'list_system_font_families'); calls++;
     return new Promise((resolve) => { release = resolve; });
   });
-  assert.deepEqual(service.availableUiFontFamilies(), ['Fira Code', 'IBM Plex Sans']);
+  assert.deepEqual(service.availableUiFontFamilies(), ['IBM Plex Sans', 'Inter Variable', 'Roboto Variable', 'Fira Code']);
   const first = service.loadSystemFontFamilies(), second = service.loadSystemFontFamilies();
   assert.equal(first, second); assert.equal(calls, 1);
-  release(['My Installed UI', ' My Installed UI ', 'my installed ui', 'IBM Plex Sans', '.Private Font']);
-  assert.deepEqual(await first, ['Fira Code', 'IBM Plex Sans', 'My Installed UI']);
+  release(['My Installed UI', ' My Installed UI ', 'my installed ui', 'IBM Plex Sans', 'JetBrains Mono', '.Private Font']);
+  assert.deepEqual(await first, ['IBM Plex Sans', 'Inter Variable', 'Roboto Variable', 'My Installed UI', 'Fira Code', 'JetBrains Mono']);
   assert.ok(!service.availableUiFontFamilies().includes('Inter'));
   const refreshed = service.loadSystemFontFamilies(); assert.equal(calls, 2);
   release(['New Installed Family']); await refreshed;
@@ -45,7 +45,7 @@ test('browser enumeration requests permission only on explicit load and uses fam
   t.after(() => { if (previous === undefined) delete globalThis.window; else globalThis.window = previous; });
   const service = catalog(() => assert.fail('Browser must not call native IPC'), false);
   assert.equal(service.browserFontDiscoveryAvailable(), true);
-  assert.deepEqual(await service.loadSystemFontFamilies(), ['Fira Code', 'IBM Plex Sans']);
+  assert.deepEqual(await service.loadSystemFontFamilies(), ['IBM Plex Sans', 'Inter Variable', 'Roboto Variable', 'Fira Code']);
   assert.equal(requests, 0);
   const fonts = await service.loadSystemFontFamilies(true);
   assert.equal(requests, 1); assert.ok(fonts.includes('Browser Installed UI'));
@@ -58,12 +58,12 @@ test('font discovery denial or unavailable APIs never falls back to invented pla
   globalThis.window = { queryLocalFonts: async () => { throw Error('Permission denied'); } };
   const denied = catalog(async () => [], false);
   await assert.rejects(denied.loadSystemFontFamilies(true), /Permission denied/);
-  assert.deepEqual(denied.availableUiFontFamilies(), ['Fira Code', 'IBM Plex Sans']);
+  assert.deepEqual(denied.availableUiFontFamilies(), ['IBM Plex Sans', 'Inter Variable', 'Roboto Variable', 'Fira Code']);
   globalThis.window = {};
   const unsupported = catalog(async () => [], false);
   assert.equal(unsupported.browserFontDiscoveryAvailable(), false);
   await assert.rejects(unsupported.loadSystemFontFamilies(true), /desktop app/);
-  assert.deepEqual(unsupported.availableUiFontFamilies(), ['Fira Code', 'IBM Plex Sans']);
+  assert.deepEqual(unsupported.availableUiFontFamilies(), ['IBM Plex Sans', 'Inter Variable', 'Roboto Variable', 'Fira Code']);
 });
 
 test('font hook ignores late results, exposes failures, and permits retry without mutating preferences', async () => {
@@ -94,7 +94,7 @@ test('font hook ignores late results, exposes failures, and permits retry withou
 test('UI font picker labels bundled/system sources and disables a missing saved family', async (t) => {
   const runner = componentHarness(), changes = [], refreshes = [];
   t.after(() => runner.cleanup());
-  const state = { families: ['Fira Code', 'IBM Plex Sans', 'Real Installed UI'], isLoading: false,
+  const state = { families: ['IBM Plex Sans', 'Inter Variable', 'Roboto Variable', 'Real Installed UI', 'Fira Code', 'JetBrains Mono'], isLoading: false,
     error: null, native: true, canDiscover: true, refresh: async (explicit) => refreshes.push(explicit) };
   const { PreferencesUiFontTab } = loadWithMocks(url('components/tabs/PreferencesUiFontTab.tsx'), {
     react: runner.react,
@@ -105,8 +105,9 @@ test('UI font picker labels bundled/system sources and disables a missing saved 
   const props = { value: 'Missing Saved Family', onChange: (value) => changes.push(value) };
   let nodes = componentNodes(await runner.render(PreferencesUiFontTab, props));
   const picker = nodes.find((node) => node.props['aria-label'] === 'UI Font Family');
+  assert.equal(picker.props.dropdownPlacement, 'bottom', 'The UI font menu should open below its trigger');
   assert.deepEqual(picker.props.options.map((font) => font.label),
-    ['Missing Saved Family', 'Fira Code', 'IBM Plex Sans', 'Real Installed UI']);
+    ['Missing Saved Family', 'IBM Plex Sans', 'Inter Variable', 'Roboto Variable', 'Real Installed UI', 'Fira Code', 'JetBrains Mono']);
   assert.equal(picker.props.options[0].disabled, true);
   assert.equal(picker.props.options[0].badge, 'Unavailable');
   assert.equal(picker.props.options.at(-1).badge, 'Installed');
@@ -135,7 +136,7 @@ test('JSONC font completion uses the discovered catalog and inserts a quoted rea
   });
   const source = '{"appearance":{"uiFont":{"fontFamily":"';
   let completion = getPreferencesJsonCompletions(source, source.length, true);
-  assert.deepEqual(completion.items.map((item) => item.label), ['Fira Code', 'IBM Plex Sans']);
+  assert.deepEqual(completion.items.map((item) => item.label), ['IBM Plex Sans', 'Inter Variable', 'Roboto Variable', 'Fira Code']);
   await service.loadSystemFontFamilies();
   completion = getPreferencesJsonCompletions(source, source.length, true);
   assert.equal(completion.items.find((item) => item.label === 'Only Installed Here').insertText, '"Only Installed Here"');

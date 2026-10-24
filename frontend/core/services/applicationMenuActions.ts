@@ -3,6 +3,7 @@ import { useGitStore } from '../../features/git/store/useGitStore';
 import { useVirtualMrStore } from '../../features/virtual-mr/store/useVirtualMrStore';
 import { usePreferencesStore } from '../../features/preferences/store/usePreferencesStore';
 import { usePerformanceMonitorStore } from '../../features/performance/store/usePerformanceMonitorStore';
+import { useOnboardingStore } from '../../features/onboarding/store/useOnboardingStore';
 import { useThemeStore } from '../store/useThemeStore';
 import { MENU_COMMANDS, menuEnabled, type MenuActionId } from '../constants/applicationMenu';
 import type { MenuCallbacks } from '../types/menu/MenuCallbacks';
@@ -12,6 +13,7 @@ import { runMenuTextEditing } from './applicationMenuTextEditing';
 
 // Both native events and custom menu clicks enter here and recheck current state.
 export async function executeMenuAction(id: string, callbacks: MenuCallbacks): Promise<void> {
+  if (useOnboardingStore.getState().isOnboardingOpen) return;
   const git = useGitStore.getState();
   if (id.startsWith('remove_recent_repo_')) {
     const repo = git.recentRepos.find((item) => item.id === id.slice('remove_recent_repo_'.length));

@@ -14,10 +14,15 @@ pub struct MenuFlags {
     pub flat: bool,
     pub tree: bool,
     pub performance: bool,
+    #[serde(default)]
+    pub onboarding: bool,
 }
 
 impl MenuFlags {
     pub fn value(&self, key: &str) -> bool {
+        if self.onboarding {
+            return false;
+        }
         match key {
             "repository" => self.repository,
             "file" => self.repository && self.file,
@@ -37,6 +42,9 @@ impl MenuFlags {
     }
 
     pub fn enabled(&self, requires: &[String]) -> bool {
+        if self.onboarding {
+            return false;
+        }
         requires.iter().all(|key| self.value(key))
     }
 }

@@ -124,6 +124,11 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
                     <button
                       key={branch}
                       type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        onChange(branch);
+                        setIsOpen(false);
+                      }}
                       onClick={() => {
                         onChange(branch);
                         setIsOpen(false);
@@ -162,6 +167,11 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
                     <button
                       key={branch}
                       type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        onChange(branch);
+                        setIsOpen(false);
+                      }}
                       onClick={() => {
                         onChange(branch);
                         setIsOpen(false);

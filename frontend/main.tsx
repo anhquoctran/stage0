@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import '@fontsource-variable/inter/wght.css';
 import '@fontsource/ibm-plex-sans/300.css';
 import '@fontsource/ibm-plex-sans/400.css';
 import '@fontsource/ibm-plex-sans/400-italic.css';
@@ -8,6 +9,7 @@ import '@fontsource/ibm-plex-sans/600.css';
 import '@fontsource/ibm-plex-sans/600-italic.css';
 import '@fontsource/ibm-plex-sans/700.css';
 import '@fontsource/ibm-plex-sans/700-italic.css';
+import '@fontsource-variable/roboto/wght.css';
 import '@fontsource/fira-code/300.css';
 import '@fontsource/fira-code/400.css';
 import '@fontsource/fira-code/500.css';

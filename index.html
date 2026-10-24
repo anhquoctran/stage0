@@ -124,33 +124,12 @@
       }
 
       #startup-splash .splash-logo {
-        display: flex;
+        display: block;
         width: 80px;
         height: 80px;
         flex-shrink: 0;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
         margin-bottom: 24px;
-        border: 1px solid var(--splash-logo-border);
-        border-radius: 0;
-        background: var(--splash-logo-bg);
-        box-shadow: var(--splash-logo-shadow);
-        color: var(--splash-brand);
-      }
-
-      #startup-splash .splash-logo svg {
-        width: 32px;
-        height: 32px;
-      }
-
-      #startup-splash .splash-logo-label {
-        color: var(--splash-brand);
-        font-family: 'Fira Code', 'SFMono-Regular', Consolas, monospace;
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
+        filter: drop-shadow(0 12px 28px rgba(147, 51, 234, 0.28));
       }
 
       #startup-splash .splash-title {
@@ -233,15 +212,17 @@
       <div class="splash-glow splash-glow-top"></div>
       <div class="splash-glow splash-glow-bottom"></div>
       <div class="splash-content">
-        <div class="splash-logo" aria-label="Stage0 logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="8" />
-            <line x1="16" y1="8" x2="8" y2="16" stroke-width="2" opacity="0.65" />
-            <circle cx="12" cy="4" r="1.5" fill="currentColor" />
-            <circle cx="12" cy="20" r="1.5" fill="currentColor" />
-          </svg>
-          <span class="splash-logo-label">STAGE0</span>
-        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="80" height="80" class="splash-logo" role="img" aria-label="Stage0 logo">
+          <title>Stage0</title>
+          <rect width="512" height="512" rx="143.36" fill="#9333ea" />
+          <rect x="4" y="4" width="504" height="504" rx="139.36" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="4" />
+          <g fill="none" stroke-linecap="round">
+            <path d="M352 208 A144 144 0 0 1 208 352" stroke="#e4e4e7" stroke-width="32" />
+            <path d="M160 112 V304" stroke="#ffffff" stroke-width="32" />
+            <circle cx="352" cy="160" r="48" stroke="#e4e4e7" stroke-width="32" />
+            <circle cx="160" cy="352" r="48" stroke="#ffffff" stroke-width="32" />
+          </g>
+        </svg>
         <h1 class="splash-title">Stage<span class="splash-title-accent">0</span></h1>
         <p class="splash-tagline">Local-first Virtual Merge Request &amp; Conflict Prediction Sandbox</p>
         <div class="splash-progress-track" aria-hidden="true">

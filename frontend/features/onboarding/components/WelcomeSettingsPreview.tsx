@@ -41,7 +41,15 @@ export function WelcomeSettingsPreview({ step, settings }: Omit<WelcomeSettingsP
   }
   if (step === 'buffer-font') return <div className="overflow-hidden rounded-sm border border-surface0 bg-base">
     <div className="border-b border-surface0 px-4 py-3 text-xs text-subtext0">review.ts · Buffer preview</div>
-    <pre className="diff-raw-viewer syntax-highlight overflow-x-auto p-4">
+    <pre className="diff-raw-viewer syntax-highlight overflow-x-auto p-4" style={{
+      fontFamily: `"${settings.viewerFont.fontFamily}", "Fira Code", monospace`,
+      fontSize: `${settings.viewerFont.fontSize}px`,
+      fontWeight: settings.viewerFont.isBold ? 700 : 400,
+      fontStyle: settings.viewerFont.isItalic ? 'italic' : 'normal',
+      textDecoration: settings.viewerFont.isUnderline ? 'underline' : 'none',
+      lineHeight: settings.viewerFont.lineSpacing,
+      fontVariantLigatures: settings.viewerFont.enableLigatures ? 'normal' : 'none',
+    }}>
       <code className="hljs language-typescript" dangerouslySetInnerHTML={{
         __html: hljs.highlight(BUFFER_PREVIEW_SOURCE, { language: 'typescript', ignoreIllegals: true }).value,
       }} />

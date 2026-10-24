@@ -1,6 +1,7 @@
 import { useGitStore } from '../../features/git/store/useGitStore';
 import { usePreferencesStore } from '../../features/preferences/store/usePreferencesStore';
 import { usePerformanceMonitorStore } from '../../features/performance/store/usePerformanceMonitorStore';
+import { useOnboardingStore } from '../../features/onboarding/store/useOnboardingStore';
 import type { MenuFlags } from '../types/menu/MenuFlags';
 
 export function getApplicationMenuFlags(): MenuFlags {
@@ -21,5 +22,6 @@ export function getApplicationMenuFlags(): MenuFlags {
     tree: git.fileListLayout === 'tree',
     inlineBlame: usePreferencesStore.getState().showInlineBlame,
     performance: usePerformanceMonitorStore.getState().isEnabled,
+    onboarding: useOnboardingStore.getState().isOnboardingOpen,
   };
 }

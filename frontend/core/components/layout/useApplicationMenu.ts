@@ -6,6 +6,7 @@ import { useGitStore } from '../../../features/git/store/useGitStore';
 import { usePreferencesStore } from '../../../features/preferences/store/usePreferencesStore';
 import { usePerformanceMonitorStore } from '../../../features/performance/store/usePerformanceMonitorStore';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
+import { useOnboardingStore } from '../../../features/onboarding/store/useOnboardingStore';
 import { getApplicationMenuFlags } from '../../services/applicationMenuState';
 import { executeMenuAction } from '../../services/applicationMenuActions';
 import { keymapPlatform, resolveKeymap } from '../../services/keymaps/catalog';
@@ -21,6 +22,7 @@ export function useApplicationMenu(callbacks: MenuCallbacks, modalOpen = false) 
   const git = useGitStore();
   const prefs = usePreferencesStore();
   const perf = usePerformanceMonitorStore();
+  const onboarding = useOnboardingStore((state) => state.isOnboardingOpen);
   useVirtualMrStore(); // Modal state affects the window-scoped native accelerators.
   const [chord, setChord] = useState<string | null>(null);
   const callbackRef = useRef(callbacks);
@@ -36,10 +38,11 @@ export function useApplicationMenu(callbacks: MenuCallbacks, modalOpen = false) 
     git.fileListLayout,
     prefs.showInlineBlame,
     perf.isEnabled,
+    onboarding,
   ]);
   const mac = isMacOS();
   const commands = useMemo(() => resolveKeymap(prefs.keymap, keymapPlatform()), [prefs.keymap]);
-  const blocked = modalOpen || keymapsBlocked(false);
+  const blocked = modalOpen || onboarding || keymapsBlocked(false);
   const accelerators = useMemo(() => nativeKeymapAccelerators(commands, blocked), [commands, blocked]);
   const shortcutLabels = useMemo(() => Object.fromEntries(commands.filter((command) => Object.hasOwn(MENU_COMMANDS, command.id)).map((command) => [
     command.id, command.keys[0] ? formatKeybinding(command.keys[0], true) : '',

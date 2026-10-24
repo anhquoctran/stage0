@@ -9,17 +9,16 @@ import { useGitStore } from '../features/git/store/useGitStore';
 import { useNotificationStore } from '../features/notifications/store/useNotificationStore';
 import { type RepoInfo } from '../features/git/types/RepoInfo';
 import { type WindowStartupContext } from '../features/git/types/WindowStartupContext';
-import { FirstLaunchWelcome, shouldShowFirstLaunchWelcome } from '../features/onboarding/components/FirstLaunchWelcome';
-import { isPrimaryAppWindow } from './utils/isPrimaryAppWindow';
+import { FirstLaunchWelcome } from '../features/onboarding/components/FirstLaunchWelcome';
+import { useOnboardingStore } from '../features/onboarding/store/useOnboardingStore';
 import { reviewAssignedSessionAfterGitChange } from '../features/review/services/assignedReviewService';
 import { installAutoHideScrollbars } from './services/autoHideScrollbars';
 
 export const MainApp: React.FC = () => {
   const { initApp, attachRepoToCurrentWindow, refreshDiff, isInitializing } = useGitStore();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
-  const [isFirstLaunchWelcomeOpen, setFirstLaunchWelcomeOpen] = useState(
-    () => isPrimaryAppWindow() && shouldShowFirstLaunchWelcome()
-  );
+  const isOnboardingOpen = useOnboardingStore((state) => state.isOnboardingOpen);
+  const setOnboardingOpen = useOnboardingStore((state) => state.setOnboardingOpen);
   const [isMaximized, setIsMaximized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const usesNativeMacFrame =
@@ -125,8 +124,8 @@ export const MainApp: React.FC = () => {
       )}
     >
       <MainLayout />
-      {!isInitializing && isFirstLaunchWelcomeOpen && (
-        <FirstLaunchWelcome onComplete={() => setFirstLaunchWelcomeOpen(false)} />
+      {!isInitializing && isOnboardingOpen && (
+        <FirstLaunchWelcome onComplete={() => setOnboardingOpen(false)} />
       )}
     </div>
   );

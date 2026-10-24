@@ -54,7 +54,6 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       <div className="w-full max-w-lg flex flex-col">
         {/* Header: Logo and Title side-by-side (Zed style) */}
         <div className="flex items-center gap-4 mb-8">
-          {/* App Logo Placeholder */}
           <AppLogo size="md" />
 
           <div className="flex flex-col justify-center">

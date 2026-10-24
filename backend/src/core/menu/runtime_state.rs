@@ -38,16 +38,30 @@ pub fn sync_repo_dependent_menus_for_window(app: &AppHandle, window_label: &str)
 }
 
 fn sync_items(items: Vec<MenuItemKind<Wry>>, flags: &MenuFlags, keymap: Option<&NativeMenuKeymap>) {
+    let onboarding = flags.onboarding;
     for item in items {
         match item {
             MenuItemKind::Submenu(submenu) => {
-                if let Some(requires) = node_requires(&definition().menus, submenu.id().as_ref()) {
+                let id = submenu.id();
+                let is_app_menu = id.as_ref() == "application_menu";
+                if onboarding {
+                    let _ = submenu.set_enabled(is_app_menu);
+                } else if let Some(requires) = node_requires(&definition().menus, id.as_ref()) {
                     let _ = submenu.set_enabled(flags.enabled(requires));
+                } else {
+                    let _ = submenu.set_enabled(true);
                 }
-                sync_items(submenu.items().unwrap_or_default(), flags, keymap);
+                sync_items(
+                    submenu.items().unwrap_or_default(),
+                    flags,
+                    if onboarding { None } else { keymap },
+                );
             }
             MenuItemKind::MenuItem(item) => {
-                if let Some(command) = definition().commands.get(item.id().as_ref()) {
+                if onboarding {
+                    let _ = item.set_enabled(false);
+                    let _ = item.set_accelerator(None::<&str>);
+                } else if let Some(command) = definition().commands.get(item.id().as_ref()) {
                     let _ = item.set_enabled(flags.enabled(&command.requires));
                     if let Some(keymap) = keymap {
                         let _ = item.set_accelerator(keymap.accelerators.get(item.id().as_ref()));
@@ -56,7 +70,10 @@ fn sync_items(items: Vec<MenuItemKind<Wry>>, flags: &MenuFlags, keymap: Option<&
                 }
             }
             MenuItemKind::Check(item) => {
-                if let Some(command) = definition().commands.get(item.id().as_ref()) {
+                if onboarding {
+                    let _ = item.set_enabled(false);
+                    let _ = item.set_accelerator(None::<&str>);
+                } else if let Some(command) = definition().commands.get(item.id().as_ref()) {
                     let _ = item.set_enabled(flags.enabled(&command.requires));
                     let _ = item
                         .set_checked(command.checked.as_ref().is_some_and(|key| flags.value(key)));

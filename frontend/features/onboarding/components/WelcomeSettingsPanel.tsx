@@ -22,11 +22,8 @@ export function WelcomeSettingsPanel({ step, settings, onChange }: WelcomeSettin
   if (step === 'ui-font') return <PreferencesUiFontTab value={settings.uiFontFamily}
     onChange={(uiFontFamily) => onChange((previous) => ({ ...previous, uiFontFamily }))} />;
   if (step === 'buffer-font') return <PreferencesFontTab
+    simplified
     draftFontFamily={settings.viewerFont.fontFamily} setDraftFontFamily={(value) => setViewer('fontFamily', value)}
-    draftFontSize={settings.viewerFont.fontSize} setDraftFontSize={(value) => setViewer('fontSize', value)}
-    draftIsBold={settings.viewerFont.isBold} setDraftIsBold={(value) => setViewer('isBold', value)}
-    draftIsItalic={settings.viewerFont.isItalic} setDraftIsItalic={(value) => setViewer('isItalic', value)}
-    draftIsUnderline={settings.viewerFont.isUnderline} setDraftIsUnderline={(value) => setViewer('isUnderline', value)}
     draftLineSpacing={settings.viewerFont.lineSpacing} setDraftLineSpacing={(value) => setViewer('lineSpacing', value)}
     draftEnableLigatures={settings.viewerFont.enableLigatures} setDraftEnableLigatures={(value) => setViewer('enableLigatures', value)} />;
   if (step === 'markdown-font') return <PreferencesMarkdownFontTab

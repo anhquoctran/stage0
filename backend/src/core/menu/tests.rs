@@ -94,6 +94,9 @@ fn gates_distinguish_repository_file_sync_and_rebase_states() {
     assert!(!flags.enabled(&definition().commands["view_blame"].requires));
     assert!(flags.enabled(&definition().commands["copy_rel_path"].requires));
     assert!(!flags.value("unrecognized"));
+    flags.onboarding = true;
+    assert!(!flags.enabled(&definition().commands["copy_rel_path"].requires));
+    assert!(!flags.value("repository"));
 }
 
 #[test]

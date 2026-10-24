@@ -41,6 +41,54 @@ test('welcome keeps Theme before Keymaps and ends with AI setup then Open/Clone'
     ['welcome', 'compare', 'review', 'theme', 'keymaps', 'ui-font', 'buffer-font', 'markdown-font', 'ai-setup', 'repository']);
 });
 
+test('onboarding UI font picker delegates font choice and defaults to standard downward placement', async (t) => {
+  const runner = componentHarness();
+  t.after(() => runner.cleanup());
+  const PreferencesUiFontTab = () => null;
+  const { WelcomeSettingsPanel } = loadWithMocks(url('features/onboarding/components/WelcomeSettingsPanel.tsx'), {
+    react: runner.react,
+    '../../preferences/components/tabs/PreferencesUiFontTab': { PreferencesUiFontTab },
+    '../../preferences/components/tabs/PreferencesFontTab': { PreferencesFontTab: () => null },
+    '../../preferences/components/tabs/PreferencesMarkdownFontTab': { PreferencesMarkdownFontTab: () => null },
+    '../../preferences/components/keymaps/KeymapPresetPicker': { KeymapPresetPicker: () => null },
+    './WelcomeThemePicker': { WelcomeThemePicker: () => null },
+  });
+  const tree = await runner.render(WelcomeSettingsPanel, {
+    step: 'ui-font', settings: fixture().draft, onChange() {},
+  });
+  const picker = componentNodes(tree).find((node) => node.type === PreferencesUiFontTab);
+  assert.equal(picker.props.value, fixture().draft.uiFontFamily);
+  assert.equal(picker.props.dropdownPlacement, undefined);
+});
+
+test('onboarding buffer font step renders simplified tab with family, line spacing, and ligatures only', async (t) => {
+  const runner = componentHarness();
+  t.after(() => runner.cleanup());
+  const PreferencesFontTab = () => null;
+  const { WelcomeSettingsPanel } = loadWithMocks(url('features/onboarding/components/WelcomeSettingsPanel.tsx'), {
+    react: runner.react,
+    '../../preferences/components/tabs/PreferencesUiFontTab': { PreferencesUiFontTab: () => null },
+    '../../preferences/components/tabs/PreferencesFontTab': { PreferencesFontTab },
+    '../../preferences/components/tabs/PreferencesMarkdownFontTab': { PreferencesMarkdownFontTab: () => null },
+    '../../preferences/components/keymaps/KeymapPresetPicker': { KeymapPresetPicker: () => null },
+    './WelcomeThemePicker': { WelcomeThemePicker: () => null },
+  });
+  const draft = fixture().draft;
+  const tree = await runner.render(WelcomeSettingsPanel, {
+    step: 'buffer-font', settings: draft, onChange() {},
+  });
+  const tab = componentNodes(tree).find((node) => node.type === PreferencesFontTab);
+  assert.ok(tab, 'Buffer font tab should be rendered');
+  assert.equal(tab.props.simplified, true);
+  assert.equal(tab.props.draftFontFamily, draft.viewerFont.fontFamily);
+  assert.equal(tab.props.draftLineSpacing, draft.viewerFont.lineSpacing);
+  assert.equal(tab.props.draftEnableLigatures, draft.viewerFont.enableLigatures);
+  assert.equal(tab.props.draftFontSize, undefined);
+  assert.equal(tab.props.draftIsBold, undefined);
+  assert.equal(tab.props.draftIsItalic, undefined);
+  assert.equal(tab.props.draftIsUnderline, undefined);
+});
+
 test('appearance and keymap steps remain optional once required AI setup is saved', async (t) => {
   const f = fixture(), runner = componentHarness(), stored = new Map();
   const previousWindow = globalThis.window, previousStorage = globalThis.localStorage;

@@ -15,6 +15,12 @@ export function useOutsideDismiss(
     const handleOutside = (event: Event) => {
       const container = containerRef.current;
       if (!container) return;
+      if (event.type === 'focusin') {
+        const target = event.target as Node | null;
+        if (!target || target === ownerDocument || target === ownerDocument.body || target === ownerDocument.documentElement) {
+          return;
+        }
+      }
       // composedPath also recognizes interactions retargeted across a shadow root.
       if (event.composedPath().includes(container) || container.contains(event.target as Node)) return;
       dismissRef.current();

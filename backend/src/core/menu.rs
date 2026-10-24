@@ -115,6 +115,12 @@ pub fn update_recent_repositories_menu(
 }
 
 pub fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
+    if let Some(window) = focused_window(app) {
+        let flags = window_flags(app, window.label());
+        if flags.onboarding {
+            return;
+        }
+    }
     let id = event.id().as_ref();
     match id {
         "zoom" => {

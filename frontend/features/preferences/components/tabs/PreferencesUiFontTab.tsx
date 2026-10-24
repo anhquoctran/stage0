@@ -1,19 +1,24 @@
 import { useEffect } from 'react';
 import { CustomSelect } from '../../../../common/components/CustomSelect';
-import { BUNDLED_UI_FONT_FAMILIES, DEFAULT_UI_FONT_FAMILY } from '../../constants/uiFonts';
+import {
+  BUNDLED_UI_FONT_FAMILIES,
+  DEFAULT_UI_FONT_FAMILY,
+  RECOMMENDED_UI_FONT_FAMILIES,
+} from '../../constants/uiFonts';
 import { applyUiFontToDocument } from '../../utils/applyUiFontToDocument';
 import type { PreferencesUiFontTabProps } from '../../types/PreferencesUiFontTabProps';
 import { useSystemFontFamilies } from '../../hooks/useSystemFontFamilies';
 import type { CustomSelectOption } from '../../../../common/types/CustomSelectOption';
 
-export function PreferencesUiFontTab({ value, onChange }: PreferencesUiFontTabProps) {
+export function PreferencesUiFontTab({ value, onChange, dropdownPlacement = 'bottom', dropdownListMaxHeight }: PreferencesUiFontTabProps) {
   const { families, isLoading, error, refresh, native, canDiscover } = useSystemFontFamilies();
   const selectedAvailable = families.some((font) => font.toLowerCase() === value.toLowerCase());
   const options: CustomSelectOption<string>[] = families.map((font) => {
     const bundled = BUNDLED_UI_FONT_FAMILIES.some((family) => family.toLowerCase() === font.toLowerCase());
+    const recommended = RECOMMENDED_UI_FONT_FAMILIES.some((family) => family.toLowerCase() === font.toLowerCase());
     return { value: font.toLowerCase() === value.toLowerCase() ? value : font, label: font,
-      group: bundled ? 'Bundled fonts' : 'System fonts', badge: bundled ? 'Bundled' : 'Installed' };
-  }).sort((left, right) => Number(right.badge === 'Bundled') - Number(left.badge === 'Bundled'));
+      group: recommended ? 'Recommended UI fonts' : 'Other fonts', badge: bundled ? 'Bundled' : 'Installed' };
+  });
   if (!selectedAvailable) options.unshift({ value, label: value, group: 'Saved preference',
     badge: isLoading ? 'Checking…' : 'Unavailable', disabled: true });
   useEffect(() => applyUiFontToDocument(value), [value]);
@@ -23,7 +28,9 @@ export function PreferencesUiFontTab({ value, onChange }: PreferencesUiFontTabPr
         <label htmlFor="ui-font-family" className="text-xs font-semibold">UI Font Family</label>
         <CustomSelect id="ui-font-family" aria-label="UI Font Family" value={value} onChange={onChange}
           options={options}
-          searchable buttonClassName="w-56" dropdownWidth="w-80" menuClassName="max-w-[calc(100vw-3rem)]" />
+          searchable buttonClassName="w-72" dropdownWidth="w-72" dropdownPlacement={dropdownPlacement}
+          dropdownListMaxHeight={dropdownListMaxHeight}
+          menuClassName="max-w-[calc(100vw-3rem)]" />
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm text-xs text-subtext0">
         <span role="status">{isLoading ? 'Reading installed fonts…' : `${families.length} available font families`}</span>

@@ -15,33 +15,35 @@ import { useOutsideDismiss } from '../../../../common/hooks/useOutsideDismiss';
 export const PreferencesFontTab: React.FC<{
   draftFontFamily: string;
   setDraftFontFamily: (val: string) => void;
-  draftFontSize: number;
-  setDraftFontSize: React.Dispatch<React.SetStateAction<number>>;
-  draftIsBold: boolean;
-  setDraftIsBold: (val: boolean) => void;
-  draftIsItalic: boolean;
-  setDraftIsItalic: (val: boolean) => void;
-  draftIsUnderline: boolean;
-  setDraftIsUnderline: (val: boolean) => void;
   draftLineSpacing: number;
   setDraftLineSpacing: React.Dispatch<React.SetStateAction<number>>;
   draftEnableLigatures: boolean;
   setDraftEnableLigatures: (val: boolean) => void;
+  simplified?: boolean;
+  draftFontSize?: number;
+  setDraftFontSize?: React.Dispatch<React.SetStateAction<number>>;
+  draftIsBold?: boolean;
+  setDraftIsBold?: (val: boolean) => void;
+  draftIsItalic?: boolean;
+  setDraftIsItalic?: (val: boolean) => void;
+  draftIsUnderline?: boolean;
+  setDraftIsUnderline?: (val: boolean) => void;
 }> = ({
   draftFontFamily,
   setDraftFontFamily,
-  draftFontSize,
-  setDraftFontSize,
-  draftIsBold,
-  setDraftIsBold,
-  draftIsItalic,
-  setDraftIsItalic,
-  draftIsUnderline,
-  setDraftIsUnderline,
   draftLineSpacing,
   setDraftLineSpacing,
   draftEnableLigatures,
   setDraftEnableLigatures,
+  simplified = false,
+  draftFontSize = 13,
+  setDraftFontSize,
+  draftIsBold = false,
+  setDraftIsBold,
+  draftIsItalic = false,
+  setDraftIsItalic,
+  draftIsUnderline = false,
+  setDraftIsUnderline,
 }) => {
   const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
   const [fontSearchQuery, setFontSearchQuery] = useState('');
@@ -135,10 +137,18 @@ export const PreferencesFontTab: React.FC<{
                       <button
                         key={font.fontFamilyName}
                         type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setDraftFontFamily(font.fontFamilyName);
+                          setDraftEnableLigatures(font.ligaturesSupport);
+                          setIsFontDropdownOpen(false);
+                          fontButtonRef.current?.focus();
+                        }}
                         onClick={() => {
                           setDraftFontFamily(font.fontFamilyName);
                           setDraftEnableLigatures(font.ligaturesSupport);
                           setIsFontDropdownOpen(false);
+                          fontButtonRef.current?.focus();
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
                           isSelected
@@ -184,93 +194,97 @@ export const PreferencesFontTab: React.FC<{
       </SettingRow>
 
       {/* Font Size Row */}
-      <SettingRow
-        title="Font Size"
-        description="Font size in pixels for diff lines and editor panes (range: 10px – 24px)."
-      >
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            min="10"
-            max="24"
-            value={draftFontSize}
-            onChange={(e) =>
-              setDraftFontSize(
-                Math.max(10, Math.min(24, parseInt(e.target.value) || 13))
-              )
-            }
-            className="w-16 px-2.5 py-1.5 bg-crust border border-surface0 text-xs text-text focus:outline-hidden focus:border-surface1 font-mono text-center rounded-sm"
-          />
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setDraftFontSize((prev) => Math.max(10, prev - 1))}
-              className="px-2 py-1 border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold rounded-sm"
-              title="Decrease font size"
-            >
-              -
-            </button>
-            <button
-              type="button"
-              onClick={() => setDraftFontSize((prev) => Math.min(24, prev + 1))}
-              className="px-2 py-1 border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold rounded-sm"
-              title="Increase font size"
-            >
-              +
-            </button>
+      {!simplified && setDraftFontSize && (
+        <SettingRow
+          title="Font Size"
+          description="Font size in pixels for diff lines and editor panes (range: 10px – 24px)."
+        >
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="10"
+              max="24"
+              value={draftFontSize}
+              onChange={(e) =>
+                setDraftFontSize(
+                  Math.max(10, Math.min(24, parseInt(e.target.value) || 13))
+                )
+              }
+              className="w-16 px-2.5 py-1.5 bg-crust border border-surface0 text-xs text-text focus:outline-hidden focus:border-surface1 font-mono text-center rounded-sm"
+            />
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setDraftFontSize((prev) => Math.max(10, prev - 1))}
+                className="px-2 py-1 border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold rounded-sm"
+                title="Decrease font size"
+              >
+                -
+              </button>
+              <button
+                type="button"
+                onClick={() => setDraftFontSize((prev) => Math.min(24, prev + 1))}
+                className="px-2 py-1 border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold rounded-sm"
+                title="Increase font size"
+              >
+                +
+              </button>
+            </div>
           </div>
-        </div>
-      </SettingRow>
+        </SettingRow>
+      )}
 
       {/* Font Styling Row */}
-      <SettingRow
-        title="Font Weight & Emphasis"
-        description="Apply Bold, Italic, or Underline formatting to diff text."
-      >
-        <div className="flex items-center gap-1 bg-crust p-0.5 border border-surface0 rounded-sm">
-          <button
-            type="button"
-            onClick={() => setDraftIsBold(!draftIsBold)}
-            className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer rounded-sm ${
-              draftIsBold
-                ? 'bg-surface0 text-text font-bold shadow-xs'
-                : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
-            }`}
-            title={formatShortcutText('Bold (Ctrl+B)')}
-          >
-            <Bold className="w-3 h-3" />
-            <span>Bold</span>
-          </button>
+      {!simplified && setDraftIsBold && setDraftIsItalic && setDraftIsUnderline && (
+        <SettingRow
+          title="Font Weight & Emphasis"
+          description="Apply Bold, Italic, or Underline formatting to diff text."
+        >
+          <div className="flex items-center gap-1 bg-crust p-0.5 border border-surface0 rounded-sm">
+            <button
+              type="button"
+              onClick={() => setDraftIsBold(!draftIsBold)}
+              className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer rounded-sm ${
+                draftIsBold
+                  ? 'bg-surface0 text-text font-bold shadow-xs'
+                  : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
+              }`}
+              title={formatShortcutText('Bold (Ctrl+B)')}
+            >
+              <Bold className="w-3 h-3" />
+              <span>Bold</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setDraftIsItalic(!draftIsItalic)}
-            className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer rounded-sm ${
-              draftIsItalic
-                ? 'bg-surface0 text-text font-bold italic shadow-xs'
-                : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
-            }`}
-            title={formatShortcutText('Italic (Ctrl+I)')}
-          >
-            <Italic className="w-3 h-3" />
-            <span>Italic</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setDraftIsItalic(!draftIsItalic)}
+              className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer rounded-sm ${
+                draftIsItalic
+                  ? 'bg-surface0 text-text font-bold italic shadow-xs'
+                  : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
+              }`}
+              title={formatShortcutText('Italic (Ctrl+I)')}
+            >
+              <Italic className="w-3 h-3" />
+              <span>Italic</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setDraftIsUnderline(!draftIsUnderline)}
-            className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer rounded-sm ${
-              draftIsUnderline
-                ? 'bg-surface0 text-text font-bold underline shadow-xs'
-                : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
-            }`}
-            title={formatShortcutText('Underline (Ctrl+U)')}
-          >
-            <Underline className="w-3 h-3" />
-            <span>Underline</span>
-          </button>
-        </div>
-      </SettingRow>
+            <button
+              type="button"
+              onClick={() => setDraftIsUnderline(!draftIsUnderline)}
+              className={`flex items-center gap-1 px-3 py-1 text-xs transition-colors cursor-pointer rounded-sm ${
+                draftIsUnderline
+                  ? 'bg-surface0 text-text font-bold underline shadow-xs'
+                  : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
+              }`}
+              title={formatShortcutText('Underline (Ctrl+U)')}
+            >
+              <Underline className="w-3 h-3" />
+              <span>Underline</span>
+            </button>
+          </div>
+        </SettingRow>
+      )}
 
       {/* Line Spacing Row */}
       <SettingRow
@@ -304,6 +318,12 @@ export const PreferencesFontTab: React.FC<{
           onChange={setDraftEnableLigatures}
         />
       </SettingRow>
+
+      {simplified && (
+        <p className="pt-2 text-xs text-subtext0">
+          Additional typography settings (font size, bold, italic, underline) can be customized anytime in Preferences.
+        </p>
+      )}
     </div>
   );
 };

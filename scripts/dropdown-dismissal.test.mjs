@@ -7,6 +7,8 @@ import { componentHarness, componentNodes, loadWithMocks } from './helpers/compo
 function eventSurface() {
   const listeners = new Map();
   const document = {
+    body: { nodeName: 'BODY' },
+    documentElement: { nodeName: 'HTML' },
     addEventListener(type, callback, capture) {
       const entries = listeners.get(type) ?? [];
       entries.push({ callback, capture });
@@ -51,8 +53,11 @@ test('outside dismissal handles stopped bubbling, assistive clicks, focus and li
     surface.dispatch('pointerdown', surface.inside);
     surface.dispatch('click', surface.inside);
     surface.dispatch('focusin', surface.inside);
+    surface.dispatch('focusin', surface.document.body);
+    surface.dispatch('focusin', surface.document.documentElement);
+    surface.dispatch('focusin', surface.document);
     surface.dispatch('pointerdown', surface.outside, { path: [surface.outside, surface.container] });
-    assert.equal(dismissed, 0, 'inside search/options and shadow descendants stay open');
+    assert.equal(dismissed, 0, 'inside search/options and blur/body focus must not dismiss');
     surface.dispatch('pointerdown', surface.outside, { stopped: true });
     surface.dispatch('click', surface.outside, { stopped: true });
     surface.dispatch('focusin', surface.outside);
@@ -73,6 +78,7 @@ test('outside dismissal handles stopped bubbling, assistive clicks, focus and li
 const controls = [
   ['common select', '../frontend/common/components/CustomSelect.tsx', 'CustomSelect', {
     value: 'main', options: [{ value: 'main', label: 'main' }, { value: 'feature', label: 'feature' }], searchable: true,
+    dropdownPlacement: 'top', dropdownListMaxHeight: '9rem',
   }, 'Search options...'],
   ['buffer font', '../frontend/features/preferences/components/tabs/PreferencesFontTab.tsx', 'PreferencesFontTab', {
     draftFontFamily: 'JetBrains Mono', draftFontSize: 13, draftLineSpacing: 1.5,
@@ -111,6 +117,11 @@ for (const [name, path, exported, initialProps, placeholder] of controls) {
       nodes(tree).find((node) => node.type === 'button').props.onClick();
       tree = await harness.render(Component, props);
       assert.ok(search(tree), 'opens');
+      if (name === 'common select') {
+        assert.match(nodes(tree).find((node) => node.props.className?.includes('bottom-full')).props.className, /\bbottom-full\b/,
+          'upward placement keeps the font menu visible inside a scroll viewport');
+        assert.equal(nodes(tree).find((node) => node.props.role === 'listbox').props.style.maxHeight, '9rem');
+      }
       surface.dispatch('pointerdown', surface.inside);
       tree = await harness.render(Component, props);
       assert.ok(search(tree), 'inside interaction must not dismiss');

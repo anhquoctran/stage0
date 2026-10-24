@@ -39,11 +39,15 @@ fn build_node(
         if let Some(role) = &command.native {
             return predefined(app, role, &title);
         }
-        let enabled = flags.enabled(&command.requires);
+        let enabled = if flags.onboarding {
+            false
+        } else {
+            flags.enabled(&command.requires)
+        };
         if let Some(key) = &command.checked {
             let builder = CheckMenuItemBuilder::with_id(id, title)
                 .enabled(enabled)
-                .checked(flags.value(key));
+                .checked(!flags.onboarding && flags.value(key));
             return Ok(MenuItemKind::Check(builder.build(app)?));
         }
         // Remappable accelerators are installed from the hydrated window keymap,
@@ -55,7 +59,11 @@ fn build_node(
         app,
         node.id.as_deref().unwrap_or_default(),
         node.label.as_deref().unwrap_or_default(),
-        flags.enabled(&node.requires),
+        if flags.onboarding {
+            node.id.as_deref() == Some("application_menu")
+        } else {
+            flags.enabled(&node.requires)
+        },
     )?;
     if node.dynamic.as_deref() == Some("recentRepositories") {
         submenu.append(
