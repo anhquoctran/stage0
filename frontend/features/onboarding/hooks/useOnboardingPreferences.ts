@@ -11,7 +11,18 @@ export function useOnboardingPreferences() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const saving = useRef(false);
-  useEffect(() => previewOnboardingPreferences(settings), [settings]);
+  useEffect(() => {
+    previewOnboardingPreferences(settings);
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const preview = () => previewOnboardingPreferences(settings);
+    if (media.addEventListener) {
+      media.addEventListener('change', preview);
+      return () => media.removeEventListener('change', preview);
+    }
+    media.addListener(preview);
+    return () => media.removeListener(preview);
+  }, [settings]);
   useEffect(() => () => previewOnboardingPreferences(captureOnboardingPreferences()), []);
 
   const save = async () => {

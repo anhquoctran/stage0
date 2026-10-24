@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
-import { Sparkles } from '../../../common/components/icons/Sparkles';
 import { X } from '../../../common/components/icons/X';
 import { isMacOS } from '../../../common/utils/shortcuts';
 import { AppLogo } from '../../../common/components/AppLogo';
@@ -14,6 +13,7 @@ import { WELCOME_SLIDES as SLIDES } from '../constants/welcomeSlides';
 import { useOnboardingPreferences } from '../hooks/useOnboardingPreferences';
 import { WelcomeSettingsPanel } from './WelcomeSettingsPanel';
 import { WelcomeSettingsPreview } from './WelcomeSettingsPreview';
+import { WelcomeArtworkScene } from './WelcomeArtworkScene';
 
 const ONBOARDING_STORAGE_KEY = 'stage0_first_launch_welcome_v1';
 
@@ -32,7 +32,6 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   const { settings, setSettings, isSaving, saveError, save, reload } = useOnboardingPreferences();
   const completedRef = useRef(false);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const initialFocusRef = useRef<HTMLButtonElement>(null);
   const isMac =
     isMacOS() ||
     (typeof window !== 'undefined' && window.location.search.includes('platform=mac'));
@@ -59,7 +58,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   };
 
   useEffect(() => {
-    initialFocusRef.current?.focus();
+    dialogRef.current?.focus({ preventScroll: true });
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented) return;
       if (event.key === 'Escape') {
@@ -75,7 +74,11 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
       if (focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      const enteringDialog = document.activeElement === dialogRef.current || !dialogRef.current.contains(document.activeElement);
+      if (enteringDialog) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -101,7 +104,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
       <div
         data-tauri-drag-region
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 z-5 h-14 cursor-move rounded-none"
+        className="absolute inset-x-0 top-0 z-5 h-14 cursor-default rounded-none"
       />
       <div
         ref={dialogRef}
@@ -110,7 +113,8 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
         aria-labelledby="first-launch-title"
         aria-describedby="first-launch-description"
         aria-busy={isSaving}
-        className={`grid h-full w-full grid-cols-1 overflow-hidden rounded-none ${isSettingsSlide ? 'md:grid-cols-[1.2fr_0.8fr]' : 'md:grid-cols-[1.05fr_0.95fr]'}`}
+        tabIndex={-1}
+        className={`grid h-full w-full grid-cols-1 overflow-hidden rounded-none focus:outline-none! ${isSettingsSlide ? 'md:grid-cols-[1.2fr_0.8fr]' : 'md:grid-cols-[1.05fr_0.95fr]'}`}
       >
         <fieldset disabled={isSaving} className="contents">
         {!isMac && (
@@ -127,7 +131,6 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
               </svg>
             </button>
             <button
-              ref={isMac ? undefined : initialFocusRef}
               type="button"
               onClick={finish}
               aria-label="Close welcome guide"
@@ -148,26 +151,36 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
             </div>
           </div>
 
-          <div key={activeSlide} className={`stage0-onboarding-slide min-h-0 flex-1 overflow-y-auto pr-1 ${isSettingsSlide ? 'mt-6' : 'mt-10 lg:mt-16'}`}>
-            <div className="mb-3 text-[10px] font-semibold tracking-[0.16em] text-mauve">{currentSlide.eyebrow}</div>
-            <h1 id="first-launch-title" className={`max-w-md font-semibold leading-tight tracking-tight ${isSettingsSlide ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'}`}>
-              {currentSlide.title}
-            </h1>
-            <p id="first-launch-description" className="mt-3 max-w-lg text-sm leading-6 text-subtext1">
-              {currentSlide.description}
-            </p>
-            {isSettingsSlide && <div className="mt-5 rounded-sm max-sm:[&_[data-setting-row]]:flex-col max-sm:[&_[data-setting-row]]:items-stretch">
-              <p className="mb-4 text-xs leading-relaxed text-subtext0">
-                Optional — everything is already set up. Keep the defaults or your saved settings and continue without choosing anything.
+          <div key={activeSlide} className={`stage0-onboarding-slide min-h-0 flex-1 overflow-y-auto pr-1 ${isSettingsSlide ? 'mt-6' : 'flex flex-col'}`}>
+            <div className={isSettingsSlide ? '' : 'my-auto py-8 lg:py-12'}>
+              <div className="mb-3 text-[10px] font-semibold tracking-[0.16em] text-mauve">{currentSlide.eyebrow}</div>
+              <h1 id="first-launch-title" className={`max-w-lg font-semibold leading-tight tracking-tight ${isSettingsSlide ? 'text-2xl sm:text-3xl' : 'text-3xl lg:text-5xl'}`}>
+                {currentSlide.title}
+              </h1>
+              <p id="first-launch-description" className={`mt-4 max-w-lg text-subtext1 ${isSettingsSlide ? 'text-sm leading-6' : 'text-[length:1rem] leading-7'}`}>
+                {currentSlide.description}
               </p>
-              <WelcomeSettingsPanel step={currentSlide.id} settings={settings} onChange={setSettings} />
-              <div className="mt-5 md:hidden rounded-sm">
-                <WelcomeSettingsPreview step={currentSlide.id} settings={settings} />
+              {'highlights' in currentSlide && <dl className="mt-7 max-w-lg space-y-5">
+                {currentSlide.highlights.map((highlight, index) => <div key={highlight.title} className="flex gap-3 rounded-sm">
+                  <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-surface0 text-[10px] font-mono text-subtext1">0{index + 1}</span>
+                  <div>
+                    <dt className="text-sm font-semibold text-text">{highlight.title}</dt>
+                    <dd className="mt-1 text-sm leading-6 text-subtext0">{highlight.description}</dd>
+                  </div>
+                </div>)}
+              </dl>}
+              {isSettingsSlide && <div className="mt-5 rounded-sm max-sm:[&_[data-setting-row]]:flex-col max-sm:[&_[data-setting-row]]:items-stretch">
+                <p className="mb-4 text-xs leading-relaxed text-subtext0">
+                  Optional — everything is already set up. Keep the defaults or your saved settings and continue without choosing anything.
+                </p>
+                <WelcomeSettingsPanel step={currentSlide.id} settings={settings} onChange={setSettings} />
+                <div className="mt-5 md:hidden rounded-sm">
+                  <WelcomeSettingsPreview step={currentSlide.id} settings={settings} />
+                </div>
+              </div>}
+              <div className="mt-5 border-l-2 border-primary/60 pl-3 text-xs leading-5 text-subtext0 rounded-sm">
+                <span>{currentSlide.caption}</span>
               </div>
-            </div>}
-            <div className="mt-5 flex items-start gap-2.5 border-l-2 border-primary/60 pl-3 text-xs leading-5 text-subtext0 rounded-sm">
-              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-              <span>{currentSlide.caption}</span>
             </div>
           </div>
 
@@ -210,7 +223,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                 <span className="text-[11px] text-subtext0">A {SLIDES.length}-step welcome guide</span>
               )}
               {activeSlide < SLIDES.length - 1 ? (
-                <button ref={isMac ? initialFocusRef : undefined} type="button" onClick={() => setActiveSlide((slide) => slide + 1)} className="btn-primary flex h-10 items-center gap-2 px-4 text-xs font-semibold rounded-sm">
+                <button type="button" onClick={() => setActiveSlide((slide) => slide + 1)} className="flex h-10 items-center gap-2 rounded-sm border-0 bg-surface0 px-4 text-xs font-semibold text-text shadow-none transition-colors hover:bg-surface1">
                   Next <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               ) : (
@@ -225,12 +238,13 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
           </div>
         </section>
 
-        <aside className="relative hidden items-center justify-center overflow-hidden border-l border-surface0 bg-mantle p-8 lg:p-14 md:flex">
-          <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'linear-gradient(135deg, transparent 35%, var(--ctp-surface0) 100%)' }} />
-          <div key={`art-${activeSlide}`} className="stage0-onboarding-slide relative z-10 w-full">
-            {isSettingsSlide ? <WelcomeSettingsPreview step={currentSlide.id} settings={settings} /> : <Artwork />}
+        <aside className="relative hidden min-h-0 flex-col overflow-y-auto bg-crust px-6 lg:px-10 md:flex">
+          <div className="pointer-events-none absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(var(--ctp-surface1) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+          <div key={`art-${activeSlide}`} className="stage0-onboarding-slide relative z-10 mx-auto my-auto w-full max-w-2xl py-12">
+            {'highlights' in currentSlide ? <WelcomeArtworkScene step={currentSlide.id}><Artwork /></WelcomeArtworkScene> :
+              <WelcomeSettingsPreview step={currentSlide.id} settings={settings} />}
           </div>
-          <div className="absolute bottom-5 left-6 flex items-center gap-2 text-[10px] text-subtext0">
+          <div className="relative z-10 flex shrink-0 items-center gap-2 pb-5 text-[10px] text-subtext0">
             <span className="h-1.5 w-1.5 bg-primary" />
             Built for thoughtful code reviews
           </div>

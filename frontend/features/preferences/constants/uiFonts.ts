@@ -1,11 +1,8 @@
 export const DEFAULT_UI_FONT_FAMILY = 'IBM Plex Sans';
 
-export const UI_FONT_FAMILIES = [
+// These fonts are shipped via @fontsource imports in frontend/main.tsx.
+// Every other choice must come from native/browser system-font discovery.
+export const BUNDLED_UI_FONT_FAMILIES = [
   DEFAULT_UI_FONT_FAMILY,
-  'Inter',
-  'Arial',
-  'Segoe UI',
-  'Roboto',
-  'SF Pro Text',
-  'Helvetica Neue',
+  'Fira Code',
 ];

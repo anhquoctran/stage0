@@ -4,7 +4,7 @@ import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
 
 export const ReviewArtwork: React.FC = () => (
-  <div className="w-full max-w-100 border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
+  <div className="w-full border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
     <div className="flex items-center justify-between border-b border-surface0 bg-mantle px-4 py-3 rounded-sm">
       <div className="flex items-center gap-2 text-xs font-semibold text-text">
         <GitPullRequest className="h-4 w-4 text-primary" />
@@ -14,9 +14,8 @@ export const ReviewArtwork: React.FC = () => (
     </div>
     <div className="space-y-4 p-4">
       <div>
-        <div className="mb-2 h-2 w-2/3 bg-subtext1/60" />
-        <div className="h-1.5 w-full bg-surface0" />
-        <div className="mt-1.5 h-1.5 w-4/5 bg-surface0" />
+        <p className="text-sm font-semibold text-text">Improve sign-in reliability</p>
+        <p className="mt-2 text-xs leading-5 text-subtext0">Check session expiry before restoring a saved sign-in.</p>
       </div>
       <div className="flex flex-wrap gap-2">
         <span className="border border-primary/30 bg-primary/10 px-2 py-1 text-[10px] text-primary">feature</span>
@@ -27,8 +26,16 @@ export const ReviewArtwork: React.FC = () => (
           <CheckCircle2 className="h-3.5 w-3.5 text-green" />
           Review notes
         </div>
-        <div className="mt-2 h-1.5 w-full bg-surface0" />
-        <div className="mt-1.5 h-1.5 w-3/4 bg-surface0" />
+        <ol className="mt-3 space-y-3">
+          {[
+            { author: 'You', note: 'What happens when a saved session expires?', color: 'bg-blue' },
+            { author: 'Reviewer', note: 'Keep the expiry check close to session validation.', color: 'bg-mauve' },
+            { author: 'You', note: 'Add coverage for expired and missing sessions.', color: 'bg-green' },
+          ].map((item) => <li key={item.note} className="flex items-start gap-2 rounded-sm">
+            <span aria-hidden="true" className={`stage0-welcome-pulse mt-1 h-2 w-2 shrink-0 rounded-full ${item.color}`} />
+            <div><p className="text-[10px] font-semibold text-subtext1">{item.author}</p><p className="mt-0.5 text-[11px] leading-5 text-subtext0">{item.note}</p></div>
+          </li>)}
+        </ol>
       </div>
     </div>
     <div className="flex items-center justify-between border-t border-surface0 px-4 py-3 text-[10px] text-subtext0 rounded-sm">

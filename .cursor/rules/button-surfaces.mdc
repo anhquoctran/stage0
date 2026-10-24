@@ -1,0 +1,19 @@
+---
+description: Border treatment for filled and outlined buttons throughout Stage0
+globs: frontend/**/*.tsx,frontend/**/*.css
+alwaysApply: false
+---
+
+# Button surfaces
+
+- Opaque colored or gray buttons have no border, in every interaction state.
+- Borders are allowed only for transparent, white or black/dark neutral surfaces
+  (`bg-base`, `bg-mantle`, `bg-crust` adapt between light and dark themes).
+- Example: `bg-surface0 text-text border-0` or `bg-red-600 text-white border-0`.
+- Outlined alternative: `bg-transparent border border-surface1 text-text`.
+- Mark custom/inline opaque button fills with `btn-solid`; shared treatment lives
+  in `frontend/core/styles/button-surfaces.css`. Extend its token list when adding
+  a new filled utility, including hover/active/selected fills.
+- Preserve keyboard focus outlines, rounded-sm corners, disabled behavior and
+  sharp native window controls. This rule does not remove borders from inputs,
+  cards, previews or dialogs. Do not classify surfaces by computed-color JS.

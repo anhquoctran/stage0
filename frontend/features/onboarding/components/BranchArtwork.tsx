@@ -3,15 +3,22 @@ import { GitCompare } from '../../../common/components/icons/GitCompare';
 import { ShieldCheck } from '../../../common/components/icons/ShieldCheck';
 
 export const BranchArtwork: React.FC = () => (
-  <div className="relative w-full max-w-100 aspect-[1.35] border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
+  <div className="relative w-full aspect-[1.35] border border-surface1 bg-base shadow-xl overflow-hidden rounded-sm">
     <div className="absolute inset-0 opacity-60" style={{ backgroundImage: 'radial-gradient(var(--ctp-surface1) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
     <svg className="absolute inset-0 h-full w-full" viewBox="0 0 400 296" fill="none" aria-hidden="true">
       <path d="M75 75H135C162 75 158 128 194 128H327" stroke="var(--ctp-overlay1)" strokeWidth="3" />
       <path d="M75 220H135C162 220 158 167 194 167H327" stroke="var(--ctp-overlay1)" strokeWidth="3" />
+      <path className="stage0-welcome-flow" d="M75 75H135C162 75 158 128 194 128H327" stroke="var(--ctp-blue)" strokeWidth="4" strokeLinecap="round" strokeDasharray="3 62" />
+      <path className="stage0-welcome-flow" d="M75 220H135C162 220 158 167 194 167H327" stroke="var(--ctp-green)" strokeWidth="4" strokeLinecap="round" strokeDasharray="3 62" />
       <path d="M194 128V167" stroke="var(--ctp-mauve)" strokeWidth="3" strokeDasharray="5 5" />
       <circle cx="75" cy="75" r="8" fill="var(--ctp-blue)" />
       <circle cx="75" cy="220" r="8" fill="var(--ctp-green)" />
       <circle cx="327" cy="128" r="8" fill="var(--ctp-mauve)" />
+      <circle cx="135" cy="75" r="4" fill="var(--ctp-blue)" />
+      <circle cx="135" cy="220" r="4" fill="var(--ctp-green)" />
+      <circle cx="245" cy="128" r="4" fill="var(--ctp-blue)" />
+      <circle cx="245" cy="167" r="4" fill="var(--ctp-green)" />
+      <circle className="stage0-welcome-pulse" cx="327" cy="128" r="14" stroke="var(--ctp-mauve)" strokeWidth="2" />
     </svg>
     <div className="absolute left-[10%] top-[18%] border border-surface1 bg-mantle px-3 py-2 text-[11px] font-mono text-text shadow-lg rounded-sm">
       <span className="mr-2 inline-block h-2 w-2 bg-blue" />main

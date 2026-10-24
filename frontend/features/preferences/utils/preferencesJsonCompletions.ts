@@ -1,6 +1,6 @@
 import { KEYMAP_PRESETS, keymapCatalog } from '../../../core/services/keymaps/catalog';
 import { MARKDOWN_CODE_FONTS, MARKDOWN_EDITOR_FONTS, MARKDOWN_PROSE_FONTS } from '../constants/markdownFonts';
-import { UI_FONT_FAMILIES } from '../constants/uiFonts';
+import { availableUiFontFamilies } from '../services/systemFontCatalog';
 
 const PROPERTY_NAMES: Record<string, string[]> = {
   '': ['schemaVersion', 'keymap', 'general', 'appearance', 'ai', 'reviewers', 'sandbox', 'git', 'notifications'],
@@ -34,7 +34,6 @@ const VALUE_OPTIONS: Record<string, string[]> = {
   'keymap.preset': KEYMAP_PRESETS.map((preset) => preset.id),
   'keymap.overrides.[].command': keymapCatalog().filter((command) => command.editable).map((command) => command.id),
   'appearance.themeMode': ['system', 'dark', 'light'],
-  'appearance.uiFont.fontFamily': UI_FONT_FAMILIES,
   'appearance.markdownFont.fontFamily': MARKDOWN_PROSE_FONTS,
   'appearance.markdownFont.codeFontFamily': MARKDOWN_CODE_FONTS,
   'appearance.markdownFont.editorFontFamily': MARKDOWN_EDITOR_FONTS,
@@ -130,6 +129,8 @@ export function getPreferencesJsonCompletions(source: string, cursor: number, ex
   let labels: string[];
   if (context.kind === 'key') {
     labels = (PROPERTY_NAMES[path] ?? []).filter((name) => !context.seenKeys.has(name));
+  } else if (propertyPath === 'appearance.uiFont.fontFamily') {
+    labels = availableUiFontFamilies();
   } else if (VALUE_OPTIONS[propertyPath]) {
     labels = VALUE_OPTIONS[propertyPath];
   } else if (BOOLEAN_PROPERTIES.has(propertyPath)) {
@@ -148,7 +149,7 @@ export function getPreferencesJsonCompletions(source: string, cursor: number, ex
     detail: context.kind === 'key' ? 'Preference property' : 'Suggested value',
     insertText: context.kind === 'key'
       ? `${JSON.stringify(label)}: `
-      : VALUE_OPTIONS[propertyPath] ? JSON.stringify(label) : label,
+      : VALUE_OPTIONS[propertyPath] || propertyPath === 'appearance.uiFont.fontFamily' ? JSON.stringify(label) : label,
   }));
   return { ...context, items };
 }

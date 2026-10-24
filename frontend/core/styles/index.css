@@ -2,6 +2,8 @@
 @source "../../../index.html";
 @source "../../**/*.{js,ts,jsx,tsx}";
 @import "@git-diff-view/react/styles/diff-view.css";
+@import "./button-surfaces.css";
+@import "./onboarding-artwork.css";
 
 @keyframes git-task-progress {
   from { transform: translateX(-100%); }
@@ -658,7 +660,7 @@ input[type="radio"]:checked {
 button.btn-primary {
   background-color: var(--color-brand) !important;
   color: #11111b !important;
-  border: 1px solid var(--color-brand) !important;
+  border: 0 !important;
   font-weight: 700;
   box-shadow: 0 2px 8px color-mix(in srgb, var(--color-brand) 25%, transparent);
   transition: all 0.15s ease-in-out;
@@ -667,14 +669,12 @@ button.btn-primary {
 .btn-primary:hover:not(:disabled),
 button.btn-primary:hover:not(:disabled) {
   background-color: #b88ff3 !important;
-  border-color: #b88ff3 !important;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand) 35%, transparent);
 }
 
 .btn-primary:active:not(:disabled),
 button.btn-primary:active:not(:disabled) {
   background-color: #a476ed !important;
-  border-color: #a476ed !important;
 }
 
 .btn-primary:disabled,
