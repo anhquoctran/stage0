@@ -33,7 +33,7 @@ export const PreferencesNavTree: React.FC<{
             placeholder="Search settings..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface0/50 border border-surface1/60 rounded px-2.5 pl-8 pr-7 py-1 text-xs text-text placeholder:text-subtext0 focus:outline-hidden focus:border-mauve transition-colors"
+            className="w-full bg-surface0/50 border border-surface1/60 rounded px-2.5 pl-8 pr-7 py-1 text-xs text-text placeholder:text-subtext0 focus:outline-hidden focus:border-brand transition-colors"
           />
           {searchQuery && (
             <button
@@ -113,4 +113,3 @@ export const PreferencesNavTree: React.FC<{
     </div>
   );
 };
-

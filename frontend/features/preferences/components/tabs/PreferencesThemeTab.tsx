@@ -62,7 +62,7 @@ export const PreferencesThemeTab: React.FC<{
               onClick={() => setDraftThemeId(id)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded border text-xs cursor-pointer transition-all ${
                 draftThemeId === id
-                  ? 'border-mauve bg-mauve/10 text-text font-medium'
+                  ? 'border-brand bg-brand/10 text-text font-medium'
                   : 'border-surface1/60 hover:border-surface2 text-subtext0 bg-surface0/30 hover:bg-surface0/60'
               }`}
             >
@@ -78,4 +78,3 @@ export const PreferencesThemeTab: React.FC<{
     </div>
   );
 };
-

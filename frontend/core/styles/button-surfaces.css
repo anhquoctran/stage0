@@ -27,3 +27,9 @@ button:hover:is(
 button:active:is(.active\:bg-surface0, .active\:bg-surface1, .active\:bg-surface2) {
   border-width: 0 !important;
 }
+
+button:is(.bg-brand, .bg-primary, .bg-accent, .btn-primary),
+button:hover:is(.bg-brand, .bg-primary, .bg-accent, .btn-primary),
+button:active:is(.bg-brand, .bg-primary, .bg-accent, .btn-primary) {
+  color: #fff !important;
+}
