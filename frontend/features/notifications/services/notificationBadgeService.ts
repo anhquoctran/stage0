@@ -1,5 +1,4 @@
-import { isTauri } from '../../../common/services/ipc/ipcClient';
-import { getCurrentWindow } from '../../../common/services/ipc/ipcWindow';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 
 const PRIMARY_ACCENT = '#9333ea';
 let windowsDotIcon: Promise<Uint8Array> | undefined;
@@ -37,10 +36,10 @@ async function createWindowsDotIcon(): Promise<Uint8Array> {
 }
 
 export async function syncUnreadBadge(unreadCount: number): Promise<void> {
-  if (!isTauri()) return;
+  if (!getApplicationServices().platform.capabilities.windows) return;
 
   const userAgent = navigator.userAgent || navigator.platform;
-  const window = getCurrentWindow();
+  const window = getApplicationServices().platform.windows.current();
   try {
     if (/windows/i.test(userAgent)) {
       await window.setOverlayIcon(unreadCount > 0 ? await createWindowsDotIcon() : undefined);

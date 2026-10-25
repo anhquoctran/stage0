@@ -1,4 +1,5 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import { create } from 'zustand';
 import { loadPersistedState, normalizeLoadedAiConfig } from '../services/aiMcpPersistence';
 import { type AiConfig } from '../types/AiConfig';
@@ -47,12 +48,12 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
 // Safely defer background hydration to avoid blocking module evaluation on startup
 if (typeof window !== 'undefined' && typeof window.setTimeout === 'function') {
   window.setTimeout(() => {
-    if (isTauri()) {
+    if (getApplicationServices().platform.capabilities.keychain) {
       // Rehydrate the last committed policy before reading native state. Reading
       // the fresh backend's balanced default first would erase saved preferences.
       void (async () => {
         try {
-          await invoke('commit_ai_preferences', {
+          await getApplicationServices().aiProviders.commitAiPreferences({
             apiKeys: {},
             apiKeyRemovals: [],
             policy: initialState.guardrailPolicy,

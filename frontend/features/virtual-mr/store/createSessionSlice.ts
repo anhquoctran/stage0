@@ -1,4 +1,5 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import { useGitStore } from '../../git/store/useGitStore';
 import { type VirtualMrCommit } from '../types/VirtualMrCommit';
 import type { VirtualMrState } from '../types/VirtualMrState';
@@ -157,7 +158,7 @@ export const createSessionSlice = (
     let commits: VirtualMrCommit[] = [];
     if (currentRepoPath) {
       try {
-        const raw = await invoke<any[]>('get_commits_between_refs', {
+        const raw = await getApplicationServices().gitHistory.getCommitsBetweenRefs({
           repoPath: currentRepoPath,
           base,
           compare,

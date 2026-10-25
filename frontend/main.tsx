@@ -1,3 +1,5 @@
+import { ApplicationServicesProvider } from './core/services/runtime/ApplicationServicesProvider';
+import { getApplicationServices } from './core/services/runtime/applicationRuntime';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import '@fontsource-variable/inter/wght.css';
@@ -16,9 +18,8 @@ import '@fontsource/fira-code/500.css';
 import '@fontsource/fira-code/600.css';
 import '@fontsource/fira-code/700.css';
 import '@fortawesome/fontawesome-svg-core/styles.css';
-import { invoke, isTauri } from './common/services/ipc/ipcClient';
+
 import type { PreferenceBootstrap } from './features/preferences/types/PreferenceBootstrap';
-import type { PreferencesDocument } from './features/preferences/types/PreferencesDocument';
 import { isLikelySecretMcpEnvValue, isSecretMcpEnvName } from './features/ai/utils/listSecretMcpEnv';
 import { initExternalLinkInterceptor } from './common/utils/openUrl';
 import './core/styles/index.css';
@@ -130,15 +131,15 @@ async function startApp() {
   let legacyKeyMigrationFailed = false;
   let legacyMcpMigrationFailed = false;
   let preferences = legacy;
-  if (isTauri()) {
+  if (getApplicationServices().platform.capabilities.backend) {
     try {
-      const document = await invoke<PreferencesDocument>('initialize_preferences', { legacy });
+      const document = await getApplicationServices().preferences.initializePreferences({ legacy });
       window.__STAGE0_PREFERENCES_REVISION__ = document.revision;
       window.__STAGE0_PREFERENCES_PATH__ = document.path;
       preferences = document.settings ?? JSON.parse(document.content) as PreferenceBootstrap;
       if (legacyApiKey.trim()) {
         try {
-          await invoke('store_ai_api_key', { provider: legacyRawAiConfig?.provider ?? 'openai', apiKey: legacyApiKey.trim() });
+          await getApplicationServices().aiProviders.storeAiApiKey({ provider: legacyRawAiConfig?.provider ?? 'openai', apiKey: legacyApiKey.trim() });
         } catch {
           legacyKeyMigrationFailed = true;
           console.warn('A legacy AI key could not be moved into the OS keychain. It remains in browser storage for another migration attempt.');
@@ -157,7 +158,7 @@ async function startApp() {
           }));
         if (mcpSecretMetadataReady && !document.validationError) {
           try {
-            await invoke('commit_ai_preferences', {
+            await getApplicationServices().aiProviders.commitAiPreferences({
               apiKeys: {},
               apiKeyRemovals: [],
               policy: null,
@@ -205,7 +206,7 @@ async function startApp() {
   ]);
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
-      <ErrorBoundary><App /></ErrorBoundary>
+      <ErrorBoundary><ApplicationServicesProvider><App /></ApplicationServicesProvider></ErrorBoundary>
     </React.StrictMode>
   );
 }

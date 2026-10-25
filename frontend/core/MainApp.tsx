@@ -1,20 +1,20 @@
+import { useApplicationServices } from './services/runtime/useApplicationServices';
 import React, { useEffect, useState } from 'react';
 import { clsx } from 'clsx';
-import { invoke, isTauri } from '../common/services/ipc/ipcClient';
-import { listen } from '../common/services/ipc/ipcEvents';
+
 import { MainLayout } from './components/layout/MainLayout';
 import { notificationService } from '../features/notifications/services/notificationService';
 import { syncUnreadBadge } from '../features/notifications/services/notificationBadgeService';
 import { useGitStore } from '../features/git/store/useGitStore';
 import { useNotificationStore } from '../features/notifications/store/useNotificationStore';
 import { type RepoInfo } from '../features/git/types/RepoInfo';
-import { type WindowStartupContext } from '../features/git/types/WindowStartupContext';
 import { FirstLaunchWelcome } from '../features/onboarding/components/FirstLaunchWelcome';
 import { useOnboardingStore } from '../features/onboarding/store/useOnboardingStore';
 import { reviewAssignedSessionAfterGitChange } from '../features/review/services/assignedReviewService';
 import { installAutoHideScrollbars } from './services/autoHideScrollbars';
 
 export const MainApp: React.FC = () => {
+  const appServices = useApplicationServices();
   const { initApp, attachRepoToCurrentWindow, refreshDiff, isInitializing } = useGitStore();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const isOnboardingOpen = useOnboardingStore((state) => state.isOnboardingOpen);
@@ -22,7 +22,7 @@ export const MainApp: React.FC = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const usesNativeMacFrame =
-    isTauri() &&
+    appServices.platform.capabilities.windows &&
     typeof navigator !== 'undefined' &&
     /Mac/i.test(navigator.platform || navigator.userAgent);
   const hideCustomFrame = isFullscreen || (isMaximized && !usesNativeMacFrame);
@@ -55,15 +55,15 @@ export const MainApp: React.FC = () => {
     const initializeWindow = async () => {
       try {
         const [stopFsListener, stopOpenListener] = await Promise.all([
-          listen<{ repo_path: string }>('repo-fs-changed', (event) => {
+          appServices.platform.events.subscribe<{ repo_path: string }>('repo-fs-changed', (event) => {
             const activePath = useGitStore.getState().currentRepo?.local_path;
-            if (activePath === event.payload.repo_path) {
+            if (activePath === event.repo_path) {
               refreshDiff();
-              void reviewAssignedSessionAfterGitChange(event.payload.repo_path);
+              void reviewAssignedSessionAfterGitChange(event.repo_path);
             }
           }),
-          listen<RepoInfo>('repo-open-request', (event) => {
-            void attachRepoToCurrentWindow(event.payload);
+          appServices.platform.events.subscribe<RepoInfo>('repo-open-request', (event) => {
+            void attachRepoToCurrentWindow(event);
           }),
         ]);
 
@@ -75,7 +75,7 @@ export const MainApp: React.FC = () => {
         unlistenFs = stopFsListener;
         unlistenOpen = stopOpenListener;
 
-        const startup = await invoke<WindowStartupContext>('get_window_startup_context');
+        const startup = await appServices.application.getWindowStartupContext();
         await initApp(startup.restore_recent);
         if (!disposed && startup.repo) {
           await attachRepoToCurrentWindow(startup.repo);
@@ -92,8 +92,8 @@ export const MainApp: React.FC = () => {
     const checkWindowState = async () => {
       try {
         const [maximized, fullscreen] = await Promise.all([
-          invoke<boolean>('window_is_maximized'),
-          invoke<boolean>('window_is_fullscreen'),
+          appServices.application.windowIsMaximized(),
+          appServices.application.windowIsFullscreen(),
         ]);
         setIsMaximized(maximized);
         setIsFullscreen(fullscreen);

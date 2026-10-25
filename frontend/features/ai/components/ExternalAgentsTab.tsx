@@ -1,9 +1,9 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import type { AcpAgentConfig, AcpRegistryAgent } from '../types/AcpAgentConfig';
-import type { AcpRegistryResponse } from '../types/AcpRegistryResponse';
 import type { AuthMethod } from '../types/AuthMethod';
 import type { ExternalAgentsFilter as Filter } from '../types/ExternalAgentsFilter';
 import type { ExternalAgentsTabProps } from '../types/ExternalAgentsTabProps';
@@ -27,6 +27,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
   draftSettings,
   onBackToOverview,
 } = {}) => {
+  const appServices = useApplicationServices();
   const store = useAiMcpStore();
   const currentRepoPath = useGitStore((state) => state.currentRepo?.local_path ?? null);
   const externalAgents = draftSettings?.externalAgents ?? store.externalAgents;
@@ -57,7 +58,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    invoke<AcpRegistryResponse>('acp_fetch_registry')
+    appServices.externalAgents.acpFetchRegistry()
       .then((result) => {
         if (!cancelled) {
           setRegistry(result.agents);
@@ -100,7 +101,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
     setBusyId(entry.id);
     setError(null);
     try {
-      const config = await invoke<AcpAgentConfig>('acp_prepare_registry_agent', {
+      const config = await appServices.externalAgents.acpPrepareRegistryAgent({
         agentId: entry.id,
       });
       updateExternalAgents([...externalAgents.filter((agent) => agent.id !== config.id), config]);
@@ -125,7 +126,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
     setRemovePending(false);
     setError(null);
     setNotice(null);
-    account.setIsCheckingAuth(isTauri());
+    account.setIsCheckingAuth(appServices.platform.capabilities.externalAgents);
   };
 
   const removeAgent = () => {
@@ -164,7 +165,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
           {error}
         </p>
       )}
-      {!isTauri() && (
+      {!appServices.platform.capabilities.externalAgents && (
         <p className="border border-surface1 px-3 py-2 text-xs text-subtext0">
           ACP agents need the Stage0 desktop app to launch a local agent process.
         </p>

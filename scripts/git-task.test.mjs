@@ -14,11 +14,10 @@ function loadStore(relativePath, overrides = {}) {
 const { useGitTaskStore: tasks } = loadStore('../frontend/features/git/store/useGitTaskStore.ts');
 let invokeHandler;
 const { useGitStore: git } = loadStore('../frontend/features/git/store/useGitStore.ts', {
-  '@tauri-apps/api/core': { invoke: (...args) => invokeHandler(...args) },
+  '@tauri-apps/api/core': { invoke: (...args) => invokeHandler(...args),
+    Channel: class { constructor(receive) { this.onmessage = receive; } } },
   './useGitTaskStore': { useGitTaskStore: tasks },
-  '../services/createGitProgressChannel': { createGitProgressChannel: (taskId) => ({
-    onmessage: (progress) => tasks.getState().updateTask(taskId, progress),
-  }) },
+
 });
 
 function reset() {

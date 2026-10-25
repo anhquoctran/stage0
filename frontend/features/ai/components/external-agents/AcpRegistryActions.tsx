@@ -1,8 +1,8 @@
-import { invoke } from '../../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../../core/services/runtime/useApplicationServices';
+
 import { ChevronLeft } from '../../../../common/components/icons/ChevronLeft';
 import { Plus } from '../../../../common/components/icons/Plus';
 import { RefreshCw } from '../../../../common/components/icons/RefreshCw';
-import type { AcpRegistryResponse } from '../../types/AcpRegistryResponse';
 import { AcpRegistryAbout } from '../AcpRegistryAbout';
 import type { AcpRegistryActionsProps } from './AcpRegistryActionsProps';
 
@@ -15,6 +15,7 @@ export function AcpRegistryActions({
   setRegistry,
   setSupportedBinaryTarget,
 }: AcpRegistryActionsProps) {
+  const appServices = useApplicationServices();
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
       {onBackToOverview ? (
@@ -43,7 +44,7 @@ export function AcpRegistryActions({
           onClick={() => {
             setError(null);
             setIsLoading(true);
-            void invoke<AcpRegistryResponse>('acp_fetch_registry')
+            void appServices.externalAgents.acpFetchRegistry()
               .then((result) => {
                 setRegistry(result.agents);
                 setSupportedBinaryTarget(result.supportedBinaryTarget ?? undefined);

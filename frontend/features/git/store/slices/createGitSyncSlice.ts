@@ -1,6 +1,7 @@
-import { invoke } from '../../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+
 import type { StateCreator } from 'zustand';
-import { createGitProgressChannel } from '../../services/createGitProgressChannel';
+import { createGitProgressHandler } from '../../services/createGitProgressHandler';
 import { getErrorMessage } from '../../services/gitStoreEffects';
 import type { GitState } from '../../types/GitState';
 import { type GitSyncOperation } from '../../types/GitSyncOperation';
@@ -24,7 +25,7 @@ export const createGitSyncSlice: StateCreator<
       return false;
     }
     try {
-      const active = await invoke<boolean>('check_rebase_status', { repoPath: path });
+      const active = await getApplicationServices().gitSync.checkRebaseStatus({ repoPath: path });
       if (get().currentRepo?.local_path !== path) return false;
       set({ isRebasing: active });
       return active;
@@ -67,11 +68,11 @@ export const createGitSyncSlice: StateCreator<
       isRebaseFromOpen: false,
     });
     try {
-      const result = await invoke<string>('run_git_sync', {
+      const result = await getApplicationServices().gitSync.runGitSync({
         repoPath: currentRepo.local_path,
         operation: op,
         options: options || null,
-        onProgress: createGitProgressChannel(taskId),
+        onProgress: createGitProgressHandler(taskId),
       });
       useGitTaskStore.getState().updateTask(taskId, {
         phase: 'Refreshing repository',

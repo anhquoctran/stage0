@@ -1,5 +1,5 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
-import { listen } from '../../../common/services/ipc/ipcEvents';
+import { useApplicationServices } from '../../services/runtime/useApplicationServices';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isMacOS } from '../../../common/utils/shortcuts';
 import { useGitStore } from '../../../features/git/store/useGitStore';
@@ -19,6 +19,7 @@ import type { MenuCallbacks } from '../../types/menu/MenuCallbacks';
 import { MENU_COMMANDS } from '../../constants/applicationMenu';
 
 export function useApplicationMenu(callbacks: MenuCallbacks, modalOpen = false) {
+  const appServices = useApplicationServices();
   const git = useGitStore();
   const prefs = usePreferencesStore();
   const perf = usePerformanceMonitorStore();
@@ -49,8 +50,8 @@ export function useApplicationMenu(callbacks: MenuCallbacks, modalOpen = false) 
   ])), [commands]);
 
   useEffect(() => {
-    if (mac && isTauri()) {
-      void invoke('update_application_menu_state', { flags, accelerators, shortcutLabels }).catch((error) =>
+    if (mac && appServices.platform.capabilities.nativeMenu) {
+      void appServices.application.updateApplicationMenuState({ flags, accelerators, shortcutLabels }).catch((error) =>
         console.warn('[Stage0 menu] Could not sync native menu state:', error)
       );
     }
@@ -59,9 +60,9 @@ export function useApplicationMenu(callbacks: MenuCallbacks, modalOpen = false) 
   useEffect(() => {
     let disposed = false;
     let unlisten: (() => void) | undefined;
-    if (isTauri())
-      void listen<string>('menu-action', (event) => {
-        if (!disposed) void executeMenuAction(event.payload, callbackRef.current);
+    if (appServices.platform.capabilities.nativeMenu)
+      void appServices.platform.events.subscribe<string>('menu-action', (event) => {
+        if (!disposed) void executeMenuAction(event, callbackRef.current);
       })
         .then((stop) => {
           if (disposed) stop();
@@ -78,7 +79,7 @@ export function useApplicationMenu(callbacks: MenuCallbacks, modalOpen = false) 
     const engine = createKeymapEngine({
       mac, getCommands: () => commands, getContext: keymapContext,
       execute: (id) => { void executeKeymapCommand(id, callbackRef.current); },
-      nativeOwns: (id, key) => mac && isTauri() && accelerators[id] === key,
+      nativeOwns: (id, key) => mac && appServices.platform.capabilities.nativeMenu && accelerators[id] === key,
       onChord: setChord,
     });
     const onKeyDown = (event: KeyboardEvent) => { engine.handle(event); };

@@ -1,4 +1,5 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import { AI_PROVIDERS } from '../constants/aiPresets';
 import type { AiConfig } from '../types/AiConfig';
 
@@ -76,7 +77,7 @@ export async function checkAiProviderConnection(aiConfig: AiConfig, startTime: n
     }
   }
 
-  if (isTauri()) {
+  if (getApplicationServices().platform.capabilities.keychain) {
     if (aiConfig.apiKey.trim()) {
       const res = {
         success: false,
@@ -87,7 +88,7 @@ export async function checkAiProviderConnection(aiConfig: AiConfig, startTime: n
 
       return res;
     }
-    const result = await invoke<{ success: boolean; message: string }>('test_ai_review_provider', {
+    const result = await getApplicationServices().aiProviders.testAiReviewProvider({
       request: {
         sessionId: 'connection-check',
         provider: aiConfig.provider,

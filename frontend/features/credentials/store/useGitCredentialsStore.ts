@@ -1,8 +1,7 @@
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 import { create } from 'zustand';
-import { invoke } from '../../../common/services/ipc/ipcClient';
-import { type GitCredential } from '../types/GitCredential';
+
 import { type SaveGitCredentialPayload } from '../types/SaveGitCredentialPayload';
-import { type OsKeyringInfo } from '../types/OsKeyringInfo';
 import type { GitCredentialsState } from '../types/GitCredentialsState';
 
 export const useGitCredentialsStore = create<GitCredentialsState>((set) => ({
@@ -15,7 +14,7 @@ export const useGitCredentialsStore = create<GitCredentialsState>((set) => ({
 
   fetchOsInfo: async () => {
     try {
-      const info = await invoke<OsKeyringInfo>('get_keyring_info');
+      const info = await getApplicationServices().credentials.getKeyringInfo();
       set({ osInfo: info });
     } catch (err: unknown) {
       console.warn('Could not fetch OS Keyring info:', err);
@@ -25,7 +24,7 @@ export const useGitCredentialsStore = create<GitCredentialsState>((set) => ({
   fetchCredentials: async () => {
     set({ isLoading: true, error: null });
     try {
-      const list = await invoke<GitCredential[]>('list_git_credentials');
+      const list = await getApplicationServices().credentials.listGitCredentials();
       set({ credentials: list, isLoading: false });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -36,7 +35,7 @@ export const useGitCredentialsStore = create<GitCredentialsState>((set) => ({
   saveCredential: async (payload: SaveGitCredentialPayload) => {
     set({ isLoading: true, error: null });
     try {
-      const newCred = await invoke<GitCredential>('save_git_credential', { payload });
+      const newCred = await getApplicationServices().credentials.saveGitCredential({ payload });
       set((state) => ({
         credentials: [newCred, ...state.credentials.filter((c) => c.id !== newCred.id)],
         isLoading: false,
@@ -52,7 +51,7 @@ export const useGitCredentialsStore = create<GitCredentialsState>((set) => ({
   deleteCredential: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      await invoke('delete_git_credential', { id });
+      await getApplicationServices().credentials.deleteGitCredential({ id });
       set((state) => ({
         credentials: state.credentials.filter((c) => c.id !== id),
         isLoading: false,
@@ -67,7 +66,7 @@ export const useGitCredentialsStore = create<GitCredentialsState>((set) => ({
 
   verifyCredential: async (id: string) => {
     try {
-      const exists = await invoke<boolean>('verify_git_credential', { id });
+      const exists = await getApplicationServices().credentials.verifyGitCredential({ id });
       set((state) => ({
         credentials: state.credentials.map((c) =>
           c.id === id ? { ...c, is_in_keyring: exists } : c

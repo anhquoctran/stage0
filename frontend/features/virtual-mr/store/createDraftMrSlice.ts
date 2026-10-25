@@ -1,4 +1,5 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import { useGitStore } from '../../git/store/useGitStore';
 import { type NewMrDraft } from '../types/NewMrDraft';
 import { type VirtualMrCommit } from '../types/VirtualMrCommit';
@@ -83,7 +84,7 @@ export const createDraftMrSlice = (
 
     // Load commits
     try {
-      const raw = await invoke<any[]>('get_commits_between_refs', {
+      const raw = await getApplicationServices().gitHistory.getCommitsBetweenRefs({
         repoPath: currentRepoPath,
         base,
         compare,
@@ -171,7 +172,7 @@ export const createDraftMrSlice = (
     if (!isCurrentDraftRequest()) return;
 
     try {
-      const raw = await invoke<any[]>('get_commits_between_refs', {
+      const raw = await getApplicationServices().gitHistory.getCommitsBetweenRefs({
         repoPath: currentRepoPath,
         base,
         compare,

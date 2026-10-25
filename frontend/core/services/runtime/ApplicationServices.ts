@@ -1,0 +1,56 @@
+import type { PlatformServices } from '../../../common/services/ipc/contracts/PlatformServices';
+import type { ExternalLinkService } from '../../../common/services/transport/ExternalLinkService';
+import type { PreferencesDocumentService } from '../../../features/preferences/services/transport/PreferencesDocumentService';
+import type { NotificationTransportService } from '../../../features/notifications/services/transport/NotificationTransportService';
+import type { GitHistoryService } from '../../../features/git/services/transport/GitHistoryService';
+import type { ApplicationService } from '../transport/ApplicationService';
+import type { GitRepositoryService } from '../../../features/git/services/transport/GitRepositoryService';
+import type { SandboxService } from '../../../features/git/services/transport/SandboxService';
+import type { GitSyncService } from '../../../features/git/services/transport/GitSyncService';
+import type { GitFileService } from '../../../features/git/services/transport/GitFileService';
+import type { AttachmentStorageService } from '../../../common/services/transport/AttachmentStorageService';
+import type { AiProviderService } from '../../../features/ai/services/transport/AiProviderService';
+import type { GuardrailService } from '../../../features/ai/services/transport/GuardrailService';
+import type { ReviewService } from '../../../features/review/services/transport/ReviewService';
+import type { DiscussionService } from '../../../features/virtual-mr/services/transport/DiscussionService';
+import type { VirtualMrService } from '../../../features/virtual-mr/services/transport/VirtualMrService';
+import type { RepositorySettingsService } from '../../../features/virtual-mr/services/transport/RepositorySettingsService';
+import type { GitRemoteService } from '../../../features/git/services/transport/GitRemoteService';
+import type { AboutService } from '../../../features/about/services/transport/AboutService';
+import type { GitCredentialService } from '../../../features/credentials/services/transport/GitCredentialService';
+import type { ExternalAgentService } from '../../../features/ai/services/transport/ExternalAgentService';
+import type { GitBinaryService } from '../../../features/git/services/transport/GitBinaryService';
+import type { SystemFontService } from '../../../features/preferences/services/transport/SystemFontService';
+import type { HarnessService } from '../../../features/review/services/transport/HarnessService';
+import type { PerformanceService } from '../../../features/performance/services/transport/PerformanceService';
+import type { DeviceAuthService } from '../../../features/ai/services/transport/DeviceAuthService';
+
+/** One service graph per application window. Mutable feature state stays in Zustand. */
+export interface ApplicationServices {
+  readonly platform: PlatformServices;
+  readonly externalLinks: ExternalLinkService;
+  readonly preferences: PreferencesDocumentService;
+  readonly notifications: NotificationTransportService;
+  readonly gitHistory: GitHistoryService;
+  readonly application: ApplicationService;
+  readonly gitRepositories: GitRepositoryService;
+  readonly sandboxes: SandboxService;
+  readonly gitSync: GitSyncService;
+  readonly gitFiles: GitFileService;
+  readonly attachments: AttachmentStorageService;
+  readonly aiProviders: AiProviderService;
+  readonly guardrails: GuardrailService;
+  readonly reviews: ReviewService;
+  readonly discussions: DiscussionService;
+  readonly virtualMrs: VirtualMrService;
+  readonly repositorySettings: RepositorySettingsService;
+  readonly gitRemotes: GitRemoteService;
+  readonly about: AboutService;
+  readonly credentials: GitCredentialService;
+  readonly externalAgents: ExternalAgentService;
+  readonly gitBinaries: GitBinaryService;
+  readonly systemFonts: SystemFontService;
+  readonly harness: HarnessService;
+  readonly performance: PerformanceService;
+  readonly deviceAuth: DeviceAuthService;
+}

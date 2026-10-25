@@ -1,5 +1,6 @@
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import React, { useState } from 'react';
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+
 import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
@@ -35,16 +36,17 @@ const categories: Array<{
 ];
 
 export const NotificationsTab: React.FC = () => {
+  const appServices = useApplicationServices();
   const { settings, updateChannel } = useNotificationStore();
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
-  const canTestNotifications = isTauri();
+  const canTestNotifications = appServices.platform.capabilities.notifications;
 
   const handleTestNotification = async () => {
     setIsTesting(true);
     setTestResult(null);
     try {
-      await invoke('send_test_notification');
+      await appServices.notifications.sendTestNotification();
       setTestResult('Test toast sent. It does not affect notification history or unread count.');
     } catch {
       setTestResult('Could not display a test notification on this system.');

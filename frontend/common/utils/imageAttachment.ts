@@ -1,4 +1,7 @@
-import { invoke, isTauri } from '../services/ipc/ipcClient';
+import type { SavedImageResult } from '../services/transport/SavedImageResult';
+import { getCommonServices } from '../services/getCommonServices';
+import { getPlatformServices } from '../services/ipc/platformServices';
+
 import { notificationService } from '../../features/notifications/services/notificationService';
 
 export const ALLOWED_IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
@@ -14,14 +17,7 @@ export const ALLOWED_IMAGE_MIMES = new Set([
 
 export const MAX_ATTACHMENT_SIZE_BYTES = 15 * 1024 * 1024; // 15 MiB
 
-export interface SavedImageResult {
-  fileName: string;
-  filePath?: string;
-  relativePath?: string;
-  mimeType: string;
-  sizeBytes: number;
-  dataUrl: string;
-}
+export type { SavedImageResult } from '../services/transport/SavedImageResult';
 
 /**
  * Checks whether a file object has an allowed image extension or MIME type.
@@ -59,7 +55,7 @@ export function readBlobAsDataUrl(file: Blob): Promise<string> {
 
 /**
  * Validates the image, reads its data URL, and saves it to the temporary attachments folder
- * in Tauri desktop mode. In web fallback mode, returns the data URL directly.
+ * through attachment storage when available. Browser fallback returns the data URL.
  */
 export async function processAndSaveImage(file: File): Promise<SavedImageResult | null> {
   const fileName = file.name || `image_${Date.now()}.png`;
@@ -87,9 +83,9 @@ export async function processAndSaveImage(file: File): Promise<SavedImageResult 
   const dataUrl = await readBlobAsDataUrl(file);
   const mimeType = file.type || 'image/png';
 
-  if (isTauri()) {
+  if (getPlatformServices().capabilities.attachments) {
     try {
-      const saved = await invoke<SavedImageResult>('save_mr_image_attachment', {
+      const saved = await getCommonServices().attachments.saveMrImageAttachment({
         fileName,
         dataBase64: dataUrl,
         mimeType,

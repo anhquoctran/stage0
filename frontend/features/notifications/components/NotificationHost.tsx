@@ -1,8 +1,6 @@
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
-import { invoke } from '../../../common/services/ipc/ipcClient';
-import { LogicalSize, PhysicalPosition } from '../../../common/services/ipc/ipcWindow';
-import { currentMonitor, getCurrentWindow } from '../../../common/services/ipc/ipcWindow';
-import { listen } from '../../../common/services/ipc/ipcEvents';
+
 import { ToastContainer } from './ToastContainer';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { applyThemeToDocument, resolveTheme, useThemeStore } from '../../../core/store/useThemeStore';
@@ -48,6 +46,7 @@ function notificationFromPayload(payload: Record<string, unknown>): AppNotificat
 }
 
 export const NotificationHost: React.FC = () => {
+  const appServices = useApplicationServices();
   const activeToasts = useNotificationStore((state) => state.activeToasts);
   const position = useMemo(() => (isMacOS() ? 'top-right' : 'bottom-right'), []);
 
@@ -82,15 +81,15 @@ export const NotificationHost: React.FC = () => {
 
     let unlisten: (() => void) | undefined;
     let disposed = false;
-    void listen<Record<string, unknown>>('stage0-toast', (event) => {
-      useNotificationStore.getState().showToast(notificationFromPayload(event.payload));
+    void appServices.platform.events.subscribe<Record<string, unknown>>('stage0-toast', (event) => {
+      useNotificationStore.getState().showToast(notificationFromPayload(event));
     }).then(async (stopListening) => {
       if (disposed) {
         stopListening();
         return;
       }
       unlisten = stopListening;
-      await invoke('notification_host_ready');
+      await appServices.notifications.notificationHostReady();
     }).catch((error) => console.warn('[NotificationHost] Could not initialize toast listener:', error));
 
     return () => {
@@ -103,8 +102,8 @@ export const NotificationHost: React.FC = () => {
 
   const resizeAndShow = useCallback(async (contentHeight: number) => {
     try {
-      const host = getCurrentWindow();
-      const monitor = await currentMonitor();
+      const host = appServices.platform.windows.current();
+      const monitor = await appServices.platform.windows.currentMonitor();
       const scale = monitor?.scaleFactor || 1;
       const workArea = monitor?.workArea;
       const width = workArea
@@ -116,14 +115,14 @@ export const NotificationHost: React.FC = () => {
         Math.min(contentHeight + HOST_RENDER_GUTTER, maxHeight),
       );
 
-      await host.setSize(new LogicalSize(width, height));
+      await host.setLogicalSize({ width, height });
       if (monitor && workArea) {
         const margin = Math.round(16 * scale);
         const x = workArea.position.x + workArea.size.width - Math.round(width * scale) - margin;
         const y = isMacOS()
           ? workArea.position.y + margin
           : workArea.position.y + workArea.size.height - Math.round(height * scale) - margin;
-        await host.setPosition(new PhysicalPosition(x, y));
+        await host.setPhysicalPosition({ x, y });
       }
       await host.show();
     } catch (error) {
@@ -133,7 +132,7 @@ export const NotificationHost: React.FC = () => {
 
   useEffect(() => {
     if (activeToasts.length > 0) return;
-    void invoke('set_notification_host_visibility', { visible: false }).catch(() => undefined);
+    void appServices.notifications.setNotificationHostVisibility({ visible: false }).catch(() => undefined);
   }, [activeToasts.length]);
 
   return <ToastContainer position={position} onHeightChange={resizeAndShow} />;

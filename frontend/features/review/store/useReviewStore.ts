@@ -1,8 +1,7 @@
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 import { create } from 'zustand';
-import { invoke } from '../../../common/services/ipc/ipcClient';
+
 import type { ReviewState } from '../types/ReviewState';
-import type { ReviewRun } from '../types/ReviewRun';
-import type { ReviewRunDetail } from '../types/ReviewRunDetail';
 import type { ReviewBotConfig } from '../types/ReviewBotConfig';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 
@@ -30,7 +29,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   syncActive: async () => {
     await Promise.all(Object.keys(get().activeRuns).map(async (id) => {
       try {
-        const detail = await invoke<ReviewRunDetail>('get_ai_review', { runId: id });
+        const detail = await getApplicationServices().reviews.getAiReview({ runId: id });
         await get().syncRun(detail);
       } catch (error) { if (get().isOpen) set({ error: message(error) }); }
     }));
@@ -80,9 +79,9 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   load: async (sessionId, runId) => {
     const version = ++loadVersion;
     try {
-      const runs = await invoke<ReviewRun[]>('list_ai_reviews', { sessionId });
+      const runs = await getApplicationServices().reviews.listAiReviews({ sessionId });
       const selected = runId || (get().detail?.run.sessionId === sessionId ? get().detail?.run.id : undefined) || runs[0]?.id;
-      const detail = selected ? await invoke<ReviewRunDetail>('get_ai_review', { runId: selected }) : null;
+      const detail = selected ? await getApplicationServices().reviews.getAiReview({ runId: selected }) : null;
       if (version === loadVersion && get().sessionId === sessionId) {
         const activeRuns = { ...get().activeRuns };
         for (const run of runs) { if (run.status === 'running') activeRuns[run.id] = run; else delete activeRuns[run.id]; }
@@ -103,7 +102,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     startingSessionIds.add(sessionId);
     set({ isStarting: true, error: null });
     try {
-      const run = await invoke<ReviewRun>('start_ai_review', { request: {
+      const run = await getApplicationServices().reviews.startAiReview({ request: {
         sessionId, provider: config.provider, authMode: 'api_key',
         model: config.model, baseUrl: config.baseUrl, reviewerRole: config.reviewerRole,
         instructions: config.customInstructions, allowRemote,
@@ -134,7 +133,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   cancel: async () => {
     const run = get().detail?.run;
     if (!run || run.status !== 'running') return;
-    try { await invoke('cancel_ai_review', { runId: run.id }); }
+    try { await getApplicationServices().reviews.cancelAiReview({ runId: run.id }); }
     catch (error) { if (get().detail?.run.id === run.id) set({ error: message(error) }); }
   },
   publish: async () => {
@@ -142,7 +141,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     if (!run || get().isPublishing || !['completed', 'partial'].includes(run.status)) return;
     set({ isPublishing: true, error: null });
     try {
-      await invoke('publish_ai_review', { runId: run.id });
+      await getApplicationServices().reviews.publishAiReview({ runId: run.id });
       await useVirtualMrStore.getState().refreshDiscussions(run.sessionId);
       if (get().isOpen && get().sessionId === run.sessionId) await get().load(run.sessionId, run.id);
     } catch (error) { if (get().detail?.run.id === run.id) set({ error: message(error) }); }

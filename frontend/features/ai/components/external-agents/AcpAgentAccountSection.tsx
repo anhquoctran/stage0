@@ -1,4 +1,5 @@
-import { isTauri } from '../../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../../core/services/runtime/useApplicationServices';
+
 import { CustomSelect } from '../../../../common/components/CustomSelect';
 import type { AcpAgentDetailsProps } from './AcpAgentDetailsProps';
 
@@ -18,6 +19,7 @@ export function AcpAgentAccountSection({
   },
   agentId,
 }: Pick<AcpAgentDetailsProps, 'account'> & { agentId: string }) {
+  const appServices = useApplicationServices();
   return (
     <section className="space-y-2 border-t border-surface1 pt-4">
       <h3 className="text-xs font-semibold">Account & sign-in</h3>
@@ -87,7 +89,7 @@ export function AcpAgentAccountSection({
           />
           <button
             type="button"
-            disabled={busyId === agentId || !isTauri() || !isProtocolAuthMethod(selectedAuthOption)}
+            disabled={busyId === agentId || !appServices.platform.capabilities.externalAgents || !isProtocolAuthMethod(selectedAuthOption)}
             onClick={() => void signIn()}
             className="px-3 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white rounded-sm shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >

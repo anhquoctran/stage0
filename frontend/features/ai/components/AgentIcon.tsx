@@ -1,5 +1,6 @@
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 import { useEffect, useState } from 'react';
-import { invoke } from '../../../common/services/ipc/ipcClient';
+
 import { Bot } from '../../../common/components/icons/Bot';
 
 function isRegistryIconUrl(icon?: string): icon is string {
@@ -21,7 +22,7 @@ const registryIconCache = new Map<string, Promise<string>>();
 function fetchRegistryIcon(iconUrl: string): Promise<string> {
   let cached = registryIconCache.get(iconUrl);
   if (!cached) {
-    cached = invoke<string>('acp_fetch_registry_icon', { iconUrl }).catch((error: unknown) => {
+    cached = getApplicationServices().externalAgents.acpFetchRegistryIcon({ iconUrl }).catch((error: unknown) => {
       registryIconCache.delete(iconUrl);
       throw error;
     });

@@ -1,6 +1,6 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
-import { listen } from '../../../common/services/ipc/ipcEvents';
-import type { UnlistenFn } from '../../../common/services/ipc/types';
+import type { Unsubscribe } from '../../../common/services/ipc/contracts/Unsubscribe';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import { type AppNotification } from '../types/AppNotification';
 import { type AppNotificationAction } from '../types/AppNotificationAction';
 import { type NotificationDispatchResult } from '../types/NotificationDispatchResult';
@@ -10,19 +10,19 @@ import { usePreferencesStore } from '../../preferences/store/usePreferencesStore
 
 let isListening = false;
 
-let unlistenFns: UnlistenFn[] = [];
+let unlistenFns: Unsubscribe[] = [];
 
 export const notificationService = {
   /**
    * Initializes the shared notification history and action listeners.
    */
   async init(): Promise<void> {
-    if (isListening || !isTauri()) return;
+    if (isListening || !getApplicationServices().platform.capabilities.notifications) return;
     isListening = true;
 
     try {
-      const stopNotifications = await listen<Record<string, unknown>>('app-notification', (event) => {
-        const payload = event.payload;
+      const stopNotifications = await getApplicationServices().platform.events.subscribe<Record<string, unknown>>('app-notification', (event) => {
+        const payload = event;
         const level = (payload.level as AppNotification['level']) || 'info';
         const notification: AppNotification = {
           id: (payload.id as string) || `notif_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -51,11 +51,11 @@ export const notificationService = {
         useNotificationStore.getState().addNotification(notification);
       });
       try {
-        const stopActions = await listen<{
+        const stopActions = await getApplicationServices().platform.events.subscribe<{
           notificationId?: string;
           action: AppNotificationAction;
         }>('notification-action', (event) => {
-          this.handleAction(event.payload.action, event.payload.notificationId);
+          this.handleAction(event.action, event.notificationId);
         });
         unlistenFns = [stopNotifications, stopActions];
       } catch (error) {
@@ -132,11 +132,11 @@ export const notificationService = {
     let delivery: NotificationDispatchResult['delivery'] = 'not_requested';
     let deliveryError: string | undefined;
     if (shouldDispatch) {
-      if (!isTauri()) {
+      if (!getApplicationServices().platform.capabilities.notifications) {
         delivery = 'unsupported';
       } else {
         try {
-          await invoke('dispatch_notification', {
+          await getApplicationServices().notifications.dispatchNotification({
             payload: {
               id: notification.id,
               title: notification.title,
@@ -177,12 +177,12 @@ export const notificationService = {
   },
 
   async dispatchAction(action: AppNotificationAction, notificationId?: string): Promise<void> {
-    if (!isTauri()) {
+    if (!getApplicationServices().platform.capabilities.notifications) {
       this.handleAction(action, notificationId);
       return;
     }
     try {
-      await invoke('dispatch_notification_action', { notificationId, action });
+      await getApplicationServices().notifications.dispatchNotificationAction({ notificationId, action });
     } catch (error) {
       console.warn('[NotificationService] Could not route notification action:', error);
     }

@@ -84,8 +84,9 @@ for (const isMac of [true, false]) {
 test('macOS constrains long versions while retaining the full tooltip and drag behavior', () => {
   const version = '12.34.56-beta.123+abcdef123456';
   const { TopBarTitleRow, calls } = titleRowFixture({ version });
-  const tree = TopBarTitleRow({ isMac: true });
-  const html = renderToStaticMarkup(tree);
+  let tree;
+  function Probe() { tree = TopBarTitleRow({ isMac: true }); return tree; }
+  const html = renderToStaticMarkup(React.createElement(Probe));
   assert.ok(html.includes(`title="Stage0 v${version}"`));
   assert.match(html, /data-tauri-drag-region="true" title="Stage0 v[^"]+"[^>]+class="[^"]*truncate min-w-0"/);
   tree.props.onDoubleClick({ target: { closest: () => null } });

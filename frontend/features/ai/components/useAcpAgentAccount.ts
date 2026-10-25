@@ -1,4 +1,5 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AcpAgentConfig } from '../types/AcpAgentConfig';
 import type { AcpAgentConnectionInfo } from '../types/AcpAgentConnectionInfo';
@@ -12,6 +13,7 @@ export function useAcpAgentAccount({
   setBusyId,
   setNotice,
 }: AcpAgentAccountContext) {
+  const appServices = useApplicationServices();
   const [authMethods, setAuthMethods] = useState<AuthMethod[]>([]);
 
   const [authStatus, setAuthStatus] = useState<AcpAgentConnectionInfo['authStatus']>(null);
@@ -45,7 +47,7 @@ export function useAcpAgentAccount({
       setIsCheckingAuth(true);
       setError(null);
       try {
-        const info = await invoke<AcpAgentConnectionInfo>('acp_agent_connection_info', {
+        const info = await appServices.externalAgents.acpAgentConnectionInfo({
           config: agent,
         });
         if (requestId === connectionRequestRef.current) applyConnectionInfo(info);
@@ -72,7 +74,7 @@ export function useAcpAgentAccount({
     setAuthStatus(null);
     setSupportsAuthStatus(false);
     setReportedAgentInfo(null);
-    if (isTauri()) void refreshAgentConnection(detailAgent);
+    if (appServices.platform.capabilities.externalAgents) void refreshAgentConnection(detailAgent);
     return () => {
       connectionRequestRef.current += 1;
     };
@@ -92,10 +94,7 @@ export function useAcpAgentAccount({
           ? 'Starting Google sign-in. Antigravity should open your default browser if a new login is needed…'
           : 'Starting the agent sign-in flow…'
       );
-      const result = await invoke<{ authStatus: AcpAgentConnectionInfo['authStatus'] }>(
-        'acp_agent_authenticate',
-        { config: detailAgent, methodId: selectedAuthMethod }
-      );
+      const result = await appServices.externalAgents.acpAgentAuthenticate({ config: detailAgent, methodId: selectedAuthMethod });
       const completed: AcpLastSuccessfulSignIn = {
         completedAt: new Date().toISOString(),
         methodId: selectedAuthMethod,

@@ -1,13 +1,15 @@
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import { useEffect, useRef, useState } from 'react';
-import { isTauri } from '../../../common/services/ipc/ipcClient';
+
 import { availableUiFontFamilies, browserFontDiscoveryAvailable, loadSystemFontFamilies } from '../services/systemFontCatalog';
 
 export function useSystemFontFamilies() {
+  const appServices = useApplicationServices();
   const [families, setFamilies] = useState(availableUiFontFamilies);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const epoch = useRef(0);
-  const native = isTauri();
+  const native = appServices.platform.capabilities.systemFonts;
   const canDiscover = native || browserFontDiscoveryAvailable();
   const refresh = async (requestBrowserAccess = false) => {
     const request = ++epoch.current;

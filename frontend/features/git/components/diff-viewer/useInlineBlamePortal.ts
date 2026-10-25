@@ -1,5 +1,6 @@
+import { useApplicationServices } from '../../../../core/services/runtime/useApplicationServices';
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { invoke } from '../../../../common/services/ipc/ipcClient';
+
 import type { ChangedFile } from '../../types/ChangedFile';
 import type { RepoInfo } from '../../types/RepoInfo';
 import type { FileBlamePayload } from '../../types/FileBlamePayload';
@@ -34,6 +35,7 @@ export function useInlineBlamePortal({
   theme: string;
   diffData: unknown;
 }) {
+  const appServices = useApplicationServices();
   const [activeLine, setActiveLine] = useState<{
     side: 'old' | 'new';
     lineNo: number;
@@ -48,7 +50,7 @@ export function useInlineBlamePortal({
       fetchFileBlame(selectedFile.path, compareBranch || 'HEAD');
       if (baseBranch) {
         const oldPath = selectedFile.old_path || selectedFile.path;
-        invoke<FileBlamePayload>('get_file_blame', {
+        appServices.gitHistory.getFileBlame({
           repoPath: currentRepo.local_path,
           filePath: oldPath,
           revision: baseBranch,

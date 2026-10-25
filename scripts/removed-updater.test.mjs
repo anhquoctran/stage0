@@ -47,7 +47,7 @@ test('mounting the main window initializes repositories and notifications withou
   try {
     const { MainApp } = loadWithMocks(new URL('../frontend/core/MainApp.tsx', import.meta.url), {
       react: harness.react, clsx: { clsx: () => '' },
-      '@tauri-apps/api/core': { isTauri: () => false, invoke: async (name) => {
+      '@tauri-apps/api/core': { isTauri: () => true, invoke: async (name) => {
         calls.push(name);
         if (name === 'get_window_startup_context') return { restore_recent: false, repo: { id: 'repo-a' } };
         assert.ok(['window_is_maximized', 'window_is_fullscreen'].includes(name));

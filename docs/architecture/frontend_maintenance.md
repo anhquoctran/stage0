@@ -4,7 +4,7 @@ Read [feature layout](feature_layout.md) for ownership, the
 [refactor report](frontend_refactor_analysis.md) for the original audit and measured
 implementation, and the
 [IPC facade refactor specification](frontend_ipc_refactor_spec.md) for the
-implemented Tauri SDK boundary and its verification checkpoint.
+implemented platform contracts, private adapters and verification checkpoints.
 Public component exports, root Zustand hooks, IPC payloads and
 events remain stable. Internal bot/ACP form props are grouped by responsibility;
 their application callers migrate together (see report section 8).
@@ -13,7 +13,7 @@ their application callers migrate together (see report section 8).
 
 | Workflow | Owner |
 |---|---|
-| IPC facade | `common/services/ipc/` owns explicit SDK re-exports in `ipcClient.ts`, `ipcEvents.ts`, `ipcWindow.ts` (including DPI), `ipcPath.ts`, type-only `types.ts` and an optional `index.ts`. Prefer leaf imports. `scripts/check-frontend-ipc-boundary.mjs`, integrated into `pnpm check:architecture`, enforces all `@tauri-apps/*` dependencies through this directory and rejects computed import/require specifiers. Existing feature/core owners retain browser fallbacks, listener cleanup, primary-window policy and workflow behavior. See [IPC refactor spec](frontend_ipc_refactor_spec.md). |
+| Platform services | `common/services/ipc/contracts/` owns neutral command/event/path/window/capability contracts; `adapters/tauri/` alone constructs SDK channels/window/DPI objects. Browser ports explicitly reject unsupported operations; `adapters/testing/` accepts explicit fakes. `platformServices.ts` selects/installs one platform before startup. `core/services/runtime/` composes 25 typed service objects and supplies the same instance to Context, `useApplicationServices()` and `getApplicationServices()`. Common links/attachments use `common/services/getCommonServices.ts`; common does not import the application composition root. Backend names/payloads live only in owning `services/transport/` factories; these cannot import runtime, stores or components. The architecture gate enforces private SDK/adapter boundaries and caller separation. See [platform contracts](frontend_ipc_refactor_spec.md#12-platform-service-abstraction-2026-10-25). |
 | Dropdown dismissal | `common/hooks/useOutsideDismiss.ts` owns capture-phase outside pointer/click/focus dismissal for `CustomSelect` and bespoke font, branch and MR metadata pickers. Keep both trigger and popup within the registered ref; inside search and multi-selection must stay open. Do not swallow the outside control's activation or steal its focus. Attach listeners only while open and clean them up on close/unmount. |
 | Button surfaces | `core/styles/button-surfaces.css` enforces borderless opaque palette-filled buttons (including filled hover states); `btn-solid` opts custom/inline fills in. Transparent, white and black/dark canvas surfaces may retain borders. Focus outlines remain independent. Keep the palette selector list in sync with new filled utilities; see `.cursor/rules/button-surfaces.mdc`. |
 | Scrollbars | `common/components/ScrollArea.tsx` wraps the official OverlayScrollbars React component for vertical scroll surfaces, including onboarding: a 4px visible thumb, transparent track and 700ms scroll-idle hide. `core/styles/index.css` imports its stylesheet and owns the theme, reduced motion and forced-color overrides. Keep its viewport at `z-index: auto` so nested fixed dialogs can escape the scroller's clip. The existing `core/services/autoHideScrollbars.ts` capture listener remains the activity fallback for native scroll surfaces. Native CSS scrollbar styling alone is not reliable in the macOS webview; use `ScrollArea` for a consistent overlay. |
@@ -220,8 +220,9 @@ Full Node suite: **313 tests / 293 pass / the same 20 baseline failures** (befor
 300 / 280 / 20), with no new failing names. Checks ran on macOS; no Windows/Linux
 native keyboard or visual QA is claimed. No ownership boundaries moved.
 
-## Frontend Tauri IPC facade (2026-10-25)
+## Frontend Tauri IPC facade (2026-10-25, historical Stage A)
 
+This checkpoint predates the platform service abstraction documented below.
 All 70 original SDK-importing consumers now use `common/services/ipc/` leaves.
 The six facade modules explicitly re-export native primitives and SDK types;
 feature/core owners retain guards, fallbacks, lifecycle and business behavior.
@@ -274,3 +275,49 @@ its Unicode behavior while bundled source remains English. The frontend now has
 lockfile, version or release metadata changed. Native UI, live accounts/providers
 and Windows/Linux runtime behavior remain unexercised on this macOS host.
 See the [failure-resolution checkpoint](frontend_ipc_refactor_spec.md#10-baseline-failure-resolution-2026-10-25).
+
+
+## Platform service abstraction (2026-10-25)
+
+All 70 original consumers now use neutral platform ports or named feature
+services. The former re-export leaves and SDK-derived `types.ts` were removed.
+All 127 backend operations are preserved, including the four retained dynamic
+device-auth actions; no backend registration/schema changes were needed.
+
+- **Composition:** `core/services/runtime/createApplicationServices.ts` constructs
+  the graph without starting IPC, subscriptions, credential reads or hydration.
+  `applicationRuntime.ts` selects/caches it and rejects replacing an initialized
+  runtime. `ApplicationServicesProvider.tsx` wraps both application window roots;
+  its Context contains stable services, while existing Zustand stores own state.
+- **Backend contracts:** 25 interfaces and constructor-injected factories live in
+  `services/transport/` under each owner. Git separates repository/history/sync,
+  binaries/remotes/files and sandbox operations. AI separates provider/keychain,
+  guardrail, external-agent and retained device-auth operations. Review/harness,
+  MR/discussion/repository settings, preferences/fonts, notifications, About,
+  performance, core application and reusable links/attachments keep their owners.
+- **Progress:** `git/services/createGitProgressHandler.ts` connects plain progress
+  callbacks to the task store. Only the native command adapter creates a channel,
+  preserving backend serialization, callback order and background task behavior.
+- **Events/windows:** event subscribers receive payloads and own asynchronous
+  unsubscribe registration. Existing target, late-registration and readiness
+  ordering remain. Window handles and monitor records expose plain data with
+  explicit logical-size/physical-position methods; badge handling stays owned by
+  notifications. No SDK class/type reaches a component or store.
+- **Wire records:** Git commit and MR session/reviewer/settings/label records now
+  describe the existing serialized responses rather than using untyped results.
+  `VirtualMrCommit.body` includes the backend's existing `null` value; rendering
+  and serialization behavior did not change.
+- **Browser:** capability checks replace environment checks. Existing preferences,
+  link, font, image and notification fallbacks retain their owners and behavior.
+  Existing Git binary preview mocks and the `mock` query flag stay feature-owned;
+  bridge readiness for executable discovery/menu updates is exposed by capabilities.
+  Unsupported native operations reject with `UnsupportedCapabilityError`;
+  native errors remain raw, with no generic catches/retries or fake successes.
+
+Final verification: **398/398 Node tests**, **180/180 Rust library tests**,
+TypeScript, architecture, Cargo check, isolated Vite compilation and whitespace
+checks pass. There are **963 frontend files**, largest **395/450**; no file limit
+exceptions, backend source/schema changes or release/version/lockfile changes.
+The bundle retains mixed-import and large-chunk warnings. Detailed commands and
+coverage are recorded in specification section 12. Native UI, real accounts/
+providers and Windows/Linux runtime execution remain unverified.

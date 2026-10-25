@@ -1,4 +1,5 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import type { PreferencesDocument } from '../types/PreferencesDocument';
 import type { PreferenceBootstrap } from '../types/PreferenceBootstrap';
 
@@ -6,25 +7,25 @@ export class PreferencesJsonService {
   private writeQueue: Promise<unknown> = Promise.resolve();
 
   async load(): Promise<PreferencesDocument> {
-    if (!isTauri()) {
+    if (!getApplicationServices().platform.capabilities.preferencesFile) {
       const content = JSON.stringify(window.__STAGE0_PREFERENCES__ ?? {}, null, 2);
       return { content, revision: window.__STAGE0_PREFERENCES_REVISION__ ?? 'web', path: 'browser storage', migrated: false };
     }
-    const document = await invoke<PreferencesDocument>('load_preferences_json');
+    const document = await getApplicationServices().preferences.loadPreferencesJson();
     this.accept(document);
     return document;
   }
 
   saveText(content: string, expectedRevision: string): Promise<PreferencesDocument> {
     return this.enqueue(async () => {
-      if (!isTauri()) {
+      if (!getApplicationServices().platform.capabilities.preferencesFile) {
         const parsed = JSON.parse(content) as PreferenceBootstrap;
         window.__STAGE0_PREFERENCES__ = parsed;
         const revision = `web-${Date.now()}`;
         window.__STAGE0_PREFERENCES_REVISION__ = revision;
         return { content, revision, path: 'browser storage', migrated: false };
       }
-      const document = await invoke<PreferencesDocument>('save_preferences_json', { content, expectedRevision });
+      const document = await getApplicationServices().preferences.savePreferencesJson({ content, expectedRevision });
       this.accept(document);
       return document;
     });
@@ -32,7 +33,7 @@ export class PreferencesJsonService {
 
   patch(patch: Record<string, unknown>): Promise<PreferencesDocument> {
     return this.enqueue(async () => {
-      if (!isTauri()) {
+      if (!getApplicationServices().platform.capabilities.preferencesFile) {
         const current = window.__STAGE0_PREFERENCES__ ?? {};
         const next = merge(current as Record<string, unknown>, patch) as PreferenceBootstrap;
         window.__STAGE0_PREFERENCES__ = next;
@@ -46,10 +47,10 @@ export class PreferencesJsonService {
       const baseline = structuredClone(window.__STAGE0_PREFERENCES__ ?? {});
       let document: PreferencesDocument;
       try {
-        document = await invoke<PreferencesDocument>('patch_preferences', { patch, expectedRevision });
+        document = await getApplicationServices().preferences.patchPreferences({ patch, expectedRevision });
       } catch (error) {
         if (!/changed outside/i.test(String(error))) throw error;
-        const latest = await invoke<PreferencesDocument>('load_preferences_json');
+        const latest = await getApplicationServices().preferences.loadPreferencesJson();
         if (latest.validationError) {
           this.accept(latest);
           throw new Error('preferences.json is invalid. Fix or restore the file before applying Preferences.');
@@ -60,7 +61,7 @@ export class PreferencesJsonService {
           throw new Error('These preferences changed in another Stage0 window or editor. Reload and review the conflicting values before applying.');
         }
         this.accept(latest);
-        document = await invoke<PreferencesDocument>('patch_preferences', { patch, expectedRevision: latest.revision });
+        document = await getApplicationServices().preferences.patchPreferences({ patch, expectedRevision: latest.revision });
       }
       this.accept(document);
       return document;
@@ -68,9 +69,9 @@ export class PreferencesJsonService {
   }
 
   async reset(): Promise<PreferencesDocument> {
-    if (!isTauri()) throw new Error('Resetting preferences requires the native Stage0 app.');
+    if (!getApplicationServices().platform.capabilities.preferencesFile) throw new Error('Resetting preferences requires the native Stage0 app.');
     return this.enqueue(async () => {
-      const document = await invoke<PreferencesDocument>('reset_preferences_json');
+      const document = await getApplicationServices().preferences.resetPreferencesJson();
       this.accept(document);
       return document;
     });

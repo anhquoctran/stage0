@@ -1,5 +1,6 @@
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 import { create } from 'zustand';
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+
 import type { ChatGptDeviceAuthState } from '../types/ChatGptDeviceAuthState';
 import type { ChatGptDeviceAuthStatus } from '../types/ChatGptDeviceAuthStatus';
 
@@ -23,22 +24,22 @@ function publicStatus(value: ChatGptDeviceAuthStatus): ChatGptDeviceAuthStatus {
 
 // No persistence: user codes are sensitive, temporary sign-in instructions.
 export const useChatGptDeviceAuthStore = create<ChatGptDeviceAuthState>((set, get) => {
-  const act = async (command: string, args?: { attemptId: string }) => {
+  const act = async (operation: () => Promise<ChatGptDeviceAuthStatus>, recoverMetadata = false) => {
     if (get().isActing) return;
     const version = ++epoch;
     set({ isActing: true, error: null });
     try {
-      if (!isTauri()) throw new Error('ChatGPT device-code sign-in requires the native Stage0 app and the official Codex CLI.');
-      const status = publicStatus(await invoke<ChatGptDeviceAuthStatus>(command, args));
+      if (!getApplicationServices().platform.capabilities.keychain) throw new Error('ChatGPT device-code sign-in requires the native Stage0 app and the official Codex CLI.');
+      const status = publicStatus(await operation());
       if (version === epoch) set({ status });
     } catch (error) {
       if (version === epoch) {
         // The native operation may have changed its session before failing.
         // Drop stale connected state and recover through metadata only.
         set({ status: null, error: message(error) });
-        if (isTauri() && ['chatgpt_device_auth_check', 'chatgpt_device_auth_cancel', 'chatgpt_device_auth_logout'].includes(command)) {
+        if (getApplicationServices().platform.capabilities.keychain && recoverMetadata) {
           try {
-            const status = publicStatus(await invoke<ChatGptDeviceAuthStatus>('chatgpt_device_auth_status'));
+            const status = publicStatus(await getApplicationServices().deviceAuth.chatgptDeviceAuthStatus());
             if (version === epoch) set({ status });
           } catch { /* Keep the original action error and the cleared status. */ }
         }
@@ -51,15 +52,15 @@ export const useChatGptDeviceAuthStore = create<ChatGptDeviceAuthState>((set, ge
     refresh: async () => {
       if (get().isActing) return;
       const version = epoch; const sequence = ++pollSequence;
-      if (!isTauri()) return;
+      if (!getApplicationServices().platform.capabilities.keychain) return;
       try {
-        const status = publicStatus(await invoke<ChatGptDeviceAuthStatus>('chatgpt_device_auth_status'));
+        const status = publicStatus(await getApplicationServices().deviceAuth.chatgptDeviceAuthStatus());
         if (version === epoch && sequence === pollSequence && !get().isActing) set({ status, error: null });
       } catch (error) { if (version === epoch && sequence === pollSequence) set({ error: message(error) }); }
     },
-    start: () => act('chatgpt_device_auth_start'),
-    checkSaved: () => act('chatgpt_device_auth_check'),
-    cancel: async () => { const id = get().status?.attemptId; if (id) await act('chatgpt_device_auth_cancel', { attemptId: id }); },
-    logout: async () => { const id = get().status?.attemptId; if (id) await act('chatgpt_device_auth_logout', { attemptId: id }); },
+    start: () => act(() => getApplicationServices().deviceAuth.chatgptDeviceAuthStart()),
+    checkSaved: () => act(() => getApplicationServices().deviceAuth.chatgptDeviceAuthCheck(), true),
+    cancel: async () => { const id = get().status?.attemptId; if (id) await act(() => getApplicationServices().deviceAuth.chatgptDeviceAuthCancel({ attemptId: id }), true); },
+    logout: async () => { const id = get().status?.attemptId; if (id) await act(() => getApplicationServices().deviceAuth.chatgptDeviceAuthLogout({ attemptId: id }), true); },
   };
 });

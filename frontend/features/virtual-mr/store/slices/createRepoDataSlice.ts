@@ -1,4 +1,5 @@
-import { invoke } from '../../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+
 import type { StateCreator } from 'zustand';
 import { flushSessionWrites } from '../../services/sessionPersistence';
 import { type RepoLabel } from '../../types/RepoLabel';
@@ -76,7 +77,7 @@ export const createRepoDataSlice: StateCreator<
       // 1. Load Repo Settings
       let settings: RepoSettings | null = null;
       try {
-        const dbSettings = await invoke<any>('get_repo_settings', { repoId });
+        const dbSettings = await getApplicationServices().repositorySettings.getRepoSettings({ repoId });
         if (dbSettings) {
           settings = {
             repoId: dbSettings.repo_id,
@@ -111,7 +112,7 @@ export const createRepoDataSlice: StateCreator<
       // 2. Load Labels
       let labels: RepoLabel[] = [];
       try {
-        const dbLabels = await invoke<any[]>('list_repo_labels', { repoId });
+        const dbLabels = await getApplicationServices().repositorySettings.listRepoLabels({ repoId });
         labels = (dbLabels || []).map((l) => ({
           id: l.id,
           repoId: l.repo_id,
@@ -127,7 +128,7 @@ export const createRepoDataSlice: StateCreator<
       let userName = 'Local User';
       let userEmail = 'user@local.stage0';
       try {
-        const [uName, uEmail] = await invoke<[string, string]>('get_git_user_identity_cmd', {
+        const [uName, uEmail] = await getApplicationServices().gitHistory.getGitUserIdentityCmd({
           repoPath,
         });
         if (uName) userName = uName;
@@ -138,13 +139,13 @@ export const createRepoDataSlice: StateCreator<
       let sessions: VirtualMrSession[] = [];
       try {
         await flushSessionWrites();
-        const dbSessions = await invoke<any[]>('list_virtual_mr_sessions', { repoId });
+        const dbSessions = await getApplicationServices().virtualMrs.listVirtualMrSessions({ repoId });
         if (dbSessions && dbSessions.length > 0) {
           sessions = await Promise.all(
             dbSessions.map(async (ds) => {
               const [discRes, commitRes] = await Promise.allSettled([
-                invoke<any[]>('list_mr_discussions', { sessionId: ds.id }),
-                invoke<any[]>('get_commits_between_refs', {
+                getApplicationServices().discussions.listMrDiscussions({ sessionId: ds.id }),
+                getApplicationServices().gitHistory.getCommitsBetweenRefs({
                   repoPath,
                   base: ds.base_branch,
                   compare: ds.compare_branch,
@@ -261,8 +262,8 @@ export const createRepoDataSlice: StateCreator<
   refreshRepoMetadata: async (repoId: string) => {
     const requestVersion = ++repoMetadataRequestVersion;
     const [settingsResult, labelsResult] = await Promise.allSettled([
-      invoke<any>('get_repo_settings', { repoId }),
-      invoke<any[]>('list_repo_labels', { repoId }),
+      getApplicationServices().repositorySettings.getRepoSettings({ repoId }),
+      getApplicationServices().repositorySettings.listRepoLabels({ repoId }),
     ]);
 
     if (requestVersion !== repoMetadataRequestVersion || get().currentRepoId !== repoId) return;

@@ -1,9 +1,11 @@
-import { isTauri } from '../../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../../core/services/runtime/useApplicationServices';
+
 import type { AcpAgentDetailsProps } from './AcpAgentDetailsProps';
 
 export function AcpAgentPromptSection({
   promptSession: { currentRepoPath, prompt, setPrompt, isSendingPrompt, sendPrompt, response },
 }: Pick<AcpAgentDetailsProps, 'promptSession'>) {
+  const appServices = useApplicationServices();
   return (
     <section className="space-y-2 border-t border-surface1 pt-4">
       <h3 className="text-xs font-semibold">Send a prompt</h3>
@@ -19,7 +21,7 @@ export function AcpAgentPromptSection({
       />
       <button
         type="button"
-        disabled={isSendingPrompt || !prompt.trim() || !isTauri()}
+        disabled={isSendingPrompt || !prompt.trim() || !appServices.platform.capabilities.externalAgents}
         onClick={() => void sendPrompt()}
         className="border border-surface2 px-3 py-1.5 text-xs disabled:opacity-50 rounded-sm"
       >

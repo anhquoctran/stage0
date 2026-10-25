@@ -1,4 +1,5 @@
-import { invoke } from '../../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+
 import type { StateCreator } from 'zustand';
 import {
   getErrorMessage,
@@ -6,9 +7,7 @@ import {
   syncRecentRepositoriesMenu,
 } from '../../services/gitStoreEffects';
 import type { GitState } from '../../types/GitState';
-import { type OpenRepoOutcome } from '../../types/OpenRepoOutcome';
 import { type RepoInfo } from '../../types/RepoInfo';
-import { type RepoValidation } from '../../types/RepoValidation';
 import { createGitCloneActions } from './createGitCloneActions';
 
 export const createGitRepoSlice: StateCreator<
@@ -57,7 +56,7 @@ export const createGitRepoSlice: StateCreator<
 
   closeRepo: async () => {
     try {
-      await invoke('close_repository_window');
+      await getApplicationServices().gitRepositories.closeRepositoryWindow();
     } catch (err) {
       set({ error: getErrorMessage(err) });
       return;
@@ -92,7 +91,7 @@ export const createGitRepoSlice: StateCreator<
     set({ isInitializing: true });
     try {
       const [repos] = await Promise.all([
-        invoke<RepoInfo[]>('get_recent_repos'),
+        getApplicationServices().gitRepositories.getRecentRepos(),
         get().fetchAvailableSandboxes(),
         get().fetchActiveSandbox(),
       ]);
@@ -105,7 +104,7 @@ export const createGitRepoSlice: StateCreator<
       if (restoreRecent && repos.length > 0) {
         for (const candidate of repos) {
           try {
-            const validation = await invoke<RepoValidation>('validate_repo', {
+            const validation = await getApplicationServices().gitRepositories.validateRepo({
               repoPath: candidate.local_path,
             });
 
@@ -134,7 +133,7 @@ export const createGitRepoSlice: StateCreator<
       // Keep the welcome window at the platform's default size when no repo opens.
       if (!openedAny && !get().currentRepo) {
         try {
-          await invoke('window_reset_size');
+          await getApplicationServices().application.windowResetSize();
         } catch {}
       }
     } catch (err: unknown) {
@@ -146,7 +145,7 @@ export const createGitRepoSlice: StateCreator<
 
   loadRecentRepos: async () => {
     try {
-      const repos = await invoke<RepoInfo[]>('get_recent_repos');
+      const repos = await getApplicationServices().gitRepositories.getRecentRepos();
       set({ recentRepos: repos });
       await syncRecentRepositoriesMenu(repos);
     } catch (err: unknown) {
@@ -156,7 +155,7 @@ export const createGitRepoSlice: StateCreator<
 
   attachRepoToCurrentWindow: async (repo: RepoInfo) => {
     try {
-      await invoke('window_maximize');
+      await getApplicationServices().application.windowMaximize();
     } catch {}
     if (get().currentRepo?.local_path === repo.local_path) return;
     gitDiffRequests.version += 1;
@@ -193,7 +192,7 @@ export const createGitRepoSlice: StateCreator<
   openRepoDialog: async (forceNewWindow = false) => {
     set({ isLoading: true, error: null });
     try {
-      const outcome = await invoke<OpenRepoOutcome | null>('open_repo_dialog', {
+      const outcome = await getApplicationServices().gitRepositories.openRepoDialog({
         forceNewWindow,
       });
       if (outcome?.action === 'opened_here') {
@@ -214,7 +213,7 @@ export const createGitRepoSlice: StateCreator<
   selectRepo: async (repo: RepoInfo) => {
     set({ isLoading: true, error: null });
     try {
-      const outcome = await invoke<OpenRepoOutcome>('open_repo_by_path', {
+      const outcome = await getApplicationServices().gitRepositories.openRepoByPath({
         repoPath: repo.local_path,
       });
       if (outcome.action === 'opened_here') {
@@ -232,7 +231,7 @@ export const createGitRepoSlice: StateCreator<
 
   removeRecentRepo: async (id: string) => {
     try {
-      await invoke('delete_recent_repo', { id });
+      await getApplicationServices().gitRepositories.deleteRecentRepo({ id });
       const { currentRepo } = get();
       if (currentRepo?.id === id) {
         gitDiffRequests.version += 1;
@@ -258,7 +257,7 @@ export const createGitRepoSlice: StateCreator<
 
   clearRecentRepos: async () => {
     try {
-      await invoke('clear_recent_repos');
+      await getApplicationServices().gitRepositories.clearRecentRepos();
       set({ recentRepos: [] });
       await syncRecentRepositoriesMenu([]);
       get().showToast('Cleared all recent repositories');
@@ -269,7 +268,7 @@ export const createGitRepoSlice: StateCreator<
 
   fetchRemotes: async (repoPath: string) => {
     try {
-      const remotes = await invoke<string[]>('list_git_remotes', { repoPath });
+      const remotes = await getApplicationServices().gitRepositories.listGitRemotes({ repoPath });
       if (get().currentRepo?.local_path !== repoPath) return;
       set({ remotes });
       await get().fetchRemoteUrl(repoPath);
@@ -280,7 +279,7 @@ export const createGitRepoSlice: StateCreator<
 
   fetchRemoteUrl: async (repoPath: string) => {
     try {
-      const url = await invoke<string>('get_git_remote_url', { repoPath, remote: null });
+      const url = await getApplicationServices().gitRepositories.getGitRemoteUrl({ repoPath, remote: null });
       set({ remoteUrl: url });
       return url;
     } catch (err) {

@@ -1,5 +1,6 @@
+import { useApplicationServices } from '../../services/runtime/useApplicationServices';
 import React, { useEffect, useState } from 'react';
-import { invoke } from '../../../common/services/ipc/ipcClient';
+
 import type { WindowControlsProps } from '../../types/WindowControlsProps';
 import { useCommandShortcut } from '../../hooks/useCommandShortcut';
 
@@ -7,6 +8,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
   style = 'auto',
   className = '',
 }) => {
+  const appServices = useApplicationServices();
   const [isMaximized, setIsMaximized] = useState(false);
   const { title } = useCommandShortcut();
   const [isMac, setIsMac] = useState(false);
@@ -20,7 +22,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
 
     const checkMaximized = async () => {
       try {
-        const max = await invoke<boolean>('window_is_maximized');
+        const max = await appServices.application.windowIsMaximized();
         setIsMaximized(max);
       } catch {
         // Fallback for browser testing
@@ -41,7 +43,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
 
   const handleMinimize = async () => {
     try {
-      await invoke('window_minimize');
+      await appServices.application.windowMinimize();
     } catch (err) {
       console.warn('Minimize error:', err);
     }
@@ -49,7 +51,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
 
   const handleToggleMaximize = async () => {
     try {
-      const next = await invoke<boolean>('window_toggle_maximize');
+      const next = await appServices.application.windowToggleMaximize();
       setIsMaximized(next);
     } catch (err) {
       setIsMaximized((prev) => !prev);
@@ -58,7 +60,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
 
   const handleClose = async () => {
     try {
-      await invoke('window_close');
+      await appServices.application.windowClose();
     } catch (err) {
       console.warn('Close error:', err);
     }

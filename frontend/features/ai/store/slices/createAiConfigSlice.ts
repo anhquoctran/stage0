@@ -1,4 +1,5 @@
-import { invoke, isTauri } from '../../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+
 import type { StateCreator } from 'zustand';
 import { AI_PROVIDERS, DEFAULT_AI_CONFIG } from '../../constants/aiPresets';
 import { loadPersistedState, persistState } from '../../services/aiMcpPersistence';
@@ -86,9 +87,9 @@ export const createAiConfigSlice =
       persistState(nextConfig, get().mcpServers, get().guardrailPolicy, get().externalAgents);
 
       // Plaintext is sent only to the OS keyring and never retained in Zustand.
-      if (keyToSave && isTauri()) {
+      if (keyToSave && getApplicationServices().platform.capabilities.keychain) {
         const provider = nextConfig.provider;
-        void invoke('store_ai_api_key', {
+        void getApplicationServices().aiProviders.storeAiApiKey({
           provider,
           apiKey: keyToSave,
         })
@@ -116,18 +117,18 @@ export const createAiConfigSlice =
         get().guardrailPolicy,
         get().externalAgents
       );
-      if (isTauri()) {
-        void invoke('delete_ai_api_key', { provider: currentProvider }).catch(() => {});
+      if (getApplicationServices().platform.capabilities.keychain) {
+        void getApplicationServices().aiProviders.deleteAiApiKey({ provider: currentProvider }).catch(() => {});
       }
     },
 
     loadApiKeyForProvider: async (providerId) => {
       // Explicit user action only. Status checks must not cascade into another
       // keyring read/model request, nor queue more prompts while one is open.
-      if (!isTauri() || get().isCheckingApiKey) return;
+      if (!getApplicationServices().platform.capabilities.keychain || get().isCheckingApiKey) return;
       set({ isCheckingApiKey: true, apiKeyCheckError: null });
       try {
-        const configured = await invoke<boolean>('has_ai_api_key', {
+        const configured = await getApplicationServices().aiProviders.hasAiApiKey({
           provider: providerId,
         });
         set((state) => ({
@@ -219,15 +220,12 @@ export const createAiConfigSlice =
       set({ isFetchingDynamicModels: true, dynamicModelError: null });
 
       try {
-        if (isTauri()) {
-          const models = await invoke<Array<{ id: string; name: string; description?: string }>>(
-            'fetch_ai_models',
-            {
+        if (getApplicationServices().platform.capabilities.keychain) {
+          const models = await getApplicationServices().aiProviders.fetchAiModels({
               provider,
               apiKey: null,
               baseUrl: config.baseUrl || null,
-            }
-          );
+            });
 
           const presets: AiModelPreset[] = models.map((m) => ({
             id: m.id,

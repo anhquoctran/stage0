@@ -1,4 +1,5 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import { preferencesJsonService } from '../../preferences/services/preferencesJsonService';
 import { AI_PROVIDERS, DEFAULT_AI_CONFIG, DEFAULT_MCP_SERVERS } from '../constants/aiPresets';
 import type { AcpAgentConfig } from '../types/AcpAgentConfig';
@@ -123,8 +124,8 @@ export function loadPersistedState(): {
             : savedAiConfig.provider === undefined
               ? DEFAULT_AI_CONFIG.provider
               : null;
-        if (isTauri() && legacyKeyProvider) {
-          void invoke('store_ai_api_key', {
+        if (getApplicationServices().platform.capabilities.keychain && legacyKeyProvider) {
+          void getApplicationServices().aiProviders.storeAiApiKey({
             provider: legacyKeyProvider,
             apiKey: legacyKey.trim(),
           }).catch(() => {

@@ -1,11 +1,12 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import type { PerformanceMetrics } from '../types/PerformanceMetrics';
 
 export async function getPerformanceMetrics(): Promise<PerformanceMetrics> {
-  if (!isTauri()) {
+  if (!getApplicationServices().platform.capabilities.backend) {
     throw new Error('Performance monitoring is only available in the desktop app');
   }
-  return invoke<PerformanceMetrics>('get_performance_metrics');
+  return getApplicationServices().performance.getPerformanceMetrics();
 }
 
 export type { PerformanceMetrics } from '../types/PerformanceMetrics';

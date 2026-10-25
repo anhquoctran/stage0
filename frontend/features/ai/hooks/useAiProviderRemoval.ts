@@ -1,4 +1,5 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import { useState } from 'react';
 import { DEFAULT_AI_CONFIG } from '../constants/aiPresets';
 import { useAiMcpStore } from '../store/useAiMcpStore';
@@ -12,6 +13,7 @@ export function useAiProviderRemoval({
   aiConfig,
   updateAiConfig,
 }: AiProviderRemovalContext) {
+  const appServices = useApplicationServices();
   const [providerToDelete, setProviderToDelete] = useState<AiProviderId | null>(null);
 
   const [providerDeleteError, setProviderDeleteError] = useState<string | null>(null);
@@ -24,8 +26,8 @@ export function useAiProviderRemoval({
     setIsDeletingProvider(true);
     setProviderDeleteError(null);
     try {
-      if (!draftSettings && isTauri()) {
-        await invoke('delete_ai_api_key', { provider: providerId });
+      if (!draftSettings && appServices.platform.capabilities.keychain) {
+        await appServices.aiProviders.deleteAiApiKey({ provider: providerId });
       }
 
       const configured = configuredProviderIds(aiConfig);

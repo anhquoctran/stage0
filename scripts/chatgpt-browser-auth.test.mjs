@@ -15,7 +15,7 @@ test('retained auth starts once through backend IPC without frontend URLs, crede
     name === 'chatgpt_device_auth_start' ? pending.promise : deviceStatus('cancelled'));
   const first = store.getState().start();
   await store.getState().start();
-  assert.deepEqual(calls, [['chatgpt_device_auth_start', undefined]]);
+  assert.deepEqual(calls, [['chatgpt_device_auth_start']]);
   pending.resolve(deviceStatus('pending')); await first;
   assert.equal(store.getState().status.phase, 'pending');
   await store.getState().cancel();
@@ -133,7 +133,8 @@ test('native provider UI keeps retired browser/device cards out and ACP owns ext
   assert.match(tab, /<ProviderSetupModal/);
   assert.doesNotMatch(tab, /ChatGptBrowserAuthCard|ChatGptDeviceCodeCard|startChatGptOAuth/);
   const external = source('frontend/features/ai/components/useAcpAgentAccount.ts');
-  assert.match(external, /acp_agent_authenticate/);
+  assert.match(external, /externalAgents\.acpAgentAuthenticate/);
+  assert.match(source('frontend/features/ai/services/transport/createExternalAgentService.ts'), /acp_agent_authenticate/);
   assert.doesNotMatch(external, /chatgpt_oauth_start|store_ai_api_key|ai_chat_dispatch/);
   const backend = source('backend/src/features/ai/chatgpt_oauth.rs');
   assert.doesNotMatch(backend, /Command::|CODEX_HOME|openai_subscription|chat\/completions|PENDING_CHATGPT_VERIFIER/);

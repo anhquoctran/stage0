@@ -1,7 +1,6 @@
-import { invoke } from '../../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+
 import type { StateCreator } from 'zustand';
-import { type ConflictFilePreview } from '../../types/ConflictFilePreview';
-import { type FileBlamePayload } from '../../types/FileBlamePayload';
 import type { GitState } from '../../types/GitState';
 
 export const createGitConflictBlameSlice: StateCreator<
@@ -66,7 +65,7 @@ export const createGitConflictBlameSlice: StateCreator<
 
     set({ isConflictLoading: true, conflictPreviewError: null });
     try {
-      const preview = await invoke<ConflictFilePreview>('get_conflicted_file_preview', {
+      const preview = await getApplicationServices().gitHistory.getConflictedFilePreview({
         repoPath: currentRepo.local_path,
         base: baseBranch,
         compare: compareBranch,
@@ -111,7 +110,7 @@ export const createGitConflictBlameSlice: StateCreator<
       blameIgnoreWhitespace: ignoreWs,
     });
     try {
-      const payload = await invoke<FileBlamePayload>('get_file_blame', {
+      const payload = await getApplicationServices().gitHistory.getFileBlame({
         repoPath: currentRepo.local_path,
         filePath: targetFile,
         revision: rev || null,

@@ -1,11 +1,12 @@
 # Frontend Tauri IPC Facade Refactoring Specification
 
-Status: **Stage A implemented (2026-10-25)**. All 70 original consumers now use
-`frontend/common/services/ipc/`; the architecture check enforces the SDK boundary.
-This document records the contracts, original inventory and execution plan.
-Section 9 records the original implementation verification; section 10 records
-the follow-up resolution of all 22 baseline failures. Stage B browser fallback
-and diagnostics changes remain deferred.
+Status: **Platform service abstraction implemented (2026-10-25)**. Section 12
+is the current architecture and behavior contract. Sections 1–11 retain the
+historical Stage A facade plan, verification and baseline-failure follow-up.
+The explicit user request to implement the abstraction supersedes Stage A's
+SDK re-export and browser-failure contracts where section 12 states a change.
+New runtime diagnostics and additional browser feature implementations remain
+out of scope.
 
 ## 1. Objectives and Scope
 
@@ -723,3 +724,139 @@ pass, with no skips/cancellations or lost passing tests. Typecheck, architecture
 frontend size, Cargo check, whitespace and isolated Vite compilation also pass.
 The bundle retains large-chunk and mixed-import warnings. Verification remains
 headless on macOS; no live native/browser UI or Windows/Linux runtime QA is claimed.
+
+
+## 12. Platform Service Abstraction (2026-10-25)
+
+### 12.1 Scope and ownership
+
+The requested abstraction is implemented across all 70 original consumers.
+Applications call platform-neutral interfaces and named feature services.
+`invoke`, `isTauri`, `Channel`, native event envelopes, window/monitor classes and
+DPI classes are private adapter implementation details. The public IPC barrel
+exports application-owned contracts and the unsupported-capability error only.
+
+```text
+frontend/common/services/ipc/
+  contracts/                  # Commands, events, paths, windows, capabilities
+  adapters/tauri/              # SDK calls, progress channels, event/DPI conversion
+  adapters/browser/            # Explicit unsupported native capabilities
+  adapters/testing/            # Explicit fake ports; no guessed OS results
+  adapters/createDefaultPlatform.ts
+  platformServices.ts         # One environment selection / installation per window
+frontend/{features/<owner>,core,common}/services/transport/
+  <Responsibility>Service.ts   # Typed domain contract
+  create<Responsibility>Service.ts # Constructor-injected command mapping
+frontend/core/services/runtime/
+  ApplicationServices.ts
+  createApplicationServices.ts
+  applicationRuntime.ts
+  ApplicationServicesContext.ts
+  ApplicationServicesProvider.tsx
+  useApplicationServices.ts
+```
+
+There are 25 service contracts, covering 127 distinct backend operations. A
+comparison against the preceding implementation confirms identical command sets:
+no additions or omissions, including device-auth actions previously selected by
+an internal command string. Wire names and serialized input fields remain in
+transport factories. Domain state, validation, transactions and workflows remain
+with their feature owners; common does not depend on application composition.
+
+### 12.2 Runtime and dependency contract
+
+`createApplicationServices(platform)` accepts a `PlatformServices` implementation.
+All transport factories receive the command port through their constructor.
+Construction starts no native calls, subscriptions, window/channel allocation,
+keychain access, hydration or inference. Environment selection occurs once when
+the default platform is first requested, rather than before every command.
+
+For explicit injection, construct the platform/service graph and call
+`installApplicationServices(runtime)` **before startup or the first service
+lookup**. Each window has its own module instance and service graph. Installing
+a different platform or service graph after initialization throws before changing
+the existing graph. Reinstalling the same instance is harmless.
+
+React uses `useApplicationServices()`, supplied by the root
+`ApplicationServicesProvider`; stores/classes/workflows use
+`getApplicationServices()`. Both resolve the same graph. The Provider creates no
+new services per render, and the hook creates no subscriptions. Existing Zustand
+stores continue to own mutable state. Common utilities obtain the same reusable
+link/attachment instances through `getCommonServices()` without importing core.
+
+```typescript
+// React hook/component
+const services = useApplicationServices();
+await services.gitRepositories.cloneRepository({
+  url, targetPath, credentialId, options,
+  onProgress: progress => updateTask(taskId, progress),
+});
+
+// Store/service outside React
+await getApplicationServices().gitRepositories.getRecentRepos();
+```
+
+### 12.3 Compatibility and deliberate boundary changes
+
+- **Native commands:** preserve names, serialized fields, results, promises,
+  synchronous throws and original rejection values. No error normalization,
+  retries, timeouts, success defaults or credential logging were added.
+- **Progress:** callers pass ordinary typed callbacks. The adapter creates the
+  SDK channel immediately before invocation and replaces only the `onProgress`
+  field. Native serialization, message order and background-task lifetime remain.
+- **Events:** `subscribe<T>` forwards event names and translated target scopes,
+  delivers the same payload object and returns the native unsubscribe promise.
+  Registration remains asynchronous and independent per subscriber. Owners keep
+  cleanup, late-registration disposal and notification readiness ordering.
+- **Windows:** the adapter returns application-owned handles and copied monitor
+  records. Logical dimensions and physical placement are explicit methods;
+  `currentMonitor()` preserves native `null`. SDK classes remain inside the
+  adapter. Window-role policy remains in core and notification sizing in its feature.
+- **Paths:** native home, absolute checks and joins retain host OS semantics;
+  browser adapters do not invent Unix paths or emulate Windows/UNC behavior.
+- **Capabilities:** replace platform identity checks with support checks. These
+  describe availability, not authentication, consent or backend authorization.
+- **Browser failures:** an unsupported native port now reports
+  `UnsupportedCapabilityError` with code `UNSUPPORTED_CAPABILITY`. This deliberately
+  replaces accidental missing-bridge errors for the new API. Native failures never
+  fall through to the browser adapter. Existing feature-owned fallbacks and
+  native-only credential/review requirements remain intact.
+- **Persistence/security:** preferences queue, revision conflict checks, rollback
+  and publication order remain with their current owners. Secret isolation,
+  redaction, account projection, immutable snapshots, review evidence/publication
+  checks and native/ACP guardrails are unchanged.
+
+Architecture checks allow SDK imports only inside adapters and keep adapter
+imports private to platform composition. They reject legacy primitive imports,
+computed module specifiers, direct command transport execution in callers, raw
+native bridge access and transport dependencies on runtime/stores/components.
+
+### 12.4 Verification
+
+| Check | Result |
+|---|---|
+| Full Node suite: `node --test --test-reporter=tap scripts/*.test.mjs` | **398 tests / 398 pass / 0 fail**, no skips/cancellations/todo; preceding baseline 388/388 |
+| Compiled Rust library suite: `cargo test --manifest-path backend/Cargo.toml --lib` | **180 pass / 0 fail / 0 ignored** |
+| `pnpm typecheck` | Pass |
+| `pnpm check:architecture` | Pass; **963 frontend files**, largest **395/450**; **327 Rust files**, largest **499/500** |
+| `cargo check --manifest-path backend/Cargo.toml` | Pass |
+| Isolated Vite production compilation | Pass with `configFile: false`, React/Tailwind plugins and the frontend alias; temporary output directory |
+| `git diff --check` | Pass |
+| Previous-consumer / wire-command audit | **70 consumers**, **127 before / 127 after**, no missing or additional commands |
+
+Ten added Node cases cover runtime sharing/isolation, explicit fake ports, all
+127 operation mappings, inert one-time initialization, rejected late dependency
+replacement, preferences write-queue failure recovery, legacy bridge-readiness
+capabilities and the stronger architecture boundary. Existing adapter/lifecycle
+fixtures were updated for payload callbacks, plain window contracts and private
+SDK objects. Native options, bytes, promise/result/error identity, real SDK
+channel serialization, event scopes, monitor-null and logical/physical placement
+remain covered. Existing workflow/security assertions were retained; source
+ownership assertions now follow the transport owner.
+
+No backend source, IPC schema/registration, package version, release metadata or
+dependency lockfile changes are included. The isolated build bypasses metadata
+sync/packaging scripts. Mixed static/dynamic import and large-chunk warnings
+remain. Checks ran headlessly on macOS; Windows/UNC behavior is modeled in tests,
+with no live Windows/Linux execution, native window/browser UI smoke test or
+real account/provider calls claimed.

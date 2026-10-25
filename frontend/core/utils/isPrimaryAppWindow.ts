@@ -1,10 +1,9 @@
-import { isTauri } from '../../common/services/ipc/ipcClient';
-import { getCurrentWindow } from '../../common/services/ipc/ipcWindow';
+import { getApplicationServices } from '../services/runtime/applicationRuntime';
 
 export function isPrimaryAppWindow(): boolean {
-  if (!isTauri()) return true;
+  if (!getApplicationServices().platform.capabilities.windows) return true;
   try {
-    return getCurrentWindow().label === 'main';
+    return getApplicationServices().platform.windows.current().label === 'main';
   } catch {
     return false;
   }

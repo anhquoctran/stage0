@@ -1,4 +1,5 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { copyTextToClipboard } from '../constants/gitGraphConstants';
 import { useGitStore } from '../store/useGitStore';
@@ -10,6 +11,7 @@ import { useGitCommitMessage } from './useGitCommitMessage';
 import { useGitGraphSearch } from './useGitGraphSearch';
 
 export function useGitGraphState({ isOpen, repoPath, onClose }: GitGraphModalProps) {
+  const appServices = useApplicationServices();
   const showToast = useGitStore((state) => state.showToast);
   const [graph, setGraph] = useState<GitGraph | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +32,7 @@ export function useGitGraphState({ isOpen, repoPath, onClose }: GitGraphModalPro
     setError(null);
     setIsLoading(true);
 
-    invoke<GitGraph>('get_current_branch_graph', { repoPath })
+    appServices.gitHistory.getCurrentBranchGraph({ repoPath })
       .then((result) => {
         if (isCurrentRequest) setGraph(result);
       })

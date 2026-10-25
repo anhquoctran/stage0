@@ -1,17 +1,18 @@
-import { invoke, isTauri } from '../services/ipc/ipcClient';
+import { getCommonServices } from '../services/getCommonServices';
+import { getPlatformServices } from '../services/ipc/platformServices';
 
 /**
  * Opens a URL in the operating system's default web browser.
- * Uses Tauri IPC 'open_external_url' when running in desktop app,
+ * Uses the external-link service when available,
  * falling back to window.open for web environments.
  */
 export async function openUrl(url: string): Promise<void> {
   const trimmed = url.trim();
   if (!trimmed) return;
 
-  if (isTauri()) {
+  if (getPlatformServices().capabilities.externalLinks) {
     try {
-      await invoke('open_external_url', { url: trimmed });
+      await getCommonServices().externalLinks.openExternalUrl({ url: trimmed });
       return;
     } catch (err) {
       console.warn('Failed to open URL via open_external_url:', err);

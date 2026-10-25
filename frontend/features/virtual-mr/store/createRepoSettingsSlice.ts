@@ -1,8 +1,7 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import { type RepoLabel } from '../types/RepoLabel';
 import { type RepoSettings } from '../types/RepoSettings';
-import { type GitRemoteDetail } from '../types/GitRemoteDetail';
-import { type GitTagInfo } from '../types/GitTagInfo';
 import { PRESET_REPO_LABELS } from '../types/virtualMr';
 import type { VirtualMrState } from '../types/VirtualMrState';
 
@@ -17,7 +16,7 @@ export const createRepoSettingsSlice = (
     const id = `label-${Date.now()}`;
     const newLabel: RepoLabel = { id, repoId: currentRepoId, name, color, description };
     try {
-      await invoke('create_repo_label', {
+      await getApplicationServices().repositorySettings.createRepoLabel({
         label: { id, repo_id: currentRepoId, name, color, description: description || null },
       });
       set({ repoLabels: [...repoLabels, newLabel] });
@@ -31,7 +30,7 @@ export const createRepoSettingsSlice = (
   updateRepoLabel: async (label: RepoLabel) => {
     const { repoLabels, sessions } = get();
     try {
-      await invoke('update_repo_label', {
+      await getApplicationServices().repositorySettings.updateRepoLabel({
         label: {
           id: label.id,
           repo_id: label.repoId,
@@ -55,7 +54,7 @@ export const createRepoSettingsSlice = (
   deleteRepoLabel: async (labelId: string) => {
     const { repoLabels, sessions } = get();
     try {
-      await invoke('delete_repo_label', { id: labelId });
+      await getApplicationServices().repositorySettings.deleteRepoLabel({ id: labelId });
       set({
         repoLabels: repoLabels.filter((l) => l.id !== labelId),
         sessions: sessions.map((s) => ({
@@ -88,7 +87,7 @@ export const createRepoSettingsSlice = (
     set({ repoSettings: newSettings });
 
     try {
-      await invoke('save_repo_settings', {
+      await getApplicationServices().repositorySettings.saveRepoSettings({
         settings: {
           repo_id: currentRepoId,
           default_base_branch: newSettings.defaultBaseBranch,
@@ -105,7 +104,7 @@ export const createRepoSettingsSlice = (
     const { currentRepoPath } = get();
     if (!currentRepoPath) return;
     try {
-      const res = await invoke<GitRemoteDetail[]>('list_git_remotes_detailed', { repoPath: currentRepoPath });
+      const res = await getApplicationServices().gitRemotes.listGitRemotesDetailed({ repoPath: currentRepoPath });
       set({ remotesDetailed: res || [] });
     } catch (err) {
       console.warn('Failed to fetch remotes detailed:', err);
@@ -115,28 +114,28 @@ export const createRepoSettingsSlice = (
   addRemote: async (name: string, url: string) => {
     const { currentRepoPath } = get();
     if (!currentRepoPath) return;
-    await invoke('add_git_remote', { repoPath: currentRepoPath, name, url });
+    await getApplicationServices().gitRemotes.addGitRemote({ repoPath: currentRepoPath, name, url });
     await get().fetchRemotesDetailed();
   },
 
   removeRemote: async (name: string) => {
     const { currentRepoPath } = get();
     if (!currentRepoPath) return;
-    await invoke('remove_git_remote', { repoPath: currentRepoPath, name });
+    await getApplicationServices().gitRemotes.removeGitRemote({ repoPath: currentRepoPath, name });
     await get().fetchRemotesDetailed();
   },
 
   setRemoteUrl: async (name: string, url: string) => {
     const { currentRepoPath } = get();
     if (!currentRepoPath) return;
-    await invoke('set_git_remote_url', { repoPath: currentRepoPath, name, url });
+    await getApplicationServices().gitRemotes.setGitRemoteUrl({ repoPath: currentRepoPath, name, url });
     await get().fetchRemotesDetailed();
   },
 
   testRemote: async (remoteOrUrl: string) => {
     const { currentRepoPath } = get();
     if (!currentRepoPath) return 'No repo open';
-    return await invoke<string>('test_git_remote', { repoPath: currentRepoPath, remoteOrUrl });
+    return await getApplicationServices().gitRemotes.testGitRemote({ repoPath: currentRepoPath, remoteOrUrl });
   },
 
   // Tags & Branches
@@ -144,7 +143,7 @@ export const createRepoSettingsSlice = (
     const { currentRepoPath } = get();
     if (!currentRepoPath) return;
     try {
-      const res = await invoke<GitTagInfo[]>('list_git_tags', { repoPath: currentRepoPath });
+      const res = await getApplicationServices().gitRemotes.listGitTags({ repoPath: currentRepoPath });
       set({ tags: res || [] });
     } catch (err) {
       console.warn('Failed to fetch tags:', err);
@@ -154,7 +153,7 @@ export const createRepoSettingsSlice = (
   createTag: async (name: string, commitRef?: string, message?: string) => {
     const { currentRepoPath } = get();
     if (!currentRepoPath) return;
-    await invoke('create_git_tag', {
+    await getApplicationServices().gitRemotes.createGitTag({
       repoPath: currentRepoPath,
       tagName: name,
       commitRef: commitRef || null,
@@ -166,14 +165,14 @@ export const createRepoSettingsSlice = (
   deleteTag: async (name: string) => {
     const { currentRepoPath } = get();
     if (!currentRepoPath) return;
-    await invoke('delete_git_tag', { repoPath: currentRepoPath, tagName: name });
+    await getApplicationServices().gitRemotes.deleteGitTag({ repoPath: currentRepoPath, tagName: name });
     await get().fetchTags();
   },
 
   createBranch: async (name: string, startPoint?: string) => {
     const { currentRepoPath } = get();
     if (!currentRepoPath) return;
-    await invoke('create_git_branch', {
+    await getApplicationServices().gitRemotes.createGitBranch({
       repoPath: currentRepoPath,
       branchName: name,
       startPoint: startPoint || null,
@@ -183,13 +182,13 @@ export const createRepoSettingsSlice = (
   deleteBranch: async (name: string, force = false) => {
     const { currentRepoPath } = get();
     if (!currentRepoPath) return;
-    await invoke('delete_git_branch', { repoPath: currentRepoPath, branchName: name, force });
+    await getApplicationServices().gitRemotes.deleteGitBranch({ repoPath: currentRepoPath, branchName: name, force });
   },
 
   renameBranch: async (oldName: string, newName: string) => {
     const { currentRepoPath } = get();
     if (!currentRepoPath) return;
-    await invoke('rename_git_branch', { repoPath: currentRepoPath, oldName, newName });
+    await getApplicationServices().gitRemotes.renameGitBranch({ repoPath: currentRepoPath, oldName, newName });
   },
 });
 

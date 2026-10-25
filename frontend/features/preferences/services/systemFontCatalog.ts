@@ -1,4 +1,5 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import {
   BUNDLED_UI_FONT_FAMILIES,
   LOW_PRIORITY_UI_FONT_FAMILIES,
@@ -53,8 +54,8 @@ export function loadSystemFontFamilies(requestBrowserAccess = false): Promise<st
   if (pending) return pending;
   const read = async () => {
     let names: string[];
-    if (isTauri()) {
-      names = await invoke<string[]>('list_system_font_families');
+    if (getApplicationServices().platform.capabilities.systemFonts) {
+      names = await getApplicationServices().systemFonts.listSystemFontFamilies();
     } else {
       // Local Font Access requires permission and a user gesture. Never prompt
       // on render or fabricate a browser list with document.fonts.check().

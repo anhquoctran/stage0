@@ -1,4 +1,5 @@
-import { homeDir } from '../../../common/services/ipc/ipcPath';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import { useEffect, useState } from 'react';
 import { resolveCloneDestination } from '../services/resolveCloneDestination';
 import type { CloneDestinationContext } from './CloneDestinationContext';
@@ -8,6 +9,7 @@ export function useCloneDestination({
   setErrorMessage,
   pickCloneFolder,
 }: CloneDestinationContext) {
+  const appServices = useApplicationServices();
   const [parentDir, setParentDir] = useState('');
 
   const [repoName, setRepoName] = useState('');
@@ -19,7 +21,7 @@ export function useCloneDestination({
   useEffect(() => {
     if (!isCloneModalOpen) return;
     let disposed = false;
-    void homeDir()
+    void appServices.platform.paths.homeDirectory()
       .then((directory) => {
         // A late home lookup must not replace a folder the user has chosen.
         if (!disposed) setParentDir((current) => current || directory);

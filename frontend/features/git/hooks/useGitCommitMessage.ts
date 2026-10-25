@@ -1,8 +1,10 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import { useEffect, useRef, useState } from 'react';
 import type { GitCommitMessageContext } from './GitCommitMessageContext';
 
 export function useGitCommitMessage({ isOpen, repoPath, selectedCommit }: GitCommitMessageContext) {
+  const appServices = useApplicationServices();
   const [selectedCommitMessage, setSelectedCommitMessage] = useState<string | null>(null);
 
   const [isLoadingCommitMessage, setIsLoadingCommitMessage] = useState(false);
@@ -23,7 +25,7 @@ export function useGitCommitMessage({ isOpen, repoPath, selectedCommit }: GitCom
     setSelectedCommitMessage(null);
     setCommitMessageError(null);
     setIsLoadingCommitMessage(true);
-    invoke<string>('get_git_commit_message', {
+    appServices.gitHistory.getGitCommitMessage({
       repoPath,
       commitHash: selectedCommit.hash,
     })

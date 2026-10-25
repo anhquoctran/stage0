@@ -1,9 +1,11 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import { useEffect, useMemo, useState } from 'react';
 import type { CommitMessageSearchResult } from '../types/CommitMessageSearchResult';
 import type { GitGraphSearchContext } from './GitGraphSearchContext';
 
 export function useGitGraphSearch({ isOpen, repoPath, graph, commits }: GitGraphSearchContext) {
+  const appServices = useApplicationServices();
   const [query, setQuery] = useState('');
 
   const [debouncedSearchText, setDebouncedSearchText] = useState('');
@@ -50,7 +52,7 @@ export function useGitGraphSearch({ isOpen, repoPath, graph, commits }: GitGraph
     setMessageSearchResult(null);
     setMessageSearchError(null);
     setIsSearchingCommitMessages(true);
-    invoke<string[]>('search_git_commit_messages', {
+    appServices.gitHistory.searchGitCommitMessages({
       repoPath,
       query: activeSearchText,
       caseSensitive,

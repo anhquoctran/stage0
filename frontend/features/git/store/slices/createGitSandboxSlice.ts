@@ -1,9 +1,7 @@
-import { invoke } from '../../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+
 import type { StateCreator } from 'zustand';
 import type { GitState } from '../../types/GitState';
-import { type SandboxAdapterInfo } from '../../types/SandboxAdapterInfo';
-import { type SandboxExecutionResult } from '../../types/SandboxExecutionResult';
-import { type SandboxInstanceInfo } from '../../types/SandboxInstanceInfo';
 import { type SandboxType } from '../../types/SandboxType';
 
 export const createGitSandboxSlice: StateCreator<
@@ -34,7 +32,7 @@ export const createGitSandboxSlice: StateCreator<
 
   fetchAvailableSandboxes: async () => {
     try {
-      const sandboxes = await invoke<SandboxAdapterInfo[]>('get_available_sandboxes');
+      const sandboxes = await getApplicationServices().sandboxes.getAvailableSandboxes();
       set({ availableSandboxes: sandboxes });
     } catch (err) {
       console.warn('Failed to fetch available sandboxes:', err);
@@ -43,7 +41,7 @@ export const createGitSandboxSlice: StateCreator<
 
   fetchActiveSandbox: async () => {
     try {
-      const active = await invoke<SandboxType>('get_active_sandbox');
+      const active = await getApplicationServices().sandboxes.getActiveSandbox();
       set({ activeSandboxType: active });
     } catch (err) {
       console.warn('Failed to fetch active sandbox:', err);
@@ -53,7 +51,7 @@ export const createGitSandboxSlice: StateCreator<
   setActiveSandbox: async (type: SandboxType) => {
     set({ isSandboxLoading: true });
     try {
-      const active = await invoke<SandboxType>('set_active_sandbox', { adapterType: type });
+      const active = await getApplicationServices().sandboxes.setActiveSandbox({ adapterType: type });
       set({ activeSandboxType: active });
       const label =
         active === 'in_memory'
@@ -74,7 +72,7 @@ export const createGitSandboxSlice: StateCreator<
     const { currentRepo, baseBranch, compareBranch } = get();
     if (!currentRepo || !baseBranch || !compareBranch) return null;
     try {
-      const instance = await invoke<SandboxInstanceInfo>('create_sandbox_instance', {
+      const instance = await getApplicationServices().sandboxes.createSandboxInstance({
         repoPath: currentRepo.local_path,
         base: baseBranch,
         compare: compareBranch,
@@ -92,7 +90,7 @@ export const createGitSandboxSlice: StateCreator<
 
   destroySandboxInstance: async (id: string) => {
     try {
-      await invoke('destroy_sandbox_instance', { instanceId: id });
+      await getApplicationServices().sandboxes.destroySandboxInstance({ instanceId: id });
       set((state) => ({
         activeSandboxInstances: state.activeSandboxInstances.filter((i) => i.id !== id),
       }));
@@ -104,7 +102,7 @@ export const createGitSandboxSlice: StateCreator<
 
   executeSandboxCommand: async (id: string, command: string, args: string[]) => {
     try {
-      const result = await invoke<SandboxExecutionResult>('execute_sandbox_command', {
+      const result = await getApplicationServices().sandboxes.executeSandboxCommand({
         instanceId: id,
         command,
         args,

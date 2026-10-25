@@ -1,11 +1,12 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import type { RepoInfo } from '../types/RepoInfo';
 
 export const syncRecentRepositoriesMenu = async (repositories: RepoInfo[]): Promise<void> => {
-  if (typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)) return;
+  if (!getApplicationServices().platform.capabilities.menuUpdates) return;
 
   try {
-    await invoke('update_recent_repositories_menu', { repositories });
+    await getApplicationServices().application.updateRecentRepositoriesMenu({ repositories });
   } catch (error) {
     console.warn('Failed to update the native recent repositories menu:', error);
   }

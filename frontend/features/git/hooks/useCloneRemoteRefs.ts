@@ -1,4 +1,5 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import { useEffect, useState } from 'react';
 import type { RemoteCloneRefs } from '../types/RemoteCloneRefs';
 import type { UrlValidationStatus } from '../types/UrlValidationStatus';
@@ -12,6 +13,7 @@ export function useCloneRemoteRefs({
   hasSelectedCredential,
   selectedCredentialId,
 }: CloneRemoteRefsContext) {
+  const appServices = useApplicationServices();
   const [urlStatus, setUrlStatus] = useState<UrlValidationStatus>('idle');
 
   const [urlMessage, setUrlMessage] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function useCloneRemoteRefs({
 
     const timer = setTimeout(async () => {
       try {
-        const refs = await invoke<RemoteCloneRefs>('get_clone_remote_refs', {
+        const refs = await appServices.gitRepositories.getCloneRemoteRefs({
           url: trimmed,
           credentialId: useSavedCredential ? selectedCredentialId : null,
         });

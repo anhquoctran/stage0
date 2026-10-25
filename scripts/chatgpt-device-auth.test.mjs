@@ -65,7 +65,9 @@ test('active account UI requires an explicit supported native action and never o
   const { AcpAgentAccountSection } = loadWithMocks(
     new URL('../frontend/features/ai/components/external-agents/AcpAgentAccountSection.tsx', import.meta.url), {
       react: harness.react,
-      '@tauri-apps/api/core': { isTauri: () => native, invoke: async (...args) => calls.push(args) },
+      '../../../../core/services/runtime/useApplicationServices': {
+        useApplicationServices: () => ({ platform: { capabilities: { externalAgents: native } } }),
+      },
       '../../../../common/components/CustomSelect': { CustomSelect: () => null },
     });
   const render = async () => componentNodes(await harness.render(AcpAgentAccountSection, { account, agentId: 'selected' }));

@@ -1,4 +1,5 @@
-import { listen } from '../../../common/services/ipc/ipcEvents';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import React, { useEffect, useState } from 'react';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Key } from '../../../common/components/icons/Key';
@@ -39,6 +40,7 @@ const CREDENTIAL_TYPE_OPTIONS: CustomSelectOption<GitCredentialType>[] = [
 ];
 
 export const GitCredentialsTab: React.FC = () => {
+  const appServices = useApplicationServices();
   const {
     credentials,
     osInfo,
@@ -73,7 +75,7 @@ export const GitCredentialsTab: React.FC = () => {
   useEffect(() => {
     let disposed = false;
     let unlisten: (() => void) | undefined;
-    void listen('git-credentials-updated', () => {
+    void appServices.platform.events.subscribe('git-credentials-updated', () => {
       void fetchCredentials();
     })
       .then((stopListening) => {

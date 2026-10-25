@@ -1,4 +1,5 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import type { VirtualMrSession } from '../types/VirtualMrSession';
 import type { VirtualMrSessionSaveOutcome } from '../types/VirtualMrSessionSaveOutcome';
 
@@ -30,7 +31,7 @@ export function pendingSessionSnapshot(sessionId: string): VirtualMrSession | un
 }
 
 export async function saveSessionSnapshot(session: VirtualMrSession): Promise<VirtualMrSessionSaveOutcome> {
-  const result = await invoke<VirtualMrSessionSaveOutcome>('save_virtual_mr_session', {
+  const result = await getApplicationServices().virtualMrs.saveVirtualMrSession({
     session: {
       id: session.id,
       repo_id: session.repoId,

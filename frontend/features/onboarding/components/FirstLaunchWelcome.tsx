@@ -1,5 +1,6 @@
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import React, { useEffect, useRef, useState } from 'react';
-import { invoke } from '../../../common/services/ipc/ipcClient';
+
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { X } from '../../../common/components/icons/X';
 import { isMacOS } from '../../../common/utils/shortcuts';
@@ -34,6 +35,7 @@ const ARTWORK = [BranchArtwork, CompareArtwork, ReviewArtwork];
 const AI_SETUP_SLIDE = SLIDES.findIndex((slide) => slide.id === 'ai-setup');
 
 export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComplete }) => {
+  const appServices = useApplicationServices();
   const [activeSlide, setActiveSlide] = useState(0);
   const { settings, setSettings, isSaving, saveError, save, reload } = useOnboardingPreferences();
   const aiSetup = useOnboardingAiSetup();
@@ -76,7 +78,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   finishRef.current = finish;
 
   const minimizeWindow = () => {
-    void invoke('window_minimize').catch((error) => console.warn('Minimize error:', error));
+    void appServices.application.windowMinimize().catch((error) => console.warn('Minimize error:', error));
   };
 
   useEffect(() => {

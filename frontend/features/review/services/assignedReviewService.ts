@@ -1,4 +1,5 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { resolveReviewBotConfig } from '../utils/resolveReviewBotConfig';
@@ -6,7 +7,6 @@ import { isReviewStartingForSession, useReviewStore } from '../store/useReviewSt
 import { useGitStore } from '../../git/store/useGitStore';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import type { ReviewRun } from '../types/ReviewRun';
-import type { ReviewRunDetail } from '../types/ReviewRunDetail';
 import type { BotReviewer } from '../../virtual-mr/types/BotReviewer';
 
 const attemptedHeadBySession = new Map<string, string>();
@@ -84,7 +84,7 @@ export interface AssignedReviewBatchResult {
 async function waitForReviewRun(runId: string, onUpdate: (run: ReviewRun) => void | Promise<void>): Promise<ReviewRun> {
   const deadline = Date.now() + 330_000;
   while (Date.now() < deadline) {
-    const detail = await invoke<ReviewRunDetail>('get_ai_review', { runId });
+    const detail = await getApplicationServices().reviews.getAiReview({ runId });
     await useReviewStore.getState().syncRun(detail);
     await onUpdate(detail.run);
     if (detail.run.status !== 'running') {
@@ -222,8 +222,8 @@ export async function reviewAssignedSessionAfterGitChange(repoPath: string): Pro
   checkingSession.add(session.id);
   try {
     const [baseSha, headSha] = await Promise.all([
-      invoke<string>('get_git_ref_sha', { repoPath, reference: session.baseBranch }),
-      invoke<string>('get_git_ref_sha', { repoPath, reference: session.compareBranch }),
+      getApplicationServices().gitHistory.getGitRefSha({ repoPath, reference: session.baseBranch }),
+      getApplicationServices().gitHistory.getGitRefSha({ repoPath, reference: session.compareBranch }),
     ]);
     const revisionKey = `${baseSha}:${headSha}`;
     if (!baseSha || !headSha || attemptedHeadBySession.get(session.id) === revisionKey) return;
@@ -238,7 +238,7 @@ export async function reviewAssignedSessionAfterGitChange(repoPath: string): Pro
       }
       return;
     }
-    const runs = await invoke<ReviewRun[]>('list_ai_reviews', { sessionId: session.id });
+    const runs = await getApplicationServices().reviews.listAiReviews({ sessionId: session.id });
     const latestRun = [...runs].sort((left, right) => right.startedAt.localeCompare(left.startedAt))[0];
     if (latestRun?.snapshot.headSha === headSha && latestRun.snapshot.baseSha === baseSha) {
       attemptedHeadBySession.set(session.id, revisionKey);

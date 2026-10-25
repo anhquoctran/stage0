@@ -1,5 +1,6 @@
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { invoke } from '../../../common/services/ipc/ipcClient';
+
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import type { AcpSessionConfigOption } from '../types/AcpSessionConfigOption';
@@ -13,6 +14,7 @@ const KIND_LABELS: Record<AcpSessionConfigOption['reviewKind'], string> = {
 };
 
 export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> = ({ agent, value = {}, onChange }) => {
+  const appServices = useApplicationServices();
   const [options, setOptions] = useState<AcpSessionConfigOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
     if (!agent) return () => { current = false; };
 
     setLoading(true);
-    void invoke<AcpSessionConfigOption[]>('acp_agent_review_config_options', { config: agent })
+    void appServices.externalAgents.acpAgentReviewConfigOptions({ config: agent })
       .then(async (result) => {
         if (!current || requestVersion.current !== version) return;
         setOptions(result);
@@ -38,7 +40,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
           return option.reviewKind === 'model' && typeof saved === 'string' ? [[option.id, saved]] : [];
         }));
         if (Object.keys(modelOverrides).length > 0) {
-          const modelSpecificOptions = await invoke<AcpSessionConfigOption[]>('acp_agent_review_config_options', {
+          const modelSpecificOptions = await appServices.externalAgents.acpAgentReviewConfigOptions({
             config: agent,
             configOverrides: modelOverrides,
           });
@@ -67,7 +69,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
     const version = ++requestVersion.current;
     setLoading(true);
     setError(null);
-    void invoke<AcpSessionConfigOption[]>('acp_agent_review_config_options', {
+    void appServices.externalAgents.acpAgentReviewConfigOptions({
       config: agent,
       configOverrides: modelOverrides,
     })

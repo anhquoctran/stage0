@@ -1,11 +1,10 @@
-import { invoke } from '../../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+
 import type { StoreApi } from 'zustand';
-import { createGitProgressChannel } from '../../services/createGitProgressChannel';
+import { createGitProgressHandler } from '../../services/createGitProgressHandler';
 import { getErrorMessage } from '../../services/gitStoreEffects';
 import type { CloneOptions } from '../../types/CloneOptions';
 import type { GitState } from '../../types/GitState';
-import { type OpenRepoOutcome } from '../../types/OpenRepoOutcome';
-import { type RepoInfo } from '../../types/RepoInfo';
 import { useGitTaskStore } from '../useGitTaskStore';
 export const createGitCloneActions = (
   set: StoreApi<GitState>['setState'],
@@ -13,7 +12,7 @@ export const createGitCloneActions = (
 ): Pick<GitState, 'pickCloneFolder' | 'cloneRepo'> => ({
   pickCloneFolder: async () => {
     try {
-      const folder = await invoke<string | null>('pick_folder');
+      const folder = await getApplicationServices().application.pickFolder();
       return folder;
     } catch (err) {
       console.warn('Failed to pick folder:', err);
@@ -30,12 +29,12 @@ export const createGitCloneActions = (
     const taskId = useGitTaskStore.getState().startTask('clone', 'Clone repository', targetPath);
     set({ error: null, isCloneModalOpen: false });
     try {
-      const repo = await invoke<RepoInfo>('clone_repository', {
+      const repo = await getApplicationServices().gitRepositories.cloneRepository({
         url,
         targetPath,
         credentialId: credentialId ?? null,
         options: options ?? null,
-        onProgress: createGitProgressChannel(taskId),
+        onProgress: createGitProgressHandler(taskId),
       });
       if (repo) {
         useGitTaskStore.getState().updateTask(taskId, {
@@ -46,7 +45,7 @@ export const createGitCloneActions = (
         try {
           // Route through the window manager even after backgrounding or a repo
           // switch. It preserves the current repo by opening/focusing another window.
-          const outcome = await invoke<OpenRepoOutcome>('open_repo_by_path', {
+          const outcome = await getApplicationServices().gitRepositories.openRepoByPath({
             repoPath: repo.local_path,
           });
           if (outcome.action === 'opened_here') {

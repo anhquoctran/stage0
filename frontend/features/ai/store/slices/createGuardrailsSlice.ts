@@ -1,9 +1,8 @@
-import { invoke, isTauri } from '../../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+
 import type { StateCreator } from 'zustand';
 import { loadPersistedState, persistState } from '../../services/aiMcpPersistence';
 import type { AiMcpState } from '../../types/AiMcpState';
-import { type GuardrailAuditEvent } from '../../types/GuardrailAuditEvent';
-import { type GuardrailEvaluationResult } from '../../types/GuardrailEvaluationResult';
 import { type GuardrailPolicy } from '../../types/GuardrailPolicy';
 import { DEFAULT_GUARDRAIL_POLICY } from '../../types/guardrails';
 
@@ -35,10 +34,10 @@ export const createGuardrailsSlice =
     isGuardrailLoading: false,
 
     loadGuardrailPolicy: async () => {
-      if (!isTauri()) return;
+      if (!getApplicationServices().platform.capabilities.keychain) return;
       try {
         set({ isGuardrailLoading: true });
-        const backendPolicy = await invoke<GuardrailPolicy>('get_guardrail_policy');
+        const backendPolicy = await getApplicationServices().guardrails.getGuardrailPolicy();
         if (backendPolicy) {
           set({ guardrailPolicy: backendPolicy });
           persistState(get().aiConfig, get().mcpServers, backendPolicy, get().externalAgents);
@@ -54,9 +53,9 @@ export const createGuardrailsSlice =
       const nextPolicy: GuardrailPolicy = { ...get().guardrailPolicy, ...partial };
       set({ guardrailPolicy: nextPolicy });
       persistState(get().aiConfig, get().mcpServers, nextPolicy, get().externalAgents);
-      if (isTauri()) {
+      if (getApplicationServices().platform.capabilities.keychain) {
         try {
-          await invoke('update_guardrail_policy', { policy: nextPolicy });
+          await getApplicationServices().guardrails.updateGuardrailPolicy({ policy: nextPolicy });
         } catch (err) {
           console.error('Failed to sync guardrail policy to backend:', err);
         }
@@ -64,9 +63,9 @@ export const createGuardrailsSlice =
     },
 
     resetGuardrailPolicy: async (mode) => {
-      if (isTauri()) {
+      if (getApplicationServices().platform.capabilities.keychain) {
         try {
-          const resetPolicy = await invoke<GuardrailPolicy>('reset_guardrail_policy', {
+          const resetPolicy = await getApplicationServices().guardrails.resetGuardrailPolicy({
             mode,
           });
           set({ guardrailPolicy: resetPolicy });
@@ -82,9 +81,9 @@ export const createGuardrailsSlice =
     },
 
     loadGuardrailAuditLog: async (limit = 50) => {
-      if (!isTauri()) return;
+      if (!getApplicationServices().platform.capabilities.keychain) return;
       try {
-        const logs = await invoke<GuardrailAuditEvent[]>('get_guardrail_audit_log', {
+        const logs = await getApplicationServices().guardrails.getGuardrailAuditLog({
           limit,
         });
         set({ guardrailAuditLog: logs || [] });
@@ -94,9 +93,9 @@ export const createGuardrailsSlice =
     },
 
     clearGuardrailAuditLog: async () => {
-      if (isTauri()) {
+      if (getApplicationServices().platform.capabilities.keychain) {
         try {
-          await invoke('clear_guardrail_audit_log');
+          await getApplicationServices().guardrails.clearGuardrailAuditLog();
         } catch (err) {
           console.warn('Failed to clear audit log:', err);
         }
@@ -105,9 +104,9 @@ export const createGuardrailsSlice =
     },
 
     simulateGuardrailCheck: async (toolName, args) => {
-      if (isTauri()) {
+      if (getApplicationServices().platform.capabilities.keychain) {
         try {
-          const res = await invoke<GuardrailEvaluationResult>('simulate_guardrail_check', {
+          const res = await getApplicationServices().guardrails.simulateGuardrailCheck({
             toolName,
             arguments: args,
           });

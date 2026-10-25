@@ -1,4 +1,5 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import { useState } from 'react';
 import type { AcpAgentPromptContext } from './AcpAgentPromptContext';
 
@@ -7,6 +8,7 @@ export function useAcpAgentPrompt({
   setError,
   currentRepoPath,
 }: AcpAgentPromptContext) {
+  const appServices = useApplicationServices();
   const [prompt, setPrompt] = useState('What can you help me with?');
 
   const [response, setResponse] = useState('');
@@ -19,7 +21,7 @@ export function useAcpAgentPrompt({
     setError(null);
     setResponse('');
     try {
-      const result = await invoke<string>('acp_agent_prompt', {
+      const result = await appServices.externalAgents.acpAgentPrompt({
         config: detailAgent,
         prompt,
         cwd: currentRepoPath,

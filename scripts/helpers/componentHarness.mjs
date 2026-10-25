@@ -2,6 +2,25 @@ import fs from 'node:fs';
 import ts from 'typescript';
 
 export function loadWithMocks(url, dependencies, context) {
+  if (!context) {
+    const originalDependencies = dependencies;
+    dependencies = new Proxy({ ...dependencies }, {
+      get: (target, key) => Object.hasOwn(target, key) ? target[key] : originalDependencies[key],
+    });
+    // Legacy workflow fixtures exercise the native adapter. Explicit browser
+    // fixtures retain isTauri: false; missing SDK pieces remain unavailable.
+    if (Object.keys(dependencies).some((id) => id.startsWith('@tauri-apps/'))) {
+      dependencies['@tauri-apps/api/core'] = { isTauri: () => true, ...dependencies['@tauri-apps/api/core'] };
+    }
+    if (dependencies.react) {
+      const react = dependencies.react;
+      dependencies.react = {
+        createContext: (value) => ({ _currentValue: value }),
+        useContext: (context) => context._currentValue,
+        ...react,
+      };
+    }
+  }
   if (url.pathname.endsWith('.json')) return { default: JSON.parse(fs.readFileSync(url, 'utf8')) };
   context ??= {
     mocks: new Map(Object.entries(dependencies).filter(([id]) => id.startsWith('.') || id.startsWith('@/'))

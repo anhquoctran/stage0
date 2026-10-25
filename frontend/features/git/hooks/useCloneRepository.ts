@@ -1,4 +1,5 @@
-import { listen } from '../../../common/services/ipc/ipcEvents';
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGitCredentialsStore } from '../../credentials/store/useGitCredentialsStore';
 import { useGitStore } from '../store/useGitStore';
@@ -9,6 +10,7 @@ import { useCloneDestination } from './useCloneDestination';
 import { useCloneRemoteRefs } from './useCloneRemoteRefs';
 
 export function useCloneRepository() {
+  const appServices = useApplicationServices();
   const { isCloneModalOpen, setIsCloneModalOpen, cloneRepo, pickCloneFolder } = useGitStore();
   const credentials = useGitCredentialsStore((state) => state.credentials);
   const credentialsLoading = useGitCredentialsStore((state) => state.isLoading);
@@ -69,7 +71,7 @@ export function useCloneRepository() {
     void fetchCredentials();
     let disposed = false;
     let unlisten: (() => void) | undefined;
-    void listen('git-credentials-updated', () => {
+    void appServices.platform.events.subscribe('git-credentials-updated', () => {
       void fetchCredentials();
     })
       .then((stopListening) => {

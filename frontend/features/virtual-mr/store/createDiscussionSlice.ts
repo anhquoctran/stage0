@@ -1,7 +1,7 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import { type VirtualMrComment } from '../types/VirtualMrComment';
 import { type VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
-import { type DbDiscussion } from '../types/DbDiscussion';
 import { type DiscussionCodeSnippet } from '../types/DiscussionCodeSnippet';
 import { type ReviewActionType } from '../types/ReviewActionType';
 import { fromDbDiscussion } from '../utils/fromDbDiscussion';
@@ -61,7 +61,7 @@ export const createDiscussionSlice = (
     };
 
     try {
-      await invoke('create_mr_discussion', {
+      await getApplicationServices().discussions.createMrDiscussion({
         discussion: {
           id: newDisc.id,
           session_id: sessionId,
@@ -140,7 +140,7 @@ export const createDiscussionSlice = (
       updatedAt: now,
     };
     try {
-      await invoke('add_mr_comment', {
+      await getApplicationServices().discussions.addMrComment({
         comment: {
           id: commentId,
           discussion_id: discussionId,
@@ -207,7 +207,7 @@ export const createDiscussionSlice = (
     set({ sessions: updated });
 
     try {
-      await invoke('resolve_mr_discussion', {
+      await getApplicationServices().discussions.resolveMrDiscussion({
         discussionId,
         isResolved,
         resolveType,
@@ -247,7 +247,7 @@ export const createDiscussionSlice = (
 
   refreshDiscussions: async (sessionId: string) => {
     const repoId = get().currentRepoId;
-    const items = await invoke<DbDiscussion[]>('list_mr_discussions', { sessionId });
+    const items = await getApplicationServices().discussions.listMrDiscussions({ sessionId });
     if (get().currentRepoId !== repoId) return;
     set((state) => ({
       sessions: state.sessions.map((session) =>

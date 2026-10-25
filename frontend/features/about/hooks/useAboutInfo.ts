@@ -1,14 +1,16 @@
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import { useState, useEffect } from 'react';
-import { invoke } from '../../../common/services/ipc/ipcClient';
+
 import { SOFTWARE_ABOUT } from '../config/about';
 import { type SoftwareAboutInfo } from '../types/SoftwareAboutInfo';
 
 export function useAboutInfo(): SoftwareAboutInfo {
+  const appServices = useApplicationServices();
   const [aboutInfo, setAboutInfo] = useState<SoftwareAboutInfo>(SOFTWARE_ABOUT);
 
   useEffect(() => {
     let isMounted = true;
-    invoke<SoftwareAboutInfo>('get_app_info')
+    appServices.about.getAppInfo()
       .then((info) => {
         if (isMounted && info) {
           setAboutInfo(info);

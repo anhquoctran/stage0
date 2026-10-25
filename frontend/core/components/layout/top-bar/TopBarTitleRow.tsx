@@ -1,6 +1,7 @@
+import { useApplicationServices } from '../../../services/runtime/useApplicationServices';
 import React from 'react';
 import { clsx } from 'clsx';
-import { invoke } from '../../../../common/services/ipc/ipcClient';
+
 import { AppLogo } from '../../../../common/components/AppLogo';
 import { MenuBar } from '../MenuBar';
 import { WindowControls } from '../WindowControls';
@@ -10,6 +11,7 @@ import { useAboutInfo } from '../../../../features/about/hooks/useAboutInfo';
 export const TopBarTitleRow: React.FC<{
   isMac: boolean;
 }> = ({ isMac }) => {
+  const appServices = useApplicationServices();
   const { currentRepo, baseBranch, compareBranch } = useGitStore();
   const about = useAboutInfo();
 
@@ -17,7 +19,7 @@ export const TopBarTitleRow: React.FC<{
     if ((e.target as HTMLElement).closest('button, input, select, [role="button"], a')) {
       return;
     }
-    invoke<boolean>('window_toggle_maximize').catch(() => {});
+    appServices.application.windowToggleMaximize().catch(() => {});
   };
 
   const titleText = currentRepo

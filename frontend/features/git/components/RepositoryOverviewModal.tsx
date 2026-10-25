@@ -1,5 +1,6 @@
+import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import React, { useEffect, useState } from 'react';
-import { invoke } from '../../../common/services/ipc/ipcClient';
+
 import { Bot } from '../../../common/components/icons/Bot';
 import { Check } from '../../../common/components/icons/Check';
 import { Copy } from '../../../common/components/icons/Copy';
@@ -27,6 +28,7 @@ import {
 } from '../utils/fileActions';
 
 export const RepositoryOverviewModal: React.FC = () => {
+  const appServices = useApplicationServices();
   const {
     currentRepo,
     isRepoOverviewOpen,
@@ -58,7 +60,7 @@ export const RepositoryOverviewModal: React.FC = () => {
     if (!isRepoOverviewOpen || !currentRepo) return;
     let cancelled = false;
 
-    invoke<[string, string]>('get_git_user_identity_cmd', {
+    appServices.gitHistory.getGitUserIdentityCmd({
       repoPath: currentRepo.local_path,
     })
       .then(([name, email]) => {

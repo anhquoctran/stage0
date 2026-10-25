@@ -1,12 +1,13 @@
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 import { create } from 'zustand';
-import { invoke } from '../../../common/services/ipc/ipcClient';
+
 import type { GitBinaryInfo } from '../types/GitBinaryInfo';
 import type { GitBinaryState } from '../types/GitBinaryState';
 
 const isMockMode = (): boolean => {
   if (typeof window === 'undefined') return true;
   return (
-    !(window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ ||
+    !getApplicationServices().platform.capabilities.executableDiscovery ||
     window.location.search.includes('mock')
   );
 };
@@ -62,7 +63,7 @@ export const useGitBinaryStore = create<GitBinaryState>((set, get) => ({
       return { id: get().activeBinaryId, path: get().activeBinaryPath };
     }
     try {
-      const res = await invoke<[string, string]>('get_active_git_binary');
+      const res = await getApplicationServices().gitBinaries.getActiveGitBinary();
       const [id, path] = res;
       set({ activeBinaryId: id, activeBinaryPath: path });
       return { id, path };
@@ -85,7 +86,7 @@ export const useGitBinaryStore = create<GitBinaryState>((set, get) => ({
       return list;
     }
     try {
-      const list = await invoke<GitBinaryInfo[]>('scan_git_binaries');
+      const list = await getApplicationServices().gitBinaries.scanGitBinaries();
       const active = list.find((b) => b.is_active);
       const activeId = active?.id || get().activeBinaryId;
       const activePath = active?.path || get().activeBinaryPath;
@@ -114,7 +115,7 @@ export const useGitBinaryStore = create<GitBinaryState>((set, get) => ({
       return true;
     }
     try {
-      await invoke('set_active_git_binary', { id, path });
+      await getApplicationServices().gitBinaries.setActiveGitBinary({ id, path });
       set((state) => ({
         activeBinaryId: id,
         activeBinaryPath: path,
@@ -151,7 +152,7 @@ export const useGitBinaryStore = create<GitBinaryState>((set, get) => ({
       };
     }
     try {
-      const info = await invoke<GitBinaryInfo>('validate_custom_git_binary', { path });
+      const info = await getApplicationServices().gitBinaries.validateCustomGitBinary({ path });
       set({ isLoading: false });
       return info;
     } catch (err: unknown) {
@@ -166,7 +167,7 @@ export const useGitBinaryStore = create<GitBinaryState>((set, get) => ({
       return 'C:\\Tools\\Git\\bin\\git.exe';
     }
     try {
-      const picked = await invoke<string | null>('pick_git_executable');
+      const picked = await getApplicationServices().gitBinaries.pickGitExecutable();
       return picked;
     } catch (err: unknown) {
       console.warn('Failed to pick git executable:', err);
@@ -180,7 +181,7 @@ export const useGitBinaryStore = create<GitBinaryState>((set, get) => ({
       return;
     }
     try {
-      await invoke('restart_app');
+      await getApplicationServices().application.restartApp();
     } catch (err: unknown) {
       console.error('Failed to restart app via command:', err);
       window.location.reload();

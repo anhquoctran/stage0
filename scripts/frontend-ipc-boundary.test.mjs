@@ -56,15 +56,15 @@ test('IPC boundary detects every supported dependency syntax and reports its loc
   }
 });
 
-test('IPC boundary allows facade dependencies, ordinary imports and nondependency mentions', (t) => {
+test('IPC boundary allows adapter dependencies, ordinary imports and nondependency mentions', (t) => {
   const root = fixture(t, {
-    'frontend/common/services/ipc/ipcClient.ts': "export { invoke } from '@tauri-apps/api/core';",
-    'frontend/common/services/ipc/nested/plugin.ts': "import(('@tauri-apps/plugin-fs')); (require)('@tauri-apps/api/core');",
-    'frontend/common/services/ipc/types.ts': "export type { UnlistenFn } from '@tauri-apps/api/event';",
+    'frontend/common/services/ipc/adapters/tauri/commands.ts': "export { invoke } from '@tauri-apps/api/core';",
+    'frontend/common/services/ipc/adapters/tauri/plugin.ts': "import(('@tauri-apps/plugin-fs')); (require)('@tauri-apps/api/core');",
+    'frontend/common/services/ipc/adapters/tauri/types.ts': "export type { UnlistenFn } from '@tauri-apps/api/event';",
     'frontend/features/git/component.tsx': `
-      import { invoke } from '@/common/services/ipc/ipcClient';
-      import type { Window } from '../../common/services/ipc/types';
-      export { listen } from '../../common/services/ipc/ipcEvents';
+      import { getApplicationServices } from '@/core/services/runtime/applicationRuntime';
+      import type { WindowHandle } from '../../common/services/ipc/contracts/WindowHandle';
+      export type { EventService } from '../../common/services/ipc/contracts/EventService';
       import React from 'react';
       void import('./component');
       require('ordinary-package');
@@ -134,8 +134,42 @@ test('architecture command fails on an IPC violation and passes once it uses the
   assert.equal(failed.status, 1, failed.stderr);
   assert.match(failed.stderr, /frontend\/new-consumer\.ts:1:\d+: @tauri-apps\/api\/core/);
   fs.writeFileSync(path.join(root, 'frontend', 'new-consumer.ts'),
-    "import { invoke } from './common/services/ipc/ipcClient';");
+    "import { getApplicationServices } from './core/services/runtime/applicationRuntime';");
   const passed = spawnSync(process.execPath, [command], { encoding: 'utf8' });
   assert.equal(passed.status, 0, passed.stderr);
   assert.match(passed.stdout, /Architecture OK/);
+});
+
+
+test('platform contracts cannot leak native types or adapter factories', (t) => {
+  const root = fixture(t, {
+    'frontend/common/services/ipc/contracts/WindowHandle.ts': "export type { Window } from '@tauri-apps/api/window';",
+    'frontend/common/services/ipc/index.ts': "export { createTauriCommands } from './adapters/tauri/commands';",
+    'frontend/features/git/view.ts': "import { createTauriCommands } from '@/common/services/ipc/adapters/tauri/commands';",
+    'frontend/features/git/old.ts': "import { invoke } from '@/common/services/ipc/ipcClient';",
+    'frontend/features/git/direct.ts': "runtime.platform.commands.executeCommand('clone_repository');",
+  });
+  const { violations } = checkFrontendIpcBoundary(root);
+  assert.equal(violations.length, 5);
+  assert.ok(violations.some(v => /native types|SDK dependency/.test(v.reason)));
+  assert.ok(violations.some(v => /private/.test(v.reason)));
+  assert.ok(violations.some(v => /replaced/.test(v.reason)));
+  assert.ok(violations.some(v => /services\/transport/.test(v.reason)));
+});
+
+
+test('transport ownership rejects runtime cycles, bridge internals and destructured command execution', t => {
+  const root = fixture(t, {
+    'frontend/features/git/services/transport/invalid.ts': "import { useGitStore } from '../../store/useGitStore';",
+    'frontend/features/git/services/transport/cycle.ts': "import { getApplicationServices } from '@/core/services/runtime/applicationRuntime';",
+    'frontend/features/git/view.ts': "window.__TAURI_INTERNALS__.invoke('command');",
+    'frontend/features/git/indexed.ts': "window['__TAURI_INTERNALS__'];",
+    'frontend/features/git/presence.ts': "'__TAURI_INTERNALS__' in window;",
+    'frontend/features/git/reflect.ts': "Object.hasOwn(window, '__TAURI_INTERNALS__');",
+    'frontend/features/git/native-binding.ts': "const { __TAURI_INTERNALS__ } = window;",
+    'frontend/features/git/template.ts': "runtime.platform.commands[`executeCommand`]('command');",
+    'frontend/features/git/destructured.ts': "const { executeCommand: request } = runtime.platform.commands;",
+    'frontend/common/services/ipc/platformServices.ts': "export { createTauriPlatform } from './adapters/tauri/createTauriPlatform';",
+  });
+  assert.equal(checkFrontendIpcBoundary(root).violations.length, 10);
 });

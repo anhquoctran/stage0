@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { GitTaskState } from '../types/GitTaskState';
 
 // Task lifetime belongs to the store, never to an input dialog. Backgrounding
-// changes presentation only; the invoke promise and its progress channel live on.
+// changes presentation only; the operation promise and its progress callback live on.
 export const useGitTaskStore = create<GitTaskState>((set, get) => ({
   tasks: [],
   selectedTaskId: null,

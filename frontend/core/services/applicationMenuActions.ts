@@ -1,4 +1,5 @@
-import { invoke } from '../../common/services/ipc/ipcClient';
+import { getApplicationServices } from './runtime/applicationRuntime';
+
 import { useGitStore } from '../../features/git/store/useGitStore';
 import { useVirtualMrStore } from '../../features/virtual-mr/store/useVirtualMrStore';
 import { usePreferencesStore } from '../../features/preferences/store/usePreferencesStore';
@@ -36,13 +37,13 @@ export async function executeMenuAction(id: string, callbacks: MenuCallbacks): P
   const mr = useVirtualMrStore.getState();
   const nativeOnly = () => {}; // These roles are handled by the native OS menu.
   const actions: Record<MenuActionId, () => unknown> = {
-    new_window: () => invoke('create_new_window'),
+    new_window: () => getApplicationServices().application.createNewWindow(),
     open_repo: () => git.openRepoDialog(),
     open_repo_new_window: () => git.openRepoDialog(true),
     clone_repo: () => git.setIsCloneModalOpen(true),
     close_repo: () => git.closeRepo(),
-    close_window: () => invoke('window_close'),
-    exit: () => invoke('window_close'),
+    close_window: () => getApplicationServices().application.windowClose(),
+    exit: () => getApplicationServices().application.windowClose(),
     clear_recent: () => git.clearRecentRepos(),
     preferences: () => prefs.setIsPreferencesOpen(true),
     undo: () => runMenuTextEditing('undo'),
@@ -94,9 +95,9 @@ export async function executeMenuAction(id: string, callbacks: MenuCallbacks): P
     keymaps: () => prefs.openPreferences('general-keymaps'),
     release_notes: callbacks.onOpenReleaseNotes,
     about: callbacks.onOpenAbout,
-    open_webview_devtools: () => invoke('open_webview_devtools'),
-    zoom: () => invoke('window_toggle_maximize'),
-    minimize: () => invoke('window_minimize'),
+    open_webview_devtools: () => getApplicationServices().application.openWebviewDevtools(),
+    zoom: () => getApplicationServices().application.windowToggleMaximize(),
+    minimize: () => getApplicationServices().application.windowMinimize(),
     services: nativeOnly,
     hide: nativeOnly,
     hide_others: nativeOnly,

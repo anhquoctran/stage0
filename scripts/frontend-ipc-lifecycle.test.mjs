@@ -107,7 +107,7 @@ test('notification registration failure is reported without announcing readiness
 });
 
 test('notification sizing preserves logical dimensions, physical placement and native show order', async (t) => {
-  const f = hostFixture(t, { scaleFactor: 2, workArea: {
+  const f = hostFixture(t, { name: 'Display', position: { x: 100, y: 200 }, size: { width: 2880, height: 1800 }, scaleFactor: 2, workArea: {
     size: { width: 2880, height: 1800 }, position: { x: 100, y: 200 },
   } });
   const mounted = await f.mount();

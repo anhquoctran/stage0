@@ -28,12 +28,22 @@ the feature modules so `lib.rs` can continue to register the same Tauri commands
 The SQLite connection and migrations are in `core/db`; repository, credential
 and Virtual MR records and queries live in their feature `persistence.rs` files.
 Frontend imports point to the owning feature or to `common`/`core` directly.
-Use `frontend/common/services/ipc/` for Tauri SDK access, including platform
-primitives. Prefer the owning leaf module; use its `types.ts` for SDK types.
-`pnpm check:architecture` rejects direct `@tauri-apps/*` dependencies outside the
-facade and computed dynamic import/require specifiers. Existing callers own
-browser guards, fallbacks and lifecycle; see the implemented
-[IPC facade specification](frontend_ipc_refactor_spec.md).
+Frontend platform contracts live in `frontend/common/services/ipc/contracts/`.
+Only `common/services/ipc/adapters/` may import the Tauri SDK; SDK functions,
+classes and types must not escape that boundary. Feature-owned
+`services/transport/` interfaces/factories own backend command names and typed
+payloads. Keep these factories independent of stores, React and the runtime.
+`core/services/runtime/` composes one stable service graph per window. Components
+and hooks use `useApplicationServices()`; stores and workflows outside React use
+`getApplicationServices()`. Common utilities use the feature-independent
+`getCommonServices()` / `getPlatformServices()` roots. Install overrides before
+startup; replacing an initialized runtime is rejected so Context and store
+workflows cannot diverge. Zustand continues to own mutable feature state.
+`pnpm check:architecture` enforces private adapters, rejects SDK type leaks,
+legacy facade imports, transport/runtime cycles, direct transport execution in
+callers, native bridge access and computed import/require specifiers. Feature
+owners retain browser fallbacks and listener cleanup. See the implemented
+[platform service contracts](frontend_ipc_refactor_spec.md#12-platform-service-abstraction-2026-10-25).
 Use `frontend/common/utils/dateTime.ts` for displayed dates and times; it treats
 numeric timestamps as milliseconds, with explicit Unix-second helpers for Git.
 Keep ISO serialization for persistence and IPC separate from display formatting.

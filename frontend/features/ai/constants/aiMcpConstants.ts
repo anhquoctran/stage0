@@ -1,8 +1,8 @@
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import type { McpServerType } from '../types/McpServerType';
 import { BOT_CATEGORIES } from './botPresets';
 import type { BotCategory } from '../../virtual-mr/types/BotCategory';
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 
 export const MAX_TOKEN_OPTIONS: CustomSelectOption<string>[] = [
   { value: '1024', label: '1,024 Tokens (Compact)' },
@@ -24,9 +24,9 @@ export const PROMPT_ROLE_OPTIONS: CustomSelectOption<BotCategory>[] = BOT_CATEGO
 }));
 
 export const openUrlInBrowser = async (url: string) => {
-  if (isTauri()) {
+  if (getApplicationServices().platform.capabilities.externalLinks) {
     try {
-      await invoke('open_external_url', { url });
+      await getApplicationServices().externalLinks.openExternalUrl({ url });
       return;
     } catch {
       // fallback

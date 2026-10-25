@@ -1,4 +1,5 @@
-import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import { useBotReviewersStore } from '../store/useBotReviewersStore';
 import type { AiPreferencesEditor } from '../types/AiPreferencesEditor';
@@ -51,7 +52,7 @@ export async function commitAiPreferences(
       const removed = (server.secretEnvKeys ?? []).filter((name) => !nextNames.has(name));
       if (removed.length) mcpEnvRemovals[server.id] = removed;
     }
-    if (!isTauri() && (Object.keys(apiKeys).length || apiKeyRemovals.length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
+    if (!getApplicationServices().platform.capabilities.keychain && (Object.keys(apiKeys).length || apiKeyRemovals.length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
       throw new Error('Saving credentials requires the native Stage0 app and OS keychain. The draft is preserved.');
     }
     previous = await preferencesJsonService.load();
@@ -79,8 +80,8 @@ export async function commitAiPreferences(
       reviewers: snapshot.globalReviewers,
     });
     let configured: Partial<Record<AiProviderId, boolean>> = {};
-    if (isTauri() && (Object.keys(apiKeys).length || apiKeyRemovals.length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
-      configured = await invoke('commit_ai_preferences', {
+    if (getApplicationServices().platform.capabilities.keychain && (Object.keys(apiKeys).length || apiKeyRemovals.length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
+      configured = await getApplicationServices().aiProviders.commitAiPreferences({
         apiKeys,
         apiKeyRemovals,
         policy: null,

@@ -2,13 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-test('openUrl utility invokes open_external_url via Tauri IPC', () => {
+test('openUrl utility uses external link service and retains its browser fallback', () => {
   const utilSrc = readFileSync(
     new URL('../frontend/common/utils/openUrl.ts', import.meta.url),
     'utf-8'
   );
 
-  assert.match(utilSrc, /invoke\('open_external_url'/);
+  assert.match(utilSrc, /externalLinks\.openExternalUrl\(/);
+  const transport = readFileSync(new URL('../frontend/common/services/transport/createExternalLinkService.ts', import.meta.url), 'utf8');
+  assert.match(transport, /executeCommand\('open_external_url'/);
   assert.match(utilSrc, /window\.open/);
   assert.match(utilSrc, /export function initExternalLinkInterceptor/);
 });

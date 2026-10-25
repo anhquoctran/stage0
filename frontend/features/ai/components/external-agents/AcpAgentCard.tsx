@@ -1,4 +1,5 @@
-import { isTauri } from '../../../../common/services/ipc/ipcClient';
+import { useApplicationServices } from '../../../../core/services/runtime/useApplicationServices';
+
 import { AcpRegistryProjectInfo } from '../AcpRegistryProjectInfo';
 import { AgentIcon } from '../AgentIcon';
 import type { AcpAgentCardProps } from './AcpAgentCardProps';
@@ -19,6 +20,7 @@ export function AcpAgentCard({
   install,
   registryDistribution,
 }: AcpAgentCardProps) {
+  const appServices = useApplicationServices();
   return (
     <article key={`${isCustom ? 'custom' : 'registry'}-${item.id}`} className="py-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -57,7 +59,7 @@ export function AcpAgentCard({
         ) : installable ? (
           <button
             type="button"
-            disabled={busyId === item.id || !isTauri()}
+            disabled={busyId === item.id || !appServices.platform.capabilities.externalAgents}
             onClick={() => void install(entry!)}
             className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white rounded-sm shadow-xs transition-colors cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
           >

@@ -1,4 +1,4 @@
-import { invoke } from '../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 
 /**
  * Normalizes git remote URL (SSH or HTTPS) into a browseable web URL.
@@ -79,7 +79,7 @@ export function getAbsoluteFilePath(repoPath: string, relativePath: string): str
  * Reveals a file in OS File Explorer (Windows Explorer, macOS Finder, or Linux file manager).
  */
 export async function revealInOs(repoPath: string, filePath: string): Promise<void> {
-  await invoke('reveal_file_in_os', { repoPath, filePath });
+  await getApplicationServices().gitFiles.revealFileInOs({ repoPath, filePath });
 }
 
 /**
@@ -89,7 +89,7 @@ export async function openRepoIn(
   repoPath: string,
   target: 'explorer' | 'vscode' | 'terminal'
 ): Promise<void> {
-  await invoke('open_repo_in', { repoPath, target });
+  await getApplicationServices().gitFiles.openRepoIn({ repoPath, target });
 }
 
 /**
@@ -147,7 +147,7 @@ export async function openFileInEditor(
   lineNumber?: number
 ): Promise<void> {
   try {
-    await invoke('open_file_in_editor', {
+    await getApplicationServices().gitFiles.openFileInEditor({
       repoPath,
       filePath,
       lineNumber: lineNumber || null,
@@ -181,7 +181,7 @@ export function getOsFileManagerName(): string {
  * Fetches the remote URL for a repository from git.
  */
 export async function getRemoteUrl(repoPath: string, remote?: string): Promise<string> {
-  return await invoke<string>('get_git_remote_url', {
+  return await getApplicationServices().gitRepositories.getGitRemoteUrl({
     repoPath,
     remote: remote || null,
   });

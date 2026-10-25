@@ -1,11 +1,10 @@
-import { invoke } from '../../../../common/services/ipc/ipcClient';
+import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+
 import type { StateCreator } from 'zustand';
 import { getErrorMessage, gitDiffRequests } from '../../services/gitStoreEffects';
-import { type BranchList } from '../../types/BranchList';
 import { type ChangedFile } from '../../types/ChangedFile';
 import { type ConflictReport } from '../../types/ConflictReport';
 import type { GitState } from '../../types/GitState';
-import { type MrDiffPayload } from '../../types/MrDiffPayload';
 import { type ViewMode } from '../../types/ViewMode';
 import { createGitFileSelectionActions } from './createGitFileSelectionActions';
 
@@ -66,7 +65,7 @@ export const createGitDiffSlice: StateCreator<
 
   fetchBranches: async (repoPath: string) => {
     try {
-      const branches = await invoke<BranchList>('get_branches', { repoPath });
+      const branches = await getApplicationServices().gitRepositories.getBranches({ repoPath });
       if (get().currentRepo?.local_path !== repoPath) return;
 
       // Smart default base branch (check local then remote)
@@ -180,7 +179,7 @@ export const createGitDiffSlice: StateCreator<
       selectedFile: null,
     });
     try {
-      const diffPayload = await invoke<MrDiffPayload>('get_mr_diff', {
+      const diffPayload = await getApplicationServices().gitHistory.getMrDiff({
         repoPath,
         base: baseBranch,
         compare: compareBranch,
@@ -190,7 +189,7 @@ export const createGitDiffSlice: StateCreator<
       let conflictReport: ConflictReport | null = null;
       let conflictCheckError: string | null = null;
       try {
-        conflictReport = await invoke<ConflictReport>('check_merge_conflicts', {
+        conflictReport = await getApplicationServices().gitHistory.checkMergeConflicts({
           repoPath,
           base: baseBranch,
           compare: compareBranch,
