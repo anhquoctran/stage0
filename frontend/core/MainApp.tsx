@@ -1,3 +1,7 @@
+import { useStartupSplash } from './hooks/useStartupSplash';
+import { startupProgress } from './services/startup/startupProgress';
+import type { WindowStartupContext } from '../features/git/types/WindowStartupContext';
+import { useVirtualMrStore } from '../features/virtual-mr/store/useVirtualMrStore';
 import { useApplicationServices } from './services/runtime/useApplicationServices';
 import React, { useEffect, useState } from 'react';
 import { clsx } from 'clsx';
@@ -15,7 +19,12 @@ import { installAutoHideScrollbars } from './services/autoHideScrollbars';
 
 export const MainApp: React.FC = () => {
   const appServices = useApplicationServices();
-  const { initApp, attachRepoToCurrentWindow, refreshDiff, isInitializing } = useGitStore();
+  const { initApp, attachRepoToCurrentWindow, refreshDiff, isInitializing, isLoading, currentRepo } = useGitStore();
+  const [windowInitialized, setWindowInitialized] = useState(false);
+  const workspaceReady = useVirtualMrStore((state) => !currentRepo || (
+    state.currentRepoId === currentRepo.id && state.currentRepoPath === currentRepo.local_path && !state.isLoadingSessions
+  ));
+  useStartupSplash(windowInitialized && !isInitializing && !isLoading && workspaceReady);
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const isOnboardingOpen = useOnboardingStore((state) => state.isOnboardingOpen);
   const setOnboardingOpen = useOnboardingStore((state) => state.setOnboardingOpen);
@@ -30,63 +39,72 @@ export const MainApp: React.FC = () => {
   useEffect(() => installAutoHideScrollbars(), []);
 
   useEffect(() => {
-    if (isInitializing) return;
-
-    const splash = document.getElementById('startup-splash');
-    if (!splash) return;
-
-    let removeTimer: number | undefined;
-    const fadeTimer = window.setTimeout(() => {
-      splash.classList.add('is-hidden');
-      removeTimer = window.setTimeout(() => splash.remove(), 350);
-    }, 500);
-
-    return () => {
-      window.clearTimeout(fadeTimer);
-      if (removeTimer !== undefined) window.clearTimeout(removeTimer);
-    };
-  }, [isInitializing]);
-
-  useEffect(() => {
     let disposed = false;
-    let unlistenFs: (() => void) | undefined;
-    let unlistenOpen: (() => void) | undefined;
+    let listenerFailed = false;
+    const subscriptions = new Set<() => void>();
+    const register = (pending: Promise<() => void>) => pending.then((stop) => {
+      if (disposed || listenerFailed) stop();
+      else subscriptions.add(stop);
+    });
+    const stopSubscriptions = () => {
+      subscriptions.forEach((stop) => stop());
+      subscriptions.clear();
+    };
 
     const initializeWindow = async () => {
+      startupProgress.begin('window');
+      let startup: WindowStartupContext | undefined;
       try {
-        const [stopFsListener, stopOpenListener] = await Promise.all([
-          appServices.platform.events.subscribe<{ repo_path: string }>('repo-fs-changed', (event) => {
-            const activePath = useGitStore.getState().currentRepo?.local_path;
-            if (activePath === event.repo_path) {
-              refreshDiff();
-              void reviewAssignedSessionAfterGitChange(event.repo_path);
-            }
-          }),
-          appServices.platform.events.subscribe<RepoInfo>('repo-open-request', (event) => {
-            void attachRepoToCurrentWindow(event);
-          }),
-        ]);
-
-        if (disposed) {
-          stopFsListener();
-          stopOpenListener();
-          return;
+        if (appServices.platform.capabilities.events) {
+          await Promise.all([
+            register(appServices.platform.events.subscribe<{ repo_path: string }>('repo-fs-changed', (event) => {
+              const activePath = useGitStore.getState().currentRepo?.local_path;
+              if (activePath === event.repo_path) {
+                refreshDiff();
+                void reviewAssignedSessionAfterGitChange(event.repo_path);
+              }
+            })),
+            register(appServices.platform.events.subscribe<RepoInfo>('repo-open-request', (event) => {
+              void attachRepoToCurrentWindow(event);
+            })),
+          ]);
         }
-        unlistenFs = stopFsListener;
-        unlistenOpen = stopOpenListener;
-
-        const startup = await appServices.application.getWindowStartupContext();
-        await initApp(startup.restore_recent);
-        if (!disposed && startup.repo) {
-          await attachRepoToCurrentWindow(startup.repo);
+        if (disposed) return;
+        if (appServices.platform.capabilities.backend) {
+          startup = await appServices.application.getWindowStartupContext();
         }
       } catch (error) {
+        listenerFailed = true;
+        stopSubscriptions();
         console.warn('Failed to initialize window context:', error);
-        await initApp();
       }
+      if (disposed) return;
+      startupProgress.complete('window');
+      startupProgress.begin('repositories');
+      await initApp(startup?.restore_recent ?? true, (progress) => {
+        if (disposed) return;
+        if (progress.phase === 'catalog') {
+          startupProgress.update('repositories', progress.completed / progress.total);
+          if (progress.completed === progress.total) startupProgress.begin('workspace');
+        } else {
+          startupProgress.begin('workspace');
+        }
+      });
+      if (disposed) return;
+      startupProgress.complete('repositories');
+      startupProgress.begin('workspace');
+      if (startup?.repo) await attachRepoToCurrentWindow(startup.repo);
+      if (disposed) return;
+      // Remaining workspace work is observed through the MR store readiness key.
+      startupProgress.update('workspace', 0.5);
+      setWindowInitialized(true);
     };
 
-    void initializeWindow();
+    void initializeWindow().catch((error) => {
+      if (disposed) return;
+      startupProgress.fail();
+      console.error('Could not prepare the startup workspace:', error);
+    });
     void notificationService.init();
 
     const checkWindowState = async () => {
@@ -105,12 +123,11 @@ export const MainApp: React.FC = () => {
 
     return () => {
       disposed = true;
-      unlistenFs?.();
-      unlistenOpen?.();
+      stopSubscriptions();
       notificationService.destroy();
       window.removeEventListener('resize', checkWindowState);
     };
-  }, [initApp, attachRepoToCurrentWindow, refreshDiff]);
+  }, [appServices, initApp, attachRepoToCurrentWindow, refreshDiff]);
 
   useEffect(() => {
     void syncUnreadBadge(unreadCount);

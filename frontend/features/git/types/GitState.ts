@@ -1,3 +1,4 @@
+import type { RepositoryInitializationProgress } from './RepositoryInitializationProgress';
 import { type BranchList } from './BranchList';
 import { type ChangedFile } from './ChangedFile';
 import { type ConflictReport } from './ConflictReport';
@@ -33,7 +34,7 @@ export interface GitState {
   isSyncing: boolean;
   error: string | null;
 
-  initApp: (restoreRecent?: boolean) => Promise<void>;
+  initApp: (restoreRecent?: boolean, onProgress?: (progress: RepositoryInitializationProgress) => void) => Promise<void>;
   attachRepoToCurrentWindow: (repo: RepoInfo) => Promise<void>;
   loadRecentRepos: () => Promise<void>;
   openRepoDialog: (forceNewWindow?: boolean) => Promise<void>;

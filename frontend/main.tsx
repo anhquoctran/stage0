@@ -1,3 +1,4 @@
+import { startupProgress } from './core/services/startup/startupProgress';
 import { ApplicationServicesProvider } from './core/services/runtime/ApplicationServicesProvider';
 import { getApplicationServices } from './core/services/runtime/applicationRuntime';
 import React from 'react';
@@ -123,6 +124,7 @@ When reviewing git diffs:
 }
 
 async function startApp() {
+  startupProgress.begin('runtime');
   initExternalLinkInterceptor();
   const legacy = buildLegacyPreferences();
   const legacyRawAi = readLegacyJson('stage0_ai_mcp_config') as Record<string, unknown> | undefined;
@@ -131,6 +133,8 @@ async function startApp() {
   let legacyKeyMigrationFailed = false;
   let legacyMcpMigrationFailed = false;
   let preferences = legacy;
+  startupProgress.complete('runtime');
+  startupProgress.begin('preferences');
   if (getApplicationServices().platform.capabilities.backend) {
     try {
       const document = await getApplicationServices().preferences.initializePreferences({ legacy });
@@ -200,15 +204,21 @@ async function startApp() {
     } catch (_) {}
   }
 
+  startupProgress.complete('preferences');
+  startupProgress.begin('interface');
   const [{ default: App }, { ErrorBoundary }] = await Promise.all([
     import('./core/App'),
     import('./common/components/ErrorBoundary'),
   ]);
+  startupProgress.complete('interface');
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
-      <ErrorBoundary><ApplicationServicesProvider><App /></ApplicationServicesProvider></ErrorBoundary>
+      <ErrorBoundary onError={startupProgress.fail}><ApplicationServicesProvider><App /></ApplicationServicesProvider></ErrorBoundary>
     </React.StrictMode>
   );
 }
 
-void startApp();
+void startApp().catch((error) => {
+  startupProgress.fail();
+  console.error('Stage0 startup failed:', error);
+});

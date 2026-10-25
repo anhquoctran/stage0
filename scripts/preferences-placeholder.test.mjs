@@ -44,14 +44,16 @@ test('PreferencesModal and window configuration accommodate the full dialog dime
   );
   const mainWindow = tauriConf.app.windows.find((w) => w.label === 'main');
   assert.ok(mainWindow, 'main window must be configured');
-  assert.ok(mainWindow.minWidth >= 1100, `minWidth (${mainWindow.minWidth}) must accommodate max-w-5xl dialog`);
-  assert.ok(mainWindow.minHeight >= 780, `minHeight (${mainWindow.minHeight}) must accommodate h-[760px] dialog`);
-  assert.ok(mainWindow.width >= 1280, 'default width must provide comfortable workspace');
-  assert.ok(mainWindow.height >= 820, 'default height must provide comfortable workspace');
 
   const windowManagerSrc = readFileSync(
     new URL('../backend/src/core/window_manager.rs', import.meta.url),
     'utf-8'
   );
   assert.match(windowManagerSrc, /1120\.0,\s*800\.0/);
+  assert.match(windowManagerSrc, /1280\.0,\s*840\.0/, 'ready workspace retains comfortable default dimensions');
+  const startupSrc = readFileSync(new URL('../backend/src/core/window_manager/startup_window.rs', import.meta.url), 'utf-8');
+  assert.match(startupSrc, /minimum_window_size\(\)/, 'ready main window restores minimum bounds for Preferences');
+  assert.match(startupSrc, /set_min_size\(Some\(tauri::LogicalSize::new\(min_width, min_height\)\)\)/);
+  assert.equal(mainWindow.width, 600, 'initial window fits the compact splash');
+  assert.equal(mainWindow.height, 380);
 });

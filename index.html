@@ -83,7 +83,7 @@
         user-select: none;
         opacity: 1;
         transform: scale(1);
-        transition: opacity 350ms ease, transform 350ms ease;
+        transition: opacity 180ms ease, transform 180ms ease;
       }
 
       #startup-splash.is-hidden {
@@ -116,7 +116,9 @@
       #startup-splash .splash-content {
         position: relative;
         display: flex;
-        width: min(100%, 384px);
+        width: min(100%, 400px);
+        box-sizing: border-box;
+        border-radius: 4px;
         flex-direction: column;
         align-items: center;
         padding: 0 24px;
@@ -151,29 +153,81 @@
         line-height: 1.5;
       }
 
+      #startup-splash .splash-progress-header {
+        display: flex;
+        width: 100%;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 10px;
+      }
+
       #startup-splash .splash-progress-track {
         width: 100%;
         height: 6px;
-        margin-bottom: 14px;
         overflow: hidden;
-        border: 1px solid var(--splash-track-border);
-        border-radius: 0;
+        border: 0;
+        border-radius: 4px;
         background: var(--splash-track-bg);
       }
 
       #startup-splash .splash-progress {
-        width: 66.666%;
+        width: 0%;
         height: 100%;
-        border-radius: 0;
+        border-radius: 4px;
         background: var(--splash-brand);
-        animation: startup-splash-progress 1.6s ease-in-out infinite;
+        transition: width 180ms ease-out;
       }
 
       #startup-splash .splash-status {
-        min-height: 20px;
         color: var(--splash-status);
+        font-size: 12px;
+        line-height: 1.5;
+        text-align: left;
+      }
+
+      #startup-splash .splash-percentage {
+        flex-shrink: 0;
+        color: var(--splash-text);
         font-family: 'Fira Code', 'SFMono-Regular', Consolas, monospace;
         font-size: 11px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #startup-splash .splash-detail {
+        width: 100%;
+        min-height: 18px;
+        margin-top: 10px;
+        color: var(--splash-muted);
+        font-size: 11px;
+        line-height: 1.6;
+        text-align: left;
+      }
+
+      #startup-splash[data-state="error"] .splash-progress {
+        background: var(--splash-error);
+      }
+
+      #startup-splash[data-state="error"] .splash-status {
+        color: var(--splash-error);
+      }
+
+      #startup-splash .splash-reload {
+        margin-top: 16px;
+        padding: 8px 14px;
+        border: 0;
+        border-radius: 4px;
+        background: var(--splash-brand);
+        color: #ffffff;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      #startup-splash .splash-reload:focus-visible {
+        outline: 2px solid var(--splash-title-accent);
+        outline-offset: 3px;
       }
 
       #startup-splash .splash-highlights {
@@ -199,16 +253,28 @@
         border-radius: 0;
       }
 
-      @keyframes startup-splash-progress {
-        0% { transform: translateX(-100%); }
-        50% { transform: translateX(35%); }
-        100% { transform: translateX(180%); }
+      @media (max-height: 480px) {
+        #startup-splash .splash-content { width: min(100%, 440px); }
+        #startup-splash .splash-logo { width: 48px; height: 48px; margin-bottom: 12px; }
+        #startup-splash .splash-title { margin-bottom: 4px; }
+        #startup-splash .splash-tagline { margin-bottom: 16px; }
+        #startup-splash .splash-progress-header { margin-bottom: 8px; }
+        #startup-splash .splash-highlights { margin-top: 20px; }
+        #startup-splash[data-state="error"] .splash-highlights { display: none; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #startup-splash,
+        #startup-splash .splash-progress {
+          transition: none;
+        }
+        #startup-splash.is-hidden { transform: none; }
       }
     </style>
   </head>
   <body class="bg-crust text-text antialiased h-screen overflow-hidden select-none" style="background-color: var(--splash-bg); margin: 0;">
     <div id="root" class="h-full w-full"></div>
-    <div id="startup-splash" role="status" aria-live="polite">
+    <div id="startup-splash" data-state="loading" aria-label="Starting Stage0">
       <div class="splash-glow splash-glow-top"></div>
       <div class="splash-glow splash-glow-bottom"></div>
       <div class="splash-content">
@@ -225,10 +291,15 @@
         </svg>
         <h1 class="splash-title">Stage<span class="splash-title-accent">0</span></h1>
         <p class="splash-tagline">Local-first Virtual Merge Request &amp; Conflict Prediction Sandbox</p>
-        <div class="splash-progress-track" aria-hidden="true">
-          <div class="splash-progress"></div>
+        <div class="splash-progress-header">
+          <div id="splash-status" class="splash-status" role="status" aria-live="polite" aria-atomic="true">Starting Stage0</div>
+          <span id="splash-percentage" class="splash-percentage" aria-hidden="true">0%</span>
         </div>
-        <div class="splash-status">Initializing Stage0 runtime...</div>
+        <div id="startup-progress" class="splash-progress-track" role="progressbar" aria-labelledby="splash-status" aria-describedby="splash-detail" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Starting Stage0 · 0%">
+          <div id="startup-progress-fill" class="splash-progress"></div>
+        </div>
+        <div id="splash-detail" class="splash-detail">Step 1 of 7</div>
+        <button id="splash-reload" class="splash-reload btn-solid" type="button" hidden>Reload Stage0</button>
         <div class="splash-highlights" aria-hidden="true">
           <span class="splash-highlight"><span class="splash-highlight-dot" style="background:var(--splash-peach)"></span>No Checkout</span>
           <span>·</span>

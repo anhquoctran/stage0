@@ -1,3 +1,4 @@
+import type { RepositoryInitializationProgress } from '../../types/RepositoryInitializationProgress';
 import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
 
 import type { StateCreator } from 'zustand';
@@ -87,16 +88,30 @@ export const createGitRepoSlice: StateCreator<
     });
   },
 
-  initApp: async (restoreRecent = true) => {
+  initApp: async (restoreRecent = true, onProgress) => {
     set({ isInitializing: true });
+    let completed = 0;
+    const report = (progress: RepositoryInitializationProgress) => {
+      // Presentation observers must not interrupt repository initialization.
+      try { onProgress?.(progress); } catch { /* Keep the workflow authoritative. */ }
+    };
+    function track<T>(request: Promise<T>): Promise<T> {
+      return request.finally(() => report({ phase: 'catalog', completed: ++completed, total: 3 }));
+    }
+    report({ phase: 'catalog', completed: 0, total: 3 });
     try {
-      const [repos] = await Promise.all([
-        getApplicationServices().gitRepositories.getRecentRepos(),
-        get().fetchAvailableSandboxes(),
-        get().fetchActiveSandbox(),
+      // Await every catalog operation, including recoverable failures, before
+      // allowing startup to advance to workspace restoration.
+      const [recent] = await Promise.allSettled([
+        track(getApplicationServices().gitRepositories.getRecentRepos()),
+        track(get().fetchAvailableSandboxes()),
+        track(get().fetchActiveSandbox()),
       ]);
+      if (recent.status === 'rejected') throw recent.reason;
+      const repos = recent.value;
       set({ recentRepos: repos });
       await syncRecentRepositoriesMenu(repos);
+      report({ phase: 'workspace', completed: 0, total: 1 });
 
       let openedAny = false;
       // Only the original welcome window restores the last repository. New windows

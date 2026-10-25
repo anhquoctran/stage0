@@ -18,6 +18,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('[Stage0 ErrorBoundary caught error]:', error, errorInfo);
     this.setState({ errorInfo });
+    this.props.onError?.(error, errorInfo);
   }
 
   private handleReload = () => {

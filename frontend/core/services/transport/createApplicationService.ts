@@ -16,6 +16,8 @@ export function createApplicationService(transport: CommandTransport): Applicati
     windowMaximize: () => transport.executeCommand('window_maximize'),
     windowMinimize: () => transport.executeCommand('window_minimize'),
     windowResetSize: () => transport.executeCommand('window_reset_size'),
+    windowPrepareMain: () => transport.executeCommand('window_prepare_main'),
+    windowShow: () => transport.executeCommand('window_show'),
     windowToggleMaximize: () => transport.executeCommand('window_toggle_maximize'),
   };
 }

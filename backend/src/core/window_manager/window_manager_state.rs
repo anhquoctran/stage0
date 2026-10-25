@@ -20,6 +20,7 @@ impl WindowManagerState {
                 repo: None,
                 restore_recent,
                 opening: false,
+                startup_maximized: Some(false),
             });
     }
 
@@ -37,6 +38,33 @@ impl WindowManagerState {
             .windows
             .get(label)
             .is_some_and(|window| window.repo.is_some())
+    }
+
+    /// Keep geometry requests from expanding a splash that is still loading.
+    pub fn defer_startup_geometry(&self, label: &str, maximized: bool) -> bool {
+        let mut registry = self.lock();
+        if let Some(intent) = registry
+            .windows
+            .get_mut(label)
+            .and_then(|record| record.startup_maximized.as_mut())
+        {
+            *intent = maximized;
+            return true;
+        }
+        false
+    }
+
+    pub fn startup_geometry(&self, label: &str) -> Option<bool> {
+        self.lock()
+            .windows
+            .get(label)
+            .and_then(|record| record.startup_maximized)
+    }
+
+    pub fn complete_startup(&self, label: &str) {
+        if let Some(record) = self.lock().windows.get_mut(label) {
+            record.startup_maximized = None;
+        }
     }
 
     pub(super) fn plan_open(
@@ -115,6 +143,7 @@ impl WindowManagerState {
                 repo: Some(context.clone()),
                 restore_recent: false,
                 opening: true,
+                startup_maximized: Some(true),
             },
         );
         registry

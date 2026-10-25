@@ -25,5 +25,7 @@ export interface ApplicationService {
   windowMaximize(): Promise<unknown>;
   windowMinimize(): Promise<unknown>;
   windowResetSize(): Promise<unknown>;
+  windowPrepareMain(): Promise<unknown>;
+  windowShow(): Promise<unknown>;
   windowToggleMaximize(): Promise<boolean>;
 }

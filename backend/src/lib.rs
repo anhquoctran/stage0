@@ -11,8 +11,7 @@ use std::path::{Path, PathBuf};
 use tauri::{Manager, WindowEvent};
 use watcher::WatcherState;
 use window_manager::{
-    default_window_size, destroy_window, focus_window, focused_window, minimum_window_size,
-    open_repo_path, WindowManagerState,
+    destroy_window, focus_window, focused_window, open_repo_path, WindowManagerState,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -159,22 +158,6 @@ pub fn run() {
 
             if let Some(window) = app.get_webview_window("main") {
                 app.state::<WindowManagerState>().register_welcome_window("main", true);
-                #[cfg(target_os = "macos")]
-                {
-                    let _ = window.set_decorations(true);
-                }
-                let (min_width, min_height) = minimum_window_size();
-                let min_size = tauri::LogicalSize {
-                    width: min_width,
-                    height: min_height,
-                };
-                let _ = window.set_min_size(Some(tauri::Size::Logical(min_size)));
-                let (width, height) = default_window_size();
-                let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize {
-                    width,
-                    height,
-                }));
-                let _ = window.unmaximize();
                 let _ = window.center();
             }
 
@@ -235,6 +218,7 @@ pub fn run() {
             commands::window_toggle_maximize,
             commands::window_maximize,
             commands::window_reset_size,
+            commands::window_prepare_main,
             commands::window_close,
             commands::window_is_maximized,
             commands::window_is_fullscreen,

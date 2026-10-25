@@ -14,6 +14,10 @@ mod window_startup_context;
 pub use window_startup_context::WindowStartupContext;
 mod open_plan;
 use open_plan::OpenPlan;
+pub mod startup_window;
+use startup_window::{request_maximize, SPLASH_HEIGHT, SPLASH_WIDTH};
+#[cfg(test)]
+mod startup_window_tests;
 
 #[cfg(unix)]
 use std::fs;
@@ -140,7 +144,7 @@ pub fn open_repo_path(
                         .to_string(),
                 );
             };
-            let _ = window.maximize();
+            let _ = request_maximize(&window.as_ref().window());
             focus_window(&window)?;
             if caller_label == Some(label.as_str()) {
                 Ok(OpenRepoOutcome::OpenedHere { repo })
@@ -154,7 +158,7 @@ pub fn open_repo_path(
         OpenPlan::AssignedHere(label) => {
             if let Some(window) = app.get_webview_window(&label) {
                 let _ = window.set_title(&format!("Stage0 — {}", repo.name));
-                let _ = window.maximize();
+                let _ = request_maximize(&window.as_ref().window());
             }
             start_watcher(app, &label, &canonical_path);
             crate::core::menu::sync_repo_dependent_menus_for_window(app, &label);
@@ -164,7 +168,7 @@ pub fn open_repo_path(
             start_watcher(app, &label, &canonical_path);
             if let Some(window) = app.get_webview_window(&label) {
                 let _ = window.set_title(&format!("Stage0 — {}", repo.name));
-                let _ = window.maximize();
+                let _ = request_maximize(&window.as_ref().window());
                 let _ = window.emit("repo-open-request", repo.clone());
                 focus_window(&window)?;
             }
@@ -203,16 +207,6 @@ pub fn create_welcome_window(app: &AppHandle) -> Result<String, String> {
         return Err(error);
     }
     if let Some(window) = app.get_webview_window(&label) {
-        let (min_width, min_height) = minimum_window_size();
-        let min_size = tauri::LogicalSize {
-            width: min_width,
-            height: min_height,
-        };
-        let (width, height) = default_window_size();
-        let _ = window.unmaximize();
-        let _ = window.set_min_size(Some(tauri::Size::Logical(min_size)));
-        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width, height }));
-        let _ = window.center();
         focus_window(&window)?;
     }
     Ok(label)
@@ -223,7 +217,10 @@ fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWind
     let focus_after_initial_load_callback = Arc::clone(&focus_after_initial_load);
     let builder = WebviewWindowBuilder::new(app, label, app_webview_url(app, "index.html"))
         .title(title)
-        .inner_size(1360.0, 840.0)
+        .inner_size(SPLASH_WIDTH, SPLASH_HEIGHT)
+        .center()
+        .resizable(false)
+        .maximizable(false)
         .decorations(false)
         .shadow(true)
         .on_page_load(move |window, payload| {
@@ -239,22 +236,16 @@ fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWind
 
     #[cfg(target_os = "macos")]
     let builder = builder
-        // Keep the native macOS title bar controls (traffic lights) on dynamically
-        // created windows, matching the main window's native inset. The title bar
-        // remains overlaid so the app can keep its custom title-bar content.
-        .decorations(true)
+        // Configure the eventual macOS traffic-light inset now; decorations remain
+        // off until the ready main-window handoff restores them.
         .title_bar_style(TitleBarStyle::Overlay)
         .traffic_light_position(tauri::LogicalPosition::new(19.0, 25.0))
         .hidden_title(true);
-
-    let (min_width, min_height) = minimum_window_size();
-    let builder = builder.min_inner_size(min_width, min_height);
 
     let window = builder
         .build()
         .map_err(|error| format!("Failed to create window: {error}"))?;
     crate::features::notifications::ensure_notification_host(app);
-    let _ = window.maximize();
     Ok(window)
 }
 

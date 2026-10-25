@@ -1,5 +1,5 @@
-use crate::core::window_manager::{default_window_size, minimum_window_size};
-use tauri::{AppHandle, WebviewWindow, Window};
+use crate::core::window_manager::{default_window_size, minimum_window_size, WindowManagerState};
+use tauri::{AppHandle, Manager, WebviewWindow, Window};
 
 #[tauri::command]
 pub async fn window_minimize(window: Window) -> Result<(), String> {
@@ -14,6 +14,11 @@ pub async fn open_webview_devtools(window: WebviewWindow) -> Result<(), String> 
 
 #[tauri::command]
 pub async fn window_toggle_maximize(window: Window) -> Result<bool, String> {
+    let manager = window.app_handle().state::<WindowManagerState>();
+    if let Some(maximized) = manager.startup_geometry(window.label()) {
+        manager.defer_startup_geometry(window.label(), !maximized);
+        return Ok(!maximized);
+    }
     let is_max = window.is_maximized().map_err(|e| e.to_string())?;
     if is_max {
         window.unmaximize().map_err(|e| e.to_string())?;
@@ -41,11 +46,18 @@ pub async fn window_is_fullscreen(window: Window) -> Result<bool, String> {
 
 #[tauri::command]
 pub async fn window_maximize(window: Window) -> Result<(), String> {
-    window.maximize().map_err(|e| e.to_string())
+    crate::core::window_manager::startup_window::request_maximize(&window)
 }
 
 #[tauri::command]
 pub async fn window_reset_size(window: Window) -> Result<(), String> {
+    if window
+        .app_handle()
+        .state::<WindowManagerState>()
+        .defer_startup_geometry(window.label(), false)
+    {
+        return Ok(());
+    }
     let _ = window.unmaximize();
     let (min_width, min_height) = minimum_window_size();
     let min_size = tauri::LogicalSize {
@@ -61,6 +73,11 @@ pub async fn window_reset_size(window: Window) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
     let _ = window.center();
     Ok(())
+}
+
+#[tauri::command]
+pub async fn window_prepare_main(window: Window) -> Result<(), String> {
+    crate::core::window_manager::startup_window::prepare_main_window(&window)
 }
 
 #[tauri::command]

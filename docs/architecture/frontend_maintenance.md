@@ -14,6 +14,7 @@ their application callers migrate together (see report section 8).
 | Workflow | Owner |
 |---|---|
 | Platform services | `common/services/ipc/contracts/` owns neutral command/event/path/window/capability contracts; `adapters/tauri/` alone constructs SDK channels/window/DPI objects. Browser ports explicitly reject unsupported operations; `adapters/testing/` accepts explicit fakes. `platformServices.ts` selects/installs one platform before startup. `core/services/runtime/` composes 25 typed service objects and supplies the same instance to Context, `useApplicationServices()` and `getApplicationServices()`. Common links/attachments use `common/services/getCommonServices.ts`; common does not import the application composition root. Backend names/payloads live only in owning `services/transport/` factories; these cannot import runtime, stores or components. The architecture gate enforces private SDK/adapter boundaries and caller separation. See [platform contracts](frontend_ipc_refactor_spec.md#12-platform-service-abstraction-2026-10-25). |
+| Startup splash | `public/startup.js` owns the pre-React weighted progress controller, early theme and error/reload presentation; `index.html` owns its accessible determinate surface. `core/services/startup/` provides its typed facade. `main.tsx` reports runtime/preferences/interface completion; `MainApp.tsx` coordinates window/repository initialization and workspace readiness. Git owns optional initialization progress callbacks. `core/hooks/useStartupSplash.ts` waits for the ready React tree to paint before completing and dismissing the splash, with cancellable cleanup. See [startup contract](startup_splash.md). |
 | Dropdown dismissal | `common/hooks/useOutsideDismiss.ts` owns capture-phase outside pointer/click/focus dismissal for `CustomSelect` and bespoke font, branch and MR metadata pickers. Keep both trigger and popup within the registered ref; inside search and multi-selection must stay open. Do not swallow the outside control's activation or steal its focus. Attach listeners only while open and clean them up on close/unmount. |
 | Button surfaces | `core/styles/button-surfaces.css` enforces borderless opaque palette-filled buttons (including filled hover states); `btn-solid` opts custom/inline fills in. Transparent, white and black/dark canvas surfaces may retain borders. Focus outlines remain independent. Keep the palette selector list in sync with new filled utilities; see `.cursor/rules/button-surfaces.mdc`. |
 | Scrollbars | `common/components/ScrollArea.tsx` wraps the official OverlayScrollbars React component for vertical scroll surfaces, including onboarding: a 4px visible thumb, transparent track and 700ms scroll-idle hide. `core/styles/index.css` imports its stylesheet and owns the theme, reduced motion and forced-color overrides. Keep its viewport at `z-index: auto` so nested fixed dialogs can escape the scroller's clip. The existing `core/services/autoHideScrollbars.ts` capture listener remains the activity fallback for native scroll surfaces. Native CSS scrollbar styling alone is not reliable in the macOS webview; use `ScrollArea` for a consistent overlay. |
@@ -321,3 +322,23 @@ exceptions, backend source/schema changes or release/version/lockfile changes.
 The bundle retains mixed-import and large-chunk warnings. Detailed commands and
 coverage are recorded in specification section 12. Native UI, real accounts/
 providers and Windows/Linux runtime execution remain unverified.
+
+## Determinate startup splash (2026-10-25)
+
+The splash now shows completed weighted startup work, a current phase label,
+percentage and step count. It waits for repository initialization, any startup
+repository attachment and matching Virtual MR data, then gives the ready React
+tree a paint opportunity before publishing 100% and fading. Slow work holds its
+actual value; the old timed auto-dismissal and indeterminate animation are gone.
+Fatal startup errors retain the interrupted phase and expose Reload Stage0.
+Optional fonts and existing background work do not block readiness. See the
+[startup contract](startup_splash.md) for weights, lifecycle and ownership.
+
+Verification: **410/410 Node tests**, including 12 new startup cases; typecheck,
+architecture, Cargo check, isolated production bundle and whitespace checks pass.
+The frontend has **968 TS/TSX files**, largest **395/450**. Existing Vite mixed
+static/dynamic import and large-chunk warnings remain. Light/dark progress and
+error states were visually checked in Firefox on macOS, along with actual browser
+startup reaching the welcome screen. Native Tauri startup and Windows/Linux
+runtime behavior were not exercised. No backend source, dependency or release
+metadata changed.

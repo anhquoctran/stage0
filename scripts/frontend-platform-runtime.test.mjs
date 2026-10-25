@@ -138,7 +138,7 @@ test('every named feature operation preserves its command, input, progress callb
     }
     assert.equal(Object.keys(service).length, expected.size);
   }
-  assert.equal(operations.size, 127);
+  assert.equal(operations.size, 129); // Adds native startup preparation and the existing show command.
 });
 
 
