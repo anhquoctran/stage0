@@ -35,6 +35,13 @@ test('IPC boundary detects every supported dependency syntax and reports its loc
     "void import('@tauri-apps/plugin-dialog');",
     "void import(`@tauri-apps/plugin-fs`);",
     "const core = require('@tauri-apps/api/core');",
+    "const core = (require)('@tauri-apps/api/core');",
+    "const core = (require as (id: string) => unknown)('@tauri-apps/api/core');",
+    "const core = (<(id: string) => unknown>require)('@tauri-apps/api/core');",
+    "const core = (require satisfies Function)('@tauri-apps/api/core');",
+    "const core = require!('@tauri-apps/api/core');",
+    "const core = require(('@tauri-apps/api/core' as const));",
+    "void import(('@tauri-apps/plugin-fs'));",
   ];
   const root = fixture(t, Object.fromEntries(forms.map((source, i) =>
     [`frontend/features/git/syntax-${i}.ts`, `// dependency\n${source}\n`])));
@@ -52,7 +59,7 @@ test('IPC boundary detects every supported dependency syntax and reports its loc
 test('IPC boundary allows facade dependencies, ordinary imports and nondependency mentions', (t) => {
   const root = fixture(t, {
     'frontend/common/services/ipc/ipcClient.ts': "export { invoke } from '@tauri-apps/api/core';",
-    'frontend/common/services/ipc/nested/plugin.ts': "import('@tauri-apps/plugin-fs');",
+    'frontend/common/services/ipc/nested/plugin.ts': "import(('@tauri-apps/plugin-fs')); (require)('@tauri-apps/api/core');",
     'frontend/common/services/ipc/types.ts': "export type { UnlistenFn } from '@tauri-apps/api/event';",
     'frontend/features/git/component.tsx': `
       import { invoke } from '@/common/services/ipc/ipcClient';
@@ -61,6 +68,8 @@ test('IPC boundary allows facade dependencies, ordinary imports and nondependenc
       import React from 'react';
       void import('./component');
       require('ordinary-package');
+      (require)('ordinary-package');
+      (require as Function)(('ordinary-package' as const));
       // import { invoke } from '@tauri-apps/api/core';
       /* require('@tauri-apps/plugin-fs'); */
       const message = '@tauri-apps/api/core';
@@ -94,6 +103,9 @@ test('IPC boundary rejects computed imports and require calls even inside the fa
     'require(moduleName);',
     "require('@tauri-apps/' + name);",
     'require();',
+    '(require)(moduleName);',
+    '(require as Function)(moduleName);',
+    'import((moduleName as string));',
   ];
   const root = fixture(t, Object.fromEntries(forms.map((source, i) =>
     [`frontend/common/services/ipc/computed-${i}.ts`, source])));

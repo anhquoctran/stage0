@@ -442,6 +442,9 @@ The checker must:
 - Parse TypeScript and inspect static imports (including side-effect/type-only),
   re-exports, import type expressions, import-equals, literal dynamic imports and
   literal `require` calls. Reject `@tauri-apps/` specifiers outside the facade.
+- Unwrap parentheses, TypeScript casts, non-null assertions and `satisfies` on
+  callees/specifiers before checking. Wrapped calls such as `(require)(...)`
+  follow the same rule; wrapping a computed specifier does not make it literal.
 - Fail closed on computed module specifiers in dynamic import/require forms
   within frontend sources, with a file/line diagnostic, so computed Tauri access
   cannot bypass the rule. Do not introduce aliases for direct SDK access.
@@ -700,3 +703,23 @@ provider/account calls, native window interaction or browser UI smoke tests were
 performed. Stage A and this failure-resolution follow-up are complete; new
 browser fallbacks, diagnostics or retired auth functionality require separate
 behavior specifications.
+
+## 11. Repeat Audit (2026-10-25)
+
+Re-audited implementation revision `09d0b13`. A temporary source fixture revealed
+that parenthesized/type-wrapped `require` calls escaped the IPC checker. The
+checker now unwraps transparent expression wrappers on both callees and module
+specifiers. Existing tests were expanded to 21 forbidden dependency syntax cases,
+9 computed-specifier cases, plus permitted facade/ordinary imports. The test
+count is unchanged; no application runtime code changed in this audit.
+
+The original 70-consumer AST comparison still preserves all 622 import bindings.
+Non-import code is unchanged in 69 consumers; the remaining consumer has only
+the documented device-auth recovery follow-up. No direct SDK dependency exists
+outside the facade.
+
+Fresh results: **388/388 Node tests** and **180/180 compiled Rust library tests**
+pass, with no skips/cancellations or lost passing tests. Typecheck, architecture,
+frontend size, Cargo check, whitespace and isolated Vite compilation also pass.
+The bundle retains large-chunk and mixed-import warnings. Verification remains
+headless on macOS; no live native/browser UI or Windows/Linux runtime QA is claimed.

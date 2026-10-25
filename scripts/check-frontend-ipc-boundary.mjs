@@ -18,6 +18,15 @@ function inside(directory, file) {
   return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
 }
 
+function unwrapExpression(expression) {
+  while (expression && (
+    ts.isParenthesizedExpression(expression) || ts.isAsExpression(expression) ||
+    ts.isTypeAssertionExpression(expression) || ts.isSatisfiesExpression(expression) ||
+    ts.isNonNullExpression(expression)
+  )) expression = expression.expression;
+  return expression;
+}
+
 export function checkFrontendIpcBoundary(root = projectRoot) {
   const frontend = path.resolve(root, 'frontend');
   const facade = path.join(frontend, 'common', 'services', 'ipc');
@@ -29,6 +38,7 @@ export function checkFrontendIpcBoundary(root = projectRoot) {
     const allowed = inside(facade, file);
 
     function check(specifier, location, computed = false) {
+      specifier = unwrapExpression(specifier);
       const literal = specifier && (ts.isStringLiteral(specifier) || ts.isNoSubstitutionTemplateLiteral(specifier));
       if (computed && !literal) {
         const { line, character } = source.getLineAndCharacterOfPosition(location.getStart(source));
@@ -50,11 +60,12 @@ export function checkFrontendIpcBoundary(root = projectRoot) {
         check(node.moduleReference.expression, node, true);
       } else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
         check(node.argument.literal, node);
-      } else if (ts.isCallExpression(node) && (
-        node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-        (ts.isIdentifier(node.expression) && node.expression.text === 'require')
-      )) {
-        check(node.arguments[0], node, true);
+      } else if (ts.isCallExpression(node)) {
+        const callee = unwrapExpression(node.expression);
+        if (callee.kind === ts.SyntaxKind.ImportKeyword ||
+          (ts.isIdentifier(callee) && callee.text === 'require')) {
+          check(node.arguments[0], node, true);
+        }
       }
       ts.forEachChild(node, visit);
     }
