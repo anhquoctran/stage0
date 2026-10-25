@@ -20,6 +20,10 @@ export interface PreferencesDraftSessionContext {
   storedLineSpacing: number;
   storedEnableLigatures: boolean;
   storedShowInlineBlame: boolean;
+  storedLaunchAtStartup: boolean;
+  storedStartInBackground: boolean;
+  storedExplorerContextMenu: boolean;
+  storedAddToPath: boolean;
   storedSandboxType: SandboxType;
   storedGitBinaryId: string;
   storedGitBinaryPath: string;

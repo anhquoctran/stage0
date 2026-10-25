@@ -35,10 +35,31 @@ function fixture() {
     fail: () => { fail = true; }, pause: (promise) => { paused = promise; } };
 }
 
-test('welcome keeps Theme before Keymaps and ends with AI setup then Open/Clone', () => {
+test('welcome keeps Theme before Keymaps and ends with AI setup then Startup then Open/Clone', () => {
   const { WELCOME_SLIDES } = loadWithMocks(url('features/onboarding/constants/welcomeSlides.ts'), {});
   assert.deepEqual(WELCOME_SLIDES.map((slide) => slide.id),
-    ['welcome', 'compare', 'review', 'theme', 'keymaps', 'ui-font', 'buffer-font', 'markdown-font', 'ai-setup', 'repository']);
+    ['welcome', 'compare', 'review', 'theme', 'keymaps', 'ui-font', 'buffer-font', 'markdown-font', 'ai-setup', 'startup', 'repository']);
+});
+
+test('onboarding startup tab toggles launch on boot and start in background', async (t) => {
+  const runner = componentHarness();
+  t.after(() => runner.cleanup());
+  const { WelcomeStartupTab } = loadWithMocks(url('features/onboarding/components/WelcomeStartupTab.tsx'), {
+    react: runner.react,
+  });
+  const props = { settings: fixture().draft, onChange(fn) { props.settings = fn(props.settings); } };
+  assert.equal(props.settings.launchAtStartup, true);
+  assert.equal(props.settings.startInBackground, false);
+  const tree = await runner.render(WelcomeStartupTab, props);
+  const switch1 = componentNodes(tree).find((node) => node.props.id === 'onboarding-launch-at-startup' && node.type === 'button');
+  const switch2 = componentNodes(tree).find((node) => node.props.id === 'onboarding-start-in-background' && node.type === 'button');
+  assert.ok(switch1 && switch2);
+  assert.equal(switch1.props['aria-checked'], true);
+  assert.equal(switch2.props['aria-checked'], false);
+  switch1.props.onClick();
+  assert.equal(props.settings.launchAtStartup, false);
+  switch2.props.onClick();
+  assert.equal(props.settings.startInBackground, true);
 });
 
 test('onboarding UI font picker delegates font choice and defaults to standard downward placement', async (t) => {
@@ -52,6 +73,7 @@ test('onboarding UI font picker delegates font choice and defaults to standard d
     '../../preferences/components/tabs/PreferencesMarkdownFontTab': { PreferencesMarkdownFontTab: () => null },
     '../../preferences/components/keymaps/KeymapPresetPicker': { KeymapPresetPicker: () => null },
     './WelcomeThemePicker': { WelcomeThemePicker: () => null },
+    './WelcomeStartupTab': { WelcomeStartupTab: () => null },
   });
   const tree = await runner.render(WelcomeSettingsPanel, {
     step: 'ui-font', settings: fixture().draft, onChange() {},
@@ -72,6 +94,7 @@ test('onboarding buffer font step renders simplified tab with family, line spaci
     '../../preferences/components/tabs/PreferencesMarkdownFontTab': { PreferencesMarkdownFontTab: () => null },
     '../../preferences/components/keymaps/KeymapPresetPicker': { KeymapPresetPicker: () => null },
     './WelcomeThemePicker': { WelcomeThemePicker: () => null },
+    './WelcomeStartupTab': { WelcomeStartupTab: () => null },
   });
   const draft = fixture().draft;
   const tree = await runner.render(WelcomeSettingsPanel, {

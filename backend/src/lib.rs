@@ -154,23 +154,40 @@ pub fn run() {
                 }
             }
 
+            let initial_repos = db.get_recent_repositories().unwrap_or_default();
             app.manage(db);
 
-            if let Some(window) = app.get_webview_window("main") {
-                app.state::<WindowManagerState>().register_welcome_window("main", true);
-                let _ = window.center();
-            }
+            let _ = crate::core::tray::setup_tray(handle, &initial_repos);
+            crate::core::dock::setup_dock_menu(handle, &initial_repos);
 
-            notifications::ensure_notification_host(handle);
+            let args = std::env::args().collect::<Vec<_>>();
+            let has_background_flag = args.iter().any(|arg| arg == "--background" || arg == "--hidden");
+            let pref_start_in_background = app.state::<features::preferences::PreferencesManager>()
+                .read().ok().and_then(|d| d.settings)
+                .as_ref().and_then(|s| s.pointer("/general/startInBackground"))
+                .and_then(serde_json::Value::as_bool).unwrap_or(false);
 
+            let mut has_opened_repo = false;
             if let Ok(cwd) = std::env::current_dir() {
-                let args = std::env::args().collect::<Vec<_>>();
                 if let Some(repo_path) = find_repo_argument(&args, &cwd) {
                     if let Err(error) = open_repo_path(app.handle(), &repo_path, Some("main"), false) {
                         eprintln!("Could not open repository passed on startup: {error}");
+                    } else {
+                        has_opened_repo = true;
                     }
                 }
             }
+
+            if let Some(window) = app.get_webview_window("main") {
+                app.state::<WindowManagerState>().register_welcome_window("main", true);
+                if (has_background_flag || pref_start_in_background) && !has_opened_repo {
+                    let _ = window.hide();
+                } else if !has_opened_repo {
+                    let _ = window.center();
+                }
+            }
+
+            notifications::ensure_notification_host(handle);
 
             #[cfg(target_os = "macos")]
             {

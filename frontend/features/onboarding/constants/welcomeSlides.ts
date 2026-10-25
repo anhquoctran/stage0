@@ -23,7 +23,7 @@ export const WELCOME_SLIDES = [
     caption: 'Next, make Stage0 feel familiar with your own theme, shortcuts, and fonts.',
     highlights: [
       { title: 'Keep context close to the code', description: 'Add a description, organize the review with labels, and discuss individual changes in one place.' },
-      { title: 'Pick up where you left off', description: 'Reopen your local merge request to revisit notes. Configure optional reviewer bots in Preferences when you are ready.' },
+      { title: 'Pick up where you left off', description: 'Reopen your local merge request to revisit notes. Create your first reviewer bot in the required AI setup step.' },
     ],
   },
   {
@@ -49,12 +49,17 @@ export const WELCOME_SLIDES = [
   {
     id: 'markdown-font', eyebrow: 'WRITE AND REVIEW CLEARLY', title: 'Set your Markdown fonts',
     description: 'Personalize the editor, rendered text, and code blocks independently.',
-    caption: 'Next, connect an LLM provider or ACP agent to enable AI reviews.',
+    caption: 'Connect an LLM provider or ACP agent, then create and save your first reviewer bot.',
   },
   {
     id: 'ai-setup', eyebrow: 'THE CORE OF YOUR WORKFLOW', title: 'Set up your AI connection',
-    description: 'Connect an LLM provider or add an ACP agent to power the AI review workflow.',
-    caption: 'Save at least one AI connection, then continue to open or clone your repository.',
+    description: 'Connect an LLM provider or add an ACP agent, then create and save your first enabled reviewer bot.',
+    caption: 'Both the AI connection and first reviewer are required before continuing.',
+  },
+  {
+    id: 'startup', eyebrow: 'SYSTEM INTEGRATION', title: 'Launch on startup',
+    description: 'Choose how Stage0 launches on system boot and whether the stage0 terminal command is available on your PATH.',
+    caption: 'PATH setup takes effect in new terminal sessions. You can change these options later in Preferences.',
   },
   {
     id: 'repository', eyebrow: 'YOUR WORKSPACE IS READY', title: 'Start with a repository',

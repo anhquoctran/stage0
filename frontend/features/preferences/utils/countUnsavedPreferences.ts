@@ -3,6 +3,10 @@ import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 export function countUnsavedPreferences(
   draft: {
     showInlineBlame: boolean;
+    launchAtStartup?: boolean;
+    startInBackground?: boolean;
+    explorerContextMenu?: boolean;
+    addToPath?: boolean;
     uiFontFamily?: string;
     themeMode: string;
     fontFamily: string;
@@ -26,6 +30,10 @@ export function countUnsavedPreferences(
   let count = aiChangeCount;
   if (draft.uiFontFamily !== undefined && draft.uiFontFamily !== baseline.uiFontFamily) count++;
   if (draft.showInlineBlame !== baseline.showInlineBlame) count++;
+  if (draft.launchAtStartup !== undefined && draft.launchAtStartup !== baseline.launchAtStartup) count++;
+  if (draft.startInBackground !== undefined && draft.startInBackground !== baseline.startInBackground) count++;
+  if (draft.explorerContextMenu !== undefined && draft.explorerContextMenu !== baseline.explorerContextMenu) count++;
+  if (draft.addToPath !== undefined && draft.addToPath !== baseline.addToPath) count++;
   if (draft.themeMode !== baseline.themeMode) count++;
   if (draft.fontFamily !== baseline.fontFamily) count++;
   if (draft.fontSize !== baseline.fontSize) count++;

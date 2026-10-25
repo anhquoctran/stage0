@@ -15,6 +15,10 @@ export interface PreferencesBaseline {
   lineSpacing: number;
   enableLigatures: boolean;
   showInlineBlame: boolean;
+  launchAtStartup: boolean;
+  startInBackground: boolean;
+  explorerContextMenu: boolean;
+  addToPath: boolean;
   sandboxType: SandboxType;
   aiConfig: AiConfig;
   gitBinaryId: string;

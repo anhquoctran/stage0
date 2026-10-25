@@ -9,4 +9,7 @@ export interface OnboardingPreferences {
   uiFontFamily: string;
   viewerFont: ViewerFontSettings;
   markdownFont: MarkdownFontSettings;
+  launchAtStartup: boolean;
+  startInBackground: boolean;
+  addToPath: boolean;
 }

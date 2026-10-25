@@ -86,6 +86,16 @@ export const PreferencesModal: React.FC = () => {
       draftShowInlineBlame,
       setDraftShowInlineBlame,
     },
+    general: {
+      draftLaunchAtStartup,
+      setDraftLaunchAtStartup,
+      draftStartInBackground,
+      setDraftStartInBackground,
+      draftExplorerContextMenu,
+      setDraftExplorerContextMenu,
+      draftAddToPath,
+      setDraftAddToPath,
+    },
     sandbox: { draftSandboxType, setDraftSandboxType },
     git: { draftGitBinaryId, setDraftGitBinaryId, draftGitBinaryPath, setDraftGitBinaryPath },
   } = usePreferencesDraft();
@@ -131,6 +141,14 @@ export const PreferencesModal: React.FC = () => {
               currentChildItem={currentChildItem}
               draftShowInlineBlame={draftShowInlineBlame}
               setDraftShowInlineBlame={setDraftShowInlineBlame}
+              draftLaunchAtStartup={draftLaunchAtStartup}
+              setDraftLaunchAtStartup={setDraftLaunchAtStartup}
+              draftStartInBackground={draftStartInBackground}
+              setDraftStartInBackground={setDraftStartInBackground}
+              draftExplorerContextMenu={draftExplorerContextMenu}
+              setDraftExplorerContextMenu={setDraftExplorerContextMenu}
+              draftAddToPath={draftAddToPath}
+              setDraftAddToPath={setDraftAddToPath}
               draftAiConfig={draftAiConfig}
               setDraftAiConfig={setDraftAiConfig}
               showToast={showToast}

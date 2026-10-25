@@ -131,6 +131,30 @@ function getInitialInlineBlame(): boolean {
   }
 }
 
+function getInitialLaunchAtStartup(): boolean {
+  if (typeof window === 'undefined') return true;
+  const configured = window.__STAGE0_PREFERENCES__?.general?.launchAtStartup;
+  return typeof configured === 'boolean' ? configured : true;
+}
+
+function getInitialStartInBackground(): boolean {
+  if (typeof window === 'undefined') return false;
+  const configured = window.__STAGE0_PREFERENCES__?.general?.startInBackground;
+  return typeof configured === 'boolean' ? configured : false;
+}
+
+function getInitialExplorerContextMenu(): boolean {
+  if (typeof window === 'undefined') return false;
+  const configured = window.__STAGE0_PREFERENCES__?.general?.explorerContextMenu;
+  return typeof configured === 'boolean' ? configured : false;
+}
+
+function getInitialAddToPath(): boolean {
+  if (typeof window === 'undefined') return false;
+  const configured = window.__STAGE0_PREFERENCES__?.general?.addToPath;
+  return typeof configured === 'boolean' ? configured : false;
+}
+
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   ...initialSettings,
   uiFontFamily: initialUiFontFamily,
@@ -142,6 +166,10 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   isPreferencesOpen: false,
   initialPreferencesTab: null,
   showInlineBlame: getInitialInlineBlame(),
+  launchAtStartup: getInitialLaunchAtStartup(),
+  startInBackground: getInitialStartInBackground(),
+  explorerContextMenu: getInitialExplorerContextMenu(),
+  addToPath: getInitialAddToPath(),
   keymap: readKeymap(typeof window === 'undefined' ? undefined : window.__STAGE0_PREFERENCES__?.keymap),
 
   setIsPreferencesOpen: (open: boolean) =>
@@ -167,6 +195,26 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   toggleInlineBlame: () => {
     const next = !get().showInlineBlame;
     get().setShowInlineBlame(next);
+  },
+
+  setLaunchAtStartup: (val: boolean) => {
+    set({ launchAtStartup: val });
+    void preferencesJsonService.patch({ general: { launchAtStartup: val } }).catch((error) => console.error('Could not save preferences.json:', error));
+  },
+
+  setStartInBackground: (val: boolean) => {
+    set({ startInBackground: val });
+    void preferencesJsonService.patch({ general: { startInBackground: val } }).catch((error) => console.error('Could not save preferences.json:', error));
+  },
+
+  setExplorerContextMenu: (val: boolean) => {
+    set({ explorerContextMenu: val });
+    void preferencesJsonService.patch({ general: { explorerContextMenu: val } }).catch((error) => console.error('Could not save preferences.json:', error));
+  },
+
+  setAddToPath: (val: boolean) => {
+    set({ addToPath: val });
+    void preferencesJsonService.patch({ general: { addToPath: val } }).catch((error) => console.error('Could not save preferences.json:', error));
   },
 
   updateViewerFontSettings: (partial: Partial<ViewerFontSettings>) => {

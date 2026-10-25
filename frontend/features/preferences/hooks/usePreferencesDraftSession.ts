@@ -19,6 +19,10 @@ export function usePreferencesDraftSession({
   storedLineSpacing,
   storedEnableLigatures,
   storedShowInlineBlame,
+  storedLaunchAtStartup,
+  storedStartInBackground,
+  storedExplorerContextMenu,
+  storedAddToPath,
   storedSandboxType,
   storedGitBinaryId,
   storedGitBinaryPath,
@@ -74,6 +78,10 @@ export function usePreferencesDraftSession({
   const [draftWordWrap, setDraftWordWrap] = useState(false);
 
   const [draftShowInlineBlame, setDraftShowInlineBlame] = useState(storedShowInlineBlame);
+  const [draftLaunchAtStartup, setDraftLaunchAtStartup] = useState(storedLaunchAtStartup);
+  const [draftStartInBackground, setDraftStartInBackground] = useState(storedStartInBackground);
+  const [draftExplorerContextMenu, setDraftExplorerContextMenu] = useState(storedExplorerContextMenu);
+  const [draftAddToPath, setDraftAddToPath] = useState(storedAddToPath);
 
   const [draftSandboxType, setDraftSandboxType] = useState<SandboxType>(storedSandboxType);
 
@@ -93,6 +101,10 @@ export function usePreferencesDraftSession({
     lineSpacing: storedLineSpacing,
     enableLigatures: storedEnableLigatures,
     showInlineBlame: storedShowInlineBlame,
+    launchAtStartup: storedLaunchAtStartup,
+    startInBackground: storedStartInBackground,
+    explorerContextMenu: storedExplorerContextMenu,
+    addToPath: storedAddToPath,
     sandboxType: storedSandboxType,
     aiConfig: { ...storedAiConfig },
     gitBinaryId: storedGitBinaryId,
@@ -127,6 +139,10 @@ export function usePreferencesDraftSession({
         setDraftLineSpacing(storedLineSpacing);
         setDraftEnableLigatures(storedEnableLigatures);
         setDraftShowInlineBlame(storedShowInlineBlame);
+        setDraftLaunchAtStartup(storedLaunchAtStartup);
+        setDraftStartInBackground(storedStartInBackground);
+        setDraftExplorerContextMenu(storedExplorerContextMenu);
+        setDraftAddToPath(storedAddToPath);
         setDraftSandboxType(storedSandboxType);
         setDraftMarkdownFontFamily(storedMarkdownFontFamily);
         setDraftMarkdownCodeFontFamily(storedMarkdownCodeFontFamily);
@@ -153,6 +169,10 @@ export function usePreferencesDraftSession({
           lineSpacing: storedLineSpacing,
           enableLigatures: storedEnableLigatures,
           showInlineBlame: storedShowInlineBlame,
+          launchAtStartup: storedLaunchAtStartup,
+          startInBackground: storedStartInBackground,
+          explorerContextMenu: storedExplorerContextMenu,
+          addToPath: storedAddToPath,
           sandboxType: storedSandboxType,
           aiConfig: { ...storedAiConfig },
           gitBinaryId: storedGitBinaryId,
@@ -200,6 +220,10 @@ export function usePreferencesDraftSession({
     storedLineSpacing,
     storedEnableLigatures,
     storedShowInlineBlame,
+    storedLaunchAtStartup,
+    storedStartInBackground,
+    storedExplorerContextMenu,
+    storedAddToPath,
     storedSandboxType,
     storedAiConfig,
     storedGitBinaryId,
@@ -218,6 +242,14 @@ export function usePreferencesDraftSession({
     setDraftUiFontFamily,
     setDraftKeymap,
     draftShowInlineBlame,
+    draftLaunchAtStartup,
+    setDraftLaunchAtStartup,
+    draftStartInBackground,
+    setDraftStartInBackground,
+    draftExplorerContextMenu,
+    setDraftExplorerContextMenu,
+    draftAddToPath,
+    setDraftAddToPath,
     draftThemeMode,
     draftFontFamily,
     draftFontSize,

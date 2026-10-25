@@ -81,16 +81,22 @@ When reviewing git diffs:
 3. Be clear, constructive, and concise. Avoid superfluous praise.
 4. Format markdown with code blocks, line references, and actionable improvements.`;
   const migratedAi = oldAi && typeof oldAi === 'object' ? structuredClone(oldAi) : {};
-  const migratedAiConfig = migratedAi.aiConfig && typeof migratedAi.aiConfig === 'object'
-    ? migratedAi.aiConfig as Record<string, unknown>
-    : {};
-  if (typeof legacyPrompt === 'string' && legacyPrompt.trim() && legacyPrompt !== defaultLegacyPrompt &&
-      (typeof migratedAiConfig.reviewerInstructions !== 'string' || !migratedAiConfig.reviewerInstructions.trim())) {
-    migratedAiConfig.reviewerInstructions = legacyPrompt;
+  if (oldAiConfig && typeof oldAiConfig === 'object') {
+    const migratedAiConfig = structuredClone(oldAiConfig);
+    if (typeof legacyPrompt === 'string' && legacyPrompt.trim() && legacyPrompt !== defaultLegacyPrompt &&
+        (typeof migratedAiConfig.reviewerInstructions !== 'string' || !migratedAiConfig.reviewerInstructions.trim())) {
+      migratedAiConfig.reviewerInstructions = legacyPrompt;
+    }
+    delete migratedAiConfig.systemPrompt;
+    delete migratedAiConfig.apiKey;
+    if (typeof migratedAiConfig.provider === 'string' && migratedAiConfig.provider.trim()) {
+      migratedAi.aiConfig = migratedAiConfig;
+    } else {
+      delete migratedAi.aiConfig;
+    }
+  } else {
+    delete migratedAi.aiConfig;
   }
-  delete migratedAiConfig.systemPrompt;
-  delete migratedAiConfig.apiKey;
-  migratedAi.aiConfig = migratedAiConfig;
   const oldTheme = localStorage.getItem('stage0_catppuccin_theme_mode');
   const catppuccinTheme = localStorage.getItem('stage0_catppuccin_theme');
   const themeMode = oldTheme === 'dark' || oldTheme === 'light' || oldTheme === 'system'

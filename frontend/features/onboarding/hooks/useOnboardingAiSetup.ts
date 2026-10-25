@@ -3,10 +3,12 @@ import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
 import { createAiPreferencesDraft } from '../../ai/store/createAiPreferencesDraft';
 import { captureAiPreferences, commitAiPreferences } from '../../ai/services/commitAiPreferences';
 import { aiPreferencesChangeCount } from '../../ai/utils/aiPreferencesSnapshot';
-import { onboardingAiConnections } from '../services/onboardingAiStatus';
+import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
+import { hasRequiredOnboardingReviewer, onboardingAiConnections } from '../services/onboardingAiStatus';
 
 export function useOnboardingAiSetup() {
   const committed = useAiMcpStore();
+  const committedReviewers = useBotReviewersStore();
   const [baseline, setBaseline] = useState(captureAiPreferences);
   const [draftStore] = useState(() => createAiPreferencesDraft(baseline));
   const draft = draftStore();
@@ -14,9 +16,12 @@ export function useOnboardingAiSetup() {
   const [error, setError] = useState<string | null>(null);
   const acting = useRef(false);
   const connections = onboardingAiConnections(committed);
+  const hasRequiredReviewer = hasRequiredOnboardingReviewer(draft.globalReviewers);
+  const hasSavedRequiredReviewer = hasRequiredOnboardingReviewer(committedReviewers.globalReviewers);
   const hasChanges = aiPreferencesChangeCount(draft, baseline) > 0;
   const canFinish = () => !acting.current && aiPreferencesChangeCount(draftStore.getState(), baseline) === 0 &&
-    onboardingAiConnections(useAiMcpStore.getState()).length > 0;
+    onboardingAiConnections(useAiMcpStore.getState()).length > 0 &&
+    hasRequiredOnboardingReviewer(useBotReviewersStore.getState().globalReviewers);
 
   useEffect(() => () => draftStore.getState().replace(captureAiPreferences()), [draftStore]);
 
@@ -51,5 +56,5 @@ export function useOnboardingAiSetup() {
     } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
     finally { acting.current = false; setBusy(false); }
   };
-  return { draft, connections, busy, error, hasChanges, canFinish, save, discard, checkSavedKeys };
+  return { draft, connections, busy, error, hasChanges, hasRequiredReviewer, hasSavedRequiredReviewer, canFinish, save, discard, checkSavedKeys };
 }

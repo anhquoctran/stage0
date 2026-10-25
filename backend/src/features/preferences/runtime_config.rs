@@ -49,4 +49,24 @@ pub(super) fn apply_runtime_preferences(app: &AppHandle, settings: &Value) {
             crate::features::git::runner::set_active_git_path(None);
         }
     }
+
+    let launch_at_startup = settings
+        .pointer("/general/launchAtStartup")
+        .and_then(Value::as_bool);
+    let start_in_background = settings
+        .pointer("/general/startInBackground")
+        .and_then(Value::as_bool);
+    let explorer_context_menu = settings
+        .pointer("/general/explorerContextMenu")
+        .and_then(Value::as_bool);
+    let add_to_path = settings
+        .pointer("/general/addToPath")
+        .and_then(Value::as_bool);
+
+    super::system_integration::apply_system_integration(
+        launch_at_startup,
+        start_in_background,
+        explorer_context_menu,
+        add_to_path,
+    );
 }

@@ -30,6 +30,10 @@ export interface PreferencesApplyContext {
   draftThemeMode: ThemeMode;
   savedBaseline: PreferencesBaseline;
   draftShowInlineBlame: boolean;
+  draftLaunchAtStartup: boolean;
+  draftStartInBackground: boolean;
+  draftExplorerContextMenu: boolean;
+  draftAddToPath: boolean;
   draftSandboxType: SandboxType;
   draftGitBinaryId: string;
   draftGitBinaryPath: string;

@@ -29,6 +29,14 @@ export function PreferencesTabContainer({
   currentChildItem,
   draftShowInlineBlame,
   setDraftShowInlineBlame,
+  draftLaunchAtStartup,
+  setDraftLaunchAtStartup,
+  draftStartInBackground,
+  setDraftStartInBackground,
+  draftExplorerContextMenu,
+  setDraftExplorerContextMenu,
+  draftAddToPath,
+  setDraftAddToPath,
   draftAiConfig,
   setDraftAiConfig,
   showToast,
@@ -139,6 +147,14 @@ export function PreferencesTabContainer({
           <PreferencesGeneralTab
             draftShowInlineBlame={draftShowInlineBlame}
             setDraftShowInlineBlame={setDraftShowInlineBlame}
+            draftLaunchAtStartup={draftLaunchAtStartup}
+            setDraftLaunchAtStartup={setDraftLaunchAtStartup}
+            draftStartInBackground={draftStartInBackground}
+            setDraftStartInBackground={setDraftStartInBackground}
+            draftExplorerContextMenu={draftExplorerContextMenu}
+            setDraftExplorerContextMenu={setDraftExplorerContextMenu}
+            draftAddToPath={draftAddToPath}
+            setDraftAddToPath={setDraftAddToPath}
             draftAiConfig={draftAiConfig}
             setDraftAiConfig={setDraftAiConfig}
             showToast={showToast}

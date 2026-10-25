@@ -24,6 +24,9 @@ pub fn update_recent_repositories_menu(
     app: AppHandle,
     repositories: Vec<RepoInfo>,
 ) -> Result<(), String> {
+    let _ = crate::core::tray::update_tray_menu(&app, &repositories);
+    crate::core::dock::update_dock_repositories(&repositories);
+
     let Some(app_menu) = app.menu() else {
         return Ok(());
     };

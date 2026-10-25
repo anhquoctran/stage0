@@ -38,6 +38,10 @@ export function createPreferencesApplyAction({
   draftThemeMode,
   savedBaseline,
   draftShowInlineBlame,
+  draftLaunchAtStartup,
+  draftStartInBackground,
+  draftExplorerContextMenu,
+  draftAddToPath,
   draftSandboxType,
   draftGitBinaryId,
   draftGitBinaryPath,
@@ -104,8 +108,24 @@ export function createPreferencesApplyAction({
       if (markdownFontChanged) appearancePatch.markdownFont = markdownFontSettings;
 
       if (Object.keys(appearancePatch).length) additionalPreferences.appearance = appearancePatch;
+      const generalPatch: Record<string, unknown> = {};
       if (draftShowInlineBlame !== savedBaseline.showInlineBlame) {
-        additionalPreferences.general = { showInlineBlame: draftShowInlineBlame };
+        generalPatch.showInlineBlame = draftShowInlineBlame;
+      }
+      if (draftLaunchAtStartup !== savedBaseline.launchAtStartup) {
+        generalPatch.launchAtStartup = draftLaunchAtStartup;
+      }
+      if (draftStartInBackground !== savedBaseline.startInBackground) {
+        generalPatch.startInBackground = draftStartInBackground;
+      }
+      if (draftExplorerContextMenu !== savedBaseline.explorerContextMenu) {
+        generalPatch.explorerContextMenu = draftExplorerContextMenu;
+      }
+      if (draftAddToPath !== savedBaseline.addToPath) {
+        generalPatch.addToPath = draftAddToPath;
+      }
+      if (Object.keys(generalPatch).length) {
+        additionalPreferences.general = generalPatch;
       }
       if (draftSandboxType !== savedBaseline.sandboxType)
         additionalPreferences.sandbox = { type: draftSandboxType };
@@ -136,6 +156,10 @@ export function createPreferencesApplyAction({
         uiFontFamily: committedUiFont,
         ...fontSettings,
         showInlineBlame: draftShowInlineBlame,
+        launchAtStartup: draftLaunchAtStartup,
+        startInBackground: draftStartInBackground,
+        explorerContextMenu: draftExplorerContextMenu,
+        addToPath: draftAddToPath,
         markdownFontFamily: draftMarkdownFontFamily,
         markdownCodeFontFamily: draftMarkdownCodeFontFamily,
         markdownEditorFontFamily: draftMarkdownEditorFontFamily,
@@ -182,6 +206,10 @@ export function createPreferencesApplyAction({
         lineSpacing: draftLineSpacing,
         enableLigatures: draftEnableLigatures,
         showInlineBlame: draftShowInlineBlame,
+        launchAtStartup: draftLaunchAtStartup,
+        startInBackground: draftStartInBackground,
+        explorerContextMenu: draftExplorerContextMenu,
+        addToPath: draftAddToPath,
         sandboxType: draftSandboxType,
         aiConfig: committedAi.aiConfig,
         gitBinaryId: draftGitBinaryId,

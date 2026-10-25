@@ -9,6 +9,7 @@ mod runtime_config;
 mod schema;
 mod secrets;
 mod storage;
+pub(crate) mod system_integration;
 mod validation;
 mod validation_fields;
 mod validation_records;

@@ -40,6 +40,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   const { settings, setSettings, isSaving, saveError, save, reload } = useOnboardingPreferences();
   const aiSetup = useOnboardingAiSetup();
   const [aiRequired, setAiRequired] = useState(false);
+  const [aiSetupPassed, setAiSetupPassed] = useState(false);
   const completedRef = useRef(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const isMac =
@@ -53,10 +54,14 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   const isAppearanceSlide = isSettingsSlide && !isAiSlide;
   const isBusy = isSaving || aiSetup.busy;
   const requireAiSetup = () => {
+    setAiSetupPassed(false);
     setAiRequired(true); setActiveSlide(AI_SETUP_SLIDE);
   };
   const selectSlide = (index: number) => {
     if (index > AI_SETUP_SLIDE && !aiSetup.canFinish()) { requireAiSetup(); return; }
+    if (activeSlide === AI_SETUP_SLIDE && index > AI_SETUP_SLIDE && aiSetup.canFinish()) {
+      setAiSetupPassed(true);
+    }
     setActiveSlide(index);
   };
 
@@ -196,7 +201,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                 </div>)}
               </dl>}
               {isAiSlide ? <div className="mt-5 rounded-sm">
-                {aiRequired && !aiSetup.canFinish() && <p role="alert" className="mb-3 rounded-sm bg-yellow/10 p-3 text-xs leading-5 text-text">Save at least one AI connection and save or discard any AI draft before finishing onboarding.</p>}
+                {aiRequired && !aiSetup.canFinish() && <p role="alert" className="mb-3 rounded-sm bg-yellow/10 p-3 text-xs leading-5 text-text">Save an AI connection and an enabled custom reviewer, and save or discard any AI draft before continuing.</p>}
                 <WelcomeAiSetup setup={aiSetup} />
               </div> : isAppearanceSlide && <div className="mt-5 rounded-sm max-sm:[&_[data-setting-row]]:flex-col max-sm:[&_[data-setting-row]]:items-stretch">
                 <p className="mb-4 text-xs leading-relaxed text-subtext0">
@@ -234,7 +239,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                   />
                 ))}
               </div>
-              {aiSetup.connections.length > 0 && <button
+              {aiSetupPassed && aiSetup.canFinish() && !isAiSlide && <button
                 type="button"
                 onClick={finish}
                 tabIndex={-1}
@@ -272,7 +277,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
             {isRepositorySlide ? <WelcomeRepositoryPreview /> : isAiSlide ? <div className="space-y-5 rounded-sm">
               <p className="text-xs font-semibold uppercase tracking-widest text-brand">AI is at the heart of Stage0</p>
               <h2 className="text-3xl font-semibold text-text">Your model. Your workflow.</h2>
-              <p className="text-sm leading-6 text-subtext1">Use a built-in LLM provider, a local Ollama model, or an external ACP agent. One saved setup unlocks the next step.</p>
+              <p className="text-sm leading-6 text-subtext1">Use a built-in LLM provider, a local Ollama model, or an external ACP agent, then save your first enabled reviewer bot to continue.</p>
               <div className="grid grid-cols-2 gap-3">
                 {['LLM Provider', 'ACP Agent'].map((label) => <div key={label} className="rounded-sm bg-base p-5 text-sm font-semibold text-text">{label}</div>)}
               </div>

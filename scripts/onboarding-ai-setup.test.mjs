@@ -7,7 +7,7 @@ const url = (path) => new URL(`../frontend/features/onboarding/${path}`, import.
 const { DEFAULT_AI_CONFIG } = loadWithMocks(new URL('../frontend/features/ai/constants/aiPresets.ts', import.meta.url), {});
 const { onboardingAiConnections } = loadWithMocks(url('services/onboardingAiStatus.ts'), {});
 const agent = { id: 'test-acp', name: 'Test agent', command: 'test-agent', args: [], source: 'custom' };
-const snapshot = () => ({ aiConfig: structuredClone(DEFAULT_AI_CONFIG), mcpServers: [], externalAgents: [], globalReviewers: [], guardrailPolicy: {} });
+const snapshot = () => ({ aiConfig: structuredClone(DEFAULT_AI_CONFIG), mcpServers: [], externalAgents: [], globalReviewers: [{ id: 'first-reviewer', name: 'First reviewer', enabled: true, isBuiltin: false }], guardrailPolicy: {} });
 
 test('setup requires an explicit saved provider with model/endpoint/credentials, or a saved ACP launch', () => {
   const state = { ...snapshot(), apiKeysConfigured: {} };
@@ -38,6 +38,7 @@ test('AI setup drafts do not unlock completion; failed saves retain drafts and s
   const { useOnboardingAiSetup } = loadWithMocks(url('hooks/useOnboardingAiSetup.ts'), {
     react: runner.react,
     '../../ai/store/useAiMcpStore': { useAiMcpStore: store },
+    '../../ai/store/useBotReviewersStore': { useBotReviewersStore: store },
     '../../ai/services/commitAiPreferences': {
       captureAiPreferences: capture,
       commitAiPreferences: async (draft) => {
@@ -114,6 +115,7 @@ test('Skip, Close, Escape and jumping to the final slide cannot bypass required 
   for (const action of ['Open a repository', 'Clone a repository']) {
     ready = true; nodes = await render(); assert.equal(button(nodes, 'Next').props.disabled, false);
     button(nodes, 'Next').props.onClick(); nodes = await render();
+    button(nodes, 'Next').props.onClick(); nodes = await render();
     assert.ok(nodes.some((node) => node.type === 'h1' && node.props.children.includes('Start with a repository')));
     assert.ok(button(nodes, 'Open a repository') && button(nodes, 'Clone a repository'));
     ready = false; nodes = await render();
@@ -122,6 +124,8 @@ test('Skip, Close, Escape and jumping to the final slide cannot bypass required 
     assert.equal(stored.size, 0); assert.equal(saves, 0); assert.equal(completed, 0); assert.equal(repoActions, 0);
   }
   ready = true; nodes = await render();
+  assert.equal(button(nodes, 'Skip tour'), undefined, 'The AI setup screen cannot skip the tour');
+  button(nodes, 'Next').props.onClick(); nodes = await render();
   await button(nodes, 'Skip tour').props.onClick();
   assert.equal(completed, 1); assert.equal(saves, 1); assert.equal(stored.get('stage0_first_launch_welcome_v1'), 'completed');
 });

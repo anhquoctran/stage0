@@ -13,6 +13,10 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     validate_optional_bool(general, "showInlineBlame", "general")?;
     validate_optional_bool(general, "streamResponse", "general")?;
     validate_optional_bool(general, "enableCodeReviewAssist", "general")?;
+    validate_optional_bool(general, "launchAtStartup", "general")?;
+    validate_optional_bool(general, "startInBackground", "general")?;
+    validate_optional_bool(general, "explorerContextMenu", "general")?;
+    validate_optional_bool(general, "addToPath", "general")?;
 
     let appearance = object_section(value, "appearance")?;
     if let Some(font) = appearance.get("uiFont") {
@@ -42,51 +46,53 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     let ai = object_section(value, "ai")?;
     if let Some(config) = ai.get("aiConfig") {
         let config = config.as_object().ok_or("ai.aiConfig must be an object")?;
-        validate_enum_string(
-            config,
-            "provider",
-            "ai.aiConfig",
-            &[
-                "openai",
-                "anthropic",
-                "gemini",
-                "xai_grok",
-                "github_copilot",
-                "ollama",
-                "custom",
-            ],
-        )?;
-        validate_optional_enum(
-            config,
-            "authMode",
-            "ai.aiConfig",
-            &["api_key", "subscription_oauth", "cli_bridge"],
-        )?;
-        validate_optional_enum(
-            config,
-            "cliType",
-            "ai.aiConfig",
-            &["claude", "gh_copilot", "gcloud", "grok"],
-        )?;
-        validate_optional_string(config, "model", "ai.aiConfig", 512, false)?;
-        validate_optional_string(config, "baseUrl", "ai.aiConfig", 4096, false)?;
-        if let Some(api_key) = config.get("apiKey") {
-            if api_key.as_str().is_none_or(|key| !key.is_empty()) {
-                return Err("ai.aiConfig.apiKey must be omitted or empty; credentials belong in the OS keychain".into());
+        if !config.is_empty() {
+            validate_enum_string(
+                config,
+                "provider",
+                "ai.aiConfig",
+                &[
+                    "openai",
+                    "anthropic",
+                    "gemini",
+                    "xai_grok",
+                    "github_copilot",
+                    "ollama",
+                    "custom",
+                ],
+            )?;
+            validate_optional_enum(
+                config,
+                "authMode",
+                "ai.aiConfig",
+                &["api_key", "subscription_oauth", "cli_bridge"],
+            )?;
+            validate_optional_enum(
+                config,
+                "cliType",
+                "ai.aiConfig",
+                &["claude", "gh_copilot", "gcloud", "grok"],
+            )?;
+            validate_optional_string(config, "model", "ai.aiConfig", 512, false)?;
+            validate_optional_string(config, "baseUrl", "ai.aiConfig", 4096, false)?;
+            if let Some(api_key) = config.get("apiKey") {
+                if api_key.as_str().is_none_or(|key| !key.is_empty()) {
+                    return Err("ai.aiConfig.apiKey must be omitted or empty; credentials belong in the OS keychain".into());
+                }
             }
+            validate_optional_number(config, "temperature", "ai.aiConfig", 0.0, 2.0)?;
+            validate_optional_enum(
+                config,
+                "reasoningEffort",
+                "ai.aiConfig",
+                &["none", "minimal", "low", "medium", "high", "xhigh", "max"],
+            )?;
+            validate_optional_bool(config, "fastMode", "ai.aiConfig")?;
+            validate_optional_integer(config, "maxTokens", "ai.aiConfig", 1, 1_000_000)?;
+            validate_optional_string(config, "reviewerInstructions", "ai.aiConfig", 32_000, true)?;
+            validate_optional_bool(config, "streamResponse", "ai.aiConfig")?;
+            validate_optional_bool(config, "enableCodeReviewAssist", "ai.aiConfig")?;
         }
-        validate_optional_number(config, "temperature", "ai.aiConfig", 0.0, 2.0)?;
-        validate_optional_enum(
-            config,
-            "reasoningEffort",
-            "ai.aiConfig",
-            &["none", "minimal", "low", "medium", "high", "xhigh", "max"],
-        )?;
-        validate_optional_bool(config, "fastMode", "ai.aiConfig")?;
-        validate_optional_integer(config, "maxTokens", "ai.aiConfig", 1, 1_000_000)?;
-        validate_optional_string(config, "reviewerInstructions", "ai.aiConfig", 32_000, true)?;
-        validate_optional_bool(config, "streamResponse", "ai.aiConfig")?;
-        validate_optional_bool(config, "enableCodeReviewAssist", "ai.aiConfig")?;
     }
     if let Some(servers) = ai.get("mcpServers") {
         let servers = servers.as_array().ok_or("ai.mcpServers must be an array")?;

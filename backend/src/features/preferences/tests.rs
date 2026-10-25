@@ -305,3 +305,41 @@ fn second_manager_for_test(directory: &Path) -> PreferencesManager {
 fn revision_is_content_sensitive() {
     assert_ne!(revision("{}"), revision("{ }"));
 }
+
+#[test]
+fn read_and_legacy_credentials_auto_initialize_when_missing() {
+    let directory =
+        std::env::temp_dir().join(format!("stage0-preferences-missing-{}", uuid::Uuid::new_v4()));
+    let manager = PreferencesManager::new(directory.clone()).unwrap();
+    let (creds, rev) = manager.legacy_git_credentials().unwrap();
+    assert!(creds.is_none());
+    assert!(rev.is_empty());
+
+    let doc = manager.read().unwrap();
+    assert!(doc.migrated);
+    assert!(doc.settings.is_some());
+    assert_eq!(doc.settings.as_ref().unwrap()["schemaVersion"], 1);
+    assert!(directory.join(PREFERENCES_FILE).exists());
+
+    let _ = fs::remove_dir_all(directory);
+}
+
+#[test]
+fn initialize_falls_back_to_defaults_on_corrupt_legacy_data() {
+    let directory =
+        std::env::temp_dir().join(format!("stage0-preferences-corrupt-{}", uuid::Uuid::new_v4()));
+    let manager = PreferencesManager::new(directory.clone()).unwrap();
+    let corrupt_legacy = json!({
+        "schemaVersion": "not a number",
+        "general": false,
+    });
+    let doc = manager.initialize(corrupt_legacy, None).unwrap();
+    assert!(doc.settings.is_some());
+    assert_eq!(doc.settings.as_ref().unwrap()["schemaVersion"], 1);
+    assert_eq!(
+        doc.settings.as_ref().unwrap()["general"]["showInlineBlame"],
+        true
+    );
+
+    let _ = fs::remove_dir_all(directory);
+}

@@ -7,6 +7,7 @@ import type { ViewerFontSettings } from '../../preferences/types/ViewerFontSetti
 import type { MarkdownFontSettings } from '../../preferences/types/MarkdownFontSettings';
 import type { SetStateAction } from 'react';
 import { WelcomeThemePicker } from './WelcomeThemePicker';
+import { WelcomeStartupTab } from './WelcomeStartupTab';
 
 export function WelcomeSettingsPanel({ step, settings, onChange }: WelcomeSettingsProps) {
   const setViewer = <K extends keyof ViewerFontSettings>(key: K, value: SetStateAction<ViewerFontSettings[K]>) =>
@@ -33,5 +34,6 @@ export function WelcomeSettingsPanel({ step, settings, onChange }: WelcomeSettin
     draftMarkdownEditorFontFamily={settings.markdownFont.editorFontFamily} setDraftMarkdownEditorFontFamily={(value) => setMarkdown('editorFontFamily', value)}
     draftMarkdownFontSize={settings.markdownFont.fontSize} setDraftMarkdownFontSize={(value) => setMarkdown('fontSize', value)}
     draftMarkdownHeadingWeight={settings.markdownFont.headingFontWeight} setDraftMarkdownHeadingWeight={(value) => setMarkdown('headingFontWeight', value)} />;
+  if (step === 'startup') return <WelcomeStartupTab settings={settings} onChange={onChange} />;
   return null;
 }

@@ -65,6 +65,42 @@ export function WelcomeSettingsPreview({ step, settings }: Omit<WelcomeSettingsP
       <pre><code>git diff main...feature</code></pre>
     </div>
   </div>;
+  if (step === 'startup') {
+    return (
+      <div className="overflow-hidden rounded-sm border border-surface0 bg-base p-6">
+        <div className="flex items-center gap-2 text-xs text-subtext0">
+          <span className="h-2 w-2 rounded-full bg-brand" /> Stage0 · System Integration
+        </div>
+        <h2 className="mt-4 text-base font-semibold text-text">Launch on system boot</h2>
+        <p className="mt-1 text-xs leading-relaxed text-subtext1">
+          Stage0 can start automatically with your system so your local Virtual MRs, reviews, and diff tools are ready instantly.
+        </p>
+        <div className="mt-5 space-y-3">
+          <div className="flex items-center justify-between rounded-sm bg-surface0/60 p-3 text-xs">
+            <span className="font-medium text-text">System boot</span>
+            <span className={`rounded-sm px-2 py-0.5 text-[11px] font-semibold ${settings.launchAtStartup ? 'bg-emerald-600 text-white' : 'bg-surface2 text-subtext0'}`}>
+              {settings.launchAtStartup ? 'Enabled' : 'Disabled'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between rounded-sm bg-surface0/60 p-3 text-xs">
+            <span className="font-medium text-text">Background mode</span>
+            <span className={`rounded-sm px-2 py-0.5 text-[11px] font-semibold ${settings.startInBackground ? 'bg-brand text-white' : 'bg-surface2 text-subtext0'}`}>
+              {settings.startInBackground ? 'Quiet in tray' : 'Open window'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between rounded-sm bg-surface0/60 p-3 text-xs">
+            <span className="font-medium text-text">Terminal command</span>
+            <span className={`rounded-sm px-2 py-0.5 text-[11px] font-semibold ${settings.addToPath ? 'bg-emerald-600 text-white' : 'bg-surface2 text-subtext0'}`}>
+              {settings.addToPath ? 'stage0 enabled' : 'Not added'}
+            </span>
+          </div>
+        </div>
+        <p className="mt-5 text-[11px] text-subtext0 leading-normal">
+          Run <code>stage0 [dir]</code> from a new terminal to open a repository. Background mode keeps Stage0 in the system tray.
+        </p>
+      </div>
+    );
+  }
   return <div className="rounded-sm border border-surface0 bg-base p-6">
     <p className="text-[10px] uppercase tracking-widest text-subtext0">Stage0 · Workspace</p>
     <h2 className="mt-4 text-2xl font-semibold">A workspace that feels like you</h2>

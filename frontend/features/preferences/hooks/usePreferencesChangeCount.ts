@@ -13,6 +13,10 @@ export function usePreferencesChangeCount({
     return (JSON.stringify(session.draftKeymap) !== JSON.stringify(session.savedBaseline.keymap) ? 1 : 0) + countUnsavedPreferences(
       {
         showInlineBlame: session.draftShowInlineBlame,
+        launchAtStartup: session.draftLaunchAtStartup,
+        startInBackground: session.draftStartInBackground,
+        explorerContextMenu: session.draftExplorerContextMenu,
+        addToPath: session.draftAddToPath,
         uiFontFamily: session.draftUiFontFamily,
         themeMode: session.draftThemeMode,
         fontFamily: session.draftFontFamily,
@@ -37,6 +41,10 @@ export function usePreferencesChangeCount({
     session.draftKeymap,
     session.draftUiFontFamily,
     session.draftShowInlineBlame,
+    session.draftLaunchAtStartup,
+    session.draftStartInBackground,
+    session.draftExplorerContextMenu,
+    session.draftAddToPath,
     draftAiConfig,
     session.draftThemeMode,
     session.draftFontFamily,

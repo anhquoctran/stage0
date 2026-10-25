@@ -23,6 +23,9 @@ export function captureOnboardingPreferences(): OnboardingPreferences {
       editorFontFamily: state.markdownEditorFontFamily, fontSize: state.markdownFontSize,
       headingFontWeight: state.markdownHeadingFontWeight,
     },
+    launchAtStartup: state.launchAtStartup ?? true,
+    startInBackground: state.startInBackground ?? false,
+    addToPath: state.addToPath ?? false,
   });
 }
 
@@ -61,6 +64,11 @@ export async function saveOnboardingPreferences(draft: OnboardingPreferences, ba
   );
   assertNoConflicts(baseline.viewerFont, draft.viewerFont, current.viewerFont);
   assertNoConflicts(baseline.markdownFont, draft.markdownFont, current.markdownFont);
+  assertNoConflicts(
+    { launchAtStartup: baseline.launchAtStartup, startInBackground: baseline.startInBackground, addToPath: baseline.addToPath },
+    { launchAtStartup: draft.launchAtStartup, startInBackground: draft.startInBackground, addToPath: draft.addToPath },
+    { launchAtStartup: current.launchAtStartup, startInBackground: current.startInBackground, addToPath: current.addToPath }
+  );
   const viewerChanges = changedFields(baseline.viewerFont, draft.viewerFont);
   const markdownChanges = changedFields(baseline.markdownFont, draft.markdownFont);
   const uiChanged = draft.uiFontFamily !== baseline.uiFontFamily;
@@ -71,9 +79,14 @@ export async function saveOnboardingPreferences(draft: OnboardingPreferences, ba
   if (uiChanged) appearance.uiFont = { fontFamily: draft.uiFontFamily };
   if (Object.keys(viewerChanges).length) appearance.viewerFont = viewerChanges;
   if (Object.keys(markdownChanges).length) appearance.markdownFont = markdownChanges;
+  const general: Record<string, unknown> = {};
+  if (draft.launchAtStartup !== baseline.launchAtStartup) general.launchAtStartup = draft.launchAtStartup;
+  if (draft.startInBackground !== baseline.startInBackground) general.startInBackground = draft.startInBackground;
+  if (draft.addToPath !== baseline.addToPath) general.addToPath = draft.addToPath;
   const patch: Record<string, unknown> = {};
   if (keymapChanged) patch.keymap = draft.keymap;
   if (Object.keys(appearance).length) patch.appearance = appearance;
+  if (Object.keys(general).length) patch.general = general;
   if (!Object.keys(patch).length) return;
   await preferencesJsonService.patch(patch);
 
@@ -89,6 +102,9 @@ export async function saveOnboardingPreferences(draft: OnboardingPreferences, ba
   usePreferencesStore.setState({
     ...(keymapChanged ? { keymap: structuredClone(draft.keymap) } : {}),
     ...(uiChanged ? { uiFontFamily: draft.uiFontFamily } : {}),
+    ...(draft.launchAtStartup !== baseline.launchAtStartup ? { launchAtStartup: draft.launchAtStartup } : {}),
+    ...(draft.startInBackground !== baseline.startInBackground ? { startInBackground: draft.startInBackground } : {}),
+    ...(draft.addToPath !== baseline.addToPath ? { addToPath: draft.addToPath } : {}),
     ...viewerChanges,
     markdownFontFamily: markdown.fontFamily, markdownCodeFontFamily: markdown.codeFontFamily,
     markdownEditorFontFamily: markdown.editorFontFamily, markdownFontSize: markdown.fontSize,

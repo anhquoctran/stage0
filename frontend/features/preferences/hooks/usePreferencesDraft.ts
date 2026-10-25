@@ -45,6 +45,10 @@ export function usePreferencesDraft() {
     lineSpacing: storedLineSpacing,
     enableLigatures: storedEnableLigatures,
     showInlineBlame: storedShowInlineBlame,
+    launchAtStartup: storedLaunchAtStartup,
+    startInBackground: storedStartInBackground,
+    explorerContextMenu: storedExplorerContextMenu,
+    addToPath: storedAddToPath,
     markdownFontFamily: storedMarkdownFontFamily,
     markdownCodeFontFamily: storedMarkdownCodeFontFamily,
     markdownEditorFontFamily: storedMarkdownEditorFontFamily,
@@ -102,6 +106,10 @@ export function usePreferencesDraft() {
     storedLineSpacing,
     storedEnableLigatures,
     storedShowInlineBlame,
+    storedLaunchAtStartup,
+    storedStartInBackground,
+    storedExplorerContextMenu,
+    storedAddToPath,
     storedSandboxType,
     storedGitBinaryId,
     storedGitBinaryPath,
@@ -158,6 +166,10 @@ export function usePreferencesDraft() {
     draftThemeMode: session.draftThemeMode,
     savedBaseline: session.savedBaseline,
     draftShowInlineBlame: session.draftShowInlineBlame,
+    draftLaunchAtStartup: session.draftLaunchAtStartup,
+    draftStartInBackground: session.draftStartInBackground,
+    draftExplorerContextMenu: session.draftExplorerContextMenu,
+    draftAddToPath: session.draftAddToPath,
     draftSandboxType: session.draftSandboxType,
     draftGitBinaryId: session.draftGitBinaryId,
     draftGitBinaryPath: session.draftGitBinaryPath,
@@ -236,6 +248,7 @@ export function usePreferencesDraft() {
     applyMarkdownFontToDocument(DEFAULT_MARKDOWN_FONT_SETTINGS);
 
     session.setDraftShowInlineBlame(true);
+    session.setDraftAddToPath(false);
     session.setDraftSandboxType('in_memory');
     aiDraft.replace({
       aiConfig: { ...DEFAULT_AI_CONFIG },
@@ -324,6 +337,16 @@ export function usePreferencesDraft() {
       setDraftWordWrap: session.setDraftWordWrap,
       draftShowInlineBlame: session.draftShowInlineBlame,
       setDraftShowInlineBlame: session.setDraftShowInlineBlame,
+    },
+    general: {
+      draftLaunchAtStartup: session.draftLaunchAtStartup,
+      setDraftLaunchAtStartup: session.setDraftLaunchAtStartup,
+      draftStartInBackground: session.draftStartInBackground,
+      setDraftStartInBackground: session.setDraftStartInBackground,
+      draftExplorerContextMenu: session.draftExplorerContextMenu,
+      setDraftExplorerContextMenu: session.setDraftExplorerContextMenu,
+      draftAddToPath: session.draftAddToPath,
+      setDraftAddToPath: session.setDraftAddToPath,
     },
     sandbox: {
       draftSandboxType: session.draftSandboxType,

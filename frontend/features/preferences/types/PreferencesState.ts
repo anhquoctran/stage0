@@ -15,6 +15,14 @@ export interface PreferencesState extends ViewerFontSettings {
   showInlineBlame: boolean;
   setShowInlineBlame: (show: boolean) => void;
   toggleInlineBlame: () => void;
+  launchAtStartup: boolean;
+  setLaunchAtStartup: (val: boolean) => void;
+  startInBackground: boolean;
+  setStartInBackground: (val: boolean) => void;
+  explorerContextMenu: boolean;
+  setExplorerContextMenu: (val: boolean) => void;
+  addToPath: boolean;
+  setAddToPath: (val: boolean) => void;
   markdownFontFamily: string;
   markdownCodeFontFamily: string;
   markdownEditorFontFamily: string;

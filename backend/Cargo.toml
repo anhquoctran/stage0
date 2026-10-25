@@ -14,7 +14,7 @@ crate-type = ["rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["devtools", "image-png", "macos-private-api"] }
+tauri = { version = "2", features = ["devtools", "image-png", "macos-private-api", "tray-icon"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-single-instance = "2"
 dunce = "1"
@@ -45,13 +45,22 @@ bzip2 = "0.6"
 keyring = { version = "3", features = ["windows-native"] }
 windows-sys = {
     version = "0.61",
-    features = ["Win32_Foundation", "Win32_Security", "Win32_Storage_FileSystem"],
+    features = [
+        "Win32_Foundation",
+        "Win32_Security",
+        "Win32_Storage_FileSystem",
+        "Win32_System_Registry",
+        "Win32_UI_WindowsAndMessaging",
+    ],
 }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 keyring = { version = "3", features = ["apple-native"] }
 core-foundation = "0.10"
 security-framework-sys = "2"
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = ["NSMenu", "NSMenuItem", "NSApplication"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["NSString", "NSObject"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 keyring = { version = "3", features = ["sync-secret-service", "crypto-rust"] }

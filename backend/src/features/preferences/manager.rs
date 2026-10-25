@@ -89,9 +89,19 @@ impl PreferencesManager {
                 serde_json::json!({ "binaryId": id, "binaryPath": binary_path }),
             );
         }
-        merge_object(&root_object, &migrated)?;
-        let content = root.to_string();
-        let value = parse_and_validate(&content)?;
+        let (content, value) = match (|| -> Result<(String, Value), String> {
+            merge_object(&root_object, &migrated)?;
+            let content = root.to_string();
+            let value = parse_and_validate(&content)?;
+            Ok((content, value))
+        })() {
+            Ok(result) => result,
+            Err(_) => {
+                let default_content = DEFAULT_PREFERENCES.to_string();
+                let default_value = parse_and_validate(&default_content)?;
+                (default_content, default_value)
+            }
+        };
         atomic_write(&path, content.as_bytes())?;
         Ok(document(path, content, true, value))
     }
@@ -99,6 +109,9 @@ impl PreferencesManager {
     pub fn read(&self) -> Result<PreferencesDocument, String> {
         let path = self.file_path();
         reject_symlink(&path)?;
+        if !path.exists() {
+            return self.initialize(Value::Null, None);
+        }
         let content = read_limited(&path)?;
         match parse_and_validate(&content) {
             Ok(settings) => Ok(document(path, content, false, settings)),
@@ -112,6 +125,9 @@ impl PreferencesManager {
     pub fn legacy_git_credentials(&self) -> Result<(Option<Vec<Value>>, String), String> {
         let path = self.file_path();
         reject_symlink(&path)?;
+        if !path.exists() {
+            return Ok((None, String::new()));
+        }
         let content = read_limited(&path)?;
         let value: Value = parse_to_serde_value(&content, &strict_jsonc_options())
             .map_err(|error| format_parse_error(&error))?;
@@ -270,8 +286,11 @@ impl PreferencesManager {
         let _process_lock = self.acquire_process_lock()?;
         let path = self.file_path();
         reject_symlink(&path)?;
+        if !path.exists() {
+            atomic_write(&path, DEFAULT_PREFERENCES.as_bytes())?;
+        }
         let current = read_limited(&path)?;
-        if revision(&current) != expected_revision {
+        if !expected_revision.is_empty() && revision(&current) != expected_revision {
             return Err("Preferences changed outside Stage0. Reload the latest file before applying settings.".into());
         }
         let root = CstRootNode::parse(&current, &strict_jsonc_options())

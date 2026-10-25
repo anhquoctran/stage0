@@ -19,6 +19,14 @@ export interface PreferencesTabContainerProps {
   currentChildItem: TreeChildItem | null;
   draftShowInlineBlame: boolean;
   setDraftShowInlineBlame: React.Dispatch<React.SetStateAction<boolean>>;
+  draftLaunchAtStartup: boolean;
+  setDraftLaunchAtStartup: React.Dispatch<React.SetStateAction<boolean>>;
+  draftStartInBackground: boolean;
+  setDraftStartInBackground: React.Dispatch<React.SetStateAction<boolean>>;
+  draftExplorerContextMenu: boolean;
+  setDraftExplorerContextMenu: React.Dispatch<React.SetStateAction<boolean>>;
+  draftAddToPath: boolean;
+  setDraftAddToPath: React.Dispatch<React.SetStateAction<boolean>>;
   draftAiConfig: AiConfig;
   setDraftAiConfig: (next: AiConfig | ((previous: AiConfig) => AiConfig)) => void;
   showToast: (msg: string, level?: GitState['toastLevel']) => void;
