@@ -1,11 +1,13 @@
 #[cfg(target_os = "macos")]
 mod macos {
-    use std::sync::Mutex;
     use objc2::rc::Retained;
     use objc2::runtime::{AnyClass, AnyObject, Sel};
-    use objc2::{define_class, msg_send, sel, AnyThread, ClassType, MainThreadMarker, MainThreadOnly};
+    use objc2::{
+        define_class, msg_send, sel, AnyThread, ClassType, MainThreadMarker, MainThreadOnly,
+    };
     use objc2_app_kit::{NSApplication, NSMenu, NSMenuItem};
     use objc2_foundation::{ns_string, NSInteger, NSObject};
+    use std::sync::Mutex;
     use tauri::AppHandle;
 
     use crate::core::window_manager::{create_welcome_window, open_repo_path};
@@ -122,7 +124,8 @@ mod macos {
         };
 
         let target = Stage0DockTarget::alloc().set_ivars(());
-        let target: Retained<Stage0DockTarget> = unsafe { msg_send![super(target, NSObject::class()), init] };
+        let target: Retained<Stage0DockTarget> =
+            unsafe { msg_send![super(target, NSObject::class()), init] };
         *TARGET.lock().unwrap() = Some(target);
 
         unsafe {

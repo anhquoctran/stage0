@@ -308,8 +308,10 @@ fn revision_is_content_sensitive() {
 
 #[test]
 fn read_and_legacy_credentials_auto_initialize_when_missing() {
-    let directory =
-        std::env::temp_dir().join(format!("stage0-preferences-missing-{}", uuid::Uuid::new_v4()));
+    let directory = std::env::temp_dir().join(format!(
+        "stage0-preferences-missing-{}",
+        uuid::Uuid::new_v4()
+    ));
     let manager = PreferencesManager::new(directory.clone()).unwrap();
     let (creds, rev) = manager.legacy_git_credentials().unwrap();
     assert!(creds.is_none());
@@ -326,8 +328,10 @@ fn read_and_legacy_credentials_auto_initialize_when_missing() {
 
 #[test]
 fn initialize_falls_back_to_defaults_on_corrupt_legacy_data() {
-    let directory =
-        std::env::temp_dir().join(format!("stage0-preferences-corrupt-{}", uuid::Uuid::new_v4()));
+    let directory = std::env::temp_dir().join(format!(
+        "stage0-preferences-corrupt-{}",
+        uuid::Uuid::new_v4()
+    ));
     let manager = PreferencesManager::new(directory.clone()).unwrap();
     let corrupt_legacy = json!({
         "schemaVersion": "not a number",

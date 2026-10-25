@@ -8,6 +8,7 @@ use crate::features::{credentials, notifications, performance, sandbox};
 use db::Database;
 use sandbox::SandboxManager;
 use std::path::{Path, PathBuf};
+use tauri::webview::PageLoadEvent;
 use tauri::{Manager, WindowEvent};
 use watcher::WatcherState;
 use window_manager::{
@@ -74,6 +75,20 @@ pub fn run() {
     });
 
     builder
+        .on_page_load(|webview, payload| {
+            if webview.label() != "main" || payload.event() != PageLoadEvent::Finished {
+                return;
+            }
+            let manager = webview.state::<WindowManagerState>();
+            if manager.should_show_main_on_page_load() {
+                let window = webview.window();
+                if let Err(error) = window.show() {
+                    eprintln!("Could not show the main window after its splash loaded: {error}");
+                } else {
+                    let _ = window.set_focus();
+                }
+            }
+        })
         .on_window_event(|window, event| {
             match event {
                 WindowEvent::Focused(true) => {
@@ -178,9 +193,14 @@ pub fn run() {
                 }
             }
 
+            let show_main_on_page_load =
+                !(has_background_flag || pref_start_in_background) || has_opened_repo;
+            app.state::<WindowManagerState>()
+                .set_show_main_on_page_load(show_main_on_page_load);
+
             if let Some(window) = app.get_webview_window("main") {
                 app.state::<WindowManagerState>().register_welcome_window("main", true);
-                if (has_background_flag || pref_start_in_background) && !has_opened_repo {
+                if !show_main_on_page_load {
                     let _ = window.hide();
                 } else if !has_opened_repo {
                     let _ = window.center();

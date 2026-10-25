@@ -299,7 +299,7 @@ pub(crate) fn test_database(run: &ReviewRun) -> Database {
     )
     .unwrap();
     conn.execute("INSERT INTO virtual_mr_sessions(id,repo_id,title,base_branch,compare_branch) VALUES('session','repo','Fixture','main','feature')",[]).unwrap();
-    Database(std::sync::Mutex::new(conn))
+    Database::from_connection(conn)
 }
 
 #[cfg(test)]

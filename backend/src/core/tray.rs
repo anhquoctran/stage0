@@ -11,10 +11,7 @@ use tauri::{
 pub const TRAY_ID: &str = "stage0-tray";
 const MAX_RECENT_IN_TRAY: usize = 10;
 
-pub fn build_tray_menu(
-    app: &AppHandle,
-    repositories: &[RepoInfo],
-) -> tauri::Result<Menu<Wry>> {
+pub fn build_tray_menu(app: &AppHandle, repositories: &[RepoInfo]) -> tauri::Result<Menu<Wry>> {
     let menu = Menu::new(app)?;
 
     let new_window = MenuItemBuilder::with_id("tray_new_window", "New Window").build(app)?;
@@ -29,11 +26,8 @@ pub fn build_tray_menu(
         menu.append(&empty)?;
     } else {
         for repo in repositories.iter().take(MAX_RECENT_IN_TRAY) {
-            let item = MenuItemBuilder::with_id(
-                format!("tray_repo_{}", repo.id),
-                &repo.name,
-            )
-            .build(app)?;
+            let item = MenuItemBuilder::with_id(format!("tray_repo_{}", repo.id), &repo.name)
+                .build(app)?;
             menu.append(&item)?;
         }
     }

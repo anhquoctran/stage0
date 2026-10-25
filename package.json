@@ -14,6 +14,7 @@
     "dev:web": "node scripts/dev.mjs --web",
     "dev:app": "node scripts/dev.mjs --app",
     "dev:desktop": "node scripts/dev.mjs --app",
+    "reset:app-state": "node scripts/reset-app-state.mjs",
     "build": "node scripts/build.mjs --web-only",
     "build:web": "node scripts/build.mjs --web-only",
     "build:app": "node scripts/build.mjs",

@@ -62,6 +62,28 @@ pub(super) fn secure_database_file(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+pub(super) fn acquire_database_lock(directory: &Path) -> io::Result<std::fs::File> {
+    use fs2::FileExt;
+    let path = directory.join(".database.lock");
+    reject_symlink(&path)?;
+    let mut options = std::fs::OpenOptions::new();
+    options.read(true).write(true).create(true).truncate(false);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let file = options.open(&path)?;
+    secure_database_file(&path)?;
+    file.try_lock_exclusive().map_err(|_| {
+        io::Error::new(
+            io::ErrorKind::WouldBlock,
+            "The Stage0 database is already open in another process",
+        )
+    })?;
+    Ok(file)
+}
+
 pub(super) fn sqlite_sidecar_path(database_path: &Path, suffix: &str) -> PathBuf {
     let mut path = database_path.as_os_str().to_os_string();
     path.push(suffix);

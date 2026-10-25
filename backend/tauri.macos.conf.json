@@ -20,7 +20,7 @@
         },
         "hiddenTitle": true,
         "backgroundColor": "#11111b",
-        "visible": true,
+        "visible": false,
         "maximized": false
       }
     ]

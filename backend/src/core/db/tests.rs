@@ -5,7 +5,7 @@ use rusqlite::params;
 fn sql_injection_payloads_are_stored_as_values() {
     let conn = Connection::open_in_memory().unwrap();
     conn.execute_batch(SCHEMA_SQL).unwrap();
-    let db = Database(Mutex::new(conn));
+    let db = Database::from_connection(conn);
     let payload = "x'); DROP TABLE repositories; --";
 
     db.upsert_repository("safe-id", payload, "/tmp/safe-repo")
@@ -28,7 +28,7 @@ fn sql_injection_payloads_are_stored_as_values() {
 fn preference_secret_mapping_persists_only_opaque_keychain_references() {
     let conn = Connection::open_in_memory().unwrap();
     conn.execute_batch(SCHEMA_SQL).unwrap();
-    let db = Database(Mutex::new(conn));
+    let db = Database::from_connection(conn);
     db.upsert_preference_secret_ref("mcp_server/git-context", "st0_pref_random-ref")
         .unwrap();
     assert_eq!(
@@ -148,7 +148,7 @@ fn legacy_git_credential_metadata_is_migrated_to_sqlite_before_refs_are_compacte
         .unwrap();
     assert_eq!(migrated_source, "stage0");
 
-    let db = Database(Mutex::new(conn));
+    let db = Database::from_connection(conn);
     db.compact_git_credentials_metadata().unwrap();
     db.compact_git_credentials_metadata().unwrap();
     let (provider, account_name): (String, String) = db
@@ -194,7 +194,7 @@ fn failed_git_credential_compaction_keeps_legacy_table_and_row() {
         INSERT INTO git_credentials VALUES ('credential-id', 'keychain-ref', 'github');
         CREATE TABLE git_credentials_refs_new (id TEXT PRIMARY KEY, token_ref TEXT NOT NULL UNIQUE);",
     ).unwrap();
-    let db = Database(Mutex::new(conn));
+    let db = Database::from_connection(conn);
 
     assert!(db.compact_git_credentials_metadata().is_err());
     let (provider, token_ref): (String, String) = db
@@ -220,7 +220,7 @@ fn atomic_settings_writes_roll_back_together_on_failure() {
          WHEN NEW.key = 'fail' BEGIN SELECT RAISE(ABORT, 'test failure'); END;",
     )
     .unwrap();
-    let db = Database(Mutex::new(conn));
+    let db = Database::from_connection(conn);
 
     assert!(db
         .set_settings_atomic(&[("first", "1"), ("fail", "2")])
@@ -232,7 +232,7 @@ fn atomic_settings_writes_roll_back_together_on_failure() {
 fn legacy_preferences_can_be_removed_without_touching_other_settings() {
     let conn = Connection::open_in_memory().unwrap();
     conn.execute_batch(SCHEMA_SQL).unwrap();
-    let db = Database(Mutex::new(conn));
+    let db = Database::from_connection(conn);
     db.set_setting("git_binary_id", "custom").unwrap();
     db.set_setting("git_binary_path", "/tools/git").unwrap();
     db.set_setting("unrelated_runtime_value", "keep").unwrap();
@@ -253,7 +253,7 @@ fn legacy_preferences_can_be_removed_without_touching_other_settings() {
 fn repository_upsert_returns_the_persisted_id_for_an_existing_path() {
     let conn = Connection::open_in_memory().unwrap();
     conn.execute_batch(SCHEMA_SQL).unwrap();
-    let db = Database(Mutex::new(conn));
+    let db = Database::from_connection(conn);
 
     let first = db
         .upsert_repository("", "First name", "/tmp/stable-repository")

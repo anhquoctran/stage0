@@ -25,7 +25,7 @@
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
         "backgroundColor": "#11111b",
-        "visible": true,
+        "visible": false,
         "maximized": false,
         "devtools": true
       }
@@ -40,7 +40,8 @@
     "active": true,
     "targets": "all",
     "resources": [
-      "../RELEASE_NOTES.md"
+      "../RELEASE_NOTES.md",
+      "../THIRD_PARTY_NOTICES.txt"
     ],
     "icon": [
       "icons/32x32.png",

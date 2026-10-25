@@ -1,15 +1,27 @@
 use super::{OpenPlan, Registry, RepositoryContext, WindowRecord, WindowStartupContext};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use tauri::{AppHandle, Manager};
 
 #[derive(Default)]
-pub struct WindowManagerState(pub(super) Mutex<Registry>);
+pub struct WindowManagerState {
+    pub(super) registry: Mutex<Registry>,
+    show_main_on_page_load: AtomicBool,
+}
 
 impl WindowManagerState {
     pub(super) fn lock(&self) -> MutexGuard<'_, Registry> {
-        self.0
+        self.registry
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    pub fn set_show_main_on_page_load(&self, show: bool) {
+        self.show_main_on_page_load.store(show, Ordering::Release);
+    }
+
+    pub fn should_show_main_on_page_load(&self) -> bool {
+        self.show_main_on_page_load.load(Ordering::Acquire)
     }
 
     pub fn register_welcome_window(&self, label: &str, restore_recent: bool) {

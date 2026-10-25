@@ -22,7 +22,7 @@ Stage0 is built with Tauri 2, Rust, React, and TypeScript. It uses the Git execu
 - Compare two refs using Git's three-dot diff semantics and browse changed files with addition and deletion counts.
 - Inspect predicted merge conflicts and preview conflicted files.
 - View file-level and inline Git blame.
-- Keep local Virtual MR sessions, labels, discussions, and comments in an embedded SQLite database.
+- Keep local Virtual MR sessions, labels, discussions, and comments in an embedded SQLite database encrypted with SQLCipher and a unique installation key held by the OS credential store. See [database encryption and recovery](docs/architecture/database_encryption.md).
 - Monitor the active repository for filesystem changes and refresh the review view.
 - Fetch, pull, and rebase branches; manage local branches, tags, and remotes.
 - Open repositories and files in the system file manager, terminal, or Visual Studio Code.
@@ -66,7 +66,8 @@ versions manually; version and build metadata remain available in About.
 - Git 2.38 or later is recommended for `git merge-tree --write-tree`.
 - Node.js >= 20 (Node 24 LTS recommended, configured via `.nvmrc` and `.node-version`).
 - pnpm >= 9 (pnpm 11+ supported and pinned via `packageManager`). Note: `npm` and `yarn` are blocked by a preinstall check.
-- A stable Rust toolchain.
+- Rust 1.89 or later (stable recommended).
+- Perl 5 for compiling the bundled OpenSSL used by SQLCipher. On Windows, Strawberry Perl is suitable.
 - Native build tools for your platform:
   - Windows: Microsoft C++ Build Tools and WebView2 Runtime.
   - macOS: Xcode Command Line Tools.
@@ -74,7 +75,7 @@ versions manually; version and build metadata remain available in About.
 
     ```bash
     sudo apt update
-    sudo apt install build-essential pkg-config libwebkit2gtk-4.1-dev libssl-dev libsecret-1-dev libayatana-appindicator3-dev librsvg2-dev libfontconfig1-dev libfreetype6-dev patchelf
+    sudo apt install build-essential perl pkg-config libwebkit2gtk-4.1-dev libssl-dev libsecret-1-dev libayatana-appindicator3-dev librsvg2-dev libfontconfig1-dev libfreetype6-dev patchelf
     ```
 
 ## Development
@@ -106,6 +107,12 @@ Run the available static checks:
 pnpm run typecheck
 cd backend && cargo check
 ```
+
+To reset the desktop app to first-launch local state, quit Stage0 and run
+`pnpm reset:app-state` to preview, then `pnpm reset:app-state -- --yes` to apply.
+The script archives application data and WebView state in a dated backup. It
+keeps OS-vault keys so encrypted backups remain recoverable; see
+[database encryption and recovery](docs/architecture/database_encryption.md).
 
 ## Build
 
@@ -166,3 +173,5 @@ Stage0 uses icons from Font Awesome Free 7 by Fonticons, Inc. The icon artwork i
 ## License
 
 Stage0 is distributed under the [MIT License](./LICENSE).
+Bundled SQLCipher and OpenSSL notices are included in
+[third-party notices](THIRD_PARTY_NOTICES.txt) and packaged with the desktop app.

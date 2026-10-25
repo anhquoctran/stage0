@@ -1,6 +1,5 @@
 use super::{Database, VirtualMrReviewerDb, VirtualMrSessionDb, VirtualMrSessionSaveOutcome};
 use rusqlite::Connection;
-use std::sync::Mutex;
 
 fn seed(conn: &Connection) {
     conn.execute_batch(include_str!("../../../core/db/schema.sql"))
@@ -60,7 +59,7 @@ fn inline_discussion_snapshot_and_replies_survive_database_reopen() {
     {
         let conn = Connection::open(&path).unwrap();
         seed(&conn);
-        let db = Database(Mutex::new(conn));
+        let db = Database::from_connection(conn);
         db.save_virtual_mr_session(&session("mr-a", "repo-a"))
             .unwrap();
         db.create_discussion(&discussion, &root).unwrap();
@@ -70,7 +69,7 @@ fn inline_discussion_snapshot_and_replies_survive_database_reopen() {
         db.add_comment(&reply).unwrap();
     }
     {
-        let db = Database(Mutex::new(Connection::open(&path).unwrap()));
+        let db = Database::from_connection(Connection::open(&path).unwrap());
         let loaded = db.list_discussions("mr-a").unwrap().remove(0);
         assert_eq!(loaded.file_path.as_deref(), Some("src/old.ts"));
         assert_eq!(loaded.diff_side.as_deref(), Some("left"));
@@ -101,14 +100,14 @@ fn reviewers_and_labels_survive_database_reopen_and_removal() {
     {
         let conn = Connection::open(&path).unwrap();
         seed(&conn);
-        let db = Database(Mutex::new(conn));
+        let db = Database::from_connection(conn);
         db.save_virtual_mr_session(&expected).unwrap();
         let mut other = session("mr-b", "repo-b");
         other.reviewers = vec![reviewer()];
         db.save_virtual_mr_session(&other).unwrap();
     }
     {
-        let db = Database(Mutex::new(Connection::open(&path).unwrap()));
+        let db = Database::from_connection(Connection::open(&path).unwrap());
         let sessions = db.list_virtual_mr_sessions("repo-a").unwrap();
         assert_eq!(sessions.len(), 1);
         assert_eq!(sessions[0].id, "mr-a");
@@ -125,7 +124,7 @@ fn reviewers_and_labels_survive_database_reopen_and_removal() {
         db.save_virtual_mr_session(&edited).unwrap();
     }
     {
-        let db = Database(Mutex::new(Connection::open(&path).unwrap()));
+        let db = Database::from_connection(Connection::open(&path).unwrap());
         let loaded = db.list_virtual_mr_sessions("repo-a").unwrap().remove(0);
         assert!(loaded.reviewers.is_empty());
         assert!(loaded.label_ids.is_empty());
@@ -142,7 +141,7 @@ fn reviewers_and_labels_survive_database_reopen_and_removal() {
 fn failed_metadata_update_rolls_back_session_labels_and_reviewers_together() {
     let conn = Connection::open_in_memory().unwrap();
     seed(&conn);
-    let db = Database(Mutex::new(conn));
+    let db = Database::from_connection(conn);
     let mut original = session("mr-a", "repo-a");
     original.label_ids = vec!["bug".into()];
     original.reviewers = vec![reviewer()];
@@ -170,7 +169,7 @@ fn old_session_payload_without_reviewers_is_still_readable() {
 fn only_one_open_session_can_use_a_repo_and_source_target_pair() {
     let conn = Connection::open_in_memory().unwrap();
     seed(&conn);
-    let db = Database(Mutex::new(conn));
+    let db = Database::from_connection(conn);
 
     let first = session("mr-first", "repo-a");
     assert_eq!(
