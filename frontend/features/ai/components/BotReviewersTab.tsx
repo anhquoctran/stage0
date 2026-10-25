@@ -107,6 +107,8 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
     executionBaseUrl,
     setIsFormOpen,
     handleSaveForm,
+    canSubmit,
+    acpConfig,
   } = useReviewerBotForm({
     globalAiConfig,
     dynamicModels,
@@ -212,6 +214,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
       <BotReviewerModal
         dialog={{
           isOpen: isFormOpen,
+          canSubmit,
           editingBotId: editingBotId,
           formError: formError,
           onClose: () => setIsFormOpen(false),
@@ -232,6 +235,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
           setFormInstructions: setFormInstructions,
         }}
         execution={{
+          acpConfig,
           formExecutionMode: formExecutionMode,
           setFormExecutionMode: setFormExecutionMode,
           formAcpAgentId: formAcpAgentId,

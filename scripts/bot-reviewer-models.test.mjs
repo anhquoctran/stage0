@@ -12,16 +12,18 @@ const text = (node) => componentNodes(node).flatMap((item) => [item.props?.child
 const button = (nodes, label) => nodes.find((node) => node.type === 'button' && text(node).trim() === label);
 const labelled = (nodes, label) => nodes.find((node) => node.props?.['aria-label'] === label);
 
-function fixture(initial = [], dynamicModels = {}) {
+function fixture(initial = [], dynamicModels = {}, { externalAgents = [], discover = () => assert.fail('Provider forms must not launch ACP discovery') } = {}) {
   const harness = componentHarness(); const writes = [];
   const draft = {
     aiConfig: { ...presets.DEFAULT_AI_CONFIG, provider: 'openai', model: 'draft-global-model' },
     globalReviewers: structuredClone(initial),
+    externalAgents,
     addGlobalReviewer: (bot) => { writes.push(['add', bot]); draft.globalReviewers.push({ ...bot, id: 'new-bot' }); },
     updateGlobalReviewer: (id, partial) => { writes.push(['update', id, partial]); draft.globalReviewers = draft.globalReviewers.map((bot) => bot.id === id ? { ...bot, ...partial } : bot); },
   };
   const select = () => null;
   const dependencies = {
+    '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ externalAgents: { acpAgentReviewConfigOptions: discover } }) },
     react: harness.react, '../constants/aiPresets': presets, '../constants/botPresets': bots,
     '../utils/resolveAiModelPreset': modelPresets,
     '../utils/botRolePrompts': { getBotRolePrompt: () => 'Fixture prompt' },
@@ -48,6 +50,7 @@ test('new reviewer inherits the draft global model and offers a searchable dropd
     assert.ok(models.props.options.some((option) => option.value === 'draft-global-model'));
     assert.ok(models.props.options.some((option) => option.value === presets.AI_PROVIDERS[0].defaultModel));
     assert.equal(labelled(nodes, 'Custom model ID'), undefined);
+    assert.equal(button(nodes, 'Create Bot').props.disabled, true);
     assert.deepEqual(f.writes, []);
   } finally { f.harness.cleanup(); }
 });
@@ -102,6 +105,7 @@ test('custom model entry is optional, validated, trimmed and cancelled without m
     const custom = labelled(nodes, 'Model override').props.options.find((option) => option.label === 'Custom model…');
     labelled(nodes, 'Model override').props.onChange(custom.value); nodes = await f.render();
     assert.equal(labelled(nodes, 'Custom model ID').props.value, '');
+    assert.equal(button(nodes, 'Update Bot').props.disabled, true);
     assert.equal(nodes.find((node) => node.type === 'input' && node.props.placeholder === 'e.g. Accessibility Auditor')?.props.value, 'Fixture reviewer');
     labelled(nodes, 'Model override').props.onChange(custom.value); nodes = await f.render();
     nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} }); nodes = await f.render();
@@ -129,5 +133,47 @@ test('selecting a preset leaves custom-entry mode and provider changes never car
     const local = presets.AI_PROVIDERS.find((provider) => provider.id === 'ollama');
     assert.equal(labelled(nodes, 'Model override').props.value, local.defaultModel);
     assert.ok(!labelled(nodes, 'Model override').props.options.some((option) => option.value === 'old-custom-model'));
+  } finally { f.harness.cleanup(); }
+});
+
+
+test('Create Bot stays disabled through ACP loading, failure, retry and model changes, and Enter cannot bypass it', async () => {
+  const requests = [];
+  const f = fixture([], {}, {
+    externalAgents: [{ id: 'one', name: 'Fixture ACP', command: 'fixture-acp', args: [], source: 'custom' }],
+    discover: (args) => new Promise((resolve, reject) => requests.push({ args, resolve, reject })),
+  });
+  const model = { id: 'model', name: 'Model', type: 'select', reviewKind: 'model', currentValue: 'first', options: [{ value: 'first', name: 'First' }, { value: 'second', name: 'Second' }] };
+  try {
+    let nodes = await f.open();
+    nodes.find((node) => node.type === 'input' && node.props.placeholder === 'e.g. Accessibility Auditor').props.onChange({ target: { value: 'ACP Reviewer' } });
+    nodes = await f.render();
+    assert.equal(button(nodes, 'Create Bot').props.disabled, false);
+    labelled(nodes, 'Execution engine').props.onChange('acp');
+    nodes = await f.render();
+    assert.equal(button(nodes, 'Create Bot').props.disabled, true);
+    nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} });
+    assert.deepEqual(f.writes, []);
+    requests[0].reject(new Error('Fixture discovery failure'));
+    nodes = await f.render();
+    assert.equal(button(nodes, 'Create Bot').props.disabled, true);
+    assert.match(text({ props: { children: nodes } }), /Retry to finish configuring this bot/);
+    button(nodes, 'Retry').props.onClick();
+    nodes = await f.render();
+    assert.equal(button(nodes, 'Create Bot').props.disabled, true);
+    requests[1].resolve([model]);
+    nodes = await f.render();
+    assert.equal(button(nodes, 'Create Bot').props.disabled, false);
+    labelled(nodes, 'Model for Fixture ACP').props.onChange('second');
+    nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} });
+    assert.deepEqual(f.writes, []);
+    nodes = await f.render();
+    assert.equal(button(nodes, 'Create Bot').props.disabled, true);
+    requests[2].resolve([model]);
+    nodes = await f.render();
+    assert.equal(button(nodes, 'Create Bot').props.disabled, false);
+    nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} });
+    assert.equal(f.writes.length, 1);
+    assert.deepEqual(f.writes[0][1].acpConfigOptions, { model: 'second' });
   } finally { f.harness.cleanup(); }
 });

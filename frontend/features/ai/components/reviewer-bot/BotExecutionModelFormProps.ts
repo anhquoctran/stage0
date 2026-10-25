@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CustomSelectOption } from '../../../../common/types/CustomSelectOption';
+import type { AcpReviewerConfigState } from '../../types/AcpReviewerConfigState';
 import type { AcpAgentConfig } from '../../types/AcpAgentConfig';
 import type { AcpReviewConfigOverrides } from '../../types/AcpReviewConfigOverrides';
 import type { AiConfig } from '../../types/AiConfig';
@@ -36,6 +37,7 @@ export interface BotExecutionModelFormProps {
     executionModel: AiModelPreset | undefined;
   };
   acp: {
+    acpConfig: AcpReviewerConfigState;
     externalAgents: AcpAgentConfig[];
     formAcpAgentId: string;
     setFormAcpAgentId: (val: string) => void;

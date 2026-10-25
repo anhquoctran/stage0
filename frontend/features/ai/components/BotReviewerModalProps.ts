@@ -1,5 +1,6 @@
 import React from 'react';
 import type { BotCategory } from '../../virtual-mr/types/BotCategory';
+import type { AcpReviewerConfigState } from '../types/AcpReviewerConfigState';
 import type { AcpAgentConfig } from '../types/AcpAgentConfig';
 import type { AcpReviewConfigOverrides } from '../types/AcpReviewConfigOverrides';
 import type { AiConfig } from '../types/AiConfig';
@@ -10,6 +11,7 @@ import type { AiReasoningEffort } from '../types/AiReasoningEffort';
 export interface BotReviewerModalProps {
   dialog: {
     isOpen: boolean;
+    canSubmit: boolean;
     editingBotId: string | null;
     formError: string | null;
     onClose: () => void;
@@ -30,6 +32,7 @@ export interface BotReviewerModalProps {
     setFormInstructions: (val: string) => void;
   };
   execution: {
+    acpConfig: AcpReviewerConfigState;
     formExecutionMode: 'provider' | 'acp';
     setFormExecutionMode: (val: 'provider' | 'acp') => void;
     formAcpAgentId: string;

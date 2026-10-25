@@ -27,18 +27,21 @@ test('aggregate form fields preserve neighbors, functional updates and stable se
   assert.equal(initialized, 1);
 });
 
-test('reviewer form keeps create/edit payloads, model capability checks and ACP consent', () => {
+test('reviewer form keeps create/edit payloads, model capability checks and ACP consent', async () => {
   const runner = hookHarness();
   const created = [], updated = [];
   const config = { provider: 'openai', model: 'chosen', baseUrl: 'https://example.test' };
   const props = {
     globalAiConfig: config,
     dynamicModels: { openai: [{ id: 'chosen', name: 'Chosen', reasoningEfforts: ['low'], supportsFastMode: false }] },
-    externalAgents: [{ id: 'agent' }],
+    externalAgents: [{ id: 'agent', command: 'fixture-agent', args: [] }],
     addGlobalReviewer: (value) => created.push(value),
     updateGlobalReviewer: (...value) => updated.push(value),
   };
-  const { useReviewerBotForm } = load('features/ai/components/useReviewerBotForm.ts', { react: runner.react });
+  const { useReviewerBotForm } = load('features/ai/components/useReviewerBotForm.ts', {
+    react: runner.react,
+    '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ externalAgents: { acpAgentReviewConfigOptions: async () => [{ id: 'effort', type: 'select', reviewKind: 'reasoning', options: [{ value: 'high', name: 'High' }] }] } }) },
+  });
   let form = runner.render(useReviewerBotForm, props);
   form.handleOpenAdd();
   form = runner.render(useReviewerBotForm, props);
@@ -54,6 +57,9 @@ test('reviewer form keeps create/edit payloads, model capability checks and ACP 
   assert.equal(created[0].fastMode, undefined);
   assert.equal(created[0].enabled, true);
   form.handleOpenEdit({ ...created[0], id: 'existing', acpAgentId: 'agent', allowAcpSourceTransfer: true, acpConfigOptions: { effort: 'high' } });
+  form = runner.render(useReviewerBotForm, props);
+  assert.equal(form.canSubmit, false);
+  await tick();
   form = runner.render(useReviewerBotForm, props);
   form.handleSaveForm({ preventDefault() {} });
   assert.equal(updated[0][0], 'existing');

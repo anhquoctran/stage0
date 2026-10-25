@@ -1,10 +1,12 @@
 import React, { useMemo, useState, type SetStateAction } from 'react';
 import { useFormDraft } from '../../../../common/hooks/useFormDraft';
+import { useAcpReviewerConfigOptions } from '../../../ai/hooks/useAcpReviewerConfigOptions';
 import type { RepositoryBotDraft } from '../../types/RepositoryBotDraft';
 import type { RepositoryBotFormContext } from './RepositoryBotFormContext';
 
 export function useRepositoryBotForm({
   currentRepoId,
+  inheritAgents,
   externalAgents,
   showToast,
   addRepoCustomReviewer,
@@ -74,14 +76,23 @@ export function useRepositoryBotForm({
     [setField]
   );
 
+  const acpConfig = useAcpReviewerConfigOptions(
+    isAddingRepoBot && !inheritAgents && repoBotExecutionMode === 'acp',
+    externalAgents.find((agent) => agent.id === repoBotAcpAgentId),
+    repoBotAcpConfigOptions,
+    setRepoBotAcpConfigOptions,
+  );
+  const canSubmit = isAddingRepoBot && !inheritAgents && !!currentRepoId && !!repoBotName.trim()
+    && (repoBotExecutionMode !== 'acp' || acpConfig.ready);
+
   const handleSaveRepoCustomBot = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!repoBotName.trim() || !currentRepoId) return;
+    if (!isAddingRepoBot || inheritAgents || !repoBotName.trim() || !currentRepoId) return;
     if (
       repoBotExecutionMode === 'acp' &&
-      !externalAgents.some((agent) => agent.id === repoBotAcpAgentId)
+      !acpConfig.isReady()
     ) {
-      showToast('Choose an installed ACP agent first.');
+      showToast(acpConfig.error || acpConfig.validationError || 'Finish configuring the ACP agent before saving this bot.');
       return;
     }
 
@@ -120,6 +131,8 @@ export function useRepositoryBotForm({
     setIsAddingRepoBot,
     isAddingRepoBot,
     handleSaveRepoCustomBot,
+    canSubmit,
+    acpConfig,
     repoBotEmoji,
     setRepoBotEmoji,
     repoBotName,

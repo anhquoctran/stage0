@@ -4,6 +4,7 @@ import type { BotReviewer } from '../../virtual-mr/types/BotReviewer';
 import type { AiReasoningEffort } from '../types/AiReasoningEffort';
 import type { ReviewerBotDraft } from '../types/ReviewerBotDraft';
 import type { ReviewerBotFormContext } from './ReviewerBotFormContext';
+import { useAcpReviewerConfigOptions } from '../hooks/useAcpReviewerConfigOptions';
 import { useReviewerModelCatalog } from './useReviewerModelCatalog';
 
 export function useReviewerBotForm({
@@ -120,6 +121,15 @@ export function useReviewerBotForm({
     executionBaseUrl,
   } = useReviewerModelCatalog({ formProvider, globalAiConfig, formModel, dynamicModels });
 
+  const acpConfig = useAcpReviewerConfigOptions(
+    isFormOpen && formExecutionMode === 'acp',
+    externalAgents.find((agent) => agent.id === formAcpAgentId),
+    formAcpConfigOptions,
+    setFormAcpConfigOptions,
+  );
+  const canSubmit = isFormOpen && !!formName.trim() && (formExecutionMode === 'acp'
+    ? acpConfig.ready : !!formModel.trim());
+
   const handleOpenAdd = () => {
     setEditingBotId(null);
     setFormName('');
@@ -172,6 +182,12 @@ export function useReviewerBotForm({
     }
     if (formExecutionMode === 'provider' && !formModel.trim()) {
       setFormError('Select a model or enter a custom model ID');
+      return;
+    }
+
+    if (!isFormOpen) return;
+    if (formExecutionMode === 'acp' && !acpConfig.isReady()) {
+      setFormError(acpConfig.error || acpConfig.validationError || 'Finish configuring the ACP agent before saving this bot');
       return;
     }
 
@@ -260,5 +276,7 @@ export function useReviewerBotForm({
     executionBaseUrl,
     setIsFormOpen,
     handleSaveForm,
+    canSubmit,
+    acpConfig,
   };
 }

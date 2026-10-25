@@ -1,5 +1,4 @@
-import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React from 'react';
 
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
@@ -13,77 +12,9 @@ const KIND_LABELS: Record<AcpSessionConfigOption['reviewKind'], string> = {
   fastMode: 'Fast mode',
 };
 
-export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> = ({ agent, value = {}, onChange }) => {
-  const appServices = useApplicationServices();
-  const [options, setOptions] = useState<AcpSessionConfigOption[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [retryKey, setRetryKey] = useState(0);
-  const requestVersion = useRef(0);
-  const valueRef = useRef(value);
-  valueRef.current = value;
-
-  useEffect(() => {
-    let current = true;
-    const version = ++requestVersion.current;
-    setOptions([]);
-    setError(null);
-    if (!agent) return () => { current = false; };
-
-    setLoading(true);
-    void appServices.externalAgents.acpAgentReviewConfigOptions({ config: agent })
-      .then(async (result) => {
-        if (!current || requestVersion.current !== version) return;
-        setOptions(result);
-        const modelOverrides = Object.fromEntries(result.flatMap((option) => {
-          const saved = valueRef.current[option.id];
-          return option.reviewKind === 'model' && typeof saved === 'string' ? [[option.id, saved]] : [];
-        }));
-        if (Object.keys(modelOverrides).length > 0) {
-          const modelSpecificOptions = await appServices.externalAgents.acpAgentReviewConfigOptions({
-            config: agent,
-            configOverrides: modelOverrides,
-          });
-          if (current && requestVersion.current === version) setOptions(modelSpecificOptions);
-        }
-      })
-      .catch((loadError: unknown) => {
-        if (current && requestVersion.current === version) setError(loadError instanceof Error ? loadError.message : String(loadError));
-      })
-      .finally(() => { if (current && requestVersion.current === version) setLoading(false); });
-    return () => { current = false; requestVersion.current += 1; };
-  }, [agent, retryKey]);
-
-  const updateOption = (option: AcpSessionConfigOption, next: string | boolean | undefined) => {
-    const updated = option.reviewKind === 'model'
-      ? Object.fromEntries(Object.entries(value).filter(([id]) => options.some((candidate) => candidate.id === id && candidate.reviewKind === 'model')))
-      : { ...value };
-    if (next === undefined) delete updated[option.id];
-    else updated[option.id] = next;
-    onChange(updated);
-
-    if (option.reviewKind !== 'model') return;
-    const modelOverrides = Object.fromEntries(Object.entries(updated).filter(([id]) => {
-      return id === option.id || options.some((candidate) => candidate.id === id && candidate.reviewKind === 'model');
-    }));
-    const version = ++requestVersion.current;
-    setLoading(true);
-    setError(null);
-    void appServices.externalAgents.acpAgentReviewConfigOptions({
-      config: agent,
-      configOverrides: modelOverrides,
-    })
-      .then((result) => {
-        if (requestVersion.current !== version) return;
-        setOptions(result);
-      })
-      .catch((loadError: unknown) => {
-        if (requestVersion.current === version) setError(loadError instanceof Error ? loadError.message : String(loadError));
-      })
-      .finally(() => { if (requestVersion.current === version) setLoading(false); });
-  };
-
-  const visibleKinds = useMemo(() => new Set(options.map((option) => option.reviewKind)), [options]);
+export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> = ({ agent, value = {}, state }) => {
+  const { options, loading, error, validationError, retry, reset, updateOption } = state;
+  const visibleKinds = new Set(options.map((option) => option.reviewKind));
 
   if (!agent) return null;
   return (
@@ -94,8 +25,12 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
       </div>
       {loading && <p className="text-[10px] text-subtext0" role="status">Loading options from {agent.name}…</p>}
       {error && <div className="flex flex-wrap items-center justify-between gap-2 text-[10px]" role="status">
-        <p className="text-red">Could not load ACP options: {error} The agent’s own defaults can still be used.</p>
-        <button type="button" onClick={() => setRetryKey((key) => key + 1)} className="shrink-0 border border-surface1 px-2 py-1 text-subtext0 hover:text-text rounded-sm">Retry</button>
+        <p className="text-red">Could not load ACP options: {error} Retry to finish configuring this bot.</p>
+        <button type="button" onClick={retry} className="shrink-0 border border-surface1 px-2 py-1 text-subtext0 hover:text-text rounded-sm">Retry</button>
+      </div>}
+      {(validationError || (error && Object.keys(value).length > 0)) && <div className="space-y-2 text-[10px]" role="alert">
+        {validationError && <p className="text-red">{validationError}</p>}
+        <button type="button" onClick={reset} className="border border-surface1 px-2 py-1 text-subtext0 hover:text-text rounded-sm">Reset to agent defaults</button>
       </div>}
       {!loading && !error && options.length === 0 && <p className="text-[10px] text-subtext0">This agent does not expose model, reasoning, or Fast mode options through ACP. It will use its configured defaults.</p>}
       {options.map((option) => {
@@ -113,6 +48,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
             <div key={option.id}>
               <label className="mb-1 block text-[10px] text-subtext0">{label}</label>
               <CustomSelect
+                disabled={loading || !!error}
                 value={selected}
                 options={choices}
                 onChange={(next) => updateOption(option, next === DEFAULT_OPTION ? undefined : next === 'true')}
@@ -146,6 +82,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
           <div key={option.id}>
             <label className="mb-1 block text-[10px] text-subtext0">{label}</label>
             <CustomSelect
+              disabled={loading || !!error}
               value={selected}
               options={choices}
               onChange={(next) => updateOption(option, next === DEFAULT_OPTION ? undefined : next)}

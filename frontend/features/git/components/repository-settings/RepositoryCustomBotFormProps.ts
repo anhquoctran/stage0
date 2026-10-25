@@ -1,10 +1,13 @@
 import React from 'react';
 import type { CustomSelectOption } from '../../../../common/types/CustomSelectOption';
+import type { AcpReviewerConfigState } from '../../../ai/types/AcpReviewerConfigState';
 import type { AcpAgentConfig } from '../../../ai/types/AcpAgentConfig';
 import type { AcpReviewConfigOverrides } from '../../../ai/types/AcpReviewConfigOverrides';
 import type { BotCategory } from '../../../virtual-mr/types/BotCategory';
 
 export interface RepositoryCustomBotFormProps {
+  canSubmit: boolean;
+  acpConfig: AcpReviewerConfigState;
   handleSaveRepoCustomBot: (e: React.FormEvent) => void;
   setIsAddingRepoBot: React.Dispatch<React.SetStateAction<boolean>>;
   repoBotEmoji: string;

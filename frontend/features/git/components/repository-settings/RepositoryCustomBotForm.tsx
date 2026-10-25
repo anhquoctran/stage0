@@ -7,6 +7,8 @@ import type { RepositoryCustomBotFormProps } from './RepositoryCustomBotFormProp
 
 export function RepositoryCustomBotForm({
   handleSaveRepoCustomBot,
+  canSubmit,
+  acpConfig,
   setIsAddingRepoBot,
   repoBotEmoji,
   setRepoBotEmoji,
@@ -155,7 +157,7 @@ export function RepositoryCustomBotForm({
         <AcpReviewerConfigOptions
           agent={externalAgents.find((agent) => agent.id === repoBotAcpAgentId)}
           value={repoBotAcpConfigOptions}
-          onChange={setRepoBotAcpConfigOptions}
+          state={acpConfig}
         />
       )}
 
@@ -212,7 +214,8 @@ export function RepositoryCustomBotForm({
         </button>
         <button
           type="submit"
-          className="px-4 py-1 bg-accent text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
+          disabled={!canSubmit}
+          className="px-4 py-1 border-0 bg-accent disabled:opacity-50 disabled:cursor-not-allowed text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
         >
           Save Bot
         </button>

@@ -30,40 +30,40 @@ export const BotReviewersToolbar: React.FC<{
   return (
     <>
       {/* Tab Header & Action Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-surface0/60 rounded-sm">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 pb-4 border-b border-surface0/60 rounded-sm">
+        <div className="min-w-0 flex-[1_1_20rem]">
           <h3 className="text-sm font-bold text-text flex items-center gap-2">
-            <Shield className="w-4 h-4 text-brand" />
+            <Shield className="w-4 h-4 shrink-0 text-brand" />
             Global Reviewer Bots
           </h3>
           <p className="text-xs text-subtext0 mt-0.5">
             Configure automated reviewer bots with custom system roles, prompts, and models across projects.
           </p>
         </div>
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex max-w-full shrink-0 flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={onOpenResetConfirm}
-            className="px-3 py-1.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors flex items-center gap-1.5 cursor-pointer rounded-sm"
+            className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm border-0 bg-surface0 px-3 py-1.5 text-xs text-subtext0 transition-colors hover:bg-surface1 hover:text-text cursor-pointer"
             title="Reset global reviewers to defaults"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
+            <RotateCcw className="w-3.5 h-3.5 shrink-0" />
             <span>Reset Defaults</span>
           </button>
           <button
             type="button"
             onClick={onOpenAdd}
-            className="px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs rounded-sm"
+            className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm border-0 bg-brand px-3 py-1.5 text-xs font-semibold text-on-accent shadow-xs transition-colors hover:bg-brand/90 cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 shrink-0" />
             <span>New Reviewer</span>
           </button>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative min-w-0 flex-[1_1_16rem]">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-subtext0" />
           <input
             type="text"
@@ -73,8 +73,8 @@ export const BotReviewersToolbar: React.FC<{
             className="w-full pl-8 pr-3 py-1.5 bg-surface0/60 border border-surface1 text-xs text-text placeholder-subtext0/70 focus:outline-none focus:border-brand rounded-sm"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-xs text-subtext0 cursor-pointer select-none">
+        <div className="flex shrink-0 items-center gap-2">
+          <label className="flex items-center gap-2 whitespace-nowrap text-xs text-subtext0 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={onlyEnabled}
@@ -91,10 +91,10 @@ export const BotReviewersToolbar: React.FC<{
         <button
           type="button"
           onClick={() => setSelectedCategory('all')}
-          className={`px-2.5 py-1 text-xs transition-colors cursor-pointer border rounded-sm ${
+          className={`shrink-0 whitespace-nowrap px-2.5 py-1 text-xs transition-colors cursor-pointer border-0 rounded-sm ${
             selectedCategory === 'all'
-              ? 'bg-surface1 text-text border-surface2 font-medium'
-              : 'bg-surface0/60 text-subtext0 hover:bg-surface0 border-transparent'
+              ? 'bg-surface1 text-text font-medium'
+              : 'bg-surface0/60 text-subtext0 hover:bg-surface0'
           }`}
         >
           All ({globalReviewers.length})
@@ -106,10 +106,10 @@ export const BotReviewersToolbar: React.FC<{
               key={cat.id}
               type="button"
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-2 py-1 text-xs transition-colors cursor-pointer border rounded-sm ${
+              className={`shrink-0 whitespace-nowrap px-2 py-1 text-xs transition-colors cursor-pointer border-0 rounded-sm ${
                 selectedCategory === cat.id
                   ? `${cat.bg} font-medium`
-                  : 'bg-surface0/60 text-subtext0 hover:bg-surface0 border-transparent'
+                  : 'bg-surface0/60 text-subtext0 hover:bg-surface0'
               }`}
             >
               {cat.label} ({count})
@@ -120,4 +120,3 @@ export const BotReviewersToolbar: React.FC<{
     </>
   );
 };
-

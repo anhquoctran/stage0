@@ -4,6 +4,7 @@ import type { GitState } from '../../types/GitState';
 
 export interface RepositoryBotFormContext {
   currentRepoId: string;
+  inheritAgents: boolean;
   externalAgents: AcpAgentConfig[];
   showToast: (msg: string, level?: GitState['toastLevel']) => void;
   addRepoCustomReviewer: (repoId: string, bot: Omit<BotReviewer, 'id'>) => string;

@@ -77,6 +77,8 @@ export const RepositoryAgentsTab: React.FC<{
     setIsAddingRepoBot,
     isAddingRepoBot,
     handleSaveRepoCustomBot,
+    canSubmit,
+    acpConfig,
     repoBotEmoji,
     setRepoBotEmoji,
     repoBotName,
@@ -95,7 +97,7 @@ export const RepositoryAgentsTab: React.FC<{
     setRepoBotAllowAcpSourceTransfer,
     repoBotInstructions,
     setRepoBotInstructions,
-  } = useRepositoryBotForm({ currentRepoId, externalAgents, showToast, addRepoCustomReviewer });
+  } = useRepositoryBotForm({ currentRepoId, inheritAgents, externalAgents, showToast, addRepoCustomReviewer });
 
   const repoBotCategoryOptions: CustomSelectOption<BotCategory>[] = BOT_CATEGORIES.map(
     (category) => ({ value: category.id, label: category.label })
@@ -155,6 +157,8 @@ export const RepositoryAgentsTab: React.FC<{
         {isAddingRepoBot && !inheritAgents && (
           <RepositoryCustomBotForm
             handleSaveRepoCustomBot={handleSaveRepoCustomBot}
+            canSubmit={canSubmit}
+            acpConfig={acpConfig}
             setIsAddingRepoBot={setIsAddingRepoBot}
             repoBotEmoji={repoBotEmoji}
             setRepoBotEmoji={setRepoBotEmoji}

@@ -40,6 +40,7 @@ export function BotExecutionModelForm({
     executionModel,
   },
   acp: {
+    acpConfig,
     externalAgents,
     formAcpAgentId,
     setFormAcpAgentId,
@@ -228,7 +229,7 @@ export function BotExecutionModelForm({
           <AcpReviewerConfigOptions
             agent={externalAgents.find((agent) => agent.id === formAcpAgentId)}
             value={formAcpConfigOptions}
-            onChange={setFormAcpConfigOptions}
+            state={acpConfig}
           />
           <label className="flex items-start gap-2 text-[10px] text-subtext0">
             <input

@@ -13,7 +13,7 @@ import { BotExecutionModelForm } from './reviewer-bot/BotExecutionModelForm';
 import { BotPromptConfigForm } from './reviewer-bot/BotPromptConfigForm';
 
 export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
-  dialog: { isOpen, editingBotId, formError, onClose, onSubmit },
+  dialog: { isOpen, canSubmit, editingBotId, formError, onClose, onSubmit },
   identity: {
     formName,
     setFormName,
@@ -29,6 +29,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
     setFormInstructions,
   },
   execution: {
+    acpConfig,
     formExecutionMode,
     setFormExecutionMode,
     formAcpAgentId,
@@ -243,6 +244,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
               executionModel: executionModel,
             }}
             acp={{
+              acpConfig,
               externalAgents: externalAgents,
               formAcpAgentId: formAcpAgentId,
               setFormAcpAgentId: setFormAcpAgentId,
@@ -263,7 +265,8 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-xs rounded-sm"
+              disabled={!canSubmit}
+              className="px-5 py-1.5 border-0 bg-brand enabled:hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-xs rounded-sm"
             >
               {editingBotId ? 'Update Bot' : 'Create Bot'}
             </button>
