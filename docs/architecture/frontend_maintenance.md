@@ -1,8 +1,11 @@
 # Frontend maintenance map
 
-Read [feature layout](feature_layout.md) for ownership and the
+Read [feature layout](feature_layout.md) for ownership, the
 [refactor report](frontend_refactor_analysis.md) for the original audit and measured
-implementation. Public component exports, root Zustand hooks, IPC payloads and
+implementation, and the proposed
+[IPC facade refactor specification](frontend_ipc_refactor_spec.md) for the planned
+Tauri SDK boundary. The facade and its import check are not implemented yet.
+Public component exports, root Zustand hooks, IPC payloads and
 events remain stable. Internal bot/ACP form props are grouped by responsibility;
 their application callers migrate together (see report section 8).
 
@@ -10,6 +13,7 @@ their application callers migrate together (see report section 8).
 
 | Workflow | Owner |
 |---|---|
+| IPC facade (planned) | Proposed `common/services/ipc/` contains explicit SDK re-exports in `ipcClient.ts`, `ipcEvents.ts`, `ipcWindow.ts` (including DPI), `ipcPath.ts`, type-only `types.ts` and an optional `index.ts`. Current callers still import Tauri directly; migration and the architecture import gate are pending. Existing feature/core owners retain browser fallbacks, listener cleanup, primary-window policy and workflow behavior. See [IPC refactor spec](frontend_ipc_refactor_spec.md). |
 | Dropdown dismissal | `common/hooks/useOutsideDismiss.ts` owns capture-phase outside pointer/click/focus dismissal for `CustomSelect` and bespoke font, branch and MR metadata pickers. Keep both trigger and popup within the registered ref; inside search and multi-selection must stay open. Do not swallow the outside control's activation or steal its focus. Attach listeners only while open and clean them up on close/unmount. |
 | Button surfaces | `core/styles/button-surfaces.css` enforces borderless opaque palette-filled buttons (including filled hover states); `btn-solid` opts custom/inline fills in. Transparent, white and black/dark canvas surfaces may retain borders. Focus outlines remain independent. Keep the palette selector list in sync with new filled utilities; see `.cursor/rules/button-surfaces.mdc`. |
 | Scrollbars | `common/components/ScrollArea.tsx` wraps the official OverlayScrollbars React component for vertical scroll surfaces, including onboarding: a 4px visible thumb, transparent track and 700ms scroll-idle hide. `core/styles/index.css` imports its stylesheet and owns the theme, reduced motion and forced-color overrides. Keep its viewport at `z-index: auto` so nested fixed dialogs can escape the scroller's clip. The existing `core/services/autoHideScrollbars.ts` capture listener remains the activity fallback for native scroll surfaces. Native CSS scrollbar styling alone is not reliable in the macOS webview; use `ScrollArea` for a consistent overlay. |
