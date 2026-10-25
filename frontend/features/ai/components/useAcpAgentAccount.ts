@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AcpAgentConfig } from '../types/AcpAgentConfig';
 import type { AcpAgentConnectionInfo } from '../types/AcpAgentConnectionInfo';

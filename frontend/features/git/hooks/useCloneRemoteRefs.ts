@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { useEffect, useState } from 'react';
 import type { RemoteCloneRefs } from '../types/RemoteCloneRefs';
 import type { UrlValidationStatus } from '../types/UrlValidationStatus';

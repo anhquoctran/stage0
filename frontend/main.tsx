@@ -16,7 +16,7 @@ import '@fontsource/fira-code/500.css';
 import '@fontsource/fira-code/600.css';
 import '@fontsource/fira-code/700.css';
 import '@fortawesome/fontawesome-svg-core/styles.css';
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from './common/services/ipc/ipcClient';
 import type { PreferenceBootstrap } from './features/preferences/types/PreferenceBootstrap';
 import type { PreferencesDocument } from './features/preferences/types/PreferencesDocument';
 import { isLikelySecretMcpEnvValue, isSecretMcpEnvName } from './features/ai/utils/listSecretMcpEnv';

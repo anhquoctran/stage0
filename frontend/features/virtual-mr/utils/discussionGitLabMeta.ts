@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 
 /**
  * Derives a GitLab-style @handle from author name or email.
- * E.g., "Nguyễn Huỳnh Duy" -> "@duynh", "Tôn Quốc Nam" -> "@namtq"
+ * E.g., "Jane Alex Doe" -> "@doeja"; combining accents are normalized below.
  */
 export function getAuthorHandle(authorName: string, authorId?: string): string {
   if (authorId && authorId.includes('@')) {
@@ -102,4 +102,3 @@ export function formatGitLabTime(dateInput: string): string {
   const years = Math.floor(seconds / (365 * 86400));
   return years === 1 ? '1 year ago' : `${years} years ago`;
 }
-

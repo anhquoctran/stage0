@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { clsx } from 'clsx';
-import { invoke, isTauri } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { invoke, isTauri } from '../common/services/ipc/ipcClient';
+import { listen } from '../common/services/ipc/ipcEvents';
 import { MainLayout } from './components/layout/MainLayout';
 import { notificationService } from '../features/notifications/services/notificationService';
 import { syncUnreadBadge } from '../features/notifications/services/notificationBadgeService';

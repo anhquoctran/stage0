@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { loadWithMocks } from './helpers/componentHarness.mjs';
+import { deviceAuthFixture, deviceStatus } from './helpers/deviceAuthHarness.mjs';
 
 const { create } = createRequire(import.meta.url)('zustand');
 const url = (path) => new URL(`../frontend/features/ai/${path}`, import.meta.url);
@@ -74,34 +75,32 @@ test('explicit model refresh uses the selected endpoint, coalesces repeated clic
   }, () => pending.promise);
 });
 
-test('explicit subscription checks are single-flight and Google sign-in never starts keyring polling', async () => {
-  const pending = deferred();
+test('retired subscription and Google OAuth actions cannot start keyring polling from the provider store', async () => {
   await fixture(async (store, calls) => {
-    const first = store.getState().checkCopilotStatus();
-    await store.getState().checkCopilotStatus(); await store.getState().checkGoogleAuthStatus();
-    assert.equal(calls.length, 1);
-    pending.resolve({ connected: true, has_subscription: true }); await first;
-    assert.equal(store.getState().isCheckingSubscription, false);
-  }, () => pending.promise);
-  await fixture(async (store, calls) => {
-    await store.getState().startGoogleOAuth();
-    assert.deepEqual(calls.map(([command]) => command), ['google_oauth_start', 'open_external_url']);
-  }, async () => ({ auth_url: 'https://fixture.test/authorize' }));
+    for (const action of ['checkCopilotStatus', 'checkGoogleAuthStatus', 'startGoogleOAuth',
+      'loadSavedChatGptAuth', 'startChatGptOAuth', 'refreshChatGptSession', 'disconnectChatGptOAuth']) {
+      assert.equal(store.getState()[action], undefined, action);
+    }
+    store.getState().setProvider('gemini');
+    assert.deepEqual(calls, []);
+    assert.equal(store.getState().isCheckingApiKey, false);
+  });
 });
 
 test('ChatGPT saved credentials require an explicit load; failure recovery and polling use metadata only', async () => {
   const pending = deferred();
-  const status = { connected: false, phase: 'signed_out', profiles: [], credentials_loaded: true };
-  await fixture(async (store, calls) => {
-    const first = store.getState().loadSavedChatGptAuth();
-    await store.getState().loadSavedChatGptAuth();
-    assert.deepEqual(calls.map(([command]) => command), ['chatgpt_oauth_load_saved']);
-    pending.reject(new Error('fixture keyring denied')); await first;
-    assert.deepEqual(calls.map(([command]) => command), ['chatgpt_oauth_load_saved', 'chatgpt_oauth_check_status']);
-    assert.match(store.getState().chatgptAuthStatus.error, /denied/);
-    await store.getState().checkChatGptAuthStatus();
-    assert.equal(calls.at(-1)[0], 'chatgpt_oauth_check_status');
-  }, (command) => command === 'chatgpt_oauth_load_saved' ? pending.promise : status);
+  const { store, calls } = deviceAuthFixture((command) =>
+    command === 'chatgpt_device_auth_check' ? pending.promise : deviceStatus('signed_out'));
+  assert.deepEqual(calls, []);
+  const first = store.getState().checkSaved();
+  await store.getState().checkSaved();
+  assert.deepEqual(calls.map(([command]) => command), ['chatgpt_device_auth_check']);
+  pending.reject(new Error('fixture keyring denied')); await first;
+  assert.deepEqual(calls.map(([command]) => command), ['chatgpt_device_auth_check', 'chatgpt_device_auth_status']);
+  assert.match(store.getState().error, /denied/);
+  assert.equal(store.getState().isActing, false);
+  await store.getState().refresh();
+  assert.equal(calls.at(-1)[0], 'chatgpt_device_auth_status');
   const native = readFileSync(new URL('../backend/src/features/ai/chatgpt_oauth.rs', import.meta.url), 'utf8');
   const passive = native.split('pub async fn check_chatgpt_auth_status()')[1].split('pub async fn load_saved_chatgpt_auth()')[0];
   assert.match(passive, /\.status\(\)/); assert.doesNotMatch(passive, /AuthCatalog::load|snapshot|keyring/);
@@ -113,6 +112,6 @@ test('macOS legacy migration uses exact item queries with no authentication UI o
   assert.match(native, /kSecAttrService/); assert.match(native, /kSecAttrAccount/);
   assert.match(native, /SecItemCopyMatching/);
   assert.doesNotMatch(native, /SecKeychainSetUserInteractionAllowed|SecKeychainItemSetAccess|kSecUseAuthenticationUIAllow/);
-  const card = readFileSync(url('components/ChatGptBrowserAuthCard.tsx'), 'utf8');
-  assert.match(card, /Older keyring items are retained/);
+  const storage = readFileSync(new URL('../backend/src/features/ai/chatgpt_oauth/secret_storage.rs', import.meta.url), 'utf8');
+  assert.match(storage, /Older keyring items are retained/);
 });

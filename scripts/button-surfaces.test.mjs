@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
+import { loadWithMocks } from './helpers/componentHarness.mjs';
 
 const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -33,8 +34,11 @@ test('onboarding artwork fills its preview and comparison demonstrates an actual
 });
 
 test('onboarding adds explanatory copy and illustrative scenes without claiming live activity', () => {
-  const slides = read('frontend/features/onboarding/constants/welcomeSlides.ts');
-  assert.equal((slides.match(/highlights:/g) ?? []).length, 3);
+  const { WELCOME_SLIDES } = loadWithMocks(new URL('../frontend/features/onboarding/constants/welcomeSlides.ts', import.meta.url), {});
+  assert.deepEqual(WELCOME_SLIDES.filter((slide) => slide.highlights).map((slide) => slide.id),
+    ['welcome', 'compare', 'review', 'repository']);
+  assert.ok(WELCOME_SLIDES.filter((slide) => slide.highlights).every((slide) =>
+    slide.highlights.length === 2 && slide.highlights.every((item) => item.title && item.description)));
   const scene = read('frontend/features/onboarding/components/WelcomeArtworkScene.tsx');
   assert.ok(scene.includes('Sample workspace'));
   assert.ok(scene.includes('scene.metrics.map'));

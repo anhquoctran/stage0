@@ -1,4 +1,4 @@
-import { listen } from '@tauri-apps/api/event';
+import { listen } from '../../../common/services/ipc/ipcEvents';
 import React, { useEffect, useState } from 'react';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Key } from '../../../common/components/icons/Key';

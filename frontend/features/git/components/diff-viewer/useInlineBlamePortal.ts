@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../../common/services/ipc/ipcClient';
 import type { ChangedFile } from '../../types/ChangedFile';
 import type { RepoInfo } from '../../types/RepoInfo';
 import type { FileBlamePayload } from '../../types/FileBlamePayload';

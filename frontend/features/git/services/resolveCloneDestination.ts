@@ -1,4 +1,4 @@
-import { isAbsolute, join } from '@tauri-apps/api/path';
+import { isAbsolute, join } from '../../../common/services/ipc/ipcPath';
 import { isSafeCloneRepoName } from '../utils/cloneDestination';
 
 export async function resolveCloneDestination(parent: string, name: string): Promise<string> {

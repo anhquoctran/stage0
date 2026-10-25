@@ -1,5 +1,5 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { listen } from '../../../common/services/ipc/ipcEvents';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isMacOS } from '../../../common/utils/shortcuts';
 import { useGitStore } from '../../../features/git/store/useGitStore';

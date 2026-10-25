@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import { AI_PROVIDERS } from '../constants/aiPresets';
 import type { AiConfig } from '../types/AiConfig';
 

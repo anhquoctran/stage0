@@ -28,10 +28,12 @@ the feature modules so `lib.rs` can continue to register the same Tauri commands
 The SQLite connection and migrations are in `core/db`; repository, credential
 and Virtual MR records and queries live in their feature `persistence.rs` files.
 Frontend imports point to the owning feature or to `common`/`core` directly.
-The proposed [IPC facade specification](frontend_ipc_refactor_spec.md) targets
-`frontend/common/services/ipc/` for Tauri SDK access. That facade and its import
-boundary check are not implemented yet; current callers still import the SDK
-directly. The planned migration preserves caller guards and native behavior.
+Use `frontend/common/services/ipc/` for Tauri SDK access, including platform
+primitives. Prefer the owning leaf module; use its `types.ts` for SDK types.
+`pnpm check:architecture` rejects direct `@tauri-apps/*` dependencies outside the
+facade and computed dynamic import/require specifiers. Existing callers own
+browser guards, fallbacks and lifecycle; see the implemented
+[IPC facade specification](frontend_ipc_refactor_spec.md).
 Use `frontend/common/utils/dateTime.ts` for displayed dates and times; it treats
 numeric timestamps as milliseconds, with explicit Unix-second helpers for Git.
 Keep ISO serialization for persistence and IPC separate from display formatting.

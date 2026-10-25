@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { X } from '../../../common/components/icons/X';
 import { isMacOS } from '../../../common/utils/shortcuts';

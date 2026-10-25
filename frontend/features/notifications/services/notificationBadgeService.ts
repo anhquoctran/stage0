@@ -1,5 +1,5 @@
-import { isTauri } from '@tauri-apps/api/core';
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { isTauri } from '../../../common/services/ipc/ipcClient';
+import { getCurrentWindow } from '../../../common/services/ipc/ipcWindow';
 
 const PRIMARY_ACCENT = '#9333ea';
 let windowsDotIcon: Promise<Uint8Array> | undefined;

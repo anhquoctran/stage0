@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../services/ipc/ipcClient';
 import { notificationService } from '../../features/notifications/services/notificationService';
 
 export const ALLOWED_IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);

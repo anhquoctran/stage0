@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { type GitCredential } from '../types/GitCredential';
 import { type SaveGitCredentialPayload } from '../types/SaveGitCredentialPayload';
 import { type OsKeyringInfo } from '../types/OsKeyringInfo';

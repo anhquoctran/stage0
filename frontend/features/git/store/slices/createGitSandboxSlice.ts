@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../../common/services/ipc/ipcClient';
 import type { StateCreator } from 'zustand';
 import type { GitState } from '../../types/GitState';
 import { type SandboxAdapterInfo } from '../../types/SandboxAdapterInfo';

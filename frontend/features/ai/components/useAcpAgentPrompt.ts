@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { useState } from 'react';
 import type { AcpAgentPromptContext } from './AcpAgentPromptContext';
 

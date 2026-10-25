@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import {
   BUNDLED_UI_FONT_FAMILIES,
   LOW_PRIORITY_UI_FONT_FAMILIES,

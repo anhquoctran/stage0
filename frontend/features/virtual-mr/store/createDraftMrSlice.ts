@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { useGitStore } from '../../git/store/useGitStore';
 import { type NewMrDraft } from '../types/NewMrDraft';
 import { type VirtualMrCommit } from '../types/VirtualMrCommit';

@@ -1,7 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { formatFriendlyVsCodeError } from '../frontend/features/git/utils/fileActions.ts';
+import * as tauriCore from '@tauri-apps/api/core';
+import { loadWithMocks } from './helpers/componentHarness.mjs';
+
+// Resolve extensionless frontend imports through the same loader as other fixtures.
+const { formatFriendlyVsCodeError } = loadWithMocks(
+  new URL('../frontend/features/git/utils/fileActions.ts', import.meta.url),
+  { '@tauri-apps/api/core': tauriCore },
+);
 
 test('formatFriendlyVsCodeError provides friendly actionable guidance for missing/misconfigured VS Code across platforms', () => {
   const err1 = new Error('Failed to launch Visual Studio Code. Please ensure Code.exe is in your PATH.');

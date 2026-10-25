@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';

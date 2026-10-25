@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { SOFTWARE_ABOUT } from '../config/about';
 import { type SoftwareAboutInfo } from '../types/SoftwareAboutInfo';
 

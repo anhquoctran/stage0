@@ -1,5 +1,5 @@
-import { isTauri } from '@tauri-apps/api/core';
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { isTauri } from '../../common/services/ipc/ipcClient';
+import { getCurrentWindow } from '../../common/services/ipc/ipcWindow';
 
 export function isPrimaryAppWindow(): boolean {
   if (!isTauri()) return true;

@@ -24,6 +24,7 @@ import { type ViewerFontSettings } from '../types/ViewerFontSettings';
 import { usePreferencesChangeCount } from './usePreferencesChangeCount';
 import { usePreferencesDraftSession } from './usePreferencesDraftSession';
 import { usePreferencesNavigation } from './usePreferencesNavigation';
+import { usePreferencesDismiss } from './usePreferencesDismiss';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
 import { DEFAULT_UI_FONT_FAMILY } from '../constants/uiFonts';
 import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
@@ -204,6 +205,12 @@ export function usePreferencesDraft() {
 
     setIsPreferencesOpen(false);
   };
+
+  usePreferencesDismiss({
+    isOpen: isPreferencesOpen,
+    hasChildDialog: isJsonEditorOpen || session.showResetConfirm || session.showRestartPrompt,
+    onCancel: handleCancel,
+  });
 
   const handleResetDefaults = () => {
     session.setDraftKeymap(structuredClone(DEFAULT_KEYMAP));

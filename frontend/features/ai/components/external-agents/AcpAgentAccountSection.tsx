@@ -1,4 +1,4 @@
-import { isTauri } from '@tauri-apps/api/core';
+import { isTauri } from '../../../../common/services/ipc/ipcClient';
 import { CustomSelect } from '../../../../common/components/CustomSelect';
 import type { AcpAgentDetailsProps } from './AcpAgentDetailsProps';
 

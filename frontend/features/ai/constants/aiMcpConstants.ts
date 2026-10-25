@@ -2,7 +2,7 @@ import type { CustomSelectOption } from '../../../common/types/CustomSelectOptio
 import type { McpServerType } from '../types/McpServerType';
 import { BOT_CATEGORIES } from './botPresets';
 import type { BotCategory } from '../../virtual-mr/types/BotCategory';
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 
 export const MAX_TOKEN_OPTIONS: CustomSelectOption<string>[] = [
   { value: '1024', label: '1,024 Tokens (Compact)' },

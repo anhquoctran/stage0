@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import type { ReviewState } from '../types/ReviewState';
 import type { ReviewRun } from '../types/ReviewRun';
 import type { ReviewRunDetail } from '../types/ReviewRunDetail';

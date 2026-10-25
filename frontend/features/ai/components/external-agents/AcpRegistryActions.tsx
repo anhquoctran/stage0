@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../../common/services/ipc/ipcClient';
 import { ChevronLeft } from '../../../../common/components/icons/ChevronLeft';
 import { Plus } from '../../../../common/components/icons/Plus';
 import { RefreshCw } from '../../../../common/components/icons/RefreshCw';

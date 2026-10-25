@@ -1,7 +1,7 @@
 import React from 'react';
-import { isTauri } from '@tauri-apps/api/core';
+import { isTauri } from '../common/services/ipc/ipcClient';
 import { NotificationHost } from '../features/notifications/components/NotificationHost';
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { getCurrentWindow } from '../common/services/ipc/ipcWindow';
 import { MainApp } from './MainApp';
 
 export const App: React.FC = () => {

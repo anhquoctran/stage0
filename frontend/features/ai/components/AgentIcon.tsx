@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { Bot } from '../../../common/components/icons/Bot';
 
 function isRegistryIconUrl(icon?: string): icon is string {

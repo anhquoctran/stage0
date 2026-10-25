@@ -1,4 +1,4 @@
-import { Channel } from '@tauri-apps/api/core';
+import { Channel } from '../../../common/services/ipc/ipcClient';
 import type { GitOperationProgress } from '../types/GitOperationProgress';
 import { useGitTaskStore } from '../store/useGitTaskStore';
 

@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import type { PreferencesDocument } from '../types/PreferencesDocument';
 import type { PreferenceBootstrap } from '../types/PreferenceBootstrap';
 

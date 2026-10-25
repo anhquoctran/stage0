@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { Bot } from '../../../common/components/icons/Bot';
 import { Check } from '../../../common/components/icons/Check';
 import { Copy } from '../../../common/components/icons/Copy';

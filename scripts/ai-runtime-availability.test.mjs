@@ -12,7 +12,7 @@ const presets = loadWithMocks(new URL('../frontend/features/ai/constants/aiPrese
 const guardrails = loadWithMocks(new URL('../frontend/features/ai/types/guardrails.ts', import.meta.url), {});
 
 function mrStore() {
-  const calls = [];
+  const calls = [], reviewCalls = [];
   const { useVirtualMrStore: store } = loadWithMocks(new URL('../frontend/features/virtual-mr/store/useVirtualMrStore.ts', import.meta.url), {
     zustand: { create },
     '@tauri-apps/api/core': { invoke: async (...args) => { calls.push(args); } },
@@ -20,8 +20,12 @@ function mrStore() {
     '../../ai/store/useBotReviewersStore': { useBotReviewersStore: { getState: () => ({ globalReviewers: [], repoCustomReviewers: {} }) } },
     '../types/virtualMr': { AVAILABLE_AI_BOTS: [], PRESET_REPO_LABELS: [] },
     '../../ai/constants/runtimeAvailability': availability,
+    '../../review/services/assignedReviewService': {
+      startAssignedReviewForSession: async (id) => { reviewCalls.push(['start', id]); return { id: 'native-review-run' }; },
+      reReviewAssignedSession: async (id) => { reviewCalls.push(['re-review', id]); },
+    },
   });
-  return { store, calls };
+  return { store, calls, reviewCalls };
 }
 
 function session(discussions = []) {
@@ -29,17 +33,21 @@ function session(discussions = []) {
     assignee: { name: 'User', email: 'user@example.test' }, reviewers: [], discussions };
 }
 
-test('re-verification never changes state, emits fake comments or auto-approves any session', async () => {
+test('re-verification delegates to sandboxed review without changing discussions, emitting fake comments or auto-approving', async () => {
   for (const discussions of [[], [{ id: 'disc', isResolved: false }], [{ id: 'disc', isResolved: true }]]) {
-    const { store, calls } = mrStore();
+    const { store, calls, reviewCalls } = mrStore();
     store.setState({ sessions: [session(discussions)], activeSessionId: 'mr' });
     const before = store.getState().sessions;
-    await assert.rejects(store.getState().reverifyDiscussionFix('disc'), /not available yet/);
-    await assert.rejects(store.getState().triggerIncrementalReReview('mr'), /not available yet/);
-    await assert.rejects(store.getState().triggerIncrementalReReview('missing'), /not available yet/);
-    await assert.rejects(store.getState().resolveDiscussion('disc', true, 'ai_verified'), /not available yet/);
+    assert.equal(await store.getState().reverifyDiscussionFix('disc'), discussions.length > 0);
+    await store.getState().triggerIncrementalReReview('mr');
+    await store.getState().triggerIncrementalReReview('missing');
+    await assert.rejects(store.getState().resolveDiscussion('disc', true, 'ai_verified'),
+      { message: availability.AI_REVIEW_UNAVAILABLE });
     assert.equal(store.getState().sessions, before);
     assert.deepEqual(calls, []);
+    assert.deepEqual(reviewCalls, [
+      ...(discussions.length ? [['start', 'mr']] : []), ['re-review', 'mr'], ['re-review', 'missing'],
+    ]);
   }
 });
 
@@ -169,16 +177,24 @@ test('native connectivity refuses unsaved key drafts instead of silently checkin
   });
 });
 
-test('implemented CLI and subscription connectivity paths still report actual successful responses', async () => {
+test('retired CLI and subscription fields cannot bypass saved-key validation or select a legacy transport', async () => {
   for (const authMode of ['cli_bridge', 'subscription_oauth']) {
     await withAiStore(async (store, calls) => {
-      const result = await store.getState().testAiConnection({
+      const config = {
         ...presets.DEFAULT_AI_CONFIG, provider: 'openai', authMode, cliType: 'claude',
-      });
+      };
+      const blocked = await store.getState().testAiConnection(config);
+      assert.equal(blocked.success, false);
+      assert.match(blocked.message, /API Key is required/);
+      assert.deepEqual(calls, []);
+      const result = await store.getState().testAiConnection(config, true);
       assert.equal(result.success, true);
       assert.equal(calls.length, 1);
-      assert.equal(calls[0][0], authMode === 'cli_bridge' ? 'ai_execute_cli' : 'ai_chat_dispatch');
-    }, undefined, () => ({ success: true, output: 'Connected', content: 'Connected', duration_ms: 10, provider_used: 'Fixture provider' }));
+      assert.equal(calls[0][0], 'test_ai_review_provider');
+      assert.equal(calls[0][1].request.authMode, 'api_key');
+      assert.equal(calls[0][1].request.cliType, undefined);
+      assert.equal(calls[0][1].request.apiKey, undefined);
+    }, undefined, () => ({ success: true, message: 'Verified function calling using the saved native credential.' }));
   }
 });
 

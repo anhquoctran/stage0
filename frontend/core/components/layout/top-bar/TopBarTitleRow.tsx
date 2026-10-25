@@ -1,6 +1,6 @@
 import React from 'react';
 import { clsx } from 'clsx';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../../common/services/ipc/ipcClient';
 import { AppLogo } from '../../../../common/components/AppLogo';
 import { MenuBar } from '../MenuBar';
 import { WindowControls } from '../WindowControls';

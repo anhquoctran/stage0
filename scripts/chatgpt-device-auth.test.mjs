@@ -55,24 +55,33 @@ test('unsupported/browser-only sign-in is an explicit failure, never a simulated
   assert.equal(failed.store.getState().status, null); assert.equal(failed.store.getState().isActing, false);
 });
 
-test('device-code UI consumes explicit launch consent, opens only the pinned official URL and never starts on render', async () => {
-  const harness = componentHarness(); let starts = 0; let refreshes = 0; const calls = [];
-  const state = { status: status('idle'), isActing: false, error: null, refresh: async () => { refreshes++; }, start: async () => { starts++; }, checkSaved: async () => {}, cancel: async () => {}, logout: async () => {} };
-  const { ChatGptDeviceCodeCard } = loadWithMocks(new URL('../frontend/features/ai/components/ChatGptDeviceCodeCard.tsx', import.meta.url), {
-    react: harness.react, '@tauri-apps/api/core': { invoke: async (...args) => { calls.push(args); } },
-    '../store/useChatGptDeviceAuthStore': { useChatGptDeviceAuthStore: () => state }, '../../../common/utils/dateTime': { formatDateTime: (s) => s },
-  });
-  const nodes = async () => componentNodes(await harness.render(ChatGptDeviceCodeCard));
-  const button = (items, label) => items.find((item) => item.type === 'button' && item.props.children.flat(Infinity).includes(label));
+test('active account UI requires an explicit supported native action and never opens device URLs on render', async () => {
+  const harness = componentHarness(); let native = true, starts = 0; const calls = [];
+  const method = { id: 'agent-oauth', name: 'Agent sign-in', type: 'agent' };
+  const account = { authStatus: null, lastSuccessfulSignIn: null, isCheckingAuth: false, supportsAuthStatus: false,
+    authMethods: [method], selectedAuthMethod: method.id, selectedAuthOption: method,
+    setSelectedAuthMethod() {}, busyId: null,
+    isProtocolAuthMethod: (item) => item?.type === 'agent', signIn: async () => { starts++; } };
+  const { AcpAgentAccountSection } = loadWithMocks(
+    new URL('../frontend/features/ai/components/external-agents/AcpAgentAccountSection.tsx', import.meta.url), {
+      react: harness.react,
+      '@tauri-apps/api/core': { isTauri: () => native, invoke: async (...args) => calls.push(args) },
+      '../../../../common/components/CustomSelect': { CustomSelect: () => null },
+    });
+  const render = async () => componentNodes(await harness.render(AcpAgentAccountSection, { account, agentId: 'selected' }));
+  const button = (nodes) => nodes.find((node) => node.type === 'button');
   try {
-    let items = await nodes(); assert.equal(starts, 0); assert.equal(refreshes, 1); assert.equal(button(items, 'Continue with ChatGPT').props.disabled, true);
-    items.find((item) => item.type === 'input').props.onChange({ target: { checked: true } }); items = await nodes();
-    button(items, 'Continue with ChatGPT').props.onClick(); items = await nodes(); assert.equal(starts, 1); assert.equal(button(items, 'Continue with ChatGPT').props.disabled, true);
-    state.status = status(); items = await nodes(); await button(items, 'Open sign-in page').props.onClick();
-    assert.deepEqual(calls, [['open_external_url', { url: 'https://auth.openai.com/codex/device' }]]);
-    state.status = status('pending', { verificationUrl: 'https://evil.example/device' }); items = await nodes();
-    assert.equal(button(items, 'Open sign-in page').props.disabled, true); await button(items, 'Open sign-in page').props.onClick(); assert.equal(calls.length, 1);
-    state.status = status('signed_in'); items = await nodes(); assert.equal(button(items, 'Copy code'), undefined);
+    let items = await render(); assert.equal(starts, 0); assert.deepEqual(calls, []);
+    assert.equal(button(items).props.disabled, false);
+    native = false; items = await render(); assert.equal(button(items).props.disabled, true);
+    native = true; method.type = 'terminal'; items = await render();
+    assert.equal(button(items).props.disabled, true);
+    assert.match(JSON.stringify(items), /interactive terminal sign-in/);
+    method.type = 'agent'; items = await render();
+    await button(items).props.onClick(); assert.equal(starts, 1);
+    account.busyId = 'selected'; items = await render();
+    assert.equal(button(items).props.disabled, true);
+    assert.deepEqual(calls, [], 'the UI never opens device URLs or bypasses the account workflow');
   } finally { harness.cleanup(); }
 });
 

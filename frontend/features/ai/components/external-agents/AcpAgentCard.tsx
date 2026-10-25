@@ -1,4 +1,4 @@
-import { isTauri } from '@tauri-apps/api/core';
+import { isTauri } from '../../../../common/services/ipc/ipcClient';
 import { AcpRegistryProjectInfo } from '../AcpRegistryProjectInfo';
 import { AgentIcon } from '../AgentIcon';
 import type { AcpAgentCardProps } from './AcpAgentCardProps';

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { isTauri } from '@tauri-apps/api/core';
+import { isTauri } from '../../../common/services/ipc/ipcClient';
 import { availableUiFontFamilies, browserFontDiscoveryAvailable, loadSystemFontFamilies } from '../services/systemFontCatalog';
 
 export function useSystemFontFamilies() {

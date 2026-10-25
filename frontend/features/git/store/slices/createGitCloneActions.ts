@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../../common/services/ipc/ipcClient';
 import type { StoreApi } from 'zustand';
 import { createGitProgressChannel } from '../../services/createGitProgressChannel';
 import { getErrorMessage } from '../../services/gitStoreEffects';

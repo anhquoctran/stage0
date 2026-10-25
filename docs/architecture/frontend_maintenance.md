@@ -2,9 +2,9 @@
 
 Read [feature layout](feature_layout.md) for ownership, the
 [refactor report](frontend_refactor_analysis.md) for the original audit and measured
-implementation, and the proposed
-[IPC facade refactor specification](frontend_ipc_refactor_spec.md) for the planned
-Tauri SDK boundary. The facade and its import check are not implemented yet.
+implementation, and the
+[IPC facade refactor specification](frontend_ipc_refactor_spec.md) for the
+implemented Tauri SDK boundary and its verification checkpoint.
 Public component exports, root Zustand hooks, IPC payloads and
 events remain stable. Internal bot/ACP form props are grouped by responsibility;
 their application callers migrate together (see report section 8).
@@ -13,7 +13,7 @@ their application callers migrate together (see report section 8).
 
 | Workflow | Owner |
 |---|---|
-| IPC facade (planned) | Proposed `common/services/ipc/` contains explicit SDK re-exports in `ipcClient.ts`, `ipcEvents.ts`, `ipcWindow.ts` (including DPI), `ipcPath.ts`, type-only `types.ts` and an optional `index.ts`. Current callers still import Tauri directly; migration and the architecture import gate are pending. Existing feature/core owners retain browser fallbacks, listener cleanup, primary-window policy and workflow behavior. See [IPC refactor spec](frontend_ipc_refactor_spec.md). |
+| IPC facade | `common/services/ipc/` owns explicit SDK re-exports in `ipcClient.ts`, `ipcEvents.ts`, `ipcWindow.ts` (including DPI), `ipcPath.ts`, type-only `types.ts` and an optional `index.ts`. Prefer leaf imports. `scripts/check-frontend-ipc-boundary.mjs`, integrated into `pnpm check:architecture`, enforces all `@tauri-apps/*` dependencies through this directory and rejects computed import/require specifiers. Existing feature/core owners retain browser fallbacks, listener cleanup, primary-window policy and workflow behavior. See [IPC refactor spec](frontend_ipc_refactor_spec.md). |
 | Dropdown dismissal | `common/hooks/useOutsideDismiss.ts` owns capture-phase outside pointer/click/focus dismissal for `CustomSelect` and bespoke font, branch and MR metadata pickers. Keep both trigger and popup within the registered ref; inside search and multi-selection must stay open. Do not swallow the outside control's activation or steal its focus. Attach listeners only while open and clean them up on close/unmount. |
 | Button surfaces | `core/styles/button-surfaces.css` enforces borderless opaque palette-filled buttons (including filled hover states); `btn-solid` opts custom/inline fills in. Transparent, white and black/dark canvas surfaces may retain borders. Focus outlines remain independent. Keep the palette selector list in sync with new filled utilities; see `.cursor/rules/button-surfaces.mdc`. |
 | Scrollbars | `common/components/ScrollArea.tsx` wraps the official OverlayScrollbars React component for vertical scroll surfaces, including onboarding: a 4px visible thumb, transparent track and 700ms scroll-idle hide. `core/styles/index.css` imports its stylesheet and owns the theme, reduced motion and forced-color overrides. Keep its viewport at `z-index: auto` so nested fixed dialogs can escape the scroller's clip. The existing `core/services/autoHideScrollbars.ts` capture listener remains the activity fallback for native scroll surfaces. Native CSS scrollbar styling alone is not reliable in the macOS webview; use `ScrollArea` for a consistent overlay. |
@@ -22,7 +22,7 @@ their application callers migrate together (see report section 8).
 | Git invalidation | `git/services/gitStoreEffects.ts` owns the shared diff request epoch, error conversion and native recent-repository menu synchronization. Repository changes and diff loads must invalidate the same epoch. |
 | AI state | `ai/store/useAiMcpStore.ts` composes config, MCP servers, guardrails and external-agent slices. Keep bootstrap, preference events and delayed native hydration in this facade. `ai/services/aiMcpPersistence.ts` owns normalization, migration and sanitized persistence. |
 | AI preferences UI | `ai/hooks/useAiMcpTabState.ts` coordinates draft/committed routing and returns provider/MCP/navigation/setup/removal/details groups. `useAiProviderSetup.ts`, `useAiProviderRemoval.ts`, `useAiProviderDetails.ts` own their workflows. `useMcpServerForm.ts` owns MCP validation/secrets. Provider key/model/endpoint views live under `components/providers/`. `services/checkAiProviderConnection.ts` owns connection transport; the slice owns status publication. |
-| Preferences transaction | `preferences/hooks/usePreferencesDraft.ts` coordinates transaction actions and grouped tab APIs. `usePreferencesDraftSession.ts` owns draft seeding/baselines/open-close synchronization; `usePreferencesNavigation.ts` owns navigation/search; `usePreferencesChangeCount.ts` owns dirty counts. `services/createPreferencesApplyAction.ts` still owns ordered commit/publication/error handling. The tab container routes drafts; the modal is the shell. |
+| Preferences transaction | `preferences/hooks/usePreferencesDraft.ts` coordinates transaction actions and grouped tab APIs. `usePreferencesDraftSession.ts` owns draft seeding/baselines/open-close synchronization; `usePreferencesNavigation.ts` owns navigation/search; `usePreferencesChangeCount.ts` owns dirty counts. `usePreferencesDismiss.ts` routes unconsumed Escape through the same discard/single-flight path as Cancel, leaving child dialogs and IME composition alone. `services/createPreferencesApplyAction.ts` still owns ordered commit/publication/error handling. The tab container routes drafts; the modal is the shell. |
 | Preferences JSONC editor | `components/usePreferencesJsonDocument.ts` owns load/save/revision conflicts/autosave/polling/close/reset; `usePreferencesJsonCodeBuffer.ts` owns highlighting, caret, scrolling and completions. `PreferencesJsonEditor.tsx` composes the buffer and header. Preserve focus, cursor restoration and external-change protection. |
 | Welcome onboarding | `onboarding/constants/welcomeSlides.ts` owns the ten-step tour: three introduction slides → optional Theme → Keymaps → UI Font → Buffer Font → Markdown Font → required AI setup → Open/Clone repository. `store/useOnboardingStore.ts` tracks onboarding open/close state and synchronizes with application menu flags to deactivate all native menus and keyboard accelerators during onboarding. `WelcomeThemePicker.tsx` offers System/Light/Dark; `WelcomeSettingsPanel.tsx` reuses Preferences font controls and `KeymapPresetPicker.tsx`; `WelcomeSettingsPreview.tsx` owns responsive samples. `WelcomeRepositoryPreview.tsx` owns the final step's illustration. `useOnboardingPreferences.ts` owns appearance/keymap drafts, OS-appearance previews, cleanup, save errors and reload. `services/onboardingPreferences.ts` commits only changed appearance/keymap fields in one JSON patch and publishes after success. Cleanup restores the latest committed theme/fonts. Navigation to the repository step requires saved AI setup; completion rechecks it before and after saving, then sets the welcome flag or opens/clones a repo. |
 | Required onboarding AI | `WelcomeAiSetup.tsx` reuses `AiMcpTab` and `ExternalAgentsTab`; `useOnboardingAiSetup.ts` owns an isolated AI draft, explicit save/discard through `commitAiPreferences`, save errors/single-flight and live committed status. `services/onboardingAiStatus.ts` counts explicitly configured providers with model/HTTP endpoint plus confirmed saved key metadata (except keyless Ollama), or a saved ACP launch configuration. Defaults, plaintext key drafts, MCP servers and reviewer bots alone do not count. No automatic keyring reads, inference, process launch or permission bypass: saved-key checks are explicit; agent account management and review guardrails stay with their existing owners. Saved ACP launch configuration is not proof of authentication or inference. Skip/Close/Escape/final repo actions cannot bypass the gate; appearance stays optional. AI-step content must not use a transformed animation ancestor, so reused fixed modals remain viewport-sized. |
@@ -219,3 +219,58 @@ latter resolve/validate every preset for all three desktop configurations.
 Full Node suite: **313 tests / 293 pass / the same 20 baseline failures** (before:
 300 / 280 / 20), with no new failing names. Checks ran on macOS; no Windows/Linux
 native keyboard or visual QA is claimed. No ownership boundaries moved.
+
+## Frontend Tauri IPC facade (2026-10-25)
+
+All 70 original SDK-importing consumers now use `common/services/ipc/` leaves.
+The six facade modules explicitly re-export native primitives and SDK types;
+feature/core owners retain guards, fallbacks, lifecycle and business behavior.
+`check-frontend-ipc-boundary.mjs` is enforced by `pnpm check:architecture` and
+covers static/type imports, re-exports, import types, import-equals, require and
+dynamic imports, including untracked TS/TSX files. Computed specifiers fail closed.
+
+Fresh full Node baseline: **366 / 344 pass / 22 fail**. Final: **383 / 361 pass /
+the same 22 failures**, with no lost passing tests or skips/cancellations.
+Seventeen new facade, import-gate and notification lifecycle/window tests pass.
+The VS Code test now uses the shared loader with the real SDK; existing
+assertions remain. An AST audit of all 70 consumers confirms unchanged
+non-import code and preserved import bindings after routing through the facade.
+
+Typecheck, architecture, frontend size, Cargo check and whitespace checks pass.
+The frontend has 881 TS/TSX files; its largest remains 393/450 lines. No backend
+source/schema or version metadata changed. Checks ran headlessly on macOS, with
+no live native/browser UI, accounts or Windows/Linux runtime verification.
+See the [IPC implementation checkpoint](frontend_ipc_refactor_spec.md#9-implementation-and-verification-checkpoint-2026-10-25)
+for actual commands, baseline revision/lockfile and all 22 failing test names.
+
+## Node baseline failures resolved (2026-10-25)
+
+The IPC follow-up fixes all 22 failures recorded at the previous checkpoint.
+Full Node results are now **388 tests / 388 pass / 0 fail**, with no skips,
+cancellations or lost passing tests. All **180 compiled Rust library tests pass**.
+Typecheck, architecture, frontend size, Cargo check and isolated Vite production
+compilation pass. Vite retains mixed static/dynamic import and large-chunk warnings.
+
+Actual behavior fixes are Preferences Escape/discard and retained device-auth
+error recovery. Escape uses `usePreferencesDismiss.ts` and cannot cancel an
+in-flight commit. A failed auth check/cancel/logout clears stale public status,
+then attempts one metadata-only recovery without retrying credential access;
+recovery failure keeps status cleared and preserves the original error.
+
+Other failures were stale test contracts/fixtures: the ACP migration intentionally
+retired provider OAuth/CLI fields, native browser/device UI and registration.
+Tests now guard that retirement and exercise active provider/ACP UI plus retained
+device-store contracts in isolation; no legacy auth commands were re-registered.
+The 180 Rust tests cover compiled modules, not the unregistered legacy OAuth
+source. Secret isolation, exact profile selection in legacy source, raw metadata
+projection, stale results, single-flight actions and no automatic inference
+remain asserted at their relevant boundaries.
+
+Payload checks include `apiKeyRemovals`; Preferences fixtures include current
+theme/font APIs; onboarding checks four highlighted slides. Mention submission
+tests model macOS, Windows and Linux modifiers. Author-name normalization retains
+its Unicode behavior while bundled source remains English. The frontend now has
+882 TS/TSX files; its largest remains 393/450 lines. No backend source, dependency
+lockfile, version or release metadata changed. Native UI, live accounts/providers
+and Windows/Linux runtime behavior remain unexercised on this macOS host.
+See the [failure-resolution checkpoint](frontend_ipc_refactor_spec.md#10-baseline-failure-resolution-2026-10-25).

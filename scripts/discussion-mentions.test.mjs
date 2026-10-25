@@ -74,16 +74,27 @@ async function editorFixture(t, initialValue = '') {
   return { render, textarea, options, input, key, value: () => value, submits: () => submits, setSubmitting: (next) => { isSubmitting = next; } };
 }
 
-test('keyboard autocomplete inserts a stable mention without submitting and preserves surrounding content', async (t) => {
+for (const platform of ['MacIntel', 'Win32', 'Linux x86_64']) {
+test(`keyboard autocomplete preserves content and uses the submit modifier for ${platform}`, async (t) => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { platform } });
+  t.after(() => {
+    if (previous) Object.defineProperty(globalThis, 'navigator', previous);
+    else delete globalThis.navigator;
+  });
   const view = await editorFixture(t);
   await view.input('Hello @Sec, check this', 10);
   assert.equal(view.options().length, 1);
   await view.key('Enter');
   assert.equal(view.value(), 'Hello [@Security Bot](#mr-mention/reviewer/security), check this');
   assert.equal(view.submits(), 0);
-  await view.key('Enter', { ctrlKey: true });
+  const mac = navigator.platform.toUpperCase().includes('MAC');
+  await view.key('Enter', { ctrlKey: mac, metaKey: !mac });
+  assert.equal(view.submits(), 0, 'the other platform modifier does not submit');
+  await view.key('Enter', { ctrlKey: !mac, metaKey: mac });
   assert.equal(view.submits(), 1);
 });
+}
 
 test('arrow keys choose a reviewer and Escape closes only the suggestion list', async (t) => {
   const view = await editorFixture(t);
@@ -106,7 +117,8 @@ test('mouse selection inserts a mention and submissions in flight cannot be repe
   assert.match(view.value(), /#mr-mention\/reviewer\/performance/);
   view.setSubmitting(true);
   await view.render();
-  await view.key('Enter', { ctrlKey: true });
+  const mac = navigator.platform.toUpperCase().includes('MAC');
+  await view.key('Enter', { ctrlKey: !mac, metaKey: mac });
   assert.equal(view.submits(), 0);
   assert.equal(view.textarea().props.disabled, true);
 });

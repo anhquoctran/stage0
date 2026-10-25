@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../services/ipc/ipcClient';
 
 /**
  * Opens a URL in the operating system's default web browser.

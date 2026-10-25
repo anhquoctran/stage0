@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import type { PerformanceMetrics } from '../types/PerformanceMetrics';
 
 export async function getPerformanceMetrics(): Promise<PerformanceMetrics> {

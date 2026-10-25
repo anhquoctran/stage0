@@ -41,7 +41,7 @@ test('mounting the main window initializes repositories and notifications withou
     setTimeout() { assert.fail('Unexpected startup timer'); },
     setInterval() { assert.fail('Unexpected background scheduler'); },
   };
-  globalThis.document = { getElementById: () => null };
+  globalThis.document = { getElementById: () => null, addEventListener() {}, removeEventListener() {} };
   const git = { isInitializing: false, currentRepo: { local_path: '/fixture' }, initApp: async () => { initialized++; }, attachRepoToCurrentWindow: async (repo) => attached.push(repo), refreshDiff: () => { refreshed++; } };
   const useGitStore = Object.assign(() => git, { getState: () => git });
   try {
@@ -59,6 +59,8 @@ test('mounting the main window initializes repositories and notifications withou
       '../features/notifications/services/notificationBadgeService': { syncUnreadBadge: async () => {} },
       '../features/notifications/store/useNotificationStore': { useNotificationStore: (selector) => selector({ unreadCount: 0 }) },
       '../features/git/store/useGitStore': { useGitStore },
+      '../features/review/services/assignedReviewService': { reviewAssignedSessionAfterGitChange: async () => {} },
+      '../features/onboarding/store/useOnboardingStore': { useOnboardingStore: (selector) => selector({ isOnboardingOpen: false, setOnboardingOpen() {} }) },
       '../features/onboarding/components/FirstLaunchWelcome': { FirstLaunchWelcome: () => null, shouldShowFirstLaunchWelcome: () => false },
       './utils/isPrimaryAppWindow': { isPrimaryAppWindow: () => true },
     });

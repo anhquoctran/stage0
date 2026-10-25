@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import { preferencesJsonService } from '../../preferences/services/preferencesJsonService';
 import { AI_PROVIDERS, DEFAULT_AI_CONFIG, DEFAULT_MCP_SERVERS } from '../constants/aiPresets';
 import type { AcpAgentConfig } from '../types/AcpAgentConfig';

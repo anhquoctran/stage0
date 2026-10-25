@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { type VirtualMrComment } from '../types/VirtualMrComment';
 import { type VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
 import { type DbDiscussion } from '../types/DbDiscussion';

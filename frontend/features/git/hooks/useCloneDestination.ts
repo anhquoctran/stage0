@@ -1,4 +1,4 @@
-import { homeDir } from '@tauri-apps/api/path';
+import { homeDir } from '../../../common/services/ipc/ipcPath';
 import { useEffect, useState } from 'react';
 import { resolveCloneDestination } from '../services/resolveCloneDestination';
 import type { CloneDestinationContext } from './CloneDestinationContext';

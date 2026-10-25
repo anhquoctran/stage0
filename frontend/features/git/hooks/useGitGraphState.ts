@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { copyTextToClipboard } from '../constants/gitGraphConstants';
 import { useGitStore } from '../store/useGitStore';

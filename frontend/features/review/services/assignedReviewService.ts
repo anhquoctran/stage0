@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { resolveReviewBotConfig } from '../utils/resolveReviewBotConfig';

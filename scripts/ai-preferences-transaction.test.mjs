@@ -158,7 +158,7 @@ test('MCP secret variables are stored per server in the keychain and never retai
 
   const saved = await fixture.commitAiPreferences(draft.getState(), fixture.initial);
   assert.deepEqual(fixture.calls[0], ['commit_ai_preferences', {
-    apiKeys: {}, policy: null,
+    apiKeys: {}, apiKeyRemovals: [], policy: null,
     mcpEnvSecrets: { 'git-context': { GITHUB_TOKEN: 'ghp_sensitive-fixture' } },
     mcpEnvRemovals: {},
   }]);
@@ -204,7 +204,9 @@ function dialogFixture(commitHandler) {
   const dependencies = {
     react: harness.react,
     '../store/usePreferencesStore': { usePreferencesStore, checkFontLigaturesSupport: () => true, applyViewerFontToDocument() {}, DEFAULT_VIEWER_FONT_SETTINGS: preferences },
-    '../../../core/store/useThemeStore': { useThemeStore, resolveTheme: () => 'dark', applyThemeToDocument() {} },
+    '../../../core/store/useThemeStore': { useThemeStore, resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {} },
+    '../utils/applyUiFontToDocument': { applyUiFontToDocument() {} },
+    '../utils/applyMarkdownFontToDocument': { applyMarkdownFontToDocument() {} },
     '../constants/fonts': { SUPPORTED_FONTS: [{ fontFamilyName: 'Fira Code' }] },
     '../../../common/utils/shortcuts': { formatShortcutText: (s) => s },
     '../../git/store/useGitStore': { useGitStore },
@@ -276,7 +278,7 @@ test('Cancel, close and Escape discard AI-only drafts, and committing blocks ove
     try {
       await fixture.render(); fixture.draft().updateAiConfig({ apiKey: 'discard-secret', model: 'discard-model' });
       const nodes = await fixture.render();
-      if (close === 'Escape') handlers.get('keydown')({ key: 'Escape' });
+      if (close === 'Escape') handlers.get('keydown')({ key: 'Escape', preventDefault() {} });
       else (close === 'close' ? nodes.find((node) => node.props['aria-label'] === 'Close Preferences') : button(nodes, 'Cancel')).props.onClick();
       await fixture.render(); assert.equal(fixture.saves(), 0); assert.equal(fixture.saved().aiConfig.model, baseline().aiConfig.model);
       assert.deepEqual(fixture.draft().apiKeyDrafts, {});
@@ -287,6 +289,7 @@ test('Cancel, close and Escape discard AI-only drafts, and committing blocks ove
     await fixture.render(); fixture.draft().updateAiConfig({ model: 'chosen' }); const nodes = await fixture.render();
     const applying = button(nodes, 'Apply').props.onClick();
     await button(nodes, 'OK').props.onClick(); button(nodes, 'Cancel').props.onClick();
+    handlers.get('keydown')({ key: 'Escape', preventDefault() {} });
     assert.equal(fixture.saves(), 1); assert.equal(fixture.preferences.isPreferencesOpen, true);
     const busyNodes = await fixture.render(); assert.equal(busyNodes.find((node) => node.type === 'fieldset').props.disabled, true);
     pending.resolve(); await applying; assert.equal(fixture.preferences.isPreferencesOpen, true);
@@ -345,7 +348,7 @@ test('startup restores the committed guardrail policy before native hydration in
   } finally { globalThis.window = originalWindow; globalThis.localStorage = originalStorage; }
 });
 
-test('reloading the AI store preserves the chosen provider, auth mode, explicit model and every saved scalar preference', () => {
+test('reloading the AI store preserves provider/model/preferences and discards retired authentication fields', () => {
   const originalWindow = globalThis.window; const originalStorage = globalThis.localStorage;
   try {
     globalThis.window = { setTimeout() {} };
@@ -358,7 +361,10 @@ test('reloading the AI store preserves the chosen provider, auth mode, explicit 
         '../constants/runtimeAvailability': availability, '../utils/resetMcpVerification': verification,
         '@tauri-apps/api/core': { isTauri: () => true, invoke: () => assert.fail('Hydration should not run in this fixture') },
       });
-      assert.deepEqual(store.getState().aiConfig, saved.aiConfig);
+      const { authMode, ...expected } = saved.aiConfig;
+      assert.deepEqual(store.getState().aiConfig, expected);
+      assert.equal('authMode' in store.getState().aiConfig, false);
+      assert.equal('cliType' in store.getState().aiConfig, false);
     }
   } finally { globalThis.window = originalWindow; globalThis.localStorage = originalStorage; }
 });
@@ -388,7 +394,7 @@ test('first launch, incomplete settings and Reset use OpenAI defaults without ov
   } finally { globalThis.window = originalWindow; globalThis.localStorage = originalStorage; }
 });
 
-test('provider UI selects OpenAI on first launch, exposes its API key input and keeps provider changes in the draft', async () => {
+test('provider UI defaults new setup to OpenAI, exposes key inputs and keeps explicit provider changes in the draft', async () => {
   const harness = componentHarness(); const draft = createAiPreferencesDraft(baseline());
   const noop = () => {};
   const credentialCalls = [];
@@ -398,18 +404,20 @@ test('provider UI selects OpenAI on first launch, exposes its API key input and 
     '../store/useAiMcpStore': { useAiMcpStore: () => ({
       aiConfig: baseline().aiConfig, apiKeysConfigured: {}, mcpServers: [], cliStatus: {}, dynamicModels: {},
       setActiveSubTab: noop, checkCopilotStatus: () => credentialCalls.push('copilot'), checkGoogleAuthStatus: () => credentialCalls.push('google'), checkChatGptAuthStatus: noop,
-      detectCli: noop, fetchDynamicModels: () => credentialCalls.push('models'), loadApiKeyForProvider: () => credentialCalls.push('key'),
+      detectCli: noop, fetchDynamicModels: () => credentialCalls.push('models'), loadApiKeyForProvider: (provider) => credentialCalls.push(['key', provider]),
     }) },
     '../constants/aiPresets': presets,
     '../constants/botPresets': bots,
     '../utils/resolveAiModelPreset': modelPresets,
+    '../utils/getProviderIcon': { getProviderIcon: () => () => null },
     '../utils/botRolePrompts': { getBotRolePrompt: () => 'Fixture prompt' },
     './AiModelExecutionOptions': { AiModelExecutionOptions: () => null },
     '../../../common/components/CustomSelect': { CustomSelect: () => null },
     '../../review/components/HarnessConnectionsPanel': { HarnessConnectionsPanel: () => null },
-    './ChatGptDeviceCodeCard': { ChatGptDeviceCodeCard: () => null },
-    './ChatGptBrowserAuthCard': { ChatGptBrowserAuthCard: () => null },
   };
+  for (const name of ['Plus', 'Trash2', 'Sparkles', 'X', 'AlertCircle', 'Check', 'Eye', 'EyeOff', 'ShieldCheck', 'CheckCircle2', 'ExternalLink', 'RefreshCw', 'RotateCcw', 'ChevronDown', 'ArrowLeft']) {
+    dependencies[`../../../common/components/icons/${name}`] = { [name]: () => null };
+  }
   const source = readFileSync(url('features/ai/components/AiMcpTab.tsx'), 'utf8');
   for (const [, name, path] of source.matchAll(/import \{ (\w+) \} from '([^']+\/icons\/[^']+)';/g)) dependencies[path] = { [name]: () => null };
   const { AiMcpTab } = loadWithMocks(url('features/ai/components/AiMcpTab.tsx'), dependencies);
@@ -419,17 +427,32 @@ test('provider UI selects OpenAI on first launch, exposes its API key input and 
   }));
   try {
     let nodes = await render();
-    assert.match(button(nodes, 'OpenAI / ChatGPT').props.className, /bg-surface1 text-text/);
-    assert.ok(nodes.some((node) => node.type === 'input' && node.props.type === 'password'));
+    assert.equal(draft.getState().aiConfig.provider, 'openai');
+    assert.deepEqual(draft.getState().aiConfig.configuredProviders, []);
     assert.deepEqual(credentialCalls, []);
     assert.doesNotMatch(text({ props: { children: nodes } }), /Ollama runs offline/);
-    button(nodes, 'Anthropic Claude').props.onClick(); nodes = await render();
-    assert.match(button(nodes, 'Anthropic Claude').props.className, /bg-surface1 text-text/);
+    for (const provider of ['openai', 'anthropic']) {
+      button(nodes, 'Add provider').props.onClick(); nodes = await render();
+      const select = nodes.find((node) => node.props?.id === 'llm-provider-select');
+      assert.equal(select.props.value, provider);
+      const input = nodes.find((node) => node.props?.id === 'llm-provider-api-key');
+      assert.equal(input.props.type, 'password');
+      input.props.onChange({ target: { value: 'fixture-draft-key' } }); nodes = await render();
+      nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} }); nodes = await render();
+      assert.equal(draft.getState().aiConfig.provider, provider);
+      assert.ok(draft.getState().aiConfig.configuredProviders.includes(provider));
+      const row = nodes.find((node) => node.type === 'tr' && text(node).includes(provider === 'openai' ? 'OpenAI / ChatGPT' : 'Anthropic Claude'));
+      assert.match(row.props.className, /bg-surface0\/70/);
+      assert.deepEqual(credentialCalls, []);
+    }
     assert.equal(draft.getState().aiConfig.provider, 'anthropic');
-    assert.deepEqual(credentialCalls, []);
-    button(nodes, 'Check saved API key').props.onClick(); assert.deepEqual(credentialCalls, ['key']);
+    assert.equal(baseline().aiConfig.provider, 'openai');
+    const row = nodes.find((node) => node.type === 'tr' && text(node).includes('Anthropic Claude'));
+    button(componentNodes(row), 'Configure').props.onClick(); nodes = await render();
+    button(nodes, 'Check saved API key').props.onClick(); assert.deepEqual(credentialCalls, [['key', 'anthropic']]);
     button(nodes, 'Reset').props.onClick(); nodes = await render();
     assert.equal(draft.getState().aiConfig.provider, 'openai');
-    assert.match(button(nodes, 'OpenAI / ChatGPT').props.className, /bg-surface1 text-text/);
+    assert.deepEqual(draft.getState().aiConfig.configuredProviders, []);
+    assert.deepEqual(draft.getState().apiKeyDrafts, {});
   } finally { harness.cleanup(); }
 });

@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { LogicalSize, PhysicalPosition } from '@tauri-apps/api/dpi';
-import { currentMonitor, getCurrentWindow } from '@tauri-apps/api/window';
-import { listen } from '@tauri-apps/api/event';
+import { invoke } from '../../../common/services/ipc/ipcClient';
+import { LogicalSize, PhysicalPosition } from '../../../common/services/ipc/ipcWindow';
+import { currentMonitor, getCurrentWindow } from '../../../common/services/ipc/ipcWindow';
+import { listen } from '../../../common/services/ipc/ipcEvents';
 import { ToastContainer } from './ToastContainer';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { applyThemeToDocument, resolveTheme, useThemeStore } from '../../../core/store/useThemeStore';

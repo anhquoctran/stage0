@@ -1,5 +1,6 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
+import { listen } from '../../../common/services/ipc/ipcEvents';
+import type { UnlistenFn } from '../../../common/services/ipc/types';
 import { type AppNotification } from '../types/AppNotification';
 import { type AppNotificationAction } from '../types/AppNotificationAction';
 import { type NotificationDispatchResult } from '../types/NotificationDispatchResult';

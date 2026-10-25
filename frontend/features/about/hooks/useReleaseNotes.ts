@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { DEFAULT_RELEASE_NOTES } from '../config/releaseNotes';
 
 export function useReleaseNotes(customContent?: string): string {

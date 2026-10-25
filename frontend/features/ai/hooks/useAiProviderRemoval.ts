@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import { useState } from 'react';
 import { DEFAULT_AI_CONFIG } from '../constants/aiPresets';
 import { useAiMcpStore } from '../store/useAiMcpStore';

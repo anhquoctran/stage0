@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import { loadWithMocks } from './helpers/componentHarness.mjs';
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.rs', '.html', '.css', '.json']);
@@ -36,4 +37,14 @@ test('clone URL validation uses English copy and a stable Git message locale', (
   assert.ok(validation.includes('Repository is valid and ready to clone.'));
   assert.ok(validation.includes('Please enter a repository URL.'));
   assert.ok(validation.includes('cmd.env("LC_ALL", "C")'));
+});
+
+test('English-only source retains Vietnamese author-name transliteration', () => {
+  const { getAuthorHandle } = loadWithMocks(
+    new URL('../frontend/features/virtual-mr/utils/discussionAuthorUtils.ts', import.meta.url), {
+      '../../../common/utils/dateTime': { formatTime: (value) => value },
+    });
+  assert.equal(getAuthorHandle('Nguyễn Huỳnh Duy'), '@duynh');
+  assert.equal(getAuthorHandle('Đặng Đình Đức'), '@ducdd');
+  assert.equal(getAuthorHandle('đức'), '@duc');
 });

@@ -1,4 +1,4 @@
-import { listen } from '@tauri-apps/api/event';
+import { listen } from '../../../common/services/ipc/ipcEvents';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGitCredentialsStore } from '../../credentials/store/useGitCredentialsStore';
 import { useGitStore } from '../store/useGitStore';

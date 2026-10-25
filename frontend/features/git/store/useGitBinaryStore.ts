@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import type { GitBinaryInfo } from '../types/GitBinaryInfo';
 import type { GitBinaryState } from '../types/GitBinaryState';
 

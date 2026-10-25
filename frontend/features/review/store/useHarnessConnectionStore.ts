@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import type { HarnessConnectionState } from '../types/HarnessConnectionState';
 import type { McpDiscoveryReport } from '../types/McpDiscoveryReport';
 import type { CliHarnessReadiness } from '../types/CliHarnessReadiness';

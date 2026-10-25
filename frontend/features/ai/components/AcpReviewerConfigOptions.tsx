@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import type { AcpSessionConfigOption } from '../types/AcpSessionConfigOption';

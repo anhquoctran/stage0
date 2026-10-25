@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '../../../common/services/ipc/ipcClient';
 
 /**
  * Normalizes git remote URL (SSH or HTTPS) into a browseable web URL.

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import type { ChatGptDeviceAuthState } from '../types/ChatGptDeviceAuthState';
 import type { ChatGptDeviceAuthStatus } from '../types/ChatGptDeviceAuthStatus';
 
@@ -31,7 +31,19 @@ export const useChatGptDeviceAuthStore = create<ChatGptDeviceAuthState>((set, ge
       if (!isTauri()) throw new Error('ChatGPT device-code sign-in requires the native Stage0 app and the official Codex CLI.');
       const status = publicStatus(await invoke<ChatGptDeviceAuthStatus>(command, args));
       if (version === epoch) set({ status });
-    } catch (error) { if (version === epoch) set({ error: message(error) }); }
+    } catch (error) {
+      if (version === epoch) {
+        // The native operation may have changed its session before failing.
+        // Drop stale connected state and recover through metadata only.
+        set({ status: null, error: message(error) });
+        if (isTauri() && ['chatgpt_device_auth_check', 'chatgpt_device_auth_cancel', 'chatgpt_device_auth_logout'].includes(command)) {
+          try {
+            const status = publicStatus(await invoke<ChatGptDeviceAuthStatus>('chatgpt_device_auth_status'));
+            if (version === epoch) set({ status });
+          } catch { /* Keep the original action error and the cleared status. */ }
+        }
+      }
+    }
     finally { if (version === epoch) set({ isActing: false }); }
   };
   return {

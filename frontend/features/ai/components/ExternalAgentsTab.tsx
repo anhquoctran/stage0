@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../common/services/ipc/ipcClient';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useAiMcpStore } from '../store/useAiMcpStore';

@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '../../../../common/services/ipc/ipcClient';
 import type { StateCreator } from 'zustand';
 import { AI_PROVIDERS, DEFAULT_AI_CONFIG } from '../../constants/aiPresets';
 import { loadPersistedState, persistState } from '../../services/aiMcpPersistence';
