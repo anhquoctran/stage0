@@ -1,3 +1,4 @@
+import type { LinuxTitleBarMode } from '../../../core/types/LinuxTitleBarMode';
 import React from 'react';
 import { type ThemeMode } from '../../../core/types/ThemeMode';
 import { type AiConfig } from '../../ai/types/AiConfig';
@@ -25,6 +26,8 @@ export interface PreferencesTabContainerProps {
   setDraftStartInBackground: React.Dispatch<React.SetStateAction<boolean>>;
   draftExplorerContextMenu: boolean;
   setDraftExplorerContextMenu: React.Dispatch<React.SetStateAction<boolean>>;
+  draftLinuxTitleBar: LinuxTitleBarMode;
+  setDraftLinuxTitleBar: (value: LinuxTitleBarMode) => void;
   draftAddToPath: boolean;
   setDraftAddToPath: React.Dispatch<React.SetStateAction<boolean>>;
   draftAiConfig: AiConfig;

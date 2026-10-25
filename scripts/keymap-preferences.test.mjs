@@ -8,7 +8,7 @@ const original = { preset: 'stage0', overrides: [] };
 const custom = { preset: 'vscode', overrides: [{ command: 'pull', keys: ['CmdOrCtrl+F8'] }] };
 
 function applyFixture(draft = custom, current = original) {
-  const calls = [], prefs = { keymap: current };
+  const calls = [], prefs = { keymap: current, linuxTitleBar: 'system' };
   let failure = false, paused, saved;
   const store = { getState: () => prefs, setState: (value) => { Object.assign(prefs, value); calls.push('publish'); } };
   const { createPreferencesApplyAction } = loadWithMocks(url('features/preferences/services/createPreferencesApplyAction.ts'), {
@@ -22,7 +22,7 @@ function applyFixture(draft = custom, current = original) {
     '../store/usePreferencesStore': { usePreferencesStore: store, applyViewerFontToDocument() {} },
     '../utils/applyMarkdownFontToDocument': { applyMarkdownFontToDocument() {} },
   });
-  const baseline = { keymap: original, themeMode: 'system', fontFamily: 'Fira Code', fontSize: 13,
+  const baseline = { keymap: original, linuxTitleBar: 'system', themeMode: 'system', fontFamily: 'Fira Code', fontSize: 13,
     isBold: false, isItalic: false, isUnderline: false, lineSpacing: 1.5, enableLigatures: true,
     showInlineBlame: true, sandboxType: 'in_memory', gitBinaryId: 'system', gitBinaryPath: 'git',
     markdownFontFamily: 'system', markdownCodeFontFamily: 'Fira Code', markdownFontSize: 13, markdownHeadingWeight: 600 };
@@ -30,7 +30,7 @@ function applyFixture(draft = custom, current = original) {
     draftKeymap: draft, setDraftKeymap: (value) => { calls.push(['draft', value]); },
     applyingRef: { current: false }, setIsApplying() {}, setApplyError: (value) => { if (value) calls.push(['error', value]); },
     savedBaseline: baseline, aiDraftStore: { getState: () => ({ replace() {} }) }, aiBaseline: {},
-    setAiBaseline() {}, showToast() {}, setSavedBaseline: (value) => { saved = value; }, setIsApplied() {}, setShowRestartPrompt() {},
+    setAiBaseline() {}, showToast() {}, setSavedBaseline: (value) => { saved = value; }, setIsApplied() {}, setShowRestartPrompt: value => calls.push(['restart', value]),
   };
   return { calls, prefs, options, apply: () => createPreferencesApplyAction(options)(),
     fail: () => { failure = true; }, pause: (promise) => { paused = promise; }, baseline: () => saved };
@@ -85,13 +85,17 @@ test('closing and reopening the draft session discards unapplied keymaps and res
   let session = runner.render(usePreferencesDraftSession, props);
   session = runner.render(usePreferencesDraftSession, props);
   session.setDraftKeymap(custom);
+  session.setDraftLinuxTitleBar('custom');
   session = runner.render(usePreferencesDraftSession, props);
   assert.deepEqual(session.draftKeymap, custom);
   assert.deepEqual(session.savedBaseline.keymap, original);
+  assert.equal(session.draftLinuxTitleBar, 'custom');
+  assert.equal(session.savedBaseline.linuxTitleBar, 'system');
   runner.render(usePreferencesDraftSession, { ...props, isPreferencesOpen: false });
   runner.render(usePreferencesDraftSession, props);
   session = runner.render(usePreferencesDraftSession, props);
   assert.deepEqual(session.draftKeymap, original);
+  assert.equal(session.draftLinuxTitleBar, 'system');
   await new Promise((resolve) => setImmediate(resolve)); runner.cleanup();
 });
 
@@ -140,4 +144,35 @@ test('registry dispatch keeps MR tab selection and branch comparison in sync', a
   assert.deepEqual(calls, [['switch', 'mr'], ['compare', 'main', 'feature'], ['close-draft']]);
   git.currentRepo = null; await executeKeymapCommand('tab_1', {});
   assert.equal(calls.length, 3);
+});
+
+
+test('Linux title bar changes join Apply, publish only after success and require a restart', async () => {
+  const fixture = applyFixture(original);
+  fixture.options.draftLinuxTitleBar = 'custom';
+  let release;
+  fixture.pause(new Promise(resolve => { release = resolve; }));
+  const pending = fixture.apply();
+  assert.deepEqual(fixture.calls[0], ['patch', { appearance: { linuxTitleBar: 'custom' } }]);
+  assert.equal(fixture.prefs.linuxTitleBar, 'system');
+  release();
+  assert.equal(await pending, true);
+  assert.equal(fixture.prefs.linuxTitleBar, 'custom');
+  assert.equal(fixture.baseline().linuxTitleBar, 'custom');
+  assert.ok(fixture.calls.some(call => call[0] === 'restart' && call[1] === true));
+});
+
+test('failed Linux title bar saves retain the current frame preference; unrelated Apply preserves external changes', async () => {
+  const failure = applyFixture(original);
+  failure.options.draftLinuxTitleBar = 'custom'; failure.fail();
+  assert.equal(await failure.apply(), false);
+  assert.equal(failure.prefs.linuxTitleBar, 'system');
+  assert.equal(failure.options.draftLinuxTitleBar, 'custom');
+  assert.ok(!failure.calls.includes('publish'));
+  const external = applyFixture(original);
+  external.prefs.linuxTitleBar = 'custom';
+  assert.equal(await external.apply(), true);
+  assert.equal(external.prefs.linuxTitleBar, 'custom');
+  assert.equal(external.baseline().linuxTitleBar, 'custom');
+  assert.deepEqual(external.calls[0], ['patch', {}]);
 });

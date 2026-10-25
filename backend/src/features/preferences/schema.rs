@@ -25,6 +25,11 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
             .ok_or("appearance.uiFont must be an object")?;
         validate_optional_string(font, "fontFamily", "appearance.uiFont", 128, false)?;
     }
+    if let Some(mode) = appearance.get("linuxTitleBar") {
+        if !matches!(mode.as_str(), Some("system" | "custom")) {
+            return Err("appearance.linuxTitleBar must be system or custom".into());
+        }
+    }
     if let Some(theme) = appearance.get("themeMode") {
         if !matches!(theme.as_str(), Some("system" | "dark" | "light")) {
             return Err("appearance.themeMode must be 'system', 'dark', or 'light'".into());

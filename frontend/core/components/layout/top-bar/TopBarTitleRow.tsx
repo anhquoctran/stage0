@@ -1,3 +1,5 @@
+import { useWindowChromeStore } from '../../../store/useWindowChromeStore';
+import { titleBarMouseDown } from './titleBarMouseDown';
 import { useApplicationServices } from '../../../services/runtime/useApplicationServices';
 import React from 'react';
 import { clsx } from 'clsx';
@@ -15,12 +17,9 @@ export const TopBarTitleRow: React.FC<{
   const { currentRepo, baseBranch, compareBranch } = useGitStore();
   const about = useAboutInfo();
 
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button, input, select, [role="button"], a')) {
-      return;
-    }
-    appServices.application.windowToggleMaximize().catch(() => {});
-  };
+  const profile = useWindowChromeStore((state) => state.profile);
+  const linux = profile.platform === 'linux';
+  const dragRegion = linux ? undefined : true;
 
   const titleText = currentRepo
     ? `${currentRepo.name} — [${compareBranch || '...'} → ${baseBranch || '...'}]`
@@ -28,7 +27,7 @@ export const TopBarTitleRow: React.FC<{
   const visibleTitleText = currentRepo ? titleText : 'Stage0 — Virtual MR Sandbox';
   const versionLabel = (
     <span
-      data-tauri-drag-region
+      data-tauri-drag-region={dragRegion}
       title={`Stage0 v${about.packageVersion}`}
       aria-label={`Stage0 version ${about.packageVersion}`}
       className="text-[10px] font-mono text-subtext0 select-none truncate min-w-0"
@@ -39,8 +38,8 @@ export const TopBarTitleRow: React.FC<{
 
   return (
     <div
-      data-tauri-drag-region
-      onDoubleClick={handleDoubleClick}
+      data-tauri-drag-region={linux ? false : true}
+      onMouseDown={titleBarMouseDown(profile, appServices.application)}
       className={clsx(
         'h-8.5 bg-crust border-b border-surface0/70 rounded-none items-center shrink-0 select-none transition-all relative z-[100]',
         isMac
@@ -54,15 +53,15 @@ export const TopBarTitleRow: React.FC<{
           <MenuBar hidden />
 
           {/* Reserve the native traffic-light area; controls are rendered by macOS */}
-          <div data-tauri-drag-region aria-hidden="true" className="w-20 h-full shrink-0" />
+          <div data-tauri-drag-region={dragRegion} aria-hidden="true" className="w-20 h-full shrink-0" />
 
           {/* Center: Draggable Window Document Title */}
           <div
-            data-tauri-drag-region
+            data-tauri-drag-region={dragRegion}
             className="h-full flex items-center justify-center min-w-0 overflow-hidden px-4"
           >
             <span
-              data-tauri-drag-region
+              data-tauri-drag-region={dragRegion}
               title={titleText}
               className="text-[11px] font-mono text-subtext0/70 truncate pointer-events-none"
             >
@@ -71,16 +70,19 @@ export const TopBarTitleRow: React.FC<{
           </div>
 
           {/* Match the traffic-light reserve so the document title stays centered. */}
-          <div data-tauri-drag-region className="h-full min-w-0 flex items-center justify-end">
+          <div data-tauri-drag-region={dragRegion} className="h-full min-w-0 flex items-center justify-end">
             {versionLabel}
           </div>
         </>
       ) : (
         <>
           {/* Left: Brand Icon + Stage0 + VSCode Menu Bar */}
-          <div className="flex items-center gap-2 h-full">
+          <div className="flex items-center gap-2 h-full min-w-0">
+            {linux && !profile.nativeFrame && profile.controlsLeft.length > 0 && (
+              <WindowControls style="windows" buttons={profile.controlsLeft} />
+            )}
             <div
-              data-tauri-drag-region
+              data-tauri-drag-region={dragRegion}
               className="flex items-center gap-1.5 pr-2.5 border-r border-surface0/80 cursor-default"
             >
               <AppLogo size="sm" />
@@ -93,11 +95,11 @@ export const TopBarTitleRow: React.FC<{
 
           {/* Center: Draggable Window Document Title */}
           <div
-            data-tauri-drag-region
+            data-tauri-drag-region={dragRegion}
             className="flex-1 h-full flex items-center justify-center min-w-8 overflow-hidden px-4"
           >
             <span
-              data-tauri-drag-region
+              data-tauri-drag-region={dragRegion}
               title={titleText}
               className="text-[11px] font-mono text-subtext0/70 truncate pointer-events-none"
             >
@@ -107,7 +109,7 @@ export const TopBarTitleRow: React.FC<{
 
           {/* Right: Window Controls */}
           <div className="flex items-center h-full shrink-0">
-            <WindowControls style="windows" />
+            {!profile.nativeFrame && <WindowControls style="windows" buttons={linux ? profile.controlsRight : undefined} />}
           </div>
         </>
       )}

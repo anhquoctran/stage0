@@ -1,3 +1,4 @@
+import { WindowControlIcon } from './WindowControlIcon';
 import { useApplicationServices } from '../../services/runtime/useApplicationServices';
 import React, { useEffect, useState } from 'react';
 
@@ -7,6 +8,7 @@ import { useCommandShortcut } from '../../hooks/useCommandShortcut';
 export const WindowControls: React.FC<WindowControlsProps> = ({
   style = 'auto',
   className = '',
+  buttons = ['minimize', 'maximize', 'close'],
 }) => {
   const appServices = useApplicationServices();
   const [isMaximized, setIsMaximized] = useState(false);
@@ -20,10 +22,13 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
         (typeof window !== 'undefined' && window.location.search.includes('platform=mac')));
     setIsMac(isApple);
 
+    let current = true;
+    let requestVersion = 0;
     const checkMaximized = async () => {
+      const version = ++requestVersion;
       try {
         const max = await appServices.application.windowIsMaximized();
-        setIsMaximized(max);
+        if (current && version === requestVersion) setIsMaximized(max);
       } catch {
         // Fallback for browser testing
       }
@@ -36,7 +41,12 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('focus', handleResize);
+    return () => {
+      current = false;
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('focus', handleResize);
+    };
   }, []);
 
   const effectiveStyle = style === 'auto' ? (isMac ? 'mac' : 'windows') : style;
@@ -54,7 +64,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
       const next = await appServices.application.windowToggleMaximize();
       setIsMaximized(next);
     } catch (err) {
-      setIsMaximized((prev) => !prev);
+      console.warn('Maximize error:', err);
     }
   };
 
@@ -140,55 +150,26 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
     );
   }
 
-  // WINDOWS STYLE: Minimize, Maximize, Close icons on the right
+  // Custom Linux frames use the desktop's supported button order and visibility.
   return (
-    <div className={`flex items-center h-full select-none ml-2 shrink-0 ${className}`}>
-      {/* Minimize */}
-      <button
-        type="button"
-        onClick={handleMinimize}
-        title="Minimize"
-        aria-label="Minimize"
-        className="h-full px-3.5 flex items-center justify-center text-subtext1 hover:text-text hover:bg-surface0 transition-colors rounded-none"
-      >
-        <svg width="10" height="1" viewBox="0 0 10 1">
-          <rect width="10" height="1" fill="currentColor" />
-        </svg>
-      </button>
-
-      {/* Maximize / Restore */}
-      <button
-        type="button"
-        onClick={handleToggleMaximize}
-        title={isMaximized ? 'Restore Down' : 'Maximize'}
-        aria-label={isMaximized ? 'Restore Down' : 'Maximize'}
-        className="h-full px-3.5 flex items-center justify-center text-subtext1 hover:text-text hover:bg-surface0 transition-colors rounded-none"
-      >
-        {isMaximized ? (
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
-            <path d="M2.5 2.5V0.5H9.5V7.5H7.5" strokeWidth="1" />
-            <rect x="0.5" y="2.5" width="7" height="7" strokeWidth="1" />
-          </svg>
-        ) : (
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
-            <rect x="0.5" y="0.5" width="9" height="9" strokeWidth="1" />
-          </svg>
-        )}
-      </button>
-
-      {/* Close */}
-      <button
-        type="button"
-        onClick={handleClose}
-        title="Close"
-        aria-label="Close"
-        className="h-full px-3.5 flex items-center justify-center text-subtext1 hover:text-white hover:bg-[#e81123] transition-colors rounded-none"
-      >
-        <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" strokeWidth="1.2">
-          <line x1="0" y1="0" x2="10" y2="10" />
-          <line x1="10" y1="0" x2="0" y2="10" />
-        </svg>
-      </button>
+    <div className={`flex items-center h-full select-none shrink-0 ${className}`}>
+      {buttons.map((action) => {
+        const label = action === 'close' ? 'Close' : action === 'minimize' ? 'Minimize'
+          : isMaximized ? 'Restore Down' : 'Maximize';
+        return <button
+          key={action}
+          type="button"
+          data-window-control={action}
+          onClick={action === 'close' ? handleClose : action === 'minimize' ? handleMinimize : handleToggleMaximize}
+          title={label}
+          aria-label={label}
+          className={`h-full border-0 px-3.5 flex items-center justify-center transition-colors rounded-none ${action === 'close'
+            ? 'text-subtext1 hover:text-white hover:bg-[#e81123]'
+            : 'text-subtext1 hover:text-text hover:bg-surface0'}`}
+        >
+          <WindowControlIcon action={action} maximized={isMaximized} />
+        </button>;
+      })}
     </div>
   );
 };

@@ -81,7 +81,7 @@ for (const isMac of [true, false]) {
   }
 }
 
-test('macOS constrains long versions while retaining the full tooltip and drag behavior', () => {
+test('macOS constrains long versions and leaves double-click handling with the native drag owner', () => {
   const version = '12.34.56-beta.123+abcdef123456';
   const { TopBarTitleRow, calls } = titleRowFixture({ version });
   let tree;
@@ -89,8 +89,8 @@ test('macOS constrains long versions while retaining the full tooltip and drag b
   const html = renderToStaticMarkup(React.createElement(Probe));
   assert.ok(html.includes(`title="Stage0 v${version}"`));
   assert.match(html, /data-tauri-drag-region="true" title="Stage0 v[^"]+"[^>]+class="[^"]*truncate min-w-0"/);
-  tree.props.onDoubleClick({ target: { closest: () => null } });
-  assert.deepEqual(calls, [['window_toggle_maximize']]);
-  tree.props.onDoubleClick({ target: { closest: () => ({}) } });
-  assert.equal(calls.length, 1, 'interactive controls must not toggle maximize');
+  assert.equal(tree.props['data-tauri-drag-region'], true);
+  assert.equal(tree.props.onDoubleClick, undefined, 'framework drag handling already owns double-click');
+  assert.equal(tree.props.onMouseDown, undefined);
+  assert.deepEqual(calls, [], 'React must not issue another maximize request');
 });

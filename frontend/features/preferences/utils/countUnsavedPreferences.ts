@@ -8,6 +8,7 @@ export function countUnsavedPreferences(
     explorerContextMenu?: boolean;
     addToPath?: boolean;
     uiFontFamily?: string;
+    linuxTitleBar?: string;
     themeMode: string;
     fontFamily: string;
     fontSize: number;
@@ -28,6 +29,7 @@ export function countUnsavedPreferences(
   aiChangeCount: number
 ): number {
   let count = aiChangeCount;
+  if (draft.linuxTitleBar !== undefined && draft.linuxTitleBar !== baseline.linuxTitleBar) count++;
   if (draft.uiFontFamily !== undefined && draft.uiFontFamily !== baseline.uiFontFamily) count++;
   if (draft.showInlineBlame !== baseline.showInlineBlame) count++;
   if (draft.launchAtStartup !== undefined && draft.launchAtStartup !== baseline.launchAtStartup) count++;

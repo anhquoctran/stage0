@@ -1,3 +1,4 @@
+import { useMenuPopupPosition } from './useMenuPopupPosition';
 import { useEffect, useState } from 'react';
 import { Check } from '../../../../common/components/icons/Check';
 import { ChevronRight } from '../../../../common/components/icons/ChevronRight';
@@ -20,6 +21,7 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
   const [activeChild, setActiveChild] = useState<string | null>(null);
   const topLevel = props.onToggle !== undefined;
   const open = props.isOpen ?? hovered;
+  const { anchorRef, popupRef, popupStyle } = useMenuPopupPosition(open, !topLevel);
   useEffect(() => {
     if (!open) setActiveChild(null);
   }, [open]);
@@ -108,6 +110,7 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
         type="button"
         disabled={!enabled}
         role={topLevel ? undefined : 'menuitem'}
+        ref={anchorRef}
         aria-haspopup="menu"
         aria-expanded={open}
         onMouseDown={(event) => event.preventDefault()}
@@ -141,9 +144,11 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
       </button>
       {open && enabled && (
         <div
+          ref={popupRef}
+          style={popupStyle}
           role="menu"
           aria-label={label}
-          className={`absolute z-50 min-w-64 rounded-sm border border-surface0 bg-mantle py-1.5 shadow-2xl ${topLevel ? 'left-0 top-full mt-0.5' : 'left-full top-0'} `}
+          className={`absolute z-50 min-w-64 rounded-sm border border-surface0 bg-mantle py-1.5 shadow-2xl  `}
           onKeyDown={(event) => {
             if (event.key === 'ArrowLeft' && !topLevel) {
               event.preventDefault();

@@ -3,6 +3,8 @@ import type { ApplicationService } from './ApplicationService';
 
 export function createApplicationService(transport: CommandTransport): ApplicationService {
   return {
+    getWindowChrome: () => transport.executeCommand('get_window_chrome'),
+    windowStartDragging: () => transport.executeCommand('window_start_dragging'),
     createNewWindow: () => transport.executeCommand('create_new_window'),
     getWindowStartupContext: () => transport.executeCommand('get_window_startup_context'),
     openWebviewDevtools: () => transport.executeCommand('open_webview_devtools'),

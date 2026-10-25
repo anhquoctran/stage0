@@ -1,3 +1,5 @@
+import { useDesktopWindowChrome } from './hooks/useDesktopWindowChrome';
+import { useWindowChromeStore } from './store/useWindowChromeStore';
 import { useStartupSplash } from './hooks/useStartupSplash';
 import { startupProgress } from './services/startup/startupProgress';
 import type { WindowStartupContext } from '../features/git/types/WindowStartupContext';
@@ -19,12 +21,14 @@ import { installAutoHideScrollbars } from './services/autoHideScrollbars';
 
 export const MainApp: React.FC = () => {
   const appServices = useApplicationServices();
+  const chromeReady = useDesktopWindowChrome();
+  const nativeFrame = useWindowChromeStore((state) => state.profile.nativeFrame);
   const { initApp, attachRepoToCurrentWindow, refreshDiff, isInitializing, isLoading, currentRepo } = useGitStore();
   const [windowInitialized, setWindowInitialized] = useState(false);
   const workspaceReady = useVirtualMrStore((state) => !currentRepo || (
     state.currentRepoId === currentRepo.id && state.currentRepoPath === currentRepo.local_path && !state.isLoadingSessions
   ));
-  useStartupSplash(windowInitialized && !isInitializing && !isLoading && workspaceReady);
+  useStartupSplash(chromeReady && windowInitialized && !isInitializing && !isLoading && workspaceReady);
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const isOnboardingOpen = useOnboardingStore((state) => state.isOnboardingOpen);
   const setOnboardingOpen = useOnboardingStore((state) => state.setOnboardingOpen);
@@ -34,7 +38,7 @@ export const MainApp: React.FC = () => {
     appServices.platform.capabilities.windows &&
     typeof navigator !== 'undefined' &&
     /Mac/i.test(navigator.platform || navigator.userAgent);
-  const hideCustomFrame = isFullscreen || (isMaximized && !usesNativeMacFrame);
+  const hideCustomFrame = nativeFrame || isFullscreen || (isMaximized && !usesNativeMacFrame);
 
   useEffect(() => installAutoHideScrollbars(), []);
 

@@ -36,9 +36,16 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
       if (!menuBarRef.current?.contains(event.target as Node)) setActiveMenu(null);
     };
     const escape = (event: KeyboardEvent) => {
+      if (event.key === 'F10' && !event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey && !flags.onboarding && menuBarRef.current) {
+        event.preventDefault();
+        menuBarRef.current.querySelector<HTMLButtonElement>(':scope > div > button:not(:disabled)')?.focus();
+        return;
+      }
       if (event.key === 'Escape') {
+        const trigger = menuBarRef.current?.querySelector<HTMLButtonElement>('[aria-expanded="true"]');
         setActiveMenu(null);
         setShowShortcutsModal(false);
+        if (document.activeElement?.closest('[role="menu"]')) trigger?.focus();
       }
     };
     document.addEventListener('mousedown', outside);
@@ -47,7 +54,7 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
       document.removeEventListener('mousedown', outside);
       window.removeEventListener('keydown', escape);
     };
-  }, []);
+  }, [flags.onboarding]);
   return (
     <>
       {chord && <div role="status" className="fixed bottom-9 left-3 z-[110] rounded-sm border border-surface1 bg-mantle px-3 py-2 text-xs text-text shadow-lg">
@@ -57,6 +64,17 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
         <nav
           ref={menuBarRef}
           aria-label="Application menu"
+          onKeyDown={(event) => {
+            if (event.target instanceof Element && event.target.closest('[role="menu"]')) return;
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+            const items = [...(menuBarRef.current?.querySelectorAll<HTMLButtonElement>(':scope > div > button:not(:disabled)') ?? [])];
+            const index = items.indexOf(document.activeElement as HTMLButtonElement);
+            if (index < 0 || !items.length) return;
+            event.preventDefault();
+            const next = (index + (event.key === 'ArrowRight' ? 1 : -1) + items.length) % items.length;
+            setActiveMenu(null);
+            items[next]?.focus();
+          }}
           className="flex h-full select-none text-xs"
         >
           {menuNodesForPlatform(APPLICATION_MENUS, platform).map((node) => (

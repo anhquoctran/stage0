@@ -52,6 +52,10 @@ fn configure_main_window(window: &Window, maximized: bool) -> Result<(), String>
     window
         .set_decorations(true)
         .map_err(|error| error.to_string())?;
+    #[cfg(target_os = "linux")]
+    window
+        .set_decorations(crate::core::desktop::desired_system_frame(window))
+        .map_err(|error| error.to_string())?;
     let (width, height) = default_window_size();
     let (min_width, min_height) = minimum_window_size();
     window
@@ -60,6 +64,10 @@ fn configure_main_window(window: &Window, maximized: bool) -> Result<(), String>
     window
         .set_min_size(Some(tauri::LogicalSize::new(min_width, min_height)))
         .map_err(|error| error.to_string())?;
+    // Wayland compositors own window placement and may reject client positioning.
+    #[cfg(target_os = "linux")]
+    let _ = window.center();
+    #[cfg(not(target_os = "linux"))]
     window.center().map_err(|error| error.to_string())?;
     if maximized {
         window.maximize().map_err(|error| error.to_string())?;

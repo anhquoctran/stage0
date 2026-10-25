@@ -34,6 +34,7 @@ export function usePreferencesDraft() {
     isPreferencesOpen,
     keymap: storedKeymap,
     uiFontFamily: storedUiFontFamily,
+    linuxTitleBar: storedLinuxTitleBar,
     setIsPreferencesOpen,
     initialPreferencesTab,
     setInitialPreferencesTab,
@@ -97,6 +98,7 @@ export function usePreferencesDraft() {
   const session = usePreferencesDraftSession({
     storedKeymap,
     storedUiFontFamily,
+    storedLinuxTitleBar,
     storedThemeMode,
     storedFontFamily,
     storedFontSize,
@@ -147,6 +149,7 @@ export function usePreferencesDraft() {
   const handleApply = createPreferencesApplyAction({
     draftKeymap: session.draftKeymap,
     draftUiFontFamily: session.draftUiFontFamily,
+    draftLinuxTitleBar: session.draftLinuxTitleBar,
     setDraftKeymap: session.setDraftKeymap,
     applyingRef,
     setIsApplying,
@@ -227,6 +230,7 @@ export function usePreferencesDraft() {
   const handleResetDefaults = () => {
     session.setDraftKeymap(structuredClone(DEFAULT_KEYMAP));
     session.setDraftUiFontFamily(DEFAULT_UI_FONT_FAMILY);
+    session.setDraftLinuxTitleBar('system');
     applyUiFontToDocument(DEFAULT_UI_FONT_FAMILY);
     session.setDraftThemeMode('system');
     applyThemeToDocument(resolveTheme('system'));
@@ -339,6 +343,8 @@ export function usePreferencesDraft() {
       setDraftShowInlineBlame: session.setDraftShowInlineBlame,
     },
     general: {
+      draftLinuxTitleBar: session.draftLinuxTitleBar,
+      setDraftLinuxTitleBar: session.setDraftLinuxTitleBar,
       draftLaunchAtStartup: session.draftLaunchAtStartup,
       setDraftLaunchAtStartup: session.setDraftLaunchAtStartup,
       draftStartInBackground: session.draftStartInBackground,

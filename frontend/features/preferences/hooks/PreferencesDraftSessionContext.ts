@@ -1,3 +1,4 @@
+import type { LinuxTitleBarMode } from '../../../core/types/LinuxTitleBarMode';
 import type { Dispatch, SetStateAction } from 'react';
 import type { StoreApi, UseBoundStore } from 'zustand';
 import { type ThemeMode } from '../../../core/types/ThemeMode';
@@ -11,6 +12,7 @@ import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings'
 export interface PreferencesDraftSessionContext {
   storedKeymap: KeymapSettings;
   storedUiFontFamily: string;
+  storedLinuxTitleBar: LinuxTitleBarMode;
   storedThemeMode: ThemeMode;
   storedFontFamily: string;
   storedFontSize: number;

@@ -19,6 +19,7 @@ import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
 export function createPreferencesApplyAction({
   draftKeymap = DEFAULT_KEYMAP,
   draftUiFontFamily,
+  draftLinuxTitleBar = 'system',
   setDraftKeymap,
   applyingRef,
   setIsApplying,
@@ -79,6 +80,13 @@ export function createPreferencesApplyAction({
         additionalPreferences.keymap = draftKeymap;
       }
       const appearancePatch: Record<string, unknown> = {};
+      const titleBarChanged = draftLinuxTitleBar !== (savedBaseline.linuxTitleBar ?? 'system');
+      if (titleBarChanged) {
+        const current = usePreferencesStore.getState().linuxTitleBar ?? 'system';
+        if (current !== (savedBaseline.linuxTitleBar ?? 'system') && current !== draftLinuxTitleBar)
+          throw new Error('Window title bar changed in another window. Reopen Preferences before applying');
+        appearancePatch.linuxTitleBar = draftLinuxTitleBar;
+      }
       const uiFontChanged = draftUiFontFamily !== savedBaseline.uiFontFamily;
       if (uiFontChanged) {
         const currentUiFont = usePreferencesStore.getState().uiFontFamily;
@@ -154,6 +162,7 @@ export function createPreferencesApplyAction({
       usePreferencesStore.setState({
         keymap: committedKeymap,
         uiFontFamily: committedUiFont,
+        linuxTitleBar: titleBarChanged ? draftLinuxTitleBar : usePreferencesStore.getState().linuxTitleBar ?? 'system',
         ...fontSettings,
         showInlineBlame: draftShowInlineBlame,
         launchAtStartup: draftLaunchAtStartup,
@@ -169,7 +178,7 @@ export function createPreferencesApplyAction({
       applyViewerFontToDocument(fontSettings);
       applyUiFontToDocument(committedUiFont);
       applyMarkdownFontToDocument(markdownFontSettings);
-      const needsRestart =
+      const needsRestart = titleBarChanged ||
         draftGitBinaryId !== savedBaseline.gitBinaryId ||
         draftGitBinaryPath !== savedBaseline.gitBinaryPath;
       const sandboxChanged = draftSandboxType !== savedBaseline.sandboxType;
@@ -197,6 +206,7 @@ export function createPreferencesApplyAction({
       setSavedBaseline({
         keymap: committedKeymap,
         uiFontFamily: committedUiFont,
+        linuxTitleBar: titleBarChanged ? draftLinuxTitleBar : usePreferencesStore.getState().linuxTitleBar ?? 'system',
         themeMode: draftThemeMode,
         fontFamily: draftFontFamily,
         fontSize: draftFontSize,

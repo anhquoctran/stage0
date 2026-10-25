@@ -18,8 +18,8 @@ export const PreferencesRestartModal: React.FC<{
           <h3 className="text-sm font-bold">Restart Required</h3>
         </div>
         <p className="text-xs text-subtext0 leading-relaxed">
-          The Git executable binary was changed. Please restart the Stage0 application to apply
-          the new Git runtime across all sandboxes and active repositories.
+          Restart Stage0 to apply changes to the Git executable or Linux window title bar
+          across all application windows.
         </p>
         <div className="flex items-center justify-end gap-2 pt-2">
           <button

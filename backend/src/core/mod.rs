@@ -5,3 +5,4 @@ pub mod keymaps;
 pub mod menu;
 pub mod tray;
 pub mod window_manager;
+pub mod desktop;

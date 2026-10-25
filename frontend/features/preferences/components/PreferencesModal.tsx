@@ -87,6 +87,8 @@ export const PreferencesModal: React.FC = () => {
       setDraftShowInlineBlame,
     },
     general: {
+      draftLinuxTitleBar,
+      setDraftLinuxTitleBar,
       draftLaunchAtStartup,
       setDraftLaunchAtStartup,
       draftStartInBackground,
@@ -148,6 +150,8 @@ export const PreferencesModal: React.FC = () => {
               draftExplorerContextMenu={draftExplorerContextMenu}
               setDraftExplorerContextMenu={setDraftExplorerContextMenu}
               draftAddToPath={draftAddToPath}
+              draftLinuxTitleBar={draftLinuxTitleBar}
+              setDraftLinuxTitleBar={setDraftLinuxTitleBar}
               setDraftAddToPath={setDraftAddToPath}
               draftAiConfig={draftAiConfig}
               setDraftAiConfig={setDraftAiConfig}

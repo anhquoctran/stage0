@@ -326,7 +326,7 @@ function mainFixture(t) {
     platform: { capabilities: { backend: true, events: true, windows: false }, events: {
       subscribe: (name, receive) => { const pending = deferred(); registrations.push({ name, receive, ...pending }); return pending.promise; },
     } },
-    application: { getWindowStartupContext: async () => { calls.push('context'); return { restore_recent: false, repo }; },
+    application: { getWindowChrome: async () => ({ platform: 'linux', desktop: 'gnome', session: 'wayland', nativeFrame: true, controlsLeft: [], controlsRight: ['close'], doubleClickAction: 'maximize' }), getWindowStartupContext: async () => { calls.push('context'); return { restore_recent: false, repo }; },
       windowIsMaximized: async () => false, windowIsFullscreen: async () => false },
   };
   const { MainApp } = loadWithMocks(new URL('../frontend/core/MainApp.tsx', import.meta.url), {

@@ -1,3 +1,5 @@
+import type { LinuxTitleBarMode } from '../../../../core/types/LinuxTitleBarMode';
+import { LinuxTitleBarSetting } from './LinuxTitleBarSetting';
 import React from 'react';
 import { SettingRow } from '../SettingRow';
 import { ZedSwitch } from '../ZedSwitch';
@@ -14,6 +16,8 @@ export const PreferencesGeneralTab: React.FC<{
   setDraftStartInBackground: (val: boolean) => void;
   draftExplorerContextMenu: boolean;
   setDraftExplorerContextMenu: (val: boolean) => void;
+  draftLinuxTitleBar: LinuxTitleBarMode;
+  setDraftLinuxTitleBar: (value: LinuxTitleBarMode) => void;
   draftAddToPath: boolean;
   setDraftAddToPath: (val: boolean) => void;
   draftAiConfig: AiConfig;
@@ -29,6 +33,8 @@ export const PreferencesGeneralTab: React.FC<{
   draftExplorerContextMenu,
   setDraftExplorerContextMenu,
   draftAddToPath,
+  draftLinuxTitleBar,
+  setDraftLinuxTitleBar,
   setDraftAddToPath,
   draftAiConfig,
   setDraftAiConfig,
@@ -39,6 +45,7 @@ export const PreferencesGeneralTab: React.FC<{
   const isWindows = typeof navigator !== 'undefined' && /Win/i.test(navigator.platform || navigator.userAgent);
   return (
     <div className="space-y-1">
+      <LinuxTitleBarSetting value={draftLinuxTitleBar} onChange={setDraftLinuxTitleBar} />
       <SettingRow
         title="Start Stage0 on System Boot"
         description="Automatically launch Stage0 when you log in to Windows."

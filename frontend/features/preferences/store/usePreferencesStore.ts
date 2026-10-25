@@ -158,6 +158,7 @@ function getInitialAddToPath(): boolean {
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   ...initialSettings,
   uiFontFamily: initialUiFontFamily,
+  linuxTitleBar: typeof window !== 'undefined' && window.__STAGE0_PREFERENCES__?.appearance?.linuxTitleBar === 'custom' ? 'custom' : 'system',
   markdownFontFamily: initialMarkdownSettings.fontFamily,
   markdownCodeFontFamily: initialMarkdownSettings.codeFontFamily,
   markdownEditorFontFamily: initialMarkdownSettings.editorFontFamily,
@@ -293,7 +294,7 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
     const uiFontFamily = uiFont && typeof uiFont === 'object' && 'fontFamily' in uiFont && typeof uiFont.fontFamily === 'string'
       ? uiFont.fontFamily : DEFAULT_UI_FONT_FAMILY;
     applyUiFontToDocument(uiFontFamily);
-    usePreferencesStore.setState({ uiFontFamily });
+    usePreferencesStore.setState({ uiFontFamily, linuxTitleBar: settings?.appearance?.linuxTitleBar === 'custom' ? 'custom' : 'system' });
     const general = settings?.general;
     usePreferencesStore.setState({ keymap: readKeymap(settings?.keymap) });
     if (font && typeof font === 'object') {

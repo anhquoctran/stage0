@@ -347,3 +347,20 @@ fn initialize_falls_back_to_defaults_on_corrupt_legacy_data() {
 
     let _ = fs::remove_dir_all(directory);
 }
+
+
+#[test]
+fn linux_title_bar_mode_is_optional_and_rejects_unsupported_values() {
+    let mut settings = parse_and_validate(DEFAULT_PREFERENCES).unwrap();
+    assert_eq!(settings["appearance"]["linuxTitleBar"], "system");
+    settings["appearance"].as_object_mut().unwrap().remove("linuxTitleBar");
+    assert!(validate_schema(&settings).is_ok());
+    for mode in [json!("system"), json!("custom")] {
+        settings["appearance"]["linuxTitleBar"] = mode;
+        assert!(validate_schema(&settings).is_ok());
+    }
+    for mode in [json!("auto"), json!(true), json!(42)] {
+        settings["appearance"]["linuxTitleBar"] = mode;
+        assert!(validate_schema(&settings).is_err());
+    }
+}

@@ -256,6 +256,8 @@ pub fn run() {
             commands::window_maximize,
             commands::window_reset_size,
             commands::window_prepare_main,
+            commands::get_window_chrome,
+            commands::window_start_dragging,
             commands::window_close,
             commands::window_is_maximized,
             commands::window_is_fullscreen,

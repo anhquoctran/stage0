@@ -10,6 +10,7 @@ import { DEFAULT_UI_FONT_FAMILY } from '../constants/uiFonts';
 export function usePreferencesDraftSession({
   storedKeymap = DEFAULT_KEYMAP,
   storedUiFontFamily = DEFAULT_UI_FONT_FAMILY,
+  storedLinuxTitleBar = 'system',
   storedThemeMode,
   storedFontFamily,
   storedFontSize,
@@ -43,6 +44,7 @@ export function usePreferencesDraftSession({
 }: PreferencesDraftSessionContext) {
   const [draftKeymap, setDraftKeymap] = useState(storedKeymap);
   const [draftUiFontFamily, setDraftUiFontFamily] = useState(storedUiFontFamily);
+  const [draftLinuxTitleBar, setDraftLinuxTitleBar] = useState(storedLinuxTitleBar);
   const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
 
   const [draftThemeId, setDraftThemeId] = useState('catppuccin-mocha');
@@ -92,6 +94,7 @@ export function usePreferencesDraftSession({
   const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
     keymap: storedKeymap,
     uiFontFamily: storedUiFontFamily,
+    linuxTitleBar: storedLinuxTitleBar,
     themeMode: storedThemeMode,
     fontFamily: storedFontFamily,
     fontSize: storedFontSize,
@@ -130,6 +133,7 @@ export function usePreferencesDraftSession({
         wasOpenRef.current = true;
         setDraftKeymap(storedKeymap);
         setDraftUiFontFamily(storedUiFontFamily);
+        setDraftLinuxTitleBar(storedLinuxTitleBar);
         setDraftThemeMode(storedThemeMode);
         setDraftFontFamily(storedFontFamily);
         setDraftFontSize(storedFontSize);
@@ -160,6 +164,7 @@ export function usePreferencesDraftSession({
         setSavedBaseline({
           keymap: storedKeymap,
           uiFontFamily: storedUiFontFamily,
+    linuxTitleBar: storedLinuxTitleBar,
           themeMode: storedThemeMode,
           fontFamily: storedFontFamily,
           fontSize: storedFontSize,
@@ -211,6 +216,7 @@ export function usePreferencesDraftSession({
     isPreferencesOpen,
     storedKeymap,
     storedUiFontFamily,
+    storedLinuxTitleBar,
     storedThemeMode,
     storedFontFamily,
     storedFontSize,
@@ -239,6 +245,8 @@ export function usePreferencesDraftSession({
   return {
     draftKeymap,
     draftUiFontFamily,
+    draftLinuxTitleBar,
+    setDraftLinuxTitleBar,
     setDraftUiFontFamily,
     setDraftKeymap,
     draftShowInlineBlame,

@@ -114,3 +114,31 @@ pub async fn restart_app(app: AppHandle) -> Result<(), String> {
     app.exit(0);
     Ok(())
 }
+
+/// Desktop settings are read on a worker; a missing desktop tool uses safe defaults.
+#[tauri::command]
+pub async fn get_window_chrome(
+    window: Window,
+) -> Result<crate::core::desktop::WindowChrome, String> {
+    let mut profile = tauri::async_runtime::spawn_blocking(crate::core::desktop::read_profile)
+        .await
+        .map_err(|_| "Could not read desktop window settings".to_string())?;
+    profile.native_frame = if window
+        .app_handle()
+        .state::<WindowManagerState>()
+        .startup_geometry(window.label())
+        .is_some()
+    {
+        crate::core::desktop::desired_system_frame(&window)
+    } else if cfg!(target_os = "linux") {
+        window.is_decorated().map_err(|error| error.to_string())?
+    } else {
+        false
+    };
+    Ok(profile)
+}
+
+#[tauri::command]
+pub async fn window_start_dragging(window: Window) -> Result<(), String> {
+    window.start_dragging().map_err(|error| error.to_string())
+}

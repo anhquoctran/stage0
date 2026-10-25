@@ -36,6 +36,8 @@ export function PreferencesTabContainer({
   draftExplorerContextMenu,
   setDraftExplorerContextMenu,
   draftAddToPath,
+  draftLinuxTitleBar,
+  setDraftLinuxTitleBar,
   setDraftAddToPath,
   draftAiConfig,
   setDraftAiConfig,
@@ -154,6 +156,8 @@ export function PreferencesTabContainer({
             draftExplorerContextMenu={draftExplorerContextMenu}
             setDraftExplorerContextMenu={setDraftExplorerContextMenu}
             draftAddToPath={draftAddToPath}
+            draftLinuxTitleBar={draftLinuxTitleBar}
+            setDraftLinuxTitleBar={setDraftLinuxTitleBar}
             setDraftAddToPath={setDraftAddToPath}
             draftAiConfig={draftAiConfig}
             setDraftAiConfig={setDraftAiConfig}
