@@ -239,7 +239,7 @@ fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWind
         // Configure the eventual macOS traffic-light inset now; decorations remain
         // off until the ready main-window handoff restores them.
         .title_bar_style(TitleBarStyle::Overlay)
-        .traffic_light_position(tauri::LogicalPosition::new(19.0, 25.0))
+        .traffic_light_position(tauri::LogicalPosition::new(13.0, 12.0))
         .hidden_title(true);
 
     let window = builder
