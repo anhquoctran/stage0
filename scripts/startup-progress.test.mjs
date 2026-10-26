@@ -286,7 +286,7 @@ test('ready hook supplies the native prepare/reveal pair only when window capabi
 });
 
 test('all native application windows begin compact and restore workspace bounds only through the handoff', () => {
-  for (const path of ['backend/tauri.conf.json', 'backend/tauri.macos.conf.json']) {
+  for (const path of ['backend/tauri.conf.json', 'backend/tauri.macos.conf.json', 'backend/tauri.linux.conf.json']) {
     const window = JSON.parse(fs.readFileSync(path, 'utf8')).app.windows.find(window => window.label === 'main');
     assert.deepEqual([window.width, window.height, window.minWidth, window.minHeight], [600, 380, 600, 380]);
     assert.equal(window.decorations, false);

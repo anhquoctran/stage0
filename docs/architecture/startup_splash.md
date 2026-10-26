@@ -35,6 +35,11 @@ Auxiliary notification windows retain their separate splash-removal path.
 
 ## Lifecycle and presentation
 
+- All native platform configurations, including Linux's override, start at
+  600×380 logical units with matching minimum bounds, without resizing or
+  maximization. This follows OS DPI scaling once; screen resolution does not
+  switch the splash to workspace bounds. The hidden readiness handoff restores
+  the normal workspace geometry, resizing and maximization capabilities.
 - The bootstrap controller is available before React loads. Its typed core
   facade safely delegates when present. Without the controller, a ready main
   application removes the static overlay directly.
@@ -61,3 +66,8 @@ resource failures, actual repository task settlement, window subscription cleanu
 and matching workspace readiness. Use the usual typecheck and architecture gate.
 Visual checks should include light/dark progress, startup failure and transition
 to the actual welcome or repository workspace.
+
+On Fedora GNOME/Wayland with LG 2560×1440 displays at 100% scale (2026-10-26),
+the native protocol reports an initial 600×380 surface followed by the maximized
+workspace bounds after readiness. The configuration regression covers the base,
+macOS and Linux overrides. MacBook/Windows visual DPI checks remain separate.
