@@ -97,7 +97,7 @@ function transportFactories(directory) {
 test('every named feature operation preserves its command, input, progress callback, result and failure', async () => {
   const files = transportFactories(frontend);
   const operations = new Set();
-  assert.equal(files.length, 25);
+  assert.equal(files.length, 26);
   for (const file of files) {
     const source = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
     const expected = new Map();
@@ -138,7 +138,7 @@ test('every named feature operation preserves its command, input, progress callb
     }
     assert.equal(Object.keys(service).length, expected.size);
   }
-  assert.equal(operations.size, 132); // Includes desktop chrome and ACP logout operations.
+  assert.equal(operations.size, 136); // Includes desktop chrome, ACP logout and software updates.
 });
 
 

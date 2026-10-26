@@ -46,6 +46,7 @@ test('onboarding startup tab toggles launch on boot and start in background', as
   t.after(() => runner.cleanup());
   const { WelcomeStartupTab } = loadWithMocks(url('features/onboarding/components/WelcomeStartupTab.tsx'), {
     react: runner.react,
+    '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ platform: { capabilities: { backend: true } } }) },
   });
   const props = { settings: fixture().draft, onChange(fn) { props.settings = fn(props.settings); } };
   assert.equal(props.settings.launchAtStartup, true);

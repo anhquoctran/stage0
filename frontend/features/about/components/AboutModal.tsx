@@ -5,6 +5,7 @@ import { Copy } from '../../../common/components/icons/Copy';
 import { X } from '../../../common/components/icons/X';
 import { useAboutInfo } from '../hooks/useAboutInfo';
 import type { AboutModalProps } from '../types/AboutModalProps';
+import { SoftwareUpdatePanel } from '../../updates/components/SoftwareUpdatePanel';
 
 export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   const about = useAboutInfo();
@@ -66,7 +67,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
     >
       <div
         data-tauri-drag-region
-        className="relative bg-base border border-surface0 p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-150 cursor-default text-text overflow-hidden rounded-sm"
+        className="relative bg-base border border-surface0 p-6 max-w-md w-full max-h-[90vh] overflow-auto shadow-2xl animate-in zoom-in-95 duration-150 cursor-default text-text rounded-sm"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button Top Right */}
@@ -154,6 +155,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         </p>
 
         {/* Footer Actions */}
+        <div className="mb-4 bg-mantle p-3 rounded-sm"><SoftwareUpdatePanel /></div>
         <div className="flex items-center justify-between gap-3 pt-2 border-t border-surface0 rounded-sm">
           <div className="flex items-center gap-2">
             <button

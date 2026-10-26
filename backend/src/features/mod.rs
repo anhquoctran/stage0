@@ -7,4 +7,5 @@ pub mod performance;
 pub mod preferences;
 pub mod review;
 pub mod sandbox;
+pub mod updates;
 pub mod virtual_mr;

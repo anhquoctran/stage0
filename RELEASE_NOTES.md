@@ -1,73 +1,30 @@
-# Stage0 v0.1.11 Release Notes
+# Stage0 v0.1.12
 
-> **Stage0** — A local-first Virtual Merge Request and Conflict Prediction Sandbox.
-> This document details the changes and enhancements included in the **current release (v0.1.11)**.
+Stage0 is a local-first Virtual Merge Request and conflict prediction sandbox.
 
----
+## Highlights
 
-### 🌟 Release Highlights
+- Check for software updates from About, with an optional daily background check.
+- Download updates from the official GitHub Releases repository, inspect progress and release notes, and explicitly install/restart after saving work.
+- Verify package signatures and signed versions before installation. Active reviews, Git operations and external agent work prevent update installation.
+- Support in-app updates for Linux x86_64 AppImage, Windows x86_64 NSIS, macOS Apple Silicon and macOS Intel.
+- Build all four targets with one release version; publish the stable update manifest only after all packages pass signature verification.
+- Improve Linux desktop title bars, application/Dock identity and Wayland tray detection.
+- Keep startup splash sizing and percentage labels consistent.
+- Harden reviewer custom instructions and discussion replies with scoped tools, bounded context, thread revision checks and authoritative publication guards.
 
-- **Visual Studio Code Multi-Platform Integration**: Seamlessly launch repositories and files directly into VS Code across Windows, macOS, and Linux (with support for native packages, Snap, and Flatpak).
-- **Startup Theme Consistency**: Instant detection and synchronization of Catppuccin themes (Mocha / Latte) on initial application launch, eliminating dark-mode flash.
-- **Spacious & Responsive Layouts**: Expanded window minimum dimensions (`1120×800`) and widened dialogs to ensure rich content, settings, and release notes display cleanly without truncation.
-- **Standardized Form Controls**: High-contrast, circular radio button design applied across all application preferences and configuration forms.
+## Installation
 
----
+Choose the asset matching your platform and CPU. Existing versions without an updater require a manual installation of this release once.
 
-### 🚀 Detailed Changes in v0.1.11
+- Linux: use AppImage for in-app updates. Debian and RPM packages remain available for manual/package-manager installation.
+- Windows: install the x86_64 NSIS setup executable. Windows ARM is not included.
+- macOS: install the matching Apple Silicon (`aarch64`) or Intel (`x86_64`) DMG/app.
 
-#### 1. Code Editor & Platform Integration
-- Added dedicated platform-specific launcher logic for Visual Studio Code (`vscode_launcher.rs`).
-  - **macOS**: Detects application bundles (`/Applications/Visual Studio Code.app`), Homebrew binaries (`/opt/homebrew/bin/code`, `/usr/local/bin/code`), and falls back to `open -b com.microsoft.VSCode`.
-  - **Linux**: Resolves standard system binaries, Flatpak wrappers (`org.visualstudio.code`), and Snap packages (`/snap/bin/code`).
-  - **Windows**: Handles `code.cmd`, `code.exe`, and PATH resolutions.
-- Added friendly, actionable toast notifications when VS Code is not installed or not in PATH, guiding users with installation and configuration links.
+The initial macOS packages use ad-hoc signing and are not notarized by Apple; Gatekeeper may require approval in Privacy & Security. The Windows installer is not Authenticode signed. All updater payloads are separately signed with Stage0's update key.
 
-#### 2. Theme & Visual Experience
-- Eliminated light-theme startup flashing by syncing the theme cache (`stage0_catppuccin_theme_mode`) immediately prior to React tree mounting.
-- Styled badges with high-contrast text and solid backgrounds for clear visibility across all Catppuccin color palettes.
-- Refined navigation menus to remove unintended bold weighting on AI menu items.
+Updates never upload repository content or invoke AI services. Automatic checks can be disabled in About; downloading and installation always require user actions.
 
-#### 3. Forms & Component Uniformity
-- Created reusable circular `Radio` component with accessible keyboard navigation and Catppuccin accent focus rings.
-- Replaced custom or inconsistent radio buttons in Sandbox Settings, Git Binary Management, and Repository Bot Inheritance cards.
+## Verification scope
 
----
-
-### 📊 Feature & Platform Compatibility Matrix
-
-| Capability / Platform | Windows 10/11 | macOS (Apple Silicon / Intel) | Linux (X11 / Wayland) |
-| :--- | :---: | :---: | :---: |
-| **Virtual MR & Conflict Prediction** | ✅ Full Support | ✅ Full Support | ✅ Full Support |
-| **VS Code Direct Launcher** | ✅ (`code.cmd` / PATH) | ✅ (Bundle / `open -b`) | ✅ (Native / Flatpak / Snap) |
-| **Catppuccin Mocha & Latte Themes** | ✅ Native Sync | ✅ Native Sync | ✅ Native Sync |
-| **Top Menu Bar (Tauri Frame)** | ✅ Embedded Custom | ✅ Native macOS Menu | ✅ Embedded Custom |
-| **Local Git Sandbox Adapters** | ✅ In-process | ✅ In-process | ✅ In-process |
-
----
-
-### ⌨️ Useful Keyboard Shortcuts
-
-| Shortcut | Description |
-| :--- | :--- |
-| <kbd>Ctrl</kbd> + <kbd>,</kbd> / <kbd>Cmd</kbd> + <kbd>,</kbd> | Open Preferences dialog |
-| <kbd>Ctrl</kbd> + <kbd>I</kbd> / <kbd>Cmd</kbd> + <kbd>I</kbd> | View Repository Overview |
-| <kbd>Ctrl</kbd> + <kbd>R</kbd> / <kbd>Cmd</kbd> + <kbd>R</kbd> | Reload current sandbox state |
-| <kbd>Esc</kbd> | Dismiss active modal or overlay |
-
----
-
-### 🛡️ Safety & Architecture Note
-
-> [!NOTE]
-> Stage0 operates entirely on local repository clones and in-memory or sandbox virtual refs.
-> Your working tree files and remote branches are never modified without explicit confirmation.
-
----
-
-### 🔗 Feedback & Documentation
-
-- **Documentation**: [https://github.com/anhquoctran/stage0](https://github.com/anhquoctran/stage0)
-- **Report an Issue**: [https://github.com/anhquoctran/stage0/issues](https://github.com/anhquoctran/stage0/issues)
-- **License**: MIT License © 2026 Anh Quoc Tran
-
+Automated Node/Rust tests and Linux build checks are run before publication. CI compiles the native release packages on Linux, macOS and Windows. Compilation does not replace installed-app smoke testing on each supported desktop.

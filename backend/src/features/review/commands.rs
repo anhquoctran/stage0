@@ -45,6 +45,7 @@ pub async fn start_ai_review(
     app: AppHandle,
     mut request: ReviewRequest,
 ) -> Result<ReviewRun, String> {
+    let activity = crate::common::activity::OperationLease::acquire()?;
     if request
         .reviewer_id
         .as_deref()
@@ -228,6 +229,7 @@ pub async fn start_ai_review(
     let task_app = app.clone();
     let task_run = run.clone();
     tauri::async_runtime::spawn(async move {
+        let _activity = activity;
         let worker_app = task_app.clone();
         let worker = tauri::async_runtime::spawn(super::runtime::run(
             worker_app,

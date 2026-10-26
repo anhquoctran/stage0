@@ -18,6 +18,7 @@ import { FirstLaunchWelcome } from '../features/onboarding/components/FirstLaunc
 import { useOnboardingStore } from '../features/onboarding/store/useOnboardingStore';
 import { reviewAssignedSessionAfterGitChange } from '../features/review/services/assignedReviewService';
 import { installAutoHideScrollbars } from './services/autoHideScrollbars';
+import { SoftwareUpdateNotice } from '../features/updates/components/SoftwareUpdateNotice';
 
 export const MainApp: React.FC = () => {
   const appServices = useApplicationServices();
@@ -145,6 +146,7 @@ export const MainApp: React.FC = () => {
       )}
     >
       <MainLayout />
+      <SoftwareUpdateNotice />
       {!isInitializing && isOnboardingOpen && (
         <FirstLaunchWelcome onComplete={() => setOnboardingOpen(false)} />
       )}

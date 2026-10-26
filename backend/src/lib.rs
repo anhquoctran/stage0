@@ -154,6 +154,7 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(WatcherState::new())
         .manage(SandboxManager::new())
         .manage(WindowManagerState::default())
@@ -167,6 +168,7 @@ pub fn run() {
             let preferences = features::preferences::PreferencesManager::new(preferences_dir)
                 .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
             app.manage(preferences);
+            app.manage(features::updates::UpdateRuntime::new());
             let db = Database::init(handle)
                 .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
 
@@ -216,6 +218,7 @@ pub fn run() {
             }
 
             notifications::ensure_notification_host(handle);
+            features::updates::start_background_checks(handle);
 
             #[cfg(target_os = "macos")]
             {
@@ -370,6 +373,10 @@ pub fn run() {
             commands::restart_app,
             commands::get_app_info,
             commands::get_release_notes,
+            commands::get_software_update_status,
+            commands::check_software_update,
+            commands::download_software_update,
+            commands::install_software_update,
             // Stage0 toast notifications
             notifications::dispatch_notification,
             notifications::send_test_notification,

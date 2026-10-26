@@ -1,0 +1,155 @@
+name: Release Stage0
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable version tag to build and publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+  CARGO_TERM_COLOR: always
+
+jobs:
+  validate:
+    if: github.repository == 'anhquoctran/stage0'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - run: npm install --global pnpm@12.14.0
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/release-artifacts.mjs version "$RELEASE_TAG"
+      - run: pnpm check:architecture
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  build:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            target_os: linux
+            arch: x64
+            bundles: appimage,deb,rpm
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            target_os: windows
+            arch: x64
+            bundles: nsis
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            target_os: macos
+            arch: arm64
+            bundles: app,dmg
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            target_os: macos
+            arch: x64
+            bundles: app,dmg
+    runs-on: ${{ matrix.os }}
+    env:
+      TARGET_OS: ${{ matrix.target_os }}
+      TARGET_ARCH: ${{ matrix.arch }}
+      RELEASE_TARGET: ${{ matrix.target }}
+      RELEASE_BUNDLES: ${{ matrix.bundles }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libfontconfig1-dev libfreetype6-dev xdg-utils rpm
+      - run: npm install --global pnpm@12.14.0
+      - run: pnpm install --frozen-lockfile
+      - name: Require updater signing key
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: test -n "$TAURI_SIGNING_PRIVATE_KEY" || { echo 'Configure TAURI_SIGNING_PRIVATE_KEY before releasing.'; exit 1; }
+      - name: Run Rust tests
+        if: runner.os == 'Linux'
+        run: cargo test --locked --manifest-path backend/Cargo.toml --lib
+      - name: Build versioned and signed packages
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && '-' || '' }}
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+        run: pnpm exec tauri build --ci --target "$RELEASE_TARGET" --bundles "$RELEASE_BUNDLES" -- --locked
+      - name: Collect uniquely named assets
+        shell: bash
+        run: node scripts/release-artifacts.mjs collect "backend/target/$RELEASE_TARGET/release/bundle" release-assets "$RELEASE_TARGET"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-${{ matrix.target }}
+          path: release-assets/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release-assets
+      - run: node scripts/release-artifacts.mjs manifest release-assets "$RELEASE_TAG"
+      - name: Verify every package against the embedded public key
+        run: cargo run --locked --manifest-path scripts/release-verifier/Cargo.toml -- release-assets
+      - name: Upload to draft, then publish the complete release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          if gh release view "$RELEASE_TAG" --json isDraft > release-state.json; then
+            node -e "if (!JSON.parse(require('fs').readFileSync('release-state.json')).isDraft) throw new Error('Refusing to replace an already published release')"
+          else
+            gh release create "$RELEASE_TAG" --draft --verify-tag --title "Stage0 $RELEASE_TAG" --notes-file RELEASE_NOTES.md
+          fi
+          gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          gh release edit "$RELEASE_TAG" --draft=false --latest

@@ -6,7 +6,7 @@ const PROPERTY_NAMES: Record<string, string[]> = {
   '': ['schemaVersion', 'keymap', 'general', 'appearance', 'ai', 'reviewers', 'sandbox', 'git', 'notifications'],
   keymap: ['preset', 'overrides'],
   'keymap.overrides.[]': ['command', 'keys'],
-  general: ['showInlineBlame', 'streamResponse', 'enableCodeReviewAssist'],
+  general: ['showInlineBlame', 'streamResponse', 'enableCodeReviewAssist', 'autoCheckUpdates'],
   appearance: ['themeMode', 'linuxTitleBar', 'uiFont', 'viewerFont', 'markdownFont'],
   'appearance.uiFont': ['fontFamily'],
   'appearance.markdownFont': ['fontFamily', 'codeFontFamily', 'editorFontFamily', 'fontSize', 'headingFontWeight'],

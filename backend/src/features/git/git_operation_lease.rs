@@ -7,10 +7,12 @@ static RUNNING_OPERATIONS: OnceLock<Mutex<HashSet<PathBuf>>> = OnceLock::new();
 /// Serializes mutations of a physical repository across all Stage0 windows.
 pub struct GitOperationLease {
     path: PathBuf,
+    _activity: crate::common::activity::OperationLease,
 }
 
 impl GitOperationLease {
     pub fn acquire(path: &str) -> Result<Self, String> {
+        let activity = crate::common::activity::OperationLease::acquire()?;
         let absolute = std::path::absolute(Path::new(path))
             .map_err(|error| format!("Invalid repository path: {error}"))?;
         let resolved = if absolute.exists() {
@@ -33,7 +35,10 @@ impl GitOperationLease {
                     .to_string(),
             );
         }
-        Ok(Self { path: resolved })
+        Ok(Self {
+            path: resolved,
+            _activity: activity,
+        })
     }
 }
 

@@ -1,4 +1,5 @@
 import type { PlatformServices } from '../../../common/services/ipc/contracts/PlatformServices';
+import { createSoftwareUpdateService } from '../../../features/updates/services/transport/createSoftwareUpdateService';
 import type { ApplicationServices } from './ApplicationServices';
 import { getCommonServices } from '../../../common/services/getCommonServices';
 import { createPreferencesDocumentService } from '../../../features/preferences/services/transport/createPreferencesDocumentService';
@@ -28,6 +29,7 @@ import { createDeviceAuthService } from '../../../features/ai/services/transport
 /** Compose ports without starting IPC, subscriptions, hydration or credential access. */
 export function createApplicationServices(platform: PlatformServices): ApplicationServices {
   return {
+    softwareUpdates: createSoftwareUpdateService(platform.commands),
     platform,
     ...getCommonServices(platform),
     preferences: createPreferencesDocumentService(platform.commands),

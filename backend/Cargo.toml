@@ -1,6 +1,6 @@
 [package]
 name = "stage0"
-version = "0.1.11"
+version = "0.1.12"
 description = "Stage0 - Local Virtual MR / PR Sandbox"
 authors = ["Anh Quoc Tran"]
 license = "MIT"
@@ -42,6 +42,7 @@ zip = { version = "9", default-features = false, features = ["deflate", "bzip2"]
 tar = "0.4"
 flate2 = "1"
 bzip2 = "0.6"
+tauri-plugin-updater = "2.14"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 keyring = { version = "3", features = ["windows-native"] }
@@ -87,5 +88,6 @@ opt-level = 0
 debug = 1
 
 [dev-dependencies]
+tauri = { version = "2", features = ["test"] }
 tokio = { version = "1", features = ["test-util"] }
 tempfile = "3"

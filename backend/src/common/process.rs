@@ -68,6 +68,7 @@ fn run_bounded_command_inner(
     stderr_limit: usize,
     timeout: Duration,
 ) -> Result<BoundedOutput, String> {
+    let _activity = super::activity::OperationLease::acquire()?;
     command
         .stdin(if input.is_some() {
             Stdio::piped()

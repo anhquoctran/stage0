@@ -221,7 +221,12 @@ test('splash markup exposes determinate progress, responsive labels and reduced-
   assert.match(html, /id="splash-reload"[^>]+hidden/);
   assert.match(html, /prefers-reduced-motion: reduce/);
   assert.match(html, /transition: width 180ms ease-out/);
-  assert.doesNotMatch(html, /startup-splash-progress|animation:[^;]*infinite/);
+  assert.doesNotMatch(html, /startup-splash-progress/);
+  const decorativeMotion = html.match(/@keyframes splash-progress-stripes\s*\{[^]*?\n\s*\}/)?.[0];
+  assert.ok(decorativeMotion, 'decorative stripes may animate without changing progress');
+  assert.match(decorativeMotion, /background-position/);
+  assert.doesNotMatch(decorativeMotion, /(?:width|transform)\s*:/);
+  assert.match(html, /prefers-reduced-motion: reduce[^]*?\.splash-progress\s*\{\s*animation: none/);
   const ids = fs.readFileSync('frontend/core/services/startup/StartupPhase.ts', 'utf8').match(/'[^']+'/g).map(id => id.slice(1, -1));
   assert.deepEqual(ids, [...phases, 'ready']);
 });

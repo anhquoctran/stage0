@@ -71,9 +71,21 @@
     "publisher": "Anh Quoc Tran",
     "copyright": "Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",
     "license": "MIT",
-    "homepage": "https://github.com/anhquoctran/stage0"
+    "homepage": "https://github.com/anhquoctran/stage0",
+    "createUpdaterArtifacts": true
   },
-  "plugins": {},
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDgxNDE1RUREQjIxOTYxQkQKUldTOVlSbXkzVjVCZ2RYQURWUzA2YnppQitmcHhNRVo3ZFk5NWVCOHNGdm1DQzJmNkVlb0diak0K",
+      "endpoints": [
+        "https://github.com/anhquoctran/stage0/releases/latest/download/latest.json"
+      ],
+      "requireSignedVersion": true,
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
   "productName": "Stage0",
-  "version": "0.1.11"
+  "version": "0.1.12"
 }

@@ -1,4 +1,5 @@
 import type { PlatformServices } from '../../../common/services/ipc/contracts/PlatformServices';
+import type { SoftwareUpdateService } from '../../../features/updates/services/transport/SoftwareUpdateService';
 import type { ExternalLinkService } from '../../../common/services/transport/ExternalLinkService';
 import type { PreferencesDocumentService } from '../../../features/preferences/services/transport/PreferencesDocumentService';
 import type { NotificationTransportService } from '../../../features/notifications/services/transport/NotificationTransportService';
@@ -27,6 +28,7 @@ import type { DeviceAuthService } from '../../../features/ai/services/transport/
 
 /** One service graph per application window. Mutable feature state stays in Zustand. */
 export interface ApplicationServices {
+  readonly softwareUpdates: SoftwareUpdateService;
   readonly platform: PlatformServices;
   readonly externalLinks: ExternalLinkService;
   readonly preferences: PreferencesDocumentService;

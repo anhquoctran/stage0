@@ -15,6 +15,7 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     validate_optional_bool(general, "enableCodeReviewAssist", "general")?;
     validate_optional_bool(general, "launchAtStartup", "general")?;
     validate_optional_bool(general, "startInBackground", "general")?;
+    validate_optional_bool(general, "autoCheckUpdates", "general")?;
     validate_optional_bool(general, "explorerContextMenu", "general")?;
     validate_optional_bool(general, "addToPath", "general")?;
 

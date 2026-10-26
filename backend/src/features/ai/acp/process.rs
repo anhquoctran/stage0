@@ -13,6 +13,7 @@ use tokio::{
 const AUTH_STATUS_UPDATE_METHOD: &str = "_auth/status_update";
 
 pub(super) struct AcpProcess {
+    _activity: crate::common::activity::OperationLease,
     pub(super) child: Child,
     input: ChildStdin,
     output: BufReader<ChildStdout>,
@@ -24,6 +25,7 @@ impl AcpProcess {
         config: &AcpAgentConfig,
         working_directory: Option<&Path>,
     ) -> Result<Self, String> {
+        let activity = crate::common::activity::OperationLease::acquire()?;
         validate_config(config)?;
         let mut child = make_command(config, working_directory).spawn().map_err(|_| {
             if config.launch_mode.as_deref() == Some("binary") {
@@ -38,6 +40,7 @@ impl AcpProcess {
             .take()
             .ok_or("ACP agent stdout is unavailable")?;
         Ok(Self {
+            _activity: activity,
             child,
             input,
             output: BufReader::new(output),

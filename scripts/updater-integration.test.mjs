@@ -8,24 +8,15 @@ const require = createRequire(import.meta.url);
 const { create } = require('zustand');
 const source = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('application entry points expose no updater UI, IPC, release endpoint or feature modules', () => {
-  for (const directory of ['frontend/features/updates', 'backend/src/features/updates']) {
-    // Empty working-tree directories can remain after deleting tracked files.
-    const path = new URL(`../${directory}`, import.meta.url);
-    if (fs.existsSync(path)) assert.equal(fs.readdirSync(path, { recursive: true }).filter((name) => /\.(ts|tsx|rs)$/.test(name)).length, 0);
-  }
-  for (const path of [
-    'frontend/core/MainApp.tsx', 'frontend/core/components/layout/StatusBar.tsx',
-    'frontend/core/components/layout/MenuBar.tsx', 'frontend/features/about/components/AboutModal.tsx',
-    'frontend/features/preferences/components/PreferencesModal.tsx',
-    'frontend/features/preferences/types/PreferenceTab.ts',
-    'frontend/features/notifications/components/NotificationsTab.tsx',
-    'frontend/features/notifications/services/notificationService.ts',
-    'backend/src/lib.rs', 'backend/src/features/mod.rs', 'backend/tauri.conf.json',
-  ]) {
-    assert.doesNotMatch(source(path), /useUpdateStore|UpdatesTab|UpdateModal|check_updates|softwareUpdates|open_updates|open_preferences_updates|updates-check|check_for_update|download_update|install_update|downloadcenter\.quoctran\.space|(?:features\/|mod )updates/);
-  }
-  assert.doesNotMatch(source('backend/Cargo.toml'), /^(?:semver|futures-util)\s*=/m);
+test('official GitHub updater requires signed versions without exposing raw plugin capabilities', () => {
+  const config = JSON.parse(source('backend/tauri.conf.json'));
+  assert.equal(config.bundle.createUpdaterArtifacts, true);
+  assert.equal(config.plugins.updater.requireSignedVersion, true);
+  assert.deepEqual(config.plugins.updater.endpoints, ['https://github.com/anhquoctran/stage0/releases/latest/download/latest.json']);
+  assert.equal(config.plugins.updater.allowDowngrades ?? false, false);
+  assert.doesNotMatch(source('backend/capabilities/default.json'), /updater:/);
+  assert.doesNotMatch(source('backend/tauri.conf.json'), /downloadcenter\.quoctran\.space/);
+  assert.doesNotMatch(config.app.security.csp, /github\.com/);
   assert.match(source('frontend/features/preferences/utils/normalizePreferenceTab.ts'), /SETTINGS_TREE\.some[\s\S]*?: 'ai-overview'/);
 });
 
@@ -107,22 +98,26 @@ test('legacy notification settings cannot restore the removed category; saved hi
   } finally { globalThis.window = originalWindow; globalThis.localStorage = originalStorage; }
 });
 
-test('About retains version information, copy and close without an updater action', async () => {
+test('About retains version information, copy and close alongside the updater panel', async () => {
   const harness = componentHarness(); const originalWindow = globalThis.window;
   globalThis.window = { addEventListener() {}, removeEventListener() {} };
   let closed = 0;
   const about = { name: 'Stage0', version: 'fixture-version', packageVersion: 'fixture-package', gitCommit: 'fixture-commit', arch: 'aarch64', author: 'Fixture', releaseDate: 'fixture-date' };
   try {
-    const mocks = { react: harness.react, '../hooks/useAboutInfo': { useAboutInfo: () => about }, '../../../common/components/AppLogo': { AppLogo: () => null } };
+    const mocks = {
+      react: harness.react, '../hooks/useAboutInfo': { useAboutInfo: () => about },
+      '../../../common/components/AppLogo': { AppLogo: () => null },
+      '../../updates/components/SoftwareUpdatePanel': { SoftwareUpdatePanel: () => harness.react.createElement('button', {}, 'Check for Updates') },
+    };
     for (const name of ['Check', 'Copy', 'X']) mocks[`../../../common/components/icons/${name}`] = { [name]: () => null };
     const { AboutModal } = loadWithMocks(new URL('../frontend/features/about/components/AboutModal.tsx', import.meta.url), mocks);
     const nodes = componentNodes(await harness.render(AboutModal, { isOpen: true, onClose: () => { closed++; } }));
     const buttons = nodes.filter((node) => node.type === 'button');
-    assert.equal(buttons.length, 4);
+    assert.equal(buttons.length, 5);
     assert.ok(buttons.some((node) => node.props.title === 'Copy version string'));
     assert.ok(buttons.some((node) => node.props.title === 'Copy system and version information'));
     assert.match(JSON.stringify(nodes), /fixture-version/);
-    assert.doesNotMatch(JSON.stringify(nodes), /Check for Updates/);
+    assert.match(JSON.stringify(nodes), /Check for Updates/);
     buttons.find((node) => node.props['aria-label'] === 'Close About dialog').props.onClick();
     assert.equal(closed, 1);
     harness.cleanup();
