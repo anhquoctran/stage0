@@ -85,6 +85,18 @@ application's native window commands; Windows/macOS retain Tauri's built-in drag
 region handling. Interactive menu/buttons never initiate a window drag. A failed
 maximize request does not flip the UI state; focus/resize refresh native state.
 
+## Tray host availability
+
+Wayland tray creation requires an owned `org.kde.StatusNotifierWatcher` name and
+its `IsStatusNotifierHostRegistered` property to be true. Stock GNOME sessions
+may have no such host. In that case Stage0 skips optional tray setup rather than
+letting libappindicator fall back to the X11-only GtkStatusIcon implementation,
+which produces `gtk_widget_get_scale_factor: GTK_IS_WIDGET` criticals on Wayland.
+GNOME users who want a tray icon must enable an AppIndicator/StatusNotifier host
+and restart Stage0. The application does not install or enable extensions.
+Actual X11 sessions keep their legacy tray behavior. The Dock identity is
+independent of the system tray.
+
 ## Application menu
 
 Menus remain application-rendered on Linux. Popup placement clamps to the webview,

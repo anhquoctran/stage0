@@ -1,3 +1,6 @@
+#[cfg(target_os = "linux")]
+mod linux_host;
+
 use crate::core::db::Database;
 use crate::core::window_manager::{create_welcome_window, open_repo_path};
 use crate::features::git::RepoInfo;
@@ -44,6 +47,14 @@ pub fn setup_tray(
     app: &AppHandle,
     repositories: &[RepoInfo],
 ) -> Result<TrayIcon, Box<dyn std::error::Error>> {
+    #[cfg(target_os = "linux")]
+    if !linux_host::available() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "This Wayland session has no StatusNotifier tray host",
+        )
+        .into());
+    }
     let menu = build_tray_menu(app, repositories)?;
 
     let mut builder = TrayIconBuilder::with_id(TRAY_ID)
