@@ -132,6 +132,48 @@ test('ACP account hook auto-checks once and rejects results for a previously sel
   assert.ok(errors.every((value) => value === null));
 });
 
+test('ACP account switching logs out then selects ChatGPT authentication', async (t) => {
+  const runner = hookHarness();
+  t.after(() => runner.cleanup());
+  const calls = [];
+  const info = {
+    authMethods: [
+      { id: 'api-key', name: 'API Key' },
+      { id: 'chat-gpt', name: 'ChatGPT' },
+    ],
+    authStatus: null,
+    supportsAuthStatus: true,
+    supportsAuthLogout: true,
+    agentInfo: { name: 'codex-acp', version: '2.2.2' },
+  };
+  const { useAcpAgentAccount } = load('features/ai/components/useAcpAgentAccount.ts', {
+    react: runner.react,
+    '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({
+      platform: { capabilities: { externalAgents: true } },
+      externalAgents: {
+        acpAgentConnectionInfo: async () => info,
+        acpAgentLogout: async ({ config }) => calls.push(['logout', config.id]),
+        acpAgentAuthenticate: async ({ config, methodId }) => {
+          calls.push(['authenticate', config.id, methodId]);
+          return { authStatus: null };
+        },
+      },
+    }) },
+  });
+  const props = {
+    detailAgent: { id: 'codex', version: '2.2.2' },
+    setError() {},
+    setBusyId() {},
+    setNotice() {},
+  };
+  runner.render(useAcpAgentAccount, props);
+  await tick();
+  const account = runner.render(useAcpAgentAccount, props);
+  assert.equal(account.selectedAuthMethod, 'chat-gpt');
+  await account.signIn();
+  assert.deepEqual(calls, [['logout', 'codex'], ['authenticate', 'codex', 'chat-gpt']]);
+});
+
 test('pure graph layout preserves merge lanes without mutating commits', () => {
   const { buildGitGraphLayout } = load('features/git/utils/buildGitGraphLayout.ts', {});
   const commits = [{ hash: 'merge', parents: ['left', 'right'] }, { hash: 'left', parents: ['base'] }, { hash: 'right', parents: ['base'] }, { hash: 'base', parents: [] }];

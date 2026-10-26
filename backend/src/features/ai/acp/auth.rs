@@ -26,6 +26,7 @@ pub async fn acp_agent_connection_info(config: AcpAgentConfig) -> Result<Value, 
         let supports_auth_status = initialized
             .pointer("/agentCapabilities/_meta/authStatus")
             .is_some();
+        let supports_auth_logout = supports_auth_logout(&initialized);
         let auth_methods = initialized
             .get("authMethods")
             .and_then(Value::as_array)
@@ -50,12 +51,19 @@ pub async fn acp_agent_connection_info(config: AcpAgentConfig) -> Result<Value, 
             "authMethods": auth_methods,
             "authStatus": auth_status,
             "supportsAuthStatus": supports_auth_status,
+            "supportsAuthLogout": supports_auth_logout,
             "agentInfo": agent_info,
         }))
     }
     .await;
     process.close().await;
     result
+}
+
+pub(super) fn supports_auth_logout(initialized: &Value) -> bool {
+    initialized
+        .pointer("/agentCapabilities/auth/logout")
+        .is_some_and(Value::is_object)
 }
 
 fn bounded_agent_text(value: &Value, limit: usize) -> Option<String> {
@@ -150,6 +158,22 @@ pub async fn acp_agent_authenticate(
         process.request(1, "authenticate", json!({"methodId":method_id})).await?;
         Ok(json!({"authStatus": process.auth_status.clone()}))
     }.await;
+    process.close().await;
+    result
+}
+
+#[command]
+pub async fn acp_agent_logout(config: AcpAgentConfig) -> Result<(), String> {
+    let mut process = AcpProcess::start(&config, None).await?;
+    let result = async {
+        let initialized = process.initialize().await?;
+        if !supports_auth_logout(&initialized) {
+            return Err("This agent does not support logout over ACP".into());
+        }
+        process.request(1, "logout", json!({})).await?;
+        Ok(())
+    }
+    .await;
     process.close().await;
     result
 }

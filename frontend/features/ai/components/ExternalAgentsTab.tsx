@@ -13,6 +13,7 @@ import { registryDistribution, safeProjectUrl } from '../utils/acpRegistryMetada
 import { AcpAgentCard } from './external-agents/AcpAgentCard';
 import { AcpAgentDetails } from './external-agents/AcpAgentDetails';
 import { AcpAgentModalForm } from './external-agents/AcpAgentModalForm';
+import { AcpOnboardingProviderPicker } from './external-agents/AcpOnboardingProviderPicker';
 import { AcpRegistryActions } from './external-agents/AcpRegistryActions';
 import { AcpRegistryToolbar } from './external-agents/AcpRegistryToolbar';
 import { useAcpAgentAccount } from './useAcpAgentAccount';
@@ -26,6 +27,7 @@ function isProtocolAuthMethod(method?: AuthMethod): boolean {
 export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
   draftSettings,
   onBackToOverview,
+  isOnboarding = false,
 } = {}) => {
   const appServices = useApplicationServices();
   const store = useAiMcpStore();
@@ -149,6 +151,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
     <div className="space-y-2 text-text">
       <AcpRegistryActions
         onBackToOverview={onBackToOverview}
+        isOnboarding={isOnboarding}
         setIsCustomOpen={setIsCustomOpen}
         isLoading={isLoading}
         setError={setError}
@@ -171,58 +174,77 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
         </p>
       )}
 
-      <AcpRegistryToolbar query={query} setQuery={setQuery} setFilter={setFilter} filter={filter} />
-
-      <div className="divide-y divide-surface1 border-y border-surface1">
-        {isLoading && !registry.length && (
-          <p className="px-3 py-8 text-center text-xs text-subtext0">Loading ACP Registry…</p>
-        )}
-        {!isLoading && !visibleAgents.length && (
-          <p className="px-3 py-8 text-center text-xs text-subtext0">No agents match this view.</p>
-        )}
-        {visibleAgents.map((item) => {
-          const isCustom = 'source' in item && item.source === 'custom';
-          const entry = isCustom ? undefined : (item as AcpRegistryAgent);
-          const installed = isCustom
-            ? (item as AcpAgentConfig)
-            : registryConfig(item as AcpRegistryAgent);
-          const name = isCustom ? (item as AcpAgentConfig).name : (item as AcpRegistryAgent).name;
-          const version = isCustom ? undefined : (item as AcpRegistryAgent).version;
-          const description = isCustom
-            ? (item as AcpAgentConfig).command
-            : (item as AcpRegistryAgent).description;
-          const unavailableReason = entry
-            ? registryUnavailableReason(entry, supportedBinaryTarget)
-            : undefined;
-          const installable = !isCustom && !unavailableReason;
-          return (
-            <AcpAgentCard
-              key={`${isCustom ? 'custom' : 'registry'}-${item.id}`}
-              isCustom={isCustom}
-              item={item}
-              installed={installed}
-              openDetails={openDetails}
-              entry={entry}
-              setError={setError}
-              installable={installable}
-              unavailableReason={unavailableReason}
-              name={name}
-              version={version}
-              description={description}
-              busyId={busyId}
-              install={install}
-              registryDistribution={registryDistribution}
-            />
-          );
-        })}
-      </div>
-      <p className="text-[11px] text-subtext0">
-        Installing an <code className="font-mono">npx</code> or{' '}
-        <code className="font-mono">uvx</code> agent saves its launch config; the package downloads
-        on first launch. Native packages for {supportedBinaryTarget || 'this platform'} are
-        downloaded and extracted into Stage0’s local data folder. Uninstalling removes the launch
-        config; downloaded package files may remain.
-      </p>
+      {isOnboarding ? (
+        <>
+          <p className="text-xs leading-5 text-subtext0">
+            Choose a provider to install it. Select an installed provider to manage it or sign in.
+          </p>
+          <AcpOnboardingProviderPicker
+            registry={registry}
+            externalAgents={externalAgents}
+            supportedBinaryTarget={supportedBinaryTarget}
+            busyId={busyId}
+            isLoading={isLoading}
+            canLaunchAgents={appServices.platform.capabilities.externalAgents}
+            onInstall={(entry) => { void install(entry); }}
+            onManage={openDetails}
+          />
+        </>
+      ) : (
+        <>
+          <AcpRegistryToolbar query={query} setQuery={setQuery} setFilter={setFilter} filter={filter} />
+          <div className="divide-y divide-surface1 border-y border-surface1">
+            {isLoading && !registry.length && (
+              <p className="px-3 py-8 text-center text-xs text-subtext0">Loading ACP Registry…</p>
+            )}
+            {!isLoading && !visibleAgents.length && (
+              <p className="px-3 py-8 text-center text-xs text-subtext0">No agents match this view.</p>
+            )}
+            {visibleAgents.map((item) => {
+              const isCustom = 'source' in item && item.source === 'custom';
+              const entry = isCustom ? undefined : (item as AcpRegistryAgent);
+              const installed = isCustom
+                ? (item as AcpAgentConfig)
+                : registryConfig(item as AcpRegistryAgent);
+              const name = isCustom ? (item as AcpAgentConfig).name : (item as AcpRegistryAgent).name;
+              const version = isCustom ? undefined : (item as AcpRegistryAgent).version;
+              const description = isCustom
+                ? (item as AcpAgentConfig).command
+                : (item as AcpRegistryAgent).description;
+              const unavailableReason = entry
+                ? registryUnavailableReason(entry, supportedBinaryTarget)
+                : undefined;
+              const installable = !isCustom && !unavailableReason;
+              return (
+                <AcpAgentCard
+                  key={`${isCustom ? 'custom' : 'registry'}-${item.id}`}
+                  isCustom={isCustom}
+                  item={item}
+                  installed={installed}
+                  openDetails={openDetails}
+                  entry={entry}
+                  setError={setError}
+                  installable={installable}
+                  unavailableReason={unavailableReason}
+                  name={name}
+                  version={version}
+                  description={description}
+                  busyId={busyId}
+                  install={install}
+                  registryDistribution={registryDistribution}
+                />
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-subtext0">
+            Installing an <code className="font-mono">npx</code> or{' '}
+            <code className="font-mono">uvx</code> agent saves its launch config; the package downloads
+            on first launch. Native packages for {supportedBinaryTarget || 'this platform'} are
+            downloaded and extracted into Stage0’s local data folder. Uninstalling removes the launch
+            config; downloaded package files may remain.
+          </p>
+        </>
+      )}
 
       {detailAgent && (
         <AcpAgentDetails
@@ -249,6 +271,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
             lastSuccessfulSignIn: account.lastSuccessfulSignIn,
             isCheckingAuth: account.isCheckingAuth,
             supportsAuthStatus: account.supportsAuthStatus,
+            supportsAuthLogout: account.supportsAuthLogout,
             authMethods: account.authMethods,
             selectedAuthMethod: account.selectedAuthMethod,
             setSelectedAuthMethod: account.setSelectedAuthMethod,
@@ -268,7 +291,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
         />
       )}
 
-      {isCustomOpen && (
+      {!isOnboarding && isCustomOpen && (
         <AcpAgentModalForm
           setIsCustomOpen={setIsCustomOpen}
           addCustomAgent={customForm.addCustomAgent}

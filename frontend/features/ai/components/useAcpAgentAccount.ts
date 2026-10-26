@@ -7,6 +7,19 @@ import type { AuthMethod } from '../types/AuthMethod';
 import { saveLastSuccessfulSignIn, type AcpLastSuccessfulSignIn } from '../utils/acpAuthHistory';
 import type { AcpAgentAccountContext } from './AcpAgentAccountContext';
 
+function preferredAuthMethod(methods: AuthMethod[], authStatus: AcpAgentConnectionInfo['authStatus']) {
+  const accountLabel = `${authStatus?.kind || ''} ${authStatus?.label || ''}`;
+  if (/api[\s-]*key/i.test(accountLabel)) {
+    const apiKeyMethod = methods.find((method) => method.id === 'api-key');
+    if (apiKeyMethod) return apiKeyMethod.id;
+  }
+  const chatGptMethod = methods.find((method) =>
+    /chat\s*-?gpt/i.test(`${method.name || ''} ${method.id}`)
+  );
+  const currentMethod = /chat\s*-?gpt/i.test(accountLabel) ? chatGptMethod : undefined;
+  return currentMethod?.id || chatGptMethod?.id || methods[0]?.id || '';
+}
+
 export function useAcpAgentAccount({
   setError,
   detailAgent,
@@ -19,6 +32,8 @@ export function useAcpAgentAccount({
   const [authStatus, setAuthStatus] = useState<AcpAgentConnectionInfo['authStatus']>(null);
 
   const [supportsAuthStatus, setSupportsAuthStatus] = useState(false);
+
+  const [supportsAuthLogout, setSupportsAuthLogout] = useState(false);
 
   const [reportedAgentInfo, setReportedAgentInfo] =
     useState<AcpAgentConnectionInfo['agentInfo']>(null);
@@ -35,9 +50,10 @@ export function useAcpAgentAccount({
 
   const applyConnectionInfo = useCallback((info: AcpAgentConnectionInfo) => {
     setAuthMethods(info.authMethods);
-    setSelectedAuthMethod(info.authMethods[0]?.id || '');
+    setSelectedAuthMethod(preferredAuthMethod(info.authMethods, info.authStatus));
     setAuthStatus(info.authStatus);
     setSupportsAuthStatus(info.supportsAuthStatus);
+    setSupportsAuthLogout(info.supportsAuthLogout);
     setReportedAgentInfo(info.agentInfo);
   }, []);
 
@@ -57,6 +73,7 @@ export function useAcpAgentAccount({
           setAuthMethods([]);
           setAuthStatus(null);
           setSupportsAuthStatus(false);
+          setSupportsAuthLogout(false);
           setReportedAgentInfo(null);
           setError(`Could not check this agent's account status: ${String(cause)}`);
         }
@@ -73,6 +90,7 @@ export function useAcpAgentAccount({
     setAuthMethods([]);
     setAuthStatus(null);
     setSupportsAuthStatus(false);
+    setSupportsAuthLogout(false);
     setReportedAgentInfo(null);
     if (appServices.platform.capabilities.externalAgents) void refreshAgentConnection(detailAgent);
     return () => {
@@ -89,11 +107,18 @@ export function useAcpAgentAccount({
       const isGoogleSignIn = /google/i.test(
         `${method?.name || ''} ${method?.id || selectedAuthMethod}`
       );
+      const shouldLogoutFirst = supportsAuthLogout && authStatus?.kind !== 'none';
       setNotice(
-        isGoogleSignIn
+        shouldLogoutFirst
+          ? 'Signing out of the current agent account before starting a new sign-in…'
+          : isGoogleSignIn
           ? 'Starting Google sign-in. Antigravity should open your default browser if a new login is needed…'
           : 'Starting the agent sign-in flow…'
       );
+      if (shouldLogoutFirst) {
+        await appServices.externalAgents.acpAgentLogout({ config: detailAgent });
+        setAuthStatus(null);
+      }
       const result = await appServices.externalAgents.acpAgentAuthenticate({ config: detailAgent, methodId: selectedAuthMethod });
       const completed: AcpLastSuccessfulSignIn = {
         completedAt: new Date().toISOString(),
@@ -136,6 +161,7 @@ export function useAcpAgentAccount({
     lastSuccessfulSignIn,
     isCheckingAuth,
     supportsAuthStatus,
+    supportsAuthLogout,
     authMethods,
     selectedAuthMethod,
     selectedAuthOption,

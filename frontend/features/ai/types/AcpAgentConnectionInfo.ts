@@ -16,6 +16,7 @@ export interface AcpAgentConnectionInfo {
     };
   } | null;
   supportsAuthStatus: boolean;
+  supportsAuthLogout: boolean;
   agentInfo: {
     name?: string;
     title?: string;

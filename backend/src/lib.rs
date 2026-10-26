@@ -284,6 +284,7 @@ pub fn run() {
             features::ai::acp::acp_agent_auth_methods,
             features::ai::acp::acp_agent_connection_info,
             features::ai::acp::acp_agent_authenticate,
+            features::ai::acp::acp_agent_logout,
             features::ai::acp::acp_agent_prompt,
             features::ai::acp::review_config::acp_agent_review_config_options,
             commands::start_ai_review,

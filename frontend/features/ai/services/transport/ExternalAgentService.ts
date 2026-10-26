@@ -11,6 +11,7 @@ export interface ExternalAgentService {
   }): Promise<{
     authStatus: AcpAgentConnectionInfo["authStatus"];
   }>;
+  acpAgentLogout(input: { config: AcpAgentConfig }): Promise<void>;
   acpAgentConnectionInfo(input: {
     config: AcpAgentConfig;
   }): Promise<AcpAgentConnectionInfo>;

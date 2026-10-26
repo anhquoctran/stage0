@@ -138,7 +138,7 @@ test('every named feature operation preserves its command, input, progress callb
     }
     assert.equal(Object.keys(service).length, expected.size);
   }
-  assert.equal(operations.size, 131); // Includes desktop chrome discovery and native title-bar dragging.
+  assert.equal(operations.size, 132); // Includes desktop chrome and ACP logout operations.
 });
 
 

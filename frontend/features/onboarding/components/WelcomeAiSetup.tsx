@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AiMcpTab } from '../../ai/components/AiMcpTab';
-import { BotReviewersTab } from '../../ai/components/BotReviewersTab';
 import { ExternalAgentsTab } from '../../ai/components/ExternalAgentsTab';
+import { OnboardingReviewerSetup } from './OnboardingReviewerSetup';
 import type { WelcomeAiSetupProps } from '../types/WelcomeAiSetupProps';
 
 export function WelcomeAiSetup({ setup }: WelcomeAiSetupProps) {
@@ -29,10 +29,10 @@ export function WelcomeAiSetup({ setup }: WelcomeAiSetupProps) {
         </div>
         {route === 'provider' ? <AiMcpTab activeView="providers" draftSettings={setup.draft}
           draftAiConfig={setup.draft.aiConfig} onUpdateAiConfig={setup.draft.updateAiConfig} /> :
-          <ExternalAgentsTab draftSettings={setup.draft} />}
+          <ExternalAgentsTab draftSettings={setup.draft} isOnboarding />}
       </> : <div className="space-y-3 rounded-sm">
-        <p className="text-xs leading-5 text-subtext0">Create and save your first enabled custom reviewer. Built-in reviewer presets do not satisfy this requirement.</p>
-        <BotReviewersTab draftSettings={setup.draft} />
+        <p className="text-xs leading-5 text-subtext0">Add one enabled reviewer to finish AI setup. You can customize it later.</p>
+        <OnboardingReviewerSetup draftSettings={setup.draft} hasSavedRequiredReviewer={setup.hasSavedRequiredReviewer} />
       </div>}
       <div className="flex flex-wrap items-center gap-2 rounded-sm">
         <button type="button" onClick={() => { void setup.save(); }} disabled={!setup.hasChanges}
@@ -48,11 +48,11 @@ export function WelcomeAiSetup({ setup }: WelcomeAiSetupProps) {
     {setup.error && <p role="alert" className="text-xs text-red">{setup.error}</p>}
     <div role="status" className="space-y-1 rounded-sm bg-surface0 p-3 text-xs leading-5 text-subtext1">
       <p>{setup.connections.length ? `Saved connection: ${setup.connections.join(', ')}.` : 'AI connection required — unsaved drafts do not count.'}</p>
-      <p>{setup.hasSavedRequiredReviewer ? 'First custom reviewer is saved and enabled.' : setup.hasRequiredReviewer ? 'First reviewer is drafted; save AI setup to continue.' : 'Enabled custom reviewer required — add one in the First reviewer step.'}</p>
+      {step === 'connection' && <p>{setup.hasSavedRequiredReviewer ? 'First reviewer is saved and enabled.' : setup.hasRequiredReviewer ? 'First reviewer is drafted; save AI setup to continue.' : 'First enabled reviewer required — add one in the First reviewer step.'}</p>}
     </div>
-    <p className="text-xs leading-5 text-subtext0">
+    {step === 'connection' && <p className="text-xs leading-5 text-subtext0">
       API keys are stored in your OS keychain; Check saved API keys reads them. For ACP, add an agent and sign in through Manage if needed.
       Saving only stores your setup—it doesn’t test access, send repository code, or run a review.
-    </p>
+    </p>}
   </div>;
 }

@@ -9,6 +9,7 @@ export function AcpAgentAccountSection({
     lastSuccessfulSignIn,
     isCheckingAuth,
     supportsAuthStatus,
+    supportsAuthLogout,
     authMethods,
     selectedAuthMethod,
     setSelectedAuthMethod,
@@ -89,15 +90,19 @@ export function AcpAgentAccountSection({
           />
           <button
             type="button"
-            disabled={busyId === agentId || !appServices.platform.capabilities.externalAgents || !isProtocolAuthMethod(selectedAuthOption)}
+            disabled={busyId === agentId || !appServices.platform.capabilities.externalAgents || !isProtocolAuthMethod(selectedAuthOption) || Boolean(authStatus && authStatus.kind !== 'none' && !supportsAuthLogout)}
             onClick={() => void signIn()}
             className="px-3 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white rounded-sm shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {busyId === agentId
               ? 'Connecting…'
-              : authStatus && authStatus.kind !== 'none'
+              : authStatus && authStatus.kind !== 'none' && supportsAuthLogout
                 ? 'Change account'
-                : 'Connect account'}
+                : authStatus && authStatus.kind !== 'none'
+                  ? 'Change account unavailable'
+                  : supportsAuthLogout
+                    ? 'Sign in / change account'
+                    : 'Connect account'}
           </button>
         </div>
       ) : (
@@ -107,6 +112,17 @@ export function AcpAgentAccountSection({
             you can still try sending a prompt.
           </p>
         )
+      )}
+      {authStatus && authStatus.kind !== 'none' && !supportsAuthLogout && (
+        <p className="text-[11px] text-subtext0">
+          This agent does not support ACP logout, so Stage0 cannot clear its current account before signing in again.
+        </p>
+      )}
+      {supportsAuthLogout && (
+        <p className="text-[11px] text-subtext0">
+          Changing accounts signs out through the agent. For Codex, other clients using the same
+          CODEX_HOME may also need to sign in again.
+        </p>
       )}
       {selectedAuthOption?.type === 'terminal' && (
         <p className="text-[11px] text-yellow">

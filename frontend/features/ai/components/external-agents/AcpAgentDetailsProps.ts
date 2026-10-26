@@ -32,6 +32,7 @@ export interface AcpAgentDetailsProps {
     lastSuccessfulSignIn: AcpLastSuccessfulSignIn | null;
     isCheckingAuth: boolean;
     supportsAuthStatus: boolean;
+    supportsAuthLogout: boolean;
     authMethods: AuthMethod[];
     selectedAuthMethod: string;
     setSelectedAuthMethod: React.Dispatch<React.SetStateAction<string>>;

@@ -4,6 +4,7 @@ import type { ExternalAgentService } from './ExternalAgentService';
 export function createExternalAgentService(transport: CommandTransport): ExternalAgentService {
   return {
     acpAgentAuthenticate: (input) => transport.executeCommand('acp_agent_authenticate', input),
+    acpAgentLogout: (input) => transport.executeCommand('acp_agent_logout', input),
     acpAgentConnectionInfo: (input) => transport.executeCommand('acp_agent_connection_info', input),
     acpAgentPrompt: (input) => transport.executeCommand('acp_agent_prompt', input),
     acpAgentReviewConfigOptions: (input) => transport.executeCommand('acp_agent_review_config_options', input),

@@ -22,16 +22,24 @@ const registryIconCache = new Map<string, Promise<string>>();
 function fetchRegistryIcon(iconUrl: string): Promise<string> {
   let cached = registryIconCache.get(iconUrl);
   if (!cached) {
-    cached = getApplicationServices().externalAgents.acpFetchRegistryIcon({ iconUrl }).catch((error: unknown) => {
-      registryIconCache.delete(iconUrl);
-      throw error;
-    });
+    cached = getApplicationServices().externalAgents.acpFetchRegistryIcon({ iconUrl }).catch(
+      (error: unknown) => {
+        registryIconCache.delete(iconUrl);
+        throw error;
+      }
+    );
     registryIconCache.set(iconUrl, cached);
   }
   return cached;
 }
 
-export function AgentIcon({ icon }: { icon?: string }) {
+export function AgentIcon({
+  icon,
+  className = 'h-4 w-4',
+}: {
+  icon?: string;
+  className?: string;
+}) {
   const iconUrl = isRegistryIconUrl(icon) ? icon : undefined;
   const [iconData, setIconData] = useState<{ sourceUrl: string; dataUrl: string }>();
   const [loadedDataUrl, setLoadedDataUrl] = useState<string>();
@@ -47,20 +55,39 @@ export function AgentIcon({ icon }: { icon?: string }) {
   }, [iconUrl]);
 
   const dataUrl = iconData && iconData.sourceUrl === iconUrl ? iconData.dataUrl : undefined;
-  if (!iconUrl || failedSourceUrl === iconUrl || !dataUrl) return <Bot aria-hidden="true" className="h-4 w-4 shrink-0 text-subtext0" />;
+  if (!iconUrl || failedSourceUrl === iconUrl || !dataUrl) {
+    return <Bot aria-hidden="true" className={`${className} shrink-0 text-subtext0`} />;
+  }
 
   const iconMask = `url("${dataUrl}")`;
-  return <>
-    <img src={dataUrl} alt="" aria-hidden="true" onLoad={() => setLoadedDataUrl(dataUrl)} onError={() => setFailedSourceUrl(iconUrl)} className="hidden" />
-    {loadedDataUrl === dataUrl ? <span aria-hidden="true" className="h-4 w-4 shrink-0 bg-subtext0" style={{
-      maskImage: iconMask,
-      WebkitMaskImage: iconMask,
-      maskRepeat: 'no-repeat',
-      WebkitMaskRepeat: 'no-repeat',
-      maskPosition: 'center',
-      WebkitMaskPosition: 'center',
-      maskSize: 'contain',
-      WebkitMaskSize: 'contain',
-    }} /> : <Bot aria-hidden="true" className="h-4 w-4 shrink-0 text-subtext0" />}
-  </>;
+  return (
+    <>
+      <img
+        src={dataUrl}
+        alt=""
+        aria-hidden="true"
+        onLoad={() => setLoadedDataUrl(dataUrl)}
+        onError={() => setFailedSourceUrl(iconUrl)}
+        className="hidden"
+      />
+      {loadedDataUrl === dataUrl ? (
+        <span
+          aria-hidden="true"
+          className={`${className} shrink-0 bg-subtext0`}
+          style={{
+            maskImage: iconMask,
+            WebkitMaskImage: iconMask,
+            maskRepeat: 'no-repeat',
+            WebkitMaskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            WebkitMaskPosition: 'center',
+            maskSize: 'contain',
+            WebkitMaskSize: 'contain',
+          }}
+        />
+      ) : (
+        <Bot aria-hidden="true" className={`${className} shrink-0 text-subtext0`} />
+      )}
+    </>
+  );
 }

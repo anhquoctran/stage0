@@ -1,7 +1,55 @@
-use super::auth::{sanitize_agent_info, sanitize_auth_method, sanitize_auth_status};
+use super::auth::{
+    sanitize_agent_info, sanitize_auth_method, sanitize_auth_status, supports_auth_logout,
+};
 use super::review_config::filter_review_config_options;
 use super::validate_review_config_overrides;
 use serde_json::json;
+
+#[test]
+fn auth_logout_capability_requires_the_advertised_object() {
+    assert!(supports_auth_logout(&json!({
+        "agentCapabilities": {"auth": {"logout": {}}}
+    })));
+    assert!(!supports_auth_logout(&json!({
+        "agentCapabilities": {"auth": {"logout": null}}
+    })));
+    assert!(!supports_auth_logout(
+        &json!({"agentCapabilities": {"auth": {}}})
+    ));
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn acp_agent_logout_uses_the_advertised_protocol_method() {
+    let script = r#"
+while IFS= read -r request; do
+  case "$request" in
+*'"method":"initialize"'*)
+  printf '%s\n' '{"jsonrpc":"2.0","id":0,"result":{"protocolVersion":1,"agentCapabilities":{"auth":{"logout":{}}}}}' ;;
+*'"method":"logout"'*)
+  printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{}}' ;;
+  esac
+done
+"#.lines().map(str::trim).collect::<Vec<_>>().join(" ");
+    let config = super::AcpAgentConfig {
+        id: "fixture".into(),
+        name: "Fixture".into(),
+        version: None,
+        description: None,
+        source: "custom".into(),
+        command: "/bin/sh".into(),
+        launch_mode: None,
+        args: vec!["-c".into(), script.into()],
+    };
+
+    tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        super::auth::acp_agent_logout(config),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+}
 
 #[cfg(unix)]
 #[tokio::test]

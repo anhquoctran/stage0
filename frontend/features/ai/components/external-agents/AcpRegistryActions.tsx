@@ -14,6 +14,7 @@ export function AcpRegistryActions({
   setIsLoading,
   setRegistry,
   setSupportedBinaryTarget,
+  isOnboarding = false,
 }: AcpRegistryActionsProps) {
   const appServices = useApplicationServices();
   return (
@@ -31,13 +32,15 @@ export function AcpRegistryActions({
       )}
       <div className="flex flex-wrap items-center gap-2">
         <AcpRegistryAbout />
-        <button
-          type="button"
-          onClick={() => setIsCustomOpen(true)}
-          className="flex items-center gap-1.5 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
-        >
-          <Plus className="h-3.5 w-3.5" /> Add custom
-        </button>
+        {!isOnboarding && (
+          <button
+            type="button"
+            onClick={() => setIsCustomOpen(true)}
+            className="flex items-center gap-1.5 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add custom
+          </button>
+        )}
         <button
           type="button"
           disabled={isLoading}

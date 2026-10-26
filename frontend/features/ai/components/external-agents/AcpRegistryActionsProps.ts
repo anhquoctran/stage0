@@ -9,4 +9,5 @@ export interface AcpRegistryActionsProps {
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setRegistry: React.Dispatch<React.SetStateAction<AcpRegistryAgent[]>>;
   setSupportedBinaryTarget: React.Dispatch<React.SetStateAction<string | undefined>>;
+  isOnboarding?: boolean;
 }
