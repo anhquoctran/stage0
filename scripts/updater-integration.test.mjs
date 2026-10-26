@@ -46,6 +46,8 @@ test('mounting the main window initializes repositories and notifications withou
       } },
       '@tauri-apps/api/event': { listen: async (name, handler) => { listeners.set(name, handler); return () => listeners.delete(name); } },
       './components/layout/MainLayout': { MainLayout: () => null },
+      './hooks/useDesktopWindowChrome': { useDesktopWindowChrome: () => true },
+      '../features/virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: (selector) => selector({ currentRepoId: 'repo-a', currentRepoPath: '/fixture', isLoadingSessions: false }) },
       '../features/notifications/services/notificationService': { notificationService: { init: async () => { notified++; }, destroy: () => { destroyed++; } } },
       '../features/notifications/services/notificationBadgeService': { syncUnreadBadge: async () => {} },
       '../features/notifications/store/useNotificationStore': { useNotificationStore: (selector) => selector({ unreadCount: 0 }) },

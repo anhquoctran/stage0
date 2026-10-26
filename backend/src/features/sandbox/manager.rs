@@ -121,6 +121,7 @@ impl SandboxManager {
         base: &str,
         compare: &str,
     ) -> Result<SandboxInstanceInfo, String> {
+        let _activity = crate::common::activity::OperationLease::acquire()?;
         let _creation_guard = self
             .creation_lock
             .lock()
@@ -141,6 +142,7 @@ impl SandboxManager {
     }
 
     pub fn destroy_instance(&self, instance_id: &str) -> Result<(), String> {
+        let _activity = crate::common::activity::OperationLease::acquire()?;
         let instance = {
             let map = self.instances_lock();
             map.get(instance_id).cloned()

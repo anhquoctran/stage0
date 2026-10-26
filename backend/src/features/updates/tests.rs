@@ -3,7 +3,9 @@ use tauri::Url;
 
 #[test]
 fn daily_check_survives_restarts_and_recovers_from_clock_changes() {
-    let now = chrono::DateTime::parse_from_rfc3339("2026-10-26T12:00:00Z").unwrap().with_timezone(&chrono::Utc);
+    let now = chrono::DateTime::parse_from_rfc3339("2026-10-26T12:00:00Z")
+        .unwrap()
+        .with_timezone(&chrono::Utc);
     assert!(super::policy::check_due(None, now));
     assert!(super::policy::check_due(Some("invalid"), now));
     assert!(!super::policy::check_due(Some("2026-10-26T11:59:00Z"), now));

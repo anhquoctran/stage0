@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
+import { loadWithMocks } from './helpers/componentHarness.mjs';
+
+const version = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 test('MenuBarHelpMenu renders View release notes menu item above About Stage0', () => {
   const menuSrc = readFileSync(
@@ -58,24 +62,20 @@ test('CSS provides rich markdown styling for images and tables', () => {
   assert.match(cssSrc, /\.markdown-preview table/);
 });
 
-test('RELEASE_NOTES.md exists and is scoped to the current version v0.1.11', () => {
+test('RELEASE_NOTES.md exists and is scoped to the current package version', () => {
   const filePath = new URL('../RELEASE_NOTES.md', import.meta.url);
   assert.ok(existsSync(filePath), 'RELEASE_NOTES.md must exist in root');
 
   const notesSrc = readFileSync(filePath, 'utf-8');
-  assert.match(notesSrc, /Stage0 v0\.1\.11 Release Notes/);
-  assert.match(notesSrc, /Current Version Release Notes|current release \(v0\.1\.11\)/);
+  assert.match(notesSrc, new RegExp(`Stage0 v${escapeRegex(version)} Release Notes`));
+  assert.match(notesSrc, new RegExp(`Current Version Release Notes|current release \\(v${escapeRegex(version)}\\)`));
   assert.match(notesSrc, /Compatibility Matrix/);
 });
 
 test('DEFAULT_RELEASE_NOTES provides rich markdown for current version', () => {
-  const notesSrc = readFileSync(
-    new URL('../frontend/features/about/config/releaseNotes.ts', import.meta.url),
-    'utf-8'
-  );
-
-  assert.match(notesSrc, /Stage0 v0\.1\.11 Release Notes/);
-  assert.match(notesSrc, /DEFAULT_RELEASE_NOTES/);
+  const { DEFAULT_RELEASE_NOTES } = loadWithMocks(new URL('../frontend/features/about/config/releaseNotes.ts', import.meta.url), {});
+  assert.match(DEFAULT_RELEASE_NOTES, new RegExp(`Stage0 v${escapeRegex(version)} Release Notes`));
+  assert.equal(DEFAULT_RELEASE_NOTES, readFileSync(new URL('../RELEASE_NOTES.md', import.meta.url), 'utf8'));
 });
 
 test('Backend exposes get_release_notes command and tauri.conf.json bundles RELEASE_NOTES.md', () => {

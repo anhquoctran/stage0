@@ -1,7 +1,11 @@
 use super::{policy, runtime::UpdateRuntime, transport, update_status::UpdateStatus};
 use crate::{
-    common::activity::InstallationLease, core::db::Database,
-    features::preferences::PreferencesManager,
+    common::activity::InstallationLease,
+    core::db::Database,
+    features::{
+        preferences::PreferencesManager,
+        sandbox::{SandboxManager, SandboxType},
+    },
 };
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
@@ -24,7 +28,9 @@ pub(super) async fn check(app: &AppHandle) -> Result<UpdateStatus, String> {
         .lock()
         .unwrap_or_else(|error| error.into_inner()) = None;
     let checked_at = chrono::Utc::now().to_rfc3339();
-    let _ = app.state::<Database>().set_setting(LAST_CHECK_SETTING, &checked_at);
+    let _ = app
+        .state::<Database>()
+        .set_setting(LAST_CHECK_SETTING, &checked_at);
     runtime.change(app, |status| {
         status.phase = "checking".into();
         status.version = None;
@@ -107,12 +113,25 @@ pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Resu
     }
     // This reservation and operation acquisition use the same atomic gate.
     let installation = InstallationLease::acquire()?;
-    let checkpoint_busy: i32 = app.state::<Database>()
+    // Updater installation can exit Windows directly. Require physical sandboxes
+    // to be closed first, rather than bypass their normal resource cleanup.
+    if app
+        .state::<SandboxManager>()
+        .list_active_instances()
+        .iter()
+        .any(|instance| instance.adapter_type != SandboxType::InMemory)
+    {
+        return Err("Close Local Worktree and Docker instances in Sandbox settings before installing the update.".into());
+    }
+    let checkpoint_busy: i32 = app
+        .state::<Database>()
         .conn()
         .query_row("PRAGMA wal_checkpoint(FULL);", [], |row| row.get(0))
         .map_err(|_| "Could not flush Stage0's database. Installation was not started.")?;
     if checkpoint_busy != 0 {
-        return Err("Stage0's database is busy. Wait for pending writes and retry installation.".into());
+        return Err(
+            "Stage0's database is busy. Wait for pending writes and retry installation.".into(),
+        );
     }
     let (update, bytes) = runtime
         .pending
@@ -168,7 +187,12 @@ pub fn start_background_checks(app: &AppHandle) {
                 })
                 .unwrap_or(false);
             let status = app.state::<UpdateRuntime>().snapshot();
-            let checked_at = status.checked_at.clone().or_else(|| app.state::<Database>().get_setting(LAST_CHECK_SETTING).ok().flatten());
+            let checked_at = status.checked_at.clone().or_else(|| {
+                app.state::<Database>()
+                    .get_setting(LAST_CHECK_SETTING)
+                    .ok()
+                    .flatten()
+            });
             let due = policy::check_due(checked_at.as_deref(), chrono::Utc::now());
             if enabled && due && matches!(status.phase.as_str(), "idle" | "current" | "error") {
                 let _ = check(&app).await;

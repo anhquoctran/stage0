@@ -132,6 +132,23 @@ The desktop build runs the TypeScript check and writes Tauri bundle artifacts un
 
 Every project build command increments the SemVer PATCH version once before building and synchronizes the package, Cargo, Tauri, and About metadata. This also applies to web-only builds; if a build fails, its version increment is retained.
 
+## Software updates and releases
+
+Installed Stage0 builds check GitHub Releases daily, with an option to disable
+automatic checking in **About Stage0**. Downloads and installation require user
+actions. Packages and their signed versions are verified before installation;
+active reviews, Git operations and external agent work block installation.
+
+In-app updates support Linux x86_64 AppImage, Windows x86_64 NSIS, and macOS
+Apple Silicon/Intel applications. Debian/RPM installations use manual or package
+manager upgrades. Older Stage0 builds need one manual installation of the first
+updater-enabled release.
+
+The release workflow builds a fixed `vMAJOR.MINOR.PATCH` tag on all four targets
+and publishes only after every updater package passes signature verification.
+It calls Tauri directly, without the local build script's version bump. See the
+[release and signing procedure](docs/architecture/software_updater.md).
+
 ## Architecture
 
 ```mermaid

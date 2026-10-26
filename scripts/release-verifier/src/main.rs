@@ -5,17 +5,28 @@ use serde_json::Value;
 use std::{error::Error, fs, path::Path};
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let directory = std::env::args()
-        .nth(1)
-        .ok_or("Pass the release asset directory")?;
-    let manifest: Value =
-        serde_json::from_slice(&fs::read(Path::new(&directory).join("latest.json"))?)?;
+    let arguments = std::env::args().skip(1).collect::<Vec<_>>();
     let config: Value = serde_json::from_slice(&fs::read("backend/tauri.conf.json")?)?;
     let key = config["plugins"]["updater"]["pubkey"]
         .as_str()
         .ok_or("Missing updater public key")?;
     let key = String::from_utf8(STANDARD.decode(key)?)?;
     let key = PublicKey::decode(&key)?;
+    if let [flag, package, version] = arguments.as_slice() {
+        if flag != "--package" {
+            return Err("Use --package PATH VERSION".into());
+        }
+        let bytes = fs::read(package)?;
+        let signature = fs::read_to_string(format!("{package}.sig"))?;
+        verify_package(&key, &bytes, signature.trim(), version)?;
+        println!("Verified signed package for version {version}: {package}");
+        return Ok(());
+    }
+    let [directory] = arguments.as_slice() else {
+        return Err("Pass an asset directory, or --package PATH VERSION".into());
+    };
+    let manifest: Value =
+        serde_json::from_slice(&fs::read(Path::new(directory).join("latest.json"))?)?;
     let version = manifest["version"]
         .as_str()
         .ok_or("Missing release version")?;

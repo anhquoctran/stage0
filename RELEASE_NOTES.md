@@ -1,6 +1,7 @@
-# Stage0 v0.1.12
+# Stage0 v0.1.12 Release Notes
 
 Stage0 is a local-first Virtual Merge Request and conflict prediction sandbox.
+This document describes the current release (v0.1.12).
 
 ## Highlights
 
@@ -14,6 +15,16 @@ Stage0 is a local-first Virtual Merge Request and conflict prediction sandbox.
 - Harden reviewer custom instructions and discussion replies with scoped tools, bounded context, thread revision checks and authoritative publication guards.
 
 ## Installation
+
+### Compatibility Matrix
+
+| Platform | CPU | Installer | In-app updates |
+|---|---|---|---|
+| Linux | x86_64 | AppImage | Supported |
+| Linux | x86_64 | Debian / RPM | Manual or package manager |
+| Windows | x86_64 | NSIS | Supported |
+| macOS | Apple Silicon | DMG / app | Supported |
+| macOS | Intel | DMG / app | Supported |
 
 Choose the asset matching your platform and CPU. Existing versions without an updater require a manual installation of this release once.
 

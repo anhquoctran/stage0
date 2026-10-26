@@ -19,7 +19,7 @@ menu defaults are not the runtime source of truth. See [keymaps](keymaps.md).
 | `features` | UI components, Zustand stores, services, types and constants grouped by feature. | Feature command handlers, domain modules and SQLite operations grouped by feature. |
 
 Features currently include About, AI, credentials, Git, notifications,
-performance and Virtual MR. The backend also has a sandbox feature; its
+performance, software updates and Virtual MR. The backend also has a sandbox feature; its
 frontend controls live with AI preferences. Preferences is a frontend feature
 that composes settings components from their owning features.
 

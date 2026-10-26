@@ -44,6 +44,9 @@ this does not claim to discover/save arbitrary editor drafts. `common/activity/`
 atomically reserves installation only when there is no active work. Reviews, Git
 mutation leases, bounded subprocesses and ACP process lifetimes hold operation
 leases. New work in those paths is rejected after installation is reserved.
+Local Worktree/Docker sandbox instances must be closed through Sandbox settings
+before installation, including on Windows where the installer exits directly.
+Instance creation/destruction also participates in the activity gate.
 SQLite's committed state is checkpointed before replacement; storage locks remain
 held until process exit. All windows display an installation overlay. A normal
 installation failure releases the gate and preserves verified bytes for retry.
