@@ -21,10 +21,11 @@ fn role_catalog_is_allowlisted_and_custom_instructions_stay_below_fixed_policy()
     request.instructions = "Prefer checking authorization edge cases.".into();
     let prompt = build_system_prompt(&request);
     let role_index = prompt.find("Stage0-managed reviewer role prompt").unwrap();
-    let custom_index = prompt.find("User additional instructions").unwrap();
-    assert!(role_index < custom_index);
-    let policy_index = prompt.find("UNTRUSTED DATA").unwrap();
-    assert!(custom_index < policy_index);
+    assert!(prompt.contains("UNTRUSTED DATA"));
+    assert!(role_index < prompt.find("UNTRUSTED DATA").unwrap());
     assert!(prompt.contains("Security Reviewer"));
-    assert!(prompt.contains("Prefer checking authorization edge cases."));
+    assert!(!prompt.contains(&request.instructions));
+    let preferences = super::super::prompt::review_preferences(&request);
+    assert_eq!(preferences["text"], request.instructions);
+    assert_eq!(preferences["authority"], "review_preferences_only");
 }

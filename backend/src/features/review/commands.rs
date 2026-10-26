@@ -101,6 +101,7 @@ pub async fn start_ai_review(
         _ => return Err("Unsupported review execution mode".into()),
     };
     let session_id = request.session_id.clone();
+    super::runtime::validate_request(&app.state::<Database>(), &request)?;
     let (repo, base, head) = {
         let db = app.state::<Database>();
         let conn = db.conn();
@@ -163,6 +164,7 @@ pub async fn start_ai_review(
         model: run_model,
         reviewer_id: request.reviewer_id.clone(),
         reviewer_name: request.reviewer_name.clone(),
+        reply_discussion_id: request.reply_discussion_id.clone(),
         endpoint,
         snapshot: snapshot.clone(),
         status: "running".into(),
@@ -181,10 +183,10 @@ pub async fn start_ai_review(
         finished_at: None,
         published: false,
         prompt_version: format!(
-            "review-v1:{:x}",
+            "review-v2:{:x}",
             Sha256::digest(
                 format!(
-                    "{}{}{}{}{}",
+                    "{}{}{}{}{}{:?}",
                     super::runtime::SYSTEM,
                     request.instructions,
                     policy,
@@ -198,6 +200,7 @@ pub async fn start_ai_review(
                             agent.version.as_deref().unwrap_or_default()
                         ))
                         .unwrap_or_default(),
+                    request.reply_discussion_id,
                 )
                 .as_bytes()
             )

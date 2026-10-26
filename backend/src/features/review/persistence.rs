@@ -7,11 +7,13 @@ pub enum ReviewDiscussionAction {
     Reply {
         discussion_id: String,
         target_comment_id: String,
+        discussion_revision: String,
         body: String,
     },
     Resolve {
         discussion_id: String,
         target_comment_id: String,
+        discussion_revision: String,
         file_path: String,
         side: String,
         start_line: usize,
@@ -105,8 +107,27 @@ impl Database {
         if !matches!(run.status.as_str(), "completed" | "partial") {
             return Err("Only finished review findings may be published".into());
         }
+        if let Some(target) = run.reply_discussion_id.as_deref() {
+            if run.decision.as_deref() != Some("comment") || !run.findings.is_empty() || run.generated_description.is_some()
+                || actions.iter().any(|action| !matches!(action, ReviewDiscussionAction::Reply { discussion_id, .. } if discussion_id == target)) {
+                return Err("Discussion reply runs cannot publish MR verdicts, findings, descriptions or other discussion actions".into());
+            }
+        }
         let mut conn = self.conn();
         let tx = conn.transaction().map_err(|e| e.to_string())?;
+        if run.reply_discussion_id.is_some() {
+            let reviewer = run
+                .reviewer_id
+                .as_deref()
+                .ok_or("Discussion replies require an assigned reviewer")?;
+            let assigned: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM virtual_mr_session_reviewers WHERE session_id=?1 AND agent_id=?2)", [&run.session_id, reviewer], |row| row.get(0)).map_err(|e| e.to_string())?;
+            if !assigned {
+                return Err(
+                    "The reviewer was unassigned before the discussion reply could be posted"
+                        .into(),
+                );
+            }
+        }
         let reviewer = run.reviewer_name.as_deref().unwrap_or(&run.model);
         let author_id = run.reviewer_id.as_deref().unwrap_or(&run.id);
         let author_name = format!("Stage0 AI ({reviewer})");
@@ -131,8 +152,16 @@ impl Database {
                 ReviewDiscussionAction::Reply {
                     discussion_id,
                     target_comment_id,
+                    discussion_revision,
                     body,
                 } => {
+                    if super::discussion_revision::current(&tx, discussion_id)?
+                        != *discussion_revision
+                    {
+                        return Err(
+                            "The discussion changed before the AI reply could be posted".into()
+                        );
+                    }
                     let (session_id, is_resolved, latest_id): (String, bool, Option<String>) = tx.query_row(
                         "SELECT d.session_id, d.is_resolved, (SELECT c.id FROM virtual_mr_comments c WHERE c.discussion_id=d.id ORDER BY c.rowid DESC LIMIT 1) FROM virtual_mr_discussions d WHERE d.id=?1",
                         [discussion_id],
@@ -169,6 +198,7 @@ impl Database {
                 ReviewDiscussionAction::Resolve {
                     discussion_id,
                     target_comment_id,
+                    discussion_revision,
                     file_path,
                     side,
                     start_line,
@@ -177,6 +207,12 @@ impl Database {
                     body,
                     reverted_commit_id,
                 } => {
+                    if side != "head"
+                        || super::discussion_revision::current(&tx, discussion_id)?
+                            != *discussion_revision
+                    {
+                        return Err("The discussion changed or resolution evidence is not current-head evidence".into());
+                    }
                     let (session_id, stored_path, is_resolved, latest_id): (String, Option<String>, bool, Option<String>) = tx.query_row(
                         "SELECT d.session_id, d.file_path, d.is_resolved, (SELECT c.id FROM virtual_mr_comments c WHERE c.discussion_id=d.id ORDER BY c.rowid DESC LIMIT 1) FROM virtual_mr_discussions d WHERE d.id=?1",
                         [discussion_id],
@@ -224,7 +260,11 @@ impl Database {
                 }
             }
         }
-        if let Some(reviewer_id) = run.reviewer_id.as_deref() {
+        if let Some(reviewer_id) = run
+            .reviewer_id
+            .as_deref()
+            .filter(|_| run.reply_discussion_id.is_none())
+        {
             let unresolved_count: i64 = tx
                 .query_row(
                     "SELECT COUNT(*) FROM virtual_mr_discussions WHERE session_id=?1 AND is_resolved=0",
@@ -317,9 +357,12 @@ mod tests {
         let db = test_database(&run);
         db.save_review_run(&run).unwrap();
         db.conn().execute_batch("INSERT INTO virtual_mr_session_reviewers(session_id,agent_id,agent_name) VALUES('session','a','Bot A'),('session','b','Bot B'); INSERT INTO virtual_mr_discussions(id,session_id) VALUES('thread','session'); INSERT INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,created_at,updated_at) VALUES('root','thread','ai_agent','a','Bot A','[@Bot B](#mr-mention/reviewer/b) please check this','2099-01-01','2099-01-01');").unwrap();
+        let revision =
+            crate::features::review::discussion_revision::current(&db.conn(), "thread").unwrap();
         let reply = |target: &str| ReviewDiscussionAction::Reply {
             discussion_id: "thread".into(),
             target_comment_id: target.into(),
+            discussion_revision: revision.clone(),
             body: "[@Alice](#mr-mention/assignee/alice%40test) verified the concern.".into(),
         };
         assert!(db

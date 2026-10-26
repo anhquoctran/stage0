@@ -140,8 +140,46 @@ function assignedBatchFixture(finished) {
     '../../git/store/useGitStore': { useGitStore: { getState: () => ({ showToast: () => {} }) } },
     '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: { getState: () => ({ sessions: [session], resetReviewerReviews: async () => {} }) } },
   });
-  return { service, started, synchronized, reviewState };
+  return { service, started, synchronized, reviewState, session };
 }
+
+test('discussion replies send thread scope and cannot change frontend MR descriptions or reviewer verdicts', async () => {
+  const current = { ...run(), reviewerId: 'bot-a', replyDiscussionId: 'thread' };
+  const { store, calls, refreshed, descriptions, reviewerStatuses } = storeFixture((name) => {
+    if (name === 'start_ai_review') return current;
+    return { run: { ...current, status: 'completed', decision: 'comment', generatedDescription: 'Must not apply' }, events: [] };
+  });
+  await store.getState().startForSession('a', config, true, { id: 'bot-a', name: 'Bot A' }, false, 'thread');
+  assert.equal(calls[0][1].request.replyDiscussionId, 'thread');
+  assert.equal(calls[0][1].request.generateDescription, false);
+  assert.deepEqual(reviewerStatuses, []);
+  await store.getState().syncActive();
+  assert.deepEqual(reviewerStatuses, []);
+  assert.deepEqual(descriptions, []);
+  assert.deepEqual(refreshed, ['a']);
+});
+
+test('user discussion comments start bounded replies without a full review batch and deduplicate the same comment', async () => {
+  const finished = { ...run('run-a', 'a', 'completed'), replyDiscussionId: 'thread', decision: 'comment' };
+  const { service, started, reviewState, session } = assignedBatchFixture(finished);
+  session.discussions = [{ id: 'thread', isResolved: false,
+    rootComment: { id: 'root', authorType: 'ai_agent', authorId: 'bot-a', body: 'Finding' },
+    children: [{ id: 'user', authorType: 'user', authorId: 'alice', body: 'Please explain', updatedAt: 'now' }],
+  }];
+  await service.queueAssignedDiscussionReply('a', 'thread');
+  assert.equal(started.length, 1);
+  assert.equal(started[0][4], false);
+  assert.equal(started[0][5], 'thread');
+  assert.deepEqual(reviewState.reviewBatches, {});
+  await service.queueAssignedDiscussionReply('a', 'thread');
+  assert.equal(started.length, 1);
+  session.discussions[0].children[0].body = 'Edited question, same ID and timestamp';
+  await service.queueAssignedDiscussionReply('a', 'thread');
+  assert.equal(started.length, 2);
+  session.discussions[0].children.push({ id: 'user-2', authorType: 'user', authorId: 'alice', body: 'Another question', updatedAt: 'later' });
+  await service.queueAssignedDiscussionReply('a', 'thread');
+  assert.equal(started.length, 3);
+});
 
 test('provider backoff is synchronized and shown instead of a misleading summarizing status', async () => {
   const retry = { reason: 'rate_limit', httpStatus: 429, attempt: 1, maxAttempts: 2, retryAt: '2026-10-20T15:30:00Z' };

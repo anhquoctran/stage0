@@ -33,7 +33,7 @@ function storeFixture(beforeWrite = async () => {}) {
     '../../ai/constants/runtimeAvailability': {},
     '../utils/fromDbDiscussion': { fromDbDiscussion },
     '../services/sessionPersistence': {},
-    '../../review/services/assignedReviewService': { reReviewAssignedSession: async () => {} },
+    '../../review/services/assignedReviewService': { reReviewAssignedSession: async () => {}, queueAssignedDiscussionReply: async () => {} },
   }).useVirtualMrStore;
   store.setState({ currentRepoId: 'repo', sessions: [session()], invalidateReviewerApprovals: async () => {} });
   return { store, records, writes };

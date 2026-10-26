@@ -5,6 +5,23 @@ use crate::features::review::runtime::{
 use crate::features::review::ReviewToolCall;
 
 #[tokio::test]
+async fn discussion_database_failures_remain_fatal_after_context_validation() {
+    let (_repo, mut run, context, db) = super::discussion_fixture::setup("An original finding");
+    let mut state = ReviewToolState::new(false);
+    super::discussion_fixture::list(&db, &run, &mut state, &context);
+    let reply = super::discussion_fixture::call(
+        "reply_to_discussion",
+        super::discussion_fixture::action(&db),
+    );
+    db.conn()
+        .execute_batch("DROP TABLE virtual_mr_comments;")
+        .unwrap();
+    let result = dispatch_action(&db, &mut run, &context, &reply, &mut state).await;
+    assert!(result.unwrap_err().contains("virtual_mr_comments"));
+    assert!(state.pending_discussion_actions.is_empty());
+}
+
+#[tokio::test]
 async fn action_rejection_is_recoverable_but_state_persistence_failure_aborts_the_run() {
     let repo = TestRepo::new();
     let (mut run, context) = repo.review();

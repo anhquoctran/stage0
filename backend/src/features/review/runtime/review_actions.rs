@@ -1,6 +1,5 @@
 use crate::core::db::Database;
 use crate::features::review::{context::ReviewContext, ReviewFinding, ReviewRun};
-use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
@@ -78,67 +77,22 @@ pub(super) async fn validate_reverted_finding(
     .map_err(|_| "Revert verification task failed")?
 }
 
-pub(super) fn list_open_discussions(
-    db: &Database,
-    session_id: &str,
-    offset: usize,
-    queued_resolutions: &HashSet<String>,
-    reviewer_id: Option<&str>,
-) -> Result<Value, String> {
-    const PAGE_SIZE: usize = 10;
-    let discussions = db
-        .list_discussions(session_id)
-        .map_err(|error| error.to_string())?;
-    let open = discussions
-        .into_iter()
-        .filter(|discussion| {
-            !discussion.is_resolved && !queued_resolutions.contains(&discussion.id)
-        })
-        .collect::<Vec<_>>();
-    let total = open.len();
-    let start = offset.min(total);
-    let end = start.saturating_add(PAGE_SIZE).min(total);
-    let threads = open[start..end]
-        .iter()
-        .map(|discussion| {
-            let can_reply = discussion.comments.last().is_some_and(|comment| super::super::mentions::can_reply_to_comment(
-                &db.conn(), session_id, reviewer_id, &comment.author_type, &comment.author_id, &comment.body,
-            ));
-            let comments = discussion
-                .comments
-                .iter()
-                .rev()
-                .take(5)
-                .collect::<Vec<_>>()
-                .into_iter()
-                .rev()
-                .map(|comment| {
-                    json!({
-                        "id": comment.id,
-                        "authorId": comment.author_id,
-                        "authorType": comment.author_type,
-                        "authorName": comment.author_name,
-                        "body": super::super::security::redact(&comment.body).chars().take(1200).collect::<String>(),
-                        "createdAt": comment.created_at,
-                    })
-                })
-                .collect::<Vec<_>>();
-            json!({
-                "id": discussion.id,
-                "filePath": discussion.file_path,
-                "side": discussion.diff_side,
-                "lineNumber": discussion.line_number,
-                "commitId": discussion.commit_id,
-                "canReply": can_reply,
-                "comments": comments,
-            })
-        })
-        .collect::<Vec<_>>();
-    Ok(json!({
-        "threads": threads,
-        "totalOpen": total,
-        "nextOffset": if end < total { Some(end) } else { None },
-    }))
+pub(super) async fn validate_resolution_change(
+    context: &Arc<Mutex<ReviewContext>>,
+    path: &str,
+    original_sha: &str,
+) -> Result<(), String> {
+    let context = Arc::clone(context);
+    let path = path.to_owned();
+    let original_sha = original_sha.to_owned();
+    tauri::async_runtime::spawn_blocking(move || {
+        context
+            .lock()
+            .map_err(|_| "Review context unavailable")?
+            .validate_resolution_change(&path, &original_sha)
+    })
+    .await
+    .map_err(|_| "Fix verification task failed")?
 }
 
 pub(super) fn deduplicate(findings: Vec<ReviewFinding>) -> Vec<ReviewFinding> {

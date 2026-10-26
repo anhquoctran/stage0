@@ -18,11 +18,31 @@ pub struct ReviewContext {
     pub complete_diffs: BTreeSet<String>,
     pub limited: bool,
     pub bytes: usize,
+    pub max_bytes: usize,
     guards: Arc<GuardrailsEngine>,
     diff_offsets: HashMap<String, usize>,
 }
 
 impl ReviewContext {
+    pub(crate) fn deliver_external(
+        &mut self,
+        name: &str,
+        value: serde_json::Value,
+    ) -> Result<serde_json::Value, String> {
+        let bytes = value.to_string().len();
+        if self.guards.evaluate_review_output(name, bytes).is_err()
+            || bytes > 24 * 1024
+            || self.bytes.saturating_add(bytes) > self.max_bytes
+        {
+            self.limited = true;
+            return Err(
+                "Review context byte budget exceeded or discussion output blocked by policy".into(),
+            );
+        }
+        self.bytes = self.bytes.saturating_add(bytes);
+        Ok(value)
+    }
+
     pub fn new(snapshot: ReviewSnapshot, guards: Arc<GuardrailsEngine>) -> Self {
         Self {
             snapshot,
@@ -31,6 +51,7 @@ impl ReviewContext {
             complete_diffs: BTreeSet::new(),
             limited: false,
             bytes: 0,
+            max_bytes: 128 * 1024,
             diff_offsets: HashMap::new(),
         }
     }

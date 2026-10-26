@@ -29,8 +29,11 @@ pub(super) async fn execute_tool_calls(
             debug_log::safe_label(&call.name, 100),
             run.tool_calls
         ));
-        let valid = registry.validate_call(&call.name, &call.arguments);
+        let valid = registry
+            .validate_call(&call.name, &call.arguments)
+            .and_then(|()| super::scope::validate_call(state, &call));
         if valid.is_ok() {
+            super::audit::output(db, &run.id, &call)?;
             if let Some(file_path) = call.arguments["filePath"].as_str() {
                 debug_log::log(format_args!(
                     "event=tool_target run={} turn={} tool={} file={}",
@@ -120,6 +123,12 @@ pub(super) async fn execute_tool_calls(
         };
         // No raw prompt, source, tool arguments, model reasoning or secrets in logs.
         let output_bytes = value.to_string().len();
+        if value["isError"] == false && call.name == "list_open_discussions" {
+            for thread in value["result"]["threads"].as_array().into_iter().flatten() {
+                db.review_event(&run.id, "discussion_context_delivered", json!({"discussionRevision":thread["discussionRevision"],
+                    "comments":thread["comments"].as_array().into_iter().flatten().map(|c| json!({"id":c["id"],"screeningFlags":c["screeningFlags"]})).collect::<Vec<_>>()}))?;
+            }
+        }
         db.review_event(
             &run.id,
             "tool_result",

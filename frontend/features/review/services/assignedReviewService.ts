@@ -8,10 +8,16 @@ import { useGitStore } from '../../git/store/useGitStore';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import type { ReviewRun } from '../types/ReviewRun';
 import type { BotReviewer } from '../../virtual-mr/types/BotReviewer';
+import { discussionReplyRecipients } from '../utils/discussionReplyRecipients';
+import { getDiscussionComments } from '../../virtual-mr/utils/discussionReferences';
+import { discussionReplyVersion } from '../utils/discussionReplyVersion';
 
 const attemptedHeadBySession = new Map<string, string>();
 const checkingSession = new Set<string>();
 const queuedReReviewSessions = new Set<string>();
+const queuedDiscussionReplies = new Map<string, Set<string>>();
+const replyingSessions = new Set<string>();
+const attemptedReplyComments = new Map<string, string>();
 
 function reviewersForSession(sessionId: string) {
   const virtualMr = useVirtualMrStore.getState();
@@ -95,16 +101,62 @@ async function waitForReviewRun(runId: string, onUpdate: (run: ReviewRun) => voi
   throw new Error('Timed out waiting for the AI review run to finish.');
 }
 
-async function waitForSessionIdle(sessionId: string): Promise<void> {
+async function waitForSessionIdle(sessionId: string, includeBatch = false): Promise<void> {
   const deadline = Date.now() + 330_000;
   while (Date.now() < deadline) {
     const store = useReviewStore.getState();
     const active = Object.values(store.activeRuns).some((run) => run.sessionId === sessionId && run.status === 'running');
-    if (!active && !isReviewStartingForSession(sessionId)) return;
+    if (!active && !isReviewStartingForSession(sessionId) && (!includeBatch || !store.reviewBatches[sessionId])) return;
     await store.syncActive();
     await new Promise((resolve) => setTimeout(resolve, 800));
   }
   throw new Error('Timed out waiting for another review of this Virtual MR to finish.');
+}
+
+/** User comments enqueue bounded replies; they never start a full MR review. */
+export async function queueAssignedDiscussionReply(sessionId: string, discussionId: string): Promise<void> {
+  const pending = queuedDiscussionReplies.get(sessionId) || new Set<string>();
+  pending.add(discussionId);
+  queuedDiscussionReplies.set(sessionId, pending);
+  if (replyingSessions.has(sessionId)) return;
+  replyingSessions.add(sessionId);
+  try {
+    while (pending.size) {
+      const target = pending.values().next().value!;
+      pending.delete(target);
+      try {
+        await waitForSessionIdle(sessionId, true);
+        const assigned = reviewersForSession(sessionId);
+        if (!assigned || assigned.session.status === 'closed') continue;
+        const ids = assigned.reviewers.filter((reviewer) => reviewer.profile).map((reviewer) => reviewer.id);
+        for (const reviewer of assigned.reviewers) {
+          const current = useVirtualMrStore.getState().sessions.find((item) => item.id === sessionId);
+          const discussion = current?.discussions.find((item) => item.id === target);
+          if (!discussion || current?.status === 'closed' || !reviewer.profile
+            || !discussionReplyRecipients(discussion, ids).includes(reviewer.id)) continue;
+          const latest = getDiscussionComments(discussion).at(-1);
+          if (!latest) continue;
+          const key = `${sessionId}:${target}:${reviewer.id}`;
+          const version = await discussionReplyVersion(latest);
+          if (version && attemptedReplyComments.get(key) === version) continue;
+          await waitForSessionIdle(sessionId, true);
+          const config = configForReviewer(reviewer.profile);
+          const run = await useReviewStore.getState().startForSession(sessionId, config,
+            sourceTransferAllowed(config), { id: reviewer.id, name: reviewer.name }, false, target);
+          if (!run) { pending.add(target); break; }
+          const finished = await waitForReviewRun(run.id, () => {});
+          if (!['completed', 'partial'].includes(finished.status)) throw new Error(finished.error || 'Discussion reply did not finish.');
+          if (version) attemptedReplyComments.set(key, version);
+          if (attemptedReplyComments.size > 500) attemptedReplyComments.delete(attemptedReplyComments.keys().next().value!);
+        }
+      } catch (error) {
+        useGitStore.getState().showToast(`AI reviewer could not reply: ${error instanceof Error ? error.message : String(error)}`, 'warning');
+      }
+    }
+  } finally {
+    replyingSessions.delete(sessionId);
+    queuedDiscussionReplies.delete(sessionId);
+  }
 }
 
 export async function startAssignedReviewBatchForSession(sessionId: string): Promise<AssignedReviewBatchResult> {

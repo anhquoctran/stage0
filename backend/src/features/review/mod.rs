@@ -5,6 +5,8 @@ pub mod connectors;
 pub mod context;
 pub mod coordinator;
 mod debug_log;
+mod discussion_revision;
+mod input_screen;
 mod mentions;
 pub mod model_adapter;
 mod model_failure;

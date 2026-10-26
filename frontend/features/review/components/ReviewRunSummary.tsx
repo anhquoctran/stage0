@@ -9,6 +9,9 @@ export function ReviewRunSummary({ run, isPublishing, publish }: ReviewRunSummar
         {run.reviewerName && <> · {run.reviewerName}</>} · {run.provider} / {run.model} ·{' '}
         {run.findings.length} findings
       </p>
+      {run.replyDiscussionId && (
+        <p className="text-subtext0">Discussion reply only. Run a full review to evaluate the MR.</p>
+      )}
       <p className="break-all text-subtext0">Run endpoint: {run.endpoint}</p>
       <p className="font-mono text-[11px] break-all">
         {run.snapshot.repoPath}

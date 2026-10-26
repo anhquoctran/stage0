@@ -1,5 +1,6 @@
+use super::discussion_observation::DiscussionObservation;
 use crate::features::review::{persistence::ReviewDiscussionAction, ReviewFinding};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 /// Mutable state for a single bounded review run; actions remain staged until submission.
 pub(super) struct ReviewToolState {
@@ -9,6 +10,9 @@ pub(super) struct ReviewToolState {
     pub description_updated: bool,
     pub replied_discussions: HashSet<String>,
     pub resolved_discussions: HashSet<String>,
+    pub observations: HashMap<String, DiscussionObservation>,
+    pub reply_discussion_id: Option<String>,
+    pub reply_file_path: Option<String>,
 }
 
 impl ReviewToolState {
@@ -20,6 +24,9 @@ impl ReviewToolState {
             description_updated: !generate_description,
             replied_discussions: HashSet::new(),
             resolved_discussions: HashSet::new(),
+            observations: HashMap::new(),
+            reply_discussion_id: None,
+            reply_file_path: None,
         }
     }
 }

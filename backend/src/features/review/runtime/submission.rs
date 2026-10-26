@@ -14,6 +14,19 @@ pub(super) async fn submit_review(
     state: &mut ReviewToolState,
     results: &mut Vec<(ReviewToolCall, Value)>,
 ) -> Result<bool, String> {
+    if let Err(error) = super::scope::validate_call(state, &call) {
+        state.had_errors = true;
+        results.push((call, json!({"isError":true,"error":error})));
+        return Ok(false);
+    }
+    if state
+        .reply_discussion_id
+        .as_ref()
+        .is_some_and(|id| !state.replied_discussions.contains(id))
+    {
+        results.push((call, json!({"isError":true,"error":"Queue a reply to the assigned discussion before finishing this reply-only run."})));
+        return Ok(false);
+    }
     let submitted_findings: Vec<ReviewFinding> =
         serde_json::from_value(call.arguments["findings"].clone())
             .map_err(|_| "Malformed structured findings")?;
@@ -56,12 +69,13 @@ pub(super) async fn submit_review(
         run.context_bytes = ctx.bytes;
         run.status = if state.had_errors
             || ctx.limited
-            || !run.snapshot.excluded_files.is_empty()
-            || run
-                .snapshot
-                .changed_files
-                .iter()
-                .any(|path| !ctx.complete_diffs.contains(path))
+            || (state.reply_discussion_id.is_none()
+                && (!run.snapshot.excluded_files.is_empty()
+                    || run
+                        .snapshot
+                        .changed_files
+                        .iter()
+                        .any(|path| !ctx.complete_diffs.contains(path))))
         {
             "partial"
         } else {

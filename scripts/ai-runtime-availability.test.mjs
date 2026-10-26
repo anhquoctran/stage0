@@ -23,6 +23,7 @@ function mrStore() {
     '../../review/services/assignedReviewService': {
       startAssignedReviewForSession: async (id) => { reviewCalls.push(['start', id]); return { id: 'native-review-run' }; },
       reReviewAssignedSession: async (id) => { reviewCalls.push(['re-review', id]); },
+      queueAssignedDiscussionReply: async (id, discussionId) => { reviewCalls.push(['reply', id, discussionId]); },
     },
   });
   return { store, calls, reviewCalls };

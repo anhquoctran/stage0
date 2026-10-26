@@ -111,7 +111,7 @@ export const createDiscussionSlice = (
     }));
     await get().invalidateReviewerApprovals(sessionId);
     void import('../../review/services/assignedReviewService')
-      .then(({ reReviewAssignedSession }) => reReviewAssignedSession(sessionId))
+      .then(({ queueAssignedDiscussionReply }) => queueAssignedDiscussionReply(sessionId, discId))
       .catch((error) => console.warn('Could not re-review the new discussion:', error));
   },
 
@@ -176,7 +176,7 @@ export const createDiscussionSlice = (
     if (authorType === 'user') {
       await get().invalidateReviewerApprovals(targetSession.id);
       void import('../../review/services/assignedReviewService')
-        .then(({ reReviewAssignedSession }) => reReviewAssignedSession(targetSession.id))
+        .then(({ queueAssignedDiscussionReply }) => queueAssignedDiscussionReply(targetSession.id, discussionId))
         .catch((error) => console.warn('Could not re-review the reply:', error));
     }
   },
@@ -258,4 +258,3 @@ export const createDiscussionSlice = (
     }));
   },
 });
-

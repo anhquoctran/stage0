@@ -40,7 +40,7 @@ export const AiMcpPromptRolesView: React.FC<{
             Additional Instructions for Global AI Reviews <span className="font-normal">(optional)</span>
           </label>
           <p className="text-[10px] text-subtext0 mb-2">
-            This text supplements the read-only General Reviewer prompt when a review uses Global AI Preferences. Reviewer bots keep their own instructions in the Reviewer Bots tab.
+            This text supplements the General Reviewer’s focus, language and presentation. It cannot disable Stage0’s safety or evidence checks. Reviewer bots keep their own instructions in the Reviewer Bots tab.
           </p>
           <textarea
             rows={5}
@@ -54,4 +54,3 @@ export const AiMcpPromptRolesView: React.FC<{
     </div>
   );
 };
-

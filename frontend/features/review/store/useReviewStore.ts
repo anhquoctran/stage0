@@ -52,12 +52,12 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     });
     // The backend saves this description before exposing generatedDescription.
     // Apply it as soon as it appears, including if a later review step fails.
-    if (run.generatedDescription?.trim() && run.generatedDescription !== previous.generatedDescription) {
+    if (!run.replyDiscussionId && run.generatedDescription?.trim() && run.generatedDescription !== previous.generatedDescription) {
       await useVirtualMrStore.getState().applyReviewGeneratedDescription(run.sessionId, run.generatedDescription);
     }
     if (!finished) return;
     await useVirtualMrStore.getState().refreshDiscussions(run.sessionId);
-    if (run.reviewerId) {
+    if (run.reviewerId && !run.replyDiscussionId) {
       const reviewerStatus = run.status === 'completed' && run.decision === 'approve'
         ? 'approved'
         : run.decision === 'request_changes' || run.findings.length > 0
@@ -97,7 +97,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     try { await get().startForSession(sessionId, config, allowRemote, reviewer, true); }
     catch { /* The store records the error for the open review panel. */ }
   },
-  startForSession: async (sessionId, config, allowRemote, reviewer, generateDescription = false) => {
+  startForSession: async (sessionId, config, allowRemote, reviewer, generateDescription = false, replyDiscussionId) => {
     if (startingSessionIds.has(sessionId) || Object.values(get().activeRuns).some((run) => run.sessionId === sessionId && run.status === 'running')) return null;
     startingSessionIds.add(sessionId);
     set({ isStarting: true, error: null });
@@ -111,9 +111,10 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         reasoningEffort: config.reasoningEffort || null, fastMode: config.fastMode === true,
         reviewerId: reviewer?.id || null, reviewerName: reviewer?.name || null,
         generateDescription,
+        ...(replyDiscussionId ? { replyDiscussionId } : {}),
       } });
       set((state) => ({ activeRuns: { ...state.activeRuns, [run.id]: run } }));
-      if (run.reviewerId) {
+      if (run.reviewerId && !run.replyDiscussionId) {
         await useVirtualMrStore.getState().setReviewerReviewStatus(sessionId, run.reviewerId, 'reviewing');
       }
       if (get().isOpen && get().sessionId === sessionId) {

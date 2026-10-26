@@ -2,6 +2,21 @@ use super::{git, ReviewContext};
 use crate::features::review::{security, ReviewFinding};
 
 impl ReviewContext {
+    pub fn validate_resolution_change(&self, path: &str, original_sha: &str) -> Result<(), String> {
+        security::safe_path(path, &self.guards)?;
+        if ![40, 64].contains(&original_sha.len())
+            || !original_sha.bytes().all(|b| b.is_ascii_hexdigit())
+        {
+            return Err("The original finding snapshot is unavailable".into());
+        }
+        let previous = self.raw_blob_at(path, original_sha)?;
+        let current = self.raw_blob_at(path, &self.snapshot.head_sha)?;
+        if current.is_none() || current == previous {
+            return Err("The file has not changed since the original finding. Explain the concern or leave it open for manual resolution.".into());
+        }
+        Ok(())
+    }
+
     pub(super) fn allowed_changed(&self, path: &str) -> Result<(), String> {
         security::safe_path(path, &self.guards)?;
         if !self.snapshot.changed_files.iter().any(|p| p == path) {

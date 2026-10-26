@@ -12,6 +12,8 @@ pub struct ReviewRun {
     pub reviewer_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reviewer_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reply_discussion_id: Option<String>,
     #[serde(default)]
     pub endpoint: String,
     pub snapshot: ReviewSnapshot,

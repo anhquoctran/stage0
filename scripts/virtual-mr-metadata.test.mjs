@@ -85,7 +85,7 @@ async function fixture(beforeSave = async () => {}) {
       globalReviewers: [{ id: 'bot-1', name: 'Reviewer 01' }, { id: 'bot-2', name: 'Reviewer 02' }],
       repoCustomReviewers: {},
     }) } },
-    '../../review/services/assignedReviewService': { reReviewAssignedSession: async () => {} },
+    '../../review/services/assignedReviewService': { reReviewAssignedSession: async () => {}, queueAssignedDiscussionReply: async () => {} },
     '../types/virtualMr': { AVAILABLE_AI_BOTS: [], PRESET_REPO_LABELS: [] },
     '../../ai/constants/runtimeAvailability': {},
     '../utils/fromDbDiscussion': { fromDbDiscussion },

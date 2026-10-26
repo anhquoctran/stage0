@@ -25,6 +25,23 @@ pub(super) async fn execute_with_adapter(
     context: &Arc<Mutex<ReviewContext>>,
     adapter: &dyn ReviewModelAdapter,
 ) -> Result<(), String> {
+    super::scope::validate_request(db, config)?;
+    run.reply_discussion_id = config.reply_discussion_id.clone();
+    let reply_only = config.reply_discussion_id.is_some();
+    let max_turns = if reply_only { 16 } else { MAX_REVIEW_TURNS };
+    let max_calls = if reply_only {
+        24
+    } else {
+        MAX_REVIEW_TOOL_CALLS
+    };
+    let token_limit = if reply_only { 32_000 } else { 64_000 };
+    let wire_limit = if reply_only { 384 * 1024 } else { 512 * 1024 };
+    if reply_only {
+        context
+            .lock()
+            .map_err(|_| "Review context unavailable")?
+            .max_bytes = 32 * 1024;
+    }
     let system = build_system_prompt(config);
     let (mr_title, target_branch, source_branch) = {
         let conn = db.conn();
@@ -43,14 +60,22 @@ pub(super) async fn execute_with_adapter(
     };
     let participants = mentions::participants(&db.conn(), &run.session_id)?;
     let prompt=json!({"task":"Review this Virtual MR snapshot. Compare the source branch with the target branch, inspect unresolved discussions, publish evidence-backed inline findings, reply to users or AI peers who directly mention you when needed, and resolve only verified fixes", "mrTitle":mr_title,"targetBranch":target_branch,"sourceBranch":source_branch,"reviewerId":run.reviewer_id,"participants":participants,"baseSha":run.snapshot.base_sha,"headSha":run.snapshot.head_sha,"mergeBaseSha":run.snapshot.merge_base_sha,"changedFileCount":run.snapshot.changed_files.len(),"excludedFileCount":run.snapshot.excluded_files.len()}).to_string();
-    let mut history = adapter.initial_history(&prompt);
-    let registry = ReviewToolRegistry::native_for_review(config.generate_description);
+    let mut initial: serde_json::Value =
+        serde_json::from_str(&prompt).map_err(|_| "Could not build review context")?;
+    initial["reviewPreferences"] = super::prompt::review_preferences(config);
+    initial["replyDiscussionId"] = json!(config.reply_discussion_id);
+    if reply_only {
+        initial["task"] = json!("Answer the latest eligible comment in the assigned discussion. This is not an MR review or approval.");
+    }
+    let mut history = adapter.initial_history(&initial.to_string());
+    let registry = ReviewToolRegistry::for_request(config);
     let tools = registry.definitions();
     let mut wire_bytes = 0usize;
     let mut recovered_missing_tool_call = false;
     let mut decode_recoveries = 0;
     let mut provider_retries = 0;
     let mut state = ReviewToolState::new(config.generate_description);
+    super::scope::configure(db, config, &mut state)?;
     let has_open_discussions = db
         .list_discussions(&run.session_id)
         .map_err(|error| error.to_string())?
@@ -88,7 +113,13 @@ pub(super) async fn execute_with_adapter(
         tools.len(),
         config.generate_description
     ));
-    for turn in 0..MAX_REVIEW_TURNS {
+    db.review_event(&run.id, "review_preferences_screened", json!({
+        "inputBytes":config.instructions.len(),"screeningFlags":super::super::input_screen::flags(&config.instructions),
+        "scope":if config.reply_discussion_id.is_some(){"discussion_reply"}else{"mr_review"},
+        "executionMode":config.execution_mode,
+        "acpOsSandboxed":if config.execution_mode == "acp" { Some(false) } else { None }
+    }))?;
+    for turn in 0..max_turns {
         run.turns = turn + 1;
         let body = adapter.payload(&system, &history, tools, 2048);
         let bytes = adapter.request_size(&body);
@@ -96,7 +127,7 @@ pub(super) async fn execute_with_adapter(
         // continuation, including a delayed provider retry, is counted here.
         wire_bytes =
             wire_bytes.saturating_add(bytes.saturating_mul(adapter.retry_reserve_factor()));
-        if bytes > 160 * 1024 || wire_bytes > 512 * 1024 || run.usage_tokens >= 64000 {
+        if bytes > 160 * 1024 || wire_bytes > wire_limit || run.usage_tokens >= token_limit {
             debug_log::log(format_args!(
                 "event=review_budget_exhausted run={} turn={} request_bytes={} estimated_wire_bytes={} usage_tokens={}",
                 debug_log::safe_label(&run.id, 80),
@@ -150,7 +181,7 @@ pub(super) async fn execute_with_adapter(
                 failure.http_status.unwrap_or(0),
                 failure.retryable
             ));
-            let delay = if provider_retries < MAX_PROVIDER_RETRIES && run.turns < MAX_REVIEW_TURNS {
+            let delay = if provider_retries < MAX_PROVIDER_RETRIES && run.turns < max_turns {
                 failure.retry_delay(provider_retries + 1)
             } else {
                 None
@@ -199,7 +230,7 @@ pub(super) async fn execute_with_adapter(
                     debug_log::error_class(&error)
                 ));
                 if decode_recoveries < MAX_DECODE_RECOVERIES
-                    && run.turns < MAX_REVIEW_TURNS
+                    && run.turns < max_turns
                     && adapter.recover_decode_error(&error, &mut history)
                 {
                     decode_recoveries += 1;
@@ -276,9 +307,9 @@ pub(super) async fn execute_with_adapter(
             has_output_text,
             has_refusal
         ));
-        if run.usage_tokens > 64000 {
+        if run.usage_tokens > token_limit {
             debug_log::log(format_args!(
-                "event=review_budget_exhausted run={} reason=reported_token_limit usage_tokens={} limit=64000",
+                "event=review_budget_exhausted run={} reason=reported_token_limit usage_tokens={} limit=selected_run_budget",
                 debug_log::safe_label(&run.id, 80),
                 run.usage_tokens
             ));
@@ -291,9 +322,9 @@ pub(super) async fn execute_with_adapter(
                 run.turns,
                 has_refusal,
                 has_output_text,
-                !has_refusal && !recovered_missing_tool_call && run.turns < MAX_REVIEW_TURNS
+                !has_refusal && !recovered_missing_tool_call && run.turns < max_turns
             ));
-            if !has_refusal && !recovered_missing_tool_call && run.turns < MAX_REVIEW_TURNS {
+            if !has_refusal && !recovered_missing_tool_call && run.turns < max_turns {
                 let reminder = "Your previous response did not invoke a tool and is not a review result. Continue the sandboxed review now: call one supplied snapshot or discussion tool; do not answer in prose. If the investigation is complete, call submit_review with the summary and findings.";
                 if config.execution_mode != "acp" && config.provider == "gemini" {
                     history.push(json!({"role":"user","parts":[{"text":reminder}]}));
@@ -315,13 +346,13 @@ pub(super) async fn execute_with_adapter(
             }
             return Err("The provider returned no function call although this review requires tool use. The selected model/account may not support required function calling, or the response may have been refused; check the run trace for response type metadata.".into());
         }
-        if run.tool_calls + calls.len() > MAX_REVIEW_TOOL_CALLS {
+        if run.tool_calls + calls.len() > max_calls {
             debug_log::log(format_args!(
                 "event=review_budget_exhausted run={} reason=tool_call_limit current_calls={} requested_calls={} limit={}",
                 debug_log::safe_label(&run.id, 80),
                 run.tool_calls,
                 calls.len(),
-                MAX_REVIEW_TOOL_CALLS
+                max_calls
             ));
             return Err("Review tool-call budget exhausted".into());
         }

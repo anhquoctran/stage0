@@ -1,7 +1,6 @@
 use super::{
     review_actions::{
-        deduplicate, list_open_discussions, update_mr_description, validate_findings,
-        validate_reverted_finding,
+        deduplicate, update_mr_description, validate_findings, validate_reverted_finding,
     },
     tool_state::ReviewToolState,
 };
@@ -21,6 +20,9 @@ pub(super) async fn dispatch_action(
     call: &ReviewToolCall,
     state: &mut ReviewToolState,
 ) -> Result<Result<Value, String>, String> {
+    if let Err(error) = super::scope::validate_call(state, call) {
+        return Ok(Err(error));
+    }
     Ok(match call.name.as_str() {
         "update_mr_description" => {
             if state.description_updated {
@@ -84,23 +86,15 @@ pub(super) async fn dispatch_action(
         }
         "list_open_discussions" => {
             let offset = call.arguments["offset"].as_u64().unwrap_or(0) as usize;
-            list_open_discussions(
-                db,
-                &run.session_id,
-                offset,
-                &state.resolved_discussions,
-                run.reviewer_id.as_deref(),
-            )
+            super::discussions::list(db, run, state, context, offset)
+        }
+        "read_discussion_comment" => {
+            super::discussions::read_comment(db, run, state, context, call)
         }
         "reply_to_discussion" => {
             let discussion_id = call.arguments["discussionId"].as_str().unwrap().to_owned();
             let body = security::redact(call.arguments["body"].as_str().unwrap());
-            let discussion = db
-                .list_discussions(&run.session_id)
-                .map_err(|error| error.to_string())?
-                .into_iter()
-                .find(|discussion| discussion.id == discussion_id && !discussion.is_resolved)
-                .ok_or_else(|| "Open discussion not found in this Virtual MR".to_string());
+            let discussion = super::discussions::observed(db, run, state, call)?;
             match discussion {
                 Err(error) => Err(error),
                 Ok(_) if state.replied_discussions.contains(&discussion_id) || state.resolved_discussions.contains(&discussion_id) => {
@@ -114,7 +108,8 @@ pub(super) async fn dispatch_action(
                 Ok(discussion) => {
                     state.replied_discussions.insert(discussion_id.clone());
                     let target_comment_id = discussion.comments.last().unwrap().id.clone();
-                    state.pending_discussion_actions.push(ReviewDiscussionAction::Reply { discussion_id, target_comment_id, body });
+                    let discussion_revision = call.arguments["discussionRevision"].as_str().unwrap().to_owned();
+                    state.pending_discussion_actions.push(ReviewDiscussionAction::Reply { discussion_id, target_comment_id, discussion_revision, body });
                     Ok(json!({"queued":true,"message":"The reply will be posted when this review finishes."}))
                 }
             }
@@ -126,12 +121,7 @@ pub(super) async fn dispatch_action(
             {
                 Err("This discussion already has a queued AI action in this review".into())
             } else {
-                let discussion = db
-                    .list_discussions(&run.session_id)
-                    .map_err(|error| error.to_string())?
-                    .into_iter()
-                    .find(|discussion| discussion.id == discussion_id && !discussion.is_resolved)
-                    .ok_or_else(|| "Open discussion not found in this Virtual MR".to_string());
+                let discussion = super::discussions::observed(db, run, state, call)?;
                 match discussion {
                     Err(error) => Err(error),
                     Ok(discussion) => {
@@ -145,7 +135,9 @@ pub(super) async fn dispatch_action(
                         let body = security::redact(call.arguments["body"].as_str().unwrap());
                         let original_commit_id = discussion.commit_id.clone();
                         let original_side = discussion.diff_side.clone();
-                        if let Some(target_comment_id) = target_comment_id {
+                        if side != "head" {
+                            Err("Resolution evidence must use the current head, never the base side".into())
+                        } else if let Some(target_comment_id) = target_comment_id {
                             if discussion.file_path.as_deref() != Some(file_path.as_str()) {
                                 Err("Resolution evidence must refer to the discussion's file"
                                     .into())
@@ -160,8 +152,15 @@ pub(super) async fn dispatch_action(
                                     body: body.clone(),
                                     evidence: evidence.clone(),
                                 };
-                                let validation =
-                                    match validate_findings(context, vec![proof.clone()]).await {
+                                let changed = match original_commit_id.as_deref() {
+                                    Some(original) => super::review_actions::validate_resolution_change(context, &file_path, original).await,
+                                    None => Err("The original finding snapshot is unavailable; leave this discussion open for manual resolution".into()),
+                                };
+                                let validation = match changed {
+                                    Err(error) => Err(error),
+                                    Ok(()) => match validate_findings(context, vec![proof.clone()])
+                                        .await
+                                    {
                                         Ok(()) => Ok(None),
                                         Err(changed_line_error)
                                             if side == "head"
@@ -183,7 +182,8 @@ pub(super) async fn dispatch_action(
                                             }
                                         }
                                         Err(error) => Err(error),
-                                    };
+                                    },
+                                };
                                 match validation {
                                     Ok(reverted_commit_id) => {
                                         state.resolved_discussions.insert(discussion_id.clone());
@@ -191,6 +191,11 @@ pub(super) async fn dispatch_action(
                                             ReviewDiscussionAction::Resolve {
                                                 discussion_id,
                                                 target_comment_id,
+                                                discussion_revision: call.arguments
+                                                    ["discussionRevision"]
+                                                    .as_str()
+                                                    .unwrap()
+                                                    .to_owned(),
                                                 file_path,
                                                 side,
                                                 start_line,

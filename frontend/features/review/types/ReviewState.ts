@@ -23,7 +23,7 @@ export interface ReviewState {
   close: () => void;
   load: (sessionId: string, runId?: string) => Promise<void>;
   start: (config: ReviewBotConfig, allowRemote: boolean, reviewer?: { id: string; name: string }) => Promise<void>;
-  startForSession: (sessionId: string, config: ReviewBotConfig, allowRemote: boolean, reviewer?: { id: string; name: string }, generateDescription?: boolean) => Promise<ReviewRun | null>;
+  startForSession: (sessionId: string, config: ReviewBotConfig, allowRemote: boolean, reviewer?: { id: string; name: string }, generateDescription?: boolean, replyDiscussionId?: string) => Promise<ReviewRun | null>;
   cancel: () => Promise<void>;
   publish: () => Promise<void>;
 }

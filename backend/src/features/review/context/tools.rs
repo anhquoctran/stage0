@@ -211,7 +211,7 @@ impl ReviewContext {
             self.limited = true;
             return Err("Review tool output blocked by Stage0 output-size policy".into());
         }
-        if bytes > 24 * 1024 || self.bytes.saturating_add(bytes) > 128 * 1024 {
+        if bytes > 24 * 1024 || self.bytes.saturating_add(bytes) > self.max_bytes {
             self.limited = true;
             return Err("Review context byte budget exceeded; narrow the request".into());
         }

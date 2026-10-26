@@ -1,8 +1,12 @@
 //! Review lifecycle and stable entry points. The bounded loop and tool actions live in child modules.
 mod action_dispatch;
+mod audit;
+mod discussion_observation;
+mod discussions;
 mod engine;
 mod prompt;
 mod review_actions;
+mod scope;
 mod submission;
 mod tool_state;
 mod tool_turn;
@@ -13,6 +17,7 @@ use super::{
 use crate::core::db::Database;
 use engine::execute_with_adapter;
 pub use prompt::{is_supported_reviewer_role, SYSTEM};
+pub(crate) use scope::validate_request;
 use serde_json::{json, Value};
 use std::{
     sync::{

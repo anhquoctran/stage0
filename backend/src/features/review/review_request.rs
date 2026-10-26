@@ -26,6 +26,8 @@ pub struct ReviewRequest {
     pub allow_remote: bool,
     #[serde(default)]
     pub generate_description: bool,
+    #[serde(default)]
+    pub reply_discussion_id: Option<String>,
 }
 
 fn default_execution_mode() -> String {

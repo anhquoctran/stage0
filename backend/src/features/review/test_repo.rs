@@ -64,6 +64,7 @@ impl TestRepo {
             model: "fixture".into(),
             reviewer_id: None,
             reviewer_name: None,
+            reply_discussion_id: None,
             endpoint: "http://localhost/api/chat".into(),
             snapshot: snapshot.clone(),
             status: "running".into(),

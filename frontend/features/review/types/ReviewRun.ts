@@ -12,6 +12,7 @@ export interface ReviewRun {
   model: string;
   reviewerId?: string;
   reviewerName?: string;
+  replyDiscussionId?: string;
   endpoint: string;
   snapshot: ReviewSnapshot;
   status: 'running' | 'completed' | 'partial' | 'incomplete' | 'failed' | 'cancelled' | 'interrupted';

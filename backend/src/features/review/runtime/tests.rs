@@ -80,6 +80,7 @@ fn config(url: String) -> ReviewRequest {
         acp_config_options: None,
         reviewer_id: None,
         reviewer_name: None,
+        reply_discussion_id: None,
         reviewer_role: None,
         base_url: url,
         instructions: String::new(),
@@ -91,5 +92,8 @@ fn config(url: String) -> ReviewRequest {
 mod acp;
 mod action_errors;
 mod coverage;
+mod discussion_fixture;
+mod discussion_security;
 mod http;
+mod injection;
 mod policy;
