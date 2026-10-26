@@ -65,6 +65,7 @@ objc2-app-kit = { version = "0.3", default-features = false, features = ["NSMenu
 objc2-foundation = { version = "0.3", default-features = false, features = ["NSString", "NSObject"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18"
 keyring = { version = "3", features = ["sync-secret-service", "crypto-rust"] }
 notify-rust = "4.11"
 zbus = "5"

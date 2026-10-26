@@ -12,7 +12,7 @@ const profile = overrides => ({ platform: 'linux', desktop: 'gnome', session: 'w
   controlsLeft: [], controlsRight: ['close'], doubleClickAction: 'maximize', ...overrides });
 const labels = tree => componentNodes(tree).filter(node => node.type === 'button').map(node => node.props['aria-label']);
 
-function titleFixture(settings) {
+function titleFixture(settings, currentRepo = { name: 'Long repository' }) {
   const calls = [];
   const application = Object.fromEntries(['windowStartDragging', 'windowToggleMaximize', 'windowMinimize'].map(name => [name, async () => { calls.push(name); }]));
   const { TopBarTitleRow } = loadWithMocks(url('components/layout/top-bar/TopBarTitleRow.tsx'), {
@@ -22,7 +22,7 @@ function titleFixture(settings) {
     '@/common/components/AppLogo': { AppLogo: () => null },
     '@/core/components/layout/MenuBar': { MenuBar: () => React.createElement('nav', { 'aria-label': 'Application menu' }, 'File Edit') },
     '@/core/components/layout/WindowControls': { WindowControls: ({ buttons = ['minimize', 'maximize', 'close'] }) => React.createElement('div', { 'data-controls': buttons.join(',') }) },
-    '@/features/git/store/useGitStore': { useGitStore: () => ({ currentRepo: { name: 'Long repository' }, baseBranch: 'main', compareBranch: 'feature' }) },
+    '@/features/git/store/useGitStore': { useGitStore: () => ({ currentRepo, baseBranch: 'main', compareBranch: 'feature' }) },
     '@/features/about/hooks/useAboutInfo': { useAboutInfo: () => ({ packageVersion: '0.1.11' }) },
   });
   return { calls, tree: TopBarTitleRow({ isMac: false }) };
@@ -42,6 +42,20 @@ test('all three desktops render configured left/right controls and system frames
     assert.doesNotMatch(renderToStaticMarkup(system.tree), /data-controls=/);
     assert.match(renderToStaticMarkup(system.tree), /Application menu/);
     assert.equal(system.tree.props.onMouseDown, undefined);
+  }
+});
+
+test('Linux system frames show a menu row without duplicating the native window title', () => {
+  for (const desktop of ['gnome', 'kde', 'xfce']) {
+    for (const repo of [null, { name: 'Long repository' }]) {
+      const { tree } = titleFixture(profile({ desktop, nativeFrame: true }), repo);
+      const html = renderToStaticMarkup(tree);
+      assert.match(html, /Application menu/);
+      assert.equal((html.match(/aria-label="Stage0 version 0\.1\.11"/g) ?? []).length, 1);
+      assert.doesNotMatch(html, /Long repository|Virtual MR Sandbox|data-controls=|data-tauri-drag-region/);
+      assert.equal(tree.props.onMouseDown, undefined);
+      assert.equal(tree.props.onDoubleClick, undefined);
+    }
   }
 });
 

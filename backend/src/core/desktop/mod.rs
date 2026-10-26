@@ -1,5 +1,9 @@
 mod window_chrome;
 pub use window_chrome::WindowChrome;
+#[cfg(all(target_os = "linux", any(dev, test)))]
+mod dev_desktop;
+#[cfg(all(target_os = "linux", dev))]
+pub use dev_desktop::initialize as initialize_dev_desktop;
 #[cfg(any(target_os = "linux", test))]
 mod linux;
 #[cfg(any(target_os = "linux", test))]

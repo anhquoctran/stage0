@@ -36,6 +36,15 @@ export const TopBarTitleRow: React.FC<{
     </span>
   );
 
+  if (linux && profile.nativeFrame) {
+    return (
+      <div className="h-7 bg-crust border-b border-surface0/70 rounded-none flex items-center justify-between gap-3 px-2.5 shrink-0 select-none relative z-[100]">
+        <MenuBar />
+        {versionLabel}
+      </div>
+    );
+  }
+
   return (
     <div
       data-tauri-drag-region={linux ? false : true}

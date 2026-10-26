@@ -52,3 +52,64 @@ fn new_repository_window_retains_its_maximized_intent_after_open_finishes() {
     manager.defer_startup_geometry("repo", false);
     assert_eq!(manager.startup_geometry("repo"), Some(false));
 }
+
+#[cfg(target_os = "linux")]
+#[test]
+#[ignore = "requires a Linux desktop session for native GTK decoration checks"]
+fn wayland_splash_handoff_restores_native_controls_and_tracks_window_title() {
+    use gtk::prelude::*;
+
+    gtk::init().expect("GTK requires a desktop session");
+    let window = gtk::Window::new(gtk::WindowType::Toplevel);
+    let placeholder = gtk::EventBox::new();
+    window.set_title("Stage0 splash");
+    window.set_titlebar(Some(&placeholder));
+    window.set_decorated(false);
+    window.show_all();
+    window.hide();
+    window.set_decorated(true);
+    assert!(
+        placeholder.child().is_none(),
+        "decorations alone leave the empty splash title bar"
+    );
+
+    super::startup_window::restore_system_titlebar(&window);
+    let header = placeholder
+        .child()
+        .unwrap()
+        .downcast::<gtk::HeaderBar>()
+        .unwrap();
+    header.set_decoration_layout(Some(":minimize,maximize,close"));
+    window.show_all();
+    fn native_buttons(widget: &gtk::Widget, buttons: &mut Vec<&'static str>) {
+        for name in ["minimize", "maximize", "close"] {
+            if widget.style_context().has_class(name) {
+                buttons.push(name);
+            }
+        }
+        if let Some(container) = widget.downcast_ref::<gtk::Container>() {
+            container.forall(|child| native_buttons(child, buttons));
+        }
+    }
+    let mut buttons = Vec::new();
+    native_buttons(header.upcast_ref(), &mut buttons);
+    assert_eq!(buttons, ["minimize", "maximize", "close"]);
+    window.set_title("Stage0 — repository");
+    assert_eq!(header.title().as_deref(), Some("Stage0 — repository"));
+
+    super::startup_window::restore_system_titlebar(&window);
+    assert_eq!(
+        placeholder.child(),
+        Some(header.upcast()),
+        "repeated handoffs must not duplicate controls"
+    );
+    window.close();
+
+    let standard = gtk::Window::new(gtk::WindowType::Toplevel);
+    super::startup_window::restore_system_titlebar(&standard);
+    assert!(
+        standard.titlebar().is_none(),
+        "standard system frames must remain toolkit-owned"
+    );
+    standard.close();
+}

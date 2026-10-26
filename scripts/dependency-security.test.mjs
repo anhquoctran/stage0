@@ -41,13 +41,19 @@ test('the application resolves GTK3 glib to the local security backport', () => 
   assert.doesNotMatch(packages[0], /^source = /m, 'Registry GLib would bypass the local backport');
 });
 
-test('vendored glib differs from its verified distribution only by the upstream two-line fix', () => {
+test('vendored glib retains its verified sources with only the security fix and scoped manifest lints', () => {
   const directory = path.join(root, 'backend/vendor/glib');
   const provenance = JSON.parse(read('backend/vendor/glib/UPSTREAM-SHA256.json'));
   assert.equal(provenance.distributionSha256, '233daaf6e83ae6a12a52055f568f9d7cf4671dabb78ff9560ab6da230ce00ee5');
   assert.equal(Object.keys(provenance.files).length, 121);
   for (const [file, expectedHash] of Object.entries(provenance.files)) {
     let source = readFileSync(path.join(directory, file), 'utf8');
+    if (file === 'Cargo.toml') {
+      const lintPolicy = '\n# Keep the security-backported source intact while newer Rust checks old syntax.\n'
+        + '[lints.rust]\nmismatched_lifetime_syntaxes = "allow"\nunused_parens = "allow"\n';
+      assert.ok(source.endsWith(lintPolicy), 'Only the documented GLib style lints may be relaxed');
+      source = source.slice(0, -lintPolicy.length);
+    }
     if (file === 'src/variant_iter.rs') {
       assert.match(source, /let mut p: \*mut libc::c_char = std::ptr::null_mut\(\);/);
       assert.match(source, /ffi::g_variant_get_child\([\s\S]*?&mut p,/);

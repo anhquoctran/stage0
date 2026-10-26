@@ -36,6 +36,14 @@ pub fn run() {
         context
     };
 
+    #[cfg(all(target_os = "linux", dev))]
+    if let Err(error) = core::desktop::initialize_dev_desktop(
+        &context.config().identifier,
+        context.config().product_name.as_deref().unwrap_or("Stage0"),
+    ) {
+        eprintln!("{error}");
+    }
+
     let builder = tauri::Builder::default();
     let builder = builder.manage(features::review::coordinator::ReviewCoordinator::default());
     #[cfg(not(dev))]

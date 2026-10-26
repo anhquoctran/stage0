@@ -15,14 +15,18 @@ use runtime_state::RuntimeState;
 mod notification_runtime;
 pub use notification_runtime::NotificationRuntime;
 
-use tauri::{AppHandle, Emitter, Manager, State, WebviewWindowBuilder};
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+use tauri::WebviewWindowBuilder;
+use tauri::{AppHandle, Emitter, Manager, State};
 
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 use crate::core::window_manager::app_webview_url;
 
 pub const NOTIFICATION_EVENT: &str = "app-notification";
 const TOAST_EVENT: &str = "stage0-toast";
 const ACTION_EVENT: &str = "notification-action";
 pub const NOTIFICATION_HOST_LABEL: &str = "notification-host";
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 const MAX_PENDING_TOASTS: usize = 50;
 
 pub fn ensure_notification_host(app: &AppHandle) {
@@ -85,6 +89,7 @@ fn has_user_window(app: &AppHandle) -> bool {
         .any(|label| label != NOTIFICATION_HOST_LABEL)
 }
 
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 fn queue_or_emit_custom_toast(app: &AppHandle, payload: NotificationPayload) -> Result<(), String> {
     if !has_user_window(app) {
         return Ok(());

@@ -14,6 +14,19 @@ The only Rust source change is the upstream two-line fix in
 `&mut p` rather than `&p` to `g_variant_get_child`. Text files have a final newline.
 No build scripts or additional external dependencies are introduced.
 
+## Compiler diagnostics
+
+The normalized `Cargo.toml` additionally allows only `mismatched_lifetime_syntaxes`
+and `unused_parens` for this crate. Newer Rust versions report these style warnings
+throughout GLib 0.18.5. Path dependencies expose them during every Stage0 dev
+build, unlike registry dependencies with Cargo's normal lint capping. Keeping the
+Rust source unchanged preserves the narrowly scoped security backport. Stage0's
+own lint settings and all other GLib diagnostics remain enabled.
+
+The integrity test removes exactly this documented manifest suffix before
+checking the original upstream hash; every original file hash and the two-line
+security fix remain checked. `UPSTREAM-SHA256.json` is unchanged.
+
 GTK3/Tauri Linux dependencies currently require GLib 0.18.x. Adding GLib 0.20 as
 a separate dependency does not repair their copy and is not API-compatible.
 `backend/Cargo.toml` uses a crates.io patch so all 0.18.x consumers resolve to
