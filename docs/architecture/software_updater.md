@@ -112,3 +112,13 @@ Validate the workflow with `actionlint .github/workflows/release.yml`. Signature
 fixtures use a discarded test key, never the production private key, and make
 no network/installation calls. Installed-app smoke tests are still needed on
 Windows, both Mac architectures and supported Linux desktops.
+
+The local package verifier can authenticate one package without installing it:
+
+```bash
+cargo run --locked --manifest-path scripts/release-verifier/Cargo.toml -- \
+  --package backend/target/release/bundle/appimage/Stage0_0.1.12_amd64.AppImage 0.1.12
+```
+
+Local verification on Fedora 44 does not establish compatibility with older
+Ubuntu systems; the published Linux packages are built on Ubuntu 22.04 by CI.
