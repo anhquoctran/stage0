@@ -106,7 +106,14 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && '-' || '' }}
           APPIMAGE_EXTRACT_AND_RUN: '1'
-        run: pnpm exec tauri build --ci --target "$RELEASE_TARGET" --bundles "$RELEASE_BUNDLES" -- --locked
+        run: |
+          # Git Bash's bundled Perl lacks Locale::Maketext::Simple, which
+          # vendored OpenSSL needs while building SQLCipher on Windows.
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            export PATH="/c/Strawberry/perl/bin:$PATH"
+            perl -MLocale::Maketext::Simple -e 'exit 0'
+          fi
+          pnpm exec tauri build --ci --target "$RELEASE_TARGET" --bundles "$RELEASE_BUNDLES" -- --locked
       - name: Collect uniquely named assets
         shell: bash
         run: node scripts/release-artifacts.mjs collect "backend/target/$RELEASE_TARGET/release/bundle" release-assets "$RELEASE_TARGET"
