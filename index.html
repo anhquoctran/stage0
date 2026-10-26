@@ -154,7 +154,7 @@
       }
 
       #startup-splash .splash-progress-info {
-        position: fixed;
+        position: absolute;
         right: 16px;
         bottom: 14px;
         left: 16px;
@@ -165,10 +165,10 @@
       }
 
       #startup-splash .splash-progress-header {
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         width: 100%;
-        align-items: baseline;
-        justify-content: space-between;
+        align-items: end;
         gap: 16px;
         margin: 0;
       }
@@ -206,6 +206,7 @@
       }
 
       #startup-splash .splash-status {
+        min-width: 0;
         color: var(--splash-status);
         font-size: 12px;
         line-height: 1.5;
@@ -213,7 +214,9 @@
       }
 
       #startup-splash .splash-percentage {
-        flex-shrink: 0;
+        min-width: 4ch;
+        line-height: 18px;
+        text-align: right;
         color: var(--splash-text);
         font-family: 'Fira Code', 'SFMono-Regular', Consolas, monospace;
         font-size: 11px;
@@ -317,13 +320,6 @@
         </svg>
         <h1 class="splash-title">Stage<span class="splash-title-accent">0</span></h1>
         <p class="splash-tagline">Local-first Virtual Merge Request &amp; Conflict Prediction Sandbox</p>
-        <div class="splash-progress-info">
-          <div class="splash-progress-header">
-            <div id="splash-status" class="splash-status" role="status" aria-live="polite" aria-atomic="true">Starting Stage0</div>
-            <span id="splash-percentage" class="splash-percentage" aria-hidden="true">0%</span>
-          </div>
-          <div id="splash-detail" class="splash-detail">Step 1 of 7</div>
-        </div>
         <button id="splash-reload" class="splash-reload btn-solid" type="button" hidden>Reload Stage0</button>
         <div class="splash-highlights" aria-hidden="true">
           <span class="splash-highlight"><span class="splash-highlight-dot" style="background:var(--splash-peach)"></span>No Checkout</span>
@@ -332,6 +328,13 @@
           <span>·</span>
           <span class="splash-highlight"><span class="splash-highlight-dot" style="background:var(--splash-green)"></span>Sandbox Adapters</span>
         </div>
+      </div>
+      <div class="splash-progress-info">
+        <div class="splash-progress-header">
+          <div id="splash-status" class="splash-status" role="status" aria-live="polite" aria-atomic="true">Starting Stage0</div>
+          <span id="splash-percentage" class="splash-percentage" aria-hidden="true">0%</span>
+        </div>
+        <div id="splash-detail" class="splash-detail">Step 1 of 7</div>
       </div>
       <div id="startup-progress" class="splash-progress-track" role="progressbar" aria-labelledby="splash-status" aria-describedby="splash-detail" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Starting Stage0 · 0%">
         <div id="startup-progress-fill" class="splash-progress"></div>

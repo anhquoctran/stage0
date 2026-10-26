@@ -55,6 +55,11 @@ Auxiliary notification windows retain their separate splash-removal path.
 - The progress bar exposes its current value, label and detail through ARIA;
   phase changes use a polite status announcement. Reduced motion disables the
   fill/fade transitions. Early saved/system theme selection is preserved.
+- Status, percentage and step detail belong to a footer anchored directly to the
+  splash, separate from the centered branding. The percentage reserves four
+  monospace character widths and aligns to the footer's right edge above the
+  bottom progress track, so changing digits or wrapping phase labels cannot
+  move it into the logo area.
 - Keep progress surfaces and the reload button at a 4px radius; the opaque reload
   button has no border and keeps a separate keyboard focus outline.
 
