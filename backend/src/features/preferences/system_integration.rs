@@ -1,9 +1,9 @@
 #[cfg(windows)]
 mod windows {
-    use windows_sys::Win32::Foundation::{ERROR_SUCCESS, HKEY};
+    use windows_sys::Win32::Foundation::ERROR_SUCCESS;
     use windows_sys::Win32::System::Registry::{
         RegCloseKey, RegCreateKeyExW, RegDeleteTreeW, RegDeleteValueW, RegOpenKeyExW,
-        RegQueryValueExW, RegSetValueExW, HKEY_CURRENT_USER, KEY_QUERY_VALUE, KEY_SET_VALUE,
+        RegQueryValueExW, RegSetValueExW, HKEY, HKEY_CURRENT_USER, KEY_QUERY_VALUE, KEY_SET_VALUE,
         KEY_WRITE, REG_OPTION_NON_VOLATILE, REG_SZ,
     };
 
