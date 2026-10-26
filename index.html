@@ -165,12 +165,16 @@
       }
 
       #startup-splash .splash-progress-header {
+        width: 100%;
+        margin: 0;
+      }
+
+      #startup-splash .splash-progress-footer {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         width: 100%;
         align-items: end;
         gap: 16px;
-        margin: 0;
       }
 
       #startup-splash .splash-progress-track {
@@ -224,7 +228,7 @@
       }
 
       #startup-splash .splash-detail {
-        width: 100%;
+        min-width: 0;
         min-height: 18px;
         margin: 0;
         color: var(--splash-muted);
@@ -332,9 +336,11 @@
       <div class="splash-progress-info">
         <div class="splash-progress-header">
           <div id="splash-status" class="splash-status" role="status" aria-live="polite" aria-atomic="true">Starting Stage0</div>
+        </div>
+        <div class="splash-progress-footer">
+          <div id="splash-detail" class="splash-detail">Step 1 of 7</div>
           <span id="splash-percentage" class="splash-percentage" aria-hidden="true">0%</span>
         </div>
-        <div id="splash-detail" class="splash-detail">Step 1 of 7</div>
       </div>
       <div id="startup-progress" class="splash-progress-track" role="progressbar" aria-labelledby="splash-status" aria-describedby="splash-detail" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Starting Stage0 · 0%">
         <div id="startup-progress-fill" class="splash-progress"></div>
