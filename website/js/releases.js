@@ -20,35 +20,146 @@
     tarArchive: RELEASES_PAGE_URL
   };
 
-  let currentDetectedOS = 'windows';
+  let currentDetectedOS = 'unknown';
+  let currentDetectedMacArchitecture = null;
+  let currentDetectedLinuxDownloadKey = null;
 
   // 1. OS Auto-Detection for Hero CTA
   function detectUserOS() {
+    const ua = (navigator.userAgent || '').toLowerCase();
+    const platform = (navigator.platform || '').toLowerCase();
+    const clientPlatform = (navigator.userAgentData?.platform || '').toLowerCase();
+    const isIPadDesktopMode = platform.includes('mac')
+      && Number(navigator.maxTouchPoints) > 1
+      && ua.includes('macintosh');
+
+    // iPadOS may expose MacIntel in desktop mode. Do not recommend a macOS installer.
+    if (/iphone|ipad|ipod/.test(ua) || clientPlatform.includes('ios') || isIPadDesktopMode) {
+      return 'ios';
+    }
+
     // Check modern Client Hints (Chromium: Chrome, Edge, Brave, Opera)
     if (navigator.userAgentData && navigator.userAgentData.platform) {
       const p = navigator.userAgentData.platform.toLowerCase();
       if (p.includes('win')) return 'windows';
       if (p.includes('mac')) return 'macos';
       if (p.includes('linux')) return 'linux';
+      if (p.includes('android')) return 'android';
     }
 
     // Check navigator.platform
-    const platform = (navigator.platform || '').toLowerCase();
     if (platform.includes('win')) return 'windows';
-    if (platform.includes('mac') || platform.includes('iphone') || platform.includes('ipad')) return 'macos';
+    if (platform.includes('mac')) return 'macos';
     if (platform.includes('linux') || platform.includes('x11')) return 'linux';
 
     // Check navigator.userAgent
-    const ua = (navigator.userAgent || '').toLowerCase();
     if (ua.includes('windows') || ua.includes('win32') || ua.includes('win64') || ua.includes('wow64')) return 'windows';
     if (ua.includes('macintosh') || ua.includes('mac os x') || ua.includes('darwin')) return 'macos';
     if (ua.includes('linux') || ua.includes('x11') || ua.includes('ubuntu') || ua.includes('debian') || ua.includes('fedora')) return 'linux';
+    if (ua.includes('android')) return 'android';
 
-    return 'windows';
+    return 'unknown';
   }
 
-  function applyHeroOS(osName) {
+  function normalizeMacArchitecture(architecture, bitness) {
+    const value = String(architecture || '').toLowerCase();
+    const bits = String(bitness || '').toLowerCase();
+    if (/^(arm|arm64|aarch64)$/.test(value) && bits !== '32') return 'arm64';
+    if (/^(x86|x86_64|x64|amd64)$/.test(value) && bits !== '32') return 'x86_64';
+    return null;
+  }
+
+  function detectMacArchitectureFromRenderer() {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl');
+      if (!gl) return null;
+
+      const rendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      const renderer = rendererInfo
+        ? gl.getParameter(rendererInfo.UNMASKED_RENDERER_WEBGL)
+        : gl.getParameter(gl.RENDERER);
+      const value = String(renderer || '').toLowerCase();
+
+      // Safari may expose the Apple GPU/M-series renderer while its UA says "Intel Mac".
+      // Keep this check local; the renderer is only used to select the matching installer.
+      if (/\bapple\s+(?:m[1-9]\d*(?:\s+(?:pro|max|ultra))?|gpu)\b/.test(value)) return 'arm64';
+      if (/\b(intel|amd|radeon)\b/.test(value)) return 'x86_64';
+    } catch (error) {
+      console.debug('Could not read local graphics renderer', error);
+    }
+    return null;
+  }
+
+  function detectLinuxDownloadKey() {
+    const ua = (navigator.userAgent || '').toLowerCase();
+    if (/\b(ubuntu|debian|linux mint|linuxmint|pop!?_?os|pop os|elementary os)\b/.test(ua)) {
+      return 'linuxDeb';
+    }
+    if (/\b(fedora|rhel|red hat|centos|rocky|alma|opensuse|open suse|suse)\b/.test(ua)) {
+      return 'linuxRpm';
+    }
+    return 'linuxAppImage';
+  }
+
+  function getAvailableLinuxDownloadKey() {
+    const preferred = currentDetectedLinuxDownloadKey || 'linuxAppImage';
+    const isAvailable = (key) => latestAssets[key] && latestAssets[key] !== RELEASES_PAGE_URL;
+    if (isAvailable(preferred)) return preferred;
+    if (preferred !== 'linuxAppImage' && isAvailable('linuxAppImage')) return 'linuxAppImage';
+    return null;
+  }
+
+  async function detectMacArchitecture() {
+    const rendererArchitecture = detectMacArchitectureFromRenderer();
+    if (rendererArchitecture) return rendererArchitecture;
+
+    const userAgentData = navigator.userAgentData;
+    if (userAgentData && typeof userAgentData.getHighEntropyValues === 'function') {
+      try {
+        const hints = await userAgentData.getHighEntropyValues(['architecture', 'bitness']);
+        const architecture = normalizeMacArchitecture(hints.architecture, hints.bitness);
+        if (architecture) return architecture;
+      } catch (error) {
+        console.debug('Could not read browser architecture hints', error);
+      }
+    }
+
+    // Use only explicit architecture tokens. Safari's "Intel Mac" UA is also used on Apple silicon.
+    const ua = (navigator.userAgent || '').toLowerCase();
+    if (/\b(arm64|aarch64)\b/.test(ua)) return 'arm64';
+    if (/\b(x86_64|x86-64)\b/.test(ua)) return 'x86_64';
+    return null;
+  }
+
+  function clearRecommendedDownload() {
+    document.querySelectorAll('.download-recommended').forEach(button => {
+      button.classList.remove('download-recommended');
+    });
+  }
+
+  function recommendDownload(assetKey) {
+    const button = document.querySelector(`[data-download-key="${assetKey}"]`);
+    if (button) button.classList.add('download-recommended');
+  }
+
+  function setCardBadge(card, label) {
+    const badgeLabel = card?.querySelector('.card-detected-badge span');
+    if (badgeLabel) badgeLabel.textContent = label;
+  }
+
+  function applyHeroOS(
+    osName,
+    macArchitecture = currentDetectedMacArchitecture,
+    linuxDownloadKey = currentDetectedLinuxDownloadKey
+  ) {
     currentDetectedOS = osName;
+    currentDetectedMacArchitecture = osName === 'macos'
+      ? normalizeMacArchitecture(macArchitecture)
+      : null;
+    currentDetectedLinuxDownloadKey = osName === 'linux'
+      ? linuxDownloadKey || 'linuxAppImage'
+      : null;
     const heroDownloadBtn = document.getElementById('hero-download-btn');
     const heroBtnText = document.getElementById('hero-btn-text');
     const heroPlatformLabel = document.getElementById('hero-platform-label');
@@ -61,31 +172,61 @@
     [windowsCard, macCard, linuxCard].forEach(c => {
       if (!c) return;
       c.classList.remove('highlight');
+      setCardBadge(c, 'Your OS');
     });
+    clearRecommendedDownload();
 
     if (osName === 'macos') {
       if (macCard) macCard.classList.add('highlight');
+      const isAppleSilicon = currentDetectedMacArchitecture === 'arm64';
+      const isIntel = currentDetectedMacArchitecture === 'x86_64';
+      if (isAppleSilicon) recommendDownload('macArm');
+      if (isIntel) recommendDownload('macIntel');
+      if (!isAppleSilicon && !isIntel) setCardBadge(macCard, 'Choose your chip');
       if (heroOsIcon) heroOsIcon.className = 'fa-brands fa-apple';
       if (heroBtnText) heroBtnText.textContent = 'Download for macOS';
-      if (heroPlatformLabel) heroPlatformLabel.textContent = '(Apple Silicon / Intel .dmg)';
+      if (heroPlatformLabel) {
+        heroPlatformLabel.textContent = isAppleSilicon
+          ? '(Apple Silicon .dmg)'
+          : isIntel
+            ? '(Intel .dmg)'
+            : '(Choose Apple Silicon or Intel below)';
+      }
       if (heroDownloadBtn) {
-        heroDownloadBtn.href = latestAssets.macArm;
+        heroDownloadBtn.href = isAppleSilicon
+          ? latestAssets.macArm
+          : isIntel
+            ? latestAssets.macIntel
+            : RELEASES_PAGE_URL;
         heroDownloadBtn.setAttribute('data-umami-event', 'hero-download-macos');
         heroDownloadBtn.setAttribute('data-umami-event-os', 'macos');
       }
     } else if (osName === 'linux') {
       if (linuxCard) linuxCard.classList.add('highlight');
+      const downloadKey = getAvailableLinuxDownloadKey();
+      if (downloadKey) recommendDownload(downloadKey);
+      else setCardBadge(linuxCard, 'Choose package');
       if (heroOsIcon) heroOsIcon.className = 'fa-brands fa-linux';
-      if (heroBtnText) heroBtnText.textContent = 'Download for Linux';
-      if (heroPlatformLabel) heroPlatformLabel.textContent = '(.AppImage, .deb, .rpm)';
+      if (heroBtnText) heroBtnText.textContent = downloadKey ? 'Download for Linux' : 'View Linux downloads';
+      if (heroPlatformLabel) {
+        const packageLabels = {
+          linuxAppImage: '.AppImage',
+          linuxDeb: '.deb',
+          linuxRpm: '.rpm',
+        };
+        const isFallback = downloadKey && downloadKey !== currentDetectedLinuxDownloadKey;
+        heroPlatformLabel.textContent = downloadKey
+          ? `(${packageLabels[downloadKey]}${isFallback ? ' fallback' : ' recommended'})`
+          : '(Choose a package below)';
+      }
       if (heroDownloadBtn) {
-        heroDownloadBtn.href = latestAssets.linuxAppImage;
+        heroDownloadBtn.href = downloadKey ? latestAssets[downloadKey] : RELEASES_PAGE_URL;
         heroDownloadBtn.setAttribute('data-umami-event', 'hero-download-linux');
         heroDownloadBtn.setAttribute('data-umami-event-os', 'linux');
       }
-    } else {
-      // Windows default
+    } else if (osName === 'windows') {
       if (windowsCard) windowsCard.classList.add('highlight');
+      recommendDownload('windowsExe');
       if (heroOsIcon) heroOsIcon.className = 'fa-brands fa-windows';
       if (heroBtnText) heroBtnText.textContent = 'Download for Windows';
       if (heroPlatformLabel) heroPlatformLabel.textContent = '(64-bit .exe)';
@@ -94,12 +235,29 @@
         heroDownloadBtn.setAttribute('data-umami-event', 'hero-download-windows');
         heroDownloadBtn.setAttribute('data-umami-event-os', 'windows');
       }
+    } else {
+      if (heroOsIcon) heroOsIcon.className = 'fa-solid fa-desktop';
+      if (heroBtnText) heroBtnText.textContent = 'View desktop downloads';
+      if (heroPlatformLabel) heroPlatformLabel.textContent = '(Windows, macOS, Linux)';
+      if (heroDownloadBtn) {
+        heroDownloadBtn.href = RELEASES_PAGE_URL;
+        heroDownloadBtn.setAttribute('data-umami-event', 'hero-download-desktop');
+        heroDownloadBtn.setAttribute('data-umami-event-os', osName);
+      }
     }
   }
 
-  function initOsDetection() {
+  async function initOsDetection() {
     const detected = detectUserOS();
-    applyHeroOS(detected);
+    currentDetectedMacArchitecture = null;
+    currentDetectedLinuxDownloadKey = detected === 'linux' ? detectLinuxDownloadKey() : null;
+    applyHeroOS(detected, null, currentDetectedLinuxDownloadKey);
+    if (detected !== 'macos') return;
+
+    const architecture = await detectMacArchitecture();
+    if (currentDetectedOS !== detected) return;
+    currentDetectedMacArchitecture = architecture;
+    applyHeroOS(detected, architecture);
   }
 
   // 2. Dynamic Version & Asset Resolver from GitHub API
@@ -151,7 +309,11 @@
     });
 
     // Re-apply Hero button with resolved assets
-    applyHeroOS(currentDetectedOS);
+    applyHeroOS(
+      currentDetectedOS,
+      currentDetectedMacArchitecture,
+      currentDetectedLinuxDownloadKey
+    );
 
     // Update credit year from release timestamp if available
     if (release.published_at || release.created_at) {
