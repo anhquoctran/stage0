@@ -349,8 +349,9 @@ code, pre {
 
 [data-theme="latte"] .hero::before,
 [data-theme="light"] .hero::before {
-  filter: brightness(0.9) contrast(0.95);
-  opacity: 0.28;
+  background-image: url('./assets/page-bg-light.svg');
+  filter: brightness(0.98) contrast(1.04);
+  opacity: 0.85;
 }
 
 .hero-pill {
