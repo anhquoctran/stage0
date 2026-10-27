@@ -4,12 +4,19 @@
 
   # Stage0
 
+  [![Website](https://img.shields.io/badge/Website-stage0-7c3aed?style=flat&logo=googlechrome&logoColor=white)](https://anhquoctran.github.io/stage0/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
   [![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC131?logo=tauri&logoColor=white)](https://tauri.app/)
   [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
   [![Rust 2021](https://img.shields.io/badge/Rust-2021_Edition-DEA584?logo=rust&logoColor=white)](https://www.rust-lang.org/)
   [![TypeScript 5.7](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+
+  <p align="center">
+    <a href="https://anhquoctran.github.io/stage0/">🌐 <strong>Live Website &amp; Interactive Demo</strong></a> &nbsp;•&nbsp;
+    <a href="https://anhquoctran.github.io/stage0/#download">📦 <strong>Download Binaries</strong></a> &nbsp;•&nbsp;
+    <a href="./docs/">📖 <strong>Documentation</strong></a>
+  </p>
 
 </div>
 
