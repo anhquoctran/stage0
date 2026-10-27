@@ -229,6 +229,31 @@ fn atomic_settings_writes_roll_back_together_on_failure() {
 }
 
 #[test]
+fn settings_are_consumed_once_only_for_the_expected_value() {
+    let conn = Connection::open_in_memory().unwrap();
+    conn.execute_batch(SCHEMA_SQL).unwrap();
+    let db = Database::from_connection(conn);
+    db.set_setting("pending_release_notes_version", "0.1.13")
+        .unwrap();
+
+    assert!(!db
+        .consume_setting_if_value("pending_release_notes_version", "0.1.12")
+        .unwrap());
+    assert_eq!(
+        db.get_setting("pending_release_notes_version")
+            .unwrap()
+            .as_deref(),
+        Some("0.1.13")
+    );
+    assert!(db
+        .consume_setting_if_value("pending_release_notes_version", "0.1.13")
+        .unwrap());
+    assert!(!db
+        .consume_setting_if_value("pending_release_notes_version", "0.1.13")
+        .unwrap());
+}
+
+#[test]
 fn legacy_preferences_can_be_removed_without_touching_other_settings() {
     let conn = Connection::open_in_memory().unwrap();
     conn.execute_batch(SCHEMA_SQL).unwrap();

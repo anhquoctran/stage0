@@ -5,4 +5,5 @@ export interface SoftwareUpdateService {
   check(): Promise<SoftwareUpdateStatus>;
   download(): Promise<void>;
   install(input: { savedWorkConfirmed: boolean }): Promise<void>;
+  consumeReleaseNotesPrompt(): Promise<boolean>;
 }

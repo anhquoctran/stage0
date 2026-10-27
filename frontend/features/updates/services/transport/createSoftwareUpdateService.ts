@@ -7,5 +7,6 @@ export function createSoftwareUpdateService(transport: CommandTransport): Softwa
     check: () => transport.executeCommand('check_software_update'),
     download: () => transport.executeCommand('download_software_update'),
     install: (input) => transport.executeCommand('install_software_update', input),
+    consumeReleaseNotesPrompt: () => transport.executeCommand('consume_software_update_release_notes'),
   };
 }

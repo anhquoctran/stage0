@@ -9,8 +9,9 @@ granted frontend capabilities.
 
 Backend `features/updates/` owns shared state, bounded HTTPS transport, the
 GitHub-only URL policy and check/download/install workflows. IPC commands are
-`get_software_update_status`, `check_software_update`, `download_software_update`
-and `install_software_update`. Callers cannot supply URLs, keys or packages.
+`get_software_update_status`, `check_software_update`, `download_software_update`,
+`install_software_update` and `consume_software_update_release_notes`. Callers
+cannot supply URLs, keys or packages.
 
 The fixed endpoint is
 `https://github.com/anhquoctran/stage0/releases/latest/download/latest.json`.
@@ -51,6 +52,10 @@ SQLite's committed state is checkpointed before replacement; storage locks remai
 held until process exit. All windows display an installation overlay. A normal
 installation failure releases the gate and preserves verified bytes for retry.
 Windows requests installer relaunch; macOS/Linux restart after replacement.
+The target version is persisted before replacement. On restart, only the main
+window consumes that marker, and only when its running package version matches;
+it then opens the existing Release Notes dialog once. Failed installs clear the
+marker, and other windows cannot consume it.
 
 The gate does not control unrelated applications or add an OS sandbox to external
 agents. Existing process limits, cancellation and review publication checks remain.

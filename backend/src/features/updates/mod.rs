@@ -7,6 +7,9 @@ mod transport;
 mod update_status;
 mod workflow;
 
+pub(super) const PENDING_RELEASE_NOTES_VERSION_SETTING: &str =
+    "software_update_release_notes_version";
+
 pub use runtime::UpdateRuntime;
 pub use workflow::start_background_checks;
 

@@ -35,6 +35,19 @@ impl Database {
         tx.commit()
     }
 
+    pub fn consume_setting_if_value(
+        &self,
+        key: &str,
+        expected_value: &str,
+    ) -> Result<bool, rusqlite::Error> {
+        let conn = self.conn();
+        let removed = conn.execute(
+            "DELETE FROM app_settings WHERE key = ?1 AND value = ?2;",
+            params![key, expected_value],
+        )?;
+        Ok(removed > 0)
+    }
+
     pub fn set_settings_atomic(&self, values: &[(&str, &str)]) -> Result<(), rusqlite::Error> {
         let mut conn = self.conn();
         let tx = conn.transaction()?;

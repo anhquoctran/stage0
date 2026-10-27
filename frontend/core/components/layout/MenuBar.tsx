@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { isMacOS } from '../../../common/utils/shortcuts';
+import { useApplicationServices } from '../../services/runtime/useApplicationServices';
+import { isPrimaryAppWindow } from '../../utils/isPrimaryAppWindow';
 import { AboutModal } from '../../../features/about/components/AboutModal';
 import { ReleaseNotesModal } from '../../../features/about/components/ReleaseNotesModal';
 import { getOsFileManagerName } from '../../../features/git/utils/fileActions';
@@ -11,6 +13,7 @@ import { ConfiguredMenu } from './menu-bar/ConfiguredMenu';
 import { useApplicationMenu } from './useApplicationMenu';
 
 export function MenuBar({ hidden = false }: MenuBarProps) {
+  const appServices = useApplicationServices();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
@@ -22,6 +25,20 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
     onOpenAbout: () => setShowAboutModal(true),
   };
   const { flags, recentRepos, chord } = useApplicationMenu(callbacks, showShortcutsModal || showAboutModal || showReleaseNotesModal);
+  useEffect(() => {
+    if (!appServices.platform.capabilities.backend || !isPrimaryAppWindow()) return;
+    let disposed = false;
+    void appServices.softwareUpdates.consumeReleaseNotesPrompt()
+      .then((shouldOpen) => {
+        if (!disposed && shouldOpen) setShowReleaseNotesModal(true);
+      })
+      .catch((error) => {
+        console.warn('Could not check for release notes after the software update:', error);
+      });
+    return () => {
+      disposed = true;
+    };
+  }, [appServices]);
   useEffect(() => {
     if (!flags.repository)
       setActiveMenu((current) => (current === 'repository_menu' ? null : current));

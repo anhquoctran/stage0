@@ -1,4 +1,7 @@
-use super::{policy, runtime::UpdateRuntime, transport, update_status::UpdateStatus};
+use super::{
+    policy, runtime::UpdateRuntime, transport, update_status::UpdateStatus,
+    PENDING_RELEASE_NOTES_VERSION_SETTING,
+};
 use crate::{
     common::activity::InstallationLease,
     core::db::Database,
@@ -123,23 +126,62 @@ pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Resu
     {
         return Err("Close Local Worktree and Docker instances in Sandbox settings before installing the update.".into());
     }
-    let checkpoint_busy: i32 = app
-        .state::<Database>()
-        .conn()
-        .query_row("PRAGMA wal_checkpoint(FULL);", [], |row| row.get(0))
-        .map_err(|_| "Could not flush Stage0's database. Installation was not started.")?;
+    let target_version = runtime
+        .pending
+        .lock()
+        .unwrap_or_else(|error| error.into_inner())
+        .as_ref()
+        .map(|(update, _)| update.version.clone())
+        .ok_or("The verified update is no longer available. Check again.")?;
+    app.state::<Database>()
+        .set_setting(PENDING_RELEASE_NOTES_VERSION_SETTING, &target_version)
+        .map_err(|_| "Could not save the update restart state. Installation was not started.")?;
+    let checkpoint = {
+        let database = app.state::<Database>();
+        let connection = database.conn();
+        connection.query_row("PRAGMA wal_checkpoint(FULL);", [], |row| row.get(0))
+    };
+    let checkpoint_busy: i32 = match checkpoint {
+        Ok(busy) => busy,
+        Err(_) => {
+            let _ = app
+                .state::<Database>()
+                .delete_settings(&[PENDING_RELEASE_NOTES_VERSION_SETTING]);
+            return Err("Could not flush Stage0's database. Installation was not started.".into());
+        }
+    };
     if checkpoint_busy != 0 {
+        let _ = app
+            .state::<Database>()
+            .delete_settings(&[PENDING_RELEASE_NOTES_VERSION_SETTING]);
         return Err(
             "Stage0's database is busy. Wait for pending writes and retry installation.".into(),
         );
     }
-    let (update, bytes) = runtime
+    let pending = runtime
         .pending
         .lock()
         .unwrap_or_else(|error| error.into_inner())
-        .take()
-        .ok_or("The verified update is no longer available. Check again.")?;
-    let bytes = bytes.ok_or("Download the update before installing it")?;
+        .take();
+    let (update, bytes) = match pending {
+        Some((update, Some(bytes))) => (update, bytes),
+        Some((update, None)) => {
+            *runtime
+                .pending
+                .lock()
+                .unwrap_or_else(|error| error.into_inner()) = Some((update, None));
+            let _ = app
+                .state::<Database>()
+                .delete_settings(&[PENDING_RELEASE_NOTES_VERSION_SETTING]);
+            return Err("Download the update before installing it.".into());
+        }
+        None => {
+            let _ = app
+                .state::<Database>()
+                .delete_settings(&[PENDING_RELEASE_NOTES_VERSION_SETTING]);
+            return Err("The verified update is no longer available. Check again.".into());
+        }
+    };
     runtime.change(app, |status| {
         status.phase = "installing".into();
         status.message = Some("Installing the update. Stage0 will restart.".into());
@@ -150,6 +192,9 @@ pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Resu
         // The official installer verifies again immediately before replacement.
         // Windows runs its cleanup hook and exits only after launching the installer.
         if update.install(&bytes).is_err() {
+            let _ = handle
+                .state::<Database>()
+                .delete_settings(&[PENDING_RELEASE_NOTES_VERSION_SETTING]);
             let runtime = handle.state::<UpdateRuntime>();
             *runtime.pending.lock().unwrap_or_else(|error| error.into_inner()) = Some((update, Some(bytes)));
             runtime.change(&handle, |status| {

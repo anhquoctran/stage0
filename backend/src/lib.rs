@@ -377,6 +377,7 @@ pub fn run() {
             commands::check_software_update,
             commands::download_software_update,
             commands::install_software_update,
+            commands::consume_software_update_release_notes,
             // Stage0 toast notifications
             notifications::dispatch_notification,
             notifications::send_test_notification,
