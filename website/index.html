@@ -42,8 +42,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <!-- Styles (Modular & Versioned Cache-Busted) -->
-  <link rel="stylesheet" href="./styles.css?v=20261027_v45">
-  <link rel="stylesheet" href="./mockup.css?v=20261027_v45">
+  <link rel="stylesheet" href="./styles.css?v=20261027_v48">
+  <link rel="stylesheet" href="./mockup.css?v=20261027_v48">
+
+  <!-- Umami Analytics (Privacy-First, Cookie-Free, Open-Source) -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="5513caae-dc63-4736-aefa-37c249e6043d"></script>
 </head>
 <body>
 
@@ -65,21 +68,21 @@
       </ul>
 
       <div class="nav-actions">
-        <button id="theme-toggle" class="btn btn-icon" title="Toggle theme (Catppuccin Mocha / Latte)" aria-label="Toggle theme" style="border-radius: 9999px;">
+        <button id="theme-toggle" class="btn btn-icon" title="Toggle theme (Catppuccin Mocha / Latte)" aria-label="Toggle theme" style="border-radius: 9999px;" data-umami-event="header-theme-toggle">
           <i class="fa-solid fa-moon" id="theme-icon"></i>
         </button>
 
-        <a href="https://github.com/anhquoctran/stage0" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-github-desktop" style="border-radius: 9999px;">
+        <a href="https://github.com/anhquoctran/stage0" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-github-desktop" style="border-radius: 9999px;" data-umami-event="header-github-click">
           <i class="fa-brands fa-github"></i>
           <span>GitHub</span>
         </a>
 
-        <a href="#download" class="btn btn-primary btn-nav-download" style="border-radius: 9999px;">
+        <a href="#download" class="btn btn-primary btn-nav-download" style="border-radius: 9999px;" data-umami-event="header-get-stage0-click">
           <i class="fa-solid fa-download"></i>
           <span><span class="nav-get-text">Get </span>Stage0</span>
         </a>
 
-        <button id="mobile-menu-toggle" class="btn btn-icon mobile-menu-btn" title="Toggle menu" aria-label="Toggle menu" style="border-radius: 9999px;">
+        <button id="mobile-menu-toggle" class="btn btn-icon mobile-menu-btn" title="Toggle menu" aria-label="Toggle menu" style="border-radius: 9999px;" data-umami-event="mobile-menu-toggle">
           <i class="fa-solid fa-bars"></i>
         </button>
       </div>
@@ -88,15 +91,15 @@
     <!-- Mobile Navigation Drawer -->
     <div id="mobile-menu" class="mobile-menu">
       <ul class="mobile-nav-links">
-        <li><a href="#ai-reviewers" class="mobile-nav-link">AI Reviewers</a></li>
-        <li><a href="#features" class="mobile-nav-link">Capabilities</a></li>
-        <li><a href="#comparison" class="mobile-nav-link">Why Stage0</a></li>
-        <li><a href="#download" class="mobile-nav-link">Download</a></li>
-        <li><a href="#quickstart" class="mobile-nav-link">Quick Start</a></li>
-        <li><a href="#faq" class="mobile-nav-link">FAQ</a></li>
+        <li><a href="#ai-reviewers" class="mobile-nav-link" data-umami-event="mobile-nav-click" data-umami-event-nav="ai-reviewers">AI Reviewers</a></li>
+        <li><a href="#features" class="mobile-nav-link" data-umami-event="mobile-nav-click" data-umami-event-nav="capabilities">Capabilities</a></li>
+        <li><a href="#comparison" class="mobile-nav-link" data-umami-event="mobile-nav-click" data-umami-event-nav="why-stage0">Why Stage0</a></li>
+        <li><a href="#download" class="mobile-nav-link" data-umami-event="mobile-nav-click" data-umami-event-nav="download">Download</a></li>
+        <li><a href="#quickstart" class="mobile-nav-link" data-umami-event="mobile-nav-click" data-umami-event-nav="quickstart">Quick Start</a></li>
+        <li><a href="#faq" class="mobile-nav-link" data-umami-event="mobile-nav-click" data-umami-event-nav="faq">FAQ</a></li>
       </ul>
       <div class="mobile-menu-actions">
-        <a href="https://github.com/anhquoctran/stage0" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="border-radius: 9999px; width: 100%;">
+        <a href="https://github.com/anhquoctran/stage0" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="border-radius: 9999px; width: 100%;" data-umami-event="mobile-github-click">
           <i class="fa-brands fa-github"></i>
           <span>View on GitHub</span>
         </a>
@@ -122,13 +125,13 @@
       </p>
 
       <div class="hero-cta">
-        <a id="hero-download-btn" href="https://github.com/anhquoctran/stage0/releases/latest" class="btn btn-primary hero-download-btn" style="border-radius: 9999px;">
+        <a id="hero-download-btn" href="https://github.com/anhquoctran/stage0/releases/latest" class="btn btn-primary hero-download-btn" style="border-radius: 9999px;" data-umami-event="hero-download-click">
           <i id="hero-os-icon" class="fa-brands fa-windows" style="font-size: 1.15rem;"></i>
           <span id="hero-btn-text">Download for Windows</span>
           <span id="hero-platform-label" style="opacity: 0.85; font-size: 0.85rem; font-weight: normal;">(64-bit .exe)</span>
         </a>
 
-        <a href="#quickstart" class="btn btn-secondary hero-download-btn" style="border-radius: 9999px;">
+        <a href="#quickstart" class="btn btn-secondary hero-download-btn" style="border-radius: 9999px;" data-umami-event="hero-quickstart-click">
           <span>Quick Start Guide</span>
           <i class="fa-solid fa-arrow-right"></i>
         </a>
@@ -137,7 +140,7 @@
       <div class="hero-alt-platforms">
         <span class="version-badge" data-latest-version>v0.1.12</span>
         <span>&bull;</span>
-        <span>Windows, macOS &amp; Linux &bull; <a href="#download" style="color: var(--ctp-mauve); text-decoration: underline;">All downloads &darr;</a></span>
+        <span>Windows, macOS &amp; Linux &bull; <a href="#download" style="color: var(--ctp-mauve); text-decoration: underline;" data-umami-event="hero-all-downloads-click">All downloads &darr;</a></span>
       </div>
 
       <div class="hero-stats">
@@ -271,17 +274,17 @@
           </div>
 
           <div class="mockup-tabbar-subnav">
-            <button class="mockup-subtab-btn active" data-mockup-tab="diff">
+            <button class="mockup-subtab-btn active" data-mockup-tab="diff" data-umami-event="mockup-tab-click" data-umami-event-tab="diff">
               <i class="fa-solid fa-code"></i>
               <span>Changes</span>
               <span class="subtab-counter">3</span>
             </button>
-            <button class="mockup-subtab-btn" data-mockup-tab="ai">
+            <button class="mockup-subtab-btn" data-mockup-tab="ai" data-umami-event="mockup-tab-click" data-umami-event-tab="ai">
               <i class="fa-solid fa-robot"></i>
               <span>Multi-Agent Review</span>
               <span class="subtab-counter brand">3</span>
             </button>
-            <button class="mockup-subtab-btn" data-mockup-tab="conflict">
+            <button class="mockup-subtab-btn" data-mockup-tab="conflict" data-umami-event="mockup-tab-click" data-umami-event-tab="conflict">
               <i class="fa-solid fa-diagram-project"></i>
               <span>Conflict Map</span>
             </button>
@@ -484,10 +487,10 @@
                   <span>100% In-Memory Review &bull; Zero checkout overhead &bull; Zero code leaked</span>
                 </div>
                 <div class="ai-footer-actions">
-                  <button class="btn-card-action outline" id="mockup-btn-discuss">
+                  <button class="btn-card-action outline" id="mockup-btn-discuss" data-umami-event="mockup-btn-discuss">
                     <i class="fa-regular fa-comment-dots"></i> Discuss with Sentinel
                   </button>
-                  <button class="btn-card-action primary btn-solid" id="mockup-btn-apply">
+                  <button class="btn-card-action primary btn-solid" id="mockup-btn-apply" data-umami-event="mockup-btn-apply">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Apply Suggested Patch
                   </button>
                 </div>
@@ -938,9 +941,9 @@
         <div class="comp-filter-bar">
           <span class="comp-filter-label"><i class="fa-solid fa-sliders"></i> Compare with:</span>
           <div class="comp-filter-pills" role="tablist">
-            <button type="button" class="comp-filter-btn active" data-comp-filter="all">All</button>
-            <button type="button" class="comp-filter-btn" data-comp-filter="pr">Web PR</button>
-            <button type="button" class="comp-filter-btn" data-comp-filter="ai">In-Editor AI</button>
+            <button type="button" class="comp-filter-btn active" data-comp-filter="all" data-umami-event="comparison-filter-click" data-umami-event-filter="all">All</button>
+            <button type="button" class="comp-filter-btn" data-comp-filter="pr" data-umami-event="comparison-filter-click" data-umami-event-filter="pr">Web PR</button>
+            <button type="button" class="comp-filter-btn" data-comp-filter="ai" data-umami-event="comparison-filter-click" data-umami-event-filter="ai">In-Editor AI</button>
           </div>
         </div>
 
@@ -1121,7 +1124,7 @@
             <li><i class="fa-solid fa-check check-icon"></i> <span>VS Code one-click path resolve</span></li>
           </ul>
           <div class="download-actions">
-            <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="windowsExe" class="btn-pill-download" style="border-radius: 9999px;">
+            <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="windowsExe" class="btn-pill-download" style="border-radius: 9999px;" data-umami-event="download-windows">
               <i class="fa-brands fa-windows"></i>
               <span>Download for Windows</span>
             </a>
@@ -1148,12 +1151,12 @@
             <li><i class="fa-solid fa-check check-icon"></i> <span>macOS traffic lights window chrome</span></li>
           </ul>
           <div class="download-actions">
-            <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="macArm" class="btn-pill-download" style="border-radius: 9999px;">
+            <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="macArm" class="btn-pill-download" style="border-radius: 9999px;" data-umami-event="download-mac-arm">
               <i class="fa-brands fa-apple"></i>
               <span>Download Apple Silicon</span>
             </a>
             <div class="format-buttons-grid">
-              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="macIntel" class="btn-format" style="grid-column: span 2; border-radius: 9999px;">
+              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="macIntel" class="btn-format" style="grid-column: span 2; border-radius: 9999px;" data-umami-event="download-mac-intel">
                 <i class="fa-brands fa-apple"></i>
                 <span>Download Intel Chipset</span>
               </a>
@@ -1182,24 +1185,24 @@
             <li><i class="fa-solid fa-check check-icon"></i> <span>Secret Service / Libsecret credential storage</span></li>
           </ul>
           <div class="download-actions">
-            <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="linuxAppImage" class="btn-pill-download" style="border-radius: 9999px;">
+            <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="linuxAppImage" class="btn-pill-download" style="border-radius: 9999px;" data-umami-event="download-linux-appimage">
               <i class="fa-brands fa-linux"></i>
               <span>Download AppImage</span>
             </a>
             <div class="format-buttons-grid">
-              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="linuxDeb" class="btn-format" title="Debian / Ubuntu Package">
+              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="linuxDeb" class="btn-format" title="Debian / Ubuntu Package" data-umami-event="download-linux-deb">
                 <i class="fa-brands fa-ubuntu"></i>
                 <span>.deb</span>
               </a>
-              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="linuxRpm" class="btn-format" title="Fedora / RHEL Package">
+              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="linuxRpm" class="btn-format" title="Fedora / RHEL Package" data-umami-event="download-linux-rpm">
                 <i class="fa-brands fa-redhat"></i>
                 <span>.rpm</span>
               </a>
-              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="tarArchive" class="btn-format" title="Standalone Tarball Archive">
+              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="tarArchive" class="btn-format" title="Standalone Tarball Archive" data-umami-event="download-linux-targz">
                 <i class="fa-solid fa-file-zipper"></i>
                 <span>.tar.gz</span>
               </a>
-              <a href="https://github.com/anhquoctran/stage0/releases/latest" class="btn-format" target="_blank" rel="noopener noreferrer" title="All Release Assets">
+              <a href="https://github.com/anhquoctran/stage0/releases/latest" class="btn-format" target="_blank" rel="noopener noreferrer" title="All Release Assets" data-umami-event="download-all-assets">
                 <i class="fa-solid fa-list-ul"></i>
                 <span>All Assets</span>
               </a>
@@ -1209,7 +1212,7 @@
       </div>
 
       <div style="text-align: center; color: var(--ctp-subtext0); font-size: 0.875rem;">
-        Need build artifacts, checksums or older versions? Visit the <a href="https://github.com/anhquoctran/stage0/releases" target="_blank" rel="noopener noreferrer" style="color: var(--ctp-brand); text-decoration: underline;"><i class="fa-brands fa-github"></i> GitHub Releases page</a>.
+        Need build artifacts, checksums or older versions? Visit the <a href="https://github.com/anhquoctran/stage0/releases" target="_blank" rel="noopener noreferrer" style="color: var(--ctp-brand); text-decoration: underline;" data-umami-event="download-github-releases"><i class="fa-brands fa-github"></i> GitHub Releases page</a>.
       </div>
     </div>
   </section>
@@ -1266,16 +1269,16 @@
             </p>
             
             <div class="distro-tabs-nav">
-              <button class="distro-tab-btn active" data-distro-tab="appimage">
+              <button class="distro-tab-btn active" data-distro-tab="appimage" data-umami-event="distro-tab-click" data-umami-event-distro="appimage">
                 <i class="fa-brands fa-linux"></i> AppImage
               </button>
-              <button class="distro-tab-btn" data-distro-tab="deb">
+              <button class="distro-tab-btn" data-distro-tab="deb" data-umami-event="distro-tab-click" data-umami-event-distro="deb">
                 <i class="fa-brands fa-ubuntu"></i> Debian / Ubuntu (.deb)
               </button>
-              <button class="distro-tab-btn" data-distro-tab="rpm">
+              <button class="distro-tab-btn" data-distro-tab="rpm" data-umami-event="distro-tab-click" data-umami-event-distro="rpm">
                 <i class="fa-brands fa-redhat"></i> Fedora / RHEL (.rpm)
               </button>
-              <button class="distro-tab-btn" data-distro-tab="tar">
+              <button class="distro-tab-btn" data-distro-tab="tar" data-umami-event="distro-tab-click" data-umami-event-distro="tar">
                 <i class="fa-solid fa-file-zipper"></i> Tarball (.tar.gz)
               </button>
             </div>
@@ -1516,10 +1519,10 @@
         <div>
           <h4 class="footer-col-title">Open Source</h4>
           <ul class="footer-links">
-            <li><a href="https://github.com/anhquoctran/stage0" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github"></i> GitHub Repository</a></li>
-            <li><a href="https://github.com/anhquoctran/stage0/releases" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-tag"></i> Releases &amp; Changelog</a></li>
-            <li><a href="https://github.com/anhquoctran/stage0/issues" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-circle-exclamation"></i> Report an Issue</a></li>
-            <li><a href="https://github.com/anhquoctran/stage0/blob/main/LICENSE" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-scale-balanced"></i> MIT License</a></li>
+            <li><a href="https://github.com/anhquoctran/stage0" target="_blank" rel="noopener noreferrer" data-umami-event="footer-link-click" data-umami-event-name="github-repo"><i class="fa-brands fa-github"></i> GitHub Repository</a></li>
+            <li><a href="https://github.com/anhquoctran/stage0/releases" target="_blank" rel="noopener noreferrer" data-umami-event="footer-link-click" data-umami-event-name="releases"><i class="fa-solid fa-tag"></i> Releases &amp; Changelog</a></li>
+            <li><a href="https://github.com/anhquoctran/stage0/issues" target="_blank" rel="noopener noreferrer" data-umami-event="footer-link-click" data-umami-event-name="issues"><i class="fa-solid fa-circle-exclamation"></i> Report an Issue</a></li>
+            <li><a href="https://github.com/anhquoctran/stage0/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" data-umami-event="footer-link-click" data-umami-event-name="license"><i class="fa-solid fa-scale-balanced"></i> MIT License</a></li>
           </ul>
         </div>
       </div>
@@ -1535,6 +1538,14 @@
     </div>
   </footer>
 
-  <script src="./app.js?v=20261027_v45"></script>
+  <!-- Core Stage0 Registry & Global Object -->
+  <script src="./js/stage0.js?v=20261027_v49"></script>
+
+  <!-- Modular Landing Page Scripts (Cache-Busted) -->
+  <script defer src="./js/theme.js?v=20261027_v49"></script>
+  <script defer src="./js/releases.js?v=20261027_v49"></script>
+  <script defer src="./js/components.js?v=20261027_v49"></script>
+  <script defer src="./js/mockup.js?v=20261027_v49"></script>
+  <script defer src="./app.js?v=20261027_v49"></script>
 </body>
 </html>
