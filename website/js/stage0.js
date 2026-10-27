@@ -183,6 +183,126 @@
     }
   }
 
+  /**
+   * Common Fetch Wrapper with timeout, error handling and retry support
+   * @param {string} url - Request target URL
+   * @param {Object} [options] - Options (timeout, retries, retryDelay, headers, etc.)
+   * @returns {Promise<Response>}
+   */
+  async function httpFetch(url, options = {}) {
+    if (typeof fetch !== 'function') {
+      throw new Error('[Stage0.http] Global fetch API is not available in this environment');
+    }
+
+    const {
+      timeout = 10000,
+      retries = 0,
+      retryDelay = 500,
+      headers = {},
+      ...fetchOptions
+    } = options;
+
+    let controller;
+    let timeoutId;
+
+    if (typeof AbortController !== 'undefined') {
+      controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), timeout);
+      if (fetchOptions.signal) {
+        fetchOptions.signal.addEventListener('abort', () => controller.abort());
+      }
+      fetchOptions.signal = controller.signal;
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        headers: {
+          ...headers
+        }
+      });
+      return response;
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        throw new Error(`[Stage0.http] Request timed out after ${timeout}ms for URL: ${url}`);
+      }
+      if (retries > 0) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        return httpFetch(url, { ...options, retries: retries - 1 });
+      }
+      throw err;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
+
+  /**
+   * Convenience helper to fetch and parse JSON with automatic response.ok verification
+   * @param {string} url - Target URL
+   * @param {Object} [options] - Request options
+   * @returns {Promise<any>}
+   */
+  async function getJson(url, options = {}) {
+    const res = await httpFetch(url, {
+      ...options,
+      headers: {
+        Accept: 'application/json, application/vnd.github.v3+json, text/plain, */*',
+        ...(options.headers || {})
+      }
+    });
+
+    if (!res.ok) {
+      const error = new Error(`[Stage0.http] HTTP ${res.status} ${res.statusText} for URL: ${url}`);
+      error.status = res.status;
+      error.response = res;
+      throw error;
+    }
+
+    return res.json();
+  }
+
+  /**
+   * Convenience helper for HEAD requests (e.g. server headers inspection)
+   * @param {string} url - Target URL
+   * @param {Object} [options] - Request options
+   * @returns {Promise<Response>}
+   */
+  async function head(url, options = {}) {
+    return httpFetch(url, {
+      ...options,
+      method: 'HEAD'
+    });
+  }
+
+  /**
+   * REST API & HTTP Suite for Stage0
+   */
+  const restApi = Object.freeze({
+    fetch: httpFetch,
+    get: (url, options) => httpFetch(url, { ...options, method: 'GET' }),
+    getJson,
+    head,
+    post: (url, body, options = {}) => httpFetch(url, {
+      ...options,
+      method: 'POST',
+      body: typeof body === 'object' && !(body instanceof FormData) ? JSON.stringify(body) : body,
+      headers: {
+        ...(typeof body === 'object' && !(body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
+        ...(options.headers || {})
+      }
+    }),
+    postJson: (url, data, options = {}) => httpFetch(url, {
+      ...options,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(options.headers || {})
+      },
+      body: JSON.stringify(data)
+    })
+  });
+
   // Pre-configured Website Core Constants & Release Config
   const GITHUB_REPO = 'anhquoctran/stage0';
   const RELEASES_PAGE_URL = `https://github.com/${GITHUB_REPO}/releases/latest`;
@@ -211,6 +331,12 @@
   // Runtime dynamic asset URLs map (initialized from default fallback URLs)
   const latestAssets = { ...defaultAssets };
 
+  // Pre-register core HTTP methods in functions registry and modules
+  defineFunction('fetch', httpFetch);
+  defineFunction('getJson', getJson);
+  defineFunction('head', head);
+  defineModule('restApi', restApi);
+
   // Construct the Stage0 core registry object
   const stage0 = {
     // Registries (proxied against direct modification/overwrites)
@@ -220,6 +346,16 @@
     constant: constants,
     modules,
     module: modules,
+
+    // REST API Suite
+    restApi,
+    api: restApi,
+    http: restApi,
+
+    // Common Shortcuts
+    fetch: httpFetch,
+    getJson,
+    head,
 
     // Runtime Dynamic Release Assets
     latestAssets,

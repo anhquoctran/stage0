@@ -172,7 +172,11 @@
         } catch (e) {}
       }
 
-      const res = await fetch(RELEASES_API_URL);
+      const requestFn = s0?.restApi?.fetch || s0?.fetch || fetch;
+      const res = await requestFn(RELEASES_API_URL, {
+        timeout: 8000,
+        headers: { Accept: 'application/vnd.github.v3+json, application/json' }
+      });
       if (!res.ok) {
         console.warn(`GitHub Releases API responded with status ${res.status}`);
         return;
@@ -233,8 +237,9 @@
   async function initDynamicCreditYear() {
     if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
       try {
-        const headRes = await fetch(window.location.href, { method: 'HEAD', cache: 'no-store' });
-        const serverDate = headRes.headers.get('date');
+        const headFn = s0?.restApi?.head || s0?.head || ((url, opts) => (s0?.fetch || fetch)(url, { ...opts, method: 'HEAD' }));
+        const headRes = await headFn(window.location.href, { cache: 'no-store', timeout: 4000 });
+        const serverDate = headRes?.headers?.get('date');
         if (serverDate) {
           const year = extractYearFromDateString(serverDate);
           if (year && updateCreditYear(year)) return;
