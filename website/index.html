@@ -2,7 +2,7 @@
 <html lang="en" data-theme="mocha">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Stage0 — AI-Native Git Code Reviewer &amp; Virtual MR Sandbox</title>
   
   <!-- Primary Meta Tags -->
@@ -128,8 +128,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <!-- Styles (Modular & Versioned Cache-Busted) -->
-  <link rel="stylesheet" href="./styles.css?v=20261027_v48">
-  <link rel="stylesheet" href="./mockup.css?v=20261027_v48">
+  <link rel="stylesheet" href="./styles.css?v=20261027_v49">
+  <link rel="stylesheet" href="./mockup.css?v=20261027_v49">
 
   <!-- Umami Analytics (Privacy-First, Cookie-Free, Open-Source) -->
   <script defer src="https://cloud.umami.is/script.js" data-website-id="5513caae-dc63-4736-aefa-37c249e6043d"></script>
@@ -208,8 +208,10 @@
       <div class="hero-cta">
         <a id="hero-download-btn" href="https://github.com/anhquoctran/stage0/releases/latest" class="btn btn-primary hero-download-btn" style="border-radius: 9999px;" data-umami-event="hero-download-click">
           <i id="hero-os-icon" class="fa-brands fa-windows" style="font-size: 1.15rem;"></i>
-          <span id="hero-btn-text">Download for Windows</span>
-          <span id="hero-platform-label" style="opacity: 0.85; font-size: 0.85rem; font-weight: normal;">(64-bit .exe)</span>
+          <span class="hero-btn-content">
+            <span id="hero-btn-text">Download for Windows</span>
+            <span id="hero-platform-label" class="hero-platform-label">(64-bit .exe)</span>
+          </span>
         </a>
 
         <a href="#quickstart" class="btn btn-secondary hero-download-btn" style="border-radius: 9999px;" data-umami-event="hero-quickstart-click">
