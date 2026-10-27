@@ -42,8 +42,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <!-- Styles (Modular & Versioned Cache-Busted) -->
-  <link rel="stylesheet" href="./styles.css?v=20261027_v44">
-  <link rel="stylesheet" href="./mockup.css?v=20261027_v44">
+  <link rel="stylesheet" href="./styles.css?v=20261027_v45">
+  <link rel="stylesheet" href="./mockup.css?v=20261027_v45">
 </head>
 <body>
 
@@ -868,9 +868,9 @@
     <div class="container">
       <div class="section-header">
         <span class="section-tag">Comparison</span>
-        <h2 class="section-title">Why an AI-Native Virtual Reviewer Beats Traditional PRs</h2>
+        <h2 class="section-title">Why Stage0 Beats Traditional PRs &amp; In-Editor AI</h2>
         <p class="section-desc">
-          Compare pre-flight AI review in Stage0 versus traditional late web pull requests and generic AI web chat interfaces.
+          Compare Stage0's zero-checkout in-memory review against late cloud PRs and working-tree-invasive in-editor AI agents.
         </p>
       </div>
 
@@ -886,8 +886,8 @@
                   <div class="th-sub">GitHub / GitLab</div>
                 </th>
                 <th class="th-alt">
-                  <div class="th-title">Generic Web AI</div>
-                  <div class="th-sub">ChatGPT / Claude</div>
+                  <div class="th-title">In-Editor AI Agent</div>
+                  <div class="th-sub">Cursor / Copilot / Cline</div>
                 </th>
                 <th class="th-stage0">
                   <div class="th-stage0-badge">
@@ -899,34 +899,34 @@
             </thead>
             <tbody>
               <tr>
-                <td class="td-dim">Review Timing</td>
+                <td class="td-dim">Review Timing &amp; Flow</td>
                 <td class="td-alt">Late (after push, waiting for CI/human)</td>
-                <td class="td-alt"><span class="val-warn"><i class="fa-solid fa-triangle-exclamation"></i> Manual snippet copy-paste</span></td>
+                <td class="td-alt"><span class="val-warn"><i class="fa-solid fa-triangle-exclamation"></i> Clutters editing tabs; interrupts active coding</span></td>
                 <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> Instant &amp; Pre-Flight on local branches</span></td>
               </tr>
               <tr>
                 <td class="td-dim">3-Way Git Merge Context</td>
-                <td class="td-alt">Evaluated on cloud servers</td>
-                <td class="td-alt"><span class="val-cross"><i class="fa-solid fa-xmark"></i> Zero Git tree awareness</span></td>
-                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> Full 3-way merge base &amp; conflict preview</span></td>
-              </tr>
-              <tr>
-                <td class="td-dim">Specialized Review Personas</td>
-                <td class="td-alt">Expensive third-party cloud bots</td>
-                <td class="td-alt">Single generic chat prompt</td>
-                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> Security, Architecture, Perf &amp; Merge bots</span></td>
-              </tr>
-              <tr>
-                <td class="td-dim">Confidentiality &amp; Privacy</td>
-                <td class="td-alt">Code hosted on public/private SaaS</td>
-                <td class="td-alt"><span class="val-cross"><i class="fa-solid fa-xmark"></i> Proprietary code uploaded to cloud LLMs</span></td>
-                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> 100% Local-First, supports offline Ollama</span></td>
+                <td class="td-alt">Evaluated remotely on cloud servers</td>
+                <td class="td-alt"><span class="val-cross"><i class="fa-solid fa-xmark"></i> Zero 3-way merge base or conflict engine</span></td>
+                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> Full in-memory 3-way merge &amp; conflict preview</span></td>
               </tr>
               <tr>
                 <td class="td-dim">Working Tree Safety</td>
                 <td class="td-alt">Must push branch to remote</td>
-                <td class="td-alt">N/A (No repo context)</td>
-                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> In-Memory sandbox, never touches active files</span></td>
+                <td class="td-alt"><span class="val-cross"><i class="fa-solid fa-xmark"></i> Mutates active files; requires branch checkout &amp; stash</span></td>
+                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> In-Memory sandbox, zero-checkout, 0% dirty tree risk</span></td>
+              </tr>
+              <tr>
+                <td class="td-dim">Specialized Review Personas</td>
+                <td class="td-alt">Expensive third-party cloud bots</td>
+                <td class="td-alt">Single generalist chat prompt (one model fits all)</td>
+                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> Multi-agent ensemble (Security, Arch, Perf, Merge)</span></td>
+              </tr>
+              <tr>
+                <td class="td-dim">Confidentiality &amp; Privacy</td>
+                <td class="td-alt">Code hosted on public/private SaaS</td>
+                <td class="td-alt"><span class="val-warn"><i class="fa-solid fa-triangle-exclamation"></i> Cloud-dependent; proprietary code indexed offsite</span></td>
+                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> 100% Local-First, native Ollama &amp; OS Keychain</span></td>
               </tr>
             </tbody>
           </table>
@@ -940,7 +940,7 @@
           <div class="comp-filter-pills" role="tablist">
             <button type="button" class="comp-filter-btn active" data-comp-filter="all">All</button>
             <button type="button" class="comp-filter-btn" data-comp-filter="pr">Web PR</button>
-            <button type="button" class="comp-filter-btn" data-comp-filter="ai">Generic AI</button>
+            <button type="button" class="comp-filter-btn" data-comp-filter="ai">In-Editor AI</button>
           </div>
         </div>
 
@@ -949,7 +949,7 @@
           <div class="comp-mobile-card">
             <div class="comp-card-header">
               <span class="comp-card-pill">Dimension 1</span>
-              <h3 class="comp-card-title">Review Timing</h3>
+              <h3 class="comp-card-title">Review Timing &amp; Flow</h3>
             </div>
             <div class="comp-stage0-box">
               <div class="comp-stage0-header">
@@ -967,8 +967,8 @@
                 <span class="comp-alt-desc">Late (after push, waiting for CI / human reviewers)</span>
               </div>
               <div class="comp-alt-row" data-comp-target="ai">
-                <span class="comp-alt-source">Generic Web AI:</span>
-                <span class="comp-alt-desc text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Manual code snippet copy-paste</span>
+                <span class="comp-alt-source">In-Editor AI:</span>
+                <span class="comp-alt-desc text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Clutters editing tabs; interrupts active coding</span>
               </div>
             </div>
           </div>
@@ -987,7 +987,7 @@
                 </div>
                 <span class="badge-win"><i class="fa-solid fa-check"></i> Native Git</span>
               </div>
-              <p class="comp-stage0-text">Full 3-way merge base &amp; pre-push conflict prediction</p>
+              <p class="comp-stage0-text">Full in-memory 3-way merge base &amp; pre-push conflict preview</p>
             </div>
             <div class="comp-alts-list">
               <div class="comp-alt-row" data-comp-target="pr">
@@ -995,8 +995,8 @@
                 <span class="comp-alt-desc">Evaluated remotely on cloud servers</span>
               </div>
               <div class="comp-alt-row" data-comp-target="ai">
-                <span class="comp-alt-source">Generic Web AI:</span>
-                <span class="comp-alt-desc text-danger"><i class="fa-solid fa-xmark"></i> Zero Git tree awareness</span>
+                <span class="comp-alt-source">In-Editor AI:</span>
+                <span class="comp-alt-desc text-danger"><i class="fa-solid fa-xmark"></i> Zero 3-way merge base or conflict engine</span>
               </div>
             </div>
           </div>
@@ -1005,6 +1005,34 @@
           <div class="comp-mobile-card">
             <div class="comp-card-header">
               <span class="comp-card-pill">Dimension 3</span>
+              <h3 class="comp-card-title">Working Tree Safety</h3>
+            </div>
+            <div class="comp-stage0-box">
+              <div class="comp-stage0-header">
+                <div class="comp-stage0-tag">
+                  <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="comp-mini-logo" />
+                  <span>Stage0</span>
+                </div>
+                <span class="badge-win"><i class="fa-solid fa-check"></i> Zero-Risk</span>
+              </div>
+              <p class="comp-stage0-text">In-Memory sandbox, zero-checkout, never mutates active files</p>
+            </div>
+            <div class="comp-alts-list">
+              <div class="comp-alt-row" data-comp-target="pr">
+                <span class="comp-alt-source">Standard Web PR:</span>
+                <span class="comp-alt-desc">Must push branch to remote before reviewing</span>
+              </div>
+              <div class="comp-alt-row" data-comp-target="ai">
+                <span class="comp-alt-source">In-Editor AI:</span>
+                <span class="comp-alt-desc text-danger"><i class="fa-solid fa-xmark"></i> Mutates active files; requires branch checkout &amp; stash</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="comp-mobile-card">
+            <div class="comp-card-header">
+              <span class="comp-card-pill">Dimension 4</span>
               <h3 class="comp-card-title">Specialized Review Personas</h3>
             </div>
             <div class="comp-stage0-box">
@@ -1023,16 +1051,16 @@
                 <span class="comp-alt-desc">Expensive, fragmented third-party cloud bots</span>
               </div>
               <div class="comp-alt-row" data-comp-target="ai">
-                <span class="comp-alt-source">Generic Web AI:</span>
-                <span class="comp-alt-desc">Single generic chat prompt without specialized roles</span>
+                <span class="comp-alt-source">In-Editor AI:</span>
+                <span class="comp-alt-desc">Single generalist chat prompt without specialized roles</span>
               </div>
             </div>
           </div>
 
-          <!-- Card 4 -->
+          <!-- Card 5 -->
           <div class="comp-mobile-card">
             <div class="comp-card-header">
-              <span class="comp-card-pill">Dimension 4</span>
+              <span class="comp-card-pill">Dimension 5</span>
               <h3 class="comp-card-title">Confidentiality &amp; Privacy</h3>
             </div>
             <div class="comp-stage0-box">
@@ -1051,36 +1079,8 @@
                 <span class="comp-alt-desc">Source code stored and processed on public/private SaaS clouds</span>
               </div>
               <div class="comp-alt-row" data-comp-target="ai">
-                <span class="comp-alt-source">Generic Web AI:</span>
-                <span class="comp-alt-desc text-danger"><i class="fa-solid fa-xmark"></i> Proprietary code uploaded to public cloud LLM servers</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Card 5 -->
-          <div class="comp-mobile-card">
-            <div class="comp-card-header">
-              <span class="comp-card-pill">Dimension 5</span>
-              <h3 class="comp-card-title">Working Tree Safety</h3>
-            </div>
-            <div class="comp-stage0-box">
-              <div class="comp-stage0-header">
-                <div class="comp-stage0-tag">
-                  <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="comp-mini-logo" />
-                  <span>Stage0</span>
-                </div>
-                <span class="badge-win"><i class="fa-solid fa-check"></i> Zero-Risk</span>
-              </div>
-              <p class="comp-stage0-text">Isolated in-memory sandbox, never mutates active working tree files</p>
-            </div>
-            <div class="comp-alts-list">
-              <div class="comp-alt-row" data-comp-target="pr">
-                <span class="comp-alt-source">Standard Web PR:</span>
-                <span class="comp-alt-desc">Must push branch to remote before reviewing</span>
-              </div>
-              <div class="comp-alt-row" data-comp-target="ai">
-                <span class="comp-alt-source">Generic Web AI:</span>
-                <span class="comp-alt-desc">N/A (No workspace integration or safety barrier)</span>
+                <span class="comp-alt-source">In-Editor AI:</span>
+                <span class="comp-alt-desc text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Cloud-dependent; proprietary code indexed offsite</span>
               </div>
             </div>
           </div>
@@ -1535,6 +1535,6 @@
     </div>
   </footer>
 
-  <script src="./app.js?v=20261027_v44"></script>
+  <script src="./app.js?v=20261027_v45"></script>
 </body>
 </html>
