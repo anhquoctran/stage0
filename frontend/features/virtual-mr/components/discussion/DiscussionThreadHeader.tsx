@@ -1,5 +1,6 @@
 import { Quote } from '../../../../common/components/icons/Quote';
 import { GitLabAvatar } from '../GitLabAvatar';
+import { getDiscussionPosition } from '../../utils/discussionCodeContext';
 import type { DiscussionThreadHeaderProps } from './DiscussionThreadHeaderProps';
 
 export function DiscussionThreadHeader({
@@ -37,9 +38,9 @@ export function DiscussionThreadHeader({
 
       {/* Right side: Line number badge and Quote Discussion Button */}
       <div className="flex items-center gap-2">
-        {discussion.lineNumber && (
-          <span className="font-mono text-[10px] text-subtext0 bg-surface0 border border-surface1 px-2 py-0.5 rounded-sm">
-            Line {discussion.lineNumber}
+        {getDiscussionPosition(discussion) && (
+          <span className="font-mono text-[11px] text-subtext1 bg-surface0 px-2 py-0.5 rounded-sm">
+            {getDiscussionPosition(discussion)?.shortLabel}
           </span>
         )}
 

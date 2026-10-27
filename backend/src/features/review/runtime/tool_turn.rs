@@ -18,7 +18,6 @@ pub(super) async fn execute_tool_calls(
     registry: &ReviewToolRegistry,
 ) -> Result<(bool, Vec<(ReviewToolCall, Value)>), String> {
     let mut results = Vec::new();
-    let mut turn_review_file: Option<String> = None;
     for (tool_index, call) in calls.into_iter().enumerate() {
         run.tool_calls += 1;
         debug_log::log(format_args!(
@@ -55,34 +54,6 @@ pub(super) async fn execute_tool_calls(
                 json!({"isError":true,"error":"Complete the whole eligible diff inventory and call update_mr_description before submitting this review."}),
             ));
             continue;
-        }
-        if state.description_updated {
-            let file_path = match call.name.as_str() {
-                "get_file_diff"
-                | "read_file_range"
-                | "create_review_discussion"
-                | "resolve_discussion" => call.arguments["filePath"].as_str(),
-                _ => None,
-            };
-            if let Some(file_path) = file_path {
-                if turn_review_file
-                    .as_deref()
-                    .is_some_and(|current| current != file_path)
-                {
-                    debug_log::log(format_args!(
-                        "event=tool_call_rejected run={} turn={} tool={} reason=one_file_per_turn_policy",
-                        debug_log::safe_label(&run.id, 80),
-                        run.turns,
-                        debug_log::safe_label(&call.name, 100)
-                    ));
-                    results.push((
-                        call,
-                        json!({"isError":true,"error":"Review one changed file at a time. Finish considering the current file in this turn before moving to another file."}),
-                    ));
-                    continue;
-                }
-                turn_review_file.get_or_insert_with(|| file_path.to_owned());
-            }
         }
         if call.name == "submit_review" && valid.is_ok() {
             if submit_review(db, run, context, call, state, &mut results).await? {

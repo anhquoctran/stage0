@@ -22,6 +22,38 @@ snapshot reads, evidence checks and publication remain Rust responsibilities.
 JSON encoding prevents data from changing envelope syntax; it does not prove
 that a model will ignore a malicious natural-language instruction.
 
+## Grouped source delivery
+
+Full MR runs receive an initial `diffBatch` in the user context. It contains
+filtered diffs from the captured Git objects, never current checkout contents.
+All files that fit are delivered together. Larger changes use `get_diff_batch`
+with an explicit `{fileOffset, diffOffset}` continuation cursor. Files are kept
+whole where possible and grouped by neighboring repository paths; a large file
+can span packets with its diff-line offsets and base/head source counters.
+The bounded manifest exposes `nextOffset` when more path names remain. Per-file
+read failures are explicit and never count as complete coverage.
+
+Both delivery paths share full-blob secret screening, including private-key
+blocks that begin outside the displayed hunk. Cached sanitized diffs have an
+estimated 2 MiB memory cap. Every packet retains the untrusted-data authority;
+repository instructions cannot enter system prompts or expand capabilities.
+The initial source packet is bounded by 64 KiB, configured output limits and the
+remaining context budget with 32 KiB reserved for later investigation. Its
+encoded adapter request is measured and reduced to reserve follow-up turns
+under the existing wire budget. Tool batches retain the 24 KiB result cap and
+respect the configured line/output limits. Total delivered context, cumulative
+wire bytes, reported tokens, tool calls, cancellation and deadlines remain bounded.
+
+Preparing/caching source grants no coverage. Initial delivery is committed only
+after a successful provider response, before processing its tool calls. Rejected
+or unsent packets grant no coverage; later batches must connect to the contiguous
+delivered prefix of each diff. The complete eligible-diff gate still controls
+description generation and approval. Description and review reuse one history
+or ACP session, so supplied diffs need not be fetched again. Cross-file analysis
+and findings are allowed within the same turn; evidence checks still apply to
+every finding. Thread-scoped replies neither preload bulk source nor expose the
+batch tool.
+
 ## Discussion reply workflow
 
 User-created discussions and user replies enqueue `queueAssignedDiscussionReply`,

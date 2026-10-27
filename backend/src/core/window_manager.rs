@@ -236,10 +236,9 @@ fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWind
 
     #[cfg(target_os = "macos")]
     let builder = builder
-        // Configure the eventual macOS traffic-light inset now; decorations remain
-        // off until the ready main-window handoff restores them.
+        // Keep native traffic-light placement. Tao reapplies custom insets on
+        // every redraw and panics while the borderless splash has no buttons.
         .title_bar_style(TitleBarStyle::Overlay)
-        .traffic_light_position(tauri::LogicalPosition::new(13.0, 12.0))
         .hidden_title(true);
 
     let window = builder

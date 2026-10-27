@@ -11,13 +11,16 @@ import { ReviewFindingCard } from '../../../review/components/ReviewFindingCard'
 import { ReviewRunSummary } from '../../../review/components/ReviewRunSummary';
 import { useReviewStore } from '../../../review/store/useReviewStore';
 import { createStartMrReviewAction } from '../../services/createStartMrReviewAction';
+import { getManualReviewBlockReason } from '../../utils/manualReviewAvailability';
 import type { VirtualMrReviewsTabProps } from './VirtualMrReviewsTabProps';
 
 export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ session }) => {
   const { showToast } = useGitStore();
   const {
-    runs,
-    detail,
+    sessionId: historySessionId,
+    runs: historyRuns,
+    detail: historyDetail,
+    error,
     load,
     syncActive,
     publish,
@@ -26,6 +29,9 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
     reviewBatches,
     isStarting,
   } = useReviewStore();
+  const runs = historySessionId === session.id ? historyRuns : [];
+  const detail = historySessionId === session.id && historyDetail?.run.sessionId === session.id
+    ? historyDetail : null;
 
   useEffect(() => {
     if (session?.id) {
@@ -42,6 +48,7 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
   }, [activeIds, syncActive]);
 
   const handleStartReview = createStartMrReviewAction(session, showToast);
+  const blockedReason = getManualReviewBlockReason(session);
 
   const reviewBatch = reviewBatches[session.id];
   const isRunning =
@@ -84,15 +91,20 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
           <div className="flex items-center gap-2">
             <button
               type="button"
-              disabled={isRunning || session.reviewers.length === 0}
+              disabled={isRunning || !!blockedReason || session.reviewers.length === 0}
+              title={blockedReason || undefined}
               onClick={handleStartReview}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 active:scale-98 text-on-accent font-medium text-xs cursor-pointer rounded-sm shadow-xs disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-1.5 border-0 px-3 py-1.5 bg-primary hover:bg-primary/90 active:scale-98 text-on-accent font-medium text-xs cursor-pointer rounded-sm shadow-xs disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRunning ? 'animate-spin' : ''}`} />
               <span>{isRunning ? 'Review in progress…' : 'Run AI Code Review'}</span>
             </button>
           </div>
         </div>
+        {blockedReason && <p role="status" className="text-xs text-subtext0">{blockedReason}</p>}
+        {historySessionId === session.id && error && (
+          <p role="alert" className="text-xs text-red whitespace-pre-wrap">{error}</p>
+        )}
 
         {/* Live Running Banner */}
         {isRunning && (
@@ -177,8 +189,10 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
             {session.reviewers.length > 0 ? (
               <button
                 type="button"
+                disabled={!!blockedReason}
+                title={blockedReason || undefined}
                 onClick={handleStartReview}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-on-accent text-xs font-medium rounded-sm cursor-pointer shadow-xs transition-colors"
+                className="inline-flex items-center gap-2 border-0 px-4 py-2 bg-primary hover:bg-primary/90 text-on-accent text-xs font-medium rounded-sm cursor-pointer shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Start AI Code Review</span>

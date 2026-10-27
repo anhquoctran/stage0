@@ -13,6 +13,9 @@ use std::{
     time::Instant,
 };
 
+pub(super) const MAX_REQUEST_BYTES: usize = 160 * 1024;
+pub(super) const MAX_REVIEW_WIRE_BYTES: usize = 512 * 1024;
+
 pub(super) const MAX_REVIEW_TURNS: usize = 128;
 pub(super) const MAX_REVIEW_TOOL_CALLS: usize = 256;
 pub(super) const MAX_DECODE_RECOVERIES: usize = 2;
@@ -35,7 +38,11 @@ pub(super) async fn execute_with_adapter(
         MAX_REVIEW_TOOL_CALLS
     };
     let token_limit = if reply_only { 32_000 } else { 64_000 };
-    let wire_limit = if reply_only { 384 * 1024 } else { 512 * 1024 };
+    let wire_limit = if reply_only {
+        384 * 1024
+    } else {
+        MAX_REVIEW_WIRE_BYTES
+    };
     if reply_only {
         context
             .lock()
@@ -67,7 +74,6 @@ pub(super) async fn execute_with_adapter(
     if reply_only {
         initial["task"] = json!("Answer the latest eligible comment in the assigned discussion. This is not an MR review or approval.");
     }
-    let mut history = adapter.initial_history(&initial.to_string());
     let registry = ReviewToolRegistry::for_request(config);
     let tools = registry.definitions();
     let mut wire_bytes = 0usize;
@@ -104,6 +110,9 @@ pub(super) async fn execute_with_adapter(
         ));
         return Ok(());
     }
+    let (mut history, mut initial_diff) =
+        super::initial_context::prepare(context, adapter, &system, &initial, tools, reply_only)
+            .await?;
     debug_log::log(format_args!(
         "event=review_context_ready run={} eligible_files={} excluded_files={} open_discussions={} tool_count={} description_generation={}",
         debug_log::safe_label(&run.id, 80),
@@ -127,7 +136,7 @@ pub(super) async fn execute_with_adapter(
         // continuation, including a delayed provider retry, is counted here.
         wire_bytes =
             wire_bytes.saturating_add(bytes.saturating_mul(adapter.retry_reserve_factor()));
-        if bytes > 160 * 1024 || wire_bytes > wire_limit || run.usage_tokens >= token_limit {
+        if bytes > MAX_REQUEST_BYTES || wire_bytes > wire_limit || run.usage_tokens >= token_limit {
             debug_log::log(format_args!(
                 "event=review_budget_exhausted run={} turn={} request_bytes={} estimated_wire_bytes={} usage_tokens={}",
                 debug_log::safe_label(&run.id, 80),
@@ -217,6 +226,9 @@ pub(super) async fn execute_with_adapter(
             db.save_review_run(run)?;
             adapter.append_request_retry(&mut history);
             continue;
+        }
+        if let Some(batch) = initial_diff.take() {
+            super::initial_context::delivered(db, run, context, batch)?;
         }
         let (calls, usage) = match adapter.decode(&response, &mut history) {
             Ok(decoded) => decoded,

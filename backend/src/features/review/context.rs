@@ -1,11 +1,15 @@
 //! Immutable snapshot state; reads and evidence validation use the same captured object IDs.
 mod blob;
+mod diff;
+mod diff_batch;
+mod discussion_snippet;
 mod evidence;
 mod snapshot;
 mod tools;
 
 use super::ReviewSnapshot;
 use crate::features::sandbox::guardrails::GuardrailsEngine;
+pub(crate) use diff_batch::PreparedDiffBatch;
 pub use snapshot::{capture, git, resolve_snapshot_ref};
 use std::{
     collections::{BTreeSet, HashMap},
@@ -21,6 +25,8 @@ pub struct ReviewContext {
     pub max_bytes: usize,
     guards: Arc<GuardrailsEngine>,
     diff_offsets: HashMap<String, usize>,
+    diff_cache: HashMap<String, Arc<diff::SnapshotDiff>>,
+    diff_cache_bytes: usize,
 }
 
 impl ReviewContext {
@@ -53,6 +59,8 @@ impl ReviewContext {
             bytes: 0,
             max_bytes: 128 * 1024,
             diff_offsets: HashMap::new(),
+            diff_cache: HashMap::new(),
+            diff_cache_bytes: 0,
         }
     }
 }

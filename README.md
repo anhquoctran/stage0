@@ -87,7 +87,7 @@ pnpm build:app
 flowchart LR
     UI["React UI (Catppuccin)"] -->|Tauri IPC| Backend["Rust Core Engine"]
     Backend --> Git["Git CLI (merge-tree)"]
-    Backend --> DB["Encrypted SQLite (SQLCipher)"]
+    Backend --> DB["SQLite"]
     Backend --> AI["AI Fleet (Claude / OpenAI / Ollama)"]
     Backend --> Vault["OS Secure Keyring"]
 ```
@@ -95,7 +95,7 @@ flowchart LR
 For deep dives into internal subsystems and design contracts, explore the [`docs/`](./docs/) directory:
 - [Feature Layout & Conventions](docs/architecture/feature_layout.md)
 - [AI Review Harness & Budgets](docs/architecture/ai_review_harness.md)
-- [Database Encryption & Recovery](docs/architecture/database_encryption.md)
+- [Database Storage & Reset](docs/architecture/database_storage.md)
 - [Software Updater & Signing](docs/architecture/software_updater.md)
 
 ---

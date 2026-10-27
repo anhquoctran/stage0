@@ -2,9 +2,9 @@
   "name": "Stage0",
   "author": "Anh Quoc Tran",
   "packageVersion": "0.1.12",
-  "gitCommit": "445f2a4",
-  "arch": "amd64",
-  "version": "0.1.12+445f2a4.windows.amd64",
+  "gitCommit": "819c9d0",
+  "arch": "aarch64",
+  "version": "0.1.12+819c9d0.macos.aarch64",
   "releaseDate": "2026-10-27",
   "currentYear": "2026",
   "copyright": "Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",
@@ -12,5 +12,5 @@
   "tagline": "Local-First Virtual MR / PR Sandbox",
   "description": "Stage0 reviews branch comparisons and predicts merge conflicts without checking out or merging into the user's working tree or index. Git may still write objects to the repository's object database.",
   "website": "https://github.com/anhquoctran/stage0",
-  "os": "windows"
+  "os": "macos"
 }

@@ -38,6 +38,50 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
         const label = KIND_LABELS[option.reviewKind] || option.name;
         if (option.type === 'boolean') {
           const currentBoolean = typeof option.currentValue === 'boolean' ? option.currentValue : false;
+          if (option.reviewKind === 'fastMode') {
+            const isOverridden = typeof current === 'boolean';
+            const enabled = isOverridden ? current : currentBoolean;
+            return (
+              <div key={option.id} className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] text-text">Fast mode</p>
+                  <p className="text-[10px] text-subtext0">
+                    {isOverridden ? 'Custom setting' : `Agent default (${currentBoolean ? 'On' : 'Off'})`}
+                  </p>
+                  {option.description && <p className="mt-1 text-[10px] text-subtext0">{option.description}</p>}
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {isOverridden && (
+                    <button
+                      type="button"
+                      disabled={loading || !!error}
+                      onClick={() => updateOption(option, undefined)}
+                      className="border-0 bg-transparent px-1 py-1 text-[10px] text-subtext0 hover:text-text disabled:opacity-50 rounded-sm"
+                    >
+                      Use default
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-label={`Fast mode for ${agent.name}`}
+                    aria-checked={enabled}
+                    disabled={loading || !!error}
+                    onClick={() => updateOption(option, !enabled)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-0 p-0.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                      enabled ? 'bg-brand' : 'bg-surface1'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-4 w-4 shrink-0 transform rounded-full bg-base shadow-lg transition duration-200 ${
+                        enabled ? 'translate-x-4' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            );
+          }
           const selected = typeof current === 'boolean' ? String(current) : DEFAULT_OPTION;
           const choices: CustomSelectOption<string>[] = [
             { value: DEFAULT_OPTION, label: `Agent default (${currentBoolean ? 'On' : 'Off'})` },

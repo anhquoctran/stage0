@@ -14,7 +14,6 @@ import net from 'net';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { computeAboutInfo } from './generate-about-info.mjs';
-import { ensureWindowsPerlInPath } from './windowsPerlEnv.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -181,7 +180,7 @@ async function main() {
     console.log(`${DIM}   Frontend: Vite HMR at http://127.0.0.1:${effectivePort}${RESET}`);
     console.log(`${DIM}   Backend : Cargo watch for backend/src/*.rs changes${RESET}\n`);
 
-    const tauriEnv = ensureWindowsPerlInPath({ ...process.env, FORCE_COLOR: '1' });
+    const tauriEnv = { ...process.env, FORCE_COLOR: '1' };
     const tauriArgs = ['tauri', 'dev'];
     if (PLATFORM === 'darwin') {
       // Tauri invokes this wrapper as Cargo; it configures Cargo's executable

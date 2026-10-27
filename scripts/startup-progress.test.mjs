@@ -298,10 +298,14 @@ test('all native application windows begin compact and restore workspace bounds 
     assert.equal(window.resizable, false);
     assert.equal(window.maximizable, false);
     assert.equal(window.center, true);
+    assert.equal(window.trafficLightPosition, undefined,
+      'borderless splash must not ask Tao to reposition nonexistent native buttons');
   }
   const manager = fs.readFileSync('backend/src/core/window_manager.rs', 'utf8');
   assert.match(manager, /inner_size\(SPLASH_WIDTH, SPLASH_HEIGHT\)/);
   assert.match(manager, /resizable\(false\)/);
+  assert.doesNotMatch(manager, /\.traffic_light_position\(/,
+    'dynamically created splash windows must also use safe native button placement');
   assert.doesNotMatch(manager, /window\.maximize\(\)/, 'repository opening uses deferred maximize requests');
   const native = fs.readFileSync('backend/src/core/window_manager/startup_window.rs', 'utf8');
   assert.match(native, /SPLASH_WIDTH: f64 = 600\.0/);

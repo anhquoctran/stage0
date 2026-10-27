@@ -212,6 +212,15 @@ fn search_and_middle_diff_hunks_cannot_leak_private_key_interiors() {
     assert!(
         diff.contains("REDACTED") && !diff.contains("BASE64FIXTURE") && !diff.contains("\\u001b")
     );
+    let batch = ctx
+        .execute("get_diff_batch", &json!({"fileOffset":0,"diffOffset":0}))
+        .unwrap()
+        .to_string();
+    assert!(
+        batch.contains("REDACTED")
+            && !batch.contains("BASE64FIXTURE")
+            && !batch.contains("\\u001b")
+    );
     let search = ctx
         .execute("search_code", &json!({"query":"CHANGEDBASE64FIXTURE15"}))
         .unwrap()

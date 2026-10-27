@@ -5,6 +5,21 @@ use std::{
     time::Duration,
 };
 
+pub(super) fn open_database(path: &Path) -> Result<Connection, Box<dyn std::error::Error>> {
+    reject_symlink(path)?;
+    for suffix in ["-wal", "-shm", "-journal"] {
+        reject_symlink(&sqlite_sidecar_path(path, suffix))?;
+    }
+    let connection = Connection::open(path)?;
+    secure_database_file(path)?;
+    connection
+        .query_row("SELECT count(*) FROM sqlite_master", [], |row| row.get::<_, i64>(0))
+        .map_err(|_| io::Error::other(
+            "Cannot read the Stage0 SQLite database. It may be encrypted or damaged. Reset local app state to start fresh, or restore it with a compatible build. The existing file was retained",
+        ))?;
+    Ok(connection)
+}
+
 pub(super) fn create_app_data_dir(path: &Path) -> io::Result<()> {
     #[cfg(unix)]
     {

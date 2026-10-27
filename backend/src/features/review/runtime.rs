@@ -4,6 +4,7 @@ mod audit;
 mod discussion_observation;
 mod discussions;
 mod engine;
+mod initial_context;
 mod prompt;
 mod review_actions;
 mod scope;

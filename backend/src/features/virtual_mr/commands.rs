@@ -97,8 +97,17 @@ pub async fn list_mr_discussions(
     app: AppHandle,
     session_id: String,
 ) -> Result<Vec<VirtualMrDiscussionDb>, String> {
-    let db = app.state::<Database>();
-    db.list_discussions(&session_id).map_err(|e| e.to_string())
+    tauri::async_runtime::spawn_blocking(move || {
+        let db = app.state::<Database>();
+        let manager = app.state::<crate::features::sandbox::SandboxManager>();
+        crate::features::review::discussion_snippets::list_with_code_context(
+            &db,
+            &session_id,
+            std::sync::Arc::clone(manager.guardrails()),
+        )
+    })
+    .await
+    .map_err(|_| "Could not load discussion code context".to_string())?
 }
 
 #[tauri::command]
@@ -127,6 +136,13 @@ pub async fn create_mr_discussion(
                 || snippet.lines.iter().map(String::len).sum::<usize>() > 32768
                 || line < snippet.start_line
                 || line >= snippet.start_line + snippet.lines.len() as i64
+                || snippet
+                    .selected_end_line
+                    .is_some_and(|end| end < line || end - line >= 200)
+                || snippet
+                    .format
+                    .as_deref()
+                    .is_some_and(|format| !matches!(format, "diff" | "plain"))
                 || discussion.file_path.is_none()
                 || !matches!(discussion.diff_side.as_deref(), Some("left" | "right"))
             {

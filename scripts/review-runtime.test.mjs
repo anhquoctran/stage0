@@ -14,10 +14,12 @@ function run(id = 'run-a', sessionId = 'a', status = 'running') {
 function deferred() { let resolve; const promise = new Promise((ok) => { resolve = ok; }); return { promise, resolve }; }
 function storeFixture(handler) {
   const calls = []; const refreshed = []; const descriptions = []; const reviewerStatuses = [];
+  const sessions = [{ id: 'a', discussions: [] }];
   const { useReviewStore: store } = loadWithMocks(new URL('../frontend/features/review/store/useReviewStore.ts', import.meta.url), {
     zustand: { create },
     '@tauri-apps/api/core': { invoke: async (...args) => { calls.push(args); return handler(...args); } },
     '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: { getState: () => ({
+      sessions,
       refreshDiscussions: async (id) => { refreshed.push(id); },
       applyReviewGeneratedDescription: async (...args) => { descriptions.push(args); },
       setReviewerReviewStatus: async (...args) => { reviewerStatuses.push(args); },
@@ -25,8 +27,96 @@ function storeFixture(handler) {
     }) } },
     '../services/assignedReviewService': { flushQueuedReReviewAfterActive: async () => {} },
   });
-  return { store, calls, refreshed, descriptions, reviewerStatuses };
+  return { store, calls, refreshed, descriptions, reviewerStatuses, sessions };
 }
+
+test('MR review history loads without opening the review panel', async () => {
+  const finished = run('run-a', 'a', 'completed');
+  const { store } = storeFixture((name) => name === 'list_ai_reviews'
+    ? [finished] : { run: finished, events: [] });
+  await store.getState().load('a');
+  assert.equal(store.getState().isOpen, false);
+  assert.equal(store.getState().sessionId, 'a');
+  assert.deepEqual(store.getState().runs, [finished]);
+  assert.equal(store.getState().detail.run, finished);
+});
+
+test('the selected MR tab follows background startup and completion with the panel closed', async () => {
+  const started = { ...run(), reviewerId: 'bot-a' };
+  const { store, refreshed, reviewerStatuses } = storeFixture((name) => {
+    if (name === 'list_ai_reviews') return [];
+    if (name === 'start_ai_review') return started;
+  });
+  await store.getState().load('a');
+  await store.getState().startForSession('a', config, true);
+  assert.equal(store.getState().detail.run, started);
+  assert.deepEqual(store.getState().runs, [started]);
+  const finished = { ...started, status: 'completed', decision: 'approve' };
+  await store.getState().syncRun({ run: finished, events: [] });
+  assert.equal(store.getState().detail.run, finished);
+  assert.deepEqual(store.getState().runs, [finished]);
+  assert.equal(store.getState().isOpen, false);
+  assert.deepEqual(refreshed, ['a']);
+  assert.deepEqual(reviewerStatuses, [['a', 'bot-a', 'reviewing'], ['a', 'bot-a', 'approved']]);
+});
+
+test('history observes completion before retiring a tracked run and synchronizes exactly once', async () => {
+  const finished = { ...run('run-a', 'a', 'completed'), reviewerId: 'bot-a', decision: 'request_changes', generatedDescription: 'Summary' };
+  const { store, refreshed, descriptions, reviewerStatuses } = storeFixture((name) => name === 'list_ai_reviews'
+    ? [run()] : { run: finished, events: [] });
+  store.setState({ activeRuns: { 'run-a': run() } });
+  await store.getState().load('a');
+  await store.getState().load('a');
+  assert.deepEqual(store.getState().activeRuns, {});
+  assert.equal(store.getState().runs[0].status, 'completed');
+  assert.deepEqual(refreshed, ['a']);
+  assert.deepEqual(descriptions, [['a', 'Summary']]);
+  assert.deepEqual(reviewerStatuses, [['a', 'bot-a', 'changes_requested']]);
+});
+
+test('a slow history response cannot resurrect a review that polling has completed', async () => {
+  const pending = deferred();
+  const { store } = storeFixture((name) => name === 'list_ai_reviews'
+    ? [run()] : pending.promise);
+  store.setState({ activeRuns: { 'run-a': run() } });
+  const loading = store.getState().load('a');
+  await Promise.resolve();
+  const finished = run('run-a', 'a', 'completed');
+  await store.getState().syncRun({ run: finished, events: [] });
+  pending.resolve({ run: run(), events: [] });
+  await loading;
+  assert.deepEqual(store.getState().activeRuns, {});
+  assert.equal(store.getState().runs[0].status, 'completed');
+  assert.equal(store.getState().detail.run.status, 'completed');
+});
+
+test('switching MR tabs rejects a previous tab history response without opening a panel', async () => {
+  const pending = deferred();
+  const { store } = storeFixture((name, args) => name === 'list_ai_reviews'
+    ? args.sessionId === 'a' ? pending.promise : [run('run-b', 'b', 'completed')]
+    : { run: run(args.runId, args.runId === 'run-a' ? 'a' : 'b', 'completed'), events: [] });
+  const loading = store.getState().load('a');
+  await store.getState().load('b');
+  pending.resolve([run()]);
+  await loading;
+  assert.equal(store.getState().sessionId, 'b');
+  assert.equal(store.getState().detail.run.sessionId, 'b');
+  assert.equal(store.getState().isOpen, false);
+});
+
+test('manual review startup rechecks open code discussions and resumes only after they are resolved', async () => {
+  const { store, calls, sessions } = storeFixture(() => run());
+  const discussion = { id: 'finding', filePath: 'source.rs', isResolved: false };
+  sessions[0].discussions = [discussion];
+  store.getState().open('a');
+  await store.getState().start(config, true);
+  assert.equal(calls.length, 0);
+  assert.match(store.getState().error, /Resolve 1 open code discussion/);
+  discussion.isResolved = true;
+  await store.getState().start(config, true);
+  assert.equal(calls.length, 1);
+  assert.equal(store.getState().error, null);
+});
 
 test('new reviews send only configuration and consent, not plaintext API keys or client-selected refs', async () => {
   const { store, calls } = storeFixture((name) => { assert.equal(name, 'start_ai_review'); return run(); });
@@ -145,10 +235,11 @@ function assignedBatchFixture(finished) {
 
 test('discussion replies send thread scope and cannot change frontend MR descriptions or reviewer verdicts', async () => {
   const current = { ...run(), reviewerId: 'bot-a', replyDiscussionId: 'thread' };
-  const { store, calls, refreshed, descriptions, reviewerStatuses } = storeFixture((name) => {
+  const { store, calls, refreshed, descriptions, reviewerStatuses, sessions } = storeFixture((name) => {
     if (name === 'start_ai_review') return current;
     return { run: { ...current, status: 'completed', decision: 'comment', generatedDescription: 'Must not apply' }, events: [] };
   });
+  sessions[0].discussions = [{ id: 'thread', filePath: 'source.rs', isResolved: false }];
   await store.getState().startForSession('a', config, true, { id: 'bot-a', name: 'Bot A' }, false, 'thread');
   assert.equal(calls[0][1].request.replyDiscussionId, 'thread');
   assert.equal(calls[0][1].request.generateDescription, false);

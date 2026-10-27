@@ -1,6 +1,7 @@
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { AI_PROVIDERS } from '../../ai/constants/aiPresets';
 import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
+import { getManualReviewBlockReason } from '../../virtual-mr/utils/manualReviewAvailability';
 import type { ReviewConfigurationSectionProps } from './ReviewConfigurationSectionProps';
 
 export function ReviewConfigurationSection({
@@ -24,6 +25,7 @@ export function ReviewConfigurationSection({
   running,
   cancel,
 }: ReviewConfigurationSectionProps) {
+  const blockedReason = getManualReviewBlockReason(session);
   return (
     <div className="border border-surface1 bg-base p-3 space-y-2 text-xs rounded-sm">
       {session && (
@@ -158,22 +160,24 @@ export function ReviewConfigurationSection({
         <button
           type="button"
           disabled={
-            !compatible ||
+            !session || !compatible || !!blockedReason ||
             isStarting ||
             hasRunning ||
             ((reviewConfig.executionMode === 'acp' || reviewConfig.provider !== 'ollama') &&
               !allowRemote)
           }
-          onClick={() =>
+          title={blockedReason || undefined}
+          onClick={() => {
+            if (blockedReason) return;
             void start(
               reviewConfig,
               allowRemote,
               selectedReviewer
                 ? { id: selectedReviewer.id, name: selectedReviewer.name }
                 : undefined
-            )
-          }
-          className="bg-primary text-on-accent px-3 py-2 font-semibold disabled:opacity-40 rounded-sm"
+            );
+          }}
+          className="border-0 bg-primary text-on-accent px-3 py-2 font-semibold disabled:cursor-not-allowed disabled:opacity-40 rounded-sm"
         >
           {isStarting
             ? 'Capturing snapshot…'
@@ -196,6 +200,7 @@ export function ReviewConfigurationSection({
           </button>
         )}
       </div>
+      {blockedReason && <p role="status" className="text-subtext0">{blockedReason}</p>}
     </div>
   );
 }

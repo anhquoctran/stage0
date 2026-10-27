@@ -39,7 +39,7 @@ pub(super) async fn dispatch_action(
                         .all(|path| ctx.complete_diffs.contains(path))
                 };
                 if !complete {
-                    Err("Read every page of every eligible changed file diff before updating the MR description.".into())
+                    Err("Read every page of every eligible changed file diff, using the supplied initial diff batch or get_diff_batch, before updating the MR description.".into())
                 } else if description.is_empty() {
                     Err("The generated MR description is empty after source redaction.".into())
                 } else {
@@ -54,7 +54,7 @@ pub(super) async fn dispatch_action(
                                 json!({"descriptionBytes":description.len()}),
                             )?;
                             Ok(
-                                json!({"updated":true,"message":"The local Virtual MR description was updated. Continue with the file-by-file review now."}),
+                                json!({"updated":true,"message":"The local Virtual MR description was updated. Continue reviewing the supplied diff context, including relationships across files."}),
                             )
                         }
                         Err(error) => Err(error),

@@ -92,6 +92,7 @@ fn config(url: String) -> ReviewRequest {
 mod acp;
 mod action_errors;
 mod coverage;
+mod diff_batches;
 mod discussion_fixture;
 mod discussion_security;
 mod http;

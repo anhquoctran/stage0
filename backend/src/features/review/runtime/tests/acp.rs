@@ -1,5 +1,19 @@
 use super::*;
 
+async fn wait_for_fixture_backoff(db: &crate::core::db::Database, run_id: &str) {
+    let deadline = std::time::Instant::now() + Duration::from_secs(5);
+    loop {
+        if db.get_review_run(run_id).unwrap().retry.is_some() {
+            return;
+        }
+        assert!(
+            std::time::Instant::now() < deadline,
+            "Fixture never entered provider backoff"
+        );
+        tokio::task::yield_now().await;
+    }
+}
+
 #[tokio::test(start_paused = true)]
 async fn acp_rate_limit_waits_then_continues_and_generates_the_description() {
     use crate::features::review::fixture_acp_adapter::FixtureAcpAdapter;
@@ -31,6 +45,7 @@ async fn acp_rate_limit_waits_then_continues_and_generates_the_description() {
     let started = tokio::time::Instant::now();
     let work = execute_with_adapter(&db, &request, &mut run, &context, &adapter);
     let observe_wait = async {
+        wait_for_fixture_backoff(&db, &run_id).await;
         tokio::time::sleep(Duration::from_secs(1)).await;
         let saved = db.get_review_run(&run_id).unwrap();
         assert_eq!(saved.status, "running");
@@ -152,9 +167,13 @@ async fn cancelling_an_acp_rate_limit_wait_prevents_the_next_request() {
     ]);
     let request = config("http://localhost".into());
     let context = Arc::new(Mutex::new(ctx));
+    let run_id = run.id.clone();
     let outcome = tokio::select! {
         result = execute_with_adapter(&db, &request, &mut run, &context, &adapter) => result,
-        _ = tokio::time::sleep(Duration::from_secs(1)) => Err("Review cancelled during provider backoff".into()),
+        _ = async {
+            wait_for_fixture_backoff(&db, &run_id).await;
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        } => Err("Review cancelled during provider backoff".into()),
     };
     run.finish(outcome);
     assert_eq!(run.status, "cancelled");

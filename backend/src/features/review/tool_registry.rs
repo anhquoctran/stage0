@@ -64,7 +64,7 @@ mod tests {
     #[test]
     fn external_and_native_looking_tools_cannot_bypass_the_active_registry() {
         let registry = super::ReviewToolRegistry::native();
-        assert_eq!(registry.definitions().len(), 12);
+        assert_eq!(registry.definitions().len(), 13);
         for name in [
             "mcp_deadbeef_search",
             "execute_terminal_cmd",

@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import type { ReviewState } from '../types/ReviewState';
 import type { ReviewBotConfig } from '../types/ReviewBotConfig';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
+import { getManualReviewBlockReason } from '../../virtual-mr/utils/manualReviewAvailability';
 
 const startingSessionIds = new Set<string>();
 
@@ -78,13 +79,49 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   close: () => { loadVersion++; set({ isOpen: false }); },
   load: async (sessionId, runId) => {
     const version = ++loadVersion;
+    const trackedAtStart = new Set(Object.keys(get().activeRuns));
+    // The Reviews tab selects history independently of the modal panel.
+    if (get().sessionId !== sessionId) {
+      set({ sessionId, runs: [], detail: null, error: null });
+    }
     try {
-      const runs = await getApplicationServices().reviews.listAiReviews({ sessionId });
+      let runs = await getApplicationServices().reviews.listAiReviews({ sessionId });
       const selected = runId || (get().detail?.run.sessionId === sessionId ? get().detail?.run.id : undefined) || runs[0]?.id;
-      const detail = selected ? await getApplicationServices().reviews.getAiReview({ runId: selected }) : null;
+      let detail = selected ? await getApplicationServices().reviews.getAiReview({ runId: selected }) : null;
       if (version === loadVersion && get().sessionId === sessionId) {
+        // A selected detail is fetched after the list and may already be final.
+        runs = runs.map((run) => detail?.run.id === run.id ? detail.run : run);
+        // Loading history may be the first observation of completion. Process
+        // discussion/reviewer updates before retiring the tracked run.
+        for (const run of runs) {
+          if (run.status !== 'running' && get().activeRuns[run.id]) {
+            await get().syncRun(detail?.run.id === run.id ? detail : { run, events: [] });
+          }
+        }
+        if (version !== loadVersion || get().sessionId !== sessionId) return;
+        // A poll may finish while history is in flight. Keep that newer result,
+        // including its events, instead of resurrecting an older running view.
+        runs = runs.map((run) => {
+          const state = get();
+          const known = state.activeRuns[run.id]
+            || (state.lastFinishedRun?.id === run.id ? state.lastFinishedRun : null)
+            || state.runs.find((item) => item.id === run.id);
+          if (run.status !== 'running' || !trackedAtStart.has(run.id) || !known) return run;
+          if (known.status !== 'running' || known.turns > run.turns
+            || (known.generatedDescription && !run.generatedDescription)) {
+            if (detail?.run.id === run.id) {
+              detail = state.detail?.run.id === run.id ? state.detail : { run: known, events: [] };
+            }
+            return known;
+          }
+          return run;
+        });
         const activeRuns = { ...get().activeRuns };
-        for (const run of runs) { if (run.status === 'running') activeRuns[run.id] = run; else delete activeRuns[run.id]; }
+        for (const run of runs) {
+          if (run.status === 'running' && !activeRuns[run.id] && !trackedAtStart.has(run.id)) {
+            activeRuns[run.id] = run;
+          }
+        }
         set({ runs, detail, activeRuns, error: null });
       }
     } catch (error) {
@@ -94,6 +131,10 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   start: async (config: ReviewBotConfig, allowRemote, reviewer) => {
     const sessionId = get().sessionId;
     if (!sessionId) return;
+    const blockedReason = getManualReviewBlockReason(
+      useVirtualMrStore.getState().sessions?.find((session) => session.id === sessionId),
+    );
+    if (blockedReason) { set({ error: blockedReason }); return; }
     try { await get().startForSession(sessionId, config, allowRemote, reviewer, true); }
     catch { /* The store records the error for the open review panel. */ }
   },
@@ -117,13 +158,13 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       if (run.reviewerId && !run.replyDiscussionId) {
         await useVirtualMrStore.getState().setReviewerReviewStatus(sessionId, run.reviewerId, 'reviewing');
       }
-      if (get().isOpen && get().sessionId === sessionId) {
+      if (get().sessionId === sessionId) {
         loadVersion++;
         set({ detail: { run, events: [] }, runs: [run, ...get().runs.filter((item) => item.id !== run.id)] });
       }
       return run;
     } catch (error) {
-      if (get().isOpen && get().sessionId === sessionId) set({ error: message(error) });
+      if (get().sessionId === sessionId) set({ error: message(error) });
       throw error;
     }
     finally {

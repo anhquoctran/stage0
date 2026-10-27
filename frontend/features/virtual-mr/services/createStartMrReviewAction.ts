@@ -1,12 +1,24 @@
 import type { GitState } from '../../git/types/GitState';
 import { startAssignedReviewBatchForSession } from '../../review/services/assignedReviewService';
 import type { VirtualMrSession } from '../types/VirtualMrSession';
+import { useVirtualMrStore } from '../store/useVirtualMrStore';
+import { getManualReviewBlockReason } from '../utils/manualReviewAvailability';
 
 export function createStartMrReviewAction(
   session: VirtualMrSession,
   showToast: GitState['showToast']
 ) {
   return async () => {
+    const current = useVirtualMrStore.getState().sessions.find((item) => item.id === session.id);
+    if (!current) {
+      showToast('This Virtual MR is no longer available.', 'warning');
+      return;
+    }
+    const blockedReason = getManualReviewBlockReason(current);
+    if (blockedReason) {
+      showToast(blockedReason, 'warning');
+      return;
+    }
     try {
       const result = await startAssignedReviewBatchForSession(session.id);
       if (!result.runs.length && !result.failures.length) {

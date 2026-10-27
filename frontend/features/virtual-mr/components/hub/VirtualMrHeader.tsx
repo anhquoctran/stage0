@@ -8,6 +8,7 @@ import { RefreshCw } from '../../../../common/components/icons/RefreshCw';
 import { X } from '../../../../common/components/icons/X';
 import { TabBranchSelector } from '../../../git/components/TabBranchSelector';
 import { formatMrFriendlyId } from '../../utils/virtualMrSequence';
+import { getManualReviewBlockReason } from '../../utils/manualReviewAvailability';
 import type { VirtualMrHeaderProps } from './VirtualMrHeaderProps';
 
 export function VirtualMrHeader({
@@ -30,6 +31,7 @@ export function VirtualMrHeader({
   reviewIsRunning,
   handleStartAiReview,
 }: VirtualMrHeaderProps) {
+  const blockedReason = getManualReviewBlockReason(session);
   return (
     <div className="px-4 py-2.5 flex items-center justify-between gap-4 border-b border-surface0/60 bg-crust/30 rounded-sm">
       <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -169,19 +171,19 @@ export function VirtualMrHeader({
         <button
           type="button"
           disabled={
-            !hasAssignedReviewer || Boolean(reviewBatch) || reviewIsStarting || reviewIsRunning
+            !hasAssignedReviewer || !!blockedReason || Boolean(reviewBatch) || reviewIsStarting || reviewIsRunning
           }
-          onClick={() => void handleStartAiReview()}
+          onClick={() => { if (!blockedReason) void handleStartAiReview(); }}
           title={
-            !hasAssignedReviewer
+            blockedReason || (!hasAssignedReviewer
               ? 'Add an AI bot to the Reviewers list to start a review'
               : reviewBatch
                 ? `Reviewing ${reviewBatch.reviewerName} (${reviewBatch.current}/${reviewBatch.total})`
                 : reviewIsRunning
                   ? 'An AI code review is already running'
-                  : 'Start a review with every assigned AI reviewer'
+                  : 'Start a review with every assigned AI reviewer')
           }
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white transition-colors font-medium text-xs cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed rounded-sm"
+          className="flex items-center gap-1.5 border-0 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white transition-colors font-medium text-xs cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed rounded-sm"
         >
           <RefreshCw
             className={`w-3.5 h-3.5 text-white ${reviewIsRunning ? 'animate-spin' : ''}`}

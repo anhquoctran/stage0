@@ -1,10 +1,5 @@
 //! SQLite connection facade. Storage, schema migration and setting queries are separate concerns.
-mod encrypted_storage;
-mod encryption_key;
-mod key_manifest;
-mod machine_identity;
 mod migrations;
-mod plaintext_migration;
 mod settings;
 mod storage;
 
@@ -14,7 +9,7 @@ use std::{fs::File, path::PathBuf, sync::Mutex};
 use storage::secure_database_file;
 use storage::{
     acquire_database_lock, create_app_data_dir, fallback_app_data_dir, migrate_legacy_database,
-    reject_symlink, secure_app_data_dir,
+    open_database, reject_symlink, secure_app_data_dir,
 };
 use tauri::{AppHandle, Manager};
 
@@ -45,12 +40,7 @@ impl Database {
         let legacy_db_path = app_dir.join(LEGACY_DATABASE_FILE_NAME);
         reject_symlink(&db_path)?;
         migrate_legacy_database(&legacy_db_path, &db_path)?;
-        let key = encryption_key::load_or_create_key(
-            &app_dir,
-            encrypted_storage::needs_existing_key(&db_path)?,
-        )?;
-        let conn = encrypted_storage::open_database(&db_path, &key)?;
-        drop(key);
+        let conn = open_database(&db_path)?;
 
         // High Performance SQLite Pragmas
         conn.execute_batch(
@@ -116,8 +106,6 @@ impl Database {
 }
 
 #[cfg(test)]
-mod encryption_tests;
-#[cfg(test)]
-mod key_tests;
+mod storage_tests;
 #[cfg(test)]
 mod tests;

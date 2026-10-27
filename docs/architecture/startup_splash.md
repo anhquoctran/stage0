@@ -40,6 +40,10 @@ Auxiliary notification windows retain their separate splash-removal path.
   maximization. This follows OS DPI scaling once; screen resolution does not
   switch the splash to workspace bounds. The hidden readiness handoff restores
   the normal workspace geometry, resizing and maximization capabilities.
+- macOS splash windows do not configure a custom traffic-light inset. Tao 0.37.1
+  reapplies that inset during redraw and unwraps a missing Close button on a
+  borderless window. Both configured and dynamically created windows use native
+  button placement; the hidden handoff restores decorations for the workspace.
 - The bootstrap controller is available before React loads. Its typed core
   facade safely delegates when present. Without the controller, a ready main
   application removes the static overlay directly.

@@ -14,10 +14,6 @@
         "resizable": false,
         "maximizable": false,
         "titleBarStyle": "Overlay",
-        "trafficLightPosition": {
-          "x": 13,
-          "y": 12
-        },
         "hiddenTitle": true,
         "backgroundColor": "#11111b",
         "visible": false,

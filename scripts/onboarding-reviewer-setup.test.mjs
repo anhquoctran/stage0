@@ -12,8 +12,42 @@ function fixture({ providerIds = [], provider = 'openai', externalAgents = [], r
   let autoSaves = 0;
   const { OnboardingReviewerSetup } = loadWithMocks(source, {
     react: harness.react,
-    '../../ai/constants/aiPresets': { AI_PROVIDERS: [{ id: 'openai', name: 'OpenAI' }] },
-    '../../ai/utils/aiProviderSettings': { providerSettingsFor: () => ({ model: 'gpt-test' }) },
+    '../../../common/components/CustomSelect': {
+      CustomSelect: ({ value, 'aria-label': ariaLabel }) =>
+        harness.react.createElement('button', { 'aria-label': ariaLabel }, value),
+    },
+    '../../ai/store/useAiMcpStore': {
+      useAiMcpStore: (selector) => selector({ dynamicModels: {} }),
+    },
+    '../../ai/components/AcpReviewerConfigOptions': { AcpReviewerConfigOptions: () => null },
+    '../../ai/components/AiModelExecutionOptions': { AiModelExecutionOptions: () => null },
+    '../../ai/hooks/useAcpReviewerConfigOptions': {
+      useAcpReviewerConfigOptions: () => ({
+        options: [],
+        loading: false,
+        error: null,
+        validationError: null,
+        retry() {},
+        reset() {},
+        updateOption() {},
+        ready: true,
+        isReady: () => true,
+      }),
+    },
+    '../../ai/constants/aiPresets': {
+      AI_PROVIDERS: [{
+        id: 'openai',
+        name: 'OpenAI',
+        defaultModel: 'gpt-test',
+        models: [{ id: 'gpt-test', name: 'Test model' }],
+      }],
+    },
+    '../../ai/utils/aiProviderSettings': {
+      providerSettingsFor: () => ({ model: 'gpt-test', baseUrl: 'https://api.openai.com/v1' }),
+    },
+    '../../ai/utils/resolveAiModelPreset': {
+      resolveAiModelPreset: (_provider, model) => model === 'gpt-test' ? { id: model, name: 'Test model' } : undefined,
+    },
   });
   const draftSettings = {
     aiConfig: { configuredProviders: providerIds, provider },

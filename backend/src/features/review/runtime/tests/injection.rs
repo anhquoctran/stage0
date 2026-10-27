@@ -73,6 +73,7 @@ fn reply_scope_rejects_global_mutations_and_cross_thread_or_file_access() {
         "create_review_discussion",
         "resolve_discussion",
         "search_code",
+        "get_diff_batch",
         "list_directory",
         "execute_terminal_cmd",
     ] {

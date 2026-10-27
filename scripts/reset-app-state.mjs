@@ -126,6 +126,22 @@ function getDirectories(userHome) {
           backupName: 'macOS-preferences.plist',
           label: 'macOS window and app preferences',
         },
+        ...[
+          ['WebKit', 'stage0', 'legacy-webkit-storage'],
+          ['Caches', APP_ID, 'application-cache'],
+          ['Caches', 'stage0', 'legacy-application-cache'],
+          ['HTTPStorages', APP_ID, 'http-storage'],
+          ['HTTPStorages', 'stage0', 'legacy-http-storage'],
+          ['Preferences', `${APP_ID}.plist`, 'bundle-preferences.plist'],
+          ['Saved Application State', `${APP_ID}.savedState`, 'saved-window-state'],
+          ['Saved Application State', 'stage0.savedState', 'legacy-saved-window-state'],
+        ].map(([folder, name, backupName]) => ({
+          path: path.join(userHome, 'Library', folder, name),
+          parent: path.join(userHome, 'Library', folder),
+          name,
+          backupName,
+          label: `${folder} (${name})`,
+        })),
       ],
     };
   }

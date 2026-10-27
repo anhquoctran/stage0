@@ -28,7 +28,7 @@ export function getDiffCodeSnippet(hunks: string[], side: 'left' | 'right', line
     const selected = rows.findIndex((row) => row.number === lineNumber);
     if (selected < 0) continue;
     const context = rows.slice(Math.max(0, selected - 3), selected + 4);
-    return { startLine: context[0].number, selectedLine: lineNumber, lines: context.map((row) => row.text) };
+    return { startLine: context[0].number, selectedLine: lineNumber, format: 'diff', lines: context.map((row) => row.text) };
   }
   return null;
 }

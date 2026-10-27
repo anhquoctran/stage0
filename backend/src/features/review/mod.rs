@@ -6,6 +6,7 @@ pub mod context;
 pub mod coordinator;
 mod debug_log;
 mod discussion_revision;
+pub(crate) mod discussion_snippets;
 mod input_screen;
 mod mentions;
 pub mod model_adapter;
