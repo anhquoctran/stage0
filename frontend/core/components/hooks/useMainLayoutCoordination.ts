@@ -33,19 +33,19 @@ export function useMainLayoutCoordination() {
     isDraftActive,
     openNewMrDraft,
     repoSettings,
+    loadRepoData,
+    resetRepoData,
   } = useVirtualMrStore();
 
   // Load Virtual MR data when repo changes or branches are fetched
   useEffect(() => {
     if (currentRepo) {
       const allBranches = branches ? [...(branches.local || []), ...(branches.remote || [])] : [];
-      useVirtualMrStore
-        .getState()
-        .loadRepoData(currentRepo.id, currentRepo.local_path, allBranches, baseBranch || undefined);
+      void loadRepoData(currentRepo.id, currentRepo.local_path, allBranches, baseBranch || undefined);
     } else {
-      useVirtualMrStore.getState().resetRepoData();
+      resetRepoData();
     }
-  }, [currentRepo?.id, currentRepo?.local_path, Boolean(branches)]);
+  }, [currentRepo?.id, currentRepo?.local_path, Boolean(branches), loadRepoData, resetRepoData]);
 
   const { sidebarWidth, isResizing, startResizing, resetSidebarWidth } = useSidebarResizing();
 

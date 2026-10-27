@@ -4,6 +4,7 @@ import { X } from '../../../common/components/icons/X';
 import type { VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
 import type { VirtualMrComment } from '../types/VirtualMrComment';
 import { getDiscussionComments } from '../utils/discussionReferences';
+import { getDiscussionCommentBody } from '../utils/discussionCommentBody';
 
 export const DiscussionReferenceDialog: React.FC<{
   discussion: VirtualMrDiscussion;
@@ -53,7 +54,7 @@ export const DiscussionReferenceDialog: React.FC<{
           {(comment ? [comment] : getDiscussionComments(discussion)).map((item) => (
             <div key={item.id} className="border-l-2 border-surface1 pl-3">
               <p className="mb-1 text-xs font-medium">{item.authorName} <span className="break-all font-mono text-[10px] font-normal text-subtext0">{item.id}</span></p>
-              <MarkdownPreview content={item.body} />
+              <MarkdownPreview content={getDiscussionCommentBody(item)} />
             </div>
           ))}
         </div>

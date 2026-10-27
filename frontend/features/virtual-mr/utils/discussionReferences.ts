@@ -1,6 +1,7 @@
 import type { DiscussionReference } from '../types/DiscussionReference';
 import type { VirtualMrComment } from '../types/VirtualMrComment';
 import type { VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
+import { getDiscussionCommentBody } from './discussionCommentBody';
 
 export function getDiscussionComments(discussion: VirtualMrDiscussion): VirtualMrComment[] {
   return discussion.rootComment ? [discussion.rootComment, ...discussion.children] : discussion.children;
@@ -22,7 +23,7 @@ export function buildDiscussionQuote(discussion: VirtualMrDiscussion, comment?: 
   const id = comment?.id ?? discussion.id;
   const author = (source?.authorName ?? 'Unknown author').replace(/[\\`*_{}\[\]<>!|]/g, '\\$&').replace(/[\r\n]+/g, ' ');
   const label = `${kind === 'comment' ? 'Comment' : 'Discussion'} ${id.replace(/[\\`*_{}\[\]<>!|]/g, '\\$&')} · ${author}`;
-  const body = (source?.body ?? '').replace(/\r\n?/g, '\n').split('\n').map((line) => `> ${line}`).join('\n');
+  const body = (source ? getDiscussionCommentBody(source) : '').replace(/\r\n?/g, '\n').split('\n').map((line) => `> ${line}`).join('\n');
   return `> [${label}](#mr-${kind}/${encodeURIComponent(id)})\n>\n${body}\n\n`;
 }
 

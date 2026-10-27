@@ -54,6 +54,8 @@
   --ctp-base: #1e1e2e;
   --ctp-mantle: #181825;
   --ctp-crust: #11111b;
+  --diff-added-background: #18271f;
+  --diff-deleted-background: #23191c;
 
   --bg-canvas: var(--ctp-crust);
   --bg-subtle: var(--ctp-mantle);
@@ -111,6 +113,8 @@
   --ctp-base: #eff1f5;
   --ctp-mantle: #e6e9ef;
   --ctp-crust: #dce0e8;
+  --diff-added-background: #dafbe1;
+  --diff-deleted-background: #ffebe9;
 
   --bg-canvas: var(--ctp-crust);
   --bg-subtle: var(--ctp-mantle);
@@ -464,6 +468,20 @@ code, kbd, samp, pre {
 
 .diff-line-new {
   background-color: color-mix(in srgb, var(--ctp-green) 16%, transparent) !important;
+}
+
+/* Share the Changes viewer's opaque palette with discussion excerpts. */
+.diff-tailwindcss-wrapper[data-theme] .diff-style-root {
+  --diff-add-content--: var(--diff-added-background);
+  --diff-del-content--: var(--diff-deleted-background);
+}
+
+.discussion-diff-added {
+  background-color: var(--diff-added-background);
+}
+
+.discussion-diff-deleted {
+  background-color: var(--diff-deleted-background);
 }
 
 .diff-line-hunk-header {

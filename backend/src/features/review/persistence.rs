@@ -143,7 +143,12 @@ impl Database {
             } else {
                 "right"
             };
-            let body=format!("**[{}] {}**\n\n{}\n\nEvidence from `{}` lines {}–{}:\n\n```\n{}\n```\n\nReview run `{}` · {} · {}. This is a model finding, not an approval.",finding.severity,finding.title,super::security::redact(&finding.body),sha,finding.start_line,finding.end_line,finding.evidence,run.id,run.provider,run.model);
+            let body = format!(
+                "**[{}] {}**\n\n{}",
+                finding.severity,
+                finding.title,
+                super::security::redact(&finding.body)
+            );
             tx.execute("INSERT OR IGNORE INTO virtual_mr_discussions(id,session_id,file_path,diff_side,line_number,commit_id,is_resolved,resolve_type,verification_status,created_at) VALUES(?1,?2,?3,?4,?5,?6,0,'manual','none',?7)",params![id,run.session_id,finding.file_path,side,finding.start_line as i64,sha,run.started_at]).map_err(|e|e.to_string())?;
             tx.execute("INSERT OR IGNORE INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,review_action,created_at,updated_at) VALUES(?1,?2,'ai_agent',?3,?4,?5,'comment',?6,?6)",params![format!("{id}-comment"),id,author_id,author_name,body,run.started_at]).map_err(|e|e.to_string())?;
         }

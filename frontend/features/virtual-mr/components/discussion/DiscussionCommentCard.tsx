@@ -1,4 +1,5 @@
 import { MarkdownPreview } from '../../../../common/components/MarkdownPreview';
+import { getDiscussionCommentBody } from '../../utils/discussionCommentBody';
 
 import {
   formatGitLabTime,
@@ -78,7 +79,7 @@ export function DiscussionCommentCard({
           </div>
 
           <div className="pt-0.5 leading-relaxed text-text select-text">
-            <MarkdownPreview content={rootComment.body} />
+            <MarkdownPreview content={getDiscussionCommentBody(rootComment)} />
           </div>
         </div>
       </div>

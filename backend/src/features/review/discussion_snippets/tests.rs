@@ -34,6 +34,17 @@ fn old_ai_findings_get_redacted_original_head_and_deleted_base_excerpts_and_cach
             finding("deleted.rs", "base", 1, 1),
         ],
     );
+    for discussion in db.list_discussions("session").unwrap() {
+        let body = &discussion.comments[0].body;
+        assert_eq!(body, "**[medium] Fixture**\n\nA finding");
+        assert!(!body.contains("Evidence from"));
+        assert!(!body.contains("Review run"));
+        assert!(!body.contains("This is a model finding, not an approval"));
+    }
+    assert_eq!(
+        db.get_review_run(&run.id).unwrap().findings[0].evidence,
+        "source evidence"
+    );
     assert!(db
         .list_discussions("session")
         .unwrap()

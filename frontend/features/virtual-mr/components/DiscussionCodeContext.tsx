@@ -65,7 +65,7 @@ export const DiscussionCodeContext: React.FC<{
         </div>
       )}
       {rows.length > 0 ? (
-        <div className="overflow-x-auto rounded-sm bg-crust select-text" aria-label="Discussion code snippet">
+        <div className="overflow-x-auto rounded-sm bg-base select-text" aria-label="Discussion code snippet">
           <table className="w-full border-collapse font-mono text-xs leading-6">
             <tbody>
               {rows.map((row) => (
@@ -75,9 +75,9 @@ export const DiscussionCodeContext: React.FC<{
                   data-selected={row.isSelected}
                   aria-label={row.isSelected ? `Issue line ${row.number}` : undefined}
                   className={`border-0 ${row.isSelected ? 'font-semibold' : ''} ${
-                    row.type === 'del' ? 'bg-red-600 text-white'
-                      : row.type === 'add' ? 'bg-emerald-600 text-white'
-                        : row.isSelected ? 'bg-surface0 text-text' : 'bg-crust text-subtext1'
+                    row.type === 'del' ? 'discussion-diff-deleted text-text'
+                      : row.type === 'add' ? 'discussion-diff-added text-text'
+                        : row.isSelected ? 'bg-surface0 text-text' : 'bg-base text-subtext1'
                   }`}
                 >
                   <td className="w-6 border-0 text-center select-none" aria-hidden="true">{row.isSelected ? '›' : ''}</td>

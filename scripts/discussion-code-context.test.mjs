@@ -59,6 +59,9 @@ test('discussion shows a readable path, signed range, snapshot and highlighted c
   assert.doesNotMatch(file.props.className, /truncate/);
   const issueRows = nodes.filter((node) => node.type === 'tr' && node.props['data-selected']);
   assert.deepEqual(issueRows.map((node) => node.props['data-line-number']), [60, 61]);
-  assert.ok(issueRows.every((node) => node.props.className.includes('bg-emerald-600 text-white')));
+  assert.ok(issueRows.every((node) => node.props.className.includes('discussion-diff-added text-text')));
+  assert.ok(issueRows.every((node) => !/bg-emerald-600|text-white/.test(node.props.className)));
+  const excerpt = nodes.find((node) => node.props['aria-label'] === 'Discussion code snippet');
+  assert.match(excerpt.props.className, /bg-base/);
   harness.cleanup();
 });
