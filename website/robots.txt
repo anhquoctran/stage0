@@ -1,0 +1,6 @@
+# Robots.txt for Stage0 Landing Page
+User-agent: *
+Allow: /
+
+Sitemap: https://anhquoctran.github.io/stage0/sitemap.xml
+

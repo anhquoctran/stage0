@@ -11,27 +11,113 @@
   <meta name="keywords" content="ai code review, git code reviewer, autonomous ai agent, virtual mr, merge conflict prediction, tauri, rust, local first, claude, gpt-4o, ollama, catppuccin">
   <meta name="author" content="Anh Quoc Tran">
 
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://anhquoctran.github.io/stage0/">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#1e1e2e" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#eff1f5" media="(prefers-color-scheme: light)">
+
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://anhquoctran.github.io/stage0/">
+  <meta property="og:site_name" content="Stage0">
   <meta property="og:title" content="Stage0 — AI-Native Git Code Reviewer">
   <meta property="og:description" content="Autonomous AI code review for Git branches. Audit security, verify architecture, and predict merge conflicts in-memory.">
-  <meta property="og:image" content="./assets/app-icon.png">
+  <meta property="og:image" content="https://anhquoctran.github.io/stage0/assets/app-icon.png">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://anhquoctran.github.io/stage0/">
   <meta property="twitter:title" content="Stage0 — AI-Native Git Code Reviewer">
   <meta property="twitter:description" content="Autonomous AI code review for Git branches. Audit security, verify architecture, and predict merge conflicts in-memory.">
-  <meta property="twitter:image" content="./assets/app-icon.png">
-
-  <!-- Anti-Cache Meta Tags for Live Development -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
+  <meta property="twitter:image" content="https://anhquoctran.github.io/stage0/assets/app-icon.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="./assets/app-icon.svg">
   <link rel="shortcut icon" href="./assets/favicon.ico">
+
+  <!-- Structured Data / Schema.org (JSON-LD) for SoftwareApplication & FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Stage0",
+        "operatingSystem": "Windows 10+, macOS 12+, Linux",
+        "applicationCategory": "DeveloperApplication",
+        "description": "Autonomous AI-native Git code reviewer and virtual MR sandbox. Inspect branch diffs, audit security, predict merge conflicts, and chat on diff lines before pushing.",
+        "url": "https://anhquoctran.github.io/stage0/",
+        "downloadUrl": "https://anhquoctran.github.io/stage0/#download",
+        "softwareVersion": "0.1.12",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Anh Quoc Tran",
+          "url": "https://github.com/anhquoctran"
+        },
+        "license": "https://github.com/anhquoctran/stage0/blob/main/LICENSE"
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What makes Stage0 an AI-native Git code reviewer?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Stage0 is designed specifically for code review before code is published. It evaluates 3-way branch diffs in-memory and deploys specialized AI reviewer bots (Security Sentinel, Architecture Guardian, Performance Auditor) directly to your changes, allowing interactive discussion, conflict prediction, and one-click patch application."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Which AI models and providers can I use?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Stage0 supports Anthropic Claude (Claude 3.7 Sonnet / Haiku), OpenAI (GPT-4o, o3-mini), Google Gemini 2.0, DeepSeek, local offline models via Ollama or LM Studio, and custom ACP (Agent Client Protocol) external agents."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I run AI reviews completely offline without an internet connection?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes! By configuring Ollama or a local OpenAI-compatible endpoint, Stage0 executes AI reviews, conflict analyses, and discussions completely offline on your own GPU/CPU. No data ever leaves your computer."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does Stage0 modify my working tree or uncommitted files?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Stage0 creates Virtual MRs entirely in memory using Git's native git merge-tree --write-tree. It never checks out branches, stashes files, or modifies your active working tree."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How are my API keys and repository code kept secure?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "API keys are vaulted directly into your operating system's native secure keyring (Windows Credential Manager, macOS Keychain, Linux Libsecret) and zeroized in memory immediately after use. Stage0 never commits secrets to JSON files or tracks telemetry."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How is Stage0 different from GitHub Copilot or GitLab Duo?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "While Copilot assists primarily with autocompleting code as you type, Stage0 acts as an independent, holistic code reviewer that evaluates branch comparisons, analyzes security threats, predicts 3-way merge conflicts, and enforces architecture boundaries locally before you open an official pull request."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 
   <!-- IBM Plex Fonts (Sans & Mono) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
