@@ -1,73 +1,53 @@
 export const WELCOME_SLIDES = [
   {
-    id: 'welcome', eyebrow: 'A FRIENDLIER WAY TO REVIEW', title: 'Welcome to Stage0',
-    description: 'Understand what a branch will bring into your project before you merge it. Stage0 gives you a clear place to compare, inspect, and review.',
-    caption: 'Start with two branches. Keep your working copy right where it is.',
+    id: 'welcome',
+    stepLabel: 'Workspace',
+    eyebrow: 'WELCOME TO STAGE0',
+    title: 'Welcome to Stage0',
+    description:
+      'Compare branches, spot merge conflicts in memory, and keep local Virtual MR reviews organized without touching your working tree.',
+    caption:
+      'System theme and Stage0 shortcuts are selected by default. You can customize fonts and more anytime in Preferences.',
     highlights: [
-      { title: 'Start with your repository', description: 'Open a project on disk or clone a remote repository. There is no need to move your existing work.' },
-      { title: 'Build a clear picture', description: 'Explore the changes, understand the context, and collect review notes before deciding what comes next.' },
+      {
+        title: 'Compare without checkout',
+        description:
+          'Inspect diffs and likely merge conflicts between any two branches while keeping your working copy clean.',
+      },
+      {
+        title: 'Local Virtual MRs',
+        description:
+          'Keep descriptions, labels, inline comments, and AI review runs together on your machine.',
+      },
     ],
   },
   {
-    id: 'compare', eyebrow: 'COMPARE WITH CONFIDENCE', title: 'Know what will change',
-    description: 'Choose a base branch and a branch to compare. Review changed files and likely merge conflicts before deciding what to do next.',
-    caption: 'Reviewing does not check out or merge branches into your working tree or Git index.',
-    highlights: [
-      { title: 'Read the change, not just the file', description: 'Follow additions and deletions in a focused diff, then inspect the surrounding code when you need more context.' },
-      { title: 'Spot friction before merging', description: 'See likely conflicts early. Inspect the affected files and plan your next step without changing branches.' },
-    ],
+    id: 'ai-setup',
+    stepLabel: 'AI Connection',
+    eyebrow: 'REQUIRED STEP 1 OF 2',
+    title: 'Set up your AI connection',
+    description:
+      'Connect an LLM provider or install an ACP agent. Your connection is saved automatically.',
+    caption:
+      'API keys are stored in your OS keychain. Saving a connection does not send repository code or start a review.',
   },
   {
-    id: 'review', eyebrow: 'YOUR REVIEW, READY WHEN YOU ARE', title: 'Keep the conversation together',
-    description: 'Save a local Virtual MR with its description, labels, comments, and review notes. Come back to the same review whenever you need it.',
-    caption: 'Next, make Stage0 feel familiar with your own theme, shortcuts, and fonts.',
-    highlights: [
-      { title: 'Keep context close to the code', description: 'Add a description, organize the review with labels, and discuss individual changes in one place.' },
-      { title: 'Pick up where you left off', description: 'Reopen your local merge request to revisit notes. Create your first reviewer bot in the required AI setup step.' },
-    ],
+    id: 'reviewer-setup',
+    stepLabel: 'Reviewer Bot',
+    eyebrow: 'REQUIRED STEP 2 OF 2',
+    title: 'Create your first reviewer bot',
+    description:
+      'Create an enabled custom reviewer bot powered by your AI connection to unlock code reviews.',
+    caption:
+      'You can add more specialized reviewer bots or customize instructions later in AI Preferences.',
   },
   {
-    id: 'theme', eyebrow: 'YOUR WORKSPACE, YOUR STYLE', title: 'Choose your theme',
-    description: 'Follow your system appearance or choose a light or dark workspace.',
-    caption: 'System is the default. Preview your choice now and change it later in Preferences.',
-  },
-  {
-    id: 'keymaps', eyebrow: 'FAMILIAR SHORTCUTS', title: 'Choose your keymap',
-    description: 'Start with the shortcuts of your favorite editor or Git app.',
-    caption: 'Presets adapt equivalent Stage0 actions. Custom bindings are preserved; you can fine-tune them in Preferences.',
-  },
-  {
-    id: 'ui-font', eyebrow: 'YOUR INTERFACE', title: 'Choose your UI font',
-    description: 'Give menus, navigation, labels, and buttons a familiar look.',
-    caption: 'Preview changes instantly. Your choices are saved when you finish or skip the guide.',
-  },
-  {
-    id: 'buffer-font', eyebrow: 'COMFORTABLE CODE READING', title: 'Tune your buffer font',
-    description: 'Choose how code appears in diff viewers and editor panes.',
-    caption: 'Use an installed font. Fira Code is bundled, with support for programming ligatures.',
-  },
-  {
-    id: 'markdown-font', eyebrow: 'WRITE AND REVIEW CLEARLY', title: 'Set your Markdown fonts',
-    description: 'Personalize the editor, rendered text, and code blocks independently.',
-    caption: 'Connect an LLM provider or ACP agent, then create and save your first reviewer bot.',
-  },
-  {
-    id: 'ai-setup', eyebrow: 'THE CORE OF YOUR WORKFLOW', title: 'Set up your AI connection',
-    description: 'Connect an LLM provider or add an ACP agent, then create and save your first enabled reviewer bot.',
-    caption: 'Both the AI connection and first reviewer are required before continuing.',
-  },
-  {
-    id: 'startup', eyebrow: 'SYSTEM INTEGRATION', title: 'Launch on startup',
-    description: 'Choose how Stage0 launches on system boot and whether the stage0 terminal command is available on your PATH.',
-    caption: 'PATH setup takes effect in new terminal sessions. You can change these options later in Preferences.',
-  },
-  {
-    id: 'repository', eyebrow: 'YOUR WORKSPACE IS READY', title: 'Start with a repository',
-    description: 'Open a local Git project or clone a remote repository to begin your first review.',
-    caption: 'Your theme, shortcuts, and fonts are saved when you continue.',
-    highlights: [
-      { title: 'Open an existing project', description: 'Choose a Git repository on your computer and start comparing branches.' },
-      { title: 'Bring a remote project into your workspace', description: 'Clone a repository from its Git URL into a folder you choose.' },
-    ],
+    id: 'repository',
+    stepLabel: 'Ready',
+    eyebrow: 'YOUR WORKSPACE IS READY',
+    title: 'Start with a repository',
+    description:
+      'Configure system startup options, then open a local Git project or clone a remote repository to begin your first review.',
+    caption: 'Your appearance, keymap, and startup choices are saved when you continue.',
   },
 ] as const;

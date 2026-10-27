@@ -9,6 +9,7 @@ const secondAgent = { id: 'cursor', name: 'Cursor', command: 'cursor-agent', arg
 function fixture({ providerIds = [], provider = 'openai', externalAgents = [], reviewers = [] } = {}) {
   const harness = componentHarness();
   const added = [];
+  let autoSaves = 0;
   const { OnboardingReviewerSetup } = loadWithMocks(source, {
     react: harness.react,
     '../../ai/constants/aiPresets': { AI_PROVIDERS: [{ id: 'openai', name: 'OpenAI' }] },
@@ -20,17 +21,25 @@ function fixture({ providerIds = [], provider = 'openai', externalAgents = [], r
     globalReviewers: reviewers,
     addGlobalReviewer: (reviewer) => added.push(reviewer),
   };
-  const render = () => harness.render(OnboardingReviewerSetup, { draftSettings, hasSavedRequiredReviewer: false });
-  return { harness, added, render };
+  const render = () =>
+    harness.render(OnboardingReviewerSetup, {
+      draftSettings,
+      hasSavedRequiredReviewer: false,
+      onAutoSave: () => {
+        autoSaves++;
+      },
+    });
+  return { harness, added, getAutoSaves: () => autoSaves, render };
 }
 
-test('quick setup creates an enabled general reviewer with the configured provider defaults', async (t) => {
+test('quick setup creates an enabled general reviewer with the configured provider defaults and auto-saves', async (t) => {
   const setup = fixture({ providerIds: ['openai'] });
   t.after(() => setup.harness.cleanup());
   let nodes = componentNodes(await setup.render());
   assert.equal(nodes.some((node) => node.type === 'select'), false, 'A single connection needs no selector');
   assert.equal(nodes.some((node) => node.type === 'textarea'), false, 'Advanced prompts stay out of onboarding');
   nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} });
+  await new Promise((resolve) => queueMicrotask(resolve));
   assert.deepEqual(setup.added[0], {
     name: 'Code Reviewer',
     tagline: 'Code review',
@@ -44,6 +53,7 @@ test('quick setup creates an enabled general reviewer with the configured provid
     enabled: true,
     isBuiltin: false,
   });
+  assert.equal(setup.getAutoSaves(), 1);
 });
 
 test('ACP quick setup requires explicit consent before creating the reviewer', async (t) => {

@@ -1,39 +1,32 @@
 import { KeymapPresetPicker } from '../../preferences/components/keymaps/KeymapPresetPicker';
-import { PreferencesUiFontTab } from '../../preferences/components/tabs/PreferencesUiFontTab';
-import { PreferencesFontTab } from '../../preferences/components/tabs/PreferencesFontTab';
-import { PreferencesMarkdownFontTab } from '../../preferences/components/tabs/PreferencesMarkdownFontTab';
 import type { WelcomeSettingsProps } from '../types/WelcomeSettingsProps';
-import type { ViewerFontSettings } from '../../preferences/types/ViewerFontSettings';
-import type { MarkdownFontSettings } from '../../preferences/types/MarkdownFontSettings';
-import type { SetStateAction } from 'react';
 import { WelcomeThemePicker } from './WelcomeThemePicker';
 import { WelcomeStartupTab } from './WelcomeStartupTab';
 
 export function WelcomeSettingsPanel({ step, settings, onChange }: WelcomeSettingsProps) {
-  const setViewer = <K extends keyof ViewerFontSettings>(key: K, value: SetStateAction<ViewerFontSettings[K]>) =>
-    onChange((previous) => ({ ...previous, viewerFont: { ...previous.viewerFont,
-      [key]: typeof value === 'function' ? value(previous.viewerFont[key]) : value } }));
-  const setMarkdown = <K extends keyof MarkdownFontSettings>(key: K, value: SetStateAction<MarkdownFontSettings[K]>) =>
-    onChange((previous) => ({ ...previous, markdownFont: { ...previous.markdownFont,
-      [key]: typeof value === 'function' ? value(previous.markdownFont[key]) : value } }));
-
-  if (step === 'theme') return <WelcomeThemePicker settings={settings} onChange={onChange} />;
-  if (step === 'keymaps') return <KeymapPresetPicker value={settings.keymap}
-    onChange={(keymap) => onChange((previous) => ({ ...previous, keymap }))} />;
-  if (step === 'ui-font') return <PreferencesUiFontTab value={settings.uiFontFamily}
-    onChange={(uiFontFamily) => onChange((previous) => ({ ...previous, uiFontFamily }))} />;
-  if (step === 'buffer-font') return <PreferencesFontTab
-    simplified
-    draftFontFamily={settings.viewerFont.fontFamily} setDraftFontFamily={(value) => setViewer('fontFamily', value)}
-    draftLineSpacing={settings.viewerFont.lineSpacing} setDraftLineSpacing={(value) => setViewer('lineSpacing', value)}
-    draftEnableLigatures={settings.viewerFont.enableLigatures} setDraftEnableLigatures={(value) => setViewer('enableLigatures', value)} />;
-  if (step === 'markdown-font') return <PreferencesMarkdownFontTab
-    showPreview={false}
-    draftMarkdownFontFamily={settings.markdownFont.fontFamily} setDraftMarkdownFontFamily={(value) => setMarkdown('fontFamily', value)}
-    draftMarkdownCodeFontFamily={settings.markdownFont.codeFontFamily} setDraftMarkdownCodeFontFamily={(value) => setMarkdown('codeFontFamily', value)}
-    draftMarkdownEditorFontFamily={settings.markdownFont.editorFontFamily} setDraftMarkdownEditorFontFamily={(value) => setMarkdown('editorFontFamily', value)}
-    draftMarkdownFontSize={settings.markdownFont.fontSize} setDraftMarkdownFontSize={(value) => setMarkdown('fontSize', value)}
-    draftMarkdownHeadingWeight={settings.markdownFont.headingFontWeight} setDraftMarkdownHeadingWeight={(value) => setMarkdown('headingFontWeight', value)} />;
-  if (step === 'startup') return <WelcomeStartupTab settings={settings} onChange={onChange} />;
+  if (step === 'welcome') {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtext0">
+            Choose your theme
+          </h2>
+          <WelcomeThemePicker settings={settings} onChange={onChange} />
+        </div>
+        <div className="space-y-2.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtext0">
+            Choose your keymap preset
+          </h2>
+          <KeymapPresetPicker
+            value={settings.keymap}
+            onChange={(keymap) => onChange((previous) => ({ ...previous, keymap }))}
+          />
+        </div>
+      </div>
+    );
+  }
+  if (step === 'repository') {
+    return <WelcomeStartupTab settings={settings} onChange={onChange} />;
+  }
   return null;
 }

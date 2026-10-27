@@ -4,7 +4,7 @@
 @import "@git-diff-view/react/styles/diff-view.css";
 @import "overlayscrollbars/overlayscrollbars.css";
 @import "./button-surfaces.css";
-@import "./onboarding-artwork.css";
+
 
 @keyframes git-task-progress {
   from { transform: translateX(-100%); }

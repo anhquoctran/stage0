@@ -35,10 +35,10 @@ function fixture() {
     fail: () => { fail = true; }, pause: (promise) => { paused = promise; } };
 }
 
-test('welcome keeps Theme before Keymaps and ends with AI setup then Startup then Open/Clone', () => {
+test('welcome follows the streamlined 4-step sequence: welcome, ai-setup, reviewer-setup, repository', () => {
   const { WELCOME_SLIDES } = loadWithMocks(url('features/onboarding/constants/welcomeSlides.ts'), {});
   assert.deepEqual(WELCOME_SLIDES.map((slide) => slide.id),
-    ['welcome', 'compare', 'review', 'theme', 'keymaps', 'ui-font', 'buffer-font', 'markdown-font', 'ai-setup', 'startup', 'repository']);
+    ['welcome', 'ai-setup', 'reviewer-setup', 'repository']);
 });
 
 test('onboarding startup tab toggles launch on boot and start in background', async (t) => {
@@ -63,54 +63,31 @@ test('onboarding startup tab toggles launch on boot and start in background', as
   assert.equal(props.settings.startInBackground, true);
 });
 
-test('onboarding UI font picker delegates font choice and defaults to standard downward placement', async (t) => {
+test('WelcomeSettingsPanel renders Theme and Keymap on welcome step, and Startup on repository step', async (t) => {
   const runner = componentHarness();
   t.after(() => runner.cleanup());
-  const PreferencesUiFontTab = () => null;
+  const KeymapPresetPicker = () => null;
+  const WelcomeThemePicker = () => null;
+  const WelcomeStartupTab = () => null;
   const { WelcomeSettingsPanel } = loadWithMocks(url('features/onboarding/components/WelcomeSettingsPanel.tsx'), {
     react: runner.react,
-    '../../preferences/components/tabs/PreferencesUiFontTab': { PreferencesUiFontTab },
-    '../../preferences/components/tabs/PreferencesFontTab': { PreferencesFontTab: () => null },
-    '../../preferences/components/tabs/PreferencesMarkdownFontTab': { PreferencesMarkdownFontTab: () => null },
-    '../../preferences/components/keymaps/KeymapPresetPicker': { KeymapPresetPicker: () => null },
-    './WelcomeThemePicker': { WelcomeThemePicker: () => null },
-    './WelcomeStartupTab': { WelcomeStartupTab: () => null },
-  });
-  const tree = await runner.render(WelcomeSettingsPanel, {
-    step: 'ui-font', settings: fixture().draft, onChange() {},
-  });
-  const picker = componentNodes(tree).find((node) => node.type === PreferencesUiFontTab);
-  assert.equal(picker.props.value, fixture().draft.uiFontFamily);
-  assert.equal(picker.props.dropdownPlacement, undefined);
-});
-
-test('onboarding buffer font step renders simplified tab with family, line spacing, and ligatures only', async (t) => {
-  const runner = componentHarness();
-  t.after(() => runner.cleanup());
-  const PreferencesFontTab = () => null;
-  const { WelcomeSettingsPanel } = loadWithMocks(url('features/onboarding/components/WelcomeSettingsPanel.tsx'), {
-    react: runner.react,
-    '../../preferences/components/tabs/PreferencesUiFontTab': { PreferencesUiFontTab: () => null },
-    '../../preferences/components/tabs/PreferencesFontTab': { PreferencesFontTab },
-    '../../preferences/components/tabs/PreferencesMarkdownFontTab': { PreferencesMarkdownFontTab: () => null },
-    '../../preferences/components/keymaps/KeymapPresetPicker': { KeymapPresetPicker: () => null },
-    './WelcomeThemePicker': { WelcomeThemePicker: () => null },
-    './WelcomeStartupTab': { WelcomeStartupTab: () => null },
+    '../../preferences/components/keymaps/KeymapPresetPicker': { KeymapPresetPicker },
+    './WelcomeThemePicker': { WelcomeThemePicker },
+    './WelcomeStartupTab': { WelcomeStartupTab },
   });
   const draft = fixture().draft;
-  const tree = await runner.render(WelcomeSettingsPanel, {
-    step: 'buffer-font', settings: draft, onChange() {},
+  const welcomeTree = await runner.render(WelcomeSettingsPanel, {
+    step: 'welcome', settings: draft, onChange() {},
   });
-  const tab = componentNodes(tree).find((node) => node.type === PreferencesFontTab);
-  assert.ok(tab, 'Buffer font tab should be rendered');
-  assert.equal(tab.props.simplified, true);
-  assert.equal(tab.props.draftFontFamily, draft.viewerFont.fontFamily);
-  assert.equal(tab.props.draftLineSpacing, draft.viewerFont.lineSpacing);
-  assert.equal(tab.props.draftEnableLigatures, draft.viewerFont.enableLigatures);
-  assert.equal(tab.props.draftFontSize, undefined);
-  assert.equal(tab.props.draftIsBold, undefined);
-  assert.equal(tab.props.draftIsItalic, undefined);
-  assert.equal(tab.props.draftIsUnderline, undefined);
+  const welcomeNodes = componentNodes(welcomeTree);
+  assert.ok(welcomeNodes.some((node) => node.type === WelcomeThemePicker));
+  assert.ok(welcomeNodes.some((node) => node.type === KeymapPresetPicker));
+
+  const repoTree = await runner.render(WelcomeSettingsPanel, {
+    step: 'repository', settings: draft, onChange() {},
+  });
+  const repoNodes = componentNodes(repoTree);
+  assert.ok(repoNodes.some((node) => node.type === WelcomeStartupTab));
 });
 
 test('appearance and keymap steps remain optional once required AI setup is saved', async (t) => {
@@ -128,17 +105,25 @@ test('appearance and keymap steps remain optional once required AI setup is save
     react: runner.react,
     '@tauri-apps/api/core': { invoke: async () => {} },
     '../../../common/components/icons/ArrowRight': { ArrowRight: () => null },
+    '../../../common/components/icons/Check': { Check: () => null },
     '../../../common/components/icons/X': { X: () => null },
     '../../../common/components/AppLogo': { AppLogo: () => null },
     '../../../common/utils/shortcuts': { isMacOS: () => true },
     '../../git/store/useGitStore': { useGitStore: { getState: () => ({}) } },
-    './BranchArtwork': { BranchArtwork: () => null },
-    './CompareArtwork': { CompareArtwork: () => null },
-    './ReviewArtwork': { ReviewArtwork: () => null },
     './WelcomeSettingsPanel': { WelcomeSettingsPanel: () => null },
-    './WelcomeSettingsPreview': { WelcomeSettingsPreview: () => null },
     './WelcomeAiSetup': { WelcomeAiSetup: () => null },
-    '../hooks/useOnboardingAiSetup': { useOnboardingAiSetup: () => ({ connections: ['Saved ACP'], busy: false, canFinish: () => true }) },
+    './OnboardingReviewerSetup': { OnboardingReviewerSetup: () => null },
+    '../hooks/useOnboardingAiSetup': {
+      useOnboardingAiSetup: () => ({
+        connections: ['Saved ACP'],
+        busy: false,
+        hasChanges: false,
+        hasSavedRequiredReviewer: true,
+        draft: {},
+        save: async () => {},
+        canFinish: () => true,
+      }),
+    },
     '../hooks/useOnboardingPreferences': { useOnboardingPreferences: () => ({
       settings: f.draft, setSettings: () => assert.fail('No settings should be chosen'),
       isSaving: false, saveError: null, reload() {},
@@ -157,32 +142,15 @@ test('appearance and keymap steps remain optional once required AI setup is save
   assert.equal(dialog.props.tabIndex, -1, 'Initial focus belongs to the dialog, not a call-to-action');
   assert.match(dialog.props.className, /\bh-full\b.*\bw-full\b/);
   assert.match(dialog.props.className, /\brounded-none\b/, 'Onboarding is the full window, not an inset card');
-  assert.ok(!dialog.props.className.includes('max-w-') && !dialog.props.className.includes('max-h-'),
-    'Do not restore an outer gutter or bounded card around the tour');
-  assert.ok(componentNodes(tree).some((node) => node.props.className?.includes('my-auto py-8')),
-    'Intro copy should be vertically balanced instead of pinned far above its navigation');
   for (let slide = 0; slide < WELCOME_SLIDES.length - 1; slide++) {
-    const visibleText = componentNodes(tree).map((node) => node.props.children
-      .filter((child) => typeof child === 'string' || typeof child === 'number').join(''));
-    assert.ok(!visibleText.some((text) => /^0?\d+\s*\/\s*0?\d+$/.test(text.trim()) || /-step welcome guide/.test(text)),
-      'Step counters must not be visible on the onboarding screen');
-    const nextLabel = slide === 2 ? "Let's get started" : 'Next';
-    const next = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.flat().some((child) => typeof child === 'string' && child.trim() === nextLabel));
+    const next = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.flat().some((child) => typeof child === 'string' && child.trim() === 'Next'));
     assert.ok(next, `Step ${slide + 1} must allow Next without choosing anything`);
     assert.ok(!next.props.disabled);
     assert.ok(!componentNodes(tree).some((node) => node.type === 'button' &&
       node.props.children.includes('Open a repository')), 'Repository actions belong to the final step only');
     assert.equal(next.props.ref, undefined, 'Next must not receive automatic focus');
-    if (slide === 2) {
-      assert.ok(next.props.className.includes('btn-primary'), "Let's get started must use the brand button");
-    } else {
-      assert.ok(!next.props.className.includes('btn-primary'), 'Next must not use the glowing brand button');
-      assert.match(next.props.className, /\bbg-surface0\b/);
-      assert.match(next.props.className, /\btext-text\b/);
-      assert.match(next.props.className, /\bborder-0\b/);
-    }
     assert.notEqual(next.props.tabIndex, -1, 'Next remains available to keyboard navigation');
-    next.props.onClick(); tree = await render();
+    await next.props.onClick(); tree = await render();
   }
   const finalNodes = componentNodes(tree);
   assert.ok(finalNodes.some((node) => node.type === 'h1' && node.props.children.includes('Start with a repository')));
@@ -190,8 +158,6 @@ test('appearance and keymap steps remain optional once required AI setup is save
   const clone = finalNodes.find((node) => node.type === 'button' && node.props.children.includes('Clone a repository'));
   assert.ok(clone);
   assert.ok(!clone.props.className.split(/\s+/).includes('hidden'), 'Clone stays available on narrow windows');
-  assert.ok(!finalNodes.some((node) => node.type === 'p' && node.props.children.some((child) =>
-    typeof child === 'string' && child.includes('Optional — everything is already set up.'))));
   const skip = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.includes('Skip tour'));
   await skip.props.onClick();
   assert.equal(completed, 1);

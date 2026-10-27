@@ -4,7 +4,11 @@ import { providerSettingsFor } from '../../ai/utils/aiProviderSettings';
 import type { OnboardingReviewerConnection } from '../types/OnboardingReviewerConnection';
 import type { OnboardingReviewerSetupProps } from '../types/OnboardingReviewerSetupProps';
 
-export function OnboardingReviewerSetup({ draftSettings, hasSavedRequiredReviewer }: OnboardingReviewerSetupProps) {
+export function OnboardingReviewerSetup({
+  draftSettings,
+  hasSavedRequiredReviewer,
+  onAutoSave,
+}: OnboardingReviewerSetupProps) {
   const [name, setName] = useState('Code Reviewer');
   const [connectionId, setConnectionId] = useState('');
   const [consentedAcpAgentId, setConsentedAcpAgentId] = useState<string | null>(null);
@@ -43,41 +47,88 @@ export function OnboardingReviewerSetup({ draftSettings, hasSavedRequiredReviewe
       enabled: true,
       isBuiltin: false,
     });
+    if (onAutoSave) {
+      queueMicrotask(() => {
+        void onAutoSave();
+      });
+    }
   };
 
   if (readyReviewer) {
-    return <div role="status" className="space-y-1 rounded-sm bg-surface0 p-3 text-xs leading-5 text-subtext1">
-      <p className="font-semibold text-text">{readyReviewer.name} is ready.</p>
-      <p>{hasSavedRequiredReviewer ? 'Your first reviewer is saved.' : 'Select Save AI setup below to save your reviewer.'}</p>
-    </div>;
+    return (
+      <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-surface0 p-4 text-xs leading-5 text-subtext1">
+        <div>
+          <p className="font-semibold text-text">{readyReviewer.name} is ready.</p>
+          <p>{hasSavedRequiredReviewer ? 'Your first reviewer is saved.' : 'Saving your first reviewer…'}</p>
+        </div>
+        <span className={`rounded-sm px-2.5 py-1 text-[11px] font-semibold text-white ${hasSavedRequiredReviewer ? 'bg-emerald-600' : 'bg-brand'}`}>
+          {hasSavedRequiredReviewer ? 'Saved & Enabled' : 'Saving…'}
+        </span>
+      </div>
+    );
   }
 
-  return <form onSubmit={createReviewer} className="space-y-3 rounded-sm border border-surface0 p-3">
-    <p className="text-xs leading-5 text-subtext0">Start with a general code reviewer. You can fine-tune its role and instructions later in AI Preferences.</p>
-    <label className="block space-y-1 text-xs font-medium text-subtext1">
-      Reviewer name
-      <input value={name} onChange={(event) => setName(event.target.value)} required maxLength={80}
-        className="w-full rounded-sm border border-surface1 bg-base px-3 py-2 text-sm text-text" />
-    </label>
-    {connections.length > 1 ? <label className="block space-y-1 text-xs font-medium text-subtext1">
-      AI connection
-      <select value={selected?.value ?? ''} onChange={(event) => setConnectionId(event.target.value)}
-        className="w-full rounded-sm border border-surface1 bg-base px-3 py-2 text-sm text-text">
-        {connections.map((connection) => <option key={connection.value} value={connection.value}>{connection.label}</option>)}
-      </select>
-    </label> : selected && <p className="text-xs text-subtext0">Uses {selected.label}.</p>}
-    {!selected ? <p role="status" className="text-xs text-subtext0">Add an AI connection in the previous step to continue.</p> : null}
-    {selected?.kind === 'acp' && <div className="space-y-2 rounded-sm bg-crust p-3">
-      <p className="text-xs text-subtext0">This reviewer uses the agent’s default model and settings.</p>
-      <label className="flex items-start gap-2 text-xs leading-5 text-subtext1">
-        <input type="checkbox" checked={consentedAcpAgentId === selected.id}
-          onChange={(event) => setConsentedAcpAgentId(event.target.checked ? selected.id : null)} className="mt-0.5 accent-brand" />
-        <span>I allow this agent to receive eligible changed-file diffs and review context. Sensitive paths are excluded and matching secret lines are redacted, but detection may miss some secrets.</span>
+  return (
+    <form onSubmit={createReviewer} className="space-y-4 rounded-sm border border-surface0 bg-mantle/50 p-4">
+      <p className="text-xs leading-5 text-subtext0">
+        Start with a general code reviewer. You can fine-tune its role and instructions later in AI Preferences.
+      </p>
+      <label className="block space-y-1.5 text-xs font-medium text-subtext1">
+        <span>Reviewer name</span>
+        <input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          required
+          maxLength={80}
+          className="w-full rounded-sm border border-surface1 bg-base px-3 py-2 text-sm text-text"
+        />
       </label>
-    </div>}
-    <button type="submit" disabled={!name.trim() || !selected || (selected.kind === 'acp' && consentedAcpAgentId !== selected.id)}
-      className="rounded-sm border-0 bg-brand px-3 py-2 text-xs font-semibold text-on-accent disabled:cursor-not-allowed disabled:opacity-45">
-      Create first reviewer
-    </button>
-  </form>;
+      {connections.length > 1 ? (
+        <label className="block space-y-1.5 text-xs font-medium text-subtext1">
+          <span>AI connection</span>
+          <select
+            value={selected?.value ?? ''}
+            onChange={(event) => setConnectionId(event.target.value)}
+            className="w-full rounded-sm border border-surface1 bg-base px-3 py-2 text-sm text-text"
+          >
+            {connections.map((connection) => (
+              <option key={connection.value} value={connection.value}>
+                {connection.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        selected && <p className="text-xs text-subtext0">Uses {selected.label}.</p>
+      )}
+      {!selected ? (
+        <p role="status" className="text-xs text-subtext0">
+          Add an AI connection in the previous step to continue.
+        </p>
+      ) : null}
+      {selected?.kind === 'acp' && (
+        <div className="space-y-2 rounded-sm bg-crust p-3">
+          <p className="text-xs text-subtext0">This reviewer uses the agent’s default model and settings.</p>
+          <label className="flex items-start gap-2 text-xs leading-5 text-subtext1">
+            <input
+              type="checkbox"
+              checked={consentedAcpAgentId === selected.id}
+              onChange={(event) => setConsentedAcpAgentId(event.target.checked ? selected.id : null)}
+              className="mt-0.5 accent-brand"
+            />
+            <span>
+              I allow this agent to receive eligible changed-file diffs and review context. Sensitive paths are excluded and matching secret lines are redacted, but detection may miss some secrets.
+            </span>
+          </label>
+        </div>
+      )}
+      <button
+        type="submit"
+        disabled={!name.trim() || !selected || (selected.kind === 'acp' && consentedAcpAgentId !== selected.id)}
+        className="rounded-sm border-0 bg-brand px-4 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-45"
+      >
+        Create first reviewer
+      </button>
+    </form>
+  );
 }

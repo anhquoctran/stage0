@@ -72,60 +72,156 @@ test('AI setup drafts do not unlock completion; failed saves retain drafts and s
   state.apiKeysConfigured.openai = false; assert.equal(setup.canFinish(), false);
 });
 
-test('Skip, Close, Escape and jumping to the final slide cannot bypass required AI setup', async (t) => {
+test('WelcomeAiSetup auto-saves provider and ACP changes without a manual Save AI setup button', async (t) => {
+  const runner = componentHarness();
+  t.after(() => runner.cleanup());
+  let saves = 0;
+  let capturedProviderProps = null;
+  let capturedAcpProps = null;
+  const { WelcomeAiSetup } = loadWithMocks(url('components/WelcomeAiSetup.tsx'), {
+    react: runner.react,
+    '../../ai/components/AiMcpTab': {
+      AiMcpTab: (props) => {
+        capturedProviderProps = props;
+        return null;
+      },
+    },
+    '../../ai/components/ExternalAgentsTab': {
+      ExternalAgentsTab: (props) => {
+        capturedAcpProps = props;
+        return null;
+      },
+    },
+  });
+  const setup = {
+    connections: [],
+    busy: false,
+    error: null,
+    hasChanges: false,
+    save: async () => { saves++; },
+    discard() {},
+    checkSavedKeys: async () => {},
+    draft: {
+      aiConfig: structuredClone(DEFAULT_AI_CONFIG),
+      externalAgents: [],
+      updateAiConfig() {},
+      removeApiKey() {},
+      updateExternalAgents() {},
+    },
+  };
+  let nodes = componentNodes(await runner.render(WelcomeAiSetup, { setup }));
+  assert.equal(
+    nodes.some((node) => node.type === 'button' && node.props.children.flat().includes('Save AI setup')),
+    false,
+    'Manual Save AI setup button must be removed'
+  );
+  capturedProviderProps.onUpdateAiConfig({ configuredProviders: ['openai'] });
+  await new Promise((resolve) => queueMicrotask(resolve));
+  assert.equal(saves, 1, 'Adding a provider auto-saves immediately');
+
+  const acpBtn = nodes.find((node) => node.type === 'button' && node.props.children.flat().includes('ACP Agent'));
+  acpBtn.props.onClick();
+  nodes = componentNodes(await runner.render(WelcomeAiSetup, { setup }));
+  capturedAcpProps.draftSettings.updateExternalAgents([agent]);
+  await new Promise((resolve) => queueMicrotask(resolve));
+  assert.equal(saves, 2, 'Installing an ACP agent auto-saves immediately');
+});
+
+test('Skip, Close, Escape and jumping to the final slide cannot bypass required AI and reviewer setup', async (t) => {
   const runner = componentHarness(), stored = new Map(), handlers = new Map();
   const previousWindow = globalThis.window, previousStorage = globalThis.localStorage;
   globalThis.window = { location: { search: '' }, addEventListener: (name, fn) => handlers.set(name, fn), removeEventListener: (name) => handlers.delete(name) };
   globalThis.localStorage = { setItem: (key, value) => stored.set(key, value) };
   t.after(() => { runner.cleanup(); globalThis.window = previousWindow; globalThis.localStorage = previousStorage; });
-  let ready = false, completed = 0, saves = 0, repoActions = 0;
+  let hasConnection = false, ready = false, completed = 0, saves = 0, repoActions = 0;
   const { FirstLaunchWelcome } = loadWithMocks(url('components/FirstLaunchWelcome.tsx'), {
     react: runner.react,
     '@tauri-apps/api/core': { invoke: async () => {} },
     '../../../common/utils/shortcuts': { isMacOS: () => false },
     '../../../common/components/icons/ArrowRight': { ArrowRight: () => null },
+    '../../../common/components/icons/Check': { Check: () => null },
     '../../../common/components/icons/X': { X: () => null },
     '../../../common/components/AppLogo': { AppLogo: () => null },
     '../../git/store/useGitStore': { useGitStore: { getState: () => ({ openRepoDialog: () => repoActions++, setIsCloneModalOpen: () => repoActions++ }) } },
-    './BranchArtwork': { BranchArtwork: () => null }, './CompareArtwork': { CompareArtwork: () => null },
-    './ReviewArtwork': { ReviewArtwork: () => null }, './WelcomeSettingsPanel': { WelcomeSettingsPanel: () => null },
-    './WelcomeSettingsPreview': { WelcomeSettingsPreview: () => null }, './WelcomeAiSetup': { WelcomeAiSetup: () => null },
+    './WelcomeSettingsPanel': { WelcomeSettingsPanel: () => null },
+    './WelcomeAiSetup': { WelcomeAiSetup: () => null },
+    './OnboardingReviewerSetup': { OnboardingReviewerSetup: () => null },
     '../hooks/useOnboardingPreferences': { useOnboardingPreferences: () => ({ settings: {}, setSettings() {}, isSaving: false, saveError: null, reload() {}, save: async () => { saves++; return true; } }) },
-    '../hooks/useOnboardingAiSetup': { useOnboardingAiSetup: () => ({ connections: ready ? ['Saved ACP'] : [], busy: false, canFinish: () => ready }) },
+    '../hooks/useOnboardingAiSetup': {
+      useOnboardingAiSetup: () => ({
+        connections: hasConnection ? ['Saved ACP'] : [],
+        busy: false,
+        hasChanges: false,
+        hasSavedRequiredReviewer: ready,
+        draft: {},
+        save: async () => {},
+        canFinish: () => hasConnection && ready,
+      }),
+    },
   });
   const render = async () => componentNodes(await runner.render(FirstLaunchWelcome, { onComplete: () => completed++ }));
   const button = (nodes, name) => nodes.find((node) => node.type === 'button' && node.props.children.flat().some((child) => typeof child === 'string' && child.trim() === name));
   const { WELCOME_SLIDES } = loadWithMocks(url('constants/welcomeSlides.ts'), {});
-  const aiIndex = WELCOME_SLIDES.findIndex((slide) => slide.id === 'ai-setup');
+
+  // Step 1: Welcome
   let nodes = await render();
-  for (let slide = 0; slide < aiIndex; slide++) {
-    assert.equal(button(nodes, 'Set up AI'), undefined, 'Intro screens must not show a redundant AI setup action');
-    assert.equal(button(nodes, 'Skip tour'), undefined, 'Skipping stays unavailable until AI is configured');
-    const next = button(nodes, slide === 2 ? "Let's get started" : 'Next');
-    assert.ok(next && !next.props.disabled, 'Introduction and optional appearance steps stay available before AI setup');
-    next.props.onClick(); nodes = await render();
-  }
+  assert.equal(button(nodes, 'Skip tour'), undefined, 'Skipping stays unavailable until AI & reviewer are configured');
+  const nextFromWelcome = button(nodes, 'Next');
+  assert.ok(nextFromWelcome && !nextFromWelcome.props.disabled);
+  await nextFromWelcome.props.onClick();
+  nodes = await render();
+
+  // Step 2: AI Connection (Mandatory)
   assert.ok(nodes.some((node) => node.type === 'h1' && node.props.children.includes('Set up your AI connection')));
-  assert.equal(button(nodes, 'Next').props.disabled, true); button(nodes, 'Next').props.onClick();
+  assert.equal(button(nodes, 'Next').props.disabled, true);
+  await button(nodes, 'Next').props.onClick();
   await nodes.find((node) => node.props['aria-label'] === 'Close welcome guide').props.onClick();
   handlers.get('keydown')({ key: 'Escape', preventDefault() {} });
-  nodes.find((node) => node.props['aria-label']?.startsWith(`Go to slide ${WELCOME_SLIDES.length}:`)).props.onClick(); nodes = await render();
-  assert.equal(button(nodes, 'Open a repository'), undefined, 'The final-step dot must route back to required AI setup');
+  await nodes.find((node) => node.props['aria-label']?.startsWith(`Go to slide ${WELCOME_SLIDES.length}:`)).props.onClick();
+  nodes = await render();
+  assert.equal(button(nodes, 'Open a repository'), undefined, 'The final-step button must route back to required AI setup');
   assert.equal(stored.size, 0); assert.equal(saves, 0); assert.equal(completed, 0); assert.equal(repoActions, 0);
+
+  // Unlock AI Connection -> Advance to Step 3: Reviewer Bot (Mandatory)
+  hasConnection = true;
+  nodes = await render();
+  assert.equal(button(nodes, 'Next').props.disabled, false);
+  await button(nodes, 'Next').props.onClick();
+  nodes = await render();
+  assert.ok(nodes.some((node) => node.type === 'h1' && node.props.children.includes('Create your first reviewer bot')));
+  assert.equal(button(nodes, 'Next').props.disabled, true, 'Reviewer step remains blocked until reviewer is saved');
+
+  // Unlock Reviewer Bot -> Advance to Step 4: Ready
   for (const action of ['Open a repository', 'Clone a repository']) {
-    ready = true; nodes = await render(); assert.equal(button(nodes, 'Next').props.disabled, false);
-    button(nodes, 'Next').props.onClick(); nodes = await render();
-    button(nodes, 'Next').props.onClick(); nodes = await render();
-    assert.ok(nodes.some((node) => node.type === 'h1' && node.props.children.includes('Start with a repository')));
+    hasConnection = true;
+    ready = true;
+    nodes = await render();
+    while (!nodes.some((node) => node.type === 'h1' && node.props.children.includes('Start with a repository'))) {
+      assert.equal(button(nodes, 'Next').props.disabled, false);
+      await button(nodes, 'Next').props.onClick();
+      nodes = await render();
+    }
     assert.ok(button(nodes, 'Open a repository') && button(nodes, 'Clone a repository'));
-    ready = false; nodes = await render();
-    await button(nodes, action).props.onClick(); nodes = await render();
+
+    // Revoking AI connection routes back to Step 2 when attempting to finish
+    hasConnection = false;
+    ready = false;
+    nodes = await render();
+    await button(nodes, action).props.onClick();
+    nodes = await render();
     assert.ok(nodes.some((node) => node.type === 'h1' && node.props.children.includes('Set up your AI connection')));
     assert.equal(stored.size, 0); assert.equal(saves, 0); assert.equal(completed, 0); assert.equal(repoActions, 0);
   }
-  ready = true; nodes = await render();
-  assert.equal(button(nodes, 'Skip tour'), undefined, 'The AI setup screen cannot skip the tour');
-  button(nodes, 'Next').props.onClick(); nodes = await render();
+
+  hasConnection = true;
+  ready = true;
+  nodes = await render();
+  await button(nodes, 'Next').props.onClick();
+  nodes = await render();
+  await button(nodes, 'Next').props.onClick();
+  nodes = await render();
   await button(nodes, 'Skip tour').props.onClick();
-  assert.equal(completed, 1); assert.equal(saves, 1); assert.equal(stored.get('stage0_first_launch_welcome_v1'), 'completed');
+  assert.equal(completed, 1);
+  assert.equal(saves, 1);
+  assert.equal(stored.get('stage0_first_launch_welcome_v1'), 'completed');
 });

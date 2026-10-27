@@ -21,35 +21,16 @@ test('shared button surface rule targets opaque fills without touching neutral o
   assert.ok(read('frontend/core/styles/index.css').includes('@import "./button-surfaces.css";'));
 });
 
-test('onboarding artwork fills its preview and comparison demonstrates an actual readable diff', () => {
-  for (const artwork of ['Branch', 'Compare', 'Review']) {
-    const source = read(`frontend/features/onboarding/components/${artwork}Artwork.tsx`);
-    assert.doesNotMatch(source, /max-w-100/);
-  }
-  const comparison = read('frontend/features/onboarding/components/CompareArtwork.tsx');
-  assert.ok(comparison.includes('bg-red-600'));
-  assert.ok(comparison.includes('bg-emerald-600'));
-  assert.ok(comparison.includes('expiresAt'));
-  assert.doesNotMatch(comparison, /Sparkles/);
-});
-
-test('onboarding adds explanatory copy and illustrative scenes without claiming live activity', () => {
+test('onboarding wizard uses single-canvas 4-step flow and borderless solid brand buttons', () => {
   const { WELCOME_SLIDES } = loadWithMocks(new URL('../frontend/features/onboarding/constants/welcomeSlides.ts', import.meta.url), {});
-  assert.deepEqual(WELCOME_SLIDES.filter((slide) => slide.highlights).map((slide) => slide.id),
-    ['welcome', 'compare', 'review', 'repository']);
-  assert.ok(WELCOME_SLIDES.filter((slide) => slide.highlights).every((slide) =>
-    slide.highlights.length === 2 && slide.highlights.every((item) => item.title && item.description)));
-  const scene = read('frontend/features/onboarding/components/WelcomeArtworkScene.tsx');
-  assert.ok(scene.includes('Sample workspace'));
-  assert.ok(scene.includes('scene.metrics.map'));
-  assert.ok(scene.includes('scene.steps.map'));
-  assert.ok(!scene.includes('{index + 1}'), 'Illustrated workflow uses dots, not visible step numbers');
-  assert.doesNotMatch(scene, /setInterval|setTimeout|fetch\(|invoke\(/);
-  const motion = read('frontend/core/styles/onboarding-artwork.css');
-  assert.ok(motion.includes('prefers-reduced-motion: reduce'));
-  for (const name of ['flow', 'pulse', 'connector']) {
-    assert.ok(motion.includes(`.stage0-welcome-${name}`));
-    assert.ok(motion.slice(motion.indexOf('@media')).includes(`.stage0-welcome-${name}`));
-  }
-  assert.match(motion, /@media[^]*animation: none;/);
+  assert.deepEqual(
+    WELCOME_SLIDES.map((slide) => slide.id),
+    ['welcome', 'ai-setup', 'reviewer-setup', 'repository']
+  );
+  const welcome = read('frontend/features/onboarding/components/FirstLaunchWelcome.tsx');
+  assert.ok(welcome.includes('max-w-4xl'));
+  assert.ok(welcome.includes('border-0 bg-brand'));
+  const aiSetup = read('frontend/features/onboarding/components/WelcomeAiSetup.tsx');
+  assert.ok(aiSetup.includes('border-0 bg-brand text-white'));
+  assert.doesNotMatch(aiSetup, /Save AI setup/);
 });
