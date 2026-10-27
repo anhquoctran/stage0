@@ -84,6 +84,42 @@ if ($Mode -eq "App") {
     } else {
         $RustVer = rustc --version
         Write-Host "[OK] Rust detected   : $RustVer" -ForegroundColor Green
+
+        # OpenSSL source build (via rusqlite/SQLCipher) requires Perl with Locale::Maketext::Simple
+        $PerlFound = $false
+        try {
+            $test = & perl -MLocale::Maketext::Simple -e "exit 0" 2>&1
+            if ($LASTEXITCODE -eq 0) { $PerlFound = $true }
+        } catch {}
+
+        if (-not $PerlFound) {
+            $PerlCandidates = @(
+                "C:\Strawberry\perl\bin",
+                "C:\msys64\usr\bin",
+                "C:\msys64\mingw64\bin",
+                "$env:LOCALAPPDATA\Programs\Git\usr\bin",
+                "C:\Program Files\Git\usr\bin"
+            )
+            foreach ($dir in $PerlCandidates) {
+                $exe = Join-Path $dir "perl.exe"
+                if (Test-Path $exe) {
+                    try {
+                        $null = & $exe -MLocale::Maketext::Simple -e "exit 0" 2>&1
+                        if ($LASTEXITCODE -eq 0) {
+                            $env:PATH = "$env:PATH;$dir"
+                            $PerlFound = $true
+                            Write-Host "[OK] Perl detected   : $dir" -ForegroundColor Green
+                            break
+                        }
+                    } catch {}
+                }
+            }
+            if (-not $PerlFound) {
+                Write-Host "[WARN] Perl with Locale::Maketext::Simple not found. OpenSSL compilation may fail if rebuild is needed." -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "[OK] Perl detected   : in PATH" -ForegroundColor Green
+        }
     }
 }
 

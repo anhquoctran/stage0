@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="mocha">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stage0 — AI-Native Git Code Reviewer &amp; Virtual MR Sandbox</title>
+  
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="Stage0 — AI-Native Git Code Reviewer &amp; Virtual MR Sandbox">
+  <meta name="description" content="Autonomous AI code reviewer for your local Git workflow. Inspect branch diffs, run multi-agent security &amp; architecture audits, predict merge conflicts, and chat on diff lines before pushing.">
+  <meta name="keywords" content="ai code review, git code reviewer, autonomous ai agent, virtual mr, merge conflict prediction, tauri, rust, local first, claude, gpt-4o, ollama, catppuccin">
+  <meta name="author" content="Anh Quoc Tran">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://anhquoctran.github.io/stage0/">
+  <meta property="og:title" content="Stage0 — AI-Native Git Code Reviewer">
+  <meta property="og:description" content="Autonomous AI code review for Git branches. Audit security, verify architecture, and predict merge conflicts in-memory.">
+  <meta property="og:image" content="./assets/app-icon.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="Stage0 — AI-Native Git Code Reviewer">
+  <meta property="twitter:description" content="Autonomous AI code review for Git branches. Audit security, verify architecture, and predict merge conflicts in-memory.">
+  <meta property="twitter:image" content="./assets/app-icon.png">
+
+  <!-- Anti-Cache Meta Tags for Live Development -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="./assets/app-icon.svg">
+  <link rel="shortcut icon" href="./assets/favicon.ico">
+
+  <!-- FontAwesome 6 Free -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Styles (Versioned Cache-Busted) -->
+  <link rel="stylesheet" href="./styles.css?v=20261027_v17">
+
+  <!-- Guaranteed Inline Pill & Theme Styles (Anti-Cache, No Glow, 1px Border) -->
+  <style>
+    .header {
+      background-color: var(--bg-header, rgba(17, 17, 27, 0.85));
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    [data-theme="latte"] .header,
+    [data-theme="light"] .header {
+      background-color: rgba(239, 241, 245, 0.88) !important;
+    }
+    .hero-title .text-highlight,
+    .hero-title .text-gradient {
+      color: var(--ctp-brand) !important;
+      background: none !important;
+      -webkit-background-clip: unset !important;
+      -webkit-text-fill-color: currentColor !important;
+    }
+    .download-specs li {
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 0.65rem !important;
+      line-height: 1.45 !important;
+    }
+    .download-specs li .check-icon {
+      margin-top: 0.22rem !important;
+      flex-shrink: 0 !important;
+    }
+    .download-specs li span {
+      flex: 1 !important;
+    }
+    .btn-pill-download,
+    .hero-download-btn,
+    .btn-format,
+    .alt-platform-btn,
+    .nav-actions .btn,
+    .btn-icon {
+      border-radius: 9999px !important;
+    }
+    .btn-primary, .btn-primary:hover, .btn-secondary, .btn-secondary:hover {
+      box-shadow: none !important;
+    }
+    .download-card.highlight {
+      border: 1px solid var(--ctp-brand) !important;
+      background-color: var(--bg-elevated) !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+    .card-detected-badge {
+      display: none;
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.7rem;
+      border-radius: 9999px;
+      background-color: var(--ctp-brand);
+      color: #ffffff;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: none !important;
+      letter-spacing: 0.02em;
+    }
+    .download-card.highlight .card-detected-badge {
+      display: inline-flex !important;
+    }
+    .download-card.highlight .btn-pill-download {
+      background-color: var(--ctp-brand) !important;
+      color: #ffffff !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+    .download-card.highlight .btn-pill-download:hover {
+      background-color: var(--ctp-brand-hover) !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+    .btn-pill-download {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 0.6rem !important;
+      font-weight: 600 !important;
+      font-size: 0.9375rem !important;
+      padding: 0.7rem 1.4rem !important;
+      border-radius: 9999px !important;
+      background-color: rgba(147, 51, 234, 0.12) !important;
+      color: var(--ctp-mauve) !important;
+      border: 1px solid rgba(147, 51, 234, 0.35) !important;
+      cursor: pointer !important;
+      text-decoration: none !important;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+      box-shadow: none !important;
+      width: 100% !important;
+    }
+    .btn-pill-download:hover {
+      background-color: var(--ctp-brand) !important;
+      color: #ffffff !important;
+      border-color: var(--ctp-brand) !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+    [data-theme="latte"] .btn-pill-download,
+    [data-theme="light"] .btn-pill-download {
+      background-color: rgba(147, 51, 234, 0.08) !important;
+      color: var(--ctp-brand) !important;
+      border-color: rgba(147, 51, 234, 0.25) !important;
+    }
+    [data-theme="latte"] .btn-pill-download:hover,
+    [data-theme="light"] .btn-pill-download:hover {
+      background-color: var(--ctp-brand) !important;
+      color: #ffffff !important;
+      border-color: var(--ctp-brand) !important;
+      box-shadow: none !important;
+    }
+    .step-title {
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 0.5rem !important;
+      line-height: 1.45 !important;
+    }
+    .step-title i {
+      margin-top: 0.22rem !important;
+      flex-shrink: 0 !important;
+    }
+    .step-title span {
+      flex: 1 !important;
+    }
+    @media (max-width: 768px) {
+      .step-card {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+        padding: 1.25rem !important;
+      }
+      .step-number {
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        font-size: 1.05rem !important;
+        flex-shrink: 0 !important;
+        align-self: flex-start !important;
+        margin: 0 !important;
+      }
+      .step-body {
+        flex: 1 !important;
+        min-width: 0 !important;
+      }
+      .comp-card-pill {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+      }
+      .badge-win {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+      }
+      .comp-stage0-tag {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="header">
+    <div class="container nav-row">
+      <a href="#" class="brand-link">
+        <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="brand-logo" />
+        <span>Stage0</span>
+        <span class="version-badge" data-latest-version>latest</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#ai-reviewers" class="nav-link">AI Reviewers</a></li>
+        <li><a href="#features" class="nav-link">Capabilities</a></li>
+        <li><a href="#comparison" class="nav-link">Why Stage0</a></li>
+        <li><a href="#download" class="nav-link">Download</a></li>
+        <li><a href="#quickstart" class="nav-link">Quick Start</a></li>
+        <li><a href="#faq" class="nav-link">FAQ</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button id="theme-toggle" class="btn btn-icon" title="Toggle theme (Catppuccin Mocha / Latte)" aria-label="Toggle theme" style="border-radius: 9999px;">
+          <i class="fa-solid fa-moon" id="theme-icon"></i>
+        </button>
+
+        <a href="https://github.com/anhquoctran/stage0" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-github-desktop" style="border-radius: 9999px;">
+          <i class="fa-brands fa-github"></i>
+          <span>GitHub</span>
+        </a>
+
+        <a href="#download" class="btn btn-primary" style="border-radius: 9999px;">
+          <i class="fa-solid fa-download"></i>
+          <span><span class="nav-get-text">Get </span>Stage0</span>
+        </a>
+
+        <button id="mobile-menu-toggle" class="btn btn-icon mobile-menu-btn" title="Toggle menu" aria-label="Toggle menu" style="border-radius: 9999px;">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-menu" class="mobile-menu">
+      <ul class="mobile-nav-links">
+        <li><a href="#ai-reviewers" class="mobile-nav-link">AI Reviewers</a></li>
+        <li><a href="#features" class="mobile-nav-link">Capabilities</a></li>
+        <li><a href="#comparison" class="mobile-nav-link">Why Stage0</a></li>
+        <li><a href="#download" class="mobile-nav-link">Download</a></li>
+        <li><a href="#quickstart" class="mobile-nav-link">Quick Start</a></li>
+        <li><a href="#faq" class="mobile-nav-link">FAQ</a></li>
+      </ul>
+      <div class="mobile-menu-actions">
+        <a href="https://github.com/anhquoctran/stage0" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="border-radius: 9999px; width: 100%;">
+          <i class="fa-brands fa-github"></i>
+          <span>View on GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-pill">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>AI-Native Git Code Reviewer &amp; Virtual Sandbox</span>
+      </div>
+
+      <h1 class="hero-title">
+        Autonomous AI Code Review for Every Git Change.<br>
+        <span class="text-highlight">Review, Audit &amp; Predict Conflicts Before You Push.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Stage0 pairs specialized autonomous AI reviewer agents directly with your Git branches. Audit security flaws, enforce architectural boundaries, predict 3-way merge conflicts in-memory, and chat on diff lines — 100% private, zero-checkout, and local-first.
+      </p>
+
+      <div class="hero-cta">
+        <a id="hero-download-btn" href="https://github.com/anhquoctran/stage0/releases/latest" class="btn btn-primary hero-download-btn" style="border-radius: 9999px;">
+          <i id="hero-os-icon" class="fa-brands fa-windows" style="font-size: 1.15rem;"></i>
+          <span id="hero-btn-text">Download for Windows</span>
+          <span id="hero-platform-label" style="opacity: 0.85; font-size: 0.85rem; font-weight: normal;">(64-bit .exe)</span>
+        </a>
+
+        <a href="#quickstart" class="btn btn-secondary hero-download-btn" style="border-radius: 9999px;">
+          <span>Quick Start Guide (5 mins)</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="hero-alt-platforms">
+        <span>Also available for Windows, macOS, and Linux &bull; <a href="#download" style="color: var(--ctp-mauve); text-decoration: underline;">See all platform downloads &darr;</a></span>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat-item">
+          <i class="fa-solid fa-robot text-brand"></i>
+          <span>Multi-Agent AI Reviewers (Claude, GPT, Ollama)</span>
+        </div>
+        <div class="hero-stat-item">
+          <i class="fa-solid fa-shield-halved text-brand"></i>
+          <span>Automated Security &amp; Arch Audits</span>
+        </div>
+        <div class="hero-stat-item">
+          <i class="fa-solid fa-code-compare text-brand"></i>
+          <span>In-Memory 3-Way Conflict Prediction</span>
+        </div>
+        <div class="hero-stat-item">
+          <i class="fa-solid fa-lock text-brand"></i>
+          <span>100% Local-First &amp; Encrypted Vault</span>
+        </div>
+      </div>
+
+      <!-- High-Fidelity Interactive Mockup -->
+      <div class="mockup-wrapper">
+        <div class="mockup-titlebar">
+          <div class="mockup-controls">
+            <span class="mockup-dot red"></span>
+            <span class="mockup-dot yellow"></span>
+            <span class="mockup-dot green"></span>
+          </div>
+          <div class="mockup-title">
+            <i class="fa-solid fa-robot text-brand"></i>
+            <span>Stage0 — Autonomous AI Code Review Sandbox (feat/token-vault-migration &rarr; main)</span>
+          </div>
+          <div style="width: 50px;"></div>
+        </div>
+
+        <div class="mockup-header-bar">
+          <div class="branch-compare-pill">
+            <i class="fa-solid fa-code-commit text-brand"></i>
+            <span class="branch-name">feat/token-vault-migration</span>
+            <i class="fa-solid fa-arrow-right-long branch-arrow"></i>
+            <span class="branch-name" style="color: var(--ctp-blue);">main</span>
+          </div>
+
+          <div class="mockup-status-badges">
+            <span class="status-badge-clean">
+              <i class="fa-solid fa-circle-check"></i>
+              0 Conflicts Predicted
+            </span>
+            <span class="status-badge-clean" style="background: rgba(147, 51, 234, 0.15); color: var(--ctp-mauve);">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              AI Review: 2 Findings &bull; 1 Suggestion
+            </span>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-outline" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;" data-mockup-tab="diff">
+              <i class="fa-solid fa-code"></i> Diff &amp; Inline AI
+            </button>
+            <button class="btn btn-outline" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;" data-mockup-tab="ai">
+              <i class="fa-solid fa-robot"></i> Multi-Agent Report (3)
+            </button>
+          </div>
+        </div>
+
+        <div class="mockup-body">
+          <div class="mockup-sidebar">
+            <div class="mockup-section-title">Inspected Files (3)</div>
+            <div class="mockup-file-item active">
+              <span>auth_service.rs</span>
+              <span class="file-status-m">M</span>
+            </div>
+            <div class="mockup-file-item">
+              <span>token_vault.rs</span>
+              <span class="file-status-a">A</span>
+            </div>
+            <div class="mockup-file-item">
+              <span>db/migration.rs</span>
+              <span class="file-status-m">M</span>
+            </div>
+          </div>
+
+          <!-- View 1: Diff with Inline AI Review Finding -->
+          <div class="mockup-editor" id="mockup-view-diff">
+            <div class="diff-line">
+              <span class="diff-line-number">48</span>
+              <span class="diff-line-content">pub fn load_active_token(vault: &amp;TokenVault) -&gt; Result&lt;SecretToken, VaultError&gt; {</span>
+            </div>
+            <div class="diff-line diff-del">
+              <span class="diff-line-number">49</span>
+              <span class="diff-line-content">-     let raw_key = std::env::var("APP_SECRET_TOKEN")?;</span>
+            </div>
+            <div class="diff-line diff-add">
+              <span class="diff-line-number">49</span>
+              <span class="diff-line-content">+     let raw_key = vault.read_keychain_secret("stage0_auth_token")?;</span>
+            </div>
+            <div class="diff-line diff-add">
+              <span class="diff-line-number">50</span>
+              <span class="diff-line-content">+     let token = SecretToken::from_secure_bytes(raw_key)?;</span>
+            </div>
+            <div class="diff-line">
+              <span class="diff-line-number">51</span>
+              <span class="diff-line-content">      Ok(token)</span>
+            </div>
+            <div class="diff-line">
+              <span class="diff-line-number">52</span>
+              <span class="diff-line-content">}</span>
+            </div>
+
+            <!-- Inline AI Review finding banner -->
+            <div class="ai-review-banner">
+              <div class="ai-review-header">
+                <span class="ai-badge">
+                  <i class="fa-solid fa-shield-halved"></i>
+                  <span>Security Sentinel (Bot Reviewer)</span>
+                </span>
+                <span class="ai-resolved-badge">
+                  <i class="fa-solid fa-check-double"></i>
+                  Zeroization Verified
+                </span>
+              </div>
+              <p class="ai-review-content">
+                <strong>Vulnerability Resolved:</strong> Plaintext environment variable <code>APP_SECRET_TOKEN</code> replaced with OS native Credential Store. Memory zeroization on <code>Drop</code> confirmed.
+              </p>
+              <div class="ai-review-actions-bar" style="margin-top: 0.5rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.775rem;">
+                <span style="color: var(--ctp-subtext0);"><i class="fa-regular fa-comment-dots"></i> 1 Actionable Suggestion: Add bounded retry on Keychain unlock timeout.</span>
+                <button class="btn btn-primary" style="padding: 0.2rem 0.65rem; font-size: 0.72rem; border-radius: 9999px;">
+                  <i class="fa-solid fa-code-compare"></i> Apply Suggested Patch
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- View 2: Multi-Agent AI Report -->
+          <div class="mockup-editor" id="mockup-view-ai" style="display: none;">
+            <div class="ai-review-banner" style="margin-top: 0; border-left-color: var(--ctp-green);">
+              <div class="ai-review-header">
+                <span class="ai-badge">
+                  <i class="fa-solid fa-robot"></i>
+                  <span>Anthropic Claude 3.7 Sonnet &bull; Lead Reviewer</span>
+                </span>
+                <span class="status-badge-clean" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">
+                  <i class="fa-solid fa-circle-check"></i> Overall: Approve with 1 minor tip
+                </span>
+              </div>
+              <p class="ai-review-content" style="margin-bottom: 0.5rem;">
+                <strong>Branch Assessment:</strong> Compares <code>feat/token-vault-migration</code> against <code>main</code>. 3 files inspected, 0 merge conflicts found.
+              </p>
+              <div class="ai-report-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem; font-size: 0.75rem;">
+                <div style="background: var(--ctp-crust); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-subtle);">
+                  <strong style="color: var(--ctp-green); display: block; margin-bottom: 0.2rem;"><i class="fa-solid fa-shield-halved"></i> Security Sentinel</strong>
+                  Passed (0 leaked credentials)
+                </div>
+                <div style="background: var(--ctp-crust); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-subtle);">
+                  <strong style="color: var(--ctp-mauve); display: block; margin-bottom: 0.2rem;"><i class="fa-solid fa-cubes-stacked"></i> Architecture Guardian</strong>
+                  Passed (Single responsibility)
+                </div>
+                <div style="background: var(--ctp-crust); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-subtle);">
+                  <strong style="color: var(--ctp-blue); display: block; margin-bottom: 0.2rem;"><i class="fa-solid fa-gauge-high"></i> Performance Auditor</strong>
+                  Passed (Zero extra allocations)
+                </div>
+              </div>
+            </div>
+
+            <!-- Threaded Chat preview -->
+            <div style="margin-top: 0.85rem; padding: 0.85rem 1rem; background-color: var(--ctp-crust); border-radius: 4px; border: 1px solid var(--border-subtle); font-size: 0.8rem;">
+              <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem; color: var(--ctp-text);">
+                <i class="fa-solid fa-user-circle text-brand"></i>
+                <strong>You:</strong> "Can we handle the case where the keychain record doesn't exist yet?"
+              </div>
+              <div style="display: flex; gap: 0.5rem; color: var(--ctp-subtext1); padding-left: 1.35rem;">
+                <i class="fa-solid fa-robot" style="color: var(--ctp-mauve);"></i>
+                <span><strong>AI Reviewer:</strong> Updated in diff proposal #2: Fallback to generating a fresh ephemeral key with user consent.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dedicated Section 1: The Autonomous AI Review Team -->
+  <section id="ai-reviewers" class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Autonomous Multi-Agent AI</span>
+        <h2 class="section-title">Meet Your Specialized AI Code Review Team</h2>
+        <p class="section-desc">
+          Stage0 doesn't just ask a generic chatbot for feedback. It deploys specialized AI reviewer bots that inspect your Git changes from multiple critical technical perspectives simultaneously.
+        </p>
+      </div>
+
+      <div class="ai-persona-grid">
+        <!-- Persona 1: Security Sentinel -->
+        <div class="ai-persona-card">
+          <div class="ai-persona-icon">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <span class="ai-persona-tag">Zero-Trust Security</span>
+          <h3 class="ai-persona-name">Security Sentinel</h3>
+          <p class="ai-persona-role">Automated Vulnerability Auditor</p>
+          <p class="ai-persona-desc">
+            Scans every diff line for accidentally committed API keys, hardcoded credentials, SQL/command injection vectors, and improper permission grants before your code leaves your machine.
+          </p>
+        </div>
+
+        <!-- Persona 2: Architecture Guardian -->
+        <div class="ai-persona-card">
+          <div class="ai-persona-icon">
+            <i class="fa-solid fa-cubes-stacked"></i>
+          </div>
+          <span class="ai-persona-tag">Structural Integrity</span>
+          <h3 class="ai-persona-name">Architecture Guardian</h3>
+          <p class="ai-persona-role">System &amp; Boundary Enforcer</p>
+          <p class="ai-persona-desc">
+            Enforces modular boundaries, verifies single cohesive responsibilities, detects circular imports, tracks file size budgets, and stops architectural technical debt in its tracks.
+          </p>
+        </div>
+
+        <!-- Persona 3: Performance Auditor -->
+        <div class="ai-persona-card">
+          <div class="ai-persona-icon">
+            <i class="fa-solid fa-gauge-high"></i>
+          </div>
+          <span class="ai-persona-tag">Runtime Efficiency</span>
+          <h3 class="ai-persona-name">Performance Auditor</h3>
+          <p class="ai-persona-role">Memory &amp; Latency Profiler</p>
+          <p class="ai-persona-desc">
+            Flags redundant object clones, unbuffered disk I/O, synchronous thread blocking in async contexts, and expensive N+1 database queries directly on your Git changes.
+          </p>
+        </div>
+
+        <!-- Persona 4: Conflict & Merge Co-pilot -->
+        <div class="ai-persona-card">
+          <div class="ai-persona-icon">
+            <i class="fa-solid fa-code-merge"></i>
+          </div>
+          <span class="ai-persona-tag">Smart Rebase &amp; Merge</span>
+          <h3 class="ai-persona-name">Merge Co-pilot</h3>
+          <p class="ai-persona-role">Predictive 3-Way Conflict Resolver</p>
+          <p class="ai-persona-desc">
+            Anticipates 3-way merge conflicts using in-memory branch calculations, explains why conflicting hunks occurred, and drafts clean AI-suggested resolutions preserving both intents.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Core Platform Capabilities -->
+  <section id="features" class="section" style="background-color: var(--bg-card);">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">AI-First Architecture</span>
+        <h2 class="section-title">Built for Thorough, Safe Code Reviews</h2>
+        <p class="section-desc">
+          Everything you need to review Git branches, interact with AI agents, and predict merge conflicts with zero disruption to your daily workspace.
+        </p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <i class="fa-solid fa-microchip"></i>
+          </div>
+          <h3 class="feature-title">Multi-Model AI Flexibility</h3>
+          <p class="feature-desc">
+            Bring your own API keys for Anthropic Claude 3.7, OpenAI GPT-4o, Google Gemini 2.0, DeepSeek, or run 100% offline with local Ollama models. Switch models per review task seamlessly.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <i class="fa-solid fa-comments"></i>
+          </div>
+          <h3 class="feature-title">Interactive AI Discussions &amp; Patches</h3>
+          <p class="feature-desc">
+            Start threaded conversations right on any diff hunk. Ask the AI to refactor code, propose unit tests, or generate immediate Git patch diffs you can apply with one click.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h3 class="feature-title">Zero Working Tree Disruption</h3>
+          <p class="feature-desc">
+            Never stash uncommitted work or switch branches just to review changes. Stage0 reads directly from Git's object database and computes 3-way comparisons purely in memory.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <i class="fa-solid fa-code-compare"></i>
+          </div>
+          <h3 class="feature-title">Predictive Conflict Analysis</h3>
+          <p class="feature-desc">
+            Using Git's native <code>merge-tree --write-tree</code>, Stage0 anticipates merge collisions before code is pushed to remotes. Inspect exact conflict markers and affected files visually.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <i class="fa-solid fa-plug-circle-bolt"></i>
+          </div>
+          <h3 class="feature-title">Extensible via MCP &amp; ACP</h3>
+          <p class="feature-desc">
+            Connect Model Context Protocol (MCP) servers and Agent Client Protocol (ACP) agents. Let AI reviewers query linters, documentation, database schemas, and custom architecture rules.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <h3 class="feature-title">100% Local-First &amp; Air-Gapped</h3>
+          <p class="feature-desc">
+            Your proprietary code never goes to an unapproved cloud. Review sessions are stored locally in SQLCipher-encrypted SQLite, and API keys reside safely in your OS Credential Vault.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Comparison Table -->
+  <section id="comparison" class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Comparison</span>
+        <h2 class="section-title">Why an AI-Native Virtual Reviewer Beats Traditional PRs</h2>
+        <p class="section-desc">
+          Compare pre-flight AI review in Stage0 versus traditional late web pull requests and generic AI web chat interfaces.
+        </p>
+      </div>
+
+      <!-- Desktop View (>= 768px): Polished Side-by-Side Matrix -->
+      <div class="comparison-desktop">
+        <div class="comparison-table-wrapper">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th class="th-dim">Workflow Dimension</th>
+                <th class="th-alt">
+                  <div class="th-title">Standard Web PR</div>
+                  <div class="th-sub">GitHub / GitLab</div>
+                </th>
+                <th class="th-alt">
+                  <div class="th-title">Generic Web AI</div>
+                  <div class="th-sub">ChatGPT / Claude</div>
+                </th>
+                <th class="th-stage0">
+                  <div class="th-stage0-badge">
+                    <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="th-stage0-logo" />
+                    <span>Stage0 Virtual Reviewer</span>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-dim">Review Timing</td>
+                <td class="td-alt">Late (after push, waiting for CI/human)</td>
+                <td class="td-alt"><span class="val-warn"><i class="fa-solid fa-triangle-exclamation"></i> Manual snippet copy-paste</span></td>
+                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> Instant &amp; Pre-Flight on local branches</span></td>
+              </tr>
+              <tr>
+                <td class="td-dim">3-Way Git Merge Context</td>
+                <td class="td-alt">Evaluated on cloud servers</td>
+                <td class="td-alt"><span class="val-cross"><i class="fa-solid fa-xmark"></i> Zero Git tree awareness</span></td>
+                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> Full 3-way merge base &amp; conflict preview</span></td>
+              </tr>
+              <tr>
+                <td class="td-dim">Specialized Review Personas</td>
+                <td class="td-alt">Expensive third-party cloud bots</td>
+                <td class="td-alt">Single generic chat prompt</td>
+                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> Security, Architecture, Perf &amp; Merge bots</span></td>
+              </tr>
+              <tr>
+                <td class="td-dim">Confidentiality &amp; Privacy</td>
+                <td class="td-alt">Code hosted on public/private SaaS</td>
+                <td class="td-alt"><span class="val-cross"><i class="fa-solid fa-xmark"></i> Proprietary code uploaded to cloud LLMs</span></td>
+                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> 100% Local-First, supports offline Ollama</span></td>
+              </tr>
+              <tr>
+                <td class="td-dim">Working Tree Safety</td>
+                <td class="td-alt">Must push branch to remote</td>
+                <td class="td-alt">N/A (No repo context)</td>
+                <td class="td-stage0"><span class="val-win"><i class="fa-solid fa-check"></i> In-Memory sandbox, never touches active files</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Mobile View (< 768px): Responsive Feature Spotlight Cards -->
+      <div class="comparison-mobile">
+        <div class="comp-filter-bar">
+          <span class="comp-filter-label"><i class="fa-solid fa-sliders"></i> Compare with:</span>
+          <div class="comp-filter-pills" role="tablist">
+            <button type="button" class="comp-filter-btn active" data-comp-filter="all">All</button>
+            <button type="button" class="comp-filter-btn" data-comp-filter="pr">Web PR</button>
+            <button type="button" class="comp-filter-btn" data-comp-filter="ai">Generic AI</button>
+          </div>
+        </div>
+
+        <div class="comp-mobile-stack">
+          <!-- Card 1 -->
+          <div class="comp-mobile-card">
+            <div class="comp-card-header">
+              <span class="comp-card-pill">Dimension 1</span>
+              <h3 class="comp-card-title">Review Timing</h3>
+            </div>
+            <div class="comp-stage0-box">
+              <div class="comp-stage0-header">
+                <div class="comp-stage0-tag">
+                  <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="comp-mini-logo" />
+                  <span>Stage0</span>
+                </div>
+                <span class="badge-win"><i class="fa-solid fa-check"></i> Pre-Flight</span>
+              </div>
+              <p class="comp-stage0-text">Instant &amp; Pre-Flight on local branches before any git push</p>
+            </div>
+            <div class="comp-alts-list">
+              <div class="comp-alt-row" data-comp-target="pr">
+                <span class="comp-alt-source">Standard Web PR:</span>
+                <span class="comp-alt-desc">Late (after push, waiting for CI / human reviewers)</span>
+              </div>
+              <div class="comp-alt-row" data-comp-target="ai">
+                <span class="comp-alt-source">Generic Web AI:</span>
+                <span class="comp-alt-desc text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Manual code snippet copy-paste</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="comp-mobile-card">
+            <div class="comp-card-header">
+              <span class="comp-card-pill">Dimension 2</span>
+              <h3 class="comp-card-title">3-Way Git Merge Context</h3>
+            </div>
+            <div class="comp-stage0-box">
+              <div class="comp-stage0-header">
+                <div class="comp-stage0-tag">
+                  <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="comp-mini-logo" />
+                  <span>Stage0</span>
+                </div>
+                <span class="badge-win"><i class="fa-solid fa-check"></i> Native Git</span>
+              </div>
+              <p class="comp-stage0-text">Full 3-way merge base &amp; pre-push conflict prediction</p>
+            </div>
+            <div class="comp-alts-list">
+              <div class="comp-alt-row" data-comp-target="pr">
+                <span class="comp-alt-source">Standard Web PR:</span>
+                <span class="comp-alt-desc">Evaluated remotely on cloud servers</span>
+              </div>
+              <div class="comp-alt-row" data-comp-target="ai">
+                <span class="comp-alt-source">Generic Web AI:</span>
+                <span class="comp-alt-desc text-danger"><i class="fa-solid fa-xmark"></i> Zero Git tree awareness</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="comp-mobile-card">
+            <div class="comp-card-header">
+              <span class="comp-card-pill">Dimension 3</span>
+              <h3 class="comp-card-title">Specialized Review Personas</h3>
+            </div>
+            <div class="comp-stage0-box">
+              <div class="comp-stage0-header">
+                <div class="comp-stage0-tag">
+                  <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="comp-mini-logo" />
+                  <span>Stage0</span>
+                </div>
+                <span class="badge-win"><i class="fa-solid fa-check"></i> Multi-Agent</span>
+              </div>
+              <p class="comp-stage0-text">Security Sentinel, Architecture Guardian, Perf &amp; Merge bots</p>
+            </div>
+            <div class="comp-alts-list">
+              <div class="comp-alt-row" data-comp-target="pr">
+                <span class="comp-alt-source">Standard Web PR:</span>
+                <span class="comp-alt-desc">Expensive, fragmented third-party cloud bots</span>
+              </div>
+              <div class="comp-alt-row" data-comp-target="ai">
+                <span class="comp-alt-source">Generic Web AI:</span>
+                <span class="comp-alt-desc">Single generic chat prompt without specialized roles</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="comp-mobile-card">
+            <div class="comp-card-header">
+              <span class="comp-card-pill">Dimension 4</span>
+              <h3 class="comp-card-title">Confidentiality &amp; Privacy</h3>
+            </div>
+            <div class="comp-stage0-box">
+              <div class="comp-stage0-header">
+                <div class="comp-stage0-tag">
+                  <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="comp-mini-logo" />
+                  <span>Stage0</span>
+                </div>
+                <span class="badge-win"><i class="fa-solid fa-check"></i> Local-First</span>
+              </div>
+              <p class="comp-stage0-text">100% Local-First, supports offline Ollama &amp; OS Keychain encryption</p>
+            </div>
+            <div class="comp-alts-list">
+              <div class="comp-alt-row" data-comp-target="pr">
+                <span class="comp-alt-source">Standard Web PR:</span>
+                <span class="comp-alt-desc">Source code stored and processed on public/private SaaS clouds</span>
+              </div>
+              <div class="comp-alt-row" data-comp-target="ai">
+                <span class="comp-alt-source">Generic Web AI:</span>
+                <span class="comp-alt-desc text-danger"><i class="fa-solid fa-xmark"></i> Proprietary code uploaded to public cloud LLM servers</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5 -->
+          <div class="comp-mobile-card">
+            <div class="comp-card-header">
+              <span class="comp-card-pill">Dimension 5</span>
+              <h3 class="comp-card-title">Working Tree Safety</h3>
+            </div>
+            <div class="comp-stage0-box">
+              <div class="comp-stage0-header">
+                <div class="comp-stage0-tag">
+                  <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="comp-mini-logo" />
+                  <span>Stage0</span>
+                </div>
+                <span class="badge-win"><i class="fa-solid fa-check"></i> Zero-Risk</span>
+              </div>
+              <p class="comp-stage0-text">Isolated in-memory sandbox, never mutates active working tree files</p>
+            </div>
+            <div class="comp-alts-list">
+              <div class="comp-alt-row" data-comp-target="pr">
+                <span class="comp-alt-source">Standard Web PR:</span>
+                <span class="comp-alt-desc">Must push branch to remote before reviewing</span>
+              </div>
+              <div class="comp-alt-row" data-comp-target="ai">
+                <span class="comp-alt-source">Generic Web AI:</span>
+                <span class="comp-alt-desc">N/A (No workspace integration or safety barrier)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download Center -->
+  <section id="download" class="section" style="background-color: var(--bg-card);">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Get Started Today</span>
+        <h2 class="section-title">Download Stage0 for your desktop</h2>
+        <p class="section-desc">
+          Available as native desktop builds for Windows, macOS, and Linux. Free and open source under the MIT License.
+        </p>
+      </div>
+
+      <div class="download-grid">
+        <!-- Windows Card -->
+        <div class="download-card" id="card-windows">
+          <div class="card-detected-badge">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Detected OS</span>
+          </div>
+          <div class="download-header">
+            <div class="download-icon-box windows">
+              <i class="fa-brands fa-windows"></i>
+            </div>
+            <h3 class="download-title">Windows</h3>
+            <p class="download-target">Windows 10 / 11 (64-bit)</p>
+          </div>
+          <ul class="download-specs">
+            <li><i class="fa-solid fa-check check-icon"></i> <span>Native NSIS Setup Installer (.exe)</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span>Windows Credential Manager integration</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span>Integrated WebView2 acceleration</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span>VS Code one-click path resolve</span></li>
+          </ul>
+          <div class="download-actions">
+            <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="windowsExe" class="btn-pill-download" style="border-radius: 9999px;">
+              <i class="fa-brands fa-windows"></i>
+              <span>Download for Windows (x64)</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- macOS Card -->
+        <div class="download-card" id="card-macos">
+          <div class="card-detected-badge">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Detected OS</span>
+          </div>
+          <div class="download-header">
+            <div class="download-icon-box macos">
+              <i class="fa-brands fa-apple"></i>
+            </div>
+            <h3 class="download-title">macOS</h3>
+            <p class="download-target">macOS 11+ (Apple Silicon &amp; Intel)</p>
+          </div>
+          <ul class="download-specs">
+            <li><i class="fa-solid fa-check check-icon"></i> <span><strong>Apple Silicon</strong> (M1/M2/M3/M4) DMG</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span><strong>Intel x86_64</strong> DMG supported</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span>Apple Keychain native encryption</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span>macOS traffic lights window chrome</span></li>
+          </ul>
+          <div class="download-actions">
+            <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="macArm" class="btn-pill-download" style="border-radius: 9999px;">
+              <i class="fa-brands fa-apple"></i>
+              <span>Download Apple Silicon (.dmg)</span>
+            </a>
+            <div class="format-buttons-grid">
+              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="macIntel" class="btn-format" style="grid-column: span 2; border-radius: 9999px;">
+                <i class="fa-brands fa-apple"></i>
+                <span>Download Intel x86_64 (.dmg)</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Linux Card -->
+        <div class="download-card" id="card-linux">
+          <div class="card-detected-badge">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Detected OS</span>
+          </div>
+          <div class="download-header">
+            <div class="download-icon-box linux">
+              <i class="fa-brands fa-linux"></i>
+            </div>
+            <h3 class="download-title">Linux</h3>
+            <p class="download-target">Ubuntu, Debian, Fedora, Arch, RHEL &amp; more</p>
+          </div>
+          <ul class="download-specs">
+            <li><i class="fa-solid fa-check check-icon"></i> <span><strong>.AppImage:</strong> Portable &amp; automatic in-app updates</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span><strong>.deb:</strong> Debian, Ubuntu, Linux Mint</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span><strong>.rpm:</strong> Fedora, RHEL, openSUSE</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span><strong>.tar.gz:</strong> Standalone binary archive</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span>Secret Service / Libsecret credential storage</span></li>
+          </ul>
+          <div class="download-actions">
+            <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="linuxAppImage" class="btn-pill-download" style="border-radius: 9999px;">
+              <i class="fa-brands fa-linux"></i>
+              <span>Download AppImage</span>
+            </a>
+            <div class="format-buttons-grid">
+              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="linuxDeb" class="btn-format" title="Debian / Ubuntu Package">
+                <i class="fa-brands fa-ubuntu"></i>
+                <span>.deb</span>
+              </a>
+              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="linuxRpm" class="btn-format" title="Fedora / RHEL Package">
+                <i class="fa-brands fa-redhat"></i>
+                <span>.rpm</span>
+              </a>
+              <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="tarArchive" class="btn-format" title="Standalone Tarball Archive">
+                <i class="fa-solid fa-file-zipper"></i>
+                <span>.tar.gz</span>
+              </a>
+              <a href="https://github.com/anhquoctran/stage0/releases/latest" class="btn-format" target="_blank" rel="noopener noreferrer" title="All Release Assets">
+                <i class="fa-solid fa-list-ul"></i>
+                <span>All Assets</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: var(--ctp-subtext0); font-size: 0.875rem;">
+        Need build artifacts, checksums or older versions? Visit the <a href="https://github.com/anhquoctran/stage0/releases" target="_blank" rel="noopener noreferrer" style="color: var(--ctp-brand); text-decoration: underline;"><i class="fa-brands fa-github"></i> GitHub Releases page</a>.
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Installation Guide -->
+  <section id="install" class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Setup in seconds</span>
+        <h2 class="section-title">Quick Installation Instructions</h2>
+        <p class="section-desc">
+          Follow the simple steps below for your platform to install and get Stage0 ready to use.
+        </p>
+      </div>
+
+      <div class="step-container">
+        <!-- Step 1 -->
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <h3 class="step-title">
+              <i class="fa-brands fa-git-alt text-brand"></i>
+              <span>Ensure Git is installed on your computer</span>
+            </h3>
+            <p class="step-desc">
+              Stage0 connects to your system Git binary to read commits, branches, and calculate merge trees. Git 2.38 or later is recommended.
+            </p>
+            <div class="code-box">
+              <span id="code-git-version">git --version</span>
+              <button class="copy-btn" data-copy-target="code-git-version">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <h3 class="step-title">
+              <i class="fa-solid fa-desktop text-brand"></i>
+              <span>Run the installer for your operating system</span>
+            </h3>
+            <p class="step-desc">
+              &bull; <strong>Windows:</strong> Double-click <code>stage0_setup.exe</code> and follow the setup wizard.<br>
+              &bull; <strong>macOS:</strong> Open the downloaded <code>.dmg</code> file and drag Stage0 into your <code>Applications</code> folder.<br>
+              &bull; <strong>Linux:</strong> Choose the package format matching your distribution:
+            </p>
+            
+            <div class="distro-tabs-nav">
+              <button class="distro-tab-btn active" data-distro-tab="appimage">
+                <i class="fa-brands fa-linux"></i> AppImage
+              </button>
+              <button class="distro-tab-btn" data-distro-tab="deb">
+                <i class="fa-brands fa-ubuntu"></i> Debian / Ubuntu (.deb)
+              </button>
+              <button class="distro-tab-btn" data-distro-tab="rpm">
+                <i class="fa-brands fa-redhat"></i> Fedora / RHEL (.rpm)
+              </button>
+              <button class="distro-tab-btn" data-distro-tab="tar">
+                <i class="fa-solid fa-file-zipper"></i> Tarball (.tar.gz)
+              </button>
+            </div>
+
+            <!-- AppImage Command -->
+            <div class="code-box" data-distro-code="appimage">
+              <span id="code-linux-appimage">chmod +x Stage0_*.AppImage &amp;&amp; ./Stage0_*.AppImage</span>
+              <button class="copy-btn" data-copy-target="code-linux-appimage">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+
+            <!-- DEB Command -->
+            <div class="code-box" data-distro-code="deb" style="display: none;">
+              <span id="code-linux-deb">sudo dpkg -i stage0_*_amd64.deb || sudo apt-get install -f</span>
+              <button class="copy-btn" data-copy-target="code-linux-deb">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+
+            <!-- RPM Command -->
+            <div class="code-box" data-distro-code="rpm" style="display: none;">
+              <span id="code-linux-rpm">sudo rpm -i stage0-*.x86_64.rpm  # or: sudo dnf install ./stage0-*.x86_64.rpm</span>
+              <button class="copy-btn" data-copy-target="code-linux-rpm">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+
+            <!-- Tarball Command -->
+            <div class="code-box" data-distro-code="tar" style="display: none;">
+              <span id="code-linux-tar">tar -xzf stage0-*.tar.gz &amp;&amp; ./stage0/stage0</span>
+              <button class="copy-btn" data-copy-target="code-linux-tar">
+                <i class="fa-regular fa-copy"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start Guide (AI Review Workflow) -->
+  <section id="quickstart" class="section" style="background-color: var(--bg-card);">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">How To Use</span>
+        <h2 class="section-title">Review Code with AI in 4 Simple Steps</h2>
+        <p class="section-desc">
+          How to inspect branches, deploy autonomous AI reviewers, and resolve merge conflicts.
+        </p>
+      </div>
+
+      <div class="step-container">
+        <!-- Usage Step 1 -->
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <h3 class="step-title">
+              <i class="fa-regular fa-folder-open text-brand"></i>
+              <span>Open Any Local Git Repository</span>
+            </h3>
+            <p class="step-desc">
+              Click <strong>Open Repository</strong> from the top bar or launch menu. Stage0 instantly indexes your branches, tags, and commits using your local Git database without remote network calls.
+            </p>
+          </div>
+        </div>
+
+        <!-- Usage Step 2 -->
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <h3 class="step-title">
+              <i class="fa-solid fa-code-branch text-brand"></i>
+              <span>Select Source &amp; Target Branch Virtually</span>
+            </h3>
+            <p class="step-desc">
+              Pick your feature branch and target branch (e.g. <code>main</code> or <code>develop</code>). Stage0 creates an in-memory Virtual MR with zero file checkout, keeping your working directory completely clean.
+            </p>
+          </div>
+        </div>
+
+        <!-- Usage Step 3 -->
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div class="step-body">
+            <h3 class="step-title">
+              <i class="fa-solid fa-wand-magic-sparkles text-brand"></i>
+              <span>Trigger Autonomous AI Reviewers</span>
+            </h3>
+            <p class="step-desc">
+              Deploy your configured AI reviewer bots (Security Sentinel, Architecture Guardian, Performance Auditor). Agents analyze the diff hunks in parallel, finding vulnerabilities and logic bugs with zero secret leakage.
+            </p>
+          </div>
+        </div>
+
+        <!-- Usage Step 4 -->
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <div class="step-body">
+            <h3 class="step-title">
+              <i class="fa-solid fa-comments text-brand"></i>
+              <span>Discuss, Apply AI Patches &amp; Push with Confidence</span>
+            </h3>
+            <p class="step-desc">
+              Ask follow-up questions directly on diff lines, accept AI patch proposals, and review predicted merge conflicts. When satisfied, push your clean, pre-flight audited code to upstream GitHub or GitLab!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Answers</span>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-desc">
+          Common questions about AI reviewers, privacy, local-first Git operations, and offline support.
+        </p>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>What makes Stage0 an AI-native Git code reviewer?</span>
+            <i class="fa-solid fa-chevron-down faq-arrow"></i>
+          </button>
+          <div class="faq-answer">
+            Stage0 is designed specifically for code review before code is published. It evaluates 3-way branch diffs in-memory and deploys specialized AI reviewer bots (Security Sentinel, Architecture Guardian, Performance Auditor) directly to your changes, allowing interactive discussion, conflict prediction, and one-click patch application.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Which AI models and providers can I use?</span>
+            <i class="fa-solid fa-chevron-down faq-arrow"></i>
+          </button>
+          <div class="faq-answer">
+            Stage0 supports Anthropic Claude (Claude 3.7 Sonnet / Haiku), OpenAI (GPT-4o, o3-mini), Google Gemini 2.0, DeepSeek, local offline models via Ollama or LM Studio, and custom ACP (Agent Client Protocol) external agents.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Can I run AI reviews completely offline without an internet connection?</span>
+            <i class="fa-solid fa-chevron-down faq-arrow"></i>
+          </button>
+          <div class="faq-answer">
+            <strong>Yes!</strong> By configuring Ollama or a local OpenAI-compatible endpoint, Stage0 executes AI reviews, conflict analyses, and discussions completely offline on your own GPU/CPU. No data ever leaves your computer.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Does Stage0 modify my working tree or uncommitted files?</span>
+            <i class="fa-solid fa-chevron-down faq-arrow"></i>
+          </button>
+          <div class="faq-answer">
+            <strong>No.</strong> Stage0 creates Virtual MRs entirely in memory using Git's native <code>git merge-tree --write-tree</code>. It never checks out branches, stashes files, or modifies your active working tree.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How are my API keys and repository code kept secure?</span>
+            <i class="fa-solid fa-chevron-down faq-arrow"></i>
+          </button>
+          <div class="faq-answer">
+            API keys are vaulted directly into your operating system's native secure keyring (Windows Credential Manager, macOS Keychain, Linux Libsecret) and zeroized in memory immediately after use. Stage0 never commits secrets to JSON files or tracks telemetry.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How is Stage0 different from GitHub Copilot or GitLab Duo?</span>
+            <i class="fa-solid fa-chevron-down faq-arrow"></i>
+          </button>
+          <div class="faq-answer">
+            While Copilot assists primarily with autocompleting code as you type, Stage0 acts as an <strong>independent, holistic code reviewer</strong> that evaluates branch comparisons, analyzes security threats, predicts 3-way merge conflicts, and enforces architecture boundaries locally <em>before</em> you open an official pull request.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand-link" style="margin-bottom: 0.75rem;">
+            <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="brand-logo" />
+            <span>Stage0</span>
+          </div>
+          <p style="line-height: 1.6; max-width: 320px; color: var(--ctp-subtext0); margin-bottom: 1rem;">
+            AI-Native Git Code Reviewer &amp; Virtual MR Sandbox for auditing changes, predicting merge conflicts, and refining code before pushing.
+          </p>
+          <p style="font-size: 0.8125rem; color: var(--ctp-overlay1);">
+            Created by <strong>Anh Quoc Tran</strong>.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="#ai-reviewers"><i class="fa-solid fa-angle-right"></i> AI Reviewers</a></li>
+            <li><a href="#features"><i class="fa-solid fa-angle-right"></i> Capabilities</a></li>
+            <li><a href="#comparison"><i class="fa-solid fa-angle-right"></i> Why Stage0</a></li>
+            <li><a href="#download"><i class="fa-solid fa-angle-right"></i> Downloads</a></li>
+            <li><a href="#quickstart"><i class="fa-solid fa-angle-right"></i> Quick Start</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Platforms</h4>
+          <ul class="footer-links">
+            <li><a href="#download"><i class="fa-brands fa-windows"></i> Windows</a></li>
+            <li><a href="#download"><i class="fa-brands fa-apple"></i> macOS</a></li>
+            <li><a href="#download"><i class="fa-brands fa-linux"></i> Linux</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Open Source</h4>
+          <ul class="footer-links">
+            <li><a href="https://github.com/anhquoctran/stage0" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github"></i> GitHub Repository</a></li>
+            <li><a href="https://github.com/anhquoctran/stage0/releases" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-tag"></i> Releases &amp; Changelog</a></li>
+            <li><a href="https://github.com/anhquoctran/stage0/issues" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-circle-exclamation"></i> Report an Issue</a></li>
+            <li><a href="https://github.com/anhquoctran/stage0/blob/main/LICENSE" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-scale-balanced"></i> MIT License</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          &copy; 2026 Anh Quoc Tran. Licensed under the MIT License.
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <span style="font-size: 0.8125rem; color: var(--ctp-overlay1);">Designed with Catppuccin Mocha &amp; Latte</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./app.js?v=20261027_v17"></script>
+</body>
+</html>

@@ -21,6 +21,7 @@ import os from 'os';
 import { fileURLToPath } from 'url';
 import { syncAllMetadata } from './generate-about-info.mjs';
 import { bumpProjectPatchVersion } from './bump-version.mjs';
+import { ensureWindowsPerlInPath } from './windowsPerlEnv.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,6 +74,7 @@ ${BOLD}Output Artifacts:${RESET}
 const architectureCheck = spawnSync(process.execPath, [path.join(__dirname, 'check-architecture.mjs')], {
   cwd: ROOT_DIR,
   stdio: 'inherit',
+  env: ensureWindowsPerlInPath(process.env),
 });
 if (architectureCheck.error || architectureCheck.status !== 0) {
   console.error('Architecture checks failed. Fix module ownership or file size before building.');
@@ -155,6 +157,7 @@ if (!skipTypeCheck) {
   const tscResult = spawnSync(npxCmd, ['tsc', '--noEmit'], {
     cwd: ROOT_DIR,
     stdio: 'inherit',
+  env: ensureWindowsPerlInPath(process.env),
     shell: isWin,
   });
 
@@ -179,6 +182,7 @@ console.log(`${BOLD}[3/4] Building optimized frontend bundle with Vite...${RESET
 const viteResult = spawnSync(npxCmd, ['vite', 'build'], {
   cwd: ROOT_DIR,
   stdio: 'inherit',
+  env: ensureWindowsPerlInPath(process.env),
   shell: isWin,
 });
 
@@ -201,6 +205,7 @@ console.log(`${DIM}   Compiler Profile: LTO=true, Opt-Level=3, Strip=true, Panic
 const tauriBuildResult = spawnSync(npxCmd, ['tauri', 'build'], {
   cwd: ROOT_DIR,
   stdio: 'inherit',
+  env: ensureWindowsPerlInPath(process.env),
   shell: isWin,
 });
 

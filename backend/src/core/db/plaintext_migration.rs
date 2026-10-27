@@ -102,22 +102,22 @@ fn replace_database(temporary: &Path, original: &Path) -> io::Result<()> {
 fn replace_database(temporary: &Path, original: &Path) -> io::Result<()> {
     use std::os::windows::ffi::OsStrExt;
     use windows_sys::Win32::Storage::FileSystem::ReplaceFileW;
-    let original: Vec<u16> = original.as_os_str().encode_wide().chain(Some(0)).collect();
-    let temporary: Vec<u16> = temporary.as_os_str().encode_wide().chain(Some(0)).collect();
+    let orig_wide: Vec<u16> = original.as_os_str().encode_wide().chain(Some(0)).collect();
+    let temp_wide: Vec<u16> = temporary.as_os_str().encode_wide().chain(Some(0)).collect();
     // Both files are closed; no plaintext backup path is passed to ReplaceFileW.
     let result = unsafe {
         ReplaceFileW(
-            original.as_ptr(),
-            temporary.as_ptr(),
+            orig_wide.as_ptr(),
+            temp_wide.as_ptr(),
             std::ptr::null(),
             0,
             std::ptr::null(),
             std::ptr::null(),
         )
     };
-    if result == 0 {
-        Err(io::Error::last_os_error())
-    } else {
+    if result != 0 {
         Ok(())
+    } else {
+        std::fs::rename(temporary, original)
     }
 }

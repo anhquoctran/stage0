@@ -27,6 +27,7 @@
     "test:version": "node --test scripts/bump-version.test.mjs",
     "test:about": "node --test scripts/generate-about-info.test.mjs",
     "preview": "vite preview",
+    "preview:site": "vite website --port 3333",
     "tauri": "tauri"
   },
   "dependencies": {

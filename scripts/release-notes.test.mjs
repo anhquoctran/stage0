@@ -75,7 +75,10 @@ test('RELEASE_NOTES.md exists and is scoped to the current package version', () 
 test('DEFAULT_RELEASE_NOTES provides rich markdown for current version', () => {
   const { DEFAULT_RELEASE_NOTES } = loadWithMocks(new URL('../frontend/features/about/config/releaseNotes.ts', import.meta.url), {});
   assert.match(DEFAULT_RELEASE_NOTES, new RegExp(`Stage0 v${escapeRegex(version)} Release Notes`));
-  assert.equal(DEFAULT_RELEASE_NOTES, readFileSync(new URL('../RELEASE_NOTES.md', import.meta.url), 'utf8'));
+  assert.equal(
+    DEFAULT_RELEASE_NOTES.replace(/\r\n/g, '\n'),
+    readFileSync(new URL('../RELEASE_NOTES.md', import.meta.url), 'utf8').replace(/\r\n/g, '\n')
+  );
 });
 
 test('Backend exposes get_release_notes command and tauri.conf.json bundles RELEASE_NOTES.md', () => {
