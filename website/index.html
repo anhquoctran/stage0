@@ -33,14 +33,25 @@
   <link rel="icon" type="image/svg+xml" href="./assets/app-icon.svg">
   <link rel="shortcut icon" href="./assets/favicon.ico">
 
+  <!-- IBM Plex Fonts (Sans & Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+
   <!-- FontAwesome 6 Free -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <!-- Styles (Versioned Cache-Busted) -->
-  <link rel="stylesheet" href="./styles.css?v=20261027_v17">
+  <link rel="stylesheet" href="./styles.css?v=20261027_v39">
 
   <!-- Guaranteed Inline Pill & Theme Styles (Anti-Cache, No Glow, 1px Border) -->
   <style>
+    html, body, button, input, select, textarea {
+      font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    }
+    code, pre, kbd, samp, .code-box, .mockup-editor, .branch-compare-pill, .mockup-file-item {
+      font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace !important;
+    }
     .header {
       background-color: var(--bg-header, rgba(17, 17, 27, 0.85));
       transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -48,6 +59,38 @@
     [data-theme="latte"] .header,
     [data-theme="light"] .header {
       background-color: rgba(239, 241, 245, 0.88) !important;
+    }
+    .hero {
+      position: relative !important;
+      overflow: hidden !important;
+    }
+    .hero::before {
+      content: '' !important;
+      position: absolute !important;
+      inset: -15px !important;
+      background-image: url('./assets/page-bg.svg') !important;
+      background-position: center bottom !important;
+      background-repeat: no-repeat !important;
+      background-size: cover !important;
+      filter: brightness(0.74) contrast(1.12) !important;
+      opacity: 0.9 !important;
+      transform: scale(1.02) !important;
+      z-index: 0 !important;
+      pointer-events: none !important;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.95) 60%, rgba(0, 0, 0, 0) 95%) !important;
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.95) 60%, rgba(0, 0, 0, 0) 95%) !important;
+    }
+    .hero::after {
+      display: none !important;
+    }
+    .hero > .container {
+      position: relative !important;
+      z-index: 2 !important;
+    }
+    [data-theme="latte"] .hero::before,
+    [data-theme="light"] .hero::before {
+      filter: brightness(0.9) contrast(0.95) !important;
+      opacity: 0.28 !important;
     }
     .hero-title .text-highlight,
     .hero-title .text-gradient {
@@ -69,12 +112,37 @@
     .download-specs li span {
       flex: 1 !important;
     }
+    .brand-link {
+      gap: 0.45rem !important;
+      font-size: 1.3rem !important;
+      font-weight: 800 !important;
+    }
+    .brand-logo {
+      width: 2.35rem !important;
+      height: 2.35rem !important;
+      border-radius: 8px !important;
+    }
+    .nav-actions {
+      gap: 0.5rem !important;
+    }
+    .nav-actions .btn {
+      padding: 0.38rem 0.85rem !important;
+      font-size: 0.8125rem !important;
+      height: 2rem !important;
+      gap: 0.4rem !important;
+      border-radius: 9999px !important;
+    }
+    .nav-actions .btn-icon {
+      width: 2rem !important;
+      height: 2rem !important;
+      font-size: 0.825rem !important;
+      padding: 0 !important;
+      border-radius: 9999px !important;
+    }
     .btn-pill-download,
     .hero-download-btn,
     .btn-format,
-    .alt-platform-btn,
-    .nav-actions .btn,
-    .btn-icon {
+    .alt-platform-btn {
       border-radius: 9999px !important;
     }
     .btn-primary, .btn-primary:hover, .btn-secondary, .btn-secondary:hover {
@@ -120,10 +188,10 @@
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 0.6rem !important;
+      gap: 0.5rem !important;
       font-weight: 600 !important;
-      font-size: 0.9375rem !important;
-      padding: 0.7rem 1.4rem !important;
+      font-size: 0.875rem !important;
+      padding: 0.65rem 1rem !important;
       border-radius: 9999px !important;
       background-color: rgba(147, 51, 234, 0.12) !important;
       color: var(--ctp-mauve) !important;
@@ -133,6 +201,7 @@
       transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
       box-shadow: none !important;
       width: 100% !important;
+      white-space: nowrap !important;
     }
     .btn-pill-download:hover {
       background-color: var(--ctp-brand) !important;
@@ -154,50 +223,219 @@
       border-color: var(--ctp-brand) !important;
       box-shadow: none !important;
     }
-    .step-title {
+    .step-card {
       display: flex !important;
-      align-items: flex-start !important;
+      flex-direction: column !important;
+      padding: 1.75rem !important;
+      border-radius: 4px !important;
+      background-color: var(--bg-card) !important;
+      border: 1px solid var(--border-subtle) !important;
+      gap: 0 !important;
+    }
+    .step-header {
+      display: flex !important;
+      align-items: center !important;
+      gap: 0.85rem !important;
+      margin-bottom: 0.85rem !important;
+      width: 100% !important;
+    }
+    .step-number {
+      width: 2.25rem !important;
+      height: 2.25rem !important;
+      border-radius: 4px !important;
+      background-color: var(--ctp-brand) !important;
+      color: #ffffff !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-weight: 800 !important;
+      font-size: 1.15rem !important;
+      flex-shrink: 0 !important;
+      margin: 0 !important;
+    }
+    .step-title {
+      font-size: 1.15rem !important;
+      font-weight: 700 !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center !important;
       gap: 0.5rem !important;
-      line-height: 1.45 !important;
+      color: var(--ctp-text) !important;
+      line-height: 1.35 !important;
+      flex: 1 !important;
     }
     .step-title i {
-      margin-top: 0.22rem !important;
       flex-shrink: 0 !important;
+      font-size: 1.15rem !important;
+      margin-top: 0 !important;
     }
     .step-title span {
       flex: 1 !important;
     }
+    .step-body {
+      width: 100% !important;
+      flex: 1 !important;
+    }
+    .step-desc {
+      font-size: 0.9375rem !important;
+      color: var(--ctp-subtext0) !important;
+      margin-bottom: 0.85rem !important;
+      line-height: 1.55 !important;
+    }
+    code {
+      white-space: nowrap !important;
+    }
+    .code-box {
+      display: flex;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 0.75rem !important;
+      padding: 0.75rem 0.85rem !important;
+      background-color: var(--ctp-mantle) !important;
+      border: 1px solid var(--border-subtle) !important;
+      border-radius: 4px !important;
+      overflow: hidden !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .code-box[style*="display: none"] {
+      display: none !important;
+    }
+    .code-box span {
+      white-space: nowrap !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      line-height: 1.4 !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: thin !important;
+    }
+    .copy-btn {
+      flex-shrink: 0 !important;
+      white-space: nowrap !important;
+    }
+    .comp-card-header {
+      display: flex !important;
+      align-items: center !important;
+      gap: 0.65rem !important;
+      margin-bottom: 0.85rem !important;
+    }
+    .comp-card-pill {
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      line-height: 1 !important;
+    }
+    .badge-win,
+    .comp-stage0-tag {
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+    }
+    .distro-tabs-nav {
+      display: flex !important;
+      gap: 0.5rem !important;
+      margin-bottom: 0.75rem !important;
+      flex-wrap: wrap !important;
+    }
+    .distro-tab-btn {
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+    }
     @media (max-width: 768px) {
+      .btn-nav-download {
+        display: none !important;
+      }
       .step-card {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: flex-start !important;
-        gap: 1rem !important;
-        padding: 1.25rem !important;
+        padding: 1.35rem 1.15rem !important;
+      }
+      .step-header {
+        gap: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
       }
       .step-number {
-        width: 2.25rem !important;
-        height: 2.25rem !important;
+        width: 2.1rem !important;
+        height: 2.1rem !important;
         font-size: 1.05rem !important;
-        flex-shrink: 0 !important;
-        align-self: flex-start !important;
-        margin: 0 !important;
       }
-      .step-body {
-        flex: 1 !important;
-        min-width: 0 !important;
+      .step-title {
+        font-size: 1.05rem !important;
       }
-      .comp-card-pill {
-        white-space: nowrap !important;
-        flex-shrink: 0 !important;
+      .step-desc {
+        font-size: 0.875rem !important;
+        line-height: 1.5 !important;
       }
-      .badge-win {
-        white-space: nowrap !important;
-        flex-shrink: 0 !important;
+    }
+    @media (max-width: 640px) {
+      .step-card {
+        padding: 1.15rem 1rem !important;
       }
-      .comp-stage0-tag {
-        white-space: nowrap !important;
-        flex-shrink: 0 !important;
+      .step-header {
+        gap: 0.65rem !important;
+        margin-bottom: 0.65rem !important;
+      }
+      .step-number {
+        width: 1.95rem !important;
+        height: 1.95rem !important;
+        font-size: 0.95rem !important;
+      }
+      .step-title {
+        font-size: 1rem !important;
+      }
+      .step-desc {
+        font-size: 0.85rem !important;
+        line-height: 1.5 !important;
+        margin-bottom: 0.65rem !important;
+      }
+      .distro-tabs-nav {
+        gap: 0.35rem !important;
+      }
+      .distro-tab-btn {
+        padding: 0.28rem 0.55rem !important;
+        font-size: 0.75rem !important;
+      }
+      .code-box {
+        padding: 0.65rem 0.75rem !important;
+        font-size: 0.775rem !important;
+        gap: 0.5rem !important;
+      }
+    }
+    @media (max-width: 480px) {
+      .brand-link {
+        gap: 0.35rem !important;
+      }
+      .brand-logo {
+        width: 2.15rem !important;
+        height: 2.15rem !important;
+      }
+      .brand-link span:first-of-type {
+        font-size: 1.15rem !important;
+      }
+      .nav-actions {
+        gap: 0.35rem !important;
+      }
+      .nav-actions .btn {
+        padding: 0.35rem 0.65rem !important;
+        font-size: 0.775rem !important;
+        height: 1.95rem !important;
+      }
+      .nav-actions .btn-icon {
+        width: 1.95rem !important;
+        height: 1.95rem !important;
+        font-size: 0.8rem !important;
+      }
+      .btn-pill-download {
+        font-size: 0.8125rem !important;
+        padding: 0.6rem 0.65rem !important;
+        gap: 0.4rem !important;
+      }
+      .format-buttons-grid .btn-format {
+        font-size: 0.8125rem !important;
+        padding: 0.55rem 0.6rem !important;
+      }
+      .download-card {
+        padding: 1.5rem 1.15rem !important;
       }
     }
   </style>
@@ -210,7 +448,6 @@
       <a href="#" class="brand-link">
         <img src="./assets/app-icon.svg" alt="Stage0 Logo" class="brand-logo" />
         <span>Stage0</span>
-        <span class="version-badge" data-latest-version>latest</span>
       </a>
 
       <ul class="nav-links">
@@ -232,7 +469,7 @@
           <span>GitHub</span>
         </a>
 
-        <a href="#download" class="btn btn-primary" style="border-radius: 9999px;">
+        <a href="#download" class="btn btn-primary btn-nav-download" style="border-radius: 9999px;">
           <i class="fa-solid fa-download"></i>
           <span><span class="nav-get-text">Get </span>Stage0</span>
         </a>
@@ -267,16 +504,16 @@
     <div class="container">
       <div class="hero-pill">
         <i class="fa-solid fa-wand-magic-sparkles"></i>
-        <span>AI-Native Git Code Reviewer &amp; Virtual Sandbox</span>
+        <span>AI-Native Git Reviewer &amp; Sandbox</span>
       </div>
 
       <h1 class="hero-title">
-        Autonomous AI Code Review for Every Git Change.<br>
-        <span class="text-highlight">Review, Audit &amp; Predict Conflicts Before You Push.</span>
+        Autonomous AI Code Review.<br>
+        <span class="text-highlight">Before You Push.</span>
       </h1>
 
       <p class="hero-subtitle">
-        Stage0 pairs specialized autonomous AI reviewer agents directly with your Git branches. Audit security flaws, enforce architectural boundaries, predict 3-way merge conflicts in-memory, and chat on diff lines — 100% private, zero-checkout, and local-first.
+        Audit security flaws, enforce architectural boundaries, and predict merge conflicts in-memory — 100% private and local-first.
       </p>
 
       <div class="hero-cta">
@@ -287,188 +524,592 @@
         </a>
 
         <a href="#quickstart" class="btn btn-secondary hero-download-btn" style="border-radius: 9999px;">
-          <span>Quick Start Guide (5 mins)</span>
+          <span>Quick Start Guide</span>
           <i class="fa-solid fa-arrow-right"></i>
         </a>
       </div>
 
       <div class="hero-alt-platforms">
-        <span>Also available for Windows, macOS, and Linux &bull; <a href="#download" style="color: var(--ctp-mauve); text-decoration: underline;">See all platform downloads &darr;</a></span>
+        <span class="version-badge" data-latest-version>v0.1.12</span>
+        <span>&bull;</span>
+        <span>Windows, macOS &amp; Linux &bull; <a href="#download" style="color: var(--ctp-mauve); text-decoration: underline;">All downloads &darr;</a></span>
       </div>
 
       <div class="hero-stats">
         <div class="hero-stat-item">
           <i class="fa-solid fa-robot text-brand"></i>
-          <span>Multi-Agent AI Reviewers (Claude, GPT, Ollama)</span>
+          <span>Multi-Agent AI</span>
         </div>
         <div class="hero-stat-item">
           <i class="fa-solid fa-shield-halved text-brand"></i>
-          <span>Automated Security &amp; Arch Audits</span>
+          <span>Security &amp; Arch Audits</span>
         </div>
         <div class="hero-stat-item">
           <i class="fa-solid fa-code-compare text-brand"></i>
-          <span>In-Memory 3-Way Conflict Prediction</span>
+          <span>In-Memory Conflict Engine</span>
         </div>
         <div class="hero-stat-item">
           <i class="fa-solid fa-lock text-brand"></i>
-          <span>100% Local-First &amp; Encrypted Vault</span>
+          <span>100% Local &amp; Private</span>
         </div>
       </div>
 
-      <!-- High-Fidelity Interactive Mockup -->
+      <!-- High-Fidelity Interactive Mockup: 90%+ Accurate Stage0 Desktop App -->
       <div class="mockup-wrapper">
+        <!-- 1. Native Desktop Title Bar & Window Chrome -->
         <div class="mockup-titlebar">
-          <div class="mockup-controls">
-            <span class="mockup-dot red"></span>
-            <span class="mockup-dot yellow"></span>
-            <span class="mockup-dot green"></span>
+          <div class="mockup-titlebar-left">
+            <div class="mockup-controls">
+              <span class="mockup-dot red" title="Close"></span>
+              <span class="mockup-dot yellow" title="Minimize"></span>
+              <span class="mockup-dot green" title="Maximize"></span>
+            </div>
+            <div class="mockup-divider"></div>
+            <div class="mockup-brand-group">
+              <svg class="mockup-app-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="512" height="512" rx="143.36" fill="#9333ea" />
+                <rect x="4" y="4" width="504" height="504" rx="139.36" stroke="#ffffff" stroke-opacity="0.2" stroke-width="4" />
+                <g stroke-linecap="round">
+                  <path d="M352 208 A144 144 0 0 1 208 352" stroke="#e4e4e7" stroke-width="32" />
+                  <path d="M160 112 V304" stroke="#ffffff" stroke-width="32" />
+                  <circle cx="352" cy="160" r="48" stroke="#e4e4e7" stroke-width="32" />
+                  <circle cx="160" cy="352" r="48" stroke="#ffffff" stroke-width="32" />
+                </g>
+              </svg>
+              <span class="mockup-app-name">Stage0</span>
+              <span class="mockup-app-version">v0.1.12</span>
+            </div>
+            <div class="mockup-menu-bar">
+              <span class="mockup-menu-item">File</span>
+              <span class="mockup-menu-item">Edit</span>
+              <span class="mockup-menu-item">View</span>
+              <span class="mockup-menu-item">Git</span>
+              <span class="mockup-menu-item">Sandbox</span>
+              <span class="mockup-menu-item">Help</span>
+            </div>
           </div>
-          <div class="mockup-title">
-            <i class="fa-solid fa-robot text-brand"></i>
-            <span>Stage0 — Autonomous AI Code Review Sandbox (feat/token-vault-migration &rarr; main)</span>
+
+          <div class="mockup-titlebar-center">
+            <span class="mockup-doc-title">
+              <i class="fa-solid fa-code-fork text-mauve"></i>
+              <span>feat/token-vault-migration &harr; main &mdash; Virtual MR Sandbox</span>
+            </span>
           </div>
-          <div style="width: 50px;"></div>
+
+          <div class="mockup-titlebar-right hidden-mobile">
+            <span class="mockup-engine-pill">
+              <i class="fa-solid fa-bolt text-yellow"></i>
+              <span>In-Memory Engine</span>
+            </span>
+          </div>
         </div>
 
-        <div class="mockup-header-bar">
-          <div class="branch-compare-pill">
-            <i class="fa-solid fa-code-commit text-brand"></i>
-            <span class="branch-name">feat/token-vault-migration</span>
-            <i class="fa-solid fa-arrow-right-long branch-arrow"></i>
-            <span class="branch-name" style="color: var(--ctp-blue);">main</span>
+        <!-- 2. Action Ribbon & Repository Context Bar -->
+        <div class="mockup-ribbon">
+          <div class="mockup-repo-badge" title="d:/stage0/services/auth">
+            <div class="mockup-repo-icon">
+              <i class="fa-solid fa-folder-tree"></i>
+            </div>
+            <div class="mockup-repo-info">
+              <div class="mockup-repo-title">
+                <span>stage0-core</span>
+                <span class="mockup-repo-git-tag">git</span>
+              </div>
+              <span class="mockup-repo-path">~/workspace/stage0-core</span>
+            </div>
           </div>
 
-          <div class="mockup-status-badges">
-            <span class="status-badge-clean">
-              <i class="fa-solid fa-circle-check"></i>
-              0 Conflicts Predicted
-            </span>
-            <span class="status-badge-clean" style="background: rgba(147, 51, 234, 0.15); color: var(--ctp-mauve);">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-              AI Review: 2 Findings &bull; 1 Suggestion
-            </span>
+          <div class="mockup-ribbon-center">
+            <!-- 3-way branch comparison pill -->
+            <div class="branch-compare-pill">
+              <span class="branch-pill-base"><i class="fa-solid fa-code-branch"></i> main</span>
+              <span class="branch-pill-arrow">&harr;</span>
+              <span class="branch-pill-target"><i class="fa-solid fa-code-fork"></i> feat/token-vault-migration</span>
+            </div>
+
+            <div class="mockup-ribbon-badges">
+              <span class="status-badge-clean" title="Predicted using 3-way in-memory AST evaluation">
+                <i class="fa-solid fa-circle-check"></i>
+                <span class="badge-text-full">0 Conflicts Predicted</span>
+                <span class="badge-text-short">0 Conflicts</span>
+              </span>
+              <span class="status-badge-ai" title="Security, Architecture & Performance reviewers active">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span class="badge-text-full">3 Bots Active &bull; 1 Resolved Finding</span>
+                <span class="badge-text-short">3 Bots Active</span>
+              </span>
+            </div>
           </div>
 
-          <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-outline" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;" data-mockup-tab="diff">
-              <i class="fa-solid fa-code"></i> Diff &amp; Inline AI
+          <div class="mockup-ribbon-actions">
+            <button class="mockup-action-btn" title="Fast pull remote updates"><i class="fa-solid fa-arrow-down"></i> Pull</button>
+            <button class="mockup-action-btn" title="Simulate 3-way merge in memory"><i class="fa-solid fa-code-merge"></i> Merge MR</button>
+            <button class="mockup-action-btn primary" id="mockup-btn-refresh" title="Re-evaluate working tree and run review bots"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          </div>
+        </div>
+
+        <!-- 3. Virtual MR Session Tab Bar -->
+        <div class="mockup-tabbar">
+          <div class="mockup-tabbar-left hidden-mobile">
+            <button class="mockup-mr-list-btn" title="List all active virtual MR sessions">
+              <i class="fa-solid fa-list-check"></i>
+              <span>All MRs</span>
             </button>
-            <button class="btn btn-outline" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;" data-mockup-tab="ai">
-              <i class="fa-solid fa-robot"></i> Multi-Agent Report (3)
+            <div class="mockup-session-tab active">
+              <i class="fa-solid fa-code-pull-request text-brand"></i>
+              <span class="session-tab-title">!42: feat/token-vault-migration</span>
+              <span class="session-tab-close" title="Close Session">&times;</span>
+            </div>
+            <button class="mockup-new-tab-btn" title="Open new branch comparison session">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+
+          <div class="mockup-tabbar-subnav">
+            <button class="mockup-subtab-btn active" data-mockup-tab="diff">
+              <i class="fa-solid fa-code"></i>
+              <span>Changes</span>
+              <span class="subtab-counter">3</span>
+            </button>
+            <button class="mockup-subtab-btn" data-mockup-tab="ai">
+              <i class="fa-solid fa-robot"></i>
+              <span>Multi-Agent Review</span>
+              <span class="subtab-counter brand">3</span>
+            </button>
+            <button class="mockup-subtab-btn" data-mockup-tab="conflict">
+              <i class="fa-solid fa-diagram-project"></i>
+              <span>Conflict Map</span>
+            </button>
+            <button class="mockup-subtab-btn" data-mockup-tab="commits">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+              <span>Commits</span>
+              <span class="subtab-counter">2</span>
             </button>
           </div>
         </div>
 
+        <!-- 4. Split-Pane Workspace Body -->
         <div class="mockup-body">
+          <!-- Sidebar: Files Tree & Stats -->
           <div class="mockup-sidebar">
-            <div class="mockup-section-title">Inspected Files (3)</div>
-            <div class="mockup-file-item active">
-              <span>auth_service.rs</span>
-              <span class="file-status-m">M</span>
+            <div class="mockup-sidebar-header">
+              <span class="mockup-section-title">Changed Files (3)</span>
+              <div class="mockup-sidebar-stats">
+                <span class="stat-add">+48</span>
+                <span class="stat-del">-12</span>
+              </div>
             </div>
-            <div class="mockup-file-item">
-              <span>token_vault.rs</span>
-              <span class="file-status-a">A</span>
+
+            <div class="mockup-search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="Filter changed files... (Ctrl+P)" readonly />
             </div>
-            <div class="mockup-file-item">
-              <span>db/migration.rs</span>
-              <span class="file-status-m">M</span>
+
+            <div class="mockup-file-tree">
+              <div class="mockup-file-item active" data-file-key="auth">
+                <div class="file-item-left">
+                  <i class="fa-brands fa-rust text-peach"></i>
+                  <div class="file-name-group">
+                    <span class="file-dir">src/auth/</span>
+                    <span class="file-name">auth_service.rs</span>
+                  </div>
+                </div>
+                <div class="file-item-right">
+                  <span class="file-diff-stat">+2 -1</span>
+                  <span class="file-status-badge m">M</span>
+                </div>
+              </div>
+
+              <div class="mockup-file-item" data-file-key="vault">
+                <div class="file-item-left">
+                  <i class="fa-brands fa-rust text-peach"></i>
+                  <div class="file-name-group">
+                    <span class="file-dir">src/security/</span>
+                    <span class="file-name">token_vault.rs</span>
+                  </div>
+                </div>
+                <div class="file-item-right">
+                  <span class="file-diff-stat">+36</span>
+                  <span class="file-status-badge a">A</span>
+                </div>
+              </div>
+
+              <div class="mockup-file-item" data-file-key="db">
+                <div class="file-item-left">
+                  <i class="fa-brands fa-rust text-peach"></i>
+                  <div class="file-name-group">
+                    <span class="file-dir">src/db/</span>
+                    <span class="file-name">migration.rs</span>
+                  </div>
+                </div>
+                <div class="file-item-right">
+                  <span class="file-diff-stat">+10 -11</span>
+                  <span class="file-status-badge m">M</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- View 1: Diff with Inline AI Review Finding -->
+          <!-- Main View 1: Diff Viewer & Inline AI Review -->
           <div class="mockup-editor" id="mockup-view-diff">
-            <div class="diff-line">
-              <span class="diff-line-number">48</span>
-              <span class="diff-line-content">pub fn load_active_token(vault: &amp;TokenVault) -&gt; Result&lt;SecretToken, VaultError&gt; {</span>
-            </div>
-            <div class="diff-line diff-del">
-              <span class="diff-line-number">49</span>
-              <span class="diff-line-content">-     let raw_key = std::env::var("APP_SECRET_TOKEN")?;</span>
-            </div>
-            <div class="diff-line diff-add">
-              <span class="diff-line-number">49</span>
-              <span class="diff-line-content">+     let raw_key = vault.read_keychain_secret("stage0_auth_token")?;</span>
-            </div>
-            <div class="diff-line diff-add">
-              <span class="diff-line-number">50</span>
-              <span class="diff-line-content">+     let token = SecretToken::from_secure_bytes(raw_key)?;</span>
-            </div>
-            <div class="diff-line">
-              <span class="diff-line-number">51</span>
-              <span class="diff-line-content">      Ok(token)</span>
-            </div>
-            <div class="diff-line">
-              <span class="diff-line-number">52</span>
-              <span class="diff-line-content">}</span>
+            <!-- Diff File Toolbar -->
+            <div class="diff-file-toolbar">
+              <div class="diff-breadcrumb">
+                <i class="fa-brands fa-rust text-peach"></i>
+                <span class="diff-crumb-prefix-desktop">
+                  <span class="diff-crumb-segment">stage0-core</span>
+                  <span class="diff-crumb-sep">/</span>
+                  <span class="diff-crumb-segment">src</span>
+                  <span class="diff-crumb-sep">/</span>
+                </span>
+                <span class="diff-crumb-prefix-mobile">... / </span>
+                <span class="diff-crumb-segment">auth</span>
+                <span class="diff-crumb-sep">/</span>
+                <span class="diff-crumb-active" id="mockup-file-name-display">auth_service.rs</span>
+                <button class="btn-crumb-copy" title="Copy relative path"><i class="fa-regular fa-copy"></i></button>
+              </div>
+
+              <div class="diff-toolbar-actions">
+                <span class="diff-hunk-summary">2 hunks &bull; 3 modified lines</span>
+                <div class="diff-mode-toggle">
+                  <span class="toggle-option active">Unified</span>
+                  <span class="toggle-option">Split</span>
+                </div>
+              </div>
             </div>
 
-            <!-- Inline AI Review finding banner -->
-            <div class="ai-review-banner">
-              <div class="ai-review-header">
-                <span class="ai-badge">
-                  <i class="fa-solid fa-shield-halved"></i>
-                  <span>Security Sentinel (Bot Reviewer)</span>
-                </span>
-                <span class="ai-resolved-badge">
-                  <i class="fa-solid fa-check-double"></i>
-                  Zeroization Verified
-                </span>
+            <!-- Diff Lines Table with Rust Syntax Highlighting -->
+            <div class="diff-lines-container">
+              <div class="diff-line diff-context">
+                <span class="diff-num old">46</span>
+                <span class="diff-num new">46</span>
+                <span class="diff-sign">&nbsp;</span>
+                <span class="diff-code"><span class="hl-cmt">/// Safely loads active token from persistent OS Keychain store</span></span>
               </div>
-              <p class="ai-review-content">
-                <strong>Vulnerability Resolved:</strong> Plaintext environment variable <code>APP_SECRET_TOKEN</code> replaced with OS native Credential Store. Memory zeroization on <code>Drop</code> confirmed.
-              </p>
-              <div class="ai-review-actions-bar" style="margin-top: 0.5rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.775rem;">
-                <span style="color: var(--ctp-subtext0);"><i class="fa-regular fa-comment-dots"></i> 1 Actionable Suggestion: Add bounded retry on Keychain unlock timeout.</span>
-                <button class="btn btn-primary" style="padding: 0.2rem 0.65rem; font-size: 0.72rem; border-radius: 9999px;">
-                  <i class="fa-solid fa-code-compare"></i> Apply Suggested Patch
-                </button>
+              <div class="diff-line diff-context">
+                <span class="diff-num old">47</span>
+                <span class="diff-num new">47</span>
+                <span class="diff-sign">&nbsp;</span>
+                <span class="diff-code"><span class="hl-cmt">/// Enforces zero-cost cryptographic zeroization upon Drop</span></span>
+              </div>
+              <div class="diff-line diff-context">
+                <span class="diff-num old">48</span>
+                <span class="diff-num new">48</span>
+                <span class="diff-sign">&nbsp;</span>
+                <span class="diff-code"><span class="hl-kw">pub fn</span> <span class="hl-fn">load_active_token</span>(vault: &amp;<span class="hl-type">TokenVault</span>) -&gt; <span class="hl-type">Result</span>&lt;<span class="hl-type">SecretToken</span>, <span class="hl-type">VaultError</span>&gt; {</span>
+              </div>
+              <div class="diff-line diff-del">
+                <span class="diff-num old">49</span>
+                <span class="diff-num new">&nbsp;</span>
+                <span class="diff-sign">-</span>
+                <span class="diff-code"><span class="hl-kw">let</span> raw_key = std::env::<span class="hl-fn">var</span>(<span class="hl-str">"APP_SECRET_TOKEN"</span>)?;</span>
+              </div>
+              <div class="diff-line diff-add">
+                <span class="diff-num old">&nbsp;</span>
+                <span class="diff-num new">49</span>
+                <span class="diff-sign">+</span>
+                <span class="diff-code"><span class="hl-kw">let</span> raw_key = vault.<span class="hl-fn">read_keychain_secret</span>(<span class="hl-str">"stage0_auth_token"</span>)?;</span>
+              </div>
+              <div class="diff-line diff-add">
+                <span class="diff-num old">&nbsp;</span>
+                <span class="diff-num new">50</span>
+                <span class="diff-sign">+</span>
+                <span class="diff-code"><span class="hl-kw">let</span> token = <span class="hl-type">SecretToken</span>::<span class="hl-fn">from_secure_bytes</span>(raw_key)?;</span>
+              </div>
+              <div class="diff-line diff-context">
+                <span class="diff-num old">50</span>
+                <span class="diff-num new">51</span>
+                <span class="diff-sign">&nbsp;</span>
+                <span class="diff-code"><span class="hl-type">Ok</span>(token)</span>
+              </div>
+              <div class="diff-line diff-context">
+                <span class="diff-num old">51</span>
+                <span class="diff-num new">52</span>
+                <span class="diff-sign">&nbsp;</span>
+                <span class="diff-code">}</span>
+              </div>
+            </div>
+
+            <!-- Authentic Inline AI Review Finding Card -->
+            <div class="ai-review-card">
+              <div class="ai-card-glow-bar"></div>
+              <div class="ai-card-header">
+                <div class="ai-card-author">
+                  <div class="ai-bot-avatar">
+                    <i class="fa-solid fa-shield-halved"></i>
+                  </div>
+                  <div class="ai-bot-meta">
+                    <div class="ai-bot-name-row">
+                      <span class="ai-bot-name">Security Sentinel</span>
+                      <span class="ai-bot-tag">AI BOT REVIEWER</span>
+                    </div>
+                    <span class="ai-bot-model">Anthropic Claude 3.7 Sonnet &bull; 2 min ago &bull; Lines 49-50</span>
+                  </div>
+                </div>
+
+                <div class="ai-card-status-badges">
+                  <span class="badge-resolved">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Vulnerability Mitigated</span>
+                  </span>
+                  <span class="badge-zeroize">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Zeroization Verified</span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="ai-card-body">
+                <p>
+                  <strong>Security Audit Passed:</strong> Plaintext environment variable <code>APP_SECRET_TOKEN</code> (susceptible to <code>/proc/environ</code> dumps and crash logs) was successfully replaced with OS native Credential Store (Apple Keychain / Windows DPAPI / Secret Service). Memory zeroization on <code>Drop</code> confirmed.
+                </p>
+                <div class="ai-suggested-patch">
+                  <div class="suggested-patch-header">
+                    <i class="fa-solid fa-lightbulb text-yellow"></i>
+                    <span>Actionable Hardening Suggestion: Add bounded retry on Keychain unlock timeout</span>
+                  </div>
+                  <pre class="suggested-patch-code"><code><span class="hl-cmt">// Hardened OS Keychain timeout retry</span>
++ vault.with_keychain_retry(Duration::from_millis(500), 2)?;</code></pre>
+                </div>
+              </div>
+
+              <div class="ai-card-footer">
+                <div class="ai-footer-info">
+                  <i class="fa-solid fa-shield-check text-brand"></i>
+                  <span>100% In-Memory Review &bull; Zero checkout overhead &bull; Zero code leaked</span>
+                </div>
+                <div class="ai-footer-actions">
+                  <button class="btn-card-action outline" id="mockup-btn-discuss">
+                    <i class="fa-regular fa-comment-dots"></i> Discuss with Sentinel
+                  </button>
+                  <button class="btn-card-action primary btn-solid" id="mockup-btn-apply">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Apply Suggested Patch
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- View 2: Multi-Agent AI Report -->
+          <!-- Main View 2: Multi-Agent AI Review Fleet Scorecard -->
           <div class="mockup-editor" id="mockup-view-ai" style="display: none;">
-            <div class="ai-review-banner" style="margin-top: 0; border-left-color: var(--ctp-green);">
-              <div class="ai-review-header">
-                <span class="ai-badge">
-                  <i class="fa-solid fa-robot"></i>
-                  <span>Anthropic Claude 3.7 Sonnet &bull; Lead Reviewer</span>
-                </span>
-                <span class="status-badge-clean" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">
-                  <i class="fa-solid fa-circle-check"></i> Overall: Approve with 1 minor tip
+            <div class="ai-fleet-header">
+              <div class="fleet-title-row">
+                <div class="fleet-title">
+                  <i class="fa-solid fa-robot text-brand"></i>
+                  <span>Autonomous Multi-Agent Review Fleet</span>
+                </div>
+                <span class="status-badge-clean">
+                  <i class="fa-solid fa-circle-check"></i> 3 of 3 Reviews Approved &bull; Ready to Merge
                 </span>
               </div>
-              <p class="ai-review-content" style="margin-bottom: 0.5rem;">
-                <strong>Branch Assessment:</strong> Compares <code>feat/token-vault-migration</code> against <code>main</code>. 3 files inspected, 0 merge conflicts found.
+              <p class="fleet-desc">
+                Stage0 dispatches parallel autonomous reviewer agents directly to your in-memory Git tree.
               </p>
-              <div class="ai-report-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem; font-size: 0.75rem;">
-                <div style="background: var(--ctp-crust); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-subtle);">
-                  <strong style="color: var(--ctp-green); display: block; margin-bottom: 0.2rem;"><i class="fa-solid fa-shield-halved"></i> Security Sentinel</strong>
-                  Passed (0 leaked credentials)
+            </div>
+
+            <div class="ai-agent-grid">
+              <!-- Bot 1 -->
+              <div class="agent-card">
+                <div class="agent-card-top">
+                  <div class="agent-icon-wrap security">
+                    <i class="fa-solid fa-shield-halved"></i>
+                  </div>
+                  <div class="agent-info">
+                    <h4>Security Sentinel</h4>
+                    <span class="agent-role">Secrets, OWASP &amp; Vaults</span>
+                  </div>
+                  <span class="agent-badge pass">Passed</span>
                 </div>
-                <div style="background: var(--ctp-crust); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-subtle);">
-                  <strong style="color: var(--ctp-mauve); display: block; margin-bottom: 0.2rem;"><i class="fa-solid fa-cubes-stacked"></i> Architecture Guardian</strong>
-                  Passed (Single responsibility)
+                <p class="agent-finding">
+                  Migrated plaintext token to OS Keychain. Zeroization confirmed on <code>Drop</code>. Zero plaintext leakage in diff.
+                </p>
+                <div class="agent-metrics">
+                  <span><i class="fa-solid fa-lock"></i> 0 Leaked Secrets</span>
+                  <span><i class="fa-solid fa-stopwatch"></i> 1.8s</span>
                 </div>
-                <div style="background: var(--ctp-crust); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-subtle);">
-                  <strong style="color: var(--ctp-blue); display: block; margin-bottom: 0.2rem;"><i class="fa-solid fa-gauge-high"></i> Performance Auditor</strong>
-                  Passed (Zero extra allocations)
+              </div>
+
+              <!-- Bot 2 -->
+              <div class="agent-card">
+                <div class="agent-card-top">
+                  <div class="agent-icon-wrap arch">
+                    <i class="fa-solid fa-cubes-stacked"></i>
+                  </div>
+                  <div class="agent-info">
+                    <h4>Architecture Guardian</h4>
+                    <span class="agent-role">Coupling &amp; Boundaries</span>
+                  </div>
+                  <span class="agent-badge pass">Passed</span>
+                </div>
+                <p class="agent-finding">
+                  Single cohesive responsibility preserved. File size is 285 physical lines (under the 400-line boundary).
+                </p>
+                <div class="agent-metrics">
+                  <span><i class="fa-solid fa-diagram-precedence"></i> 0 Circular Deps</span>
+                  <span><i class="fa-solid fa-stopwatch"></i> 2.1s</span>
+                </div>
+              </div>
+
+              <!-- Bot 3 -->
+              <div class="agent-card">
+                <div class="agent-card-top">
+                  <div class="agent-icon-wrap perf">
+                    <i class="fa-solid fa-gauge-high"></i>
+                  </div>
+                  <div class="agent-info">
+                    <h4>Performance Auditor</h4>
+                    <span class="agent-role">Allocations &amp; Memory</span>
+                  </div>
+                  <span class="agent-badge pass">Passed</span>
+                </div>
+                <p class="agent-finding">
+                  In-memory 3-way AST simulation completed in 4.2ms. Zero unnecessary memory allocations in hot crypto path.
+                </p>
+                <div class="agent-metrics">
+                  <span><i class="fa-solid fa-bolt"></i> 4.2ms Tree Diff</span>
+                  <span><i class="fa-solid fa-stopwatch"></i> 1.4s</span>
                 </div>
               </div>
             </div>
 
-            <!-- Threaded Chat preview -->
-            <div style="margin-top: 0.85rem; padding: 0.85rem 1rem; background-color: var(--ctp-crust); border-radius: 4px; border: 1px solid var(--border-subtle); font-size: 0.8rem;">
-              <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem; color: var(--ctp-text);">
-                <i class="fa-solid fa-user-circle text-brand"></i>
-                <strong>You:</strong> "Can we handle the case where the keychain record doesn't exist yet?"
+            <!-- Interactive Conversation Thread -->
+            <div class="thread-preview-card">
+              <div class="thread-header">
+                <i class="fa-solid fa-comments text-brand"></i>
+                <span>Interactive Diff Conversation Thread</span>
               </div>
-              <div style="display: flex; gap: 0.5rem; color: var(--ctp-subtext1); padding-left: 1.35rem;">
-                <i class="fa-solid fa-robot" style="color: var(--ctp-mauve);"></i>
-                <span><strong>AI Reviewer:</strong> Updated in diff proposal #2: Fallback to generating a fresh ephemeral key with user consent.</span>
+              <div class="thread-bubble user">
+                <div class="bubble-avatar"><i class="fa-solid fa-user"></i></div>
+                <div class="bubble-body">
+                  <strong>You:</strong> "Can we handle the case where the keychain item is locked by OS?"
+                </div>
+              </div>
+              <div class="thread-bubble bot">
+                <div class="bubble-avatar bot"><i class="fa-solid fa-robot"></i></div>
+                <div class="bubble-body">
+                  <strong>Security Sentinel:</strong> "Applied in patch proposal #2: Added <code>with_keychain_retry()</code> with exponential backoff up to 500ms before requesting user PIN unlock."
+                </div>
               </div>
             </div>
+          </div>
+
+          <!-- Main View 3: In-Memory Conflict Map -->
+          <div class="mockup-editor" id="mockup-view-conflict" style="display: none;">
+            <div class="conflict-map-wrapper">
+              <div class="conflict-header-row">
+                <div class="conflict-header-title">
+                  <i class="fa-solid fa-diagram-project text-green"></i>
+                  <span>In-Memory 3-Way Conflict Prediction Graph</span>
+                </div>
+                <span class="status-badge-clean">
+                  <i class="fa-solid fa-circle-check"></i> 0 Conflicts &bull; 100% Mergeable
+                </span>
+              </div>
+
+              <div class="conflict-diagram">
+                <div class="branch-node base">
+                  <div class="node-badge">MERGE BASE</div>
+                  <div class="node-commit">commit 91e402</div>
+                  <div class="node-title">main~3 (common ancestor)</div>
+                </div>
+                <div class="branch-arrow-down"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="branch-fork-grid">
+                  <div class="branch-col">
+                    <div class="branch-node branch-left">
+                      <div class="node-badge blue">TARGET</div>
+                      <div class="node-commit">commit a8f12c</div>
+                      <div class="node-title">origin/main</div>
+                    </div>
+                  </div>
+                  <div class="branch-col">
+                    <div class="branch-node branch-right">
+                      <div class="node-badge brand">FEATURE</div>
+                      <div class="node-commit">commit 4e99b0</div>
+                      <div class="node-title">feat/token-vault-migration</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="branch-arrow-merge"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="branch-merge-result">
+                  <div class="merge-result-icon"><i class="fa-solid fa-circle-check text-green"></i></div>
+                  <div class="merge-result-info">
+                    <strong>Predicted Result: Fast-Forward / Clean 3-Way Auto-Merge</strong>
+                    <span>All 3 inspected files contain non-overlapping AST changes. Safe to merge or rebase immediately.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main View 4: Commits Tab -->
+          <div class="mockup-editor" id="mockup-view-commits" style="display: none;">
+            <div class="commits-list-wrapper">
+              <div class="commits-header-row">
+                <span class="font-bold text-xs text-text"><i class="fa-solid fa-clock-rotate-left text-brand"></i> Commits in Branch (2)</span>
+                <span class="text-subtext0 text-xs font-mono">Ahead 2 &bull; Behind 0</span>
+              </div>
+              <div class="commits-list">
+                <div class="commit-row">
+                  <span class="commit-hash">4e99b0d</span>
+                  <div class="commit-details">
+                    <span class="commit-msg">refactor(auth): migrate token storage to native OS keychain vault</span>
+                    <span class="commit-meta">Anh Quoc Tran &bull; 14 minutes ago &bull; 3 files changed (+48, -12)</span>
+                  </div>
+                  <span class="commit-status-clean"><i class="fa-solid fa-check"></i> Verified</span>
+                </div>
+                <div class="commit-row">
+                  <span class="commit-hash">1a88c3f</span>
+                  <div class="commit-details">
+                    <span class="commit-msg">feat(vault): add memory zeroization on Drop for SecretToken</span>
+                    <span class="commit-meta">Anh Quoc Tran &bull; 32 minutes ago &bull; 1 file changed (+36, -0)</span>
+                  </div>
+                  <span class="commit-status-clean"><i class="fa-solid fa-check"></i> Verified</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Bottom Status Bar -->
+        <div class="mockup-statusbar">
+          <div class="statusbar-left">
+            <span class="statusbar-item" title="Active Branch">
+              <i class="fa-solid fa-code-branch text-brand"></i>
+              <span>feat/token-vault-migration</span>
+            </span>
+            <span class="statusbar-item" title="Git Remote Status">
+              <i class="fa-solid fa-circle text-green status-dot"></i>
+              <span class="sync-full">Synced with origin/main</span>
+              <span class="sync-short">Synced</span>
+            </span>
+            <span class="statusbar-item hidden-laptop hidden-mobile" title="Virtual MR Sandbox Mode">
+              <i class="fa-solid fa-box text-mauve"></i>
+              <span>In-Memory</span>
+            </span>
+          </div>
+
+          <div class="statusbar-center hidden-laptop hidden-mobile">
+            <span class="statusbar-item text-green" title="3-Way in-memory branch conflict simulation">
+              <i class="fa-solid fa-shield-check"></i>
+              <span>Clean Merge (0)</span>
+            </span>
+          </div>
+
+          <div class="statusbar-right">
+            <span class="statusbar-item hidden-laptop hidden-mobile">UTF-8</span>
+            <span class="statusbar-item hidden-laptop hidden-mobile">LF</span>
+            <span class="statusbar-item">
+              <i class="fa-brands fa-rust text-peach"></i>
+              <span>Rust 2021</span>
+            </span>
+            <span class="statusbar-item" title="Low memory overhead with 0ms disk checkout">
+              <i class="fa-solid fa-bolt text-blue"></i>
+              <span>38.4 MB</span>
+            </span>
+            <span class="statusbar-item" title="Notifications">
+              <i class="fa-regular fa-bell"></i>
+              <span>0</span>
+            </span>
           </div>
         </div>
       </div>
@@ -859,7 +1500,7 @@
         <div class="download-card" id="card-windows">
           <div class="card-detected-badge">
             <i class="fa-solid fa-circle-check"></i>
-            <span>Detected OS</span>
+            <span>Your OS</span>
           </div>
           <div class="download-header">
             <div class="download-icon-box windows">
@@ -877,7 +1518,7 @@
           <div class="download-actions">
             <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="windowsExe" class="btn-pill-download" style="border-radius: 9999px;">
               <i class="fa-brands fa-windows"></i>
-              <span>Download for Windows (x64)</span>
+              <span>Download for Windows</span>
             </a>
           </div>
         </div>
@@ -886,7 +1527,7 @@
         <div class="download-card" id="card-macos">
           <div class="card-detected-badge">
             <i class="fa-solid fa-circle-check"></i>
-            <span>Detected OS</span>
+            <span>Your OS</span>
           </div>
           <div class="download-header">
             <div class="download-icon-box macos">
@@ -896,20 +1537,20 @@
             <p class="download-target">macOS 11+ (Apple Silicon &amp; Intel)</p>
           </div>
           <ul class="download-specs">
-            <li><i class="fa-solid fa-check check-icon"></i> <span><strong>Apple Silicon</strong> (M1/M2/M3/M4) DMG</span></li>
-            <li><i class="fa-solid fa-check check-icon"></i> <span><strong>Intel x86_64</strong> DMG supported</span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span><strong>Apple Silicon</strong></span></li>
+            <li><i class="fa-solid fa-check check-icon"></i> <span><strong>Intel Chipset</strong></span></li>
             <li><i class="fa-solid fa-check check-icon"></i> <span>Apple Keychain native encryption</span></li>
             <li><i class="fa-solid fa-check check-icon"></i> <span>macOS traffic lights window chrome</span></li>
           </ul>
           <div class="download-actions">
             <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="macArm" class="btn-pill-download" style="border-radius: 9999px;">
               <i class="fa-brands fa-apple"></i>
-              <span>Download Apple Silicon (.dmg)</span>
+              <span>Download Apple Silicon</span>
             </a>
             <div class="format-buttons-grid">
               <a href="https://github.com/anhquoctran/stage0/releases/latest" data-download-key="macIntel" class="btn-format" style="grid-column: span 2; border-radius: 9999px;">
                 <i class="fa-brands fa-apple"></i>
-                <span>Download Intel x86_64 (.dmg)</span>
+                <span>Download Intel Chipset</span>
               </a>
             </div>
           </div>
@@ -919,7 +1560,7 @@
         <div class="download-card" id="card-linux">
           <div class="card-detected-badge">
             <i class="fa-solid fa-circle-check"></i>
-            <span>Detected OS</span>
+            <span>Your OS</span>
           </div>
           <div class="download-header">
             <div class="download-icon-box linux">
@@ -982,12 +1623,14 @@
       <div class="step-container">
         <!-- Step 1 -->
         <div class="step-card">
-          <div class="step-number">1</div>
-          <div class="step-body">
+          <div class="step-header">
+            <div class="step-number">1</div>
             <h3 class="step-title">
               <i class="fa-brands fa-git-alt text-brand"></i>
               <span>Ensure Git is installed on your computer</span>
             </h3>
+          </div>
+          <div class="step-body">
             <p class="step-desc">
               Stage0 connects to your system Git binary to read commits, branches, and calculate merge trees. Git 2.38 or later is recommended.
             </p>
@@ -1003,12 +1646,14 @@
 
         <!-- Step 2 -->
         <div class="step-card">
-          <div class="step-number">2</div>
-          <div class="step-body">
+          <div class="step-header">
+            <div class="step-number">2</div>
             <h3 class="step-title">
               <i class="fa-solid fa-desktop text-brand"></i>
               <span>Run the installer for your operating system</span>
             </h3>
+          </div>
+          <div class="step-body">
             <p class="step-desc">
               &bull; <strong>Windows:</strong> Double-click <code>stage0_setup.exe</code> and follow the setup wizard.<br>
               &bull; <strong>macOS:</strong> Open the downloaded <code>.dmg</code> file and drag Stage0 into your <code>Applications</code> folder.<br>
@@ -1040,7 +1685,7 @@
             </div>
 
             <!-- DEB Command -->
-            <div class="code-box" data-distro-code="deb" style="display: none;">
+            <div class="code-box" data-distro-code="deb" style="display: none !important;">
               <span id="code-linux-deb">sudo dpkg -i stage0_*_amd64.deb || sudo apt-get install -f</span>
               <button class="copy-btn" data-copy-target="code-linux-deb">
                 <i class="fa-regular fa-copy"></i>
@@ -1049,7 +1694,7 @@
             </div>
 
             <!-- RPM Command -->
-            <div class="code-box" data-distro-code="rpm" style="display: none;">
+            <div class="code-box" data-distro-code="rpm" style="display: none !important;">
               <span id="code-linux-rpm">sudo rpm -i stage0-*.x86_64.rpm  # or: sudo dnf install ./stage0-*.x86_64.rpm</span>
               <button class="copy-btn" data-copy-target="code-linux-rpm">
                 <i class="fa-regular fa-copy"></i>
@@ -1058,7 +1703,7 @@
             </div>
 
             <!-- Tarball Command -->
-            <div class="code-box" data-distro-code="tar" style="display: none;">
+            <div class="code-box" data-distro-code="tar" style="display: none !important;">
               <span id="code-linux-tar">tar -xzf stage0-*.tar.gz &amp;&amp; ./stage0/stage0</span>
               <button class="copy-btn" data-copy-target="code-linux-tar">
                 <i class="fa-regular fa-copy"></i>
@@ -1086,12 +1731,14 @@
       <div class="step-container">
         <!-- Usage Step 1 -->
         <div class="step-card">
-          <div class="step-number">1</div>
-          <div class="step-body">
+          <div class="step-header">
+            <div class="step-number">1</div>
             <h3 class="step-title">
               <i class="fa-regular fa-folder-open text-brand"></i>
               <span>Open Any Local Git Repository</span>
             </h3>
+          </div>
+          <div class="step-body">
             <p class="step-desc">
               Click <strong>Open Repository</strong> from the top bar or launch menu. Stage0 instantly indexes your branches, tags, and commits using your local Git database without remote network calls.
             </p>
@@ -1100,12 +1747,14 @@
 
         <!-- Usage Step 2 -->
         <div class="step-card">
-          <div class="step-number">2</div>
-          <div class="step-body">
+          <div class="step-header">
+            <div class="step-number">2</div>
             <h3 class="step-title">
               <i class="fa-solid fa-code-branch text-brand"></i>
               <span>Select Source &amp; Target Branch Virtually</span>
             </h3>
+          </div>
+          <div class="step-body">
             <p class="step-desc">
               Pick your feature branch and target branch (e.g. <code>main</code> or <code>develop</code>). Stage0 creates an in-memory Virtual MR with zero file checkout, keeping your working directory completely clean.
             </p>
@@ -1114,12 +1763,14 @@
 
         <!-- Usage Step 3 -->
         <div class="step-card">
-          <div class="step-number">3</div>
-          <div class="step-body">
+          <div class="step-header">
+            <div class="step-number">3</div>
             <h3 class="step-title">
               <i class="fa-solid fa-wand-magic-sparkles text-brand"></i>
               <span>Trigger Autonomous AI Reviewers</span>
             </h3>
+          </div>
+          <div class="step-body">
             <p class="step-desc">
               Deploy your configured AI reviewer bots (Security Sentinel, Architecture Guardian, Performance Auditor). Agents analyze the diff hunks in parallel, finding vulnerabilities and logic bugs with zero secret leakage.
             </p>
@@ -1128,12 +1779,14 @@
 
         <!-- Usage Step 4 -->
         <div class="step-card">
-          <div class="step-number">4</div>
-          <div class="step-body">
+          <div class="step-header">
+            <div class="step-number">4</div>
             <h3 class="step-title">
               <i class="fa-solid fa-comments text-brand"></i>
               <span>Discuss, Apply AI Patches &amp; Push with Confidence</span>
             </h3>
+          </div>
+          <div class="step-body">
             <p class="step-desc">
               Ask follow-up questions directly on diff lines, accept AI patch proposals, and review predicted merge conflicts. When satisfied, push your clean, pre-flight audited code to upstream GitHub or GitLab!
             </p>
@@ -1268,7 +1921,7 @@
 
       <div class="footer-bottom">
         <div>
-          &copy; 2026 Anh Quoc Tran. Licensed under the MIT License.
+          &copy; <span id="credit-year">2026</span> Anh Quoc Tran. Licensed under the MIT License.
         </div>
         <div style="display: flex; gap: 1rem; align-items: center;">
           <span style="font-size: 0.8125rem; color: var(--ctp-overlay1);">Designed with Catppuccin Mocha &amp; Latte</span>
@@ -1277,6 +1930,6 @@
     </div>
   </footer>
 
-  <script src="./app.js?v=20261027_v17"></script>
+  <script src="./app.js?v=20261027_v39"></script>
 </body>
 </html>
