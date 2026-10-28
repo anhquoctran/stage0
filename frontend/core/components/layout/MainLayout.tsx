@@ -1,4 +1,5 @@
 import React from 'react';
+import { clsx } from 'clsx';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Check } from '../../../common/components/icons/Check';
 import { Info } from '../../../common/components/icons/Info';
@@ -14,6 +15,7 @@ import { VirtualMrBottomBar } from '../../../features/virtual-mr/components/Virt
 import { VirtualMrHub } from '../../../features/virtual-mr/components/VirtualMrHub';
 import { VirtualMrListDialog } from '../../../features/virtual-mr/components/VirtualMrListDialog';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
+import { useWindowChromeStore } from '../../store/useWindowChromeStore';
 import { useMainLayoutCoordination } from '../hooks/useMainLayoutCoordination';
 import { MainLayoutDiffWorkspace } from './MainLayoutDiffWorkspace';
 import { MainLayoutModals } from './MainLayoutModals';
@@ -55,10 +57,16 @@ export const MainLayout: React.FC = () => {
   } = useMainLayoutCoordination();
 
   const activeMrTab = useVirtualMrStore((state) => state.activeMrTab);
+  const isCustomMacFrame = useWindowChromeStore(
+    (state) => state.profile.platform === 'macos' && !state.profile.nativeFrame,
+  );
   const currentSession = sessions.find((s) => s.id === activeSessionId) || null;
 
   return (
-    <div className="relative flex flex-col h-full w-full flex-1 overflow-hidden bg-crust text-text font-sans">
+    <div className={clsx(
+      'relative flex flex-col h-full w-full flex-1 overflow-hidden bg-crust text-text font-sans',
+      isCustomMacFrame ? 'rounded-sm' : 'rounded-none',
+    )}>
       {/* Top Application Bar with Menu Bar & Action Toolbar */}
       <TopBar />
 

@@ -178,6 +178,7 @@
       "toggle_theme": "Đổi chủ đề",
       "toggle_perf_monitor": "Hiển thị hiệu suất",
       "fullscreen": "Vào toàn màn hình",
+      "exit_fullscreen": "Thoát toàn màn hình",
       "repo_overview": "Tổng quan kho lưu trữ...",
       "new_mr": "Virtual MR mới...",
       "fetch": "Fetch (tất cả và dọn dẹp)",
@@ -318,5 +319,14 @@
     "previousPage": "Trang trước",
     "nextPage": "Trang sau",
     "pageOf": "Trang {{page}} / {{pageCount}}"
+  },
+  "onboarding": {
+    "hello": {
+      "title": "Xin chào",
+      "welcome": "Chào mừng đến với Stage0",
+      "description": "Chọn ngôn ngữ để bắt đầu.",
+      "languageLabel": "Ngôn ngữ",
+      "continue": "Tiếp tục"
+    }
   }
 }

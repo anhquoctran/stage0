@@ -21,5 +21,6 @@ export function createApplicationService(transport: CommandTransport): Applicati
     windowPrepareMain: () => transport.executeCommand('window_prepare_main'),
     windowShow: () => transport.executeCommand('window_show'),
     windowToggleMaximize: () => transport.executeCommand('window_toggle_maximize'),
+    windowToggleFullscreen: () => transport.executeCommand('window_toggle_fullscreen'),
   };
 }

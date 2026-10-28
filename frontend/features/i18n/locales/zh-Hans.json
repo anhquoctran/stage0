@@ -178,6 +178,7 @@
       "toggle_theme": "切换主题",
       "toggle_perf_monitor": "显示性能监视器",
       "fullscreen": "进入全屏",
+      "exit_fullscreen": "退出全屏",
       "repo_overview": "仓库概览...",
       "new_mr": "新建 Virtual MR...",
       "fetch": "Fetch（全部并清理）",
@@ -318,5 +319,14 @@
     "previousPage": "上一页",
     "nextPage": "下一页",
     "pageOf": "第 {{page}} 页，共 {{pageCount}} 页"
+  },
+  "onboarding": {
+    "hello": {
+      "title": "你好",
+      "welcome": "欢迎使用 Stage0",
+      "description": "选择语言，开始使用。",
+      "languageLabel": "语言",
+      "continue": "继续"
+    }
   }
 }

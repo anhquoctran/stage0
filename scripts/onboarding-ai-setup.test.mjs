@@ -136,6 +136,8 @@ test('Skip, Close, Escape and jumping to the final slide cannot bypass required 
   let hasConnection = false, ready = false, completed = 0, saves = 0, repoActions = 0;
   const { FirstLaunchWelcome } = loadWithMocks(url('components/FirstLaunchWelcome.tsx'), {
     react: runner.react,
+    'react-i18next': { useTranslation: () => ({ t: (key) => key === 'common.next' ? 'Next' : key }) },
+    '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ application: {} }) },
     '@tauri-apps/api/core': { invoke: async () => {} },
     '../../../common/utils/shortcuts': { isMacOS: () => false },
     '../../../common/components/icons/ArrowRight': { ArrowRight: () => null },
@@ -146,6 +148,7 @@ test('Skip, Close, Escape and jumping to the final slide cannot bypass required 
     './WelcomeSettingsPanel': { WelcomeSettingsPanel: () => null },
     './WelcomeAiSetup': { WelcomeAiSetup: () => null },
     './OnboardingReviewerSetup': { OnboardingReviewerSetup: () => null },
+    './OnboardingHello': { OnboardingHello: ({ onContinue }) => runner.react.createElement('button', { onClick: onContinue }, 'Continue') },
     '../hooks/useOnboardingPreferences': { useOnboardingPreferences: () => ({ settings: {}, setSettings() {}, isSaving: false, saveError: null, reload() {}, save: async () => { saves++; return true; } }) },
     '../hooks/useOnboardingAiSetup': {
       useOnboardingAiSetup: () => ({
@@ -163,8 +166,18 @@ test('Skip, Close, Escape and jumping to the final slide cannot bypass required 
   const button = (nodes, name) => nodes.find((node) => node.type === 'button' && node.props.children.flat().some((child) => typeof child === 'string' && child.trim() === name));
   const { WELCOME_SLIDES } = loadWithMocks(url('constants/welcomeSlides.ts'), {});
 
-  // Step 1: Welcome
+  // Hello is first and cannot be dismissed to skip language selection.
   let nodes = await render();
+  assert.ok(button(nodes, 'Continue'));
+  assert.equal(button(nodes, 'Next'), undefined);
+  handlers.get('keydown')({ key: 'Escape', preventDefault() {} });
+  nodes = await render();
+  assert.ok(button(nodes, 'Continue'));
+  assert.equal(completed, 0);
+  await button(nodes, 'Continue').props.onClick();
+  nodes = await render();
+
+  // Welcome & Workspace
   assert.equal(button(nodes, 'Skip tour'), undefined, 'Skipping stays unavailable until AI & reviewer are configured');
   const nextFromWelcome = button(nodes, 'Next');
   assert.ok(nextFromWelcome && !nextFromWelcome.props.disabled);

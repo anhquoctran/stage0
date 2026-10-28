@@ -178,6 +178,7 @@
       "toggle_theme": "테마 전환",
       "toggle_perf_monitor": "성능 모니터 표시",
       "fullscreen": "전체 화면",
+      "exit_fullscreen": "전체 화면 종료",
       "repo_overview": "저장소 개요...",
       "new_mr": "새 Virtual MR...",
       "fetch": "Fetch (전체 및 정리)",
@@ -318,5 +319,14 @@
     "previousPage": "이전 페이지",
     "nextPage": "다음 페이지",
     "pageOf": "{{pageCount}}페이지 중 {{page}}페이지"
+  },
+  "onboarding": {
+    "hello": {
+      "title": "안녕하세요",
+      "welcome": "Stage0에 오신 것을 환영합니다",
+      "description": "시작하려면 언어를 선택하세요.",
+      "languageLabel": "언어",
+      "continue": "계속"
+    }
   }
 }

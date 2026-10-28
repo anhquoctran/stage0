@@ -265,6 +265,7 @@ pub fn run() {
             commands::window_minimize,
             commands::open_webview_devtools,
             commands::window_toggle_maximize,
+            commands::window_toggle_fullscreen,
             commands::window_maximize,
             commands::window_reset_size,
             commands::window_prepare_main,

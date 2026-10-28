@@ -184,6 +184,7 @@
       "toggle_theme": "Toggle Theme",
       "toggle_perf_monitor": "Display Perf Monitor",
       "fullscreen": "Enter Full Screen",
+      "exit_fullscreen": "Exit Full Screen",
       "repo_overview": "Repository Overview...",
       "new_mr": "New Virtual MR...",
       "fetch": "Fetch (All & Prune)",
@@ -318,5 +319,14 @@
     "previousPage": "Previous page",
     "nextPage": "Next page",
     "pageOf": "Page {{page}} of {{pageCount}}"
+  },
+  "onboarding": {
+    "hello": {
+      "title": "Hello",
+      "welcome": "Welcome to Stage0",
+      "description": "Choose your language to get started.",
+      "languageLabel": "Language",
+      "continue": "Continue"
+    }
   }
 }

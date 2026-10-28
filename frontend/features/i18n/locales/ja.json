@@ -178,6 +178,7 @@
       "toggle_theme": "テーマを切り替え",
       "toggle_perf_monitor": "パフォーマンスモニターを表示",
       "fullscreen": "全画面表示",
+      "exit_fullscreen": "全画面表示を終了",
       "repo_overview": "リポジトリの概要...",
       "new_mr": "新しい Virtual MR...",
       "fetch": "Fetch (すべて・整理)",
@@ -318,5 +319,14 @@
     "previousPage": "前のページ",
     "nextPage": "次のページ",
     "pageOf": "{{pageCount}}ページ中 {{page}}ページ"
+  },
+  "onboarding": {
+    "hello": {
+      "title": "こんにちは",
+      "welcome": "Stage0へようこそ",
+      "description": "言語を選択して始めましょう。",
+      "languageLabel": "言語",
+      "continue": "続ける"
+    }
   }
 }

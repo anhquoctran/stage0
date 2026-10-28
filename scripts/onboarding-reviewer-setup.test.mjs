@@ -13,8 +13,8 @@ function fixture({ providerIds = [], provider = 'openai', externalAgents = [], r
   const { OnboardingReviewerSetup } = loadWithMocks(source, {
     react: harness.react,
     '../../../common/components/CustomSelect': {
-      CustomSelect: ({ value, 'aria-label': ariaLabel }) =>
-        harness.react.createElement('button', { 'aria-label': ariaLabel }, value),
+      CustomSelect: ({ value, onChange, 'aria-label': ariaLabel }) =>
+        harness.react.createElement('button', { 'aria-label': ariaLabel, onChange }, value),
     },
     '../../ai/store/useAiMcpStore': {
       useAiMcpStore: (selector) => selector({ dynamicModels: {} }),
@@ -99,7 +99,7 @@ test('ACP quick setup requires explicit consent before creating the reviewer', a
   nodes.find((node) => node.type === 'input' && node.props.type === 'checkbox').props.onChange({ target: { checked: true } });
   nodes = componentNodes(await setup.render());
   assert.equal(create().props.disabled, false);
-  nodes.find((node) => node.type === 'select').props.onChange({ target: { value: 'acp:cursor' } });
+  nodes.find((node) => node.type === 'button' && node.props['aria-label'] === 'AI connection').props.onChange('acp:cursor');
   nodes = componentNodes(await setup.render());
   assert.equal(create().props.disabled, true, 'Consent applies only to the selected ACP agent');
   nodes.find((node) => node.type === 'input' && node.props.type === 'checkbox').props.onChange({ target: { checked: true } });

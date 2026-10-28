@@ -1,6 +1,7 @@
 import { WindowControlIcon } from './WindowControlIcon';
 import { useApplicationServices } from '../../services/runtime/useApplicationServices';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import type { WindowControlsProps } from '../../types/WindowControlsProps';
 import { useCommandShortcut } from '../../hooks/useCommandShortcut';
@@ -12,6 +13,8 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
 }) => {
   const appServices = useApplicationServices();
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { t } = useTranslation();
   const { title } = useCommandShortcut();
   const [isMac, setIsMac] = useState(false);
 
@@ -27,8 +30,14 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
     const checkMaximized = async () => {
       const version = ++requestVersion;
       try {
-        const max = await appServices.application.windowIsMaximized();
-        if (current && version === requestVersion) setIsMaximized(max);
+        const [max, fullscreen] = await Promise.all([
+          appServices.application.windowIsMaximized(),
+          appServices.application.windowIsFullscreen(),
+        ]);
+        if (current && version === requestVersion) {
+          setIsMaximized(max);
+          setIsFullscreen(fullscreen);
+        }
       } catch {
         // Fallback for browser testing
       }
@@ -68,6 +77,15 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
     }
   };
 
+  const handleToggleFullscreen = async () => {
+    try {
+      const next = await appServices.application.windowToggleFullscreen();
+      setIsFullscreen(next);
+    } catch (err) {
+      console.warn('Full screen toggle error:', err);
+    }
+  };
+
   const handleClose = async () => {
     try {
       await appServices.application.windowClose();
@@ -86,6 +104,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
         {/* Close (Red) */}
         <button
           type="button"
+          data-macos-traffic-light
           onClick={handleClose}
           title={title('close_window', 'Close')}
           aria-label="Close"
@@ -107,6 +126,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
         {/* Minimize (Yellow) */}
         <button
           type="button"
+          data-macos-traffic-light
           onClick={handleMinimize}
           title="Minimize (⌘M)"
           aria-label="Minimize"
@@ -124,12 +144,13 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
           </svg>
         </button>
 
-        {/* Zoom / Maximize (Green) */}
+        {/* Native macOS Full Screen (Green) */}
         <button
           type="button"
-          onClick={handleToggleMaximize}
-          title={isMaximized ? 'Restore Down' : 'Zoom (Maximize)'}
-          aria-label={isMaximized ? 'Restore Down' : 'Zoom'}
+          data-macos-traffic-light
+          onClick={handleToggleFullscreen}
+          title={isFullscreen ? t('menu.commands.exit_fullscreen') : t('menu.commands.fullscreen')}
+          aria-label={isFullscreen ? t('menu.commands.exit_fullscreen') : t('menu.commands.fullscreen')}
           className="btn-solid w-3 h-3 rounded-full bg-[#27c93f] flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs relative"
         >
           <svg

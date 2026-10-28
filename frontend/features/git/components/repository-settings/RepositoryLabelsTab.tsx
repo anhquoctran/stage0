@@ -144,7 +144,9 @@ export const RepositoryLabelsTab: React.FC = () => {
                 type="color"
                 value={labelFormColor}
                 onChange={(e) => setLabelFormColor(e.target.value)}
-                className="w-8 h-8 border-0 cursor-pointer bg-transparent rounded-sm"
+                aria-label="Custom label color"
+                title="Choose a custom label color"
+                className="repo-label-color-picker h-6 w-6 cursor-pointer rounded-sm border-0 bg-transparent p-0"
               />
               <div className="flex items-center gap-1.5 flex-wrap">
                 {COLOR_PRESETS.map((c) => (

@@ -16,6 +16,7 @@ import { useOnboardingAiSetup } from '../hooks/useOnboardingAiSetup';
 import { WelcomeSettingsPanel } from './WelcomeSettingsPanel';
 import { WelcomeAiSetup } from './WelcomeAiSetup';
 import { OnboardingReviewerSetup } from './OnboardingReviewerSetup';
+import { OnboardingHello } from './OnboardingHello';
 
 const ONBOARDING_STORAGE_KEY = 'stage0_first_launch_welcome_v1';
 
@@ -45,6 +46,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
     (typeof window !== 'undefined' && window.location.search.includes('platform=mac'));
 
   const currentSlide = SLIDES[activeSlide];
+  const isHelloSlide = currentSlide.id === 'hello';
   const isAiSlide = currentSlide.id === 'ai-setup';
   const isReviewerSlide = currentSlide.id === 'reviewer-setup';
   const isRepositorySlide = currentSlide.id === 'repository';
@@ -94,7 +96,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   };
 
   const finish = async () => {
-    if (completedRef.current || isBusy) return false;
+    if (isHelloSlide || completedRef.current || isBusy) return false;
     if (aiSetup.hasChanges && aiSetup.save) {
       await aiSetup.save();
     }
@@ -204,7 +206,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                   <path d="M2 6h8" stroke="currentColor" strokeWidth="1.25" />
                 </svg>
               </button>
-              <button
+              {!isHelloSlide && <button
                 type="button"
                 onClick={finish}
                 aria-label="Close welcome guide"
@@ -212,11 +214,13 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                 className="flex h-10 w-10 items-center justify-center text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-primary rounded-none"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </button>}
             </div>
           )}
 
-          <section className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col overflow-hidden px-6 py-8 sm:px-10 sm:py-10">
+          {isHelloSlide ? (
+            <OnboardingHello onContinue={() => void selectSlide(activeSlide + 1)} />
+          ) : <section className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col overflow-hidden px-6 py-8 sm:px-10 sm:py-10">
             {/* Header + Horizontal Stepper */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-surface0 pb-5 pe-16">
               <div className="flex items-center gap-3">
@@ -241,7 +245,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                       key={slide.id}
                       type="button"
                       onClick={() => selectSlide(index)}
-                      aria-label={`Go to slide ${index + 1}: ${slide.title}`}
+                      aria-label={`Go to slide ${index + 1}: ${slide.id === 'hello' ? t(slide.title) : slide.title}`}
                       aria-current={isActive ? 'step' : undefined}
                       className={`flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs font-medium transition-colors ${
                         isActive
@@ -252,7 +256,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                       }`}
                     >
                       {isCompleted && <Check className="h-3 w-3 shrink-0" />}
-                      <span>{slide.stepLabel}</span>
+                      <span>{slide.id === 'hello' ? t(slide.stepLabel) : slide.stepLabel}</span>
                     </button>
                   );
                 })}
@@ -408,7 +412,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                 )}
               </div>
             </div>
-          </section>
+          </section>}
         </fieldset>
       </div>
     </div>

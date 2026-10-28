@@ -62,7 +62,7 @@ export const TopBarTitleRow: React.FC<{
           <MenuBar hidden />
 
           {/* Custom macOS traffic lights replace native window decorations. */}
-          <WindowControls style="mac" className="w-20 justify-center" />
+          <WindowControls style="mac" className="w-20 -translate-x-4 justify-center" />
 
           {/* Center: Draggable Window Document Title */}
           <div

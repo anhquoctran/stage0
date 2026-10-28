@@ -14,6 +14,8 @@ mod window_startup_context;
 pub use window_startup_context::WindowStartupContext;
 mod open_plan;
 use open_plan::OpenPlan;
+#[cfg(target_os = "windows")]
+mod snap_layout;
 pub mod startup_window;
 use startup_window::{request_maximize, SPLASH_HEIGHT, SPLASH_WIDTH};
 #[cfg(test)]

@@ -188,6 +188,7 @@
       "toggle_theme": "Сменить тему",
       "toggle_perf_monitor": "Показать монитор производительности",
       "fullscreen": "На весь экран",
+      "exit_fullscreen": "Выйти из полноэкранного режима",
       "repo_overview": "Обзор репозитория...",
       "new_mr": "Новый Virtual MR...",
       "fetch": "Fetch (всё и очистить)",
@@ -332,5 +333,14 @@
     "previousPage": "Предыдущая страница",
     "nextPage": "Следующая страница",
     "pageOf": "Страница {{page}} из {{pageCount}}"
+  },
+  "onboarding": {
+    "hello": {
+      "title": "Здравствуйте",
+      "welcome": "Добро пожаловать в Stage0",
+      "description": "Выберите язык, чтобы начать.",
+      "languageLabel": "Язык",
+      "continue": "Продолжить"
+    }
   }
 }

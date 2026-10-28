@@ -32,4 +32,5 @@ export interface ApplicationService {
   windowPrepareMain(): Promise<unknown>;
   windowShow(): Promise<unknown>;
   windowToggleMaximize(): Promise<boolean>;
+  windowToggleFullscreen(): Promise<boolean>;
 }

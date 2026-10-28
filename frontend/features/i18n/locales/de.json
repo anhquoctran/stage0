@@ -178,6 +178,7 @@
       "toggle_theme": "Design wechseln",
       "toggle_perf_monitor": "Leistungsmonitor anzeigen",
       "fullscreen": "Vollbild aktivieren",
+      "exit_fullscreen": "Vollbild beenden",
       "repo_overview": "Repository-Übersicht...",
       "new_mr": "Neues Virtual MR...",
       "fetch": "Fetch (alle und bereinigen)",
@@ -318,5 +319,14 @@
     "previousPage": "Vorherige Seite",
     "nextPage": "Nächste Seite",
     "pageOf": "Seite {{page}} von {{pageCount}}"
+  },
+  "onboarding": {
+    "hello": {
+      "title": "Hallo",
+      "welcome": "Willkommen bei Stage0",
+      "description": "Wähle deine Sprache, um loszulegen.",
+      "languageLabel": "Sprache",
+      "continue": "Weiter"
+    }
   }
 }

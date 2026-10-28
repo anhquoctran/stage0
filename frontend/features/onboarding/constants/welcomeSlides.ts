@@ -1,5 +1,13 @@
 export const WELCOME_SLIDES = [
   {
+    id: 'hello',
+    stepLabel: 'onboarding.hello.languageLabel',
+    eyebrow: '',
+    title: 'onboarding.hello.title',
+    description: 'onboarding.hello.description',
+    caption: '',
+  },
+  {
     id: 'welcome',
     stepLabel: 'Workspace',
     eyebrow: 'WELCOME TO STAGE0',

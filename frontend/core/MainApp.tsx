@@ -23,6 +23,7 @@ import { SoftwareUpdateNotice } from '../features/updates/components/SoftwareUpd
 export const MainApp: React.FC = () => {
   const appServices = useApplicationServices();
   const chromeReady = useDesktopWindowChrome();
+  const platform = useWindowChromeStore((state) => state.profile.platform);
   const nativeFrame = useWindowChromeStore((state) => state.profile.nativeFrame);
   const { initApp, attachRepoToCurrentWindow, refreshDiff, isInitializing, isLoading, currentRepo } = useGitStore();
   const [windowInitialized, setWindowInitialized] = useState(false);
@@ -36,6 +37,7 @@ export const MainApp: React.FC = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const hideCustomFrame = nativeFrame || isFullscreen || isMaximized;
+  const isCustomMacWindow = platform === 'macos' && !hideCustomFrame;
 
   useEffect(() => installAutoHideScrollbars(), []);
 
@@ -138,7 +140,8 @@ export const MainApp: React.FC = () => {
     <div
       className={clsx(
         'flex flex-col h-screen w-screen overflow-hidden box-border bg-crust select-none transition-all duration-150',
-        hideCustomFrame ? 'border-0' : 'border border-surface0'
+        hideCustomFrame ? 'border-0 rounded-none' : 'border border-surface0',
+        isCustomMacWindow ? 'rounded-sm' : 'rounded-none',
       )}
     >
       <MainLayout />

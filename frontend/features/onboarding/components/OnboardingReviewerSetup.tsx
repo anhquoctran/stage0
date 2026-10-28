@@ -38,6 +38,10 @@ export function OnboardingReviewerSetup({
     .filter((agent) => agent.id.trim() && agent.command.trim())
     .map((agent) => ({ id: agent.id, value: `acp:${agent.id}`, kind: 'acp' as const, label: `${agent.name} (ACP)`, agent }));
   const connections: OnboardingReviewerConnection[] = [...providers, ...agents];
+  const connectionOptions: CustomSelectOption<string>[] = connections.map((connection) => ({
+    value: connection.value,
+    label: connection.label,
+  }));
   const activeProvider = providers.find((provider) => provider.id === draftSettings.aiConfig.provider);
   const selected = connections.find((connection) => connection.value === connectionId) ?? activeProvider ?? connections[0];
   const selectedProviderId = selected?.kind === 'provider' ? selected.id : undefined;
@@ -185,17 +189,17 @@ export function OnboardingReviewerSetup({
       {connections.length > 1 ? (
         <label className="block space-y-1.5 text-xs font-medium text-subtext1">
           <span>AI connection</span>
-          <select
+          <CustomSelect
+            id="onboarding-reviewer-connection"
             value={selected?.value ?? ''}
-            onChange={(event) => setConnectionId(event.target.value)}
-            className="w-full rounded-sm border border-surface1 bg-base px-3 py-2 text-sm text-text"
-          >
-            {connections.map((connection) => (
-              <option key={connection.value} value={connection.value}>
-                {connection.label}
-              </option>
-            ))}
-          </select>
+            onChange={setConnectionId}
+            options={connectionOptions}
+            className="w-full"
+            buttonClassName="w-full bg-base px-3 py-2 text-sm"
+            dropdownWidth="w-full"
+            align="left"
+            aria-label="AI connection"
+          />
         </label>
       ) : (
         selected && <p className="text-xs text-subtext0">Uses {selected.label}.</p>

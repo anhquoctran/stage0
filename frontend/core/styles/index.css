@@ -306,23 +306,21 @@ textarea {
 }
 
 /* Universal small-rounded defaults for interactive elements */
-button:not([data-tauri-drag-region]):not([aria-label="Minimize"]):not([aria-label="Maximize"]):not([aria-label="Restore Down"]):not([aria-label="Close"]):not(.rounded-none):not(.rounded-full):not([class*="rounded-"]),
+button:not([data-tauri-drag-region]):not(.rounded-none):not(.rounded-full):not([class*="rounded-"]),
 input:not([type="checkbox"]):not([type="radio"]):not(.rounded-none):not(.rounded-full):not([class*="rounded-"]),
 select:not(.rounded-none):not(.rounded-full):not([class*="rounded-"]),
 textarea:not(.rounded-none):not(.rounded-full):not([class*="rounded-"]) {
   border-radius: var(--radius-sm, 4px);
 }
 
-/* Explicit sharp corners for window title and window controls */
-[data-tauri-drag-region] button[aria-label="Minimize"],
-[data-tauri-drag-region] button[aria-label="Maximize"],
-[data-tauri-drag-region] button[aria-label="Restore Down"],
-[data-tauri-drag-region] button[aria-label="Close"],
-button[aria-label="Minimize"],
-button[aria-label="Maximize"],
-button[aria-label="Restore Down"],
-button[aria-label="Close"] {
+/* Windows/Linux frame controls are sharp; macOS traffic lights opt into circles. */
+button[data-window-control] {
   border-radius: 0 !important;
+}
+
+button[data-macos-traffic-light]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 
@@ -704,6 +702,22 @@ select:focus-visible {
   border-color: var(--color-brand) !important;
   box-shadow: 0 0 0 1px var(--color-brand) !important;
   outline: none !important;
+}
+
+.repo-label-color-picker {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 1px;
+}
+
+.repo-label-color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.repo-label-color-picker::-webkit-color-swatch,
+.repo-label-color-picker::-moz-color-swatch {
+  border: 1px solid var(--ctp-surface1);
+  border-radius: var(--radius-sm, 4px);
 }
 
 .git-graph-search-input {

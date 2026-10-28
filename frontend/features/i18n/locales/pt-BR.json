@@ -178,6 +178,7 @@
       "toggle_theme": "Alternar tema",
       "toggle_perf_monitor": "Exibir monitor de desempenho",
       "fullscreen": "Entrar em tela cheia",
+      "exit_fullscreen": "Sair da tela cheia",
       "repo_overview": "Visão geral do repositório...",
       "new_mr": "Novo Virtual MR...",
       "fetch": "Fetch (tudo e limpar)",
@@ -318,5 +319,14 @@
     "previousPage": "Página anterior",
     "nextPage": "Próxima página",
     "pageOf": "Página {{page}} de {{pageCount}}"
+  },
+  "onboarding": {
+    "hello": {
+      "title": "Olá",
+      "welcome": "Boas-vindas ao Stage0",
+      "description": "Escolha seu idioma para começar.",
+      "languageLabel": "Idioma",
+      "continue": "Continuar"
+    }
   }
 }

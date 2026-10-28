@@ -78,6 +78,10 @@ fn configure_main_window(window: &Window, maximized: bool) -> Result<(), String>
     if maximized {
         window.maximize().map_err(|error| error.to_string())?;
     }
+    #[cfg(target_os = "windows")]
+    if let Err(error) = super::snap_layout::install_maximize_hit_test(window) {
+        eprintln!("Could not enable Windows Snap Layouts on the custom maximize button: {error}");
+    }
     Ok(())
 }
 

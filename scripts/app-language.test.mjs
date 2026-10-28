@@ -18,16 +18,25 @@ function sourceFiles(directory) {
   });
 }
 
-test('bundled application source contains no Vietnamese copy', () => {
-  // Documentation and user-provided content (commit messages, names, etc.) are
-  // intentionally outside this check. Normalize decomposed accents as well.
+test('application implementation and the English source locale keep copy in English', () => {
+  // Translation catalogs, native language names and localized reviewer prompt
+  // instructions are intentional. Keep checking implementation and en.json.
   const files = ['frontend', 'backend/src', 'public'].flatMap((directory) =>
     sourceFiles(path.join(projectRoot, directory)));
   files.push(path.join(projectRoot, 'index.html'));
-  const matches = files.flatMap((file) => fs.readFileSync(file, 'utf8')
-    .split('\n')
+  const matches = files.flatMap((file) => {
+    const relative = path.relative(projectRoot, file).replaceAll(path.sep, '/');
+    if (relative.startsWith('frontend/features/i18n/locales/') && path.basename(file) !== 'en.json') return [];
+    if (relative === 'frontend/features/i18n/constants/supportedLanguages.ts') return [];
+    let source = fs.readFileSync(file, 'utf8');
+    if (relative === 'backend/src/features/review/runtime/prompt.rs') {
+      source = source.replace(/fn output_language_instruction\([\s\S]*?\n\}/u,
+        (localizedFunction) => localizedFunction.replace(/[^\n]/gu, ' '));
+    }
+    return source.split('\n')
     .flatMap((line, index) => vietnameseCharacters.test(line.normalize('NFC'))
-      ? [`${path.relative(projectRoot, file)}:${index + 1}`] : []));
+      ? [`${relative}:${index + 1}`] : []);
+  });
   assert.deepEqual(matches, [], `Translate application copy to English:\n${matches.join('\n')}`);
 });
 

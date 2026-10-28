@@ -35,10 +35,10 @@ function fixture() {
     fail: () => { fail = true; }, pause: (promise) => { paused = promise; } };
 }
 
-test('welcome follows the streamlined 4-step sequence: welcome, ai-setup, reviewer-setup, repository', () => {
+test('welcome starts with Hello and language selection before the four workspace setup steps', () => {
   const { WELCOME_SLIDES } = loadWithMocks(url('features/onboarding/constants/welcomeSlides.ts'), {});
   assert.deepEqual(WELCOME_SLIDES.map((slide) => slide.id),
-    ['welcome', 'ai-setup', 'reviewer-setup', 'repository']);
+    ['hello', 'welcome', 'ai-setup', 'reviewer-setup', 'repository']);
 });
 
 test('onboarding startup tab toggles launch on boot and start in background', async (t) => {
@@ -103,6 +103,8 @@ test('appearance and keymap steps remain optional once required AI setup is save
   let completed = 0;
   const { FirstLaunchWelcome } = loadWithMocks(url('features/onboarding/components/FirstLaunchWelcome.tsx'), {
     react: runner.react,
+    'react-i18next': { useTranslation: () => ({ t: (key) => key === 'common.next' ? 'Next' : key }) },
+    '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ application: {} }) },
     '@tauri-apps/api/core': { invoke: async () => {} },
     '../../../common/components/icons/ArrowRight': { ArrowRight: () => null },
     '../../../common/components/icons/Check': { Check: () => null },
@@ -113,6 +115,7 @@ test('appearance and keymap steps remain optional once required AI setup is save
     './WelcomeSettingsPanel': { WelcomeSettingsPanel: () => null },
     './WelcomeAiSetup': { WelcomeAiSetup: () => null },
     './OnboardingReviewerSetup': { OnboardingReviewerSetup: () => null },
+    './OnboardingHello': { OnboardingHello: ({ onContinue }) => runner.react.createElement('button', { onClick: onContinue }, 'Continue') },
     '../hooks/useOnboardingAiSetup': {
       useOnboardingAiSetup: () => ({
         connections: ['Saved ACP'],
@@ -142,7 +145,10 @@ test('appearance and keymap steps remain optional once required AI setup is save
   assert.equal(dialog.props.tabIndex, -1, 'Initial focus belongs to the dialog, not a call-to-action');
   assert.match(dialog.props.className, /\bh-full\b.*\bw-full\b/);
   assert.match(dialog.props.className, /\brounded-none\b/, 'Onboarding is the full window, not an inset card');
-  for (let slide = 0; slide < WELCOME_SLIDES.length - 1; slide++) {
+  const continueButton = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.includes('Continue'));
+  assert.ok(continueButton, 'Language welcome precedes the existing setup screens');
+  await continueButton.props.onClick(); tree = await render();
+  for (let slide = 1; slide < WELCOME_SLIDES.length - 1; slide++) {
     const next = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.flat().some((child) => typeof child === 'string' && child.trim() === 'Next'));
     assert.ok(next, `Step ${slide + 1} must allow Next without choosing anything`);
     assert.ok(!next.props.disabled);

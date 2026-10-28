@@ -30,6 +30,16 @@ pub async fn window_toggle_maximize(window: Window) -> Result<bool, String> {
 }
 
 #[tauri::command]
+pub async fn window_toggle_fullscreen(window: Window) -> Result<bool, String> {
+    let is_fullscreen = window.is_fullscreen().map_err(|error| error.to_string())?;
+    let next = !is_fullscreen;
+    window
+        .set_fullscreen(next)
+        .map_err(|error| error.to_string())?;
+    Ok(next)
+}
+
+#[tauri::command]
 pub async fn window_close(window: Window) -> Result<(), String> {
     window.close().map_err(|e| e.to_string())
 }
