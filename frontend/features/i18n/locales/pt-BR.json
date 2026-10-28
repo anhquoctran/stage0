@@ -21,7 +21,10 @@
       "baseGroup": "Idiomas base",
       "extendedGroup": "Idiomas adicionais",
       "saving": "Salvando idioma…",
-      "saveError": "Não foi possível salvar a preferência de idioma."
+      "saveError": "Não foi possível salvar a preferência de idioma.",
+      "loading": "Carregando idiomas salvos…",
+      "loadError": "Não foi possível carregar os idiomas salvos. Reabra as Preferências para tentar novamente.",
+      "changedElsewhere": "Os idiomas foram alterados em outra janela. Reabra as Preferências antes de aplicar suas alterações."
     },
     "nav": {
       "general": "Geral",

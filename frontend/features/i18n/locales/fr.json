@@ -21,7 +21,10 @@
       "baseGroup": "Langues de base",
       "extendedGroup": "Langues supplémentaires",
       "saving": "Enregistrement de la langue…",
-      "saveError": "Impossible d’enregistrer la préférence de langue."
+      "saveError": "Impossible d’enregistrer la préférence de langue.",
+      "loading": "Chargement des langues enregistrées…",
+      "loadError": "Impossible de charger les langues enregistrées. Rouvrez les préférences pour réessayer.",
+      "changedElsewhere": "Les langues ont changé dans une autre fenêtre. Rouvrez les préférences avant d’appliquer vos modifications."
     },
     "nav": {
       "general": "Général",

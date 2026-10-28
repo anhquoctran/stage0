@@ -21,7 +21,10 @@
       "baseGroup": "기본 언어",
       "extendedGroup": "추가 언어",
       "saving": "언어 저장 중…",
-      "saveError": "언어 설정을 저장하지 못했습니다."
+      "saveError": "언어 설정을 저장하지 못했습니다.",
+      "loading": "저장된 언어를 불러오는 중…",
+      "loadError": "저장된 언어 설정을 불러오지 못했습니다. 환경설정을 다시 열어 주세요.",
+      "changedElsewhere": "다른 창에서 언어 설정이 변경되었습니다. 적용하기 전에 환경설정을 다시 열어 주세요."
     },
     "nav": {
       "general": "일반",

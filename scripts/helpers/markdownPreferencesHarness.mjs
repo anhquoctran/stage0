@@ -2,8 +2,12 @@ import { loadWithMocks } from './componentHarness.mjs';
 import { hookHarness } from './hookHarness.mjs';
 
 // Exercise the actual draft session, dirty counter and Apply closure together.
-export function markdownPreferencesHarness() {
+export function markdownPreferencesHarness({ languageSettings } = {}) {
   const runner = hookHarness();
+  const previousWindow = globalThis.window;
+  if (languageSettings) globalThis.window = {
+    __STAGE0_PREFERENCES__: languageSettings, addEventListener() {}, removeEventListener() {},
+  };
   const patches = [], previews = [];
   const viewerFont = { fontFamily: 'Fira Code', fontSize: 13, isBold: false,
     isItalic: false, isUnderline: false, lineSpacing: 1.5, enableLigatures: true };
@@ -30,6 +34,12 @@ export function markdownPreferencesHarness() {
     new URL('../../frontend/features/preferences/hooks/usePreferencesDraft.ts', import.meta.url),
     {
       react: runner.react,
+      '../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({
+        platform: { capabilities: { backend: Boolean(languageSettings), preferencesFile: Boolean(languageSettings) } },
+        preferences: { loadPreferencesJson: async () => ({ settings: structuredClone(languageSettings) }) },
+      }) },
+      '../../i18n/i18n': { default: { t: (key) => key === 'preferences.language.changedElsewhere'
+        ? 'Language preferences changed in another window' : key } },
       '../../../core/store/useThemeStore': {
         useThemeStore: stateStore({ themeMode: 'system' }),
         resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {},
@@ -45,10 +55,17 @@ export function markdownPreferencesHarness() {
       '../../git/store/useGitBinaryStore': { useGitBinaryStore: stateStore(binaries) },
       '../../ai/services/commitAiPreferences': {
         captureAiPreferences: () => snapshot,
-        commitAiPreferences: async (_, __, patch) => {
+        commitAiPreferences: async (_, __, patch, validate) => {
+          validate?.(languageSettings ?? {});
           patches.push(structuredClone(patch));
           if (paused) await paused;
           if (failure) throw Error('Disk unavailable');
+          if (languageSettings) {
+            for (const [key, value] of Object.entries(patch)) {
+              languageSettings[key] = { ...languageSettings[key], ...value };
+            }
+            window.__STAGE0_PREFERENCES__ = languageSettings;
+          }
           return snapshot;
         },
       },
@@ -69,5 +86,5 @@ export function markdownPreferencesHarness() {
   render();
   return { render, preferences, patches, previews, markdownFont,
     fail: () => { failure = true; }, pause: (promise) => { paused = promise; },
-    cleanup: () => runner.cleanup() };
+    cleanup: () => { runner.cleanup(); if (languageSettings) globalThis.window = previousWindow; } };
 }

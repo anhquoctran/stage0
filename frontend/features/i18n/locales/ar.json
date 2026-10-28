@@ -127,7 +127,10 @@
       "baseGroup": "Base languages",
       "extendedGroup": "Additional languages",
       "saving": "Saving language…",
-      "saveError": "The language preference could not be saved."
+      "saveError": "The language preference could not be saved.",
+      "loading": "Loading saved languages…",
+      "loadError": "Saved language preferences could not be loaded. Reopen Preferences to try again.",
+      "changedElsewhere": "Language preferences changed in another window. Reopen Preferences before applying your changes."
     }
   },
   "dateTime": {

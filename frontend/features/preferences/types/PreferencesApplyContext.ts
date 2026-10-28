@@ -8,8 +8,10 @@ import type { GitState } from '../../git/types/GitState';
 import { type SandboxType } from '../../git/types/SandboxType';
 import type { PreferencesBaseline } from './PreferencesBaseline';
 import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings';
+import type { LanguagePreferencesTransaction } from '../../i18n/types/LanguagePreferencesTransaction';
 
 export interface PreferencesApplyContext {
+  languageDraft?: LanguagePreferencesTransaction;
   draftKeymap: KeymapSettings;
   draftUiFontFamily: string;
   draftLinuxTitleBar: LinuxTitleBarMode;

@@ -65,7 +65,7 @@ export const PreferencesModalFooter: React.FC<{
           <button
             type="button"
             onClick={onApply}
-            disabled={isApplying || !hasUnsavedChanges}
+            disabled={isApplying || !canCommitPreferences}
             className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all rounded-sm ${
               isApplied
                 ? 'bg-green/10 border-green/30 text-green'

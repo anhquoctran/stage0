@@ -8,6 +8,7 @@ import type { AiProviderId } from '../types/AiProviderId';
 import { cleanAiSnapshot, mergeAiPreferences } from '../utils/aiPreferencesSnapshot';
 import { isLikelySecretMcpEnvValue, isSecretMcpEnvName } from '../utils/listSecretMcpEnv';
 import { preferencesJsonService } from '../../preferences/services/preferencesJsonService';
+import type { PreferenceBootstrap } from '../../preferences/types/PreferenceBootstrap';
 
 export function captureAiPreferences(): AiPreferencesSnapshot {
   const { aiConfig, mcpServers, guardrailPolicy, externalAgents } = useAiMcpStore.getState();
@@ -19,6 +20,7 @@ export async function commitAiPreferences(
   draft: AiPreferencesEditor,
   baseline: AiPreferencesSnapshot,
   additionalPreferences: Record<string, unknown> = {},
+  validateAdditionalPreferences?: (settings: PreferenceBootstrap | undefined) => void,
 ): Promise<AiPreferencesSnapshot> {
   if (committing) throw new Error('An AI preferences save is already in progress.');
   committing = true;
@@ -64,6 +66,7 @@ export async function commitAiPreferences(
         throw new Error('Preferences file could not be read');
       }
     }
+    validateAdditionalPreferences?.(previous.settings ?? undefined);
     const persistedAiConfig = { ...snapshot.aiConfig } as Record<string, unknown>;
     delete persistedAiConfig.apiKey;
     const previousAi = previous.settings?.ai;
@@ -82,9 +85,16 @@ export async function commitAiPreferences(
     }
     // One JSONC patch commits AI plus the dialog's other app preferences and reviewers.
     // Runtime Zustand state is published only after the keyring batch also succeeds.
+    const additionalAi = additionalPreferences.ai;
     committed = await preferencesJsonService.patch({
       ...additionalPreferences,
-      ai: { aiConfig: persistedAiConfig, mcpServers: persistedMcpServers, guardrailPolicy: snapshot.guardrailPolicy, externalAgents: snapshot.externalAgents },
+      ai: {
+        ...(additionalAi && typeof additionalAi === 'object' && !Array.isArray(additionalAi) ? additionalAi : {}),
+        aiConfig: persistedAiConfig,
+        mcpServers: persistedMcpServers,
+        guardrailPolicy: snapshot.guardrailPolicy,
+        externalAgents: snapshot.externalAgents,
+      },
       reviewers: snapshot.globalReviewers,
     });
     let configured: Partial<Record<AiProviderId, boolean>> = {};

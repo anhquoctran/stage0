@@ -10,8 +10,10 @@ import type { PreferenceTab } from '../types/PreferenceTab';
 import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 import type { TreeChildItem } from '../types/TreeChildItem';
 import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings';
+import type { PreferencesLanguageTabProps } from '../../i18n/types/PreferencesLanguageTabProps';
 
 export interface PreferencesTabContainerProps {
+  language: PreferencesLanguageTabProps;
   draftKeymap: KeymapSettings;
   draftUiFontFamily: string;
   setDraftUiFontFamily: React.Dispatch<React.SetStateAction<string>>;

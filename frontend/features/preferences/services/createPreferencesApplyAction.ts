@@ -14,9 +14,11 @@ import { type ViewerFontSettings } from '../types/ViewerFontSettings';
 import { keymapErrors } from '../../../core/services/keymaps/validation';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
 import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
+import { languagePreferencesPatch, readLanguagePreferences } from '../../i18n/services/languagePreferences';
 
 // Preserve commit ordering and failure rollback; creating this closure has no side effects.
 export function createPreferencesApplyAction({
+  languageDraft,
   draftKeymap = DEFAULT_KEYMAP,
   draftUiFontFamily,
   draftLinuxTitleBar = 'system',
@@ -55,7 +57,7 @@ export function createPreferencesApplyAction({
   setShowRestartPrompt,
 }: PreferencesApplyContext) {
   const handleApply = async () => {
-    if (applyingRef.current) return false;
+    if (applyingRef.current || languageDraft?.loading || languageDraft?.error) return false;
     applyingRef.current = true;
     setIsApplying(true);
     setApplyError(null);
@@ -72,6 +74,9 @@ export function createPreferencesApplyAction({
         enableLigatures: draftEnableLigatures,
       };
       const additionalPreferences: Record<string, unknown> = {};
+      const languagePatch = languageDraft
+        ? languagePreferencesPatch(languageDraft.value, languageDraft.baseline) : undefined;
+      if (languagePatch?.ai) additionalPreferences.ai = languagePatch.ai;
       const keymapChanged = JSON.stringify(draftKeymap) !== JSON.stringify(savedBaseline.keymap);
       const currentKeymap = usePreferencesStore.getState().keymap ?? DEFAULT_KEYMAP;
       if (keymapChanged) {
@@ -79,7 +84,7 @@ export function createPreferencesApplyAction({
           throw new Error('Keymap changed in another window or editor. Reopen Preferences before applying your keymap draft');
         additionalPreferences.keymap = draftKeymap;
       }
-      const appearancePatch: Record<string, unknown> = {};
+      const appearancePatch: Record<string, unknown> = { ...languagePatch?.appearance };
       const titleBarChanged = draftLinuxTitleBar !== (savedBaseline.linuxTitleBar ?? 'system');
       if (titleBarChanged) {
         const current = usePreferencesStore.getState().linuxTitleBar ?? 'system';
@@ -149,8 +154,12 @@ export function createPreferencesApplyAction({
       const committedAi = await commitAiPreferences(
         aiDraftStore.getState(),
         aiBaseline,
-        additionalPreferences
+        additionalPreferences,
+        languageDraft ? (settings) => {
+          languagePreferencesPatch(languageDraft.value, languageDraft.baseline, readLanguagePreferences(settings));
+        } : undefined,
       );
+      await languageDraft?.acceptCommitted();
       aiDraftStore.getState().replace(committedAi);
       setAiBaseline(committedAi);
       const resolvedTheme = resolveTheme(draftThemeMode);

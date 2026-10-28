@@ -33,6 +33,7 @@ export const PreferencesModal: React.FC = () => {
       handleResetDefaults,
     },
     ai: { aiDraft, aiBaseline, draftAiConfig, setDraftAiConfig },
+    language,
     keymaps: { draftKeymap, setDraftKeymap },
     navigation: {
       activeTab,
@@ -135,6 +136,7 @@ export const PreferencesModal: React.FC = () => {
 
             {/* Right Column: Settings Content Area */}
             <PreferencesTabContainer
+              language={language}
               draftUiFontFamily={draftUiFontFamily}
               setDraftUiFontFamily={setDraftUiFontFamily}
               draftKeymap={draftKeymap}

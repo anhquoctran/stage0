@@ -22,6 +22,7 @@ import { PreferencesUiFontTab } from './tabs/PreferencesUiFontTab';
 import { PreferencesLanguageTab } from '../../i18n/components/PreferencesLanguageTab';
 
 export function PreferencesTabContainer({
+  language,
   draftKeymap,
   draftUiFontFamily,
   setDraftUiFontFamily,
@@ -180,7 +181,7 @@ export function PreferencesTabContainer({
           />
         </div>
       )}
-      {currentTabId === 'appearance-language' && <PreferencesLanguageTab />}
+      {currentTabId === 'appearance-language' && <PreferencesLanguageTab {...language} />}
 
       {/* VIEW: APPEARANCE - BUFFER FONT */}
       {currentTabId === 'appearance-ui-font' && (

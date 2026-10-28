@@ -21,7 +21,10 @@
       "baseGroup": "基础语言",
       "extendedGroup": "其他语言",
       "saving": "正在保存语言…",
-      "saveError": "无法保存语言设置。"
+      "saveError": "无法保存语言设置。",
+      "loading": "正在加载已保存的语言…",
+      "loadError": "无法加载已保存的语言设置。请重新打开偏好设置以重试。",
+      "changedElsewhere": "语言设置已在其他窗口中更改。请重新打开偏好设置后再应用更改。"
     },
     "nav": {
       "general": "常规",

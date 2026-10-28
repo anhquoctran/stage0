@@ -21,7 +21,10 @@
       "baseGroup": "Ngôn ngữ chính",
       "extendedGroup": "Ngôn ngữ bổ sung",
       "saving": "Đang lưu ngôn ngữ…",
-      "saveError": "Không thể lưu tùy chọn ngôn ngữ."
+      "saveError": "Không thể lưu tùy chọn ngôn ngữ.",
+      "loading": "Đang tải ngôn ngữ đã lưu…",
+      "loadError": "Không thể tải cài đặt ngôn ngữ đã lưu. Hãy mở lại Preferences để thử lại.",
+      "changedElsewhere": "Cài đặt ngôn ngữ đã thay đổi trong cửa sổ khác. Hãy mở lại Preferences trước khi áp dụng."
     },
     "nav": {
       "general": "Chung",

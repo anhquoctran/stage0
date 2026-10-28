@@ -203,6 +203,7 @@ function dialogFixture(commitHandler) {
   const usePreferencesStore = Object.assign(() => preferences, { getState: () => preferences, setState: (value) => Object.assign(preferences, typeof value === 'function' ? value(preferences) : value) });
   const dependencies = {
     react: harness.react,
+    '../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({ platform: { capabilities: { backend: false, preferencesFile: false } } }) },
     '../store/usePreferencesStore': { usePreferencesStore, checkFontLigaturesSupport: () => true, applyViewerFontToDocument() {}, DEFAULT_VIEWER_FONT_SETTINGS: preferences },
     '../../../core/store/useThemeStore': { useThemeStore, resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {} },
     '../utils/applyUiFontToDocument': { applyUiFontToDocument() {} },

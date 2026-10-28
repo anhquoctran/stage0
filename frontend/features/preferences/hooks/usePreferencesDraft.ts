@@ -28,6 +28,7 @@ import { usePreferencesDismiss } from './usePreferencesDismiss';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
 import { DEFAULT_UI_FONT_FAMILY } from '../constants/uiFonts';
 import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
+import { usePreferencesLanguageDraft } from './usePreferencesLanguageDraft';
 
 export function usePreferencesDraft() {
   const {
@@ -94,6 +95,7 @@ export function usePreferencesDraft() {
   });
 
   const [isJsonEditorOpen, setIsJsonEditorOpen] = useState(false);
+  const languageDraft = usePreferencesLanguageDraft(isPreferencesOpen);
 
   const session = usePreferencesDraftSession({
     storedKeymap,
@@ -132,21 +134,23 @@ export function usePreferencesDraft() {
   });
 
   // Unsaved count calculation
-  const { totalUnsaved } = usePreferencesChangeCount({
+  const { totalUnsaved: otherUnsaved } = usePreferencesChangeCount({
     session,
     aiDraft,
     aiBaseline,
     draftAiConfig,
   });
+  const totalUnsaved = otherUnsaved + languageDraft.changeCount;
 
   const hasUnsavedChanges = totalUnsaved > 0;
-  const canCommitPreferences = hasUnsavedChanges && !isApplying;
+  const canCommitPreferences = hasUnsavedChanges && !isApplying && !languageDraft.loading && !languageDraft.error;
   useEffect(() => {
     if (hasUnsavedChanges) session.setIsApplied(false);
   }, [hasUnsavedChanges, aiDraft]);
 
   // Commit changes
   const handleApply = createPreferencesApplyAction({
+    languageDraft,
     draftKeymap: session.draftKeymap,
     draftUiFontFamily: session.draftUiFontFamily,
     draftLinuxTitleBar: session.draftLinuxTitleBar,
@@ -186,7 +190,7 @@ export function usePreferencesDraft() {
   });
 
   const handleOk = async () => {
-    if (applyingRef.current) return;
+    if (applyingRef.current || languageDraft.loading || languageDraft.error) return;
     if (hasUnsavedChanges) {
       if (!(await handleApply())) return;
     }
@@ -195,6 +199,7 @@ export function usePreferencesDraft() {
 
   const handleCancel = () => {
     if (applyingRef.current) return;
+    languageDraft.discard();
     aiDraftStore.getState().replace(captureAiPreferences());
     const resolvedTheme = resolveTheme(session.savedBaseline.themeMode);
     applyThemeToDocument(resolvedTheme);
@@ -228,6 +233,7 @@ export function usePreferencesDraft() {
   });
 
   const handleResetDefaults = () => {
+    languageDraft.reset();
     session.setDraftKeymap(structuredClone(DEFAULT_KEYMAP));
     session.setDraftUiFontFamily(DEFAULT_UI_FONT_FAMILY);
     session.setDraftLinuxTitleBar('system');
@@ -271,7 +277,7 @@ export function usePreferencesDraft() {
       isPreferencesOpen,
       showToast,
       isApplying,
-      applyError,
+      applyError: applyError || languageDraft.error,
       isJsonEditorOpen,
       setIsJsonEditorOpen,
       savedBaseline: session.savedBaseline,
@@ -289,6 +295,7 @@ export function usePreferencesDraft() {
       handleResetDefaults,
     },
     ai: { aiDraft, aiBaseline, draftAiConfig, setDraftAiConfig },
+    language: { value: languageDraft.value, onChange: languageDraft.setValue, disabled: languageDraft.loading, error: languageDraft.error },
     keymaps: { draftKeymap: session.draftKeymap, setDraftKeymap: session.setDraftKeymap },
     navigation: {
       activeTab,

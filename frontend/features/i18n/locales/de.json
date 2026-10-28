@@ -21,7 +21,10 @@
       "baseGroup": "Basissprachen",
       "extendedGroup": "Weitere Sprachen",
       "saving": "Sprache wird gespeichert…",
-      "saveError": "Die Spracheinstellung konnte nicht gespeichert werden."
+      "saveError": "Die Spracheinstellung konnte nicht gespeichert werden.",
+      "loading": "Gespeicherte Sprachen werden geladen…",
+      "loadError": "Die gespeicherten Spracheinstellungen konnten nicht geladen werden. Öffne die Einstellungen erneut.",
+      "changedElsewhere": "Die Spracheinstellungen wurden in einem anderen Fenster geändert. Öffne die Einstellungen erneut, bevor du Änderungen übernimmst."
     },
     "nav": {
       "general": "Allgemein",
