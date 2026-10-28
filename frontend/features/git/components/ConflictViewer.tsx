@@ -125,7 +125,7 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
             </button>
           </div>
 
-          <span className="text-[11px] text-subtext0 ml-2 hidden sm:inline">
+          <span className="text-[11px] text-subtext0 ms-2 hidden sm:inline">
             Stage0 Virtual 3-Way Collision Inspector
           </span>
         </div>

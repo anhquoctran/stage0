@@ -30,12 +30,12 @@ export function CloneCredentialsSection({
         <span>Use a saved HTTPS credential (optional)</span>
       </label>
       {isSshRemote && (
-        <p className="pl-5 text-[10px] text-subtext0">
+        <p className="ps-5 text-[10px] text-subtext0">
           SSH cloning uses your existing Git/SSH setup. Stage0 credential selection is HTTPS-only.
         </p>
       )}
       {useSavedCredential && (
-        <div className="pl-5 space-y-1.5">
+        <div className="ps-5 space-y-1.5">
           <CustomSelect
             value={selectedCredentialId}
             disabled={isCloning || credentialsLoading || credentialOptions.length === 0}

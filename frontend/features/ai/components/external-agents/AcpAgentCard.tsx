@@ -35,7 +35,7 @@ export function AcpAgentCard({
                     : unavailableReason || 'No compatible registry package.'
                 )
           }
-          className="min-w-0 flex-1 text-left rounded-sm"
+          className="min-w-0 flex-1 text-start rounded-sm"
         >
           <span className="flex items-center gap-2 text-sm font-medium">
             <AgentIcon icon={entry?.icon} /> <span className="truncate">{name}</span>
@@ -68,7 +68,7 @@ export function AcpAgentCard({
         ) : (
           <span
             title={unavailableReason}
-            className="shrink-0 max-w-48 text-right text-[10px] text-subtext0"
+            className="shrink-0 max-w-48 text-end text-[10px] text-subtext0"
           >
             {unavailableReason}
           </span>

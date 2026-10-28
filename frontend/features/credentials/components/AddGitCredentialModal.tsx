@@ -84,13 +84,13 @@ export function AddGitCredentialModal({
             Server / Host URL
           </label>
           <div className="relative flex items-center">
-            <Globe className="w-3.5 h-3.5 text-subtext0 absolute left-2.5" />
+            <Globe className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
             <input
               type="text"
               value={serverUrl}
               onChange={(e) => setServerUrl(e.target.value)}
               placeholder="https://github.com"
-              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
+              className="w-full ps-8 pe-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
         </div>
@@ -101,14 +101,14 @@ export function AddGitCredentialModal({
             Account / Username <span className="text-red">*</span>
           </label>
           <div className="relative flex items-center">
-            <User className="w-3.5 h-3.5 text-subtext0 absolute left-2.5" />
+            <User className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
             <input
               type="text"
               value={accountName}
               onChange={(e) => setAccountName(e.target.value)}
               placeholder="e.g. octocat, john.doe"
               required
-              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
+              className="w-full ps-8 pe-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
         </div>
@@ -138,13 +138,13 @@ export function AddGitCredentialModal({
             Label <span className="text-subtext0/60 font-normal">(Optional)</span>
           </label>
           <div className="relative flex items-center">
-            <Tag className="w-3.5 h-3.5 text-subtext0 absolute left-2.5" />
+            <Tag className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
             <input
               type="text"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="e.g. Work PAT, Personal GitHub"
-              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
+              className="w-full ps-8 pe-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
         </div>
@@ -159,19 +159,19 @@ export function AddGitCredentialModal({
           <span className="text-[10px] text-subtext0/70 font-mono">Secured in {keyringName}</span>
         </div>
         <div className="relative flex items-center">
-          <Lock className="w-3.5 h-3.5 text-subtext0 absolute left-2.5" />
+          <Lock className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
           <input
             type={showSecret ? 'text' : 'password'}
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
             placeholder="ghp_..., glpat-..., or account password"
             required
-            className="w-full pl-8 pr-9 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
+            className="w-full ps-8 pe-9 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
           />
           <button
             type="button"
             onClick={() => setShowSecret(!showSecret)}
-            className="absolute right-2.5 p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
+            className="absolute end-2.5 p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
             title={showSecret ? 'Hide secret' : 'Show secret'}
           >
             {showSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}

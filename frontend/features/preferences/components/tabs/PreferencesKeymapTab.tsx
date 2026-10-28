@@ -95,7 +95,7 @@ export function PreferencesKeymapTab({
                     className="rounded-sm border border-red/40 bg-red/10 p-3 text-xs text-red"
                 >
                     Resolve conflicts before Apply/OK:
-                    <ul className="mt-1 list-disc pl-4">
+                    <ul className="mt-1 list-disc ps-4">
                         {errors.map((error) => (
                             <li key={error}>{error}</li>
                         ))}

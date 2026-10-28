@@ -25,23 +25,23 @@ export const PreferencesNavTree: React.FC<{
 }) => {
   const { t } = useTranslation();
   return (
-    <div className="w-60 border-r border-surface0/60 flex flex-col bg-mantle/50 shrink-0">
+    <div className="w-60 border-e border-surface0/60 flex flex-col bg-mantle/50 shrink-0">
       {/* Search Input Box */}
       <div className="p-3 border-b border-surface0/60 rounded-sm">
         <div className="relative flex items-center">
-          <Search className="w-3.5 h-3.5 text-subtext0 absolute left-2.5 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 text-subtext0 absolute start-2.5 pointer-events-none" />
           <input
             type="text"
             placeholder="Search settings..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface0/50 border border-surface1/60 rounded px-2.5 pl-8 pr-7 py-1 text-xs text-text placeholder:text-subtext0 focus:outline-hidden focus:border-brand transition-colors"
+            className="w-full bg-surface0/50 border border-surface1/60 rounded px-2.5 ps-8 pe-7 py-1 text-xs text-text placeholder:text-subtext0 focus:outline-hidden focus:border-brand transition-colors"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-2 text-subtext0 hover:text-text cursor-pointer p-0.5 rounded-sm"
+              className="absolute end-2 text-subtext0 hover:text-text cursor-pointer p-0.5 rounded-sm"
             >
               <X className="w-3 h-3" />
             </button>
@@ -71,14 +71,14 @@ export const PreferencesNavTree: React.FC<{
                       setActiveTab(group.children[0].id);
                     }
                   }}
-                  className={`w-full flex items-center justify-between px-2 py-1.5 text-xs transition-colors cursor-pointer select-none text-left group rounded-sm ${
+                  className={`w-full flex items-center justify-between px-2 py-1.5 text-xs transition-colors cursor-pointer select-none text-start group rounded-sm ${
                     hasActiveChild ? 'text-text font-medium' : 'text-subtext1 hover:text-text hover:bg-surface0/30'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <ChevronRight
                       className={`w-3 h-3 text-subtext0 shrink-0 transition-transform duration-150 ${
-                        isExpanded ? 'rotate-90 text-text' : 'group-hover:text-text'
+                        isExpanded ? 'rotate-90 text-text' : 'rtl:rotate-180 group-hover:text-text'
                       }`}
                     />
                     <span className="truncate">{t(`preferences.nav.${group.id}`, group.label)}</span>
@@ -87,7 +87,7 @@ export const PreferencesNavTree: React.FC<{
 
                 {/* Collapsible Children */}
                 {isExpanded && (
-                  <div className="space-y-0.5 pl-3">
+                  <div className="space-y-0.5 ps-3">
                     {group.children.map((child) => {
                       const isActive = currentTabId === child.id;
                       return (
@@ -95,7 +95,7 @@ export const PreferencesNavTree: React.FC<{
                           key={child.id}
                           type="button"
                           onClick={() => setActiveTab(child.id)}
-                          className={`w-full flex items-center justify-between pl-5 pr-2 py-1.5 text-xs transition-colors cursor-pointer text-left rounded-sm ${
+                          className={`w-full flex items-center justify-between ps-5 pe-2 py-1.5 text-xs transition-colors cursor-pointer text-start rounded-sm ${
                             isActive
                               ? 'bg-surface0/90 text-text font-medium shadow-xs'
                               : 'text-subtext0 hover:text-text hover:bg-surface0/50'

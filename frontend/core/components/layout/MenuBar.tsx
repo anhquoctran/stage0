@@ -90,7 +90,9 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
             const index = items.indexOf(document.activeElement as HTMLButtonElement);
             if (index < 0 || !items.length) return;
             event.preventDefault();
-            const next = (index + (event.key === 'ArrowRight' ? 1 : -1) + items.length) % items.length;
+            const rtl = document.documentElement.dir === 'rtl';
+            const advances = event.key === (rtl ? 'ArrowLeft' : 'ArrowRight');
+            const next = (index + (advances ? 1 : -1) + items.length) % items.length;
             setActiveMenu(null);
             items[next]?.focus();
           }}

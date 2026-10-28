@@ -113,7 +113,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-72 shadow-2xl bg-mantle border border-surface0 py-1 z-50 text-xs animate-in fade-in duration-100 rounded-sm">
+        <div className="absolute start-0 top-full mt-1.5 w-72 shadow-2xl bg-mantle border border-surface0 py-1 z-50 text-xs animate-in fade-in duration-100 rounded-sm">
           <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/70 mb-1 truncate rounded-sm">
             {file.path.split('/').pop() || file.path}
           </div>
@@ -121,26 +121,26 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           <button
             type="button"
             onClick={handleReveal}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-start transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
           >
             <div className="flex items-center gap-2">
               <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Open in File Explorer</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('reveal_file')}</span>
+            <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('reveal_file')}</span>
           </button>
 
           {!file.is_binary && (
             <button
               type="button"
               onClick={handleViewBlame}
-              className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
+              className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-start transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
             >
               <div className="flex items-center gap-2">
                 <History className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
                 <span>View Git Blame</span>
               </div>
-              <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('view_blame')}</span>
+              <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('view_blame')}</span>
             </button>
           )}
 
@@ -149,25 +149,25 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           <button
             type="button"
             onClick={handleCopyRelative}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-start transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Copy className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Relative Path</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('copy_rel_path')}</span>
+            <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('copy_rel_path')}</span>
           </button>
 
           <button
             type="button"
             onClick={handleCopyAbsolute}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-start transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
           >
             <div className="flex items-center gap-2">
               <FileText className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Absolute Path</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('copy_abs_path')}</span>
+            <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('copy_abs_path')}</span>
           </button>
 
           <div className="my-1 border-t border-surface0" />
@@ -175,25 +175,25 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           <button
             type="button"
             onClick={handleCopyRemoteUrl}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-start transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Globe className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Remote File URL</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('copy_remote_url')}</span>
+            <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('copy_remote_url')}</span>
           </button>
 
           <button
             type="button"
             onClick={handleCopyRemoteUrlFrom}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-left transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-text text-start transition-colors cursor-pointer group whitespace-nowrap rounded-sm"
           >
             <div className="flex items-center gap-2">
               <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
               <span>Copy Remote File URL from...</span>
             </div>
-            <span className="text-[10px] text-subtext0 font-mono ml-3">{shortcut('copy_remote_url_from')}</span>
+            <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('copy_remote_url_from')}</span>
           </button>
         </div>
       )}

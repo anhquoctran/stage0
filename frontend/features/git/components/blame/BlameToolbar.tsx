@@ -47,7 +47,7 @@ export function BlameToolbar({
           </button>
 
           {isRevisionDropdownOpen && (
-            <div className="absolute left-0 top-full mt-1 w-64 shadow-2xl bg-mantle border border-surface0 py-1 z-50 rounded-sm text-xs animate-in fade-in duration-75">
+            <div className="absolute start-0 top-full mt-1 w-64 shadow-2xl bg-mantle border border-surface0 py-1 z-50 rounded-sm text-xs animate-in fade-in duration-75">
               <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/60 mb-1 rounded-sm">
                 Blame Revision
               </div>
@@ -59,7 +59,7 @@ export function BlameToolbar({
                     setBlameRevision(compareBranch);
                     setIsRevisionDropdownOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer rounded-sm ${
+                  className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-start transition-colors cursor-pointer rounded-sm ${
                     blameRevision === compareBranch
                       ? 'bg-surface0 text-text font-semibold'
                       : 'text-text'
@@ -77,7 +77,7 @@ export function BlameToolbar({
                     setBlameRevision(baseBranch);
                     setIsRevisionDropdownOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer rounded-sm ${
+                  className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-start transition-colors cursor-pointer rounded-sm ${
                     blameRevision === baseBranch
                       ? 'bg-surface0 text-text font-semibold'
                       : 'text-text'
@@ -94,7 +94,7 @@ export function BlameToolbar({
                   setBlameRevision('HEAD');
                   setIsRevisionDropdownOpen(false);
                 }}
-                className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer rounded-sm ${
+                className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-start transition-colors cursor-pointer rounded-sm ${
                   blameRevision === 'HEAD' ? 'bg-surface0 text-text font-semibold' : 'text-text'
                 }`}
               >
@@ -117,7 +117,7 @@ export function BlameToolbar({
                           setBlameRevision(b);
                           setIsRevisionDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-left transition-colors cursor-pointer rounded-sm ${
+                        className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface1 text-start transition-colors cursor-pointer rounded-sm ${
                           blameRevision === b ? 'bg-surface0 text-text font-semibold' : 'text-text'
                         }`}
                       >
@@ -162,19 +162,19 @@ export function BlameToolbar({
       <div className="flex items-center gap-2">
         {/* Search Filter */}
         <div className="relative flex items-center">
-          <Search className="w-3.5 h-3.5 absolute left-2 text-subtext0 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 absolute start-2 text-subtext0 pointer-events-none" />
           <input
             type="text"
             placeholder="Search blame (code, author, commit)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-7 pr-6 py-1 w-56 text-xs bg-mantle border border-surface0 rounded-sm text-text placeholder-subtext0 focus:outline-none focus:border-surface2 transition-colors font-mono"
+            className="ps-7 pe-6 py-1 w-56 text-xs bg-mantle border border-surface0 rounded-sm text-text placeholder-subtext0 focus:outline-none focus:border-surface2 transition-colors font-mono"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-1.5 p-0.5 text-subtext0 hover:text-text rounded-sm cursor-pointer"
+              className="absolute end-1.5 p-0.5 text-subtext0 hover:text-text rounded-sm cursor-pointer"
             >
               <X className="w-3 h-3" />
             </button>
@@ -200,11 +200,11 @@ export function BlameToolbar({
             </button>
 
             {isStatsOpen && (
-              <div className="absolute right-0 top-full mt-1 w-72 shadow-2xl bg-mantle border border-surface0 py-2 px-3 z-50 rounded-sm text-xs animate-in fade-in duration-75">
+              <div className="absolute end-0 top-full mt-1 w-72 shadow-2xl bg-mantle border border-surface0 py-2 px-3 z-50 rounded-sm text-xs animate-in fade-in duration-75">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/60 pb-1 mb-2">
                   Line Attribution Breakdown
                 </div>
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-56 overflow-y-auto pe-1">
                   {blamePayload.author_stats.map((st) => (
                     <div key={st.email || st.name} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">

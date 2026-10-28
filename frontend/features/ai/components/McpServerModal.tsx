@@ -143,14 +143,14 @@ export const McpServerModal: React.FC<{
                 Executable Command <span className="text-red">*</span>
               </label>
               <div className="relative flex items-center">
-                <Terminal className="w-3.5 h-3.5 text-subtext0 absolute left-2.5" />
+                <Terminal className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
                 <input
                   type="text"
                   value={serverCommand}
                   onChange={(e) => setServerCommand(e.target.value)}
                   placeholder="npx, uvx, docker, python"
                   required
-                  className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
+                  className="w-full ps-8 pe-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
                 />
               </div>
             </div>
@@ -176,14 +176,14 @@ export const McpServerModal: React.FC<{
             {serverType === 'http' ? 'Streamable HTTP Endpoint URL' : 'Legacy SSE Endpoint URL'} <span className="text-red">*</span>
           </label>
           <div className="relative flex items-center">
-            <Globe className="w-3.5 h-3.5 text-subtext0 absolute left-2.5" />
+            <Globe className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
             <input
               type="url"
               value={serverUrl}
               onChange={(e) => setServerUrl(e.target.value)}
               placeholder={serverType === 'http' ? 'http://localhost:8000/mcp' : 'http://localhost:8000/sse'}
               required
-              className="w-full pl-8 pr-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
+              className="w-full ps-8 pe-3 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
         </div>

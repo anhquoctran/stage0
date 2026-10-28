@@ -70,7 +70,7 @@ export const InlineDiscussionComposer: React.FC<{
 
   return (
     <div
-      className="space-y-2.5 border-y border-surface1 bg-mantle p-3.5 text-left font-sans text-text shadow-sm rounded-sm"
+      className="space-y-2.5 border-y border-surface1 bg-mantle p-3.5 text-start font-sans text-text shadow-sm rounded-sm"
       onClick={(event) => event.stopPropagation()}
     >
       <DiscussionCodeContext discussion={{ filePath, diffSide: side, lineNumber, commitId, codeSnippet: snippet }} />

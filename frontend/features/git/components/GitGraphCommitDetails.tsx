@@ -23,7 +23,7 @@ export const GitGraphCommitDetails: React.FC<{
 }) => {
     useDateTimeLanguage();
     return (
-        <aside className="flex w-[min(36%,440px)] min-w-[300px] shrink-0 flex-col border-l border-surface0 bg-base/40">
+        <aside className="flex w-[min(36%,440px)] min-w-[300px] shrink-0 flex-col border-s border-surface0 bg-base/40">
             {selectedCommit ? (
                 <>
                     <div className="shrink-0 border-b border-surface0 px-4 py-3 rounded-sm">

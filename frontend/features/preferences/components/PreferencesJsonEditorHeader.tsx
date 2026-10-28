@@ -7,7 +7,7 @@ export function PreferencesJsonEditorHeader({
 }: PreferencesJsonEditorHeaderProps) {
   return (
     <header
-      className={`flex shrink-0 items-center justify-between border-b border-surface0 ${isMac ? 'pl-16 pr-4' : 'px-4'} py-3`}
+      className={`flex shrink-0 items-center justify-between border-b border-surface0 ${isMac ? 'pl-16 pe-4' : 'px-4'} py-3`}
     >
       <div>
         <h2 className="text-sm font-semibold">Edit in preferences.json</h2>

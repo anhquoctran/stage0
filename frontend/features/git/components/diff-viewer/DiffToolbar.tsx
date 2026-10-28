@@ -76,7 +76,7 @@ export const DiffToolbar: React.FC<{
             {fileName}
           </span>
           {selectedFile.old_path && (
-            <span className="text-subtext1 text-[11px] truncate ml-1 max-xl:hidden">
+            <span className="text-subtext1 text-[11px] truncate ms-1 max-xl:hidden">
               (renamed from {selectedFile.old_path})
             </span>
           )}
@@ -104,7 +104,7 @@ export const DiffToolbar: React.FC<{
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 font-mono text-xs ml-1 font-semibold max-xl:hidden">
+        <div className="flex items-center gap-1.5 font-mono text-xs ms-1 font-semibold max-xl:hidden">
           {selectedFile.is_binary ? (
             <span className="text-amber-400">Binary · preview unavailable</span>
           ) : (
@@ -121,7 +121,7 @@ export const DiffToolbar: React.FC<{
       </div>
 
       {/* Center: File Stepper & Conflict Stepper */}
-      <div className="flex items-center gap-2 shrink-0 max-xl:ml-auto">
+      <div className="flex items-center gap-2 shrink-0 max-xl:ms-auto">
         {diffPayload && diffPayload.files.length > 1 && (
           <div className="flex items-center gap-1 bg-surface0 border border-surface0 px-1 py-0.5 rounded-sm">
             <button

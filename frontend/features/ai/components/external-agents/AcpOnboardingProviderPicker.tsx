@@ -43,7 +43,7 @@ export function AcpOnboardingProviderPicker({
           else onInstall(entry);
         }}
         title={unavailable ?? undefined}
-        className={`flex items-center justify-between gap-2 rounded-sm border border-surface1 bg-base text-left text-text transition-colors hover:bg-surface1 disabled:cursor-not-allowed disabled:opacity-50 ${compact ? 'min-h-10 px-2 py-1.5 text-[11px]' : 'min-h-24 flex-col px-3 py-3 text-xs font-semibold'}`}
+        className={`flex items-center justify-between gap-2 rounded-sm border border-surface1 bg-base text-start text-text transition-colors hover:bg-surface1 disabled:cursor-not-allowed disabled:opacity-50 ${compact ? 'min-h-10 px-2 py-1.5 text-[11px]' : 'min-h-24 flex-col px-3 py-3 text-xs font-semibold'}`}
       >
         <span className={`flex min-w-0 items-center gap-2 ${compact ? '' : 'flex-col'}`}>
           <AgentIcon icon={entry?.icon} className={compact ? 'h-4 w-4' : 'h-8 w-8'} />

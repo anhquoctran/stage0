@@ -64,13 +64,13 @@ export const BotReviewersToolbar: React.FC<{
       {/* Filter and Search Bar */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-0 flex-[1_1_16rem]">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-subtext0" />
+          <Search className="w-3.5 h-3.5 absolute start-3 top-1/2 -translate-y-1/2 text-subtext0" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search reviewers by name, tagline, or prompt..."
-            className="w-full pl-8 pr-3 py-1.5 bg-surface0/60 border border-surface1 text-xs text-text placeholder-subtext0/70 focus:outline-none focus:border-brand rounded-sm"
+            className="w-full ps-8 pe-3 py-1.5 bg-surface0/60 border border-surface1 text-xs text-text placeholder-subtext0/70 focus:outline-none focus:border-brand rounded-sm"
           />
         </div>
         <div className="flex shrink-0 items-center gap-2">

@@ -74,7 +74,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-0 top-0 flex h-11 w-12 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
+          className="absolute end-0 top-0 flex h-11 w-12 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
           title="Close (Esc)"
           aria-label="Close About dialog"
         >
@@ -100,7 +100,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             <button
               type="button"
               onClick={handleCopyVersion}
-              className="ml-1 p-0.5 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
+              className="ms-1 p-0.5 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
               title="Copy version string"
             >
               {copiedVersion ? (

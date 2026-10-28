@@ -188,7 +188,7 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
         </div>
 
         {/* Right Sidebar (Metadata: Assignee, Reviewers, Labels, Participants) */}
-        <div className="w-full lg:w-72 xl:w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-surface0/60 bg-mantle/30 p-5">
+        <div className="w-full lg:w-72 xl:w-80 shrink-0 border-t lg:border-t-0 lg:border-s border-surface0/60 bg-mantle/30 p-5">
           <VirtualMrOverviewSidebar session={session} />
         </div>
       </div>

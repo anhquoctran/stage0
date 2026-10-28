@@ -76,7 +76,7 @@ export const VirtualMrBottomBar: React.FC = () => {
         </div>
 
         {/* AI Auditor Review Status Indicator */}
-        <div className="flex items-center gap-2 pl-3 max-xl:pl-2 border-l border-surface0/60 hidden md:flex rounded-sm" title={unresolvedCount > 0 ? `${unresolvedCount} open discussion${unresolvedCount > 1 ? 's' : ''}` : `${approvedReviewers} of ${session.reviewers.length} reviewers approved`}>
+        <div className="flex items-center gap-2 ps-3 max-xl:ps-2 border-s border-surface0/60 hidden md:flex rounded-sm" title={unresolvedCount > 0 ? `${unresolvedCount} open discussion${unresolvedCount > 1 ? 's' : ''}` : `${approvedReviewers} of ${session.reviewers.length} reviewers approved`}>
           {unresolvedCount > 0 ? (
             <div className="flex items-center gap-1.5 text-xs text-amber-300 font-medium">
               <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />

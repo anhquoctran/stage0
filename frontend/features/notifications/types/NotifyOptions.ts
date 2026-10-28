@@ -5,8 +5,11 @@ import type { AppNotificationAction } from './AppNotificationAction';
 import type { NotificationDismissPolicy } from './NotificationDismissPolicy';
 
 export interface NotifyOptions {
-  title: string;
-  body: string;
+  title?: string;
+  body?: string;
+  titleKey?: string;
+  bodyKey?: string;
+  values?: Record<string, string | number>;
   level?: NotificationLevel;
   variant?: NotificationVariant;
   channel: NotificationChannel;

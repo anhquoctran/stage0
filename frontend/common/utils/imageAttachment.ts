@@ -3,6 +3,7 @@ import { getCommonServices } from '../services/getCommonServices';
 import { getPlatformServices } from '../services/ipc/platformServices';
 
 import { notificationService } from '../../features/notifications/services/notificationService';
+import i18n from '../../features/i18n/i18n';
 
 export const ALLOWED_IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
 
@@ -45,10 +46,10 @@ export function readBlobAsDataUrl(file: Blob): Promise<string> {
       if (typeof reader.result === 'string') {
         resolve(reader.result);
       } else {
-        reject(new Error('Failed to read file as data URL'));
+        reject(new Error(i18n.t('attachments.readFailed')));
       }
     };
-    reader.onerror = () => reject(reader.error || new Error('FileReader error'));
+    reader.onerror = () => reject(reader.error || new Error(i18n.t('attachments.readFailed')));
     reader.readAsDataURL(file);
   });
 }
@@ -62,8 +63,9 @@ export async function processAndSaveImage(file: File): Promise<SavedImageResult 
 
   if (!isAllowedImage(file)) {
     notificationService.notify({
-      title: 'Unsupported file type',
-      body: `File "${fileName}" was rejected. Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.`,
+      titleKey: 'attachments.unsupportedTitle',
+      bodyKey: 'attachments.unsupportedBody',
+      values: { fileName },
       level: 'warning',
       channel: 'guardrails',
     });
@@ -72,8 +74,9 @@ export async function processAndSaveImage(file: File): Promise<SavedImageResult 
 
   if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
     notificationService.notify({
-      title: 'File too large',
-      body: `Image "${fileName}" exceeds the maximum allowed size of 15 MiB.`,
+      titleKey: 'attachments.tooLargeTitle',
+      bodyKey: 'attachments.tooLargeBody',
+      values: { fileName },
       level: 'warning',
       channel: 'guardrails',
     });

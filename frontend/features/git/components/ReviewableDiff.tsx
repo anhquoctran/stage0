@@ -44,7 +44,7 @@ export const ReviewableDiff: React.FC<{
             onDraftChange={(body) => { if (body) drafts.current.set(key, body); else drafts.current.delete(key); }} />;
         }}
         renderExtendLine={({ data: discussions }) => !session || !discussions?.length ? null : (
-          <div className="space-y-3 bg-crust/50 p-3 text-left font-sans text-text rounded-sm">
+          <div className="space-y-3 bg-crust/50 p-3 text-start font-sans text-text rounded-sm">
             {discussions.map((discussion) => (
               <DiscussionThread key={discussion.id} session={session} discussion={discussion} />
             ))}

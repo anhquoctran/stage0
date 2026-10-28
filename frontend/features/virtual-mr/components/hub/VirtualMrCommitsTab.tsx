@@ -41,7 +41,7 @@ export const VirtualMrCommitsTab: React.FC<VirtualMrCommitsTabProps> = ({ sessio
                 onClick={() => setSelected({ sessionId: session.id, hash: c.hash })}
                 disabled={!repoPath}
                 aria-label={`View commit ${c.shortHash}: ${c.subject}`}
-                className="w-full p-3.5 text-left rounded-sm bg-mantle border border-surface0 hover:border-surface1 transition-colors flex items-center justify-between gap-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-brand disabled:opacity-50 disabled:cursor-default"
+                className="w-full p-3.5 text-start rounded-sm bg-mantle border border-surface0 hover:border-surface1 transition-colors flex items-center justify-between gap-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-brand disabled:opacity-50 disabled:cursor-default"
               >
                 <span className="space-y-1 min-w-0">
                   <span className="block font-medium text-xs text-text truncate">{c.subject}</span>
@@ -50,7 +50,7 @@ export const VirtualMrCommitsTab: React.FC<VirtualMrCommitsTabProps> = ({ sessio
                     <span>{formatDateTime(c.authoredDate)}</span>
                   </span>
                 </span>
-                <span className="text-right shrink-0">
+                <span className="text-end shrink-0">
                   <span className="px-2 py-0.5 rounded-sm bg-surface0 font-mono text-[11px] text-subtext0">
                     {c.shortHash}
                   </span>

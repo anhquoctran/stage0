@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { notificationService } from '../../../features/notifications/services/notificationService';
 import { isAllowedImage, processAndSaveImage } from '../../utils/imageAttachment';
 
@@ -9,9 +10,10 @@ export function useMarkdownImageDrop(
   disabled: boolean,
   isSubmitting: boolean
 ) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [attachmentWarning, setAttachmentWarning] = useState<string | null>(null);
+  const [attachmentWarningKey, setAttachmentWarningKey] = useState<string | null>(null);
   const [isAttaching, setIsAttaching] = useState(false);
   const insertImageMarkdown = (markdownSnippet: string) => {
     const textarea = textareaRef.current;
@@ -62,16 +64,14 @@ export function useMarkdownImageDrop(
       }
 
       if (hasRejected) {
-        const msg =
-          'Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.';
-        setAttachmentWarning(msg);
+        setAttachmentWarningKey('attachments.allowedTypes');
         notificationService.notify({
-          title: 'Unsupported file type',
-          body: msg,
+          titleKey: 'attachments.unsupportedTitle',
+          bodyKey: 'attachments.allowedTypes',
           level: 'warning',
           channel: 'guardrails',
         });
-        setTimeout(() => setAttachmentWarning(null), 5000);
+        setTimeout(() => setAttachmentWarningKey(null), 5000);
       }
     } finally {
       setIsAttaching(false);
@@ -110,8 +110,8 @@ export function useMarkdownImageDrop(
     fileInputRef,
     isDraggingOver,
     setIsDraggingOver,
-    attachmentWarning,
-    setAttachmentWarning,
+    attachmentWarning: attachmentWarningKey ? t(attachmentWarningKey) : null,
+    setAttachmentWarning: (message: string | null) => setAttachmentWarningKey(message),
     isAttaching,
     handleImageFiles,
     handlePaste,

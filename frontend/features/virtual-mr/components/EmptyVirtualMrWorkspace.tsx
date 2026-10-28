@@ -34,7 +34,7 @@ export const EmptyVirtualMrWorkspace: React.FC<EmptyVirtualMrWorkspaceProps> = (
       >
         <Plus className="h-4 w-4 stroke-[2.5]" />
         <span>Create Virtual MR</span>
-        <kbd className="ml-1.5 border border-black/10 bg-black/15 px-1.5 py-0.5 font-mono text-[10px] text-on-accent/80">
+        <kbd className="ms-1.5 border border-black/10 bg-black/15 px-1.5 py-0.5 font-mono text-[10px] text-on-accent/80">
           {shortcut('new_mr')}
         </kbd>
       </button>

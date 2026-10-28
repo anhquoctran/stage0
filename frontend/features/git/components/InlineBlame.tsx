@@ -118,7 +118,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
         e.stopPropagation();
         setIsCardOpen(!isCardOpen);
       }}
-      className="inline-blame-badge relative ml-8 inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[11px] font-mono text-subtext0/45 hover:text-subtext1 select-none cursor-pointer transition-colors duration-150 align-baseline group/blame"
+      className="inline-blame-badge relative ms-8 inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[11px] font-mono text-subtext0/45 hover:text-subtext1 select-none cursor-pointer transition-colors duration-150 align-baseline group/blame"
       title="Click or hover to inspect commit details"
     >
       <GitCommit className="w-3 h-3 text-subtext0/35 group-hover/blame:text-subtext1 shrink-0 transition-colors" />
@@ -147,7 +147,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
         <div
           ref={cardRef}
           onClick={(e) => e.stopPropagation()}
-          className="absolute left-0 top-full mt-1.5 w-84 bg-mantle border border-surface1 shadow-2xl rounded-sm p-3 z-50 text-left text-xs font-sans text-text select-text animate-in fade-in zoom-in-95 duration-100"
+          className="absolute start-0 top-full mt-1.5 w-84 bg-mantle border border-surface1 shadow-2xl rounded-sm p-3 z-50 text-start text-xs font-sans text-text select-text animate-in fade-in zoom-in-95 duration-100"
         >
           {/* Header: Commit SHA & Web Link */}
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-surface0 text-[11px]">

@@ -84,7 +84,7 @@ export const ReviewPanel: React.FC = () => {
         aria-labelledby="review-panel-title"
         className="w-full max-w-5xl max-h-full bg-mantle border border-surface1 shadow-2xl flex flex-col text-text rounded-sm"
       >
-        <header className="flex items-center justify-between border-b border-surface0 pl-5 shrink-0">
+        <header className="flex items-center justify-between border-b border-surface0 ps-5 shrink-0">
           <h2 id="review-panel-title" className="text-sm font-semibold">
             AI code review
           </h2>

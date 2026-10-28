@@ -68,7 +68,7 @@ export const GuardrailsCommandSection: React.FC<{
               <button
                 type="button"
                 onClick={() => onRemoveAllowedCmd(cmd)}
-                className="text-white/80 hover:text-white cursor-pointer rounded-sm ml-0.5 transition-colors"
+                className="text-white/80 hover:text-white cursor-pointer rounded-sm ms-0.5 transition-colors"
                 title="Remove"
               >
                 <X className="w-3 h-3" />
@@ -111,7 +111,7 @@ export const GuardrailsCommandSection: React.FC<{
               <button
                 type="button"
                 onClick={() => onRemoveBlockedCmd(cmd)}
-                className="text-white/80 hover:text-white cursor-pointer rounded-sm ml-0.5 transition-colors"
+                className="text-white/80 hover:text-white cursor-pointer rounded-sm ms-0.5 transition-colors"
                 title="Remove"
               >
                 <X className="w-3 h-3" />
@@ -154,7 +154,7 @@ export const GuardrailsCommandSection: React.FC<{
               <button
                 type="button"
                 onClick={() => onRemoveBlockedPattern(pat)}
-                className="text-white/80 hover:text-white cursor-pointer rounded-sm ml-0.5 transition-colors"
+                className="text-white/80 hover:text-white cursor-pointer rounded-sm ms-0.5 transition-colors"
                 title="Remove"
               >
                 <X className="w-3 h-3" />

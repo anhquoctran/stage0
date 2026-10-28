@@ -15,7 +15,7 @@ export function SoftwareUpdateNotice() {
   }
   return <>
     {status && ['available', 'downloading', 'ready'].includes(status.phase) && (
-      <button type="button" onClick={open} className="fixed bottom-8 right-4 z-[130] border-0 rounded-sm bg-brand px-3 py-2 text-xs text-on-accent shadow-lg">
+      <button type="button" onClick={open} className="fixed bottom-8 end-4 z-[130] border-0 rounded-sm bg-brand px-3 py-2 text-xs text-on-accent shadow-lg">
         {status.phase === 'ready' ? 'Update ready to install' : status.phase === 'downloading' ? 'Downloading Stage0 update…' : `Stage0 ${status.version} available`}
       </button>
     )}

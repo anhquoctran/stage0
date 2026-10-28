@@ -18,7 +18,7 @@ export function GitBinaryListTable({
   return (
     <div className="border border-surface1 overflow-hidden">
       <div className="max-h-72 overflow-auto">
-        <table className="w-full min-w-[900px] text-left text-xs">
+        <table className="w-full min-w-[900px] text-start text-xs">
           <thead className="sticky top-0 z-10 bg-mantle text-[10px] uppercase tracking-wider text-subtext0">
             <tr className="border-b border-surface1">
               <th scope="col" className="w-10 px-3 py-2" aria-label="Select" />

@@ -29,7 +29,7 @@ export function RepositoryCustomRulesSection({
 
       {/* QUICK SNIPPETS PILLS */}
       <div className="flex items-center gap-1.5 flex-wrap pt-1">
-        <span className="text-[10px] uppercase font-bold text-subtext0/70 mr-1">
+        <span className="text-[10px] uppercase font-bold text-subtext0/70 me-1">
           Quick Snippets:
         </span>
         {RULE_SNIPPETS.map((snip) => (

@@ -29,7 +29,7 @@ export const AiMcpTabHeader: React.FC<{
             onClick={onBackToOverview}
             className="inline-flex items-center gap-1 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group rounded-sm"
           >
-            <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+            <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5 rtl:rotate-180 transition-transform" />
             <span>AI Overview</span>
           </button>
           <span className="text-xs text-surface2 font-mono">/</span>

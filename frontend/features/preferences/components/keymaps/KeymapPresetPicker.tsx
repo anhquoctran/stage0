@@ -9,7 +9,7 @@ export function KeymapPresetPicker({ value, onChange }: KeymapPresetPickerProps)
       {KEYMAP_PRESETS.map((preset) => (
         <button key={preset.id} type="button" aria-pressed={value.preset === preset.id}
           title={preset.description} onClick={() => onChange({ ...value, preset: preset.id })}
-          className={`flex min-h-14 items-center gap-2 rounded-sm border px-3 py-2 text-left text-xs transition-colors focus-visible:outline focus-visible:outline-brand ${
+          className={`flex min-h-14 items-center gap-2 rounded-sm border px-3 py-2 text-start text-xs transition-colors focus-visible:outline focus-visible:outline-brand ${
             value.preset === preset.id ? 'border-brand bg-brand/10 text-text' : 'border-surface0 bg-crust text-subtext1 hover:border-brand/50 hover:bg-surface0/40'
           }`}>
           <KeymapPresetLogo preset={preset.id} />

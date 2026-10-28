@@ -74,7 +74,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
                   >
                     <span
                       className={`pointer-events-none inline-block h-4 w-4 shrink-0 transform rounded-full bg-base shadow-lg transition duration-200 ${
-                        enabled ? 'translate-x-4' : 'translate-x-0'
+                        enabled ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-0'
                       }`}
                     />
                   </button>

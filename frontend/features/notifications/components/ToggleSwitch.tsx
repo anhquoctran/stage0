@@ -15,7 +15,7 @@ export const ToggleSwitch: React.FC<{
   >
     <span
       className={`inline-block h-3.5 w-3.5 transform rounded-full shadow-xs transition duration-200 ease-in-out ${
-        checked ? 'translate-x-4.5 bg-base' : 'translate-x-0.5 bg-overlay1'
+        checked ? 'translate-x-4.5 rtl:-translate-x-4.5 bg-base' : 'translate-x-0.5 rtl:-translate-x-0.5 bg-overlay1'
       }`}
     />
   </button>

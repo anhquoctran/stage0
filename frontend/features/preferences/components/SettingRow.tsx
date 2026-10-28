@@ -13,7 +13,7 @@ export const SettingRow: React.FC<SettingRowProps> = ({
       className={`py-3 flex items-center justify-between gap-6 rounded-sm ${borderBottom ? 'border-b border-surface0/40' : ''
         }`}
     >
-      <div className="min-w-0 flex-1 pr-2">
+      <div className="min-w-0 flex-1 pe-2">
         <div className="text-xs font-semibold text-text">{title}</div>
         {description && (
           <div className="text-[11px] text-subtext0 mt-0.5 leading-relaxed">

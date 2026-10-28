@@ -39,13 +39,13 @@ export function RepositoryBotInheritanceCards({
               Default
             </span>
           </div>
-          <p className="text-[11px] text-subtext0 leading-relaxed pl-5">
+          <p className="text-[11px] text-subtext0 leading-relaxed ps-5">
             Automatically inherits all active Bot Reviewers and AI model settings configured in App
             Preferences.
           </p>
         </div>
 
-        <div className="pt-2 mt-2 border-t border-surface0/60 pl-5 flex items-center justify-between">
+        <div className="pt-2 mt-2 border-t border-surface0/60 ps-5 flex items-center justify-between">
           <span className="text-[11px] text-brand font-medium">
             {globalReviewers.filter((b) => b.enabled).length} global bots active
           </span>
@@ -88,13 +88,13 @@ export function RepositoryBotInheritanceCards({
               Isolated
             </span>
           </div>
-          <p className="text-[11px] text-subtext0 leading-relaxed pl-5">
+          <p className="text-[11px] text-subtext0 leading-relaxed ps-5">
             Override active bots independently for this repository, or add repository-exclusive
             custom reviewer bots.
           </p>
         </div>
 
-        <div className="pt-2 mt-2 border-t border-surface0/60 pl-5 flex items-center justify-between">
+        <div className="pt-2 mt-2 border-t border-surface0/60 ps-5 flex items-center justify-between">
           <span className="text-[11px] text-accent font-medium">
             {activeBotSet.size} bots enabled for repo
           </span>

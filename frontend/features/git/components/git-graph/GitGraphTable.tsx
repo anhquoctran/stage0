@@ -94,7 +94,7 @@ export const GitGraphTable: React.FC<{
                         <col style={{ width: 150 }} />
                         <col style={{ width: 92 }} />
                     </colgroup>
-                    <thead className="sticky top-0 z-10 bg-mantle text-left text-[11px] font-semibold text-subtext1 shadow-sm">
+                    <thead className="sticky top-0 z-10 bg-mantle text-start text-[11px] font-semibold text-subtext1 shadow-sm">
                         <tr className="h-8 border-b border-surface0">
                             <th className="px-3">Graph</th>
                             <th className="px-2">Description</th>

@@ -109,7 +109,7 @@ export const AiMcpServersList: React.FC<{
                 </div>
 
                 {/* Server Controls */}
-                <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                <div className="ms-auto flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                   {/* Enable/Disable Toggle */}
                   <button
                     type="button"
@@ -201,7 +201,7 @@ export const AiMcpServersList: React.FC<{
                 </div>
 
                 {server.lastTestedAt && (
-                  <span className="text-[10px] text-subtext0/70 shrink-0 pl-2">
+                  <span className="text-[10px] text-subtext0/70 shrink-0 ps-2">
                     Checked {server.lastTestedAt}
                   </span>
                 )}

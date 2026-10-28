@@ -37,12 +37,12 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
   );
 
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
+    <div className="relative inline-block text-start" ref={dropdownRef}>
       <button
         type="button"
         disabled={disabled || !branches}
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-between gap-2.5 px-2.5 py-1 rounded-sm border text-left transition-all ${
+        className={`flex items-center justify-between gap-2.5 px-2.5 py-1 rounded-sm border text-start transition-all ${
           disabled || !branches
             ? 'bg-mantle/50 border-surface0/50 text-subtext0 cursor-not-allowed'
             : 'bg-surface0 border-surface0 text-text hover:bg-surface1 hover:border-surface2 focus:outline-none focus:ring-1 focus:ring-blue/50 shadow-xs'
@@ -59,21 +59,21 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
             </span>
           </div>
         </div>
-        <ChevronDown className="w-3.5 h-3.5 text-subtext1 shrink-0 ml-0.5" />
+        <ChevronDown className="w-3.5 h-3.5 text-subtext1 shrink-0 ms-0.5" />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-1.5 w-64 rounded-sm shadow-2xl bg-mantle border border-surface0 z-50 overflow-hidden py-1 animate-in fade-in duration-100">
+        <div className="absolute start-0 mt-1.5 w-64 rounded-sm shadow-2xl bg-mantle border border-surface0 z-50 overflow-hidden py-1 animate-in fade-in duration-100">
           <div className="p-2 border-b border-surface0 bg-base rounded-sm">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-subtext1" />
+              <Search className="w-3.5 h-3.5 absolute start-2.5 top-1/2 -translate-y-1/2 text-subtext1" />
               <input
                 ref={inputRef}
                 type="text"
                 placeholder="Filter branches..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-2.5 py-1 bg-mantle border border-surface0 rounded-sm text-xs text-text placeholder-subtext0 focus:outline-none focus:border-surface2"
+                className="w-full ps-8 pe-2.5 py-1 bg-mantle border border-surface0 rounded-sm text-xs text-text placeholder-subtext0 focus:outline-none focus:border-surface2"
               />
             </div>
           </div>
@@ -103,7 +103,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                         onChange(branch);
                         setIsOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-1.5 text-xs text-left transition-colors rounded-sm ${
+                      className={`w-full flex items-center justify-between px-3 py-1.5 text-xs text-start transition-colors rounded-sm ${
                         isSelected
                           ? 'bg-surface1 text-text font-semibold'
                           : 'text-text hover:bg-surface0'
@@ -119,7 +119,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                         )}
                       </span>
                       {isSelected && (
-                        <Check className="w-3.5 h-3.5 text-text shrink-0 ml-1" />
+                        <Check className="w-3.5 h-3.5 text-text shrink-0 ms-1" />
                       )}
                     </button>
                   );
@@ -147,7 +147,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                         onChange(branch);
                         setIsOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-1.5 text-xs text-left transition-colors rounded-sm ${
+                      className={`w-full flex items-center justify-between px-3 py-1.5 text-xs text-start transition-colors rounded-sm ${
                         isSelected
                           ? 'bg-surface1 text-text font-semibold'
                           : 'text-subtext1 hover:bg-surface0 hover:text-text'
@@ -160,7 +160,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                         </span>
                       </span>
                       {isSelected && (
-                        <Check className="w-3.5 h-3.5 text-text shrink-0 ml-1" />
+                        <Check className="w-3.5 h-3.5 text-text shrink-0 ms-1" />
                       )}
                     </button>
                   );

@@ -24,7 +24,7 @@ export function FolderFileList({
             <button
               type="button"
               onClick={() => toggleFolder(folder)}
-              className="w-full text-left px-2.5 py-1 text-xs font-semibold text-subtext1 hover:text-text hover:bg-mantle flex items-center justify-between transition-colors rounded-sm"
+              className="w-full text-start px-2.5 py-1 text-xs font-semibold text-subtext1 hover:text-text hover:bg-mantle flex items-center justify-between transition-colors rounded-sm"
             >
               <div className="flex items-center gap-1.5 truncate">
                 {isCollapsed ? (
@@ -43,7 +43,7 @@ export function FolderFileList({
             </button>
 
             {!isCollapsed && (
-              <div className="pl-4 divide-y divide-surface0/40">
+              <div className="ps-4 divide-y divide-surface0/40">
                 {folderFiles.map((file) => {
                   const isSelected = selectedFile?.path === file.path;
                   const fileName = file.path.split('/').pop() || file.path;
@@ -54,10 +54,10 @@ export function FolderFileList({
                       type="button"
                       onClick={() => onSelectFile(file)}
                       onContextMenu={(e) => handleContextMenu(e, file)}
-                      className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center justify-between gap-2 transition-colors cursor-pointer rounded-sm ${
+                      className={`w-full text-start px-2.5 py-1.5 text-xs flex items-center justify-between gap-2 transition-colors cursor-pointer rounded-sm ${
                         isSelected
-                          ? 'bg-blue/15 border-l-2 border-blue text-text'
-                          : 'text-text hover:bg-mantle border-l-2 border-transparent'
+                          ? 'bg-blue/15 border-s-2 border-blue text-text'
+                          : 'text-text hover:bg-mantle border-s-2 border-transparent'
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">

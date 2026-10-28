@@ -7,6 +7,7 @@ import { type NotificationDispatchResult } from '../types/NotificationDispatchRe
 import { type NotifyOptions } from '../types/NotifyOptions';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
+import i18n from '../../i18n/i18n';
 
 let isListening = false;
 
@@ -26,7 +27,7 @@ export const notificationService = {
         const level = (payload.level as AppNotification['level']) || 'info';
         const notification: AppNotification = {
           id: (payload.id as string) || `notif_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-          title: (payload.title as string) || 'Stage0 Notification',
+          title: (payload.title as string) || i18n.t('notifications.fallbackTitle'),
           body: (payload.body as string) || '',
           level,
           variant: (payload.variant as AppNotification['variant']) || this.variantForLevel(level),
@@ -86,14 +87,16 @@ export const notificationService = {
    */
   async notify(options: NotifyOptions): Promise<NotificationDispatchResult> {
     const settings = useNotificationStore.getState().settings;
+    const title = options.titleKey ? i18n.t(options.titleKey, options.values) : options.title || '';
+    const body = options.bodyKey ? i18n.t(options.bodyKey, options.values) : options.body || '';
 
     // Check if channel is disabled
     if (options.channel && settings.channels[options.channel] === false) {
       return {
         notification: {
           id: `notif_skipped_${Date.now()}`,
-          title: options.title,
-          body: options.body,
+          title,
+          body,
           level: options.level || 'info',
           timestamp: Date.now(),
           isRead: true,
@@ -107,8 +110,8 @@ export const notificationService = {
 
     const notification: AppNotification = {
       id,
-      title: options.title,
-      body: options.body,
+      title,
+      body,
       level: options.level || 'info',
       timestamp: Date.now(),
       isRead: false,
@@ -153,7 +156,7 @@ export const notificationService = {
           delivery = 'sent';
         } catch (err) {
           delivery = 'failed';
-          deliveryError = 'Stage0 notification delivery failed.';
+          deliveryError = i18n.t('notifications.deliveryFailed');
           console.warn('[NotificationService] Stage0 notification delivery failed:', err);
         }
       }

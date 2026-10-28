@@ -34,7 +34,7 @@ export const DiscussionCodeContext: React.FC<{
     <section className="overflow-hidden rounded-sm bg-crust text-xs" aria-label="Reviewed code location">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-surface0/30 px-3.5 py-3">
         <div className="flex min-w-0 flex-1 items-start gap-2">
-          <span className="min-w-0 break-all whitespace-normal font-mono text-xs font-semibold leading-5 text-text sm:text-sm">
+          <span dir="ltr" className="min-w-0 break-all whitespace-normal font-mono text-xs font-semibold leading-5 text-text sm:text-sm">
             {discussion.filePath}
           </span>
           <button
@@ -52,7 +52,7 @@ export const DiscussionCodeContext: React.FC<{
             <span className="rounded-sm bg-surface0 px-2 py-0.5 text-subtext1">Outdated</span>
           )}
           {discussion.commitId && (
-            <span className="font-mono" title={`Reviewed snapshot: ${discussion.commitId}`}>
+            <span dir="ltr" className="font-mono" title={`Reviewed snapshot: ${discussion.commitId}`}>
               Reviewed at {discussion.commitId.slice(0, 8)}
             </span>
           )}
@@ -65,7 +65,7 @@ export const DiscussionCodeContext: React.FC<{
         </div>
       )}
       {rows.length > 0 ? (
-        <div className="overflow-x-auto rounded-sm bg-base select-text" aria-label="Discussion code snippet">
+        <div dir="ltr" className="overflow-x-auto rounded-sm bg-base select-text" aria-label="Discussion code snippet">
           <table className="w-full border-collapse font-mono text-xs leading-6">
             <tbody>
               {rows.map((row) => (

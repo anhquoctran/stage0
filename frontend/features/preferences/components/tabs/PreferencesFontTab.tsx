@@ -102,16 +102,16 @@ export const PreferencesFontTab: React.FC<{
               {selectedFontObj.fontFamilyName}
             </span>
             <ChevronDown
-              className={`w-3.5 h-3.5 text-subtext0 transition-transform duration-200 shrink-0 ml-2 ${
+              className={`w-3.5 h-3.5 text-subtext0 transition-transform duration-200 shrink-0 ms-2 ${
                 isFontDropdownOpen ? 'rotate-180 text-text' : ''
               }`}
             />
           </button>
 
           {isFontDropdownOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-72 bg-mantle border border-surface0 shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 rounded-sm">
+            <div className="absolute end-0 top-full mt-1.5 w-72 bg-mantle border border-surface0 shadow-2xl z-50 overflow-hidden flex flex-col max-h-72 rounded-sm">
               <div className="p-2 border-b border-surface0 bg-crust sticky top-0 z-10 flex items-center gap-2 rounded-sm">
-                <Search className="w-3 h-3 text-subtext0 shrink-0 ml-1" />
+                <Search className="w-3 h-3 text-subtext0 shrink-0 ms-1" />
                 <input
                   ref={fontSearchInputRef}
                   type="text"
@@ -150,13 +150,13 @@ export const PreferencesFontTab: React.FC<{
                           setIsFontDropdownOpen(false);
                           fontButtonRef.current?.focus();
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
+                        className={`w-full flex items-center justify-between px-3 py-2 text-start transition-colors cursor-pointer rounded-sm ${
                           isSelected
                             ? 'bg-surface0 text-text font-semibold'
                             : 'hover:bg-base text-subtext1 hover:text-text'
                         }`}
                       >
-                        <div className="flex flex-col min-w-0 pr-2">
+                        <div className="flex flex-col min-w-0 pe-2">
                           <span
                             className="text-xs truncate"
                             style={{ fontFamily: font.fontFamilyName }}
@@ -181,7 +181,7 @@ export const PreferencesFontTab: React.FC<{
                               Mono
                             </span>
                           )}
-                          {isSelected && <Check className="w-3.5 h-3.5 text-text ml-1" />}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-text ms-1" />}
                         </div>
                       </button>
                     );
@@ -301,7 +301,7 @@ export const PreferencesFontTab: React.FC<{
             onChange={(e) => setDraftLineSpacing(parseFloat(e.target.value))}
             className="w-full accent-brand cursor-pointer rounded-sm"
           />
-          <span className="text-xs font-mono text-text shrink-0 w-10 text-right">
+          <span className="text-xs font-mono text-text shrink-0 w-10 text-end">
             {draftLineSpacing.toFixed(2)}x
           </span>
         </div>

@@ -17,11 +17,11 @@ export function BlameLinesTable({
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b border-surface0 bg-mantle text-[10px] text-subtext0 uppercase font-sans font-bold select-none">
-            <th className="py-1.5 px-3 text-left w-20">Commit</th>
-            <th className="py-1.5 px-2 text-left w-36">Author</th>
-            <th className="py-1.5 px-2 text-left w-24">Date</th>
-            <th className="py-1.5 px-2 text-right w-12 border-r border-surface0">Line</th>
-            <th className="py-1.5 px-3 text-left">Content</th>
+            <th className="py-1.5 px-3 text-start w-20">Commit</th>
+            <th className="py-1.5 px-2 text-start w-36">Author</th>
+            <th className="py-1.5 px-2 text-start w-24">Date</th>
+            <th className="py-1.5 px-2 text-end w-12 border-e border-surface0">Line</th>
+            <th className="py-1.5 px-3 text-start">Content</th>
           </tr>
         </thead>
         <tbody style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight: lineSpacing }}>
@@ -71,7 +71,7 @@ export function BlameLinesTable({
                 </td>
 
                 {/* Line Number */}
-                <td className="py-0.5 px-2 align-top text-right text-subtext0 border-r border-surface0 select-none text-[11px]">
+                <td className="py-0.5 px-2 align-top text-end text-subtext0 border-e border-surface0 select-none text-[11px]">
                   {row.line_no}
                 </td>
 

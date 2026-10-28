@@ -119,7 +119,7 @@ export function DiscussionReplyBox({
               setIsCollapsed(false);
             }}
             aria-label={`Reply to discussion ${discussion.id}`}
-            className="flex-1 text-left px-3 py-1.5 border border-surface1 bg-crust/50 hover:bg-crust hover:border-surface2 text-subtext0 hover:text-subtext1 text-xs transition-all cursor-text flex items-center shadow-inner rounded-sm"
+            className="flex-1 text-start px-3 py-1.5 border border-surface1 bg-crust/50 hover:bg-crust hover:border-surface2 text-subtext0 hover:text-subtext1 text-xs transition-all cursor-text flex items-center shadow-inner rounded-sm"
           >
             <span>Reply...</span>
           </button>

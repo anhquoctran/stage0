@@ -24,11 +24,11 @@ export const AcpRegistryProjectInfo: React.FC<AcpRegistryProjectInfoProps> = ({ 
   };
 
   return (
-    <details className="ml-6 mt-1 max-w-3xl text-[10px] text-subtext0">
+    <details className="ms-6 mt-1 max-w-3xl text-[10px] text-subtext0">
       <summary className="w-fit cursor-pointer select-none hover:text-text focus-visible:outline focus-visible:outline-brand">
         Project information <span className="text-subtext0">· Registry metadata</span>
       </summary>
-      <div className="mt-2 grid gap-x-3 gap-y-1 border-l border-surface1 pl-3 sm:grid-cols-[90px_minmax(0,1fr)] rounded-sm">
+      <div className="mt-2 grid gap-x-3 gap-y-1 border-s border-surface1 ps-3 sm:grid-cols-[90px_minmax(0,1fr)] rounded-sm">
         <span>Project ID</span><code className="break-all text-text">{entry.id}</code>
         <span>Version</span><span className="text-text">{entry.version || 'Not provided'}</span>
         <span>License</span><span className="text-text">{entry.license || 'Not provided'}{licenseUrl && <> · <a href={licenseUrl} target="_blank" rel="noopener noreferrer" onClick={handleLinkClick(licenseUrl)} className="text-brand hover:underline cursor-pointer">Details <ExternalLink className="inline h-3 w-3" /></a></>}</span>

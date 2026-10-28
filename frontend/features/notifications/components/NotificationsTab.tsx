@@ -1,5 +1,6 @@
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
@@ -11,31 +12,32 @@ import { ToggleSwitch } from './ToggleSwitch';
 
 const categories: Array<{
   key: NotificationChannel;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   {
     key: 'aiReview',
-    title: 'AI code review',
-    description: 'When an AI review or re-verification finishes.',
+    titleKey: 'notifications.aiReviewTitle',
+    descriptionKey: 'notifications.aiReviewDescription',
     icon: CheckCircle2,
   },
   {
     key: 'gitSync',
-    title: 'Git watchers and sync',
-    description: 'Remote changes, new branches, and sync events.',
+    titleKey: 'notifications.gitSyncTitle',
+    descriptionKey: 'notifications.gitSyncDescription',
     icon: RefreshCw,
   },
   {
     key: 'guardrails',
-    title: 'Security guardrails',
-    description: 'Elevated commands, access blocks, and policy violations.',
+    titleKey: 'notifications.guardrailsTitle',
+    descriptionKey: 'notifications.guardrailsDescription',
     icon: AlertTriangle,
   },
 ];
 
 export const NotificationsTab: React.FC = () => {
+  const { t } = useTranslation();
   const appServices = useApplicationServices();
   const { settings, updateChannel } = useNotificationStore();
   const [isTesting, setIsTesting] = useState(false);
@@ -47,9 +49,9 @@ export const NotificationsTab: React.FC = () => {
     setTestResult(null);
     try {
       await appServices.notifications.sendTestNotification();
-      setTestResult('Test toast sent. It does not affect notification history or unread count.');
+      setTestResult(t('notifications.previewSent'));
     } catch {
-      setTestResult('Could not display a test notification on this system.');
+      setTestResult(t('notifications.previewFailed'));
     } finally {
       setIsTesting(false);
     }
@@ -59,18 +61,18 @@ export const NotificationsTab: React.FC = () => {
     <div className="space-y-5 animate-in fade-in duration-100 select-none pb-6">
       <div>
         <h3 className="border-b border-surface0/50 pb-1 font-mono text-xs font-bold uppercase tracking-tight text-text">
-          Notification categories
+          {t('notifications.categoryHeading')}
         </h3>
         <p className="pt-2 text-[11px] leading-relaxed text-subtext0">
-          Choose which Stage0 events can show a toast. Position and dismissal are set by Stage0 for each event.
+          {t('notifications.categoryDescription')}
         </p>
       </div>
 
       <div className="flex items-center justify-between gap-5 rounded-sm border border-surface1/70 bg-mantle p-3.5 shadow-xs">
         <div className="min-w-0">
-          <h4 className="text-xs font-semibold text-text">Preview the notification toast</h4>
+          <h4 className="text-xs font-semibold text-text">{t('notifications.previewTitle')}</h4>
           <p className="mt-1 text-[11px] leading-relaxed text-subtext0">
-            Send a test using this platform’s notification style. It is not added to history or unread count.
+            {t('notifications.previewDescription')}
           </p>
           {testResult && (
             <p role="status" className="mt-1.5 text-[11px] text-subtext1" aria-live="polite">
@@ -82,26 +84,26 @@ export const NotificationsTab: React.FC = () => {
           type="button"
           onClick={() => void handleTestNotification()}
           disabled={!canTestNotifications || isTesting}
-          title={canTestNotifications ? 'Show a test notification without saving it' : 'Available in the desktop app'}
+          title={t(canTestNotifications ? 'notifications.testTooltip' : 'notifications.desktopOnly')}
           className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-sm bg-brand px-3 text-xs font-semibold text-on-accent shadow-xs transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Sparkles className={`h-3.5 w-3.5 ${isTesting ? 'animate-pulse' : ''}`} />
-          {isTesting ? 'Sending…' : 'Test Toast'}
+          {isTesting ? t('notifications.sending') : t('notifications.testButton')}
         </button>
       </div>
 
       <div>
-        {categories.map(({ key, title, description, icon: Icon }) => (
+        {categories.map(({ key, titleKey, descriptionKey, icon: Icon }) => (
           <div
             key={key}
             className="flex items-center justify-between gap-6 border-b border-surface0/40 py-3 rounded-sm"
           >
-            <div className="min-w-0 flex-1 pr-2">
+            <div className="min-w-0 flex-1 pe-2">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-text">
                 <Icon className="h-3.5 w-3.5 text-subtext0" />
-                <span>{title}</span>
+                <span>{t(titleKey)}</span>
               </div>
-              <div className="mt-0.5 text-[11px] leading-relaxed text-subtext0">{description}</div>
+              <div className="mt-0.5 text-[11px] leading-relaxed text-subtext0">{t(descriptionKey)}</div>
             </div>
             <ToggleSwitch
               checked={settings.channels[key]}

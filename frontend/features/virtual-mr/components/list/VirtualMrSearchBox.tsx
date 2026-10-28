@@ -94,7 +94,7 @@ export function VirtualMrSearchBox({
         {searchSuggestions.length > 0 && (
           <div
             id={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestions`}
-            className="absolute left-0 top-full z-[120] mt-1 max-h-80 w-[min(26rem,calc(100vw-2rem))] overflow-y-auto border border-surface1 bg-surface0 py-1 text-left shadow-xl rounded-sm"
+            className="absolute start-0 top-full z-[120] mt-1 max-h-80 w-[min(26rem,calc(100vw-2rem))] overflow-y-auto border border-surface1 bg-surface0 py-1 text-start shadow-xl rounded-sm"
             role="listbox"
             aria-label="Search suggestions"
           >
@@ -127,7 +127,7 @@ export function VirtualMrSearchBox({
           </div>
         )}
       </div>
-      <div className="flex h-full shrink-0 items-center border-l border-surface1">
+      <div className="flex h-full shrink-0 items-center border-s border-surface1">
         <CustomSelect<MrSort>
           value={sortBy}
           onChange={(nextSort) => {
@@ -145,7 +145,7 @@ export function VirtualMrSearchBox({
       <button
         type="button"
         onClick={() => setSortDirection((direction) => (direction === 'asc' ? 'desc' : 'asc'))}
-        className="flex h-full w-8 shrink-0 items-center justify-center border-l border-surface1 bg-surface0 text-text hover:bg-surface1 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand cursor-pointer rounded-sm"
+        className="flex h-full w-8 shrink-0 items-center justify-center border-s border-surface1 bg-surface0 text-text hover:bg-surface1 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand cursor-pointer rounded-sm"
         aria-label={`Switch to ${sortDirection === 'asc' ? 'descending' : 'ascending'} order`}
         title={`${sortDirection === 'asc' ? 'Ascending' : 'Descending'} order`}
       >

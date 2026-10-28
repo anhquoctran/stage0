@@ -47,7 +47,7 @@ export const GitTaskDialog: React.FC = () => {
   return (
     <div className="fixed inset-x-0 bottom-0 top-8.5 z-[150] flex items-center justify-center bg-crust/60 p-4 rounded-sm" onKeyDown={handleKeyDown}>
       <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="git-task-title" className="max-h-full w-full max-w-[420px] overflow-y-auto border border-surface1 bg-mantle text-text shadow-2xl">
-        <div className="flex items-center justify-between border-b border-surface0 pl-4">
+        <div className="flex items-center justify-between border-b border-surface0 ps-4">
           <div className="flex min-w-0 items-center gap-2 py-3">
             {isRunning ? <Loader2 className="h-4 w-4 animate-spin text-primary" />
               : task.status === 'failed' ? <AlertCircle className="h-4 w-4 text-red" />

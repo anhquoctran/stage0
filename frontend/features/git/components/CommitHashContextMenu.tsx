@@ -44,7 +44,7 @@ export const CommitHashContextMenu: React.FC<{
                 type="button"
                 role="menuitem"
                 onClick={() => onCopy(menu.hash)}
-                className="flex h-8 w-full items-center gap-2 px-3 text-left text-xs text-text hover:bg-surface0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-brand rounded-sm"
+                className="flex h-8 w-full items-center gap-2 px-3 text-start text-xs text-text hover:bg-surface0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-brand rounded-sm"
             >
                 <Copy className="h-3.5 w-3.5 text-subtext0" />
                 Copy Commit Hash

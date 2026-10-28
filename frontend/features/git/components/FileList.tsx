@@ -153,7 +153,7 @@ export const FileList: React.FC<FileListProps> = ({
   return (
     <aside
       style={width ? { width: `${width}px` } : undefined}
-      className={`flex flex-col h-full bg-base border-r border-surface0 shrink-0 select-none ${
+      className={`flex flex-col h-full bg-base border-e border-surface0 shrink-0 select-none ${
         !width ? 'w-80' : ''
       }`}
     >

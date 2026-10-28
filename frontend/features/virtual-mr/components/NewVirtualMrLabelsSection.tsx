@@ -77,7 +77,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
                 <button
                   type="button"
                   onClick={() => onRemoveLabel(lbl.id)}
-                  className="hover:opacity-100 opacity-60 transition-opacity cursor-pointer ml-0.5 rounded-sm"
+                  className="hover:opacity-100 opacity-60 transition-opacity cursor-pointer ms-0.5 rounded-sm"
                   title={`Remove ${lbl.name}`}
                 >
                   <X className="w-3 h-3" />
@@ -90,7 +90,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
 
       {/* Label Dropdown Popover */}
       {showLabelDropdown && (
-        <div className="absolute top-full right-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100 rounded-sm">
+        <div className="absolute top-full end-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100 rounded-sm">
           <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between rounded-sm">
             <span>Apply Labels</span>
             <button
@@ -155,7 +155,7 @@ export const NewVirtualMrLabelsSection: React.FC<{
                   <button
                     type="button"
                     onClick={handleCreateAndSelectLabel}
-                    className="w-full px-3 py-2 flex items-center gap-2 hover:bg-surface0 text-left text-xs text-brand transition-colors cursor-pointer font-medium rounded-sm"
+                    className="w-full px-3 py-2 flex items-center gap-2 hover:bg-surface0 text-start text-xs text-brand transition-colors cursor-pointer font-medium rounded-sm"
                   >
                     <Plus className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">Create label <strong>"{labelSearch.trim()}"</strong></span>
@@ -172,11 +172,11 @@ export const NewVirtualMrLabelsSection: React.FC<{
                         key={lbl.id}
                         type="button"
                         onClick={() => onToggleLabel(lbl.id)}
-                        className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors cursor-pointer rounded-sm ${
+                        className={`w-full px-3 py-2 flex items-center justify-between text-start transition-colors cursor-pointer rounded-sm ${
                           isSelected ? 'bg-surface0 font-medium' : 'hover:bg-surface0/50'
                         }`}
                       >
-                        <div className="flex items-center gap-2 min-w-0 pr-2">
+                        <div className="flex items-center gap-2 min-w-0 pe-2">
                           <span
                             className="w-2.5 h-2.5 shrink-0"
                             style={{ backgroundColor: lbl.color }}

@@ -1,4 +1,5 @@
 import { notificationService } from '../../notifications/services/notificationService';
+import i18n from '../../i18n/i18n';
 import { formatMention } from '../../../common/utils/mentions';
 import type { VirtualMrComment } from '../../virtual-mr/types/VirtualMrComment';
 import { getDiscussionComments } from '../../virtual-mr/utils/discussionReferences';
@@ -50,7 +51,7 @@ function addPendingReply(sessionId: string, discussionId: string, reviewerId: st
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     isPending: true,
-    pendingLabel: 'Reviewing this MR and preparing findings…',
+    pendingLabel: i18n.t('reviewFlow.pendingLabel'),
   };
   useVirtualMrStore.setState((state) => ({
     sessions: state.sessions.map((session) => session.id !== sessionId ? session : {
@@ -100,9 +101,11 @@ function unresolvedReport(findings: ReturnType<typeof reviewerFindings>, reviewe
     const reference = `#mr-discussion/${encodeURIComponent(discussion.id)}`;
     return `- [\`${location.replace(/`/g, '\\`')}\`](${reference})${title ? ` — ${title.slice(0, 140)}` : ''}`;
   });
-  if (findings.length > lines.length) lines.push(`- …and ${findings.length - lines.length} more open finding(s)`);
+  if (findings.length > lines.length) {
+    lines.push(`- ${i18n.t('reviewFlow.moreFindings', { count: findings.length - lines.length })}`);
+  }
   const command = `${formatMention({ id: reviewerId, label: reviewerName, kind: 'reviewer' })} review`;
-  return `**Review paused: resolve my earlier findings first.**\n\nI found ${findings.length} unresolved code discussion${findings.length === 1 ? '' : 's'} from this reviewer:\n\n${lines.join('\n')}\n\nResolve those threads, then post \`${command}\` in a new discussion to request another pass.`;
+  return `${i18n.t('reviewFlow.pausedTitle')}\n\n${i18n.t('reviewFlow.openFindings', { count: findings.length })}\n\n${lines.join('\n')}\n\n${i18n.t('reviewFlow.resolveThenRetry', { command: `\`${command}\`` })}`;
 }
 
 export async function requestManualReviewerReview(
@@ -118,22 +121,22 @@ export async function requestManualReviewerReview(
   try {
     await useVirtualMrStore.getState().refreshDiscussions(sessionId);
   } catch {
-    await botReply(discussionId, reviewerId, 'Reviewer', '**Review not started.** I could not reload the latest discussion state, so I could not safely check previous findings. Please retry shortly.');
+    await botReply(discussionId, reviewerId, 'Reviewer', i18n.t('reviewFlow.reloadFailed'));
     return;
   }
 
   const assigned = getAssignedReviewerForSession(sessionId, reviewerId);
   if (!assigned) {
-    await botReply(discussionId, reviewerId, 'Reviewer', '**Review not started.** This bot is no longer assigned to this MR.');
+    await botReply(discussionId, reviewerId, 'Reviewer', i18n.t('reviewFlow.unassigned'));
     return;
   }
   if (!assigned.profile) {
-    await botReply(discussionId, reviewerId, assigned.name, '**Review not started.** This reviewer profile is unavailable or disabled. Reassign an enabled reviewer and try again.');
+    await botReply(discussionId, reviewerId, assigned.name, i18n.t('reviewFlow.profileUnavailable'));
     return;
   }
   const session = currentSession(sessionId);
   if (!session || session.status === 'closed') {
-    await botReply(discussionId, reviewerId, assigned.name, '**Review not started.** Reopen this Virtual MR before requesting a review.');
+    await botReply(discussionId, reviewerId, assigned.name, i18n.t('reviewFlow.closed'));
     return;
   }
 
@@ -143,7 +146,7 @@ export async function requestManualReviewerReview(
     return;
   }
   if (busy(sessionId)) {
-    await botReply(discussionId, reviewerId, assigned.name, '**Review not started yet.** Another AI review is already running for this MR. Retry the command after it finishes.');
+    await botReply(discussionId, reviewerId, assigned.name, i18n.t('reviewFlow.busy'));
     return;
   }
 
@@ -151,7 +154,7 @@ export async function requestManualReviewerReview(
     discussionId,
     reviewerId,
     assigned.name,
-    '**Review request accepted.** I checked that none of my earlier findings are still open. I’m starting a new full review of this MR now.',
+    i18n.t('reviewFlow.accepted'),
   );
   const pendingId = addPendingReply(sessionId, discussionId, reviewerId, assigned.name);
 
@@ -175,15 +178,20 @@ export async function requestManualReviewerReview(
       && !session.discussions.some((before) => before.id === discussion.id),
     );
     removePendingReply(sessionId, discussionId, pendingId);
-    const incomplete = finished.status === 'partial' ? ' Coverage was incomplete.' : '';
+    const incomplete = finished.status === 'partial' ? i18n.t('reviewFlow.partialSuffix') : '';
     const summary = newFindings.length
-      ? `Review complete. I created ${newFindings.length} new code discussion${newFindings.length === 1 ? '' : 's'} with findings.${incomplete}`
-      : `Review complete. I did not create any new code discussions.${incomplete}`;
+      ? i18n.t('reviewFlow.completeWithFindings', { count: newFindings.length, incomplete })
+      : i18n.t('reviewFlow.completeNoFindings', { incomplete });
     if (newFindings.length) {
       const latestSession = currentSession(sessionId);
       void notificationService.notify({
-        title: `${assigned.name} finished an MR review`,
-        body: `Created ${newFindings.length} review discussion${newFindings.length === 1 ? '' : 's'} in ${latestSession?.title || 'the Virtual MR'}.`,
+        titleKey: 'reviewFlow.completedTitle',
+        bodyKey: 'reviewFlow.completedBody',
+        values: {
+          reviewer: assigned.name,
+          count: newFindings.length,
+          title: latestSession?.title || i18n.t('reviewFlow.virtualMrFallback'),
+        },
         channel: 'aiReview',
         level: 'success',
         autoDismissMs: 8000,
@@ -203,6 +211,6 @@ export async function requestManualReviewerReview(
       // Preserve the original run error when a refresh also fails.
     }
     const message = error instanceof Error ? error.message : String(error);
-    await botReply(discussionId, reviewerId, assigned.name, `**Review did not finish.** ${message}`);
+    await botReply(discussionId, reviewerId, assigned.name, i18n.t('reviewFlow.failed', { error: message }));
   }
 }

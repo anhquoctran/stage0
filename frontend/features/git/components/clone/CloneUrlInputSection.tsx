@@ -26,7 +26,7 @@ export function CloneUrlInputSection({
       </div>
       <div className="relative">
         <Globe
-          className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
+          className={`w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
             urlStatus === 'invalid'
               ? 'text-red'
               : urlStatus === 'valid'
@@ -41,7 +41,7 @@ export function CloneUrlInputSection({
           value={remoteUrl}
           onChange={handleUrlChange}
           placeholder="https://github.com/owner/repository.git or git@github.com:owner/repo.git"
-          className={`w-full pl-9 pr-9 py-2 bg-surface0 border text-xs placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 rounded-sm ${
+          className={`w-full ps-9 pe-9 py-2 bg-surface0 border text-xs placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 rounded-sm ${
             urlStatus === 'invalid'
               ? 'border-red text-red focus:border-red focus:ring-1 focus:ring-red'
               : urlStatus === 'valid'
@@ -49,7 +49,7 @@ export function CloneUrlInputSection({
                 : 'border-surface1 text-text focus:border-blue focus:ring-1 focus:ring-blue'
           }`}
         />
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+        <div className="absolute end-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
           {urlStatus === 'validating' && <Loader2 className="w-4 h-4 text-blue animate-spin" />}
           {urlStatus === 'valid' && <Check className="w-4 h-4 text-green" />}
           {urlStatus === 'invalid' && <AlertCircle className="w-4 h-4 text-red" />}

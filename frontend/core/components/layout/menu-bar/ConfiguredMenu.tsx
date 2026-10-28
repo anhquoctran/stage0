@@ -23,7 +23,8 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
   const [activeChild, setActiveChild] = useState<string | null>(null);
   const topLevel = props.onToggle !== undefined;
   const open = props.isOpen ?? hovered;
-  const { anchorRef, popupRef, popupStyle } = useMenuPopupPosition(open, !topLevel);
+  const rtl = document.documentElement.dir === 'rtl';
+  const { anchorRef, popupRef, popupStyle } = useMenuPopupPosition(open, !topLevel, rtl);
   useEffect(() => {
     if (!open) setActiveChild(null);
   }, [open]);
@@ -127,7 +128,7 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
           }
         }}
         onKeyDown={(event) => {
-          if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+          if (event.key === 'ArrowDown' || event.key === (rtl ? 'ArrowLeft' : 'ArrowRight')) {
             event.preventDefault();
             setHovered(true);
             if (topLevel && !open) props.onToggle?.();
@@ -142,7 +143,7 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
       >
         {!topLevel && Icon && <Icon className="h-3.5 w-3.5 text-subtext0" />}
         <span className="flex-1">{label}</span>
-        {!topLevel && <ChevronRight className="h-3.5 w-3.5 text-subtext0" />}
+        {!topLevel && <ChevronRight className="h-3.5 w-3.5 text-subtext0 rtl:rotate-180" />}
       </button>
       {open && enabled && (
         <div
@@ -152,7 +153,7 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
           aria-label={label}
           className={`absolute z-50 min-w-64 rounded-sm border border-surface0 bg-mantle py-1.5 shadow-2xl  `}
           onKeyDown={(event) => {
-            if (event.key === 'ArrowLeft' && !topLevel) {
+            if (event.key === (rtl ? 'ArrowRight' : 'ArrowLeft') && !topLevel) {
               event.preventDefault();
               event.stopPropagation();
               props.onLeave?.();

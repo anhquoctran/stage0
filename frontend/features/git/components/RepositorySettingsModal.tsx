@@ -101,14 +101,14 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
         {/* BODY (SIDEBAR + CONTENT) */}
         <div className="flex-1 flex overflow-hidden min-h-[480px]">
           {/* TABS SIDEBAR */}
-          <div className="w-52 border-r border-surface0 bg-crust p-3 flex flex-col justify-between shrink-0 rounded-sm">
+          <div className="w-52 border-e border-surface0 bg-crust p-3 flex flex-col justify-between shrink-0 rounded-sm">
             <div className="space-y-1">
               <button
                 type="button"
                 onClick={() => setActiveTab('remotes')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-start transition-colors cursor-pointer rounded-sm ${
                   activeTab === 'remotes'
-                    ? 'bg-surface0 text-text font-medium border-l-2 border-brand'
+                    ? 'bg-surface0 text-text font-medium border-s-2 border-brand'
                     : 'text-subtext0 hover:bg-surface0/50 hover:text-text'
                 }`}
               >
@@ -124,9 +124,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               <button
                 type="button"
                 onClick={() => setActiveTab('branches')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-start transition-colors cursor-pointer rounded-sm ${
                   activeTab === 'branches'
-                    ? 'bg-surface0 text-text font-medium border-l-2 border-brand'
+                    ? 'bg-surface0 text-text font-medium border-s-2 border-brand'
                     : 'text-subtext0 hover:bg-surface0/50 hover:text-text'
                 }`}
               >
@@ -142,9 +142,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               <button
                 type="button"
                 onClick={() => setActiveTab('labels')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-start transition-colors cursor-pointer rounded-sm ${
                   activeTab === 'labels'
-                    ? 'bg-surface0 text-text font-medium border-l-2 border-brand'
+                    ? 'bg-surface0 text-text font-medium border-s-2 border-brand'
                     : 'text-subtext0 hover:bg-surface0/50 hover:text-text'
                 }`}
               >
@@ -160,9 +160,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               <button
                 type="button"
                 onClick={() => setActiveTab('agents')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors cursor-pointer rounded-sm ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-start transition-colors cursor-pointer rounded-sm ${
                   activeTab === 'agents'
-                    ? 'bg-surface0 text-text font-medium border-l-2 border-brand'
+                    ? 'bg-surface0 text-text font-medium border-s-2 border-brand'
                     : 'text-subtext0 hover:bg-surface0/50 hover:text-text'
                 }`}
               >

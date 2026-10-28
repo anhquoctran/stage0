@@ -64,7 +64,7 @@ export const NewVirtualMrReviewersSection: React.FC<{
                   <button
                     type="button"
                     onClick={() => onRemoveBot(bot.id)}
-                    className="text-brand/60 hover:text-red hover:bg-surface0 transition-colors cursor-pointer ml-0.5 rounded-sm"
+                    className="text-brand/60 hover:text-red hover:bg-surface0 transition-colors cursor-pointer ms-0.5 rounded-sm"
                     title={`Remove ${bot.name}`}
                   >
                     <X className="w-3 h-3" />
@@ -81,7 +81,7 @@ export const NewVirtualMrReviewersSection: React.FC<{
 
       {/* Reviewer Dropdown Popover */}
       {showBotDropdown && (
-        <div className="absolute top-full right-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100 rounded-sm">
+        <div className="absolute top-full end-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100 rounded-sm">
           <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between rounded-sm">
             <span>Assign AI Reviewer</span>
             <button
@@ -109,11 +109,11 @@ export const NewVirtualMrReviewersSection: React.FC<{
                     key={bot.id}
                     type="button"
                     onClick={() => onToggleBot(bot.id)}
-                    className={`w-full px-3 py-2 flex items-center justify-between text-left transition-colors cursor-pointer rounded-sm ${
+                    className={`w-full px-3 py-2 flex items-center justify-between text-start transition-colors cursor-pointer rounded-sm ${
                       isAssigned ? 'bg-brand/10 text-brand' : 'hover:bg-surface0 text-text'
                     }`}
                   >
-                    <div className="flex items-center gap-2 min-w-0 pr-2">
+                    <div className="flex items-center gap-2 min-w-0 pe-2">
                       <span className="text-[1rem] shrink-0">{bot.avatarEmoji}</span>
                       <div className="truncate">
                         <div className="text-xs font-medium truncate">{bot.name}</div>

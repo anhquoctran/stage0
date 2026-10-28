@@ -85,7 +85,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
         <div className="flex min-h-0 flex-1 overflow-hidden rounded-sm border border-surface0 bg-crust focus-within:border-primary">
           <div
             aria-hidden="true"
-            className="relative w-14 shrink-0 overflow-hidden border-r border-surface0 bg-mantle text-right text-overlay0 select-none"
+            className="relative w-14 shrink-0 overflow-hidden border-e border-surface0 bg-mantle text-end text-overlay0 select-none"
             style={fontStyle}
           >
             <div ref={gutterRef} className="px-3 pt-3">
@@ -104,7 +104,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
             <pre
               ref={highlightRef}
               aria-hidden="true"
-              className="pointer-events-none absolute left-0 top-0 m-0 min-h-full w-max min-w-full whitespace-pre px-3 py-3 text-text"
+              className="pointer-events-none absolute start-0 top-0 m-0 min-h-full w-max min-w-full whitespace-pre px-3 py-3 text-text"
               style={fontStyle}
             >
               {highlightedLines.map((segments, index) => (
@@ -178,7 +178,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
                     type="button"
                     role="option"
                     aria-selected={index === completionIndex}
-                    className={`flex w-full items-center justify-between gap-4 px-3 py-1.5 text-left text-xs rounded-sm ${index === completionIndex ? 'bg-surface0 text-text' : 'text-subtext1 hover:bg-surface0/70 hover:text-text'}`}
+                    className={`flex w-full items-center justify-between gap-4 px-3 py-1.5 text-start text-xs rounded-sm ${index === completionIndex ? 'bg-surface0 text-text' : 'text-subtext1 hover:bg-surface0/70 hover:text-text'}`}
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => applyCompletion(item)}
                   >

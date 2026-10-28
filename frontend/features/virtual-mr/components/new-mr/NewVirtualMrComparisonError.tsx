@@ -16,7 +16,7 @@ export function NewVirtualMrComparisonError({
         Check that both refs still exist and that the repository is available. Select valid
         branches, then retry.
       </p>
-      <details className="max-w-xl w-full text-left text-xs text-subtext0 mb-4">
+      <details className="max-w-xl w-full text-start text-xs text-subtext0 mb-4">
         <summary className="cursor-pointer hover:text-text">Git error details</summary>
         <pre className="mt-2 p-3 bg-crust border border-surface0 whitespace-pre-wrap break-words select-text">
           {diffError}

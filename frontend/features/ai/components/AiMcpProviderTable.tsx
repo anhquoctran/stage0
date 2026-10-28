@@ -50,13 +50,13 @@ export const AiMcpProviderTable: React.FC<{
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[620px] text-left">
+        <table className="w-full min-w-[620px] text-start">
           <thead>
             <tr className="border-b border-surface1 bg-surface0/40 text-[9px] uppercase tracking-wider text-subtext0">
               <th className="px-3.5 py-2 font-semibold">Provider</th>
               <th className="px-3.5 py-2 font-semibold">Endpoint &amp; model</th>
               <th className="px-3.5 py-2 font-semibold">Connection</th>
-              <th className="px-3.5 py-2 text-right font-semibold">Actions</th>
+              <th className="px-3.5 py-2 text-end font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -113,7 +113,7 @@ export const AiMcpProviderTable: React.FC<{
                       {isActive ? 'Active' : configured ? 'Ready' : 'Needs sign-in'}
                     </span>
                   </td>
-                  <td className="px-3.5 py-2.5 text-right whitespace-nowrap">
+                  <td className="px-3.5 py-2.5 text-end whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         type="button"

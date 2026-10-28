@@ -6,7 +6,7 @@ export const PreferencesModalTopBar: React.FC<{
   onClose: () => void;
 }> = ({ onOpenJsonEditor, onClose }) => {
   return (
-    <div className="h-10 pl-4 pr-0 bg-crust border-b border-surface0/80 flex items-center justify-between shrink-0 select-none">
+    <div className="h-10 ps-4 pe-0 bg-crust border-b border-surface0/80 flex items-center justify-between shrink-0 select-none">
       <div className="flex items-center gap-2">
         <span className="text-xs font-bold tracking-tight text-text">Preferences</span>
       </div>
@@ -15,7 +15,7 @@ export const PreferencesModalTopBar: React.FC<{
         <button
           type="button"
           onClick={onOpenJsonEditor}
-          className="mr-2 border border-surface0 px-2.5 py-1 text-[11px] text-subtext1 hover:bg-surface0 hover:text-text cursor-pointer rounded-sm"
+          className="me-2 border border-surface0 px-2.5 py-1 text-[11px] text-subtext1 hover:bg-surface0 hover:text-text cursor-pointer rounded-sm"
           title="Edit the app preferences JSONC file"
         >
           Edit in preferences.json

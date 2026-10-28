@@ -45,7 +45,7 @@ export const CloneOptionsForm: React.FC<CloneOptionsFormProps> = ({ options, onC
             <input type="checkbox" className="accent-brand" checked={options.recurseSubmodules} onChange={(event) => onChange({...options,recurseSubmodules:event.target.checked,...(!event.target.checked ? {shallowSubmodules:false,filterSubmodules:false} : {})})} />
             Clone submodules recursively (including nested submodules)
           </label>
-            <div className={`space-y-3 pl-5 ${!options.recurseSubmodules ? 'opacity-50' : ''}`}>
+            <div className={`space-y-3 ps-5 ${!options.recurseSubmodules ? 'opacity-50' : ''}`}>
               <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
                 <input type="checkbox" className="accent-brand" checked={options.shallowSubmodules} disabled={disabled || !options.recurseSubmodules} onChange={(event) => onChange({...options,shallowSubmodules:event.target.checked})} />
                 Shallow submodules (depth 1)

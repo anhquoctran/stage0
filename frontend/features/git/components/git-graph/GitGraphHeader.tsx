@@ -29,7 +29,7 @@ export const GitGraphHeader: React.FC<{
                             {branch || 'Loading…'}
                         </span>
                         {isDetached && (
-                            <span className="ml-1">(detached)</span>
+                            <span className="ms-1">(detached)</span>
                         )}
                     </p>
                 </div>

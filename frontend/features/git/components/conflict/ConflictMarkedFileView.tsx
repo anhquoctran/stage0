@@ -34,6 +34,7 @@ export function ConflictMarkedFileView({
       </div>
 
       <div
+        dir="ltr"
         style={{
           fontFamily: fontFamily || 'inherit',
           fontSize: fontSize ? `${fontSize}px` : '13px',

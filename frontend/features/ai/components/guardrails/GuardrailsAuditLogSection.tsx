@@ -62,7 +62,7 @@ export const GuardrailsAuditLogSection: React.FC<{
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-right">
+                <div className="flex items-center gap-3 text-end">
                   <span className="text-[10px] font-mono text-subtext0">
                     Risk: <span className={event.risk_score > 50 ? 'text-red font-bold' : 'text-green'}>{event.risk_score}</span>
                   </span>

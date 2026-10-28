@@ -60,7 +60,7 @@ export const GuardrailsHeader: React.FC<{
         <button
           type="button"
           onClick={() => onSelectPreset('strict')}
-          className={`p-3 text-left transition-all cursor-pointer flex flex-col justify-between rounded-sm ${
+          className={`p-3 text-start transition-all cursor-pointer flex flex-col justify-between rounded-sm ${
             activeMode === 'strict'
               ? 'bg-red/10 border border-red/40 text-text shadow-sm'
               : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
@@ -88,7 +88,7 @@ export const GuardrailsHeader: React.FC<{
         <button
           type="button"
           onClick={() => onSelectPreset('balanced')}
-          className={`p-3 text-left transition-all cursor-pointer flex flex-col justify-between rounded-sm ${
+          className={`p-3 text-start transition-all cursor-pointer flex flex-col justify-between rounded-sm ${
             activeMode === 'balanced'
               ? 'bg-green/10 border border-green/40 text-text shadow-sm'
               : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'
@@ -116,7 +116,7 @@ export const GuardrailsHeader: React.FC<{
         <button
           type="button"
           onClick={() => onSelectPreset('permissive')}
-          className={`p-3 text-left transition-all cursor-pointer flex flex-col justify-between rounded-sm ${
+          className={`p-3 text-start transition-all cursor-pointer flex flex-col justify-between rounded-sm ${
             activeMode === 'permissive'
               ? 'bg-yellow/10 border border-yellow/40 text-text shadow-sm'
               : 'bg-surface0 border border-surface1 hover:border-surface2 text-text'

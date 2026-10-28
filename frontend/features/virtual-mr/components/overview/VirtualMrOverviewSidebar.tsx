@@ -180,7 +180,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
                           void assignReviewerBot(session.id, bot.id);
                           setShowReviewerDropdown(false);
                         }}
-                        className="w-full px-3 py-1.5 flex items-center justify-between text-left hover:bg-surface0 disabled:opacity-40 cursor-pointer rounded-sm"
+                        className="w-full px-3 py-1.5 flex items-center justify-between text-start hover:bg-surface0 disabled:opacity-40 cursor-pointer rounded-sm"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="shrink-0">{bot.avatarEmoji}</span>
@@ -191,7 +191,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
                             <div className="text-[10px] text-subtext0 truncate">{bot.tagline}</div>
                           </div>
                         </div>
-                        {isAssigned && <Check className="w-3.5 h-3.5 text-accent shrink-0 ml-2" />}
+                        {isAssigned && <Check className="w-3.5 h-3.5 text-accent shrink-0 ms-2" />}
                       </button>
                     );
                   })}
@@ -284,7 +284,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
                         key={lbl.id}
                         type="button"
                         onClick={() => void toggleSessionLabel(session.id, lbl.id)}
-                        className="w-full px-3 py-1.5 flex items-center justify-between text-left hover:bg-surface0 cursor-pointer rounded-sm"
+                        className="w-full px-3 py-1.5 flex items-center justify-between text-start hover:bg-surface0 cursor-pointer rounded-sm"
                       >
                         <div className="flex items-center gap-2">
                           <span
@@ -318,7 +318,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
                 <button
                   type="button"
                   onClick={() => void toggleSessionLabel(session.id, lbl.id)}
-                  className="hover:opacity-75 cursor-pointer ml-0.5"
+                  className="hover:opacity-75 cursor-pointer ms-0.5"
                   title={`Remove ${lbl.name}`}
                 >
                   <X className="w-2.5 h-2.5 text-white" />

@@ -125,7 +125,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
               <span>·</span>
               <span className="text-subtext0">{formatRelativeTime(c.authoredDate)}</span>
             </div>
-            <div className="flex items-center gap-2 pl-2 border-l border-surface2">
+            <div className="flex items-center gap-2 ps-2 border-s border-surface2">
               <span className="font-mono text-[11px] text-primary px-1.5 py-0.5 rounded-sm bg-surface0 shrink-0">
                 {c.shortHash}
               </span>
@@ -147,9 +147,9 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
           const diff = computeTitleDiff(change.oldTitle, change.newTitle);
           return (
             <div className="text-xs text-subtext0 leading-relaxed break-words">
-              <span className="font-semibold text-text mr-1.5">{change.authorName}</span>
-              <span className="mr-1.5">changed title from</span>
-              <span className="text-text mr-1.5">
+              <span className="font-semibold text-text me-1.5">{change.authorName}</span>
+              <span className="me-1.5">changed title from</span>
+              <span className="text-text me-1.5">
                 {diff.prefix}
                 {diff.oldDiff ? (
                   <span className="bg-red-600 text-white px-1.5 py-0.5 rounded-sm">
@@ -158,8 +158,8 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
                 ) : null}
                 {diff.suffix}
               </span>
-              <span className="mr-1.5">to</span>
-              <span className="text-text mr-1.5">
+              <span className="me-1.5">to</span>
+              <span className="text-text me-1.5">
                 {diff.prefix}
                 {diff.newDiff ? (
                   <span className="bg-emerald-600 text-white px-1.5 py-0.5 rounded-sm">
@@ -328,11 +328,11 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
           No activity matching this filter.
         </div>
       ) : (
-        <div className="relative pl-6 ml-3 border-l-2 border-surface1/70 space-y-4">
+        <div className="relative ps-6 ms-3 border-s-2 border-surface1/70 space-y-4">
           {filteredEvents.map((evt) => (
             <div key={evt.id} className="relative group">
               {/* Timeline Bullet Node */}
-              <div className="absolute -left-[35px] top-1 w-5 h-5 rounded-full bg-base border-2 border-surface1 flex items-center justify-center shadow-xs">
+              <div className="absolute -start-[35px] top-1 w-5 h-5 rounded-full bg-base border-2 border-surface1 flex items-center justify-center shadow-xs">
                 {getEventIcon(evt.type)}
               </div>
 

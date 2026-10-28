@@ -77,19 +77,19 @@ export function FileListFilterBar({
 
       {/* Search Input */}
       <div className="relative">
-        <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-subtext1" />
+        <Search className="w-3.5 h-3.5 absolute start-2.5 top-1/2 -translate-y-1/2 text-subtext1" />
         <input
           type="text"
           placeholder="Filter files..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-8 pr-7 py-1 bg-base border border-surface0 rounded-sm text-xs text-text placeholder-subtext0 focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
+          className="w-full ps-8 pe-7 py-1 bg-base border border-surface0 rounded-sm text-xs text-text placeholder-subtext0 focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
         />
         {searchTerm && (
           <button
             type="button"
             onClick={() => setSearchTerm('')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-subtext1 hover:text-text rounded-sm"
+            className="absolute end-2 top-1/2 -translate-y-1/2 text-subtext1 hover:text-text rounded-sm"
           >
             <X className="w-3.5 h-3.5" />
           </button>

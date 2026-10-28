@@ -273,7 +273,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
               <button
                 type="button"
                 onClick={onClearTestResult}
-                className="text-subtext0 hover:text-text cursor-pointer ml-1 rounded-sm"
+                className="text-subtext0 hover:text-text cursor-pointer ms-1 rounded-sm"
               >
                 <X className="w-3 h-3" />
               </button>

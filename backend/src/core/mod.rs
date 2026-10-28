@@ -1,6 +1,7 @@
 pub mod commands;
 pub mod db;
 pub mod dock;
+pub mod i18n;
 pub mod keymaps;
 pub mod menu;
 pub mod tray;

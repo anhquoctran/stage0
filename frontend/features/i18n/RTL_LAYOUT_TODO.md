@@ -1,19 +1,17 @@
 # RTL layout follow-up
 
-The first RTL pass uses logical start/end spacing and alignment in shared controls
-and the core application chrome. Keep code, diff, filesystem paths, and identifiers
-left-to-right even when the surrounding UI is Arabic.
+The app applies `dir="rtl"` from the persisted application locale. This pass replaced
+physical Tailwind spacing, inset, border, and text alignment utilities with logical
+utilities in 83 JSX components. Markdown prose lists, quotations, tables, and controls
+also use logical CSS properties. Menus align and open submenus toward the available
+inline direction, and keyboard traversal follows that direction.
 
-Remaining work before claiming complete RTL layout coverage:
+The remaining physical direction rules are intentional for code-oriented surfaces
+and the macOS title bar/traffic lights: diff line numbers, conflict markers, source
+excerpts, editor and terminal content, plus the active diff-line marker. Markdown code
+blocks and the review code excerpt should stay left-to-right while surrounding prose
+follows the selected locale.
 
-- Make `core/components/layout/menu-bar/menuPopupPosition.ts` choose the submenu
-  opening direction from `document.dir`; it currently computes physical `left`
-  coordinates from DOM rectangles.
-- Audit feature-owned panels and dialogs for physical `left`/`right`, `ml-*`,
-  `mr-*`, `pl-*`, `pr-*`, `text-left`, and `text-right` utilities. Prioritize
-  preferences, AI, Git, notifications, and Virtual MR discussion surfaces.
-- Keep code-oriented surfaces (diffs, source excerpts, terminal output, paths,
-  commit identifiers, and Markdown code blocks) explicitly LTR. Review prose and
-  form labels should follow the document direction.
-- Verify the window title bar, tab overflow, nested popovers, and split panes in
-  an Arabic locale at narrow and wide window sizes.
+Manual visual checks remain for Arabic at narrow and wide sizes, especially nested
+popovers, split panes, tabs, discussion threads, and the custom window chrome. Context
+menus positioned at the pointer continue to use physical screen coordinates by design.

@@ -116,7 +116,7 @@ export function VirtualMrHeader({
           }`}
           title={isBranchLocked ? branchLockedReason : undefined}
         >
-          <div className="flex items-center gap-1 mr-0.5">
+          <div className="flex items-center gap-1 me-0.5">
             {isBranchLocked && (
               <Lock className="w-3 h-3 text-subtext0 shrink-0" title={branchLockedReason} />
             )}

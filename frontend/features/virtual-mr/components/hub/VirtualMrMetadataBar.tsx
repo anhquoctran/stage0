@@ -40,7 +40,7 @@ export function VirtualMrMetadataBar({
           <span>Overview</span>
           {session.discussions.length > 0 && (
             <span
-              className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                 activeMrTab === 'overview'
                   ? 'bg-surface1 text-text'
                   : 'bg-surface0 text-subtext0'
@@ -64,7 +64,7 @@ export function VirtualMrMetadataBar({
           <span>Commits</span>
           {session.commits.length > 0 && (
             <span
-              className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                 activeMrTab === 'commits'
                   ? 'bg-surface1 text-text'
                   : 'bg-surface0 text-subtext0'
@@ -88,7 +88,7 @@ export function VirtualMrMetadataBar({
           <span>AI Reviews</span>
           {session.reviewers.length > 0 && (
             <span
-              className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                 activeMrTab === 'reviews'
                   ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold'
                   : 'bg-surface0 text-subtext0'
@@ -111,7 +111,7 @@ export function VirtualMrMetadataBar({
           <FileCode className="w-3.5 h-3.5" />
           <span>Changes</span>
           <span
-            className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+            className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
               activeMrTab === 'diff'
                 ? 'bg-surface1 text-text'
                 : 'bg-surface0 text-subtext0'
@@ -144,7 +144,7 @@ export function VirtualMrMetadataBar({
 
         {/* Label Dropdown */}
         {showLabelDropdown && (
-          <div className="absolute top-full right-0 mt-1 w-56 rounded-sm bg-crust border border-surface0 shadow-xl py-1 z-50">
+          <div className="absolute top-full end-0 mt-1 w-56 rounded-sm bg-crust border border-surface0 shadow-xl py-1 z-50">
             <div className="px-3 py-1.5 flex items-center justify-between text-[11px] font-semibold text-subtext0 uppercase tracking-wider border-b border-surface0/60 rounded-sm">
               <span>Toggle Labels</span>
               <button
@@ -169,7 +169,7 @@ export function VirtualMrMetadataBar({
                       key={lbl.id}
                       type="button"
                       onClick={() => void toggleSessionLabel(session.id, lbl.id)}
-                      className="w-full px-3 py-1.5 flex items-center justify-between text-left hover:bg-surface0 cursor-pointer rounded-sm"
+                      className="w-full px-3 py-1.5 flex items-center justify-between text-start hover:bg-surface0 cursor-pointer rounded-sm"
                     >
                       <div className="flex items-center gap-2">
                         <span

@@ -101,7 +101,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
           />
 
           {onNavigateToGuardrails && (
-            <div className="pt-1 text-right">
+            <div className="pt-1 text-end">
               <button
                 type="button"
                 onClick={onNavigateToGuardrails}
@@ -130,7 +130,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
               </span>
             </div>
 
-            <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <div className="ms-auto flex shrink-0 flex-wrap items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => state.mcp.setIsJsonModalOpen(true)}

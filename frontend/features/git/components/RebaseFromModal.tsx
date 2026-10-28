@@ -195,7 +195,7 @@ export const RebaseFromModal: React.FC = () => {
                 type="button"
                 onClick={handleRebaseAbort}
                 disabled={isSyncing || !isRebasing}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-surface1 hover:bg-surface2 text-text text-[11px] font-medium border border-surface2 transition-colors cursor-pointer ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-surface1 hover:bg-surface2 text-text text-[11px] font-medium border border-surface2 transition-colors cursor-pointer ms-auto disabled:opacity-40 disabled:cursor-not-allowed"
                 title="git rebase --abort"
               >
                 <RotateCcw className="w-3 h-3 text-subtext0" />

@@ -55,10 +55,10 @@ export function CommitDetailsModal({ repoPath, commitHash, onClose }: {
             {data.truncated && <p role="status" className="mt-2 text-xs text-yellow">The diff exceeds the 5 MiB preview limit. Only complete file diffs within the limit are shown.</p>}
           </div>
           <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
-            <nav aria-label="Commit files" className="max-h-40 shrink-0 overflow-auto border-b border-surface0 bg-mantle p-2 sm:max-h-none sm:w-64 sm:border-b-0 sm:border-r">
+            <nav aria-label="Commit files" className="max-h-40 shrink-0 overflow-auto border-b border-surface0 bg-mantle p-2 sm:max-h-none sm:w-64 sm:border-b-0 sm:border-e">
               <p className="px-2 py-1 text-[11px] font-semibold text-subtext0">Files changed ({data.files.length})</p>
               {data.files.map(item => <button key={item.path} type="button" onClick={() => setSelectedPath(item.path)} aria-pressed={file?.path === item.path}
-                className={`my-0.5 flex w-full items-start gap-2 rounded-sm border-0 px-2 py-2 text-left text-xs focus-visible:outline-2 focus-visible:outline-brand ${file?.path === item.path ? 'bg-surface0 text-text' : 'text-subtext0 hover:bg-surface0 hover:text-text'}`}>
+                className={`my-0.5 flex w-full items-start gap-2 rounded-sm border-0 px-2 py-2 text-start text-xs focus-visible:outline-2 focus-visible:outline-brand ${file?.path === item.path ? 'bg-surface0 text-text' : 'text-subtext0 hover:bg-surface0 hover:text-text'}`}>
                 <span className="min-w-0 flex-1 break-all font-mono">{item.path}</span>
                 <span className="shrink-0 text-[10px]">+{item.additions} / −{item.deletions}</span>
               </button>)}

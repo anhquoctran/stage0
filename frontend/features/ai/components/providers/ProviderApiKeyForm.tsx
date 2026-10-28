@@ -50,12 +50,12 @@ export function ProviderApiKeyForm({
                   ? 'Key saved securely. Enter a new key to replace it.'
                   : 'Paste your provider API key'
               }
-              className="w-full px-3 pr-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
+              className="w-full px-3 pe-10 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
             <button
               type="button"
               onClick={() => setShowApiKey(!showApiKey)}
-              className="absolute right-2.5 p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
+              className="absolute end-2.5 p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
               title={showApiKey ? 'Hide secret key' : 'Show secret key'}
             >
               {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}

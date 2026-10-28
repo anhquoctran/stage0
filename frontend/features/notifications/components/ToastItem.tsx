@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AppLogo } from '../../../common/components/AppLogo';
 import { notificationService } from '../services/notificationService';
 import { type AppNotification } from '../types/AppNotification';
@@ -6,6 +7,7 @@ import type { ToastItemProps } from '../types/ToastItemProps';
 import { dismissesManually } from '../utils/dismissesManually';
 
 export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
+  const { t } = useTranslation();
   const dismissPolicy = toast.dismissPolicy || 'both';
   const primaryAction = toast.clickAction || toast.actions?.[0];
   const additionalActions = toast.actions?.filter((action, index) => {
@@ -40,8 +42,8 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
         <p className="mt-1 flex min-w-0 items-baseline gap-1.5 overflow-hidden whitespace-nowrap text-xs leading-snug text-[var(--ctp-subtext1)] sm:text-sm">
           <span className="shrink-0 font-medium text-[var(--ctp-subtext0)]">stage0</span>
           <span aria-hidden="true" className="shrink-0 text-[var(--ctp-subtext0)]">•</span>
-          <span className="min-w-0 flex-1 truncate" title={toast.body || 'Notification'}>
-            {toast.body || 'Notification'}
+          <span className="min-w-0 flex-1 truncate" title={toast.body || t('notifications.fallbackBody')}>
+            {toast.body || t('notifications.fallbackBody')}
           </span>
         </p>
 
@@ -61,7 +63,7 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
         )}
       </div>
 
-      <div className="ml-1 flex w-14 shrink-0 flex-col items-stretch gap-0.5">
+      <div className="ms-1 flex w-14 shrink-0 flex-col items-stretch gap-0.5">
         {primaryAction && (
           <button
             type="button"
@@ -69,7 +71,7 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
             className="bg-[var(--ctp-surface1)] px-1.5 py-1 text-xs font-medium text-[var(--ctp-text)] transition-colors hover:bg-[var(--ctp-surface2)] rounded-sm"
             title={primaryAction.label}
           >
-            {toast.clickAction ? 'View' : primaryAction.label}
+              {toast.clickAction ? t('notifications.toastView') : primaryAction.label}
           </button>
         )}
         {dismissesManually(dismissPolicy) && (
@@ -77,9 +79,9 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
             type="button"
             onClick={() => onDismiss(toast.id)}
             className="px-1.5 py-0.5 text-[11px] font-medium text-[var(--ctp-subtext1)] transition-colors hover:bg-[var(--ctp-surface0)] hover:text-[var(--ctp-text)] rounded-sm"
-            aria-label="Dismiss notification"
+            aria-label={t('notifications.dismissLabel')}
           >
-            Dismiss
+            {t('notifications.dismiss')}
           </button>
         )}
       </div>

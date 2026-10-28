@@ -15,7 +15,7 @@ export function CloneDestinationSection({
       </label>
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Folder className="w-4 h-4 text-subtext0 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Folder className="w-4 h-4 text-subtext0 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             disabled={isCloning}
@@ -23,7 +23,7 @@ export function CloneDestinationSection({
             aria-label="Destination Directory"
             value={destinationPath || parentDir}
             placeholder="Home directory + repository name"
-            className="w-full pl-9 pr-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 rounded-sm"
+            className="w-full ps-9 pe-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 rounded-sm"
           />
         </div>
         <button

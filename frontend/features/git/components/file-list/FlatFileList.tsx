@@ -20,10 +20,10 @@ export function FlatFileList({
             type="button"
             onClick={() => onSelectFile(file)}
             onContextMenu={(e) => handleContextMenu(e, file)}
-            className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between gap-2 transition-colors cursor-pointer rounded-sm ${
+            className={`w-full text-start px-3 py-2 text-xs flex items-center justify-between gap-2 transition-colors cursor-pointer rounded-sm ${
               isSelected
-                ? 'bg-blue/15 border-l-2 border-blue text-text'
-                : 'text-text hover:bg-mantle border-l-2 border-transparent'
+                ? 'bg-blue/15 border-s-2 border-blue text-text'
+                : 'text-text hover:bg-mantle border-s-2 border-transparent'
             }`}
           >
             <div className="flex items-center gap-2 min-w-0">

@@ -191,7 +191,7 @@ export const RepositoryLabelsTab: React.FC = () => {
         </div>
 
         <div className="max-h-80 overflow-y-auto border border-surface0 bg-crust">
-          <table className="w-full table-fixed text-left">
+          <table className="w-full table-fixed text-start">
             <caption className="sr-only">Repository labels</caption>
             <colgroup>
               <col className="w-[34%]" />
@@ -202,7 +202,7 @@ export const RepositoryLabelsTab: React.FC = () => {
               <tr className="border-b border-surface0 text-[10px] uppercase tracking-wide text-subtext0">
                 <th scope="col" className="px-3 py-2 font-medium">Label</th>
                 <th scope="col" className="px-3 py-2 font-medium">Description</th>
-                <th scope="col" className="px-2 py-2 text-right font-medium">Actions</th>
+                <th scope="col" className="px-2 py-2 text-end font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface0">

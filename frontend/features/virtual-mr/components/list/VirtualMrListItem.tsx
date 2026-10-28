@@ -21,7 +21,7 @@ export function VirtualMrListItem({
       key={session.id}
       type="button"
       onClick={() => handleSelect(session.id)}
-      className="group flex w-full items-center justify-between gap-4 px-5 py-3 text-left hover:bg-surface0/60 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand cursor-pointer rounded-sm"
+      className="group flex w-full items-center justify-between gap-4 px-5 py-3 text-start hover:bg-surface0/60 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand cursor-pointer rounded-sm"
     >
       <div className="min-w-0 flex-1 space-y-1.5">
         {/* Top line: Title (bold) + Status Badge + Assigned Labels */}
@@ -95,7 +95,7 @@ export function VirtualMrListItem({
         {/* Reviewer bot icons */}
         {session.reviewers.length > 0 && (
           <div
-            className="flex items-center -space-x-1"
+            className="flex items-center -space-x-1 rtl:space-x-reverse"
             title={`${session.reviewers.length} reviewer bot(s)`}
           >
             {session.reviewers.map((rev) => {
@@ -139,7 +139,7 @@ export function VirtualMrListItem({
         <time
           dateTime={session.updatedAt}
           title={formatDateTime(session.updatedAt)}
-          className="text-right text-[11px] text-subtext0 min-w-[70px]"
+          className="text-end text-[11px] text-subtext0 min-w-[70px]"
         >
           updated {updatedLabel}
         </time>

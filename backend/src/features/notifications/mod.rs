@@ -242,16 +242,28 @@ pub async fn dispatch_notification(
 /// event used to update persisted history and unread counts.
 #[tauri::command]
 pub fn send_test_notification(app: AppHandle) -> Result<(), String> {
+    let language = app
+        .try_state::<crate::features::preferences::PreferencesManager>()
+        .and_then(|preferences| preferences.read().ok())
+        .and_then(|document| document.settings)
+        .and_then(|settings| {
+            settings
+                .get("appearance")
+                .and_then(|appearance| appearance.get("language"))
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_owned)
+        })
+        .unwrap_or_else(|| "en".to_owned());
     let payload = NotificationPayload {
         id: None,
-        title: "Stage0 notification preview".to_string(),
-        body: "Preview only. Not saved.".to_string(),
+        title: crate::core::i18n::translate("notifications.testTitle", &language),
+        body: crate::core::i18n::translate("notifications.testBody", &language),
         level: NotificationLevel::Info,
         variant: Some(NotificationVariant::Default),
         channel: None,
         actions: None,
         click_action: Some(NotificationAction {
-            label: "View notifications".to_string(),
+            label: crate::core::i18n::translate("notifications.viewAction", &language),
             action_type: "open_preferences".to_string(),
             payload: Some("notifications".to_string()),
         }),

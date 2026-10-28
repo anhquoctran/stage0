@@ -43,9 +43,9 @@ export function ConflictResolutionBar({
               <span className="text-text font-bold">{selectedFile.path}</span>
               <span className="mx-2 text-subtext0">•</span>
               <span>Collision between</span>
-              <code className="text-blue font-semibold ml-1 mr-1">{baseBranch}</code>
+              <code className="text-blue font-semibold ms-1 me-1">{baseBranch}</code>
               <span>and</span>
-              <code className="text-blue font-semibold ml-1">{compareBranch}</code>
+              <code className="text-blue font-semibold ms-1">{compareBranch}</code>
             </p>
           </div>
         </div>

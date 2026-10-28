@@ -46,7 +46,7 @@ export function KeymapBindingRow({ command, settings, onChange, mac }: KeymapBin
           if (editing) { cancel(); return; }
           setOriginalKeys(settings.overrides.find((item) => item.command === command.id)?.keys ?? null);
           setText(command.keys.join('; ')); setEditing(!editing); setRecording(false); setError('');
-        }}>Edit</button> : <span className="w-9 text-right text-[10px] text-subtext0" title="Managed by the OS or text control">System</span>}
+        }}>Edit</button> : <span className="w-9 text-end text-[10px] text-subtext0" title="Managed by the OS or text control">System</span>}
       </div>
       {editing && <div className="mt-3 space-y-2 rounded-sm border border-surface1 bg-crust p-3">
         <label className="block text-[11px] text-subtext0" htmlFor={`binding-${command.id}`}>Shortcut(s), separated by semicolons · Empty disables this command</label>

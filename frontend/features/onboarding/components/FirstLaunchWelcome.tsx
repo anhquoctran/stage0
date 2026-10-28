@@ -1,5 +1,6 @@
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { Check } from '../../../common/components/icons/Check';
@@ -30,6 +31,7 @@ const AI_SETUP_SLIDE = SLIDES.findIndex((slide) => slide.id === 'ai-setup');
 const REVIEWER_SETUP_SLIDE = SLIDES.findIndex((slide) => slide.id === 'reviewer-setup');
 
 export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComplete }) => {
+  const { t } = useTranslation();
   const appServices = useApplicationServices();
   const [activeSlide, setActiveSlide] = useState(0);
   const { settings, setSettings, isSaving, saveError, save, reload } = useOnboardingPreferences();
@@ -190,7 +192,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
       >
         <fieldset disabled={isBusy} className="contents">
           {!isMac && (
-            <div className="absolute right-4 top-4 z-10 flex items-center sm:right-6 sm:top-6">
+            <div className="absolute end-4 top-4 z-10 flex items-center sm:end-6 sm:top-6">
               <button
                 type="button"
                 onClick={minimizeWindow}
@@ -216,7 +218,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
 
           <section className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col overflow-hidden px-6 py-8 sm:px-10 sm:py-10">
             {/* Header + Horizontal Stepper */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-surface0 pb-5 pr-16">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-surface0 pb-5 pe-16">
               <div className="flex items-center gap-3">
                 <AppLogo size="md" />
                 <div>
@@ -263,7 +265,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
               role="region"
               aria-label="Welcome guide content"
               tabIndex={0}
-              className="mt-6 min-h-0 flex-1 pr-1"
+              className="mt-6 min-h-0 flex-1 pe-1"
             >
               <div className="space-y-6 pb-4">
                 <div>
@@ -327,7 +329,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                   </div>
                 )}
 
-                <div className="border-l-2 border-primary/60 pl-3 text-xs leading-5 text-subtext0 rounded-sm">
+                <div className="border-s-2 border-primary/60 ps-3 text-xs leading-5 text-subtext0 rounded-sm">
                   <span>{currentSlide.caption}</span>
                 </div>
               </div>
@@ -383,7 +385,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                     onClick={() => selectSlide(activeSlide + 1)}
                     className="flex h-10 items-center gap-2 rounded-sm border-0 bg-brand px-4 text-xs font-semibold text-white transition-colors hover:opacity-95 disabled:opacity-40"
                   >
-                    Next <ArrowRight className="h-3.5 w-3.5" />
+                    {t('common.next')} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                   </button>
                 ) : (
                   <div className="flex flex-wrap items-center justify-end gap-2">
@@ -400,7 +402,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                       className="btn-primary flex h-10 items-center gap-2 rounded-sm px-4 text-xs font-semibold"
                     >
                       {isSaving ? 'Saving…' : 'Open a repository'}{' '}
-                      <ArrowRight className="h-3.5 w-3.5" />
+                      <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </button>
                   </div>
                 )}

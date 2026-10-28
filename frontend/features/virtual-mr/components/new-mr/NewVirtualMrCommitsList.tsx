@@ -21,7 +21,7 @@ export function NewVirtualMrCommitsList({
         <div className="p-6 flex flex-col items-center gap-2 text-center text-xs">
           <AlertTriangle className="w-4 h-4 text-yellow" />
           <span className="text-text">Couldn't load commits for this comparison.</span>
-          <details className="max-w-xl text-left text-subtext0">
+          <details className="max-w-xl text-start text-subtext0">
             <summary className="cursor-pointer hover:text-text">Git error details</summary>
             <pre className="mt-2 p-3 bg-base border border-surface0 whitespace-pre-wrap break-words select-text">
               {draftMr.commitsError}
@@ -45,7 +45,7 @@ export function NewVirtualMrCommitsList({
             key={c.hash}
             className="flex items-center justify-between p-3 border border-surface0/80 bg-base hover:border-surface1 hover:bg-surface0/30 transition-all shadow-xs rounded-sm"
           >
-            <div className="flex items-center gap-3 min-w-0 flex-1 pr-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1 pe-3">
               <div className="w-7 h-7 bg-brand/10 border border-brand/20 flex items-center justify-center text-brand shrink-0">
                 <GitCommit className="w-3.5 h-3.5" />
               </div>

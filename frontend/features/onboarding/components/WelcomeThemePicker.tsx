@@ -15,7 +15,7 @@ export function WelcomeThemePicker({ settings, onChange }: Omit<WelcomeSettingsP
       {choices.map(({ mode, label, description, icon: Icon }) => (
         <button key={mode} type="button" aria-pressed={settings.themeMode === mode}
           onClick={() => onChange((previous) => ({ ...previous, themeMode: mode }))}
-          className={`rounded-sm border p-3 text-left transition-colors focus-visible:outline focus-visible:outline-brand ${
+          className={`rounded-sm border p-3 text-start transition-colors focus-visible:outline focus-visible:outline-brand ${
             settings.themeMode === mode ? 'border-brand bg-brand/10 text-text' : 'border-surface0 bg-crust text-subtext1 hover:border-brand/50'
           }`}>
           <span aria-hidden="true" className="mb-3 flex h-16 overflow-hidden rounded-sm border border-surface1/40">

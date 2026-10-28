@@ -201,7 +201,7 @@ export const DiscussionThread: React.FC<{
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className={`transition-transform duration-150 ${isCollapsed ? '-rotate-90' : ''}`}
+                  className={`transition-transform duration-150 ${isCollapsed ? '-rotate-90 rtl:rotate-90' : ''}`}
                 >
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
@@ -218,7 +218,7 @@ export const DiscussionThread: React.FC<{
             {/* Replies List with Left Vertical Thread Connector Line */}
             {!isCollapsed && (
               <div className="bg-mantle/60 px-3.5 py-3 space-y-3 rounded-sm">
-                <div className="ml-2 pl-3.5 border-l-2 border-surface1 space-y-3">
+                <div className="ms-2 ps-3.5 border-s-2 border-surface1 space-y-3">
                   {replies.map((reply) => {
                     if (reply.isPending) {
                       return (

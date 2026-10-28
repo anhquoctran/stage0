@@ -228,7 +228,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto pe-1">
               {conflictReport.conflicted_files.map((filePath) => {
                 const detail = conflictReport.details?.find((d) => d.path === filePath);
                 const conflictType = detail?.conflict_type || 'content';

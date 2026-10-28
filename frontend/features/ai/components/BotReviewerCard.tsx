@@ -82,7 +82,7 @@ export const BotReviewerCard: React.FC<{
           >
             <span
               className={`pointer-events-none inline-block h-4 w-4 shrink-0 transform rounded-full bg-base shadow-lg ring-0 transition duration-200 ease-in-out ${
-                bot.enabled ? 'translate-x-4' : 'translate-x-0'
+                bot.enabled ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-0'
               }`}
             />
           </button>
