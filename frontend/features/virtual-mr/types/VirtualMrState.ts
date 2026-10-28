@@ -114,7 +114,8 @@ export interface VirtualMrState {
     body: string,
     reviewAction?: ReviewActionType,
     authorType?: 'user' | 'ai_agent',
-    authorName?: string
+    authorName?: string,
+    authorId?: string
   ) => Promise<void>;
   resolveDiscussion: (discussionId: string, isResolved: boolean, resolveType?: ResolveType) => Promise<void>;
   reverifyDiscussionFix: (discussionId: string, agentId?: string) => Promise<boolean>;

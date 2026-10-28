@@ -39,7 +39,7 @@ test('the MR review action checks live discussions even if its captured session 
   assert.equal(starts, 1);
 });
 
-test('the review panel disables startup and its handler until the final code thread is resolved', async () => {
+test('the review panel routes manual requests through a new discussion and has no review-start button', async () => {
   const harness = componentHarness();
   const session = sessionFixture();
   let starts = 0;
@@ -56,21 +56,16 @@ test('the review panel disables startup and its handler until the final code thr
     setAllowRemote: noop, isStarting: false, hasRunning: false, start: async () => { starts++; }, running: false, cancel: noop,
   };
   const render = async () => componentNodes(await harness.render(ReviewConfigurationSection, props));
-  const startButton = (nodes) => nodes.find((node) => node.type === 'button' && node.props.children.flat(Infinity).includes('Start new review'));
-  let nodes = await render();
-  assert.equal(startButton(nodes).props.disabled, true);
-  startButton(nodes).props.onClick();
+  const nodes = await render();
+  const text = nodes.map((node) => JSON.stringify(node.children || node.props?.children || '')).join(' ');
+  assert.match(text, /new discussion/);
+  assert.match(text, /review/);
+  assert.equal(nodes.some((node) => node.type === 'button' && /Start new review|Review as/.test(JSON.stringify(node.props.children))), false);
   assert.equal(starts, 0);
-  assert.ok(nodes.some((node) => node.props.role === 'status'));
-  session.discussions[0].isResolved = true;
-  nodes = await render();
-  assert.equal(startButton(nodes).props.disabled, false);
-  startButton(nodes).props.onClick();
-  assert.equal(starts, 1);
   harness.cleanup();
 });
 
-test('both review history entry buttons react to unresolved discussions', async () => {
+test('review history exposes no direct review-start button', async () => {
   const harness = componentHarness();
   const session = sessionFixture();
   const state = { runs: [], detail: null, load: noop, syncActive: noop, publish: noop, isPublishing: false, activeRuns: {}, reviewBatches: {}, isStarting: false };
@@ -87,42 +82,27 @@ test('both review history entry buttons react to unresolved discussions', async 
     dependencies[`../../../../common/components/icons/${name}`] = { [name]: () => null };
   }
   const { VirtualMrReviewsTab } = loadWithMocks(new URL(`${root}components/hub/VirtualMrReviewsTab.tsx`, import.meta.url), dependencies);
-  const render = async () => componentNodes(await harness.render(VirtualMrReviewsTab, { session }))
-    .filter((node) => node.type === 'button' && node.props.title?.includes('Resolve'));
-  assert.equal((await render()).length, 2);
-  assert.ok((await render()).every((button) => button.props.disabled));
-  session.discussions[0].isResolved = true;
+  const render = async () => componentNodes(await harness.render(VirtualMrReviewsTab, { session }));
   const nodes = componentNodes(await harness.render(VirtualMrReviewsTab, { session }));
-  const buttons = nodes.filter((node) => node.type === 'button' && typeof node.props.disabled === 'boolean');
-  assert.equal(buttons.length, 2);
-  assert.ok(buttons.every((button) => !button.props.disabled));
+  assert.equal(nodes.some((node) => node.type === 'button' && /Run AI Code Review|Start AI Code Review/.test(JSON.stringify(node.props.children))), false);
+  assert.equal((await render()).some((node) => node.type === 'button' && /Run AI Code Review/.test(JSON.stringify(node.props.children))), false);
   harness.cleanup();
 });
 
-test('the MR header blocks its manual action and explains the open-discussion requirement', async () => {
+test('the MR header has no AI review button', async () => {
   const harness = componentHarness();
   const session = sessionFixture();
-  let starts = 0;
   const dependencies = {
     react: harness.react,
     '@/common/components/icons': { XCircle: () => null },
     '../../../git/components/TabBranchSelector': { TabBranchSelector: () => null },
   };
-  for (const name of ['ArrowRight', 'Check', 'CheckCircle2', 'Edit2', 'Lock', 'RefreshCw', 'X']) {
+  for (const name of ['ArrowRight', 'Check', 'CheckCircle2', 'Edit2', 'Lock', 'X']) {
     dependencies[`../../../../common/components/icons/${name}`] = { [name]: () => null };
   }
   const { VirtualMrHeader } = loadWithMocks(new URL(`${root}components/hub/VirtualMrHeader.tsx`, import.meta.url), dependencies);
-  const props = { session, sequenceNumber: 1, hasAssignedReviewer: true, reviewBatch: null, reviewIsStarting: false, reviewIsRunning: false, handleStartAiReview: async () => { starts++; } };
-  const button = async () => componentNodes(await harness.render(VirtualMrHeader, props))
-    .find((node) => node.type === 'button' && node.props.title?.match(/Resolve|Start a review/));
-  const blocked = await button();
-  assert.equal(blocked.props.disabled, true);
-  blocked.props.onClick();
-  assert.equal(starts, 0);
-  session.discussions[0].isResolved = true;
-  const available = await button();
-  assert.equal(available.props.disabled, false);
-  available.props.onClick();
-  assert.equal(starts, 1);
+  const props = { session, sequenceNumber: 1 };
+  const nodes = componentNodes(await harness.render(VirtualMrHeader, props));
+  assert.equal(nodes.some((node) => node.type === 'button' && /AI code review|Start a review/.test(JSON.stringify(node.props.title || node.props.children))), false);
   harness.cleanup();
 });

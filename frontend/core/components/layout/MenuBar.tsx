@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { isMacOS } from '../../../common/utils/shortcuts';
 import { useApplicationServices } from '../../services/runtime/useApplicationServices';
 import { isPrimaryAppWindow } from '../../utils/isPrimaryAppWindow';
@@ -14,6 +15,7 @@ import { useApplicationMenu } from './useApplicationMenu';
 
 export function MenuBar({ hidden = false }: MenuBarProps) {
   const appServices = useApplicationServices();
+  const { t } = useTranslation();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
@@ -74,13 +76,13 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
   }, [flags.onboarding]);
   return (
     <>
-      {chord && <div role="status" className="fixed bottom-9 left-3 z-[110] rounded-sm border border-surface1 bg-mantle px-3 py-2 text-xs text-text shadow-lg">
-        {chord} … <span className="text-subtext0">Waiting for second key · Esc to cancel</span>
+      {chord && <div role="status" className="fixed bottom-9 start-3 z-[110] rounded-sm border border-surface1 bg-mantle px-3 py-2 text-xs text-text shadow-lg">
+        {chord} … <span className="text-subtext0">{t('menu.waitingForSecondKey')}</span>
       </div>}
       {!hidden && (
         <nav
           ref={menuBarRef}
-          aria-label="Application menu"
+          aria-label={t('menu.application')}
           onKeyDown={(event) => {
             if (event.target instanceof Element && event.target.closest('[role="menu"]')) return;
             if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;

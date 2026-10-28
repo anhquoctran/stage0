@@ -1,5 +1,6 @@
 import { useMenuPopupPosition } from './useMenuPopupPosition';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check } from '../../../../common/components/icons/Check';
 import { ChevronRight } from '../../../../common/components/icons/ChevronRight';
 import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
@@ -15,6 +16,7 @@ import type { MenuNode } from '../../../types/menu/MenuNode';
 import { menuIcons } from './menuIcons';
 
 export function ConfiguredMenu(props: ConfiguredMenuProps) {
+  const { t } = useTranslation();
   const { shortcut } = useCommandShortcut();
   const { node, flags, platform, fileManager, execute, onClose, recentRepos } = props;
   const [hovered, setHovered] = useState(false);
@@ -28,7 +30,7 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
   const command = node.command ? MENU_COMMANDS[node.command] : undefined;
   const enabled = menuEnabled(command?.requires || node.requires, flags);
   const checked = command?.checked ? Boolean(flags[command.checked as keyof typeof flags]) : false;
-  const label = menuLabel(command?.label || node.label || '', fileManager);
+  const label = menuLabel(t(command?.label || node.label || ''), fileManager);
   const Icon = menuIcons[command?.icon || node.icon || ''];
   const children: MenuNode[] =
     node.dynamic === 'recentRepositories'
@@ -73,7 +75,7 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
           onClose();
           execute(node.command!);
         }}
-        className="flex w-full items-center gap-2 rounded-sm px-3 py-1.5 text-left text-xs text-text hover:bg-surface1 disabled:opacity-40 disabled:hover:bg-transparent"
+        className="flex w-full items-center gap-2 rounded-sm px-3 py-1.5 text-start text-xs text-text hover:bg-surface1 disabled:opacity-40 disabled:hover:bg-transparent"
       >
         {Icon && <Icon className="h-3.5 w-3.5 shrink-0 text-subtext0" />}
         <span className="min-w-0 flex-1 truncate">
@@ -136,7 +138,7 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
             );
           }
         }}
-        className={`flex items-center gap-2 rounded-sm text-xs disabled:opacity-40 ${topLevel ? `px-2.5 py-1 ${open ? 'bg-surface1 text-text' : 'text-subtext1 hover:bg-surface0'}` : 'w-full px-3 py-1.5 text-left text-text hover:bg-surface1'}`}
+        className={`flex items-center gap-2 rounded-sm text-xs disabled:opacity-40 ${topLevel ? `px-2.5 py-1 ${open ? 'bg-surface1 text-text' : 'text-subtext1 hover:bg-surface0'}` : 'w-full px-3 py-1.5 text-start text-text hover:bg-surface1'}`}
       >
         {!topLevel && Icon && <Icon className="h-3.5 w-3.5 text-subtext0" />}
         <span className="flex-1">{label}</span>
@@ -172,7 +174,7 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
           }}
         >
           {node.dynamic && !recentRepos.length && (
-            <p className="px-3 py-2 text-xs text-subtext0">{RECENT_MENU.emptyLabel}</p>
+            <p className="px-3 py-2 text-xs text-subtext0">{t(RECENT_MENU.emptyLabel)}</p>
           )}
           {children.map((child, index) => (
             <ConfiguredMenu

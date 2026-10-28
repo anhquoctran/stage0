@@ -72,7 +72,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
         </div>
       </div>
       {(label || description) && (
-        <div className="flex flex-col text-left">
+        <div className="flex flex-col text-start">
           {label && <span className="text-xs font-semibold text-text">{label}</span>}
           {description && (
             <span className="text-[11px] text-subtext0 leading-relaxed">{description}</span>

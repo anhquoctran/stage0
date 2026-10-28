@@ -32,6 +32,13 @@ export const SETTINGS_TREE: TreeCategory[] = [
         keywords: ['theme', 'dark', 'light', 'mocha', 'latte', 'color', 'mode', 'appearance', 'palette'],
       },
       {
+        id: 'appearance-language',
+        label: 'Language',
+        title: 'Language & Localization',
+        description: 'Choose the application language, date and time formats, and AI reviewer output language.',
+        keywords: ['language', 'locale', 'translation', 'date', 'time', 'reviewer output'],
+      },
+      {
         id: 'appearance-fonts',
         label: 'Buffer Font',
         title: 'Buffer Font & Typography',

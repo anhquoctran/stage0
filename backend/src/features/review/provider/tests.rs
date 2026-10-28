@@ -15,11 +15,13 @@ fn config(provider: &str, url: &str) -> ReviewRequest {
         reviewer_id: None,
         reviewer_name: None,
         reply_discussion_id: None,
+        manual_review_discussion_id: None,
         reviewer_role: None,
         base_url: url.into(),
         instructions: String::new(),
         allow_remote: true,
         generate_description: false,
+        agent_output_language: "en".into(),
     }
 }
 #[test]

@@ -64,14 +64,14 @@ export const TabBarSessionItem: React.FC<{
           e.stopPropagation();
           onClose();
         }}
-        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ml-1 cursor-pointer shrink-0 rounded-sm"
+        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ms-1 cursor-pointer shrink-0 rounded-sm"
         title={title('close_tab', 'Close tab. This MR remains saved in this repository.')}
       >
         <X className="w-3 h-3" />
       </button>
 
       {isActive && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />
+        <div className="absolute bottom-0 inset-x-0 h-0.5 bg-brand" />
       )}
     </div>
   );

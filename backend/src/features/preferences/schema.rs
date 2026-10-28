@@ -1,3 +1,4 @@
+use super::supported_language::{is_supported_agent_output_language, is_supported_app_language};
 use super::validation_fields::{
     object_section, validate_enum_string, validate_optional_bool, validate_optional_enum,
     validate_optional_integer, validate_optional_number, validate_optional_string,
@@ -20,6 +21,14 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     validate_optional_bool(general, "addToPath", "general")?;
 
     let appearance = object_section(value, "appearance")?;
+    if let Some(language) = appearance.get("language") {
+        let language = language
+            .as_str()
+            .ok_or("appearance.language must be a supported app locale")?;
+        if !is_supported_app_language(language) {
+            return Err("appearance.language must be one of the supported app locales".into());
+        }
+    }
     if let Some(font) = appearance.get("uiFont") {
         let font = font
             .as_object()
@@ -50,6 +59,14 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     }
 
     let ai = object_section(value, "ai")?;
+    if let Some(language) = ai.get("agentOutputLanguage") {
+        let language = language
+            .as_str()
+            .ok_or("ai.agentOutputLanguage must be a supported locale or follow-app")?;
+        if !is_supported_agent_output_language(language) {
+            return Err("ai.agentOutputLanguage must be a supported locale or follow-app".into());
+        }
+    }
     if let Some(config) = ai.get("aiConfig") {
         let config = config.as_object().ok_or("ai.aiConfig must be an object")?;
         if !config.is_empty() {

@@ -15,11 +15,13 @@ import { keymapContext, keymapsBlocked } from '../../services/keymaps/context';
 import { executeKeymapCommand } from '../../services/keymaps/actions';
 import { nativeKeymapAccelerators } from '../../services/keymaps/native';
 import { formatKeybinding } from '../../services/keymaps/keystroke';
+import { useDateTimeLanguage } from '../../../features/i18n/hooks/useDateTimeLanguage';
 import type { MenuCallbacks } from '../../types/menu/MenuCallbacks';
 import { MENU_COMMANDS } from '../../constants/applicationMenu';
 
 export function useApplicationMenu(callbacks: MenuCallbacks, modalOpen = false) {
   const appServices = useApplicationServices();
+  const language = useDateTimeLanguage();
   const git = useGitStore();
   const prefs = usePreferencesStore();
   const perf = usePerformanceMonitorStore();
@@ -51,11 +53,11 @@ export function useApplicationMenu(callbacks: MenuCallbacks, modalOpen = false) 
 
   useEffect(() => {
     if (mac && appServices.platform.capabilities.nativeMenu) {
-      void appServices.application.updateApplicationMenuState({ flags, accelerators, shortcutLabels }).catch((error) =>
-        console.warn('[Stage0 menu] Could not sync native menu state:', error)
-      );
+      void appServices.application.updateApplicationMenuState({ flags, language, accelerators, shortcutLabels })
+        .then(() => appServices.application.updateRecentRepositoriesMenu({ repositories: git.recentRepos }))
+        .catch((error) => console.warn('[Stage0 menu] Could not sync native menu state:', error));
     }
-  }, [mac, flags, accelerators, shortcutLabels]);
+  }, [mac, flags, language, accelerators, shortcutLabels, git.recentRepos]);
 
   useEffect(() => {
     let disposed = false;

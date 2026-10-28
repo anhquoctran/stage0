@@ -5,6 +5,7 @@ import { type VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
 import { type DiscussionCodeSnippet } from '../types/DiscussionCodeSnippet';
 import { type ReviewActionType } from '../types/ReviewActionType';
 import { fromDbDiscussion } from '../utils/fromDbDiscussion';
+import { parseReviewerReviewCommand } from '../utils/parseReviewerReviewCommand';
 import { AI_REVIEW_UNAVAILABLE } from '../../ai/constants/runtimeAvailability';
 import type { VirtualMrState } from '../types/VirtualMrState';
 
@@ -110,9 +111,16 @@ export const createDiscussionSlice = (
       ),
     }));
     await get().invalidateReviewerApprovals(sessionId);
-    void import('../../review/services/assignedReviewService')
-      .then(({ queueAssignedDiscussionReply }) => queueAssignedDiscussionReply(sessionId, discId))
-      .catch((error) => console.warn('Could not re-review the new discussion:', error));
+    const reviewerId = parseReviewerReviewCommand(payload.initialComment);
+    if (reviewerId) {
+      void import('../../review/services/manualReviewerRequestService')
+        .then(({ requestManualReviewerReview }) => requestManualReviewerReview(sessionId, discId, reviewerId))
+        .catch((error) => console.warn('Could not process the manual review request:', error));
+    } else {
+      void import('../../review/services/assignedReviewService')
+        .then(({ queueAssignedDiscussionReply }) => queueAssignedDiscussionReply(sessionId, discId))
+        .catch((error) => console.warn('Could not re-review the new discussion:', error));
+    }
   },
 
   replyToDiscussion: async (
@@ -120,7 +128,8 @@ export const createDiscussionSlice = (
     body: string,
     reviewAction?: VirtualMrComment['reviewAction'],
     authorType: VirtualMrComment['authorType'] = 'user',
-    authorName?: string
+    authorName?: string,
+    authorId?: string
   ) => {
     const { sessions } = get();
     const targetSession = sessions.find((s) => s.discussions.some((d) => d.id === discussionId));
@@ -132,7 +141,7 @@ export const createDiscussionSlice = (
       id: commentId,
       discussionId,
       authorType,
-      authorId: authorType === 'ai_agent' ? 'ai-bot' : targetSession.assignee.email,
+      authorId: authorId || (authorType === 'ai_agent' ? 'ai-bot' : targetSession.assignee.email),
       authorName: authorName || (authorType === 'ai_agent' ? 'Security Bot' : targetSession.assignee.name),
       body,
       reviewAction,
@@ -211,7 +220,9 @@ export const createDiscussionSlice = (
         discussionId,
         isResolved,
         resolveType,
-        resolvedBy: isResolved ? 'Local User' : null,
+        resolvedBy: isResolved ? sessions.find((session) =>
+          session.discussions.some((discussion) => discussion.id === discussionId)
+        )?.assignee.name || 'Local User' : null,
       });
     } catch (e) {
       console.error('Failed to resolve discussion in db:', e);
@@ -252,7 +263,7 @@ export const createDiscussionSlice = (
     set((state) => ({
       sessions: state.sessions.map((session) =>
         session.id === sessionId
-          ? { ...session, discussions: items.map(fromDbDiscussion) }
+          ? { ...session, discussions: items.map((item) => fromDbDiscussion(item, session.assignee)) }
           : session
       ),
     }));

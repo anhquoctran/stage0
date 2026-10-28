@@ -1,0 +1,236 @@
+{
+  "common": {
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "loading": "Wird geladen…",
+    "save": "Speichern",
+    "settings": "Einstellungen"
+  },
+  "preferences": {
+    "appearance": "Erscheinungsbild",
+    "language": {
+      "title": "Sprache",
+      "description": "Wähle die Sprache von Stage0 sowie Datums- und Zeitformate.",
+      "uiLabel": "Anwendungssprache",
+      "uiDescription": "Ändert die Oberfläche und Datums- und Zeitformate in allen geöffneten Fenstern.",
+      "agentLabel": "Ausgabesprache der KI-Reviewer",
+      "agentDescription": "Lege die Sprache für generierte Hinweise und Zusammenfassungen fest. Code, Diffs, Pfade und Bezeichner werden nicht übersetzt.",
+      "followApp": "Anwendungssprache übernehmen",
+      "baseGroup": "Basissprachen",
+      "extendedGroup": "Weitere Sprachen",
+      "saving": "Sprache wird gespeichert…",
+      "saveError": "Die Spracheinstellung konnte nicht gespeichert werden."
+    },
+    "nav": {
+      "general": "Allgemein",
+      "appearance": "Erscheinungsbild",
+      "editor": "Editor und Diff",
+      "ai": "KI",
+      "git": "Versionsverwaltung",
+      "notifications": "Benachrichtigungen",
+      "general-keymaps": "Tastaturbelegung",
+      "general-settings": "Allgemeine Einstellungen",
+      "appearance-theme": "Design",
+      "appearance-language": "Sprache",
+      "appearance-fonts": "Editor-Schrift",
+      "appearance-ui-font": "UI-Schrift",
+      "appearance-markdown-font": "Markdown-Schrift",
+      "editor-diff": "Diff-Ansicht",
+      "ai-overview": "Allgemein",
+      "ai-providers": "LLM-Anbieter",
+      "ai-mcp": "MCP-Server",
+      "ai-external-agents": "Externe Agenten",
+      "ai-reviewers": "Reviewer-Bots",
+      "ai-sandbox": "Sandbox",
+      "ai-guardrails": "Sicherheit und Schutzregeln",
+      "git-binary": "Git-Programm",
+      "git-credentials": "Git-Zugangsdaten",
+      "notifications-settings": "Push und Hinweise"
+    },
+    "headers": {
+      "general-keymaps": {
+        "title": "Tastaturbelegung und Kurzbefehle",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "general-settings": {
+        "title": "Allgemeine Einstellungen",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "appearance-theme": {
+        "title": "Design und Oberflächenmodus",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "appearance-language": {
+        "title": "Sprache und Lokalisierung",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "appearance-fonts": {
+        "title": "Editor-Schrift und Typografie",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "appearance-ui-font": {
+        "title": "UI-Schrift",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "appearance-markdown-font": {
+        "title": "Markdown-Schrift und Typografie",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "editor-diff": {
+        "title": "Diff-Ansicht und Codenavigation",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "ai-overview": {
+        "title": "KI",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "ai-providers": {
+        "title": "LLM-Anbieter",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "ai-mcp": {
+        "title": "MCP-Server",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "ai-external-agents": {
+        "title": "Externe Agenten",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "ai-reviewers": {
+        "title": "Reviewer-Bots",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "ai-sandbox": {
+        "title": "Sandbox und Werkzeugrechte",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "ai-guardrails": {
+        "title": "Sicherheit und Schutzregeln",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "git-binary": {
+        "title": "Git-Programm",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "git-credentials": {
+        "title": "Git-Zugangsdaten und Remotes",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      },
+      "notifications-settings": {
+        "title": "Benachrichtigungen und Push-Hinweise",
+        "description": "Konfiguriere die Optionen in diesem Bereich."
+      }
+    }
+  },
+  "dateTime": {
+    "justNow": "gerade eben",
+    "minutesAgo_one": "vor {{count}} Minute",
+    "minutesAgo_other": "vor {{count}} Minuten",
+    "hoursAgo_one": "vor {{count}} Stunde",
+    "hoursAgo_other": "vor {{count}} Stunden",
+    "daysAgo_one": "vor {{count}} Tag",
+    "daysAgo_other": "vor {{count}} Tagen",
+    "monthsAgo_one": "vor {{count}} Monat",
+    "monthsAgo_other": "vor {{count}} Monaten",
+    "yearsAgo_one": "vor {{count}} Jahr",
+    "yearsAgo_other": "vor {{count}} Jahren"
+  },
+  "menu": {
+    "commands": {
+      "about": "Über Stage0",
+      "preferences": "Einstellungen...",
+      "services": "Dienste",
+      "hide": "Stage0 ausblenden",
+      "hide_others": "Andere ausblenden",
+      "show_all": "Alle einblenden",
+      "quit": "Stage0 beenden",
+      "new_window": "Neues Fenster",
+      "open_repo": "Öffnen...",
+      "open_repo_new_window": "In neuem Fenster öffnen...",
+      "clone_repo": "Klonen...",
+      "close_repo": "Repository schließen",
+      "close_window": "Fenster schließen",
+      "exit": "Beenden",
+      "clear_recent": "Zuletzt verwendet leeren",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen",
+      "cut": "Ausschneiden",
+      "copy": "Kopieren",
+      "paste": "Einfügen",
+      "select_all": "Alles auswählen",
+      "reveal_file": "In {fileManager} öffnen",
+      "view_blame": "Git Blame anzeigen",
+      "copy_rel_path": "Relativen Pfad kopieren",
+      "copy_abs_path": "Absoluten Pfad kopieren",
+      "copy_remote_url": "Remote-Datei-URL kopieren",
+      "copy_remote_url_from": "Remote-Datei-URL kopieren von...",
+      "previous_file": "Vorherige Datei",
+      "next_file": "Nächste Datei",
+      "view_split": "Nebeneinander (geteilt)",
+      "view_unified": "Inline (vereinheitlicht)",
+      "toggle_blame": "Datei-Blame umschalten",
+      "toggle_inline_blame": "Inline-Blame umschalten",
+      "view_git_graph": "Git Graph anzeigen",
+      "file_list_flat": "Dateiliste: flache Ansicht",
+      "file_list_tree": "Dateiliste: Baumansicht",
+      "toggle_theme": "Design wechseln",
+      "toggle_perf_monitor": "Leistungsmonitor anzeigen",
+      "fullscreen": "Vollbild aktivieren",
+      "repo_overview": "Repository-Übersicht...",
+      "new_mr": "Neues Virtual MR...",
+      "fetch": "Fetch (alle und bereinigen)",
+      "pull": "Pull",
+      "pull_from": "Pull von...",
+      "merge": "Upstream zusammenführen",
+      "merge_from": "Zusammenführen von...",
+      "rebase": "Rebase",
+      "rebase_from": "Rebase von...",
+      "rebase_continue": "Fortfahren",
+      "rebase_skip": "Commit überspringen",
+      "rebase_abort": "Rebase abbrechen",
+      "swap_branches": "Base und Compare tauschen",
+      "refresh_diff": "Diff und Konflikte aktualisieren",
+      "open_terminal": "Terminal",
+      "open_vscode": "Visual Studio Code",
+      "open_explorer": "{fileManager}",
+      "repo_settings": "Repository-Einstellungen...",
+      "minimize": "Minimieren",
+      "zoom": "Zoom",
+      "bring_all_to_front": "Alle nach vorne bringen",
+      "shortcuts": "Tastenkombinationen",
+      "keymaps": "Tastaturbelegung anpassen...",
+      "open_webview_devtools": "Entwicklertools",
+      "release_notes": "Versionshinweise anzeigen"
+    },
+    "recent": {
+      "emptyLabel": "Keine zuletzt verwendeten Repositories",
+      "removeLabel": "Aus den zuletzt verwendeten entfernen"
+    },
+    "menus": {
+      "application_menu": "Stage0",
+      "file_menu": "Datei",
+      "open_recent": "Zuletzt verwendet",
+      "edit_menu": "Bearbeiten",
+      "view_menu": "Ansicht",
+      "performance_menu": "Leistung",
+      "repository_menu": "Repository",
+      "repo_sync_menu": "Synchronisieren",
+      "repo_merge_menu": "Zusammenführen",
+      "repo_rebase_menu": "Rebase",
+      "repo_open_menu": "Öffnen mit",
+      "window_menu": "Fenster",
+      "help_menu": "Hilfe"
+    },
+    "categories": {
+      "workspace": "Arbeitsbereichnavigation"
+    },
+    "application": "Anwendungsmenü",
+    "waitingForSecondKey": "Warte auf zweite Taste · Esc zum Abbrechen"
+  },
+  "shortcuts": {
+    "title": "Tastenkombinationen",
+    "close": "Schließen (Esc)",
+    "customize": "Tastaturbelegung anpassen…",
+    "gotIt": "Verstanden"
+  }
+}

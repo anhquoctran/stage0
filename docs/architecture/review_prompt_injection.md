@@ -56,12 +56,22 @@ batch tool.
 
 ## Discussion reply workflow
 
-User-created discussions and user replies enqueue `queueAssignedDiscussionReply`,
-not the full MR batch. A per-session queue waits for existing reviews/batches,
-coalesces repeated requests for a thread and refreshes context between reviewers.
-Exact direct mentions route replies; quoted/code mentions do not. Without an
-explicit recipient, the original assigned bot is preferred. Backend checks remain
-authoritative and require a currently assigned, eligible reviewer.
+Ordinary user-created discussions and replies enqueue
+`queueAssignedDiscussionReply`, not a full MR batch. A per-session queue waits
+for existing reviews/batches, coalesces repeated requests for a thread and
+refreshes context between reviewers. Exact direct mentions route replies;
+quoted/code mentions do not. Without an explicit recipient, the original
+assigned bot is preferred. Backend checks remain authoritative and require a
+currently assigned, eligible reviewer.
+
+The exact root body `[@Assigned reviewer](#mr-mention/reviewer/<encoded-id>) review`
+is a separate host workflow. The frontend recognizes the editor-generated
+Markdown mention, checks that bot's unresolved code discussions and starts one
+full run for that bot only. The runtime prompt treats this as normal full-review
+intent; it grants no extra authority. Backend reply eligibility marks the exact
+command as host-managed so model-generated reply actions cannot race with the
+host's progress and completion replies. Other discussion bodies retain the
+scoped reply workflow.
 
 `replyDiscussionId` is an optional, additive request/run field. Older records
 default to full-review scope. A reply run exposes only:

@@ -282,7 +282,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 <button
                   type="button"
                   onClick={() => setAttachmentWarning(null)}
-                  className="text-yellow-400 hover:text-yellow-100 ml-2 font-bold cursor-pointer rounded-sm"
+                  className="text-yellow-400 hover:text-yellow-100 ms-2 font-bold cursor-pointer rounded-sm"
                   title="Dismiss warning"
                 >
                   ×

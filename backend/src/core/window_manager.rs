@@ -28,8 +28,6 @@ use std::thread;
 use std::time::Duration;
 
 use tauri::webview::PageLoadEvent;
-#[cfg(target_os = "macos")]
-use tauri::TitleBarStyle;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 use crate::core::db::Database;
@@ -233,13 +231,6 @@ fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWind
                 let _ = focus_window(&window);
             }
         });
-
-    #[cfg(target_os = "macos")]
-    let builder = builder
-        // Keep native traffic-light placement. Tao reapplies custom insets on
-        // every redraw and panics while the borderless splash has no buttons.
-        .title_bar_style(TitleBarStyle::Overlay)
-        .hidden_title(true);
 
     let window = builder
         .build()

@@ -1,0 +1,236 @@
+{
+  "common": {
+    "cancel": "Hủy",
+    "close": "Đóng",
+    "loading": "Đang tải…",
+    "save": "Lưu",
+    "settings": "Cài đặt"
+  },
+  "preferences": {
+    "appearance": "Giao diện",
+    "language": {
+      "title": "Ngôn ngữ",
+      "description": "Chọn ngôn ngữ Stage0 và cách định dạng ngày giờ.",
+      "uiLabel": "Ngôn ngữ ứng dụng",
+      "uiDescription": "Thay đổi giao diện và cách định dạng ngày giờ trong tất cả cửa sổ đang mở.",
+      "agentLabel": "Ngôn ngữ đầu ra của AI reviewer",
+      "agentDescription": "Chọn ngôn ngữ cho nhận xét và tóm tắt do reviewer tạo. Mã nguồn, diff, đường dẫn và định danh không được dịch.",
+      "followApp": "Theo ngôn ngữ ứng dụng",
+      "baseGroup": "Ngôn ngữ chính",
+      "extendedGroup": "Ngôn ngữ bổ sung",
+      "saving": "Đang lưu ngôn ngữ…",
+      "saveError": "Không thể lưu tùy chọn ngôn ngữ."
+    },
+    "nav": {
+      "general": "Chung",
+      "appearance": "Giao diện",
+      "editor": "Trình sửa & Diff",
+      "ai": "AI",
+      "git": "Quản lý phiên bản",
+      "notifications": "Thông báo",
+      "general-keymaps": "Phím tắt",
+      "general-settings": "Cài đặt chung",
+      "appearance-theme": "Chủ đề",
+      "appearance-language": "Ngôn ngữ",
+      "appearance-fonts": "Phông chữ vùng soạn thảo",
+      "appearance-ui-font": "Phông chữ giao diện",
+      "appearance-markdown-font": "Phông chữ Markdown",
+      "editor-diff": "Trình xem Diff",
+      "ai-overview": "Chung",
+      "ai-providers": "Nhà cung cấp LLM",
+      "ai-mcp": "Máy chủ MCP",
+      "ai-external-agents": "Tác nhân bên ngoài",
+      "ai-reviewers": "Bot reviewer",
+      "ai-sandbox": "Sandbox",
+      "ai-guardrails": "Bảo mật & Guardrails",
+      "git-binary": "Git executable",
+      "git-credentials": "Thông tin xác thực Git",
+      "notifications-settings": "Push & cảnh báo"
+    },
+    "headers": {
+      "general-keymaps": {
+        "title": "Phím tắt và tổ hợp phím",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "general-settings": {
+        "title": "Cài đặt chung",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "appearance-theme": {
+        "title": "Chủ đề và chế độ giao diện",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "appearance-language": {
+        "title": "Ngôn ngữ và bản địa hóa",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "appearance-fonts": {
+        "title": "Phông chữ vùng soạn thảo và kiểu chữ",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "appearance-ui-font": {
+        "title": "Phông chữ giao diện",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "appearance-markdown-font": {
+        "title": "Phông chữ Markdown và kiểu chữ",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "editor-diff": {
+        "title": "Trình xem Diff và điều hướng mã",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "ai-overview": {
+        "title": "AI",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "ai-providers": {
+        "title": "Nhà cung cấp LLM",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "ai-mcp": {
+        "title": "Máy chủ MCP",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "ai-external-agents": {
+        "title": "Tác nhân bên ngoài",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "ai-reviewers": {
+        "title": "Bot reviewer",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "ai-sandbox": {
+        "title": "Sandbox và quyền công cụ",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "ai-guardrails": {
+        "title": "Bảo mật và Guardrails",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "git-binary": {
+        "title": "Git executable",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "git-credentials": {
+        "title": "Thông tin xác thực và remote Git",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      },
+      "notifications-settings": {
+        "title": "Thông báo và cảnh báo đẩy",
+        "description": "Định cấu hình các tùy chọn trong mục này."
+      }
+    }
+  },
+  "dateTime": {
+    "justNow": "vừa xong",
+    "minutesAgo_one": "{{count}} phút trước",
+    "minutesAgo_other": "{{count}} phút trước",
+    "hoursAgo_one": "{{count}} giờ trước",
+    "hoursAgo_other": "{{count}} giờ trước",
+    "daysAgo_one": "{{count}} ngày trước",
+    "daysAgo_other": "{{count}} ngày trước",
+    "monthsAgo_one": "{{count}} tháng trước",
+    "monthsAgo_other": "{{count}} tháng trước",
+    "yearsAgo_one": "{{count}} năm trước",
+    "yearsAgo_other": "{{count}} năm trước"
+  },
+  "menu": {
+    "commands": {
+      "about": "Giới thiệu Stage0",
+      "preferences": "Tùy chọn...",
+      "services": "Dịch vụ",
+      "hide": "Ẩn Stage0",
+      "hide_others": "Ẩn ứng dụng khác",
+      "show_all": "Hiện tất cả",
+      "quit": "Thoát Stage0",
+      "new_window": "Cửa sổ mới",
+      "open_repo": "Mở...",
+      "open_repo_new_window": "Mở trong cửa sổ mới...",
+      "clone_repo": "Sao chép kho lưu trữ...",
+      "close_repo": "Đóng kho lưu trữ",
+      "close_window": "Đóng cửa sổ",
+      "exit": "Thoát",
+      "clear_recent": "Xóa mục đã mở gần đây",
+      "undo": "Hoàn tác",
+      "redo": "Làm lại",
+      "cut": "Cắt",
+      "copy": "Sao chép",
+      "paste": "Dán",
+      "select_all": "Chọn tất cả",
+      "reveal_file": "Mở bằng {fileManager}",
+      "view_blame": "Xem Git Blame",
+      "copy_rel_path": "Sao chép đường dẫn tương đối",
+      "copy_abs_path": "Sao chép đường dẫn tuyệt đối",
+      "copy_remote_url": "Sao chép URL tệp từ remote",
+      "copy_remote_url_from": "Sao chép URL tệp từ remote...",
+      "previous_file": "Tệp trước",
+      "next_file": "Tệp tiếp theo",
+      "view_split": "Cạnh nhau (Chia đôi)",
+      "view_unified": "Trong dòng (Hợp nhất)",
+      "toggle_blame": "Bật/tắt Git Blame của tệp",
+      "toggle_inline_blame": "Bật/tắt Git Blame trong dòng",
+      "view_git_graph": "Xem Git Graph",
+      "file_list_flat": "Danh sách tệp: bố cục phẳng",
+      "file_list_tree": "Danh sách tệp: bố cục cây",
+      "toggle_theme": "Đổi chủ đề",
+      "toggle_perf_monitor": "Hiển thị hiệu suất",
+      "fullscreen": "Vào toàn màn hình",
+      "repo_overview": "Tổng quan kho lưu trữ...",
+      "new_mr": "Virtual MR mới...",
+      "fetch": "Fetch (tất cả và dọn dẹp)",
+      "pull": "Pull",
+      "pull_from": "Pull từ...",
+      "merge": "Hợp nhất upstream",
+      "merge_from": "Hợp nhất từ...",
+      "rebase": "Rebase",
+      "rebase_from": "Rebase từ...",
+      "rebase_continue": "Tiếp tục",
+      "rebase_skip": "Bỏ qua commit",
+      "rebase_abort": "Hủy rebase",
+      "swap_branches": "Đổi Base và Compare",
+      "refresh_diff": "Làm mới Diff và xung đột",
+      "open_terminal": "Terminal",
+      "open_vscode": "Visual Studio Code",
+      "open_explorer": "{fileManager}",
+      "repo_settings": "Cài đặt kho lưu trữ...",
+      "minimize": "Thu nhỏ",
+      "zoom": "Phóng to",
+      "bring_all_to_front": "Đưa tất cả lên trước",
+      "shortcuts": "Phím tắt bàn phím",
+      "keymaps": "Tùy chỉnh phím tắt...",
+      "open_webview_devtools": "Công cụ dành cho nhà phát triển",
+      "release_notes": "Xem ghi chú phát hành"
+    },
+    "recent": {
+      "emptyLabel": "Không có kho lưu trữ gần đây",
+      "removeLabel": "Xóa khỏi danh sách gần đây"
+    },
+    "menus": {
+      "application_menu": "Stage0",
+      "file_menu": "Tệp",
+      "open_recent": "Gần đây",
+      "edit_menu": "Chỉnh sửa",
+      "view_menu": "Xem",
+      "performance_menu": "Hiệu suất",
+      "repository_menu": "Kho lưu trữ",
+      "repo_sync_menu": "Đồng bộ",
+      "repo_merge_menu": "Hợp nhất",
+      "repo_rebase_menu": "Rebase",
+      "repo_open_menu": "Mở bằng",
+      "window_menu": "Cửa sổ",
+      "help_menu": "Trợ giúp"
+    },
+    "categories": {
+      "workspace": "Điều hướng workspace"
+    },
+    "application": "Menu ứng dụng",
+    "waitingForSecondKey": "Đang chờ phím thứ hai · Esc để hủy"
+  },
+  "shortcuts": {
+    "title": "Phím tắt bàn phím",
+    "close": "Đóng (Esc)",
+    "customize": "Tùy chỉnh phím tắt…",
+    "gotIt": "Đã hiểu"
+  }
+}

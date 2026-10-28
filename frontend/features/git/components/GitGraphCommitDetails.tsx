@@ -2,6 +2,7 @@ import React from 'react';
 import { Copy } from '../../../common/components/icons/Copy';
 import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { formatDateTime } from '@/common/utils/dateTime';
+import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import { CommitAuthorAvatar } from './CommitAuthorAvatar';
 import type { GitGraphCommit } from '../types/GitGraphCommit';
 
@@ -20,6 +21,7 @@ export const GitGraphCommitDetails: React.FC<{
     handleCopyCommitHash,
     referenceColor,
 }) => {
+    useDateTimeLanguage();
     return (
         <aside className="flex w-[min(36%,440px)] min-w-[300px] shrink-0 flex-col border-l border-surface0 bg-base/40">
             {selectedCommit ? (

@@ -1,4 +1,4 @@
-use super::definition::{definition, label};
+use super::definition::definition;
 use std::collections::HashMap;
 
 #[derive(Clone, Default)]
@@ -44,8 +44,9 @@ impl NativeMenuKeymap {
         })
     }
 
-    pub fn title(&self, id: &str) -> String {
-        let title = label(&definition().commands[id].label, "macos");
+    pub fn title(&self, id: &str, language: &str) -> String {
+        let title =
+            super::localized_menu_label(&definition().commands[id].label, language, "macos");
         // Chords/context-specific shortcuts are executed by the WebView, not AppKit.
         // Keep their resolved primary binding visible without registering a second owner.
         match self

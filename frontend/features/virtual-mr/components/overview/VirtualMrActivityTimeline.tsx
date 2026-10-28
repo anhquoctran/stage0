@@ -9,6 +9,7 @@ import { SortDescending } from '../../../../common/components/icons/SortDescendi
 import { Tag } from '../../../../common/components/icons/Tag';
 import { User } from '../../../../common/components/icons/User';
 import { formatRelativeTime } from '../../../../common/utils/dateTime';
+import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import { getAuthorHandle } from '../../utils/discussionAuthorUtils';
 import { computeTitleDiff } from '../../utils/virtualMrTitleDiff';
 import { DiscussionThread } from '../DiscussionThread';
@@ -17,6 +18,7 @@ import type { VirtualMrTimelineEvent } from './types/VirtualMrTimelineEvent';
 import type { VirtualMrActivityTimelineProps } from './VirtualMrActivityTimelineProps';
 
 export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps> = ({ session }) => {
+  const uiLanguage = useDateTimeLanguage();
   const [filter, setFilter] = useState<ActivityFilter>('all');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -222,7 +224,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
     });
 
     return list;
-  }, [session, sortOrder]);
+  }, [session, sortOrder, uiLanguage]);
 
   const filteredEvents = useMemo(() => {
     if (filter === 'comments') {

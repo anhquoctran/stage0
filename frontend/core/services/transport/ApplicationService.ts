@@ -14,6 +14,7 @@ export interface ApplicationService {
   restartApp(): Promise<unknown>;
   updateApplicationMenuState(input: {
     flags: MenuFlags;
+    language: string;
     accelerators: Record<string, string>;
     shortcutLabels: {
       [k: string]: string;

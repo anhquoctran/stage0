@@ -1,8 +1,12 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
+import localizedFormat from 'dayjs/plugin/localizedFormat.js';
+import relativeTime from 'dayjs/plugin/relativeTime.js';
 import type { DateInput } from '../types/DateInput';
 
 dayjs.extend(utc);
+dayjs.extend(localizedFormat);
+dayjs.extend(relativeTime);
 
 function validDate(value: DateInput) {
   if (value === null || value === undefined || value === '') return null;
@@ -19,28 +23,22 @@ function validDate(value: DateInput) {
 /** Numeric inputs are Unix milliseconds; use the Unix-second helpers for Git timestamps. */
 export function formatTime(value: DateInput, withSeconds = false): string {
   const date = validDate(value);
-  return date?.format(withSeconds ? 'HH:mm:ss' : 'HH:mm') ?? '';
+  return date?.format(withSeconds ? 'LTS' : 'LT') ?? '';
 }
 
 export function formatDate(value: DateInput): string {
-  return validDate(value)?.format('MMM D, YYYY') ?? '';
+  return validDate(value)?.format('L') ?? '';
 }
 
 export function formatDateTime(value: DateInput): string {
-  return validDate(value)?.format('MMM D, YYYY HH:mm') ?? '';
+  return validDate(value)?.format('L LT') ?? '';
 }
 
 /** Compact relative time for narrow Git/MR UI, with future dates clamped to now. */
 export function formatRelativeTime(value: DateInput): string {
   const date = validDate(value);
   if (!date) return '';
-  const seconds = Math.max(0, dayjs().diff(date, 'second'));
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  if (seconds < 30 * 86400) return `${Math.floor(seconds / 86400)}d ago`;
-  if (seconds < 365 * 86400) return `${Math.floor(seconds / (30 * 86400))}mo ago`;
-  return `${Math.floor(seconds / (365 * 86400))}y ago`;
+  return date.fromNow();
 }
 
 export function formatRecentTime(value: DateInput): string {
@@ -63,5 +61,5 @@ export function formatUnixDateTime(epochSeconds: number, timezone?: string): str
   if (hours > 23 || minutes > 59) return formatDateTime(dayjs.unix(epochSeconds).valueOf());
   const offsetMinutes = (hours * 60 + minutes) * (offset[1] === '-' ? -1 : 1);
   const localAtCommit = dayjs.unix(epochSeconds).utc().add(offsetMinutes, 'minute');
-  return `${localAtCommit.format('MMM D, YYYY HH:mm')} (${timezone})`;
+  return `${localAtCommit.format('L LT')} (${timezone})`;
 }

@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </p>
 
             {this.state.error && (
-              <div className="w-full bg-[#11111b] border border-[#313244] rounded-sm p-3 mb-4 text-left overflow-auto max-h-48 font-mono text-[11px] text-red-300">
+              <div className="w-full bg-[#11111b] border border-[#313244] rounded-sm p-3 mb-4 text-start overflow-auto max-h-48 font-mono text-[11px] text-red-300">
                 <div className="font-bold mb-1">{this.state.error.name}: {this.state.error.message}</div>
                 {this.state.error.stack && (
                   <pre className="text-[10px] text-[#a6adc8] whitespace-pre-wrap">{this.state.error.stack}</pre>

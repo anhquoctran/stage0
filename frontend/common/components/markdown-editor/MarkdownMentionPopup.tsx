@@ -24,7 +24,7 @@ export function MarkdownMentionPopup({
           aria-selected={selectedMentionIndex === index}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => applyMention(option)}
-          className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs rounded-sm ${selectedMentionIndex === index ? 'bg-surface1 text-text' : 'text-subtext1 hover:bg-surface0'}`}
+          className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-xs rounded-sm ${selectedMentionIndex === index ? 'bg-surface1 text-text' : 'text-subtext1 hover:bg-surface0'}`}
         >
           <span className="min-w-0 truncate font-medium">
             @{option.label}
@@ -32,7 +32,7 @@ export function MarkdownMentionPopup({
               (other) =>
                 other.id !== option.id && other.kind === option.kind && other.label === option.label
             ) && (
-              <span className="ml-2 font-mono text-[10px] font-normal text-subtext0">
+              <span className="ms-2 font-mono text-[10px] font-normal text-subtext0">
                 {option.id}
               </span>
             )}

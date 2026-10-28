@@ -1,10 +1,19 @@
-import { formatTime } from '../../../common/utils/dateTime';
+import { formatRelativeTime } from '../../../common/utils/dateTime';
 import type { VirtualMrSession } from '../types/VirtualMrSession';
+import type { AuthorType } from '../types/AuthorType';
 
 /**
  * Derives a GitLab style handle (@handle) from full name or authorId.
  */
-export function getAuthorHandle(name: string, authorId?: string): string {
+export function getAuthorHandle(name: string, authorId?: string, authorType: AuthorType = 'user'): string {
+  const normalize = (value: string) => value.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '').replace(/\u0111/g, 'd').replace(/\u0110/g, 'D')
+    .trim().toLowerCase();
+  if (authorType === 'ai_agent') {
+    const reviewerName = /^Stage0 AI \((.*)\)$/.exec(name.trim())?.[1] ?? name;
+    const slug = normalize(reviewerName).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return `@${slug || 'reviewer'}`;
+  }
   if (authorId && authorId.includes('@')) {
     const localPart = authorId.split('@')[0].trim().toLowerCase();
     if (localPart) return `@${localPart}`;
@@ -15,13 +24,7 @@ export function getAuthorHandle(name: string, authorId?: string): string {
     if (localPart) return `@${localPart}`;
   }
 
-  const normalized = name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\u0111/g, 'd')
-    .replace(/\u0110/g, 'D')
-    .trim()
-    .toLowerCase();
+  const normalized = normalize(name).replace(/[^a-z0-9\s._-]/g, '');
 
   const words = normalized.split(/\s+/).filter(Boolean);
   if (words.length >= 2) {
@@ -72,33 +75,5 @@ export function getAuthorBadges(
  * to avoid local timezone offset miscalculations.
  */
 export function formatGitLabTime(dateInput: string): string {
-  if (!dateInput) return '';
-  let str = dateInput.trim();
-  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(str)) {
-    str = `${str.replace(' ', 'T')}Z`;
-  }
-  const date = new Date(str);
-  if (Number.isNaN(date.getTime())) return formatTime(dateInput);
-
-  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-  if (seconds < 60) return 'just now';
-
-  const minutes = Math.floor(seconds / 60);
-  if (minutes === 1) return '1 minute ago';
-  if (minutes < 60) return `${minutes} minutes ago`;
-
-  const hours = Math.floor(seconds / 3600);
-  if (hours === 1) return '1 hour ago';
-  if (hours < 24) return `${hours} hours ago`;
-
-  const days = Math.floor(seconds / 86400);
-  if (days === 1) return '1 day ago';
-  if (days < 30) return `${days} days ago`;
-
-  const months = Math.floor(seconds / (30 * 86400));
-  if (months === 1) return '1 month ago';
-  if (months < 12) return `${months} months ago`;
-
-  const years = Math.floor(seconds / (365 * 86400));
-  return years === 1 ? '1 year ago' : `${years} years ago`;
+  return dateInput ? formatRelativeTime(dateInput) : '';
 }

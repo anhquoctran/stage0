@@ -5,6 +5,7 @@ import type { VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
 import type { VirtualMrComment } from '../types/VirtualMrComment';
 import { getDiscussionComments } from '../utils/discussionReferences';
 import { getDiscussionCommentBody } from '../utils/discussionCommentBody';
+import { AiBotBadge } from './AiBotBadge';
 
 export const DiscussionReferenceDialog: React.FC<{
   discussion: VirtualMrDiscussion;
@@ -53,7 +54,7 @@ export const DiscussionReferenceDialog: React.FC<{
         <div className="space-y-3">
           {(comment ? [comment] : getDiscussionComments(discussion)).map((item) => (
             <div key={item.id} className="border-l-2 border-surface1 pl-3">
-              <p className="mb-1 text-xs font-medium">{item.authorName} <span className="break-all font-mono text-[10px] font-normal text-subtext0">{item.id}</span></p>
+              <p className="mb-1 flex flex-wrap items-center gap-1.5 text-xs font-medium">{item.authorName} {item.authorType === 'ai_agent' && <AiBotBadge />} <span className="break-all font-mono text-[10px] font-normal text-subtext0">{item.id}</span></p>
               <MarkdownPreview content={getDiscussionCommentBody(item)} />
             </div>
           ))}

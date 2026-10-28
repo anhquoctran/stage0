@@ -4,11 +4,13 @@ import { X } from '../../../common/components/icons/X';
 import { getMenuShortcutCategories } from '../../services/applicationMenuShortcuts';
 import { getOsFileManagerName } from '../../../features/git/utils/fileActions';
 import { usePreferencesStore } from '../../../features/preferences/store/usePreferencesStore';
+import { useTranslation } from 'react-i18next';
 
 export const KeyboardShortcutsModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
 }> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const { keymap, openPreferences } = usePreferencesStore();
   if (!isOpen) return null;
 
@@ -22,7 +24,7 @@ export const KeyboardShortcutsModal: React.FC<{
     : /Win/i.test(navigator.platform || navigator.userAgent)
       ? 'windows'
       : 'linux';
-  const shortcutCategories = getMenuShortcutCategories(platform, fileManagerName, keymap);
+  const shortcutCategories = getMenuShortcutCategories(platform, fileManagerName, keymap, (key) => t(key));
 
   return (
     <div
@@ -30,7 +32,7 @@ export const KeyboardShortcutsModal: React.FC<{
       onClick={onClose}
     >
       <div
-        role="dialog" aria-modal="true" aria-label="Keyboard Shortcuts"
+        role="dialog" aria-modal="true" aria-label={t('shortcuts.title', { defaultValue: 'Keyboard Shortcuts' })}
         className="relative bg-mantle border border-surface0 p-5 sm:p-6 max-w-5xl w-full shadow-2xl animate-in zoom-in-95 duration-150 text-text cursor-default rounded-sm"
         onClick={(e) => e.stopPropagation()}
       >
@@ -41,13 +43,13 @@ export const KeyboardShortcutsModal: React.FC<{
         >
           <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
             <Keyboard className="w-4 h-4 text-brand" />
-            <h3 className="text-sm font-bold text-text tracking-tight">Keyboard Shortcuts</h3>
+            <h3 className="text-sm font-bold text-text tracking-tight">{t('shortcuts.title', { defaultValue: 'Keyboard Shortcuts' })}</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
-            title="Close (Esc)"
+            title={t('shortcuts.close', { defaultValue: 'Close (Esc)' })}
           >
             <X className="w-4 h-4" />
           </button>
@@ -85,13 +87,13 @@ export const KeyboardShortcutsModal: React.FC<{
 
         {/* Footer */}
         <div className="pt-3 border-t border-surface0 flex items-center justify-between">
-          <button type="button" className="rounded-sm px-2 py-1 text-xs text-brand hover:bg-surface0" onClick={() => { onClose(); openPreferences('general-keymaps'); }}>Customize keymap…</button>
+          <button type="button" className="rounded-sm px-2 py-1 text-xs text-brand hover:bg-surface0" onClick={() => { onClose(); openPreferences('general-keymaps'); }}>{t('shortcuts.customize', { defaultValue: 'Customize keymap…' })}</button>
           <button
             type="button"
             onClick={onClose}
             className="px-5 py-1.5 bg-surface1 hover:bg-surface2 text-text font-semibold text-xs cursor-pointer transition-colors border border-surface1 hover:border-surface2 rounded-sm"
           >
-            Got it
+            {t('shortcuts.gotIt', { defaultValue: 'Got it' })}
           </button>
         </div>
       </div>

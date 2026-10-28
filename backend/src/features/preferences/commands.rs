@@ -5,6 +5,26 @@ use super::{PreferencesDocument, PreferencesManager};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
 
+const APP_LANGUAGE_CHANGED: &str = "app-language-changed";
+
+fn app_language(settings: Option<&Value>) -> Option<&str> {
+    settings?.get("appearance")?.get("language")?.as_str()
+}
+
+fn emit_app_language_changed(app: &AppHandle, before: Option<&Value>, after: Option<&Value>) {
+    let Some(language) = app_language(after) else {
+        return;
+    };
+    if !super::is_supported_app_language(language) || app_language(before) == Some(language) {
+        return;
+    }
+    let _ = crate::core::menu::set_application_menu_language(app, language);
+    let _ = app.emit(
+        APP_LANGUAGE_CHANGED,
+        serde_json::json!({ "language": language }),
+    );
+}
+
 #[tauri::command]
 pub async fn initialize_preferences(
     app: AppHandle,
@@ -29,6 +49,8 @@ pub async fn initialize_preferences(
     let document = manager.read()?;
     if let Some(settings) = document.settings.as_ref() {
         apply_runtime_preferences(&app, settings);
+        let language = app_language(Some(settings)).unwrap_or(super::DEFAULT_APP_LANGUAGE);
+        let _ = crate::core::menu::set_application_menu_language(&app, language);
     }
     db.compact_git_credentials_metadata().map_err(|_| {
         "Legacy Git credential references could not be compacted in SQLite".to_string()
@@ -83,11 +105,12 @@ pub async fn save_preferences_json(
     let settings = parse_and_validate(&content)?;
     reject_git_credentials(&settings, "")?;
     validate_runtime_preferences(&settings)?;
-    let saved = app
-        .state::<PreferencesManager>()
-        .save(content, expected_revision)?;
+    let manager = app.state::<PreferencesManager>();
+    let before = manager.read().ok().and_then(|document| document.settings);
+    let saved = manager.save(content, expected_revision)?;
     apply_runtime_preferences(&app, &settings);
     let _ = app.emit("preferences-changed", saved.revision.clone());
+    emit_app_language_changed(&app, before.as_ref(), Some(&settings));
     Ok(saved)
 }
 
@@ -97,11 +120,12 @@ pub async fn patch_preferences(
     patch: Value,
     expected_revision: String,
 ) -> Result<PreferencesDocument, String> {
-    let saved = app
-        .state::<PreferencesManager>()
-        .patch(patch, expected_revision)?;
+    let manager = app.state::<PreferencesManager>();
+    let before = manager.read().ok().and_then(|document| document.settings);
+    let saved = manager.patch(patch, expected_revision)?;
     if let Some(settings) = &saved.settings {
         apply_runtime_preferences(&app, settings);
+        emit_app_language_changed(&app, before.as_ref(), Some(settings));
     }
     let _ = app.emit("preferences-changed", saved.revision.clone());
     Ok(saved)
@@ -109,9 +133,12 @@ pub async fn patch_preferences(
 
 #[tauri::command]
 pub async fn reset_preferences_json(app: AppHandle) -> Result<PreferencesDocument, String> {
-    let saved = app.state::<PreferencesManager>().reset()?;
+    let manager = app.state::<PreferencesManager>();
+    let before = manager.read().ok().and_then(|document| document.settings);
+    let saved = manager.reset()?;
     if let Some(settings) = &saved.settings {
         apply_runtime_preferences(&app, settings);
+        emit_app_language_changed(&app, before.as_ref(), Some(settings));
     }
     let _ = app.emit("preferences-changed", saved.revision.clone());
     Ok(saved)

@@ -3,12 +3,14 @@ import { Loader2 } from '../../../common/components/icons/Loader2';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { formatDateTime } from '../../../common/utils/dateTime';
+import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import { useGitTaskStore } from '../store/useGitTaskStore';
 import { useGitStore } from '../store/useGitStore';
 import type { BackgroundTaskCardProps } from '../types/BackgroundTaskCardProps';
 import { GitTaskProgress } from './GitTaskProgress';
 
 export const BackgroundTaskCard: React.FC<BackgroundTaskCardProps> = ({ task }) => {
+  useDateTimeLanguage();
   const dismissTask = useGitTaskStore((state) => state.dismissTask);
   const isRunning = task.status === 'running';
   const openRepository = () => {

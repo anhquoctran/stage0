@@ -6,16 +6,14 @@ import { RefreshCw } from '../../../../common/components/icons/RefreshCw';
 import { ShieldCheck } from '../../../../common/components/icons/ShieldCheck';
 import { Terminal } from '../../../../common/components/icons/Terminal';
 import { formatDateTime } from '../../../../common/utils/dateTime';
-import { useGitStore } from '../../../git/store/useGitStore';
+import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import { ReviewFindingCard } from '../../../review/components/ReviewFindingCard';
 import { ReviewRunSummary } from '../../../review/components/ReviewRunSummary';
 import { useReviewStore } from '../../../review/store/useReviewStore';
-import { createStartMrReviewAction } from '../../services/createStartMrReviewAction';
-import { getManualReviewBlockReason } from '../../utils/manualReviewAvailability';
 import type { VirtualMrReviewsTabProps } from './VirtualMrReviewsTabProps';
 
 export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ session }) => {
-  const { showToast } = useGitStore();
+  const uiLanguage = useDateTimeLanguage();
   const {
     sessionId: historySessionId,
     runs: historyRuns,
@@ -47,9 +45,6 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
     return () => window.clearInterval(timer);
   }, [activeIds, syncActive]);
 
-  const handleStartReview = createStartMrReviewAction(session, showToast);
-  const blockedReason = getManualReviewBlockReason(session);
-
   const reviewBatch = reviewBatches[session.id];
   const isRunning =
     Boolean(reviewBatch) ||
@@ -64,7 +59,7 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
       value: item.id,
       label: `Run #${runs.length - index} · ${item.reviewerName || 'AI Reviewer'} (${item.status}) · ${formatDateTime(item.startedAt)}`,
     }));
-  }, [runs]);
+  }, [runs, uiLanguage]);
 
   return (
     <div className="flex-1 h-full overflow-y-auto px-6 py-6 bg-crust/30 w-full">
@@ -89,19 +84,9 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={isRunning || !!blockedReason || session.reviewers.length === 0}
-              title={blockedReason || undefined}
-              onClick={handleStartReview}
-              className="flex items-center gap-1.5 border-0 px-3 py-1.5 bg-primary hover:bg-primary/90 active:scale-98 text-on-accent font-medium text-xs cursor-pointer rounded-sm shadow-xs disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRunning ? 'animate-spin' : ''}`} />
-              <span>{isRunning ? 'Review in progress…' : 'Run AI Code Review'}</span>
-            </button>
+            <p className="text-[11px] text-subtext0">Request in a new discussion: <code className="rounded-sm bg-surface0 px-1">@bot review</code></p>
           </div>
         </div>
-        {blockedReason && <p role="status" className="text-xs text-subtext0">{blockedReason}</p>}
         {historySessionId === session.id && error && (
           <p role="alert" className="text-xs text-red whitespace-pre-wrap">{error}</p>
         )}
@@ -182,25 +167,13 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
             <div className="space-y-1">
               <h3 className="text-sm font-semibold text-text">No Bot Reviews Yet</h3>
               <p className="text-xs text-subtext0 max-w-md mx-auto">
-                Trigger automated AI code reviews to analyze diffs, detect regressions, and evaluate
-                security findings before merging your Virtual MR.
+                To review this MR, start a new discussion, mention an assigned reviewer, and add <code className="rounded-sm bg-surface0 px-1">review</code> after the mention.
               </p>
             </div>
-            {session.reviewers.length > 0 ? (
-              <button
-                type="button"
-                disabled={!!blockedReason}
-                title={blockedReason || undefined}
-                onClick={handleStartReview}
-                className="inline-flex items-center gap-2 border-0 px-4 py-2 bg-primary hover:bg-primary/90 text-on-accent text-xs font-medium rounded-sm cursor-pointer shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Start AI Code Review</span>
-              </button>
-            ) : (
+            {session.reviewers.length === 0 && (
               <p className="text-xs text-yellow">
                 No reviewers are assigned to this MR. Add an AI reviewer in the metadata bar above to
-                enable automated reviews.
+                request a review.
               </p>
             )}
           </div>

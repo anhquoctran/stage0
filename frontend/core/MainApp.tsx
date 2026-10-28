@@ -35,11 +35,7 @@ export const MainApp: React.FC = () => {
   const setOnboardingOpen = useOnboardingStore((state) => state.setOnboardingOpen);
   const [isMaximized, setIsMaximized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const usesNativeMacFrame =
-    appServices.platform.capabilities.windows &&
-    typeof navigator !== 'undefined' &&
-    /Mac/i.test(navigator.platform || navigator.userAgent);
-  const hideCustomFrame = nativeFrame || isFullscreen || (isMaximized && !usesNativeMacFrame);
+  const hideCustomFrame = nativeFrame || isFullscreen || isMaximized;
 
   useEffect(() => installAutoHideScrollbars(), []);
 

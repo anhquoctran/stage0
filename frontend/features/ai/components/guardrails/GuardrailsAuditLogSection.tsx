@@ -1,12 +1,14 @@
 import React from 'react';
 import { Trash2 } from '../../../../common/components/icons/Trash2';
 import { formatTime } from '@/common/utils/dateTime';
+import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import type { GuardrailAuditEvent } from '../../types/GuardrailAuditEvent';
 
 export const GuardrailsAuditLogSection: React.FC<{
   auditLogs: GuardrailAuditEvent[];
   onClearAuditLog: () => void;
 }> = ({ auditLogs, onClearAuditLog }) => {
+  useDateTimeLanguage();
   return (
     <div className="p-4 bg-surface0/60 border border-surface1 space-y-3 rounded-sm">
       <div className="flex items-center justify-between">

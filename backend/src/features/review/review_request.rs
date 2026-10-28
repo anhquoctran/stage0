@@ -28,6 +28,11 @@ pub struct ReviewRequest {
     pub generate_description: bool,
     #[serde(default)]
     pub reply_discussion_id: Option<String>,
+    #[serde(default)]
+    pub manual_review_discussion_id: Option<String>,
+    /// Rust overwrites this from global JSON preferences; it is never accepted over IPC.
+    #[serde(skip)]
+    pub agent_output_language: String,
 }
 
 fn default_execution_mode() -> String {

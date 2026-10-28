@@ -165,7 +165,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   onKeyDown={(e) => e.key === 'Enter' && selectRepo(repo)}
                   className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-sm hover:bg-surface0/60 transition-colors cursor-pointer text-xs"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-3">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1 pe-3">
                     <Folder className="w-4 h-4 text-subtext0 group-hover:text-text transition-colors shrink-0" />
                     <span
                       className="text-subtext1 group-hover:text-text transition-colors truncate"

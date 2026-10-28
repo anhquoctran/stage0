@@ -6,6 +6,7 @@ import { Check } from '../../../common/components/icons/Check';
 import { ExternalLink } from '../../../common/components/icons/ExternalLink';
 import { History } from '../../../common/components/icons/History';
 import { formatUnixDateTime, formatUnixRelativeTime } from '@/common/utils/dateTime';
+import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import { buildRemoteCommitUrl } from '../utils/fileActions';
 import type { InlineBlameProps } from '../types/InlineBlameProps';
 
@@ -17,6 +18,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
   onOpenFullBlame,
   showToast,
 }) => {
+  useDateTimeLanguage();
   const [isCardOpen, setIsCardOpen] = useState(false);
   const [copiedSha, setCopiedSha] = useState(false);
   const [copiedMsg, setCopiedMsg] = useState(false);

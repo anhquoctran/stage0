@@ -9,6 +9,7 @@ mod runtime_config;
 mod schema;
 mod secrets;
 mod storage;
+mod supported_language;
 pub(crate) mod system_integration;
 mod validation;
 mod validation_fields;
@@ -18,6 +19,10 @@ pub use commands::*;
 pub use fonts::*;
 pub use manager::PreferencesManager;
 pub use preferences_document::PreferencesDocument;
+pub(crate) use supported_language::{
+    is_supported_agent_output_language, is_supported_app_language, DEFAULT_AGENT_OUTPUT_LANGUAGE,
+    DEFAULT_APP_LANGUAGE,
+};
 
 const DEFAULT_PREFERENCES: &str = include_str!("../../resources/default_preferences.jsonc");
 const PREFERENCES_FILE: &str = "preferences.json";

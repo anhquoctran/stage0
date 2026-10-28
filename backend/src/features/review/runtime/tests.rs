@@ -81,11 +81,13 @@ fn config(url: String) -> ReviewRequest {
         reviewer_id: None,
         reviewer_name: None,
         reply_discussion_id: None,
+        manual_review_discussion_id: None,
         reviewer_role: None,
         base_url: url,
         instructions: String::new(),
         allow_remote: false,
         generate_description: false,
+        agent_output_language: "en".into(),
     }
 }
 

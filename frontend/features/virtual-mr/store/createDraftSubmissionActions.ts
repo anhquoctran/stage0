@@ -5,6 +5,7 @@ import { type VirtualMrSession } from '../types/VirtualMrSession';
 import type { VirtualMrState } from '../types/VirtualMrState';
 import { AVAILABLE_AI_BOTS } from '../types/virtualMr';
 import { openExistingVirtualMr,persistSession } from '../utils/virtualMrSessionHelpers';
+import { loadLocalGitAuthor } from '../services/loadLocalGitAuthor';
 export const createDraftSubmissionActions = (
   set: StoreApi<VirtualMrState>['setState'],
   get: StoreApi<VirtualMrState>['getState']
@@ -24,7 +25,7 @@ export const createDraftSubmissionActions = (
       baseBranch: draftMr.baseBranch,
       compareBranch: draftMr.compareBranch,
       status: 'open',
-      assignee: sessions[0]?.assignee || { name: 'Local User', email: 'user@local.stage0' },
+      assignee: await loadLocalGitAuthor(currentRepoPath, sessions[0]?.assignee),
       reviewers: (() => {
         const repoId = currentRepoId;
         const allBots = [

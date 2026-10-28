@@ -4,10 +4,12 @@ import { Check } from '../../../common/components/icons/Check';
 import { Trash2 } from '../../../common/components/icons/Trash2';
 import { X } from '../../../common/components/icons/X';
 import { formatDateTime } from '@/common/utils/dateTime';
+import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { NotificationMarker } from './NotificationMarker';
 
 export const NotificationDrawer: React.FC = () => {
+  useDateTimeLanguage();
   const {
     notifications,
     unreadCount,

@@ -9,6 +9,7 @@ import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import type { ReviewerState } from '../../types/ReviewerState';
 import { getVirtualMrParticipants } from '../../utils/virtualMrParticipants';
 import { GitLabAvatar } from '../GitLabAvatar';
+import { AiBotBadge } from '../AiBotBadge';
 import { useMrMetadataDropdowns } from '../useMrMetadataDropdowns';
 import type { VirtualMrOverviewSidebarProps } from './VirtualMrOverviewSidebarProps';
 
@@ -215,6 +216,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
                   <span className="text-xs font-medium text-text truncate">
                     {rev.agentName}
                   </span>
+                  <AiBotBadge />
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {renderReviewerStatusBadge(rev.reviewStatus)}

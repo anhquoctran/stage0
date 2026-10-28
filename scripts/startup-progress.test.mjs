@@ -294,25 +294,31 @@ test('all native application windows begin compact and restore workspace bounds 
   for (const path of ['backend/tauri.conf.json', 'backend/tauri.macos.conf.json', 'backend/tauri.linux.conf.json']) {
     const window = JSON.parse(fs.readFileSync(path, 'utf8')).app.windows.find(window => window.label === 'main');
     assert.deepEqual([window.width, window.height, window.minWidth, window.minHeight], [600, 380, 600, 380]);
-    assert.equal(window.decorations, false);
+    assert.equal(window.decorations, false, 'all Stage0 windows use the custom application frame');
+    if (path.endsWith('tauri.macos.conf.json')) {
+      assert.equal(window.titleBarStyle, undefined, 'custom macOS frames do not request a native title bar');
+    }
     assert.equal(window.resizable, false);
     assert.equal(window.maximizable, false);
     assert.equal(window.center, true);
-    assert.equal(window.trafficLightPosition, undefined,
-      'borderless splash must not ask Tao to reposition nonexistent native buttons');
+    assert.equal(window.trafficLightPosition, undefined, 'custom macOS controls are rendered by the application');
   }
   const manager = fs.readFileSync('backend/src/core/window_manager.rs', 'utf8');
   assert.match(manager, /inner_size\(SPLASH_WIDTH, SPLASH_HEIGHT\)/);
   assert.match(manager, /resizable\(false\)/);
-  assert.doesNotMatch(manager, /\.traffic_light_position\(/,
-    'dynamically created splash windows must also use safe native button placement');
   assert.doesNotMatch(manager, /window\.maximize\(\)/, 'repository opening uses deferred maximize requests');
   const native = fs.readFileSync('backend/src/core/window_manager/startup_window.rs', 'utf8');
   assert.match(native, /SPLASH_WIDTH: f64 = 600\.0/);
   assert.match(native, /SPLASH_HEIGHT: f64 = 380\.0/);
   assert.ok(native.indexOf('window.hide()') < native.indexOf('let result = configure_main_window'));
   assert.match(native, /set_resizable\(true\)/);
-  assert.match(native, /set_decorations\(true\)/);
+  assert.doesNotMatch(native, /set_decorations\(true\)/, 'workspace handoff keeps the custom frame');
+  assert.match(native, /set_decorations\(false\)/,
+    'workspace geometry recovery keeps native decorations disabled');
+  const windowManagerSource = fs.readFileSync('backend/src/core/window_manager.rs', 'utf8');
+  assert.match(windowManagerSource, /\.decorations\(false\)/,
+    'dynamic windows keep the custom application frame');
+  assert.doesNotMatch(windowManagerSource, /TitleBarStyle|traffic_light_position|MACOS_TRAFFIC_LIGHT_POSITION/);
   const service = fs.readFileSync('frontend/core/services/transport/createApplicationService.ts', 'utf8');
   assert.match(service, /windowPrepareMain:.*executeCommand\('window_prepare_main'\)/);
   assert.match(service, /windowShow:.*executeCommand\('window_show'\)/);

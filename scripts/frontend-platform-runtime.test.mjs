@@ -138,7 +138,7 @@ test('every named feature operation preserves its command, input, progress callb
     }
     assert.equal(Object.keys(service).length, expected.size);
   }
-  assert.equal(operations.size, 137); // Includes desktop chrome, ACP logout and software updates.
+  assert.equal(operations.size, 138); // Includes immutable commit inspection, desktop chrome, ACP logout and software updates.
 });
 
 

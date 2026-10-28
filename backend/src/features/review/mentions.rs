@@ -121,6 +121,27 @@ pub fn has_reviewer_mention(body: &str, reviewer_id: &str) -> bool {
     false
 }
 
+/// A full-review command is handled by the host workflow, which posts progress
+/// and completion replies after checking reviewer-specific unresolved findings.
+pub fn is_manual_review_command(body: &str) -> bool {
+    let body = body.trim();
+    if body.lines().count() != 1 {
+        return false;
+    }
+    let Some((label, link)) = body.rsplit_once("](") else {
+        return false;
+    };
+    if !label.starts_with("[@") || label.len() <= 2 || label.contains('\n') {
+        return false;
+    }
+    let Some((href, command)) = link.split_once(')') else {
+        return false;
+    };
+    href.strip_prefix("#mr-mention/reviewer/")
+        .is_some_and(|id| !id.is_empty())
+        && command.trim().eq_ignore_ascii_case("review")
+}
+
 pub fn can_reply_to_comment(
     conn: &Connection,
     session_id: &str,
@@ -130,6 +151,9 @@ pub fn can_reply_to_comment(
     body: &str,
 ) -> bool {
     if author_type == "user" {
+        if is_manual_review_command(body) {
+            return false;
+        }
         // An explicit reviewer mention addresses that reviewer, rather than whichever bot runs first.
         let addressed = conn
             .prepare("SELECT agent_id FROM virtual_mr_session_reviewers WHERE session_id=?1")
@@ -212,6 +236,23 @@ mod tests {
     }
 
     #[test]
+    fn exact_review_commands_are_reserved_for_the_host_workflow() {
+        let command = mention_link("reviewer", "bot-1", "Code Reviewer");
+        assert!(is_manual_review_command(&format!("{command} review")));
+        assert!(is_manual_review_command(&format!("{command} REVIEW")));
+        for body in [
+            format!("> {command} review"),
+            format!("`{command} review`"),
+            format!("```md\n{command} review\n```"),
+            format!("{command} please review"),
+            format!("Please review {command}"),
+            format!("{command} review\nwith context"),
+        ] {
+            assert!(!is_manual_review_command(&body), "{body}");
+        }
+    }
+
+    #[test]
     fn only_an_assigned_mentioned_peer_can_answer_an_ai_comment() {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch("CREATE TABLE virtual_mr_session_reviewers(session_id TEXT,agent_id TEXT); CREATE TABLE ai_review_runs(id TEXT,payload TEXT); INSERT INTO virtual_mr_session_reviewers VALUES('mr','b'); INSERT INTO ai_review_runs VALUES('old-b','{\"reviewerId\":\"b\"}');").unwrap();
@@ -274,6 +315,22 @@ mod tests {
             "user",
             "alice",
             &body
+        ));
+    }
+
+    #[test]
+    fn full_review_command_cannot_become_a_model_discussion_reply() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("CREATE TABLE virtual_mr_session_reviewers(session_id TEXT,agent_id TEXT); INSERT INTO virtual_mr_session_reviewers VALUES('mr','b');")
+            .unwrap();
+        let command = format!("{} review", mention_link("reviewer", "b", "Bot B"));
+        assert!(!can_reply_to_comment(
+            &conn,
+            "mr",
+            Some("b"),
+            "user",
+            "alice@example.test",
+            &command,
         ));
     }
 

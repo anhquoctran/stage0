@@ -15,6 +15,7 @@
     "addToPath": false
   },
   "appearance": {
+    "language": "vi",
     "themeMode": "system",
     // Linux window frame: system follows the desktop theme; custom uses Stage0 controls.
     "linuxTitleBar": "system",
@@ -36,7 +37,9 @@
       "enableLigatures": true
     }
   },
-  "ai": {},
+  "ai": {
+    "agentOutputLanguage": "follow-app"
+  },
   "reviewers": [],
   "sandbox": {
     "type": "in_memory"

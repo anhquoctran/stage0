@@ -1,5 +1,7 @@
 import type { DbDiscussion } from '../types/DbDiscussion';
 import type { VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
+import type { VirtualMrSession } from '../types/VirtualMrSession';
+import { resolveLocalAuthor } from './localAuthorIdentity';
 
 /**
  * Normalizes SQLite UTC timestamps ("YYYY-MM-DD HH:MM:SS") to standard ISO-8601 with "Z".
@@ -15,13 +17,15 @@ export function normalizeDbTimestamp(ts: string | null | undefined): string {
   return trimmed;
 }
 
-export function fromDbDiscussion(item: DbDiscussion): VirtualMrDiscussion {
+export function fromDbDiscussion(item: DbDiscussion, localAuthor?: VirtualMrSession['assignee']): VirtualMrDiscussion {
   const [rootComment = null, ...children] = (item.comments || []).map((comment) => ({
     id: comment.id,
     discussionId: comment.discussion_id,
     authorType: comment.author_type,
-    authorId: comment.author_id,
-    authorName: comment.author_name,
+    authorId: comment.author_type === 'user' && localAuthor
+      ? resolveLocalAuthor(comment.author_name, comment.author_id, localAuthor).email : comment.author_id,
+    authorName: comment.author_type === 'user' && localAuthor
+      ? resolveLocalAuthor(comment.author_name, comment.author_id, localAuthor).name : comment.author_name,
     authorAvatar: comment.author_avatar || undefined,
     body: comment.body,
     reviewAction: comment.review_action || undefined,

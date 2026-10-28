@@ -1,0 +1,236 @@
+{
+  "common": {
+    "cancel": "취소",
+    "close": "닫기",
+    "loading": "불러오는 중…",
+    "save": "저장",
+    "settings": "설정"
+  },
+  "preferences": {
+    "appearance": "모양",
+    "language": {
+      "title": "언어",
+      "description": "Stage0와 날짜 및 시간 형식에 사용할 언어를 선택합니다.",
+      "uiLabel": "앱 언어",
+      "uiDescription": "열려 있는 모든 창의 인터페이스와 날짜 및 시간 형식을 변경합니다.",
+      "agentLabel": "AI 리뷰어 출력 언어",
+      "agentDescription": "리뷰 결과와 요약에 사용할 언어를 선택합니다. 코드, diff, 경로, 식별자는 번역하지 않습니다.",
+      "followApp": "앱 언어 따르기",
+      "baseGroup": "기본 언어",
+      "extendedGroup": "추가 언어",
+      "saving": "언어 저장 중…",
+      "saveError": "언어 설정을 저장하지 못했습니다."
+    },
+    "nav": {
+      "general": "일반",
+      "appearance": "모양",
+      "editor": "편집기 및 diff",
+      "ai": "AI",
+      "git": "버전 관리",
+      "notifications": "알림",
+      "general-keymaps": "키맵",
+      "general-settings": "일반 설정",
+      "appearance-theme": "테마",
+      "appearance-language": "언어",
+      "appearance-fonts": "편집기 글꼴",
+      "appearance-ui-font": "UI 글꼴",
+      "appearance-markdown-font": "Markdown 글꼴",
+      "editor-diff": "Diff 뷰어",
+      "ai-overview": "일반",
+      "ai-providers": "LLM 제공자",
+      "ai-mcp": "MCP 서버",
+      "ai-external-agents": "외부 에이전트",
+      "ai-reviewers": "리뷰어 봇",
+      "ai-sandbox": "샌드박스",
+      "ai-guardrails": "보안 및 가드레일",
+      "git-binary": "Git 실행 파일",
+      "git-credentials": "Git 자격 증명",
+      "notifications-settings": "푸시 및 알림"
+    },
+    "headers": {
+      "general-keymaps": {
+        "title": "키맵 및 키보드 단축키",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "general-settings": {
+        "title": "일반 설정",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "appearance-theme": {
+        "title": "테마 및 인터페이스 모드",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "appearance-language": {
+        "title": "언어 및 지역화",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "appearance-fonts": {
+        "title": "편집기 글꼴 및 타이포그래피",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "appearance-ui-font": {
+        "title": "UI 글꼴",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "appearance-markdown-font": {
+        "title": "Markdown 글꼴 및 타이포그래피",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "editor-diff": {
+        "title": "Diff 뷰어 및 코드 탐색",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "ai-overview": {
+        "title": "AI",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "ai-providers": {
+        "title": "LLM 제공자",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "ai-mcp": {
+        "title": "MCP 서버",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "ai-external-agents": {
+        "title": "외부 에이전트",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "ai-reviewers": {
+        "title": "리뷰어 봇",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "ai-sandbox": {
+        "title": "샌드박스 및 도구 권한",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "ai-guardrails": {
+        "title": "보안 및 가드레일",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "git-binary": {
+        "title": "Git 실행 파일",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "git-credentials": {
+        "title": "Git 자격 증명 및 원격 저장소",
+        "description": "이 섹션의 옵션을 구성합니다."
+      },
+      "notifications-settings": {
+        "title": "알림 및 푸시 알림",
+        "description": "이 섹션의 옵션을 구성합니다."
+      }
+    }
+  },
+  "dateTime": {
+    "justNow": "방금",
+    "minutesAgo_one": "{{count}}분 전",
+    "minutesAgo_other": "{{count}}분 전",
+    "hoursAgo_one": "{{count}}시간 전",
+    "hoursAgo_other": "{{count}}시간 전",
+    "daysAgo_one": "{{count}}일 전",
+    "daysAgo_other": "{{count}}일 전",
+    "monthsAgo_one": "{{count}}개월 전",
+    "monthsAgo_other": "{{count}}개월 전",
+    "yearsAgo_one": "{{count}}년 전",
+    "yearsAgo_other": "{{count}}년 전"
+  },
+  "menu": {
+    "commands": {
+      "about": "Stage0 정보",
+      "preferences": "환경설정...",
+      "services": "서비스",
+      "hide": "Stage0 숨기기",
+      "hide_others": "다른 앱 숨기기",
+      "show_all": "모두 보기",
+      "quit": "Stage0 종료",
+      "new_window": "새 창",
+      "open_repo": "열기...",
+      "open_repo_new_window": "새 창에서 열기...",
+      "clone_repo": "복제...",
+      "close_repo": "저장소 닫기",
+      "close_window": "창 닫기",
+      "exit": "종료",
+      "clear_recent": "최근 항목 지우기",
+      "undo": "실행 취소",
+      "redo": "다시 실행",
+      "cut": "잘라내기",
+      "copy": "복사",
+      "paste": "붙여넣기",
+      "select_all": "모두 선택",
+      "reveal_file": "{fileManager}에서 열기",
+      "view_blame": "Git Blame 보기",
+      "copy_rel_path": "상대 경로 복사",
+      "copy_abs_path": "절대 경로 복사",
+      "copy_remote_url": "원격 파일 URL 복사",
+      "copy_remote_url_from": "원격 파일 URL 복사...",
+      "previous_file": "이전 파일",
+      "next_file": "다음 파일",
+      "view_split": "나란히 보기 (분할)",
+      "view_unified": "인라인 보기 (통합)",
+      "toggle_blame": "파일 Blame 전환",
+      "toggle_inline_blame": "인라인 Blame 전환",
+      "view_git_graph": "Git Graph 보기",
+      "file_list_flat": "파일 목록: 플랫 레이아웃",
+      "file_list_tree": "파일 목록: 트리 레이아웃",
+      "toggle_theme": "테마 전환",
+      "toggle_perf_monitor": "성능 모니터 표시",
+      "fullscreen": "전체 화면",
+      "repo_overview": "저장소 개요...",
+      "new_mr": "새 Virtual MR...",
+      "fetch": "Fetch (전체 및 정리)",
+      "pull": "Pull",
+      "pull_from": "다음에서 Pull...",
+      "merge": "업스트림 병합",
+      "merge_from": "다음에서 병합...",
+      "rebase": "Rebase",
+      "rebase_from": "다음에서 Rebase...",
+      "rebase_continue": "계속",
+      "rebase_skip": "커밋 건너뛰기",
+      "rebase_abort": "Rebase 중단",
+      "swap_branches": "Base와 Compare 바꾸기",
+      "refresh_diff": "Diff 및 충돌 새로고침",
+      "open_terminal": "터미널",
+      "open_vscode": "Visual Studio Code",
+      "open_explorer": "{fileManager}",
+      "repo_settings": "저장소 설정...",
+      "minimize": "최소화",
+      "zoom": "확대/축소",
+      "bring_all_to_front": "모두 앞으로 가져오기",
+      "shortcuts": "키보드 단축키",
+      "keymaps": "키맵 사용자 지정...",
+      "open_webview_devtools": "개발자 도구",
+      "release_notes": "릴리스 노트 보기"
+    },
+    "recent": {
+      "emptyLabel": "최근 저장소 없음",
+      "removeLabel": "최근 항목에서 제거"
+    },
+    "menus": {
+      "application_menu": "Stage0",
+      "file_menu": "파일",
+      "open_recent": "최근 항목",
+      "edit_menu": "편집",
+      "view_menu": "보기",
+      "performance_menu": "성능",
+      "repository_menu": "저장소",
+      "repo_sync_menu": "동기화",
+      "repo_merge_menu": "병합",
+      "repo_rebase_menu": "리베이스",
+      "repo_open_menu": "다음으로 열기",
+      "window_menu": "창",
+      "help_menu": "도움말"
+    },
+    "categories": {
+      "workspace": "작업 공간 탐색"
+    },
+    "application": "애플리케이션 메뉴",
+    "waitingForSecondKey": "두 번째 키 입력 대기 중 · Esc로 취소"
+  },
+  "shortcuts": {
+    "title": "키보드 단축키",
+    "close": "닫기 (Esc)",
+    "customize": "키맵 사용자 지정…",
+    "gotIt": "확인"
+  }
+}

@@ -41,6 +41,10 @@ function reviewersForSession(sessionId: string) {
   return { session, reviewers };
 }
 
+export function getAssignedReviewerForSession(sessionId: string, reviewerId: string) {
+  return reviewersForSession(sessionId)?.reviewers.find((reviewer) => reviewer.id === reviewerId) || null;
+}
+
 function configForReviewer(reviewer: BotReviewer) {
   const aiState = useAiMcpStore.getState();
   const reviewerProvider = reviewer.provider && reviewer.provider !== 'global_default'
@@ -80,6 +84,25 @@ export async function startAssignedReviewForSession(sessionId: string): Promise<
   );
 }
 
+export async function startAssignedReviewerReview(
+  sessionId: string,
+  reviewerId: string,
+  manualReviewDiscussionId: string,
+): Promise<ReviewRun | null> {
+  const assigned = getAssignedReviewerForSession(sessionId, reviewerId);
+  if (!assigned?.profile) return null;
+  const config = configForReviewer(assigned.profile);
+  return useReviewStore.getState().startForSession(
+    sessionId,
+    config,
+    sourceTransferAllowed(config),
+    { id: assigned.id, name: assigned.name },
+    false,
+    undefined,
+    manualReviewDiscussionId,
+  );
+}
+
 export interface AssignedReviewBatchResult {
   runs: ReviewRun[];
   failures: string[];
@@ -87,7 +110,7 @@ export interface AssignedReviewBatchResult {
   hasChanges: boolean;
 }
 
-async function waitForReviewRun(runId: string, onUpdate: (run: ReviewRun) => void | Promise<void>): Promise<ReviewRun> {
+export async function waitForReviewRun(runId: string, onUpdate: (run: ReviewRun) => void | Promise<void> = () => {}): Promise<ReviewRun> {
   const deadline = Date.now() + 330_000;
   while (Date.now() < deadline) {
     const detail = await getApplicationServices().reviews.getAiReview({ runId });

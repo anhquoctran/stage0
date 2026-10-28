@@ -1,0 +1,236 @@
+{
+  "common": {
+    "cancel": "取消",
+    "close": "关闭",
+    "loading": "正在加载…",
+    "save": "保存",
+    "settings": "设置"
+  },
+  "preferences": {
+    "appearance": "外观",
+    "language": {
+      "title": "语言",
+      "description": "选择 Stage0 使用的语言以及日期和时间格式。",
+      "uiLabel": "应用语言",
+      "uiDescription": "更改所有已打开窗口的界面以及日期和时间格式。",
+      "agentLabel": "AI 审查机器人输出语言",
+      "agentDescription": "选择审查意见和摘要的语言。代码、差异、路径和标识符不会翻译。",
+      "followApp": "跟随应用语言",
+      "baseGroup": "基础语言",
+      "extendedGroup": "其他语言",
+      "saving": "正在保存语言…",
+      "saveError": "无法保存语言设置。"
+    },
+    "nav": {
+      "general": "常规",
+      "appearance": "外观",
+      "editor": "编辑器与差异",
+      "ai": "AI",
+      "git": "版本控制",
+      "notifications": "通知",
+      "general-keymaps": "快捷键映射",
+      "general-settings": "常规设置",
+      "appearance-theme": "主题",
+      "appearance-language": "语言",
+      "appearance-fonts": "编辑器字体",
+      "appearance-ui-font": "界面字体",
+      "appearance-markdown-font": "Markdown 字体",
+      "editor-diff": "差异查看器",
+      "ai-overview": "常规",
+      "ai-providers": "LLM 提供方",
+      "ai-mcp": "MCP 服务器",
+      "ai-external-agents": "外部代理",
+      "ai-reviewers": "审查机器人",
+      "ai-sandbox": "沙盒",
+      "ai-guardrails": "安全与防护",
+      "git-binary": "Git 可执行文件",
+      "git-credentials": "Git 凭据",
+      "notifications-settings": "推送与提醒"
+    },
+    "headers": {
+      "general-keymaps": {
+        "title": "快捷键映射与键盘快捷键",
+        "description": "配置此部分中的选项。"
+      },
+      "general-settings": {
+        "title": "常规设置",
+        "description": "配置此部分中的选项。"
+      },
+      "appearance-theme": {
+        "title": "主题与界面模式",
+        "description": "配置此部分中的选项。"
+      },
+      "appearance-language": {
+        "title": "语言与本地化",
+        "description": "配置此部分中的选项。"
+      },
+      "appearance-fonts": {
+        "title": "编辑器字体与排版",
+        "description": "配置此部分中的选项。"
+      },
+      "appearance-ui-font": {
+        "title": "界面字体",
+        "description": "配置此部分中的选项。"
+      },
+      "appearance-markdown-font": {
+        "title": "Markdown 字体与排版",
+        "description": "配置此部分中的选项。"
+      },
+      "editor-diff": {
+        "title": "差异查看器与代码导航",
+        "description": "配置此部分中的选项。"
+      },
+      "ai-overview": {
+        "title": "AI",
+        "description": "配置此部分中的选项。"
+      },
+      "ai-providers": {
+        "title": "LLM 提供方",
+        "description": "配置此部分中的选项。"
+      },
+      "ai-mcp": {
+        "title": "MCP 服务器",
+        "description": "配置此部分中的选项。"
+      },
+      "ai-external-agents": {
+        "title": "外部代理",
+        "description": "配置此部分中的选项。"
+      },
+      "ai-reviewers": {
+        "title": "审查机器人",
+        "description": "配置此部分中的选项。"
+      },
+      "ai-sandbox": {
+        "title": "沙盒与工具权限",
+        "description": "配置此部分中的选项。"
+      },
+      "ai-guardrails": {
+        "title": "安全与防护",
+        "description": "配置此部分中的选项。"
+      },
+      "git-binary": {
+        "title": "Git 可执行文件",
+        "description": "配置此部分中的选项。"
+      },
+      "git-credentials": {
+        "title": "Git 凭据与远程仓库",
+        "description": "配置此部分中的选项。"
+      },
+      "notifications-settings": {
+        "title": "通知与推送提醒",
+        "description": "配置此部分中的选项。"
+      }
+    }
+  },
+  "dateTime": {
+    "justNow": "刚刚",
+    "minutesAgo_one": "{{count}} 分钟前",
+    "minutesAgo_other": "{{count}} 分钟前",
+    "hoursAgo_one": "{{count}} 小时前",
+    "hoursAgo_other": "{{count}} 小时前",
+    "daysAgo_one": "{{count}} 天前",
+    "daysAgo_other": "{{count}} 天前",
+    "monthsAgo_one": "{{count}} 个月前",
+    "monthsAgo_other": "{{count}} 个月前",
+    "yearsAgo_one": "{{count}} 年前",
+    "yearsAgo_other": "{{count}} 年前"
+  },
+  "menu": {
+    "commands": {
+      "about": "关于 Stage0",
+      "preferences": "偏好设置...",
+      "services": "服务",
+      "hide": "隐藏 Stage0",
+      "hide_others": "隐藏其他应用",
+      "show_all": "显示全部",
+      "quit": "退出 Stage0",
+      "new_window": "新建窗口",
+      "open_repo": "打开...",
+      "open_repo_new_window": "在新窗口中打开...",
+      "clone_repo": "克隆...",
+      "close_repo": "关闭仓库",
+      "close_window": "关闭窗口",
+      "exit": "退出",
+      "clear_recent": "清除最近打开项目",
+      "undo": "撤销",
+      "redo": "重做",
+      "cut": "剪切",
+      "copy": "复制",
+      "paste": "粘贴",
+      "select_all": "全选",
+      "reveal_file": "在 {fileManager} 中打开",
+      "view_blame": "查看 Git Blame",
+      "copy_rel_path": "复制相对路径",
+      "copy_abs_path": "复制绝对路径",
+      "copy_remote_url": "复制远程文件 URL",
+      "copy_remote_url_from": "复制远程文件 URL...",
+      "previous_file": "上一个文件",
+      "next_file": "下一个文件",
+      "view_split": "并排显示（拆分）",
+      "view_unified": "行内显示（统一）",
+      "toggle_blame": "切换文件 Blame",
+      "toggle_inline_blame": "切换行内 Blame",
+      "view_git_graph": "查看 Git Graph",
+      "file_list_flat": "文件列表：平铺布局",
+      "file_list_tree": "文件列表：树形布局",
+      "toggle_theme": "切换主题",
+      "toggle_perf_monitor": "显示性能监视器",
+      "fullscreen": "进入全屏",
+      "repo_overview": "仓库概览...",
+      "new_mr": "新建 Virtual MR...",
+      "fetch": "Fetch（全部并清理）",
+      "pull": "Pull",
+      "pull_from": "从... Pull",
+      "merge": "合并上游",
+      "merge_from": "从...合并",
+      "rebase": "Rebase",
+      "rebase_from": "从... Rebase",
+      "rebase_continue": "继续",
+      "rebase_skip": "跳过提交",
+      "rebase_abort": "中止 Rebase",
+      "swap_branches": "交换 Base 和 Compare",
+      "refresh_diff": "刷新差异与冲突",
+      "open_terminal": "终端",
+      "open_vscode": "Visual Studio Code",
+      "open_explorer": "{fileManager}",
+      "repo_settings": "仓库设置...",
+      "minimize": "最小化",
+      "zoom": "缩放",
+      "bring_all_to_front": "将所有窗口置前",
+      "shortcuts": "键盘快捷键",
+      "keymaps": "自定义快捷键映射...",
+      "open_webview_devtools": "开发者工具",
+      "release_notes": "查看发行说明"
+    },
+    "recent": {
+      "emptyLabel": "没有最近打开的仓库",
+      "removeLabel": "从最近项目中移除"
+    },
+    "menus": {
+      "application_menu": "Stage0",
+      "file_menu": "文件",
+      "open_recent": "最近项目",
+      "edit_menu": "编辑",
+      "view_menu": "视图",
+      "performance_menu": "性能",
+      "repository_menu": "仓库",
+      "repo_sync_menu": "同步",
+      "repo_merge_menu": "合并",
+      "repo_rebase_menu": "变基",
+      "repo_open_menu": "打开方式",
+      "window_menu": "窗口",
+      "help_menu": "帮助"
+    },
+    "categories": {
+      "workspace": "工作区导航"
+    },
+    "application": "应用程序菜单",
+    "waitingForSecondKey": "等待第二个按键 · 按 Esc 取消"
+  },
+  "shortcuts": {
+    "title": "键盘快捷键",
+    "close": "关闭 (Esc)",
+    "customize": "自定义快捷键映射…",
+    "gotIt": "知道了"
+  }
+}

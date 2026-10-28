@@ -33,7 +33,7 @@ export const MainLayoutDiffWorkspace: React.FC<MainLayoutDiffWorkspaceProps> = (
         title="Drag to resize sidebar (double-click to reset)"
         onMouseDown={startResizing}
         onDoubleClick={resetSidebarWidth}
-        className={`w-1.5 -ml-1 relative z-20 cursor-col-resize hover:bg-blue/40 transition-colors flex items-center justify-center select-none group ${
+        className={`w-1.5 -ms-1 relative z-20 cursor-col-resize hover:bg-blue/40 transition-colors flex items-center justify-center select-none group ${
           isResizing ? 'bg-blue' : 'bg-transparent'
         }`}
       >

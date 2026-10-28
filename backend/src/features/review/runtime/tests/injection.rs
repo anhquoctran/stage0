@@ -100,6 +100,31 @@ fn reply_scope_rejects_global_mutations_and_cross_thread_or_file_access() {
     assert_eq!(run.reviewer_id.as_deref(), Some("bot"));
 }
 
+#[test]
+fn manual_review_start_requires_the_exact_command_and_resolved_findings_from_that_bot() {
+    let (_repo, _run, _, db) = setup("Old finding");
+    db.conn().execute_batch("INSERT INTO virtual_mr_discussions(id,session_id) VALUES('request','session'); INSERT INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,created_at,updated_at) VALUES('request-root','request','user','alice','Alice','[@Bot](#mr-mention/reviewer/bot) review','now','now');").unwrap();
+    let mut request = config("http://localhost".into());
+    request.reviewer_id = Some("bot".into());
+    request.reviewer_name = Some("Bot".into());
+    request.manual_review_discussion_id = Some("request".into());
+    let blocked = scope::validate_request(&db, &request).unwrap_err();
+    assert!(blocked.contains("1 open code discussion"));
+
+    db.conn()
+        .execute(
+            "UPDATE virtual_mr_discussions SET is_resolved=1 WHERE id='thread'",
+            [],
+        )
+        .unwrap();
+    assert!(scope::validate_request(&db, &request).is_ok());
+
+    db.conn().execute("UPDATE virtual_mr_comments SET body='[@Bot](#mr-mention/reviewer/other) review' WHERE id='request-root'", []).unwrap();
+    assert!(scope::validate_request(&db, &request)
+        .unwrap_err()
+        .contains("exact assigned-bot"));
+}
+
 #[tokio::test]
 async fn native_and_acp_injections_cannot_expand_reply_capabilities_or_approve_an_mr() {
     for acp in [false, true] {

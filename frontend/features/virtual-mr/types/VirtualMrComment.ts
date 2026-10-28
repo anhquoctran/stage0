@@ -12,4 +12,7 @@ export interface VirtualMrComment {
   reviewAction?: ReviewActionType;
   createdAt: string;
   updatedAt: string;
+  /** Frontend-only placeholder while a manual reviewer request is running. */
+  isPending?: boolean;
+  pendingLabel?: string;
 }

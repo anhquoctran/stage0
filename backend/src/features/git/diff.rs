@@ -126,7 +126,7 @@ pub fn get_mr_diff(repo_path: &str, base: &str, compare: &str) -> Result<MrDiffP
     })
 }
 
-fn parse_name_status_z(output: &str) -> Vec<(String, String, Option<String>)> {
+pub(super) fn parse_name_status_z(output: &str) -> Vec<(String, String, Option<String>)> {
     let fields: Vec<&str> = output.split('\0').collect();
     let mut parsed = Vec::new();
     let mut index = 0;
@@ -164,7 +164,7 @@ fn parse_name_status_z(output: &str) -> Vec<(String, String, Option<String>)> {
     parsed
 }
 
-fn parse_numstat_z(output: &str) -> HashMap<String, (u32, u32, bool)> {
+pub(super) fn parse_numstat_z(output: &str) -> HashMap<String, (u32, u32, bool)> {
     let fields: Vec<&str> = output.split('\0').collect();
     let mut parsed = HashMap::new();
     let mut index = 0;

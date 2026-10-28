@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { isReviewStartingForSession, useReviewStore } from '../../review/store/useReviewStore';
-import { createStartMrReviewAction } from '../services/createStartMrReviewAction';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { hasVirtualMrActivity } from '../utils/virtualMrActivity';
 import { getMrSequenceNumber } from '../utils/virtualMrSequence';
@@ -80,7 +79,6 @@ export const VirtualMrHub: React.FC = () => {
 
   if (!currentRepo || !session) return null;
 
-  const hasAssignedReviewer = session.reviewers.length > 0;
   const reviewBatch = reviewBatches[session.id];
   const reviewIsStarting = isReviewStarting && isReviewStartingForSession(session.id);
   const reviewIsRunning = Object.values(activeReviewRuns).some(
@@ -90,11 +88,6 @@ export const VirtualMrHub: React.FC = () => {
   const isBranchLocked = hasVirtualMrActivity(session, { isReviewOngoing });
   const branchLockedReason =
     'Cannot change branches once discussions or reviews have started in this Virtual MR';
-
-  const handleStartAiReview = async () => {
-    setActiveMrTab('reviews');
-    await createStartMrReviewAction(session, showToast)();
-  };
 
   const handleStartEditTitle = () => {
     setEditTitle(session.title);
@@ -152,11 +145,6 @@ export const VirtualMrHub: React.FC = () => {
         branches={branches}
         handleBranchChange={handleBranchChange}
         handleSwapBranches={handleSwapBranches}
-        hasAssignedReviewer={hasAssignedReviewer}
-        reviewBatch={reviewBatch}
-        reviewIsStarting={reviewIsStarting}
-        reviewIsRunning={reviewIsRunning}
-        handleStartAiReview={handleStartAiReview}
       />
 
       {/* METADATA BAR: ASSIGNEE, REVIEWERS, LABELS, 4 WORKSPACE TABS */}

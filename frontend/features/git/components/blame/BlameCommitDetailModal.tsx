@@ -7,6 +7,7 @@ import { GitCommit } from '../../../../common/components/icons/GitCommit';
 import { User } from '../../../../common/components/icons/User';
 import { X } from '../../../../common/components/icons/X';
 import type { BlameCommitDetailModalProps } from './BlameCommitDetailModalProps';
+import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 
 export function BlameCommitDetailModal({
   commitModalRef,
@@ -16,6 +17,7 @@ export function BlameCommitDetailModal({
   copiedSha,
   handleCopyCommitUrl,
 }: BlameCommitDetailModalProps) {
+  useDateTimeLanguage();
   return (
     <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4 rounded-sm">
       <div

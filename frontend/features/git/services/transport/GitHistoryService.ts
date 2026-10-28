@@ -4,9 +4,11 @@ import type { ConflictReport } from '../../types/ConflictReport';
 import type { FileBlamePayload } from '../../types/FileBlamePayload';
 import type { GitGraph } from '../../types/GitGraph';
 import type { MrDiffPayload } from '../../types/MrDiffPayload';
+import type { GitCommitDetails } from '../../types/GitCommitDetails';
 
 /** Feature-owned backend contract. Inputs retain the existing wire field names. */
 export interface GitHistoryService {
+  getGitCommitDetails(input: { repoPath: string; commitHash: string }): Promise<GitCommitDetails>;
   checkMergeConflicts(input: {
     repoPath: string;
     base: string;

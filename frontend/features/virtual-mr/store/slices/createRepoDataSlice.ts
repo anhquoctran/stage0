@@ -12,6 +12,8 @@ import type { VirtualMrState } from '../../types/VirtualMrState';
 import { type VirtualMrStatus } from '../../types/VirtualMrStatus';
 import { fromDbDiscussion } from '../../utils/fromDbDiscussion';
 import { loadSessionTitleHistory } from '../../utils/virtualMrTitleHistory';
+import { loadLocalGitAuthor } from '../../services/loadLocalGitAuthor';
+import { resolveLocalAuthor } from '../../utils/localAuthorIdentity';
 
 let repoDataRequestVersion = 0;
 let repoMetadataRequestVersion = 0;
@@ -125,15 +127,7 @@ export const createRepoDataSlice: StateCreator<
       }
 
       // 3. Load User Identity
-      let userName = 'Local User';
-      let userEmail = 'user@local.stage0';
-      try {
-        const [uName, uEmail] = await getApplicationServices().gitHistory.getGitUserIdentityCmd({
-          repoPath,
-        });
-        if (uName) userName = uName;
-        if (uEmail) userEmail = uEmail;
-      } catch {}
+      const localAuthor = await loadLocalGitAuthor(repoPath);
 
       // 4. Load Sessions (Parallelized to eliminate waterfall)
       let sessions: VirtualMrSession[] = [];
@@ -154,7 +148,7 @@ export const createRepoDataSlice: StateCreator<
 
               let discussions: VirtualMrDiscussion[] = [];
               if (discRes.status === 'fulfilled' && discRes.value) {
-                discussions = discRes.value.map(fromDbDiscussion);
+                discussions = discRes.value.map((item) => fromDbDiscussion(item, localAuthor));
               }
 
               let commits: VirtualMrCommit[] = [];
@@ -187,10 +181,7 @@ export const createRepoDataSlice: StateCreator<
                 compareBranch: ds.compare_branch,
                 status:
                   (ds.status === 'approved' ? 'open' : (ds.status as VirtualMrStatus)) || 'open',
-                assignee: {
-                  name: ds.assignee_name || userName,
-                  email: ds.assignee_email || userEmail,
-                },
+                assignee: resolveLocalAuthor(ds.assignee_name, ds.assignee_email, localAuthor),
                 reviewers: (ds.reviewers || []).map((reviewer: any) => ({
                   agentId: reviewer.agent_id,
                   agentName: reviewer.agent_name,

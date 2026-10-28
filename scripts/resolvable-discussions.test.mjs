@@ -92,6 +92,7 @@ test('DiscussionThread only displays Resolve features for code review discussion
       '../utils/discussionMentions': { getDiscussionMentionOptions: () => [] },
       '../../../common/utils/mentions': { parseMentionReference: () => null },
       './DiscussionReferenceDialog': { DiscussionReferenceDialog: 'Dialog' },
+      './discussion/PendingDiscussionReply': { PendingDiscussionReply: 'PendingReply' },
     }
   );
 

@@ -29,7 +29,7 @@ export const StatusBar: React.FC = () => {
       <StatusBarRepoInfo />
 
       {/* Right: Engine, Merge Status, File Counter, View Mode & Shortcuts */}
-      <div className="flex items-center gap-2 max-xl:gap-1 shrink-0 ml-auto">
+      <div className="flex items-center gap-2 max-xl:gap-1 shrink-0 ms-auto">
         {currentRepo && (
           <>
             <StatusBarSandboxEngine />

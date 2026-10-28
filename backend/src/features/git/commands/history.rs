@@ -11,6 +11,18 @@ use crate::features::sandbox::SandboxManager;
 use tauri::{AppHandle, Manager};
 
 #[tauri::command]
+pub async fn get_git_commit_details(
+    repo_path: String,
+    commit_hash: String,
+) -> Result<crate::features::git::CommitDetail, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::features::git::commit_details::get_commit_details(&repo_path, &commit_hash)
+    })
+    .await
+    .map_err(|error| format!("Task execution failed: {error}"))?
+}
+
+#[tauri::command]
 pub async fn get_current_branch_graph(
     repo_path: String,
 ) -> Result<crate::features::git::graph::GitGraph, String> {

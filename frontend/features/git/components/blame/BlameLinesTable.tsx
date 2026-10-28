@@ -1,6 +1,7 @@
 import { formatUnixDateTime, formatUnixRelativeTime } from '@/common/utils/dateTime';
 import { GitCommit } from '../../../../common/components/icons/GitCommit';
 import type { BlameLinesTableProps } from './BlameLinesTableProps';
+import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 
 export function BlameLinesTable({
   fontFamily,
@@ -10,6 +11,7 @@ export function BlameLinesTable({
   setSelectedCommit,
   enableLigatures,
 }: BlameLinesTableProps) {
+  useDateTimeLanguage();
   return (
     <div className="border border-surface0 rounded-sm overflow-hidden bg-base shadow-xs text-xs font-mono">
       <table className="w-full border-collapse">

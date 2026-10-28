@@ -1,5 +1,5 @@
 use super::{
-    definition::{definition, label, nodes_for_platform},
+    definition::{definition, nodes_for_platform},
     flags::MenuFlags,
     node::MenuNode,
     runtime_state::window_flags,
@@ -17,8 +17,9 @@ pub fn create_macos_menu(app: &AppHandle) -> Result<Menu<Wry>, Box<dyn std::erro
         .map(|window| window_flags(app, window.label()))
         .unwrap_or_default();
     let menu = Menu::new(app)?;
+    let language = super::runtime_state::app_language(app);
     for node in nodes_for_platform(&definition().menus, "macos") {
-        menu.append(&build_node(app, node, &flags)?)?;
+        menu.append(&build_node(app, node, &flags, &language)?)?;
     }
     Ok(menu)
 }
@@ -27,6 +28,7 @@ fn build_node(
     app: &AppHandle,
     node: &MenuNode,
     flags: &MenuFlags,
+    language: &str,
 ) -> tauri::Result<MenuItemKind<Wry>> {
     if node.separator {
         return Ok(MenuItemKind::Predefined(PredefinedMenuItem::separator(
@@ -35,7 +37,7 @@ fn build_node(
     }
     if let Some(id) = &node.command {
         let command = &definition().commands[id];
-        let title = label(&command.label, "macos");
+        let title = super::localized_menu_label(&command.label, language, "macos");
         if let Some(role) = &command.native {
             return predefined(app, role, &title);
         }
@@ -58,7 +60,11 @@ fn build_node(
     let submenu = Submenu::with_id(
         app,
         node.id.as_deref().unwrap_or_default(),
-        node.label.as_deref().unwrap_or_default(),
+        node.label
+            .as_deref()
+            .map(|key| super::localized_menu_label(key, language, "macos"))
+            .as_deref()
+            .unwrap_or_default(),
         if flags.onboarding {
             node.id.as_deref() == Some("application_menu")
         } else {
@@ -67,13 +73,16 @@ fn build_node(
     )?;
     if node.dynamic.as_deref() == Some("recentRepositories") {
         submenu.append(
-            &MenuItemBuilder::with_id("no_recent_repos", &definition().recent["emptyLabel"])
-                .enabled(false)
-                .build(app)?,
+            &MenuItemBuilder::with_id(
+                "no_recent_repos",
+                super::localized_menu_label(&definition().recent["emptyLabel"], language, "macos"),
+            )
+            .enabled(false)
+            .build(app)?,
         )?;
     } else {
         for child in nodes_for_platform(&node.items, "macos") {
-            submenu.append(&build_node(app, child, flags)?)?;
+            submenu.append(&build_node(app, child, flags, language)?)?;
         }
     }
     Ok(MenuItemKind::Submenu(submenu))

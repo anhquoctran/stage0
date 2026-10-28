@@ -1,5 +1,6 @@
 import { Quote } from '../../../../common/components/icons/Quote';
 import { GitLabAvatar } from '../GitLabAvatar';
+import { AiBotBadge } from '../AiBotBadge';
 import { getDiscussionPosition } from '../../utils/discussionCodeContext';
 import type { DiscussionThreadHeaderProps } from './DiscussionThreadHeaderProps';
 
@@ -26,6 +27,7 @@ export function DiscussionThreadHeader({
           <span className="font-semibold text-text hover:underline cursor-pointer">
             {rootAuthorName}
           </span>
+          {rootComment?.authorType === 'ai_agent' && <AiBotBadge />}
           <span className="text-subtext0 font-normal">{rootAuthorHandle}</span>
           <span>
             {discussion.filePath ? 'started a thread on the diff' : 'started a discussion'}

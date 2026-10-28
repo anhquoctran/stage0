@@ -167,11 +167,14 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
           {/* Leave a Comment Box */}
           <div className="p-4 rounded-sm bg-mantle border border-surface0 space-y-2">
             <span className="font-semibold text-xs text-text">Leave a Comment</span>
+            <p className="text-[11px] leading-relaxed text-subtext0">
+              To request a full review, choose an assigned bot with @ and add <code className="rounded-sm bg-surface0 px-1">review</code> after its mention. The bot checks its open findings first and reports here if any still need resolution. Eligible tracked source may be sent to its configured provider; sensitive paths are excluded and matching secret lines are redacted, but detection can miss secrets. ACP source sharing must already be enabled for that bot.
+            </p>
             <MarkdownEditor
               value={newGeneralComment}
               mentionOptions={getDiscussionMentionOptions(session)}
               onChange={setNewGeneralComment}
-              placeholder="Write your comment or mention a reviewer with @..."
+              placeholder="Write a comment, or type @Reviewer review to request a review…"
               rows={6}
               minHeight="160px"
               maxHeight="500px"

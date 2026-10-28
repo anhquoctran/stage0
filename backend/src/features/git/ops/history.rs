@@ -46,7 +46,7 @@ pub fn get_git_user_identity(repo_path: &str) -> Result<(String, String), String
     let name_res = run_git(repo_path, &["config", "user.name"]);
     let email_res = run_git(repo_path, &["config", "user.email"]);
 
-    let name = match name_res {
+    let mut name = match name_res {
         Ok(r) if r.success && !r.stdout.trim().is_empty() => r.stdout.trim().to_string(),
         _ => "Local User".to_string(),
     };
@@ -55,6 +55,41 @@ pub fn get_git_user_identity(repo_path: &str) -> Result<(String, String), String
         Ok(r) if r.success && !r.stdout.trim().is_empty() => r.stdout.trim().to_string(),
         _ => "user@local.stage0".to_string(),
     };
+
+    // Read configured account names only; credential helpers and the OS vault
+    // are intentionally not invoked to determine a discussion author.
+    let origin = run_git(repo_path, &["config", "remote.origin.url"]);
+    let scoped_username = origin
+        .ok()
+        .filter(|result| result.success)
+        .and_then(|result| {
+            run_git(
+                repo_path,
+                &[
+                    "config",
+                    "--get-urlmatch",
+                    "credential.username",
+                    result.stdout.trim(),
+                ],
+            )
+            .ok()
+            .filter(|value| value.success && !value.stdout.trim().is_empty())
+        });
+    let username = scoped_username.or_else(|| {
+        run_git(repo_path, &["config", "credential.username"])
+            .ok()
+            .filter(|value| value.success && !value.stdout.trim().is_empty())
+    });
+    if let Some(username) = username {
+        name = username.stdout.trim().to_string();
+    } else if name == "Local User" && email != "user@local.stage0" {
+        name = email
+            .split('@')
+            .next()
+            .filter(|value| !value.is_empty())
+            .unwrap_or("Local User")
+            .to_string();
+    }
 
     Ok((name, email))
 }

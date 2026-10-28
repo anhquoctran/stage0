@@ -34,7 +34,7 @@ export function MarkdownToolbar({
   return (
     <div className="flex items-center justify-between border-b border-surface1 bg-surface0/60 px-2 py-1 gap-1 flex-wrap select-none rounded-sm">
       {/* Write / Preview Tab Switcher */}
-      <div className="flex items-center gap-1 pr-1 border-r border-surface1 rounded-sm">
+      <div className="flex items-center gap-1 pe-1 border-e border-surface1 rounded-sm">
         <button
           type="button"
           onClick={() => setActiveTab('write')}

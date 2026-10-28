@@ -39,6 +39,7 @@ export interface ReviewService {
       reviewerName: string | null;
       generateDescription: boolean;
       replyDiscussionId?: string;
+      manualReviewDiscussionId?: string;
     };
   }): Promise<ReviewRun>;
 }

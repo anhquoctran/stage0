@@ -4,6 +4,7 @@ import { X } from '../../../common/components/icons/X';
 import { ChevronRight } from '../../../common/components/icons/ChevronRight';
 import type { TreeCategory } from '../types/TreeCategory';
 import type { PreferenceTab } from '../types/PreferenceTab';
+import { useTranslation } from 'react-i18next';
 
 export const PreferencesNavTree: React.FC<{
   searchQuery: string;
@@ -22,6 +23,7 @@ export const PreferencesNavTree: React.FC<{
   currentTabId,
   setActiveTab,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="w-60 border-r border-surface0/60 flex flex-col bg-mantle/50 shrink-0">
       {/* Search Input Box */}
@@ -79,7 +81,7 @@ export const PreferencesNavTree: React.FC<{
                         isExpanded ? 'rotate-90 text-text' : 'group-hover:text-text'
                       }`}
                     />
-                    <span className="truncate">{group.label}</span>
+                    <span className="truncate">{t(`preferences.nav.${group.id}`, group.label)}</span>
                   </div>
                 </button>
 
@@ -99,7 +101,7 @@ export const PreferencesNavTree: React.FC<{
                               : 'text-subtext0 hover:text-text hover:bg-surface0/50'
                           }`}
                         >
-                          <span className="truncate">{child.label}</span>
+                          <span className="truncate">{t(`preferences.nav.${child.id}`, child.label)}</span>
                         </button>
                       );
                     })}

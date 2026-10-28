@@ -48,3 +48,16 @@ test('English-only source retains Vietnamese author-name transliteration', () =>
   assert.equal(getAuthorHandle('Đặng Đình Đức'), '@ducdd');
   assert.equal(getAuthorHandle('đức'), '@duc');
 });
+
+test('reviewer handles use the bot name instead of abbreviating the Stage0 AI display wrapper', () => {
+  const { getAuthorHandle } = loadWithMocks(
+    new URL('../frontend/features/virtual-mr/utils/discussionAuthorUtils.ts', import.meta.url), {
+      '../../../common/utils/dateTime': { formatTime: (value) => value },
+    });
+  assert.equal(getAuthorHandle('Stage0 AI (Code Reviewer)', 'bot-id', 'ai_agent'), '@code-reviewer');
+  assert.equal(getAuthorHandle('Stage0 AI (Security & Quality)', 'bot-id', 'ai_agent'), '@security-quality');
+  assert.equal(getAuthorHandle('Code Reviewer', 'user@local.stage0', 'ai_agent'), '@code-reviewer');
+  assert.equal(getAuthorHandle('', undefined, 'ai_agent'), '@reviewer');
+  assert.equal(getAuthorHandle('Jane (Doe)'), '@doej');
+  assert.equal(getAuthorHandle('Jane Doe', 'jane.doe@example.com'), '@jane.doe');
+});

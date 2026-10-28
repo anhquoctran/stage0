@@ -1,4 +1,5 @@
 import React,{ useCallback,useRef,useState } from 'react';
+import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import { parseMentionReference } from '../../../common/utils/mentions';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
@@ -19,6 +20,7 @@ import { DiscussionReferenceDialog } from './DiscussionReferenceDialog';
 import { DiscussionCommentCard } from './discussion/DiscussionCommentCard';
 import { DiscussionReplyBox } from './discussion/DiscussionReplyBox';
 import { DiscussionReplyComment } from './discussion/DiscussionReplyComment';
+import { PendingDiscussionReply } from './discussion/PendingDiscussionReply';
 import { DiscussionThreadHeader } from './discussion/DiscussionThreadHeader';
 
 const DiscussionCodeContext = codeContextModule?.DiscussionCodeContext || (() => null);
@@ -27,6 +29,7 @@ export const DiscussionThread: React.FC<{
   session: VirtualMrSession;
   discussion: VirtualMrDiscussion;
 }> = ({ session, discussion }) => {
+  useDateTimeLanguage();
   const { replyToDiscussion, resolveDiscussion, createDiscussion } = useVirtualMrStore();
   const { showToast } = useGitStore();
   const isResolvable = isResolvableDiscussion(discussion);
@@ -139,7 +142,8 @@ export const DiscussionThread: React.FC<{
   const rootAuthorName = rootComment?.authorName || 'Reviewer';
   const rootAuthorHandle = getAuthorHandle(
     rootAuthorName,
-    rootComment?.authorId || session?.assignee?.email
+    rootComment?.authorId || session?.assignee?.email,
+    rootComment?.authorType
   );
   const threadRelativeTime = formatGitLabTime(discussion.createdAt || rootComment?.createdAt || '');
 
@@ -216,9 +220,19 @@ export const DiscussionThread: React.FC<{
               <div className="bg-mantle/60 px-3.5 py-3 space-y-3 rounded-sm">
                 <div className="ml-2 pl-3.5 border-l-2 border-surface1 space-y-3">
                   {replies.map((reply) => {
+                    if (reply.isPending) {
+                      return (
+                        <PendingDiscussionReply
+                          key={reply.id}
+                          authorName={reply.authorName}
+                          label={reply.pendingLabel || 'Reviewing this MR…'}
+                        />
+                      );
+                    }
                     const handle = getAuthorHandle(
                       reply.authorName,
-                      reply.authorId || session?.assignee?.email
+                      reply.authorId || session?.assignee?.email,
+                      reply.authorType
                     );
                     const badges = getAuthorBadges(reply.authorName, reply.authorType, session);
                     const relativeTime = formatGitLabTime(reply.createdAt);

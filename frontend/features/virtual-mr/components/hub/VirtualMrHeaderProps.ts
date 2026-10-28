@@ -1,6 +1,5 @@
 import React from 'react';
 import type { BranchList } from '../../../git/types/BranchList';
-import type { ReviewBatchProgress } from '../../../review/types/ReviewBatchProgress';
 import type { VirtualMrSession } from '../../types/VirtualMrSession';
 
 export interface VirtualMrHeaderProps {
@@ -21,9 +20,4 @@ export interface VirtualMrHeaderProps {
     currentBase: string,
     currentCompare: string
   ) => Promise<void>;
-  hasAssignedReviewer: boolean;
-  reviewBatch: ReviewBatchProgress;
-  reviewIsStarting: boolean;
-  reviewIsRunning: boolean;
-  handleStartAiReview: () => Promise<void>;
 }

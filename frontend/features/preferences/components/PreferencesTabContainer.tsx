@@ -19,6 +19,7 @@ import { PreferencesMarkdownFontTab } from './tabs/PreferencesMarkdownFontTab';
 import { PreferencesThemeTab } from './tabs/PreferencesThemeTab';
 import { PreferencesKeymapTab } from './tabs/PreferencesKeymapTab';
 import { PreferencesUiFontTab } from './tabs/PreferencesUiFontTab';
+import { PreferencesLanguageTab } from '../../i18n/components/PreferencesLanguageTab';
 
 export function PreferencesTabContainer({
   draftKeymap,
@@ -93,6 +94,7 @@ export function PreferencesTabContainer({
         'general-settings',
         'general-keymaps',
         'appearance-theme',
+        'appearance-language',
         'appearance-fonts',
         'appearance-ui-font',
         'appearance-markdown-font',
@@ -119,6 +121,7 @@ export function PreferencesTabContainer({
         <PreferencesTabHeader
           title={currentChildItem?.title}
           description={currentChildItem?.description}
+          itemId={currentChildItem?.id}
         />
       )}
 
@@ -177,6 +180,7 @@ export function PreferencesTabContainer({
           />
         </div>
       )}
+      {currentTabId === 'appearance-language' && <PreferencesLanguageTab />}
 
       {/* VIEW: APPEARANCE - BUFFER FONT */}
       {currentTabId === 'appearance-ui-font' && (

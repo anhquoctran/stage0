@@ -3,6 +3,7 @@ import { GitPullRequest } from '../../../common/components/icons/GitPullRequest'
 import { Loader2 } from '../../../common/components/icons/Loader2';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { formatRecentTime } from '../../../common/utils/dateTime';
+import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import * as botStoreModule from '../../ai/store/useBotReviewersStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useVirtualMrStore } from '../store/useVirtualMrStore';
@@ -40,6 +41,7 @@ const BOT_DEFAULT_EMOJIS: Record<string, string> = {
 };
 
 export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline = false }) => {
+  useDateTimeLanguage();
   const { currentRepo, showToast, setBranchComparison } = useGitStore();
   const {
     sessions,

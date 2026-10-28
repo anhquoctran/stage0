@@ -97,6 +97,22 @@ async function fixture(beforeSave = async () => {}) {
   return { store, records, writes, calls, toasts, reload, maxWrites: () => maxActiveWrites };
 }
 
+test('the first MR uses the configured Git identity through both creation workflows', async () => {
+  for (const mode of ['draft', 'direct']) {
+    const { store, records } = await fixture();
+    store.setState({ sessions: [], draftMr: {
+      title: 'First MR', description: '', baseBranch: 'main', compareBranch: 'new-feature',
+      selectedBots: [], selectedLabels: [], commits: [],
+    } });
+    const id = mode === 'draft'
+      ? await store.getState().submitNewMrDraft()
+      : await store.getState().createSession('main', 'new-feature', 'First MR');
+    assert.ok(id);
+    assert.equal(records.get(id).assignee_name, 'User');
+    assert.equal(records.get(id).assignee_email, 'user@example.test');
+  }
+});
+
 test('reviewer and label additions/removals persist and reload with assignment identity', async () => {
   const { store, records, reload, calls } = await fixture();
   await store.getState().assignReviewerBot('mr', 'bot-1');

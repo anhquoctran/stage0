@@ -1,6 +1,8 @@
 import { startupProgress } from './core/services/startup/startupProgress';
 import { ApplicationServicesProvider } from './core/services/runtime/ApplicationServicesProvider';
 import { getApplicationServices } from './core/services/runtime/applicationRuntime';
+import { startGlobalLanguageRuntime } from './core/services/runtime/globalLanguageRuntime';
+import { DEFAULT_APP_LANGUAGE } from './features/i18n/constants/defaultLanguages';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import '@fontsource-variable/inter/wght.css';
@@ -132,6 +134,7 @@ When reviewing git diffs:
 async function startApp() {
   startupProgress.begin('runtime');
   initExternalLinkInterceptor();
+  const applyInitialLanguage = await startGlobalLanguageRuntime();
   const legacy = buildLegacyPreferences();
   const legacyRawAi = readLegacyJson('stage0_ai_mcp_config') as Record<string, unknown> | undefined;
   const legacyRawAiConfig = legacyRawAi?.aiConfig as Record<string, unknown> | undefined;
@@ -203,6 +206,7 @@ async function startApp() {
     window.__STAGE0_PREFERENCES_PATH__ = 'browser storage';
   }
   window.__STAGE0_PREFERENCES__ = preferences;
+  await applyInitialLanguage(preferences?.appearance?.language ?? DEFAULT_APP_LANGUAGE);
   const startupThemeMode = preferences?.appearance?.themeMode;
   if (startupThemeMode === 'light' || startupThemeMode === 'dark' || startupThemeMode === 'system') {
     try {

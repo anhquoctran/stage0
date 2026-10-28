@@ -52,13 +52,13 @@ export const TopBarPullButton: React.FC = () => {
       >
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-1/2 h-8 w-px -translate-y-1/2 bg-surface1/80"
+          className="pointer-events-none absolute start-0 top-1/2 h-8 w-px -translate-y-1/2 bg-surface1/80"
         />
         <ChevronDown className="w-2.5 h-2.5 text-current transition-colors" />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 rounded-sm">
+        <div className="absolute start-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 rounded-sm">
           <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0 mb-1 rounded-sm">
             Pull Options
           </div>
@@ -68,7 +68,7 @@ export const TopBarPullButton: React.FC = () => {
               setIsOpen(false);
               runSync('pull');
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-left transition-colors cursor-pointer group rounded-sm"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-start transition-colors cursor-pointer group rounded-sm"
           >
             <div className="flex items-center gap-2">
               <Download className="w-3.5 h-3.5 text-current transition-colors" />
@@ -83,7 +83,7 @@ export const TopBarPullButton: React.FC = () => {
               setIsOpen(false);
               setIsPullFromOpen(true);
             }}
-            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-left transition-colors cursor-pointer group rounded-sm"
+            className="w-full flex items-center justify-between px-3 py-1.5 hover:bg-surface0 text-xs text-text hover:text-primary text-start transition-colors cursor-pointer group rounded-sm"
           >
             <div className="flex items-center gap-2">
               <DownloadCloud className="w-3.5 h-3.5 text-current transition-colors" />

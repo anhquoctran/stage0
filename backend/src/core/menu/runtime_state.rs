@@ -7,6 +7,7 @@ use tauri::{menu::MenuItemKind, AppHandle, Manager, WebviewWindow, Wry};
 pub struct MenuRuntimeState {
     pub flags: Mutex<HashMap<String, MenuFlags>>,
     pub keymaps: Mutex<HashMap<String, NativeMenuKeymap>>,
+    pub language: Mutex<String>,
 }
 
 pub fn window_flags(app: &AppHandle, window_label: &str) -> MenuFlags {
@@ -33,16 +34,34 @@ pub fn sync_repo_dependent_menus_for_window(app: &AppHandle, window_label: &str)
             menu.items().unwrap_or_default(),
             &window_flags(app, window_label),
             keymap.as_ref(),
+            app_language(app),
         );
     }
 }
 
-fn sync_items(items: Vec<MenuItemKind<Wry>>, flags: &MenuFlags, keymap: Option<&NativeMenuKeymap>) {
+pub(super) fn app_language(app: &AppHandle) -> String {
+    app.try_state::<MenuRuntimeState>()
+        .and_then(|state| state.language.lock().ok().map(|language| language.clone()))
+        .filter(|language| crate::features::preferences::is_supported_app_language(language))
+        .unwrap_or_else(|| crate::features::preferences::DEFAULT_APP_LANGUAGE.to_string())
+}
+
+fn sync_items(
+    items: Vec<MenuItemKind<Wry>>,
+    flags: &MenuFlags,
+    keymap: Option<&NativeMenuKeymap>,
+    language: String,
+) {
     let onboarding = flags.onboarding;
     for item in items {
         match item {
             MenuItemKind::Submenu(submenu) => {
                 let id = submenu.id();
+                let label_key = node_label_key(&definition().menus, id.as_ref());
+                if let Some(label_key) = label_key {
+                    let _ = submenu
+                        .set_text(super::localized_menu_label(label_key, &language, "macos"));
+                }
                 let is_app_menu = id.as_ref() == "application_menu";
                 if onboarding {
                     let _ = submenu.set_enabled(is_app_menu);
@@ -55,37 +74,75 @@ fn sync_items(items: Vec<MenuItemKind<Wry>>, flags: &MenuFlags, keymap: Option<&
                     submenu.items().unwrap_or_default(),
                     flags,
                     if onboarding { None } else { keymap },
+                    language.clone(),
                 );
             }
             MenuItemKind::MenuItem(item) => {
+                let Some(command) = definition().commands.get(item.id().as_ref()) else {
+                    continue;
+                };
+                let _ = item.set_text(super::localized_menu_label(
+                    &command.label,
+                    &language,
+                    "macos",
+                ));
                 if onboarding {
                     let _ = item.set_enabled(false);
                     let _ = item.set_accelerator(None::<&str>);
-                } else if let Some(command) = definition().commands.get(item.id().as_ref()) {
+                } else {
                     let _ = item.set_enabled(flags.enabled(&command.requires));
                     if let Some(keymap) = keymap {
                         let _ = item.set_accelerator(keymap.accelerators.get(item.id().as_ref()));
-                        let _ = item.set_text(keymap.title(item.id().as_ref()));
+                        let _ = item.set_text(keymap.title(item.id().as_ref(), &language));
                     }
                 }
             }
             MenuItemKind::Check(item) => {
+                let Some(command) = definition().commands.get(item.id().as_ref()) else {
+                    continue;
+                };
+                let _ = item.set_text(super::localized_menu_label(
+                    &command.label,
+                    &language,
+                    "macos",
+                ));
                 if onboarding {
                     let _ = item.set_enabled(false);
                     let _ = item.set_accelerator(None::<&str>);
-                } else if let Some(command) = definition().commands.get(item.id().as_ref()) {
+                } else {
                     let _ = item.set_enabled(flags.enabled(&command.requires));
                     let _ = item
                         .set_checked(command.checked.as_ref().is_some_and(|key| flags.value(key)));
                     if let Some(keymap) = keymap {
                         let _ = item.set_accelerator(keymap.accelerators.get(item.id().as_ref()));
-                        let _ = item.set_text(keymap.title(item.id().as_ref()));
+                        let _ = item.set_text(keymap.title(item.id().as_ref(), &language));
                     }
+                }
+            }
+            MenuItemKind::Predefined(item) => {
+                if let Some(command) = definition().commands.get(item.id().as_ref()) {
+                    let _ = item.set_text(super::localized_menu_label(
+                        &command.label,
+                        &language,
+                        "macos",
+                    ));
                 }
             }
             _ => {}
         }
     }
+}
+
+fn node_label_key<'a>(nodes: &'a [MenuNode], id: &str) -> Option<&'a str> {
+    for node in nodes {
+        if node.id.as_deref() == Some(id) {
+            return node.label.as_deref();
+        }
+        if let Some(label) = node_label_key(&node.items, id) {
+            return Some(label);
+        }
+    }
+    None
 }
 
 fn node_requires<'a>(nodes: &'a [MenuNode], id: &str) -> Option<&'a [String]> {
@@ -105,9 +162,11 @@ pub fn update_application_menu_state(
     app: AppHandle,
     window: WebviewWindow,
     flags: MenuFlags,
+    language: String,
     accelerators: Option<HashMap<String, String>>,
     shortcut_labels: Option<HashMap<String, String>>,
 ) -> Result<(), String> {
+    set_application_menu_language(&app, &language)?;
     let keymap = accelerators
         .map(|keys| NativeMenuKeymap::from_input(keys, shortcut_labels.unwrap_or_default()))
         .transpose()?;
@@ -122,6 +181,22 @@ pub fn update_application_menu_state(
         }
     }
     sync_repo_dependent_menus_for_window(&app, window.label());
+    Ok(())
+}
+
+pub fn set_application_menu_language(app: &AppHandle, language: &str) -> Result<(), String> {
+    if !crate::features::preferences::is_supported_app_language(language) {
+        return Err("Unsupported application language".into());
+    }
+    if let Some(state) = app.try_state::<MenuRuntimeState>() {
+        *state
+            .language
+            .lock()
+            .map_err(|_| "Native menu state is unavailable")? = language.to_owned();
+    }
+    if let Some(window) = focused_window(app) {
+        sync_repo_dependent_menus_for_window(app, window.label());
+    }
     Ok(())
 }
 

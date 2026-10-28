@@ -29,8 +29,8 @@ export const StatusBarViewModeControls: React.FC<{
       </button>
 
       {/* Keyboard Shortcuts Hint */}
-      <div className="hidden xl:flex items-center gap-1.5 pl-1.5 text-[10px] text-subtext0/80">
-        <div className="h-3 w-px bg-surface1/80 mr-1" />
+      <div className="hidden xl:flex items-center gap-1.5 ps-1.5 text-[10px] text-subtext0/80">
+        <div className="h-3 w-px bg-surface1/80 ms-1" />
         <Keyboard className="w-3 h-3 text-subtext0/60 shrink-0" />
         <span>
           <kbd className="font-mono bg-surface0/60 px-1 py-0.2 border border-surface1/40 text-subtext1">↑/↓</kbd> Files

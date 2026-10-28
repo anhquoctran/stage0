@@ -138,7 +138,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     try { await get().startForSession(sessionId, config, allowRemote, reviewer, true); }
     catch { /* The store records the error for the open review panel. */ }
   },
-  startForSession: async (sessionId, config, allowRemote, reviewer, generateDescription = false, replyDiscussionId) => {
+  startForSession: async (sessionId, config, allowRemote, reviewer, generateDescription = false, replyDiscussionId, manualReviewDiscussionId) => {
     if (startingSessionIds.has(sessionId) || Object.values(get().activeRuns).some((run) => run.sessionId === sessionId && run.status === 'running')) return null;
     startingSessionIds.add(sessionId);
     set({ isStarting: true, error: null });
@@ -153,6 +153,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         reviewerId: reviewer?.id || null, reviewerName: reviewer?.name || null,
         generateDescription,
         ...(replyDiscussionId ? { replyDiscussionId } : {}),
+        ...(manualReviewDiscussionId ? { manualReviewDiscussionId } : {}),
       } });
       set((state) => ({ activeRuns: { ...state.activeRuns, [run.id]: run } }));
       if (run.reviewerId && !run.replyDiscussionId) {

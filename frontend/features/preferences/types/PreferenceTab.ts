@@ -4,6 +4,7 @@ export type PreferenceTab =
   | 'general-keymaps'
   | 'appearance'
   | 'appearance-theme'
+  | 'appearance-language'
   | 'appearance-fonts'
   | 'appearance-ui-font'
   | 'appearance-markdown-font'

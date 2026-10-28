@@ -148,7 +148,7 @@ export const MainLayout: React.FC = () => {
       {toastMessage && (
         <div
           role={toastLevel === 'error' ? 'alert' : 'status'}
-          className="fixed bottom-10 right-6 z-50 bg-mantle border border-surface1 text-text text-xs px-3.5 py-2 shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150 rounded-sm"
+          className="fixed bottom-10 end-6 z-50 bg-mantle border border-surface1 text-text text-xs px-3.5 py-2 shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-150 rounded-sm"
         >
           {toastLevel === 'error' || toastLevel === 'warning' ? (
             <AlertCircle

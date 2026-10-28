@@ -16,7 +16,7 @@ export const TopBarRepoBadge: React.FC = () => {
 
   return (
     <div
-      className="flex items-center gap-3 px-3.5 h-12 bg-surface0 text-left max-w-[260px] select-none shrink-0 rounded-sm"
+      className="flex items-center gap-3 px-3.5 h-12 bg-surface0 text-start max-w-[260px] select-none shrink-0 rounded-sm"
       title={currentRepo.local_path}
     >
       <FolderGit2 className="w-5 h-5 text-primary shrink-0" />

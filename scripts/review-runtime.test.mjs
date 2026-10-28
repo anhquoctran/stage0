@@ -323,13 +323,12 @@ test('a later review failure still retains the confirmed description phase in th
   assert.match(result.failures[0], /Invalid later ACP/);
 });
 
-test('review panel requires renewed remote consent after changing endpoints and does not cancel on close', async () => {
-  const harness = componentHarness(); let started = 0; let closed = 0; let cancelled = 0; let preference;
+test('review panel has no direct start button and closing it does not cancel an active run', async () => {
+  const harness = componentHarness(); let closed = 0; let cancelled = 0; let preference;
   const originalDocument = globalThis.document; const originalElement = globalThis.HTMLElement;
   globalThis.document = { activeElement: null }; globalThis.HTMLElement = class {};
-  const state = { isOpen: true, sessionId: 'a', runs: [], detail: null, activeRuns: {}, error: null, isStarting: false, isPublishing: false,
-    close: () => { closed++; }, load: async () => {}, syncActive: async () => {}, start: async () => { started++; }, cancel: async () => { cancelled++; }, publish: async () => {} };
-  const ai = { ...config };
+  const state = { isOpen: true, sessionId: 'a', runs: [], detail: null, activeRuns: {}, error: null, isPublishing: false,
+    close: () => { closed++; }, load: async () => {}, syncActive: async () => {}, cancel: async () => { cancelled++; }, publish: async () => {} };
   const { ReviewPanel } = loadWithMocks(new URL('../frontend/features/review/components/ReviewPanel.tsx', import.meta.url), {
     react: harness.react,
     '../../../common/components/icons/X': { X: () => null },
@@ -338,20 +337,14 @@ test('review panel requires renewed remote consent after changing endpoints and 
     './HarnessConnectionsPanel': { HarnessConnectionsPanel: () => null },
     '../../../common/utils/dateTime': { formatDateTime: (value) => value },
     '../store/useReviewStore': { useReviewStore: () => state },
-    '../../ai/store/useAiMcpStore': { useAiMcpStore: (selector) => selector({ aiConfig: ai }) },
-    '../../ai/constants/aiPresets': { AI_PROVIDERS: [{ id: 'anthropic' }] },
     '../../preferences/store/usePreferencesStore': { usePreferencesStore: { getState: () => ({ openPreferences: (tab) => { preference = tab; } }) } },
     '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: (selector) => selector({ sessions: [{ id: 'a', repoId: 'repo-a', reviewers: [] }] }) },
-    '../../ai/store/useBotReviewersStore': { useBotReviewersStore: (selector) => selector({ globalReviewers: [], repoCustomReviewers: {} }) },
   });
   try {
     const nodes = async () => componentNodes(await harness.render(ReviewPanel));
-    const startButton = (items) => items.find((item) => item.type === 'button' && item.props.children.flat(Infinity).includes('Start new review'));
-    let items = await nodes(); assert.equal(startButton(items).props.disabled, true);
-    items.find((item) => item.type === 'input').props.onChange({ target: { checked: true } });
-    items = await nodes(); assert.equal(startButton(items).props.disabled, false);
-    await startButton(items).props.onClick(); assert.equal(started, 1);
-    ai.baseUrl = 'https://changed.example/v1'; items = await nodes(); assert.equal(startButton(items).props.disabled, true);
+    const items = await nodes();
+    assert.equal(items.some((item) => item.type === 'button' && /Start new review|Review as/.test(JSON.stringify(item.props.children))), false);
+    assert.match(JSON.stringify(items.map((item) => item.children || item.props?.children)), /new discussion/);
     items.find((item) => item.type === 'button' && item.props['aria-label'] === 'Close review panel').props.onClick();
     assert.equal(closed, 1); assert.equal(cancelled, 0);
     items.find((item) => item.type === 'button' && item.props.children.flat(Infinity).includes('AI Preferences')).props.onClick();

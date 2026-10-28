@@ -88,6 +88,28 @@ fn ui_font_preferences_are_optional_validated_and_round_trip_through_jsonc() {
 }
 
 #[test]
+fn app_and_agent_languages_are_limited_to_the_supported_catalog() {
+    let mut settings = parse_and_validate(DEFAULT_PREFERENCES).unwrap();
+    assert_eq!(settings["appearance"]["language"], "vi");
+    assert_eq!(settings["ai"]["agentOutputLanguage"], "follow-app");
+    assert_eq!(super::supported_language::SUPPORTED_APP_LANGUAGES.len(), 14);
+
+    for language in super::supported_language::SUPPORTED_APP_LANGUAGES {
+        settings["appearance"]["language"] = json!(language);
+        settings["ai"]["agentOutputLanguage"] = json!(language);
+        assert!(
+            validate_schema(&settings).is_ok(),
+            "locale {language} should validate"
+        );
+    }
+    settings["appearance"]["language"] = json!("en-US");
+    assert!(validate_schema(&settings).is_err());
+    settings["appearance"]["language"] = json!("en");
+    settings["ai"]["agentOutputLanguage"] = json!("system");
+    assert!(validate_schema(&settings).is_err());
+}
+
+#[test]
 fn schema_validation_rejects_wrong_types_ranges_and_malformed_records() {
     let valid = json!({
         "schemaVersion": 1,
@@ -348,12 +370,14 @@ fn initialize_falls_back_to_defaults_on_corrupt_legacy_data() {
     let _ = fs::remove_dir_all(directory);
 }
 
-
 #[test]
 fn linux_title_bar_mode_is_optional_and_rejects_unsupported_values() {
     let mut settings = parse_and_validate(DEFAULT_PREFERENCES).unwrap();
     assert_eq!(settings["appearance"]["linuxTitleBar"], "system");
-    settings["appearance"].as_object_mut().unwrap().remove("linuxTitleBar");
+    settings["appearance"]
+        .as_object_mut()
+        .unwrap()
+        .remove("linuxTitleBar");
     assert!(validate_schema(&settings).is_ok());
     for mode in [json!("system"), json!("custom")] {
         settings["appearance"]["linuxTitleBar"] = mode;

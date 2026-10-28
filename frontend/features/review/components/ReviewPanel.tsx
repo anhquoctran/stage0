@@ -1,100 +1,38 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { X } from '../../../common/components/icons/X';
 import { formatDateTime } from '../../../common/utils/dateTime';
-import { AI_PROVIDERS } from '../../ai/constants/aiPresets';
-import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
-import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
+import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
-import type { BotReviewer } from '../../virtual-mr/types/BotReviewer';
 import { useReviewStore } from '../store/useReviewStore';
-import type { ReviewBotConfig } from '../types/ReviewBotConfig';
-import { resolveReviewBotConfig } from '../utils/resolveReviewBotConfig';
 import { HarnessConnectionsPanel } from './HarnessConnectionsPanel';
 import { ReviewConfigurationSection } from './ReviewConfigurationSection';
 import { ReviewFindingCard } from './ReviewFindingCard';
 import { ReviewRunSummary } from './ReviewRunSummary';
 
-const GLOBAL_REVIEWER_ID = '__stage0_global_ai_config__';
-
 export const ReviewPanel: React.FC = () => {
+  useDateTimeLanguage();
   const {
     isOpen,
     sessionId,
     runs,
     detail,
     error,
-    isStarting,
     isPublishing,
     activeRuns,
     syncActive,
     close,
     load,
-    start,
     cancel,
     publish,
   } = useReviewStore();
-  const config = useAiMcpStore((state) => state.aiConfig);
-  const dynamicModels = useAiMcpStore((state) => state.dynamicModels);
-  const externalAgents = useAiMcpStore((state) => state.externalAgents);
   const session = useVirtualMrStore(
     (state) => state.sessions.find((item) => item.id === sessionId) || null
   );
-  const globalReviewers = useBotReviewersStore((state) => state.globalReviewers);
-  const repoCustomReviewers = useBotReviewersStore((state) => state.repoCustomReviewers);
-  const [allowRemote, setAllowRemote] = useState(false);
-  const [selectedReviewerId, setSelectedReviewerId] = useState(GLOBAL_REVIEWER_ID);
   const panelRef = useRef<HTMLDivElement>(null);
   const run = detail?.run;
   const running = run?.status === 'running';
-  const hasRunning = running || runs.some((item) => item.status === 'running');
   const activeIds = Object.keys(activeRuns).sort().join(',');
-  const reviewerProfiles = useMemo(() => {
-    if (!session) return [];
-    const assignedIds = new Set(session.reviewers.map((reviewer) => reviewer.agentId));
-    const configured = [...globalReviewers, ...(repoCustomReviewers[session.repoId] || [])];
-    const unique = new Map<string, BotReviewer>();
-    for (const bot of configured)
-      if (assignedIds.has(bot.id) && !unique.has(bot.id)) unique.set(bot.id, bot);
-    return [...unique.values()];
-  }, [session, globalReviewers, repoCustomReviewers]);
-  const effectiveReviewerId = reviewerProfiles.some((bot) => bot.id === selectedReviewerId)
-    ? selectedReviewerId
-    : GLOBAL_REVIEWER_ID;
-  const selectedReviewer = reviewerProfiles.find((bot) => bot.id === effectiveReviewerId);
-  const reviewerProvider =
-    selectedReviewer?.provider && selectedReviewer.provider !== 'global_default'
-      ? selectedReviewer.provider
-      : config.provider;
-  const reviewConfig: ReviewBotConfig = selectedReviewer
-    ? resolveReviewBotConfig(
-        config,
-        selectedReviewer,
-        dynamicModels[reviewerProvider as keyof typeof dynamicModels] || [],
-        externalAgents
-      )
-    : { ...config, reviewerRole: 'custom', customInstructions: config.reviewerInstructions };
-  const compatible =
-    reviewConfig.executionMode === 'acp'
-      ? Boolean(reviewConfig.acpAgent)
-      : AI_PROVIDERS.some((provider) => provider.id === reviewConfig.provider);
-  const acpConfigSummary = Object.entries(reviewConfig.acpConfigOptions || {})
-    .map(([id, value]) => `${id}: ${String(value)}`)
-    .join(' · ');
-
-  useEffect(() => {
-    setAllowRemote(false);
-  }, [
-    reviewConfig.provider,
-    reviewConfig.model,
-    reviewConfig.baseUrl,
-    reviewConfig.acpAgent?.id,
-    effectiveReviewerId,
-    sessionId,
-  ]);
-  useEffect(() => {
-    setSelectedReviewerId(reviewerProfiles[0]?.id || GLOBAL_REVIEWER_ID);
-  }, [sessionId, reviewerProfiles]);
   useEffect(() => {
     if (!sessionId || !isOpen) return;
     void load(sessionId);
@@ -163,22 +101,7 @@ export const ReviewPanel: React.FC = () => {
         <div className="min-h-0 overflow-y-auto p-5 space-y-4">
           <ReviewConfigurationSection
             session={session}
-            effectiveReviewerId={effectiveReviewerId}
-            setSelectedReviewerId={setSelectedReviewerId}
-            GLOBAL_REVIEWER_ID={GLOBAL_REVIEWER_ID}
-            config={config}
-            reviewerProfiles={reviewerProfiles}
-            externalAgents={externalAgents}
-            selectedReviewer={selectedReviewer}
-            reviewConfig={reviewConfig}
-            acpConfigSummary={acpConfigSummary}
-            compatible={compatible}
             close={close}
-            allowRemote={allowRemote}
-            setAllowRemote={setAllowRemote}
-            isStarting={isStarting}
-            hasRunning={hasRunning}
-            start={start}
             running={running}
             cancel={cancel}
           />
@@ -208,7 +131,7 @@ export const ReviewPanel: React.FC = () => {
           )}
           {!run && (
             <p className="text-xs text-subtext0">
-              No review run selected. Start a review or choose one from history.
+              No review run selected. Request one from the new discussion editor or choose a run from history.
             </p>
           )}
           {run && (

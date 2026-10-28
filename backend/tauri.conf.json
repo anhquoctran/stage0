@@ -22,8 +22,6 @@
         "center": true,
         "resizable": false,
         "maximizable": false,
-        "titleBarStyle": "Overlay",
-        "hiddenTitle": true,
         "backgroundColor": "#11111b",
         "visible": false,
         "maximized": false,

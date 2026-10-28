@@ -138,7 +138,7 @@ export function CustomSelect<T extends string>({
   return (
     <div
       ref={containerRef}
-      className={`relative inline-block text-left ${className}`}
+      className={`relative inline-block text-start ${className}`}
       onKeyDown={handleKeyDown}
     >
       <button
@@ -165,7 +165,7 @@ export function CustomSelect<T extends string>({
           </span>
         </div>
         <ChevronDown
-          className={`w-3.5 h-3.5 text-subtext0 transition-transform duration-150 shrink-0 ml-1 ${
+          className={`w-3.5 h-3.5 text-subtext0 transition-transform duration-150 shrink-0 ms-1 ${
             isOpen ? 'rotate-180 text-text' : ''
           }`}
         />
@@ -174,7 +174,7 @@ export function CustomSelect<T extends string>({
       {isOpen && (
         <div
           className={`absolute ${
-            align === 'left' ? 'left-0' : 'right-0'
+            align === 'left' ? 'start-0' : 'end-0'
           } ${dropdownPlacement === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'} ${dropdownWidth} bg-mantle border border-surface0 rounded-sm shadow-2xl z-50 py-1 overflow-hidden animate-in fade-in duration-100 ${menuClassName}`}
         >
           {searchable && <div className="px-2 py-1 border-b border-surface0 rounded-sm">
@@ -220,7 +220,7 @@ export function CustomSelect<T extends string>({
                       : 'text-subtext1 hover:text-text hover:bg-base cursor-pointer'
                   }`}
                 >
-                  <div className="flex flex-col min-w-0 pr-2">
+                  <div className="flex flex-col min-w-0 pe-2">
                     <div className="flex items-center gap-1.5">
                       {option.icon && <span className="shrink-0">{option.icon}</span>}
                       <span className={`truncate ${isSelected ? 'font-semibold text-text' : ''}`}>

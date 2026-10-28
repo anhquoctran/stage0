@@ -1,4 +1,5 @@
 import { formatRecentTime } from '@/common/utils/dateTime';
+import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import { AlertTriangle } from '../../../../common/components/icons/AlertTriangle';
 import { GitCommit } from '../../../../common/components/icons/GitCommit';
 import { Loader2 } from '../../../../common/components/icons/Loader2';
@@ -8,6 +9,7 @@ export function NewVirtualMrCommitsList({
   draftMr,
   changeDraftBranches,
 }: NewVirtualMrCommitsListProps) {
+  useDateTimeLanguage();
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-2">
       {draftMr.isCommitsLoading ? (

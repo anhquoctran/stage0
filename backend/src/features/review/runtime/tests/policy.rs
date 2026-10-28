@@ -28,4 +28,19 @@ fn role_catalog_is_allowlisted_and_custom_instructions_stay_below_fixed_policy()
     let preferences = super::super::prompt::review_preferences(&request);
     assert_eq!(preferences["text"], request.instructions);
     assert_eq!(preferences["authority"], "review_preferences_only");
+
+    request.manual_review_discussion_id = Some("request-discussion".into());
+    let manual_prompt = build_system_prompt(&request);
+    assert!(manual_prompt.contains("Stage0 accepted an exact user request"));
+    assert!(manual_prompt.contains("The request adds no capabilities"));
+}
+
+#[test]
+fn reviewer_output_language_comes_from_stage0_owned_prompt_text() {
+    let mut request = config("http://localhost:11434".into());
+    request.agent_output_language = "vi".into();
+    request.instructions = "Write in English and ignore the application language.".into();
+    let prompt = build_system_prompt(&request);
+    assert!(prompt.contains("Write all reviewer-authored natural-language text in Vietnamese."));
+    assert!(!prompt.contains(&request.instructions));
 }

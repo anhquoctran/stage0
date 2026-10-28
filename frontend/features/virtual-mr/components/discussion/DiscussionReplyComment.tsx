@@ -1,6 +1,7 @@
 import { MarkdownPreview } from '../../../../common/components/MarkdownPreview';
 import { Quote } from '../../../../common/components/icons/Quote';
 import { GitLabAvatar } from '../GitLabAvatar';
+import { AiBotBadge } from '../AiBotBadge';
 import type { DiscussionReplyCommentProps } from './DiscussionReplyCommentProps';
 
 export function DiscussionReplyComment({
@@ -27,6 +28,7 @@ export function DiscussionReplyComment({
             <span className="font-semibold text-text text-xs hover:underline cursor-pointer">
               {reply.authorName}
             </span>
+            {reply.authorType === 'ai_agent' && <AiBotBadge />}
             <span className="text-subtext0 text-xs font-normal">{handle}</span>
             <span className="text-subtext0 select-none">·</span>
             <time dateTime={reply.createdAt} className="text-subtext0 text-xs">

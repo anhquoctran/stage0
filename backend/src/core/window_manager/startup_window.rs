@@ -50,7 +50,7 @@ fn configure_main_window(window: &Window, maximized: bool) -> Result<(), String>
         .map_err(|error| error.to_string())?;
     #[cfg(target_os = "macos")]
     window
-        .set_decorations(true)
+        .set_decorations(false)
         .map_err(|error| error.to_string())?;
     #[cfg(target_os = "linux")]
     {

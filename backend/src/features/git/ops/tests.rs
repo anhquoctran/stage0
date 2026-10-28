@@ -2,6 +2,53 @@ use super::*;
 use crate::features::git::runner::{run_git, run_git_strict};
 
 #[test]
+fn local_identity_prefers_scoped_credential_username_then_git_author_or_email() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().to_str().unwrap();
+    run_git_strict(path, &["init", "-q"]).unwrap();
+    run_git_strict(path, &["config", "user.name", "Configured User"]).unwrap();
+    run_git_strict(path, &["config", "user.email", "alice@example.test"]).unwrap();
+    run_git_strict(path, &["config", "credential.username", "git-account"]).unwrap();
+    run_git_strict(
+        path,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "https://example.test/team/repo.git",
+        ],
+    )
+    .unwrap();
+    run_git_strict(
+        path,
+        &[
+            "config",
+            "credential.https://example.test.username",
+            "scoped-account",
+        ],
+    )
+    .unwrap();
+    assert_eq!(
+        get_git_user_identity(path).unwrap(),
+        ("scoped-account".into(), "alice@example.test".into())
+    );
+    run_git_strict(
+        path,
+        &[
+            "config",
+            "--unset",
+            "credential.https://example.test.username",
+        ],
+    )
+    .unwrap();
+    assert_eq!(get_git_user_identity(path).unwrap().0, "git-account");
+    run_git_strict(path, &["config", "credential.username", ""]).unwrap();
+    assert_eq!(get_git_user_identity(path).unwrap().0, "Configured User");
+    run_git_strict(path, &["config", "user.name", ""]).unwrap();
+    assert_eq!(get_git_user_identity(path).unwrap().0, "alice");
+}
+
+#[test]
 fn remote_credentials_are_redacted_from_ipc_metadata() {
     let temp_dir =
         std::env::temp_dir().join(format!("remote_redaction_test_{}", uuid::Uuid::new_v4()));

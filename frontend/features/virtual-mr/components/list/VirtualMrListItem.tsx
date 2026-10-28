@@ -1,6 +1,7 @@
 import { CheckCircle2 } from '../../../../common/components/icons/CheckCircle2';
 import { MessageSquare } from '../../../../common/components/icons/MessageSquare';
 import { formatDateTime } from '../../../../common/utils/dateTime';
+import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import { GitLabAvatar } from '../GitLabAvatar';
 import type { VirtualMrListItemProps } from './VirtualMrListItemProps';
 
@@ -14,6 +15,7 @@ export function VirtualMrListItem({
   BOT_DEFAULT_EMOJIS,
   updatedLabel,
 }: VirtualMrListItemProps) {
+  useDateTimeLanguage();
   return (
     <button
       key={session.id}

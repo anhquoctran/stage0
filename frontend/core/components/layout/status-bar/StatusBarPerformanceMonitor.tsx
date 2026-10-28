@@ -57,7 +57,7 @@ export const StatusBarPerformanceMonitor: React.FC = () => {
 
   return (
     <div
-      className="group relative flex h-5.5 items-center gap-2 border-l border-surface1/80 pl-2 text-[10px] text-subtext1 cursor-help focus-visible:outline-none rounded-sm"
+      className="group relative flex h-5.5 items-center gap-2 border-s border-surface1/80 ps-2 text-[10px] text-subtext1 cursor-help focus-visible:outline-none rounded-sm"
       tabIndex={0}
       aria-label="Performance monitor details"
       aria-describedby="performance-monitor-tooltip"
@@ -89,7 +89,7 @@ export const StatusBarPerformanceMonitor: React.FC = () => {
       <div
         id="performance-monitor-tooltip"
         role="tooltip"
-        className="invisible absolute bottom-full right-0 z-50 mb-2 w-72 translate-y-1 border border-surface1 bg-mantle p-3 text-left text-xs text-text opacity-0 shadow-2xl transition-all duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 rounded-sm"
+        className="invisible absolute bottom-full end-0 z-50 mb-2 w-72 translate-y-1 border border-surface1 bg-mantle p-3 text-start text-xs text-text opacity-0 shadow-2xl transition-all duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 rounded-sm"
       >
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">

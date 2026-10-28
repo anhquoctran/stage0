@@ -11,7 +11,7 @@ export const TopBarRebasingBanner: React.FC = () => {
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950 text-white text-xs rounded-sm">
-      <span className="text-xs font-semibold text-amber-200 uppercase tracking-wider mr-1">
+      <span className="text-xs font-semibold text-amber-200 uppercase tracking-wider me-1">
         Rebasing:
       </span>
       <button

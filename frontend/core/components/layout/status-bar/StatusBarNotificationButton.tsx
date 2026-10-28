@@ -26,7 +26,7 @@ export const StatusBarNotificationButton: React.FC = () => {
       {unreadCount > 0 && (
         <span
           aria-hidden="true"
-          className="absolute right-1 top-0.5 h-1.5 w-1.5 bg-brand ring-1 ring-mantle"
+          className="absolute end-1 top-0.5 h-1.5 w-1.5 bg-brand ring-1 ring-mantle"
         />
       )}
     </button>

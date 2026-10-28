@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GitCommit } from '../../../../common/components/icons/GitCommit';
 import { formatDateTime } from '../../../../common/utils/dateTime';
+import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import type { VirtualMrCommitsTabProps } from './VirtualMrCommitsTabProps';
+import { useGitStore } from '../../../git/store/useGitStore';
+import { CommitDetailsModal } from '../../../git/components/CommitDetailsModal';
 
 export const VirtualMrCommitsTab: React.FC<VirtualMrCommitsTabProps> = ({ session }) => {
+  useDateTimeLanguage();
+  const currentRepo = useGitStore(state => state.currentRepo);
+  const [selected, setSelected] = useState<{ sessionId: string; hash: string } | null>(null);
+  const repoPath = currentRepo?.id === session.repoId ? currentRepo.local_path : null;
   return (
     <div className="flex-1 h-full overflow-y-auto px-6 py-6 bg-crust/30 w-full">
       <div className="w-full space-y-4">
@@ -28,27 +35,33 @@ export const VirtualMrCommitsTab: React.FC<VirtualMrCommitsTabProps> = ({ sessio
         ) : (
           <div className="space-y-2.5">
             {session.commits.map((c) => (
-              <div
+              <button
                 key={c.hash}
-                className="p-3.5 rounded-sm bg-mantle border border-surface0 hover:border-surface1 transition-colors flex items-center justify-between gap-4"
+                type="button"
+                onClick={() => setSelected({ sessionId: session.id, hash: c.hash })}
+                disabled={!repoPath}
+                aria-label={`View commit ${c.shortHash}: ${c.subject}`}
+                className="w-full p-3.5 text-left rounded-sm bg-mantle border border-surface0 hover:border-surface1 transition-colors flex items-center justify-between gap-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-brand disabled:opacity-50 disabled:cursor-default"
               >
-                <div className="space-y-1 min-w-0">
-                  <div className="font-medium text-xs text-text truncate">{c.subject}</div>
-                  <div className="flex items-center gap-3 text-[11px] text-subtext0 font-mono">
+                <span className="space-y-1 min-w-0">
+                  <span className="block font-medium text-xs text-text truncate">{c.subject}</span>
+                  <span className="flex items-center gap-3 text-[11px] text-subtext0 font-mono">
                     <span className="text-primary font-medium">{c.authorName}</span>
                     <span>{formatDateTime(c.authoredDate)}</span>
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
+                  </span>
+                </span>
+                <span className="text-right shrink-0">
                   <span className="px-2 py-0.5 rounded-sm bg-surface0 font-mono text-[11px] text-subtext0">
                     {c.shortHash}
                   </span>
-                </div>
-              </div>
+                </span>
+              </button>
             ))}
           </div>
         )}
       </div>
+      {repoPath && selected?.sessionId === session.id && <CommitDetailsModal key={`${session.id}:${selected.hash}`}
+        repoPath={repoPath} commitHash={selected.hash} onClose={() => setSelected(null)} />}
     </div>
   );
 };

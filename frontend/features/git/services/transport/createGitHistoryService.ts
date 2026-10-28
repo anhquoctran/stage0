@@ -3,6 +3,7 @@ import type { GitHistoryService } from './GitHistoryService';
 
 export function createGitHistoryService(transport: CommandTransport): GitHistoryService {
   return {
+    getGitCommitDetails: (input) => transport.executeCommand('get_git_commit_details', input),
     checkMergeConflicts: (input) => transport.executeCommand('check_merge_conflicts', input),
     getCommitsBetweenRefs: (input) => transport.executeCommand('get_commits_between_refs', input),
     getConflictedFilePreview: (input) => transport.executeCommand('get_conflicted_file_preview', input),

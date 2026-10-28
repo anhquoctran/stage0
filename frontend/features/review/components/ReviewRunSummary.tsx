@@ -1,7 +1,9 @@
 import { formatDateTime } from '../../../common/utils/dateTime';
+import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import type { ReviewRunSummaryProps } from './ReviewRunSummaryProps';
 
 export function ReviewRunSummary({ run, isPublishing, publish }: ReviewRunSummaryProps) {
+  useDateTimeLanguage();
   return (
     <section className="border border-surface1 p-3 space-y-2 text-xs">
       <p role="status">

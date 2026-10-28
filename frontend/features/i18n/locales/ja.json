@@ -1,0 +1,236 @@
+{
+  "common": {
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "loading": "読み込み中…",
+    "save": "保存",
+    "settings": "設定"
+  },
+  "preferences": {
+    "appearance": "外観",
+    "language": {
+      "title": "言語",
+      "description": "Stage0 の表示言語と日付・時刻の形式を選択します。",
+      "uiLabel": "アプリケーションの言語",
+      "uiDescription": "開いているすべてのウィンドウの表示と日付・時刻の形式を変更します。",
+      "agentLabel": "AI レビュアーの出力言語",
+      "agentDescription": "レビューの指摘と要約に使う言語を選択します。コード、差分、パス、識別子は翻訳されません。",
+      "followApp": "アプリの言語に合わせる",
+      "baseGroup": "基本言語",
+      "extendedGroup": "追加の言語",
+      "saving": "言語を保存中…",
+      "saveError": "言語設定を保存できませんでした。"
+    },
+    "nav": {
+      "general": "一般",
+      "appearance": "外観",
+      "editor": "エディターと差分",
+      "ai": "AI",
+      "git": "バージョン管理",
+      "notifications": "通知",
+      "general-keymaps": "キーマップ",
+      "general-settings": "一般設定",
+      "appearance-theme": "テーマ",
+      "appearance-language": "言語",
+      "appearance-fonts": "エディターのフォント",
+      "appearance-ui-font": "UI フォント",
+      "appearance-markdown-font": "Markdown フォント",
+      "editor-diff": "差分ビューアー",
+      "ai-overview": "一般",
+      "ai-providers": "LLM プロバイダー",
+      "ai-mcp": "MCP サーバー",
+      "ai-external-agents": "外部エージェント",
+      "ai-reviewers": "レビューボット",
+      "ai-sandbox": "サンドボックス",
+      "ai-guardrails": "セキュリティとガードレール",
+      "git-binary": "Git 実行ファイル",
+      "git-credentials": "Git 認証情報",
+      "notifications-settings": "プッシュ通知"
+    },
+    "headers": {
+      "general-keymaps": {
+        "title": "キーマップとキーボードショートカット",
+        "description": "このセクションの項目を設定します。"
+      },
+      "general-settings": {
+        "title": "一般設定",
+        "description": "このセクションの項目を設定します。"
+      },
+      "appearance-theme": {
+        "title": "テーマとインターフェースモード",
+        "description": "このセクションの項目を設定します。"
+      },
+      "appearance-language": {
+        "title": "言語とローカライズ",
+        "description": "このセクションの項目を設定します。"
+      },
+      "appearance-fonts": {
+        "title": "エディターのフォントと文字設定",
+        "description": "このセクションの項目を設定します。"
+      },
+      "appearance-ui-font": {
+        "title": "UI フォント",
+        "description": "このセクションの項目を設定します。"
+      },
+      "appearance-markdown-font": {
+        "title": "Markdown フォントと文字設定",
+        "description": "このセクションの項目を設定します。"
+      },
+      "editor-diff": {
+        "title": "差分ビューアーとコードナビゲーション",
+        "description": "このセクションの項目を設定します。"
+      },
+      "ai-overview": {
+        "title": "AI",
+        "description": "このセクションの項目を設定します。"
+      },
+      "ai-providers": {
+        "title": "LLM プロバイダー",
+        "description": "このセクションの項目を設定します。"
+      },
+      "ai-mcp": {
+        "title": "MCP サーバー",
+        "description": "このセクションの項目を設定します。"
+      },
+      "ai-external-agents": {
+        "title": "外部エージェント",
+        "description": "このセクションの項目を設定します。"
+      },
+      "ai-reviewers": {
+        "title": "レビューボット",
+        "description": "このセクションの項目を設定します。"
+      },
+      "ai-sandbox": {
+        "title": "サンドボックスとツール権限",
+        "description": "このセクションの項目を設定します。"
+      },
+      "ai-guardrails": {
+        "title": "セキュリティとガードレール",
+        "description": "このセクションの項目を設定します。"
+      },
+      "git-binary": {
+        "title": "Git 実行ファイル",
+        "description": "このセクションの項目を設定します。"
+      },
+      "git-credentials": {
+        "title": "Git 認証情報とリモート",
+        "description": "このセクションの項目を設定します。"
+      },
+      "notifications-settings": {
+        "title": "通知とプッシュ通知",
+        "description": "このセクションの項目を設定します。"
+      }
+    }
+  },
+  "dateTime": {
+    "justNow": "たった今",
+    "minutesAgo_one": "{{count}} 分前",
+    "minutesAgo_other": "{{count}} 分前",
+    "hoursAgo_one": "{{count}} 時間前",
+    "hoursAgo_other": "{{count}} 時間前",
+    "daysAgo_one": "{{count}} 日前",
+    "daysAgo_other": "{{count}} 日前",
+    "monthsAgo_one": "{{count}} か月前",
+    "monthsAgo_other": "{{count}} か月前",
+    "yearsAgo_one": "{{count}} 年前",
+    "yearsAgo_other": "{{count}} 年前"
+  },
+  "menu": {
+    "commands": {
+      "about": "Stage0 について",
+      "preferences": "設定...",
+      "services": "サービス",
+      "hide": "Stage0 を隠す",
+      "hide_others": "ほかを隠す",
+      "show_all": "すべてを表示",
+      "quit": "Stage0 を終了",
+      "new_window": "新規ウィンドウ",
+      "open_repo": "開く...",
+      "open_repo_new_window": "新しいウィンドウで開く...",
+      "clone_repo": "クローン...",
+      "close_repo": "リポジトリを閉じる",
+      "close_window": "ウィンドウを閉じる",
+      "exit": "終了",
+      "clear_recent": "最近使った項目を消去",
+      "undo": "元に戻す",
+      "redo": "やり直す",
+      "cut": "切り取り",
+      "copy": "コピー",
+      "paste": "貼り付け",
+      "select_all": "すべて選択",
+      "reveal_file": "{fileManager} で開く",
+      "view_blame": "Git Blame を表示",
+      "copy_rel_path": "相対パスをコピー",
+      "copy_abs_path": "絶対パスをコピー",
+      "copy_remote_url": "リモートのファイル URL をコピー",
+      "copy_remote_url_from": "リモートのファイル URL をコピー...",
+      "previous_file": "前のファイル",
+      "next_file": "次のファイル",
+      "view_split": "左右に並べる",
+      "view_unified": "インライン表示",
+      "toggle_blame": "ファイルの Blame を切り替え",
+      "toggle_inline_blame": "インライン Blame を切り替え",
+      "view_git_graph": "Git Graph を表示",
+      "file_list_flat": "ファイル一覧: フラット表示",
+      "file_list_tree": "ファイル一覧: ツリー表示",
+      "toggle_theme": "テーマを切り替え",
+      "toggle_perf_monitor": "パフォーマンスモニターを表示",
+      "fullscreen": "全画面表示",
+      "repo_overview": "リポジトリの概要...",
+      "new_mr": "新しい Virtual MR...",
+      "fetch": "Fetch (すべて・整理)",
+      "pull": "Pull",
+      "pull_from": "Pull 元...",
+      "merge": "上流をマージ",
+      "merge_from": "マージ元...",
+      "rebase": "Rebase",
+      "rebase_from": "Rebase 元...",
+      "rebase_continue": "続行",
+      "rebase_skip": "コミットをスキップ",
+      "rebase_abort": "Rebase を中止",
+      "swap_branches": "Base と Compare を入れ替え",
+      "refresh_diff": "差分と競合を更新",
+      "open_terminal": "ターミナル",
+      "open_vscode": "Visual Studio Code",
+      "open_explorer": "{fileManager}",
+      "repo_settings": "リポジトリ設定...",
+      "minimize": "最小化",
+      "zoom": "拡大/縮小",
+      "bring_all_to_front": "すべてを最前面へ",
+      "shortcuts": "キーボードショートカット",
+      "keymaps": "キーマップをカスタマイズ...",
+      "open_webview_devtools": "開発者ツール",
+      "release_notes": "リリースノートを表示"
+    },
+    "recent": {
+      "emptyLabel": "最近使ったリポジトリはありません",
+      "removeLabel": "最近使った項目から削除"
+    },
+    "menus": {
+      "application_menu": "Stage0",
+      "file_menu": "ファイル",
+      "open_recent": "最近使った項目",
+      "edit_menu": "編集",
+      "view_menu": "表示",
+      "performance_menu": "パフォーマンス",
+      "repository_menu": "リポジトリ",
+      "repo_sync_menu": "同期",
+      "repo_merge_menu": "マージ",
+      "repo_rebase_menu": "リベース",
+      "repo_open_menu": "アプリで開く",
+      "window_menu": "ウィンドウ",
+      "help_menu": "ヘルプ"
+    },
+    "categories": {
+      "workspace": "ワークスペースの移動"
+    },
+    "application": "アプリケーションメニュー",
+    "waitingForSecondKey": "次のキーを待機中 · Esc でキャンセル"
+  },
+  "shortcuts": {
+    "title": "キーボードショートカット",
+    "close": "閉じる (Esc)",
+    "customize": "キーマップをカスタマイズ…",
+    "gotIt": "了解"
+  }
+}

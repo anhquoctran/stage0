@@ -21,7 +21,7 @@ export const TabBarMrListButton: React.FC<{
       <span className="hidden sm:inline">Merge Requests</span>
       <span className="font-mono text-[10px]">{sessionCount}</span>
       {isActive && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />
+        <div className="absolute bottom-0 inset-x-0 h-0.5 bg-brand" />
       )}
     </button>
   );

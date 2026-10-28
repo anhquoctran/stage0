@@ -6,6 +6,7 @@ import { type VirtualMrCommit } from '../../types/VirtualMrCommit';
 import { type VirtualMrSession } from '../../types/VirtualMrSession';
 import type { VirtualMrState } from '../../types/VirtualMrState';
 import { openExistingVirtualMr, persistSession } from '../../utils/virtualMrSessionHelpers';
+import { loadLocalGitAuthor } from '../../services/loadLocalGitAuthor';
 
 export const createSessionCreationSlice: StateCreator<
   VirtualMrState,
@@ -81,7 +82,7 @@ export const createSessionCreationSlice: StateCreator<
       baseBranch: base,
       compareBranch: compare,
       status: 'open',
-      assignee: sessions[0]?.assignee || { name: 'Local User', email: 'user@local.stage0' },
+      assignee: await loadLocalGitAuthor(currentRepoPath, sessions[0]?.assignee),
       reviewers: [],
       labels: [],
       discussions: [],

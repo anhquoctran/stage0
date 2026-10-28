@@ -19,7 +19,7 @@ export const TopBarTitleRow: React.FC<{
 
   const profile = useWindowChromeStore((state) => state.profile);
   const linux = profile.platform === 'linux';
-  const dragRegion = linux ? undefined : true;
+  const dragRegion = linux ? undefined : isMac ? false : true;
 
   const titleText = currentRepo
     ? `${currentRepo.name} — [${compareBranch || '...'} → ${baseBranch || '...'}]`
@@ -48,7 +48,7 @@ export const TopBarTitleRow: React.FC<{
   return (
     <div
       data-tauri-drag-region={linux ? false : true}
-      onMouseDown={titleBarMouseDown(profile, appServices.application)}
+      onMouseDown={titleBarMouseDown(profile, appServices.application, isMac)}
       className={clsx(
         'h-8.5 bg-crust border-b border-surface0/70 rounded-none items-center shrink-0 select-none transition-all relative z-[100]',
         isMac
@@ -61,8 +61,8 @@ export const TopBarTitleRow: React.FC<{
           {/* Mounted for shortcuts & macOS native system menu events */}
           <MenuBar hidden />
 
-          {/* Reserve the native traffic-light area; controls are rendered by macOS */}
-          <div data-tauri-drag-region={dragRegion} aria-hidden="true" className="w-20 h-full shrink-0" />
+          {/* Custom macOS traffic lights replace native window decorations. */}
+          <WindowControls style="mac" className="w-20 justify-center" />
 
           {/* Center: Draggable Window Document Title */}
           <div
@@ -92,7 +92,7 @@ export const TopBarTitleRow: React.FC<{
             )}
             <div
               data-tauri-drag-region={dragRegion}
-              className="flex items-center gap-1.5 pr-2.5 border-r border-surface0/80 cursor-default"
+              className="flex items-center gap-1.5 pe-2.5 border-e border-surface0/80 cursor-default"
             >
               <AppLogo size="sm" />
               <span className="text-xs font-bold tracking-tight text-text">Stage0</span>

@@ -7,6 +7,8 @@ import {
   getAuthorHandle,
 } from '../../utils/discussionAuthorUtils';
 import { GitLabAvatar } from '../GitLabAvatar';
+import { AiBotBadge } from '../AiBotBadge';
+import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import type { DiscussionCommentCardProps } from './DiscussionCommentCardProps';
 
 export function DiscussionCommentCard({
@@ -15,6 +17,7 @@ export function DiscussionCommentCard({
   isResolvable,
   discussion,
 }: DiscussionCommentCardProps) {
+  useDateTimeLanguage();
   return (
     <div className="p-3.5 text-xs text-text transition-colors bg-mantle rounded-sm">
       <div className="flex gap-3">
@@ -32,10 +35,12 @@ export function DiscussionCommentCard({
               <span className="font-semibold text-text text-xs hover:underline cursor-pointer">
                 {rootComment.authorName}
               </span>
+              {rootComment.authorType === 'ai_agent' && <AiBotBadge />}
               <span className="text-subtext0 text-xs font-normal">
                 {getAuthorHandle(
                   rootComment.authorName,
-                  rootComment.authorId || session?.assignee?.email
+                  rootComment.authorId || session?.assignee?.email,
+                  rootComment.authorType
                 )}
               </span>
               <span className="text-subtext0 select-none">·</span>

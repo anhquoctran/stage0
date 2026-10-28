@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatDateTime } from '@/common/utils/dateTime';
+import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import { CommitAuthorAvatar } from '../CommitAuthorAvatar';
 import {
     ROW_HEIGHT,
@@ -33,6 +34,7 @@ export const GitGraphTableRow: React.FC<{
     onContextMenu,
     onRowRef,
 }) => {
+    useDateTimeLanguage();
     const color = LANE_COLORS[row.lane % LANE_COLORS.length];
 
     return (

@@ -7,10 +7,12 @@ mod node;
 mod runtime_state;
 #[cfg(test)]
 mod tests;
+mod translations;
 
 pub use native::create_macos_menu;
 // Tauri command macros must be re-exported alongside the command.
 pub use runtime_state::*;
+pub(crate) use translations::localized_menu_label;
 
 use crate::core::window_manager::{create_welcome_window, focused_window};
 use crate::features::git::RepoInfo;
@@ -42,6 +44,7 @@ pub fn update_recent_repositories_menu(
     else {
         return Ok(());
     };
+    let language = runtime_state::app_language(&app);
 
     let existing_items = recent_menu.items().map_err(|error| error.to_string())?;
     for item in existing_items {
@@ -61,7 +64,11 @@ pub fn update_recent_repositories_menu(
     if repositories.is_empty() {
         let item = MenuItemBuilder::with_id(
             "no_recent_repos",
-            &definition::definition().recent["emptyLabel"],
+            localized_menu_label(
+                &definition::definition().recent["emptyLabel"],
+                &language,
+                "macos",
+            ),
         )
         .enabled(false)
         .build(&app)
@@ -87,7 +94,11 @@ pub fn update_recent_repositories_menu(
         let remove = Submenu::with_id(
             &app,
             "remove_recent_menu",
-            &definition::definition().recent["removeLabel"],
+            localized_menu_label(
+                &definition::definition().recent["removeLabel"],
+                &language,
+                "macos",
+            ),
             true,
         )
         .map_err(|e| e.to_string())?;
@@ -107,9 +118,12 @@ pub fn update_recent_repositories_menu(
         let command = &definition::definition().commands["clear_recent"];
         recent_menu
             .append(
-                &MenuItemBuilder::with_id("clear_recent", &command.label)
-                    .build(&app)
-                    .map_err(|e| e.to_string())?,
+                &MenuItemBuilder::with_id(
+                    "clear_recent",
+                    localized_menu_label(&command.label, &language, "macos"),
+                )
+                .build(&app)
+                .map_err(|e| e.to_string())?,
             )
             .map_err(|e| e.to_string())?;
     }

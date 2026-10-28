@@ -46,6 +46,29 @@ pub async fn start_ai_review(
     mut request: ReviewRequest,
 ) -> Result<ReviewRun, String> {
     let activity = crate::common::activity::OperationLease::acquire()?;
+    let preferences = app
+        .state::<crate::features::preferences::PreferencesManager>()
+        .read()?;
+    let settings = preferences.settings.unwrap_or_default();
+    let ui_language = settings
+        .get("appearance")
+        .and_then(|section| section.get("language"))
+        .and_then(Value::as_str)
+        .filter(|language| crate::features::preferences::is_supported_app_language(language))
+        .unwrap_or(crate::features::preferences::DEFAULT_APP_LANGUAGE);
+    let output_language = settings
+        .get("ai")
+        .and_then(|section| section.get("agentOutputLanguage"))
+        .and_then(Value::as_str)
+        .filter(|language| {
+            crate::features::preferences::is_supported_agent_output_language(language)
+        })
+        .unwrap_or(crate::features::preferences::DEFAULT_AGENT_OUTPUT_LANGUAGE);
+    request.agent_output_language = if output_language == "follow-app" {
+        ui_language.to_owned()
+    } else {
+        output_language.to_owned()
+    };
     if request
         .reviewer_id
         .as_deref()
@@ -187,7 +210,7 @@ pub async fn start_ai_review(
             "review-v2:{:x}",
             Sha256::digest(
                 format!(
-                    "{}{}{}{}{}{:?}",
+                    "{}{}{}{}{}{:?}{}",
                     super::runtime::SYSTEM,
                     request.instructions,
                     policy,
@@ -202,6 +225,7 @@ pub async fn start_ai_review(
                         ))
                         .unwrap_or_default(),
                     request.reply_discussion_id,
+                    request.agent_output_language,
                 )
                 .as_bytes()
             )

@@ -249,6 +249,7 @@ pub fn run() {
             commands::get_branches,
             commands::get_current_branch_graph,
             commands::get_git_commit_message,
+            commands::get_git_commit_details,
             commands::search_git_commit_messages,
             commands::get_mr_diff,
             commands::check_merge_conflicts,

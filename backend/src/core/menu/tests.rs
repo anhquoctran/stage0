@@ -165,8 +165,11 @@ fn window_keymaps_validate_inputs_and_keep_webview_owned_shortcuts_visible() {
         ]),
     )
     .unwrap();
-    assert_eq!(keymap.title("open_repo"), "Open...");
-    assert_eq!(keymap.title("keymaps"), "Customize Keymap...  (⌘+K ⌘+S)");
+    assert_eq!(keymap.title("open_repo", "en"), "Open...");
+    assert_eq!(
+        keymap.title("keymaps", "en"),
+        "Customize Keymap...  (⌘+K ⌘+S)"
+    );
     for (id, key) in [
         ("copy", "Cmd+F8"),
         ("unknown", "Cmd+F8"),
