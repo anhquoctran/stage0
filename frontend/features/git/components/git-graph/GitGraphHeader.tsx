@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { GitBranch } from '../../../../common/components/icons/GitBranch';
 import { RotateCw } from '../../../../common/components/icons/RotateCw';
@@ -10,6 +11,7 @@ export const GitGraphHeader: React.FC<{
     onRefresh: () => void;
     onClose: () => void;
 }> = ({ branch, isDetached, isLoading, onRefresh, onClose }) => {
+  const { t: translateUiText } = useUiTextTranslation();
     return (
         <header className="flex shrink-0 items-center justify-between border-b border-surface0 bg-base/60 px-5 py-3.5">
             <div className="flex min-w-0 items-center gap-3">
@@ -52,7 +54,7 @@ export const GitGraphHeader: React.FC<{
                     type="button"
                     onClick={onClose}
                     aria-label="Close Git Graph"
-                    title="Close (Esc)"
+                    title={translateUiText('shortcuts.close')}
                     className="flex h-8 w-8 items-center justify-center text-subtext0 transition-colors hover:bg-surface0 hover:text-text rounded-sm"
                 >
                     <X className="h-4 w-4" />

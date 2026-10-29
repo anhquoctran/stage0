@@ -6,6 +6,8 @@ import { componentHarness, componentNodes, loadWithMocks } from './helpers/compo
 
 const require = createRequire(import.meta.url);
 const { create } = require('zustand');
+const english = require('../frontend/features/i18n/locales/en.json');
+const translate = key => key.split('.').reduce((value, part) => value?.[part], english) ?? key;
 const url = (path) => new URL(`../frontend/${path}`, import.meta.url);
 const presets = loadWithMocks(url('features/ai/constants/aiPresets.ts'), {});
 const modelPresets = loadWithMocks(url('features/ai/utils/resolveAiModelPreset.ts'), { '../constants/aiPresets': presets });
@@ -86,8 +88,9 @@ function serviceFixture(handler = async () => ({})) {
     '../store/useAiMcpStore': { useAiMcpStore: ai }, '../store/useBotReviewersStore': { useBotReviewersStore: reviewers },
     '../utils/aiPreferencesSnapshot': snapshots,
     '../../preferences/services/preferencesJsonService': { preferencesJsonService: {
-      load: async () => document,
-      patch: async (patch) => {
+      load: async () => { if (document.loadFailure) throw new Error('fixture read failure'); return document; },
+      patch: async (patch, expectedRevision) => {
+        assert.equal(expectedRevision, document.revision, 'The rollback snapshot and write must use the same revision');
         preferenceWrites.push(['patch', patch]);
         document = { ...document, content: JSON.stringify(patch), revision: 'fixture-2', settings: patch };
         return document;
@@ -124,6 +127,17 @@ test('Apply awaits one native key/policy batch, publishes all AI sections togeth
     assert.equal(fixture.reviewers.getState().globalReviewers.length, 1); assert.equal(fixture.ai.getState().apiKeysConfigured.openai, true);
     assert.equal(saved.aiConfig.apiKey, ''); assert.doesNotMatch(JSON.stringify(fixture.ai.getState()), /fixture-private-key/);
   } finally { globalThis.localStorage = old; }
+});
+
+test('a failed preferences read aborts before any writes or credential changes', async () => {
+  const fixture = serviceFixture();
+  fixture.getPreferenceDocument().loadFailure = true;
+  const draft = createAiPreferencesDraft(fixture.initial);
+  draft.getState().updateAiConfig({ apiKey: 'pending-secret' });
+  await assert.rejects(fixture.commitAiPreferences(draft.getState(), fixture.initial), /fixture read failure/);
+  assert.deepEqual(fixture.preferenceWrites, []);
+  assert.deepEqual(fixture.calls, []);
+  assert.equal(draft.getState().apiKeyDrafts.openai, 'pending-secret');
 });
 
 test('keyring failures roll back JSON and incomplete file rollback keeps pending secrets available for retry', async () => {
@@ -256,7 +270,7 @@ function dialogFixture(commitHandler) {
   const usePreferencesStore = Object.assign(() => preferences, { getState: () => preferences, setState: (value) => Object.assign(preferences, typeof value === 'function' ? value(preferences) : value) });
   const dependencies = {
     react: harness.react,
-    'react-i18next': { useTranslation: () => ({ t: key => ({ 'menu.commands.preferences': 'Preferences...', 'common.settings': 'Settings', 'common.close': 'Close' })[key] ?? key }) },
+    'react-i18next': { useTranslation: () => ({ t: translate }) },
     '../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({ platform: { capabilities: { backend: false, preferencesFile: false } } }) },
     '../store/usePreferencesStore': { usePreferencesStore, checkFontLigaturesSupport: () => true, applyViewerFontToDocument() {}, DEFAULT_VIEWER_FONT_SETTINGS: preferences },
     '../../../core/store/useThemeStore': { useThemeStore, resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {} },
@@ -455,6 +469,7 @@ test('provider UI defaults new setup to OpenAI, exposes key inputs and keeps exp
   const credentialCalls = [];
   const dependencies = {
     react: harness.react,
+    'react-i18next': { useTranslation: () => ({ t: translate }) },
     '@tauri-apps/api/core': { isTauri: () => false, invoke: () => assert.fail('No IPC expected') },
     '../store/useAiMcpStore': { useAiMcpStore: () => ({
       aiConfig: baseline().aiConfig, apiKeysConfigured: {}, mcpServers: [], cliStatus: {}, dynamicModels: {},

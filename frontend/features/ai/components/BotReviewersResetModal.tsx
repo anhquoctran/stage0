@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 
@@ -6,6 +7,7 @@ export const BotReviewersResetModal: React.FC<{
   onClose: () => void;
   onConfirm: () => void;
 }> = ({ isOpen, onClose, onConfirm }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   if (!isOpen) return null;
 
   return (
@@ -24,7 +26,7 @@ export const BotReviewersResetModal: React.FC<{
             onClick={onClose}
             className="px-3 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs cursor-pointer rounded-sm"
           >
-            Cancel
+            {translateUiText('common.cancel')}
           </button>
           <button
             type="button"

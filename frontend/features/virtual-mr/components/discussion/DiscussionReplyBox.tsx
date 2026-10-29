@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { CustomSelect } from '../../../../common/components/CustomSelect';
 import { MarkdownEditor } from '../../../../common/components/MarkdownEditor';
 import { getDiscussionMentionOptions } from '../../utils/discussionMentions';
@@ -21,6 +22,7 @@ export function DiscussionReplyBox({
   setIsCollapsed,
   handleToggleResolve,
 }: DiscussionReplyBoxProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="border-t border-surface0/80 p-3.5 bg-surface0/20 rounded-sm">
       {isReplying ? (
@@ -104,7 +106,7 @@ export function DiscussionReplyBox({
                 disabled={isSubmitting}
                 className="px-3.5 py-1.5 border border-surface1 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer rounded-sm"
               >
-                Cancel
+                {translateUiText('common.cancel')}
               </button>
             </div>
           </div>

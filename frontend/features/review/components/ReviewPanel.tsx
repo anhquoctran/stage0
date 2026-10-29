@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useEffect, useRef } from 'react';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { X } from '../../../common/components/icons/X';
@@ -11,6 +12,7 @@ import { ReviewFindingCard } from './ReviewFindingCard';
 import { ReviewRunSummary } from './ReviewRunSummary';
 
 export const ReviewPanel: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   useDateTimeLanguage();
   const {
     isOpen,
@@ -86,7 +88,7 @@ export const ReviewPanel: React.FC = () => {
       >
         <header className="flex items-center justify-between border-b border-surface0 ps-5 shrink-0">
           <h2 id="review-panel-title" className="text-sm font-semibold">
-            AI code review
+            {translateUiText('notifications.aiReviewTitle')}
           </h2>
           <button
             type="button"

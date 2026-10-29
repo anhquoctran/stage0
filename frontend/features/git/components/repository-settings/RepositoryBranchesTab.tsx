@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState } from 'react';
 import { GitBranch } from '../../../../common/components/icons/GitBranch';
 import { Tag } from '../../../../common/components/icons/Tag';
@@ -12,6 +13,7 @@ export const RepositoryBranchesTab: React.FC<{
   defaultBaseBranch: string;
   setDefaultBaseBranch: (branch: string) => void;
 }> = ({ defaultBaseBranch, setDefaultBaseBranch }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { currentRepo, branches, fetchBranches, showToast } = useGitStore();
   const { tags, createTag, deleteTag, createBranch, deleteBranch } = useVirtualMrStore();
 
@@ -141,7 +143,7 @@ export const RepositoryBranchesTab: React.FC<{
               onClick={() => setIsAddingBranch(false)}
               className="px-2 py-1.5 bg-surface0 cursor-pointer rounded-sm"
             >
-              Cancel
+              {translateUiText('common.cancel')}
             </button>
           </form>
         )}
@@ -226,7 +228,7 @@ export const RepositoryBranchesTab: React.FC<{
                 onClick={() => setIsAddingTag(false)}
                 className="px-3 py-1 bg-surface0 cursor-pointer rounded-sm"
               >
-                Cancel
+                {translateUiText('common.cancel')}
               </button>
               <button
                 type="submit"

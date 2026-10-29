@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState, useMemo } from 'react';
 import { Globe } from '../../../common/components/icons/Globe';
 import { X } from '../../../common/components/icons/X';
@@ -10,6 +11,7 @@ import { useGitStore } from '../store/useGitStore';
 import { buildRemoteFileUrl } from '../utils/fileActions';
 
 export const RemoteUrlFromModal: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const {
     isRemoteUrlFromOpen,
     setIsRemoteUrlFromOpen,
@@ -120,7 +122,7 @@ export const RemoteUrlFromModal: React.FC = () => {
         >
           <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
             <Globe className="w-4 h-4 text-subtext0" />
-            <h3 className="text-sm font-bold text-text">Copy Remote File URL from...</h3>
+            <h3 className="text-sm font-bold text-text">{translateUiText('menu.commands.copy_remote_url_from')}</h3>
           </div>
           <button
             type="button"
@@ -245,7 +247,7 @@ export const RemoteUrlFromModal: React.FC = () => {
             onClick={() => setIsRemoteUrlFromOpen(false)}
             className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text font-medium text-xs rounded-sm transition-colors cursor-pointer"
           >
-            Close
+            {translateUiText('common.close')}
           </button>
         </div>
       </div>

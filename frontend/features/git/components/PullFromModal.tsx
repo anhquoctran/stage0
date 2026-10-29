@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useEffect, useMemo, useState } from 'react';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { Download } from '../../../common/components/icons/Download';
@@ -11,6 +12,7 @@ import { useGitStore } from '../store/useGitStore';
 import { PullAdvancedOptions } from './pull/PullAdvancedOptions';
 
 export const PullFromModal: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { branches, remotes, isSyncing, isPullFromOpen, setIsPullFromOpen, runSync } =
     useGitStore();
 
@@ -108,7 +110,7 @@ export const PullFromModal: React.FC = () => {
             type="button"
             onClick={() => setIsPullFromOpen(false)}
             className="p-1.5 rounded-sm hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
-            title="Close (Esc)"
+            title={translateUiText('shortcuts.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -192,7 +194,7 @@ export const PullFromModal: React.FC = () => {
               onClick={() => setIsPullFromOpen(false)}
               className="px-4 py-1.5 rounded-sm border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
             >
-              Cancel
+              {translateUiText('common.cancel')}
             </button>
 
             <button
@@ -208,7 +210,7 @@ export const PullFromModal: React.FC = () => {
               ) : (
                 <>
                   <Download className="w-3.5 h-3.5" />
-                  <span>Pull</span>
+                  <span>{translateUiText('menu.commands.pull')}</span>
                 </>
               )}
             </button>

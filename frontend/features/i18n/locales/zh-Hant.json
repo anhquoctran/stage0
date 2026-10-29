@@ -133,6 +133,17 @@
       "openError": "無法開啟偏好設定：{{error}}",
       "initializeError": "無法初始化偏好設定視窗：{{error}}",
       "closeError": "無法關閉偏好設定視窗：{{error}}"
+    },
+    "editorActions": {
+      "reset": "還原預設設定",
+      "resetTooltip": "將所有設定還原為應用程式預設值",
+      "unsaved": "未儲存：{{count}}",
+      "closeUnsaved": "關閉而不儲存 (Esc)",
+      "apply": "套用",
+      "applying": "正在套用…",
+      "applied": "已套用",
+      "editFile": "在 preferences.json 中編輯",
+      "editFileTitle": "編輯應用程式設定 JSONC 檔案"
     }
   },
   "dateTime": {
@@ -339,5 +350,14 @@
       "languageLabel": "語言",
       "continue": "繼續"
     }
+  },
+  "compareStatus": {
+    "failed": "比較失敗",
+    "comparingTitle": "正在比較分支",
+    "comparing": "正在比較…",
+    "unavailable": "無法檢查合併",
+    "noChanges": "沒有變更",
+    "conflicts": "偵測到衝突",
+    "clean": "可乾淨合併"
   }
 }

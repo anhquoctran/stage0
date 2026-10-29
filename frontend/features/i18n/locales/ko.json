@@ -133,6 +133,17 @@
       "openError": "환경설정을 열 수 없습니다: {{error}}",
       "initializeError": "환경설정 창을 초기화할 수 없습니다: {{error}}",
       "closeError": "환경설정 창을 닫을 수 없습니다: {{error}}"
+    },
+    "editorActions": {
+      "reset": "기본값으로 재설정",
+      "resetTooltip": "모든 설정을 앱 기본값으로 재설정",
+      "unsaved": "저장되지 않음: {{count}}",
+      "closeUnsaved": "저장하지 않고 닫기 (Esc)",
+      "apply": "적용",
+      "applying": "적용 중…",
+      "applied": "적용됨",
+      "editFile": "preferences.json에서 편집",
+      "editFileTitle": "앱 설정 JSONC 파일 편집"
     }
   },
   "dateTime": {
@@ -339,5 +350,14 @@
       "languageLabel": "언어",
       "continue": "계속"
     }
+  },
+  "compareStatus": {
+    "failed": "비교 실패",
+    "comparingTitle": "브랜치 비교 중",
+    "comparing": "비교 중…",
+    "unavailable": "병합 검사를 사용할 수 없음",
+    "noChanges": "변경 사항 없음",
+    "conflicts": "충돌 발견",
+    "clean": "충돌 없는 병합"
   }
 }

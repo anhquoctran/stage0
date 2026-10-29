@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState } from 'react';
 import { Plus } from '../../../../common/components/icons/Plus';
 import { X } from '../../../../common/components/icons/X';
@@ -10,6 +11,7 @@ import { useVirtualMrStore } from '../../../virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../../store/useGitStore';
 
 export const RepositoryRemotesTab: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { showToast } = useGitStore();
   const {
     remotesDetailed,
@@ -152,7 +154,7 @@ export const RepositoryRemotesTab: React.FC = () => {
               onClick={() => setIsAddingRemote(false)}
               className="px-3 py-1 bg-surface0 hover:bg-surface1 text-xs cursor-pointer rounded-sm"
             >
-              Cancel
+              {translateUiText('common.cancel')}
             </button>
             <button
               type="submit"
@@ -233,14 +235,14 @@ export const RepositoryRemotesTab: React.FC = () => {
                     onClick={() => handleSaveRemoteUrl(rem.name)}
                     className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
                   >
-                    Save
+                    {translateUiText('common.save')}
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditingRemoteName(null)}
                     className="px-2 py-1 bg-surface0 text-xs cursor-pointer rounded-sm"
                   >
-                    Cancel
+                    {translateUiText('common.cancel')}
                   </button>
                 </div>
               ) : (

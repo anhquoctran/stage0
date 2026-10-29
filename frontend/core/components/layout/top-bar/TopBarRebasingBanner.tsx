@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { Play } from '../../../../common/components/icons/Play';
 import { SkipForward } from '../../../../common/components/icons/SkipForward';
@@ -5,6 +6,7 @@ import { Undo2 } from '../../../../common/components/icons/Undo2';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
 
 export const TopBarRebasingBanner: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { currentRepo, isRebasing, isSyncing, runSync } = useGitStore();
 
   if (!currentRepo || !isRebasing) return null;
@@ -22,7 +24,7 @@ export const TopBarRebasingBanner: React.FC = () => {
         title="Continue rebase after resolving conflicts"
       >
         <Play className="w-3.5 h-3.5 text-white" />
-        <span>Continue</span>
+        <span>{translateUiText('menu.commands.rebase_continue')}</span>
       </button>
       <button
         type="button"
@@ -42,7 +44,7 @@ export const TopBarRebasingBanner: React.FC = () => {
         title="Abort rebase and restore original state"
       >
         <Undo2 className="w-3.5 h-3.5 text-white" />
-        <span>Abort</span>
+        <span>{translateUiText('menu.commands.rebase_abort')}</span>
       </button>
     </div>
   );

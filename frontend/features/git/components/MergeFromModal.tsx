@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useEffect, useMemo, useState } from 'react';
 import { GitMerge } from '../../../common/components/icons/GitMerge';
 import { GitBranch } from '../../../common/components/icons/GitBranch';
@@ -7,6 +8,7 @@ import type { CustomSelectOption } from '../../../common/types/CustomSelectOptio
 import { useGitStore } from '../store/useGitStore';
 
 export const MergeFromModal: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { branches, isSyncing, isMergeFromOpen, setIsMergeFromOpen, runSync } = useGitStore();
   const [selectedBranch, setSelectedBranch] = useState('');
   const [noCommit, setNoCommit] = useState(false);
@@ -87,7 +89,7 @@ export const MergeFromModal: React.FC = () => {
             type="button"
             onClick={() => setIsMergeFromOpen(false)}
             className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
-            title="Close (Esc)"
+            title={translateUiText('shortcuts.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -148,7 +150,7 @@ export const MergeFromModal: React.FC = () => {
           </div>
 
           <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={() => setIsMergeFromOpen(false)} className="px-3 py-1.5 text-xs text-subtext1 hover:bg-surface0 transition-colors rounded-sm">Cancel</button>
+            <button type="button" onClick={() => setIsMergeFromOpen(false)} className="px-3 py-1.5 text-xs text-subtext1 hover:bg-surface0 transition-colors rounded-sm">{translateUiText('common.cancel')}</button>
             <button type="submit" disabled={isSyncing || !selectedBranch.trim()} className="px-3 py-1.5 bg-primary text-on-accent text-xs font-semibold hover:brightness-110 disabled:opacity-40 transition-colors rounded-sm">
               {isSyncing ? 'Merging…' : 'Merge'}
             </button>

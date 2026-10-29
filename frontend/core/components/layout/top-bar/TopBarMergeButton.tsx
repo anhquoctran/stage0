@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState, useRef, useEffect } from 'react';
 import { GitMerge } from '../../../../common/components/icons/GitMerge';
 import { GitBranch } from '../../../../common/components/icons/GitBranch';
@@ -5,6 +6,7 @@ import { ChevronDown } from '../../../../common/components/icons/ChevronDown';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
 
 export const TopBarMergeButton: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { isSyncing, runSync, setIsMergeFromOpen } = useGitStore();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -37,7 +39,7 @@ export const TopBarMergeButton: React.FC = () => {
       >
         <GitMerge className="w-5 h-5 text-primary shrink-0 transition-colors" />
         <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
-          Merge
+          {translateUiText('menu.menus.repo_merge_menu')}
         </span>
       </button>
 

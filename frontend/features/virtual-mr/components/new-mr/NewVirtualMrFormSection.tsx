@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { GitPullRequest } from '../../../../common/components/icons/GitPullRequest';
 import { Loader2 } from '../../../../common/components/icons/Loader2';
 import { MarkdownEditor } from '../../../../common/components/MarkdownEditor';
@@ -35,6 +36,7 @@ export function NewVirtualMrFormSection({
   canCreateVirtualMr,
   closeNewMrDraft,
 }: NewVirtualMrFormSectionProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="border-b border-surface0 bg-base/50 p-4 shrink-0 space-y-3 rounded-sm">
       <div className="flex items-start gap-4">
@@ -116,7 +118,7 @@ export function NewVirtualMrFormSection({
               onClick={closeNewMrDraft}
               className="px-3 py-2 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs font-medium transition-colors cursor-pointer border border-surface1/60 rounded-sm"
             >
-              Cancel
+              {translateUiText('common.cancel')}
             </button>
           </div>
         </div>

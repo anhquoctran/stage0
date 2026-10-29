@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useEffect } from 'react';
 import { FileText } from '../../../common/components/icons/FileText';
 import { X } from '../../../common/components/icons/X';
@@ -11,6 +12,7 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
   onClose,
   content,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const about = useAboutInfo();
   const markdownContent = useReleaseNotes(content);
 
@@ -56,7 +58,7 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
             type="button"
             onClick={onClose}
             className="flex h-7 w-7 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
-            title="Close (Esc)"
+            title={translateUiText('shortcuts.close')}
             aria-label="Close Release Notes dialog"
           >
             <X className="w-4 h-4" />
@@ -81,7 +83,7 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
             onClick={onClose}
             className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-sm transition-colors cursor-pointer"
           >
-            Close
+            {translateUiText('common.close')}
           </button>
         </div>
       </div>

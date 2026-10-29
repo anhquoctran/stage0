@@ -139,6 +139,17 @@
       "openError": "Could not open Preferences: {{error}}",
       "initializeError": "Could not initialize the Preferences window: {{error}}",
       "closeError": "Could not close the Preferences window: {{error}}"
+    },
+    "editorActions": {
+      "reset": "Reset to default",
+      "resetTooltip": "Reset all settings to application defaults",
+      "unsaved": "Unsaved: {{count}}",
+      "closeUnsaved": "Close without saving (Esc)",
+      "apply": "Apply",
+      "applying": "Applying…",
+      "applied": "Applied",
+      "editFile": "Edit in preferences.json",
+      "editFileTitle": "Edit the app preferences JSONC file"
     }
   },
   "dateTime": {
@@ -339,5 +350,14 @@
       "languageLabel": "Language",
       "continue": "Continue"
     }
+  },
+  "compareStatus": {
+    "failed": "Compare failed",
+    "comparingTitle": "Comparing branches",
+    "comparing": "Comparing…",
+    "unavailable": "Merge check unavailable",
+    "noChanges": "No changes",
+    "conflicts": "Conflicts detected",
+    "clean": "Clean merge"
   }
 }

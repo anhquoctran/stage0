@@ -203,3 +203,22 @@ test('preferences keeps queued writes and raw failures when using an injected tr
   assert.equal(globalThis.window.__STAGE0_PREFERENCES_REVISION__, 'saved');
   assert.equal(globalThis.window.__STAGE0_PREFERENCES_PATH__, document.path);
 });
+
+test('a transaction with a captured revision rejects an asynchronous conflict without rebasing or overwriting', async t => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  globalThis.window = { dispatchEvent() {}, __STAGE0_PREFERENCES__: {}, __STAGE0_PREFERENCES_REVISION__: 'newer' };
+  t.after(() => { if (previous) Object.defineProperty(globalThis, 'window', previous); else delete globalThis.window; });
+  const f = runtimeFixture(), calls = [], browser = f.createTestPlatform();
+  f.runtime.installApplicationServices(f.createApplicationServices(f.createTestPlatform({
+    capabilities: { ...browser.capabilities, preferencesFile: true },
+    commands: {
+      executeCommand: async (command, input) => { calls.push([command, input]); throw new Error('Preferences changed outside Stage0'); },
+      executeWithProgress: () => assert.fail('Unexpected progress channel'),
+    },
+  })));
+  const { PreferencesJsonService } = f.load('features/preferences/services/preferencesJsonService.ts');
+  const service = new PreferencesJsonService();
+  await assert.rejects(service.patch({ general: { showInlineBlame: false } }, 'captured'), /changed outside/);
+  assert.deepEqual(calls, [['patch_preferences', { patch: { general: { showInlineBlame: false } }, expectedRevision: 'captured' }]]);
+  assert.equal(globalThis.window.__STAGE0_PREFERENCES_REVISION__, 'newer');
+});

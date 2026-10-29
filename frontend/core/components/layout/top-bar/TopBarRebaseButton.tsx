@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState, useRef, useEffect } from 'react';
 import { GitBranch } from '../../../../common/components/icons/GitBranch';
 import { ChevronDown } from '../../../../common/components/icons/ChevronDown';
@@ -8,6 +9,7 @@ import { useGitStore } from '../../../../features/git/store/useGitStore';
 import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 
 export const TopBarRebaseButton: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { shortcut, title } = useCommandShortcut();
   const { isSyncing, runSync, setIsRebaseFromOpen, isRebasing } = useGitStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +43,7 @@ export const TopBarRebaseButton: React.FC = () => {
       >
         <GitBranch className="w-5 h-5 text-primary shrink-0 transition-colors" />
         <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
-          Rebase
+          {translateUiText('menu.commands.rebase')}
         </span>
       </button>
 
@@ -74,7 +76,7 @@ export const TopBarRebaseButton: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <GitBranch className="w-3.5 h-3.5 text-current transition-colors" />
-              <span>Rebase</span>
+              <span>{translateUiText('menu.commands.rebase')}</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono">{shortcut('rebase')}</span>
           </button>
@@ -89,7 +91,7 @@ export const TopBarRebaseButton: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <GitBranch className="w-3.5 h-3.5 text-current transition-colors" />
-              <span>Rebase from...</span>
+              <span>{translateUiText('menu.commands.rebase_from')}</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono">{shortcut('rebase_from')}</span>
           </button>
@@ -126,7 +128,7 @@ export const TopBarRebaseButton: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <SkipForward className="w-3.5 h-3.5 text-current transition-colors" />
-              <span>Skip Commit</span>
+              <span>{translateUiText('menu.commands.rebase_skip')}</span>
             </div>
           </button>
 

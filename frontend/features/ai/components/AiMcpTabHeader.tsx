@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
 
@@ -20,6 +21,7 @@ export const AiMcpTabHeader: React.FC<{
   enabledMcpCount,
   totalMcpCount,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <>
       {onBackToOverview && (
@@ -78,7 +80,7 @@ export const AiMcpTabHeader: React.FC<{
                   : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
               }`}
             >
-              <span>MCP Servers</span>
+              <span>{translateUiText('preferences.nav.ai-mcp')}</span>
               <span className="text-[10px] px-1.5 py-0.2 bg-base border border-surface2 font-mono">
                 {enabledMcpCount}/{totalMcpCount}
               </span>

@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState, useEffect } from 'react';
 import { GitMerge } from '../../../common/components/icons/GitMerge';
 import { X } from '../../../common/components/icons/X';
@@ -13,6 +14,7 @@ import type { CustomSelectOption } from '../../../common/types/CustomSelectOptio
 import { useGitStore } from '../store/useGitStore';
 
 export const RebaseFromModal: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const {
     branches,
     isSyncing,
@@ -108,7 +110,7 @@ export const RebaseFromModal: React.FC = () => {
             type="button"
             onClick={() => setIsRebaseFromOpen(false)}
             className="p-1.5 rounded-sm hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
-            title="Close (Esc)"
+            title={translateUiText('shortcuts.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -177,7 +179,7 @@ export const RebaseFromModal: React.FC = () => {
                 title="git rebase --continue"
               >
                 <Play className="w-3 h-3 text-subtext0" />
-                <span>Continue</span>
+                <span>{translateUiText('menu.commands.rebase_continue')}</span>
               </button>
 
               <button
@@ -222,7 +224,7 @@ export const RebaseFromModal: React.FC = () => {
               onClick={() => setIsRebaseFromOpen(false)}
               className="px-4 py-1.5 rounded-sm border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
             >
-              Cancel
+              {translateUiText('common.cancel')}
             </button>
 
             <button

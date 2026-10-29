@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
@@ -63,6 +64,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
     dynamicModels,
   },
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   if (!isOpen) return null;
 
   const modelOptions: CustomSelectOption<string>[] = [
@@ -261,7 +263,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
               onClick={onClose}
               className="px-4 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs transition-colors cursor-pointer rounded-sm"
             >
-              Cancel
+              {translateUiText('common.cancel')}
             </button>
             <button
               type="submit"

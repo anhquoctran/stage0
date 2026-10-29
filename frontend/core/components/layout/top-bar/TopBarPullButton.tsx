@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState, useRef, useEffect } from 'react';
 import { Download } from '../../../../common/components/icons/Download';
 import { DownloadCloud } from '../../../../common/components/icons/DownloadCloud';
@@ -6,6 +7,7 @@ import { useGitStore } from '../../../../features/git/store/useGitStore';
 import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 
 export const TopBarPullButton: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { shortcut, title } = useCommandShortcut();
   const { isSyncing, runSync, setIsPullFromOpen } = useGitStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -39,7 +41,7 @@ export const TopBarPullButton: React.FC = () => {
       >
         <Download className="w-5 h-5 text-primary shrink-0 transition-colors" />
         <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
-          Pull
+          {translateUiText('menu.commands.pull')}
         </span>
       </button>
 
@@ -72,7 +74,7 @@ export const TopBarPullButton: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <Download className="w-3.5 h-3.5 text-current transition-colors" />
-              <span>Pull</span>
+              <span>{translateUiText('menu.commands.pull')}</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono">{shortcut('pull')}</span>
           </button>
@@ -87,7 +89,7 @@ export const TopBarPullButton: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <DownloadCloud className="w-3.5 h-3.5 text-current transition-colors" />
-              <span>Pull from...</span>
+              <span>{translateUiText('menu.commands.pull_from')}</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono">{shortcut('pull_from')}</span>
           </button>

@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { ExternalAgentsModal as Modal } from '../ExternalAgentsModal';
 import type { AcpAgentModalFormProps } from './AcpAgentModalFormProps';
 
@@ -12,6 +13,7 @@ export function AcpAgentModalForm({
   customArgs,
   setCustomArgs,
 }: AcpAgentModalFormProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <Modal title="Add custom ACP agent" onClose={() => setIsCustomOpen(false)}>
       <form onSubmit={addCustomAgent} className="space-y-3">
@@ -60,7 +62,7 @@ export function AcpAgentModalForm({
             onClick={() => setIsCustomOpen(false)}
             className="border border-surface2 px-3 py-1.5 text-xs rounded-sm"
           >
-            Cancel
+            {translateUiText('common.cancel')}
           </button>
           <button
             type="submit"

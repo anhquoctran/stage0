@@ -139,6 +139,17 @@
       "openError": "تعذر فتح التفضيلات: {{error}}",
       "initializeError": "تعذرت تهيئة نافذة التفضيلات: {{error}}",
       "closeError": "تعذر إغلاق نافذة التفضيلات: {{error}}"
+    },
+    "editorActions": {
+      "reset": "استعادة الإعدادات الافتراضية",
+      "resetTooltip": "استعادة جميع إعدادات التطبيق الافتراضية",
+      "unsaved": "غير محفوظ: {{count}}",
+      "closeUnsaved": "إغلاق دون حفظ (Esc)",
+      "apply": "تطبيق",
+      "applying": "جارٍ التطبيق…",
+      "applied": "تم التطبيق",
+      "editFile": "تعديل في preferences.json",
+      "editFileTitle": "تعديل ملف إعدادات التطبيق JSONC"
     }
   },
   "dateTime": {
@@ -373,5 +384,14 @@
       "languageLabel": "اللغة",
       "continue": "متابعة"
     }
+  },
+  "compareStatus": {
+    "failed": "فشلت المقارنة",
+    "comparingTitle": "جارٍ مقارنة الفروع",
+    "comparing": "جارٍ المقارنة…",
+    "unavailable": "تعذر التحقق من الدمج",
+    "noChanges": "لا توجد تغييرات",
+    "conflicts": "تم اكتشاف تعارضات",
+    "clean": "دمج بلا تعارضات"
   }
 }

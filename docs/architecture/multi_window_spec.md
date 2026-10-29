@@ -168,3 +168,31 @@ UI language continues using its separate `app-language-changed`/Day.js flow.
 No draft, repository path or secret is broadcast. Existing revision conflicts,
 credential rollback and app-language persistence are preserved. The browser
 fallback remains an in-page Preferences dialog.
+
+Verification: architecture, TypeScript, locale validation, Cargo check and all
+252 Rust library tests pass (serial execution). The focused frontend suite has
+56 passing tests. The complete Node suite has 527 tests / 496 pass / 31 fail;
+all remaining failure locations predate this change. The stale platform-operation
+count assertion was updated for the new window commands.
+
+An isolated macOS native smoke run, using a separate app identifier and test
+preferences, confirmed concurrent opens create one real window, frontend IPC
+readiness, native CloseRequested → Cancel → destruction, reopening, focus reuse,
+and Preferences surviving closure of the workspace window. Browser DOM checks
+confirmed the standalone layout at 1100×800 and 900×620. Windows/Linux native
+execution and a manual two-repository GUI session remain unverified.
+
+## Preferences transaction limitations
+
+The async editor captures the JSON revision before its patch and rejects a
+conflicting write instead of rebasing a rollback snapshot over newer settings.
+A failed read aborts before touching the file or credentials. JSON replacement
+is atomic and validated; the OS keychain batch has compensating rollback.
+
+This is not an ACID transaction across resources: JSON and runtime events are
+published before the keychain batch finishes; a crash or failed compensation
+can leave them inconsistent. OS startup/PATH integration is applied separately
+and can fail independently. Full crash recovery and isolation need a coordinated
+native commit protocol with a durable recovery journal, staged keychain values,
+and delayed publication; external OS integration needs reconciliation and
+cannot be made part of a single atomic commit with the current platform APIs.

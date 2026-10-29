@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState } from 'react';
 import { Plus } from '../../../../common/components/icons/Plus';
 import { X } from '../../../../common/components/icons/X';
@@ -12,6 +13,7 @@ const COLOR_PRESETS = [
 ];
 
 export const RepositoryLabelsTab: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { showToast } = useGitStore();
   const {
     repoLabels,
@@ -171,7 +173,7 @@ export const RepositoryLabelsTab: React.FC = () => {
               }}
               className="px-3 py-1 bg-surface0 text-xs cursor-pointer rounded-sm"
             >
-              Cancel
+              {translateUiText('common.cancel')}
             </button>
             <button
               type="submit"

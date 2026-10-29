@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState } from 'react';
 import { FileJson } from '../../../common/components/icons/FileJson';
 import { X } from '../../../common/components/icons/X';
@@ -12,6 +13,7 @@ export const McpJsonModal: React.FC<{
   exportMcpConfigFile: () => string;
   importMcpConfigFile: (content: string) => { success: boolean; count: number; error?: string };
 }> = ({ isOpen, onClose, exportMcpConfigFile, importMcpConfigFile }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const [jsonTab, setJsonTab] = useState<'export' | 'import'>('export');
   const [jsonInput, setJsonInput] = useState('');
   const [jsonFeedback, setJsonFeedback] = useState<{ success?: boolean; text: string } | null>(null);
@@ -168,7 +170,7 @@ export const McpJsonModal: React.FC<{
                 onClick={onClose}
                 className="px-3 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded-sm"
               >
-                Cancel
+                {translateUiText('common.cancel')}
               </button>
               <button
                 type="button"

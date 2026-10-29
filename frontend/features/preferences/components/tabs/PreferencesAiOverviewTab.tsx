@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { SettingRow } from '../SettingRow';
 import { ZedSwitch } from '../ZedSwitch';
@@ -14,10 +15,11 @@ export const PreferencesAiOverviewTab: React.FC<{
   draftAiConfig,
   setDraftAiConfig,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="space-y-3">
       <SettingRow
-        title="LLM Providers"
+        title={translateUiText('preferences.nav.ai-providers')}
         description="Configure natively-included model providers."
       >
         <button
@@ -31,7 +33,7 @@ export const PreferencesAiOverviewTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="External Agents"
+        title={translateUiText('preferences.nav.ai-external-agents')}
         description="View, add, and remove agents connected through the Agent Client Protocol."
       >
         <button
@@ -45,7 +47,7 @@ export const PreferencesAiOverviewTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="Reviewer Bots"
+        title={translateUiText('preferences.nav.ai-reviewers')}
         description="Configure review roles and their additional instructions."
       >
         <button
@@ -59,7 +61,7 @@ export const PreferencesAiOverviewTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="MCP Servers"
+        title={translateUiText('preferences.nav.ai-mcp')}
         description="View, add, configure, and remove Model Context Protocol servers."
       >
         <button
@@ -92,7 +94,7 @@ export const PreferencesAiOverviewTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="Sandbox"
+        title={translateUiText('preferences.nav.ai-sandbox')}
         description="Review and change the elevated terminal sandbox permissions that are always allowed without prompting."
       >
         <button

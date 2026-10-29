@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { XCircle } from '@/common/components/icons';
 import { ArrowRight } from '../../../../common/components/icons/ArrowRight';
 import { Check } from '../../../../common/components/icons/Check';
@@ -24,6 +25,7 @@ export function VirtualMrHeader({
   handleBranchChange,
   handleSwapBranches,
 }: VirtualMrHeaderProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="px-4 py-2.5 flex items-center justify-between gap-4 border-b border-surface0/60 bg-crust/30 rounded-sm">
       <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -80,7 +82,7 @@ export function VirtualMrHeader({
               type="button"
               onClick={handleSaveTitle}
               className="p-1 rounded-sm bg-brand hover:bg-brand/90 text-on-accent cursor-pointer shadow-xs"
-              title="Save"
+              title={translateUiText('common.save')}
             >
               <Check className="w-4 h-4" />
             </button>
@@ -88,7 +90,7 @@ export function VirtualMrHeader({
               type="button"
               onClick={() => setIsEditingTitle(false)}
               className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-subtext0 hover:text-text cursor-pointer"
-              title="Cancel"
+              title={translateUiText('common.cancel')}
             >
               <X className="w-4 h-4" />
             </button>

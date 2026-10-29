@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { Eye } from '../../../common/components/icons/Eye';
 import { EyeOff } from '../../../common/components/icons/EyeOff';
@@ -34,6 +35,7 @@ export function AddGitCredentialModal({
   setShowSecret,
   isLoading,
 }: AddGitCredentialModalProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <form
       onSubmit={handleSave}
@@ -189,7 +191,7 @@ export function AddGitCredentialModal({
           }}
           className="px-3 py-1.5 rounded-sm border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer"
         >
-          Cancel
+          {translateUiText('common.cancel')}
         </button>
         <button
           type="submit"

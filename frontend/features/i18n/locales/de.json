@@ -133,6 +133,17 @@
       "openError": "Einstellungen konnten nicht geöffnet werden: {{error}}",
       "initializeError": "Das Einstellungsfenster konnte nicht initialisiert werden: {{error}}",
       "closeError": "Das Einstellungsfenster konnte nicht geschlossen werden: {{error}}"
+    },
+    "editorActions": {
+      "reset": "Standard wiederherstellen",
+      "resetTooltip": "Alle Einstellungen auf die App-Standardwerte zurücksetzen",
+      "unsaved": "Ungespeichert: {{count}}",
+      "closeUnsaved": "Ohne Speichern schließen (Esc)",
+      "apply": "Anwenden",
+      "applying": "Wird angewendet…",
+      "applied": "Angewendet",
+      "editFile": "In preferences.json bearbeiten",
+      "editFileTitle": "JSONC-Datei der App-Einstellungen bearbeiten"
     }
   },
   "dateTime": {
@@ -339,5 +350,14 @@
       "languageLabel": "Sprache",
       "continue": "Weiter"
     }
+  },
+  "compareStatus": {
+    "failed": "Vergleich fehlgeschlagen",
+    "comparingTitle": "Branches werden verglichen",
+    "comparing": "Vergleich läuft…",
+    "unavailable": "Merge-Prüfung nicht verfügbar",
+    "noChanges": "Keine Änderungen",
+    "conflicts": "Konflikte erkannt",
+    "clean": "Konfliktfreier Merge"
   }
 }

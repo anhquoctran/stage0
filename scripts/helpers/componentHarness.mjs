@@ -1,12 +1,23 @@
 import fs from 'node:fs';
 import ts from 'typescript';
 
+const english = JSON.parse(fs.readFileSync(new URL('../../frontend/features/i18n/locales/en.json', import.meta.url), 'utf8'));
+const translate = (key, options = {}) => {
+  const value = key.split('.').reduce((node, part) => node?.[part], english);
+  return typeof value === 'string'
+    ? value.replace(/\{\{(\w+)\}\}/g, (token, name) => String(options[name] ?? token))
+    : key;
+};
+
 export function loadWithMocks(url, dependencies, context) {
   if (!context) {
     const originalDependencies = dependencies;
     dependencies = new Proxy({ ...dependencies }, {
       get: (target, key) => Object.hasOwn(target, key) ? target[key] : originalDependencies[key],
     });
+    if (!Object.hasOwn(dependencies, 'react-i18next')) {
+      dependencies['react-i18next'] = { useTranslation: () => ({ t: translate, i18n: { language: 'en' } }) };
+    }
     // Legacy workflow fixtures exercise the native adapter. Explicit browser
     // fixtures retain isTauri: false; missing SDK pieces remain unavailable.
     if (Object.keys(dependencies).some((id) => id.startsWith('@tauri-apps/'))) {

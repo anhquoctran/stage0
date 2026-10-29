@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { Loader2 } from '../../../common/components/icons/Loader2';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
@@ -10,6 +11,7 @@ import type { BackgroundTaskCardProps } from '../types/BackgroundTaskCardProps';
 import { GitTaskProgress } from './GitTaskProgress';
 
 export const BackgroundTaskCard: React.FC<BackgroundTaskCardProps> = ({ task }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   useDateTimeLanguage();
   const dismissTask = useGitTaskStore((state) => state.dismissTask);
   const isRunning = task.status === 'running';
@@ -40,7 +42,7 @@ export const BackgroundTaskCard: React.FC<BackgroundTaskCardProps> = ({ task }) 
         {!isRunning && (
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => dismissTask(task.id)} className="border border-surface1 px-2 py-1 text-[11px] hover:bg-surface0 rounded-sm">
-              Dismiss
+              {translateUiText('notifications.dismiss')}
             </button>
             {task.resultRepository && (
               <button type="button" onClick={openRepository} className="bg-primary px-2 py-1 text-[11px] font-semibold text-on-accent hover:brightness-110 rounded-sm">

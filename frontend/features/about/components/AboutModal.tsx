@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState, useEffect } from 'react';
 import { AppLogo } from '../../../common/components/AppLogo';
 import { Check } from '../../../common/components/icons/Check';
@@ -8,6 +9,7 @@ import type { AboutModalProps } from '../types/AboutModalProps';
 import { SoftwareUpdatePanel } from '../../updates/components/SoftwareUpdatePanel';
 
 export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const about = useAboutInfo();
   const [copiedVersion, setCopiedVersion] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
@@ -75,7 +77,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           type="button"
           onClick={onClose}
           className="absolute end-0 top-0 flex h-11 w-12 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
-          title="Close (Esc)"
+          title={translateUiText('shortcuts.close')}
           aria-label="Close About dialog"
         >
           <X className="w-5 h-5" />
@@ -183,7 +185,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             onClick={onClose}
             className="px-5 py-1.5 bg-brand hover:brightness-105 text-on-accent font-semibold text-xs transition-all shadow-md cursor-pointer rounded-sm"
           >
-            Close
+            {translateUiText('common.close')}
           </button>
         </div>
       </div>

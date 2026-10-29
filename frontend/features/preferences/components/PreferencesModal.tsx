@@ -120,12 +120,15 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({ standalone =
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Window Bar */}
+        {standalone && <PreferencesModalTopBar
+          standalone disabled={isApplying}
+          onOpenJsonEditor={() => setIsJsonEditorOpen(true)} onClose={handleCancel}
+        />}
         <fieldset disabled={isApplying} className="contents">
-          <PreferencesModalTopBar
-            standalone={standalone}
+          {!standalone && <PreferencesModalTopBar
             onOpenJsonEditor={() => setIsJsonEditorOpen(true)}
             onClose={handleCancel}
-          />
+          />}
           {windowError && <p role="alert" className="px-4 py-2 text-xs text-red">{windowError}</p>}
 
           {/* Modal Main Area: Nav sidebar + Content Area */}

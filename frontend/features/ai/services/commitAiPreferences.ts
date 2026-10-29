@@ -57,15 +57,9 @@ export async function commitAiPreferences(
     if (!getApplicationServices().platform.capabilities.keychain && (Object.keys(apiKeys).length || apiKeyRemovals.length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
       throw new Error('Saving credentials requires the native Stage0 app and OS keychain. The draft is preserved.');
     }
-    try {
-      previous = await preferencesJsonService.load();
-    } catch {
-      if (getApplicationServices().platform.capabilities.preferencesFile) {
-        previous = await getApplicationServices().preferences.initializePreferences({ legacy: { schemaVersion: 1 } });
-      } else {
-        throw new Error('Preferences file could not be read');
-      }
-    }
+    // Loading already initializes a missing native file. Any other read error
+    // must abort; initializing here could mask I/O or migration failures.
+    previous = await preferencesJsonService.load();
     validateAdditionalPreferences?.(previous.settings ?? undefined);
     const persistedAiConfig = { ...snapshot.aiConfig } as Record<string, unknown>;
     delete persistedAiConfig.apiKey;
@@ -96,7 +90,7 @@ export async function commitAiPreferences(
         externalAgents: snapshot.externalAgents,
       },
       reviewers: snapshot.globalReviewers,
-    });
+    }, previous.revision);
     let configured: Partial<Record<AiProviderId, boolean>> = {};
     if (getApplicationServices().platform.capabilities.keychain && (Object.keys(apiKeys).length || apiKeyRemovals.length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
       configured = await getApplicationServices().aiProviders.commitAiPreferences({

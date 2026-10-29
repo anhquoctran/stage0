@@ -133,6 +133,17 @@
       "openError": "Không thể mở Tùy chọn: {{error}}",
       "initializeError": "Không thể khởi tạo cửa sổ Tùy chọn: {{error}}",
       "closeError": "Không thể đóng cửa sổ Tùy chọn: {{error}}"
+    },
+    "editorActions": {
+      "reset": "Khôi phục mặc định",
+      "resetTooltip": "Khôi phục mọi cài đặt về mặc định của ứng dụng",
+      "unsaved": "Chưa lưu: {{count}}",
+      "closeUnsaved": "Đóng mà không lưu (Esc)",
+      "apply": "Áp dụng",
+      "applying": "Đang áp dụng…",
+      "applied": "Đã áp dụng",
+      "editFile": "Sửa trong preferences.json",
+      "editFileTitle": "Sửa tệp JSONC cài đặt ứng dụng"
     }
   },
   "dateTime": {
@@ -339,5 +350,14 @@
       "languageLabel": "Ngôn ngữ",
       "continue": "Tiếp tục"
     }
+  },
+  "compareStatus": {
+    "failed": "So sánh thất bại",
+    "comparingTitle": "Đang so sánh các nhánh",
+    "comparing": "Đang so sánh…",
+    "unavailable": "Không thể kiểm tra merge",
+    "noChanges": "Không có thay đổi",
+    "conflicts": "Phát hiện xung đột",
+    "clean": "Merge không có xung đột"
   }
 }

@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { RotateCcw } from '../../../common/components/icons/RotateCcw';
 import { Check } from '../../../common/components/icons/Check';
@@ -24,6 +25,7 @@ export const PreferencesModalFooter: React.FC<{
   onApply,
   onOk,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <>
       {applyError && (
@@ -37,16 +39,16 @@ export const PreferencesModalFooter: React.FC<{
             type="button"
             onClick={onResetDefaultsPrompt}
             className="flex items-center gap-1.5 px-3 py-1.5 border border-surface0 hover:bg-surface0/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded-sm"
-            title="Reset all settings to application defaults"
+            title={translateUiText('preferences.editorActions.resetTooltip')}
           >
             <RotateCcw className="w-3 h-3" />
-            <span>Reset to default</span>
+            <span>{translateUiText('preferences.editorActions.reset')}</span>
           </button>
 
           {totalUnsaved > 0 && (
             <span className="flex items-center gap-1.5 text-[11px] font-mono text-subtext0 font-medium">
               <span className="w-1.5 h-1.5 bg-subtext0" />
-              <span>{totalUnsaved} unsaved</span>
+              <span>{translateUiText('preferences.editorActions.unsaved', { count: totalUnsaved })}</span>
             </span>
           )}
         </div>
@@ -56,9 +58,9 @@ export const PreferencesModalFooter: React.FC<{
             type="button"
             onClick={onCancel}
             className="px-4 py-1.5 border border-surface0 hover:bg-surface0/50 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer font-medium rounded-sm"
-            title="Close without saving (Esc)"
+            title={translateUiText('preferences.editorActions.closeUnsaved')}
           >
-            Cancel
+            {translateUiText('common.cancel')}
           </button>
 
           <button
@@ -76,10 +78,10 @@ export const PreferencesModalFooter: React.FC<{
             {isApplied ? (
               <>
                 <Check className="w-3.5 h-3.5" />
-                <span>Applied</span>
+                <span>{translateUiText('preferences.editorActions.applied')}</span>
               </>
             ) : (
-              <span>{isApplying ? 'Applying…' : 'Apply'}</span>
+              <span>{translateUiText(isApplying ? 'preferences.editorActions.applying' : 'preferences.editorActions.apply')}</span>
             )}
           </button>
 

@@ -11,7 +11,8 @@ export const PreferencesModalTopBar: React.FC<{
   onOpenJsonEditor: () => void;
   onClose: () => void;
   standalone?: boolean;
-}> = ({ onOpenJsonEditor, onClose, standalone = false }) => {
+  disabled?: boolean;
+}> = ({ onOpenJsonEditor, onClose, standalone = false, disabled = false }) => {
   const { t } = useTranslation();
   const title = t('menu.commands.preferences').replace(/[.…]+$/u, '');
   const services = useApplicationServices();
@@ -34,11 +35,12 @@ export const PreferencesModalTopBar: React.FC<{
       <div className="flex h-full items-center">
         <button
           type="button"
+          disabled={disabled}
           onClick={onOpenJsonEditor}
           className="me-2 border border-surface0 px-2.5 py-1 text-[11px] text-subtext1 hover:bg-surface0 hover:text-text cursor-pointer rounded-sm"
-          title="Edit the app preferences JSONC file"
+          title={t('preferences.editorActions.editFileTitle')}
         >
-          Edit in preferences.json
+          {t('preferences.editorActions.editFile')}
         </button>
         {custom && !mac && <WindowControls style="windows" buttons={linux ? profile.controlsRight : undefined} />}
         {!standalone && <button

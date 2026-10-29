@@ -139,6 +139,17 @@
       "openError": "Impossibile aprire le preferenze: {{error}}",
       "initializeError": "Impossibile inizializzare la finestra delle preferenze: {{error}}",
       "closeError": "Impossibile chiudere la finestra delle preferenze: {{error}}"
+    },
+    "editorActions": {
+      "reset": "Ripristina predefiniti",
+      "resetTooltip": "Ripristina tutte le impostazioni predefinite dell’app",
+      "unsaved": "Non salvati: {{count}}",
+      "closeUnsaved": "Chiudi senza salvare (Esc)",
+      "apply": "Applica",
+      "applying": "Applicazione…",
+      "applied": "Applicato",
+      "editFile": "Modifica in preferences.json",
+      "editFileTitle": "Modifica il file JSONC delle preferenze"
     }
   },
   "dateTime": {
@@ -346,5 +357,14 @@
       "languageLabel": "Lingua",
       "continue": "Continua"
     }
+  },
+  "compareStatus": {
+    "failed": "Confronto non riuscito",
+    "comparingTitle": "Confronto dei branch",
+    "comparing": "Confronto…",
+    "unavailable": "Verifica della fusione non disponibile",
+    "noChanges": "Nessuna modifica",
+    "conflicts": "Conflitti rilevati",
+    "clean": "Fusione senza conflitti"
   }
 }

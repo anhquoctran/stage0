@@ -31,9 +31,12 @@ export class PreferencesJsonService {
     });
   }
 
-  patch(patch: Record<string, unknown>): Promise<PreferencesDocument> {
+  patch(patch: Record<string, unknown>, expectedRevision?: string): Promise<PreferencesDocument> {
     return this.enqueue(async () => {
       if (!getApplicationServices().platform.capabilities.preferencesFile) {
+        if (expectedRevision !== undefined && expectedRevision !== (window.__STAGE0_PREFERENCES_REVISION__ ?? 'web')) {
+          throw new Error('Preferences changed outside this transaction. Reload before applying.');
+        }
         const current = window.__STAGE0_PREFERENCES__ ?? {};
         const next = merge(current as Record<string, unknown>, patch) as PreferenceBootstrap;
         window.__STAGE0_PREFERENCES__ = next;
@@ -42,14 +45,15 @@ export class PreferencesJsonService {
         window.__STAGE0_PREFERENCES_REVISION__ = revision;
         return { content, revision, path: 'browser storage', migrated: false };
       }
-      const expectedRevision = window.__STAGE0_PREFERENCES_REVISION__;
-      if (!expectedRevision) throw new Error('Preferences are not initialized yet.');
+      const revision = expectedRevision ?? window.__STAGE0_PREFERENCES_REVISION__;
+      if (!revision) throw new Error('Preferences are not initialized yet.');
       const baseline = structuredClone(window.__STAGE0_PREFERENCES__ ?? {});
       let document: PreferencesDocument;
       try {
-        document = await getApplicationServices().preferences.patchPreferences({ patch, expectedRevision });
+        document = await getApplicationServices().preferences.patchPreferences({ patch, expectedRevision: revision });
       } catch (error) {
-        if (!/changed outside/i.test(String(error))) throw error;
+        // A caller holding a rollback snapshot must never silently rebase it.
+        if (expectedRevision !== undefined || !/changed outside/i.test(String(error))) throw error;
         const latest = await getApplicationServices().preferences.loadPreferencesJson();
         if (latest.validationError) {
           this.accept(latest);

@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useEffect, useRef, useState } from 'react';
 import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
@@ -28,6 +29,7 @@ export const InlineDiscussionComposer: React.FC<{
   onDraftChange,
   onClose,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { createDiscussion } = useVirtualMrStore();
   const { showToast } = useGitStore();
   const [body, setBody] = useState(initialBody);
@@ -109,7 +111,7 @@ export const InlineDiscussionComposer: React.FC<{
           disabled={isSubmitting}
           className="px-3.5 py-1.5 border border-surface1 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer rounded-sm"
         >
-          Cancel
+          {translateUiText('common.cancel')}
         </button>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { formatUnixDateTime, formatUnixRelativeTime } from '@/common/utils/dateTime';
 import { Check } from '../../../../common/components/icons/Check';
 import { Clock } from '../../../../common/components/icons/Clock';
@@ -17,6 +18,7 @@ export function BlameCommitDetailModal({
   copiedSha,
   handleCopyCommitUrl,
 }: BlameCommitDetailModalProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   useDateTimeLanguage();
   return (
     <div className="fixed inset-x-0 bottom-0 top-8.5 z-50 bg-crust/70 backdrop-blur-xs flex items-center justify-center p-4 rounded-sm">
@@ -118,7 +120,7 @@ export function BlameCommitDetailModal({
             onClick={() => setSelectedCommit(null)}
             className="px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold rounded-sm transition-colors cursor-pointer"
           >
-            Close
+            {translateUiText('common.close')}
           </button>
         </div>
       </div>

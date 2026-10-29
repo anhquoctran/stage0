@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { CustomSelect } from '../../../../common/components/CustomSelect';
 import { Bot } from '../../../../common/components/icons/Bot';
 import { AcpReviewerConfigOptions } from '../../../ai/components/AcpReviewerConfigOptions';
@@ -31,6 +32,7 @@ export function RepositoryCustomBotForm({
   repoBotInstructions,
   setRepoBotInstructions,
 }: RepositoryCustomBotFormProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <form
       onSubmit={handleSaveRepoCustomBot}
@@ -210,7 +212,7 @@ export function RepositoryCustomBotForm({
           onClick={() => setIsAddingRepoBot(false)}
           className="px-3 py-1 bg-surface0 text-xs cursor-pointer rounded-sm"
         >
-          Cancel
+          {translateUiText('common.cancel')}
         </button>
         <button
           type="submit"

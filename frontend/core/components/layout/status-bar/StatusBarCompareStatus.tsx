@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ShieldCheck } from '../../../../common/components/icons/ShieldCheck';
 import { AlertTriangle } from '../../../../common/components/icons/AlertTriangle';
 import { Loader2 } from '../../../../common/components/icons/Loader2';
@@ -8,6 +9,7 @@ import { useGitStore } from '../../../../features/git/store/useGitStore';
 export const StatusBarCompareStatus: React.FC<{
   isVisible: boolean;
 }> = ({ isVisible }) => {
+  const { t } = useTranslation();
   const {
     diffPayload,
     diffError,
@@ -25,7 +27,7 @@ export const StatusBarCompareStatus: React.FC<{
         title={diffError}
       >
         <AlertTriangle className="w-3 h-3 text-red shrink-0" />
-        <span className="max-lg:hidden">Compare Failed</span>
+        <span className="max-lg:hidden">{t('compareStatus.failed')}</span>
       </div>
     );
   }
@@ -34,10 +36,10 @@ export const StatusBarCompareStatus: React.FC<{
     return (
       <div
         className="h-5.5 px-2 bg-surface0/60 border border-surface1/60 text-subtext0 flex items-center gap-1.5 font-medium shadow-xs rounded-sm"
-        title="Comparing branches"
+        title={t('compareStatus.comparingTitle')}
       >
         <Loader2 className="w-3 h-3 animate-spin text-blue shrink-0" />
-        <span className="max-lg:hidden">Comparing...</span>
+        <span className="max-lg:hidden">{t('compareStatus.comparing')}</span>
       </div>
     );
   }
@@ -49,7 +51,7 @@ export const StatusBarCompareStatus: React.FC<{
         title={conflictCheckError}
       >
         <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
-        <span className="max-lg:hidden">Merge Check Unavailable</span>
+        <span className="max-lg:hidden">{t('compareStatus.unavailable')}</span>
       </div>
     );
   }
@@ -58,10 +60,10 @@ export const StatusBarCompareStatus: React.FC<{
     return (
       <div
         className="h-5.5 px-2 bg-surface0/50 border border-surface1/50 text-subtext1 flex items-center gap-1.5 font-medium shadow-xs rounded-sm"
-        title="No Changes"
+        title={t('compareStatus.noChanges')}
       >
         <Info className="w-3 h-3 text-subtext0 shrink-0" />
-        <span className="max-lg:hidden">No Changes</span>
+        <span className="max-lg:hidden">{t('compareStatus.noChanges')}</span>
       </div>
     );
   }
@@ -70,10 +72,10 @@ export const StatusBarCompareStatus: React.FC<{
     return (
       <div
         className="h-5.5 px-2 bg-red/10 border border-red/25 text-red flex items-center gap-1.5 font-medium shadow-xs rounded-sm"
-        title="Conflicts Detected"
+        title={t('compareStatus.conflicts')}
       >
         <AlertTriangle className="w-3 h-3 text-red shrink-0" />
-        <span className="max-lg:hidden">Conflicts Detected</span>
+        <span className="max-lg:hidden">{t('compareStatus.conflicts')}</span>
       </div>
     );
   }
@@ -82,10 +84,10 @@ export const StatusBarCompareStatus: React.FC<{
     return (
       <div
         className="h-5.5 px-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center gap-1.5 font-medium shadow-xs rounded-sm"
-        title="Clean Merge"
+        title={t('compareStatus.clean')}
       >
         <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
-        <span className="max-lg:hidden">Clean Merge</span>
+        <span className="max-lg:hidden">{t('compareStatus.clean')}</span>
       </div>
     );
   }

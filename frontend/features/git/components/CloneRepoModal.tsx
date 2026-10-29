@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Download } from '../../../common/components/icons/Download';
@@ -14,6 +15,7 @@ import { CloneUrlInputSection } from './clone/CloneUrlInputSection';
 import { CloneOptionsForm } from './CloneOptionsForm';
 
 export const CloneRepoModal: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const {
     isCloneModalOpen,
     credentialsLoading,
@@ -204,7 +206,7 @@ export const CloneRepoModal: React.FC = () => {
                 onClick={handleClose}
                 className="px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-subtext1 hover:text-text text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 rounded-sm"
               >
-                Cancel
+                {translateUiText('common.cancel')}
               </button>
               <button
                 type="submit"

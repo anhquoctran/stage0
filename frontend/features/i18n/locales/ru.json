@@ -133,6 +133,17 @@
       "openError": "Не удалось открыть настройки: {{error}}",
       "initializeError": "Не удалось инициализировать окно настроек: {{error}}",
       "closeError": "Не удалось закрыть окно настроек: {{error}}"
+    },
+    "editorActions": {
+      "reset": "Восстановить настройки",
+      "resetTooltip": "Восстановить все настройки приложения по умолчанию",
+      "unsaved": "Не сохранено: {{count}}",
+      "closeUnsaved": "Закрыть без сохранения (Esc)",
+      "apply": "Применить",
+      "applying": "Применение…",
+      "applied": "Применено",
+      "editFile": "Изменить в preferences.json",
+      "editFileTitle": "Изменить файл настроек приложения JSONC"
     }
   },
   "dateTime": {
@@ -353,5 +364,14 @@
       "languageLabel": "Язык",
       "continue": "Продолжить"
     }
+  },
+  "compareStatus": {
+    "failed": "Ошибка сравнения",
+    "comparingTitle": "Сравнение веток",
+    "comparing": "Сравнение…",
+    "unavailable": "Проверка слияния недоступна",
+    "noChanges": "Нет изменений",
+    "conflicts": "Обнаружены конфликты",
+    "clean": "Слияние без конфликтов"
   }
 }

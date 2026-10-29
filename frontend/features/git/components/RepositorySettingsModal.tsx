@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState, useEffect } from 'react';
 import { X } from '../../../common/components/icons/X';
 import { Globe } from '../../../common/components/icons/Globe';
@@ -18,6 +19,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
   onClose,
   initialTab = 'remotes',
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { currentRepo, showToast } = useGitStore();
   const { repoSettings, saveRepoSettings } = useVirtualMrStore();
 
@@ -207,7 +209,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               onClick={onClose}
               className="px-4 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs transition-colors cursor-pointer border border-surface1 rounded-sm"
             >
-              Cancel
+              {translateUiText('common.cancel')}
             </button>
             <button
               type="button"

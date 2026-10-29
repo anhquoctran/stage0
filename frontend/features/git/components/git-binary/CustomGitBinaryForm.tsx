@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { AlertCircle } from '../../../../common/components/icons/AlertCircle';
 import { Check } from '../../../../common/components/icons/Check';
 import { FolderOpen } from '../../../../common/components/icons/FolderOpen';
@@ -17,6 +18,7 @@ export function CustomGitBinaryForm({
   isValidatingCustom,
   customError,
 }: CustomGitBinaryFormProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="pt-2 border-t border-surface0/60">
       {!showAddCustom ? (
@@ -40,7 +42,7 @@ export function CustomGitBinaryForm({
               }}
               className="text-[11px] text-subtext0 hover:text-text cursor-pointer rounded-sm"
             >
-              Cancel
+              {translateUiText('common.cancel')}
             </button>
           </div>
 

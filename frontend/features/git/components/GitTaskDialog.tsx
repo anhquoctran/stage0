@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useEffect, useRef } from 'react';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { X } from '../../../common/components/icons/X';
@@ -9,6 +10,7 @@ import { useGitStore } from '../store/useGitStore';
 import { GitTaskProgress } from './GitTaskProgress';
 
 export const GitTaskDialog: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { tasks, selectedTaskId, runInBackground, dismissTask, showTask } = useGitTaskStore();
   const task = tasks.find((item) => item.id === selectedTaskId);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -64,7 +66,7 @@ export const GitTaskDialog: React.FC = () => {
           {isRunning && <p className="text-[11px] text-subtext0">You can continue working while this task runs in the background.</p>}
         </div>
         <div className="flex items-center justify-end gap-2 border-t border-surface0 px-4 py-3 rounded-sm">
-          <button type="button" disabled={isRunning} title={isRunning ? 'Available when the task finishes. Use Run in background to hide progress.' : 'Dismiss this result'} onClick={() => dismissTask(task.id)} className="border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0 disabled:cursor-not-allowed disabled:opacity-40 rounded-sm">Dismiss</button>
+          <button type="button" disabled={isRunning} title={isRunning ? 'Available when the task finishes. Use Run in background to hide progress.' : 'Dismiss this result'} onClick={() => dismissTask(task.id)} className="border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0 disabled:cursor-not-allowed disabled:opacity-40 rounded-sm">{translateUiText('notifications.dismiss')}</button>
           {isRunning ? <button type="button" onClick={() => runInBackground(task.id)} className="bg-primary px-3 py-1.5 text-xs font-semibold text-on-accent hover:brightness-110 rounded-sm">Run in background</button>
             : task.resultRepository && <button type="button" onClick={() => { void useGitStore.getState().selectRepo(task.resultRepository!); dismissTask(task.id); }} className="bg-primary px-3 py-1.5 text-xs font-semibold text-on-accent hover:brightness-110 rounded-sm">Open repository</button>}
         </div>

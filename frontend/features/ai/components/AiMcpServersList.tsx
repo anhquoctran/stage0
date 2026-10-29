@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { Cable } from '../../../common/components/icons/Cable';
 import { Plus } from '../../../common/components/icons/Plus';
@@ -30,6 +31,7 @@ export const AiMcpServersList: React.FC<{
   deletingServerId,
   setDeletingServerId,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="space-y-2.5">
       {mcpServers.length === 0 ? (
@@ -167,7 +169,7 @@ export const AiMcpServersList: React.FC<{
                         onClick={() => setDeletingServerId(null)}
                         className="px-1.5 py-0.5 text-subtext0 hover:text-text text-[11px] transition-colors cursor-pointer rounded-sm"
                       >
-                        Cancel
+                        {translateUiText('common.cancel')}
                       </button>
                     </div>
                   ) : (

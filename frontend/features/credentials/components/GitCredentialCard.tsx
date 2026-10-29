@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { Check } from '../../../common/components/icons/Check';
 import { Copy } from '../../../common/components/icons/Copy';
 import { Lock } from '../../../common/components/icons/Lock';
@@ -18,6 +19,7 @@ export function GitCredentialCard({
   handleCopyTokenRef,
   copiedId,
 }: GitCredentialCardProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div
       key={cred.id}
@@ -110,7 +112,7 @@ export function GitCredentialCard({
                 onClick={() => setDeletingId(null)}
                 className="px-1.5 py-0.5 text-subtext0 hover:text-text text-[11px] rounded-sm transition-colors cursor-pointer"
               >
-                Cancel
+                {translateUiText('common.cancel')}
               </button>
             </div>
           ) : cred.source === 'stage0' ? (

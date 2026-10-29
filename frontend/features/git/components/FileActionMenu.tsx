@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState, useRef, useEffect } from 'react';
 import { FolderOpen } from '../../../common/components/icons/FolderOpen';
 import { Copy } from '../../../common/components/icons/Copy';
@@ -13,6 +14,7 @@ import { useCommandShortcut } from '../../../core/hooks/useCommandShortcut';
 import type { FileActionMenuProps } from '../types/FileActionMenuProps';
 
 export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className = '' }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const {
     currentRepo,
     remoteUrl,
@@ -138,7 +140,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
             >
               <div className="flex items-center gap-2">
                 <History className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
-                <span>View Git Blame</span>
+                <span>{translateUiText('menu.commands.view_blame')}</span>
               </div>
               <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('view_blame')}</span>
             </button>
@@ -153,7 +155,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           >
             <div className="flex items-center gap-2">
               <Copy className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
-              <span>Copy Relative Path</span>
+              <span>{translateUiText('menu.commands.copy_rel_path')}</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('copy_rel_path')}</span>
           </button>
@@ -165,7 +167,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           >
             <div className="flex items-center gap-2">
               <FileText className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
-              <span>Copy Absolute Path</span>
+              <span>{translateUiText('menu.commands.copy_abs_path')}</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('copy_abs_path')}</span>
           </button>
@@ -179,7 +181,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           >
             <div className="flex items-center gap-2">
               <Globe className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
-              <span>Copy Remote File URL</span>
+              <span>{translateUiText('menu.commands.copy_remote_url')}</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('copy_remote_url')}</span>
           </button>
@@ -191,7 +193,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           >
             <div className="flex items-center gap-2">
               <ExternalLink className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
-              <span>Copy Remote File URL from...</span>
+              <span>{translateUiText('menu.commands.copy_remote_url_from')}</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('copy_remote_url_from')}</span>
           </button>

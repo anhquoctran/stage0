@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { Trash2 } from '../../../common/components/icons/Trash2';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
@@ -18,6 +19,7 @@ export const ProviderDeleteModal: React.FC<{
   providerDeleteError,
   getProviderDisplayName,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   if (!providerToDelete) return null;
 
   return (
@@ -44,7 +46,7 @@ export const ProviderDeleteModal: React.FC<{
 
         <div className="flex justify-end gap-2 pt-2 border-t border-surface0 rounded-sm">
           <button type="button" disabled={isDeletingProvider} onClick={onClose} className="px-3 py-1.5 border border-surface1 text-subtext0 hover:text-text hover:bg-surface0 text-xs transition cursor-pointer disabled:opacity-50 rounded-sm">
-            Cancel
+            {translateUiText('common.cancel')}
           </button>
           <button type="button" disabled={isDeletingProvider} onClick={() => void onConfirm()} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red text-base text-xs font-semibold hover:brightness-110 transition cursor-pointer disabled:opacity-50 rounded-sm">
             <Trash2 className="w-3.5 h-3.5" />

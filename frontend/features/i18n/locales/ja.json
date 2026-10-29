@@ -133,6 +133,17 @@
       "openError": "環境設定を開けませんでした：{{error}}",
       "initializeError": "環境設定ウィンドウを初期化できませんでした：{{error}}",
       "closeError": "環境設定ウィンドウを閉じられませんでした：{{error}}"
+    },
+    "editorActions": {
+      "reset": "デフォルトに戻す",
+      "resetTooltip": "すべての設定をアプリのデフォルトに戻す",
+      "unsaved": "未保存: {{count}}",
+      "closeUnsaved": "保存せずに閉じる (Esc)",
+      "apply": "適用",
+      "applying": "適用中…",
+      "applied": "適用済み",
+      "editFile": "preferences.json で編集",
+      "editFileTitle": "アプリ設定の JSONC ファイルを編集"
     }
   },
   "dateTime": {
@@ -339,5 +350,14 @@
       "languageLabel": "言語",
       "continue": "続ける"
     }
+  },
+  "compareStatus": {
+    "failed": "比較に失敗",
+    "comparingTitle": "ブランチを比較中",
+    "comparing": "比較中…",
+    "unavailable": "マージの確認を利用できません",
+    "noChanges": "変更なし",
+    "conflicts": "競合を検出",
+    "clean": "競合なしでマージ可能"
   }
 }

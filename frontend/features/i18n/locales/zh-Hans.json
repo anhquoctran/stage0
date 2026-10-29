@@ -133,6 +133,17 @@
       "openError": "无法打开偏好设置：{{error}}",
       "initializeError": "无法初始化偏好设置窗口：{{error}}",
       "closeError": "无法关闭偏好设置窗口：{{error}}"
+    },
+    "editorActions": {
+      "reset": "恢复默认设置",
+      "resetTooltip": "将所有设置恢复为应用默认值",
+      "unsaved": "未保存：{{count}}",
+      "closeUnsaved": "关闭而不保存 (Esc)",
+      "apply": "应用",
+      "applying": "正在应用…",
+      "applied": "已应用",
+      "editFile": "在 preferences.json 中编辑",
+      "editFileTitle": "编辑应用设置 JSONC 文件"
     }
   },
   "dateTime": {
@@ -339,5 +350,14 @@
       "languageLabel": "语言",
       "continue": "继续"
     }
+  },
+  "compareStatus": {
+    "failed": "比较失败",
+    "comparingTitle": "正在比较分支",
+    "comparing": "正在比较…",
+    "unavailable": "无法检查合并",
+    "noChanges": "无更改",
+    "conflicts": "检测到冲突",
+    "clean": "可干净合并"
   }
 }

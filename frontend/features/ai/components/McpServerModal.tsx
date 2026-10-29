@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { Cable } from '../../../common/components/icons/Cable';
 import { X } from '../../../common/components/icons/X';
@@ -58,6 +59,7 @@ export const McpServerModal: React.FC<{
   serverEnvPairs,
   setServerEnvPairs,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   if (!isOpen) return null;
 
   return (
@@ -263,7 +265,7 @@ export const McpServerModal: React.FC<{
           onClick={onClose}
           className="px-3 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded-sm"
         >
-          Cancel
+          {translateUiText('common.cancel')}
         </button>
         <button
           type="submit"

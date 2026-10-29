@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import React, { useEffect, useState } from 'react';
 
@@ -28,6 +29,7 @@ import {
 } from '../utils/fileActions';
 
 export const RepositoryOverviewModal: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const appServices = useApplicationServices();
   const {
     currentRepo,
@@ -161,7 +163,7 @@ export const RepositoryOverviewModal: React.FC = () => {
             type="button"
             onClick={() => setIsRepoOverviewOpen(false)}
             className="p-1.5 hover:bg-surface0 rounded-sm text-subtext0 hover:text-text transition-colors cursor-pointer"
-            title="Close (Esc)"
+            title={translateUiText('shortcuts.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -384,7 +386,7 @@ export const RepositoryOverviewModal: React.FC = () => {
               onClick={() => setIsRepoOverviewOpen(false)}
               className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-on-accent font-medium transition-colors cursor-pointer rounded-sm"
             >
-              Close
+              {translateUiText('common.close')}
             </button>
           </div>
         </div>
