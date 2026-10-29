@@ -184,10 +184,8 @@ export const useBotReviewersStore = create<BotReviewersState>((set, get) => ({
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('stage0-preferences-updated', (event) => {
     const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
-    if (Array.isArray(settings?.reviewers)) {
-      useBotReviewersStore.setState({
-        globalReviewers: normalizeReviewerList(settings.reviewers).reviewers,
-      });
-    }
+    useBotReviewersStore.setState({
+      globalReviewers: normalizeReviewerList(Array.isArray(settings?.reviewers) ? settings.reviewers : DEFAULT_BOT_REVIEWERS).reviewers,
+    });
   });
 }

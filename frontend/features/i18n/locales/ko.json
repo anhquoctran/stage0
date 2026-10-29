@@ -6,7 +6,10 @@
     "save": "저장",
     "settings": "설정",
     "backToAiOverview": "AI 개요로 돌아가기",
-    "next": "다음"
+    "next": "다음",
+    "windowControls": "창 제어",
+    "restoreWindow": "이전 크기로 복원",
+    "maximizeWindow": "최대화"
   },
   "preferences": {
     "appearance": "모양",
@@ -55,76 +58,81 @@
     "headers": {
       "general-keymaps": {
         "title": "키맵 및 키보드 단축키",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "익숙한 사전 설정을 선택하거나 Stage0 명령과 탐색 방식을 사용자 지정합니다."
       },
       "general-settings": {
         "title": "일반 설정",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "인라인 주석, 시작 동작, 파일 탐색기 통합 및 터미널 명령을 설정합니다."
       },
       "appearance-theme": {
         "title": "테마 및 인터페이스 모드",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "선택한 밝은 테마나 어두운 테마를 사용하거나 운영 체제의 모양을 따릅니다."
       },
       "appearance-language": {
         "title": "언어 및 지역화",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "앱 언어, 날짜와 시간 형식 및 AI 리뷰어 출력 언어를 선택합니다."
       },
       "appearance-fonts": {
         "title": "편집기 글꼴 및 타이포그래피",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "편집기 패널의 글꼴, 크기, 굵기, 줄 높이 및 합자 표시를 설정합니다."
       },
       "appearance-ui-font": {
         "title": "UI 글꼴",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "메뉴, 탐색, 레이블 및 버튼에 사용할 글꼴을 선택합니다."
       },
       "appearance-markdown-font": {
         "title": "Markdown 글꼴 및 타이포그래피",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "Markdown 편집기, 미리 보기 및 코드 블록의 글꼴과 미리 보기 크기, 제목 굵기를 설정합니다."
       },
       "editor-diff": {
         "title": "Diff 뷰어 및 코드 탐색",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "분할·통합 diff 보기, 공백 처리 및 인라인 Git blame을 설정합니다."
       },
       "ai-overview": {
         "title": "AI",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "가상 MR이나 저장소를 열 때 AI 도우미 컨텍스트를 자동으로 활성화할지 선택합니다."
       },
       "ai-providers": {
         "title": "LLM 제공자",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "기본 제공 모델 공급자(OpenAI, Anthropic, DeepSeek, Ollama 등)를 설정합니다."
       },
       "ai-mcp": {
         "title": "MCP 서버",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "Model Context Protocol 서버를 보고 추가, 설정 및 삭제합니다."
       },
       "ai-external-agents": {
         "title": "외부 에이전트",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "Agent Client Protocol을 통해 에이전트를 찾고 추가, 로그인 및 삭제합니다."
       },
       "ai-reviewers": {
         "title": "리뷰어 봇",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "코드 리뷰를 위한 리뷰어 역할과 추가 지침을 설정합니다."
       },
       "ai-sandbox": {
         "title": "샌드박스 및 도구 권한",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "가상 샌드박스(메모리, Docker, 호스트)의 권한 상승 설정을 확인하고 변경합니다."
       },
       "ai-guardrails": {
         "title": "보안 및 가드레일",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "경로 제한, 파괴적 명령 차단 및 승인 기준을 설정합니다."
       },
       "git-binary": {
         "title": "Git 실행 파일",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "저장소 작업에 사용할 Git 실행 파일을 선택합니다. 저장된 Git 자격 증명은 현재 Git 명령에 전달되지 않습니다."
       },
       "git-credentials": {
         "title": "Git 자격 증명 및 원격 저장소",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "시스템·전역 Git 도우미에서 발견한 Stage0 자격 증명과 연결 정보를 관리합니다."
       },
       "notifications-settings": {
         "title": "알림 및 푸시 알림",
-        "description": "이 섹션의 옵션을 구성합니다."
+        "description": "운영 체제 기본 알림과 이벤트 채널을 설정합니다."
       }
+    },
+    "window": {
+      "openError": "환경설정을 열 수 없습니다: {{error}}",
+      "initializeError": "환경설정 창을 초기화할 수 없습니다: {{error}}",
+      "closeError": "환경설정 창을 닫을 수 없습니다: {{error}}"
     }
   },
   "dateTime": {
@@ -240,79 +248,79 @@
     "gotIt": "확인"
   },
   "notifications": {
-    "categoryHeading": "Notification categories",
-    "categoryDescription": "Choose which Stage0 events can show a toast. Position and dismissal are set by Stage0 for each event.",
-    "aiReviewTitle": "AI code review",
-    "aiReviewDescription": "When an AI review or re-verification finishes.",
-    "gitSyncTitle": "Git watchers and sync",
-    "gitSyncDescription": "Remote changes, new branches, and sync events.",
-    "guardrailsTitle": "Security guardrails",
-    "guardrailsDescription": "Elevated commands, access blocks, and policy violations.",
-    "previewTitle": "Preview the notification toast",
-    "previewDescription": "Send a test using this platform’s notification style. It is not added to history or unread count.",
-    "previewSent": "Test toast sent. It does not affect notification history or unread count.",
-    "previewFailed": "Could not display a test notification on this system.",
-    "testTooltip": "Show a test notification without saving it",
-    "desktopOnly": "Available in the desktop app",
-    "sending": "Sending…",
-    "testButton": "Test Toast",
-    "testTitle": "Stage0 notification preview",
-    "testBody": "Preview only. Not saved.",
-    "viewAction": "View notifications",
-    "close": "Close notifications",
-    "drawerTitle": "Notifications",
-    "unreadCount_one": "{{count}} unread",
-    "unreadCount_other": "{{count}} unread",
-    "clearAll": "Clear all notifications",
-    "markAllRead": "Mark all read",
-    "markRead": "Mark read",
-    "unreadLabel": "Unread",
-    "emptyTitle": "You’re all caught up",
-    "emptyDescription": "New notifications will appear here.",
-    "fallbackTitle": "Stage0 Notification",
-    "fallbackBody": "Notification",
-    "toastView": "View",
-    "dismiss": "Dismiss",
-    "dismissLabel": "Dismiss notification",
-    "deliveryFailed": "Stage0 notification delivery failed."
+    "categoryHeading": "알림 종류",
+    "categoryDescription": "알림을 표시할 수 있는 Stage0 이벤트를 선택하세요. 표시 위치와 닫기 방식은 이벤트별로 Stage0가 설정합니다.",
+    "aiReviewTitle": "AI 코드 리뷰",
+    "aiReviewDescription": "AI 리뷰 또는 재검증이 완료되었을 때.",
+    "gitSyncTitle": "Git 감시 및 동기화",
+    "gitSyncDescription": "원격 변경 사항, 새 브랜치 및 동기화 이벤트.",
+    "guardrailsTitle": "보안 보호 장치",
+    "guardrailsDescription": "권한 상승 명령, 접근 차단 및 정책 위반.",
+    "previewTitle": "알림 미리 보기",
+    "previewDescription": "이 플랫폼의 알림 스타일로 테스트를 보냅니다. 기록이나 읽지 않은 알림 수에는 추가되지 않습니다.",
+    "previewSent": "테스트 알림을 보냈습니다. 기록이나 읽지 않은 알림 수에는 영향을 주지 않습니다.",
+    "previewFailed": "이 시스템에서 테스트 알림을 표시할 수 없습니다.",
+    "testTooltip": "저장하지 않고 테스트 알림 표시",
+    "desktopOnly": "데스크톱 앱에서 사용 가능",
+    "sending": "보내는 중…",
+    "testButton": "알림 테스트",
+    "testTitle": "Stage0 알림 미리 보기",
+    "testBody": "미리 보기 전용이며 저장되지 않습니다.",
+    "viewAction": "알림 보기",
+    "close": "알림 닫기",
+    "drawerTitle": "알림",
+    "unreadCount_one": "읽지 않음 {{count}}개",
+    "unreadCount_other": "읽지 않음 {{count}}개",
+    "clearAll": "모든 알림 삭제",
+    "markAllRead": "모두 읽음으로 표시",
+    "markRead": "읽음으로 표시",
+    "unreadLabel": "읽지 않음",
+    "emptyTitle": "새 알림이 없습니다",
+    "emptyDescription": "새 알림이 여기에 표시됩니다.",
+    "fallbackTitle": "Stage0 알림",
+    "fallbackBody": "알림",
+    "toastView": "보기",
+    "dismiss": "닫기",
+    "dismissLabel": "알림 닫기",
+    "deliveryFailed": "Stage0 알림 전송에 실패했습니다."
   },
   "reviewFlow": {
-    "completedTitle": "{{reviewer}} finished an MR review",
-    "completedBody_one": "Created {{count}} review discussion in {{title}}.",
-    "completedBody_other": "Created {{count}} review discussions in {{title}}.",
-    "pendingLabel": "Reviewing this MR and preparing findings…",
-    "pausedTitle": "Review paused: resolve my earlier findings first.",
-    "openFindings_one": "I found {{count}} unresolved code discussion from this reviewer:",
-    "openFindings_other": "I found {{count}} unresolved code discussions from this reviewer:",
-    "openFindings_few": "I found {{count}} unresolved code discussions from this reviewer:",
-    "openFindings_many": "I found {{count}} unresolved code discussions from this reviewer:",
-    "moreFindings_one": "…and {{count}} more open finding",
-    "moreFindings_other": "…and {{count}} more open findings",
-    "moreFindings_few": "…and {{count}} more open findings",
-    "moreFindings_many": "…and {{count}} more open findings",
-    "resolveThenRetry": "Resolve those threads, then post {{command}} in a new discussion to request another pass.",
-    "reloadFailed": "**Review not started.** I could not reload the latest discussion state, so I could not safely check previous findings. Please retry shortly.",
-    "unassigned": "**Review not started.** This bot is no longer assigned to this MR.",
-    "profileUnavailable": "**Review not started.** This reviewer profile is unavailable or disabled. Reassign an enabled reviewer and try again.",
-    "closed": "**Review not started.** Reopen this Virtual MR before requesting a review.",
-    "busy": "**Review not started yet.** Another AI review is already running for this MR. Retry the command after it finishes.",
-    "accepted": "**Review request accepted.** I checked that none of my earlier findings are still open. I’m starting a new full review of this MR now.",
-    "completeWithFindings_one": "Review complete. I created {{count}} new code discussion with findings.{{incomplete}}",
-    "completeWithFindings_other": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeWithFindings_few": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeWithFindings_many": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeNoFindings": "Review complete. I did not create any new code discussions.{{incomplete}}",
-    "partialSuffix": " Coverage was incomplete.",
-    "failed": "**Review did not finish.** {{error}}",
-    "virtualMrFallback": "the Virtual MR"
+    "completedTitle": "{{reviewer}} 님이 MR 리뷰를 완료했습니다",
+    "completedBody_one": "{{title}}에 리뷰 토론 {{count}}개를 만들었습니다.",
+    "completedBody_other": "{{title}}에 리뷰 토론 {{count}}개를 만들었습니다.",
+    "pendingLabel": "이 MR을 리뷰하고 검토 결과를 준비하는 중…",
+    "pausedTitle": "리뷰 일시 중지: 먼저 이전 지적 사항을 해결하세요.",
+    "openFindings_one": "이 리뷰어의 미해결 코드 토론 {{count}}개를 찾았습니다:",
+    "openFindings_other": "이 리뷰어의 미해결 코드 토론 {{count}}개를 찾았습니다:",
+    "openFindings_few": "이 리뷰어의 미해결 코드 토론 {{count}}개를 찾았습니다:",
+    "openFindings_many": "이 리뷰어의 미해결 코드 토론 {{count}}개를 찾았습니다:",
+    "moreFindings_one": "…외에 미해결 지적 사항 {{count}}개",
+    "moreFindings_other": "…외에 미해결 지적 사항 {{count}}개",
+    "moreFindings_few": "…외에 미해결 지적 사항 {{count}}개",
+    "moreFindings_many": "…외에 미해결 지적 사항 {{count}}개",
+    "resolveThenRetry": "이 스레드를 해결한 다음 새 토론에 {{command}} 명령을 게시하여 다시 리뷰를 요청하세요.",
+    "reloadFailed": "**리뷰를 시작하지 못했습니다.** 최신 토론 상태를 다시 불러오지 못해 이전 지적 사항을 안전하게 확인할 수 없습니다. 잠시 후 다시 시도하세요.",
+    "unassigned": "**리뷰를 시작하지 못했습니다.** 이 봇은 더 이상 이 MR에 배정되어 있지 않습니다.",
+    "profileUnavailable": "**리뷰를 시작하지 못했습니다.** 리뷰어 프로필을 사용할 수 없거나 비활성화되어 있습니다. 활성 리뷰어를 배정하고 다시 시도하세요.",
+    "closed": "**리뷰를 시작하지 못했습니다.** 이 가상 MR을 다시 연 다음 리뷰를 요청하세요.",
+    "busy": "**리뷰가 아직 시작되지 않았습니다.** 이 MR에서 다른 AI 리뷰가 진행 중입니다. 완료된 후 명령을 다시 실행하세요.",
+    "accepted": "**리뷰 요청을 수락했습니다.** 이전 지적 사항이 모두 해결되었는지 확인했습니다. 이제 이 MR의 새로운 전체 리뷰를 시작합니다.",
+    "completeWithFindings_one": "리뷰를 완료했습니다. 지적 사항이 포함된 새 코드 토론 {{count}}개를 만들었습니다.{{incomplete}}",
+    "completeWithFindings_other": "리뷰를 완료했습니다. 지적 사항이 포함된 새 코드 토론 {{count}}개를 만들었습니다.{{incomplete}}",
+    "completeWithFindings_few": "리뷰를 완료했습니다. 지적 사항이 포함된 새 코드 토론 {{count}}개를 만들었습니다.{{incomplete}}",
+    "completeWithFindings_many": "리뷰를 완료했습니다. 지적 사항이 포함된 새 코드 토론 {{count}}개를 만들었습니다.{{incomplete}}",
+    "completeNoFindings": "리뷰를 완료했습니다. 새 코드 토론은 만들지 않았습니다.{{incomplete}}",
+    "partialSuffix": " 검토 범위가 일부로 제한되었습니다.",
+    "failed": "**리뷰를 완료하지 못했습니다.** {{error}}",
+    "virtualMrFallback": "가상 MR"
   },
   "attachments": {
-    "unsupportedTitle": "Unsupported file type",
-    "unsupportedBody": "File “{{fileName}}” was rejected. Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.",
-    "tooLargeTitle": "File too large",
-    "tooLargeBody": "Image “{{fileName}}” exceeds the maximum allowed size of 15 MiB.",
-    "allowedTypes": "Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.",
-    "readFailed": "Failed to read image file as data URL"
+    "unsupportedTitle": "지원하지 않는 파일 형식",
+    "unsupportedBody": "“{{fileName}}” 파일이 거부되었습니다. 이 샌드박스에서는 이미지 파일(PNG, JPG, GIF, WebP, SVG)만 지원합니다.",
+    "tooLargeTitle": "파일이 너무 큽니다",
+    "tooLargeBody": "“{{fileName}}” 이미지가 최대 허용 크기인 15 MiB를 초과합니다.",
+    "allowedTypes": "이 샌드박스에서는 이미지 파일(PNG, JPG, GIF, WebP, SVG)만 지원합니다.",
+    "readFailed": "이미지 파일을 데이터 URL로 읽지 못했습니다"
   },
   "virtualMr": {
     "loadingMergeRequests": "병합 요청 불러오는 중…",

@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import React from 'react';
+import { readFileSync } from 'node:fs';
+const en = JSON.parse(readFileSync(new URL('../frontend/features/i18n/locales/en.json', import.meta.url)));
+const translate = key => key.split('.').reduce((value, part) => value?.[part], en) ?? key;
 import { renderToStaticMarkup } from 'react-dom/server';
 import { clsx } from 'clsx';
 import { componentHarness, componentNodes, loadWithMocks } from './helpers/componentHarness.mjs';
@@ -93,9 +96,11 @@ test('custom control order/visibility is honored and maximize failure does not f
   const calls = [];
   const { WindowControls } = loadWithMocks(url('components/layout/WindowControls.tsx'), {
     react: harness.react,
+    'react-i18next': { useTranslation: () => ({ t: translate }) },
     '@/core/hooks/useCommandShortcut': { useCommandShortcut: () => ({ title: (_, fallback) => fallback }) },
     '@/core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ application: {
       windowIsMaximized: async () => maximized,
+      windowIsFullscreen: async () => false,
       windowToggleMaximize: async () => { calls.push('maximize'); if (fail) throw Error('Compositor denied'); maximized = !maximized; return maximized; },
       windowMinimize: async () => calls.push('minimize'), windowClose: async () => calls.push('close'),
     } }) },

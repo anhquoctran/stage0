@@ -108,6 +108,9 @@ pub fn run() {
                     }
                 }
                 WindowEvent::Destroyed => {
+                    if window.label() == window_manager::preferences_window::LABEL {
+                        window.app_handle().state::<window_manager::PreferencesWindowState>().destroyed();
+                    }
                     menu::forget_window(&window.app_handle(), window.label());
                     if window.label() != notifications::NOTIFICATION_HOST_LABEL {
                         destroy_window(&window.app_handle(), window.label());
@@ -116,6 +119,15 @@ pub fn run() {
                             window.label(),
                         );
                     }
+                }
+                WindowEvent::CloseRequested { api, .. }
+                    if window.label() == window_manager::preferences_window::LABEL
+                        && window.app_handle().state::<window_manager::PreferencesWindowState>().is_ready() =>
+                {
+                    use tauri::Emitter;
+                    api.prevent_close();
+                    let _ = window.emit_to(window_manager::preferences_window::LABEL,
+                        window_manager::preferences_window::CLOSE_EVENT, ());
                 }
                 _ => {}
             }
@@ -158,6 +170,7 @@ pub fn run() {
         .manage(WatcherState::new())
         .manage(SandboxManager::new())
         .manage(WindowManagerState::default())
+        .manage(window_manager::PreferencesWindowState::default())
         .manage(menu::MenuRuntimeState::default())
         .manage(credentials::GitCredentialScanCoordinator::default())
         .manage(notifications::NotificationRuntime::default())
@@ -272,6 +285,9 @@ pub fn run() {
             commands::get_window_chrome,
             commands::window_start_dragging,
             commands::window_close,
+            commands::open_preferences_window,
+            commands::preferences_window_ready,
+            commands::close_preferences_window,
             commands::window_is_maximized,
             commands::window_is_fullscreen,
             commands::window_show,

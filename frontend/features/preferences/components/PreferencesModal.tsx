@@ -8,8 +8,12 @@ import { PreferencesNavTree } from './PreferencesNavTree';
 import { PreferencesResetModal } from './PreferencesResetModal';
 import { PreferencesRestartModal } from './PreferencesRestartModal';
 import { PreferencesTabContainer } from './PreferencesTabContainer';
+import type { PreferencesModalProps } from '../types/PreferencesModalProps';
+import { usePreferencesNativeWindow } from '../hooks/usePreferencesNativeWindow';
+import { useTranslation } from 'react-i18next';
 
-export const PreferencesModal: React.FC = () => {
+export const PreferencesModal: React.FC<PreferencesModalProps> = ({ standalone = false }) => {
+  const { t } = useTranslation();
   const {
     transaction: {
       isPreferencesOpen,
@@ -103,23 +107,26 @@ export const PreferencesModal: React.FC = () => {
     git: { draftGitBinaryId, setDraftGitBinaryId, draftGitBinaryPath, setDraftGitBinaryPath },
   } = usePreferencesDraft();
 
+  const windowError = usePreferencesNativeWindow(standalone, isPreferencesOpen, handleCancel);
   if (!isPreferencesOpen) return null;
 
   const currentTabId = activeTab ? normalizeTab(activeTab) : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[var(--backdrop-modal)] backdrop-blur-xs animate-in fade-in duration-150 select-none">
+    <div className={standalone ? 'flex min-h-0 flex-1 flex-col select-none' : 'fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[var(--backdrop-modal)] backdrop-blur-xs animate-in fade-in duration-150 select-none'}>
       <div
-        role="dialog" aria-modal="true" aria-label="Preferences"
-        className="relative w-full max-w-5xl h-[760px] max-h-[calc(100vh-2rem)] bg-mantle border border-surface0 shadow-2xl flex flex-col overflow-hidden text-text rounded-sm"
+        role="dialog" aria-modal={!standalone} aria-label={t('menu.commands.preferences').replace(/[.…]+$/u, '')}
+        className={standalone ? 'relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-mantle text-text' : 'relative w-full max-w-5xl h-[760px] max-h-[calc(100vh-2rem)] bg-mantle border border-surface0 shadow-2xl flex flex-col overflow-hidden text-text rounded-sm'}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Window Bar */}
         <fieldset disabled={isApplying} className="contents">
           <PreferencesModalTopBar
+            standalone={standalone}
             onOpenJsonEditor={() => setIsJsonEditorOpen(true)}
             onClose={handleCancel}
           />
+          {windowError && <p role="alert" className="px-4 py-2 text-xs text-red">{windowError}</p>}
 
           {/* Modal Main Area: Nav sidebar + Content Area */}
           <div className="flex-1 flex overflow-hidden">

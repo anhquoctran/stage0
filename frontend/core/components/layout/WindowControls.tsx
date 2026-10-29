@@ -99,15 +99,15 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
     return (
       <div
         className={`flex items-center gap-2 group/traffic select-none ${className}`}
-        aria-label="macOS Window Controls"
+        aria-label={t('common.windowControls')}
       >
         {/* Close (Red) */}
         <button
           type="button"
           data-macos-traffic-light
           onClick={handleClose}
-          title={title('close_window', 'Close')}
-          aria-label="Close"
+          title={title('close_window', t('common.close'))}
+          aria-label={t('common.close')}
           className="btn-solid w-3 h-3 rounded-full bg-[#ff5f56] flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs relative"
         >
           <svg
@@ -128,8 +128,8 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
           type="button"
           data-macos-traffic-light
           onClick={handleMinimize}
-          title="Minimize (⌘M)"
-          aria-label="Minimize"
+          title={`${t('menu.commands.minimize')} (⌘M)`}
+          aria-label={t('menu.commands.minimize')}
           className="btn-solid w-3 h-3 rounded-full bg-[#ffbd2e] flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-xs relative"
         >
           <svg
@@ -175,8 +175,8 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
   return (
     <div className={`flex items-center h-full select-none shrink-0 ${className}`}>
       {buttons.map((action) => {
-        const label = action === 'close' ? 'Close' : action === 'minimize' ? 'Minimize'
-          : isMaximized ? 'Restore Down' : 'Maximize';
+        const label = action === 'close' ? t('common.close') : action === 'minimize' ? t('menu.commands.minimize')
+          : isMaximized ? t('common.restoreWindow') : t('common.maximizeWindow');
         return <button
           key={action}
           type="button"

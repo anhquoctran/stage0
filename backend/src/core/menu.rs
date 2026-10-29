@@ -140,6 +140,17 @@ pub fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
     }
     let id = event.id().as_ref();
     match id {
+        "preferences" | "keymaps" => {
+            let app = app.clone();
+            let tab = (id == "keymaps").then(|| "general-keymaps".to_string());
+            tauri::async_runtime::spawn(async move {
+                if let Err(error) =
+                    crate::core::window_manager::preferences_window::open(&app, tab).await
+                {
+                    eprintln!("Could not open Preferences: {error}");
+                }
+            });
+        }
         "zoom" => {
             if let Some(window) = focused_window(app) {
                 if let Ok(is_max) = window.is_maximized() {

@@ -4,10 +4,12 @@ import { create } from 'zustand';
 import { loadPersistedState, normalizeLoadedAiConfig } from '../services/aiMcpPersistence';
 import { type AiConfig } from '../types/AiConfig';
 import type { AiMcpState } from '../types/AiMcpState';
+import type { AcpAgentConfig } from '../types/AcpAgentConfig';
 import { type GuardrailPolicy } from '../types/GuardrailPolicy';
 import { DEFAULT_GUARDRAIL_POLICY } from '../types/guardrails';
 import { type McpServerConfig } from '../types/McpServerConfig';
 import { resetMcpVerification } from '../utils/resetMcpVerification';
+import { DEFAULT_MCP_SERVERS } from '../constants/aiPresets';
 import { createAiConfigSlice } from './slices/createAiConfigSlice';
 import { createExternalAgentsSlice } from './slices/createExternalAgentsSlice';
 import { createGuardrailsSlice } from './slices/createGuardrailsSlice';
@@ -25,23 +27,24 @@ export const useAiMcpStore = create<AiMcpState>((...args) => ({
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('stage0-preferences-updated', (event) => {
     const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
-    const configured = settings?.ai;
-    if (!configured || Object.keys(configured).length === 0) return;
+    const configured = settings?.ai ?? {};
     const aiConfig =
       configured.aiConfig && typeof configured.aiConfig === 'object'
         ? normalizeLoadedAiConfig(configured.aiConfig as Partial<AiConfig>)
-        : useAiMcpStore.getState().aiConfig;
+        : normalizeLoadedAiConfig();
     const mcpServers = Array.isArray(configured.mcpServers)
       ? configured.mcpServers.map((server) => resetMcpVerification(server as McpServerConfig))
-      : useAiMcpStore.getState().mcpServers;
+      : DEFAULT_MCP_SERVERS.map(resetMcpVerification);
     const guardrailPolicy =
       configured.guardrailPolicy && typeof configured.guardrailPolicy === 'object'
         ? {
             ...DEFAULT_GUARDRAIL_POLICY,
             ...(configured.guardrailPolicy as Partial<GuardrailPolicy>),
           }
-        : useAiMcpStore.getState().guardrailPolicy;
-    useAiMcpStore.setState({ aiConfig, mcpServers, guardrailPolicy, aiTestResult: null });
+        : DEFAULT_GUARDRAIL_POLICY;
+    const externalAgents = Array.isArray(configured.externalAgents)
+      ? configured.externalAgents as AcpAgentConfig[] : [];
+    useAiMcpStore.setState({ aiConfig, mcpServers, guardrailPolicy, externalAgents, aiTestResult: null });
   });
 }
 

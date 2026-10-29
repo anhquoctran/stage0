@@ -126,7 +126,7 @@ if (typeof window !== 'undefined' && window.matchMedia) {
 if (typeof window !== 'undefined') {
   window.addEventListener('stage0-preferences-updated', (event) => {
     const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
-    const mode = settings?.appearance?.themeMode;
+    const mode = settings?.appearance?.themeMode ?? 'system';
     if (mode === 'system' || mode === 'dark' || mode === 'light') {
       const theme = resolveTheme(mode);
       applyThemeToDocument(theme);

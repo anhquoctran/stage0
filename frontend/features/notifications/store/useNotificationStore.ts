@@ -189,7 +189,7 @@ export const useNotificationStore = create<NotificationState>((set) => ({
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('stage0-preferences-updated', (event) => {
     const settings = (event as CustomEvent<Window['__STAGE0_PREFERENCES__']>).detail;
-    if (settings?.notifications) useNotificationStore.setState({ settings: normalizeSettings(settings.notifications) });
+    useNotificationStore.setState({ settings: normalizeSettings(settings?.notifications) });
   });
 
   window.addEventListener('storage', (event) => {

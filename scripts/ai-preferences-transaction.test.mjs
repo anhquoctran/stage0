@@ -171,6 +171,59 @@ test('MCP secret variables are stored per server in the keychain and never retai
   assert.doesNotMatch(JSON.stringify(saved), /ghp_sensitive-fixture/);
 });
 
+test('UI and output languages join the same JSON patch as AI preferences without touching the keychain', async () => {
+  const fixture = serviceFixture();
+  const saved = { appearance: { language: 'en' }, ai: { agentOutputLanguage: 'follow-app' } };
+  Object.assign(fixture.getPreferenceDocument(), { settings: saved, content: JSON.stringify(saved) });
+  const draft = createAiPreferencesDraft(fixture.initial);
+  draft.getState().updateAiConfig({ maxTokens: 8192 });
+  let validated = false;
+  await fixture.commitAiPreferences(draft.getState(), fixture.initial, {
+    appearance: { language: 'vi' }, ai: { agentOutputLanguage: 'ja' },
+  }, (current) => {
+    validated = true;
+    assert.equal(current.appearance.language, 'en');
+    assert.equal(fixture.preferenceWrites.length, 0, 'Validate the fresh document before writing');
+  });
+  assert.equal(validated, true);
+  assert.equal(fixture.preferenceWrites.length, 1);
+  const patch = fixture.preferenceWrites[0][1];
+  assert.equal(patch.appearance.language, 'vi');
+  assert.equal(patch.ai.agentOutputLanguage, 'ja');
+  assert.equal(patch.ai.aiConfig.maxTokens, 8192, 'Output language does not replace the AI configuration');
+  assert.equal(fixture.calls.length, 0, 'Language values do not go through OS keychain IPC');
+});
+
+test('a rejected latest-document validation performs no preference or credential writes', async () => {
+  const fixture = serviceFixture();
+  const draft = createAiPreferencesDraft(fixture.initial);
+  draft.getState().updateAiConfig({ apiKey: 'pending-secret' });
+  await assert.rejects(fixture.commitAiPreferences(draft.getState(), fixture.initial,
+    { appearance: { language: 'vi' } }, () => { throw Error('Language changed in another window'); }), /another window/);
+  assert.equal(fixture.preferenceWrites.length, 0);
+  assert.equal(fixture.calls.length, 0);
+  assert.equal(draft.getState().apiKeyDrafts.openai, 'pending-secret');
+});
+
+test('a failed credentials batch rolls back both language fields with the rest of the JSON transaction', async () => {
+  const fixture = serviceFixture(async () => { throw Error('Keychain denied'); });
+  const previous = { appearance: { language: 'en' }, ai: { agentOutputLanguage: 'fr' } };
+  const content = JSON.stringify(previous);
+  Object.assign(fixture.getPreferenceDocument(), { content, settings: previous });
+  const draft = createAiPreferencesDraft(fixture.initial);
+  draft.getState().updateAiConfig({ apiKey: 'pending-secret' });
+  await assert.rejects(fixture.commitAiPreferences(draft.getState(), fixture.initial, {
+    appearance: { language: 'ar' }, ai: { agentOutputLanguage: 'follow-app' },
+  }), /Keychain denied/);
+  assert.equal(fixture.preferenceWrites[0][1].ai.agentOutputLanguage, 'follow-app');
+  assert.deepEqual(fixture.preferenceWrites[1], ['rollback', content]);
+  assert.equal(fixture.getPreferenceDocument().content, content);
+  assert.equal(fixture.calls.length, 1);
+  assert.equal(fixture.calls[0][1].appearance, undefined);
+  assert.equal(fixture.calls[0][1].agentOutputLanguage, undefined);
+  assert.equal(draft.getState().apiKeyDrafts.openai, 'pending-secret', 'Draft remains available for retry');
+});
+
 test('removing the last MCP secret removes that server’s keychain record after JSON patching', async () => {
   const fixture = serviceFixture(async () => ({}));
   const server = { id: 'git-context', name: 'Git Context', type: 'stdio', command: 'mcp-server', args: [], env: {}, secretEnvKeys: ['GITHUB_TOKEN'], enabled: true };
@@ -203,6 +256,7 @@ function dialogFixture(commitHandler) {
   const usePreferencesStore = Object.assign(() => preferences, { getState: () => preferences, setState: (value) => Object.assign(preferences, typeof value === 'function' ? value(preferences) : value) });
   const dependencies = {
     react: harness.react,
+    'react-i18next': { useTranslation: () => ({ t: key => ({ 'menu.commands.preferences': 'Preferences...', 'common.settings': 'Settings', 'common.close': 'Close' })[key] ?? key }) },
     '../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({ platform: { capabilities: { backend: false, preferencesFile: false } } }) },
     '../store/usePreferencesStore': { usePreferencesStore, checkFontLigaturesSupport: () => true, applyViewerFontToDocument() {}, DEFAULT_VIEWER_FONT_SETTINGS: preferences },
     '../../../core/store/useThemeStore': { useThemeStore, resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {} },

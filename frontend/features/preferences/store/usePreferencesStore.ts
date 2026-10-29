@@ -9,6 +9,7 @@ import { applyMarkdownFontToDocument } from '../utils/applyMarkdownFontToDocumen
 import { readKeymap } from '../../../core/services/keymaps/validation';
 import { DEFAULT_UI_FONT_FAMILY } from '../constants/uiFonts';
 import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
+import { requestPreferencesWindow } from '../services/preferencesWindowService';
 
 const STORAGE_KEY = 'stage0_viewer_font_settings';
 const MARKDOWN_FONT_STORAGE_KEY = 'stage0_markdown_font_settings';
@@ -173,20 +174,30 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   addToPath: getInitialAddToPath(),
   keymap: readKeymap(typeof window === 'undefined' ? undefined : window.__STAGE0_PREFERENCES__?.keymap),
 
-  setIsPreferencesOpen: (open: boolean) =>
+  setIsPreferencesOpen: (open: boolean) => {
+    if (open && requestPreferencesWindow(get().initialPreferencesTab)) {
+      set({ initialPreferencesTab: null });
+      return;
+    }
     set({
       isPreferencesOpen: open,
       initialPreferencesTab: open ? get().initialPreferencesTab : null,
-    }),
+    });
+  },
 
   setInitialPreferencesTab: (tab: string | null) =>
     set({ initialPreferencesTab: tab }),
 
-  openPreferences: (tab?: string) =>
+  openPreferences: (tab?: string) => {
+    if (requestPreferencesWindow(tab)) {
+      set({ initialPreferencesTab: null });
+      return;
+    }
     set({
       isPreferencesOpen: true,
       initialPreferencesTab: tab ?? null,
-    }),
+    });
+  },
 
   setShowInlineBlame: (show: boolean) => {
     set({ showInlineBlame: show });
@@ -297,13 +308,13 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
     usePreferencesStore.setState({ uiFontFamily, linuxTitleBar: settings?.appearance?.linuxTitleBar === 'custom' ? 'custom' : 'system' });
     const general = settings?.general;
     usePreferencesStore.setState({ keymap: readKeymap(settings?.keymap) });
-    if (font && typeof font === 'object') {
-      const next = { ...DEFAULT_VIEWER_FONT_SETTINGS, ...(font as Partial<ViewerFontSettings>) };
+    {
+      const next = { ...DEFAULT_VIEWER_FONT_SETTINGS, ...(font && typeof font === 'object' ? font as Partial<ViewerFontSettings> : {}) };
       applyViewerFontToDocument(next);
       usePreferencesStore.setState(next);
     }
-    if (mdFont && typeof mdFont === 'object') {
-      const nextMd = { ...DEFAULT_MARKDOWN_FONT_SETTINGS, ...(mdFont as Partial<MarkdownFontSettings>) };
+    {
+      const nextMd = { ...DEFAULT_MARKDOWN_FONT_SETTINGS, ...(mdFont && typeof mdFont === 'object' ? mdFont as Partial<MarkdownFontSettings> : {}) };
       applyMarkdownFontToDocument(nextMd);
       usePreferencesStore.setState({
         markdownFontFamily: nextMd.fontFamily,
@@ -313,7 +324,9 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
         markdownHeadingFontWeight: nextMd.headingFontWeight,
       });
     }
-    if (typeof general?.showInlineBlame === 'boolean') usePreferencesStore.setState({ showInlineBlame: general.showInlineBlame });
+    for (const key of ['showInlineBlame', 'launchAtStartup', 'startInBackground', 'explorerContextMenu', 'addToPath'] as const) {
+      usePreferencesStore.setState({ [key]: typeof general?.[key] === 'boolean' ? general[key] : key === 'showInlineBlame' || key === 'launchAtStartup' });
+    }
   });
 }
 

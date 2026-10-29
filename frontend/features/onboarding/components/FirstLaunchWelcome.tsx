@@ -1,11 +1,8 @@
-import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ArrowRight } from '../../../common/components/icons/ArrowRight';
 import { Check } from '../../../common/components/icons/Check';
-import { X } from '../../../common/components/icons/X';
-import { isMacOS } from '../../../common/utils/shortcuts';
 import { AppLogo } from '../../../common/components/AppLogo';
 import { ScrollArea } from '../../../common/components/ScrollArea';
 import { useGitStore } from '../../git/store/useGitStore';
@@ -17,6 +14,7 @@ import { WelcomeSettingsPanel } from './WelcomeSettingsPanel';
 import { WelcomeAiSetup } from './WelcomeAiSetup';
 import { OnboardingReviewerSetup } from './OnboardingReviewerSetup';
 import { OnboardingHello } from './OnboardingHello';
+import { OnboardingWindowChrome } from './OnboardingWindowChrome';
 
 const ONBOARDING_STORAGE_KEY = 'stage0_first_launch_welcome_v1';
 
@@ -33,7 +31,6 @@ const REVIEWER_SETUP_SLIDE = SLIDES.findIndex((slide) => slide.id === 'reviewer-
 
 export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComplete }) => {
   const { t } = useTranslation();
-  const appServices = useApplicationServices();
   const [activeSlide, setActiveSlide] = useState(0);
   const { settings, setSettings, isSaving, saveError, save, reload } = useOnboardingPreferences();
   const aiSetup = useOnboardingAiSetup();
@@ -41,9 +38,6 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   const [aiSetupPassed, setAiSetupPassed] = useState(false);
   const completedRef = useRef(false);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const isMac =
-    isMacOS() ||
-    (typeof window !== 'undefined' && window.location.search.includes('platform=mac'));
 
   const currentSlide = SLIDES[activeSlide];
   const isHelloSlide = currentSlide.id === 'hello';
@@ -121,12 +115,6 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
   const finishRef = useRef(finish);
   finishRef.current = finish;
 
-  const minimizeWindow = () => {
-    void appServices.application
-      .windowMinimize()
-      .catch((error) => console.warn('Minimize error:', error));
-  };
-
   useEffect(() => {
     dialogRef.current?.focus({ preventScroll: true });
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -176,12 +164,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
     (isReviewerSlide && !aiSetup.canFinish() && !aiSetup.hasChanges);
 
   return (
-    <div className="fixed inset-0 z-200 bg-base text-text rounded-none">
-      <div
-        data-tauri-drag-region
-        aria-hidden="true"
-        className="absolute inset-x-0 top-0 z-5 h-14 cursor-default rounded-none"
-      />
+    <div className="absolute inset-0 z-200 bg-base text-text rounded-none">
       <div
         ref={dialogRef}
         role="dialog"
@@ -192,32 +175,8 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
         tabIndex={-1}
         className="flex h-full w-full flex-col overflow-hidden rounded-none focus:outline-none!"
       >
+        <OnboardingWindowChrome />
         <fieldset disabled={isBusy} className="contents">
-          {!isMac && (
-            <div className="absolute end-4 top-4 z-10 flex items-center sm:end-6 sm:top-6">
-              <button
-                type="button"
-                onClick={minimizeWindow}
-                aria-label="Minimize window"
-                title="Minimize window"
-                className="flex h-10 w-10 items-center justify-center text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-primary rounded-none"
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                  <path d="M2 6h8" stroke="currentColor" strokeWidth="1.25" />
-                </svg>
-              </button>
-              {!isHelloSlide && <button
-                type="button"
-                onClick={finish}
-                aria-label="Close welcome guide"
-                title="Close welcome guide"
-                className="flex h-10 w-10 items-center justify-center text-subtext0 transition-colors hover:border-surface1 hover:bg-surface0 hover:text-text focus-visible:outline focus-visible:outline-primary rounded-none"
-              >
-                <X className="h-4 w-4" />
-              </button>}
-            </div>
-          )}
-
           {isHelloSlide ? (
             <OnboardingHello onContinue={() => void selectSlide(activeSlide + 1)} />
           ) : <section className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col overflow-hidden px-6 py-8 sm:px-10 sm:py-10">

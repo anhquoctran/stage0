@@ -6,7 +6,10 @@
     "save": "Enregistrer",
     "settings": "Paramètres",
     "backToAiOverview": "Retour à l’aperçu de l’IA",
-    "next": "Suivant"
+    "next": "Suivant",
+    "windowControls": "Commandes de fenêtre",
+    "restoreWindow": "Restaurer la taille",
+    "maximizeWindow": "Agrandir"
   },
   "preferences": {
     "appearance": "Apparence",
@@ -55,76 +58,81 @@
     "headers": {
       "general-keymaps": {
         "title": "Raccourcis clavier",
-        "description": "Configurez les options de cette section."
+        "description": "Choisissez un préréglage familier ou personnalisez les commandes et la navigation de Stage0."
       },
       "general-settings": {
         "title": "Paramètres généraux",
-        "description": "Configurez les options de cette section."
+        "description": "Configurez les annotations en ligne, le démarrage, l’intégration à l’explorateur et la commande de terminal."
       },
       "appearance-theme": {
         "title": "Thème et mode d’interface",
-        "description": "Configurez les options de cette section."
+        "description": "Utilisez le thème clair ou sombre sélectionné ou suivez l’apparence du système."
       },
       "appearance-language": {
         "title": "Langue et localisation",
-        "description": "Configurez les options de cette section."
+        "description": "Choisissez la langue de l’application, les formats de date et d’heure et la langue des réviseurs IA."
       },
       "appearance-fonts": {
         "title": "Police et typographie de l’éditeur",
-        "description": "Configurez les options de cette section."
+        "description": "Famille, taille, graisse, hauteur de ligne et ligatures pour les panneaux de l’éditeur."
       },
       "appearance-ui-font": {
         "title": "Police de l’interface",
-        "description": "Configurez les options de cette section."
+        "description": "Choisissez la police des menus, de la navigation, des libellés et des boutons."
       },
       "appearance-markdown-font": {
         "title": "Police et typographie Markdown",
-        "description": "Configurez les options de cette section."
+        "description": "Configurez les polices de l’éditeur Markdown, de l’aperçu et des blocs de code, la taille de l’aperçu et la graisse des titres."
       },
       "editor-diff": {
         "title": "Visionneuse de diff et navigation du code",
-        "description": "Configurez les options de cette section."
+        "description": "Configurez les différences en vue divisée ou unifiée, la sensibilité aux espaces et les annotations Git en ligne."
       },
       "ai-overview": {
         "title": "IA",
-        "description": "Configurez les options de cette section."
+        "description": "Indiquez si l’ouverture d’une MR virtuelle ou d’un dépôt active automatiquement le contexte de l’assistant IA."
       },
       "ai-providers": {
         "title": "Fournisseurs LLM",
-        "description": "Configurez les options de cette section."
+        "description": "Configurez les fournisseurs de modèles intégrés (OpenAI, Anthropic, DeepSeek, Ollama, etc.)."
       },
       "ai-mcp": {
         "title": "Serveurs MCP",
-        "description": "Configurez les options de cette section."
+        "description": "Affichez, ajoutez, configurez et supprimez des serveurs Model Context Protocol."
       },
       "ai-external-agents": {
         "title": "Agents externes",
-        "description": "Configurez les options de cette section."
+        "description": "Recherchez, ajoutez, connectez et supprimez des agents via Agent Client Protocol."
       },
       "ai-reviewers": {
         "title": "Bots de revue",
-        "description": "Configurez les options de cette section."
+        "description": "Configurez les rôles des réviseurs et les instructions supplémentaires pour les revues de code."
       },
       "ai-sandbox": {
         "title": "Sandbox et autorisations des outils",
-        "description": "Configurez les options de cette section."
+        "description": "Vérifiez et modifiez les autorisations élevées du bac à sable virtuel (en mémoire, Docker, hôte)."
       },
       "ai-guardrails": {
         "title": "Sécurité et garde-fous",
-        "description": "Configurez les options de cette section."
+        "description": "Restrictions de chemins, blocage des commandes destructrices et seuils d’approbation."
       },
       "git-binary": {
         "title": "Exécutable Git",
-        "description": "Configurez les options de cette section."
+        "description": "Sélectionnez l’exécutable Git pour les opérations sur les dépôts. Les identifiants enregistrés ne sont actuellement pas transmis aux commandes Git."
       },
       "git-credentials": {
         "title": "Identifiants et dépôts distants Git",
-        "description": "Configurez les options de cette section."
+        "description": "Gérez les identifiants et associations Stage0 détectés dans les assistants Git système ou globaux."
       },
       "notifications-settings": {
         "title": "Notifications et alertes push",
-        "description": "Configurez les options de cette section."
+        "description": "Configurez les notifications natives du système d’exploitation et les canaux d’événements."
       }
+    },
+    "window": {
+      "openError": "Impossible d’ouvrir les préférences : {{error}}",
+      "initializeError": "Impossible d’initialiser la fenêtre des préférences : {{error}}",
+      "closeError": "Impossible de fermer la fenêtre des préférences : {{error}}"
     }
   },
   "dateTime": {
@@ -138,7 +146,12 @@
     "monthsAgo_one": "il y a {{count}} mois",
     "monthsAgo_other": "il y a {{count}} mois",
     "yearsAgo_one": "il y a {{count}} an",
-    "yearsAgo_other": "il y a {{count}} ans"
+    "yearsAgo_other": "il y a {{count}} ans",
+    "minutesAgo_many": "il y a {{count}} minutes",
+    "hoursAgo_many": "il y a {{count}} heures",
+    "daysAgo_many": "il y a {{count}} jours",
+    "monthsAgo_many": "il y a {{count}} mois",
+    "yearsAgo_many": "il y a {{count}} ans"
   },
   "menu": {
     "commands": {
@@ -240,79 +253,81 @@
     "gotIt": "Compris"
   },
   "notifications": {
-    "categoryHeading": "Notification categories",
-    "categoryDescription": "Choose which Stage0 events can show a toast. Position and dismissal are set by Stage0 for each event.",
-    "aiReviewTitle": "AI code review",
-    "aiReviewDescription": "When an AI review or re-verification finishes.",
-    "gitSyncTitle": "Git watchers and sync",
-    "gitSyncDescription": "Remote changes, new branches, and sync events.",
-    "guardrailsTitle": "Security guardrails",
-    "guardrailsDescription": "Elevated commands, access blocks, and policy violations.",
-    "previewTitle": "Preview the notification toast",
-    "previewDescription": "Send a test using this platform’s notification style. It is not added to history or unread count.",
-    "previewSent": "Test toast sent. It does not affect notification history or unread count.",
-    "previewFailed": "Could not display a test notification on this system.",
-    "testTooltip": "Show a test notification without saving it",
-    "desktopOnly": "Available in the desktop app",
-    "sending": "Sending…",
-    "testButton": "Test Toast",
-    "testTitle": "Stage0 notification preview",
-    "testBody": "Preview only. Not saved.",
-    "viewAction": "View notifications",
-    "close": "Close notifications",
+    "categoryHeading": "Catégories de notifications",
+    "categoryDescription": "Choisissez les événements Stage0 pouvant afficher une notification. Stage0 définit sa position et sa fermeture pour chaque événement.",
+    "aiReviewTitle": "Revue de code par IA",
+    "aiReviewDescription": "À la fin d’une revue IA ou d’une nouvelle vérification.",
+    "gitSyncTitle": "Surveillance et synchronisation Git",
+    "gitSyncDescription": "Modifications distantes, nouvelles branches et événements de synchronisation.",
+    "guardrailsTitle": "Protections de sécurité",
+    "guardrailsDescription": "Commandes avec privilèges élevés, accès bloqués et violations des règles.",
+    "previewTitle": "Aperçu de la notification",
+    "previewDescription": "Envoyez un test utilisant le style de notification de cette plateforme. Il ne sera pas ajouté à l’historique ni au nombre de notifications non lues.",
+    "previewSent": "Notification de test envoyée. Elle ne modifie ni l’historique ni le nombre de notifications non lues.",
+    "previewFailed": "Impossible d’afficher une notification de test sur ce système.",
+    "testTooltip": "Afficher une notification de test sans l’enregistrer",
+    "desktopOnly": "Disponible dans l’application de bureau",
+    "sending": "Envoi…",
+    "testButton": "Tester la notification",
+    "testTitle": "Aperçu des notifications Stage0",
+    "testBody": "Aperçu uniquement. Non enregistré.",
+    "viewAction": "Afficher les notifications",
+    "close": "Fermer les notifications",
     "drawerTitle": "Notifications",
-    "unreadCount_one": "{{count}} unread",
-    "unreadCount_other": "{{count}} unread",
-    "clearAll": "Clear all notifications",
-    "markAllRead": "Mark all read",
-    "markRead": "Mark read",
-    "unreadLabel": "Unread",
-    "emptyTitle": "You’re all caught up",
-    "emptyDescription": "New notifications will appear here.",
-    "fallbackTitle": "Stage0 Notification",
+    "unreadCount_one": "{{count}} non lue",
+    "unreadCount_other": "{{count}} non lues",
+    "clearAll": "Effacer toutes les notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "markRead": "Marquer comme lu",
+    "unreadLabel": "Non lue",
+    "emptyTitle": "Vous êtes à jour",
+    "emptyDescription": "Les nouvelles notifications apparaîtront ici.",
+    "fallbackTitle": "Notification Stage0",
     "fallbackBody": "Notification",
-    "toastView": "View",
-    "dismiss": "Dismiss",
-    "dismissLabel": "Dismiss notification",
-    "deliveryFailed": "Stage0 notification delivery failed."
+    "toastView": "Afficher",
+    "dismiss": "Ignorer",
+    "dismissLabel": "Ignorer la notification",
+    "deliveryFailed": "Échec de l’envoi de la notification Stage0.",
+    "unreadCount_many": "{{count}} non lues"
   },
   "reviewFlow": {
-    "completedTitle": "{{reviewer}} finished an MR review",
-    "completedBody_one": "Created {{count}} review discussion in {{title}}.",
-    "completedBody_other": "Created {{count}} review discussions in {{title}}.",
-    "pendingLabel": "Reviewing this MR and preparing findings…",
-    "pausedTitle": "Review paused: resolve my earlier findings first.",
-    "openFindings_one": "I found {{count}} unresolved code discussion from this reviewer:",
-    "openFindings_other": "I found {{count}} unresolved code discussions from this reviewer:",
-    "openFindings_few": "I found {{count}} unresolved code discussions from this reviewer:",
-    "openFindings_many": "I found {{count}} unresolved code discussions from this reviewer:",
-    "moreFindings_one": "…and {{count}} more open finding",
-    "moreFindings_other": "…and {{count}} more open findings",
-    "moreFindings_few": "…and {{count}} more open findings",
-    "moreFindings_many": "…and {{count}} more open findings",
-    "resolveThenRetry": "Resolve those threads, then post {{command}} in a new discussion to request another pass.",
-    "reloadFailed": "**Review not started.** I could not reload the latest discussion state, so I could not safely check previous findings. Please retry shortly.",
-    "unassigned": "**Review not started.** This bot is no longer assigned to this MR.",
-    "profileUnavailable": "**Review not started.** This reviewer profile is unavailable or disabled. Reassign an enabled reviewer and try again.",
-    "closed": "**Review not started.** Reopen this Virtual MR before requesting a review.",
-    "busy": "**Review not started yet.** Another AI review is already running for this MR. Retry the command after it finishes.",
-    "accepted": "**Review request accepted.** I checked that none of my earlier findings are still open. I’m starting a new full review of this MR now.",
-    "completeWithFindings_one": "Review complete. I created {{count}} new code discussion with findings.{{incomplete}}",
-    "completeWithFindings_other": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeWithFindings_few": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeWithFindings_many": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeNoFindings": "Review complete. I did not create any new code discussions.{{incomplete}}",
-    "partialSuffix": " Coverage was incomplete.",
-    "failed": "**Review did not finish.** {{error}}",
-    "virtualMrFallback": "the Virtual MR"
+    "completedTitle": "{{reviewer}} a terminé la revue d’une MR",
+    "completedBody_one": "{{count}} discussion de revue créée dans {{title}}.",
+    "completedBody_other": "{{count}} discussions de revue créées dans {{title}}.",
+    "pendingLabel": "Revue de cette MR et préparation des observations…",
+    "pausedTitle": "Revue suspendue : résolvez d’abord mes observations précédentes.",
+    "openFindings_one": "J’ai trouvé {{count}} discussion de code non résolue de ce réviseur :",
+    "openFindings_other": "J’ai trouvé {{count}} discussions de code non résolues de ce réviseur :",
+    "openFindings_few": "J’ai trouvé {{count}} discussions de code non résolues de ce réviseur :",
+    "openFindings_many": "J’ai trouvé {{count}} discussions de code non résolues de ce réviseur :",
+    "moreFindings_one": "…et {{count}} autre observation ouverte",
+    "moreFindings_other": "…et {{count}} autres observations ouvertes",
+    "moreFindings_few": "…et {{count}} autres observations ouvertes",
+    "moreFindings_many": "…et {{count}} autres observations ouvertes",
+    "resolveThenRetry": "Résolvez ces discussions, puis publiez {{command}} dans une nouvelle discussion pour demander une autre revue.",
+    "reloadFailed": "**Revue non démarrée.** Impossible de recharger l’état actuel des discussions et de vérifier les observations précédentes en toute sécurité. Réessayez dans un instant.",
+    "unassigned": "**Revue non démarrée.** Ce bot n’est plus affecté à cette MR.",
+    "profileUnavailable": "**Revue non démarrée.** Le profil du réviseur est indisponible ou désactivé. Affectez un réviseur actif et réessayez.",
+    "closed": "**Revue non démarrée.** Rouvrez cette MR virtuelle avant de demander une revue.",
+    "busy": "**Revue pas encore démarrée.** Une autre revue IA est en cours pour cette MR. Réexécutez la commande une fois celle-ci terminée.",
+    "accepted": "**Demande de revue acceptée.** J’ai vérifié que toutes mes observations précédentes sont résolues. Je commence une nouvelle revue complète de cette MR.",
+    "completeWithFindings_one": "Revue terminée. J’ai créé {{count}} nouvelle discussion de code contenant des observations.{{incomplete}}",
+    "completeWithFindings_other": "Revue terminée. J’ai créé {{count}} nouvelles discussions de code contenant des observations.{{incomplete}}",
+    "completeWithFindings_few": "Revue terminée. J’ai créé {{count}} nouvelles discussions de code contenant des observations.{{incomplete}}",
+    "completeWithFindings_many": "Revue terminée. J’ai créé {{count}} nouvelles discussions de code contenant des observations.{{incomplete}}",
+    "completeNoFindings": "Revue terminée. Je n’ai créé aucune nouvelle discussion de code.{{incomplete}}",
+    "partialSuffix": " La couverture était incomplète.",
+    "failed": "**La revue ne s’est pas terminée.** {{error}}",
+    "virtualMrFallback": "la MR virtuelle",
+    "completedBody_many": "{{count}} discussions de revue créées dans {{title}}."
   },
   "attachments": {
-    "unsupportedTitle": "Unsupported file type",
-    "unsupportedBody": "File “{{fileName}}” was rejected. Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.",
-    "tooLargeTitle": "File too large",
-    "tooLargeBody": "Image “{{fileName}}” exceeds the maximum allowed size of 15 MiB.",
-    "allowedTypes": "Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.",
-    "readFailed": "Failed to read image file as data URL"
+    "unsupportedTitle": "Type de fichier non pris en charge",
+    "unsupportedBody": "Le fichier « {{fileName}} » a été refusé. Cet environnement isolé ne prend en charge que les images (PNG, JPG, GIF, WebP, SVG).",
+    "tooLargeTitle": "Fichier trop volumineux",
+    "tooLargeBody": "L’image « {{fileName}} » dépasse la taille maximale autorisée de 15 MiB.",
+    "allowedTypes": "Cet environnement isolé ne prend en charge que les images (PNG, JPG, GIF, WebP, SVG).",
+    "readFailed": "Impossible de lire le fichier image sous forme d’URL de données"
   },
   "virtualMr": {
     "loadingMergeRequests": "Chargement des demandes de fusion…",

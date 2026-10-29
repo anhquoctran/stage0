@@ -139,7 +139,7 @@ export const MainApp: React.FC = () => {
   return (
     <div
       className={clsx(
-        'flex flex-col h-screen w-screen overflow-hidden box-border bg-crust select-none transition-all duration-150',
+        'relative flex flex-col h-screen w-screen overflow-hidden box-border bg-crust select-none transition-all duration-150',
         hideCustomFrame ? 'border-0 rounded-none' : 'border border-surface0',
         isCustomMacWindow ? 'rounded-sm' : 'rounded-none',
       )}

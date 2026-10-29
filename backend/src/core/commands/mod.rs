@@ -1,3 +1,4 @@
+mod preferences_window;
 mod window;
 pub use crate::features::about::commands::*;
 pub use crate::features::ai::commands::*;
@@ -10,4 +11,5 @@ pub use crate::features::review::connectors::commands::*;
 pub use crate::features::sandbox::commands::*;
 pub use crate::features::updates::commands::*;
 pub use crate::features::virtual_mr::commands::*;
+pub use preferences_window::*;
 pub use window::*;

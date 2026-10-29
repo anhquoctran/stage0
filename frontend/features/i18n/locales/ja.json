@@ -6,7 +6,10 @@
     "save": "保存",
     "settings": "設定",
     "backToAiOverview": "AI概要に戻る",
-    "next": "次へ"
+    "next": "次へ",
+    "windowControls": "ウィンドウ操作",
+    "restoreWindow": "元のサイズに戻す",
+    "maximizeWindow": "最大化"
   },
   "preferences": {
     "appearance": "外観",
@@ -55,76 +58,81 @@
     "headers": {
       "general-keymaps": {
         "title": "キーマップとキーボードショートカット",
-        "description": "このセクションの項目を設定します。"
+        "description": "使い慣れたプリセットを選ぶか、Stage0のコマンドや操作をカスタマイズします。"
       },
       "general-settings": {
         "title": "一般設定",
-        "description": "このセクションの項目を設定します。"
+        "description": "行内注釈、起動時の動作、ファイルマネージャーとの連携、ターミナルコマンドを設定します。"
       },
       "appearance-theme": {
         "title": "テーマとインターフェースモード",
-        "description": "このセクションの項目を設定します。"
+        "description": "選択したライト・ダークテーマを使うか、OSの外観に合わせます。"
       },
       "appearance-language": {
         "title": "言語とローカライズ",
-        "description": "このセクションの項目を設定します。"
+        "description": "アプリの言語、日時の形式、AIレビュアーの出力言語を選択します。"
       },
       "appearance-fonts": {
         "title": "エディターのフォントと文字設定",
-        "description": "このセクションの項目を設定します。"
+        "description": "エディターパネルのフォント、サイズ、太さ、行の高さ、合字の表示を設定します。"
       },
       "appearance-ui-font": {
         "title": "UI フォント",
-        "description": "このセクションの項目を設定します。"
+        "description": "メニュー、ナビゲーション、ラベル、ボタンのフォントを選択します。"
       },
       "appearance-markdown-font": {
         "title": "Markdown フォントと文字設定",
-        "description": "このセクションの項目を設定します。"
+        "description": "Markdownエディター、プレビュー、コードブロックのフォントと、プレビューのサイズや見出しの太さを設定します。"
       },
       "editor-diff": {
         "title": "差分ビューアーとコードナビゲーション",
-        "description": "このセクションの項目を設定します。"
+        "description": "差分の分割・統合表示、空白の扱い、行内のGit Blameを設定します。"
       },
       "ai-overview": {
         "title": "AI",
-        "description": "このセクションの項目を設定します。"
+        "description": "仮想MRやリポジトリを開くときに、AIアシスタントのコンテキストを自動で有効にするかを選択します。"
       },
       "ai-providers": {
         "title": "LLM プロバイダー",
-        "description": "このセクションの項目を設定します。"
+        "description": "組み込みのモデルプロバイダー（OpenAI、Anthropic、DeepSeek、Ollamaなど）を設定します。"
       },
       "ai-mcp": {
         "title": "MCP サーバー",
-        "description": "このセクションの項目を設定します。"
+        "description": "Model Context Protocolサーバーを表示、追加、設定、削除します。"
       },
       "ai-external-agents": {
         "title": "外部エージェント",
-        "description": "このセクションの項目を設定します。"
+        "description": "Agent Client Protocolを通じてエージェントを検索、追加、ログイン、削除します。"
       },
       "ai-reviewers": {
         "title": "レビューボット",
-        "description": "このセクションの項目を設定します。"
+        "description": "コードレビューの役割と追加の指示を設定します。"
       },
       "ai-sandbox": {
         "title": "サンドボックスとツール権限",
-        "description": "このセクションの項目を設定します。"
+        "description": "仮想サンドボックス（インメモリ、Docker、ホスト）の昇格権限を確認・変更します。"
       },
       "ai-guardrails": {
         "title": "セキュリティとガードレール",
-        "description": "このセクションの項目を設定します。"
+        "description": "パスの制限、破壊的なコマンドのブロック、承認の基準を設定します。"
       },
       "git-binary": {
         "title": "Git 実行ファイル",
-        "description": "このセクションの項目を設定します。"
+        "description": "リポジトリ操作に使うGit実行ファイルを選択します。保存済みのGit認証情報は現在Gitコマンドに渡されません。"
       },
       "git-credentials": {
         "title": "Git 認証情報とリモート",
-        "description": "このセクションの項目を設定します。"
+        "description": "システム・グローバルGitヘルパーから検出したStage0の認証情報と関連付けを管理します。"
       },
       "notifications-settings": {
         "title": "通知とプッシュ通知",
-        "description": "このセクションの項目を設定します。"
+        "description": "OSのネイティブ通知とイベントチャンネルを設定します。"
       }
+    },
+    "window": {
+      "openError": "環境設定を開けませんでした：{{error}}",
+      "initializeError": "環境設定ウィンドウを初期化できませんでした：{{error}}",
+      "closeError": "環境設定ウィンドウを閉じられませんでした：{{error}}"
     }
   },
   "dateTime": {
@@ -240,79 +248,79 @@
     "gotIt": "了解"
   },
   "notifications": {
-    "categoryHeading": "Notification categories",
-    "categoryDescription": "Choose which Stage0 events can show a toast. Position and dismissal are set by Stage0 for each event.",
-    "aiReviewTitle": "AI code review",
-    "aiReviewDescription": "When an AI review or re-verification finishes.",
-    "gitSyncTitle": "Git watchers and sync",
-    "gitSyncDescription": "Remote changes, new branches, and sync events.",
-    "guardrailsTitle": "Security guardrails",
-    "guardrailsDescription": "Elevated commands, access blocks, and policy violations.",
-    "previewTitle": "Preview the notification toast",
-    "previewDescription": "Send a test using this platform’s notification style. It is not added to history or unread count.",
-    "previewSent": "Test toast sent. It does not affect notification history or unread count.",
-    "previewFailed": "Could not display a test notification on this system.",
-    "testTooltip": "Show a test notification without saving it",
-    "desktopOnly": "Available in the desktop app",
-    "sending": "Sending…",
-    "testButton": "Test Toast",
-    "testTitle": "Stage0 notification preview",
-    "testBody": "Preview only. Not saved.",
-    "viewAction": "View notifications",
-    "close": "Close notifications",
-    "drawerTitle": "Notifications",
-    "unreadCount_one": "{{count}} unread",
-    "unreadCount_other": "{{count}} unread",
-    "clearAll": "Clear all notifications",
-    "markAllRead": "Mark all read",
-    "markRead": "Mark read",
-    "unreadLabel": "Unread",
-    "emptyTitle": "You’re all caught up",
-    "emptyDescription": "New notifications will appear here.",
-    "fallbackTitle": "Stage0 Notification",
-    "fallbackBody": "Notification",
-    "toastView": "View",
-    "dismiss": "Dismiss",
-    "dismissLabel": "Dismiss notification",
-    "deliveryFailed": "Stage0 notification delivery failed."
+    "categoryHeading": "通知の種類",
+    "categoryDescription": "通知を表示できるStage0イベントを選択します。表示位置と閉じ方はイベントごとにStage0が設定します。",
+    "aiReviewTitle": "AIコードレビュー",
+    "aiReviewDescription": "AIレビューまたは再検証が完了したとき。",
+    "gitSyncTitle": "Gitの監視と同期",
+    "gitSyncDescription": "リモートの変更、新しいブランチ、同期イベント。",
+    "guardrailsTitle": "セキュリティ保護",
+    "guardrailsDescription": "権限昇格コマンド、アクセスのブロック、ポリシー違反。",
+    "previewTitle": "通知のプレビュー",
+    "previewDescription": "このプラットフォームの通知スタイルでテストを送信します。履歴や未読件数には追加されません。",
+    "previewSent": "テスト通知を送信しました。履歴や未読件数には影響しません。",
+    "previewFailed": "このシステムではテスト通知を表示できませんでした。",
+    "testTooltip": "保存せずにテスト通知を表示",
+    "desktopOnly": "デスクトップアプリで利用できます",
+    "sending": "送信中…",
+    "testButton": "通知をテスト",
+    "testTitle": "Stage0通知のプレビュー",
+    "testBody": "プレビューのみ。保存されません。",
+    "viewAction": "通知を表示",
+    "close": "通知を閉じる",
+    "drawerTitle": "通知",
+    "unreadCount_one": "未読 {{count}} 件",
+    "unreadCount_other": "未読 {{count}} 件",
+    "clearAll": "すべての通知を削除",
+    "markAllRead": "すべて既読にする",
+    "markRead": "既読にする",
+    "unreadLabel": "未読",
+    "emptyTitle": "新しい通知はありません",
+    "emptyDescription": "新しい通知はここに表示されます。",
+    "fallbackTitle": "Stage0の通知",
+    "fallbackBody": "通知",
+    "toastView": "表示",
+    "dismiss": "閉じる",
+    "dismissLabel": "通知を閉じる",
+    "deliveryFailed": "Stage0の通知を送信できませんでした。"
   },
   "reviewFlow": {
-    "completedTitle": "{{reviewer}} finished an MR review",
-    "completedBody_one": "Created {{count}} review discussion in {{title}}.",
-    "completedBody_other": "Created {{count}} review discussions in {{title}}.",
-    "pendingLabel": "Reviewing this MR and preparing findings…",
-    "pausedTitle": "Review paused: resolve my earlier findings first.",
-    "openFindings_one": "I found {{count}} unresolved code discussion from this reviewer:",
-    "openFindings_other": "I found {{count}} unresolved code discussions from this reviewer:",
-    "openFindings_few": "I found {{count}} unresolved code discussions from this reviewer:",
-    "openFindings_many": "I found {{count}} unresolved code discussions from this reviewer:",
-    "moreFindings_one": "…and {{count}} more open finding",
-    "moreFindings_other": "…and {{count}} more open findings",
-    "moreFindings_few": "…and {{count}} more open findings",
-    "moreFindings_many": "…and {{count}} more open findings",
-    "resolveThenRetry": "Resolve those threads, then post {{command}} in a new discussion to request another pass.",
-    "reloadFailed": "**Review not started.** I could not reload the latest discussion state, so I could not safely check previous findings. Please retry shortly.",
-    "unassigned": "**Review not started.** This bot is no longer assigned to this MR.",
-    "profileUnavailable": "**Review not started.** This reviewer profile is unavailable or disabled. Reassign an enabled reviewer and try again.",
-    "closed": "**Review not started.** Reopen this Virtual MR before requesting a review.",
-    "busy": "**Review not started yet.** Another AI review is already running for this MR. Retry the command after it finishes.",
-    "accepted": "**Review request accepted.** I checked that none of my earlier findings are still open. I’m starting a new full review of this MR now.",
-    "completeWithFindings_one": "Review complete. I created {{count}} new code discussion with findings.{{incomplete}}",
-    "completeWithFindings_other": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeWithFindings_few": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeWithFindings_many": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeNoFindings": "Review complete. I did not create any new code discussions.{{incomplete}}",
-    "partialSuffix": " Coverage was incomplete.",
-    "failed": "**Review did not finish.** {{error}}",
-    "virtualMrFallback": "the Virtual MR"
+    "completedTitle": "{{reviewer}}がMRのレビューを完了しました",
+    "completedBody_one": "{{title}}にレビューのディスカッションを{{count}}件作成しました。",
+    "completedBody_other": "{{title}}にレビューのディスカッションを{{count}}件作成しました。",
+    "pendingLabel": "このMRをレビューして指摘事項を準備しています…",
+    "pausedTitle": "レビューを一時停止しました。先に以前の指摘を解決してください。",
+    "openFindings_one": "このレビュアーによる未解決のコードディスカッションが{{count}}件あります：",
+    "openFindings_other": "このレビュアーによる未解決のコードディスカッションが{{count}}件あります：",
+    "openFindings_few": "このレビュアーによる未解決のコードディスカッションが{{count}}件あります：",
+    "openFindings_many": "このレビュアーによる未解決のコードディスカッションが{{count}}件あります：",
+    "moreFindings_one": "…ほかに未解決の指摘が{{count}}件",
+    "moreFindings_other": "…ほかに未解決の指摘が{{count}}件",
+    "moreFindings_few": "…ほかに未解決の指摘が{{count}}件",
+    "moreFindings_many": "…ほかに未解決の指摘が{{count}}件",
+    "resolveThenRetry": "これらのスレッドを解決し、新しいディスカッションに{{command}}を投稿して再レビューを依頼してください。",
+    "reloadFailed": "**レビューは開始されていません。** 最新のディスカッション状態を再取得できず、以前の指摘を安全に確認できませんでした。しばらくしてから再試行してください。",
+    "unassigned": "**レビューは開始されていません。** このボットはこのMRに割り当てられていません。",
+    "profileUnavailable": "**レビューは開始されていません。** レビュアーのプロフィールが利用できないか無効です。有効なレビュアーを割り当てて再試行してください。",
+    "closed": "**レビューは開始されていません。** この仮想MRを再度開いてからレビューを依頼してください。",
+    "busy": "**レビューはまだ開始されていません。** このMRでは別のAIレビューが実行中です。完了後にコマンドを再実行してください。",
+    "accepted": "**レビュー依頼を受け付けました。** 以前の指摘がすべて解決済みであることを確認しました。このMRの新しい全体レビューを開始します。",
+    "completeWithFindings_one": "レビューが完了しました。指摘を含むコードディスカッションを新たに{{count}}件作成しました。{{incomplete}}",
+    "completeWithFindings_other": "レビューが完了しました。指摘を含むコードディスカッションを新たに{{count}}件作成しました。{{incomplete}}",
+    "completeWithFindings_few": "レビューが完了しました。指摘を含むコードディスカッションを新たに{{count}}件作成しました。{{incomplete}}",
+    "completeWithFindings_many": "レビューが完了しました。指摘を含むコードディスカッションを新たに{{count}}件作成しました。{{incomplete}}",
+    "completeNoFindings": "レビューが完了しました。新しいコードディスカッションは作成していません。{{incomplete}}",
+    "partialSuffix": " レビュー範囲は一部に限られています。",
+    "failed": "**レビューが完了しませんでした。** {{error}}",
+    "virtualMrFallback": "この仮想MR"
   },
   "attachments": {
-    "unsupportedTitle": "Unsupported file type",
-    "unsupportedBody": "File “{{fileName}}” was rejected. Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.",
-    "tooLargeTitle": "File too large",
-    "tooLargeBody": "Image “{{fileName}}” exceeds the maximum allowed size of 15 MiB.",
-    "allowedTypes": "Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.",
-    "readFailed": "Failed to read image file as data URL"
+    "unsupportedTitle": "未対応のファイル形式",
+    "unsupportedBody": "ファイル「{{fileName}}」は拒否されました。このサンドボックスでは画像ファイル（PNG、JPG、GIF、WebP、SVG）のみ利用できます。",
+    "tooLargeTitle": "ファイルサイズが大きすぎます",
+    "tooLargeBody": "画像「{{fileName}}」は上限の15 MiBを超えています。",
+    "allowedTypes": "このサンドボックスでは画像ファイル（PNG、JPG、GIF、WebP、SVG）のみ利用できます。",
+    "readFailed": "画像ファイルをデータURLとして読み込めませんでした"
   },
   "virtualMr": {
     "loadingMergeRequests": "マージリクエストを読み込み中…",

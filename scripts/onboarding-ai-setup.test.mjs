@@ -133,11 +133,17 @@ test('Skip, Close, Escape and jumping to the final slide cannot bypass required 
   globalThis.window = { location: { search: '' }, addEventListener: (name, fn) => handlers.set(name, fn), removeEventListener: (name) => handlers.delete(name) };
   globalThis.localStorage = { setItem: (key, value) => stored.set(key, value) };
   t.after(() => { runner.cleanup(); globalThis.window = previousWindow; globalThis.localStorage = previousStorage; });
-  let hasConnection = false, ready = false, completed = 0, saves = 0, repoActions = 0;
+  let hasConnection = false, ready = false, completed = 0, saves = 0, repoActions = 0, closed = 0;
   const { FirstLaunchWelcome } = loadWithMocks(url('components/FirstLaunchWelcome.tsx'), {
     react: runner.react,
     'react-i18next': { useTranslation: () => ({ t: (key) => key === 'common.next' ? 'Next' : key }) },
-    '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ application: {} }) },
+    '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ application: {
+      windowClose: async () => closed++, windowIsMaximized: async () => false, windowIsFullscreen: async () => false,
+    } }) },
+    '../../../core/store/useWindowChromeStore': { useWindowChromeStore: (select) => select({ profile: {
+      platform: 'windows', nativeFrame: false, controlsLeft: [], controlsRight: [],
+    } }) },
+    '../../../core/hooks/useCommandShortcut': { useCommandShortcut: () => ({ title: (_, fallback) => fallback }) },
     '@tauri-apps/api/core': { invoke: async () => {} },
     '../../../common/utils/shortcuts': { isMacOS: () => false },
     '../../../common/components/icons/ArrowRight': { ArrowRight: () => null },
@@ -188,7 +194,8 @@ test('Skip, Close, Escape and jumping to the final slide cannot bypass required 
   assert.ok(nodes.some((node) => node.type === 'h1' && node.props.children.includes('Set up your AI connection')));
   assert.equal(button(nodes, 'Next').props.disabled, true);
   await button(nodes, 'Next').props.onClick();
-  await nodes.find((node) => node.props['aria-label'] === 'Close welcome guide').props.onClick();
+  await nodes.find((node) => node.props['data-window-control'] === 'close').props.onClick();
+  assert.equal(closed, 1, 'Closing the window must remain available without completing onboarding');
   handlers.get('keydown')({ key: 'Escape', preventDefault() {} });
   await nodes.find((node) => node.props['aria-label']?.startsWith(`Go to slide ${WELCOME_SLIDES.length}:`)).props.onClick();
   nodes = await render();

@@ -216,10 +216,12 @@ async function startApp() {
 
   startupProgress.complete('preferences');
   startupProgress.begin('interface');
-  const [{ default: App }, { ErrorBoundary }] = await Promise.all([
+  const [{ default: App }, { ErrorBoundary }, { startGlobalPreferencesRuntime }] = await Promise.all([
     import('./core/App'),
     import('./common/components/ErrorBoundary'),
+    import('./core/services/runtime/globalPreferencesRuntime'),
   ]);
+  await startGlobalPreferencesRuntime();
   startupProgress.complete('interface');
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>

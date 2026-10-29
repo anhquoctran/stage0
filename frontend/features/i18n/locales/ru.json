@@ -6,7 +6,10 @@
     "save": "Сохранить",
     "settings": "Настройки",
     "backToAiOverview": "Назад к обзору ИИ",
-    "next": "Далее"
+    "next": "Далее",
+    "windowControls": "Управление окном",
+    "restoreWindow": "Восстановить размер",
+    "maximizeWindow": "Развернуть"
   },
   "preferences": {
     "appearance": "Внешний вид",
@@ -55,76 +58,81 @@
     "headers": {
       "general-keymaps": {
         "title": "Раскладка и сочетания клавиш",
-        "description": "Настройте параметры этого раздела."
+        "description": "Выберите привычный набор или настройте команды и навигацию Stage0."
       },
       "general-settings": {
         "title": "Общие настройки",
-        "description": "Настройте параметры этого раздела."
+        "description": "Настройте встроенные аннотации, запуск, интеграцию с файловым менеджером и команду терминала."
       },
       "appearance-theme": {
         "title": "Тема и режим интерфейса",
-        "description": "Настройте параметры этого раздела."
+        "description": "Используйте выбранную светлую или тёмную тему либо следуйте оформлению ОС."
       },
       "appearance-language": {
         "title": "Язык и локализация",
-        "description": "Настройте параметры этого раздела."
+        "description": "Выберите язык приложения, форматы даты и времени и язык ответов ИИ-ревьюеров."
       },
       "appearance-fonts": {
         "title": "Шрифт и типографика редактора",
-        "description": "Настройте параметры этого раздела."
+        "description": "Гарнитура, размер, насыщенность, высота строки и лигатуры для панелей редактора."
       },
       "appearance-ui-font": {
         "title": "Шрифт интерфейса",
-        "description": "Настройте параметры этого раздела."
+        "description": "Выберите шрифт меню, навигации, подписей и кнопок."
       },
       "appearance-markdown-font": {
         "title": "Шрифт и типографика Markdown",
-        "description": "Настройте параметры этого раздела."
+        "description": "Настройте шрифты редактора Markdown, предпросмотра и блоков кода, размер предпросмотра и насыщенность заголовков."
       },
       "editor-diff": {
         "title": "Просмотр diff и навигация по коду",
-        "description": "Настройте параметры этого раздела."
+        "description": "Настройте раздельный или единый вид изменений, учёт пробелов и встроенные аннотации Git blame."
       },
       "ai-overview": {
         "title": "ИИ",
-        "description": "Настройте параметры этого раздела."
+        "description": "Укажите, нужно ли автоматически включать контекст ИИ-помощника при открытии виртуальной MR или репозитория."
       },
       "ai-providers": {
         "title": "Провайдеры LLM",
-        "description": "Настройте параметры этого раздела."
+        "description": "Настройте встроенных поставщиков моделей (OpenAI, Anthropic, DeepSeek, Ollama и другие)."
       },
       "ai-mcp": {
         "title": "Серверы MCP",
-        "description": "Настройте параметры этого раздела."
+        "description": "Просматривайте, добавляйте, настраивайте и удаляйте серверы Model Context Protocol."
       },
       "ai-external-agents": {
         "title": "Внешние агенты",
-        "description": "Настройте параметры этого раздела."
+        "description": "Находите, добавляйте, авторизуйте и удаляйте агентов через Agent Client Protocol."
       },
       "ai-reviewers": {
         "title": "Боты-рецензенты",
-        "description": "Настройте параметры этого раздела."
+        "description": "Настройте роли ревьюеров и дополнительные инструкции для проверки кода."
       },
       "ai-sandbox": {
         "title": "Песочница и разрешения инструментов",
-        "description": "Настройте параметры этого раздела."
+        "description": "Просматривайте и меняйте повышенные разрешения виртуальной песочницы (в памяти, Docker, хост)."
       },
       "ai-guardrails": {
         "title": "Безопасность и ограничения",
-        "description": "Настройте параметры этого раздела."
+        "description": "Ограничения путей, блокировка разрушительных команд и пороги одобрения."
       },
       "git-binary": {
         "title": "Исполняемый файл Git",
-        "description": "Настройте параметры этого раздела."
+        "description": "Выберите исполняемый файл Git для операций с репозиториями. Сохранённые учётные данные пока не передаются командам Git."
       },
       "git-credentials": {
         "title": "Учётные данные и удалённые репозитории Git",
-        "description": "Настройте параметры этого раздела."
+        "description": "Управляйте учётными данными и привязками Stage0, обнаруженными в системных или глобальных помощниках Git."
       },
       "notifications-settings": {
         "title": "Уведомления и push-оповещения",
-        "description": "Настройте параметры этого раздела."
+        "description": "Настройте системные уведомления и каналы событий."
       }
+    },
+    "window": {
+      "openError": "Не удалось открыть настройки: {{error}}",
+      "initializeError": "Не удалось инициализировать окно настроек: {{error}}",
+      "closeError": "Не удалось закрыть окно настроек: {{error}}"
     }
   },
   "dateTime": {
@@ -250,83 +258,83 @@
     "gotIt": "Понятно"
   },
   "notifications": {
-    "categoryHeading": "Notification categories",
-    "categoryDescription": "Choose which Stage0 events can show a toast. Position and dismissal are set by Stage0 for each event.",
-    "aiReviewTitle": "AI code review",
-    "aiReviewDescription": "When an AI review or re-verification finishes.",
-    "gitSyncTitle": "Git watchers and sync",
-    "gitSyncDescription": "Remote changes, new branches, and sync events.",
-    "guardrailsTitle": "Security guardrails",
-    "guardrailsDescription": "Elevated commands, access blocks, and policy violations.",
-    "previewTitle": "Preview the notification toast",
-    "previewDescription": "Send a test using this platform’s notification style. It is not added to history or unread count.",
-    "previewSent": "Test toast sent. It does not affect notification history or unread count.",
-    "previewFailed": "Could not display a test notification on this system.",
-    "testTooltip": "Show a test notification without saving it",
-    "desktopOnly": "Available in the desktop app",
-    "sending": "Sending…",
-    "testButton": "Test Toast",
-    "testTitle": "Stage0 notification preview",
-    "testBody": "Preview only. Not saved.",
-    "viewAction": "View notifications",
-    "close": "Close notifications",
-    "drawerTitle": "Notifications",
+    "categoryHeading": "Категории уведомлений",
+    "categoryDescription": "Выберите события Stage0, для которых можно показывать уведомления. Положение и способ закрытия Stage0 задаёт для каждого события.",
+    "aiReviewTitle": "Проверка кода с ИИ",
+    "aiReviewDescription": "Когда завершается проверка с ИИ или повторная верификация.",
+    "gitSyncTitle": "Наблюдение и синхронизация Git",
+    "gitSyncDescription": "Удалённые изменения, новые ветки и события синхронизации.",
+    "guardrailsTitle": "Меры безопасности",
+    "guardrailsDescription": "Команды с повышенными правами, блокировки доступа и нарушения политик.",
+    "previewTitle": "Предпросмотр уведомления",
+    "previewDescription": "Отправьте тестовое уведомление в стиле этой платформы. Оно не попадёт в историю и счётчик непрочитанных.",
+    "previewSent": "Тестовое уведомление отправлено. История и счётчик непрочитанных не изменятся.",
+    "previewFailed": "Не удалось показать тестовое уведомление в этой системе.",
+    "testTooltip": "Показать тестовое уведомление без сохранения",
+    "desktopOnly": "Доступно в настольном приложении",
+    "sending": "Отправка…",
+    "testButton": "Тест уведомления",
+    "testTitle": "Предпросмотр уведомления Stage0",
+    "testBody": "Только предпросмотр. Не сохраняется.",
+    "viewAction": "Показать уведомления",
+    "close": "Закрыть уведомления",
+    "drawerTitle": "Уведомления",
     "unreadCount_one": "{{count}} непрочитанное",
     "unreadCount_other": "{{count}} непрочитанных",
-    "clearAll": "Clear all notifications",
-    "markAllRead": "Mark all read",
-    "markRead": "Mark read",
-    "unreadLabel": "Unread",
-    "emptyTitle": "You’re all caught up",
-    "emptyDescription": "New notifications will appear here.",
-    "fallbackTitle": "Stage0 Notification",
-    "fallbackBody": "Notification",
-    "toastView": "View",
-    "dismiss": "Dismiss",
-    "dismissLabel": "Dismiss notification",
-    "deliveryFailed": "Stage0 notification delivery failed.",
+    "clearAll": "Удалить все уведомления",
+    "markAllRead": "Отметить все как прочитанные",
+    "markRead": "Отметить как прочитанное",
+    "unreadLabel": "Не прочитано",
+    "emptyTitle": "Новых уведомлений нет",
+    "emptyDescription": "Новые уведомления появятся здесь.",
+    "fallbackTitle": "Уведомление Stage0",
+    "fallbackBody": "Уведомление",
+    "toastView": "Показать",
+    "dismiss": "Закрыть",
+    "dismissLabel": "Закрыть уведомление",
+    "deliveryFailed": "Не удалось доставить уведомление Stage0.",
     "unreadCount_few": "{{count}} непрочитанных",
     "unreadCount_many": "{{count}} непрочитанных"
   },
   "reviewFlow": {
-    "completedTitle": "{{reviewer}} finished an MR review",
-    "completedBody_one": "Создано {{count}} обсуждение с результатами проверки в {{title}}.",
-    "completedBody_other": "Создано {{count}} обсуждения с результатами проверки в {{title}}.",
-    "pendingLabel": "Reviewing this MR and preparing findings…",
-    "pausedTitle": "Review paused: resolve my earlier findings first.",
-    "openFindings_one": "У этого рецензента осталось {{count}} нерешённое обсуждение кода:",
-    "openFindings_other": "У этого рецензента осталось {{count}} нерешённых обсуждения кода:",
-    "openFindings_few": "У этого рецензента осталось {{count}} нерешённых обсуждения кода:",
-    "openFindings_many": "У этого рецензента осталось {{count}} нерешённых обсуждений кода:",
+    "completedTitle": "{{reviewer}} завершил проверку MR",
+    "completedBody_one": "В {{title}} создано {{count}} обсуждение по результатам проверки.",
+    "completedBody_other": "В {{title}} создано {{count}} обсуждения по результатам проверки.",
+    "pendingLabel": "Проверяю эту MR и готовлю замечания…",
+    "pausedTitle": "Проверка приостановлена: сначала устраните предыдущие замечания.",
+    "openFindings_one": "Найдено {{count}} незавершённое обсуждение кода от этого ревьюера:",
+    "openFindings_other": "Найдено {{count}} незавершённого обсуждения кода от этого ревьюера:",
+    "openFindings_few": "Найдено {{count}} незавершённых обсуждения кода от этого ревьюера:",
+    "openFindings_many": "Найдено {{count}} незавершённых обсуждений кода от этого ревьюера:",
     "moreFindings_one": "…и ещё {{count}} открытое замечание",
-    "moreFindings_other": "…и ещё {{count}} открытых замечаний",
+    "moreFindings_other": "…и ещё {{count}} открытого замечания",
     "moreFindings_few": "…и ещё {{count}} открытых замечания",
     "moreFindings_many": "…и ещё {{count}} открытых замечаний",
-    "resolveThenRetry": "Resolve those threads, then post {{command}} in a new discussion to request another pass.",
-    "reloadFailed": "**Review not started.** I could not reload the latest discussion state, so I could not safely check previous findings. Please retry shortly.",
-    "unassigned": "**Review not started.** This bot is no longer assigned to this MR.",
-    "profileUnavailable": "**Review not started.** This reviewer profile is unavailable or disabled. Reassign an enabled reviewer and try again.",
-    "closed": "**Review not started.** Reopen this Virtual MR before requesting a review.",
-    "busy": "**Review not started yet.** Another AI review is already running for this MR. Retry the command after it finishes.",
-    "accepted": "**Review request accepted.** I checked that none of my earlier findings are still open. I’m starting a new full review of this MR now.",
-    "completeWithFindings_one": "Проверка завершена. Добавлено {{count}} новое обсуждение кода с замечаниями.{{incomplete}}",
-    "completeWithFindings_other": "Проверка завершена. Добавлено {{count}} новых обсуждений кода с замечаниями.{{incomplete}}",
-    "completeWithFindings_few": "Проверка завершена. Добавлено {{count}} новых обсуждения кода с замечаниями.{{incomplete}}",
-    "completeWithFindings_many": "Проверка завершена. Добавлено {{count}} новых обсуждений кода с замечаниями.{{incomplete}}",
-    "completeNoFindings": "Review complete. I did not create any new code discussions.{{incomplete}}",
-    "partialSuffix": " Coverage was incomplete.",
-    "failed": "**Review did not finish.** {{error}}",
+    "resolveThenRetry": "Завершите эти обсуждения, затем отправьте {{command}} в новом обсуждении, чтобы запросить повторную проверку.",
+    "reloadFailed": "**Проверка не начата.** Не удалось загрузить актуальное состояние обсуждений и безопасно проверить предыдущие замечания. Повторите попытку чуть позже.",
+    "unassigned": "**Проверка не начата.** Этот бот больше не назначен на данную MR.",
+    "profileUnavailable": "**Проверка не начата.** Профиль ревьюера недоступен или отключён. Назначьте активного ревьюера и повторите попытку.",
+    "closed": "**Проверка не начата.** Снова откройте эту виртуальную MR перед запросом проверки.",
+    "busy": "**Проверка пока не начата.** Для этой MR уже выполняется другая проверка с ИИ. Повторите команду после её завершения.",
+    "accepted": "**Запрос на проверку принят.** Я убедился, что все мои предыдущие замечания устранены. Сейчас начну новую полную проверку этой MR.",
+    "completeWithFindings_one": "Проверка завершена. Создано {{count}} новое обсуждение кода с замечаниями.{{incomplete}}",
+    "completeWithFindings_other": "Проверка завершена. Создано {{count}} нового обсуждения кода с замечаниями.{{incomplete}}",
+    "completeWithFindings_few": "Проверка завершена. Создано {{count}} новых обсуждения кода с замечаниями.{{incomplete}}",
+    "completeWithFindings_many": "Проверка завершена. Создано {{count}} новых обсуждений кода с замечаниями.{{incomplete}}",
+    "completeNoFindings": "Проверка завершена. Новых обсуждений кода не создано.{{incomplete}}",
+    "partialSuffix": " Проверка охватила не все изменения.",
+    "failed": "**Проверка не завершена.** {{error}}",
     "completedBody_few": "Создано {{count}} обсуждения с результатами проверки в {{title}}.",
     "completedBody_many": "Создано {{count}} обсуждений с результатами проверки в {{title}}.",
-    "virtualMrFallback": "этого виртуального MR"
+    "virtualMrFallback": "виртуальная MR"
   },
   "attachments": {
-    "unsupportedTitle": "Unsupported file type",
-    "unsupportedBody": "File “{{fileName}}” was rejected. Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.",
-    "tooLargeTitle": "File too large",
-    "tooLargeBody": "Image “{{fileName}}” exceeds the maximum allowed size of 15 MiB.",
-    "allowedTypes": "Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.",
-    "readFailed": "Failed to read image file as data URL"
+    "unsupportedTitle": "Неподдерживаемый тип файла",
+    "unsupportedBody": "Файл «{{fileName}}» отклонён. В этой изолированной среде поддерживаются только изображения (PNG, JPG, GIF, WebP, SVG).",
+    "tooLargeTitle": "Файл слишком большой",
+    "tooLargeBody": "Изображение «{{fileName}}» превышает максимально допустимый размер 15 MiB.",
+    "allowedTypes": "В этой изолированной среде поддерживаются только изображения (PNG, JPG, GIF, WebP, SVG).",
+    "readFailed": "Не удалось прочитать изображение как URL данных"
   },
   "virtualMr": {
     "loadingMergeRequests": "Загрузка запросов на слияние…",

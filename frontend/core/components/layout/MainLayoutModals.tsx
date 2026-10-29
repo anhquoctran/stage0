@@ -8,12 +8,14 @@ import { RepositoryOverviewModal } from '../../../features/git/components/Reposi
 import { RepositorySettingsModal } from '../../../features/git/components/RepositorySettingsModal';
 import { PreferencesModal } from '../../../features/preferences/components/PreferencesModal';
 import type { MainLayoutModalsProps } from './MainLayoutModalsProps';
+import { useApplicationServices } from '../../services/runtime/useApplicationServices';
 
 export function MainLayoutModals({
   isRepoSettingsOpen,
   closeRepoSettings,
   repoSettingsActiveTab,
 }: MainLayoutModalsProps) {
+  const { platform } = useApplicationServices();
   return (
     <>
       {/* Repository Settings Dialog */}
@@ -24,7 +26,7 @@ export function MainLayoutModals({
       />
 
       {/* Preferences Modal Dialog */}
-      <PreferencesModal />
+      {!(platform.capabilities.backend && platform.capabilities.windows) && <PreferencesModal />}
 
       {/* Pull From Remote Modal Dialog */}
       <PullFromModal />

@@ -19,6 +19,7 @@ fn emit_app_language_changed(app: &AppHandle, before: Option<&Value>, after: Opt
         return;
     }
     let _ = crate::core::menu::set_application_menu_language(app, language);
+    crate::core::window_manager::preferences_window::refresh_title(app, language);
     let _ = app.emit(
         APP_LANGUAGE_CHANGED,
         serde_json::json!({ "language": language }),

@@ -68,7 +68,7 @@ export function OnboardingLanguagePicker({ value, disabled, onChange }: Onboardi
   };
 
   return (
-    <div ref={container} className="relative z-20 rounded-sm">
+    <div ref={container} className="relative z-20 flex flex-col items-center rounded-sm">
       <button
         ref={trigger}
         type="button"
@@ -90,8 +90,7 @@ export function OnboardingLanguagePicker({ value, disabled, onChange }: Onboardi
         <ChevronDown aria-hidden="true" className={`h-3.5 w-3.5 text-subtext0 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && !disabled && (
-        <div className="absolute start-1/2 top-full mt-2 w-64 -translate-x-1/2 rounded-sm bg-base rtl:translate-x-1/2">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-x-3 top-[88px] h-11 rounded-sm bg-text/5" />
+        <div className="mt-2 w-64 rounded-sm bg-transparent">
           <div
             id={id}
             ref={list}
@@ -107,7 +106,7 @@ export function OnboardingLanguagePicker({ value, disabled, onChange }: Onboardi
                 setActiveIndex(Math.max(0, Math.min(SUPPORTED_LANGUAGES.length - 1, index)));
               }, 120);
             }}
-            className="onboarding-language-wheel relative h-[220px] snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-sm py-[88px] text-center"
+            className="onboarding-language-wheel relative h-[132px] snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-sm bg-transparent py-11 text-center"
           >
             {SUPPORTED_LANGUAGES.map((language) => (
               <button

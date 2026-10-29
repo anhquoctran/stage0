@@ -130,3 +130,41 @@ Các cửa sổ dùng chung một `Database` trong tiến trình, với một `r
 - `frontend/core/App.tsx`, `frontend/features/git/store/useGitStore.ts`, `frontend/features/git/types/git.ts`: bootstrap theo cửa sổ, định tuyến state và kiểu IPC.
 
 Trước khi thay đổi luồng này, chạy `cargo check --lib`, `cargo test --lib`, `npm run typecheck`, `npm run build` và `git diff --check`. Unit tests hiện xác nhận symlink alias dùng cùng identity, path không phải Git bị từ chối và upsert cùng path giữ nguyên ID. Các race giữa nhiều cửa sổ, native focus/menu và custom frame vẫn cần kiểm thử thủ công trên desktop; build/typecheck không thay thế được kiểm thử GUI đó.
+
+## App-wide Preferences utility window (2026-10-29)
+
+Preferences is one independent native Tauri window per application process, with
+label `preferences`. It has no repository identity, watcher, recent-repo restore
+or onboarding. Its custom macOS/Windows frame and Linux System/Custom selection
+follow the existing desktop conventions. Initial size is 1100×800, with a
+900×620 minimum. Closing a repository does not close this utility.
+
+All repo-window buttons, shortcuts, notification actions and deep links route to
+`ApplicationService.openPreferencesWindow`. The native Preferences/Keymaps menu
+uses the same Rust operation. A process-wide async creation lock covers lookup
+and build, so concurrent requests cannot create multiple editors. Existing
+windows are unminimized, shown and focused; explicit section requests navigate
+without discarding an open draft. Requests arriving during load are retained
+until the frontend has installed its listeners.
+
+| Command | Input | Behavior |
+| --- | --- | --- |
+| `open_preferences_window` | `tab?: string` | Validate a bounded section identifier; create or focus the singleton. |
+| `preferences_window_ready` | None | Only the Preferences caller; deliver queued navigation, enable guarded close and reveal/focus. |
+| `close_preferences_window` | None | Only the Preferences caller; destroy after its existing Cancel/OK workflow completes. |
+
+Native `CloseRequested` is intercepted after readiness and sent only to the
+Preferences window. Its Cancel callback discards changes since the last Apply;
+it does not approve closing while Apply is running. Cancel, Escape, the custom
+close button and native close menu retain the same transaction semantics. Apply
+stays open; OK closes only after a successful save. JSONC editing and other
+immediate actions retain the existing transaction contract. Readiness resets on
+page load and destruction; an uninitialized window can still be closed.
+
+JSON preferences remain app-wide and Rust-owned. Every WebView subscribes once
+to the existing application-targeted `preferences-changed` revision event,
+reloads the current document, and publishes to feature-owned runtime handlers.
+UI language continues using its separate `app-language-changed`/Day.js flow.
+No draft, repository path or secret is broadcast. Existing revision conflicts,
+credential rollback and app-language persistence are preserved. The browser
+fallback remains an in-page Preferences dialog.

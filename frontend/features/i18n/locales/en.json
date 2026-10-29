@@ -6,7 +6,10 @@
     "save": "Save",
     "settings": "Settings",
     "backToAiOverview": "Back to AI overview",
-    "next": "Next"
+    "next": "Next",
+    "windowControls": "Window controls",
+    "restoreWindow": "Restore Down",
+    "maximizeWindow": "Maximize"
   },
   "shortcuts": {
     "title": "Keyboard Shortcuts",
@@ -131,6 +134,11 @@
       "loading": "Loading saved languages…",
       "loadError": "Saved language preferences could not be loaded. Reopen Preferences to try again.",
       "changedElsewhere": "Language preferences changed in another window. Reopen Preferences before applying your changes."
+    },
+    "window": {
+      "openError": "Could not open Preferences: {{error}}",
+      "initializeError": "Could not initialize the Preferences window: {{error}}",
+      "closeError": "Could not close the Preferences window: {{error}}"
     }
   },
   "dateTime": {

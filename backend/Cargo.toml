@@ -29,7 +29,7 @@ fs2 = "0.4"
 font-kit = "0.14.3"
 zeroize = "1"
 jsonwebtoken = { version = "11.1.0", default-features = false, features = ["rust_crypto"] }
-tokio = { version = "1", features = ["fs", "io-util", "macros", "time", "process", "net"] }
+tokio = { version = "1", features = ["fs", "io-util", "macros", "time", "process", "net", "sync"] }
 notify = "6.1"
 notify-debouncer-mini = "0.4"
 uuid = { version = "1.8", features = ["v4"] }

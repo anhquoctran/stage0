@@ -16,7 +16,6 @@ export const PreferencesModalFooter: React.FC<{
 }> = ({
   applyError,
   totalUnsaved,
-  hasUnsavedChanges,
   canCommitPreferences,
   isApplying,
   isApplied,

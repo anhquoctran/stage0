@@ -6,7 +6,10 @@
     "save": "保存",
     "settings": "设置",
     "backToAiOverview": "返回 AI 概览",
-    "next": "下一步"
+    "next": "下一步",
+    "windowControls": "窗口控制",
+    "restoreWindow": "还原窗口",
+    "maximizeWindow": "最大化"
   },
   "preferences": {
     "appearance": "外观",
@@ -55,76 +58,81 @@
     "headers": {
       "general-keymaps": {
         "title": "快捷键映射与键盘快捷键",
-        "description": "配置此部分中的选项。"
+        "description": "选择熟悉的预设，或自定义 Stage0 命令和导航操作。"
       },
       "general-settings": {
         "title": "常规设置",
-        "description": "配置此部分中的选项。"
+        "description": "配置行内注释、启动行为、文件管理器集成和终端命令。"
       },
       "appearance-theme": {
         "title": "主题与界面模式",
-        "description": "配置此部分中的选项。"
+        "description": "使用所选的浅色或深色主题，或跟随操作系统外观。"
       },
       "appearance-language": {
         "title": "语言与本地化",
-        "description": "配置此部分中的选项。"
+        "description": "选择应用语言、日期时间格式和 AI 审查者的输出语言。"
       },
       "appearance-fonts": {
         "title": "编辑器字体与排版",
-        "description": "配置此部分中的选项。"
+        "description": "设置编辑器面板的字体、字号、字重、行高和连字显示。"
       },
       "appearance-ui-font": {
         "title": "界面字体",
-        "description": "配置此部分中的选项。"
+        "description": "选择菜单、导航、标签和按钮使用的字体。"
       },
       "appearance-markdown-font": {
         "title": "Markdown 字体与排版",
-        "description": "配置此部分中的选项。"
+        "description": "配置 Markdown 编辑器、预览和代码块的字体，以及预览大小和标题字重。"
       },
       "editor-diff": {
         "title": "差异查看器与代码导航",
-        "description": "配置此部分中的选项。"
+        "description": "配置分栏或统一差异视图、空白敏感性和行内 Git blame。"
       },
       "ai-overview": {
         "title": "AI",
-        "description": "配置此部分中的选项。"
+        "description": "选择打开虚拟 MR 或仓库时是否自动启用 AI 助手上下文。"
       },
       "ai-providers": {
         "title": "LLM 提供方",
-        "description": "配置此部分中的选项。"
+        "description": "配置内置模型提供商（OpenAI、Anthropic、DeepSeek、Ollama 等）。"
       },
       "ai-mcp": {
         "title": "MCP 服务器",
-        "description": "配置此部分中的选项。"
+        "description": "查看、添加、配置和删除 Model Context Protocol 服务器。"
       },
       "ai-external-agents": {
         "title": "外部代理",
-        "description": "配置此部分中的选项。"
+        "description": "通过 Agent Client Protocol 查找、添加、登录和删除智能体。"
       },
       "ai-reviewers": {
         "title": "审查机器人",
-        "description": "配置此部分中的选项。"
+        "description": "配置代码审查的审查者角色和补充指令。"
       },
       "ai-sandbox": {
         "title": "沙盒与工具权限",
-        "description": "配置此部分中的选项。"
+        "description": "查看和更改虚拟沙箱的提权权限（内存、Docker、主机）。"
       },
       "ai-guardrails": {
         "title": "安全与防护",
-        "description": "配置此部分中的选项。"
+        "description": "设置路径限制、破坏性命令拦截和审批阈值。"
       },
       "git-binary": {
         "title": "Git 可执行文件",
-        "description": "配置此部分中的选项。"
+        "description": "选择仓库操作使用的 Git 可执行文件。目前不会将已保存的 Git 凭据传入 Git 命令。"
       },
       "git-credentials": {
         "title": "Git 凭据与远程仓库",
-        "description": "配置此部分中的选项。"
+        "description": "管理从系统或全局 Git 凭据助手发现的 Stage0 凭据及映射。"
       },
       "notifications-settings": {
         "title": "通知与推送提醒",
-        "description": "配置此部分中的选项。"
+        "description": "配置操作系统原生通知和事件通道。"
       }
+    },
+    "window": {
+      "openError": "无法打开偏好设置：{{error}}",
+      "initializeError": "无法初始化偏好设置窗口：{{error}}",
+      "closeError": "无法关闭偏好设置窗口：{{error}}"
     }
   },
   "dateTime": {
@@ -240,79 +248,79 @@
     "gotIt": "知道了"
   },
   "notifications": {
-    "categoryHeading": "Notification categories",
-    "categoryDescription": "Choose which Stage0 events can show a toast. Position and dismissal are set by Stage0 for each event.",
-    "aiReviewTitle": "AI code review",
-    "aiReviewDescription": "When an AI review or re-verification finishes.",
-    "gitSyncTitle": "Git watchers and sync",
-    "gitSyncDescription": "Remote changes, new branches, and sync events.",
-    "guardrailsTitle": "Security guardrails",
-    "guardrailsDescription": "Elevated commands, access blocks, and policy violations.",
-    "previewTitle": "Preview the notification toast",
-    "previewDescription": "Send a test using this platform’s notification style. It is not added to history or unread count.",
-    "previewSent": "Test toast sent. It does not affect notification history or unread count.",
-    "previewFailed": "Could not display a test notification on this system.",
-    "testTooltip": "Show a test notification without saving it",
-    "desktopOnly": "Available in the desktop app",
-    "sending": "Sending…",
-    "testButton": "Test Toast",
-    "testTitle": "Stage0 notification preview",
-    "testBody": "Preview only. Not saved.",
-    "viewAction": "View notifications",
-    "close": "Close notifications",
-    "drawerTitle": "Notifications",
-    "unreadCount_one": "{{count}} unread",
-    "unreadCount_other": "{{count}} unread",
-    "clearAll": "Clear all notifications",
-    "markAllRead": "Mark all read",
-    "markRead": "Mark read",
-    "unreadLabel": "Unread",
-    "emptyTitle": "You’re all caught up",
-    "emptyDescription": "New notifications will appear here.",
-    "fallbackTitle": "Stage0 Notification",
-    "fallbackBody": "Notification",
-    "toastView": "View",
-    "dismiss": "Dismiss",
-    "dismissLabel": "Dismiss notification",
-    "deliveryFailed": "Stage0 notification delivery failed."
+    "categoryHeading": "通知类别",
+    "categoryDescription": "选择哪些 Stage0 事件可以显示通知。Stage0 会为各个事件设置通知的位置和关闭方式。",
+    "aiReviewTitle": "AI 代码审查",
+    "aiReviewDescription": "AI 审查或重新验证完成时。",
+    "gitSyncTitle": "Git 监控与同步",
+    "gitSyncDescription": "远程更改、新分支和同步事件。",
+    "guardrailsTitle": "安全防护",
+    "guardrailsDescription": "提权命令、访问拦截和策略违规。",
+    "previewTitle": "通知预览",
+    "previewDescription": "使用此平台的通知样式发送测试，不会加入历史记录或未读计数。",
+    "previewSent": "测试通知已发送，不会影响历史记录或未读计数。",
+    "previewFailed": "无法在此系统上显示测试通知。",
+    "testTooltip": "显示测试通知但不保存",
+    "desktopOnly": "可在桌面应用中使用",
+    "sending": "正在发送…",
+    "testButton": "测试通知",
+    "testTitle": "Stage0 通知预览",
+    "testBody": "仅供预览，不会保存。",
+    "viewAction": "查看通知",
+    "close": "关闭通知",
+    "drawerTitle": "通知",
+    "unreadCount_one": "{{count}} 条未读",
+    "unreadCount_other": "{{count}} 条未读",
+    "clearAll": "清除所有通知",
+    "markAllRead": "全部标为已读",
+    "markRead": "标为已读",
+    "unreadLabel": "未读",
+    "emptyTitle": "暂无新通知",
+    "emptyDescription": "新通知将在此处显示。",
+    "fallbackTitle": "Stage0 通知",
+    "fallbackBody": "通知",
+    "toastView": "查看",
+    "dismiss": "忽略",
+    "dismissLabel": "忽略通知",
+    "deliveryFailed": "Stage0 通知发送失败。"
   },
   "reviewFlow": {
-    "completedTitle": "{{reviewer}} finished an MR review",
-    "completedBody_one": "Created {{count}} review discussion in {{title}}.",
-    "completedBody_other": "Created {{count}} review discussions in {{title}}.",
-    "pendingLabel": "Reviewing this MR and preparing findings…",
-    "pausedTitle": "Review paused: resolve my earlier findings first.",
-    "openFindings_one": "I found {{count}} unresolved code discussion from this reviewer:",
-    "openFindings_other": "I found {{count}} unresolved code discussions from this reviewer:",
-    "openFindings_few": "I found {{count}} unresolved code discussions from this reviewer:",
-    "openFindings_many": "I found {{count}} unresolved code discussions from this reviewer:",
-    "moreFindings_one": "…and {{count}} more open finding",
-    "moreFindings_other": "…and {{count}} more open findings",
-    "moreFindings_few": "…and {{count}} more open findings",
-    "moreFindings_many": "…and {{count}} more open findings",
-    "resolveThenRetry": "Resolve those threads, then post {{command}} in a new discussion to request another pass.",
-    "reloadFailed": "**Review not started.** I could not reload the latest discussion state, so I could not safely check previous findings. Please retry shortly.",
-    "unassigned": "**Review not started.** This bot is no longer assigned to this MR.",
-    "profileUnavailable": "**Review not started.** This reviewer profile is unavailable or disabled. Reassign an enabled reviewer and try again.",
-    "closed": "**Review not started.** Reopen this Virtual MR before requesting a review.",
-    "busy": "**Review not started yet.** Another AI review is already running for this MR. Retry the command after it finishes.",
-    "accepted": "**Review request accepted.** I checked that none of my earlier findings are still open. I’m starting a new full review of this MR now.",
-    "completeWithFindings_one": "Review complete. I created {{count}} new code discussion with findings.{{incomplete}}",
-    "completeWithFindings_other": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeWithFindings_few": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeWithFindings_many": "Review complete. I created {{count}} new code discussions with findings.{{incomplete}}",
-    "completeNoFindings": "Review complete. I did not create any new code discussions.{{incomplete}}",
-    "partialSuffix": " Coverage was incomplete.",
-    "failed": "**Review did not finish.** {{error}}",
-    "virtualMrFallback": "the Virtual MR"
+    "completedTitle": "{{reviewer}} 已完成 MR 审查",
+    "completedBody_one": "已在 {{title}} 中创建 {{count}} 条审查讨论。",
+    "completedBody_other": "已在 {{title}} 中创建 {{count}} 条审查讨论。",
+    "pendingLabel": "正在审查此 MR 并整理发现的问题…",
+    "pausedTitle": "审查已暂停：请先解决我之前提出的问题。",
+    "openFindings_one": "发现此审查者还有 {{count}} 条未解决的代码讨论：",
+    "openFindings_other": "发现此审查者还有 {{count}} 条未解决的代码讨论：",
+    "openFindings_few": "发现此审查者还有 {{count}} 条未解决的代码讨论：",
+    "openFindings_many": "发现此审查者还有 {{count}} 条未解决的代码讨论：",
+    "moreFindings_one": "…另有 {{count}} 个未解决的问题",
+    "moreFindings_other": "…另有 {{count}} 个未解决的问题",
+    "moreFindings_few": "…另有 {{count}} 个未解决的问题",
+    "moreFindings_many": "…另有 {{count}} 个未解决的问题",
+    "resolveThenRetry": "请先解决这些讨论，再在新讨论中发布 {{command}} 以请求再次审查。",
+    "reloadFailed": "**审查未开始。** 无法重新加载最新讨论状态，因此无法安全地检查之前的问题。请稍后重试。",
+    "unassigned": "**审查未开始。** 此机器人已不再分配给该 MR。",
+    "profileUnavailable": "**审查未开始。** 此审查者配置不可用或已停用。请分配已启用的审查者后重试。",
+    "closed": "**审查未开始。** 请先重新打开此虚拟 MR，再请求审查。",
+    "busy": "**审查尚未开始。** 此 MR 已有另一个 AI 审查正在运行。请等待完成后再次执行命令。",
+    "accepted": "**审查请求已接受。** 已确认我之前提出的问题均已解决。现在开始对此 MR 进行新一轮完整审查。",
+    "completeWithFindings_one": "审查已完成，已创建 {{count}} 条包含问题的新代码讨论。{{incomplete}}",
+    "completeWithFindings_other": "审查已完成，已创建 {{count}} 条包含问题的新代码讨论。{{incomplete}}",
+    "completeWithFindings_few": "审查已完成，已创建 {{count}} 条包含问题的新代码讨论。{{incomplete}}",
+    "completeWithFindings_many": "审查已完成，已创建 {{count}} 条包含问题的新代码讨论。{{incomplete}}",
+    "completeNoFindings": "审查已完成，未创建新的代码讨论。{{incomplete}}",
+    "partialSuffix": " 本次审查未覆盖全部更改。",
+    "failed": "**审查未完成。** {{error}}",
+    "virtualMrFallback": "该虚拟 MR"
   },
   "attachments": {
-    "unsupportedTitle": "Unsupported file type",
-    "unsupportedBody": "File “{{fileName}}” was rejected. Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.",
-    "tooLargeTitle": "File too large",
-    "tooLargeBody": "Image “{{fileName}}” exceeds the maximum allowed size of 15 MiB.",
-    "allowedTypes": "Only image files (PNG, JPG, GIF, WebP, SVG) are supported in this sandbox environment.",
-    "readFailed": "Failed to read image file as data URL"
+    "unsupportedTitle": "不支持的文件类型",
+    "unsupportedBody": "文件“{{fileName}}”已被拒绝。此沙箱环境仅支持图片文件（PNG、JPG、GIF、WebP、SVG）。",
+    "tooLargeTitle": "文件过大",
+    "tooLargeBody": "图片“{{fileName}}”超过了允许的最大大小 15 MiB。",
+    "allowedTypes": "此沙箱环境仅支持图片文件（PNG、JPG、GIF、WebP、SVG）。",
+    "readFailed": "无法将图片文件读取为数据 URL"
   },
   "virtualMr": {
     "loadingMergeRequests": "正在加载合并请求…",

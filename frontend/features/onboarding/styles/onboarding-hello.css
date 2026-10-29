@@ -8,15 +8,14 @@
   animation: onboarding-hello-arrive 1.2s ease-out both;
 }
 
-.onboarding-hello-stroke {
+.onboarding-hello-pen {
   stroke-dasharray: 1;
   stroke-dashoffset: 0;
-  animation: onboarding-hello-write 7s cubic-bezier(.45, 0, .25, 1) infinite;
 }
 
 .onboarding-language-wheel {
   scrollbar-width: none;
-  scroll-padding-block: 88px;
+  scroll-padding-block: 44px;
   mask-image: linear-gradient(transparent, #000 32%, #000 68%, transparent);
   -webkit-mask-image: linear-gradient(transparent, #000 32%, #000 68%, transparent);
 }
@@ -30,16 +29,8 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes onboarding-hello-write {
-  0%, 5% { stroke-dashoffset: 1; opacity: 0; }
-  10% { opacity: 1; }
-  62%, 84% { stroke-dashoffset: 0; opacity: 1; }
-  96%, 100% { stroke-dashoffset: 0; opacity: 0; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .onboarding-hello-art,
-  .onboarding-hello-stroke {
+  .onboarding-hello-art {
     animation: none;
   }
 }

@@ -6,7 +6,10 @@
     "save": "Lưu",
     "settings": "Cài đặt",
     "backToAiOverview": "Quay lại tổng quan AI",
-    "next": "Tiếp"
+    "next": "Tiếp",
+    "windowControls": "Điều khiển cửa sổ",
+    "restoreWindow": "Khôi phục kích thước",
+    "maximizeWindow": "Phóng to"
   },
   "preferences": {
     "appearance": "Giao diện",
@@ -55,76 +58,81 @@
     "headers": {
       "general-keymaps": {
         "title": "Phím tắt và tổ hợp phím",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Chọn bộ phím tắt quen thuộc hoặc tùy chỉnh lệnh và thao tác điều hướng của Stage0."
       },
       "general-settings": {
         "title": "Cài đặt chung",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Thiết lập chú thích trong dòng, hành vi khởi động, tích hợp trình quản lý tệp và lệnh terminal."
       },
       "appearance-theme": {
         "title": "Chủ đề và chế độ giao diện",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Dùng giao diện sáng hoặc tối đã chọn, hoặc theo giao diện của hệ điều hành."
       },
       "appearance-language": {
         "title": "Ngôn ngữ và bản địa hóa",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Chọn ngôn ngữ ứng dụng, định dạng ngày giờ và ngôn ngữ đầu ra của AI reviewer."
       },
       "appearance-fonts": {
         "title": "Phông chữ vùng soạn thảo và kiểu chữ",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Phông chữ, cỡ chữ, độ đậm, chiều cao dòng và cách hiển thị ký tự ghép trong trình soạn thảo."
       },
       "appearance-ui-font": {
         "title": "Phông chữ giao diện",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Chọn phông chữ cho menu, điều hướng, nhãn và nút bấm."
       },
       "appearance-markdown-font": {
         "title": "Phông chữ Markdown và kiểu chữ",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Thiết lập phông chữ cho trình soạn thảo Markdown, bản xem trước và khối mã, cùng cỡ bản xem trước và độ đậm tiêu đề."
       },
       "editor-diff": {
         "title": "Trình xem Diff và điều hướng mã",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Thiết lập diff chia đôi hoặc hợp nhất, cách xử lý khoảng trắng và chú thích Git blame trong dòng."
       },
       "ai-overview": {
         "title": "AI",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Chọn có tự bật ngữ cảnh trợ lý AI khi mở MR ảo hoặc kho mã hay không."
       },
       "ai-providers": {
         "title": "Nhà cung cấp LLM",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Thiết lập các nhà cung cấp mô hình tích hợp sẵn (OpenAI, Anthropic, DeepSeek, Ollama…)."
       },
       "ai-mcp": {
         "title": "Máy chủ MCP",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Xem, thêm, cấu hình và xóa máy chủ Model Context Protocol."
       },
       "ai-external-agents": {
         "title": "Tác nhân bên ngoài",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Tìm, thêm, đăng nhập và xóa agent qua Agent Client Protocol."
       },
       "ai-reviewers": {
         "title": "Bot reviewer",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Thiết lập vai trò reviewer và hướng dẫn bổ sung cho việc review mã."
       },
       "ai-sandbox": {
         "title": "Sandbox và quyền công cụ",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Xem và thay đổi quyền nâng cao của sandbox ảo (trong bộ nhớ, Docker, máy chủ)."
       },
       "ai-guardrails": {
         "title": "Bảo mật và Guardrails",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Giới hạn đường dẫn, chặn lệnh phá hủy và ngưỡng cần phê duyệt."
       },
       "git-binary": {
         "title": "Git executable",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Chọn tệp thực thi Git cho thao tác với kho mã. Thông tin xác thực Git đã lưu hiện chưa được truyền vào lệnh Git."
       },
       "git-credentials": {
         "title": "Thông tin xác thực và remote Git",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Quản lý thông tin xác thực Stage0 và các ánh xạ tìm thấy từ trình hỗ trợ Git cấp hệ thống/toàn cục."
       },
       "notifications-settings": {
         "title": "Thông báo và cảnh báo đẩy",
-        "description": "Định cấu hình các tùy chọn trong mục này."
+        "description": "Thiết lập thông báo gốc của hệ điều hành và các kênh sự kiện."
       }
+    },
+    "window": {
+      "openError": "Không thể mở Tùy chọn: {{error}}",
+      "initializeError": "Không thể khởi tạo cửa sổ Tùy chọn: {{error}}",
+      "closeError": "Không thể đóng cửa sổ Tùy chọn: {{error}}"
     }
   },
   "dateTime": {

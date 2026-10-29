@@ -8,6 +8,9 @@ export interface ApplicationService {
   getWindowChrome(): Promise<WindowChrome>;
   windowStartDragging(): Promise<unknown>;
   createNewWindow(): Promise<unknown>;
+  openPreferencesWindow(input: { tab: string | null }): Promise<void>;
+  preferencesWindowReady(): Promise<void>;
+  closePreferencesWindow(): Promise<void>;
   getWindowStartupContext(): Promise<WindowStartupContext>;
   openWebviewDevtools(): Promise<unknown>;
   pickFolder(): Promise<string | null>;
