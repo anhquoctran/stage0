@@ -91,7 +91,7 @@ export const DiscussionCodeContext: React.FC<{
             </tbody>
           </table>
           {position && lastLine && position.end > lastLine && (
-            <p className="px-3.5 py-2 font-sans text-[11px] text-subtext0">
+            <p dir="auto" className="px-3.5 py-2 font-sans text-[11px] text-subtext0">
               {translateUiText('virtualMr.discussionCode.excerptLines', { start: rows[0].number, end: lastLine, continuedEnd: position.end })}
             </p>
           )}

@@ -14,7 +14,6 @@ export interface ReviewerBotDraft {
   formAcpConfigOptions: AcpReviewConfigOverrides;
   formProvider: string;
   formModel: string;
-  isCustomModel: boolean;
   formTemp: number;
   formReasoningEffort: AiReasoningEffort | undefined;
   formFastMode: boolean;

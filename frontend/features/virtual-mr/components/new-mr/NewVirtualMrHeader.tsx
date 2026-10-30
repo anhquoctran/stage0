@@ -37,7 +37,7 @@ export function NewVirtualMrHeader({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xs font-semibold text-text">{translateUiText('compareStatus.header')}</h1>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 bg-surface0 border border-surface1/60 text-subtext0 font-medium">
+              <span className="text-[10px] font-mono px-1.5 py-[0.2rem] bg-surface0 border border-surface1/60 text-subtext0 font-medium">
                 {translateUiText('compareStatus.draft')}
               </span>
             </div>

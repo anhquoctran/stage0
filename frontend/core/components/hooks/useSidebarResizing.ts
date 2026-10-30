@@ -26,6 +26,9 @@ export function useSidebarResizing() {
 
   const startResizing = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
+    const workspace = e.currentTarget.parentElement;
+    const workspaceBounds = workspace?.getBoundingClientRect();
+    const isRtl = getComputedStyle(workspace ?? document.documentElement).direction === 'rtl';
     isResizingRef.current = true;
     setIsResizing(true);
     document.body.style.cursor = 'col-resize';
@@ -33,7 +36,14 @@ export function useSidebarResizing() {
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!isResizingRef.current) return;
-      const newWidth = Math.min(Math.max(moveEvent.clientX, MIN_SIDEBAR_WIDTH), MAX_SIDEBAR_WIDTH);
+      const pointerOffset = workspaceBounds
+        ? isRtl
+          ? workspaceBounds.right - moveEvent.clientX
+          : moveEvent.clientX - workspaceBounds.left
+        : isRtl
+          ? window.innerWidth - moveEvent.clientX
+          : moveEvent.clientX;
+      const newWidth = Math.min(Math.max(pointerOffset, MIN_SIDEBAR_WIDTH), MAX_SIDEBAR_WIDTH);
       setSidebarWidth(newWidth);
     };
 

@@ -133,7 +133,7 @@ export const DiffToolbar: React.FC<{
               className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer rounded-sm"
               title={commandTitle('previous_file', t('menu.commands.previous_file'))}
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" />
             </button>
             <span className="text-[11px] text-subtext1 font-mono px-1.5">
               {currentFileIndex + 1} / {diffPayload.files.length}
@@ -145,7 +145,7 @@ export const DiffToolbar: React.FC<{
               className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer rounded-sm"
               title={commandTitle('next_file', t('menu.commands.next_file'))}
             >
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </button>
           </div>
         )}
@@ -159,7 +159,7 @@ export const DiffToolbar: React.FC<{
               className="p-0.5 text-red hover:bg-red/20 transition-colors cursor-pointer rounded-sm"
               title={t('git.conflicts.jumpTitle')}
             >
-              <ChevronLeft className="w-3 h-3" />
+              <ChevronLeft className="w-3 h-3 rtl:rotate-180" />
             </button>
             <button
               type="button"
@@ -177,7 +177,7 @@ export const DiffToolbar: React.FC<{
               className="p-0.5 text-red hover:bg-red/20 transition-colors cursor-pointer rounded-sm"
               title={commandTitle('next_conflict', t('git.conflicts.jumpTitle'))}
             >
-              <ChevronRight className="w-3 h-3" />
+              <ChevronRight className="w-3 h-3 rtl:rotate-180" />
             </button>
           </div>
         )}

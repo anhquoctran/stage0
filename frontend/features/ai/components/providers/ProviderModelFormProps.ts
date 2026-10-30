@@ -4,7 +4,6 @@ import type { AiModelPreset } from '../../types/AiModelPreset';
 
 export interface ProviderModelFormProps {
   isFetchingDynamicModels: boolean;
-  apiKeyDraft: string;
   onFetchDynamicModels: (config: AiConfig) => void;
   aiConfig: AiConfig;
   modelOptions: CustomSelectOption<string>[];

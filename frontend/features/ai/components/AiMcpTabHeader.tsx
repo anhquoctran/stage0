@@ -81,7 +81,7 @@ export const AiMcpTabHeader: React.FC<{
               }`}
             >
               <span>{translateUiText('preferences.nav.ai-mcp')}</span>
-              <span className="text-[10px] px-1.5 py-0.2 bg-base border border-surface2 font-mono">
+              <span className="text-[10px] px-1.5 py-[0.2rem] bg-base border border-surface2 font-mono">
                 {enabledMcpCount}/{totalMcpCount}
               </span>
             </button>

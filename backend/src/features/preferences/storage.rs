@@ -102,9 +102,12 @@ pub(super) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
         #[cfg(not(windows))]
         fs::rename(&temp, path)
             .map_err(|_| "Could not atomically replace preferences.json".to_string())?;
-        if let Ok(directory) = OpenOptions::new().read(true).open(parent) {
-            let _ = directory.sync_all();
-        }
+        #[cfg(unix)]
+        OpenOptions::new()
+            .read(true)
+            .open(parent)
+            .and_then(|directory| directory.sync_all())
+            .map_err(|_| "Preferences replacement could not be durably flushed".to_string())?;
         Ok(())
     })();
     if result.is_err() {

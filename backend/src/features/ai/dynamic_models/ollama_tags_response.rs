@@ -1,4 +1,4 @@
-use super::OllamaTagItem;
+use super::ollama_tag_item::OllamaTagItem;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

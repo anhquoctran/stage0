@@ -1629,7 +1629,7 @@
       "summarizeCommitsDiffs": "Resumir automaticamente commits e diferenças Git"
     },
     "providerModel": {
-      "refreshModelsTitle": "Atualiza os modelos com as credenciais API guardadas. Aplique primeiro as alterações da chave.",
+      "refreshModelsTitle": "Carrega os modelos disponíveis a partir da API do fornecedor configurado.",
       "refreshing": "A atualizar…",
       "refreshModels": "Atualizar modelos",
       "recommended": "Recomendado",

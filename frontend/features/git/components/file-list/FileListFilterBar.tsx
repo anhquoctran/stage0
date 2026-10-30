@@ -27,7 +27,7 @@ export function FileListFilterBar({
           <span className="text-xs font-bold uppercase tracking-wider text-subtext1">
             {t('git.diff.empty.files')}
           </span>
-          <span className="text-xs px-1.5 py-0.2 bg-surface0 text-text rounded-sm font-mono font-semibold border border-surface0">
+          <span className="text-xs px-1.5 py-[0.2rem] bg-surface0 text-text rounded-sm font-mono font-semibold border border-surface0">
             {files.length}
           </span>
         </div>
@@ -113,7 +113,7 @@ export function FileListFilterBar({
             <AlertTriangle className="w-3.5 h-3.5 text-white shrink-0" />
             <span>{t('git.fileList.showConflictsOnly')}</span>
           </div>
-          <span className="bg-red-700 text-white px-1.5 py-0.2 rounded-sm font-mono text-[10px]">
+          <span className="bg-red-700 text-white px-1.5 py-[0.2rem] rounded-sm font-mono text-[10px]">
             {conflictedCount}
           </span>
         </button>

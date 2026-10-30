@@ -7,6 +7,30 @@ use super::validation_records::{validate_git_credential, validate_mcp_server, va
 use serde_json::Value;
 
 pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
+    if let Some(references) = value.get("credentialReferences") {
+        let references = references
+            .as_object()
+            .ok_or("credentialReferences must be an object")?;
+        if references.len() > 512
+            || references.iter().any(|(logical, id)| {
+                logical.len() > 280
+                    || !(matches!(
+                        logical.strip_prefix("ai/"),
+                        Some("openai" | "anthropic" | "gemini" | "xai_grok" | "ollama" | "custom")
+                    ) || logical.strip_prefix("mcp_server/").is_some_and(|id| {
+                        !id.is_empty() && id.len() <= 256 && !id.chars().any(char::is_control)
+                    }))
+                    || !(id.is_null()
+                        || id.as_str().is_some_and(|id| {
+                            id.len() == 36
+                                && id.starts_with("txn/")
+                                && id[4..].bytes().all(|b| b.is_ascii_hexdigit())
+                        }))
+            })
+        {
+            return Err("Invalid credential reference metadata".into());
+        }
+    }
     if let Some(keymap) = value.get("keymap") {
         crate::core::keymaps::validate_settings(keymap)?;
     }

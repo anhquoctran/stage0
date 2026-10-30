@@ -23,7 +23,7 @@ export function ConfiguredMenu(props: ConfiguredMenuProps) {
   const [activeChild, setActiveChild] = useState<string | null>(null);
   const topLevel = props.onToggle !== undefined;
   const open = props.isOpen ?? hovered;
-  const rtl = document.documentElement.dir === 'rtl';
+  const rtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const { anchorRef, popupRef, popupStyle } = useMenuPopupPosition(open, !topLevel, rtl);
   useEffect(() => {
     if (!open) setActiveChild(null);

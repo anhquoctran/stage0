@@ -4,7 +4,6 @@ import type { BotCategory } from '../../virtual-mr/types/BotCategory';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 
 export const EMOJI_PRESETS = ['🛡️', '⚡', '🏗️', '🐛', '📝', '🎨', '🔒', '🚀', '🧪', '🔍', '⚙️', '💎'];
-export const CUSTOM_MODEL_OPTION = '__stage0_custom_model__';
 
 export const BOT_CATEGORY_OPTIONS: CustomSelectOption<BotCategory>[] = BOT_CATEGORIES.map((category) => ({
   value: category.id,

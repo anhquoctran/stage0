@@ -32,7 +32,7 @@ export function SandboxInstanceCard({
       <div className="font-mono space-y-0.5 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-text">{inst.id}</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-sm bg-surface0 text-subtext0 uppercase">
+          <span className="text-[10px] px-1.5 py-[0.2rem] rounded-sm bg-surface0 text-subtext0 uppercase">
             {inst.adapter_type}
           </span>
         </div>

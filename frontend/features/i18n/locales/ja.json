@@ -1622,7 +1622,7 @@
       "summarizeCommitsDiffs": "Git コミットと差分を自動要約"
     },
     "providerModel": {
-      "refreshModelsTitle": "保存済み API 認証情報でモデルを更新します。先にキーの変更を Apply してください。",
+      "refreshModelsTitle": "設定済みプロバイダー API から利用可能なモデルを読み込みます。",
       "refreshing": "更新中…",
       "refreshModels": "モデルを更新",
       "recommended": "おすすめ",

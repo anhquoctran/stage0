@@ -5,7 +5,6 @@ import type { AcpAgentConfig } from '../../types/AcpAgentConfig';
 import type { AcpReviewConfigOverrides } from '../../types/AcpReviewConfigOverrides';
 import type { AiConfig } from '../../types/AiConfig';
 import type { AiModelPreset } from '../../types/AiModelPreset';
-import type { AiProviderPreset } from '../../types/AiProviderPreset';
 import type { AiReasoningEffort } from '../../types/AiReasoningEffort';
 
 export interface BotExecutionModelFormProps {
@@ -16,9 +15,7 @@ export interface BotExecutionModelFormProps {
     setFormFastMode: (val: boolean) => void;
     formProvider: string;
     setFormProvider: (val: string) => void;
-    setIsCustomModel: (val: boolean) => void;
     setFormModel: (val: string) => void;
-    isCustomModel: boolean;
     formModel: string;
     formReasoningEffort: AiReasoningEffort | undefined;
     formTemp: number;
@@ -27,12 +24,18 @@ export interface BotExecutionModelFormProps {
   };
   catalog: {
     modelOptions: CustomSelectOption<string>[];
-    availableModels: AiModelPreset[];
     globalAiConfig: AiConfig;
-    providerPreset: AiProviderPreset | undefined;
     effectiveProvider: string;
     executionBaseUrl: string;
     dynamicModels: Record<string, AiModelPreset[]>;
+    fetchDynamicModels: (config: AiConfig) => Promise<{
+      success: boolean;
+      count: number;
+      error?: string;
+      models?: AiModelPreset[];
+    }>;
+    isFetchingDynamicModels: boolean;
+    dynamicModelError: string | null;
     inheritsGlobalModel: boolean;
     executionModel: AiModelPreset | undefined;
   };

@@ -19,10 +19,15 @@ export interface AiMcpState {
   setActiveSubTab: (tab: 'ai' | 'mcp' | 'guardrails' | 'prompts') => void;
 
   // Dynamic Live Models State
-  dynamicModels: Partial<Record<AiConfig['provider'], AiModelPreset[]>>;
+  dynamicModels: Record<string, AiModelPreset[]>;
   isFetchingDynamicModels: boolean;
   dynamicModelError: string | null;
-  fetchDynamicModels: (configOverride?: AiConfig) => Promise<{ success: boolean; count: number; error?: string }>;
+  fetchDynamicModels: (configOverride?: AiConfig) => Promise<{
+    success: boolean;
+    count: number;
+    error?: string;
+    models?: AiModelPreset[];
+  }>;
 
   // AI Configuration Actions
   updateAiConfig: (partial: Partial<AiConfig>) => void;

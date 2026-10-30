@@ -36,7 +36,7 @@ export function RepositoryBotInheritanceCards({
               />
               <span className="font-semibold text-xs text-text">{translateUiText('git.repositoryBotInheritance.inheritGlobal')}</span>
             </div>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 bg-brand/20 text-brand border border-brand/30">
+            <span className="text-[10px] font-mono px-1.5 py-[0.2rem] bg-brand/20 text-brand border border-brand/30">
               {translateUiText('git.repositoryBotInheritance.default')}
             </span>
           </div>
@@ -84,7 +84,7 @@ export function RepositoryBotInheritanceCards({
               />
               <span className="font-semibold text-xs text-text">{translateUiText('git.repositoryBotInheritance.customForRepository')}</span>
             </div>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 bg-surface1 text-subtext0 border border-surface2">
+            <span className="text-[10px] font-mono px-1.5 py-[0.2rem] bg-surface1 text-subtext0 border border-surface2">
               {translateUiText('git.repositoryBotInheritance.isolated')}
             </span>
           </div>

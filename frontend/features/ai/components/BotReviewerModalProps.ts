@@ -5,7 +5,6 @@ import type { AcpAgentConfig } from '../types/AcpAgentConfig';
 import type { AcpReviewConfigOverrides } from '../types/AcpReviewConfigOverrides';
 import type { AiConfig } from '../types/AiConfig';
 import type { AiModelPreset } from '../types/AiModelPreset';
-import type { AiProviderPreset } from '../types/AiProviderPreset';
 import type { AiReasoningEffort } from '../types/AiReasoningEffort';
 
 export interface BotReviewerModalProps {
@@ -45,8 +44,6 @@ export interface BotReviewerModalProps {
     setFormProvider: (val: string) => void;
     formModel: string;
     setFormModel: (val: string) => void;
-    isCustomModel: boolean;
-    setIsCustomModel: (val: boolean) => void;
     formTemp: number;
     setFormTemp: (val: number) => void;
     formReasoningEffort: AiReasoningEffort | undefined;
@@ -57,12 +54,19 @@ export interface BotReviewerModalProps {
   catalog: {
     externalAgents: AcpAgentConfig[];
     globalAiConfig: AiConfig;
-    providerPreset: AiProviderPreset | undefined;
     effectiveProvider: string;
     inheritsGlobalModel: boolean;
     availableModels: AiModelPreset[];
     executionModel: AiModelPreset | undefined;
     executionBaseUrl: string;
     dynamicModels: Record<string, AiModelPreset[]>;
+    fetchDynamicModels: (config: AiConfig) => Promise<{
+      success: boolean;
+      count: number;
+      error?: string;
+      models?: AiModelPreset[];
+    }>;
+    isFetchingDynamicModels: boolean;
+    dynamicModelError: string | null;
   };
 }

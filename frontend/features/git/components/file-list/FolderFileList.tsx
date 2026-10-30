@@ -30,7 +30,7 @@ export function FolderFileList({
             >
               <div className="flex items-center gap-1.5 truncate">
                 {isCollapsed ? (
-                  <ChevronRight className="w-3.5 h-3.5 text-subtext0 shrink-0" />
+                  <ChevronRight className="w-3.5 h-3.5 text-subtext0 shrink-0 rtl:rotate-180" />
                 ) : (
                   <ChevronDown className="w-3.5 h-3.5 text-subtext0 shrink-0" />
                 )}
@@ -72,7 +72,7 @@ export function FolderFileList({
                             BIN
                           </span>
                         )}
-                        <span className="truncate font-mono text-[12px] font-medium">
+                        <span dir="ltr" className="truncate font-mono text-[12px] font-medium">
                           {fileName}
                         </span>
                       </div>

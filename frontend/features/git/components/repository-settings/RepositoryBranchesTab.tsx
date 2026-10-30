@@ -154,12 +154,12 @@ export const RepositoryBranchesTab: React.FC<{
               <div className="flex items-center gap-2">
                 <span className="font-mono">{b}</span>
                 {b === branches?.current && (
-                  <span className="text-[10px] px-1.5 py-0.2 bg-surface1 text-text font-mono border border-surface2/40">
+                  <span className="text-[10px] px-1.5 py-[0.2rem] bg-surface1 text-text font-mono border border-surface2/40">
                     {translateUiText('git.repositoryBranches.currentHead')}
                   </span>
                 )}
                 {b === defaultBaseBranch && (
-                  <span className="text-[10px] px-1.5 py-0.2 bg-surface1 text-subtext0 font-mono border border-surface2/40">
+                  <span className="text-[10px] px-1.5 py-[0.2rem] bg-surface1 text-subtext0 font-mono border border-surface2/40">
                     {translateUiText('git.repositoryBranches.defaultBaseBadge')}
                   </span>
                 )}

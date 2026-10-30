@@ -7,12 +7,14 @@ import { RefreshCw } from '../../../common/components/icons/RefreshCw';
 import { RotateCcw } from '../../../common/components/icons/RotateCcw';
 import { X } from '../../../common/components/icons/X';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
+import type { AiModelPreset } from '../types/AiModelPreset';
 import { openUrlInBrowser } from '../constants/aiMcpConstants';
 import { AI_PROVIDERS } from '../constants/aiPresets';
 import { type AiConfig } from '../types/AiConfig';
 import { type AiProviderId } from '../types/AiProviderId';
 import { getProviderDisplayName } from '../utils/getProviderDisplayName';
 import { getProviderIcon } from '../utils/getProviderIcon';
+import { getProviderModelCatalog } from '../utils/providerModelCatalog';
 import { resolveAiModelPreset } from '../utils/resolveAiModelPreset';
 import { ProviderApiKeyForm } from './providers/ProviderApiKeyForm';
 import { ProviderEndpointForm } from './providers/ProviderEndpointForm';
@@ -31,7 +33,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
   apiKeyCheckError: string | null;
   onLoadApiKey: (provider: AiProviderId) => void;
   onUpdateAiConfig: (partial: Partial<AiConfig>) => void;
-  dynamicModels: Record<string, any[]>;
+  dynamicModels: Record<string, AiModelPreset[]>;
   isFetchingDynamicModels: boolean;
   dynamicModelError: string | null;
   onFetchDynamicModels: (config: AiConfig) => void;
@@ -70,15 +72,10 @@ export const AiMcpProviderDetailsModal: React.FC<{
 
   const ActiveProviderIcon = getProviderIcon(activeProviderPreset.id);
 
-  const currentDynamic = dynamicModels[aiConfig.provider];
-  const modelsList =
-    currentDynamic && currentDynamic.length > 0 ? currentDynamic : activeProviderPreset.models;
-  const selectedModelInfo = resolveAiModelPreset(
-    aiConfig.provider,
-    aiConfig.model,
-    aiConfig.baseUrl,
-    modelsList
-  );
+  const modelsList = getProviderModelCatalog(dynamicModels, aiConfig.provider, aiConfig.baseUrl);
+  const selectedModelInfo = modelsList.some((model) => model.id === aiConfig.model)
+    ? resolveAiModelPreset(aiConfig.provider, aiConfig.model, aiConfig.baseUrl, modelsList)
+    : undefined;
 
   const selectModel = (model: string) => {
     const nextModel = resolveAiModelPreset(aiConfig.provider, model, aiConfig.baseUrl, modelsList);
@@ -93,15 +90,10 @@ export const AiMcpProviderDetailsModal: React.FC<{
     });
   };
 
-  const modelOptions: CustomSelectOption<string>[] = [
-    ...(aiConfig.model && !modelsList.some((model) => model.id === aiConfig.model)
-      ? [{ value: aiConfig.model, label: t('ai.providers.customActiveModel', { model: aiConfig.model }) }]
-      : []),
-    ...modelsList.map((model) => ({
+  const modelOptions: CustomSelectOption<string>[] = modelsList.map((model) => ({
       value: model.id,
       label: `${model.name || model.id}${model.recommendedFor ? ` — ${model.recommendedFor}` : ''}`,
-    })),
-  ];
+    }));
 
   return (
     <>
@@ -208,8 +200,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
         {/* Model selection & inference parameters */}
         <ProviderModelForm
           isFetchingDynamicModels={isFetchingDynamicModels}
-          apiKeyDraft={apiKeyDraft}
-          onFetchDynamicModels={onFetchDynamicModels}
+          onFetchDynamicModels={(config) => onFetchDynamicModels({ ...config, apiKey: apiKeyDraft })}
           aiConfig={aiConfig}
           modelOptions={modelOptions}
           selectModel={selectModel}

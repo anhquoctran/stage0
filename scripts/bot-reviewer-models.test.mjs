@@ -6,136 +6,192 @@ import { componentHarness, componentNodes, loadWithMocks } from './helpers/compo
 const url = (path) => new URL(`../frontend/features/ai/${path}`, import.meta.url);
 const presets = loadWithMocks(url('constants/aiPresets.ts'), {});
 const bots = loadWithMocks(url('constants/botPresets.ts'), {});
-const modelPresets = loadWithMocks(url('utils/resolveAiModelPreset.ts'), { '../constants/aiPresets': presets });
-const sample = (overrides = {}) => ({ id: 'fixture-bot', name: 'Fixture reviewer', tagline: '', description: '', category: 'custom', avatarEmoji: '🤖', systemPrompt: 'Review safely.', provider: 'openai', model: 'saved-private-model', enabled: true, isBuiltin: false, ...overrides });
-const text = (node) => componentNodes(node).flatMap((item) => [item.props?.children].flat(Infinity)).filter((value) => typeof value === 'string').join(' ');
+const catalogUtils = loadWithMocks(url('utils/providerModelCatalog.ts'), {
+  '../constants/aiPresets': presets,
+});
+const modelPresets = loadWithMocks(url('utils/resolveAiModelPreset.ts'), {
+  '../constants/aiPresets': presets,
+});
+const sample = (overrides = {}) => ({
+  id: 'fixture-bot', name: 'Fixture reviewer', tagline: '', description: '',
+  category: 'custom', avatarEmoji: '🤖', systemPrompt: 'Review safely.',
+  provider: 'openai', model: 'saved-private-model', enabled: true, isBuiltin: false,
+  ...overrides,
+});
+const text = (node) => componentNodes(node)
+  .flatMap((item) => [item.props?.children].flat(Infinity))
+  .filter((value) => typeof value === 'string').join(' ');
 const button = (nodes, label) => nodes.find((node) => node.type === 'button' && text(node).trim() === label);
 const labelled = (nodes, label) => nodes.find((node) => node.props?.['aria-label'] === label);
+const providerUrl = (id) => presets.AI_PROVIDERS.find((provider) => provider.id === id).defaultBaseUrl;
 
-function fixture(initial = [], dynamicModels = {}, { externalAgents = [], discover = () => assert.fail('Provider forms must not launch ACP discovery') } = {}) {
-  const harness = componentHarness(); const writes = [];
+test('Anthropic model capabilities use API metadata and saved choices survive an empty catalog', () => {
+  const model = { id: 'claude-opus-5-5', name: 'Claude', reasoningEfforts: ['low', 'high'], supportsFastMode: true };
+  const baseUrl = providerUrl('anthropic');
+  assert.deepEqual(modelPresets.resolveAiModelPreset('anthropic', model.id, baseUrl, [model]).reasoningEfforts, ['low', 'high']);
+  assert.equal(modelPresets.resolveAiModelPreset('anthropic', model.id, 'https://example.com/v1', [model]).supportsFastMode, undefined);
+  const { resolveReviewBotConfig } = loadWithMocks(new URL('../frontend/features/review/utils/resolveReviewBotConfig.ts', import.meta.url), {});
+  const cfg = { ...presets.DEFAULT_AI_CONFIG, provider: 'anthropic', baseUrl, model: model.id };
+  const result = resolveReviewBotConfig(cfg, sample({ provider: 'anthropic', model: model.id, reasoningEffort: 'high', fastMode: true }));
+  assert.equal(result.reasoningEffort, 'high');
+  assert.equal(result.fastMode, true);
+});
+
+function fixture(initial = [], initialModels = {}, {
+  externalAgents = [], discover = () => assert.fail('Provider forms must not launch ACP discovery'),
+  discoveredByProvider = {},
+} = {}) {
+  const harness = componentHarness();
+  const writes = [];
+  const fetches = [];
   const draft = {
-    aiConfig: { ...presets.DEFAULT_AI_CONFIG, provider: 'openai', model: 'draft-global-model' },
+    aiConfig: {
+      ...presets.DEFAULT_AI_CONFIG,
+      provider: 'openai',
+      configuredProviders: ['openai', 'anthropic'],
+      model: 'draft-global-model',
+    },
     globalReviewers: structuredClone(initial),
     externalAgents,
     addGlobalReviewer: (bot) => { writes.push(['add', bot]); draft.globalReviewers.push({ ...bot, id: 'new-bot' }); },
-    updateGlobalReviewer: (id, partial) => { writes.push(['update', id, partial]); draft.globalReviewers = draft.globalReviewers.map((bot) => bot.id === id ? { ...bot, ...partial } : bot); },
+    updateGlobalReviewer: (id, partial) => {
+      writes.push(['update', id, partial]);
+      draft.globalReviewers = draft.globalReviewers.map((bot) => bot.id === id ? { ...bot, ...partial } : bot);
+    },
   };
-  const select = () => null;
+  let modelCatalogs = { ...initialModels };
+  const fetchDynamicModels = async (config) => {
+    fetches.push(config);
+    const models = discoveredByProvider[config.provider] || [];
+    modelCatalogs = {
+      ...modelCatalogs,
+      [catalogUtils.providerModelCatalogKey(config.provider, config.baseUrl || '')]: models,
+    };
+    return { success: true, count: models.length, models };
+  };
+  const select = (props) => harness.react.createElement('button', {
+    'aria-label': props['aria-label'], onChange: props.onChange,
+    options: props.options, value: props.value,
+  }, props.value);
   const dependencies = {
-    '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ externalAgents: { acpAgentReviewConfigOptions: discover } }) },
-    react: harness.react, '../constants/aiPresets': presets, '../constants/botPresets': bots,
+    '../../../core/services/runtime/useApplicationServices': {
+      useApplicationServices: () => ({ externalAgents: { acpAgentReviewConfigOptions: discover } }),
+    },
+    react: harness.react,
+    '../constants/aiPresets': presets,
+    '../constants/botPresets': bots,
     '../utils/resolveAiModelPreset': modelPresets,
     '../utils/botRolePrompts': { getBotRolePrompt: () => 'Fixture prompt' },
     './AiModelExecutionOptions': { AiModelExecutionOptions: () => null },
-    '../store/useAiMcpStore': { useAiMcpStore: () => ({ aiConfig: { ...presets.DEFAULT_AI_CONFIG, provider: 'anthropic', model: 'committed-model' }, dynamicModels }) },
-    '../store/useBotReviewersStore': { useBotReviewersStore: () => ({ globalReviewers: [], addGlobalReviewer: () => assert.fail('Editing must not mutate committed reviewers'), updateGlobalReviewer: () => assert.fail('Editing must remain a draft') }) },
+    '../store/useAiMcpStore': {
+      useAiMcpStore: () => ({
+        aiConfig: { ...presets.DEFAULT_AI_CONFIG, provider: 'openai', model: 'committed-model' },
+        dynamicModels: modelCatalogs,
+        fetchDynamicModels,
+        isFetchingDynamicModels: false,
+        dynamicModelError: null,
+      }),
+    },
+    '../store/useBotReviewersStore': {
+      useBotReviewersStore: () => ({
+        globalReviewers: [],
+        addGlobalReviewer: () => assert.fail('Editing must not mutate committed reviewers'),
+        updateGlobalReviewer: () => assert.fail('Editing must remain a draft'),
+      }),
+    },
     '../../../common/components/CustomSelect': { CustomSelect: select },
   };
   const source = readFileSync(url('components/BotReviewersTab.tsx'), 'utf8');
-  for (const [, name, path] of source.matchAll(/import \{ (\w+) \} from '([^']+\/icons\/[^']+)';/g)) dependencies[path] = { [name]: () => null };
+  for (const [, name, path] of source.matchAll(/import \{ (\w+) \} from '([^']+\/icons\/[^']+)';/g)) {
+    dependencies[path] = { [name]: () => null };
+  }
   const { BotReviewersTab } = loadWithMocks(url('components/BotReviewersTab.tsx'), dependencies);
   const render = async () => componentNodes(await harness.render(BotReviewersTab, { draftSettings: draft }));
   const open = async () => { const nodes = await render(); button(nodes, 'New Reviewer').props.onClick(); return render(); };
-  return { harness, draft, writes, render, open, select };
+  return { harness, draft, writes, fetches, render, open, select };
 }
 
-test('new reviewer inherits the draft global model and offers a searchable dropdown, not a required model ID input', async () => {
+test('new reviewer requires explicit provider and API model selections', async () => {
   const f = fixture();
   try {
-    const nodes = await f.open(); const models = labelled(nodes, 'Model override');
-    assert.equal(models.type, f.select); assert.equal(models.props.searchable, true);
-    assert.equal(models.props.value, 'global_default');
-    assert.match(models.props.options[0].label, /draft-global-model/);
-    assert.ok(models.props.options.some((option) => option.value === 'draft-global-model'));
-    assert.ok(models.props.options.some((option) => option.value === presets.AI_PROVIDERS[0].defaultModel));
+    const nodes = await f.open();
+    const models = labelled(nodes, 'Model override');
+    assert.equal(models.type, f.select);
+    assert.equal(labelled(nodes, 'Provider override').props.value, '');
+    assert.deepEqual(labelled(nodes, 'Provider override').props.options.map((option) => option.value), ['openai', 'anthropic']);
+    assert.equal(models.props.value, '');
+    assert.deepEqual(models.props.options, []);
     assert.equal(labelled(nodes, 'Custom model ID'), undefined);
+    assert.equal(nodes.some((node) => node.type === 'input' && /model/i.test(node.props?.id || '')), false);
     assert.equal(button(nodes, 'Create Bot').props.disabled, true);
     assert.deepEqual(f.writes, []);
   } finally { f.harness.cleanup(); }
 });
 
-test('changing providers selects its default model and replaces the list without retaining another provider models', async () => {
+test('choosing a reviewer provider loads its model catalog from that provider API', async () => {
   const f = fixture();
   try {
-    let nodes = await f.open(); labelled(nodes, 'Provider override').props.onChange('anthropic'); nodes = await f.render();
-    let models = labelled(nodes, 'Model override'); const preset = presets.AI_PROVIDERS.find((provider) => provider.id === 'anthropic');
-    assert.equal(models.props.value, preset.defaultModel);
-    assert.ok(preset.models.every((model) => models.props.options.some((option) => option.value === model.id)));
-    assert.ok(!models.props.options.some((option) => option.value === presets.AI_PROVIDERS[0].defaultModel));
-    labelled(nodes, 'Provider override').props.onChange('global_default'); nodes = await f.render();
-    models = labelled(nodes, 'Model override'); assert.equal(models.props.value, 'global_default');
-    assert.match(models.props.options[0].label, /draft-global-model/);
+    let nodes = await f.open();
+    labelled(nodes, 'Provider override').props.onChange('anthropic');
+    await new Promise((resolve) => setImmediate(resolve));
+    nodes = await f.render();
+    const modelPicker = labelled(nodes, 'Model override');
+    assert.equal(modelPicker.props.value, '');
+    assert.deepEqual(modelPicker.props.options, []);
+    assert.equal(button(nodes, 'Create Bot').props.disabled, true);
+    assert.equal(nodes.some((node) => node.type === 'input' && /model/i.test(node.props?.id || '')), false);
+    assert.equal(f.fetches.length, 1);
+    assert.equal(f.fetches[0].provider, 'anthropic');
     assert.deepEqual(f.writes, []);
   } finally { f.harness.cleanup(); }
 });
 
-test('cached model discovery is combined with presets and deduplicated without fetching or reading credentials', async () => {
-  const first = presets.AI_PROVIDERS[0].models[0];
-  const f = fixture([], { openai: [{ id: first.id, name: 'Cached friendly name' }, { id: 'discovered-model', name: 'Discovered' }], anthropic: [{ id: 'other-provider-model', name: 'Other' }] });
+test('provider API model choices are never selected implicitly', async () => {
+  const liveModels = [{ id: 'claude-api-model', name: 'API Claude model' }];
+  const f = fixture([], {}, { discoveredByProvider: { anthropic: liveModels } });
   try {
-    const nodes = await f.open(); const options = labelled(nodes, 'Model override').props.options;
-    assert.equal(options.filter((option) => option.value === first.id).length, 1);
-    assert.equal(options.find((option) => option.value === first.id).label, 'Cached friendly name');
-    assert.ok(options.some((option) => option.value === 'discovered-model'));
-    assert.ok(!options.some((option) => option.value === 'other-provider-model'));
+    let nodes = await f.open();
+    nodes.find((node) => node.type === 'input' && node.props.placeholder === 'e.g. Accessibility Auditor')
+      .props.onChange({ target: { value: 'API backed reviewer' } });
+    nodes = await f.render();
+    labelled(nodes, 'Provider override').props.onChange('anthropic');
+    await new Promise((resolve) => setImmediate(resolve));
+    nodes = await f.render();
+    assert.equal(f.fetches.length, 1);
+    assert.equal(f.fetches[0].provider, 'anthropic');
+    assert.equal(f.fetches[0].baseUrl, providerUrl('anthropic'));
+    const modelPicker = labelled(nodes, 'Model override');
+    assert.equal(modelPicker.props.value, '');
+    assert.deepEqual(modelPicker.props.options.map((option) => option.value), ['claude-api-model']);
+    assert.equal(button(nodes, 'Create Bot').props.disabled, true);
+    modelPicker.props.onChange('claude-api-model');
+    nodes = await f.render();
+    assert.equal(labelled(nodes, 'Model override').props.value, 'claude-api-model');
+    assert.equal(button(nodes, 'Create Bot').props.disabled, false);
     assert.deepEqual(f.writes, []);
   } finally { f.harness.cleanup(); }
 });
 
-test('editing a saved custom model preserves it as a dropdown option and updates only the draft', async () => {
-  const f = fixture([sample()]);
+test('catalogs are scoped to provider and endpoint, and unavailable saved model IDs stay disabled', async () => {
+  const openAiModel = [{ id: 'openai-api-model', name: 'OpenAI API model' }];
+  const f = fixture([sample()], {
+    [catalogUtils.providerModelCatalogKey('openai', providerUrl('openai'))]: openAiModel,
+    [catalogUtils.providerModelCatalogKey('anthropic', providerUrl('anthropic'))]: [
+      { id: 'claude-only', name: 'Claude only' },
+    ],
+  });
   try {
-    let nodes = await f.render(); nodes.find((node) => node.props?.title === 'Edit bot settings and prompt').props.onClick(); nodes = await f.render();
-    const models = labelled(nodes, 'Model override');
-    assert.equal(models.props.value, 'saved-private-model');
-    assert.ok(models.props.options.some((option) => option.value === 'saved-private-model'));
+    let nodes = await f.render();
+    nodes.find((node) => node.props?.title === 'Edit bot settings and prompt').props.onClick();
+    nodes = await f.render();
+    const modelPicker = labelled(nodes, 'Model override');
+    assert.equal(modelPicker.props.options.find((option) => option.value === 'saved-private-model').disabled, true);
+    assert.ok(modelPicker.props.options.some((option) => option.value === 'openai-api-model'));
+    assert.ok(!modelPicker.props.options.some((option) => option.value === 'claude-only'));
     assert.equal(labelled(nodes, 'Custom model ID'), undefined);
-    assert.equal(nodes.find((node) => node.type === 'input' && node.props.placeholder === 'e.g. Accessibility Auditor')?.props.value, 'Fixture reviewer');
-    models.props.onChange('saved-private-model'); nodes = await f.render();
-    nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} });
-    assert.equal(f.writes[0][0], 'update'); assert.equal(f.writes[0][2].model, 'saved-private-model');
+    assert.deepEqual(f.writes, []);
   } finally { f.harness.cleanup(); }
 });
-
-test('custom model entry is optional, validated, trimmed and cancelled without mutating the draft', async () => {
-  const f = fixture([sample({ model: presets.DEFAULT_AI_CONFIG.model })]);
-  try {
-    let nodes = await f.render(); nodes.find((node) => node.props?.title === 'Edit bot settings and prompt').props.onClick(); nodes = await f.render();
-    const custom = labelled(nodes, 'Model override').props.options.find((option) => option.label === 'Custom model…');
-    labelled(nodes, 'Model override').props.onChange(custom.value); nodes = await f.render();
-    assert.equal(labelled(nodes, 'Custom model ID').props.value, '');
-    assert.equal(button(nodes, 'Update Bot').props.disabled, true);
-    assert.equal(nodes.find((node) => node.type === 'input' && node.props.placeholder === 'e.g. Accessibility Auditor')?.props.value, 'Fixture reviewer');
-    labelled(nodes, 'Model override').props.onChange(custom.value); nodes = await f.render();
-    nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} }); nodes = await f.render();
-    assert.match(text({ props: { children: nodes } }), /Select a model or enter a custom model ID/); assert.deepEqual(f.writes, []);
-    labelled(nodes, 'Custom model ID').props.onChange({ target: { value: '  my-custom-model  ' } }); nodes = await f.render();
-    nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} });
-    assert.equal(f.writes[0][2].model, 'my-custom-model');
-    nodes = await f.open(); const before = structuredClone(f.draft.globalReviewers);
-    labelled(nodes, 'Model override').props.onChange(custom.value); nodes = await f.render();
-    labelled(nodes, 'Custom model ID').props.onChange({ target: { value: 'discard-this' } }); nodes = await f.render();
-    button(nodes, 'Cancel').props.onClick(); await f.render();
-    assert.deepEqual(f.draft.globalReviewers, before); assert.equal(f.writes.length, 1);
-  } finally { f.harness.cleanup(); }
-});
-
-test('selecting a preset leaves custom-entry mode and provider changes never carry a previous custom ID', async () => {
-  const f = fixture();
-  try {
-    let nodes = await f.open(); const custom = labelled(nodes, 'Model override').props.options.find((option) => option.label === 'Custom model…');
-    labelled(nodes, 'Model override').props.onChange(custom.value); nodes = await f.render();
-    labelled(nodes, 'Custom model ID').props.onChange({ target: { value: 'old-custom-model' } }); nodes = await f.render();
-    labelled(nodes, 'Model override').props.onChange(presets.DEFAULT_AI_CONFIG.model); nodes = await f.render();
-    assert.equal(labelled(nodes, 'Custom model ID'), undefined);
-    labelled(nodes, 'Provider override').props.onChange('ollama'); nodes = await f.render();
-    const local = presets.AI_PROVIDERS.find((provider) => provider.id === 'ollama');
-    assert.equal(labelled(nodes, 'Model override').props.value, local.defaultModel);
-    assert.ok(!labelled(nodes, 'Model override').props.options.some((option) => option.value === 'old-custom-model'));
-  } finally { f.harness.cleanup(); }
-});
-
 
 test('Create Bot stays disabled through ACP loading, failure, retry and model changes, and Enter cannot bypass it', async () => {
   const requests = [];
@@ -148,7 +204,7 @@ test('Create Bot stays disabled through ACP loading, failure, retry and model ch
     let nodes = await f.open();
     nodes.find((node) => node.type === 'input' && node.props.placeholder === 'e.g. Accessibility Auditor').props.onChange({ target: { value: 'ACP Reviewer' } });
     nodes = await f.render();
-    assert.equal(button(nodes, 'Create Bot').props.disabled, false);
+    assert.equal(button(nodes, 'Create Bot').props.disabled, true);
     labelled(nodes, 'Execution engine').props.onChange('acp');
     nodes = await f.render();
     assert.equal(button(nodes, 'Create Bot').props.disabled, true);

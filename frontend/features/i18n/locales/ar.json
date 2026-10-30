@@ -1656,7 +1656,7 @@
       "summarizeCommitsDiffs": "تلخيص عمليات Git والفروق تلقائيًا"
     },
     "providerModel": {
-      "refreshModelsTitle": "حدّث النماذج باستخدام بيانات اعتماد API المحفوظة. طبّق تغييرات المفتاح أولًا.",
+      "refreshModelsTitle": "حمّل النماذج المتاحة من واجهة API لموفر الخدمة المُعد.",
       "refreshing": "جارٍ التحديث…",
       "refreshModels": "تحديث النماذج",
       "recommended": "موصى به",

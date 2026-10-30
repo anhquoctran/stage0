@@ -11,7 +11,11 @@ fn app_language(settings: Option<&Value>) -> Option<&str> {
     settings?.get("appearance")?.get("language")?.as_str()
 }
 
-fn emit_app_language_changed(app: &AppHandle, before: Option<&Value>, after: Option<&Value>) {
+pub(super) fn emit_app_language_changed(
+    app: &AppHandle,
+    before: Option<&Value>,
+    after: Option<&Value>,
+) {
     let Some(language) = app_language(after) else {
         return;
     };
@@ -117,11 +121,11 @@ pub async fn save_preferences_json(
         validate_runtime_preferences(&settings)?;
         let manager = app.state::<PreferencesManager>();
         let before = manager.read().ok().and_then(|document| document.settings);
-        let saved = manager.save(content, expected_revision)?;
-        apply_runtime_preferences(&app, &settings);
-        let _ = app.emit("preferences-changed", saved.revision.clone());
-        emit_app_language_changed(&app, before.as_ref(), Some(&settings));
-        Ok(saved)
+        finish_file_operation(
+            &app,
+            before.as_ref(),
+            manager.save(content, expected_revision),
+        )
     })
     .await
 }
@@ -132,18 +136,14 @@ pub async fn patch_preferences(
     patch: Value,
     expected_revision: String,
 ) -> Result<PreferencesDocument, String> {
-    super::transaction::run_async(move || {
-        let manager = app.state::<PreferencesManager>();
-        let before = manager.read().ok().and_then(|document| document.settings);
-        let saved = manager.patch(patch, expected_revision)?;
-        if let Some(settings) = &saved.settings {
-            apply_runtime_preferences(&app, settings);
-            emit_app_language_changed(&app, before.as_ref(), Some(settings));
-        }
-        let _ = app.emit("preferences-changed", saved.revision.clone());
-        Ok(saved)
+    let mut request = super::PreferencesTransactionRequest::default();
+    request.patch = patch;
+    request.expected_revision = Some(expected_revision);
+    tauri::async_runtime::spawn_blocking(move || {
+        super::commit::commit_transaction(&app, &request).map(|result| result.document)
     })
     .await
+    .map_err(|_| "Preferences worker stopped unexpectedly".to_string())?
 }
 
 #[tauri::command]
@@ -151,13 +151,29 @@ pub async fn reset_preferences_json(app: AppHandle) -> Result<PreferencesDocumen
     super::transaction::run_async(move || {
         let manager = app.state::<PreferencesManager>();
         let before = manager.read().ok().and_then(|document| document.settings);
-        let saved = manager.reset()?;
-        if let Some(settings) = &saved.settings {
-            apply_runtime_preferences(&app, settings);
-            emit_app_language_changed(&app, before.as_ref(), Some(settings));
-        }
-        let _ = app.emit("preferences-changed", saved.revision.clone());
-        Ok(saved)
+        finish_file_operation(&app, before.as_ref(), manager.reset())
     })
     .await
+}
+
+fn finish_file_operation(
+    app: &AppHandle,
+    before: Option<&Value>,
+    result: Result<PreferencesDocument, String>,
+) -> Result<PreferencesDocument, String> {
+    match result {
+        Ok(saved) => {
+            super::commit::publish(app, before, &saved);
+            Ok(saved)
+        }
+        Err(error) => {
+            if let Ok(mut actual) = app.state::<PreferencesManager>().read() {
+                if actual.validation_error.is_none() && actual.settings.as_ref() != before {
+                    actual.publication_sequence = super::transaction::advance_sequence();
+                    super::commit::publish(app, before, &actual);
+                }
+            }
+            Err(error)
+        }
+    }
 }

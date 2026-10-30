@@ -182,17 +182,12 @@ and Preferences surviving closure of the workspace window. Browser DOM checks
 confirmed the standalone layout at 1100×800 and 900×620. Windows/Linux native
 execution and a manual two-repository GUI session remain unverified.
 
-## Preferences transaction limitations
+## Preferences transactions
 
-The async editor captures the JSON revision before its patch and rejects a
-conflicting write instead of rebasing a rollback snapshot over newer settings.
-A failed read aborts before touching the file or credentials. JSON replacement
-is atomic and validated; the OS keychain batch has compensating rollback.
-
-This is not an ACID transaction across resources: JSON and runtime events are
-published before the keychain batch finishes; a crash or failed compensation
-can leave them inconsistent. OS startup/PATH integration is applied separately
-and can fail independently. Full crash recovery and isolation need a coordinated
-native commit protocol with a durable recovery journal, staged keychain values,
-and delayed publication; external OS integration needs reconciliation and
-cannot be made part of a single atomic commit with the current platform APIs.
+Apply/OK and onboarding commit JSON preferences and versioned API/MCP credentials
+through one Rust worker. The atomic JSON replacement selects the complete secret
+snapshot; runtime and cross-window events follow commit. Invalid or stale drafts
+never publish, prepared credentials remain unreachable on failure, and cold startup
+collects only versions unreachable from the primary and recovery documents.
+Frontend rollback is no longer used. See [the commit protocol](preferences_transaction.md)
+for locks, durability, cancellation, recovery tests and the OS-integration boundary.

@@ -4,6 +4,7 @@ import { hookHarness } from './helpers/hookHarness.mjs';
 import { loadWithMocks } from './helpers/componentHarness.mjs';
 
 const load = (owner, dependencies) => loadWithMocks(new URL(`../frontend/${owner}`, import.meta.url), dependencies);
+const modelCatalog = load('features/ai/utils/providerModelCatalog.ts', {});
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 function deferred() {
   let resolve;
@@ -33,7 +34,11 @@ test('reviewer form keeps create/edit payloads, model capability checks and ACP 
   const config = { provider: 'openai', model: 'chosen', baseUrl: 'https://example.test' };
   const props = {
     globalAiConfig: config,
-    dynamicModels: { openai: [{ id: 'chosen', name: 'Chosen', reasoningEfforts: ['low'], supportsFastMode: false }] },
+    dynamicModels: {
+      [modelCatalog.providerModelCatalogKey('openai', config.baseUrl)]: [
+        { id: 'chosen', name: 'Chosen', reasoningEfforts: ['low'], supportsFastMode: false },
+      ],
+    },
     externalAgents: [{ id: 'agent', command: 'fixture-agent', args: [] }],
     addGlobalReviewer: (value) => created.push(value),
     updateGlobalReviewer: (...value) => updated.push(value),

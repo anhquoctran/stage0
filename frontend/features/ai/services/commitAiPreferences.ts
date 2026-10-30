@@ -25,8 +25,9 @@ export async function commitAiPreferences(
   if (committing) throw new Error('An AI preferences save is already in progress.');
   committing = true;
   let previous: Awaited<ReturnType<typeof preferencesJsonService.load>> | null = null;
-  let committed: Awaited<ReturnType<typeof preferencesJsonService.patch>> | null = null;
   try {
+    previous = await preferencesJsonService.load();
+    validateAdditionalPreferences?.(previous.settings ?? undefined);
     const snapshot = mergeAiPreferences(draft, baseline, captureAiPreferences());
     const apiKeys = Object.fromEntries(Object.entries(draft.apiKeyDrafts).filter(([, key]) => key?.trim()).map(([provider, key]) => [provider, key!.trim()]));
     const apiKeyRemovals = draft.apiKeyRemovals.filter((provider) => !(provider in apiKeys));
@@ -59,8 +60,6 @@ export async function commitAiPreferences(
     }
     // Loading already initializes a missing native file. Any other read error
     // must abort; initializing here could mask I/O or migration failures.
-    previous = await preferencesJsonService.load();
-    validateAdditionalPreferences?.(previous.settings ?? undefined);
     const persistedAiConfig = { ...snapshot.aiConfig } as Record<string, unknown>;
     delete persistedAiConfig.apiKey;
     const previousAi = previous.settings?.ai;
@@ -78,9 +77,9 @@ export async function commitAiPreferences(
       }
     }
     // One JSONC patch commits AI plus the dialog's other app preferences and reviewers.
-    // Runtime Zustand state is published only after the keyring batch also succeeds.
+    // Rust publishes the complete JSON/credential snapshot after its commit point.
     const additionalAi = additionalPreferences.ai;
-    committed = await preferencesJsonService.patch({
+    const patch = {
       ...additionalPreferences,
       ai: {
         ...(additionalAi && typeof additionalAi === 'object' && !Array.isArray(additionalAi) ? additionalAi : {}),
@@ -90,16 +89,21 @@ export async function commitAiPreferences(
         externalAgents: snapshot.externalAgents,
       },
       reviewers: snapshot.globalReviewers,
-    }, previous.revision);
+    };
     let configured: Partial<Record<AiProviderId, boolean>> = {};
-    if (getApplicationServices().platform.capabilities.keychain && (Object.keys(apiKeys).length || apiKeyRemovals.length || Object.keys(mcpEnvSecrets).length || Object.keys(mcpEnvRemovals).length)) {
-      configured = await getApplicationServices().aiProviders.commitAiPreferences({
+    if (getApplicationServices().platform.capabilities.preferencesFile) {
+      const result = await preferencesJsonService.commit({
+        patch,
+        expectedRevision: previous.revision,
         apiKeys,
         apiKeyRemovals,
-        policy: null,
         mcpEnvSecrets,
         mcpEnvRemovals,
       });
+      if (!preferencesJsonService.isCurrent(result.document)) return captureAiPreferences();
+      configured = result.configured;
+    } else {
+      await preferencesJsonService.patch(patch, previous.revision);
     }
     const committedSnapshot = cleanAiSnapshot({ ...snapshot, mcpServers: persistedMcpServers });
     useAiMcpStore.setState((state) => ({ aiConfig: snapshot.aiConfig, mcpServers: persistedMcpServers, guardrailPolicy: snapshot.guardrailPolicy,
@@ -107,11 +111,5 @@ export async function commitAiPreferences(
       apiKeysConfigured: { ...state.apiKeysConfigured, ...configured }, aiTestResult: null }));
     useBotReviewersStore.setState({ globalReviewers: snapshot.globalReviewers });
     return committedSnapshot;
-  } catch (error) {
-    if (previous && committed) {
-      try { await preferencesJsonService.saveText(previous.content, committed.revision); }
-      catch { throw new Error('Preferences save failed and file rollback was incomplete. Keep this dialog open and check preferences.json before retrying.'); }
-    }
-    throw error;
   } finally { committing = false; }
 }

@@ -20,6 +20,7 @@ pub mod commands;
 mod discovery;
 mod helper_lookup;
 pub mod persistence;
+pub(crate) mod preference_snapshot;
 mod remote_identity;
 mod scan;
 mod vault;
@@ -30,7 +31,6 @@ pub use clone_auth::run_git_credential_helper;
 pub use discovery::discover_system_git_credentials;
 pub(crate) use remote_identity::https_origin;
 pub use scan::schedule_system_git_credential_rescan;
-pub(crate) use vault::store_ai_key_unlogged;
 pub use vault::{
     ai_key_exists, delete_ai_key, delete_preference_secret, delete_secret, exists_in_keyring,
     get_ai_key, get_os_keyring_info, retrieve_preference_secret, retrieve_secret, store_ai_key,

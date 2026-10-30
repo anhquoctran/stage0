@@ -29,6 +29,7 @@
         --splash-logo-shadow: 0 12px 30px rgba(147, 51, 234, 0.12);
         --splash-track-border: rgba(49, 50, 68, 0.4);
         --splash-track-bg: rgba(49, 50, 68, 0.6);
+        --splash-frame-border: #313244;
         --splash-glow-blue: rgba(137, 180, 250, 0.1);
         --splash-glow-purple: rgba(147, 51, 234, 0.1);
         --splash-peach: #fab387;
@@ -53,6 +54,7 @@
         --splash-logo-shadow: 0 12px 30px rgba(76, 79, 105, 0.16);
         --splash-track-border: rgba(150, 158, 174, 0.72);
         --splash-track-bg: rgba(190, 196, 208, 0.72);
+        --splash-frame-border: #bec4d0;
         --splash-glow-blue: rgba(30, 102, 245, 0.12);
         --splash-glow-purple: rgba(147, 51, 234, 0.1);
         --splash-peach: #fe640b;
@@ -84,6 +86,12 @@
         opacity: 1;
         transform: scale(1);
         transition: opacity 180ms ease, transform 180ms ease;
+      }
+
+      [data-platform="macos"] #startup-splash {
+        box-sizing: border-box;
+        border: 1px solid var(--splash-frame-border);
+        border-radius: 4px;
       }
 
       #startup-splash.is-hidden {

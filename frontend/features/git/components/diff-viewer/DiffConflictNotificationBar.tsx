@@ -47,7 +47,7 @@ export const DiffConflictNotificationBar: React.FC<{
               {t('git.diff.conflict.unmergedInFile')}
             </span>
             {detail?.conflict_type && (
-              <span className="text-[10px] uppercase px-1.5 py-0.2 bg-surface1 text-subtext1 font-bold">
+              <span className="text-[10px] uppercase px-1.5 py-[0.2rem] bg-surface1 text-subtext1 font-bold">
                 {detail.conflict_type}
               </span>
             )}

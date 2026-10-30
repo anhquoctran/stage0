@@ -17,8 +17,6 @@ export const ProviderSetupModal: React.FC<{
   setSetupApiKey: (key: string) => void;
   setupBaseUrl: string;
   setSetupBaseUrl: (url: string) => void;
-  setupModel: string;
-  setSetupModel: (model: string) => void;
   providerSetupError: string | null;
   loadProviderSetup: (id: AiProviderId) => void;
   handleSaveProviderSetup: (e: React.FormEvent<HTMLFormElement>) => void;
@@ -35,8 +33,6 @@ export const ProviderSetupModal: React.FC<{
   setSetupApiKey,
   setupBaseUrl,
   setSetupBaseUrl,
-  setupModel,
-  setSetupModel,
   providerSetupError,
   loadProviderSetup,
   handleSaveProviderSetup,
@@ -111,28 +107,16 @@ export const ProviderSetupModal: React.FC<{
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="llm-provider-base-url" className="block text-[11px] font-semibold text-subtext0 mb-1">{translateUiText('ai.providerSetup.baseUrl')}</label>
-              <input
-                id="llm-provider-base-url"
-                type="url"
-                value={setupBaseUrl}
-                onChange={(event) => setSetupBaseUrl(event.target.value)}
-                placeholder="https://api.example.com/v1"
-                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
-              />
-            </div>
-            <div>
-              <label htmlFor="llm-provider-model" className="block text-[11px] font-semibold text-subtext0 mb-1">{translateUiText('ai.providerSetup.modelId')}</label>
-              <input
-                id="llm-provider-model"
-                value={setupModel}
-                onChange={(event) => setSetupModel(event.target.value)}
-                placeholder="model-name"
-                className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
-              />
-            </div>
+          <div>
+            <label htmlFor="llm-provider-base-url" className="block text-[11px] font-semibold text-subtext0 mb-1">{translateUiText('ai.providerSetup.baseUrl')}</label>
+            <input
+              id="llm-provider-base-url"
+              type="url"
+              value={setupBaseUrl}
+              onChange={(event) => setSetupBaseUrl(event.target.value)}
+              placeholder="https://api.example.com/v1"
+              className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
+            />
           </div>
         </div>
 

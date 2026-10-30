@@ -69,7 +69,7 @@ export const GitGraphSearchToolbar: React.FC<{
                 title={translateUiText('git.graphSearch.previousMatch')}
                 className="flex h-7 w-6 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text disabled:opacity-35 rounded-sm"
             >
-                <ChevronLeft className="h-3 w-3" />
+                <ChevronLeft className="h-3 w-3 rtl:rotate-180" />
             </button>
             <button
                 type="button"
@@ -79,7 +79,7 @@ export const GitGraphSearchToolbar: React.FC<{
                 title={translateUiText('git.graphSearch.nextMatch')}
                 className="flex h-7 w-6 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text disabled:opacity-35 rounded-sm"
             >
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-3 w-3 rtl:rotate-180" />
             </button>
             <span
                 className="w-12 text-center text-[10px] tabular-nums text-subtext0"

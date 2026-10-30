@@ -61,21 +61,26 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
     }
     let root = url.as_str().trim_end_matches('/');
     if let Some(effort) = config.reasoning_effort.as_deref() {
-        if config.provider != "openai"
-            || root != OPENAI_API_BASE_URL
-            || !openai_reasoning_efforts(&config.model).contains(&effort)
-        {
+        let supported = (config.provider == "openai"
+            && root == OPENAI_API_BASE_URL
+            && openai_reasoning_efforts(&config.model).contains(&effort))
+            || (config.provider == "anthropic"
+                && root == "https://api.anthropic.com/v1"
+                && ["low", "medium", "high", "xhigh", "max"].contains(&effort));
+        if !supported {
             return Err(
                 "The selected provider/model does not declare support for this reasoning effort"
                     .into(),
             );
         }
     }
-    if config.fast_mode
-        && (config.provider != "openai"
-            || root != OPENAI_API_BASE_URL
-            || !openai_supports_fast_mode(&config.model))
-    {
+    let fast_supported = (config.provider == "openai"
+        && root == OPENAI_API_BASE_URL
+        && openai_supports_fast_mode(&config.model))
+        || (config.provider == "anthropic"
+            && root == "https://api.anthropic.com/v1"
+            && config.model == "claude-opus-5-5");
+    if config.fast_mode && !fast_supported {
         return Err("Fast mode is not supported for the selected provider/model".into());
     }
     let suffix=match config.provider.as_str(){

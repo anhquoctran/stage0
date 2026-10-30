@@ -5,7 +5,6 @@ import type { ProviderModelFormProps } from './ProviderModelFormProps';
 
 export function ProviderModelForm({
   isFetchingDynamicModels,
-  apiKeyDraft,
   onFetchDynamicModels,
   aiConfig,
   modelOptions,
@@ -26,7 +25,7 @@ export function ProviderModelForm({
           <label className="text-xs font-semibold text-text">{t('ai.execution.model')}</label>
           <button
             type="button"
-            disabled={isFetchingDynamicModels || !!apiKeyDraft.trim()}
+            disabled={isFetchingDynamicModels}
             onClick={() => void onFetchDynamicModels(aiConfig)}
             className="text-[11px] text-subtext0 hover:text-text disabled:opacity-40 rounded-sm"
             title={t('ai.providerModel.refreshModelsTitle')}
@@ -35,9 +34,11 @@ export function ProviderModelForm({
           </button>
         </div>
         <CustomSelect
-          value={aiConfig.model}
+          value={modelOptions.some((option) => option.value === aiConfig.model) ? aiConfig.model : ''}
           options={modelOptions}
           onChange={selectModel}
+          searchable={modelOptions.length > 8}
+          searchPlaceholder={t('ai.execution.searchModels')}
           className="w-full"
           buttonClassName="w-full py-2 font-mono"
           dropdownWidth="w-full"

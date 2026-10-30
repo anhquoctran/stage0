@@ -42,7 +42,7 @@ export function VirtualMrMetadataBar({
           <span>{translateUiText('virtualMr.metadataBar.overview')}</span>
           {session.discussions.length > 0 && (
             <span
-              className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              className={`ms-0.5 px-1.5 py-[0.2rem] rounded-full text-[10px] font-mono ${
                 activeMrTab === 'overview'
                   ? 'bg-surface1 text-text'
                   : 'bg-surface0 text-subtext0'
@@ -66,7 +66,7 @@ export function VirtualMrMetadataBar({
           <span>{translateUiText('virtualMr.metadataBar.commits')}</span>
           {session.commits.length > 0 && (
             <span
-              className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              className={`ms-0.5 px-1.5 py-[0.2rem] rounded-full text-[10px] font-mono ${
                 activeMrTab === 'commits'
                   ? 'bg-surface1 text-text'
                   : 'bg-surface0 text-subtext0'
@@ -90,7 +90,7 @@ export function VirtualMrMetadataBar({
           <span>{translateUiText('virtualMr.metadataBar.aiReviews')}</span>
           {session.reviewers.length > 0 && (
             <span
-              className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+              className={`ms-0.5 px-1.5 py-[0.2rem] rounded-full text-[10px] font-mono ${
                 activeMrTab === 'reviews'
                   ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold'
                   : 'bg-surface0 text-subtext0'
@@ -113,7 +113,7 @@ export function VirtualMrMetadataBar({
           <FileCode className="w-3.5 h-3.5" />
           <span>{translateUiText('virtualMr.metadataBar.changes')}</span>
           <span
-            className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+            className={`ms-0.5 px-1.5 py-[0.2rem] rounded-full text-[10px] font-mono ${
               activeMrTab === 'diff'
                 ? 'bg-surface1 text-text'
                 : 'bg-surface0 text-subtext0'

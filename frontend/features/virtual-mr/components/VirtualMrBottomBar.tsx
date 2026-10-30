@@ -68,11 +68,11 @@ export const VirtualMrBottomBar: React.FC = () => {
         {/* Branch Routing Pill */}
         <div className="flex items-center gap-1.5 text-xs font-mono text-subtext0 hidden sm:flex min-w-0 max-w-[55vw]">
           <GitPullRequest className="w-3.5 h-3.5 text-brand shrink-0" />
-          <span className="px-2 py-0.5 bg-surface0 text-accent font-semibold max-w-[18vw] truncate whitespace-nowrap" title={session.compareBranch}>
+          <span dir="ltr" className="px-2 py-0.5 bg-surface0 text-accent font-semibold max-w-[18vw] truncate whitespace-nowrap" title={session.compareBranch}>
             {session.compareBranch}
           </span>
-          <ArrowRight className="w-3.5 h-3.5 text-subtext1 shrink-0" />
-          <span className="px-2 py-0.5 bg-surface0 text-subtext1 max-w-[18vw] truncate whitespace-nowrap" title={session.baseBranch}>
+          <ArrowRight className="w-3.5 h-3.5 text-subtext1 shrink-0 rtl:rotate-180" />
+          <span dir="ltr" className="px-2 py-0.5 bg-surface0 text-subtext1 max-w-[18vw] truncate whitespace-nowrap" title={session.baseBranch}>
             {session.baseBranch}
           </span>
         </div>

@@ -36,6 +36,7 @@ impl KeyringWriteProgress {
         progress
     }
 
+    #[cfg(test)]
     pub(crate) fn stage(&mut self, stage: &'static str) {
         self.stage = stage;
         self.log("stage");
@@ -62,6 +63,7 @@ impl KeyringWriteProgress {
         result
     }
 
+    #[cfg(test)]
     pub(crate) fn rollback_item(
         &mut self,
         restore: impl FnOnce() -> Result<(), String>,

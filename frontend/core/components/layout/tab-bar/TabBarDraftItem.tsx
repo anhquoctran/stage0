@@ -35,7 +35,7 @@ export const TabBarDraftItem: React.FC<{
       >
         {draftMr.title || t('common.tabs.newVirtualMr')}
       </span>
-      <span className="text-[10px] px-1.5 py-0.2 bg-brand/20 text-brand font-mono font-medium">
+      <span className="text-[10px] px-1.5 py-[0.2rem] bg-brand/20 text-brand font-mono font-medium">
         {t('common.tabs.draft')}
       </span>
       <button

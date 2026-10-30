@@ -81,7 +81,7 @@ export const MergeFromModal: React.FC = () => {
             <div>
               <h3 className="text-sm font-bold text-text">{translateUiText('git.mergeDialog.title')}</h3>
               <p className="text-[11px] text-subtext0">
-                {translateUiText('git.mergeDialog.mergeInto')} <span className="font-mono text-text font-semibold">{branches?.current || 'HEAD'}</span>
+                {translateUiText('git.mergeDialog.mergeInto')} <span dir="ltr" className="font-mono text-text font-semibold">{branches?.current || 'HEAD'}</span>
               </p>
             </div>
           </div>

@@ -6,7 +6,6 @@ import { Bot } from '../../../common/components/icons/Bot';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import {
   BOT_CATEGORY_OPTIONS,
-  CUSTOM_MODEL_OPTION,
   EMOJI_PRESETS,
 } from '../constants/botReviewerConstants';
 import type { BotReviewerModalProps } from './BotReviewerModalProps';
@@ -43,8 +42,6 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
     setFormProvider,
     formModel,
     setFormModel,
-    isCustomModel,
-    setIsCustomModel,
     formTemp,
     setFormTemp,
     formReasoningEffort,
@@ -55,50 +52,39 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
   catalog: {
     externalAgents,
     globalAiConfig,
-    providerPreset,
     effectiveProvider,
     inheritsGlobalModel,
     availableModels,
     executionModel,
     executionBaseUrl,
     dynamicModels,
+    fetchDynamicModels,
+    isFetchingDynamicModels,
+    dynamicModelError,
   },
 }) => {
   const { t: translateUiText } = useUiTextTranslation();
   if (!isOpen) return null;
 
   const modelOptions: CustomSelectOption<string>[] = [
-    ...(formProvider === 'global_default' || formModel === 'global_default'
-      ? [
-          {
-            value: 'global_default',
-            label:
-              formProvider === 'global_default'
-                ? translateUiText('ai.reviewerBot.useGlobalModel', { model: globalAiConfig.model })
-                : translateUiText('ai.reviewerBot.useProviderDefault', { model: providerPreset?.defaultModel || globalAiConfig.model }),
-            description:
-              formProvider === 'global_default'
-                ? translateUiText('ai.reviewerBot.inheritProviderModel')
-                : translateUiText('ai.reviewerBot.useSelectedProviderDefault'),
-          },
-        ]
+    ...(formProvider === 'global_default'
+      ? [{
+          value: 'global_default',
+          label: translateUiText('ai.reviewerBot.useGlobalModel', { model: globalAiConfig.model }),
+          description: translateUiText('ai.reviewerBot.inheritProviderModel'),
+        }]
       : []),
     ...availableModels.map((model) => ({
       value: model.id,
       label: model.name || model.id,
       description: model.id,
     })),
-    ...(!isCustomModel &&
+    ...(editingBotId &&
     formModel &&
     formModel !== 'global_default' &&
     !availableModels.some((model) => model.id === formModel)
-      ? [{ value: formModel, label: translateUiText('ai.reviewerBot.savedCustomModel', { model: formModel }) }]
+      ? [{ value: formModel, label: formModel, disabled: true }]
       : []),
-    {
-      value: CUSTOM_MODEL_OPTION,
-      label: translateUiText('ai.reviewerBot.customModel'),
-      description: translateUiText('ai.reviewerBot.enterUnlistedModel'),
-    },
   ];
 
   return (
@@ -225,9 +211,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
               setFormFastMode: setFormFastMode,
               formProvider: formProvider,
               setFormProvider: setFormProvider,
-              setIsCustomModel: setIsCustomModel,
               setFormModel: setFormModel,
-              isCustomModel: isCustomModel,
               formModel: formModel,
               formReasoningEffort: formReasoningEffort,
               formTemp: formTemp,
@@ -236,12 +220,13 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
             }}
             catalog={{
               modelOptions: modelOptions,
-              availableModels: availableModels,
               globalAiConfig: globalAiConfig,
-              providerPreset: providerPreset,
               effectiveProvider: effectiveProvider,
               executionBaseUrl: executionBaseUrl,
               dynamicModels: dynamicModels,
+              fetchDynamicModels: fetchDynamicModels,
+              isFetchingDynamicModels: isFetchingDynamicModels,
+              dynamicModelError: dynamicModelError,
               inheritsGlobalModel: inheritsGlobalModel,
               executionModel: executionModel,
             }}

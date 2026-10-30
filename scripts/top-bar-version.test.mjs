@@ -9,6 +9,7 @@ import { loadWithMocks } from './helpers/componentHarness.mjs';
 function titleRowFixture({ currentRepo = null, version = '0.1.11' } = {}) {
   const calls = [];
   const menus = [];
+  const controls = [];
   const { TopBarTitleRow } = loadWithMocks(
     new URL('../frontend/core/components/layout/top-bar/TopBarTitleRow.tsx', import.meta.url),
     {
@@ -18,7 +19,13 @@ function titleRowFixture({ currentRepo = null, version = '0.1.11' } = {}) {
       '../../../../common/components/AppLogo': { AppLogo: () => null },
       '../MenuBar': { MenuBar: (props) => { menus.push(props); return null; } },
       '../WindowControls': {
-        WindowControls: () => React.createElement('div', { 'data-window-controls': 'windows' }),
+        WindowControls: (props) => {
+          controls.push(props);
+          return React.createElement('div', {
+            'data-window-controls': props.style,
+            className: props.className,
+          });
+        },
       },
       '../../../../features/git/store/useGitStore': {
         useGitStore: () => ({ currentRepo, baseBranch: 'main', compareBranch: 'feature/titlebar' }),
@@ -28,7 +35,7 @@ function titleRowFixture({ currentRepo = null, version = '0.1.11' } = {}) {
       },
     },
   );
-  return { TopBarTitleRow, calls, menus };
+  return { TopBarTitleRow, calls, menus, controls };
 }
 
 test('TopBarTitleRow renders current application version as normal text next to Stage0 brand', () => {
@@ -48,24 +55,26 @@ test('TopBarTitleRow renders current application version as normal text next to 
   assert.doesNotMatch(topBarSrc, /bg-surface0 text-subtext0 border/);
 
   // Full welcome-title metadata retains the version, separate from the visible title.
-  assert.match(topBarSrc, /Stage0 v\$\{about\.packageVersion\} — Virtual MR Sandbox/);
+  assert.match(topBarSrc, /`Stage0 v\$\{about\.packageVersion\} — \$\{t\('common\.layout\.productDescriptor'\)\}`/);
 });
 
 for (const isMac of [true, false]) {
   for (const currentRepo of [null, { name: 'Stage0 repository' }]) {
     test(`${isMac ? 'macOS' : 'Windows/Linux'} shows one version ${currentRepo ? 'with a repository' : 'on welcome'}`, () => {
-      const { TopBarTitleRow, menus } = titleRowFixture({ currentRepo });
+      const { TopBarTitleRow, menus, controls } = titleRowFixture({ currentRepo });
       const html = renderToStaticMarkup(React.createElement(TopBarTitleRow, { isMac }));
       assert.equal((html.match(/>v0\.1\.11<\/span>/g) ?? []).length, 1);
       assert.match(html, /aria-label="Stage0 version 0\.1\.11"/);
       assert.match(html, /title="Stage0 v0\.1\.11"/);
       assert.match(html, /rounded-none/);
+      assert.match(html, /<div dir="ltr"/);
       assert.equal(menus.length, 1);
       assert.equal(Boolean(menus[0].hidden), isMac);
       if (isMac) {
         assert.match(html, /grid-cols-\[5rem_minmax\(0,1fr\)_5rem\]/);
-        assert.match(html, /aria-hidden="true" class="w-20 h-full shrink-0"/);
-        assert.doesNotMatch(html, /data-window-controls/);
+        assert.match(html, /data-window-controls="mac"/);
+        assert.equal(controls[0].style, 'mac');
+        assert.match(controls[0].className, /-translate-x-4/);
       } else {
         assert.match(html, /Stage0<\/span><span[^>]*>v0\.1\.11<\/span>/);
         assert.match(html, /data-window-controls="windows"/);
@@ -88,9 +97,9 @@ test('macOS constrains long versions and leaves double-click handling with the n
   function Probe() { tree = TopBarTitleRow({ isMac: true }); return tree; }
   const html = renderToStaticMarkup(React.createElement(Probe));
   assert.ok(html.includes(`title="Stage0 v${version}"`));
-  assert.match(html, /data-tauri-drag-region="true" title="Stage0 v[^"]+"[^>]+class="[^"]*truncate min-w-0"/);
+  assert.match(html, /title="Stage0 v[^"]+" aria-label="Stage0 version [^"]+" class="[^"]*truncate min-w-0"/);
   assert.equal(tree.props['data-tauri-drag-region'], true);
   assert.equal(tree.props.onDoubleClick, undefined, 'framework drag handling already owns double-click');
-  assert.equal(tree.props.onMouseDown, undefined);
+  assert.equal(typeof tree.props.onMouseDown, 'function');
   assert.deepEqual(calls, [], 'React must not issue another maximize request');
 });

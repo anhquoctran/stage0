@@ -40,7 +40,6 @@ export const createGuardrailsSlice =
         const backendPolicy = await getApplicationServices().guardrails.getGuardrailPolicy();
         if (backendPolicy) {
           set({ guardrailPolicy: backendPolicy });
-          persistState(get().aiConfig, get().mcpServers, backendPolicy, get().externalAgents);
         }
       } catch (err) {
         console.warn('Failed to load guardrail policy from backend:', err);

@@ -18,14 +18,13 @@ export const AiModelExecutionOptions: React.FC<{
   fastMode,
   onReasoningEffortChange,
   onFastModeChange,
-  emptyMessage,
 }) => {
   const { t } = useTranslation();
   const efforts = model?.reasoningEfforts || [];
   const supportsFastMode = model?.supportsFastMode === true;
 
   if (!efforts.length && !supportsFastMode) {
-    return <p className="text-[10px] text-subtext0">{emptyMessage || t('ai.execution.noCapabilityMetadata')}</p>;
+    return null;
   }
 
   const effortOptions: CustomSelectOption<string>[] = [
@@ -54,7 +53,6 @@ export const AiModelExecutionOptions: React.FC<{
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[11px] text-text">{t('ai.execution.fastMode')}</p>
-            <p className="text-[10px] text-subtext0">{t('ai.execution.fastModeCost')}</p>
           </div>
           <button
             type="button"

@@ -52,7 +52,7 @@ export const AiMcpProviderTable: React.FC<{
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[620px] text-start">
+        <table className="w-full min-w-155 text-start">
           <thead>
             <tr className="border-b border-surface1 bg-surface0/40 text-[9px] uppercase tracking-wider text-subtext0">
               <th className="px-3.5 py-2 font-semibold">{t('ai.providers.provider')}</th>

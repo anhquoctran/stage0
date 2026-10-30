@@ -1622,7 +1622,7 @@
       "summarizeCommitsDiffs": "自動摘要 Git 提交與差異"
     },
     "providerModel": {
-      "refreshModelsTitle": "使用已儲存的 API 認證更新模型。請先套用金鑰變更。",
+      "refreshModelsTitle": "從已設定的提供者 API 載入可用模型。",
       "refreshing": "正在更新…",
       "refreshModels": "更新模型",
       "recommended": "建議",

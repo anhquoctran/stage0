@@ -9,7 +9,6 @@ const DEFAULT_OPTION = '__stage0_agent_default__';
 export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> = ({ agent, value = {}, state }) => {
   const { t } = useTranslation();
   const { options, loading, error, validationError, retry, reset, updateOption } = state;
-  const visibleKinds = new Set(options.map((option) => option.reviewKind));
 
   if (!agent) return null;
   return (
@@ -29,17 +28,31 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
       </div>}
       {!loading && !error && options.length === 0 && <p className="text-[10px] text-subtext0">{t('ai.acp.noOptions')}</p>}
       {options.map((option) => {
+        if (option.reviewKind === 'fastMode' && (loading || error)) return null;
         const current = value[option.id];
         const label = option.reviewKind === 'model'
           ? t('ai.execution.model')
           : option.reviewKind === 'reasoning'
             ? t('ai.execution.reasoningEffort')
             : option.reviewKind === 'fastMode' ? t('ai.execution.fastMode') : option.name;
-        if (option.type === 'boolean') {
-          const currentBoolean = typeof option.currentValue === 'boolean' ? option.currentValue : false;
-          if (option.reviewKind === 'fastMode') {
-            const isOverridden = typeof current === 'boolean';
-            const enabled = isOverridden ? current : currentBoolean;
+        const fastChoices = option.reviewKind === 'fastMode' && option.type === 'select'
+          ? (option.options || []).reduce<{ on?: string; off?: string }>((found, choice) => {
+              const key = choice.value.toLowerCase();
+              if (['true', 'on', 'enabled', 'enable', '1'].includes(key)) found.on = choice.value;
+              if (['false', 'off', 'disabled', 'disable', '0'].includes(key)) found.off = choice.value;
+              return found;
+            }, {})
+          : undefined;
+        if (option.reviewKind === 'fastMode' && (option.type === 'boolean' || (
+          option.options?.length === 2 && fastChoices?.on && fastChoices.off &&
+          (option.currentValue === fastChoices.on || option.currentValue === fastChoices.off)
+        ))) {
+            const currentBoolean = option.type === 'boolean'
+              ? option.currentValue === true : option.currentValue === fastChoices?.on;
+            const isOverridden = current !== undefined;
+            const enabled = isOverridden
+              ? option.type === 'boolean' ? current === true : current === fastChoices?.on
+              : currentBoolean;
             return (
               <div key={option.id} className="flex items-center justify-between gap-3">
                 <div>
@@ -66,7 +79,8 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
                     aria-label={t('ai.acp.fastModeFor', { name: agent.name })}
                     aria-checked={enabled}
                     disabled={loading || !!error}
-                    onClick={() => updateOption(option, !enabled)}
+                    onClick={() => updateOption(option, option.type === 'boolean'
+                      ? !enabled : enabled ? fastChoices?.off : fastChoices?.on)}
                     className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-0 p-0.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
                       enabled ? 'bg-brand' : 'bg-surface1'
                     }`}
@@ -80,7 +94,12 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
                 </div>
               </div>
             );
-          }
+        }
+        // A Fast mode control must have a complete, advertised on/off pair.
+        // Do not expose a disabled switch or a substitute Fast mode dropdown.
+        if (option.reviewKind === 'fastMode') return null;
+        if (option.type === 'boolean') {
+          const currentBoolean = typeof option.currentValue === 'boolean' ? option.currentValue : false;
           const selected = typeof current === 'boolean' ? String(current) : DEFAULT_OPTION;
           const choices: CustomSelectOption<string>[] = [
             { value: DEFAULT_OPTION, label: t('ai.acp.agentDefaultBoolean', { status: t(currentBoolean ? 'ai.acp.on' : 'ai.acp.off') }) },
@@ -143,7 +162,6 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
           </div>
         );
       })}
-      {!loading && options.length > 0 && !visibleKinds.has('fastMode') && <p className="text-[10px] text-subtext0">{t('ai.acp.fastModeUnavailable')}</p>}
     </div>
   );
 };

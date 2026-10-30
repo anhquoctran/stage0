@@ -1622,7 +1622,7 @@
       "summarizeCommitsDiffs": "Tự động tóm tắt commit và diff Git"
     },
     "providerModel": {
-      "refreshModelsTitle": "Làm mới mô hình bằng thông tin xác thực API đã lưu. Hãy Apply các thay đổi khóa trước.",
+      "refreshModelsTitle": "Tải các mô hình khả dụng từ API của nhà cung cấp đã cấu hình.",
       "refreshing": "Đang làm mới…",
       "refreshModels": "Làm mới mô hình",
       "recommended": "Đề xuất",

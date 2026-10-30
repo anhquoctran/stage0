@@ -47,19 +47,19 @@ export function SandboxConfigForm({
                 <span className="text-xs font-semibold text-text">{adapter.title}</span>
 
                 {adapter.defaultBadge && (
-                  <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2 rounded-sm bg-surface0 border border-surface1 uppercase">
+                  <span className="text-[10px] font-mono text-subtext0 px-1.5 py-[0.2rem] rounded-sm bg-surface0 border border-surface1 uppercase">
                     {t('ai.sandbox.default')}
                   </span>
                 )}
 
                 {adapter.extraBadge && (
-                  <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2 rounded-sm bg-surface0 border border-surface1">
+                  <span className="text-[10px] font-mono text-subtext0 px-1.5 py-[0.2rem] rounded-sm bg-surface0 border border-surface1">
                     {adapter.extraBadge}
                   </span>
                 )}
 
                 {isCurrent && (
-                  <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2 rounded-sm bg-surface1 border border-surface2">
+                  <span className="text-[10px] font-mono text-subtext0 px-1.5 py-[0.2rem] rounded-sm bg-surface1 border border-surface2">
                     {t('ai.sandbox.active')}
                   </span>
                 )}

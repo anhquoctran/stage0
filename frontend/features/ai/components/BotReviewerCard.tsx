@@ -53,11 +53,11 @@ export const BotReviewerCard: React.FC<{
                 {categoryLabel}
               </span>
               {bot.isBuiltin ? (
-                <span className="px-1.5 py-0.2 text-[9px] font-mono bg-surface1 text-subtext0 border border-surface2/60">
+                <span className="px-1.5 py-[0.2rem] text-[9px] font-mono bg-surface1 text-subtext0 border border-surface2/60">
                   {t('ai.botReviewers.builtIn')}
                 </span>
               ) : (
-                <span className="px-1.5 py-0.2 text-[9px] font-mono bg-brand/10 text-brand border border-brand/20">
+                <span className="px-1.5 py-[0.2rem] text-[9px] font-mono bg-brand/10 text-brand border border-brand/20">
                   {t('ai.botReviewers.custom')}
                 </span>
               )}

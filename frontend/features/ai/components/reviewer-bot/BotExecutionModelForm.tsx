@@ -1,11 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { CustomSelect } from '../../../../common/components/CustomSelect';
 import { AI_PROVIDERS } from '../../constants/aiPresets';
-import {
-  CUSTOM_MODEL_OPTION,
-} from '../../constants/botReviewerConstants';
-import type { AiReasoningEffort } from '../../types/AiReasoningEffort';
-import { resolveAiModelPreset } from '../../utils/resolveAiModelPreset';
+import type { AiProviderId } from '../../types/AiProviderId';
+import { configuredProviderIds, providerSettingsFor } from '../../utils/aiProviderSettings';
 import { AcpReviewerConfigOptions } from '../AcpReviewerConfigOptions';
 import { AiModelExecutionOptions } from '../AiModelExecutionOptions';
 import type { BotExecutionModelFormProps } from './BotExecutionModelFormProps';
@@ -18,9 +15,7 @@ export function BotExecutionModelForm({
     setFormFastMode,
     formProvider,
     setFormProvider,
-    setIsCustomModel,
     setFormModel,
-    isCustomModel,
     formModel,
     formReasoningEffort,
     formTemp,
@@ -29,12 +24,11 @@ export function BotExecutionModelForm({
   },
   catalog: {
     modelOptions,
-    availableModels,
     globalAiConfig,
-    providerPreset,
     effectiveProvider,
-    executionBaseUrl,
-    dynamicModels,
+    fetchDynamicModels,
+    isFetchingDynamicModels,
+    dynamicModelError,
     inheritsGlobalModel,
     executionModel,
   },
@@ -54,10 +48,27 @@ export function BotExecutionModelForm({
     { value: 'provider' as const, label: t('ai.execution.builtInProvider') },
     { value: 'acp' as const, label: t('ai.execution.acpAgent') },
   ];
+  const configuredProviders = configuredProviderIds(globalAiConfig);
   const providerOptions = [
-    { value: 'global_default', label: t('ai.execution.globalDefaultFromAiTab') },
-    ...AI_PROVIDERS.map((provider) => ({ value: provider.id, label: provider.name })),
+    ...(formProvider === 'global_default'
+      ? [{ value: 'global_default', label: t('ai.execution.globalDefaultFromAiTab') }]
+      : []),
+    ...AI_PROVIDERS
+      .filter((provider) => configuredProviders.includes(provider.id) || provider.id === formProvider)
+      .map((provider) => ({ value: provider.id, label: provider.name })),
   ];
+  const loadModels = async (providerValue: string) => {
+    if (!providerValue || providerValue === 'global_default') return;
+    const provider = providerValue as AiProviderId;
+    const settings = providerSettingsFor(globalAiConfig, provider);
+    await fetchDynamicModels({
+      ...globalAiConfig,
+      ...settings,
+      provider,
+      apiKey: provider === globalAiConfig.provider ? globalAiConfig.apiKey : '',
+    });
+  };
+  const refreshModels = () => loadModels(effectiveProvider);
   return (
     <div className="p-3 bg-surface0/30 border border-surface0 space-y-3 rounded-sm">
       <span className="text-[11px] font-bold text-text uppercase tracking-wider block">
@@ -90,14 +101,13 @@ export function BotExecutionModelForm({
                 options={providerOptions}
                 onChange={(p) => {
                   setFormProvider(p);
-                  setIsCustomModel(false);
                   setFormReasoningEffort(undefined);
                   setFormFastMode(false);
                   if (p === 'global_default') {
                     setFormModel('global_default');
                   } else {
-                    const nextPreset = AI_PROVIDERS.find((provider) => provider.id === p);
-                    setFormModel(nextPreset?.defaultModel || 'global_default');
+                    setFormModel('');
+                    void loadModels(p);
                   }
                 }}
                 className="w-full"
@@ -109,44 +119,31 @@ export function BotExecutionModelForm({
             </div>
 
             <div>
-              <label className="block text-[10px] text-subtext0 mb-1">{t('ai.execution.model')}</label>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="block text-[10px] text-subtext0">{t('ai.execution.model')}</label>
+                {!!formProvider && formProvider !== 'global_default' && (
+                  <button
+                    type="button"
+                    disabled={isFetchingDynamicModels}
+                    onClick={() => void refreshModels()}
+                    title={t('ai.providerModel.refreshModelsTitle')}
+                    className="rounded-sm text-[10px] text-subtext0 hover:text-text disabled:opacity-40"
+                  >
+                    {isFetchingDynamicModels ? t('ai.providerModel.refreshing') : t('ai.providerModel.refreshModels')}
+                  </button>
+                )}
+              </div>
               <CustomSelect
-                value={isCustomModel ? CUSTOM_MODEL_OPTION : formModel}
+                value={formModel}
                 options={modelOptions}
+                disabled={
+                  isFetchingDynamicModels ||
+                  (!modelOptions.length && formProvider !== 'global_default')
+                }
                 onChange={(model) => {
-                  if (model === CUSTOM_MODEL_OPTION) {
-                    setIsCustomModel(true);
-                    if (
-                      formModel === 'global_default' ||
-                      availableModels.some((item) => item.id === formModel)
-                    )
-                      setFormModel('');
-                    setFormReasoningEffort(undefined);
-                    setFormFastMode(false);
-                  } else {
-                    setIsCustomModel(false);
-                    setFormModel(model);
-                    const nextModelId =
-                      model === 'global_default'
-                        ? formProvider === 'global_default'
-                          ? globalAiConfig.model
-                          : providerPreset?.defaultModel || ''
-                        : model;
-                    const nextModel = resolveAiModelPreset(
-                      effectiveProvider,
-                      nextModelId,
-                      executionBaseUrl,
-                      dynamicModels[effectiveProvider as keyof typeof dynamicModels] || []
-                    );
-                    if (
-                      !nextModel?.reasoningEfforts?.includes(
-                        formReasoningEffort as AiReasoningEffort
-                      )
-                    ) {
-                      setFormReasoningEffort(undefined);
-                    }
-                    if (!nextModel?.supportsFastMode) setFormFastMode(false);
-                  }
+                  setFormModel(model);
+                  setFormReasoningEffort(undefined);
+                  setFormFastMode(false);
                 }}
                 searchable
                 searchPlaceholder={t('ai.execution.searchModels')}
@@ -156,16 +153,8 @@ export function BotExecutionModelForm({
                 align="left"
                 aria-label={t('ai.execution.modelOverride')}
               />
-              {isCustomModel && (
-                <input
-                  type="text"
-                  aria-label={t('ai.execution.customModelId')}
-                  required
-                  value={formModel}
-                  onChange={(e) => setFormModel(e.target.value)}
-                  placeholder={t('ai.execution.enterCustomModelId')}
-                  className="mt-2 w-full px-2 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand font-mono rounded-sm"
-                />
+              {dynamicModelError && formProvider !== 'global_default' && (
+                <p role="alert" className="mt-1 text-[10px] text-red">{dynamicModelError}</p>
               )}
             </div>
 

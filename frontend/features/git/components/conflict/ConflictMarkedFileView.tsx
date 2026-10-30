@@ -55,7 +55,7 @@ export function ConflictMarkedFileView({
                 key={idx}
                 className="bg-red/25 text-red font-bold px-2 py-1 my-1 rounded-sm border-l-4 border-red flex items-center gap-2"
               >
-                <span className="text-[10px] uppercase px-1.5 py-0.5 rounded-sm bg-red text-white">
+                <span dir="auto" className="text-[10px] uppercase px-1.5 py-0.5 rounded-sm bg-red text-white">
                   {t('git.conflicts.targetChange')}
                 </span>
                 <span>{line}</span>
@@ -69,7 +69,7 @@ export function ConflictMarkedFileView({
                 key={idx}
                 className="bg-surface1 text-subtext1 font-bold px-2 py-0.5 my-1 border-y border-dashed border-surface2 flex items-center gap-2 text-center justify-center text-[11px] rounded-sm"
               >
-                <span>{t('git.conflicts.collisionBoundary')}</span>
+                <span dir="auto">{t('git.conflicts.collisionBoundary')}</span>
               </div>
             );
           }
@@ -80,7 +80,7 @@ export function ConflictMarkedFileView({
                 key={idx}
                 className="bg-blue/25 text-blue font-bold px-2 py-1 my-1 rounded-sm border-l-4 border-blue flex items-center gap-2"
               >
-                <span className="text-[10px] uppercase px-1.5 py-0.5 rounded-sm bg-blue text-white">
+                <span dir="auto" className="text-[10px] uppercase px-1.5 py-0.5 rounded-sm bg-blue text-white">
                   {t('git.conflicts.incomingChange')}
                 </span>
                 <span>{line}</span>

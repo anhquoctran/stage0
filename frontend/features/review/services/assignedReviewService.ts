@@ -12,6 +12,7 @@ import type { BotReviewer } from '../../virtual-mr/types/BotReviewer';
 import { discussionReplyRecipients } from '../utils/discussionReplyRecipients';
 import { getDiscussionComments } from '../../virtual-mr/utils/discussionReferences';
 import { discussionReplyVersion } from '../utils/discussionReplyVersion';
+import { getProviderModelCatalog } from '../../ai/utils/providerModelCatalog';
 
 const attemptedHeadBySession = new Map<string, string>();
 const checkingSession = new Set<string>();
@@ -48,13 +49,16 @@ export function getAssignedReviewerForSession(sessionId: string, reviewerId: str
 
 function configForReviewer(reviewer: BotReviewer) {
   const aiState = useAiMcpStore.getState();
-  const reviewerProvider = reviewer.provider && reviewer.provider !== 'global_default'
-    ? reviewer.provider as keyof typeof aiState.dynamicModels
-    : aiState.aiConfig.provider;
+  const preliminaryConfig = resolveReviewBotConfig(
+    aiState.aiConfig,
+    reviewer,
+    [],
+    aiState.externalAgents,
+  );
   const config = resolveReviewBotConfig(
     aiState.aiConfig,
     reviewer,
-    aiState.dynamicModels[reviewerProvider] || [],
+    getProviderModelCatalog(aiState.dynamicModels, preliminaryConfig.provider, preliminaryConfig.baseUrl),
     aiState.externalAgents,
   );
   if (reviewer.acpAgentId && !config.acpAgent) {

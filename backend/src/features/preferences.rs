@@ -1,10 +1,17 @@
 //! JSONC preferences: a stable facade over validation, storage and IPC modules.
 mod commands;
+mod commit;
+mod credential_stage;
 mod fonts;
 mod jsonc_patch;
 mod manager;
 mod migration;
 mod preferences_document;
+mod preferences_transaction_request;
+mod preferences_transaction_result;
+pub use commit::*;
+pub use preferences_transaction_request::PreferencesTransactionRequest;
+pub use preferences_transaction_result::PreferencesTransactionResult;
 mod runtime_config;
 mod schema;
 mod secrets;
@@ -33,5 +40,7 @@ const MAX_JSON_DEPTH: usize = 64;
 const SUPPORTED_SCHEMA_VERSION: u64 = 1;
 static PROCESS_PREFERENCES_WRITE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
+#[cfg(test)]
+mod commit_tests;
 #[cfg(test)]
 mod tests;

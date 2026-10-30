@@ -142,7 +142,7 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
               className="p-1 text-subtext1 hover:text-text rounded-sm hover:bg-surface1 transition-colors disabled:opacity-30 cursor-pointer"
               title={t('git.conflicts.previousBlock')}
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" />
             </button>
             <span className="text-[11px] text-subtext1 font-mono px-1.5">
               {t('git.conflicts.blockStepper', { active: activeRegionIndex + 1, total: regions.length })}
@@ -154,7 +154,7 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
               className="p-1 text-subtext1 hover:text-text rounded-sm hover:bg-surface1 transition-colors disabled:opacity-30 cursor-pointer"
               title={t('git.conflicts.nextBlock')}
             >
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </button>
           </div>
         )}

@@ -31,7 +31,7 @@ async function fixture(run, handler = async () => undefined) {
 test('startup, provider selection and API key save cannot automatically read secrets or fetch models', async () => {
   await fixture(async (store, calls, startup) => {
     startup(); await new Promise((resolve) => setImmediate(resolve));
-    const allowed = new Set(['commit_ai_preferences', 'get_guardrail_policy', 'get_guardrail_audit_log', 'ai_detect_cli']);
+    const allowed = new Set(['get_guardrail_policy', 'get_guardrail_audit_log', 'ai_detect_cli']);
     assert.ok(calls.length > 0 && calls.every(([command]) => allowed.has(command)));
     calls.length = 0;
     store.getState().setProvider('anthropic');
@@ -61,17 +61,17 @@ test('explicit key check is single-flight, does not chain a model request and de
   }, async () => { throw new Error('fixture access denied'); });
 });
 
-test('explicit model refresh uses the selected endpoint, coalesces repeated clicks and refuses pending secrets', async () => {
+test('explicit model refresh uses the selected endpoint and current unsaved key without persisting it', async () => {
   const pending = deferred();
   await fixture(async (store, calls) => {
     const selected = { ...presets.DEFAULT_AI_CONFIG, provider: 'custom', baseUrl: 'https://fixture.test/v1' };
-    const rejected = await store.getState().fetchDynamicModels({ ...selected, apiKey: 'fixture-unsaved-secret' });
-    assert.equal(rejected.success, false); assert.deepEqual(calls, []);
-    const first = store.getState().fetchDynamicModels(selected);
-    await store.getState().fetchDynamicModels(selected);
-    assert.deepEqual(calls, [['fetch_ai_models', { provider: 'custom', apiKey: null, baseUrl: selected.baseUrl }]]);
+    const first = store.getState().fetchDynamicModels({ ...selected, apiKey: 'fixture-unsaved-secret' });
+    await store.getState().fetchDynamicModels({ ...selected, apiKey: 'fixture-unsaved-secret' });
+    assert.deepEqual(calls, [['fetch_ai_models', { provider: 'custom', apiKey: 'fixture-unsaved-secret', baseUrl: selected.baseUrl }]]);
     pending.resolve([{ id: 'fixture-model', name: 'Fixture' }]);
     assert.equal((await first).success, true); assert.equal(store.getState().isFetchingDynamicModels, false);
+    assert.deepEqual(calls.map(([command]) => command), ['fetch_ai_models']);
+    assert.equal(Object.values(store.getState().dynamicModels)[0][0].id, 'fixture-model');
   }, () => pending.promise);
 });
 

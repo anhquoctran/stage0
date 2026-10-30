@@ -41,7 +41,7 @@ export function CommitDetailsModal({ repoPath, commitHash, onClose }: {
         className="flex h-[85vh] w-full max-w-7xl flex-col overflow-hidden rounded-sm border border-surface0 bg-base text-text shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-surface0 px-4 py-3">
           <div className="min-w-0"><h2 className="text-sm font-semibold">{t('git.commitDetails.title')}</h2>
-            <p className="mt-1 break-all font-mono text-[11px] text-subtext0 select-text">{commitHash}</p></div>
+            <p dir="ltr" className="mt-1 break-all font-mono text-[11px] text-subtext0 select-text">{commitHash}</p></div>
           <button type="button" onClick={onClose} aria-label={t('git.commitDetails.close')}
             className="shrink-0 rounded-sm p-1.5 text-subtext0 hover:bg-surface0 hover:text-text focus-visible:outline-2 focus-visible:outline-brand"><X className="h-4 w-4" /></button>
         </div>
@@ -61,7 +61,7 @@ export function CommitDetailsModal({ repoPath, commitHash, onClose }: {
               <p className="px-2 py-1 text-[11px] font-semibold text-subtext0">{t('git.commitDetails.filesChanged', { count: data.files.length })}</p>
               {data.files.map(item => <button key={item.path} type="button" onClick={() => setSelectedPath(item.path)} aria-pressed={file?.path === item.path}
                 className={`my-0.5 flex w-full items-start gap-2 rounded-sm border-0 px-2 py-2 text-start text-xs focus-visible:outline-2 focus-visible:outline-brand ${file?.path === item.path ? 'bg-surface0 text-text' : 'text-subtext0 hover:bg-surface0 hover:text-text'}`}>
-                <span className="min-w-0 flex-1 break-all font-mono">{item.path}</span>
+                <span dir="ltr" className="min-w-0 flex-1 break-all font-mono">{item.path}</span>
                 <span className="shrink-0 text-[10px]">+{item.additions} / −{item.deletions}</span>
               </button>)}
             </nav>

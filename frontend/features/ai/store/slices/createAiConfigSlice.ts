@@ -6,13 +6,13 @@ import { loadPersistedState, persistState } from '../../services/aiMcpPersistenc
 import { checkAiProviderConnection } from '../../services/checkAiProviderConnection';
 import { type AiConfig } from '../../types/AiConfig';
 import type { AiMcpState } from '../../types/AiMcpState';
-import { type AiModelPreset } from '../../types/AiModelPreset';
 import {
   activeProviderSettings,
   configuredProviderIds,
   providerSettingsFor,
   rememberActiveProviderSettings,
 } from '../../utils/aiProviderSettings';
+import { enrichDiscoveredModels, providerModelCatalogKey } from '../../utils/providerModelCatalog';
 
 export const createAiConfigSlice =
   (
@@ -211,49 +211,27 @@ export const createAiConfigSlice =
         };
       const config = configOverride || get().aiConfig;
       const provider = config.provider;
-      if (config.apiKey?.trim())
-        return {
-          success: false,
-          count: 0,
-          error: 'Apply API key changes before refreshing models.',
-        };
       set({ isFetchingDynamicModels: true, dynamicModelError: null });
 
       try {
-        if (getApplicationServices().platform.capabilities.keychain) {
-          const models = await getApplicationServices().aiProviders.fetchAiModels({
-              provider,
-              apiKey: null,
-              baseUrl: config.baseUrl || null,
-            });
-
-          const presets: AiModelPreset[] = models.map((m) => ({
-            id: m.id,
-            name: m.name,
-            recommendedFor: m.description,
-          }));
-
-          set((state) => ({
-            dynamicModels: {
-              ...state.dynamicModels,
-              [provider]: presets,
-            },
-            isFetchingDynamicModels: false,
-          }));
-
-          return { success: true, count: presets.length };
-        } else {
-          const defaultPreset = AI_PROVIDERS.find((p) => p.id === provider);
-          const fallback = defaultPreset?.models || [];
-          set((state) => ({
-            dynamicModels: {
-              ...state.dynamicModels,
-              [provider]: fallback,
-            },
-            isFetchingDynamicModels: false,
-          }));
-          return { success: true, count: fallback.length };
-        }
+        const models = await getApplicationServices().aiProviders.fetchAiModels({
+          provider,
+          apiKey: config.apiKey?.trim() || null,
+          baseUrl: config.baseUrl || null,
+        });
+        const catalog = enrichDiscoveredModels(provider, models.map((model) => ({
+          id: model.id,
+          name: model.name,
+          recommendedFor: model.description,
+          ...(model.reasoningEfforts ? { reasoningEfforts: model.reasoningEfforts } : {}),
+          ...(model.supportsFastMode != null ? { supportsFastMode: model.supportsFastMode } : {}),
+        })));
+        const catalogKey = providerModelCatalogKey(provider, config.baseUrl || '');
+        set((state) => ({
+          dynamicModels: { ...state.dynamicModels, [catalogKey]: catalog },
+          isFetchingDynamicModels: false,
+        }));
+        return { success: true, count: catalog.length, models: catalog };
       } catch (err: unknown) {
         const errMsg = err instanceof Error ? err.message : String(err);
         set({ isFetchingDynamicModels: false, dynamicModelError: errMsg });

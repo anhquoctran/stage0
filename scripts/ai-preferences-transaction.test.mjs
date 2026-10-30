@@ -7,7 +7,10 @@ import { componentHarness, componentNodes, loadWithMocks } from './helpers/compo
 const require = createRequire(import.meta.url);
 const { create } = require('zustand');
 const english = require('../frontend/features/i18n/locales/en.json');
-const translate = key => key.split('.').reduce((value, part) => value?.[part], english) ?? key;
+const translate = (key, options = {}) => {
+  const value = key.split('.').reduce((value, part) => value?.[part], english) ?? key;
+  return typeof value === 'string' ? value.replace(/\{\{(\w+)\}\}/g, (match, name) => String(options[name] ?? match)) : value;
+};
 const url = (path) => new URL(`../frontend/${path}`, import.meta.url);
 const presets = loadWithMocks(url('features/ai/constants/aiPresets.ts'), {});
 const modelPresets = loadWithMocks(url('features/ai/utils/resolveAiModelPreset.ts'), { '../constants/aiPresets': presets });
@@ -87,8 +90,22 @@ function serviceFixture(handler = async () => ({})) {
     '@tauri-apps/api/core': { isTauri: () => true, invoke: async (...args) => { calls.push(args); return handler(...args); } },
     '../store/useAiMcpStore': { useAiMcpStore: ai }, '../store/useBotReviewersStore': { useBotReviewersStore: reviewers },
     '../utils/aiPreferencesSnapshot': snapshots,
+    '../../i18n/i18n': { default: { t: translate } },
     '../../preferences/services/preferencesJsonService': { preferencesJsonService: {
-      load: async () => { if (document.loadFailure) throw new Error('fixture read failure'); return document; },
+      load: async () => {
+        if (document.loadFailure) throw new Error('fixture read failure');
+        if (document.settings.ai?.aiConfig) ai.setState({ aiConfig: document.settings.ai.aiConfig });
+        return document;
+      },
+      isCurrent: () => true,
+      commit: async (request) => {
+        assert.equal(request.expectedRevision, document.revision);
+        calls.push(['commit_preferences_transaction', { request }]);
+        const configured = await handler('commit_preferences_transaction', { request });
+        preferenceWrites.push(['commit', request.patch]);
+        document = { ...document, content: JSON.stringify(request.patch), revision: 'fixture-2', settings: request.patch };
+        return { document, configured };
+      },
       patch: async (patch, expectedRevision) => {
         assert.equal(expectedRevision, document.revision, 'The rollback snapshot and write must use the same revision');
         preferenceWrites.push(['patch', patch]);
@@ -116,10 +133,10 @@ test('Apply awaits one native key/policy batch, publishes all AI sections togeth
     const save = fixture.commitAiPreferences(draft.getState(), fixture.initial);
     await new Promise((resolve) => setImmediate(resolve));
     assert.equal(fixture.ai.getState().aiConfig.maxTokens, 4096); assert.equal(fixture.reviewers.getState().globalReviewers.length, 0);
-    assert.equal(fixture.calls.length, 1); assert.equal(fixture.calls[0][0], 'commit_ai_preferences');
-    assert.deepEqual(fixture.calls[0][1].apiKeys, { openai: 'fixture-private-key' });
-    assert.equal(fixture.preferenceWrites[0][0], 'patch');
-    assert.doesNotMatch(JSON.stringify(fixture.preferenceWrites[0][1]), /fixture-private-key|apiKeyDrafts/);
+    assert.equal(fixture.calls.length, 1); assert.equal(fixture.calls[0][0], 'commit_preferences_transaction');
+    assert.deepEqual(fixture.calls[0][1].request.apiKeys, { openai: 'fixture-private-key' });
+    assert.equal(fixture.preferenceWrites.length, 0, 'No JSON is published while native staging is pending');
+    assert.doesNotMatch(JSON.stringify(fixture.calls[0][1].request.patch), /fixture-private-key|apiKeyDrafts/);
     assert.doesNotMatch([...fixture.storage.values()].join(''), /fixture-private-key|apiKeyDrafts/);
     await assert.rejects(fixture.commitAiPreferences(draft.getState(), fixture.initial), /already in progress/);
     native.resolve({ openai: true }); const saved = await save;
@@ -140,7 +157,17 @@ test('a failed preferences read aborts before any writes or credential changes',
   assert.equal(draft.getState().apiKeyDrafts.openai, 'pending-secret');
 });
 
-test('keyring failures roll back JSON and incomplete file rollback keeps pending secrets available for retry', async () => {
+test('Apply merges against the freshly loaded document before preparing its patch', async () => {
+  const fixture = serviceFixture();
+  const draft = createAiPreferencesDraft(fixture.initial);
+  draft.getState().updateAiConfig({ model: 'user-choice' });
+  fixture.getPreferenceDocument().settings = { ai: { aiConfig: { ...fixture.initial.aiConfig, maxTokens: 8192 } } };
+  await fixture.commitAiPreferences(draft.getState(), fixture.initial);
+  assert.equal(fixture.preferenceWrites[0][1].ai.aiConfig.maxTokens, 8192);
+  assert.equal(fixture.preferenceWrites[0][1].ai.aiConfig.model, 'user-choice');
+});
+
+test('native transaction failure leaves JSON unchanged without frontend compensation and retains the draft', async () => {
   for (const rollbackFailure of [false, true]) {
     const fixture = serviceFixture(async () => { throw new Error('OS keyring unavailable'); });
     const old = globalThis.localStorage; const previous = [...fixture.storage];
@@ -152,9 +179,8 @@ test('keyring failures roll back JSON and incomplete file rollback keeps pending
       assert.deepEqual([...fixture.storage], previous); assert.equal(fixture.ai.getState().aiConfig.maxTokens, 4096);
       assert.equal(draft.getState().apiKeyDrafts.openai, 'retry-secret');
       assert.equal(fixture.calls.length, 1);
-      assert.equal(fixture.preferenceWrites[0][0], 'patch');
-      assert.equal(fixture.preferenceWrites[1][0], 'rollback');
-      if (!rollbackFailure) assert.equal(fixture.getPreferenceDocument().content, '{}');
+      assert.deepEqual(fixture.preferenceWrites, [], 'Failure must not publish a JSON patch or invoke frontend rollback');
+      assert.equal(fixture.getPreferenceDocument().content, '{}');
     } finally { globalThis.localStorage = old; }
   }
 });
@@ -171,11 +197,13 @@ test('MCP secret variables are stored per server in the keychain and never retai
   });
 
   const saved = await fixture.commitAiPreferences(draft.getState(), fixture.initial);
-  assert.deepEqual(fixture.calls[0], ['commit_ai_preferences', {
-    apiKeys: {}, apiKeyRemovals: [], policy: null,
-    mcpEnvSecrets: { 'git-context': { GITHUB_TOKEN: 'ghp_sensitive-fixture' } },
-    mcpEnvRemovals: {},
-  }]);
+  assert.equal(fixture.calls[0][0], 'commit_preferences_transaction');
+  const request = fixture.calls[0][1].request;
+  assert.deepEqual(request.apiKeys, {});
+  assert.deepEqual(request.apiKeyRemovals, []);
+  assert.deepEqual(request.mcpEnvSecrets, { 'git-context': { GITHUB_TOKEN: 'ghp_sensitive-fixture' } });
+  assert.deepEqual(request.mcpEnvRemovals, {});
+  assert.equal(request.expectedRevision, 'fixture-1');
   const persisted = fixture.preferenceWrites[0][1].ai.mcpServers[0];
   assert.deepEqual(persisted.env, {});
   assert.deepEqual(persisted.secretEnvKeys, ['GITHUB_TOKEN']);
@@ -205,7 +233,9 @@ test('UI and output languages join the same JSON patch as AI preferences without
   assert.equal(patch.appearance.language, 'vi');
   assert.equal(patch.ai.agentOutputLanguage, 'ja');
   assert.equal(patch.ai.aiConfig.maxTokens, 8192, 'Output language does not replace the AI configuration');
-  assert.equal(fixture.calls.length, 0, 'Language values do not go through OS keychain IPC');
+  assert.equal(fixture.calls.length, 1, 'Languages join the same native transaction');
+  assert.deepEqual(fixture.calls[0][1].request.apiKeys, {});
+  assert.deepEqual(fixture.calls[0][1].request.mcpEnvSecrets, {});
 });
 
 test('a rejected latest-document validation performs no preference or credential writes', async () => {
@@ -219,7 +249,7 @@ test('a rejected latest-document validation performs no preference or credential
   assert.equal(draft.getState().apiKeyDrafts.openai, 'pending-secret');
 });
 
-test('a failed credentials batch rolls back both language fields with the rest of the JSON transaction', async () => {
+test('a failed native preparation leaves both language fields and all JSON unchanged', async () => {
   const fixture = serviceFixture(async () => { throw Error('Keychain denied'); });
   const previous = { appearance: { language: 'en' }, ai: { agentOutputLanguage: 'fr' } };
   const content = JSON.stringify(previous);
@@ -229,8 +259,8 @@ test('a failed credentials batch rolls back both language fields with the rest o
   await assert.rejects(fixture.commitAiPreferences(draft.getState(), fixture.initial, {
     appearance: { language: 'ar' }, ai: { agentOutputLanguage: 'follow-app' },
   }), /Keychain denied/);
-  assert.equal(fixture.preferenceWrites[0][1].ai.agentOutputLanguage, 'follow-app');
-  assert.deepEqual(fixture.preferenceWrites[1], ['rollback', content]);
+  assert.equal(fixture.calls[0][1].request.patch.ai.agentOutputLanguage, 'follow-app');
+  assert.deepEqual(fixture.preferenceWrites, []);
   assert.equal(fixture.getPreferenceDocument().content, content);
   assert.equal(fixture.calls.length, 1);
   assert.equal(fixture.calls[0][1].appearance, undefined);
@@ -238,7 +268,7 @@ test('a failed credentials batch rolls back both language fields with the rest o
   assert.equal(draft.getState().apiKeyDrafts.openai, 'pending-secret', 'Draft remains available for retry');
 });
 
-test('removing the last MCP secret removes that server’s keychain record after JSON patching', async () => {
+test('removing the last MCP secret joins its server removal in the native transaction', async () => {
   const fixture = serviceFixture(async () => ({}));
   const server = { id: 'git-context', name: 'Git Context', type: 'stdio', command: 'mcp-server', args: [], env: {}, secretEnvKeys: ['GITHUB_TOKEN'], enabled: true };
   fixture.initial.mcpServers = [server];
@@ -247,8 +277,8 @@ test('removing the last MCP secret removes that server’s keychain record after
   draft.getState().deleteMcpServer(server.id);
 
   await fixture.commitAiPreferences(draft.getState(), fixture.initial);
-  assert.deepEqual(fixture.calls[0][1].mcpEnvSecrets, {});
-  assert.deepEqual(fixture.calls[0][1].mcpEnvRemovals, { 'git-context': ['GITHUB_TOKEN'] });
+  assert.deepEqual(fixture.calls[0][1].request.mcpEnvSecrets, {});
+  assert.deepEqual(fixture.calls[0][1].request.mcpEnvRemovals, { 'git-context': ['GITHUB_TOKEN'] });
   assert.deepEqual(fixture.preferenceWrites[0][1].ai.mcpServers, []);
 });
 
@@ -271,6 +301,7 @@ function dialogFixture(commitHandler) {
   const dependencies = {
     react: harness.react,
     'react-i18next': { useTranslation: () => ({ t: translate }) },
+    '../../i18n/i18n': { default: { t: translate } },
     '../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({ platform: { capabilities: { backend: false, preferencesFile: false } } }) },
     '../store/usePreferencesStore': { usePreferencesStore, checkFontLigaturesSupport: () => true, applyViewerFontToDocument() {}, DEFAULT_VIEWER_FONT_SETTINGS: preferences },
     '../../../core/store/useThemeStore': { useThemeStore, resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {} },
@@ -389,11 +420,11 @@ test('Reset to Defaults is also a draft and Cancel preserves the committed AI co
   } finally { fixture.harness.cleanup(); globalThis.window = original; }
 });
 
-test('startup restores the committed guardrail policy before native hydration instead of replacing it with balanced defaults', async () => {
+test('startup reads the native committed policy without writing stale WebView preferences', async () => {
   const originalWindow = globalThis.window; const originalStorage = globalThis.localStorage;
   const saved = baseline(); saved.guardrailPolicy = guardrailPresets.guardrailPreset('strict');
   const values = new Map([['stage0_ai_mcp_config', JSON.stringify(saved)]]);
-  let startup; const calls = []; let nativePolicy = guards.DEFAULT_GUARDRAIL_POLICY;
+  let startup; const calls = []; let nativePolicy = saved.guardrailPolicy;
   globalThis.window = { setTimeout: (callback) => { startup = callback; } };
   globalThis.localStorage = { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
   try {
@@ -412,7 +443,9 @@ test('startup restores the committed guardrail policy before native hydration in
     });
     startup(); await new Promise((resolve) => setImmediate(resolve));
     assert.equal(store.getState().guardrailPolicy.mode, 'strict');
-    assert.ok(calls.indexOf('commit_ai_preferences') < calls.indexOf('get_guardrail_policy'));
+    assert.ok(calls.includes('get_guardrail_policy'));
+    assert.ok(!calls.includes('commit_ai_preferences'));
+    assert.ok(!calls.includes('patch_preferences'));
     assert.equal(JSON.parse(values.get('stage0_ai_mcp_config')).guardrailPolicy.mode, 'strict');
   } finally { globalThis.window = originalWindow; globalThis.localStorage = originalStorage; }
 });
@@ -463,18 +496,23 @@ test('first launch, incomplete settings and Reset use OpenAI defaults without ov
   } finally { globalThis.window = originalWindow; globalThis.localStorage = originalStorage; }
 });
 
-test('provider UI defaults new setup to OpenAI, exposes key inputs and keeps explicit provider changes in the draft', async () => {
+test('provider setup saves connection details without requiring model discovery', async () => {
   const harness = componentHarness(); const draft = createAiPreferencesDraft(baseline());
   const noop = () => {};
   const credentialCalls = [];
+  const modelFetches = [];
   const dependencies = {
     react: harness.react,
     'react-i18next': { useTranslation: () => ({ t: translate }) },
+    '../../i18n/i18n': { default: { t: translate } },
     '@tauri-apps/api/core': { isTauri: () => false, invoke: () => assert.fail('No IPC expected') },
     '../store/useAiMcpStore': { useAiMcpStore: () => ({
       aiConfig: baseline().aiConfig, apiKeysConfigured: {}, mcpServers: [], cliStatus: {}, dynamicModels: {},
       setActiveSubTab: noop, checkCopilotStatus: () => credentialCalls.push('copilot'), checkGoogleAuthStatus: () => credentialCalls.push('google'), checkChatGptAuthStatus: noop,
-      detectCli: noop, fetchDynamicModels: () => credentialCalls.push('models'), loadApiKeyForProvider: (provider) => credentialCalls.push(['key', provider]),
+      detectCli: noop, fetchDynamicModels: (config) => {
+        modelFetches.push(config);
+        return Promise.resolve({ success: true, count: 1, models: [{ id: `api-${config.provider}`, name: `API ${config.provider} model` }] });
+      }, loadApiKeyForProvider: (provider) => credentialCalls.push(['key', provider]),
     }) },
     '../constants/aiPresets': presets,
     '../constants/botPresets': bots,
@@ -508,12 +546,14 @@ test('provider UI defaults new setup to OpenAI, exposes key inputs and keeps exp
       const input = nodes.find((node) => node.props?.id === 'llm-provider-api-key');
       assert.equal(input.props.type, 'password');
       input.props.onChange({ target: { value: 'fixture-draft-key' } }); nodes = await render();
+      assert.equal(nodes.some((node) => node.props?.id === 'llm-provider-model'), false);
       nodes.find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} }); nodes = await render();
       assert.equal(draft.getState().aiConfig.provider, provider);
       assert.ok(draft.getState().aiConfig.configuredProviders.includes(provider));
       const row = nodes.find((node) => node.type === 'tr' && text(node).includes(provider === 'openai' ? 'OpenAI / ChatGPT' : 'Anthropic Claude'));
       assert.match(row.props.className, /bg-surface0\/70/);
       assert.deepEqual(credentialCalls, []);
+      assert.deepEqual(modelFetches, []);
     }
     assert.equal(draft.getState().aiConfig.provider, 'anthropic');
     assert.equal(baseline().aiConfig.provider, 'openai');

@@ -231,7 +231,7 @@ export function CustomSelect<T extends string>({
                         {option.label}
                       </span>
                       {option.badge && (
-                        <span className="text-[10px] px-1.5 py-0.2 rounded-sm font-mono font-normal bg-brand/15 text-brand border border-brand/30">
+                        <span className="text-[10px] px-1.5 py-[0.2rem] rounded-sm font-mono font-normal bg-brand/15 text-brand border border-brand/30">
                           {option.badge}
                         </span>
                       )}

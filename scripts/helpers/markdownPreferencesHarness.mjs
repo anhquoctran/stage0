@@ -38,8 +38,9 @@ export function markdownPreferencesHarness({ languageSettings } = {}) {
         platform: { capabilities: { backend: Boolean(languageSettings), preferencesFile: Boolean(languageSettings) } },
         preferences: { loadPreferencesJson: async () => ({ settings: structuredClone(languageSettings) }) },
       }) },
-      '../../i18n/i18n': { default: { t: (key) => key === 'preferences.language.changedElsewhere'
-        ? 'Language preferences changed in another window' : key } },
+      '../../i18n/i18n': { default: { t: (key, options = {}) => key === 'preferences.language.changedElsewhere'
+        ? 'Language preferences changed in another window'
+        : key === 'preferences.applyFailedWithDetail' ? `Could not apply preferences: ${options.error}` : key } },
       '../../../core/store/useThemeStore': {
         useThemeStore: stateStore({ themeMode: 'system' }),
         resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {},

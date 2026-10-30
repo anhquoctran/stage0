@@ -8,6 +8,18 @@ window.$RefreshSig$ = window.$RefreshSig$ || function () {
 };
 window.__stage0_has_error__ = false;
 
+// Match the compact splash edge to Stage0's undecorated macOS window before
+// index.html paints. Browser previews and other platforms keep square edges.
+(function identifyMacOSWindowFrame() {
+  if (!window.__TAURI_INTERNALS__) return;
+  var navigator = window.navigator || {};
+  var platform = String(navigator.platform || '');
+  var userAgent = String(navigator.userAgent || '');
+  if (/Mac|iPod|iPhone|iPad/.test(platform) || /Macintosh|Mac OS X/.test(userAgent)) {
+    document.documentElement.setAttribute('data-platform', 'macos');
+  }
+})();
+
 // Resolve the persisted theme before the inline splash styles are parsed. This
 // prevents a dark first frame when the application is configured for light or
 // system-light mode. Keep these storage keys in sync with useThemeStore.ts.

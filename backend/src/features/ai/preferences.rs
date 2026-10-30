@@ -1,12 +1,11 @@
+#[cfg(test)]
 use super::keyring_write_progress::KeyringWriteProgress;
-use crate::features::sandbox::{guardrails::GuardrailPolicy, manager::SandboxManager};
+use crate::features::sandbox::guardrails::GuardrailPolicy;
 use std::collections::{BTreeMap, BTreeSet};
-use tauri::Manager;
 use zeroize::Zeroizing;
 
-static COMMIT: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
 // Read every old key before writing anything. Never send previous secrets to the WebView.
+#[cfg(test)]
 fn apply_keys(
     keys: &BTreeMap<String, Zeroizing<String>>,
     removals: &[String],
@@ -86,23 +85,6 @@ fn apply_keys(
     ))
 }
 
-fn restore_ai_keys(
-    previous: &BTreeMap<String, Option<Zeroizing<String>>>,
-    write: impl Fn(&str, Option<&str>) -> Result<(), String>,
-) -> Result<(), String> {
-    let mut restored = true;
-    for (provider, key) in previous.iter().rev() {
-        if write(provider, key.as_ref().map(|value| value.as_str())).is_err() {
-            restored = false;
-        }
-    }
-    if restored {
-        Ok(())
-    } else {
-        Err("AI key rollback was incomplete".into())
-    }
-}
-
 fn valid_mcp_server_id(id: &str) -> bool {
     !id.is_empty() && id.len() <= 256 && !id.chars().any(char::is_control)
 }
@@ -124,6 +106,9 @@ pub fn resolve_mcp_server_env(
 ) -> Result<BTreeMap<String, Zeroizing<String>>, String> {
     resolve_mcp_env_with_record(server_id, public_env, secret_env_keys, |server_id| {
         let id = format!("mcp_server/{server_id}");
+        if let Some(value) = crate::features::credentials::preference_snapshot::current(&id)? {
+            return Ok(value.map(|v| v.to_string()));
+        }
         let reference = db
             .get_preference_secret_ref(&id)
             .map_err(|_| "Could not read the MCP credential mapping")?;
@@ -199,6 +184,7 @@ fn resolve_mcp_env_with_record(
     Ok(resolved)
 }
 
+#[cfg(test)]
 fn apply_mcp_env_changes(
     updates: &BTreeMap<String, BTreeMap<String, Zeroizing<String>>>,
     removals: &BTreeMap<String, Vec<String>>,
@@ -322,113 +308,24 @@ pub async fn commit_ai_preferences(
     mcp_env_secrets: Option<BTreeMap<String, BTreeMap<String, String>>>,
     mcp_env_removals: Option<BTreeMap<String, Vec<String>>>,
 ) -> Result<BTreeMap<String, bool>, String> {
+    let patch = match policy {
+        Some(policy) => serde_json::json!({"ai": {"guardrailPolicy": policy}}),
+        None => serde_json::json!({}),
+    };
+    let request = crate::features::preferences::PreferencesTransactionRequest {
+        patch,
+        expected_revision: None,
+        api_keys,
+        api_key_removals: api_key_removals.unwrap_or_default(),
+        mcp_env_secrets: mcp_env_secrets.unwrap_or_default(),
+        mcp_env_removals: mcp_env_removals.unwrap_or_default(),
+    };
     tauri::async_runtime::spawn_blocking(move || {
-        let _guard = COMMIT
-            .lock()
-            .map_err(|_| "AI preferences commit is unavailable")?;
-        let secrets = api_keys
-            .into_iter()
-            .map(|(provider, key)| (provider, Zeroizing::new(key)))
-            .collect();
-        let (configured, previous_ai_keys) = apply_keys(
-            &secrets,
-            &api_key_removals.unwrap_or_default(),
-            |provider| {
-                let entry =
-                    keyring::Entry::new(crate::features::credentials::AI_KEYRING_SERVICE, provider)
-                        .map_err(|_| "Could not initialize the AI credential store")?;
-                match entry.get_password() {
-                    Ok(key) => Ok(Some(key)),
-                    Err(keyring::Error::NoEntry) => Ok(None),
-                    Err(_) => {
-                        Err("Could not read the AI credential store. Nothing was saved.".into())
-                    }
-                }
-            },
-            |provider, key| match key {
-                Some(key) => crate::features::credentials::store_ai_key_unlogged(provider, key),
-                None => crate::features::credentials::delete_ai_key(provider),
-            },
-        )?;
-        let mcp_env_secrets = mcp_env_secrets
-            .unwrap_or_default()
-            .into_iter()
-            .map(|(server_id, env)| {
-                (
-                    server_id,
-                    env.into_iter()
-                        .map(|(name, value)| (name, Zeroizing::new(value)))
-                        .collect(),
-                )
-            })
-            .collect::<BTreeMap<_, _>>();
-        let mcp_env_removals = mcp_env_removals.unwrap_or_default();
-        let db = app.state::<crate::core::db::Database>();
-        match apply_mcp_env_changes(
-            &mcp_env_secrets,
-            &mcp_env_removals,
-            |server_id| {
-                let id = format!("mcp_server/{server_id}");
-                let reference = db
-                    .get_preference_secret_ref(&id)
-                    .map_err(|_| "Could not read the MCP credential mapping")?;
-                match reference {
-                    Some(reference) => crate::features::credentials::retrieve_preference_secret(
-                        &reference,
-                    )
-                    .map(Some),
-                    None => Ok(None),
-                }
-            },
-            |id, secret| {
-                if id.strip_prefix("mcp_server/").is_none() {
-                    return Err("Invalid MCP server secret identity".into());
-                }
-                let reference = db
-                    .get_preference_secret_ref(id)
-                    .map_err(|_| "Could not read the MCP credential mapping")?;
-                match (reference, secret) {
-                    (Some(reference), Some(secret)) => {
-                        crate::features::credentials::store_preference_secret(&reference, secret)
-                    }
-                    (Some(reference), None) => {
-                        crate::features::credentials::delete_preference_secret(&reference)?;
-                        db.delete_preference_secret_ref(id)
-                            .map_err(|_| "Could not remove the MCP credential mapping")?;
-                        Ok(())
-                    }
-                    (None, Some(secret)) => {
-                        let reference = format!("st0_pref_{}", uuid::Uuid::new_v4().simple());
-                        crate::features::credentials::store_preference_secret(&reference, secret)?;
-                        if db.upsert_preference_secret_ref(id, &reference).is_err() {
-                            let _ = crate::features::credentials::delete_preference_secret(&reference);
-                            return Err("Could not save the MCP credential mapping".into());
-                        }
-                        Ok(())
-                    }
-                    (None, None) => Ok(()),
-                }
-            },
-        ) {
-            Ok(_) => {}
-            Err(error) => {
-                if restore_ai_keys(&previous_ai_keys, |provider, key| match key {
-                    Some(key) => crate::features::credentials::store_ai_key_unlogged(provider, key),
-                    None => crate::features::credentials::delete_ai_key(provider),
-                }).is_err() {
-                    return Err("MCP credential save failed and AI-key rollback was incomplete. Check the OS credential store before retrying.".into());
-                }
-                return Err(error);
-            }
-        }
-        if let Some(policy) = policy {
-            app.state::<SandboxManager>()
-                .update_guardrail_policy(policy);
-        }
-        Ok(configured)
+        crate::features::preferences::commit_transaction(&app, &request)
+            .map(|result| result.configured)
     })
     .await
-    .map_err(|_| "AI preferences worker stopped unexpectedly".to_string())?
+    .map_err(|_| "Preferences transaction worker stopped unexpectedly".to_string())?
 }
 
 #[cfg(test)]

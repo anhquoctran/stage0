@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { getProviderModelCatalog } from '../../utils/providerModelCatalog';
 import { resolveAiModelPreset } from '../../utils/resolveAiModelPreset';
 import type { ProviderEndpointFormProps } from './ProviderEndpointFormProps';
 
@@ -37,7 +38,7 @@ export function ProviderEndpointForm({
               aiConfig.provider,
               aiConfig.model,
               baseUrl,
-              dynamicModels[aiConfig.provider]
+              getProviderModelCatalog(dynamicModels, aiConfig.provider, baseUrl)
             );
             onUpdateAiConfig({
               baseUrl,

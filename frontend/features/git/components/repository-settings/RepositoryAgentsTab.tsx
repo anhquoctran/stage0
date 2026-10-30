@@ -215,7 +215,7 @@ export const RepositoryAgentsTab: React.FC<{
                           <span className="font-semibold text-xs text-text truncate">
                             {bot.name}
                           </span>
-                          <span className="text-[10px] font-mono px-1.5 py-0.2 bg-brand/10 text-brand border border-brand/20">
+                          <span className="text-[10px] font-mono px-1.5 py-[0.2rem] bg-brand/10 text-brand border border-brand/20">
                             {translateUiText('git.repositoryAgents.global')}
                           </span>
                         </div>

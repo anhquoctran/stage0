@@ -1,14 +1,25 @@
 #[tauri::command]
-pub async fn store_ai_api_key(provider: String, api_key: String) -> Result<(), String> {
+pub async fn store_ai_api_key(
+    app: tauri::AppHandle,
+    provider: String,
+    api_key: String,
+) -> Result<(), String> {
+    let api_key = zeroize::Zeroizing::new(api_key);
     let p = provider.trim();
     let k = api_key.trim();
     if p.is_empty() {
         return Err("AI provider cannot be empty".to_string());
     }
-    if k.is_empty() {
-        return crate::features::credentials::delete_ai_key(p);
-    }
-    crate::features::credentials::store_ai_key(p, k)
+    let mut keys = std::collections::BTreeMap::new();
+    let removals = if k.is_empty() {
+        vec![p.to_string()]
+    } else {
+        keys.insert(p.to_string(), k.to_string());
+        vec![]
+    };
+    super::preferences::commit_ai_preferences(app, keys, Some(removals), None, None, None)
+        .await
+        .map(|_| ())
 }
 
 #[tauri::command]
@@ -21,12 +32,12 @@ pub async fn has_ai_api_key(provider: String) -> Result<bool, String> {
 }
 
 #[tauri::command]
-pub async fn delete_ai_api_key(provider: String) -> Result<(), String> {
+pub async fn delete_ai_api_key(app: tauri::AppHandle, provider: String) -> Result<(), String> {
     let p = provider.trim();
     if p.is_empty() {
         return Ok(());
     }
-    crate::features::credentials::delete_ai_key(p)
+    store_ai_api_key(app, provider, String::new()).await
 }
 
 #[tauri::command]
@@ -37,13 +48,19 @@ pub async fn open_external_url(url: String) -> Result<(), String> {
 #[tauri::command]
 pub async fn fetch_ai_models(
     provider: String,
-    api_key: Option<String>,
+    mut api_key: Option<String>,
     base_url: Option<String>,
 ) -> Result<Vec<crate::features::ai::dynamic_models::DynamicModelInfo>, String> {
-    crate::features::ai::dynamic_models::fetch_provider_models(
+    use zeroize::Zeroize;
+
+    let result = crate::features::ai::dynamic_models::fetch_provider_models(
         &provider,
         api_key.as_deref(),
         base_url.as_deref(),
     )
-    .await
+    .await;
+    if let Some(key) = api_key.as_mut() {
+        key.zeroize();
+    }
+    result
 }

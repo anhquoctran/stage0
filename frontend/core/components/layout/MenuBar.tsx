@@ -21,6 +21,7 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showReleaseNotesModal, setShowReleaseNotesModal] = useState(false);
   const menuBarRef = useRef<HTMLDivElement>(null);
+  const rtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const callbacks = {
     onOpenShortcuts: () => setShowShortcutsModal(true),
     onOpenReleaseNotes: () => setShowReleaseNotesModal(true),
@@ -82,6 +83,7 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
       {!hidden && (
         <nav
           ref={menuBarRef}
+          dir={rtl ? 'rtl' : 'ltr'}
           aria-label={t('menu.application')}
           onKeyDown={(event) => {
             if (event.target instanceof Element && event.target.closest('[role="menu"]')) return;
@@ -90,7 +92,6 @@ export function MenuBar({ hidden = false }: MenuBarProps) {
             const index = items.indexOf(document.activeElement as HTMLButtonElement);
             if (index < 0 || !items.length) return;
             event.preventDefault();
-            const rtl = document.documentElement.dir === 'rtl';
             const advances = event.key === (rtl ? 'ArrowLeft' : 'ArrowRight');
             const next = (index + (advances ? 1 : -1) + items.length) % items.length;
             setActiveMenu(null);

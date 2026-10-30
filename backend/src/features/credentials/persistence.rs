@@ -3,6 +3,39 @@ use crate::features::credentials::GitCredentialPreferenceRecord;
 use rusqlite::params;
 
 impl Database {
+    /// Prepared references must reach durable SQLite storage before JSON can select them.
+    pub(crate) fn stage_preference_secret_ref(
+        &self,
+        id: &str,
+        reference: &str,
+    ) -> Result<(), String> {
+        let conn = self.conn();
+        let previous: i64 = conn
+            .query_row("PRAGMA synchronous", [], |row| row.get(0))
+            .map_err(|_| "Could not read credential durability mode")?;
+        conn.pragma_update(None, "synchronous", "FULL")
+            .map_err(|_| "Could not enable durable credential staging")?;
+        let result = conn.execute(
+            "INSERT INTO preference_secret_refs(id,keychain_ref) VALUES (?1,?2)",
+            params![id, reference],
+        );
+        let _ = conn.pragma_update(None, "synchronous", previous);
+        result
+            .map(|_| ())
+            .map_err(|_| "Could not stage credential mapping".into())
+    }
+
+    pub(crate) fn staged_preference_secret_refs(&self) -> Result<Vec<(String, String)>, String> {
+        let conn = self.conn();
+        let mut statement = conn
+            .prepare("SELECT id,keychain_ref FROM preference_secret_refs WHERE id LIKE 'txn/%'")
+            .map_err(|_| "Could not inspect prepared credential mappings")?;
+        let rows = statement
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+            .map_err(|_| "Could not inspect prepared credential mappings")?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(|_| "Could not inspect prepared credential mappings".into())
+    }
     /// Stores no secret value: only the stable preference secret ID and its OS-keychain reference.
     pub fn get_preference_secret_ref(&self, id: &str) -> Result<Option<String>, rusqlite::Error> {
         match self.conn().query_row(

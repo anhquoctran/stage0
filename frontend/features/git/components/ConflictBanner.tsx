@@ -250,7 +250,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                           {filePath}
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] text-subtext0 mt-0.5">
-                          <span className="uppercase px-1.5 py-0.2 rounded-sm bg-surface1 text-subtext1 font-bold">
+                          <span className="uppercase px-1.5 py-[0.2rem] rounded-sm bg-surface1 text-subtext1 font-bold">
                             {conflictType}
                           </span>
                           {markersCount > 0 ? (

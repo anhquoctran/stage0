@@ -36,11 +36,11 @@ export function RepositoryBotItem({
             <div className="flex items-center justify-between">
               <span className="font-semibold text-xs text-text truncate">{bot.name}</span>
               {isRepoExclusive ? (
-                <span className="text-[9px] font-mono px-1.5 py-0.2 bg-accent/20 text-accent border border-accent/30">
+                <span className="text-[9px] font-mono px-1.5 py-[0.2rem] bg-accent/20 text-accent border border-accent/30">
                   {translateUiText('git.repositoryAgents.repoCustom')}
                 </span>
               ) : (
-                <span className="text-[9px] font-mono px-1.5 py-0.2 bg-surface1 text-subtext0">
+                <span className="text-[9px] font-mono px-1.5 py-[0.2rem] bg-surface1 text-subtext0">
                   {translateUiText('git.repositoryAgents.global')}
                 </span>
               )}

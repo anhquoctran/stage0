@@ -4,4 +4,5 @@ use serde::Deserialize;
 pub(super) struct AnthropicModelItem {
     pub(super) id: String,
     pub(super) display_name: Option<String>,
+    pub(super) capabilities: Option<serde_json::Value>,
 }

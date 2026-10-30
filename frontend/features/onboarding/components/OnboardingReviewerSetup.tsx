@@ -6,9 +6,11 @@ import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
 import { AcpReviewerConfigOptions } from '../../ai/components/AcpReviewerConfigOptions';
 import { AiModelExecutionOptions } from '../../ai/components/AiModelExecutionOptions';
 import { AI_PROVIDERS } from '../../ai/constants/aiPresets';
+import type { AiProviderId } from '../../ai/types/AiProviderId';
 import { useAcpReviewerConfigOptions } from '../../ai/hooks/useAcpReviewerConfigOptions';
 import type { AiReasoningEffort } from '../../ai/types/AiReasoningEffort';
 import type { AcpReviewConfigOverrides } from '../../ai/types/AcpReviewConfigOverrides';
+import { EMPTY_PROVIDER_MODELS, getProviderModelCatalog } from '../../ai/utils/providerModelCatalog';
 import { providerSettingsFor } from '../../ai/utils/aiProviderSettings';
 import { resolveAiModelPreset } from '../../ai/utils/resolveAiModelPreset';
 import type { OnboardingReviewerConnection } from '../types/OnboardingReviewerConnection';
@@ -20,7 +22,7 @@ export function OnboardingReviewerSetup({
   onAutoSave,
 }: OnboardingReviewerSetupProps) {
   const { t: translateUiText } = useUiTextTranslation();
-  const dynamicModels = useAiMcpStore((state) => state.dynamicModels);
+  const { dynamicModels, fetchDynamicModels, isFetchingDynamicModels, dynamicModelError } = useAiMcpStore();
   const [name, setName] = useState(() => translateUiText('onboarding.reviewerSetup.defaultName'));
   const [connectionId, setConnectionId] = useState('');
   const [consentedAcpAgentId, setConsentedAcpAgentId] = useState<string | null>(null);
@@ -34,7 +36,6 @@ export function OnboardingReviewerSetup({
     value: `provider:${provider.id}`,
     kind: 'provider' as const,
     label: provider.name,
-    model: providerSettingsFor(draftSettings.aiConfig, provider.id).model.trim() || 'global_default',
   }));
   const agents = draftSettings.externalAgents
     .filter((agent) => agent.id.trim() && agent.command.trim())
@@ -44,17 +45,18 @@ export function OnboardingReviewerSetup({
     value: connection.value,
     label: connection.label,
   }));
-  const activeProvider = providers.find((provider) => provider.id === draftSettings.aiConfig.provider);
-  const selected = connections.find((connection) => connection.value === connectionId) ?? activeProvider ?? connections[0];
+  const selected = connections.find((connection) => connection.value === connectionId);
   const selectedProviderId = selected?.kind === 'provider' ? selected.id : undefined;
   const selectedProviderSettings = useMemo(
     () => selectedProviderId ? providerSettingsFor(draftSettings.aiConfig, selectedProviderId) : undefined,
     [draftSettings.aiConfig, selectedProviderId],
   );
-  const selectedProviderModels = selectedProviderId ? dynamicModels[selectedProviderId] : undefined;
-  const selectedProviderPreset = selectedProviderId
-    ? AI_PROVIDERS.find((provider) => provider.id === selectedProviderId)
-    : undefined;
+  const selectedProviderModels = useMemo(
+    () => selectedProviderId && selectedProviderSettings
+      ? getProviderModelCatalog(dynamicModels, selectedProviderId, selectedProviderSettings.baseUrl)
+      : EMPTY_PROVIDER_MODELS,
+    [dynamicModels, selectedProviderId, selectedProviderSettings],
+  );
   const selectedAgent = selected?.kind === 'acp' ? selected.agent : undefined;
   const readyReviewer = draftSettings.globalReviewers.find(
     (reviewer) => !reviewer.isBuiltin && reviewer.enabled && reviewer.name.trim()
@@ -67,43 +69,13 @@ export function OnboardingReviewerSetup({
   );
 
   useEffect(() => {
-    if (selectedProviderId && selectedProviderSettings) {
-      const settings = selectedProviderSettings;
-      const model = settings.model.trim() && settings.model !== 'global_default'
-        ? settings.model.trim()
-        : AI_PROVIDERS.find((provider) => provider.id === selectedProviderId)?.defaultModel || '';
-      const capabilities = resolveAiModelPreset(
-        selectedProviderId,
-        model,
-        settings.baseUrl,
-        selectedProviderModels || [],
-      );
-      setProviderModel(model);
-      setReasoningEffort(
-        capabilities?.reasoningEfforts?.includes(settings.reasoningEffort as AiReasoningEffort)
-          ? settings.reasoningEffort
-          : undefined,
-      );
-      setFastMode(capabilities?.supportsFastMode === true && settings.fastMode === true);
-    } else {
-      setProviderModel('');
-      setReasoningEffort(undefined);
-      setFastMode(false);
-    }
+    setProviderModel('');
+    setReasoningEffort(undefined);
+    setFastMode(false);
     setAcpConfigOptions({});
-  }, [selected?.value, selectedProviderId, selectedProviderSettings, selectedProviderModels]);
+  }, [selected?.value, selectedProviderId, selectedProviderSettings?.baseUrl]);
 
-  const providerModelCatalog = selected?.kind === 'provider'
-    ? [
-        ...(dynamicModels[selected.id] || []),
-        ...(selectedProviderPreset?.models || []),
-      ]
-    : [];
-  const uniqueModels = [...new Map(providerModelCatalog.map((model) => [model.id, model])).values()];
-  if (providerModel && !uniqueModels.some((model) => model.id === providerModel)) {
-    uniqueModels.unshift({ id: providerModel, name: providerModel });
-  }
-  const modelOptions: CustomSelectOption<string>[] = uniqueModels.map((model) => ({
+  const modelOptions: CustomSelectOption<string>[] = selectedProviderModels.map((model) => ({
     value: model.id,
     label: model.name || model.id,
     description: model.recommendedFor || model.id,
@@ -113,7 +85,7 @@ export function OnboardingReviewerSetup({
         selected.id,
         providerModel,
         selectedProviderSettings?.baseUrl || '',
-        dynamicModels[selected.id] || [],
+        selectedProviderModels,
       )
     : undefined;
 
@@ -159,6 +131,28 @@ export function OnboardingReviewerSetup({
     }
   };
 
+  const loadProviderModels = async (providerId: AiProviderId | undefined) => {
+    if (!providerId) return;
+    const providerSettings = providerSettingsFor(draftSettings.aiConfig, providerId);
+    await fetchDynamicModels({
+      ...draftSettings.aiConfig,
+      ...providerSettings,
+      provider: providerId,
+      apiKey: providerId === draftSettings.aiConfig.provider
+        ? draftSettings.aiConfig.apiKey
+        : '',
+    });
+  };
+
+  const selectConnection = (value: string) => {
+    setConnectionId(value);
+    if (value.startsWith('provider:')) {
+      void loadProviderModels(value.slice('provider:'.length) as AiProviderId);
+    }
+  };
+
+  const loadSelectedProviderModels = () => loadProviderModels(selectedProviderId);
+
   if (readyReviewer) {
     return (
       <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-surface0 p-4 text-xs leading-5 text-subtext1">
@@ -188,62 +182,60 @@ export function OnboardingReviewerSetup({
           className="w-full rounded-sm border border-surface1 bg-base px-3 py-2 text-sm text-text"
         />
       </label>
-      {connections.length > 1 ? (
+      {connections.length > 0 ? (
         <label className="block space-y-1.5 text-xs font-medium text-subtext1">
           <span>{translateUiText('onboarding.reviewerSetup.aiConnection')}</span>
           <CustomSelect
             id="onboarding-reviewer-connection"
             value={selected?.value ?? ''}
-            onChange={setConnectionId}
+            onChange={selectConnection}
             options={connectionOptions}
             className="w-full"
             buttonClassName="w-full bg-base px-3 py-2 text-sm"
             dropdownWidth="w-full"
             align="left"
+            placeholder={translateUiText('common.select.placeholder')}
             aria-label={translateUiText('onboarding.reviewerSetup.aiConnection')}
           />
         </label>
       ) : (
-        selected && <p className="text-xs text-subtext0">{translateUiText('onboarding.reviewerSetup.usesConnection', { name: selected.label })}</p>
-      )}
-      {!selected ? (
         <p role="status" className="text-xs text-subtext0">
           {translateUiText('onboarding.reviewerSetup.addConnectionFirst')}
         </p>
-      ) : null}
+      )}
       {selected?.kind === 'provider' && (
         <div className="space-y-3 rounded-sm bg-crust p-3">
           <label className="block space-y-1.5 text-xs font-medium text-subtext1">
-            <span>{translateUiText('onboarding.reviewerSetup.model')}</span>
+            <span className="flex items-center justify-between gap-2">
+              {translateUiText('onboarding.reviewerSetup.model')}
+              <button
+                type="button"
+                disabled={isFetchingDynamicModels}
+                onClick={() => void loadSelectedProviderModels()}
+                title={translateUiText('ai.providerModel.refreshModelsTitle')}
+                className="rounded-sm text-[10px] text-subtext0 hover:text-text disabled:opacity-40"
+              >
+                {isFetchingDynamicModels ? translateUiText('ai.providerModel.refreshing') : translateUiText('ai.providerModel.refreshModels')}
+              </button>
+            </span>
             <CustomSelect
               value={providerModel}
               options={modelOptions}
               onChange={(model) => {
                 setProviderModel(model);
-                const capabilities = resolveAiModelPreset(
-                  selected.id,
-                  model,
-                  selectedProviderSettings?.baseUrl || '',
-                  dynamicModels[selected.id] || [],
-                );
-                const providerDefaults = providerSettingsFor(draftSettings.aiConfig, selected.id);
-                setReasoningEffort(
-                  model === providerDefaults.model && capabilities?.reasoningEfforts?.includes(
-                    providerDefaults.reasoningEffort as AiReasoningEffort
-                  )
-                    ? providerDefaults.reasoningEffort
-                    : undefined,
-                );
-                setFastMode(model === providerDefaults.model && capabilities?.supportsFastMode === true && providerDefaults.fastMode === true);
+                setReasoningEffort(undefined);
+                setFastMode(false);
               }}
               searchable={modelOptions.length > 8}
               searchPlaceholder={translateUiText('onboarding.reviewerSetup.searchModels')}
+              disabled={isFetchingDynamicModels || modelOptions.length === 0}
               className="w-full"
               buttonClassName="w-full"
               dropdownWidth="w-full"
               align="left"
               aria-label={translateUiText('onboarding.reviewerSetup.reviewerModel')}
             />
+            {dynamicModelError && <p role="alert" className="text-[10px] text-red">{dynamicModelError}</p>}
           </label>
           <AiModelExecutionOptions
             model={executionModel}

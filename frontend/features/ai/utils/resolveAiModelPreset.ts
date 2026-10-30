@@ -11,11 +11,12 @@ export function resolveAiModelPreset(
 ): AiModelPreset | undefined {
   const dynamic = dynamicModels.find((model) => model.id === modelId);
   const preset = AI_PROVIDERS.find((provider) => provider.id === providerId)?.models.find((model) => model.id === modelId);
-  const model = preset || dynamic;
+  const model = dynamic || preset;
   if (!model) return undefined;
 
-  // Only expose the capabilities Stage0 can verify for the official OpenAI API.
-  if (providerId !== 'openai' || baseUrl.replace(/\/+$/, '') !== OPENAI_API_BASE_URL) {
+  const root = baseUrl.replace(/\/+$/, '');
+  if (!((providerId === 'openai' && root === OPENAI_API_BASE_URL) ||
+    (providerId === 'anthropic' && root === 'https://api.anthropic.com/v1' && dynamic))) {
     return { id: model.id, name: model.name, recommendedFor: model.recommendedFor };
   }
   return model;

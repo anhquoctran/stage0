@@ -1,4 +1,4 @@
-use super::AnthropicModelItem;
+use super::anthropic_model_item::AnthropicModelItem;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

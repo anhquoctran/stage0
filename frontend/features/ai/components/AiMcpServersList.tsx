@@ -81,18 +81,18 @@ export const AiMcpServersList: React.FC<{
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-bold text-text">{server.name}</span>
-                      <span className="text-[10px] px-2 py-0.2 bg-surface1 text-subtext0 border border-surface2 font-mono uppercase">
+                      <span className="text-[10px] px-2 py-[0.2rem] bg-surface1 text-subtext0 border border-surface2 font-mono uppercase">
                         {server.type}
                       </span>
 
                       {envCount > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.2 bg-surface0 text-subtext1 border border-surface1 font-mono">
+                        <span className="text-[10px] px-1.5 py-[0.2rem] bg-surface0 text-subtext1 border border-surface1 font-mono">
                           {translateUiText('ai.mcpServers.envVarCount', { count: envCount })}
                         </span>
                       )}
 
                       {server.testStatus === 'unavailable' && (
-                        <span className="text-[10px] px-1.5 py-0.2 bg-surface1 text-text border border-surface2 font-mono flex items-center gap-1">
+                        <span className="text-[10px] px-1.5 py-[0.2rem] bg-surface1 text-text border border-surface2 font-mono flex items-center gap-1">
                           <span>{translateUiText('ai.mcpServers.notConnected')}</span>
                         </span>
                       )}

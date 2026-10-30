@@ -2,9 +2,24 @@ import { getApplicationServices } from '../../../core/services/runtime/applicati
 
 import type { PreferencesDocument } from '../types/PreferencesDocument';
 import type { PreferenceBootstrap } from '../types/PreferenceBootstrap';
+import type { PreferencesTransactionInput } from '../types/PreferencesTransactionInput';
 
 export class PreferencesJsonService {
   private writeQueue: Promise<unknown> = Promise.resolve();
+  private publicationSequence = -1;
+  private latestDocument: PreferencesDocument | undefined;
+
+  commit(request: PreferencesTransactionInput) {
+    return this.enqueue(async () => {
+      const result = await getApplicationServices().preferences.commitPreferencesTransaction({ request });
+      this.accept(result.document);
+      return result;
+    });
+  }
+
+  isCurrent(document: PreferencesDocument): boolean {
+    return document.publicationSequence === undefined || document.publicationSequence >= this.publicationSequence;
+  }
 
   async load(): Promise<PreferencesDocument> {
     if (!getApplicationServices().platform.capabilities.preferencesFile) {
@@ -13,7 +28,7 @@ export class PreferencesJsonService {
     }
     const document = await getApplicationServices().preferences.loadPreferencesJson();
     this.accept(document);
-    return document;
+    return this.latestDocument ?? document;
   }
 
   saveText(content: string, expectedRevision: string): Promise<PreferencesDocument> {
@@ -27,7 +42,7 @@ export class PreferencesJsonService {
       }
       const document = await getApplicationServices().preferences.savePreferencesJson({ content, expectedRevision });
       this.accept(document);
-      return document;
+      return this.latestDocument ?? document;
     });
   }
 
@@ -68,7 +83,7 @@ export class PreferencesJsonService {
         document = await getApplicationServices().preferences.patchPreferences({ patch, expectedRevision: latest.revision });
       }
       this.accept(document);
-      return document;
+      return this.latestDocument ?? document;
     });
   }
 
@@ -77,7 +92,7 @@ export class PreferencesJsonService {
     return this.enqueue(async () => {
       const document = await getApplicationServices().preferences.resetPreferencesJson();
       this.accept(document);
-      return document;
+      return this.latestDocument ?? document;
     });
   }
 
@@ -88,6 +103,11 @@ export class PreferencesJsonService {
   }
 
   private accept(document: PreferencesDocument): void {
+    if (document.publicationSequence !== undefined) {
+      if (document.publicationSequence < this.publicationSequence) return;
+      this.publicationSequence = document.publicationSequence;
+    }
+    this.latestDocument = document;
     window.__STAGE0_PREFERENCES_REVISION__ = document.revision;
     window.__STAGE0_PREFERENCES_PATH__ = document.path;
     if (document.settings) window.__STAGE0_PREFERENCES__ = document.settings;

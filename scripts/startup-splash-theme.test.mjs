@@ -53,6 +53,8 @@ test('startup.js applies light theme and splash variables when localStorage has 
   };
 
   const fakeWindow = {
+    __TAURI_INTERNALS__: {},
+    navigator: { platform: 'MacIntel', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X)' },
     localStorage: fakeLocalStorage,
     matchMedia: () => ({ matches: true }), // OS dark mode, but app prefers light
     addEventListener() {},
@@ -76,6 +78,7 @@ test('startup.js applies light theme and splash variables when localStorage has 
   assert.equal(fakeDocument.documentElement.style.colorScheme, 'light');
   assert.equal(styles['--splash-bg'], '#dce0e8');
   assert.equal(styles['--splash-text'], '#3b3e53');
+  assert.equal(attributes['data-platform'], 'macos', 'native macOS frame style is known before splash paint');
 });
 
 test('startup.js applies dark theme and splash variables when localStorage has dark mode', () => {
@@ -166,5 +169,12 @@ test('useThemeStore and createPreferencesApplyAction persist theme mode to local
 
   const applyActionCode = fs.readFileSync('frontend/features/preferences/services/createPreferencesApplyAction.ts', 'utf8');
   assert.ok(applyActionCode.includes('persistThemeMode(draftThemeMode)'), 'createPreferencesApplyAction must persist draft theme mode');
+});
+
+test('splash frame uses the same subtle rounded border as the custom macOS main frame', () => {
+  const html = fs.readFileSync('index.html', 'utf8');
+  assert.match(html, /\[data-platform="macos"\]\s+#startup-splash\s*\{[^}]*border: 1px solid var\(--splash-frame-border\);[^}]*border-radius: 4px;/);
+  assert.match(html, /--splash-frame-border:\s*#313244;/);
+  assert.match(html, /--splash-frame-border:\s*#bec4d0;/);
 });
 

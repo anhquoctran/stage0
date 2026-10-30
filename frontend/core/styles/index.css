@@ -198,6 +198,59 @@
   --font-mono: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+@keyframes stage0-enter {
+  from {
+    opacity: var(--stage0-enter-opacity, 1);
+    transform: translate3d(
+      var(--stage0-enter-translate-x, 0),
+      var(--stage0-enter-translate-y, 0),
+      0
+    ) scale(var(--stage0-enter-scale, 1));
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@utility animate-in {
+  animation-name: stage0-enter;
+  animation-duration: var(--tw-duration, 150ms);
+  animation-timing-function: var(--tw-ease, ease);
+  animation-fill-mode: both;
+}
+
+@utility fade-in {
+  --stage0-enter-opacity: 0;
+}
+
+@utility zoom-in-95 {
+  --stage0-enter-scale: 0.95;
+}
+
+@utility zoom-in-98 {
+  --stage0-enter-scale: 0.98;
+}
+
+@utility slide-in-from-bottom-2 {
+  --stage0-enter-translate-y: 0.5rem;
+}
+
+@utility slide-in-from-right-3 {
+  --stage0-enter-translate-x: 0.75rem;
+}
+
+@utility slide-in-from-left-3 {
+  --stage0-enter-translate-x: -0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    animation-duration: 0.01ms !important;
+  }
+}
+
 body {
   margin: 0;
   padding: 0;

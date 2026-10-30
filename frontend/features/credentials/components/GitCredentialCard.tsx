@@ -33,13 +33,13 @@ export function GitCredentialCard({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-text">{cred.label || cred.account_name}</span>
-              <span className="text-[10px] px-2 py-0.2 bg-surface1 text-subtext0 border border-surface2 font-mono uppercase">
+              <span className="text-[10px] px-2 py-[0.2rem] bg-surface1 text-subtext0 border border-surface2 font-mono uppercase">
                 {cred.provider}
               </span>
-              <span className="text-[10px] px-1.5 py-0.2 bg-surface0 text-subtext1 border border-surface1 font-mono uppercase">
+              <span className="text-[10px] px-1.5 py-[0.2rem] bg-surface0 text-subtext1 border border-surface1 font-mono uppercase">
                 {cred.token_type}
               </span>
-              <span className="text-[10px] px-1.5 py-0.2 bg-surface0 text-subtext1 border border-surface1 font-mono uppercase">
+              <span className="text-[10px] px-1.5 py-[0.2rem] bg-surface0 text-subtext1 border border-surface1 font-mono uppercase">
                 {cred.source === 'system_global' ? translateUiText('credentials.systemGlobal') : 'Stage0'}
               </span>
             </div>

@@ -25,7 +25,7 @@ export function GitBinaryDetectionCard({
           <div className="min-w-0">
             <div className="text-xs font-semibold text-text flex items-center gap-2">
               <span>{committedBinary.name}</span>
-              <span className="font-mono text-[11px] px-1.5 py-0.2 bg-surface1 text-text border border-surface2">
+              <span className="font-mono text-[11px] px-1.5 py-[0.2rem] bg-surface1 text-text border border-surface2">
                 {committedBinary.version || t('git.binary.versionUnknown')}
               </span>
             </div>

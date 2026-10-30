@@ -12,6 +12,8 @@ pub struct PreferencesDocument {
     pub path: String,
     pub migrated: bool,
     pub settings: Option<Value>,
+    #[serde(default)]
+    pub publication_sequence: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub validation_error: Option<String>,
 }
@@ -29,6 +31,7 @@ pub(super) fn document(
         path: path.display().to_string(),
         migrated,
         settings,
+        publication_sequence: super::transaction::sequence(),
         validation_error: None,
     }
 }
@@ -45,6 +48,7 @@ pub(super) fn document_with_error(
         path: path.display().to_string(),
         migrated: false,
         settings: (!settings.is_null()).then_some(settings),
+        publication_sequence: super::transaction::sequence(),
         validation_error: Some(error),
     }
 }

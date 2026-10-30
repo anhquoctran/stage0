@@ -16,7 +16,7 @@ export function CommitFileDiff({ file, rawDiff }: { file: ChangedFile; rawDiff: 
   return (
     <section className="min-w-0 rounded-sm bg-base" aria-label={t('git.commitDetails.changesIn', { path: file.path })}>
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm bg-mantle px-3 py-2">
-        <span className="break-all font-mono text-xs text-text">{file.old_path ? `${file.old_path} → ${file.path}` : file.path}</span>
+        <span dir="ltr" className="break-all font-mono text-xs text-text">{file.old_path ? `${file.old_path} → ${file.path}` : file.path}</span>
         <span className="text-[11px] text-subtext0">{file.status} · +{file.additions} / −{file.deletions}</span>
       </div>
       {file.is_binary ? <p className="p-4 text-xs text-subtext0">{t('git.commitDetails.binaryFile')}</p>

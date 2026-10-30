@@ -56,7 +56,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
           </span>
           <div className="flex items-center gap-1.5 truncate mt-0.5">
             <GitBranch className="w-3.5 h-3.5 text-blue shrink-0" />
-            <span className="truncate font-mono text-xs font-semibold text-text leading-none">
+            <span dir="ltr" className="truncate font-mono text-xs font-semibold text-text leading-none">
               {value || t('git.branchSelector.selectBranch')}
             </span>
           </div>
@@ -72,6 +72,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
               <input
                 ref={inputRef}
                 type="text"
+                dir="ltr"
                 placeholder={t('git.branchSelector.filterBranches')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -113,9 +114,9 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                     >
                       <span className="truncate flex items-center gap-1.5 font-mono">
                         <GitBranch className="w-3 h-3 text-subtext1 shrink-0" />
-                        <span className="truncate">{branch}</span>
+                        <span dir="ltr" className="truncate">{branch}</span>
                         {isCurrent && (
-                          <span className="text-[9px] px-1 py-0.2 bg-surface1 text-subtext1 border border-surface2 rounded-sm font-sans">
+                          <span className="text-[9px] px-1 py-[0.2rem] bg-surface1 text-subtext1 border border-surface2 rounded-sm font-sans">
                             HEAD
                           </span>
                         )}
@@ -155,7 +156,7 @@ export const BranchSelector: React.FC<BranchSelectorProps> = ({
                           : 'text-subtext1 hover:bg-surface0 hover:text-text'
                       }`}
                     >
-                      <span className="truncate flex items-center gap-1.5 font-mono text-[11px]">
+                      <span dir="ltr" className="truncate flex items-center gap-1.5 font-mono text-[11px]">
                         <span className="text-subtext0">origin/</span>
                         <span className="truncate">
                           {branch.replace(/^origin\//, '')}

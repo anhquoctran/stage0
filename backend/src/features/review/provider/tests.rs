@@ -25,6 +25,21 @@ fn config(provider: &str, url: &str) -> ReviewRequest {
     }
 }
 #[test]
+fn anthropic_effort_and_fast_mode_are_encoded_for_the_official_api() {
+    let mut cfg = config("anthropic", "https://api.anthropic.com/v1");
+    cfg.model = "claude-opus-5-5".into();
+    cfg.reasoning_effort = Some("high".into());
+    cfg.fast_mode = true;
+    assert!(endpoint(&cfg).is_ok());
+    let body = payload(&cfg, "policy", &[], &[], 2048);
+    assert_eq!(body["output_config"]["effort"], "high");
+    assert_eq!(body["speed"], "fast");
+    cfg.model = "claude-sonnet-5-5".into();
+    assert!(endpoint(&cfg).is_err());
+    cfg.fast_mode = false;
+    assert!(endpoint(&cfg).is_ok());
+}
+#[test]
 fn endpoints_require_explicit_consent_and_do_not_send_provider_keys_to_arbitrary_hosts() {
     let mut cfg = config("openai", "https://api.openai.com/v1");
     assert!(endpoint(&cfg).unwrap().ends_with("/responses"));

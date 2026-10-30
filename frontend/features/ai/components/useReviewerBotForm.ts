@@ -29,9 +29,8 @@ export function useReviewerBotForm({
     formAcpAgentId: '',
     formAllowAcpSourceTransfer: false,
     formAcpConfigOptions: {},
-    formProvider: 'global_default',
-    formModel: 'global_default',
-    isCustomModel: false,
+    formProvider: '',
+    formModel: '',
     formTemp: 0.2,
     formReasoningEffort: undefined,
     formFastMode: false,
@@ -49,7 +48,6 @@ export function useReviewerBotForm({
     formAcpConfigOptions,
     formProvider,
     formModel,
-    isCustomModel,
     formTemp,
     formReasoningEffort,
     formFastMode,
@@ -67,7 +65,6 @@ export function useReviewerBotForm({
     setFormAcpConfigOptions,
     setFormProvider,
     setFormModel,
-    setIsCustomModel,
     setFormTemp,
     setFormReasoningEffort,
     setFormFastMode,
@@ -98,8 +95,6 @@ export function useReviewerBotForm({
         setField('formProvider', next),
       setFormModel: (next: SetStateAction<ReviewerBotDraft['formModel']>) =>
         setField('formModel', next),
-      setIsCustomModel: (next: SetStateAction<ReviewerBotDraft['isCustomModel']>) =>
-        setField('isCustomModel', next),
       setFormTemp: (next: SetStateAction<ReviewerBotDraft['formTemp']>) =>
         setField('formTemp', next),
       setFormReasoningEffort: (next: SetStateAction<ReviewerBotDraft['formReasoningEffort']>) =>
@@ -115,7 +110,6 @@ export function useReviewerBotForm({
   const {
     inheritsGlobalModel,
     executionModel,
-    providerPreset,
     effectiveProvider,
     availableModels,
     executionBaseUrl,
@@ -128,7 +122,7 @@ export function useReviewerBotForm({
     setFormAcpConfigOptions,
   );
   const canSubmit = isFormOpen && !!formName.trim() && (formExecutionMode === 'acp'
-    ? acpConfig.ready : !!formModel.trim());
+    ? acpConfig.ready : !!formProvider && !!formModel.trim());
 
   const handleOpenAdd = () => {
     setEditingBotId(null);
@@ -142,9 +136,8 @@ export function useReviewerBotForm({
     setFormAcpAgentId(externalAgents[0]?.id || '');
     setFormAllowAcpSourceTransfer(false);
     setFormAcpConfigOptions({});
-    setFormProvider('global_default');
-    setFormModel('global_default');
-    setIsCustomModel(false);
+    setFormProvider('');
+    setFormModel('');
     setFormTemp(0.2);
     setFormReasoningEffort(undefined);
     setFormFastMode(false);
@@ -166,7 +159,6 @@ export function useReviewerBotForm({
     setFormAcpConfigOptions(bot.acpConfigOptions || {});
     setFormProvider(bot.provider || 'global_default');
     setFormModel(bot.model || 'global_default');
-    setIsCustomModel(false);
     setFormTemp(bot.temperature ?? 0.2);
     setFormReasoningEffort(bot.reasoningEffort);
     setFormFastMode(bot.fastMode === true);
@@ -180,8 +172,7 @@ export function useReviewerBotForm({
       setFormError('Bot name is required');
       return;
     }
-    if (formExecutionMode === 'provider' && !formModel.trim()) {
-      setFormError('Select a model or enter a custom model ID');
+    if (formExecutionMode === 'provider' && (!formProvider || !formModel.trim())) {
       return;
     }
 
@@ -191,13 +182,20 @@ export function useReviewerBotForm({
       return;
     }
 
+    const preserveAnthropicSettings = !!editingBotId && effectiveProvider === 'anthropic'
+      && executionBaseUrl.replace(/\/+$/, '') === 'https://api.anthropic.com/v1'
+      && !availableModels.some((model) => model.id === formModel);
     const savedReasoningEffort = inheritsGlobalModel
       ? undefined
+      : preserveAnthropicSettings
+        ? formReasoningEffort
       : executionModel?.reasoningEfforts?.includes(formReasoningEffort as AiReasoningEffort)
         ? formReasoningEffort
         : undefined;
     const savedFastMode = inheritsGlobalModel
       ? undefined
+      : preserveAnthropicSettings
+        ? formFastMode
       : executionModel?.supportsFastMode
         ? formFastMode
         : undefined;
@@ -259,8 +257,6 @@ export function useReviewerBotForm({
     setFormProvider,
     formModel,
     setFormModel,
-    isCustomModel,
-    setIsCustomModel,
     formTemp,
     setFormTemp,
     formReasoningEffort,
@@ -268,7 +264,6 @@ export function useReviewerBotForm({
     formFastMode,
     setFormFastMode,
     formError,
-    providerPreset,
     effectiveProvider,
     inheritsGlobalModel,
     availableModels,

@@ -9,7 +9,7 @@ import { type GuardrailPolicy } from '../types/GuardrailPolicy';
 import { DEFAULT_GUARDRAIL_POLICY } from '../types/guardrails';
 import { type McpServerConfig } from '../types/McpServerConfig';
 import { resetMcpVerification } from '../utils/resetMcpVerification';
-import { DEFAULT_MCP_SERVERS } from '../constants/aiPresets';
+import { AI_PROVIDERS, DEFAULT_MCP_SERVERS } from '../constants/aiPresets';
 import { createAiConfigSlice } from './slices/createAiConfigSlice';
 import { createExternalAgentsSlice } from './slices/createExternalAgentsSlice';
 import { createGuardrailsSlice } from './slices/createGuardrailsSlice';
@@ -44,7 +44,16 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
         : DEFAULT_GUARDRAIL_POLICY;
     const externalAgents = Array.isArray(configured.externalAgents)
       ? configured.externalAgents as AcpAgentConfig[] : [];
-    useAiMcpStore.setState({ aiConfig, mcpServers, guardrailPolicy, externalAgents, aiTestResult: null });
+    const references = settings?.credentialReferences;
+    const configuredKeys: Record<string, boolean> = {};
+    if (references && typeof references === 'object' && !Array.isArray(references)) {
+      for (const provider of AI_PROVIDERS) {
+        const reference = (references as Record<string, unknown>)[`ai/${provider.id}`];
+        if (reference === null || typeof reference === 'string') configuredKeys[provider.id] = reference !== null;
+      }
+    }
+    useAiMcpStore.setState((state) => ({ aiConfig, mcpServers, guardrailPolicy, externalAgents,
+      apiKeysConfigured: { ...state.apiKeysConfigured, ...configuredKeys }, aiTestResult: null }));
   });
 }
 
@@ -52,24 +61,9 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
 if (typeof window !== 'undefined' && typeof window.setTimeout === 'function') {
   window.setTimeout(() => {
     if (getApplicationServices().platform.capabilities.keychain) {
-      // Rehydrate the last committed policy before reading native state. Reading
-      // the fresh backend's balanced default first would erase saved preferences.
-      void (async () => {
-        try {
-          await getApplicationServices().aiProviders.commitAiPreferences({
-            apiKeys: {},
-            apiKeyRemovals: [],
-            policy: initialState.guardrailPolicy,
-            mcpEnvSecrets: {},
-            mcpEnvRemovals: {},
-          });
-          await useAiMcpStore.getState().loadGuardrailPolicy();
-        } catch {
-          console.warn(
-            'Could not restore the saved guardrail policy; saved preferences were retained.'
-          );
-        }
-      })();
+      // Native preference initialization already applied the committed policy.
+      // Hydration is read-only: a stale WebView must not write its cache back.
+      void useAiMcpStore.getState().loadGuardrailPolicy();
       void useAiMcpStore.getState().loadGuardrailAuditLog();
     }
   }, 150);

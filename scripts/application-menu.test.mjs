@@ -189,7 +189,13 @@ test('native hook syncs flags, executes each event once and disposes late listen
   resolveListener(() => { stopped++; });
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(stopped, 1);
-  assert.equal(calls.length, 3);
+  assert.equal(calls.filter((call) => call === 'about').length, 1);
+  assert.equal(calls.filter((call) => call === 'about-callback').length, 1);
+  assert.equal(
+    calls.filter((call) => Array.isArray(call) && call[0] === 'update_recent_repositories_menu').length,
+    1,
+    'the initial menu sync must also publish the empty recent-repository list once'
+  );
   native = false;
 });
 

@@ -27,7 +27,7 @@ export function AcpRegistryActions({
           onClick={onBackToOverview}
           className="inline-flex items-center gap-1 text-xs text-subtext0 transition-colors hover:text-text rounded-sm"
         >
-          <ChevronLeft className="h-3.5 w-3.5" /> {t('preferences.nav.ai-overview')}
+          <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" /> {t('preferences.nav.ai-overview')}
         </button>
       ) : (
         <span />

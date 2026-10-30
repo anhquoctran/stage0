@@ -1,4 +1,4 @@
-use super::GeminiModelItem;
+use super::gemini_model_item::GeminiModelItem;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

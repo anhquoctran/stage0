@@ -16,12 +16,15 @@ export interface AiProviderService {
   }): Promise<unknown>;
   fetchAiModels(input: {
     provider: AiProviderId;
-    apiKey: null;
+    /** One-time form input; the backend uses it only for this model-list request. */
+    apiKey: string | null;
     baseUrl: string | null;
   }): Promise<{
     id: string;
     name: string;
     description?: string;
+    reasoningEfforts?: AiReasoningEffort[] | null;
+    supportsFastMode?: boolean | null;
   }[]>;
   hasAiApiKey(input: {
     provider: AiProviderId;

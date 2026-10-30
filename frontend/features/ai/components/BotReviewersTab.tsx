@@ -45,6 +45,9 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
     aiConfig: committedAiConfig,
     dynamicModels,
     externalAgents: committedExternalAgents,
+    fetchDynamicModels,
+    isFetchingDynamicModels,
+    dynamicModelError,
   } = useAiMcpStore();
   const globalAiConfig = draftSettings?.aiConfig || committedAiConfig || DEFAULT_AI_CONFIG;
   const externalAgents = draftSettings?.externalAgents || committedExternalAgents || [];
@@ -92,8 +95,6 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
     setFormProvider,
     formModel,
     setFormModel,
-    isCustomModel,
-    setIsCustomModel,
     formTemp,
     setFormTemp,
     formReasoningEffort,
@@ -101,7 +102,6 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
     formFastMode,
     setFormFastMode,
     formError,
-    providerPreset,
     effectiveProvider,
     inheritsGlobalModel,
     availableModels,
@@ -250,8 +250,6 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
           setFormProvider: setFormProvider,
           formModel: formModel,
           setFormModel: setFormModel,
-          isCustomModel: isCustomModel,
-          setIsCustomModel: setIsCustomModel,
           formTemp: formTemp,
           setFormTemp: setFormTemp,
           formReasoningEffort: formReasoningEffort,
@@ -262,13 +260,15 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
         catalog={{
           externalAgents: externalAgents,
           globalAiConfig: globalAiConfig,
-          providerPreset: providerPreset,
           effectiveProvider: effectiveProvider,
           inheritsGlobalModel: inheritsGlobalModel,
           availableModels: availableModels,
           executionModel: executionModel,
           executionBaseUrl: executionBaseUrl,
           dynamicModels: dynamicModels,
+          fetchDynamicModels,
+          isFetchingDynamicModels,
+          dynamicModelError,
         }}
       />
 

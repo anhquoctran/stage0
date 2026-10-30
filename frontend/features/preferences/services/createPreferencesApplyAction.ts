@@ -16,8 +16,11 @@ import { keymapErrors } from '../../../core/services/keymaps/validation';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
 import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
 import { languagePreferencesPatch, readLanguagePreferences } from '../../i18n/services/languagePreferences';
+import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+import { preferencesJsonService } from './preferencesJsonService';
+import { synchronizeWorkspacePreferences } from '../../git/services/synchronizeWorkspacePreferences';
 
-// Preserve commit ordering and failure rollback; creating this closure has no side effects.
+// Advance draft baselines only after native commit; creating this closure is inert.
 export function createPreferencesApplyAction({
   languageDraft,
   draftKeymap = DEFAULT_KEYMAP,
@@ -241,6 +244,17 @@ export function createPreferencesApplyAction({
         markdownHeadingWeight: draftMarkdownHeadingWeight,
       });
       setDraftKeymap(committedKeymap);
+      if (getApplicationServices().platform.capabilities.preferencesFile) {
+        // Another window may commit while this response is in flight. Reconcile
+        // local previews after publication, without treating a refresh failure
+        // as a failed transaction that has already committed.
+        try {
+          const latest = await preferencesJsonService.load();
+          if (latest.settings && !latest.validationError) synchronizeWorkspacePreferences(latest.settings);
+        } catch {
+          console.warn('Preferences committed; runtime refresh will retry on the next preference event.');
+        }
+      }
       setIsApplied(true);
       setTimeout(() => setIsApplied(false), 2000);
       showToast(i18n.t('preferences.appliedToast'));

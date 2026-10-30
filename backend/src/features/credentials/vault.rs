@@ -129,6 +129,9 @@ pub(crate) fn store_ai_key_unlogged(provider: &str, api_key: &str) -> Result<(),
 }
 
 pub fn ai_key_exists(provider: &str) -> Result<bool, String> {
+    if let Some(value) = super::preference_snapshot::current(&format!("ai/{provider}"))? {
+        return Ok(value.is_some());
+    }
     let entry = keyring::Entry::new(AI_KEYRING_SERVICE, provider)
         .map_err(|e| map_keyring_error("initialize AI secret", e))?;
     match entry.get_password() {
@@ -148,6 +151,11 @@ pub fn delete_ai_key(provider: &str) -> Result<(), String> {
 }
 
 pub fn get_ai_key(provider: &str) -> Result<String, String> {
+    if let Some(value) = super::preference_snapshot::current(&format!("ai/{provider}"))? {
+        return value
+            .map(|v| v.to_string())
+            .ok_or_else(|| "AI credential is not configured".into());
+    }
     let entry = keyring::Entry::new(AI_KEYRING_SERVICE, provider)
         .map_err(|e| map_keyring_error("initialize AI secret", e))?;
     entry

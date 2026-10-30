@@ -3,6 +3,7 @@ import type { PreferencesDocumentService } from './PreferencesDocumentService';
 
 export function createPreferencesDocumentService(transport: CommandTransport): PreferencesDocumentService {
   return {
+    commitPreferencesTransaction: (input) => transport.executeCommand('commit_preferences_transaction', input),
     initializePreferences: (input) => transport.executeCommand('initialize_preferences', input),
     loadPreferencesJson: () => transport.executeCommand('load_preferences_json'),
     patchPreferences: (input) => transport.executeCommand('patch_preferences', input),

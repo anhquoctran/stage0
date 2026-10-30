@@ -1636,7 +1636,7 @@
       "summarizeCommitsDiffs": "Автоматически обобщать коммиты и различия Git"
     },
     "providerModel": {
-      "refreshModelsTitle": "Обновить модели с сохраненными учетными данными API. Сначала примените изменения ключа.",
+      "refreshModelsTitle": "Загрузить доступные модели из API настроенного провайдера.",
       "refreshing": "Обновление…",
       "refreshModels": "Обновить модели",
       "recommended": "Рекомендуется",

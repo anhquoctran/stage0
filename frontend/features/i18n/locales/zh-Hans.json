@@ -1622,7 +1622,7 @@
       "summarizeCommitsDiffs": "自动总结 Git 提交和差异"
     },
     "providerModel": {
-      "refreshModelsTitle": "使用已保存的 API 凭据刷新模型。请先 Apply 密钥更改。",
+      "refreshModelsTitle": "从已配置的提供商 API 加载可用模型。",
       "refreshing": "正在刷新…",
       "refreshModels": "刷新模型",
       "recommended": "推荐",

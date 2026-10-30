@@ -1,6 +1,6 @@
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { XCircle } from '@/common/components/icons';
-import { ArrowRight } from '../../../../common/components/icons/ArrowRight';
+import { ArrowLeftRight } from '../../../../common/components/icons/ArrowLeftRight';
 import { Check } from '../../../../common/components/icons/Check';
 import { CheckCircle2 } from '../../../../common/components/icons/CheckCircle2';
 import { Edit2 } from '../../../../common/components/icons/Edit2';
@@ -147,7 +147,7 @@ export function VirtualMrHeader({
                 : 'text-subtext0 hover:text-brand hover:bg-surface0 hover:border-surface0 cursor-pointer'
             }`}
           >
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowLeftRight className="w-3.5 h-3.5" />
           </button>
           <TabBranchSelector
             roleType="target"

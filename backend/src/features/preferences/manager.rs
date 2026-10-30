@@ -103,6 +103,7 @@ impl PreferencesManager {
             }
         };
         atomic_write(&path, content.as_bytes())?;
+        super::transaction::advance_sequence();
         Ok(document(path, content, true, value))
     }
 
@@ -198,6 +199,7 @@ impl PreferencesManager {
             )?;
         }
         atomic_write(&path, content.as_bytes())?;
+        super::transaction::advance_sequence();
         let settings = match parsed {
             Ok(settings) => {
                 let _ = atomic_write(
@@ -225,6 +227,10 @@ impl PreferencesManager {
         parse_and_validate(DEFAULT_PREFERENCES).unwrap_or(Value::Null)
     }
 
+    pub(crate) fn credential_recovery_settings(&self) -> Value {
+        self.recovery_settings()
+    }
+
     pub fn save(
         &self,
         content: String,
@@ -250,6 +256,10 @@ impl PreferencesManager {
                     .into(),
             );
         }
+        let prior = parse_and_validate(&current).unwrap_or_else(|_| self.recovery_settings());
+        if prior.get("credentialReferences") != value.get("credentialReferences") {
+            return Err("Credential references cannot be edited in preferences.json".into());
+        }
         // Invalid drafts never reach disk. Keep the last valid file as a recovery copy.
         if parse_and_validate(&current).is_ok() {
             atomic_write(
@@ -258,6 +268,7 @@ impl PreferencesManager {
             )?;
         }
         atomic_write(&path, content.as_bytes())?;
+        super::transaction::advance_sequence();
         // Refresh the recovery copy after the primary write succeeds. If that
         // secondary write fails, the previous valid recovery copy is retained.
         let _ = atomic_write(
@@ -272,8 +283,20 @@ impl PreferencesManager {
         patch: Value,
         expected_revision: String,
     ) -> Result<PreferencesDocument, String> {
+        self.patch_prepared(patch, expected_revision, |_| Ok(Value::Null))
+    }
+
+    pub(crate) fn patch_prepared(
+        &self,
+        patch: Value,
+        expected_revision: String,
+        prepare: impl FnOnce(&Value) -> Result<Value, String>,
+    ) -> Result<PreferencesDocument, String> {
         if !patch.is_object() {
             return Err("Preferences updates must be a JSON object".into());
+        }
+        if patch.get("credentialReferences").is_some() {
+            return Err("Credential references are managed by the native transaction".into());
         }
         reject_git_credentials(&patch, "")?;
         let _guard = self
@@ -299,6 +322,13 @@ impl PreferencesManager {
             .object_value()
             .ok_or_else(|| "Preferences root must be an object".to_string())?;
         merge_object(&object, patch.as_object().unwrap())?;
+        let candidate = parse_and_validate(&root.to_string())?;
+        reject_secrets(&candidate, "")?;
+        validate_runtime_preferences(&candidate)?;
+        let prepared = prepare(&candidate)?;
+        if let Some(prepared) = prepared.as_object() {
+            merge_object(&object, prepared)?;
+        }
         let content = root.to_string();
         let value = parse_and_validate(&content)?;
         reject_git_credentials(&value, "")?;
@@ -306,11 +336,19 @@ impl PreferencesManager {
         if patch.get("git").is_some() {
             validate_runtime_preferences(&value)?;
         }
+        // Keychain preparation can wait for an OS prompt. An external editor
+        // may ignore our advisory lock, so recheck before replacing its file.
+        if revision(&read_limited(&path)?) != revision(&current) {
+            return Err(
+                "Preferences changed during credential preparation. Reload before applying.".into(),
+            );
+        }
         atomic_write(
             &self.directory.join(LAST_KNOWN_GOOD_FILE),
             current.as_bytes(),
         )?;
         atomic_write(&path, content.as_bytes())?;
+        super::transaction::advance_sequence();
         let _ = atomic_write(
             &self.directory.join(LAST_KNOWN_GOOD_FILE),
             content.as_bytes(),
@@ -319,7 +357,7 @@ impl PreferencesManager {
     }
 
     pub fn reset(&self) -> Result<PreferencesDocument, String> {
-        let value = parse_and_validate(DEFAULT_PREFERENCES)?;
+        let mut value = parse_and_validate(DEFAULT_PREFERENCES)?;
         let _guard = self
             .write_lock
             .lock()
@@ -332,6 +370,10 @@ impl PreferencesManager {
         reject_symlink(&path)?;
         if path.exists() {
             let current = read_limited(&path)?;
+            let prior = parse_and_validate(&current).unwrap_or_else(|_| self.recovery_settings());
+            if let Some(references) = prior.get("credentialReferences") {
+                value["credentialReferences"] = references.clone();
+            }
             if parse_and_validate(&current).is_ok() {
                 atomic_write(
                     &self.directory.join(LAST_KNOWN_GOOD_FILE),
@@ -339,16 +381,22 @@ impl PreferencesManager {
                 )?;
             }
         }
-        atomic_write(&path, DEFAULT_PREFERENCES.as_bytes())?;
+        let content = if value.get("credentialReferences").is_some() {
+            let root = CstRootNode::parse(DEFAULT_PREFERENCES, &strict_jsonc_options())
+                .map_err(|error| format_parse_error(&error))?;
+            let object = root.object_value().ok_or("Invalid defaults")?;
+            let patch = serde_json::json!({"credentialReferences": value["credentialReferences"]});
+            merge_object(&object, patch.as_object().unwrap())?;
+            root.to_string()
+        } else {
+            DEFAULT_PREFERENCES.to_string()
+        };
+        atomic_write(&path, content.as_bytes())?;
+        super::transaction::advance_sequence();
         let _ = atomic_write(
             &self.directory.join(LAST_KNOWN_GOOD_FILE),
-            DEFAULT_PREFERENCES.as_bytes(),
+            content.as_bytes(),
         );
-        Ok(document(
-            path,
-            DEFAULT_PREFERENCES.to_string(),
-            false,
-            value,
-        ))
+        Ok(document(path, content, false, value))
     }
 }

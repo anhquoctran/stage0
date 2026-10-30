@@ -38,7 +38,7 @@ export function FlatFileList({
                   BIN
                 </span>
               )}
-              <div className="min-w-0 font-mono leading-tight">
+              <div dir="ltr" className="min-w-0 font-mono leading-tight">
                 {dir && <span className="text-subtext1 text-[11px] block truncate">{dir}</span>}
                 <span
                   className={`truncate font-medium block ${isSelected ? 'text-text' : 'text-text'}`}

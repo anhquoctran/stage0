@@ -1629,7 +1629,7 @@
       "summarizeCommitsDiffs": "Résumer automatiquement les commits et différences Git"
     },
     "providerModel": {
-      "refreshModelsTitle": "Actualise les modèles avec les identifiants API enregistrés. Appliquez d’abord les modifications de clé.",
+      "refreshModelsTitle": "Charge les modèles disponibles depuis l’API du fournisseur configuré.",
       "refreshing": "Actualisation…",
       "refreshModels": "Actualiser les modèles",
       "recommended": "Recommandé",

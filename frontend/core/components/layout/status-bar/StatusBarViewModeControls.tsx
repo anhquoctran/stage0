@@ -37,11 +37,11 @@ export const StatusBarViewModeControls: React.FC<{
         <div className="h-3 w-px bg-surface1/80 ms-1" />
         <Keyboard className="w-3 h-3 text-subtext0/60 shrink-0" />
         <span>
-          <kbd className="font-mono bg-surface0/60 px-1 py-0.2 border border-surface1/40 text-subtext1">↑/↓</kbd> {t('common.layout.files')}
+          <kbd className="font-mono bg-surface0/60 px-1 py-[0.2rem] border border-surface1/40 text-subtext1">↑/↓</kbd> {t('common.layout.files')}
         </span>
         <span className="text-surface2">•</span>
         <span>
-          <kbd className="font-mono bg-surface0/60 px-1 py-0.2 border border-surface1/40 text-subtext1">S/U</kbd> {t('common.layout.view')}
+          <kbd className="font-mono bg-surface0/60 px-1 py-[0.2rem] border border-surface1/40 text-subtext1">S/U</kbd> {t('common.layout.view')}
         </span>
       </div>
     </>

@@ -1622,7 +1622,7 @@
       "summarizeCommitsDiffs": "Auto-summarize Git commits & diffs"
     },
     "providerModel": {
-      "refreshModelsTitle": "Refresh models using saved API credentials. Apply key changes first.",
+      "refreshModelsTitle": "Load available models from the configured provider API.",
       "refreshing": "Refreshing…",
       "refreshModels": "Refresh models",
       "recommended": "Recommended",

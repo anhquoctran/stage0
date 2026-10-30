@@ -40,7 +40,7 @@ export const TopBarTitleRow: React.FC<{
 
   if (linux && profile.nativeFrame) {
     return (
-      <div className="h-7 bg-crust border-b border-surface0/70 rounded-none flex items-center justify-between gap-3 px-2.5 shrink-0 select-none relative z-[100]">
+      <div dir="ltr" className="h-7 bg-crust border-b border-surface0/70 rounded-none flex items-center justify-between gap-3 px-2.5 shrink-0 select-none relative z-[100]">
         <MenuBar />
         {versionLabel}
       </div>
@@ -49,6 +49,7 @@ export const TopBarTitleRow: React.FC<{
 
   return (
     <div
+      dir="ltr"
       data-tauri-drag-region={linux ? false : true}
       onMouseDown={titleBarMouseDown(profile, appServices.application, isMac)}
       className={clsx(

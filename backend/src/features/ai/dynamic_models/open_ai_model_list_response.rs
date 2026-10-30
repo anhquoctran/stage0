@@ -1,4 +1,4 @@
-use super::OpenAiModelItem;
+use super::open_ai_model_item::OpenAiModelItem;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

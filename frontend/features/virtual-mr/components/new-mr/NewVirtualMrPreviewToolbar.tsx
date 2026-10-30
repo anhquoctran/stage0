@@ -24,7 +24,7 @@ export function NewVirtualMrPreviewToolbar({
         >
           <GitCommit className="w-3.5 h-3.5 text-brand" />
           <span>{t('virtualMr.previewToolbar.commits')}</span>
-          <span className="px-1.5 py-0.2 text-[10px] font-mono bg-surface0 border border-surface1/60 text-subtext0">
+          <span className="px-1.5 py-[0.2rem] text-[10px] font-mono bg-surface0 border border-surface1/60 text-subtext0">
             {draftMr.commits.length}
           </span>
         </button>
@@ -40,7 +40,7 @@ export function NewVirtualMrPreviewToolbar({
         >
           <FileCode className="w-3.5 h-3.5 text-subtext0" />
           <span>{t('virtualMr.previewToolbar.filesChanged')}</span>
-          <span className="px-1.5 py-0.2 text-[10px] font-mono bg-surface0 border border-surface1/60 text-subtext0">
+          <span className="px-1.5 py-[0.2rem] text-[10px] font-mono bg-surface0 border border-surface1/60 text-subtext0">
             {diffPayload?.files.length || 0}
           </span>
         </button>

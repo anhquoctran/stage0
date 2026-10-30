@@ -42,6 +42,12 @@ pub fn payload(
         }
         "anthropic" => {
             let mut body = json!({"model":config.model,"system":system,"messages":history,"max_tokens":max_tokens,"tools":tools.iter().map(|t|json!({"name":t["name"],"description":t["description"],"input_schema":t["parameters"]})).collect::<Vec<_>>()});
+            if let Some(effort) = config.reasoning_effort.as_deref() {
+                body["output_config"] = json!({"effort": effort});
+            }
+            if config.fast_mode {
+                body["speed"] = json!("fast");
+            }
             body["tool_choice"] = if anthropic_supports_forced_tool_choice(&config.model) {
                 json!({"type":"any","disable_parallel_tool_use":true})
             } else {

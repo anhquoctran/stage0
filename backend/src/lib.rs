@@ -194,6 +194,8 @@ pub fn run() {
 
             let initial_repos = db.get_recent_repositories().unwrap_or_default();
             app.manage(db);
+            features::credentials::preference_snapshot::initialize(handle);
+            features::preferences::recover_prepared_credentials(handle);
 
             let _ = crate::core::tray::setup_tray(handle, &initial_repos);
             crate::core::dock::setup_dock_menu(handle, &initial_repos);
@@ -298,6 +300,7 @@ pub fn run() {
             commands::get_keyring_info,
             commands::store_ai_api_key,
             commands::commit_ai_preferences,
+            commands::commit_preferences_transaction,
             commands::initialize_preferences,
             commands::load_preferences_json,
             commands::save_preferences_json,

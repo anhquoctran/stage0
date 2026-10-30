@@ -7,4 +7,5 @@ export interface PreferencesDocument {
   migrated: boolean;
   settings?: PreferenceBootstrap | null;
   validationError?: string | null;
+  publicationSequence?: number;
 }

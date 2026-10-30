@@ -28,7 +28,7 @@ export const PreferencesAiOverviewTab: React.FC<{
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>{translateUiText('preferences.aiOverview.configure')}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
         </button>
       </SettingRow>
 
@@ -42,7 +42,7 @@ export const PreferencesAiOverviewTab: React.FC<{
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>{translateUiText('preferences.aiOverview.configure')}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
         </button>
       </SettingRow>
 
@@ -56,7 +56,7 @@ export const PreferencesAiOverviewTab: React.FC<{
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>{translateUiText('preferences.aiOverview.configure')}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
         </button>
       </SettingRow>
 
@@ -70,7 +70,7 @@ export const PreferencesAiOverviewTab: React.FC<{
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>{translateUiText('preferences.aiOverview.configure')}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
         </button>
       </SettingRow>
 
@@ -88,7 +88,7 @@ export const PreferencesAiOverviewTab: React.FC<{
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>{translateUiText('preferences.aiOverview.configure')}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
         </button>
       </SettingRow>
 
@@ -102,7 +102,7 @@ export const PreferencesAiOverviewTab: React.FC<{
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>{translateUiText('preferences.aiOverview.configure')}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
         </button>
       </SettingRow>
 
@@ -116,7 +116,7 @@ export const PreferencesAiOverviewTab: React.FC<{
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
           <span>{translateUiText('preferences.aiOverview.configure')}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" />
         </button>
       </SettingRow>
 

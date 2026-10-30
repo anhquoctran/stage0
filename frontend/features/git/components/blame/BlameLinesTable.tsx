@@ -39,7 +39,7 @@ export function BlameLinesTable({
                 }`}
               >
                 {/* Commit SHA Badge */}
-                <td className="py-0.5 px-3 align-top whitespace-nowrap select-none">
+                <td dir="ltr" className="py-0.5 px-3 align-top whitespace-nowrap select-none">
                   {isNewBlock ? (
                     <button
                       type="button"
@@ -78,9 +78,9 @@ export function BlameLinesTable({
 
                 {/* Code Content */}
                 <td
-                  className={`py-0.5 px-3 align-top text-text whitespace-pre overflow-x-auto ${
-                    enableLigatures ? 'font-variant-ligatures-normal' : ''
-                  }`}
+                  dir="ltr"
+                  style={{ fontVariantLigatures: enableLigatures ? 'normal' : 'none' }}
+                  className="py-0.5 px-3 align-top text-text whitespace-pre overflow-x-auto"
                 >
                   {row.content || ' '}
                 </td>

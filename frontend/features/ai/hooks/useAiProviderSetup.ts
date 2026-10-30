@@ -22,14 +22,11 @@ export function useAiProviderSetup({
 
   const [setupProviderName, setSetupProviderName] = useState('');
 
-  const [setupModel, setSetupModel] = useState('');
+  const [setupBaseUrl, setSetupBaseUrlState] = useState('');
 
-  const [setupBaseUrl, setSetupBaseUrl] = useState('');
-
-  const [setupApiKey, setSetupApiKey] = useState('');
+  const [setupApiKey, setSetupApiKeyState] = useState('');
 
   const [providerSetupError, setProviderSetupError] = useState<string | null>(null);
-
   const hasProviderApiKey = (id: string) => {
     const providerId = id as AiProviderId;
     return (
@@ -51,11 +48,18 @@ export function useAiProviderSetup({
     setSetupProviderName(
       providerId === 'custom' ? aiConfig.customProviderName?.trim() || 'My Custom Provider' : ''
     );
-    setSetupModel(settings.model);
     setSetupBaseUrl(settings.baseUrl);
     setSetupApiKey('');
     setProviderSetupError(null);
     setIsProviderSetupOpen(true);
+  };
+
+  const setSetupApiKey = (key: string) => {
+    setSetupApiKeyState(key);
+  };
+
+  const setSetupBaseUrl = (url: string) => {
+    setSetupBaseUrlState(url);
   };
 
   const openAddProvider = () => {
@@ -67,15 +71,10 @@ export function useAiProviderSetup({
   const handleSaveProviderSetup = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setProviderSetupError(null);
-    const model = setupModel.trim();
     const baseUrl = setupBaseUrl.trim().replace(/\/+$/, '');
 
     if (setupProviderId === 'custom' && !setupProviderName.trim()) {
       setProviderSetupError('Enter a name for this custom provider.');
-      return;
-    }
-    if (!model) {
-      setProviderSetupError('Enter a model ID.');
       return;
     }
     if (configuredProviderIds(aiConfig).includes(setupProviderId)) {
@@ -108,7 +107,6 @@ export function useAiProviderSetup({
     delete rememberedPreferences.apiKey;
     const nextProviderSettings = {
       ...currentSettings,
-      model,
       baseUrl,
     };
     const nextConfig: Partial<AiConfig> = {
@@ -135,8 +133,6 @@ export function useAiProviderSetup({
     setupProviderId,
     setupProviderName,
     setSetupProviderName,
-    setupModel,
-    setSetupModel,
     setupBaseUrl,
     setSetupBaseUrl,
     setupApiKey,

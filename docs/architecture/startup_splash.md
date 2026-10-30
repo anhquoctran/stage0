@@ -42,8 +42,9 @@ Auxiliary notification windows retain their separate splash-removal path.
   the normal workspace geometry, resizing and maximization capabilities.
 - The macOS main window stays hidden during startup and remains borderless after
   the readiness handoff; the React title row draws the traffic lights and owns
-  drag/double-click behavior. Dynamically created windows use the same custom
-  frame. Native application menus remain available through macOS.
+  drag/double-click behavior. The static splash gets the same 4px outer radius
+  and subtle frame border before React loads. Dynamically created windows use
+  the same custom frame. Native application menus remain available through macOS.
 - The bootstrap controller is available before React loads. Its typed core
   facade safely delegates when present. Without the controller, a ready main
   application removes the static overlay directly.

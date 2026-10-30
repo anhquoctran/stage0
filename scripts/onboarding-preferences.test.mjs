@@ -103,7 +103,6 @@ test('appearance and keymap steps remain optional once required AI setup is save
   let completed = 0;
   const { FirstLaunchWelcome } = loadWithMocks(url('features/onboarding/components/FirstLaunchWelcome.tsx'), {
     react: runner.react,
-    'react-i18next': { useTranslation: () => ({ t: (key) => key === 'common.next' ? 'Next' : key }) },
     '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ application: {} }) },
     '@tauri-apps/api/core': { invoke: async () => {} },
     '../../../common/components/icons/ArrowRight': { ArrowRight: () => null },

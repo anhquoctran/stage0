@@ -136,7 +136,6 @@ test('Skip, Close, Escape and jumping to the final slide cannot bypass required 
   let hasConnection = false, ready = false, completed = 0, saves = 0, repoActions = 0, closed = 0;
   const { FirstLaunchWelcome } = loadWithMocks(url('components/FirstLaunchWelcome.tsx'), {
     react: runner.react,
-    'react-i18next': { useTranslation: () => ({ t: (key) => key === 'common.next' ? 'Next' : key }) },
     '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ application: {
       windowClose: async () => closed++, windowIsMaximized: async () => false, windowIsFullscreen: async () => false,
     } }) },

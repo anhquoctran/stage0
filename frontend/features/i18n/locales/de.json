@@ -1622,7 +1622,7 @@
       "summarizeCommitsDiffs": "Git-Commits und Diffs automatisch zusammenfassen"
     },
     "providerModel": {
-      "refreshModelsTitle": "Modelle mit den gespeicherten API-Zugangsdaten aktualisieren. Schlüsseländerungen zuerst anwenden.",
+      "refreshModelsTitle": "Verfügbare Modelle über die API des konfigurierten Anbieters laden.",
       "refreshing": "Wird aktualisiert…",
       "refreshModels": "Modelle aktualisieren",
       "recommended": "Empfohlen",

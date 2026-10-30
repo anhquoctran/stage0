@@ -80,7 +80,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
         } ${buttonClassName || ''}`}
       >
         <GitBranch className={`w-3.5 h-3.5 shrink-0 ${disabled || !branches ? 'text-subtext0' : 'text-brand'}`} />
-        <span className="truncate font-mono text-xs font-medium text-text leading-tight">
+        <span dir="ltr" className="truncate font-mono text-xs font-medium text-text leading-tight">
           {value || (isSource ? 'compare...' : 'base...')}
         </span>
         <ChevronDown className="w-3 h-3 text-subtext0 shrink-0 ms-auto opacity-75" />
@@ -101,6 +101,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
               <input
                 ref={inputRef}
                 type="text"
+                dir="ltr"
                 placeholder={t('git.branchSelector.filterBranches')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -142,7 +143,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-1.5 truncate pe-2">
-                        <span className="truncate">{branch}</span>
+                        <span dir="ltr" className="truncate">{branch}</span>
                         {isCurrent && (
                           <span className="text-[9px] px-1 bg-surface0 border border-surface1/60 text-subtext0 font-sans">
                             HEAD
@@ -184,7 +185,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
                           : 'hover:bg-surface0 text-text'
                       }`}
                     >
-                      <span className="truncate pe-2">{branch}</span>
+                      <span dir="ltr" className="truncate pe-2">{branch}</span>
                       {isSelected && <Check className="w-3.5 h-3.5 text-brand shrink-0" />}
                     </button>
                   );
