@@ -14,7 +14,7 @@ impl GuardrailsEngine {
             let violation = GuardrailViolation {
                 rule: "INVALID_LINE_RANGE".to_string(),
                 severity: GuardrailSeverity::High,
-                message: "Requested file line range is invalid.".to_string(),
+                message: crate::common::messages::code("backend.sandbox.invalidLineRange"),
             };
             self.record_audit_event(
                 "read_file_range",
@@ -49,7 +49,7 @@ impl GuardrailsEngine {
             let violation = GuardrailViolation {
                 rule: "INVALID_READ_SIZE".to_string(),
                 severity: GuardrailSeverity::High,
-                message: "Requested review read must return at least one line.".to_string(),
+                message: crate::common::messages::code("backend.sandbox.invalidReadSize"),
             };
             self.record_audit_event(tool_name, action, false, 85, vec![violation.clone()]);
             return Err(violation);

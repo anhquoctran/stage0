@@ -17,6 +17,7 @@ if (localeFiles.length !== 15 || localeFiles.some((name, index) => name !== expe
   const sourceText = await readFile(resolve(localeDirectory, 'en.json'), 'utf8');
   const source = JSON.parse(sourceText);
   const sourceKeys = leafKeys(source);
+  const sourceKeySet = new Set(sourceKeys);
   let errors = 0;
   for (const file of localeFiles.filter((name) => name !== 'en.json')) {
     const localeText = await readFile(resolve(localeDirectory, file), 'utf8');
@@ -53,8 +54,39 @@ if (localeFiles.length !== 15 || localeFiles.some((name, index) => name !== expe
       }
     }
   }
+  const backendFiles = await rustFiles(resolve(root, 'backend/src'));
+  const referencedMessageCodes = new Map();
+  for (const file of backendFiles) {
+    const content = await readFile(file, 'utf8');
+    for (const match of content.matchAll(/"(backend\.[A-Za-z0-9_.]+)"/gu)) {
+      const code = match[1];
+      const line = content.slice(0, match.index).split('\n').length;
+      const locations = referencedMessageCodes.get(code) ?? [];
+      locations.push(`${file.slice(root.length + 1)}:${line}`);
+      referencedMessageCodes.set(code, locations);
+    }
+  }
+  for (const [code, locations] of referencedMessageCodes) {
+    if (!sourceKeySet.has(code)) {
+      errors++;
+      console.error(`Backend message code ${code} has no en.json text: ${locations.join(', ')}`);
+    }
+  }
+  if (referencedMessageCodes.size) {
+    console.log(`Backend message codes: ${referencedMessageCodes.size} referenced, all have en.json text`);
+  }
   if (errors) process.exitCode = 1;
   else console.log('All 15 locales passed: keys, nonempty translations, interpolation and plural categories (Hindi catalog currently uses English fallback text).');
+}
+
+async function rustFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const nested = await Promise.all(entries.map(async (entry) => {
+    const path = resolve(directory, entry.name);
+    if (entry.isDirectory()) return rustFiles(path);
+    return entry.isFile() && entry.name.endsWith('.rs') ? [path] : [];
+  }));
+  return nested.flat();
 }
 
 function tokens(value) {

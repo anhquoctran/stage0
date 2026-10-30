@@ -2746,13 +2746,16 @@
       "httpFailure": "GitHub ReleasesがHTTP {{status}}を返しました。後でもう一度お試しください。",
       "downloadTooLarge": "更新ファイルがStage0のダウンロード上限を超えています。",
       "downloadInterrupted": "更新のダウンロードが中断されました。再試行してください。",
-      "packageInvalid": "更新パッケージはStage0公式リリースのものではありません。"
+      "packageInvalid": "更新パッケージはStage0公式リリースのものではありません。",
+      "installingRestart": "Stage0はアップデートをインストールしています。再起動をお待ちください。",
+      "activeOperations": "アップデートをインストールする前に、レビュー、Git操作、外部エージェントの完了をお待ちください。"
     },
     "preferences": {
       "changed": "設定が別の場所で変更されました。最新のファイルを読み込み直してから適用してください。",
       "invalid": "変更を適用する前に preferences.json を修正してください。",
       "revisionRequired": "変更を適用する前に設定を再読み込みし、現在のリビジョンを取得してください。",
-      "uncertain": "ディスク上の設定は変更されましたが、永続的な保存を確認できませんでした。再試行する前に設定を再読み込みしてください。"
+      "uncertain": "ディスク上の設定は変更されましたが、永続的な保存を確認できませんでした。再試行する前に設定を再読み込みしてください。",
+      "closeUnauthorized": "設定ウィンドウのみが自身のクローズリクエストを承認できます。"
     },
     "git": {
       "connected": "接続に成功しました。リモートリポジトリにアクセスできます。",
@@ -2796,7 +2799,8 @@
       "credentialPasswordRequired": "選択した認証情報にはパスワードベースのHTTPS認証が必要です。"
     },
     "harness": {
-      "cliPreflight": "実行ファイルの有無のみを確認しました。プロセスの実行や認証の検査は行っていません。CLI のインストールやログインはツール呼び出し機能を意味しません。接続には審査済みの構造化プロトコルアダプターと OS の隔離・承認ポリシーが必要です。ハーネスは従来のプロンプトランナーを使用しません。"
+      "cliPreflight": "実行ファイルの有無のみを確認しました。プロセスの実行や認証の検査は行っていません。CLI のインストールやログインはツール呼び出し機能を意味しません。接続には審査済みの構造化プロトコルアダプターと OS の隔離・承認ポリシーが必要です。ハーネスは従来のプロンプトランナーを使用しません。",
+      "unsupportedCli": "ハーネス事前チェックでサポートされていないCLIタイプです。"
     },
     "acp": {
       "checksumInvalid": "ACP RegistryのSHA-256チェックサムが無効です。",
@@ -2862,7 +2866,21 @@
       "providerApiKeyRequired": "レビューを開始する前にPreferencesでプロバイダーのAPIキーを追加してください。",
       "acpAgentRequired": "このレビュアーにインストール済みのACPエージェントを選択してください。",
       "acpSourceConsentRequired": "ACPエージェントにレビュー用スナップショットを送る前に、ソース転送を許可してください。",
-      "changedFilesLimit": "1回のレビューで扱える変更ファイルは最大{{limit}}件です。変更を分割してください。"
+      "changedFilesLimit": "1回のレビューで扱える変更ファイルは最大{{limit}}件です。変更を分割してください。",
+      "cancelled": "レビューがキャンセルされました。送信済みのプロバイダーリクエストは課金される場合があります。",
+      "deadlineExceeded": "レビューの制限時間を超過しました。結果は不完全です。",
+      "executionModeUnsupported": "サポートされていないレビュー実行モードです。",
+      "tokenBudgetExceeded": "レビューのコンテキスト/トークン予算を使い果たしました。",
+      "toolCallBudgetExceeded": "レビューのツール呼び出し予算を使い果たしました。",
+      "submitReviewSingleCall": "submit_reviewは最終ターンの唯一の呼び出しでなければなりません。",
+      "turnBudgetExceeded": "最終的な構造化結果が得られないまま、レビューのターン予算を使い果たしました。",
+      "instructionsTooLong": "レビュアーの指示が8000バイトの制限を超えています。",
+      "reviewerUnassigned": "このレビュアーはVirtual MRに割り当てられていません。",
+      "branchesChanged": "レビュー中にVirtual MRブランチが変更されました。説明を更新する前に新しいレビューを開始してください。",
+      "mrDescriptionAlreadyGenerated": "MRの説明はこのレビューで一度だけ生成できます。",
+      "tooManyFindings": "レビューに含めることができるインライン指摘は最大50件です。",
+      "discussionActionQueued": "このディスカッションには、このレビューですでにキューに入っているAIアクションがあります。",
+      "noCommentToResolve": "ディスカッションに解決するコメントがありません。"
     },
     "credentials": {
       "accountRequired": "アカウント名を入力してください。",
@@ -2887,6 +2905,53 @@
       "copilotSubscriptionRequired": "このGitHubアカウントには有効なCopilotサブスクリプションがありません。",
       "copilotSignInRequired": "使用する前にPreferencesでGitHub Copilotを接続してください。",
       "googleSignInRequired": "PreferencesでGoogle AIにサインインするか、Google Cloud ADCを設定してください。"
+    },
+    "notifications": {
+      "hostCreationFailed": "Stage0通知ホストを作成できませんでした。",
+      "runtimeUnavailable": "Stage0通知ランタイムは利用できません。",
+      "queueUnavailable": "Stage0通知キューは利用できません。",
+      "unsupportedPlatform": "Stage0通知はこのプラットフォームではサポートされていません。",
+      "dispatchFailed": "通知ディスパッチタスクが失敗しました。"
+    },
+    "sandbox": {
+      "dockerRunning": "Dockerデーモンが実行中です (デフォルトイメージ: {{image}})。",
+      "dockerDaemonStopped": "Dockerはインストールされていますが、デーモンが実行されていません。Docker Desktopまたはdockerdを開始してください。",
+      "dockerCliNotFound": "PATH上にDocker CLIが見つかりません。コンテナサンドボックスを有効にするにはDocker Desktopをインストールしてください。",
+      "dockerTimeout": "Dockerコマンドがタイムアウトしました。サンドボックスコンテナが停止したため、再作成が必要です。",
+      "inMemoryTerminalDisabled": "インメモリサンドボックスモードではターミナルコマンドの実行は固く禁じられています。",
+      "blockedCommand": "コマンド「{{command}}」の実行はガードレールポリシーにより明示的にブロックされています。",
+      "invalidLineRange": "要求されたファイル行範囲が無効です。",
+      "invalidReadSize": "要求されたレビュー読み取りは少なくとも1行を返す必要があります。",
+      "inMemoryReady": "アクティブで準備完了 (デフォルトサンドボックス)",
+      "worktreeReady": "利用可能で準備完了 (ストレージ: {{path}})。",
+      "worktreeError": "Git worktreeコマンドがエラーを返しました: {{error}}",
+      "worktreeExecFailed": "Git worktreeの実行に失敗しました: {{error}}",
+      "commandNameInvalid": "コマンド名が空か、32バイトの制限を超えています。",
+      "commandArgsInvalid": "コマンド引数が無効であるか、1 MiBの安全制限を超えています。",
+      "filePathTooLong": "ファイルパスが4096バイトの安全制限を超えています。",
+      "filePathNotRelative": "ファイルパスはサンドボックスワークスペース内の相対パスである必要があります。",
+      "fileNotFound": "Dockerサンドボックス内でファイルが見つからないか読み取れません。",
+      "filePathOutsideWorkspace": "解決されたファイルパスがDockerワークスペースの外にあります。",
+      "fileOutsideWorkspace": "Dockerワークスペース内のファイルのみを読み取ることができます。",
+      "fileRangeTooLarge": "要求されたファイル範囲が64 MiBのスキャン制限を超えています。",
+      "invalidLineBounds": "start_lineは1以上かつend_line以下である必要があります",
+      "onlyRegularFiles": "サンドボックスツールで読み取ることができるのは通常ファイルのみです。",
+      "patchTooLarge": "ホストリポジトリのパッチが64 MiBのサンドボックス同期制限を超過しました。",
+      "diffGenerationFailed": "ホストリポジトリからのGit差分生成に失敗しました。",
+      "worktreePathMissing": "このサンドボックスインスタンスのワークツリーディレクトリパスが見つかりません。",
+      "worktreeResetFailed": "サンドボックスワークツリーのリセットに失敗しました。",
+      "worktreeCleanFailed": "サンドボックスワークツリーのクリーンアップに失敗しました。",
+      "worktreeApplyFailed": "ホストパッチのサンドボックスワークツリーへの適用に失敗しました。",
+      "containerIdMissing": "このDockerサンドボックスインスタンスのコンテナIDが見つかりません。",
+      "dockerResetFailed": "Dockerサンドボックスワークスペースのリセットに失敗しました。",
+      "dockerApplyFailed": "Dockerサンドボックスがホストパッチの適用に失敗しました。"
+    },
+    "virtualMr": {
+      "imageEmpty": "画像ペイロードを空にすることはできません。",
+      "sourceNotRegularFile": "ソースパスは通常のファイルではありません。",
+      "sourceFileTooLarge": "ソースファイルが16 MiBのディスカッション分析制限を超えています。",
+      "sourceNotUtf8": "ソースファイルは有効なUTF-8テキストではありません。",
+      "snippetInvalid": "無効なディスカッションコードスニペットです。"
     }
   }
 }

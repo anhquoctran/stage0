@@ -2746,13 +2746,16 @@
       "httpFailure": "GitHub Releases returned HTTP {{status}}. Try again later.",
       "downloadTooLarge": "The update exceeds Stage0’s download size limit.",
       "downloadInterrupted": "The update download was interrupted. Try again.",
-      "packageInvalid": "The update package is not part of the official Stage0 release."
+      "packageInvalid": "The update package is not part of the official Stage0 release.",
+      "installingRestart": "Stage0 is installing an update. Please wait for the restart.",
+      "activeOperations": "Wait for reviews, Git operations, and external agents to finish before installing the update."
     },
     "preferences": {
       "changed": "Preferences changed elsewhere. Reload the latest file before applying changes.",
       "invalid": "Fix preferences.json before applying changes.",
       "revisionRequired": "Reload Preferences to obtain the current revision before applying changes.",
-      "uncertain": "Preferences on disk changed, but durable completion could not be confirmed. Reload Preferences before retrying."
+      "uncertain": "Preferences on disk changed, but durable completion could not be confirmed. Reload Preferences before retrying.",
+      "closeUnauthorized": "Only the Preferences window can approve its own close request."
     },
     "git": {
       "connected": "Connection successful. The remote repository is accessible.",
@@ -2796,7 +2799,8 @@
       "credentialPasswordRequired": "The selected credential must be a password-based HTTPS credential."
     },
     "harness": {
-      "cliPreflight": "Only executable availability was checked; no process or authentication probe was run. An installed or signed-in CLI is not a tool-calling capability. Attaching it requires a reviewed structured-protocol adapter and OS isolation/approval policy. The legacy prompt runner is not used by the harness."
+      "cliPreflight": "Only executable availability was checked; no process or authentication probe was run. An installed or signed-in CLI is not a tool-calling capability. Attaching it requires a reviewed structured-protocol adapter and OS isolation/approval policy. The legacy prompt runner is not used by the harness.",
+      "unsupportedCli": "Unsupported CLI type for harness preflight."
     },
     "acp": {
       "checksumInvalid": "The ACP Registry supplied an invalid SHA-256 checksum.",
@@ -2862,7 +2866,21 @@
       "providerApiKeyRequired": "Add this provider's API key in Preferences before starting a review.",
       "acpAgentRequired": "Select an installed ACP agent for this reviewer.",
       "acpSourceConsentRequired": "Allow source transfer before sending the review snapshot to the ACP agent.",
-      "changedFilesLimit": "A review can include at most {{limit}} changed files. Split the change into smaller reviews."
+      "changedFilesLimit": "A review can include at most {{limit}} changed files. Split the change into smaller reviews.",
+      "cancelled": "Review cancelled. An already-sent provider request may still be billed.",
+      "deadlineExceeded": "Review deadline exceeded; results are incomplete.",
+      "executionModeUnsupported": "Unsupported review execution mode.",
+      "tokenBudgetExceeded": "Review context/token budget exhausted.",
+      "toolCallBudgetExceeded": "Review tool-call budget exhausted.",
+      "submitReviewSingleCall": "submit_review must be the only call in its final turn.",
+      "turnBudgetExceeded": "Review turn budget exhausted without a final structured result.",
+      "instructionsTooLong": "Reviewer instructions exceed the 8000-byte limit.",
+      "reviewerUnassigned": "This reviewer is no longer assigned to the Virtual MR.",
+      "branchesChanged": "The Virtual MR branches changed during review. Start a new review before updating its description.",
+      "mrDescriptionAlreadyGenerated": "The MR description can be generated only once in this review.",
+      "tooManyFindings": "A review may contain at most 50 inline findings.",
+      "discussionActionQueued": "This discussion already has a queued AI action in this review.",
+      "noCommentToResolve": "Discussion has no comment to resolve."
     },
     "credentials": {
       "accountRequired": "Enter an account name.",
@@ -2887,6 +2905,53 @@
       "copilotSubscriptionRequired": "This GitHub account does not have an active Copilot subscription.",
       "copilotSignInRequired": "Connect GitHub Copilot in Preferences before using it.",
       "googleSignInRequired": "Sign in to Google AI or configure Google Cloud ADC in Preferences."
+    },
+    "notifications": {
+      "hostCreationFailed": "The Stage0 notification host could not be created.",
+      "runtimeUnavailable": "The Stage0 notification runtime is unavailable.",
+      "queueUnavailable": "The Stage0 notification queue is unavailable.",
+      "unsupportedPlatform": "Stage0 notifications are not supported on this platform.",
+      "dispatchFailed": "The notification dispatch task failed."
+    },
+    "sandbox": {
+      "dockerRunning": "Docker daemon is running (Default image: {{image}}).",
+      "dockerDaemonStopped": "Docker is installed, but the daemon is not running. Start Docker Desktop or dockerd.",
+      "dockerCliNotFound": "Docker CLI not found on PATH. Install Docker Desktop to enable container sandboxing.",
+      "dockerTimeout": "Docker command timed out; the sandbox container was stopped and must be recreated.",
+      "inMemoryTerminalDisabled": "Terminal command execution is strictly forbidden in In-Memory sandbox mode.",
+      "blockedCommand": "Execution of command '{{command}}' is explicitly blocked by guardrail policy.",
+      "invalidLineRange": "Requested file line range is invalid.",
+      "invalidReadSize": "Requested review read must return at least one line.",
+      "inMemoryReady": "Active & Ready (Default Sandbox)",
+      "worktreeReady": "Available & Ready (Storage: {{path}}).",
+      "worktreeError": "Git worktree command returned an error: {{error}}",
+      "worktreeExecFailed": "Failed to execute git worktree: {{error}}",
+      "commandNameInvalid": "Command name is empty or exceeds the 32-byte limit.",
+      "commandArgsInvalid": "Command arguments are invalid or exceed the 1 MiB safety limit.",
+      "filePathTooLong": "File path exceeds the 4096-byte safety limit.",
+      "filePathNotRelative": "File path must be a relative path inside the sandbox workspace.",
+      "fileNotFound": "File not found or unreadable in Docker sandbox.",
+      "filePathOutsideWorkspace": "Resolved file path is outside the Docker workspace.",
+      "fileOutsideWorkspace": "Only files inside the Docker workspace can be read.",
+      "fileRangeTooLarge": "Requested file range is beyond the 64 MiB scan limit.",
+      "invalidLineBounds": "start_line must be >= 1 and <= end_line",
+      "onlyRegularFiles": "Only regular files can be read by the sandbox tool.",
+      "patchTooLarge": "Host repository patch exceeded the 64 MiB sandbox sync limit.",
+      "diffGenerationFailed": "Failed to generate Git diff from host repository.",
+      "worktreePathMissing": "Worktree directory path is missing for this sandbox instance.",
+      "worktreeResetFailed": "Failed to reset sandbox worktree.",
+      "worktreeCleanFailed": "Failed to clean sandbox worktree.",
+      "worktreeApplyFailed": "Failed to apply host patch to sandbox worktree.",
+      "containerIdMissing": "Container ID is missing for this Docker sandbox instance.",
+      "dockerResetFailed": "Failed to reset Docker sandbox workspace.",
+      "dockerApplyFailed": "Docker sandbox failed to apply host patch."
+    },
+    "virtualMr": {
+      "imageEmpty": "Image payload cannot be empty.",
+      "sourceNotRegularFile": "Source path is not a regular file.",
+      "sourceFileTooLarge": "Source file exceeds the 16 MiB discussion analysis limit.",
+      "sourceNotUtf8": "Source file is not valid UTF-8 text.",
+      "snippetInvalid": "Invalid discussion code snippet."
     }
   }
 }

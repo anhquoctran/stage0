@@ -2746,13 +2746,16 @@
       "httpFailure": "GitHub Releases trả về HTTP {{status}}. Hãy thử lại sau.",
       "downloadTooLarge": "Bản cập nhật vượt quá giới hạn dung lượng tải xuống của Stage0.",
       "downloadInterrupted": "Quá trình tải bản cập nhật bị gián đoạn. Hãy thử lại.",
-      "packageInvalid": "Gói cập nhật không thuộc bản phát hành Stage0 chính thức."
+      "packageInvalid": "Gói cập nhật không thuộc bản phát hành Stage0 chính thức.",
+      "installingRestart": "Stage0 đang cài đặt bản cập nhật. Vui lòng đợi khởi động lại.",
+      "activeOperations": "Vui lòng đợi quá trình xem xét, thao tác Git và tác tử bên ngoài hoàn tất trước khi cài đặt cập nhật."
     },
     "preferences": {
       "changed": "Tùy chọn đã được thay đổi ở nơi khác. Tải lại tệp mới nhất trước khi áp dụng.",
       "invalid": "Sửa preferences.json trước khi áp dụng thay đổi.",
       "revisionRequired": "Tải lại Tùy chọn để lấy phiên bản hiện tại trước khi áp dụng thay đổi.",
-      "uncertain": "Tùy chọn trên đĩa đã thay đổi nhưng chưa xác nhận được việc lưu bền vững. Tải lại Tùy chọn trước khi thử lại."
+      "uncertain": "Tùy chọn trên đĩa đã thay đổi nhưng chưa xác nhận được việc lưu bền vững. Tải lại Tùy chọn trước khi thử lại.",
+      "closeUnauthorized": "Chỉ cửa sổ Tùy chọn mới có thể phê duyệt yêu cầu đóng của chính nó."
     },
     "git": {
       "connected": "Kết nối thành công. Có thể truy cập kho mã từ xa.",
@@ -2796,7 +2799,8 @@
       "credentialPasswordRequired": "Credential đã chọn phải là credential HTTPS dùng mật khẩu."
     },
     "harness": {
-      "cliPreflight": "Chỉ kiểm tra sự tồn tại của tệp thực thi, chưa chạy tiến trình hay kiểm tra xác thực. CLI đã cài hoặc đăng nhập không đồng nghĩa với khả năng gọi công cụ. Việc tích hợp yêu cầu adapter giao thức có cấu trúc đã được đánh giá cùng chính sách cách ly/phê duyệt của hệ điều hành. Harness không sử dụng trình chạy prompt cũ."
+      "cliPreflight": "Chỉ kiểm tra sự tồn tại của tệp thực thi, chưa chạy tiến trình hay kiểm tra xác thực. CLI đã cài hoặc đăng nhập không đồng nghĩa với khả năng gọi công cụ. Việc tích hợp yêu cầu adapter giao thức có cấu trúc đã được đánh giá cùng chính sách cách ly/phê duyệt của hệ điều hành. Harness không sử dụng trình chạy prompt cũ.",
+      "unsupportedCli": "Loại CLI không được hỗ trợ cho bước kiểm tra chuẩn bị của harness."
     },
     "acp": {
       "checksumInvalid": "ACP Registry cung cấp checksum SHA-256 không hợp lệ.",
@@ -2862,7 +2866,21 @@
       "providerApiKeyRequired": "Hãy thêm API key của provider trong Preferences trước khi review.",
       "acpAgentRequired": "Hãy chọn một ACP agent đã cài cho reviewer này.",
       "acpSourceConsentRequired": "Hãy cho phép chuyển mã nguồn trước khi gửi snapshot review cho ACP agent.",
-      "changedFilesLimit": "Mỗi lượt review hỗ trợ tối đa {{limit}} file thay đổi. Hãy chia nhỏ thay đổi."
+      "changedFilesLimit": "Mỗi lượt review hỗ trợ tối đa {{limit}} file thay đổi. Hãy chia nhỏ thay đổi.",
+      "cancelled": "Đã hủy xem xét. Yêu cầu đã gửi tới nhà cung cấp vẫn có thể bị tính phí.",
+      "deadlineExceeded": "Đã vượt quá hạn chót xem xét; kết quả chưa đầy đủ.",
+      "executionModeUnsupported": "Chế độ thực thi xem xét không được hỗ trợ.",
+      "tokenBudgetExceeded": "Đã cạn kiệt ngân sách ngữ cảnh hoặc token xem xét.",
+      "toolCallBudgetExceeded": "Đã cạn kiệt ngân sách gọi công cụ xem xét.",
+      "submitReviewSingleCall": "submit_review phải là lệnh gọi duy nhất trong lượt cuối cùng.",
+      "turnBudgetExceeded": "Đã cạn kiệt số lượt trao đổi xem xét mà không có kết quả cấu trúc cuối cùng.",
+      "instructionsTooLong": "Hướng dẫn của người xem xét vượt quá giới hạn 8000 byte.",
+      "reviewerUnassigned": "Người xem xét này không còn được chỉ định cho Virtual MR nữa.",
+      "branchesChanged": "Các nhánh Virtual MR đã thay đổi trong khi xem xét. Hãy bắt đầu một đợt xem xét mới trước khi cập nhật mô tả.",
+      "mrDescriptionAlreadyGenerated": "Mô tả MR chỉ có thể được tạo một lần trong đợt xem xét này.",
+      "tooManyFindings": "Một đợt xem xét chỉ có thể chứa tối đa 50 phát hiện nội tuyến.",
+      "discussionActionQueued": "Thảo luận này đã có hành động AI được xếp hàng đợi trong đợt xem xét này.",
+      "noCommentToResolve": "Thảo luận không có bình luận nào để giải quyết."
     },
     "credentials": {
       "accountRequired": "Hãy nhập tên tài khoản.",
@@ -2887,6 +2905,53 @@
       "copilotSubscriptionRequired": "Tài khoản GitHub này chưa có gói Copilot đang hoạt động.",
       "copilotSignInRequired": "Hãy kết nối GitHub Copilot trong Preferences trước khi sử dụng.",
       "googleSignInRequired": "Hãy đăng nhập Google AI hoặc cấu hình Google Cloud ADC trong Preferences."
+    },
+    "notifications": {
+      "hostCreationFailed": "Không thể tạo máy chủ thông báo Stage0.",
+      "runtimeUnavailable": "Môi trường thực thi thông báo Stage0 không khả dụng.",
+      "queueUnavailable": "Hàng đợi thông báo Stage0 không khả dụng.",
+      "unsupportedPlatform": "Thông báo Stage0 không được hỗ trợ trên nền tảng này.",
+      "dispatchFailed": "Tác vụ gửi thông báo đã thất bại."
+    },
+    "sandbox": {
+      "dockerRunning": "Docker daemon đang chạy (Image mặc định: {{image}}).",
+      "dockerDaemonStopped": "Docker đã được cài đặt nhưng daemon không chạy. Hãy khởi động Docker Desktop hoặc dockerd.",
+      "dockerCliNotFound": "Không tìm thấy Docker CLI trên PATH. Cài đặt Docker Desktop để bật sandbox dạng vùng chứa.",
+      "dockerTimeout": "Lệnh Docker đã hết thời gian chờ; vùng chứa sandbox đã dừng và cần được tạo lại.",
+      "inMemoryTerminalDisabled": "Việc thực thi lệnh terminal bị nghiêm cấm trong chế độ sandbox In-Memory.",
+      "blockedCommand": "Lệnh '{{command}}' bị chặn rõ ràng bởi chính sách bảo vệ guardrail.",
+      "invalidLineRange": "Khoảng dòng tệp được yêu cầu không hợp lệ.",
+      "invalidReadSize": "Yêu cầu đọc xem xét phải trả về ít nhất một dòng.",
+      "inMemoryReady": "Đang hoạt động và sẵn sàng (Sandbox mặc định)",
+      "worktreeReady": "Khả dụng và sẵn sàng (Lưu trữ: {{path}}).",
+      "worktreeError": "Lệnh Git worktree trả về lỗi: {{error}}",
+      "worktreeExecFailed": "Không thể thực thi git worktree: {{error}}",
+      "commandNameInvalid": "Tên lệnh trống hoặc vượt quá giới hạn 32 byte.",
+      "commandArgsInvalid": "Đối số lệnh không hợp lệ hoặc vượt quá giới hạn an toàn 1 MiB.",
+      "filePathTooLong": "Đường dẫn tệp vượt quá giới hạn an toàn 4096 byte.",
+      "filePathNotRelative": "Đường dẫn tệp phải là đường dẫn tương đối bên trong không gian làm việc sandbox.",
+      "fileNotFound": "Không tìm thấy tệp hoặc không thể đọc tệp trong Docker sandbox.",
+      "filePathOutsideWorkspace": "Đường dẫn tệp được phân giải nằm ngoài không gian làm việc của Docker.",
+      "fileOutsideWorkspace": "Chỉ có thể đọc các tệp nằm bên trong không gian làm việc của Docker.",
+      "fileRangeTooLarge": "Phạm vi tệp được yêu cầu vượt quá giới hạn quét 64 MiB.",
+      "invalidLineBounds": "start_line phải >= 1 và <= end_line",
+      "onlyRegularFiles": "Công cụ sandbox chỉ có thể đọc các tệp thông thường.",
+      "patchTooLarge": "Bản vá của kho lưu trữ vượt quá giới hạn đồng bộ sandbox 64 MiB.",
+      "diffGenerationFailed": "Không thể tạo bản diff Git từ kho lưu trữ máy chủ.",
+      "worktreePathMissing": "Thiếu đường dẫn thư mục worktree cho phiên bản sandbox này.",
+      "worktreeResetFailed": "Không thể đặt lại worktree của sandbox.",
+      "worktreeCleanFailed": "Không thể dọn dẹp worktree của sandbox.",
+      "worktreeApplyFailed": "Không thể áp dụng bản vá máy chủ vào worktree của sandbox.",
+      "containerIdMissing": "Thiếu ID container cho phiên bản Docker sandbox này.",
+      "dockerResetFailed": "Không thể đặt lại không gian làm việc của Docker sandbox.",
+      "dockerApplyFailed": "Docker sandbox không thể áp dụng bản vá từ máy chủ."
+    },
+    "virtualMr": {
+      "imageEmpty": "Dữ liệu hình ảnh không được để trống.",
+      "sourceNotRegularFile": "Đường dẫn nguồn không phải là tệp thông thường.",
+      "sourceFileTooLarge": "Tệp nguồn vượt quá giới hạn phân tích thảo luận 16 MiB.",
+      "sourceNotUtf8": "Tệp nguồn không phải là văn bản UTF-8 hợp lệ.",
+      "snippetInvalid": "Đoạn mã thảo luận không hợp lệ."
     }
   }
 }

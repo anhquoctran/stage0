@@ -21,7 +21,7 @@ const DOCKER_READ_TIMEOUT: Duration = Duration::from_secs(120);
 
 fn normalize_tool_file_path(file_path: &str) -> Result<String, String> {
     if file_path.len() > 4096 {
-        return Err("File path exceeds the 4096-byte safety limit".to_string());
+        return Err(crate::common::messages::code("backend.sandbox.filePathTooLong"));
     }
     let normalized = file_path.replace('\\', "/");
     let components = normalized.split('/').collect::<Vec<_>>();
@@ -33,7 +33,7 @@ fn normalize_tool_file_path(file_path: &str) -> Result<String, String> {
             .iter()
             .any(|part| part.is_empty() || *part == "." || *part == ".." || part.contains(':'))
     {
-        return Err("File path must be a relative path inside the sandbox workspace".to_string());
+        return Err(crate::common::messages::code("backend.sandbox.filePathNotRelative"));
     }
 
     Ok(components.join("/"))
@@ -52,15 +52,15 @@ fn read_docker_file_range(
     resolve.args(["exec", cid, "readlink", "-f", &requested_path]);
     let resolved = run_bounded_command(&mut resolve, 4096, 16 * 1024, Duration::from_secs(5))?;
     if !resolved.status.success() || resolved.output_truncated {
-        return Err("File not found or unreadable in Docker sandbox".to_string());
+        return Err(crate::common::messages::code("backend.sandbox.fileNotFound"));
     }
 
     let canonical_path = String::from_utf8_lossy(&resolved.stdout).trim().to_string();
     let Some(canonical_relative_path) = canonical_path.strip_prefix("/workspace/") else {
-        return Err("Resolved file path is outside the Docker workspace".to_string());
+        return Err(crate::common::messages::code("backend.sandbox.filePathOutsideWorkspace"));
     };
     if canonical_relative_path.is_empty() {
-        return Err("Only files inside the Docker workspace can be read".to_string());
+        return Err(crate::common::messages::code("backend.sandbox.fileOutsideWorkspace"));
     }
     manager
         .guardrails()
@@ -140,7 +140,7 @@ fn read_file_range<R: BufRead>(
 
         if scanned_bytes >= MAX_TOOL_FILE_SCAN_BYTES {
             if line_number < end_line {
-                return Err("Requested file range is beyond the 64 MiB scan limit".to_string());
+                return Err(crate::common::messages::code("backend.sandbox.fileRangeTooLarge"));
             }
             output_truncated = true;
             let mut content = String::from_utf8_lossy(&output).into_owned();
@@ -238,7 +238,7 @@ pub fn dispatch_tool_call(
                 .map_err(|e| format!("Invalid arguments for read_file_range: {}", e))?;
 
             if args.start_line == 0 || args.end_line < args.start_line {
-                return Err("start_line must be >= 1 and <= end_line".to_string());
+                return Err(crate::common::messages::code("backend.sandbox.invalidLineBounds"));
             }
 
             let relative_path = normalize_tool_file_path(&args.file_path)?;
@@ -412,7 +412,7 @@ fn read_local_file_range(
     let metadata = std::fs::symlink_metadata(path)
         .map_err(|error| format!("Failed to inspect repository file: {}", error))?;
     if !metadata.file_type().is_file() {
-        return Err("Only regular files can be read by the sandbox tool".to_string());
+        return Err(crate::common::messages::code("backend.sandbox.onlyRegularFiles"));
     }
     let file = File::open(path)
         .map_err(|error| format!("Failed to read file in repository: {}", error))?;

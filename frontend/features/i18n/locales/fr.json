@@ -2753,13 +2753,16 @@
       "httpFailure": "GitHub Releases a répondu avec HTTP {{status}}. Réessayez plus tard.",
       "downloadTooLarge": "La mise à jour dépasse la limite de téléchargement de Stage0.",
       "downloadInterrupted": "Le téléchargement de la mise à jour a été interrompu. Réessayez.",
-      "packageInvalid": "Le paquet de mise à jour ne fait pas partie de la version officielle de Stage0."
+      "packageInvalid": "Le paquet de mise à jour ne fait pas partie de la version officielle de Stage0.",
+      "installingRestart": "Stage0 installe une mise à jour. Veuillez patienter pendant le redémarrage.",
+      "activeOperations": "Attendez la fin des revues, des opérations Git et des agents externes avant d'installer la mise à jour."
     },
     "preferences": {
       "changed": "Les préférences ont été modifiées ailleurs. Rechargez le dernier fichier avant d’appliquer les changements.",
       "invalid": "Corrigez preferences.json avant d’appliquer les changements.",
       "revisionRequired": "Rechargez les Préférences pour obtenir la révision actuelle avant d’appliquer les changements.",
-      "uncertain": "Les préférences sur disque ont changé, mais leur enregistrement durable n’a pas pu être confirmé. Rechargez les Préférences avant de réessayer."
+      "uncertain": "Les préférences sur disque ont changé, mais leur enregistrement durable n’a pas pu être confirmé. Rechargez les Préférences avant de réessayer.",
+      "closeUnauthorized": "Seule la fenêtre des préférences peut approuver sa propre demande de fermeture."
     },
     "git": {
       "connected": "Connexion réussie. Le dépôt distant est accessible.",
@@ -2803,7 +2806,8 @@
       "credentialPasswordRequired": "L’identifiant sélectionné doit être un identifiant HTTPS avec mot de passe."
     },
     "harness": {
-      "cliPreflight": "Seule la disponibilité de l’exécutable a été vérifiée ; aucun processus ni test d’authentification n’a été lancé. Une CLI installée ou connectée ne garantit pas l’appel d’outils. Son intégration nécessite un adaptateur de protocole structuré vérifié et une politique d’isolation et d’approbation du système. Le harnais n’utilise pas l’ancien exécuteur de prompts."
+      "cliPreflight": "Seule la disponibilité de l’exécutable a été vérifiée ; aucun processus ni test d’authentification n’a été lancé. Une CLI installée ou connectée ne garantit pas l’appel d’outils. Son intégration nécessite un adaptateur de protocole structuré vérifié et une politique d’isolation et d’approbation du système. Le harnais n’utilise pas l’ancien exécuteur de prompts.",
+      "unsupportedCli": "Type de CLI non pris en charge pour la vérification préalable du harnais."
     },
     "acp": {
       "checksumInvalid": "Le registre ACP a fourni une somme de contrôle SHA-256 invalide.",
@@ -2869,7 +2873,21 @@
       "providerApiKeyRequired": "Ajoutez la clé API du fournisseur dans Preferences avant de démarrer la revue.",
       "acpAgentRequired": "Sélectionnez un agent ACP installé pour ce réviseur.",
       "acpSourceConsentRequired": "Autorisez le transfert du code source avant d’envoyer l’instantané de revue à l’agent ACP.",
-      "changedFilesLimit": "Une revue peut inclure au maximum {{limit}} fichiers modifiés. Divisez le changement."
+      "changedFilesLimit": "Une revue peut inclure au maximum {{limit}} fichiers modifiés. Divisez le changement.",
+      "cancelled": "Revue annulée. Une demande déjà envoyée au fournisseur peut toujours être facturée.",
+      "deadlineExceeded": "Délai de revue dépassé ; les résultats sont incomplets.",
+      "executionModeUnsupported": "Mode d'exécution de revue non pris en charge.",
+      "tokenBudgetExceeded": "Budget de contexte ou de jetons de revue épuisé.",
+      "toolCallBudgetExceeded": "Budget d'appels d'outils de revue épuisé.",
+      "submitReviewSingleCall": "submit_review doit être le seul appel de son tour final.",
+      "turnBudgetExceeded": "Budget de tours de revue épuisé sans résultat structuré final.",
+      "instructionsTooLong": "Les instructions du réviseur dépassent la limite de 8 000 octets.",
+      "reviewerUnassigned": "Ce réviseur n'est plus assigné à la Virtual MR.",
+      "branchesChanged": "Les branches de la Virtual MR ont changé pendant la revue. Démarrez une nouvelle revue avant de mettre à jour sa description.",
+      "mrDescriptionAlreadyGenerated": "La description de la MR ne peut être générée qu'une seule fois lors de cette revue.",
+      "tooManyFindings": "Une revue ne peut contenir que 50 observations intégrées au maximum.",
+      "discussionActionQueued": "Cette discussion a déjà une action d'IA en file d'attente dans cette revue.",
+      "noCommentToResolve": "La discussion ne contient aucun commentaire à résoudre."
     },
     "credentials": {
       "accountRequired": "Saisissez un nom de compte.",
@@ -2894,6 +2912,53 @@
       "copilotSubscriptionRequired": "Ce compte GitHub ne dispose pas d’un abonnement Copilot actif.",
       "copilotSignInRequired": "Connectez GitHub Copilot dans les préférences avant de l’utiliser.",
       "googleSignInRequired": "Connectez-vous à Google AI ou configurez Google Cloud ADC dans les préférences."
+    },
+    "notifications": {
+      "hostCreationFailed": "L'hôte de notification Stage0 n'a pas pu être créé.",
+      "runtimeUnavailable": "Le moteur d'exécution des notifications Stage0 est indisponible.",
+      "queueUnavailable": "La file d'attente des notifications Stage0 est indisponible.",
+      "unsupportedPlatform": "Les notifications Stage0 ne sont pas prises en charge sur cette plateforme.",
+      "dispatchFailed": "La tâche de distribution des notifications a échoué."
+    },
+    "sandbox": {
+      "dockerRunning": "Le démon Docker est en cours d'exécution (Image par défaut : {{image}}).",
+      "dockerDaemonStopped": "Docker est installé, mais le démon n'est pas en cours d'exécution. Démarrez Docker Desktop ou dockerd.",
+      "dockerCliNotFound": "CLI Docker introuvable sur le PATH. Installez Docker Desktop pour activer le bac à sable de conteneur.",
+      "dockerTimeout": "Délai d'attente de la commande Docker dépassé ; le conteneur du bac à sable a été arrêté et doit être recréé.",
+      "inMemoryTerminalDisabled": "L'exécution de commandes de terminal est strictement interdite en mode bac à sable en mémoire.",
+      "blockedCommand": "L'exécution de la commande '{{command}}' est explicitement bloquée par la politique de sécurité.",
+      "invalidLineRange": "La plage de lignes de fichier demandée est invalide.",
+      "invalidReadSize": "La lecture de revue demandée doit renvoyer au moins une ligne.",
+      "inMemoryReady": "Actif et prêt (Bac à sable par défaut)",
+      "worktreeReady": "Disponible et prêt (Stockage : {{path}}).",
+      "worktreeError": "La commande Git worktree a renvoyé une erreur : {{error}}",
+      "worktreeExecFailed": "Échec de l'exécution de Git worktree : {{error}}",
+      "commandNameInvalid": "Le nom de la commande est vide ou dépasse la limite de 32 octets.",
+      "commandArgsInvalid": "Les arguments de la commande sont invalides ou dépassent la limite de sécurité de 1 Mio.",
+      "filePathTooLong": "Le chemin du fichier dépasse la limite de sécurité de 4096 octets.",
+      "filePathNotRelative": "Le chemin du fichier doit être un chemin relatif à l'intérieur de l'espace de travail du bac à sable.",
+      "fileNotFound": "Fichier introuvable ou illisible dans le bac à sable Docker.",
+      "filePathOutsideWorkspace": "Le chemin de fichier résolu est en dehors de l'espace de travail Docker.",
+      "fileOutsideWorkspace": "Seuls les fichiers situés dans l'espace de travail Docker peuvent être lus.",
+      "fileRangeTooLarge": "La plage de fichiers demandée dépasse la limite d'analyse de 64 Mio.",
+      "invalidLineBounds": "start_line doit être >= 1 et <= end_line",
+      "onlyRegularFiles": "Seuls les fichiers normaux peuvent être lus par l'outil de bac à sable.",
+      "patchTooLarge": "Le patch du dépôt hôte dépasse la limite de synchronisation du bac à sable de 64 Mio.",
+      "diffGenerationFailed": "Échec de la génération du diff Git à partir du dépôt hôte.",
+      "worktreePathMissing": "Le chemin du répertoire worktree est manquant pour cette instance de bac à sable.",
+      "worktreeResetFailed": "Échec de la réinitialisation du worktree du bac à sable.",
+      "worktreeCleanFailed": "Échec du nettoyage du worktree du bac à sable.",
+      "worktreeApplyFailed": "Échec de l'application du patch hôte au worktree du bac à sable.",
+      "containerIdMissing": "L'ID de conteneur est manquant pour cette instance de bac à sable Docker.",
+      "dockerResetFailed": "Échec de la réinitialisation de l'espace de travail du bac à sable Docker.",
+      "dockerApplyFailed": "Le bac à sable Docker n'a pas réussi à appliquer le patch hôte."
+    },
+    "virtualMr": {
+      "imageEmpty": "La charge utile de l'image ne peut pas être vide.",
+      "sourceNotRegularFile": "Le chemin source n'est pas un fichier standard.",
+      "sourceFileTooLarge": "Le fichier source dépasse la limite d'analyse de discussion de 16 Mio.",
+      "sourceNotUtf8": "Le fichier source n'est pas un texte UTF-8 valide.",
+      "snippetInvalid": "Extrait de code de discussion invalide."
     }
   }
 }

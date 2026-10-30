@@ -2753,13 +2753,16 @@
       "httpFailure": "GitHub Releases respondió con HTTP {{status}}. Vuelve a intentarlo más tarde.",
       "downloadTooLarge": "La actualización supera el límite de descarga de Stage0.",
       "downloadInterrupted": "La descarga de la actualización se interrumpió. Vuelve a intentarlo.",
-      "packageInvalid": "El paquete de actualización no forma parte de la versión oficial de Stage0."
+      "packageInvalid": "El paquete de actualización no forma parte de la versión oficial de Stage0.",
+      "installingRestart": "Stage0 está instalando una actualización. Espere a que se reinicie.",
+      "activeOperations": "Espere a que finalicen las revisiones, operaciones de Git y agentes externos antes de instalar la actualización."
     },
     "preferences": {
       "changed": "Las preferencias cambiaron en otro lugar. Recargue el archivo más reciente antes de aplicar los cambios.",
       "invalid": "Corrija preferences.json antes de aplicar los cambios.",
       "revisionRequired": "Recargue Preferencias para obtener la revisión actual antes de aplicar los cambios.",
-      "uncertain": "Las preferencias en disco cambiaron, pero no se pudo confirmar su almacenamiento duradero. Recargue Preferencias antes de reintentar."
+      "uncertain": "Las preferencias en disco cambiaron, pero no se pudo confirmar su almacenamiento duradero. Recargue Preferencias antes de reintentar.",
+      "closeUnauthorized": "Solo la ventana de Preferencias puede aprobar su propia solicitud de cierre."
     },
     "git": {
       "connected": "Conexión correcta. Se puede acceder al repositorio remoto.",
@@ -2803,7 +2806,8 @@
       "credentialPasswordRequired": "La credencial seleccionada debe ser una credencial HTTPS basada en contraseña."
     },
     "harness": {
-      "cliPreflight": "Solo se comprobó la disponibilidad del ejecutable; no se ejecutó ningún proceso ni prueba de autenticación. Una CLI instalada o con sesión iniciada no implica capacidad para llamar herramientas. Su integración requiere un adaptador de protocolo estructurado revisado y una política de aislamiento y aprobación del sistema operativo. El arnés no utiliza el ejecutor de instrucciones heredado."
+      "cliPreflight": "Solo se comprobó la disponibilidad del ejecutable; no se ejecutó ningún proceso ni prueba de autenticación. Una CLI instalada o con sesión iniciada no implica capacidad para llamar herramientas. Su integración requiere un adaptador de protocolo estructurado revisado y una política de aislamiento y aprobación del sistema operativo. El arnés no utiliza el ejecutor de instrucciones heredado.",
+      "unsupportedCli": "Tipo de CLI no compatible para la verificación previa del entorno."
     },
     "acp": {
       "checksumInvalid": "El registro ACP proporcionó una suma SHA-256 no válida.",
@@ -2869,7 +2873,21 @@
       "providerApiKeyRequired": "Añade la clave API del proveedor en Preferences antes de iniciar la revisión.",
       "acpAgentRequired": "Selecciona un agente ACP instalado para este revisor.",
       "acpSourceConsentRequired": "Permite transferir el código fuente antes de enviar la instantánea de revisión al agente ACP.",
-      "changedFilesLimit": "Cada revisión admite como máximo {{limit}} archivos modificados. Divide el cambio."
+      "changedFilesLimit": "Cada revisión admite como máximo {{limit}} archivos modificados. Divide el cambio.",
+      "cancelled": "Revisión cancelada. Es posible que aún se cobre una solicitud ya enviada al proveedor.",
+      "deadlineExceeded": "Se superó el plazo de revisión; los resultados están incompletos.",
+      "executionModeUnsupported": "Modo de ejecución de revisión no compatible.",
+      "tokenBudgetExceeded": "Presupuesto de tokens o contexto de revisión agotado.",
+      "toolCallBudgetExceeded": "Presupuesto de llamadas a herramientas de revisión agotado.",
+      "submitReviewSingleCall": "submit_review debe ser la única llamada en su turno final.",
+      "turnBudgetExceeded": "Presupuesto de turnos de revisión agotado sin un resultado estructurado final.",
+      "instructionsTooLong": "Las instrucciones del revisor superan el límite de 8000 bytes.",
+      "reviewerUnassigned": "Este revisor ya no está asignado al Virtual MR.",
+      "branchesChanged": "Las ramas del Virtual MR cambiaron durante la revisión. Inicie una nueva revisión antes de actualizar su descripción.",
+      "mrDescriptionAlreadyGenerated": "La descripción del MR solo se puede generar una vez en esta revisión.",
+      "tooManyFindings": "Una revisión puede contener como máximo 50 hallazgos en línea.",
+      "discussionActionQueued": "Esta discusión ya tiene una acción de IA en cola en esta revisión.",
+      "noCommentToResolve": "La discusión no tiene comentarios para resolver."
     },
     "credentials": {
       "accountRequired": "Introduce un nombre de cuenta.",
@@ -2894,6 +2912,53 @@
       "copilotSubscriptionRequired": "Esta cuenta de GitHub no tiene una suscripción activa a Copilot.",
       "copilotSignInRequired": "Conecta GitHub Copilot en Preferencias antes de usarlo.",
       "googleSignInRequired": "Inicia sesión en Google AI o configura Google Cloud ADC en Preferencias."
+    },
+    "notifications": {
+      "hostCreationFailed": "No se pudo crear el host de notificaciones de Stage0.",
+      "runtimeUnavailable": "El entorno de ejecución de notificaciones de Stage0 no está disponible.",
+      "queueUnavailable": "La cola de notificaciones de Stage0 no está disponible.",
+      "unsupportedPlatform": "Las notificaciones de Stage0 no son compatibles con esta plataforma.",
+      "dispatchFailed": "Error en la tarea de envío de notificaciones."
+    },
+    "sandbox": {
+      "dockerRunning": "El demonio de Docker está en ejecución (Imagen predeterminada: {{image}}).",
+      "dockerDaemonStopped": "Docker está instalado, pero el demonio no se está ejecutando. Inicie Docker Desktop o dockerd.",
+      "dockerCliNotFound": "No se encontró Docker CLI en PATH. Instale Docker Desktop para habilitar el espacio aislado de contenedores.",
+      "dockerTimeout": "Se agotó el tiempo del comando Docker; el contenedor del espacio aislado se detuvo y debe volver a crearse.",
+      "inMemoryTerminalDisabled": "La ejecución de comandos de terminal está estrictamente prohibida en el modo de espacio aislado en memoria.",
+      "blockedCommand": "La ejecución del comando '{{command}}' está bloqueada explícitamente por la política de protección.",
+      "invalidLineRange": "El rango de líneas de archivo solicitado no es válido.",
+      "invalidReadSize": "La lectura de revisión solicitada debe devolver al menos una línea.",
+      "inMemoryReady": "Activo y listo (Espacio aislado predeterminado)",
+      "worktreeReady": "Disponible y listo (Almacenamiento: {{path}}).",
+      "worktreeError": "El comando Git worktree devolvió un error: {{error}}",
+      "worktreeExecFailed": "Error al ejecutar Git worktree: {{error}}",
+      "commandNameInvalid": "El nombre del comando está vacío o supera el límite de 32 bytes.",
+      "commandArgsInvalid": "Los argumentos del comando no son válidos o superan el límite de seguridad de 1 MiB.",
+      "filePathTooLong": "La ruta del archivo supera el límite de seguridad de 4096 bytes.",
+      "filePathNotRelative": "La ruta del archivo debe ser una ruta relativa dentro del espacio de trabajo aislado.",
+      "fileNotFound": "Archivo no encontrado o ilegible en el espacio aislado de Docker.",
+      "filePathOutsideWorkspace": "La ruta de archivo resuelta está fuera del espacio de trabajo de Docker.",
+      "fileOutsideWorkspace": "Solo se pueden leer archivos dentro del espacio de trabajo de Docker.",
+      "fileRangeTooLarge": "El rango de archivos solicitado supera el límite de escaneo de 64 MiB.",
+      "invalidLineBounds": "start_line debe ser >= 1 y <= end_line",
+      "onlyRegularFiles": "La herramienta de espacio aislado solo puede leer archivos normales.",
+      "patchTooLarge": "El parche del repositorio host superó el límite de sincronización de 64 MiB.",
+      "diffGenerationFailed": "No se pudo generar el diff de Git desde el repositorio host.",
+      "worktreePathMissing": "Falta la ruta del directorio worktree para esta instancia de espacio aislado.",
+      "worktreeResetFailed": "Error al restablecer el worktree del espacio aislado.",
+      "worktreeCleanFailed": "Error al limpiar el worktree del espacio aislado.",
+      "worktreeApplyFailed": "Error al aplicar el parche del host al worktree del espacio aislado.",
+      "containerIdMissing": "Falta el ID del contenedor para esta instancia de espacio aislado de Docker.",
+      "dockerResetFailed": "Error al restablecer el espacio de trabajo del espacio aislado de Docker.",
+      "dockerApplyFailed": "El espacio aislado de Docker no pudo aplicar el parche del host."
+    },
+    "virtualMr": {
+      "imageEmpty": "La carga útil de la imagen no puede estar vacía.",
+      "sourceNotRegularFile": "La ruta de origen no es un archivo normal.",
+      "sourceFileTooLarge": "El archivo de origen supera el límite de análisis de discusiones de 16 MiB.",
+      "sourceNotUtf8": "El archivo de origen no es texto UTF-8 válido.",
+      "snippetInvalid": "Fragmento de código de discusión no válido."
     }
   }
 }

@@ -2746,13 +2746,16 @@
       "httpFailure": "GitHub Releases 傳回 HTTP {{status}}。請稍後再試。",
       "downloadTooLarge": "更新超過 Stage0 的下載大小限制。",
       "downloadInterrupted": "更新下載已中斷，請再試一次。",
-      "packageInvalid": "更新套件不屬於 Stage0 官方版本。"
+      "packageInvalid": "更新套件不屬於 Stage0 官方版本。",
+      "installingRestart": "Stage0 正在安裝更新。請等待重新啟動。",
+      "activeOperations": "在安裝更新之前，請等待審查、Git 操作和外部代理完成。"
     },
     "preferences": {
       "changed": "偏好設定已在其他位置變更。請重新載入最新檔案後再套用。",
       "invalid": "請先修正 preferences.json，再套用變更。",
       "revisionRequired": "套用變更前，請重新載入偏好設定以取得目前的修訂版本。",
-      "uncertain": "磁碟上的偏好設定已變更，但無法確認是否已永久儲存。請重新載入偏好設定後再試。"
+      "uncertain": "磁碟上的偏好設定已變更，但無法確認是否已永久儲存。請重新載入偏好設定後再試。",
+      "closeUnauthorized": "只有偏好設定視窗才能核准其本身的關閉請求。"
     },
     "git": {
       "connected": "連線成功，可以存取遠端儲存庫。",
@@ -2796,7 +2799,8 @@
       "credentialPasswordRequired": "所選認證資訊必須是密碼式 HTTPS 認證。"
     },
     "harness": {
-      "cliPreflight": "僅檢查了執行檔是否存在，未執行程序或進行驗證檢查。已安裝或已登入的 CLI 不代表具備工具呼叫能力。接入需要經審查的結構化協定介接器及作業系統隔離與核准原則。審查框架不使用舊版提示執行器。"
+      "cliPreflight": "僅檢查了執行檔是否存在，未執行程序或進行驗證檢查。已安裝或已登入的 CLI 不代表具備工具呼叫能力。接入需要經審查的結構化協定介接器及作業系統隔離與核准原則。審查框架不使用舊版提示執行器。",
+      "unsupportedCli": "測試架構前置檢查不支援的 CLI 類型。"
     },
     "acp": {
       "checksumInvalid": "ACP Registry 提供的 SHA-256 校驗碼無效。",
@@ -2862,7 +2866,21 @@
       "providerApiKeyRequired": "開始 review 前，請在 Preferences 中新增此提供者的 API 金鑰。",
       "acpAgentRequired": "請為此 reviewer 選擇已安裝的 ACP agent。",
       "acpSourceConsentRequired": "將 review 快照傳送給 ACP agent 前，請允許傳輸原始碼。",
-      "changedFilesLimit": "一次 review 最多可處理 {{limit}} 個變更檔案。請拆分變更。"
+      "changedFilesLimit": "一次 review 最多可處理 {{limit}} 個變更檔案。請拆分變更。",
+      "cancelled": "審查已取消。已傳送的提供者請求可能仍會計費。",
+      "deadlineExceeded": "已超出審查截止時間；結果不完整。",
+      "executionModeUnsupported": "不支援的審查執行模式。",
+      "tokenBudgetExceeded": "審查上下文/權杖預算已耗盡。",
+      "toolCallBudgetExceeded": "審查工具呼叫預算已耗盡。",
+      "submitReviewSingleCall": "submit_review 必須是最終輪次中的唯一呼叫。",
+      "turnBudgetExceeded": "審查輪次預算已耗盡，未能獲得最終結構化結果。",
+      "instructionsTooLong": "審查員指示超出 8000 位元組限制。",
+      "reviewerUnassigned": "此審查員不再分配給該虛擬 MR。",
+      "branchesChanged": "虛擬 MR 分支在審查期間發生變更。在更新說明之前請開始新的審查。",
+      "mrDescriptionAlreadyGenerated": "在此次審查中，MR 說明只能產生一次。",
+      "tooManyFindings": "一次審查最多只能包含 50 個內嵌發現。",
+      "discussionActionQueued": "此討論在此次審查中已包含排隊的 AI 操作。",
+      "noCommentToResolve": "討論中沒有可解決的留言。"
     },
     "credentials": {
       "accountRequired": "請輸入帳戶名稱。",
@@ -2887,6 +2905,53 @@
       "copilotSubscriptionRequired": "此 GitHub 帳戶沒有有效的 Copilot 訂閱。",
       "copilotSignInRequired": "使用前請在 Preferences 中連線 GitHub Copilot。",
       "googleSignInRequired": "請在 Preferences 中登入 Google AI 或設定 Google Cloud ADC。"
+    },
+    "notifications": {
+      "hostCreationFailed": "無法建立 Stage0 通知主機。",
+      "runtimeUnavailable": "Stage0 通知執行階段無法使用。",
+      "queueUnavailable": "Stage0 通知佇列無法使用。",
+      "unsupportedPlatform": "此平台不支援 Stage0 通知。",
+      "dispatchFailed": "通知派送工作失敗。"
+    },
+    "sandbox": {
+      "dockerRunning": "Docker 守護程序正在運行 (預設映像檔: {{image}})。",
+      "dockerDaemonStopped": "Docker 已安裝，但守護程序未運行。請啟動 Docker Desktop 或 dockerd。",
+      "dockerCliNotFound": "在 PATH 上找不到 Docker CLI。安裝 Docker Desktop 以啟用容器沙箱。",
+      "dockerTimeout": "Docker 指令逾時；沙箱容器已停止，必須重新建立。",
+      "inMemoryTerminalDisabled": "在記憶體沙箱模式下嚴格禁止執行終端機指令。",
+      "blockedCommand": "指令「{{command}}」的執行已被護欄原則明確封鎖。",
+      "invalidLineRange": "要求的檔案行範圍無效。",
+      "invalidReadSize": "要求的審查讀取必須傳回至少一行。",
+      "inMemoryReady": "作用中且就緒 (預設沙箱)",
+      "worktreeReady": "可用並已就緒 (儲存區: {{path}})。",
+      "worktreeError": "Git worktree 指令回傳錯誤: {{error}}",
+      "worktreeExecFailed": "執行 Git worktree 失敗: {{error}}",
+      "commandNameInvalid": "指令名稱為空或超出 32 位元組限制。",
+      "commandArgsInvalid": "指令引數無效或超出 1 MiB 安全限制。",
+      "filePathTooLong": "檔案路徑超出 4096 位元組安全限制。",
+      "filePathNotRelative": "檔案路徑必須是沙箱工作區內的相對路徑。",
+      "fileNotFound": "在 Docker 沙箱中找不到檔案或檔案無法讀取。",
+      "filePathOutsideWorkspace": "解析出的檔案路徑位於 Docker 工作區外部。",
+      "fileOutsideWorkspace": "只能讀取 Docker 工作區內部的檔案。",
+      "fileRangeTooLarge": "要求的檔案範圍超出 64 MiB 掃描限制。",
+      "invalidLineBounds": "start_line 必須 >= 1 且 <= end_line",
+      "onlyRegularFiles": "沙箱工具只能讀取一般檔案。",
+      "patchTooLarge": "主機儲存庫修補程式超出 64 MiB 沙箱同步限制。",
+      "diffGenerationFailed": "無法從主機儲存庫產生 Git diff。",
+      "worktreePathMissing": "缺少此沙箱執行個體的 worktree 目錄路徑。",
+      "worktreeResetFailed": "重設沙箱 worktree 失敗。",
+      "worktreeCleanFailed": "清除沙箱 worktree 失敗。",
+      "worktreeApplyFailed": "向沙箱 worktree 套用主機修補程式失敗。",
+      "containerIdMissing": "缺少此 Docker 沙箱執行個體的容器 ID。",
+      "dockerResetFailed": "重設 Docker 沙箱工作區失敗。",
+      "dockerApplyFailed": "Docker 沙箱套用主機修補程式失敗。"
+    },
+    "virtualMr": {
+      "imageEmpty": "圖像裝載不可為空。",
+      "sourceNotRegularFile": "來源路徑不是一般檔案。",
+      "sourceFileTooLarge": "原始程式檔超出 16 MiB 討論分析限制。",
+      "sourceNotUtf8": "原始程式檔不是有效的 UTF-8 文字。",
+      "snippetInvalid": "無效的討論程式碼片段。"
     }
   }
 }

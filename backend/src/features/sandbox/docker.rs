@@ -50,18 +50,21 @@ impl DockerSandboxAdapter {
                 (
                     true,
                     Some(display_ver),
-                    format!("Docker Daemon is running (Default Image: {})", self.default_image),
+                    crate::common::messages::message(
+                        "backend.sandbox.dockerRunning",
+                        serde_json::json!({ "image": self.default_image }),
+                    ),
                 )
             }
             Ok(_) => (
                 false,
                 None,
-                "Docker is installed, but the Docker daemon is not running. Please start Docker Desktop or the dockerd service.".to_string(),
+                crate::common::messages::code("backend.sandbox.dockerDaemonStopped"),
             ),
             Err(_) => (
                 false,
                 None,
-                "Docker CLI not found on system PATH. Install Docker Desktop or Docker engine to enable containerized sandboxing.".to_string(),
+                crate::common::messages::code("backend.sandbox.dockerCliNotFound"),
             ),
         }
     }
@@ -147,7 +150,7 @@ impl SandboxAdapter for DockerSandboxAdapter {
             .map(|(commit, _)| commit)?;
         let (is_available, _, err_msg) = self.check_docker_daemon();
         if !is_available {
-            return Err(format!("Cannot create Docker sandbox: {}", err_msg));
+            return Err(err_msg);
         }
 
         let instance_id = format!("stage0-{}", uuid::Uuid::new_v4());
@@ -367,7 +370,7 @@ impl SandboxAdapter for DockerSandboxAdapter {
             Ok(output) => output,
             Err(error) if error.contains("timed out") => {
                 stop_container(container_id);
-                return Err("Docker command timed out; the sandbox container was stopped and must be recreated.".to_string());
+                return Err(crate::common::messages::code("backend.sandbox.dockerTimeout"));
             }
             Err(error) => {
                 return Err(format!(

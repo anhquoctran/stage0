@@ -6,7 +6,7 @@ use crate::{
 
 pub(crate) fn validate_request(db: &Database, config: &ReviewRequest) -> Result<(), String> {
     if config.instructions.len() > 8000 {
-        return Err("Reviewer instructions exceed the 8000-byte limit".into());
+        return Err(crate::common::messages::code("backend.review.instructionsTooLong"));
     }
     if let Some(id) = config.reply_discussion_id.as_deref() {
         let reviewer = config
@@ -15,7 +15,7 @@ pub(crate) fn validate_request(db: &Database, config: &ReviewRequest) -> Result<
             .ok_or("Discussion replies require an assigned reviewer")?;
         let assigned: bool = db.conn().query_row("SELECT EXISTS(SELECT 1 FROM virtual_mr_session_reviewers WHERE session_id=?1 AND agent_id=?2)", [&config.session_id, reviewer], |row| row.get(0)).map_err(|e| e.to_string())?;
         if !assigned {
-            return Err("This reviewer is no longer assigned to the Virtual MR".into());
+            return Err(crate::common::messages::code("backend.review.reviewerUnassigned"));
         }
         if id.is_empty() || id.len() > 200 || config.generate_description {
             return Err(

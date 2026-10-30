@@ -37,7 +37,8 @@ export function localizeBackendPayload<T>(value: T): T {
   if (value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
     const record = value as Record<string, unknown>;
     const statusMessage = ('currentVersion' in record && 'supported' in record)
-      || 'attachedToHarness' in record || 'status_message' in record || 'conflict_type' in record;
+      || 'attachedToHarness' in record || 'status_message' in record || 'conflict_type' in record
+      || ('rule' in record && 'severity' in record);
     const protectedFields = new Set(['settings', 'content', 'description', 'generatedDescription', 'summary', 'notes', 'body', 'codeSnippet', 'params']);
     const entries = Object.entries(record).map(([key, item]) => {
       if (protectedFields.has(key)) return [key, item];

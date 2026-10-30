@@ -83,7 +83,7 @@ pub async fn save_mr_image_attachment(
                 .map_err(|e| format!("Invalid base64 image data: {}", e))?;
 
             if decoded_bytes.is_empty() {
-                return Err("Image payload cannot be empty".to_string());
+                return Err(crate::common::messages::code("backend.virtualMr.imageEmpty"));
             }
 
             if decoded_bytes.len() > MAX_IMAGE_ATTACHMENT_BYTES {

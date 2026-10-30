@@ -26,7 +26,7 @@ pub(super) async fn dispatch_action(
     Ok(match call.name.as_str() {
         "update_mr_description" => {
             if state.description_updated {
-                Err("The MR description can be generated only once in this review.".into())
+                Err(crate::common::messages::code("backend.review.mrDescriptionAlreadyGenerated"))
             } else {
                 let description = security::redact(call.arguments["description"].as_str().unwrap())
                     .trim()
@@ -71,7 +71,7 @@ pub(super) async fn dispatch_action(
                     candidate.push(finding);
                     let candidate = deduplicate(candidate);
                     if candidate.len() > 50 {
-                        Err("A review may contain at most 50 inline findings".into())
+                        Err(crate::common::messages::code("backend.review.tooManyFindings"))
                     } else {
                         state.pending_findings = candidate;
                         run.findings = state.pending_findings.clone();
@@ -98,7 +98,7 @@ pub(super) async fn dispatch_action(
             match discussion {
                 Err(error) => Err(error),
                 Ok(_) if state.replied_discussions.contains(&discussion_id) || state.resolved_discussions.contains(&discussion_id) => {
-                    Err("This discussion already has a queued AI action in this review".into())
+                    Err(crate::common::messages::code("backend.review.discussionActionQueued"))
                 }
                 Ok(discussion) if discussion.comments.last().is_none_or(|comment| !mentions::can_reply_to_comment(
                     &db.conn(), &run.session_id, run.reviewer_id.as_deref(), &comment.author_type, &comment.author_id, &comment.body,
@@ -213,7 +213,7 @@ pub(super) async fn dispatch_action(
                                 }
                             }
                         } else {
-                            Err("Discussion has no comment to resolve".into())
+                            Err(crate::common::messages::code("backend.review.noCommentToResolve"))
                         }
                     }
                 }

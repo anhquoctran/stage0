@@ -98,11 +98,15 @@ fn queue_or_emit_custom_toast(app: &AppHandle, payload: NotificationPayload) -> 
         ensure_notification_host(app);
     }
     if app.get_webview_window(NOTIFICATION_HOST_LABEL).is_none() {
-        return Err("The Stage0 notification host could not be created".to_string());
+        return Err(crate::common::messages::code(
+            "backend.notifications.hostCreationFailed",
+        ));
     }
 
     let Some(runtime) = app.try_state::<NotificationRuntime>() else {
-        return Err("The Stage0 notification runtime is unavailable".to_string());
+        return Err(crate::common::messages::code(
+            "backend.notifications.runtimeUnavailable",
+        ));
     };
     let ready = match runtime.0.lock() {
         Ok(mut state) => {
@@ -116,7 +120,11 @@ fn queue_or_emit_custom_toast(app: &AppHandle, payload: NotificationPayload) -> 
                 false
             }
         }
-        Err(_) => return Err("The Stage0 notification queue is unavailable".to_string()),
+        Err(_) => {
+            return Err(crate::common::messages::code(
+                "backend.notifications.queueUnavailable",
+            ))
+        }
     };
 
     if ready {
@@ -224,7 +232,9 @@ pub fn send_notification(app: &AppHandle, payload: NotificationPayload) -> Resul
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     {
         let _ = payload;
-        Err("Stage0 notifications are not supported on this platform".to_string())
+        Err(crate::common::messages::code(
+            "backend.notifications.unsupportedPlatform",
+        ))
     }
 }
 
@@ -236,7 +246,7 @@ pub async fn dispatch_notification(
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || send_notification(&app, payload))
             .await
-            .map_err(|error| format!("Notification dispatch task failed: {error}"))?
+            .map_err(|_| crate::common::messages::code("backend.notifications.dispatchFailed"))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("notifications", error))

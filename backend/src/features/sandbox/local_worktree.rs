@@ -107,9 +107,9 @@ impl LocalWorktreeSandboxAdapter {
             Ok(output) if output.status.success() && !output.output_truncated => (
                 true,
                 Some("Git Worktree (Native CLI)".to_string()),
-                format!(
-                    "Available & Ready (Storage: {})",
-                    self.base_worktree_dir.to_string_lossy()
+                crate::common::messages::message(
+                    "backend.sandbox.worktreeReady",
+                    serde_json::json!({ "path": self.base_worktree_dir.to_string_lossy() }),
                 ),
             ),
             Ok(output) => {
@@ -119,13 +119,19 @@ impl LocalWorktreeSandboxAdapter {
                 (
                     false,
                     None,
-                    format!("Git worktree command returned an error: {}", err.trim()),
+                    crate::common::messages::message(
+                        "backend.sandbox.worktreeError",
+                        serde_json::json!({ "error": err.trim() }),
+                    ),
                 )
             }
             Err(e) => (
                 false,
                 None,
-                format!("Failed to execute git worktree: {}", e),
+                crate::common::messages::message(
+                    "backend.sandbox.worktreeExecFailed",
+                    serde_json::json!({ "error": e.to_string() }),
+                ),
             ),
         }
     }

@@ -2753,13 +2753,16 @@
       "httpFailure": "O GitHub Releases retornou HTTP {{status}}. Tente novamente mais tarde.",
       "downloadTooLarge": "A atualização excede o limite de download do Stage0.",
       "downloadInterrupted": "O download da atualização foi interrompido. Tente novamente.",
-      "packageInvalid": "O pacote de atualização não faz parte do lançamento oficial do Stage0."
+      "packageInvalid": "O pacote de atualização não faz parte do lançamento oficial do Stage0.",
+      "installingRestart": "O Stage0 está instalando uma atualização. Aguarde a reinicialização.",
+      "activeOperations": "Aguarde a conclusão de revisões, operações do Git e agentes externos antes de instalar a atualização."
     },
     "preferences": {
       "changed": "As preferências foram alteradas em outro lugar. Recarregue o arquivo mais recente antes de aplicar as alterações.",
       "invalid": "Corrija preferences.json antes de aplicar as alterações.",
       "revisionRequired": "Recarregue as Preferências para obter a revisão atual antes de aplicar as alterações.",
-      "uncertain": "As preferências no disco foram alteradas, mas não foi possível confirmar a gravação durável. Recarregue as Preferências antes de tentar novamente."
+      "uncertain": "As preferências no disco foram alteradas, mas não foi possível confirmar a gravação durável. Recarregue as Preferências antes de tentar novamente.",
+      "closeUnauthorized": "Apenas a janela de Preferências pode aprovar sua própria solicitação de fechamento."
     },
     "git": {
       "connected": "Conexão bem-sucedida. O repositório remoto está acessível.",
@@ -2803,7 +2806,8 @@
       "credentialPasswordRequired": "A credencial selecionada precisa usar HTTPS com senha."
     },
     "harness": {
-      "cliPreflight": "Somente a disponibilidade do executável foi verificada; nenhum processo ou teste de autenticação foi executado. Uma CLI instalada ou autenticada não implica capacidade de chamar ferramentas. A integração exige um adaptador de protocolo estruturado revisado e uma política de isolamento e aprovação do sistema operacional. O ambiente de revisão não usa o executor de prompts legado."
+      "cliPreflight": "Somente a disponibilidade do executável foi verificada; nenhum processo ou teste de autenticação foi executado. Uma CLI instalada ou autenticada não implica capacidade de chamar ferramentas. A integração exige um adaptador de protocolo estruturado revisado e uma política de isolamento e aprovação do sistema operacional. O ambiente de revisão não usa o executor de prompts legado.",
+      "unsupportedCli": "Tipo de CLI não suportado para a verificação prévia do harness."
     },
     "acp": {
       "checksumInvalid": "O ACP Registry forneceu um checksum SHA-256 inválido.",
@@ -2869,7 +2873,21 @@
       "providerApiKeyRequired": "Adicione a chave de API do provedor em Preferences antes de iniciar a revisão.",
       "acpAgentRequired": "Selecione um agente ACP instalado para este revisor.",
       "acpSourceConsentRequired": "Permita a transferência do código-fonte antes de enviar o snapshot da revisão ao agente ACP.",
-      "changedFilesLimit": "Cada revisão pode incluir no máximo {{limit}} arquivos alterados. Divida a alteração."
+      "changedFilesLimit": "Cada revisão pode incluir no máximo {{limit}} arquivos alterados. Divida a alteração.",
+      "cancelled": "Revisão cancelada. Uma solicitação já enviada ao provedor ainda pode ser faturada.",
+      "deadlineExceeded": "Prazo de revisão excedido; os resultados estão incompletos.",
+      "executionModeUnsupported": "Modo de execução de revisão não suportado.",
+      "tokenBudgetExceeded": "Orçamento de tokens ou contexto da revisão esgotado.",
+      "toolCallBudgetExceeded": "Orçamento de chamadas de ferramentas da revisão esgotado.",
+      "submitReviewSingleCall": "submit_review deve ser a única chamada em seu turno final.",
+      "turnBudgetExceeded": "Orçamento de turnos de revisão esgotado sem um resultado estruturado final.",
+      "instructionsTooLong": "As instruções do revisor excedem o limite de 8000 bytes.",
+      "reviewerUnassigned": "Este revisor não está mais atribuído ao Virtual MR.",
+      "branchesChanged": "Os branches do Virtual MR foram alterados durante a revisão. Inicie uma nova revisão antes de atualizar sua descrição.",
+      "mrDescriptionAlreadyGenerated": "A descrição do MR só pode ser gerada uma vez nesta revisão.",
+      "tooManyFindings": "Uma revisão pode conter no máximo 50 apontamentos em linha.",
+      "discussionActionQueued": "Esta discussão já tem uma ação de IA na fila nesta revisão.",
+      "noCommentToResolve": "A discussão não tem comentários para resolver."
     },
     "credentials": {
       "accountRequired": "Informe o nome da conta.",
@@ -2894,6 +2912,53 @@
       "copilotSubscriptionRequired": "Esta conta do GitHub não tem uma assinatura ativa do Copilot.",
       "copilotSignInRequired": "Conecte o GitHub Copilot em Preferências antes de usar.",
       "googleSignInRequired": "Entre no Google AI ou configure o Google Cloud ADC em Preferências."
+    },
+    "notifications": {
+      "hostCreationFailed": "Não foi possível criar o host de notificações do Stage0.",
+      "runtimeUnavailable": "O runtime de notificações do Stage0 está indisponível.",
+      "queueUnavailable": "A fila de notificações do Stage0 está indisponível.",
+      "unsupportedPlatform": "As notificações do Stage0 não são suportadas nesta plataforma.",
+      "dispatchFailed": "Falha na tarefa de envio de notificações."
+    },
+    "sandbox": {
+      "dockerRunning": "O daemon do Docker está em execução (Imagem padrão: {{image}}).",
+      "dockerDaemonStopped": "O Docker está instalado, mas o daemon não está em execução. Inicie o Docker Desktop ou o dockerd.",
+      "dockerCliNotFound": "A CLI do Docker não foi encontrada no PATH. Instale o Docker Desktop para habilitar o sandbox em contêineres.",
+      "dockerTimeout": "O comando do Docker expirou; o contêiner do sandbox foi interrompido e precisa ser recriado.",
+      "inMemoryTerminalDisabled": "A execução de comandos no terminal é estritamente proibida no modo de sandbox em memória.",
+      "blockedCommand": "A execução do comando '{{command}}' está explicitamente bloqueada pela política de proteção.",
+      "invalidLineRange": "O intervalo de linhas do arquivo solicitado é inválido.",
+      "invalidReadSize": "A leitura de revisão solicitada deve retornar pelo menos uma linha.",
+      "inMemoryReady": "Ativo e pronto (Sandbox padrão)",
+      "worktreeReady": "Disponível e pronto (Armazenamento: {{path}}).",
+      "worktreeError": "O comando Git worktree retornou um erro: {{error}}",
+      "worktreeExecFailed": "Falha ao executar o Git worktree: {{error}}",
+      "commandNameInvalid": "O nome do comando está vazio ou excede o limite de 32 bytes.",
+      "commandArgsInvalid": "Os argumentos do comando são inválidos ou excedem o limite de segurança de 1 MiB.",
+      "filePathTooLong": "O caminho do arquivo excede o limite de segurança de 4096 bytes.",
+      "filePathNotRelative": "O caminho do arquivo deve ser um caminho relativo dentro do espaço de trabalho do sandbox.",
+      "fileNotFound": "Arquivo não encontrado ou ilegível no sandbox do Docker.",
+      "filePathOutsideWorkspace": "O caminho do arquivo resolvido está fora do espaço de trabalho do Docker.",
+      "fileOutsideWorkspace": "Apenas arquivos dentro do espaço de trabalho do Docker podem ser lidos.",
+      "fileRangeTooLarge": "O intervalo do arquivo solicitado está além do limite de varredura de 64 MiB.",
+      "invalidLineBounds": "start_line deve ser >= 1 e <= end_line",
+      "onlyRegularFiles": "Apenas arquivos normais podem ser lidos pela ferramenta de sandbox.",
+      "patchTooLarge": "O patch do repositório host excedeu o limite de sincronização de 64 MiB.",
+      "diffGenerationFailed": "Falha ao gerar o diff do Git a partir do repositório host.",
+      "worktreePathMissing": "Caminho do diretório worktree ausente para esta instância de sandbox.",
+      "worktreeResetFailed": "Falha ao redefinir o worktree do sandbox.",
+      "worktreeCleanFailed": "Falha ao limpar o worktree do sandbox.",
+      "worktreeApplyFailed": "Falha ao aplicar o patch do host ao worktree do sandbox.",
+      "containerIdMissing": "ID do contêiner ausente para esta instância de sandbox do Docker.",
+      "dockerResetFailed": "Falha ao redefinir o espaço de trabalho do sandbox do Docker.",
+      "dockerApplyFailed": "O sandbox do Docker falhou ao aplicar o patch do host."
+    },
+    "virtualMr": {
+      "imageEmpty": "A carga útil da imagem não pode estar vazia.",
+      "sourceNotRegularFile": "O caminho de origem não é um arquivo comum.",
+      "sourceFileTooLarge": "O arquivo de origem excede o limite de análise de discussão de 16 MiB.",
+      "sourceNotUtf8": "O arquivo de origem não é um texto UTF-8 válido.",
+      "snippetInvalid": "Snippet de código de discussão inválido."
     }
   }
 }

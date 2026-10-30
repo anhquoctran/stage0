@@ -2746,13 +2746,16 @@
       "httpFailure": "GitHub Releases antwortete mit HTTP {{status}}. Versuche es später erneut.",
       "downloadTooLarge": "Das Update überschreitet das Download-Limit von Stage0.",
       "downloadInterrupted": "Der Update-Download wurde unterbrochen. Versuche es erneut.",
-      "packageInvalid": "Das Update-Paket gehört nicht zur offiziellen Stage0-Veröffentlichung."
+      "packageInvalid": "Das Update-Paket gehört nicht zur offiziellen Stage0-Veröffentlichung.",
+      "installingRestart": "Stage0 installiert ein Update. Bitte warten Sie auf den Neustart.",
+      "activeOperations": "Warten Sie, bis Reviews, Git-Vorgänge und externe Agents abgeschlossen sind, bevor Sie das Update installieren."
     },
     "preferences": {
       "changed": "Die Einstellungen wurden andernorts geändert. Laden Sie die neueste Datei, bevor Sie Änderungen anwenden.",
       "invalid": "Korrigieren Sie preferences.json, bevor Sie Änderungen anwenden.",
       "revisionRequired": "Laden Sie die Einstellungen neu, um vor dem Anwenden die aktuelle Revision zu erhalten.",
-      "uncertain": "Die Einstellungen auf dem Datenträger wurden geändert, aber die dauerhafte Speicherung konnte nicht bestätigt werden. Laden Sie die Einstellungen vor einem erneuten Versuch neu."
+      "uncertain": "Die Einstellungen auf dem Datenträger wurden geändert, aber die dauerhafte Speicherung konnte nicht bestätigt werden. Laden Sie die Einstellungen vor einem erneuten Versuch neu.",
+      "closeUnauthorized": "Nur das Einstellungen-Fenster kann seine eigene Schließanforderung genehmigen."
     },
     "git": {
       "connected": "Verbindung erfolgreich. Das Remote-Repository ist erreichbar.",
@@ -2796,7 +2799,8 @@
       "credentialPasswordRequired": "Die ausgewählte Anmeldeinformation muss eine passwortbasierte HTTPS-Anmeldung sein."
     },
     "harness": {
-      "cliPreflight": "Nur die Verfügbarkeit der ausführbaren Datei wurde geprüft; es wurden weder Prozesse noch Authentifizierungsprüfungen ausgeführt. Eine installierte oder angemeldete CLI bietet nicht automatisch Werkzeugaufrufe. Die Anbindung erfordert einen geprüften Adapter für strukturierte Protokolle und eine Isolations- und Genehmigungsrichtlinie des Betriebssystems. Das Prüfsystem verwendet den alten Prompt-Runner nicht."
+      "cliPreflight": "Nur die Verfügbarkeit der ausführbaren Datei wurde geprüft; es wurden weder Prozesse noch Authentifizierungsprüfungen ausgeführt. Eine installierte oder angemeldete CLI bietet nicht automatisch Werkzeugaufrufe. Die Anbindung erfordert einen geprüften Adapter für strukturierte Protokolle und eine Isolations- und Genehmigungsrichtlinie des Betriebssystems. Das Prüfsystem verwendet den alten Prompt-Runner nicht.",
+      "unsupportedCli": "Nicht unterstützter CLI-Typ für Harness-Preflight."
     },
     "acp": {
       "checksumInvalid": "Die ACP-Registry hat eine ungültige SHA-256-Prüfsumme geliefert.",
@@ -2862,7 +2866,21 @@
       "providerApiKeyRequired": "Füge den API-Schlüssel des Providers in Preferences hinzu, bevor du das Review startest.",
       "acpAgentRequired": "Wähle einen installierten ACP-Agenten für diesen Reviewer aus.",
       "acpSourceConsentRequired": "Erlaube die Quellcodeübertragung, bevor der Review-Snapshot an den ACP-Agenten gesendet wird.",
-      "changedFilesLimit": "Ein Review kann höchstens {{limit}} geänderte Dateien enthalten. Teile die Änderung auf."
+      "changedFilesLimit": "Ein Review kann höchstens {{limit}} geänderte Dateien enthalten. Teile die Änderung auf.",
+      "cancelled": "Review abgebrochen. Eine bereits gesendete Anbieteranfrage kann trotzdem in Rechnung gestellt werden.",
+      "deadlineExceeded": "Review-Frist überschritten; die Ergebnisse sind unvollständig.",
+      "executionModeUnsupported": "Nicht unterstützter Review-Ausführungsmodus.",
+      "tokenBudgetExceeded": "Review-Kontext- oder Token-Budget erschöpft.",
+      "toolCallBudgetExceeded": "Budget für Review-Tool-Aufrufe erschöpft.",
+      "submitReviewSingleCall": "submit_review muss der einzige Aufruf im letzten Durchgang sein.",
+      "turnBudgetExceeded": "Review-Durchgangsbudget ohne abschließendes strukturiertes Ergebnis erschöpft.",
+      "instructionsTooLong": "Anweisungen für Reviewer überschreiten das Limit von 8000 Bytes.",
+      "reviewerUnassigned": "Dieser Reviewer ist dem virtuellen MR nicht mehr zugewiesen.",
+      "branchesChanged": "Die Zweige des virtuellen MR haben sich während des Reviews geändert. Starten Sie ein neues Review, bevor Sie die Beschreibung aktualisieren.",
+      "mrDescriptionAlreadyGenerated": "Die MR-Beschreibung kann in diesem Review nur einmal generiert werden.",
+      "tooManyFindings": "Ein Review darf höchstens 50 Inline-Befunde enthalten.",
+      "discussionActionQueued": "Für diese Diskussion steht in diesem Review bereits eine KI-Aktion in der Warteschlange.",
+      "noCommentToResolve": "Die Diskussion enthält keinen Kommentar zum Auflösen."
     },
     "credentials": {
       "accountRequired": "Gib einen Kontonamen ein.",
@@ -2887,6 +2905,53 @@
       "copilotSubscriptionRequired": "Dieses GitHub-Konto hat kein aktives Copilot-Abonnement.",
       "copilotSignInRequired": "Verbinde GitHub Copilot in den Einstellungen, bevor du es verwendest.",
       "googleSignInRequired": "Melde dich in den Einstellungen bei Google AI an oder richte Google Cloud ADC ein."
+    },
+    "notifications": {
+      "hostCreationFailed": "Der Stage0-Benachrichtigungshost konnte nicht erstellt werden.",
+      "runtimeUnavailable": "Die Stage0-Benachrichtigungslaufzeit ist nicht verfügbar.",
+      "queueUnavailable": "Die Stage0-Benachrichtigungswarteschlange ist nicht verfügbar.",
+      "unsupportedPlatform": "Stage0-Benachrichtigungen werden auf dieser Plattform nicht unterstützt.",
+      "dispatchFailed": "Die Benachrichtigungsübermittlung ist fehlgeschlagen."
+    },
+    "sandbox": {
+      "dockerRunning": "Docker-Daemon läuft (Standard-Image: {{image}}).",
+      "dockerDaemonStopped": "Docker ist installiert, aber der Daemon läuft nicht. Starten Sie Docker Desktop oder dockerd.",
+      "dockerCliNotFound": "Docker-CLI im PATH nicht gefunden. Installieren Sie Docker Desktop, um Container-Sandboxing zu aktivieren.",
+      "dockerTimeout": "Zeitüberschreitung beim Docker-Befehl; der Sandbox-Container wurde gestoppt und muss neu erstellt werden.",
+      "inMemoryTerminalDisabled": "Die Ausführung von Terminalbefehlen ist im In-Memory-Sandbox-Modus strengstens untersagt.",
+      "blockedCommand": "Die Ausführung des Befehls '{{command}}' wird durch die Guardrail-Richtlinie blockiert.",
+      "invalidLineRange": "Der angeforderte Dateizeilenbereich ist ungültig.",
+      "invalidReadSize": "Der angeforderte Review-Lesevorgang muss mindestens eine Zeile zurückgeben.",
+      "inMemoryReady": "Aktiv und bereit (Standard-Sandbox)",
+      "worktreeReady": "Verfügbar und bereit (Speicher: {{path}}).",
+      "worktreeError": "Git-worktree-Befehl gab einen Fehler zurück: {{error}}",
+      "worktreeExecFailed": "Fehler beim Ausführen von Git worktree: {{error}}",
+      "commandNameInvalid": "Befehlsname ist leer oder überschreitet das Limit von 32 Bytes.",
+      "commandArgsInvalid": "Befehlsargumente sind ungültig oder überschreiten das Sicherheitslimit von 1 MiB.",
+      "filePathTooLong": "Dateipfad überschreitet das Sicherheitslimit von 4096 Bytes.",
+      "filePathNotRelative": "Der Dateipfad muss ein relativer Pfad innerhalb des Sandbox-Arbeitsbereichs sein.",
+      "fileNotFound": "Datei in der Docker-Sandbox nicht gefunden oder unlesbar.",
+      "filePathOutsideWorkspace": "Der aufgelöste Dateipfad liegt außerhalb des Docker-Arbeitsbereichs.",
+      "fileOutsideWorkspace": "Nur Dateien innerhalb des Docker-Arbeitsbereichs können gelesen werden.",
+      "fileRangeTooLarge": "Der angeforderte Dateibereich liegt über dem Scanlimit von 64 MiB.",
+      "invalidLineBounds": "start_line muss >= 1 und <= end_line sein",
+      "onlyRegularFiles": "Vom Sandbox-Tool können nur reguläre Dateien gelesen werden.",
+      "patchTooLarge": "Host-Repository-Patch hat das Sandbox-Synchronisierungslimit von 64 MiB überschritten.",
+      "diffGenerationFailed": "Git-Diff konnte nicht aus dem Host-Repository generiert werden.",
+      "worktreePathMissing": "Worktree-Verzeichnispfad für diese Sandbox-Instanz fehlt.",
+      "worktreeResetFailed": "Fehler beim Zurücksetzen des Sandbox-Worktree.",
+      "worktreeCleanFailed": "Fehler beim Bereinigen des Sandbox-Worktree.",
+      "worktreeApplyFailed": "Fehler beim Anwenden des Host-Patches auf den Sandbox-Worktree.",
+      "containerIdMissing": "Container-ID für diese Docker-Sandbox-Instanz fehlt.",
+      "dockerResetFailed": "Fehler beim Zurücksetzen des Docker-Sandbox-Arbeitsbereichs.",
+      "dockerApplyFailed": "Docker-Sandbox konnte den Host-Patch nicht anwenden."
+    },
+    "virtualMr": {
+      "imageEmpty": "Bild-Payload darf nicht leer sein.",
+      "sourceNotRegularFile": "Quellpfad ist keine reguläre Datei.",
+      "sourceFileTooLarge": "Quelldatei überschreitet das Limit für Diskussionsanalysen von 16 MiB.",
+      "sourceNotUtf8": "Quelldatei ist kein gültiger UTF-8-Text.",
+      "snippetInvalid": "Ungültiges Diskussions-Code-Snippet."
     }
   }
 }

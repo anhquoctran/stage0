@@ -59,11 +59,11 @@ pub async fn run(
         result=execute(&database,&config,&mut run,&context)=>result,
         _=wait_cancel(cancel)=>{
             super::debug_log::log(format_args!("event=review_cancelled run={}", super::debug_log::safe_label(&run_id, 80)));
-            Err("Review cancelled. An already-sent provider request may still be billed.".into())
+            Err(crate::common::messages::code("backend.review.cancelled"))
         },
         _=tokio::time::sleep(Duration::from_secs(300))=>{
             super::debug_log::log(format_args!("event=review_deadline_exceeded run={} deadline_seconds=300", super::debug_log::safe_label(&run_id, 80)));
-            Err("Review deadline exceeded; results are incomplete.".into())
+            Err(crate::common::messages::code("backend.review.deadlineExceeded"))
         },
     };
     run.finish(outcome);
@@ -132,7 +132,7 @@ async fn execute(
             adapter.close().await;
             result
         }
-        _ => Err("Unsupported review execution mode".into()),
+        _ => Err(crate::common::messages::code("backend.review.executionModeUnsupported")),
     }
 }
 

@@ -104,10 +104,10 @@ fn read_regular_text_file_capped(path: &Path, max_bytes: u64) -> Result<String, 
     let metadata = std::fs::symlink_metadata(path)
         .map_err(|error| format!("Unable to inspect source file: {}", error))?;
     if !metadata.file_type().is_file() {
-        return Err("Source path is not a regular file".to_string());
+        return Err(crate::common::messages::code("backend.virtualMr.sourceNotRegularFile"));
     }
     if metadata.len() > max_bytes {
-        return Err("Source file exceeds the 16 MiB discussion analysis limit".to_string());
+        return Err(crate::common::messages::code("backend.virtualMr.sourceFileTooLarge"));
     }
 
     let mut bytes = Vec::with_capacity(metadata.len() as usize);
@@ -115,9 +115,9 @@ fn read_regular_text_file_capped(path: &Path, max_bytes: u64) -> Result<String, 
         .and_then(|file| file.take(max_bytes + 1).read_to_end(&mut bytes))
         .map_err(|error| format!("Unable to read source file: {}", error))?;
     if bytes.len() as u64 > max_bytes {
-        return Err("Source file exceeds the 16 MiB discussion analysis limit".to_string());
+        return Err(crate::common::messages::code("backend.virtualMr.sourceFileTooLarge"));
     }
-    String::from_utf8(bytes).map_err(|_| "Source file is not valid UTF-8 text".to_string())
+    String::from_utf8(bytes).map_err(|_| crate::common::messages::code("backend.virtualMr.sourceNotUtf8"))
 }
 
 #[tauri::command]
@@ -179,7 +179,7 @@ pub async fn create_mr_discussion(
                     || discussion.file_path.is_none()
                     || !matches!(discussion.diff_side.as_deref(), Some("left" | "right"))
                 {
-                    return Err("Invalid discussion code snippet".into());
+                    return Err(crate::common::messages::code("backend.virtualMr.snippetInvalid"));
                 }
                 snippet.selected_line = Some(line);
                 // Anchor to the selected diff snapshot, including old-side deleted lines.

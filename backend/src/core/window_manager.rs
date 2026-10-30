@@ -80,19 +80,16 @@ pub fn resolve_repository(
 ) -> Result<(PathBuf, RepoIdentity, String), String> {
     let input = path.as_ref();
     if !input.exists() {
-        return Err(format!(
-            "Repository path does not exist: {}",
-            input.display()
-        ));
+        return Err(crate::common::messages::code("backend.repository.missing"));
     }
 
     let canonical = dunce::canonicalize(input)
         .map_err(|error| format!("Could not canonicalize repository path: {error}"))?;
     if !canonical.is_dir() {
-        return Err("Repository path must be a directory".to_string());
+        return Err(crate::common::messages::code("backend.repository.notDirectory"));
     }
     if !canonical.join(".git").exists() {
-        return Err("Directory is not a Git working tree (missing .git)".to_string());
+        return Err(crate::common::messages::code("backend.repository.notGit"));
     }
 
     #[cfg(unix)]

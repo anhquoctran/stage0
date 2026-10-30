@@ -4,7 +4,7 @@ Rust sends application UI messages as `stage0-message:` followed by a JSON
 object containing `code`, scalar `params`, and optional `diagnostic`. Codes use
 `backend.*` translation keys. The envelope remains a string so existing command
 error types and DTO fields retain their wire shape. Locale data stays in the
-14 frontend catalogs; no translated UI sentences are duplicated in Rust.
+15 frontend catalogs; no translated UI sentences are duplicated in Rust.
 
 `common/messages.rs` owns encoding. Command handlers wrap failures only after
 all domain handling, cancellation, cleanup and publication have completed.
@@ -33,8 +33,10 @@ states. The domain failure codes are fallback summaries for unexpected errors;
 they do not replace internal diagnostics. New specific failures should have a
 stable code and parameters rather than adding English matching in frontend code.
 
-Verification: `scripts/backend-messages.test.mjs` covers all transport paths,
-current-language error access, parameter preservation, malformed input, immutable
-snapshots, protected authored content and wrapper identity. Rust message tests
-cover envelope shape and nested-command idempotence. Run the normal locale key
-checker when adding codes.
+Verification: `scripts/check-i18n-keys.mjs` also checks that every literal
+backend message code resolves to an English catalog entry.
+`scripts/backend-messages.test.mjs` covers all transport paths, current-language
+error access, parameter preservation, malformed input, immutable snapshots,
+protected authored content and wrapper identity. Rust message tests cover
+envelope shape and nested-command idempotence. Run the locale key checker when
+adding codes.

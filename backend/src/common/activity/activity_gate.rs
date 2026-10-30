@@ -18,7 +18,9 @@ impl ActivityGate {
             .lock()
             .map_err(|_| "Application activity is unavailable")?;
         if state.1 {
-            return Err("Stage0 is installing an update. Please wait for the restart.".into());
+            return Err(crate::common::messages::code(
+                "backend.updates.installingRestart",
+            ));
         }
         state.0 += 1;
         Ok(())
@@ -35,7 +37,9 @@ impl ActivityGate {
             .lock()
             .map_err(|_| "Application activity is unavailable")?;
         if state.1 || state.0 != 0 {
-            return Err("Wait for reviews, Git operations and external agents to finish before installing the update.".into());
+            return Err(crate::common::messages::code(
+                "backend.updates.activeOperations",
+            ));
         }
         state.1 = true;
         Ok(())

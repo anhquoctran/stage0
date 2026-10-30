@@ -39,7 +39,7 @@ pub(super) async fn update_mr_description(
     .await
     .map_err(|_| "Could not verify the current Virtual MR snapshot")??;
     if actual_base != expected_base || actual_head != expected_head {
-        return Err("The Virtual MR branches changed during review. Start a new review before updating its description.".into());
+        return Err(crate::common::messages::code("backend.review.branchesChanged"));
     }
 
     db.update_review_generated_description(&run.session_id, description)

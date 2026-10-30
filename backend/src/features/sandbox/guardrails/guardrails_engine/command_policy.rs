@@ -18,9 +18,7 @@ impl GuardrailsEngine {
             let v = GuardrailViolation {
                 rule: "IN_MEMORY_TERMINAL_DISABLED".to_string(),
                 severity: GuardrailSeverity::Critical,
-                message:
-                    "Terminal command execution is strictly forbidden in InMemory sandbox mode."
-                        .to_string(),
+                message: crate::common::messages::code("backend.sandbox.inMemoryTerminalDisabled"),
             };
             self.record_audit_event("execute_terminal_cmd", command, false, 100, vec![v.clone()]);
             return Err(v);
@@ -35,9 +33,9 @@ impl GuardrailsEngine {
                 let v = GuardrailViolation {
                     rule: "BLOCKED_COMMAND_DETECTED".to_string(),
                     severity: GuardrailSeverity::Critical,
-                    message: format!(
-                        "Execution of command '{}' is explicitly blocked by guardrail policy.",
-                        command
+                    message: crate::common::messages::message(
+                        "backend.sandbox.blockedCommand",
+                        serde_json::json!({ "command": command }),
                     ),
                 };
                 self.record_audit_event(

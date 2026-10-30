@@ -145,7 +145,11 @@ pub(super) async fn execute_with_adapter(
                 wire_bytes,
                 run.usage_tokens
             ));
-            return Err("Review context/token budget exhausted".into());
+            return Err(crate::common::messages::failure(
+                "backend.review.tokenBudgetExceeded",
+                serde_json::json!({}),
+                "Review token budget exhausted".to_string(),
+            ));
         }
         db.review_event(
             &run.id,
@@ -325,7 +329,11 @@ pub(super) async fn execute_with_adapter(
                 debug_log::safe_label(&run.id, 80),
                 run.usage_tokens
             ));
-            return Err("Review token budget exhausted".into());
+            return Err(crate::common::messages::failure(
+                "backend.review.tokenBudgetExceeded",
+                serde_json::json!({}),
+                "Review token budget exhausted".to_string(),
+            ));
         }
         if calls.is_empty() {
             debug_log::log(format_args!(
@@ -366,7 +374,7 @@ pub(super) async fn execute_with_adapter(
                 calls.len(),
                 max_calls
             ));
-            return Err("Review tool-call budget exhausted".into());
+            return Err(crate::common::messages::code("backend.review.toolCallBudgetExceeded"));
         }
         if calls.iter().any(|call| call.name == "submit_review") && calls.len() != 1 {
             debug_log::log(format_args!(
@@ -375,7 +383,7 @@ pub(super) async fn execute_with_adapter(
                 run.turns,
                 calls.len()
             ));
-            return Err("submit_review must be the only call in its final turn".into());
+            return Err(crate::common::messages::code("backend.review.submitReviewSingleCall"));
         }
         let (submitted, results) =
             execute_tool_calls(db, config, run, context, &mut state, calls, &registry).await?;
@@ -390,5 +398,9 @@ pub(super) async fn execute_with_adapter(
         run.turns,
         run.tool_calls
     ));
-    Err("Review turn budget exhausted without a final structured result".into())
+    Err(crate::common::messages::failure(
+        "backend.review.turnBudgetExceeded",
+        serde_json::json!({}),
+        "Review turn budget exhausted without a final structured result".to_string(),
+    ))
 }

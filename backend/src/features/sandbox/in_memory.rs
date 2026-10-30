@@ -52,7 +52,7 @@ impl SandboxAdapter for InMemorySandboxAdapter {
             description: self.description().to_string(),
             is_available: true,
             version_info: Some("Git In-Memory Tree Engine (Native)".to_string()),
-            status_message: "Active & Ready (Default Sandbox)".to_string(),
+            status_message: crate::common::messages::code("backend.sandbox.inMemoryReady"),
             capabilities: self.capabilities(),
         }
     }

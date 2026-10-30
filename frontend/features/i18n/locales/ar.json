@@ -2780,13 +2780,16 @@
       "httpFailure": "أعاد GitHub Releases الحالة HTTP {{status}}. حاول مجددًا لاحقًا.",
       "downloadTooLarge": "يتجاوز التحديث حد التنزيل في Stage0.",
       "downloadInterrupted": "انقطع تنزيل التحديث. حاول مجددًا.",
-      "packageInvalid": "حزمة التحديث ليست جزءًا من إصدار Stage0 الرسمي."
+      "packageInvalid": "حزمة التحديث ليست جزءًا من إصدار Stage0 الرسمي.",
+      "installingRestart": "يقوم Stage0 بتثبيت التحديث. يرجى الانتظار حتى تتم إعادة التشغيل.",
+      "activeOperations": "انتظر حتى تنتهي المراجعات وعمليات Git والوكلاء الخارجيون قبل تثبيت التحديث."
     },
     "preferences": {
       "changed": "تغيرت التفضيلات في مكان آخر. أعد تحميل أحدث ملف قبل تطبيق التغييرات.",
       "invalid": "أصلح preferences.json قبل تطبيق التغييرات.",
       "revisionRequired": "أعد تحميل التفضيلات للحصول على المراجعة الحالية قبل تطبيق التغييرات.",
-      "uncertain": "تغيرت التفضيلات على القرص، لكن تعذر تأكيد حفظها بشكل دائم. أعد تحميل التفضيلات قبل المحاولة مجددًا."
+      "uncertain": "تغيرت التفضيلات على القرص، لكن تعذر تأكيد حفظها بشكل دائم. أعد تحميل التفضيلات قبل المحاولة مجددًا.",
+      "closeUnauthorized": "يمكن لنافذة التفضيلات فقط الموافقة على طلب الإغلاق الخاص بها."
     },
     "git": {
       "connected": "نجح الاتصال. المستودع البعيد متاح.",
@@ -2830,7 +2833,8 @@
       "credentialPasswordRequired": "يجب أن تكون بيانات الاعتماد المحددة خاصة بـ HTTPS وتعتمد على كلمة مرور."
     },
     "harness": {
-      "cliPreflight": "تم التحقق من توفر الملف التنفيذي فقط؛ لم يتم تشغيل أي عملية أو اختبار مصادقة. وجود واجهة سطر أوامر مثبتة أو مسجل الدخول إليها لا يعني دعم استدعاء الأدوات. يتطلب ربطها محول بروتوكول منظم خاضعًا للمراجعة وسياسة عزل وموافقة على مستوى نظام التشغيل. لا تستخدم بيئة المراجعة مشغل المطالبات القديم."
+      "cliPreflight": "تم التحقق من توفر الملف التنفيذي فقط؛ لم يتم تشغيل أي عملية أو اختبار مصادقة. وجود واجهة سطر أوامر مثبتة أو مسجل الدخول إليها لا يعني دعم استدعاء الأدوات. يتطلب ربطها محول بروتوكول منظم خاضعًا للمراجعة وسياسة عزل وموافقة على مستوى نظام التشغيل. لا تستخدم بيئة المراجعة مشغل المطالبات القديم.",
+      "unsupportedCli": "نوع CLI غير مدعوم للاختبار الأولي."
     },
     "acp": {
       "checksumInvalid": "قدّم سجل ACP قيمة تحقق SHA-256 غير صالحة.",
@@ -2896,7 +2900,21 @@
       "providerApiKeyRequired": "أضف مفتاح API للمزوّد في Preferences قبل بدء المراجعة.",
       "acpAgentRequired": "حدد وكيل ACP مثبّتًا لهذا المراجع.",
       "acpSourceConsentRequired": "اسمح بنقل المصدر قبل إرسال لقطة المراجعة إلى وكيل ACP.",
-      "changedFilesLimit": "يمكن أن تتضمن المراجعة الواحدة {{limit}} ملفًا متغيرًا كحد أقصى. قسّم التغييرات."
+      "changedFilesLimit": "يمكن أن تتضمن المراجعة الواحدة {{limit}} ملفًا متغيرًا كحد أقصى. قسّم التغييرات.",
+      "cancelled": "تم إلغاء المراجعة. قد تظل هناك رسوم على الطلب المرسل بالفعل إلى المزود.",
+      "deadlineExceeded": "تم تجاوز الموعد النهائي للمراجعة؛ النتائج غير مكتملة.",
+      "executionModeUnsupported": "وضع تنفيذ المراجعة غير مدعوم.",
+      "tokenBudgetExceeded": "تم استنفاد ميزانية سياق أو رموز المراجعة.",
+      "toolCallBudgetExceeded": "تم استنفاد ميزانية استدعاء أدوات المراجعة.",
+      "submitReviewSingleCall": "يجب أن يكون submit_review هو الاستدعاء الوحيد في جولته الأخيرة.",
+      "turnBudgetExceeded": "تم استنفاد ميزانية جولات المراجعة دون نتيجة منظمة نهائية.",
+      "instructionsTooLong": "تعليمات المراجع تتجاوز حد 8000 بايت.",
+      "reviewerUnassigned": "لم يعد هذا المراجع معيّناً لـ Virtual MR.",
+      "branchesChanged": "تغيرت فروع Virtual MR أثناء المراجعة. ابدأ مراجعة جديدة قبل تحديث الوصف.",
+      "mrDescriptionAlreadyGenerated": "يمكن إنشاء وصف MR مرة واحدة فقط في هذه المراجعة.",
+      "tooManyFindings": "قد تحتوي المراجعة على 50 ملاحظة مضمنة كحد أقصى.",
+      "discussionActionQueued": "تتضمن هذه المناقشة بالفعل إجراء ذكاء اصطناعي في قائمة الانتظار في هذه المراجعة.",
+      "noCommentToResolve": "المناقشة لا تحتوي على تعليقات لحلها."
     },
     "credentials": {
       "accountRequired": "أدخل اسم الحساب.",
@@ -2921,6 +2939,53 @@
       "copilotSubscriptionRequired": "لا يملك حساب GitHub هذا اشتراك Copilot نشطًا.",
       "copilotSignInRequired": "اربط GitHub Copilot في Preferences قبل استخدامه.",
       "googleSignInRequired": "سجّل الدخول إلى Google AI أو أعد إعداد Google Cloud ADC في Preferences."
+    },
+    "notifications": {
+      "hostCreationFailed": "تعذر إنشاء مضيف إشعارات Stage0.",
+      "runtimeUnavailable": "بيئة تشغيل إشعارات Stage0 غير متوفرة.",
+      "queueUnavailable": "قائمة انتظار إشعارات Stage0 غير متوفرة.",
+      "unsupportedPlatform": "إشعارات Stage0 غير مدعومة على هذه المنصة.",
+      "dispatchFailed": "فشلت مهمة إرسال الإشعار."
+    },
+    "sandbox": {
+      "dockerRunning": "برنامج Docker الخفي قيد التشغيل (الصورة الافتراضية: {{image}}).",
+      "dockerDaemonStopped": "تم تثبيت Docker، ولكن البرنامج الخفي لا يعمل. ابدأ تشغيل Docker Desktop أو dockerd.",
+      "dockerCliNotFound": "تعذر العثور على Docker CLI في PATH. قم بتثبيت Docker Desktop لتمكين وضع الحماية للحاويات.",
+      "dockerTimeout": "انتهت مهلة أمر Docker؛ تم إيقاف حاوية بيئة الحماية ويجب إعادة إنشائها.",
+      "inMemoryTerminalDisabled": "تنفيذ أوامر الطرفية محظور تماماً في وضع بيئة الحماية في الذاكرة.",
+      "blockedCommand": "تنفيذ الأمر '{{command}}' محظور صراحةً بموجب سياسة الحماية.",
+      "invalidLineRange": "نطاق أسطر الملف المطلوب غير صالح.",
+      "invalidReadSize": "يجب أن تُرجع قراءة المراجعة المطلوبة سطراً واحداً على الأقل.",
+      "inMemoryReady": "نشط وجاهز (بيئة الحماية الافتراضية)",
+      "worktreeReady": "متاح وجاهز (التخزين: {{path}}).",
+      "worktreeError": "أرجع أمر Git worktree خطأ: {{error}}",
+      "worktreeExecFailed": "فشل تنفيذ أمر Git worktree: {{error}}",
+      "commandNameInvalid": "اسم الأمر فارغ أو يتجاوز حد 32 بايت.",
+      "commandArgsInvalid": "وسيطات الأمر غير صالحة أو تتجاوز حد الأمان البالغ 1 ميغابايت.",
+      "filePathTooLong": "يتجاوز مسار الملف حد الأمان البالغ 4096 بايت.",
+      "filePathNotRelative": "يجب أن يكون مسار الملف مساراً نسبياً داخل مساحة عمل بيئة الحماية.",
+      "fileNotFound": "الملف غير موجود أو غير قابل للقراءة في بيئة حماية Docker.",
+      "filePathOutsideWorkspace": "مسار الملف الذي تم حله يقع خارج مساحة عمل Docker.",
+      "fileOutsideWorkspace": "يمكن قراءة الملفات الموجودة داخل مساحة عمل Docker فقط.",
+      "fileRangeTooLarge": "نطاق الملف المطلوب يتجاوز حد الفحص البالغ 64 ميغابايت.",
+      "invalidLineBounds": "يجب أن يكون start_line أكبر من أو يساوي 1 وأقل من أو يساوي end_line",
+      "onlyRegularFiles": "يمكن قراءة الملفات العادية فقط بواسطة أداة بيئة الحماية.",
+      "patchTooLarge": "تجاوزت رقعة المستودع المضيف حد مزامنة بيئة الحماية البالغ 64 ميغابايت.",
+      "diffGenerationFailed": "فشل إنشاء فرق Git من المستودع المضيف.",
+      "worktreePathMissing": "مسار دليل worktree مفقود لمثيل بيئة الحماية هذا.",
+      "worktreeResetFailed": "فشلت إعادة تعيين worktree لبيئة الحماية.",
+      "worktreeCleanFailed": "فشل تنظيف worktree لبيئة الحماية.",
+      "worktreeApplyFailed": "فشل تطبيق رقعة المضيف على worktree لبيئة الحماية.",
+      "containerIdMissing": "معرف الحاوية مفقود لمثيل بيئة حماية Docker هذا.",
+      "dockerResetFailed": "فشلت إعادة تعيين مساحة عمل بيئة حماية Docker.",
+      "dockerApplyFailed": "فشلت بيئة حماية Docker في تطبيق رقعة المضيف."
+    },
+    "virtualMr": {
+      "imageEmpty": "لا يمكن أن تكون حمولة الصورة فارغة.",
+      "sourceNotRegularFile": "مسار المصدر ليس ملفاً عادياً.",
+      "sourceFileTooLarge": "يتجاوز الملف المصدر حد تحليل المناقشة البالغ 16 ميغابايت.",
+      "sourceNotUtf8": "الملف المصدر ليس نص UTF-8 صالحاً.",
+      "snippetInvalid": "مقتطف رمز المناقشة غير صالح."
     }
   }
 }

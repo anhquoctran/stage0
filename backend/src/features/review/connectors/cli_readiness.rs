@@ -18,7 +18,7 @@ pub fn inspect(cli_type: &str) -> Result<CliHarnessReadiness, String> {
         "gh_copilot" => "gh",
         "gcloud" => "gcloud",
         "grok" | "xai_grok" => "grok",
-        _ => return Err("Unsupported CLI type for harness preflight".into()),
+        _ => return Err(crate::common::messages::code("backend.harness.unsupportedCli")),
     };
     let path = std::env::var_os("PATH").and_then(|paths| {
         std::env::split_paths(&paths).find_map(|dir| {
