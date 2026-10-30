@@ -251,10 +251,12 @@ impl PreferencesManager {
         reject_symlink(&path)?;
         let current = read_limited(&path)?;
         if revision(&current) != expected_revision {
-            return Err(
+            return Err(crate::common::messages::failure(
+                "backend.preferences.changed",
+                serde_json::json!({}),
                 "Preferences changed outside this editor. Reload the latest file before saving."
                     .into(),
-            );
+            ));
         }
         let prior = parse_and_validate(&current).unwrap_or_else(|_| self.recovery_settings());
         if prior.get("credentialReferences") != value.get("credentialReferences") {
@@ -314,7 +316,7 @@ impl PreferencesManager {
         }
         let current = read_limited(&path)?;
         if !expected_revision.is_empty() && revision(&current) != expected_revision {
-            return Err("Preferences changed outside Stage0. Reload the latest file before applying settings.".into());
+            return Err(crate::common::messages::failure("backend.preferences.changed", serde_json::json!({}), "Preferences changed outside Stage0. Reload the latest file before applying settings.".into()));
         }
         let root = CstRootNode::parse(&current, &strict_jsonc_options())
             .map_err(|error| format_parse_error(&error))?;
@@ -339,9 +341,11 @@ impl PreferencesManager {
         // Keychain preparation can wait for an OS prompt. An external editor
         // may ignore our advisory lock, so recheck before replacing its file.
         if revision(&read_limited(&path)?) != revision(&current) {
-            return Err(
+            return Err(crate::common::messages::failure(
+                "backend.preferences.changed",
+                serde_json::json!({}),
                 "Preferences changed during credential preparation. Reload before applying.".into(),
-            );
+            ));
         }
         atomic_write(
             &self.directory.join(LAST_KNOWN_GOOD_FILE),

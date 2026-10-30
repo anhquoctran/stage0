@@ -138,7 +138,7 @@ test('every named feature operation preserves its command, input, progress callb
     }
     assert.equal(Object.keys(service).length, expected.size);
   }
-  assert.equal(operations.size, 142); // Includes native fullscreen and the three singleton Preferences window operations.
+  assert.equal(operations.size, 143); // Includes native fullscreen, the singleton Preferences window operations, and atomic Preferences commit.
 });
 
 

@@ -6,9 +6,13 @@ use std::collections::BTreeMap;
 // are returned to the webview. Keep native font work off the UI thread.
 #[tauri::command]
 pub async fn list_system_font_families() -> Result<Vec<String>, String> {
-    tauri::async_runtime::spawn_blocking(installed_font_families)
-        .await
-        .map_err(|_| "System font discovery could not complete".to_string())?
+    let result: Result<_, String> = async {
+        tauri::async_runtime::spawn_blocking(installed_font_families)
+            .await
+            .map_err(|_| "System font discovery could not complete".to_string())?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("preferences", error))
 }
 
 fn installed_font_families() -> Result<Vec<String>, String> {

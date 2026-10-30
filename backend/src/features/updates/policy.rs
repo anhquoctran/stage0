@@ -15,7 +15,7 @@ pub(super) fn check_due(last: Option<&str>, now: chrono::DateTime<chrono::Utc>) 
 
 pub(super) fn unsupported_reason() -> Option<String> {
     if cfg!(dev) || cfg!(debug_assertions) {
-        return Some("Software updates are disabled in development builds.".into());
+        return Some(crate::common::messages::code("backend.updates.development"));
     }
     let packaged = match std::env::consts::OS {
         "linux" => matches!(bundle_type(), Some(BundleType::AppImage)),
@@ -23,7 +23,7 @@ pub(super) fn unsupported_reason() -> Option<String> {
         "windows" => matches!(bundle_type(), Some(BundleType::Nsis | BundleType::Msi)),
         _ => false,
     };
-    (!packaged).then(|| "Install the AppImage, macOS app or Windows installer to enable in-app updates. Other packages can be updated from GitHub Releases.".into())
+    (!packaged).then(|| crate::common::messages::code("backend.updates.packageRequired"))
 }
 
 pub(super) fn validate_download(url: &tauri::Url, version: &str) -> Result<(), String> {

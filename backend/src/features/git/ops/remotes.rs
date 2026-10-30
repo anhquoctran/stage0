@@ -86,7 +86,7 @@ pub fn test_remote_connection(repo_path: &str, remote_or_url: &str) -> Result<St
             crate::features::git::runner::redact_sensitive_text(err)
         ));
     }
-    Ok("Connection successful! Remote repository is accessible.".to_string())
+    Ok(crate::common::messages::code("backend.git.connected"))
 }
 
 pub fn check_git_remote_url(url: &str) -> Result<String, String> {
@@ -142,5 +142,5 @@ pub fn check_git_remote_url(url: &str) -> Result<String, String> {
         return Err(message.to_string());
     }
 
-    Ok("Repository is valid and ready to clone.".to_string())
+    Ok(crate::common::messages::code("backend.git.cloneReady"))
 }

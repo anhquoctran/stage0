@@ -233,59 +233,66 @@ pub async fn dispatch_notification(
     app: AppHandle,
     payload: NotificationPayload,
 ) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || send_notification(&app, payload))
-        .await
-        .map_err(|error| format!("Notification dispatch task failed: {error}"))?
+    let result: Result<_, String> = async {
+        tauri::async_runtime::spawn_blocking(move || send_notification(&app, payload))
+            .await
+            .map_err(|error| format!("Notification dispatch task failed: {error}"))?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("notifications", error))
 }
 
 /// Sends a visual test notification without emitting the app-notification
 /// event used to update persisted history and unread counts.
 #[tauri::command]
 pub fn send_test_notification(app: AppHandle) -> Result<(), String> {
-    let language = app
-        .try_state::<crate::features::preferences::PreferencesManager>()
-        .and_then(|preferences| preferences.read().ok())
-        .and_then(|document| document.settings)
-        .and_then(|settings| {
-            settings
-                .get("appearance")
-                .and_then(|appearance| appearance.get("language"))
-                .and_then(serde_json::Value::as_str)
-                .map(str::to_owned)
-        })
-        .unwrap_or_else(|| "en".to_owned());
-    let payload = NotificationPayload {
-        id: None,
-        title: crate::core::i18n::translate("notifications.testTitle", &language),
-        body: crate::core::i18n::translate("notifications.testBody", &language),
-        level: NotificationLevel::Info,
-        variant: Some(NotificationVariant::Default),
-        channel: None,
-        actions: None,
-        click_action: Some(NotificationAction {
-            label: crate::core::i18n::translate("notifications.viewAction", &language),
-            action_type: "open_preferences".to_string(),
-            payload: Some("notifications".to_string()),
-        }),
-        dismiss_policy: NotificationDismissPolicy::Both,
-        auto_dismiss_ms: Some(10_000),
-    };
+    let result = (|| -> Result<_, String> {
+        let language = app
+            .try_state::<crate::features::preferences::PreferencesManager>()
+            .and_then(|preferences| preferences.read().ok())
+            .and_then(|document| document.settings)
+            .and_then(|settings| {
+                settings
+                    .get("appearance")
+                    .and_then(|appearance| appearance.get("language"))
+                    .and_then(serde_json::Value::as_str)
+                    .map(str::to_owned)
+            })
+            .unwrap_or_else(|| "en".to_owned());
+        let payload = NotificationPayload {
+            id: None,
+            title: crate::core::i18n::translate("notifications.testTitle", &language),
+            body: crate::core::i18n::translate("notifications.testBody", &language),
+            level: NotificationLevel::Info,
+            variant: Some(NotificationVariant::Default),
+            channel: None,
+            actions: None,
+            click_action: Some(NotificationAction {
+                label: crate::core::i18n::translate("notifications.viewAction", &language),
+                action_type: "open_preferences".to_string(),
+                payload: Some("notifications".to_string()),
+            }),
+            dismiss_policy: NotificationDismissPolicy::Both,
+            auto_dismiss_ms: Some(10_000),
+        };
 
-    #[cfg(any(target_os = "windows", target_os = "macos"))]
-    {
-        queue_or_emit_custom_toast(&app, payload)
-    }
+        #[cfg(any(target_os = "windows", target_os = "macos"))]
+        {
+            queue_or_emit_custom_toast(&app, payload)
+        }
 
-    #[cfg(target_os = "linux")]
-    {
-        send_linux_notification(&app, payload)
-    }
+        #[cfg(target_os = "linux")]
+        {
+            send_linux_notification(&app, payload)
+        }
 
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    {
-        let _ = (app, payload);
-        Err("Stage0 notifications are not supported on this platform".to_string())
-    }
+        #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+        {
+            let _ = (app, payload);
+            Err("Stage0 notifications are not supported on this platform".to_string())
+        }
+    })();
+    result.map_err(|error| crate::common::messages::command_error("notifications", error))
 }
 
 #[cfg(target_os = "linux")]

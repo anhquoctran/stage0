@@ -9,25 +9,29 @@ pub async fn acp_agent_prompt(
     prompt: String,
     cwd: Option<String>,
 ) -> Result<String, String> {
-    if prompt.trim().is_empty() || prompt.len() > 64 * 1024 {
-        return Err("Enter a prompt under 64 KB".into());
+    let result: Result<_, String> = async {
+        if prompt.trim().is_empty() || prompt.len() > 64 * 1024 {
+            return Err("Enter a prompt under 64 KB".into());
+        }
+        let working_directory = match cwd.filter(|path| !path.trim().is_empty()) {
+            Some(path) => PathBuf::from(path),
+            None => std::env::current_dir()
+                .map_err(|_| "Could not determine the default working directory")?,
+        };
+        if working_directory.as_os_str().len() > 4096
+            || !working_directory.is_absolute()
+            || working_directory
+                .to_string_lossy()
+                .chars()
+                .any(char::is_control)
+            || !working_directory.is_dir()
+        {
+            return Err("Working directory must be an existing absolute path".into());
+        }
+        prompt_agent_in_directory(&config, &prompt, &working_directory).await
     }
-    let working_directory = match cwd.filter(|path| !path.trim().is_empty()) {
-        Some(path) => PathBuf::from(path),
-        None => std::env::current_dir()
-            .map_err(|_| "Could not determine the default working directory")?,
-    };
-    if working_directory.as_os_str().len() > 4096
-        || !working_directory.is_absolute()
-        || working_directory
-            .to_string_lossy()
-            .chars()
-            .any(char::is_control)
-        || !working_directory.is_dir()
-    {
-        return Err("Working directory must be an existing absolute path".into());
-    }
-    prompt_agent_in_directory(&config, &prompt, &working_directory).await
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 
 async fn prompt_agent_in_directory(

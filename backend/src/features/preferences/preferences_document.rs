@@ -15,6 +15,7 @@ pub struct PreferencesDocument {
     #[serde(default)]
     pub publication_sequence: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(serialize_with = "crate::common::messages::serialize_optional_error")]
     pub validation_error: Option<String>,
 }
 

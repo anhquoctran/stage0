@@ -4,5 +4,6 @@ pub struct RepoValidation {
     pub exists: bool,
     pub has_git: bool,
     pub has_permission: bool,
+    #[serde(serialize_with = "crate::common::messages::serialize_optional_error")]
     pub error_message: Option<String>,
 }

@@ -2693,5 +2693,50 @@
       "reviewerCouldNotStart": "無法啟動 AI 審查者：{{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI 審查者無法檢查更新後的虛擬 MR：{{error}}"
     }
+  },
+  "backend": {
+    "errors": {
+      "operation": "操作失敗。",
+      "preferences": "無法儲存或載入偏好設定。",
+      "git": "Git 操作失敗。",
+      "ai": "AI 供應商操作失敗。",
+      "review": "無法完成 AI 審查。",
+      "virtualMr": "合併請求操作失敗。",
+      "credentials": "憑證操作失敗。",
+      "updates": "軟體更新失敗。",
+      "sandbox": "沙箱操作失敗。",
+      "window": "視窗操作失敗。",
+      "notifications": "通知操作失敗。",
+      "about": "無法載入應用程式資訊。",
+      "performance": "無法載入效能資訊。"
+    },
+    "repository": {
+      "missing": "儲存庫路徑已不存在。",
+      "notDirectory": "儲存庫路徑不是目錄。",
+      "notGit": "此目錄不是 Git 儲存庫。",
+      "permission": "沒有讀取此儲存庫的權限。"
+    },
+    "updates": {
+      "ready": "已驗證，可以安裝。",
+      "current": "目前使用的是最新發佈版本。",
+      "installing": "正在安裝更新。Stage0 將重新啟動。",
+      "installFailed": "安裝失敗。請檢查磁碟空間及安裝權限後重試。",
+      "development": "開發版本已停用軟體更新。",
+      "packageRequired": "請安裝 AppImage、macOS 應用程式或 Windows 安裝套件以啟用應用程式內更新。其他套件可從 GitHub Releases 更新。"
+    },
+    "preferences": {
+      "changed": "偏好設定已在其他位置變更。請重新載入最新檔案後再套用。",
+      "invalid": "請先修正 preferences.json，再套用變更。",
+      "revisionRequired": "套用變更前，請重新載入偏好設定以取得目前的修訂版本。",
+      "uncertain": "磁碟上的偏好設定已變更，但無法確認是否已永久儲存。請重新載入偏好設定後再試。"
+    },
+    "git": {
+      "connected": "連線成功，可以存取遠端儲存庫。",
+      "cloneReady": "儲存庫有效，可以複製。",
+      "conflict": "{{path}} 中存在合併衝突。"
+    },
+    "harness": {
+      "cliPreflight": "僅檢查了執行檔是否存在，未執行程序或進行驗證檢查。已安裝或已登入的 CLI 不代表具備工具呼叫能力。接入需要經審查的結構化協定介接器及作業系統隔離與核准原則。審查框架不使用舊版提示執行器。"
+    }
   }
 }

@@ -2700,5 +2700,50 @@
       "reviewerCouldNotStart": "Impossibile avviare il revisore IA: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "Il revisore IA non è riuscito a controllare la MR virtuale aggiornata: {{error}}"
     }
+  },
+  "backend": {
+    "errors": {
+      "operation": "L’operazione non è riuscita.",
+      "preferences": "Impossibile salvare o caricare le preferenze.",
+      "git": "L’operazione Git non è riuscita.",
+      "ai": "L’operazione del fornitore IA non è riuscita.",
+      "review": "Impossibile completare la revisione IA.",
+      "virtualMr": "L’operazione della richiesta di unione non è riuscita.",
+      "credentials": "L’operazione sulle credenziali non è riuscita.",
+      "updates": "L’aggiornamento del software non è riuscito.",
+      "sandbox": "L’operazione della sandbox non è riuscita.",
+      "window": "L’operazione della finestra non è riuscita.",
+      "notifications": "L’operazione di notifica non è riuscita.",
+      "about": "Impossibile caricare le informazioni sull’applicazione.",
+      "performance": "Impossibile caricare le informazioni sulle prestazioni."
+    },
+    "repository": {
+      "missing": "Il percorso del repository non esiste più.",
+      "notDirectory": "Il percorso del repository non è una directory.",
+      "notGit": "Questa directory non è un repository Git.",
+      "permission": "L’accesso in lettura a questo repository è stato negato."
+    },
+    "updates": {
+      "ready": "Verificato e pronto per l’installazione.",
+      "current": "Stai utilizzando l’ultima versione pubblicata.",
+      "installing": "Installazione dell’aggiornamento. Stage0 verrà riavviato.",
+      "installFailed": "Installazione non riuscita. Verifica lo spazio su disco e i permessi di installazione, quindi riprova.",
+      "development": "Gli aggiornamenti sono disabilitati nelle build di sviluppo.",
+      "packageRequired": "Installa AppImage, l’app macOS o il programma di installazione Windows per aggiornare dall’app. Gli altri pacchetti possono essere aggiornati da GitHub Releases."
+    },
+    "preferences": {
+      "changed": "Le preferenze sono state modificate altrove. Ricarica il file più recente prima di applicare le modifiche.",
+      "invalid": "Correggi preferences.json prima di applicare le modifiche.",
+      "revisionRequired": "Ricarica le Preferenze per ottenere la revisione corrente prima di applicare le modifiche.",
+      "uncertain": "Le preferenze su disco sono cambiate, ma non è stato possibile confermare il salvataggio duraturo. Ricarica le Preferenze prima di riprovare."
+    },
+    "git": {
+      "connected": "Connessione riuscita. Il repository remoto è accessibile.",
+      "cloneReady": "Il repository è valido e pronto per la clonazione.",
+      "conflict": "Conflitto di unione in {{path}}."
+    },
+    "harness": {
+      "cliPreflight": "È stata verificata solo la disponibilità dell’eseguibile; non è stato avviato alcun processo o controllo di autenticazione. Una CLI installata o autenticata non implica la capacità di chiamare strumenti. Il collegamento richiede un adattatore di protocollo strutturato verificato e una politica di isolamento e approvazione del sistema operativo. L’ambiente di revisione non usa il vecchio esecutore di prompt."
+    }
   }
 }

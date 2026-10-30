@@ -166,22 +166,25 @@ pub fn update_application_menu_state(
     accelerators: Option<HashMap<String, String>>,
     shortcut_labels: Option<HashMap<String, String>>,
 ) -> Result<(), String> {
-    set_application_menu_language(&app, &language)?;
-    let keymap = accelerators
-        .map(|keys| NativeMenuKeymap::from_input(keys, shortcut_labels.unwrap_or_default()))
-        .transpose()?;
-    if let Some(state) = app.try_state::<MenuRuntimeState>() {
-        if let Ok(mut windows) = state.flags.lock() {
-            windows.insert(window.label().to_owned(), flags);
-        }
-        if let Some(keymap) = keymap {
-            if let Ok(mut windows) = state.keymaps.lock() {
-                windows.insert(window.label().to_owned(), keymap);
+    let result = (|| -> Result<_, String> {
+        set_application_menu_language(&app, &language)?;
+        let keymap = accelerators
+            .map(|keys| NativeMenuKeymap::from_input(keys, shortcut_labels.unwrap_or_default()))
+            .transpose()?;
+        if let Some(state) = app.try_state::<MenuRuntimeState>() {
+            if let Ok(mut windows) = state.flags.lock() {
+                windows.insert(window.label().to_owned(), flags);
+            }
+            if let Some(keymap) = keymap {
+                if let Ok(mut windows) = state.keymaps.lock() {
+                    windows.insert(window.label().to_owned(), keymap);
+                }
             }
         }
-    }
-    sync_repo_dependent_menus_for_window(&app, window.label());
-    Ok(())
+        sync_repo_dependent_menus_for_window(&app, window.label());
+        Ok(())
+    })();
+    result.map_err(|error| crate::common::messages::command_error("operation", error))
 }
 
 pub fn set_application_menu_language(app: &AppHandle, language: &str) -> Result<(), String> {

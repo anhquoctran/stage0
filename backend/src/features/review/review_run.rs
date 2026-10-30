@@ -23,6 +23,7 @@ pub struct ReviewRun {
     pub decision: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub generated_description: Option<String>,
+    #[serde(serialize_with = "crate::common::messages::serialize_optional_error")]
     pub error: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub retry: Option<ReviewRetryState>,

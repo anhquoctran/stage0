@@ -8,6 +8,7 @@ pub struct CodexAuthStatus {
     pub account_email: Option<String>,
     pub plan_type: Option<String>,
     pub deadline_at: Option<String>,
+    #[serde(serialize_with = "crate::common::messages::serialize_optional_error")]
     pub error: Option<String>,
     // App-server owns tokens. This ID is only for its cancel RPC, not IPC.
     #[serde(skip)]

@@ -308,24 +308,28 @@ pub async fn commit_ai_preferences(
     mcp_env_secrets: Option<BTreeMap<String, BTreeMap<String, String>>>,
     mcp_env_removals: Option<BTreeMap<String, Vec<String>>>,
 ) -> Result<BTreeMap<String, bool>, String> {
-    let patch = match policy {
-        Some(policy) => serde_json::json!({"ai": {"guardrailPolicy": policy}}),
-        None => serde_json::json!({}),
-    };
-    let request = crate::features::preferences::PreferencesTransactionRequest {
-        patch,
-        expected_revision: None,
-        api_keys,
-        api_key_removals: api_key_removals.unwrap_or_default(),
-        mcp_env_secrets: mcp_env_secrets.unwrap_or_default(),
-        mcp_env_removals: mcp_env_removals.unwrap_or_default(),
-    };
-    tauri::async_runtime::spawn_blocking(move || {
-        crate::features::preferences::commit_transaction(&app, &request)
-            .map(|result| result.configured)
-    })
-    .await
-    .map_err(|_| "Preferences transaction worker stopped unexpectedly".to_string())?
+    let result: Result<_, String> = async {
+        let patch = match policy {
+            Some(policy) => serde_json::json!({"ai": {"guardrailPolicy": policy}}),
+            None => serde_json::json!({}),
+        };
+        let request = crate::features::preferences::PreferencesTransactionRequest {
+            patch,
+            expected_revision: None,
+            api_keys,
+            api_key_removals: api_key_removals.unwrap_or_default(),
+            mcp_env_secrets: mcp_env_secrets.unwrap_or_default(),
+            mcp_env_removals: mcp_env_removals.unwrap_or_default(),
+        };
+        tauri::async_runtime::spawn_blocking(move || {
+            crate::features::preferences::commit_transaction(&app, &request)
+                .map(|result| result.configured)
+        })
+        .await
+        .map_err(|_| "Preferences transaction worker stopped unexpectedly".to_string())?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 
 #[cfg(test)]

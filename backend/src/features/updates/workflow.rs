@@ -64,7 +64,7 @@ pub(super) async fn check(app: &AppHandle) -> Result<UpdateStatus, String> {
                 .into();
                 status.message = version
                     .is_none()
-                    .then(|| "You are running the latest published version.".into());
+                    .then(|| crate::common::messages::code("backend.updates.current"));
                 status.version = version;
                 status.notes = notes;
             }))
@@ -184,7 +184,7 @@ pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Resu
     };
     runtime.change(app, |status| {
         status.phase = "installing".into();
-        status.message = Some("Installing the update. Stage0 will restart.".into());
+        status.message = Some(crate::common::messages::code("backend.updates.installing"));
     });
     let handle = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -196,16 +196,26 @@ pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Resu
                 .state::<Database>()
                 .delete_settings(&[PENDING_RELEASE_NOTES_VERSION_SETTING]);
             let runtime = handle.state::<UpdateRuntime>();
-            *runtime.pending.lock().unwrap_or_else(|error| error.into_inner()) = Some((update, Some(bytes)));
+            *runtime
+                .pending
+                .lock()
+                .unwrap_or_else(|error| error.into_inner()) = Some((update, Some(bytes)));
             runtime.change(&handle, |status| {
                 status.phase = "ready".into();
-                status.message = Some("Installation failed. Check disk space and installation permissions, then retry.".into());
+                status.message = Some(crate::common::messages::code(
+                    "backend.updates.installFailed",
+                ));
             });
             return Err("Installation failed. The update is still available to retry.".into());
         }
         handle.restart();
-    }).await.map_err(|_| {
-        runtime.fail(app, "The update installer stopped unexpectedly. Restart Stage0 before retrying.");
+    })
+    .await
+    .map_err(|_| {
+        runtime.fail(
+            app,
+            "The update installer stopped unexpectedly. Restart Stage0 before retrying.",
+        );
         "The update installer stopped unexpectedly".to_string()
     })?
 }

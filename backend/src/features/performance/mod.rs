@@ -13,13 +13,17 @@ static PERFORMANCE_SAMPLER: OnceLock<Mutex<PerformanceSampler>> = OnceLock::new(
 
 #[tauri::command]
 pub async fn get_performance_metrics() -> Result<PerformanceMetrics, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        let sampler = PERFORMANCE_SAMPLER.get_or_init(|| Mutex::new(PerformanceSampler::new()));
-        sampler
-            .lock()
-            .map_err(|_| "Performance metrics sampler is unavailable".to_string())?
-            .refresh()
-    })
-    .await
-    .map_err(|error| format!("Performance metrics task failed: {error}"))?
+    let result: Result<_, String> = async {
+        tauri::async_runtime::spawn_blocking(|| {
+            let sampler = PERFORMANCE_SAMPLER.get_or_init(|| Mutex::new(PerformanceSampler::new()));
+            sampler
+                .lock()
+                .map_err(|_| "Performance metrics sampler is unavailable".to_string())?
+                .refresh()
+        })
+        .await
+        .map_err(|error| format!("Performance metrics task failed: {error}"))?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("performance", error))
 }

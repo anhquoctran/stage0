@@ -2693,5 +2693,50 @@
       "reviewerCouldNotStart": "AI 리뷰어를 시작할 수 없습니다: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI 리뷰어가 업데이트된 가상 MR을 확인할 수 없습니다: {{error}}"
     }
+  },
+  "backend": {
+    "errors": {
+      "operation": "작업에 실패했습니다.",
+      "preferences": "환경설정을 저장하거나 불러올 수 없습니다.",
+      "git": "Git 작업에 실패했습니다.",
+      "ai": "AI 제공업체 작업에 실패했습니다.",
+      "review": "AI 리뷰를 완료할 수 없습니다.",
+      "virtualMr": "병합 요청 작업에 실패했습니다.",
+      "credentials": "자격 증명 작업에 실패했습니다.",
+      "updates": "소프트웨어 업데이트에 실패했습니다.",
+      "sandbox": "샌드박스 작업에 실패했습니다.",
+      "window": "창 작업에 실패했습니다.",
+      "notifications": "알림 작업에 실패했습니다.",
+      "about": "애플리케이션 정보를 불러올 수 없습니다.",
+      "performance": "성능 정보를 불러올 수 없습니다."
+    },
+    "repository": {
+      "missing": "저장소 경로가 더 이상 존재하지 않습니다.",
+      "notDirectory": "저장소 경로가 디렉터리가 아닙니다.",
+      "notGit": "이 디렉터리는 Git 저장소가 아닙니다.",
+      "permission": "이 저장소에 대한 읽기 권한이 없습니다."
+    },
+    "updates": {
+      "ready": "검증이 완료되어 설치할 수 있습니다.",
+      "current": "최신 배포 버전을 사용하고 있습니다.",
+      "installing": "업데이트를 설치 중입니다. Stage0가 다시 시작됩니다.",
+      "installFailed": "설치에 실패했습니다. 디스크 공간과 설치 권한을 확인한 후 다시 시도하세요.",
+      "development": "개발 빌드에서는 소프트웨어 업데이트가 비활성화됩니다.",
+      "packageRequired": "앱 내 업데이트를 사용하려면 AppImage, macOS 앱 또는 Windows 설치 프로그램으로 설치하세요. 다른 패키지는 GitHub Releases에서 업데이트할 수 있습니다."
+    },
+    "preferences": {
+      "changed": "다른 곳에서 환경설정이 변경되었습니다. 적용하기 전에 최신 파일을 다시 불러오세요.",
+      "invalid": "변경 사항을 적용하기 전에 preferences.json을 수정하세요.",
+      "revisionRequired": "변경 사항을 적용하기 전에 환경설정을 다시 불러와 현재 리비전을 확인하세요.",
+      "uncertain": "디스크의 환경설정이 변경되었지만 영구 저장 완료를 확인할 수 없습니다. 다시 시도하기 전에 환경설정을 다시 불러오세요."
+    },
+    "git": {
+      "connected": "연결되었습니다. 원격 저장소에 접근할 수 있습니다.",
+      "cloneReady": "유효한 저장소이며 복제할 준비가 되었습니다.",
+      "conflict": "{{path}}에서 병합 충돌이 발생했습니다."
+    },
+    "harness": {
+      "cliPreflight": "실행 파일의 존재 여부만 확인했으며 프로세스 실행이나 인증 검사는 수행하지 않았습니다. CLI 설치나 로그인은 도구 호출 기능을 의미하지 않습니다. 연결하려면 검토된 구조화 프로토콜 어댑터와 OS 격리 및 승인 정책이 필요합니다. 하네스는 기존 프롬프트 실행기를 사용하지 않습니다."
+    }
   }
 }

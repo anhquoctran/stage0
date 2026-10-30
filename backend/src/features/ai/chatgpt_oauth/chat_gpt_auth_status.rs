@@ -5,6 +5,7 @@ use serde::Serialize;
 pub struct ChatGptAuthStatus {
     pub connected: bool,
     pub account_email: Option<String>,
+    #[serde(serialize_with = "crate::common::messages::serialize_optional_error")]
     pub error: Option<String>,
     pub phase: String,
     pub attempt_id: Option<String>,

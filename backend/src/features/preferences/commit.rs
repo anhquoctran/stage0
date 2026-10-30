@@ -14,14 +14,22 @@ pub(crate) fn commit_transaction(
         let manager = app.state::<PreferencesManager>();
         let before = manager.read()?;
         if before.validation_error.is_some() {
-            return Err("Fix preferences.json before applying changes".into());
+            return Err(crate::common::messages::failure(
+                "backend.preferences.invalid",
+                serde_json::json!({}),
+                "Fix preferences.json before applying changes".into(),
+            ));
         }
         let expected = request
             .expected_revision
             .clone()
             .unwrap_or_else(|| before.revision.clone());
         if expected.is_empty() {
-            return Err("A preferences revision is required".into());
+            return Err(crate::common::messages::failure(
+                "backend.preferences.revisionRequired",
+                serde_json::json!({}),
+                "A preferences revision is required".into(),
+            ));
         }
         let db = app.state::<crate::core::db::Database>();
         let document = match manager.patch_prepared(request.patch.clone(), expected, |candidate| {
@@ -35,7 +43,7 @@ pub(crate) fn commit_transaction(
                     if actual.revision != before.revision && actual.validation_error.is_none() {
                         actual.publication_sequence = super::transaction::advance_sequence();
                         publish(app, before.settings.as_ref(), &actual);
-                        return Err("The on-disk preferences changed; durable transaction completion could not be confirmed. Reload Preferences before retrying.".into());
+                        return Err(crate::common::messages::failure("backend.preferences.uncertain", serde_json::json!({}), "The on-disk preferences changed; durable transaction completion could not be confirmed. Reload Preferences before retrying.".into()));
                     }
                 }
                 return Err(error);
@@ -66,16 +74,24 @@ pub async fn commit_preferences_transaction(
     app: AppHandle,
     request: PreferencesTransactionRequest,
 ) -> Result<PreferencesTransactionResult, String> {
-    if request
-        .expected_revision
-        .as_ref()
-        .is_none_or(String::is_empty)
-    {
-        return Err("A preferences revision is required".into());
+    let result: Result<_, String> = async {
+        if request
+            .expected_revision
+            .as_ref()
+            .is_none_or(String::is_empty)
+        {
+            return Err(crate::common::messages::failure(
+                "backend.preferences.revisionRequired",
+                serde_json::json!({}),
+                "A preferences revision is required".into(),
+            ));
+        }
+        tauri::async_runtime::spawn_blocking(move || commit_transaction(&app, &request))
+            .await
+            .map_err(|_| "Preferences transaction worker stopped unexpectedly".to_string())?
     }
-    tauri::async_runtime::spawn_blocking(move || commit_transaction(&app, &request))
-        .await
-        .map_err(|_| "Preferences transaction worker stopped unexpectedly".to_string())?
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("preferences", error))
 }
 
 /// Startup runs before any review/MCP consumer. Keep active and recovery snapshots;

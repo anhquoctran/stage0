@@ -2693,5 +2693,50 @@
       "reviewerCouldNotStart": "Không thể bắt đầu reviewer AI: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "Reviewer AI không thể kiểm tra MR ảo đã cập nhật: {{error}}"
     }
+  },
+  "backend": {
+    "errors": {
+      "operation": "Thao tác thất bại.",
+      "preferences": "Không thể lưu hoặc tải tùy chọn.",
+      "git": "Thao tác Git thất bại.",
+      "ai": "Thao tác với nhà cung cấp AI thất bại.",
+      "review": "Không thể hoàn tất lượt đánh giá AI.",
+      "virtualMr": "Thao tác với yêu cầu hợp nhất thất bại.",
+      "credentials": "Thao tác với thông tin xác thực thất bại.",
+      "updates": "Cập nhật phần mềm thất bại.",
+      "sandbox": "Thao tác với sandbox thất bại.",
+      "window": "Thao tác với cửa sổ thất bại.",
+      "notifications": "Thao tác thông báo thất bại.",
+      "about": "Không thể tải thông tin ứng dụng.",
+      "performance": "Không thể tải thông tin hiệu năng."
+    },
+    "repository": {
+      "missing": "Đường dẫn kho mã không còn tồn tại.",
+      "notDirectory": "Đường dẫn kho mã không phải thư mục.",
+      "notGit": "Thư mục này không phải kho Git.",
+      "permission": "Không có quyền đọc kho mã này."
+    },
+    "updates": {
+      "ready": "Đã xác minh và sẵn sàng cài đặt.",
+      "current": "Bạn đang sử dụng phiên bản phát hành mới nhất.",
+      "installing": "Đang cài bản cập nhật. Stage0 sẽ khởi động lại.",
+      "installFailed": "Cài đặt thất bại. Kiểm tra dung lượng đĩa và quyền cài đặt rồi thử lại.",
+      "development": "Cập nhật phần mềm bị tắt trong bản phát triển.",
+      "packageRequired": "Cài AppImage, ứng dụng macOS hoặc bộ cài Windows để cập nhật trong ứng dụng. Các gói khác có thể cập nhật từ GitHub Releases."
+    },
+    "preferences": {
+      "changed": "Tùy chọn đã được thay đổi ở nơi khác. Tải lại tệp mới nhất trước khi áp dụng.",
+      "invalid": "Sửa preferences.json trước khi áp dụng thay đổi.",
+      "revisionRequired": "Tải lại Tùy chọn để lấy phiên bản hiện tại trước khi áp dụng thay đổi.",
+      "uncertain": "Tùy chọn trên đĩa đã thay đổi nhưng chưa xác nhận được việc lưu bền vững. Tải lại Tùy chọn trước khi thử lại."
+    },
+    "git": {
+      "connected": "Kết nối thành công. Có thể truy cập kho mã từ xa.",
+      "cloneReady": "Kho mã hợp lệ và sẵn sàng sao chép.",
+      "conflict": "Xung đột hợp nhất trong {{path}}."
+    },
+    "harness": {
+      "cliPreflight": "Chỉ kiểm tra sự tồn tại của tệp thực thi, chưa chạy tiến trình hay kiểm tra xác thực. CLI đã cài hoặc đăng nhập không đồng nghĩa với khả năng gọi công cụ. Việc tích hợp yêu cầu adapter giao thức có cấu trúc đã được đánh giá cùng chính sách cách ly/phê duyệt của hệ điều hành. Harness không sử dụng trình chạy prompt cũ."
+    }
   }
 }

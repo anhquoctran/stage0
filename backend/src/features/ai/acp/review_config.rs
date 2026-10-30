@@ -10,65 +10,69 @@ pub async fn acp_agent_review_config_options(
     config: AcpAgentConfig,
     config_overrides: Option<Value>,
 ) -> Result<Vec<Value>, String> {
-    let working_directory =
-        std::env::temp_dir().join(format!("stage0-acp-config-{}", uuid::Uuid::new_v4()));
-    std::fs::create_dir(&working_directory)
-        .map_err(|_| "Could not create an isolated ACP configuration directory")?;
-    let mut process = match tokio::time::timeout(
-        REVIEW_CONFIG_DISCOVERY_TIMEOUT,
-        AcpProcess::start(&config, Some(&working_directory)),
-    )
-    .await
-    {
-        Ok(Ok(process)) => process,
-        Ok(Err(error)) => {
-            let _ = std::fs::remove_dir_all(&working_directory);
-            return Err(error);
-        }
-        Err(_) => {
-            let _ = std::fs::remove_dir_all(&working_directory);
-            return Err("ACP agent startup timed out while loading reviewer options.".into());
-        }
-    };
-    let result = tokio::time::timeout(REVIEW_CONFIG_DISCOVERY_TIMEOUT, async {
-        process.initialize().await?;
-        let session = process
-            .request(
-                1,
-                "session/new",
-                json!({
-                    "cwd": working_directory.to_string_lossy(),
-                    "mcpServers": []
-                }),
-            )
-            .await?;
-        let session_id = session
-            .get("sessionId")
-            .and_then(Value::as_str)
-            .ok_or("ACP agent did not return a session ID")?;
-        let mut options = session
-            .get("configOptions")
-            .and_then(Value::as_array)
-            .cloned()
-            .unwrap_or_default();
-        if let Some(overrides) = config_overrides.as_ref() {
-            validate_review_config_overrides(overrides)?;
-            if let Some(overrides) = overrides.as_object() {
-                options =
-                    apply_review_config_options(&mut process, session_id, &options, overrides)
-                        .await?;
+    let result: Result<_, String> = async {
+        let working_directory =
+            std::env::temp_dir().join(format!("stage0-acp-config-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir(&working_directory)
+            .map_err(|_| "Could not create an isolated ACP configuration directory")?;
+        let mut process = match tokio::time::timeout(
+            REVIEW_CONFIG_DISCOVERY_TIMEOUT,
+            AcpProcess::start(&config, Some(&working_directory)),
+        )
+        .await
+        {
+            Ok(Ok(process)) => process,
+            Ok(Err(error)) => {
+                let _ = std::fs::remove_dir_all(&working_directory);
+                return Err(error);
             }
-        }
-        Ok(filter_review_config_options(&options))
-    })
+            Err(_) => {
+                let _ = std::fs::remove_dir_all(&working_directory);
+                return Err("ACP agent startup timed out while loading reviewer options.".into());
+            }
+        };
+        let result = tokio::time::timeout(REVIEW_CONFIG_DISCOVERY_TIMEOUT, async {
+            process.initialize().await?;
+            let session = process
+                .request(
+                    1,
+                    "session/new",
+                    json!({
+                        "cwd": working_directory.to_string_lossy(),
+                        "mcpServers": []
+                    }),
+                )
+                .await?;
+            let session_id = session
+                .get("sessionId")
+                .and_then(Value::as_str)
+                .ok_or("ACP agent did not return a session ID")?;
+            let mut options = session
+                .get("configOptions")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
+            if let Some(overrides) = config_overrides.as_ref() {
+                validate_review_config_overrides(overrides)?;
+                if let Some(overrides) = overrides.as_object() {
+                    options =
+                        apply_review_config_options(&mut process, session_id, &options, overrides)
+                            .await?;
+                }
+            }
+            Ok(filter_review_config_options(&options))
+        })
+        .await;
+        let result = match result {
+            Ok(result) => result,
+            Err(_) => Err("ACP agent did not return reviewer options within 45 seconds.".into()),
+        };
+        process.close().await;
+        let _ = std::fs::remove_dir_all(&working_directory);
+        result
+    }
     .await;
-    let result = match result {
-        Ok(result) => result,
-        Err(_) => Err("ACP agent did not return reviewer options within 45 seconds.".into()),
-    };
-    process.close().await;
-    let _ = std::fs::remove_dir_all(&working_directory);
-    result
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 
 pub(super) fn filter_review_config_options(options: &[Value]) -> Vec<Value> {

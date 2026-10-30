@@ -2700,5 +2700,50 @@
       "reviewerCouldNotStart": "No se pudo iniciar el revisor de IA: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "El revisor de IA no pudo comprobar el MR virtual actualizado: {{error}}"
     }
+  },
+  "backend": {
+    "errors": {
+      "operation": "La operación falló.",
+      "preferences": "No se pudieron guardar o cargar las preferencias.",
+      "git": "La operación de Git falló.",
+      "ai": "La operación del proveedor de IA falló.",
+      "review": "No se pudo completar la revisión de IA.",
+      "virtualMr": "La operación de la solicitud de fusión falló.",
+      "credentials": "La operación de credenciales falló.",
+      "updates": "La actualización de software falló.",
+      "sandbox": "La operación del entorno aislado falló.",
+      "window": "La operación de la ventana falló.",
+      "notifications": "La operación de notificación falló.",
+      "about": "No se pudo cargar la información de la aplicación.",
+      "performance": "No se pudo cargar la información de rendimiento."
+    },
+    "repository": {
+      "missing": "La ruta del repositorio ya no existe.",
+      "notDirectory": "La ruta del repositorio no es un directorio.",
+      "notGit": "Este directorio no es un repositorio Git.",
+      "permission": "Se denegó el permiso de lectura del repositorio."
+    },
+    "updates": {
+      "ready": "Verificado y listo para instalar.",
+      "current": "Está utilizando la última versión publicada.",
+      "installing": "Instalando la actualización. Stage0 se reiniciará.",
+      "installFailed": "La instalación falló. Compruebe el espacio en disco y los permisos de instalación e inténtelo de nuevo.",
+      "development": "Las actualizaciones están desactivadas en las compilaciones de desarrollo.",
+      "packageRequired": "Instale AppImage, la aplicación de macOS o el instalador de Windows para actualizar desde la aplicación. Los demás paquetes se actualizan desde GitHub Releases."
+    },
+    "preferences": {
+      "changed": "Las preferencias cambiaron en otro lugar. Recargue el archivo más reciente antes de aplicar los cambios.",
+      "invalid": "Corrija preferences.json antes de aplicar los cambios.",
+      "revisionRequired": "Recargue Preferencias para obtener la revisión actual antes de aplicar los cambios.",
+      "uncertain": "Las preferencias en disco cambiaron, pero no se pudo confirmar su almacenamiento duradero. Recargue Preferencias antes de reintentar."
+    },
+    "git": {
+      "connected": "Conexión correcta. Se puede acceder al repositorio remoto.",
+      "cloneReady": "El repositorio es válido y está listo para clonar.",
+      "conflict": "Conflicto de fusión en {{path}}."
+    },
+    "harness": {
+      "cliPreflight": "Solo se comprobó la disponibilidad del ejecutable; no se ejecutó ningún proceso ni prueba de autenticación. Una CLI instalada o con sesión iniciada no implica capacidad para llamar herramientas. Su integración requiere un adaptador de protocolo estructurado revisado y una política de aislamiento y aprobación del sistema operativo. El arnés no utiliza el ejecutor de instrucciones heredado."
+    }
   }
 }

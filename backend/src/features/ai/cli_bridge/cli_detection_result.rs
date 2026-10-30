@@ -8,5 +8,6 @@ pub struct CliDetectionResult {
     pub logged_in: bool,
     pub auth_info: Option<String>,
     pub executable_path: Option<String>,
+    #[serde(serialize_with = "crate::common::messages::serialize_optional_error")]
     pub error: Option<String>,
 }

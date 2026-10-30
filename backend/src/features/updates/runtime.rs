@@ -47,7 +47,10 @@ impl UpdateRuntime {
     pub(super) fn fail(&self, app: &AppHandle, message: &str) {
         self.change(app, |status| {
             status.phase = "error".into();
-            status.message = Some(message.into());
+            status.message = Some(crate::common::messages::command_error(
+                "updates",
+                message.into(),
+            ));
         });
     }
 

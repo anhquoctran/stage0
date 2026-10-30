@@ -7,57 +7,65 @@ const AUTH_STATUS_WAIT: Duration = Duration::from_secs(5);
 
 #[command]
 pub async fn acp_agent_auth_methods(config: AcpAgentConfig) -> Result<Vec<Value>, String> {
-    let mut process = AcpProcess::start(&config, None).await?;
-    let result = process.initialize().await;
-    process.close().await;
-    let initialized = result?;
-    Ok(initialized
-        .get("authMethods")
-        .and_then(Value::as_array)
-        .cloned()
-        .unwrap_or_default())
+    let result: Result<_, String> = async {
+        let mut process = AcpProcess::start(&config, None).await?;
+        let result = process.initialize().await;
+        process.close().await;
+        let initialized = result?;
+        Ok(initialized
+            .get("authMethods")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default())
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 
 #[command]
 pub async fn acp_agent_connection_info(config: AcpAgentConfig) -> Result<Value, String> {
-    let mut process = AcpProcess::start(&config, None).await?;
-    let result = async {
-        let initialized = process.initialize().await?;
-        let supports_auth_status = initialized
-            .pointer("/agentCapabilities/_meta/authStatus")
-            .is_some();
-        let supports_auth_logout = supports_auth_logout(&initialized);
-        let auth_methods = initialized
-            .get("authMethods")
-            .and_then(Value::as_array)
-            .map(|methods| {
-                methods
-                    .iter()
-                    .filter_map(sanitize_auth_method)
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
-        let agent_info = initialized
-            .get("agentInfo")
-            .or_else(|| initialized.get("implementation"))
-            .and_then(sanitize_agent_info);
-        let auth_status = if supports_auth_status {
-            process.wait_for_auth_status(AUTH_STATUS_WAIT).await?
-        } else {
-            process.auth_status.clone()
-        };
+    let result: Result<_, String> = async {
+        let mut process = AcpProcess::start(&config, None).await?;
+        let result = async {
+            let initialized = process.initialize().await?;
+            let supports_auth_status = initialized
+                .pointer("/agentCapabilities/_meta/authStatus")
+                .is_some();
+            let supports_auth_logout = supports_auth_logout(&initialized);
+            let auth_methods = initialized
+                .get("authMethods")
+                .and_then(Value::as_array)
+                .map(|methods| {
+                    methods
+                        .iter()
+                        .filter_map(sanitize_auth_method)
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            let agent_info = initialized
+                .get("agentInfo")
+                .or_else(|| initialized.get("implementation"))
+                .and_then(sanitize_agent_info);
+            let auth_status = if supports_auth_status {
+                process.wait_for_auth_status(AUTH_STATUS_WAIT).await?
+            } else {
+                process.auth_status.clone()
+            };
 
-        Ok(json!({
-            "authMethods": auth_methods,
-            "authStatus": auth_status,
-            "supportsAuthStatus": supports_auth_status,
-            "supportsAuthLogout": supports_auth_logout,
-            "agentInfo": agent_info,
-        }))
+            Ok(json!({
+                "authMethods": auth_methods,
+                "authStatus": auth_status,
+                "supportsAuthStatus": supports_auth_status,
+                "supportsAuthLogout": supports_auth_logout,
+                "agentInfo": agent_info,
+            }))
+        }
+        .await;
+        process.close().await;
+        result
     }
     .await;
-    process.close().await;
-    result
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 
 pub(super) fn supports_auth_logout(initialized: &Value) -> bool {
@@ -143,6 +151,7 @@ pub async fn acp_agent_authenticate(
     config: AcpAgentConfig,
     method_id: String,
 ) -> Result<Value, String> {
+    let result: Result<_, String> = async {
     if method_id.trim().is_empty() || method_id.len() > 200 {
         return Err("Invalid ACP authentication method".into());
     }
@@ -160,20 +169,26 @@ pub async fn acp_agent_authenticate(
     }.await;
     process.close().await;
     result
+}.await;
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 
 #[command]
 pub async fn acp_agent_logout(config: AcpAgentConfig) -> Result<(), String> {
-    let mut process = AcpProcess::start(&config, None).await?;
-    let result = async {
-        let initialized = process.initialize().await?;
-        if !supports_auth_logout(&initialized) {
-            return Err("This agent does not support logout over ACP".into());
+    let result: Result<_, String> = async {
+        let mut process = AcpProcess::start(&config, None).await?;
+        let result = async {
+            let initialized = process.initialize().await?;
+            if !supports_auth_logout(&initialized) {
+                return Err("This agent does not support logout over ACP".into());
+            }
+            process.request(1, "logout", json!({})).await?;
+            Ok(())
         }
-        process.request(1, "logout", json!({})).await?;
-        Ok(())
+        .await;
+        process.close().await;
+        result
     }
     .await;
-    process.close().await;
-    result
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }

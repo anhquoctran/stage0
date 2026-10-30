@@ -2693,5 +2693,50 @@
       "reviewerCouldNotStart": "KI-Reviewer konnte nicht gestartet werden: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "KI-Reviewer konnte die aktualisierte virtuelle MR nicht prüfen: {{error}}"
     }
+  },
+  "backend": {
+    "errors": {
+      "operation": "Der Vorgang ist fehlgeschlagen.",
+      "preferences": "Einstellungen konnten nicht gespeichert oder geladen werden.",
+      "git": "Der Git-Vorgang ist fehlgeschlagen.",
+      "ai": "Der Vorgang beim KI-Anbieter ist fehlgeschlagen.",
+      "review": "Die KI-Prüfung konnte nicht abgeschlossen werden.",
+      "virtualMr": "Der Merge-Request-Vorgang ist fehlgeschlagen.",
+      "credentials": "Der Vorgang für Anmeldedaten ist fehlgeschlagen.",
+      "updates": "Die Softwareaktualisierung ist fehlgeschlagen.",
+      "sandbox": "Der Sandbox-Vorgang ist fehlgeschlagen.",
+      "window": "Der Fenstervorgang ist fehlgeschlagen.",
+      "notifications": "Der Benachrichtigungsvorgang ist fehlgeschlagen.",
+      "about": "Anwendungsinformationen konnten nicht geladen werden.",
+      "performance": "Leistungsinformationen konnten nicht geladen werden."
+    },
+    "repository": {
+      "missing": "Der Repository-Pfad existiert nicht mehr.",
+      "notDirectory": "Der Repository-Pfad ist kein Verzeichnis.",
+      "notGit": "Dieses Verzeichnis ist kein Git-Repository.",
+      "permission": "Der Lesezugriff auf dieses Repository wurde verweigert."
+    },
+    "updates": {
+      "ready": "Überprüft und bereit zur Installation.",
+      "current": "Sie verwenden die neueste veröffentlichte Version.",
+      "installing": "Die Aktualisierung wird installiert. Stage0 wird neu gestartet.",
+      "installFailed": "Die Installation ist fehlgeschlagen. Prüfen Sie den Speicherplatz und die Installationsberechtigungen und versuchen Sie es erneut.",
+      "development": "Softwareaktualisierungen sind in Entwicklungsversionen deaktiviert.",
+      "packageRequired": "Installieren Sie AppImage, die macOS-App oder das Windows-Installationspaket für Aktualisierungen in der App. Andere Pakete können über GitHub Releases aktualisiert werden."
+    },
+    "preferences": {
+      "changed": "Die Einstellungen wurden andernorts geändert. Laden Sie die neueste Datei, bevor Sie Änderungen anwenden.",
+      "invalid": "Korrigieren Sie preferences.json, bevor Sie Änderungen anwenden.",
+      "revisionRequired": "Laden Sie die Einstellungen neu, um vor dem Anwenden die aktuelle Revision zu erhalten.",
+      "uncertain": "Die Einstellungen auf dem Datenträger wurden geändert, aber die dauerhafte Speicherung konnte nicht bestätigt werden. Laden Sie die Einstellungen vor einem erneuten Versuch neu."
+    },
+    "git": {
+      "connected": "Verbindung erfolgreich. Das Remote-Repository ist erreichbar.",
+      "cloneReady": "Das Repository ist gültig und kann geklont werden.",
+      "conflict": "Merge-Konflikt in {{path}}."
+    },
+    "harness": {
+      "cliPreflight": "Nur die Verfügbarkeit der ausführbaren Datei wurde geprüft; es wurden weder Prozesse noch Authentifizierungsprüfungen ausgeführt. Eine installierte oder angemeldete CLI bietet nicht automatisch Werkzeugaufrufe. Die Anbindung erfordert einen geprüften Adapter für strukturierte Protokolle und eine Isolations- und Genehmigungsrichtlinie des Betriebssystems. Das Prüfsystem verwendet den alten Prompt-Runner nicht."
+    }
   }
 }

@@ -2693,5 +2693,50 @@
       "reviewerCouldNotStart": "AI reviewer could not start: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI reviewer could not check the updated Virtual MR: {{error}}"
     }
+  },
+  "backend": {
+    "errors": {
+      "operation": "The operation failed.",
+      "preferences": "Could not save or load preferences.",
+      "git": "The Git operation failed.",
+      "ai": "The AI provider operation failed.",
+      "review": "The AI review could not be completed.",
+      "virtualMr": "The merge request operation failed.",
+      "credentials": "The credential operation failed.",
+      "updates": "The software update failed.",
+      "sandbox": "The sandbox operation failed.",
+      "window": "The window operation failed.",
+      "notifications": "The notification operation failed.",
+      "about": "Could not load application information.",
+      "performance": "Could not load performance information."
+    },
+    "repository": {
+      "missing": "The repository path no longer exists.",
+      "notDirectory": "The repository path is not a directory.",
+      "notGit": "This directory is not a Git repository.",
+      "permission": "Permission to read this repository was denied."
+    },
+    "updates": {
+      "ready": "Verified and ready to install.",
+      "current": "You are running the latest published version.",
+      "installing": "Installing the update. Stage0 will restart.",
+      "installFailed": "Installation failed. Check disk space and installation permissions, then retry.",
+      "development": "Software updates are disabled in development builds.",
+      "packageRequired": "Install the AppImage, macOS app, or Windows installer to enable in-app updates. Other packages can be updated from GitHub Releases."
+    },
+    "preferences": {
+      "changed": "Preferences changed elsewhere. Reload the latest file before applying changes.",
+      "invalid": "Fix preferences.json before applying changes.",
+      "revisionRequired": "Reload Preferences to obtain the current revision before applying changes.",
+      "uncertain": "Preferences on disk changed, but durable completion could not be confirmed. Reload Preferences before retrying."
+    },
+    "git": {
+      "connected": "Connection successful. The remote repository is accessible.",
+      "cloneReady": "The repository is valid and ready to clone.",
+      "conflict": "Merge conflict in {{path}}."
+    },
+    "harness": {
+      "cliPreflight": "Only executable availability was checked; no process or authentication probe was run. An installed or signed-in CLI is not a tool-calling capability. Attaching it requires a reviewed structured-protocol adapter and OS isolation/approval policy. The legacy prompt runner is not used by the harness."
+    }
   }
 }

@@ -6,5 +6,6 @@ pub struct UnifiedAiChatResponse {
     pub content: String,
     pub duration_ms: u64,
     pub provider_used: String,
+    #[serde(serialize_with = "crate::common::messages::serialize_optional_error")]
     pub error: Option<String>,
 }

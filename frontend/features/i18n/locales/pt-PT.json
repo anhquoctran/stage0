@@ -2700,5 +2700,50 @@
       "reviewerCouldNotStart": "Não foi possível iniciar o revisor de IA: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "O revisor de IA não conseguiu verificar a MR virtual atualizada: {{error}}"
     }
+  },
+  "backend": {
+    "errors": {
+      "operation": "A operação falhou.",
+      "preferences": "Não foi possível guardar ou carregar as preferências.",
+      "git": "A operação do Git falhou.",
+      "ai": "A operação do fornecedor de IA falhou.",
+      "review": "Não foi possível concluir a revisão de IA.",
+      "virtualMr": "A operação do pedido de integração falhou.",
+      "credentials": "A operação de credenciais falhou.",
+      "updates": "A atualização do software falhou.",
+      "sandbox": "A operação do ambiente isolado falhou.",
+      "window": "A operação da janela falhou.",
+      "notifications": "A operação de notificação falhou.",
+      "about": "Não foi possível carregar as informações da aplicação.",
+      "performance": "Não foi possível carregar as informações de desempenho."
+    },
+    "repository": {
+      "missing": "O caminho do repositório já não existe.",
+      "notDirectory": "O caminho do repositório não é um diretório.",
+      "notGit": "Este diretório não é um repositório Git.",
+      "permission": "A permissão de leitura deste repositório foi negada."
+    },
+    "updates": {
+      "ready": "Verificado e pronto a instalar.",
+      "current": "Está a utilizar a versão publicada mais recente.",
+      "installing": "A instalar a atualização. O Stage0 será reiniciado.",
+      "installFailed": "A instalação falhou. Verifique o espaço em disco e as permissões de instalação e tente novamente.",
+      "development": "As atualizações estão desativadas nas compilações de desenvolvimento.",
+      "packageRequired": "Instale o AppImage, a aplicação para macOS ou o instalador do Windows para atualizar na aplicação. Outros pacotes podem ser atualizados no GitHub Releases."
+    },
+    "preferences": {
+      "changed": "As preferências foram alteradas noutro local. Recarregue o ficheiro mais recente antes de aplicar as alterações.",
+      "invalid": "Corrija preferences.json antes de aplicar as alterações.",
+      "revisionRequired": "Recarregue as Preferências para obter a revisão atual antes de aplicar as alterações.",
+      "uncertain": "As preferências no disco foram alteradas, mas não foi possível confirmar a gravação duradoura. Recarregue as Preferências antes de tentar novamente."
+    },
+    "git": {
+      "connected": "Ligação bem-sucedida. O repositório remoto está acessível.",
+      "cloneReady": "O repositório é válido e está pronto para clonar.",
+      "conflict": "Conflito de integração em {{path}}."
+    },
+    "harness": {
+      "cliPreflight": "Foi apenas verificada a disponibilidade do executável; não foi executado qualquer processo ou teste de autenticação. Uma CLI instalada ou autenticada não implica capacidade de chamar ferramentas. A integração exige um adaptador de protocolo estruturado revisto e uma política de isolamento e aprovação do sistema operativo. O ambiente de revisão não usa o executor de instruções antigo."
+    }
   }
 }

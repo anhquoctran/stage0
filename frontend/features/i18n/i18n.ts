@@ -1,4 +1,5 @@
 import i18n from 'i18next';
+import { configureBackendMessages } from '../../common/services/ipc/backendMessages';
 import { initReactI18next } from 'react-i18next';
 import en from './locales/en.json';
 import vi from './locales/vi.json';
@@ -44,5 +45,7 @@ void i18n.use(initReactI18next).init({
   compatibilityJSON: 'v4',
   react: { useSuspense: false },
 });
+
+configureBackendMessages((code, params) => i18n.t(code, { ...params, defaultValue: i18n.t('backend.errors.operation') }));
 
 export default i18n;

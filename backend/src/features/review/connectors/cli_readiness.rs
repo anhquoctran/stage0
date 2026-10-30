@@ -34,7 +34,14 @@ pub fn inspect(cli_type: &str) -> Result<CliHarnessReadiness, String> {
             candidates.into_iter().find(is_executable)
         })
     });
-    Ok(CliHarnessReadiness{cli_type:cli_type.into(),executable_found:path.is_some(),executable_path:path.map(|p|p.to_string_lossy().into_owned()),attached_to_harness:false,required_protocol:super::cli_protocol::VERSION.into(),message:"Filesystem preflight only; no process or authentication probe was run. CLI presence/login is not a tool-calling capability. A reviewed structured-protocol adapter and OS-level isolation/approval policy are required before attaching this CLI; the legacy prompt runner is not used by the harness.".into()})
+    Ok(CliHarnessReadiness {
+        cli_type: cli_type.into(),
+        executable_found: path.is_some(),
+        executable_path: path.map(|p| p.to_string_lossy().into_owned()),
+        attached_to_harness: false,
+        required_protocol: super::cli_protocol::VERSION.into(),
+        message: crate::common::messages::code("backend.harness.cliPreflight"),
+    })
 }
 
 fn is_executable(path: &PathBuf) -> bool {

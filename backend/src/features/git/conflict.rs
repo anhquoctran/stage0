@@ -101,10 +101,15 @@ pub fn check_conflicts(
         } else {
             0
         };
-        let (conflict_type, message) = typed_messages
-            .get(path)
-            .cloned()
-            .unwrap_or_else(|| ("merge".to_string(), format!("Merge conflict in {}", path)));
+        let (conflict_type, message) = typed_messages.get(path).cloned().unwrap_or_else(|| {
+            (
+                "merge".to_string(),
+                crate::common::messages::message(
+                    "backend.git.conflict",
+                    serde_json::json!({ "path": path }),
+                ),
+            )
+        });
         details.push(ConflictedFileInfo {
             path: path.clone(),
             conflict_type,

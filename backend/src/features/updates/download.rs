@@ -69,7 +69,7 @@ pub(super) async fn download(app: &AppHandle) -> Result<(), String> {
         status.phase = "ready".into();
         status.downloaded_bytes = size;
         status.total_bytes = Some(size);
-        status.message = Some("Verified and ready to install.".into());
+        status.message = Some(crate::common::messages::code("backend.updates.ready"));
     });
     Ok(())
 }

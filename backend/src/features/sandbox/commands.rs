@@ -10,18 +10,26 @@ use tauri::{AppHandle, Emitter, Manager};
 
 #[tauri::command]
 pub async fn get_available_sandboxes(app: AppHandle) -> Result<Vec<SandboxAdapterInfo>, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let manager = app.state::<SandboxManager>();
-        Ok(manager.list_available_adapters())
-    })
-    .await
-    .map_err(|error| format!("Task execution failed: {}", error))?
+    let result: Result<_, String> = async {
+        tauri::async_runtime::spawn_blocking(move || {
+            let manager = app.state::<SandboxManager>();
+            Ok(manager.list_available_adapters())
+        })
+        .await
+        .map_err(|error| format!("Task execution failed: {}", error))?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
 pub async fn get_active_sandbox(app: AppHandle) -> Result<SandboxType, String> {
-    let manager = app.state::<SandboxManager>();
-    Ok(manager.get_active_type())
+    let result: Result<_, String> = async {
+        let manager = app.state::<SandboxManager>();
+        Ok(manager.get_active_type())
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
@@ -29,19 +37,23 @@ pub async fn set_active_sandbox(
     app: AppHandle,
     adapter_type: SandboxType,
 ) -> Result<SandboxType, String> {
-    crate::features::preferences::transaction::run_async(move || {
-        let preferences = app.state::<crate::features::preferences::PreferencesManager>();
-        let current = preferences.read()?;
-        let saved = preferences.patch(
-            serde_json::json!({ "sandbox": { "type": adapter_type } }),
-            current.revision,
-        )?;
-        let manager = app.state::<SandboxManager>();
-        manager.set_active_type(adapter_type.clone());
-        let _ = app.emit("preferences-changed", saved.revision);
-        Ok(adapter_type)
-    })
-    .await
+    let result: Result<_, String> = async {
+        crate::features::preferences::transaction::run_async(move || {
+            let preferences = app.state::<crate::features::preferences::PreferencesManager>();
+            let current = preferences.read()?;
+            let saved = preferences.patch(
+                serde_json::json!({ "sandbox": { "type": adapter_type } }),
+                current.revision,
+            )?;
+            let manager = app.state::<SandboxManager>();
+            manager.set_active_type(adapter_type.clone());
+            let _ = app.emit("preferences-changed", saved.revision);
+            Ok(adapter_type)
+        })
+        .await
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
@@ -51,28 +63,40 @@ pub async fn create_sandbox_instance(
     base: String,
     compare: String,
 ) -> Result<SandboxInstanceInfo, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let manager = app.state::<SandboxManager>();
-        manager.create_instance(&repo_path, &base, &compare)
-    })
-    .await
-    .map_err(|error| format!("Task execution failed: {}", error))?
+    let result: Result<_, String> = async {
+        tauri::async_runtime::spawn_blocking(move || {
+            let manager = app.state::<SandboxManager>();
+            manager.create_instance(&repo_path, &base, &compare)
+        })
+        .await
+        .map_err(|error| format!("Task execution failed: {}", error))?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
 pub async fn destroy_sandbox_instance(app: AppHandle, instance_id: String) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let manager = app.state::<SandboxManager>();
-        manager.destroy_instance(&instance_id)
-    })
-    .await
-    .map_err(|error| format!("Task execution failed: {}", error))?
+    let result: Result<_, String> = async {
+        tauri::async_runtime::spawn_blocking(move || {
+            let manager = app.state::<SandboxManager>();
+            manager.destroy_instance(&instance_id)
+        })
+        .await
+        .map_err(|error| format!("Task execution failed: {}", error))?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
 pub async fn list_sandbox_instances(app: AppHandle) -> Result<Vec<SandboxInstanceInfo>, String> {
-    let manager = app.state::<SandboxManager>();
-    Ok(manager.list_active_instances())
+    let result: Result<_, String> = async {
+        let manager = app.state::<SandboxManager>();
+        Ok(manager.list_active_instances())
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
@@ -82,6 +106,7 @@ pub async fn execute_sandbox_command(
     command: String,
     args: Vec<String>,
 ) -> Result<SandboxExecutionResult, String> {
+    let result: Result<_, String> = async {
     tauri::async_runtime::spawn_blocking(move || {
         let manager = app.state::<SandboxManager>();
         let instance = manager
@@ -125,6 +150,8 @@ pub async fn execute_sandbox_command(
     })
     .await
     .map_err(|e| format!("Sandbox task join error: {}", e))?
+}.await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
@@ -133,22 +160,30 @@ pub async fn sync_active_sandbox(
     instance_id: String,
     repo_path: String,
 ) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let manager = app.state::<SandboxManager>();
-        manager.sync_instance(&instance_id, &repo_path)
-    })
-    .await
-    .map_err(|e| format!("Task execution failed: {}", e))?
+    let result: Result<_, String> = async {
+        tauri::async_runtime::spawn_blocking(move || {
+            let manager = app.state::<SandboxManager>();
+            manager.sync_instance(&instance_id, &repo_path)
+        })
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
 pub async fn get_sandbox_tool_schemas(app: AppHandle) -> Result<serde_json::Value, String> {
-    let manager = app.state::<SandboxManager>();
-    let active_type = manager.get_active_type();
-    Ok(crate::features::sandbox::get_tool_schemas(
-        &active_type,
-        &manager.get_guardrail_policy(),
-    ))
+    let result: Result<_, String> = async {
+        let manager = app.state::<SandboxManager>();
+        let active_type = manager.get_active_type();
+        Ok(crate::features::sandbox::get_tool_schemas(
+            &active_type,
+            &manager.get_guardrail_policy(),
+        ))
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
@@ -158,18 +193,26 @@ pub async fn dispatch_sandbox_tool(
     tool_name: String,
     arguments: serde_json::Value,
 ) -> Result<serde_json::Value, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let manager = app.state::<SandboxManager>();
-        manager.dispatch_tool(&instance_id, &tool_name, arguments)
-    })
-    .await
-    .map_err(|e| format!("Task execution failed: {}", e))?
+    let result: Result<_, String> = async {
+        tauri::async_runtime::spawn_blocking(move || {
+            let manager = app.state::<SandboxManager>();
+            manager.dispatch_tool(&instance_id, &tool_name, arguments)
+        })
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
 pub async fn get_guardrail_policy(app: AppHandle) -> Result<GuardrailPolicy, String> {
-    let manager = app.state::<SandboxManager>();
-    Ok(manager.get_guardrail_policy())
+    let result: Result<_, String> = async {
+        let manager = app.state::<SandboxManager>();
+        Ok(manager.get_guardrail_policy())
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
@@ -177,9 +220,13 @@ pub async fn update_guardrail_policy(
     app: AppHandle,
     policy: GuardrailPolicy,
 ) -> Result<(), String> {
-    let manager = app.state::<SandboxManager>();
-    manager.update_guardrail_policy(policy);
-    Ok(())
+    let result: Result<_, String> = async {
+        let manager = app.state::<SandboxManager>();
+        manager.update_guardrail_policy(policy);
+        Ok(())
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
@@ -187,14 +234,18 @@ pub async fn reset_guardrail_policy(
     app: AppHandle,
     mode: String,
 ) -> Result<GuardrailPolicy, String> {
-    let manager = app.state::<SandboxManager>();
-    let parsed_mode = match mode.to_lowercase().as_str() {
-        "strict" => GuardrailMode::Strict,
-        "permissive" => GuardrailMode::Permissive,
-        _ => GuardrailMode::Balanced,
-    };
-    manager.reset_guardrail_policy(parsed_mode);
-    Ok(manager.get_guardrail_policy())
+    let result: Result<_, String> = async {
+        let manager = app.state::<SandboxManager>();
+        let parsed_mode = match mode.to_lowercase().as_str() {
+            "strict" => GuardrailMode::Strict,
+            "permissive" => GuardrailMode::Permissive,
+            _ => GuardrailMode::Balanced,
+        };
+        manager.reset_guardrail_policy(parsed_mode);
+        Ok(manager.get_guardrail_policy())
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
@@ -202,15 +253,23 @@ pub async fn get_guardrail_audit_log(
     app: AppHandle,
     limit: Option<usize>,
 ) -> Result<Vec<GuardrailAuditEvent>, String> {
-    let manager = app.state::<SandboxManager>();
-    Ok(manager.get_guardrail_audit_log(limit))
+    let result: Result<_, String> = async {
+        let manager = app.state::<SandboxManager>();
+        Ok(manager.get_guardrail_audit_log(limit))
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
 pub async fn clear_guardrail_audit_log(app: AppHandle) -> Result<(), String> {
-    let manager = app.state::<SandboxManager>();
-    manager.clear_guardrail_audit_log();
-    Ok(())
+    let result: Result<_, String> = async {
+        let manager = app.state::<SandboxManager>();
+        manager.clear_guardrail_audit_log();
+        Ok(())
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }
 
 #[tauri::command]
@@ -219,6 +278,10 @@ pub async fn simulate_guardrail_check(
     tool_name: String,
     arguments: serde_json::Value,
 ) -> Result<GuardrailEvaluationResult, String> {
-    let manager = app.state::<SandboxManager>();
-    Ok(manager.simulate_guardrail_check(&tool_name, arguments))
+    let result: Result<_, String> = async {
+        let manager = app.state::<SandboxManager>();
+        Ok(manager.simulate_guardrail_check(&tool_name, arguments))
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("sandbox", error))
 }

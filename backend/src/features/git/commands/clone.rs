@@ -8,11 +8,15 @@ use tauri::{AppHandle, Manager};
 
 #[tauri::command]
 pub async fn check_remote_repo_url(url: String) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        crate::features::git::ops::check_git_remote_url(&url)
-    })
-    .await
-    .map_err(|e| format!("Task execution failed: {}", e))?
+    let result: Result<_, String> = async {
+        tauri::async_runtime::spawn_blocking(move || {
+            crate::features::git::ops::check_git_remote_url(&url)
+        })
+        .await
+        .map_err(|e| format!("Task execution failed: {}", e))?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("git", error))
 }
 
 #[tauri::command]
@@ -21,36 +25,40 @@ pub async fn get_clone_remote_refs(
     url: String,
     credential_id: Option<String>,
 ) -> Result<crate::features::git::RemoteCloneRefs, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let url = url.trim();
-        if url.is_empty() {
-            return Err("Please enter a repository URL.".into());
-        }
-        crate::features::git::ops::validate_remote_url(url)?;
-        let mut command =
-            std::process::Command::new(crate::features::git::runner::get_active_git_path());
-        let credential_lease = match credential_id.as_deref() {
-            Some(id) => Some(prepare_clone_credential(&app.state::<Database>(), id, url)?),
-            None => None,
-        };
-        if let Some(credential) = credential_lease.as_ref() {
-            apply_clone_credential_helper(
-                &mut command,
-                &credential.expected_origin,
-                &clone_credential_helper_config(credential)?,
-            );
-            command.env_remove("GIT_ASKPASS").env_remove("SSH_ASKPASS");
-        } else {
-            command.env("GIT_ASKPASS", "echo");
-        }
-        command
-            .env("GIT_TERMINAL_PROMPT", "0")
-            .env("GIT_ALLOW_PROTOCOL", "git:http:https:ssh")
-            .env("LC_ALL", "C");
-        crate::features::git::RemoteCloneRefs::read(&mut command, url)
-    })
-    .await
-    .map_err(|error| format!("Task execution failed: {error}"))?
+    let result: Result<_, String> = async {
+        tauri::async_runtime::spawn_blocking(move || {
+            let url = url.trim();
+            if url.is_empty() {
+                return Err("Please enter a repository URL.".into());
+            }
+            crate::features::git::ops::validate_remote_url(url)?;
+            let mut command =
+                std::process::Command::new(crate::features::git::runner::get_active_git_path());
+            let credential_lease = match credential_id.as_deref() {
+                Some(id) => Some(prepare_clone_credential(&app.state::<Database>(), id, url)?),
+                None => None,
+            };
+            if let Some(credential) = credential_lease.as_ref() {
+                apply_clone_credential_helper(
+                    &mut command,
+                    &credential.expected_origin,
+                    &clone_credential_helper_config(credential)?,
+                );
+                command.env_remove("GIT_ASKPASS").env_remove("SSH_ASKPASS");
+            } else {
+                command.env("GIT_ASKPASS", "echo");
+            }
+            command
+                .env("GIT_TERMINAL_PROMPT", "0")
+                .env("GIT_ALLOW_PROTOCOL", "git:http:https:ssh")
+                .env("LC_ALL", "C");
+            crate::features::git::RemoteCloneRefs::read(&mut command, url)
+        })
+        .await
+        .map_err(|error| format!("Task execution failed: {error}"))?
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("git", error))
 }
 
 #[tauri::command]
@@ -62,6 +70,7 @@ pub async fn clone_repository(
     options: Option<crate::features::git::CloneOptions>,
     on_progress: tauri::ipc::Channel<crate::features::git::progress::GitOperationProgress>,
 ) -> Result<RepoInfo, String> {
+    let result: Result<_, String> = async {
     tauri::async_runtime::spawn_blocking(move || {
         let options = options.unwrap_or_default();
         let clone_args = options.git_arguments()?;
@@ -168,4 +177,6 @@ pub async fn clone_repository(
     })
     .await
     .map_err(|e| format!("Task execution failed: {}", e))?
+}.await;
+    result.map_err(|error| crate::common::messages::command_error("git", error))
 }

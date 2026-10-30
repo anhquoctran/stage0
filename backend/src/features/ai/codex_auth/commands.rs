@@ -11,28 +11,38 @@ fn profile(app: &AppHandle) -> Result<std::path::PathBuf, String> {
 
 #[tauri::command]
 pub fn chatgpt_device_auth_status(app: AppHandle) -> Result<CodexAuthStatus, String> {
-    app.state::<CodexAuthManager>().status()
+    let result = (|| -> Result<_, String> { app.state::<CodexAuthManager>().status() })();
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 #[tauri::command]
 pub fn chatgpt_device_auth_start(app: AppHandle) -> Result<CodexAuthStatus, String> {
-    app.state::<CodexAuthManager>().begin(profile(&app)?)
+    let result =
+        (|| -> Result<_, String> { app.state::<CodexAuthManager>().begin(profile(&app)?) })();
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 #[tauri::command]
 pub fn chatgpt_device_auth_check(app: AppHandle) -> Result<CodexAuthStatus, String> {
-    app.state::<CodexAuthManager>().check(profile(&app)?)
+    let result =
+        (|| -> Result<_, String> { app.state::<CodexAuthManager>().check(profile(&app)?) })();
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 #[tauri::command]
 pub fn chatgpt_device_auth_cancel(
     app: AppHandle,
     attempt_id: String,
 ) -> Result<CodexAuthStatus, String> {
-    app.state::<CodexAuthManager>().cancel(&attempt_id)
+    let result =
+        (|| -> Result<_, String> { app.state::<CodexAuthManager>().cancel(&attempt_id) })();
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 #[tauri::command]
 pub fn chatgpt_device_auth_logout(
     app: AppHandle,
     attempt_id: String,
 ) -> Result<CodexAuthStatus, String> {
-    app.state::<CodexAuthManager>()
-        .logout(profile(&app)?, &attempt_id)
+    let result = (|| -> Result<_, String> {
+        app.state::<CodexAuthManager>()
+            .logout(profile(&app)?, &attempt_id)
+    })();
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }

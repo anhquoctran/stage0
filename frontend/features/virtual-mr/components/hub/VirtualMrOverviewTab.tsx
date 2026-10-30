@@ -3,6 +3,7 @@ import { Trans, useTranslation as useUiTextTranslation } from 'react-i18next';
 import { MarkdownEditor } from '../../../../common/components/MarkdownEditor';
 import { MarkdownPreview } from '../../../../common/components/MarkdownPreview';
 import { useGitStore } from '../../../git/store/useGitStore';
+import { useReviewStore } from '../../../review/store/useReviewStore';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
 import { getDiscussionMentionOptions } from '../../utils/discussionMentions';
 import { VirtualMrActivityTimeline } from '../overview/VirtualMrActivityTimeline';
@@ -12,6 +13,8 @@ import type { VirtualMrOverviewTabProps } from './VirtualMrOverviewTabProps';
 
 export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ session }) => {
   const { t: translateUiText } = useUiTextTranslation();
+  const isGeneratingDescription = useReviewStore((state) =>
+    state.reviewBatches[session.id]?.phase === 'preparing-description');
   const { showToast } = useGitStore();
   const { updateSessionDetails, createDiscussion, consumeDescriptionEditRequest } =
     useVirtualMrStore();
@@ -34,6 +37,10 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
   const postingDiscussionRef = useRef(false);
 
   useEffect(() => {
+    if (isGeneratingDescription) setIsEditingDesc(false);
+  }, [isGeneratingDescription]);
+
+  useEffect(() => {
     if (!session) return;
     setIsEditingDesc(consumeDescriptionEditRequest(session.id));
   }, [session?.id, consumeDescriptionEditRequest]);
@@ -49,6 +56,7 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
   }, [session?.id, session?.description, session?.title, updateSessionDetails]);
 
   const handleSaveDesc = async () => {
+    if (isGeneratingDescription) return;
     await updateSessionDetails(session.id, session.title, descValue);
     showToast(translateUiText('virtualMr.overview.descriptionSaved'));
     setIsEditingDesc(false);
@@ -123,7 +131,7 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
           >
             <div className="flex items-center justify-between border-b border-surface0/60 pb-2">
               <span className="font-semibold text-xs text-text">{translateUiText('virtualMr.overview.description')}</span>
-              {!isEditingDesc ? (
+              {isGeneratingDescription ? null : !isEditingDesc ? (
                 <button
                   type="button"
                   onClick={() => setIsEditingDesc(true)}
@@ -142,7 +150,17 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
               ) : null}
             </div>
 
-            {isEditingDesc ? (
+            {isGeneratingDescription ? (
+              <div role="status" aria-live="polite" aria-busy="true" className="space-y-3 rounded-sm bg-mantle p-4">
+                <p className="text-xs text-subtext0">{translateUiText('virtualMr.reviews.summarizingFiles')}</p>
+                <div aria-hidden="true" className="space-y-2 motion-safe:animate-pulse">
+                  <div className="h-4 w-1/3 rounded-sm bg-surface1" />
+                  <div className="h-3 w-full rounded-sm bg-surface0" />
+                  <div className="h-3 w-5/6 rounded-sm bg-surface0" />
+                  <div className="h-3 w-2/3 rounded-sm bg-surface0" />
+                </div>
+              </div>
+            ) : isEditingDesc ? (
               <div className="space-y-2">
                 <MarkdownEditor
                   value={descValue}

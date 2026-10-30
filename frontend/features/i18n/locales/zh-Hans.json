@@ -2693,5 +2693,50 @@
       "reviewerCouldNotStart": "无法启动 AI 审查者：{{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI 审查者无法检查更新后的虚拟 MR：{{error}}"
     }
+  },
+  "backend": {
+    "errors": {
+      "operation": "操作失败。",
+      "preferences": "无法保存或加载偏好设置。",
+      "git": "Git 操作失败。",
+      "ai": "AI 提供商操作失败。",
+      "review": "无法完成 AI 审查。",
+      "virtualMr": "合并请求操作失败。",
+      "credentials": "凭据操作失败。",
+      "updates": "软件更新失败。",
+      "sandbox": "沙箱操作失败。",
+      "window": "窗口操作失败。",
+      "notifications": "通知操作失败。",
+      "about": "无法加载应用信息。",
+      "performance": "无法加载性能信息。"
+    },
+    "repository": {
+      "missing": "仓库路径已不存在。",
+      "notDirectory": "仓库路径不是目录。",
+      "notGit": "此目录不是 Git 仓库。",
+      "permission": "没有读取此仓库的权限。"
+    },
+    "updates": {
+      "ready": "已验证，可以安装。",
+      "current": "当前使用的是最新发布版本。",
+      "installing": "正在安装更新。Stage0 将重新启动。",
+      "installFailed": "安装失败。请检查磁盘空间和安装权限后重试。",
+      "development": "开发版本已禁用软件更新。",
+      "packageRequired": "请安装 AppImage、macOS 应用或 Windows 安装包以启用应用内更新。其他软件包可从 GitHub Releases 更新。"
+    },
+    "preferences": {
+      "changed": "偏好设置已在其他位置更改。请重新加载最新文件后再应用。",
+      "invalid": "请先修复 preferences.json，再应用更改。",
+      "revisionRequired": "应用更改前，请重新加载偏好设置以获取当前修订版本。",
+      "uncertain": "磁盘上的偏好设置已更改，但无法确认是否已持久保存。请重新加载偏好设置后再试。"
+    },
+    "git": {
+      "connected": "连接成功，可以访问远程仓库。",
+      "cloneReady": "仓库有效，可以克隆。",
+      "conflict": "{{path}} 中存在合并冲突。"
+    },
+    "harness": {
+      "cliPreflight": "仅检查了可执行文件是否存在，未运行进程或进行身份验证检查。已安装或已登录的 CLI 不等于具备工具调用能力。接入需要经过审查的结构化协议适配器及操作系统隔离和审批策略。审查框架不使用旧版提示运行器。"
+    }
   }
 }

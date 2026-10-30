@@ -18,6 +18,7 @@ use tauri::{AppHandle, Manager};
 
 #[tauri::command]
 pub async fn test_ai_review_provider(request: ReviewRequest) -> Result<Value, String> {
+    let result: Result<_, String> = async {
     let url = provider::endpoint(&request)?;
     let tools = super::schemas::tools()
         .into_iter()
@@ -38,6 +39,8 @@ pub async fn test_ai_review_provider(request: ReviewRequest) -> Result<Value, St
     Ok(
         json!({"success":true,"message":format!("Verified function calling for {} / {} ({} reported tokens). No repository source was sent.",request.provider,request.model,usage)}),
     )
+}.await;
+    result.map_err(|error| crate::common::messages::command_error("review", error))
 }
 
 #[tauri::command]
@@ -45,6 +48,7 @@ pub async fn start_ai_review(
     app: AppHandle,
     mut request: ReviewRequest,
 ) -> Result<ReviewRun, String> {
+    let result: Result<_, String> = async {
     let activity = crate::common::activity::OperationLease::acquire()?;
     let preferences = app
         .state::<crate::features::preferences::PreferencesManager>()
@@ -279,6 +283,8 @@ pub async fn start_ai_review(
         }
     });
     Ok(run)
+}.await;
+    result.map_err(|error| crate::common::messages::command_error("review", error))
 }
 
 /// Never launch a process from command/args supplied by the webview. Resolve
@@ -310,22 +316,31 @@ fn resolve_saved_review_agent(
 
 #[tauri::command]
 pub async fn get_ai_review(app: AppHandle, run_id: String) -> Result<Value, String> {
-    let db = app.state::<Database>();
-    Ok(json!({"run":db.get_review_run(&run_id)?,"events":db.review_events(&run_id)?}))
+    let result: Result<_, String> = async {
+        let db = app.state::<Database>();
+        Ok(json!({"run":db.get_review_run(&run_id)?,"events":db.review_events(&run_id)?}))
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("review", error))
 }
 
 #[tauri::command]
 pub async fn list_ai_reviews(app: AppHandle, session_id: String) -> Result<Vec<ReviewRun>, String> {
-    app.state::<Database>().list_review_runs(&session_id)
+    let result: Result<_, String> =
+        async { app.state::<Database>().list_review_runs(&session_id) }.await;
+    result.map_err(|error| crate::common::messages::command_error("review", error))
 }
 
 #[tauri::command]
 pub async fn cancel_ai_review(app: AppHandle, run_id: String) -> Result<(), String> {
-    app.state::<ReviewCoordinator>().cancel(&run_id)
+    let result: Result<_, String> =
+        async { app.state::<ReviewCoordinator>().cancel(&run_id) }.await;
+    result.map_err(|error| crate::common::messages::command_error("review", error))
 }
 
 #[tauri::command]
 pub async fn publish_ai_review(app: AppHandle, run_id: String) -> Result<(), String> {
+    let result: Result<_, String> = async {
     tauri::async_runtime::spawn_blocking(move||{
         let db=app.state::<Database>();let run=db.get_review_run(&run_id)?;
         let (repo,base,head)={let conn=db.conn();conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&run.session_id],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?))).map_err(|_|"Virtual MR no longer exists")?};
@@ -335,4 +350,6 @@ pub async fn publish_ai_review(app: AppHandle, run_id: String) -> Result<(), Str
         context.validate_findings(&run.findings)?;
         db.publish_review(&run)
     }).await.map_err(|_|"Could not publish review findings")?
+}.await;
+    result.map_err(|error| crate::common::messages::command_error("review", error))
 }

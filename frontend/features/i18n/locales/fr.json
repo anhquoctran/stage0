@@ -2700,5 +2700,50 @@
       "reviewerCouldNotStart": "Impossible de démarrer le réviseur IA : {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "Le réviseur IA n’a pas pu vérifier la MR virtuelle mise à jour : {{error}}"
     }
+  },
+  "backend": {
+    "errors": {
+      "operation": "L’opération a échoué.",
+      "preferences": "Impossible d’enregistrer ou de charger les préférences.",
+      "git": "L’opération Git a échoué.",
+      "ai": "L’opération du fournisseur d’IA a échoué.",
+      "review": "La revue par IA n’a pas pu être terminée.",
+      "virtualMr": "L’opération de demande de fusion a échoué.",
+      "credentials": "L’opération sur les identifiants a échoué.",
+      "updates": "La mise à jour logicielle a échoué.",
+      "sandbox": "L’opération du bac à sable a échoué.",
+      "window": "L’opération de fenêtre a échoué.",
+      "notifications": "L’opération de notification a échoué.",
+      "about": "Impossible de charger les informations de l’application.",
+      "performance": "Impossible de charger les informations de performances."
+    },
+    "repository": {
+      "missing": "Le chemin du dépôt n’existe plus.",
+      "notDirectory": "Le chemin du dépôt n’est pas un dossier.",
+      "notGit": "Ce dossier n’est pas un dépôt Git.",
+      "permission": "L’accès en lecture à ce dépôt a été refusé."
+    },
+    "updates": {
+      "ready": "Vérifié et prêt à installer.",
+      "current": "Vous utilisez la dernière version publiée.",
+      "installing": "Installation de la mise à jour. Stage0 va redémarrer.",
+      "installFailed": "L’installation a échoué. Vérifiez l’espace disque et les autorisations d’installation, puis réessayez.",
+      "development": "Les mises à jour sont désactivées dans les versions de développement.",
+      "packageRequired": "Installez l’AppImage, l’application macOS ou le programme d’installation Windows pour activer les mises à jour intégrées. Les autres paquets peuvent être mis à jour depuis GitHub Releases."
+    },
+    "preferences": {
+      "changed": "Les préférences ont été modifiées ailleurs. Rechargez le dernier fichier avant d’appliquer les changements.",
+      "invalid": "Corrigez preferences.json avant d’appliquer les changements.",
+      "revisionRequired": "Rechargez les Préférences pour obtenir la révision actuelle avant d’appliquer les changements.",
+      "uncertain": "Les préférences sur disque ont changé, mais leur enregistrement durable n’a pas pu être confirmé. Rechargez les Préférences avant de réessayer."
+    },
+    "git": {
+      "connected": "Connexion réussie. Le dépôt distant est accessible.",
+      "cloneReady": "Le dépôt est valide et prêt à être cloné.",
+      "conflict": "Conflit de fusion dans {{path}}."
+    },
+    "harness": {
+      "cliPreflight": "Seule la disponibilité de l’exécutable a été vérifiée ; aucun processus ni test d’authentification n’a été lancé. Une CLI installée ou connectée ne garantit pas l’appel d’outils. Son intégration nécessite un adaptateur de protocole structuré vérifié et une politique d’isolation et d’approbation du système. Le harnais n’utilise pas l’ancien exécuteur de prompts."
+    }
   }
 }

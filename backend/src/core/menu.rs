@@ -26,109 +26,112 @@ pub fn update_recent_repositories_menu(
     app: AppHandle,
     repositories: Vec<RepoInfo>,
 ) -> Result<(), String> {
-    let _ = crate::core::tray::update_tray_menu(&app, &repositories);
-    crate::core::dock::update_dock_repositories(&repositories);
+    let result = (|| -> Result<_, String> {
+        let _ = crate::core::tray::update_tray_menu(&app, &repositories);
+        crate::core::dock::update_dock_repositories(&repositories);
 
-    let Some(app_menu) = app.menu() else {
-        return Ok(());
-    };
-    let Some(file_menu) = app_menu
-        .get("file_menu")
-        .and_then(|item| item.as_submenu().cloned())
-    else {
-        return Ok(());
-    };
-    let Some(recent_menu) = file_menu
-        .get("open_recent")
-        .and_then(|item| item.as_submenu().cloned())
-    else {
-        return Ok(());
-    };
-    let language = runtime_state::app_language(&app);
+        let Some(app_menu) = app.menu() else {
+            return Ok(());
+        };
+        let Some(file_menu) = app_menu
+            .get("file_menu")
+            .and_then(|item| item.as_submenu().cloned())
+        else {
+            return Ok(());
+        };
+        let Some(recent_menu) = file_menu
+            .get("open_recent")
+            .and_then(|item| item.as_submenu().cloned())
+        else {
+            return Ok(());
+        };
+        let language = runtime_state::app_language(&app);
 
-    let existing_items = recent_menu.items().map_err(|error| error.to_string())?;
-    for item in existing_items {
-        let id = item.id().as_ref();
-        if id == "no_recent_repos"
-            || id == "clear_recent"
-            || id == "remove_recent_menu"
-            || id.starts_with("recent_repo_")
-            || item.as_predefined_menuitem().is_some()
-        {
-            recent_menu
-                .remove(&item)
-                .map_err(|error| error.to_string())?;
+        let existing_items = recent_menu.items().map_err(|error| error.to_string())?;
+        for item in existing_items {
+            let id = item.id().as_ref();
+            if id == "no_recent_repos"
+                || id == "clear_recent"
+                || id == "remove_recent_menu"
+                || id.starts_with("recent_repo_")
+                || item.as_predefined_menuitem().is_some()
+            {
+                recent_menu
+                    .remove(&item)
+                    .map_err(|error| error.to_string())?;
+            }
         }
-    }
 
-    if repositories.is_empty() {
-        let item = MenuItemBuilder::with_id(
-            "no_recent_repos",
-            localized_menu_label(
-                &definition::definition().recent["emptyLabel"],
-                &language,
-                "macos",
-            ),
-        )
-        .enabled(false)
-        .build(&app)
-        .map_err(|error| error.to_string())?;
-        recent_menu
-            .append(&item)
-            .map_err(|error| error.to_string())?;
-    } else {
-        for repository in &repositories {
+        if repositories.is_empty() {
             let item = MenuItemBuilder::with_id(
-                format!("recent_repo_{}", repository.id),
-                &repository.name,
+                "no_recent_repos",
+                localized_menu_label(
+                    &definition::definition().recent["emptyLabel"],
+                    &language,
+                    "macos",
+                ),
             )
+            .enabled(false)
             .build(&app)
             .map_err(|error| error.to_string())?;
             recent_menu
                 .append(&item)
                 .map_err(|error| error.to_string())?;
-        }
-        recent_menu
-            .append(&PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?)
+        } else {
+            for repository in &repositories {
+                let item = MenuItemBuilder::with_id(
+                    format!("recent_repo_{}", repository.id),
+                    &repository.name,
+                )
+                .build(&app)
+                .map_err(|error| error.to_string())?;
+                recent_menu
+                    .append(&item)
+                    .map_err(|error| error.to_string())?;
+            }
+            recent_menu
+                .append(&PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?)
+                .map_err(|e| e.to_string())?;
+            let remove = Submenu::with_id(
+                &app,
+                "remove_recent_menu",
+                localized_menu_label(
+                    &definition::definition().recent["removeLabel"],
+                    &language,
+                    "macos",
+                ),
+                true,
+            )
             .map_err(|e| e.to_string())?;
-        let remove = Submenu::with_id(
-            &app,
-            "remove_recent_menu",
-            localized_menu_label(
-                &definition::definition().recent["removeLabel"],
-                &language,
-                "macos",
-            ),
-            true,
-        )
-        .map_err(|e| e.to_string())?;
-        for repository in &repositories {
-            remove
+            for repository in &repositories {
+                remove
+                    .append(
+                        &MenuItemBuilder::with_id(
+                            format!("remove_recent_repo_{}", repository.id),
+                            &repository.name,
+                        )
+                        .build(&app)
+                        .map_err(|e| e.to_string())?,
+                    )
+                    .map_err(|e| e.to_string())?;
+            }
+            recent_menu.append(&remove).map_err(|e| e.to_string())?;
+            let command = &definition::definition().commands["clear_recent"];
+            recent_menu
                 .append(
                     &MenuItemBuilder::with_id(
-                        format!("remove_recent_repo_{}", repository.id),
-                        &repository.name,
+                        "clear_recent",
+                        localized_menu_label(&command.label, &language, "macos"),
                     )
                     .build(&app)
                     .map_err(|e| e.to_string())?,
                 )
                 .map_err(|e| e.to_string())?;
         }
-        recent_menu.append(&remove).map_err(|e| e.to_string())?;
-        let command = &definition::definition().commands["clear_recent"];
-        recent_menu
-            .append(
-                &MenuItemBuilder::with_id(
-                    "clear_recent",
-                    localized_menu_label(&command.label, &language, "macos"),
-                )
-                .build(&app)
-                .map_err(|e| e.to_string())?,
-            )
-            .map_err(|e| e.to_string())?;
-    }
 
-    Ok(())
+        Ok(())
+    })();
+    result.map_err(|error| crate::common::messages::command_error("operation", error))
 }
 
 pub fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {

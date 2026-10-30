@@ -1,3 +1,4 @@
+import { localizePlatformMessages } from '../../localizePlatformMessages';
 import type { PlatformServices } from '../../contracts/PlatformServices';
 import { createTauriCommands } from './commands';
 import { createTauriEvents } from './events';
@@ -6,7 +7,7 @@ import { createTauriWindows } from './windows';
 
 /** Construction is inert: no window handles, channels, subscriptions or IPC. */
 export function createTauriPlatform(): PlatformServices {
-  return {
+  return localizePlatformMessages({
     commands: createTauriCommands(),
     events: createTauriEvents(),
     paths: createTauriPaths(),
@@ -24,5 +25,5 @@ export function createTauriPlatform(): PlatformServices {
       externalAgents: true, notifications: true, preferencesFile: true,
       systemFonts: true, nativeMenu: true, attachments: true, externalLinks: true,
     },
-  };
+  });
 }

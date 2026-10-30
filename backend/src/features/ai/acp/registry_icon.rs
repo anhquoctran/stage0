@@ -6,57 +6,62 @@ const MAX_REGISTRY_ICON_BYTES: usize = 128 * 1024;
 
 #[command]
 pub async fn acp_fetch_registry_icon(icon_url: String) -> Result<String, String> {
-    let parsed_url = reqwest::Url::parse(&icon_url).map_err(|_| "Invalid ACP Registry icon URL")?;
-    if !is_registry_icon_url(&parsed_url) {
-        return Err("ACP Registry icons must come from the official Registry CDN".into());
-    }
+    let result: Result<_, String> = async {
+        let parsed_url =
+            reqwest::Url::parse(&icon_url).map_err(|_| "Invalid ACP Registry icon URL")?;
+        if !is_registry_icon_url(&parsed_url) {
+            return Err("ACP Registry icons must come from the official Registry CDN".into());
+        }
 
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))
-        .redirect(reqwest::redirect::Policy::custom(|attempt| {
-            if is_registry_icon_url(attempt.url()) {
-                attempt.follow()
-            } else {
-                attempt.error("ACP Registry icon redirect left the official CDN")
-            }
-        }))
-        .build()
-        .map_err(|_| "Could not initialize ACP Registry icon client")?;
-    let mut response = client
-        .get(parsed_url)
-        .send()
-        .await
-        .map_err(|_| "Could not load ACP Registry icon")?;
-    if !response.status().is_success() || !is_registry_icon_url(response.url()) {
-        return Err("ACP Registry returned an invalid icon response".into());
-    }
-    if response
-        .content_length()
-        .is_some_and(|length| length > MAX_REGISTRY_ICON_BYTES as u64)
-    {
-        return Err("ACP Registry icon is too large".into());
-    }
-
-    let mut bytes = Vec::new();
-    while let Some(chunk) = response
-        .chunk()
-        .await
-        .map_err(|_| "Could not read ACP Registry icon")?
-    {
-        if bytes.len().saturating_add(chunk.len()) > MAX_REGISTRY_ICON_BYTES {
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(10))
+            .redirect(reqwest::redirect::Policy::custom(|attempt| {
+                if is_registry_icon_url(attempt.url()) {
+                    attempt.follow()
+                } else {
+                    attempt.error("ACP Registry icon redirect left the official CDN")
+                }
+            }))
+            .build()
+            .map_err(|_| "Could not initialize ACP Registry icon client")?;
+        let mut response = client
+            .get(parsed_url)
+            .send()
+            .await
+            .map_err(|_| "Could not load ACP Registry icon")?;
+        if !response.status().is_success() || !is_registry_icon_url(response.url()) {
+            return Err("ACP Registry returned an invalid icon response".into());
+        }
+        if response
+            .content_length()
+            .is_some_and(|length| length > MAX_REGISTRY_ICON_BYTES as u64)
+        {
             return Err("ACP Registry icon is too large".into());
         }
-        bytes.extend_from_slice(&chunk);
-    }
-    let svg = std::str::from_utf8(&bytes).map_err(|_| "ACP Registry icon is not valid SVG")?;
-    if !svg.to_ascii_lowercase().contains("<svg") {
-        return Err("ACP Registry returned an invalid SVG icon".into());
-    }
 
-    Ok(format!(
-        "data:image/svg+xml;base64,{}",
-        BASE64.encode(bytes)
-    ))
+        let mut bytes = Vec::new();
+        while let Some(chunk) = response
+            .chunk()
+            .await
+            .map_err(|_| "Could not read ACP Registry icon")?
+        {
+            if bytes.len().saturating_add(chunk.len()) > MAX_REGISTRY_ICON_BYTES {
+                return Err("ACP Registry icon is too large".into());
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        let svg = std::str::from_utf8(&bytes).map_err(|_| "ACP Registry icon is not valid SVG")?;
+        if !svg.to_ascii_lowercase().contains("<svg") {
+            return Err("ACP Registry returned an invalid SVG icon".into());
+        }
+
+        Ok(format!(
+            "data:image/svg+xml;base64,{}",
+            BASE64.encode(bytes)
+        ))
+    }
+    .await;
+    result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 
 fn is_registry_icon_url(url: &reqwest::Url) -> bool {

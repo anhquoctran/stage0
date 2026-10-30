@@ -40,10 +40,12 @@ test('application implementation and the English source locale keep copy in Engl
   assert.deepEqual(matches, [], `Translate application copy to English:\n${matches.join('\n')}`);
 });
 
-test('clone URL validation uses English copy and a stable Git message locale', () => {
+test('clone URL validation uses a UI message code, English diagnostics and a stable Git message locale', () => {
   const source = fs.readFileSync(path.join(projectRoot, 'backend/src/features/git/ops/remotes.rs'), 'utf8');
   const validation = source.slice(source.indexOf('pub fn check_git_remote_url('));
-  assert.ok(validation.includes('Repository is valid and ready to clone.'));
+  assert.ok(validation.includes('backend.git.cloneReady'));
+  const english = JSON.parse(fs.readFileSync(path.join(projectRoot, 'frontend/features/i18n/locales/en.json'), 'utf8'));
+  assert.equal(english.backend.git.cloneReady, 'The repository is valid and ready to clone.');
   assert.ok(validation.includes('Please enter a repository URL.'));
   assert.ok(validation.includes('cmd.env("LC_ALL", "C")'));
 });
