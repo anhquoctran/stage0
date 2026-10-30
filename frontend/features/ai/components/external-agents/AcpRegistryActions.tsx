@@ -1,4 +1,5 @@
 import { useApplicationServices } from '../../../../core/services/runtime/useApplicationServices';
+import { useTranslation } from 'react-i18next';
 
 import { ChevronLeft } from '../../../../common/components/icons/ChevronLeft';
 import { Plus } from '../../../../common/components/icons/Plus';
@@ -17,6 +18,7 @@ export function AcpRegistryActions({
   isOnboarding = false,
 }: AcpRegistryActionsProps) {
   const appServices = useApplicationServices();
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
       {onBackToOverview ? (
@@ -25,7 +27,7 @@ export function AcpRegistryActions({
           onClick={onBackToOverview}
           className="inline-flex items-center gap-1 text-xs text-subtext0 transition-colors hover:text-text rounded-sm"
         >
-          <ChevronLeft className="h-3.5 w-3.5" /> AI overview
+          <ChevronLeft className="h-3.5 w-3.5" /> {t('preferences.nav.ai-overview')}
         </button>
       ) : (
         <span />
@@ -38,7 +40,7 @@ export function AcpRegistryActions({
             onClick={() => setIsCustomOpen(true)}
             className="flex items-center gap-1.5 border border-surface2 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
           >
-            <Plus className="h-3.5 w-3.5" /> Add custom
+            <Plus className="h-3.5 w-3.5" /> {t('ai.externalAgents.addCustom')}
           </button>
         )}
         <button
@@ -57,7 +59,7 @@ export function AcpRegistryActions({
           }}
           className="flex items-center gap-1.5 border border-surface1 px-2.5 py-1.5 text-xs text-subtext0 hover:text-text disabled:opacity-50 rounded-sm"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
+          <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} /> {t('ai.externalAgents.refresh')}
         </button>
       </div>
     </div>

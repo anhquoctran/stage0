@@ -35,7 +35,7 @@ export const TopBarMergeButton: React.FC = () => {
         disabled={isSyncing}
         onClick={() => runSync('merge')}
         className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[58px] rounded-sm"
-        title="Merge the current branch's upstream into this branch"
+        title={translateUiText('common.layout.mergeUpstreamTitle')}
       >
         <GitMerge className="w-5 h-5 text-primary shrink-0 transition-colors" />
         <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
@@ -48,8 +48,8 @@ export const TopBarMergeButton: React.FC = () => {
         disabled={isSyncing}
         onClick={() => setIsOpen((open) => !open)}
         className="relative flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer rounded-sm"
-        title="Merge options"
-        aria-label="Merge options"
+        title={translateUiText('common.layout.mergeOptions')}
+        aria-label={translateUiText('common.layout.mergeOptions')}
       >
         <span
           aria-hidden="true"
@@ -61,7 +61,7 @@ export const TopBarMergeButton: React.FC = () => {
       {isOpen && (
         <div className="absolute start-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 rounded-sm">
           <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0 mb-1 rounded-sm">
-            Merge Options
+            {translateUiText('common.layout.mergeOptions')}
           </div>
           <button
             type="button"
@@ -73,7 +73,7 @@ export const TopBarMergeButton: React.FC = () => {
           >
             <span className="flex items-center gap-2">
               <GitMerge className="w-3.5 h-3.5" />
-              Merge upstream
+              {translateUiText('common.layout.mergeUpstream')}
             </span>
           </button>
           <button
@@ -86,7 +86,7 @@ export const TopBarMergeButton: React.FC = () => {
           >
             <span className="flex items-center gap-2">
               <GitBranch className="w-3.5 h-3.5" />
-              Merge from…
+              {translateUiText('common.layout.mergeFrom')}
             </span>
           </button>
         </div>

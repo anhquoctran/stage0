@@ -4,6 +4,7 @@ import { getApplicationServices } from './core/services/runtime/applicationRunti
 import { startGlobalLanguageRuntime } from './core/services/runtime/globalLanguageRuntime';
 import { DEFAULT_APP_LANGUAGE } from './features/i18n/constants/defaultLanguages';
 import React from 'react';
+import i18n from './features/i18n/i18n';
 import ReactDOM from 'react-dom/client';
 import '@fontsource-variable/inter/wght.css';
 import '@fontsource/ibm-plex-sans/300.css';
@@ -225,7 +226,7 @@ async function startApp() {
   startupProgress.complete('interface');
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
-      <ErrorBoundary onError={startupProgress.fail}><ApplicationServicesProvider><App /></ApplicationServicesProvider></ErrorBoundary>
+      <ErrorBoundary onError={startupProgress.fail} translate={(key) => i18n.t(key)}><ApplicationServicesProvider><App /></ApplicationServicesProvider></ErrorBoundary>
     </React.StrictMode>
   );
 }

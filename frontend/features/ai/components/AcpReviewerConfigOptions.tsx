@@ -1,18 +1,13 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
-import type { AcpSessionConfigOption } from '../types/AcpSessionConfigOption';
 import type { AcpReviewerConfigOptionsProps } from '../types/AcpReviewerConfigOptionsProps';
 
 const DEFAULT_OPTION = '__stage0_agent_default__';
-const KIND_LABELS: Record<AcpSessionConfigOption['reviewKind'], string> = {
-  model: 'Model',
-  reasoning: 'Reasoning level',
-  fastMode: 'Fast mode',
-};
-
 export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> = ({ agent, value = {}, state }) => {
+  const { t } = useTranslation();
   const { options, loading, error, validationError, retry, reset, updateOption } = state;
   const visibleKinds = new Set(options.map((option) => option.reviewKind));
 
@@ -20,22 +15,26 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
   return (
     <div className="space-y-2 border border-surface0 bg-crust/40 p-3 rounded-sm">
       <div>
-        <h4 className="text-[11px] font-semibold text-text">Agent model &amp; execution options</h4>
-        <p className="mt-0.5 text-[10px] text-subtext0">Loaded from this agent’s ACP session. “Agent default” leaves that setting under the agent’s control.</p>
+        <h4 className="text-[11px] font-semibold text-text">{t('ai.acp.optionsTitle')}</h4>
+        <p className="mt-0.5 text-[10px] text-subtext0">{t('ai.acp.optionsDescription')}</p>
       </div>
-      {loading && <p className="text-[10px] text-subtext0" role="status">Loading options from {agent.name}…</p>}
+      {loading && <p className="text-[10px] text-subtext0" role="status">{t('ai.acp.loadingOptions', { name: agent.name })}</p>}
       {error && <div className="flex flex-wrap items-center justify-between gap-2 text-[10px]" role="status">
-        <p className="text-red">Could not load ACP options: {error} Retry to finish configuring this bot.</p>
-        <button type="button" onClick={retry} className="shrink-0 border border-surface1 px-2 py-1 text-subtext0 hover:text-text rounded-sm">Retry</button>
+        <p className="text-red">{t('ai.acp.loadError', { error })}</p>
+        <button type="button" onClick={retry} className="shrink-0 border border-surface1 px-2 py-1 text-subtext0 hover:text-text rounded-sm">{t('common.retry')}</button>
       </div>}
       {(validationError || (error && Object.keys(value).length > 0)) && <div className="space-y-2 text-[10px]" role="alert">
         {validationError && <p className="text-red">{validationError}</p>}
-        <button type="button" onClick={reset} className="border border-surface1 px-2 py-1 text-subtext0 hover:text-text rounded-sm">Reset to agent defaults</button>
+        <button type="button" onClick={reset} className="border border-surface1 px-2 py-1 text-subtext0 hover:text-text rounded-sm">{t('ai.acp.resetDefaults')}</button>
       </div>}
-      {!loading && !error && options.length === 0 && <p className="text-[10px] text-subtext0">This agent does not expose model, reasoning, or Fast mode options through ACP. It will use its configured defaults.</p>}
+      {!loading && !error && options.length === 0 && <p className="text-[10px] text-subtext0">{t('ai.acp.noOptions')}</p>}
       {options.map((option) => {
         const current = value[option.id];
-        const label = KIND_LABELS[option.reviewKind] || option.name;
+        const label = option.reviewKind === 'model'
+          ? t('ai.execution.model')
+          : option.reviewKind === 'reasoning'
+            ? t('ai.execution.reasoningEffort')
+            : option.reviewKind === 'fastMode' ? t('ai.execution.fastMode') : option.name;
         if (option.type === 'boolean') {
           const currentBoolean = typeof option.currentValue === 'boolean' ? option.currentValue : false;
           if (option.reviewKind === 'fastMode') {
@@ -44,9 +43,9 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
             return (
               <div key={option.id} className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] text-text">Fast mode</p>
+                  <p className="text-[10px] text-text">{t('ai.execution.fastMode')}</p>
                   <p className="text-[10px] text-subtext0">
-                    {isOverridden ? 'Custom setting' : `Agent default (${currentBoolean ? 'On' : 'Off'})`}
+                    {isOverridden ? t('ai.acp.customSetting') : t('ai.acp.agentDefaultBoolean', { status: t(currentBoolean ? 'ai.acp.on' : 'ai.acp.off') })}
                   </p>
                   {option.description && <p className="mt-1 text-[10px] text-subtext0">{option.description}</p>}
                 </div>
@@ -58,13 +57,13 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
                       onClick={() => updateOption(option, undefined)}
                       className="border-0 bg-transparent px-1 py-1 text-[10px] text-subtext0 hover:text-text disabled:opacity-50 rounded-sm"
                     >
-                      Use default
+                      {t('ai.acp.useDefault')}
                     </button>
                   )}
                   <button
                     type="button"
                     role="switch"
-                    aria-label={`Fast mode for ${agent.name}`}
+                    aria-label={t('ai.acp.fastModeFor', { name: agent.name })}
                     aria-checked={enabled}
                     disabled={loading || !!error}
                     onClick={() => updateOption(option, !enabled)}
@@ -84,9 +83,9 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
           }
           const selected = typeof current === 'boolean' ? String(current) : DEFAULT_OPTION;
           const choices: CustomSelectOption<string>[] = [
-            { value: DEFAULT_OPTION, label: `Agent default (${currentBoolean ? 'On' : 'Off'})` },
-            { value: 'true', label: 'Enabled' },
-            { value: 'false', label: 'Disabled' },
+            { value: DEFAULT_OPTION, label: t('ai.acp.agentDefaultBoolean', { status: t(currentBoolean ? 'ai.acp.on' : 'ai.acp.off') }) },
+            { value: 'true', label: t('common.enabled') },
+            { value: 'false', label: t('common.disabled') },
           ];
           return (
             <div key={option.id}>
@@ -100,7 +99,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
                 buttonClassName="w-full"
                 dropdownWidth="w-full"
                 align="left"
-                aria-label={`${label} for ${agent.name}`}
+                aria-label={t('ai.acp.labelForAgent', { label, name: agent.name })}
               />
               {option.description && <p className="mt-1 text-[10px] text-subtext0">{option.description}</p>}
             </div>
@@ -115,12 +114,14 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
         }));
         const currentOption = discoveredOptions.find((item) => item.value === currentValue);
         const choices: CustomSelectOption<string>[] = [
-          { value: DEFAULT_OPTION, label: `Agent default${currentOption ? ` (${currentOption.label})` : ''}` },
+          { value: DEFAULT_OPTION, label: currentOption
+            ? t('ai.acp.agentDefaultValue', { value: currentOption.label })
+            : t('ai.acp.agentDefault') },
           ...discoveredOptions,
         ];
         const selected = typeof current === 'string' ? current : DEFAULT_OPTION;
         if (selected !== DEFAULT_OPTION && !choices.some((item) => item.value === selected)) {
-          choices.splice(1, 0, { value: selected, label: `${selected} (saved; no longer advertised)` });
+          choices.splice(1, 0, { value: selected, label: t('ai.acp.savedNotAdvertised', { value: selected }) });
         }
         return (
           <div key={option.id}>
@@ -131,18 +132,18 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
               options={choices}
               onChange={(next) => updateOption(option, next === DEFAULT_OPTION ? undefined : next)}
               searchable={choices.length > 8}
-              searchPlaceholder={`Search ${label.toLowerCase()}…`}
+              searchPlaceholder={t('ai.acp.searchOptions', { label: label.toLocaleLowerCase() })}
               className="w-full"
               buttonClassName="w-full"
               dropdownWidth="w-full"
               align="left"
-              aria-label={`${label} for ${agent.name}`}
+              aria-label={t('ai.acp.labelForAgent', { label, name: agent.name })}
             />
             {option.description && <p className="mt-1 text-[10px] text-subtext0">{option.description}</p>}
           </div>
         );
       })}
-      {!loading && options.length > 0 && !visibleKinds.has('fastMode') && <p className="text-[10px] text-subtext0">Fast mode is not advertised by this agent/model.</p>}
+      {!loading && options.length > 0 && !visibleKinds.has('fastMode') && <p className="text-[10px] text-subtext0">{t('ai.acp.fastModeUnavailable')}</p>}
     </div>
   );
 };

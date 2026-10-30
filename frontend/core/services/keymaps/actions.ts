@@ -8,7 +8,7 @@ export async function executeKeymapCommand(id: string, callbacks: MenuCallbacks)
   if (Object.hasOwn(MENU_COMMANDS, id)) return executeMenuAction(id, callbacks);
   try { await runWorkspaceCommand(id); }
   catch (error) {
-    useGitStore.getState().showToast(`Shortcut action failed: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    useGitStore.getState().showToast(i18n.t('menu.toasts.shortcutFailed', { error: error instanceof Error ? error.message : String(error) }), 'error');
   }
 }
 
@@ -35,3 +35,4 @@ async function runWorkspaceCommand(id: string): Promise<void> {
     }
   }
 }
+import i18n from '../../../features/i18n/i18n';

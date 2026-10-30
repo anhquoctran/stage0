@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Bot } from '../../../common/components/icons/Bot';
 import { Check } from '../../../common/components/icons/Check';
@@ -39,6 +40,7 @@ void [
 ];
 
 export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } = {}) => {
+  const { t } = useTranslation();
   const {
     aiConfig: committedAiConfig,
     dynamicModels,
@@ -177,7 +179,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
           <div className="p-8 text-center bg-surface0/20 border border-dashed border-surface1 space-y-2 rounded-sm">
             <Bot className="w-8 h-8 mx-auto text-subtext0/40" />
             <div className="text-xs text-subtext0 font-medium">
-              No reviewer bots found matching your criteria
+              {t('ai.botReviewers.noMatching')}
             </div>
             <button
               type="button"
@@ -188,7 +190,7 @@ export const BotReviewersTab: React.FC<AiSettingsTabProps> = ({ draftSettings } 
               }}
               className="text-xs text-brand hover:underline cursor-pointer rounded-sm"
             >
-              Clear filters
+              {t('ai.botReviewers.clearFilters')}
             </button>
           </div>
         ) : (

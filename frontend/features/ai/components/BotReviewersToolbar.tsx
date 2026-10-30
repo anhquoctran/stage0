@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Shield } from '../../../common/components/icons/Shield';
 import { RotateCcw } from '../../../common/components/icons/RotateCcw';
 import { Plus } from '../../../common/components/icons/Plus';
@@ -27,6 +28,7 @@ export const BotReviewersToolbar: React.FC<{
   onOpenAdd,
   onOpenResetConfirm,
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       {/* Tab Header & Action Controls */}
@@ -34,10 +36,10 @@ export const BotReviewersToolbar: React.FC<{
         <div className="min-w-0 flex-[1_1_20rem]">
           <h3 className="text-sm font-bold text-text flex items-center gap-2">
             <Shield className="w-4 h-4 shrink-0 text-brand" />
-            Global Reviewer Bots
+            {t('ai.botReviewers.title')}
           </h3>
           <p className="text-xs text-subtext0 mt-0.5">
-            Configure automated reviewer bots with custom system roles, prompts, and models across projects.
+            {t('ai.botReviewers.description')}
           </p>
         </div>
         <div className="flex max-w-full shrink-0 flex-wrap items-center gap-2">
@@ -45,10 +47,10 @@ export const BotReviewersToolbar: React.FC<{
             type="button"
             onClick={onOpenResetConfirm}
             className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm border-0 bg-surface0 px-3 py-1.5 text-xs text-subtext0 transition-colors hover:bg-surface1 hover:text-text cursor-pointer"
-            title="Reset global reviewers to defaults"
+            title={t('ai.botReviewers.resetGlobalTitle')}
           >
             <RotateCcw className="w-3.5 h-3.5 shrink-0" />
-            <span>Reset Defaults</span>
+            <span>{t('ai.botReviewers.resetButton')}</span>
           </button>
           <button
             type="button"
@@ -56,7 +58,7 @@ export const BotReviewersToolbar: React.FC<{
             className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm border-0 bg-brand px-3 py-1.5 text-xs font-semibold text-on-accent shadow-xs transition-colors hover:bg-brand/90 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 shrink-0" />
-            <span>New Reviewer</span>
+            <span>{t('ai.botReviewers.newReviewer')}</span>
           </button>
         </div>
       </div>
@@ -69,7 +71,7 @@ export const BotReviewersToolbar: React.FC<{
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search reviewers by name, tagline, or prompt..."
+            placeholder={t('ai.botReviewers.searchPlaceholder')}
             className="w-full ps-8 pe-3 py-1.5 bg-surface0/60 border border-surface1 text-xs text-text placeholder-subtext0/70 focus:outline-none focus:border-brand rounded-sm"
           />
         </div>
@@ -81,7 +83,7 @@ export const BotReviewersToolbar: React.FC<{
               onChange={(e) => setOnlyEnabled(e.target.checked)}
               className="accent-brand cursor-pointer"
             />
-            <span>Active only</span>
+            <span>{t('ai.botReviewers.activeOnly')}</span>
           </label>
         </div>
       </div>
@@ -97,7 +99,7 @@ export const BotReviewersToolbar: React.FC<{
               : 'bg-surface0/60 text-subtext0 hover:bg-surface0'
           }`}
         >
-          All ({globalReviewers.length})
+          {t('ai.botReviewers.allCount', { count: globalReviewers.length })}
         </button>
         {BOT_CATEGORIES.map((cat) => {
           const count = globalReviewers.filter((b) => b.category === cat.id).length;
@@ -112,7 +114,7 @@ export const BotReviewersToolbar: React.FC<{
                   : 'bg-surface0/60 text-subtext0 hover:bg-surface0'
               }`}
             >
-              {cat.label} ({count})
+              {t(`ai.botCategories.${cat.id}`)} ({count})
             </button>
           );
         })}

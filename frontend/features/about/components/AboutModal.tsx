@@ -78,7 +78,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           onClick={onClose}
           className="absolute end-0 top-0 flex h-11 w-12 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
           title={translateUiText('shortcuts.close')}
-          aria-label="Close About dialog"
+          aria-label={translateUiText('about.closeDialog')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -95,7 +95,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
           {/* Primary Version Badge */}
           <div className="mt-3 flex items-center gap-1.5 bg-mantle border border-surface0 px-2.5 py-1 rounded-sm">
-            <span className="text-[10px] text-subtext0 uppercase font-mono tracking-wider">Version</span>
+            <span className="text-[10px] text-subtext0 uppercase font-mono tracking-wider">{translateUiText('about.version')}</span>
             <code className="text-xs font-mono font-medium text-subtext0 px-1">
               {about.version}
             </code>
@@ -103,11 +103,11 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               type="button"
               onClick={handleCopyVersion}
               className="ms-1 p-0.5 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
-              title="Copy version string"
+              title={translateUiText('about.copyVersion')}
             >
               {copiedVersion ? (
                 <span className="flex items-center gap-1 text-[10px] text-green font-mono">
-                  <Check className="w-3 h-3 text-green" /> Copied
+                  <Check className="w-3 h-3 text-green" /> {translateUiText('about.copied')}
                 </span>
               ) : (
                 <Copy className="w-3.5 h-3.5" />
@@ -120,19 +120,19 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         <div className="bg-mantle border border-surface0 p-3.5 mb-4 text-xs space-y-2 rounded-sm">
           {/* Author */}
           <div className="flex items-center justify-between py-0.5 border-b border-surface0 pb-1.5 rounded-sm">
-            <span className="text-subtext0 font-medium">Author</span>
+            <span className="text-subtext0 font-medium">{translateUiText('about.author')}</span>
             <span className="text-text font-semibold">{about.author}</span>
           </div>
 
           {/* Release Date */}
           <div className="flex items-center justify-between py-0.5 border-b border-surface0 pb-1.5 rounded-sm">
-            <span className="text-subtext0 font-medium">Release Date</span>
+            <span className="text-subtext0 font-medium">{translateUiText('about.releaseDate')}</span>
             <span className="font-mono text-text font-medium">{about.releaseDate}</span>
           </div>
 
           {/* Architecture & Git SHA */}
           <div className="flex items-center justify-between py-0.5 border-b border-surface0 pb-1.5 rounded-sm">
-            <span className="text-subtext0 font-medium">Architecture / Commit</span>
+            <span className="text-subtext0 font-medium">{translateUiText('about.architectureCommit')}</span>
             <div className="flex items-center gap-2">
               <span className="font-mono bg-surface0 px-1.5 py-0.5 text-[11px] text-subtext1">
                 {about.arch}
@@ -164,17 +164,17 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               type="button"
               onClick={handleCopyDiagnosticInfo}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-subtext1 hover:text-text text-xs transition-colors cursor-pointer rounded-sm"
-              title="Copy system and version information"
+              title={translateUiText('about.copyDiagnostics')}
             >
               {copiedAll ? (
                 <>
                   <Check className="w-3 h-3 text-green" />
-                  <span className="text-green font-medium">Copied Info</span>
+                  <span className="text-green font-medium">{translateUiText('about.copiedInfo')}</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-3 h-3" />
-                  <span>Copy Info</span>
+                  <span>{translateUiText('about.copyInfo')}</span>
                 </>
               )}
             </button>

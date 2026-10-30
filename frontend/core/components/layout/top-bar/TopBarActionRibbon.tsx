@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw } from '../../../../common/components/icons/RefreshCw';
 import { GitCommit } from '../../../../common/components/icons/GitCommit';
 import { RotateCw } from '../../../../common/components/icons/RotateCw';
@@ -11,6 +12,7 @@ import { TopBarRebaseButton } from './TopBarRebaseButton';
 import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 
 export const TopBarActionRibbon: React.FC = () => {
+  const { t } = useTranslation();
   const { title } = useCommandShortcut();
   const { openRepoSettings } = useVirtualMrStore();
   const {
@@ -24,7 +26,7 @@ export const TopBarActionRibbon: React.FC = () => {
   if (!currentRepo) {
     return (
       <div className="text-xs text-subtext0 italic">
-        Select or open a repository to start virtual 3-dot branch comparison
+        {t('common.layout.selectRepositoryForComparison')}
       </div>
     );
   }
@@ -50,7 +52,7 @@ export const TopBarActionRibbon: React.FC = () => {
             }`}
           />
           <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
-            Fetch
+            {t('common.layout.fetch')}
           </span>
         </button>
 
@@ -68,11 +70,11 @@ export const TopBarActionRibbon: React.FC = () => {
           type="button"
           onClick={() => setIsGitGraphOpen(true)}
           className="h-12 min-w-[58px] px-1.5 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors cursor-pointer group rounded-sm"
-          title="Show Git Graph for the checked-out branch"
+          title={t('common.layout.showGitGraph')}
         >
           <GitCommit className="w-5 h-5 text-primary shrink-0 transition-colors" />
           <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
-            Graph
+            {t('common.layout.graph')}
           </span>
         </button>
 
@@ -82,11 +84,11 @@ export const TopBarActionRibbon: React.FC = () => {
           disabled={isSyncing}
           onClick={refreshDiff}
           className="h-12 min-w-[58px] px-3 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group rounded-sm"
-          title={title('refresh_diff', 'Refresh MR diff & conflict simulation')}
+          title={title('refresh_diff', t('common.layout.refreshDiffTitle'))}
         >
           <RotateCw className="w-5 h-5 text-primary shrink-0 transition-colors" />
           <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
-            Refresh
+            {t('common.layout.refresh')}
           </span>
         </button>
 
@@ -96,11 +98,11 @@ export const TopBarActionRibbon: React.FC = () => {
           disabled={!currentRepo}
           onClick={() => openRepoSettings('remotes')}
           className="h-12 min-w-[68px] px-2.5 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors disabled:opacity-40 cursor-pointer group rounded-sm"
-          title={title('repo_settings', 'Repository Settings')}
+          title={title('repo_settings', t('common.layout.repositorySettings'))}
         >
           <Cog className="w-5 h-5 text-primary shrink-0 transition-colors" />
           <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors whitespace-nowrap">
-            Repo Settings
+            {t('common.layout.repositorySettings')}
           </span>
         </button>
       </div>

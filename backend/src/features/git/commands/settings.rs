@@ -1,6 +1,6 @@
 use crate::core::db::Database;
 use crate::features::git::persistence::{RepoLabelDb, RepoSettingsDb};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 #[tauri::command]
 pub async fn get_repo_settings(
@@ -120,14 +120,17 @@ pub async fn set_active_git_binary(
         let version = crate::features::git::test_git_version(&path)
             .map_err(|error| format!("Cannot select invalid Git binary: {}", error))?;
 
-        let preferences = app.state::<crate::features::preferences::PreferencesManager>();
-        let current = preferences.read()?;
-        preferences.patch(
-            serde_json::json!({ "git": { "binaryId": id, "binaryPath": path } }),
-            current.revision,
-        )?;
-
-        crate::features::git::runner::set_active_git_path(Some(path.clone()));
+        crate::features::preferences::transaction::run(|| {
+            let preferences = app.state::<crate::features::preferences::PreferencesManager>();
+            let current = preferences.read()?;
+            let saved = preferences.patch(
+                serde_json::json!({ "git": { "binaryId": id, "binaryPath": path } }),
+                current.revision,
+            )?;
+            crate::features::git::runner::set_active_git_path(Some(path.clone()));
+            let _ = app.emit("preferences-changed", saved.revision);
+            Ok(())
+        })?;
 
         let name = if id == "system" {
             "System Git (PATH Default)".to_string()

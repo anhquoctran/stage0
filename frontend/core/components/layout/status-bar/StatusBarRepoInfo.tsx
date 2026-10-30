@@ -1,9 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FolderGit2 } from '../../../../common/components/icons/FolderGit2';
 import { GitBranch } from '../../../../common/components/icons/GitBranch';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
 
 export const StatusBarRepoInfo: React.FC = () => {
+  const { t } = useTranslation();
   const { currentRepo, branches } = useGitStore();
 
   return (
@@ -30,7 +32,7 @@ export const StatusBarRepoInfo: React.FC = () => {
       ) : (
         <div className="flex items-center gap-1.5 text-subtext0">
           <FolderGit2 className="w-3.5 h-3.5" />
-          <span>No repository open</span>
+          <span>{t('common.layout.noRepositoryOpen')}</span>
         </div>
       )}
     </div>

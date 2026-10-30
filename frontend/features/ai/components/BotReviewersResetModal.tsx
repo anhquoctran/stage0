@@ -15,10 +15,10 @@ export const BotReviewersResetModal: React.FC<{
       <div className="bg-mantle border border-surface0 w-full max-w-md shadow-2xl p-5 space-y-4 rounded-sm">
         <div className="flex items-center gap-3 text-yellow">
           <AlertCircle className="w-5 h-5 shrink-0" />
-          <h4 className="text-sm font-bold text-text">Reset Default Bot Reviewers?</h4>
+          <h4 className="text-sm font-bold text-text">{translateUiText('ai.botReviewers.resetTitle')}</h4>
         </div>
         <p className="text-xs text-subtext0 leading-relaxed">
-          This will reset the reviewer bots list to defaults and remove any custom configured bots.
+          {translateUiText('ai.botReviewers.resetDescription')}
         </p>
         <div className="flex justify-end gap-2 pt-2">
           <button
@@ -33,7 +33,7 @@ export const BotReviewersResetModal: React.FC<{
             onClick={onConfirm}
             className="px-4 py-1.5 bg-yellow hover:brightness-95 text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
           >
-            Reset to Defaults
+            {translateUiText('ai.botReviewers.resetButton')}
           </button>
         </div>
       </div>

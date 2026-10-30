@@ -1,4 +1,5 @@
 import { useApplicationServices } from '../../../../core/services/runtime/useApplicationServices';
+import { useTranslation } from 'react-i18next';
 
 import { AcpRegistryProjectInfo } from '../AcpRegistryProjectInfo';
 import { AgentIcon } from '../AgentIcon';
@@ -21,6 +22,7 @@ export function AcpAgentCard({
   registryDistribution,
 }: AcpAgentCardProps) {
   const appServices = useApplicationServices();
+  const { t } = useTranslation();
   return (
     <article key={`${isCustom ? 'custom' : 'registry'}-${item.id}`} className="py-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -31,8 +33,8 @@ export function AcpAgentCard({
               ? openDetails(installed, entry)
               : setError(
                   installable
-                    ? 'Install this agent first to configure or send a prompt.'
-                    : unavailableReason || 'No compatible registry package.'
+                    ? t('ai.externalAgents.installFirst')
+                    : unavailableReason || t('ai.externalAgents.noCompatiblePackage')
                 )
           }
           className="min-w-0 flex-1 text-start rounded-sm"
@@ -42,7 +44,7 @@ export function AcpAgentCard({
             {version && <span className="text-xs text-subtext0">v{version}</span>}
             {installed && (
               <span className="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded-sm shadow-xs">
-                Installed
+                {t('ai.externalAgents.installed')}
               </span>
             )}
           </span>
@@ -54,7 +56,7 @@ export function AcpAgentCard({
             onClick={() => openDetails(installed, entry)}
             className="shrink-0 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
           >
-            Manage
+            {t('ai.externalAgents.manage')}
           </button>
         ) : installable ? (
           <button
@@ -63,7 +65,7 @@ export function AcpAgentCard({
             onClick={() => void install(entry!)}
             className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white rounded-sm shadow-xs transition-colors cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
           >
-            {busyId === item.id ? 'Installing…' : 'Install'}
+            {busyId === item.id ? t('ai.externalAgents.installing') : t('ai.externalAgents.install')}
           </button>
         ) : (
           <span

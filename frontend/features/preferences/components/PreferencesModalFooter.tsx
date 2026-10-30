@@ -95,7 +95,7 @@ export const PreferencesModalFooter: React.FC<{
                 : 'bg-transparent text-subtext0 opacity-40 cursor-not-allowed'
             }`}
           >
-            OK
+            {translateUiText('common.ok')}
           </button>
         </div>
       </div>

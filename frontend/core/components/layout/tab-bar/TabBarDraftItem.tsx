@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { GitPullRequest } from '../../../../common/components/icons/GitPullRequest';
 import { X } from '../../../../common/components/icons/X';
 import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
@@ -10,6 +11,7 @@ export const TabBarDraftItem: React.FC<{
   onActivate: () => void;
   onClose: () => void;
 }> = ({ draftMr, isActive, onActivate, onClose }) => {
+  const { t } = useTranslation();
   const displayTitle = draftMr.title || `${draftMr.compareBranch} → ${draftMr.baseBranch}`;
   const { title } = useCommandShortcut();
 
@@ -31,10 +33,10 @@ export const TabBarDraftItem: React.FC<{
         className={`truncate text-xs ${isActive ? 'font-medium text-text' : 'text-subtext0'}`}
         title={displayTitle}
       >
-        {draftMr.title || 'New Virtual MR'}
+        {draftMr.title || t('common.tabs.newVirtualMr')}
       </span>
       <span className="text-[10px] px-1.5 py-0.2 bg-brand/20 text-brand font-mono font-medium">
-        Draft
+        {t('common.tabs.draft')}
       </span>
       <button
         type="button"
@@ -43,7 +45,7 @@ export const TabBarDraftItem: React.FC<{
           onClose();
         }}
         className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-surface1 text-subtext0 hover:text-text transition-opacity ms-1 cursor-pointer shrink-0 rounded-sm"
-        title={title('close_tab', 'Close Draft')}
+        title={title('close_tab', t('common.tabs.closeDraft'))}
       >
         <X className="w-3 h-3" />
       </button>

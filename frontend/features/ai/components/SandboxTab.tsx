@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { RotateCw } from '../../../common/components/icons/RotateCw';
 import { useGitStore } from '../../git/store/useGitStore';
@@ -12,6 +13,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
   onSelectAdapter,
   isPendingCommit = false,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const {
     activeSandboxType: committedSandboxType,
     availableSandboxes,
@@ -117,7 +119,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
           <span>
             Pending change: switch to{' '}
             <strong className="text-text font-mono">{getAdapterName(draftSandboxType)}</strong>.
-            Click <strong>Apply</strong> or <strong>OK</strong> to commit.
+            Click <strong>Apply</strong> or <strong>{translateUiText('common.ok')}</strong> to commit.
           </span>
           <span className="text-[10px] text-subtext0 font-mono uppercase">Uncommitted</span>
         </div>

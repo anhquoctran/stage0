@@ -50,7 +50,7 @@ export const TopBarPullButton: React.FC = () => {
         disabled={isSyncing}
         onClick={() => setIsOpen((prev) => !prev)}
         className="relative flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer rounded-sm"
-        title={title('pull_from', 'Pull options')}
+        title={title('pull_from', translateUiText('common.layout.pullOptions'))}
       >
         <span
           aria-hidden="true"
@@ -62,7 +62,7 @@ export const TopBarPullButton: React.FC = () => {
       {isOpen && (
         <div className="absolute start-0 top-full mt-1.5 w-56 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 rounded-sm">
           <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0 mb-1 rounded-sm">
-            Pull Options
+            {translateUiText('common.layout.pullOptions')}
           </div>
           <button
             type="button"

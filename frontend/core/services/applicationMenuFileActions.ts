@@ -1,4 +1,5 @@
 import { useGitStore } from '../../features/git/store/useGitStore';
+import i18n from '../../features/i18n/i18n';
 import {
   revealInOs,
   getAbsoluteFilePath,
@@ -16,12 +17,12 @@ export async function runMenuFileAction(id: string) {
   switch (id) {
     case 'open_terminal':
       await openRepoInTerminal(repo.local_path);
-      showToast('Opened repository in terminal');
+      showToast(i18n.t('menu.toasts.openedInTerminal'));
       break;
     case 'open_vscode':
       try {
         await openRepoInVsCode(repo.local_path);
-        showToast('Opened repository in VS Code', 'success');
+        showToast(i18n.t('menu.toasts.openedInVsCode'), 'success');
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         showToast(msg, 'error');
@@ -29,29 +30,29 @@ export async function runMenuFileAction(id: string) {
       break;
     case 'open_explorer':
       await openRepoInExplorer(repo.local_path);
-      showToast(`Opened repository in ${getOsFileManagerName()}`);
+      showToast(i18n.t('menu.toasts.openedInFileManager', { name: getOsFileManagerName() }));
       break;
     case 'reveal_file':
       if (!file) return;
       await revealInOs(repo.local_path, file.path);
-      showToast('Revealed file in OS File Explorer');
+      showToast(i18n.t('menu.toasts.revealedFile'));
       break;
     case 'copy_rel_path':
       if (!file) return;
       await navigator.clipboard.writeText(file.path);
-      showToast(`Copied relative path: ${file.path}`);
+      showToast(i18n.t('menu.toasts.copiedRelativePath', { path: file.path }));
       break;
     case 'copy_abs_path':
       if (!file) return;
       await navigator.clipboard.writeText(getAbsoluteFilePath(repo.local_path, file.path));
-      showToast('Copied absolute path to clipboard');
+      showToast(i18n.t('menu.toasts.copiedAbsolutePath'));
       break;
     case 'copy_remote_url': {
       if (!file) return;
       const remote = git.remoteUrl || `https://github.com/${repo.name}`;
       const ref = git.compareBranch || 'main';
       await navigator.clipboard.writeText(buildRemoteFileUrl(remote, ref, file.path));
-      showToast(`Copied remote file URL (${ref})`);
+      showToast(i18n.t('menu.toasts.copiedRemoteUrl', { ref }));
       break;
     }
     case 'copy_remote_url_from':

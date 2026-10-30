@@ -47,7 +47,7 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
               <FileText className="w-4 h-4" />
             </div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-text">Release Notes</h2>
+              <h2 className="text-sm font-bold text-text">{translateUiText('about.releaseNotes')}</h2>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-sm bg-surface1 text-subtext0 border border-surface2">
                 v{about.packageVersion}
               </span>
@@ -59,7 +59,7 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
             onClick={onClose}
             className="flex h-7 w-7 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
             title={translateUiText('shortcuts.close')}
-            aria-label="Close Release Notes dialog"
+            aria-label={translateUiText('about.closeReleaseNotes')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -69,14 +69,14 @@ export const ReleaseNotesModal: React.FC<ReleaseNotesModalProps> = ({
         <div className="flex-1 overflow-y-auto px-6 py-6 md:px-8 md:py-8 text-xs text-text leading-relaxed select-text">
           <MarkdownPreview
             content={markdownContent}
-            emptyPlaceholder="No release notes available for this version."
+            emptyPlaceholder={translateUiText('about.noReleaseNotes')}
           />
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-3 border-t border-surface0 bg-mantle/50 shrink-0">
           <span className="text-[11px] text-subtext0 font-mono">
-            Stage0 v{about.packageVersion} &bull; Current Version Release Notes
+            {translateUiText('about.currentReleaseNotes', { version: about.packageVersion })}
           </span>
           <button
             type="button"

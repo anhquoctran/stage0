@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
 import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
 
@@ -5,6 +6,7 @@ export const PreferencesRestartModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
 }> = ({ isOpen, onClose }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   if (!isOpen) return null;
 
   return (
@@ -27,7 +29,7 @@ export const PreferencesRestartModal: React.FC<{
             onClick={onClose}
             className="px-4 py-1.5 text-xs bg-surface0 hover:bg-surface1 text-text border border-surface1 font-semibold transition-colors cursor-pointer rounded-sm"
           >
-            OK
+            {translateUiText('common.ok')}
           </button>
         </div>
       </div>

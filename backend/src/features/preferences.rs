@@ -11,6 +11,7 @@ mod secrets;
 mod storage;
 mod supported_language;
 pub(crate) mod system_integration;
+pub(crate) mod transaction;
 mod validation;
 mod validation_fields;
 mod validation_records;

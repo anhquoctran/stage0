@@ -1,6 +1,7 @@
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGitStore } from '../../git/store/useGitStore';
 import { useAiMcpStore } from '../store/useAiMcpStore';
 import type { AcpAgentConfig, AcpRegistryAgent } from '../types/AcpAgentConfig';
@@ -29,6 +30,7 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
   onBackToOverview,
   isOnboarding = false,
 } = {}) => {
+  const { t } = useTranslation();
   const appServices = useApplicationServices();
   const store = useAiMcpStore();
   const currentRepoPath = useGitStore((state) => state.currentRepo?.local_path ?? null);
@@ -170,14 +172,14 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
       )}
       {!appServices.platform.capabilities.externalAgents && (
         <p className="border border-surface1 px-3 py-2 text-xs text-subtext0">
-          ACP agents need the Stage0 desktop app to launch a local agent process.
+          {t('ai.externalAgents.desktopAppRequired')}
         </p>
       )}
 
       {isOnboarding ? (
         <>
           <p className="text-xs leading-5 text-subtext0">
-            Choose a provider to install it. Select an installed provider to manage it or sign in.
+            {t('ai.externalAgents.onboardingInstruction')}
           </p>
           <AcpOnboardingProviderPicker
             registry={registry}
@@ -195,10 +197,10 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
           <AcpRegistryToolbar query={query} setQuery={setQuery} setFilter={setFilter} filter={filter} />
           <div className="divide-y divide-surface1 border-y border-surface1">
             {isLoading && !registry.length && (
-              <p className="px-3 py-8 text-center text-xs text-subtext0">Loading ACP Registry…</p>
+              <p className="px-3 py-8 text-center text-xs text-subtext0">{t('ai.externalAgents.loadingRegistry')}</p>
             )}
             {!isLoading && !visibleAgents.length && (
-              <p className="px-3 py-8 text-center text-xs text-subtext0">No agents match this view.</p>
+              <p className="px-3 py-8 text-center text-xs text-subtext0">{t('ai.externalAgents.noAgentsMatch')}</p>
             )}
             {visibleAgents.map((item) => {
               const isCustom = 'source' in item && item.source === 'custom';
@@ -237,11 +239,11 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
             })}
           </div>
           <p className="text-[11px] text-subtext0">
-            Installing an <code className="font-mono">npx</code> or{' '}
-            <code className="font-mono">uvx</code> agent saves its launch config; the package downloads
-            on first launch. Native packages for {supportedBinaryTarget || 'this platform'} are
-            downloaded and extracted into Stage0’s local data folder. Uninstalling removes the launch
-            config; downloaded package files may remain.
+            {t('ai.externalAgents.installingBehavior', {
+              npx: 'npx',
+              uvx: 'uvx',
+              platform: supportedBinaryTarget || t('ai.externalAgents.thisPlatform'),
+            })}
           </p>
         </>
       )}

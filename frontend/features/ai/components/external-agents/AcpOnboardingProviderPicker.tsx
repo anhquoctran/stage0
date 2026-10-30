@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AgentIcon } from '../AgentIcon';
 import { ONBOARDING_ACP_PROVIDERS } from '../../constants/onboardingAcpProviders';
 import type { AcpRegistryAgent } from '../../types/AcpAgentConfig';
@@ -15,13 +16,14 @@ export function AcpOnboardingProviderPicker({
   onInstall,
   onManage,
 }: AcpOnboardingProviderPickerProps) {
+  const { t } = useTranslation();
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const findEntry = (agentId: string) => registry.find((entry) => entry.id === agentId);
   const findInstalled = (agentId: string) =>
     externalAgents.find((agent) => agent.id === agentId && agent.source === 'registry');
   const getReason = (entry?: AcpRegistryAgent) => {
     if (entry) return registryUnavailableReason(entry, supportedBinaryTarget);
-    return isLoading ? 'Loading provider…' : 'Provider is unavailable in the ACP Registry.';
+    return isLoading ? t('ai.externalAgents.loadingProvider') : t('ai.externalAgents.providerUnavailable');
   };
 
   const renderAgentAction = (agentId: string, compact = false) => {
@@ -36,7 +38,7 @@ export function AcpOnboardingProviderPicker({
         key={agentId}
         type="button"
         disabled={disabled}
-        aria-label={installed ? `Manage ${label}` : `Install ${label}`}
+        aria-label={t(installed ? 'ai.externalAgents.manageProvider' : 'ai.externalAgents.installProvider', { name: label })}
         onClick={() => {
           if (!entry) return;
           if (installed) onManage(installed, entry);
@@ -51,21 +53,21 @@ export function AcpOnboardingProviderPicker({
         </span>
         <span className={`shrink-0 text-[10px] ${installed ? 'text-brand' : 'text-subtext0'}`}>
           {isBusy
-            ? 'Installing…'
+            ? t('ai.externalAgents.installing')
             : installed
-              ? 'Manage'
+              ? t('ai.externalAgents.manage')
               : unavailable
                 ? isLoading
-                  ? 'Loading…'
-                  : 'Unavailable'
-                : 'Install'}
+                  ? t('common.loading')
+                  : t('ai.externalAgents.unavailable')
+                : t('ai.externalAgents.install')}
         </span>
       </button>
     );
   };
 
   return (
-    <section aria-label="Popular ACP providers" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+    <section aria-label={t('ai.externalAgents.popularProviders')} className="grid grid-cols-2 gap-2 sm:grid-cols-3">
       {ONBOARDING_ACP_PROVIDERS.map((provider) => {
         if (provider.agentIds.length === 1) return renderAgentAction(provider.agentIds[0]);
         const expanded = expandedGroup === provider.id;
@@ -75,7 +77,7 @@ export function AcpOnboardingProviderPicker({
             <button
               type="button"
               aria-expanded={expanded}
-              aria-label={`${provider.name}: ${expanded ? 'hide agent choices' : 'choose an agent'}`}
+              aria-label={`${provider.name}: ${t(expanded ? 'ai.externalAgents.hideProviderChoices' : 'ai.externalAgents.chooseProvider')}`}
               onClick={() => setExpandedGroup(expanded ? null : provider.id)}
               className="flex min-h-24 w-full flex-col items-center justify-center gap-2 rounded-sm border border-surface1 bg-base px-3 py-3 text-xs font-semibold text-text transition-colors hover:bg-surface1"
             >
@@ -89,7 +91,7 @@ export function AcpOnboardingProviderPicker({
                 ))}
               </span>
               <span>{provider.name}</span>
-              <span className="text-[10px] font-normal text-subtext0">Choose Cursor or xAI</span>
+              <span className="text-[10px] font-normal text-subtext0">{t('ai.externalAgents.chooseCursorOrXai')}</span>
             </button>
             {expanded && (
               <div className="grid grid-cols-1 gap-1.5">

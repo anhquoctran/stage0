@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { GitBranch } from '../../../common/components/icons/GitBranch';
@@ -20,6 +21,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
   committedBinaryId,
   committedBinaryPath,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { binaries, isScanning, error, scanBinaries, validateCustomBinary, pickGitExecutable } =
     useGitBinaryStore();
 
@@ -185,7 +187,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
               You selected{' '}
               <span className="font-mono text-text font-semibold">{selectedDraftBinary?.name}</span>
               . Clicking <span className="font-semibold text-text">Apply</span> or{' '}
-              <span className="font-semibold text-text">OK</span> will save this setting and prompt
+              <span className="font-semibold text-text">{translateUiText('common.ok')}</span> will save this setting and prompt
               an application restart to switch all internal Git processes cleanly.
             </div>
           </div>

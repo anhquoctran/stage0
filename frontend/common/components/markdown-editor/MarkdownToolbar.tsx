@@ -1,4 +1,5 @@
 import { formatShortcutText } from '../../utils/shortcuts';
+import { useTranslation } from 'react-i18next';
 import { Bold } from '../icons/Bold';
 import { CheckSquare } from '../icons/CheckSquare';
 import { Code } from '../icons/Code';
@@ -24,6 +25,7 @@ export function MarkdownToolbar({
   isAttaching,
   activeFormats,
 }: MarkdownToolbarProps) {
+  const { t } = useTranslation();
   const getButtonClass = (isActive = false, extra = '') =>
     `p-1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm ${
       isActive
@@ -43,10 +45,10 @@ export function MarkdownToolbar({
               ? 'bg-surface2 text-text shadow-xs font-semibold'
               : 'text-subtext0 hover:text-text hover:bg-surface1'
           }`}
-          title="Write"
+          title={t('common.markdown.write')}
         >
           <PenLine className="w-3.5 h-3.5" />
-          <span>Write</span>
+          <span>{t('common.markdown.write')}</span>
         </button>
 
         <button
@@ -57,10 +59,10 @@ export function MarkdownToolbar({
               ? 'bg-surface2 text-text shadow-xs font-semibold'
               : 'text-subtext0 hover:text-text hover:bg-surface1'
           }`}
-          title="Preview Markdown"
+          title={t('common.markdown.previewMarkdown')}
         >
           <Eye className="w-3.5 h-3.5" />
-          <span>Preview</span>
+          <span>{t('common.markdown.preview')}</span>
         </button>
       </div>
 
@@ -74,7 +76,7 @@ export function MarkdownToolbar({
             disabled={disabled}
             aria-pressed={Boolean(activeFormats?.suggestion)}
             className={getButtonClass(Boolean(activeFormats?.suggestion))}
-            title="Insert suggestion"
+            title={t('common.markdown.insertSuggestion')}
           >
             <svg
               width="14"
@@ -126,7 +128,7 @@ export function MarkdownToolbar({
             disabled={disabled}
             aria-pressed={Boolean(activeFormats?.strike)}
             className={getButtonClass(Boolean(activeFormats?.strike), 'font-bold text-xs w-5 text-center leading-none')}
-            title="Strikethrough"
+            title={t('common.markdown.strikethrough')}
           >
             <s>S</s>
           </button>
@@ -140,7 +142,7 @@ export function MarkdownToolbar({
             disabled={disabled}
             aria-pressed={Boolean(activeFormats?.heading)}
             className={getButtonClass(Boolean(activeFormats?.heading))}
-            title="Heading"
+            title={t('common.markdown.heading')}
           >
             <Heading className="w-3.5 h-3.5" />
           </button>
@@ -152,7 +154,7 @@ export function MarkdownToolbar({
             disabled={disabled}
             aria-pressed={Boolean(activeFormats?.code)}
             className={getButtonClass(Boolean(activeFormats?.code))}
-            title="Inline code"
+            title={t('common.markdown.inlineCode')}
           >
             <Code className="w-3.5 h-3.5" />
           </button>
@@ -176,7 +178,7 @@ export function MarkdownToolbar({
             disabled={disabled}
             aria-pressed={Boolean(activeFormats?.bulletList)}
             className={getButtonClass(Boolean(activeFormats?.bulletList))}
-            title="Bullet list"
+            title={t('common.markdown.bulletList')}
           >
             <List className="w-3.5 h-3.5" />
           </button>
@@ -188,7 +190,7 @@ export function MarkdownToolbar({
             disabled={disabled}
             aria-pressed={Boolean(activeFormats?.numberList)}
             className={getButtonClass(Boolean(activeFormats?.numberList))}
-            title="Numbered list"
+            title={t('common.markdown.numberedList')}
           >
             <ListOrdered className="w-3.5 h-3.5" />
           </button>
@@ -200,7 +202,7 @@ export function MarkdownToolbar({
             disabled={disabled}
             aria-pressed={Boolean(activeFormats?.taskList)}
             className={getButtonClass(Boolean(activeFormats?.taskList))}
-            title="Task list"
+            title={t('common.markdown.taskList')}
           >
             <CheckSquare className="w-3.5 h-3.5" />
           </button>
@@ -212,7 +214,7 @@ export function MarkdownToolbar({
             disabled={disabled}
             aria-pressed={Boolean(activeFormats?.quote)}
             className={getButtonClass(Boolean(activeFormats?.quote))}
-            title="Quote"
+            title={t('common.markdown.quote')}
           >
             <Quote className="h-3.5 w-3.5" />
           </button>
@@ -230,7 +232,7 @@ export function MarkdownToolbar({
             disabled={disabled}
             aria-pressed={Boolean(activeFormats?.table)}
             className={getButtonClass(Boolean(activeFormats?.table))}
-            title="Insert table"
+            title={t('common.markdown.insertTable')}
           >
             <svg
               width="14"
@@ -270,8 +272,8 @@ export function MarkdownToolbar({
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || isSubmitting || isAttaching}
             className="p-1 text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer disabled:opacity-40 rounded-sm"
-            title="Attach images (PNG, JPG, GIF, WebP, SVG)"
-            aria-label="Attach images"
+            title={t('common.markdown.attachImagesTitle')}
+            aria-label={t('common.markdown.attachImages')}
           >
             <svg
               width="14"
@@ -294,13 +296,13 @@ export function MarkdownToolbar({
             disabled={disabled}
             aria-pressed={Boolean(activeFormats?.codeBlock)}
             className={getButtonClass(Boolean(activeFormats?.codeBlock))}
-            title="Code block"
+            title={t('common.markdown.codeBlock')}
           >
             <SquareCode className="w-3.5 h-3.5" />
           </button>
         </div>
       ) : (
-        <span className="text-[11px] text-subtext0 font-mono italic">Preview Markdown</span>
+        <span className="text-[11px] text-subtext0 font-mono italic">{t('common.markdown.previewMarkdown')}</span>
       )}
     </div>
   );

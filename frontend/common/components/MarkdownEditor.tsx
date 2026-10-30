@@ -1,4 +1,5 @@
 import React, { useId, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getMarkdownFormattingAtCaret } from '../utils/markdownFormatting';
 import type { MarkdownEditorProps } from '../types/MarkdownEditorProps';
 import type { MentionOption } from '../types/MentionOption';
@@ -20,15 +21,16 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   disabled = false,
   className = '',
   onSubmit,
-  submitLabel = 'Submit',
+  submitLabel,
   onCancel,
-  cancelLabel = 'Cancel',
+  cancelLabel,
   showActions = false,
   isSubmitting = false,
   onGenerateDraft,
   extraActions,
   mentionOptions = [],
 }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mentionListId = useId();
@@ -182,8 +184,8 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       >
         {isDraggingOver && (
           <div className="absolute inset-0 bg-blue/15 border-2 border-dashed border-blue flex flex-col items-center justify-center pointer-events-none z-20 text-xs font-semibold text-blue gap-1 backdrop-blur-xs">
-            <span>Drop images here to attach</span>
-            <span className="text-[10px] text-blue/80 font-normal">PNG, JPG, GIF, WebP, SVG</span>
+            <span>{t('common.markdown.dropImages')}</span>
+            <span className="text-[10px] text-blue/80 font-normal">{t('common.markdown.imageFormats')}</span>
           </div>
         )}
 
@@ -235,7 +237,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               onBlur={() => setIsMentionFocused(false)}
               onKeyDown={handleKeyDown}
               onPaste={handlePaste}
-              placeholder={placeholder || 'Write a comment, paste, or drop images here...'}
+              placeholder={placeholder || t('common.markdown.commentPlaceholder')}
               autoFocus={autoFocus}
               disabled={disabled || isSubmitting}
               role={mentionOptions.length ? 'combobox' : undefined}
@@ -283,7 +285,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                   type="button"
                   onClick={() => setAttachmentWarning(null)}
                   className="text-yellow-400 hover:text-yellow-100 ms-2 font-bold cursor-pointer rounded-sm"
-                  title="Dismiss warning"
+                  title={t('common.markdown.dismissWarning')}
                 >
                   ×
                 </button>
@@ -295,7 +297,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             style={{ minHeight, maxHeight }}
             className="w-full p-3 bg-base border-0 overflow-y-auto rounded-sm"
           >
-            <MarkdownPreview content={value} emptyPlaceholder="No content to preview" />
+            <MarkdownPreview content={value} emptyPlaceholder={t('common.markdown.noContentToPreview')} />
           </div>
         )}
       </div>
@@ -310,10 +312,10 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           isSubmitting={isSubmitting}
           extraActions={extraActions}
           onCancel={onCancel}
-          cancelLabel={cancelLabel}
+          cancelLabel={cancelLabel || t('common.cancel')}
           onSubmit={onSubmit}
           value={value}
-          submitLabel={submitLabel}
+          submitLabel={submitLabel || t('common.markdown.submit')}
         />
       )}
     </div>

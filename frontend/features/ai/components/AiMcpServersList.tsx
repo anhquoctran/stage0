@@ -40,10 +40,9 @@ export const AiMcpServersList: React.FC<{
             <Cable className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-text">No MCP Servers Configured</h4>
+            <h4 className="text-xs font-bold text-text">{translateUiText('ai.mcpServers.emptyTitle')}</h4>
             <p className="text-[11px] text-subtext0 max-w-sm mx-auto mt-0.5">
-              Model Context Protocol servers allow your AI to read local files, execute Git diffs,
-              and interact with repositories.
+              {translateUiText('ai.mcpServers.emptyDescription')}
             </p>
           </div>
           <button
@@ -52,7 +51,7 @@ export const AiMcpServersList: React.FC<{
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer shadow-xs mt-1 rounded-sm"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Add Default Git MCP Server</span>
+            <span>{translateUiText('ai.mcpServers.addDefaultGitServer')}</span>
           </button>
         </div>
       ) : (
@@ -88,13 +87,13 @@ export const AiMcpServersList: React.FC<{
 
                       {envCount > 0 && (
                         <span className="text-[10px] px-1.5 py-0.2 bg-surface0 text-subtext1 border border-surface1 font-mono">
-                          {envCount} env var{envCount > 1 ? 's' : ''}
+                          {translateUiText('ai.mcpServers.envVarCount', { count: envCount })}
                         </span>
                       )}
 
                       {server.testStatus === 'unavailable' && (
                         <span className="text-[10px] px-1.5 py-0.2 bg-surface1 text-text border border-surface2 font-mono flex items-center gap-1">
-                          <span>Not connected</span>
+                          <span>{translateUiText('ai.mcpServers.notConnected')}</span>
                         </span>
                       )}
                     </div>
@@ -105,7 +104,7 @@ export const AiMcpServersList: React.FC<{
                       </p>
                     )}
                     <p className="text-[11px] text-subtext0 mt-1" role="status">
-                      {server.testMessage || 'Not attached to harness. Use the external connectors panel for explicit HTTP discovery.'}
+                      {server.testMessage || translateUiText('ai.mcpServers.notAttached')}
                     </p>
                   </div>
                 </div>
@@ -121,9 +120,9 @@ export const AiMcpServersList: React.FC<{
                         ? 'bg-surface1 border-surface2 text-text shadow-xs'
                         : 'bg-surface0/50 border-surface0 text-subtext0 hover:text-text'
                     }`}
-                    title="Saved preference only; this does not start or connect an MCP server"
+                    title={translateUiText('ai.mcpServers.toggleTitle')}
                   >
-                    {server.enabled ? 'Configured on' : 'Configured off'}
+                    {server.enabled ? translateUiText('ai.mcpServers.enabled') : translateUiText('ai.mcpServers.disabled')}
                   </button>
 
                   {/* Ping / Test Handshake */}
@@ -132,7 +131,7 @@ export const AiMcpServersList: React.FC<{
                     onClick={() => onTestServer(server.id)}
                     disabled={testingServerId === server.id}
                     className="p-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
-                    title="Validate saved configuration only. Use the external connectors panel for HTTP discovery."
+                    title={translateUiText('ai.mcpServers.validateTitle')}
                   >
                     <RefreshCw
                       className={`w-3.5 h-3.5 ${
@@ -146,7 +145,7 @@ export const AiMcpServersList: React.FC<{
                     type="button"
                     onClick={() => onOpenEditServer(server)}
                     className="p-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
-                    title="Edit Server Configuration"
+                    title={translateUiText('ai.mcpServers.editTitle')}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
@@ -162,7 +161,7 @@ export const AiMcpServersList: React.FC<{
                         }}
                         className="px-2 py-0.5 bg-red/20 hover:bg-red/30 text-red text-[11px] font-medium transition-colors cursor-pointer rounded-sm"
                       >
-                        Confirm
+                        {translateUiText('common.confirm')}
                       </button>
                       <button
                         type="button"
@@ -177,7 +176,7 @@ export const AiMcpServersList: React.FC<{
                       type="button"
                       onClick={() => setDeletingServerId(server.id)}
                       className="p-1.5 border border-surface1 hover:bg-red/10 text-subtext0 hover:text-red transition-colors cursor-pointer rounded-sm"
-                      title="Remove MCP Server"
+                      title={translateUiText('ai.mcpServers.removeTitle')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -204,7 +203,7 @@ export const AiMcpServersList: React.FC<{
 
                 {server.lastTestedAt && (
                   <span className="text-[10px] text-subtext0/70 shrink-0 ps-2">
-                    Checked {server.lastTestedAt}
+                    {translateUiText('ai.mcpServers.checkedAt', { date: server.lastTestedAt })}
                   </span>
                 )}
               </div>

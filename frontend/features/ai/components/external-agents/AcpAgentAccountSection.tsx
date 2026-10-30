@@ -1,6 +1,8 @@
 import { useApplicationServices } from '../../../../core/services/runtime/useApplicationServices';
+import { useTranslation } from 'react-i18next';
 
 import { CustomSelect } from '../../../../common/components/CustomSelect';
+import { formatDateTime } from '../../../../common/utils/dateTime';
 import type { AcpAgentDetailsProps } from './AcpAgentDetailsProps';
 
 export function AcpAgentAccountSection({
@@ -21,12 +23,12 @@ export function AcpAgentAccountSection({
   agentId,
 }: Pick<AcpAgentDetailsProps, 'account'> & { agentId: string }) {
   const appServices = useApplicationServices();
+  const { t } = useTranslation();
   return (
     <section className="space-y-2 border-t border-surface1 pt-4">
-      <h3 className="text-xs font-semibold">Account & sign-in</h3>
+      <h3 className="text-xs font-semibold">{t('ai.acpAccount.title')}</h3>
       <p className="text-[11px] text-subtext0">
-        Stage0 checks the agent automatically when this window opens. Account details come only from
-        the agent; Stage0 never reads or stores its credentials.
+        {t('ai.acpAccount.description')}
       </p>
       <div
         role="status"
@@ -34,42 +36,42 @@ export function AcpAgentAccountSection({
         className={`border px-3 py-2 text-xs rounded-sm ${authStatus?.kind === 'none' ? 'border-yellow/40 bg-yellow/5 text-yellow' : authStatus ? 'border-green/40 bg-green/5 text-green' : lastSuccessfulSignIn ? 'border-brand/40 bg-brand/5 text-text' : 'border-surface1 bg-base/40 text-subtext0'}`}
       >
         {isCheckingAuth ? (
-          'Checking account and sign-in methods…'
+          t('ai.acpAccount.checking')
         ) : authStatus ? (
           <div className="space-y-0.5">
             <p className="font-medium">
-              {authStatus.kind === 'none' ? 'Not signed in' : authStatus.label}
+              {authStatus.kind === 'none' ? t('ai.acpAccount.notSignedIn') : authStatus.label}
             </p>
             {authStatus.account?.email && <p>{authStatus.account.email}</p>}
             {authStatus.account?.organization && (
-              <p>Organization: {authStatus.account.organization}</p>
+              <p>{t('ai.acpAccount.organization')}: {authStatus.account.organization}</p>
             )}
-            {authStatus.account?.plan && <p>Plan: {authStatus.account.plan}</p>}
+            {authStatus.account?.plan && <p>{t('ai.acpAccount.plan')}: {authStatus.account.plan}</p>}
             {authStatus.detail && <p>{authStatus.detail}</p>}
             {authStatus.kind === 'none' && lastSuccessfulSignIn && (
               <p>
-                A previous sign-in completed via {lastSuccessfulSignIn.methodLabel} on{' '}
-                {new Date(lastSuccessfulSignIn.completedAt).toLocaleString()}, but this agent now
-                reports that it is signed out.
+                {t('ai.acpAccount.previousSignOut', {
+                  method: lastSuccessfulSignIn.methodLabel,
+                  date: formatDateTime(lastSuccessfulSignIn.completedAt),
+                })}
               </p>
             )}
           </div>
         ) : lastSuccessfulSignIn ? (
           <div className="space-y-0.5">
-            <p className="font-medium">Last sign-in completed</p>
+            <p className="font-medium">{t('ai.acpAccount.lastSignIn')}</p>
             <p>
               {lastSuccessfulSignIn.methodLabel} ·{' '}
-              {new Date(lastSuccessfulSignIn.completedAt).toLocaleString()}
+              {formatDateTime(lastSuccessfulSignIn.completedAt)}
             </p>
             <p>
-              This is a saved result from this device, not a live account check. The agent does not
-              report account identity or current sign-in status over ACP.
+              {t('ai.acpAccount.savedResult')}
             </p>
           </div>
         ) : supportsAuthStatus ? (
-          'This agent supports account status reporting but has not reported an account yet.'
+          t('ai.acpAccount.noAccountReported')
         ) : (
-          'Account status is not reported by this agent over ACP; Stage0 cannot determine whether it is signed in.'
+          t('ai.acpAccount.statusUnavailable')
         )}
       </div>
       {authMethods.length ? (
@@ -79,14 +81,14 @@ export function AcpAgentAccountSection({
             onChange={setSelectedAuthMethod}
             options={authMethods.map((method) => ({
               value: method.id,
-              label: `${method.name || method.id}${method.type === 'terminal' ? ' · Interactive terminal' : ''}`,
+              label: `${method.name || method.id}${method.type === 'terminal' ? ` · ${t('ai.acpAccount.interactiveTerminal')}` : ''}`,
               description: method.description,
             }))}
             className="min-w-40"
             buttonClassName="min-w-40"
             dropdownWidth="w-64"
             align="left"
-            aria-label="ACP sign-in method"
+            aria-label={t('ai.acpAccount.signInMethod')}
           />
           <button
             type="button"
@@ -95,46 +97,43 @@ export function AcpAgentAccountSection({
             className="px-3 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white rounded-sm shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {busyId === agentId
-              ? 'Connecting…'
+              ? t('ai.acpAccount.connecting')
               : authStatus && authStatus.kind !== 'none' && supportsAuthLogout
-                ? 'Change account'
+                ? t('ai.acpAccount.changeAccount')
                 : authStatus && authStatus.kind !== 'none'
-                  ? 'Change account unavailable'
+                  ? t('ai.acpAccount.changeUnavailable')
                   : supportsAuthLogout
-                    ? 'Sign in / change account'
-                    : 'Connect account'}
+                    ? t('ai.acpAccount.signInOrChange')
+                    : t('ai.acpAccount.connectAccount')}
           </button>
         </div>
       ) : (
         !isCheckingAuth && (
           <p className="text-[11px] text-subtext0">
-            This agent did not advertise an ACP sign-in method. If it already has a local session,
-            you can still try sending a prompt.
+            {t('ai.acpAccount.noMethod')}
           </p>
         )
       )}
       {authStatus && authStatus.kind !== 'none' && !supportsAuthLogout && (
         <p className="text-[11px] text-subtext0">
-          This agent does not support ACP logout, so Stage0 cannot clear its current account before signing in again.
+          {t('ai.acpAccount.logoutUnsupported')}
         </p>
       )}
       {supportsAuthLogout && (
         <p className="text-[11px] text-subtext0">
-          Changing accounts signs out through the agent. For Codex, other clients using the same
-          CODEX_HOME may also need to sign in again.
+          {t('ai.acpAccount.changeAccountNotice')}
         </p>
       )}
       {selectedAuthOption?.type === 'terminal' && (
         <p className="text-[11px] text-yellow">
-          This agent requires interactive terminal sign-in, which Stage0 does not support yet.
+          {t('ai.acpAccount.terminalUnsupported')}
         </p>
       )}
       {selectedAuthOption?.type &&
         selectedAuthOption.type !== 'agent' &&
         selectedAuthOption.type !== 'terminal' && (
           <p className="text-[11px] text-yellow">
-            This sign-in method requires a client-specific setup ({selectedAuthOption.type}); Stage0
-            cannot complete it automatically.
+            {t('ai.acpAccount.clientSpecificSetup', { type: selectedAuthOption.type })}
           </p>
         )}
     </section>

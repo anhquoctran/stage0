@@ -32,11 +32,11 @@ export const AiMcpTabHeader: React.FC<{
             className="inline-flex items-center gap-1 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer group rounded-sm"
           >
             <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5 rtl:rotate-180 transition-transform" />
-            <span>AI Overview</span>
+            <span>{translateUiText('preferences.nav.ai-overview')}</span>
           </button>
           <span className="text-xs text-surface2 font-mono">/</span>
           <span className="text-xs font-semibold text-text">
-            {activeView === 'mcp' ? 'MCP Servers' : 'LLM Providers'}
+            {activeView === 'mcp' ? translateUiText('ai.mcpTab.servers') : translateUiText('ai.mcpTab.providers')}
           </span>
         </div>
       )}
@@ -47,14 +47,14 @@ export const AiMcpTabHeader: React.FC<{
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-text">
-                AI & Model Context Protocol (MCP)
+                {translateUiText('ai.mcpTab.title')}
               </h3>
               <p className="text-[11px] text-subtext0 mt-0.5">
-                Configure LLM intelligence, automated diff reviewer, and Model Context Protocol servers
+                {translateUiText('ai.mcpTab.description')}
               </p>
             </div>
             <span className="text-[10px] text-subtext0 font-mono px-2 py-0.5 bg-surface0 border border-surface1">
-              Active: {activeProviderName} • {activeModel}
+              {translateUiText('ai.mcpTab.active')}: {activeProviderName} • {activeModel}
             </span>
           </div>
 
@@ -68,7 +68,7 @@ export const AiMcpTabHeader: React.FC<{
                   : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
               }`}
             >
-              <span>AI Model & Security Policies</span>
+              <span>{translateUiText('ai.mcpTab.securityPolicies')}</span>
             </button>
 
             <button
@@ -95,7 +95,7 @@ export const AiMcpTabHeader: React.FC<{
                   : 'border-transparent text-subtext0 hover:bg-surface0 hover:text-text'
               }`}
             >
-              <span>Stage0 System Prompts</span>
+              <span>{translateUiText('ai.mcpPrompts.title')}</span>
             </button>
           </div>
         </div>

@@ -74,12 +74,12 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
             value: 'global_default',
             label:
               formProvider === 'global_default'
-                ? `Use global model (${globalAiConfig.model})`
-                : `Use provider default (${providerPreset?.defaultModel || globalAiConfig.model})`,
+                ? translateUiText('ai.reviewerBot.useGlobalModel', { model: globalAiConfig.model })
+                : translateUiText('ai.reviewerBot.useProviderDefault', { model: providerPreset?.defaultModel || globalAiConfig.model }),
             description:
               formProvider === 'global_default'
-                ? 'Inherit the model configured in LLM Providers.'
-                : 'Use the selected provider’s default model.',
+                ? translateUiText('ai.reviewerBot.inheritProviderModel')
+                : translateUiText('ai.reviewerBot.useSelectedProviderDefault'),
           },
         ]
       : []),
@@ -92,12 +92,12 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
     formModel &&
     formModel !== 'global_default' &&
     !availableModels.some((model) => model.id === formModel)
-      ? [{ value: formModel, label: `${formModel} (Saved custom model)` }]
+      ? [{ value: formModel, label: translateUiText('ai.reviewerBot.savedCustomModel', { model: formModel }) }]
       : []),
     {
       value: CUSTOM_MODEL_OPTION,
-      label: 'Custom model…',
-      description: 'Enter an ID for a model not listed above.',
+      label: translateUiText('ai.reviewerBot.customModel'),
+      description: translateUiText('ai.reviewerBot.enterUnlistedModel'),
     },
   ];
 
@@ -107,7 +107,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
         <div className="flex items-center justify-between border-b border-surface0 pb-3">
           <h4 className="text-sm font-bold text-text flex items-center gap-2">
             <Bot className="w-4 h-4 text-brand" />
-            {editingBotId ? 'Edit Reviewer Bot' : 'Create Custom Reviewer Bot'}
+            {editingBotId ? translateUiText('ai.reviewerBot.editTitle') : translateUiText('ai.reviewerBot.createTitle')}
           </h4>
           <button
             type="button"
@@ -129,7 +129,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
           <div className="grid grid-cols-4 gap-3">
             <div className="col-span-1">
               <label className="block text-[11px] font-semibold text-subtext0 mb-1">
-                Avatar Emoji
+                {translateUiText('ai.reviewerBot.avatarEmoji')}
               </label>
               <div className="flex items-center gap-1.5">
                 <input
@@ -156,12 +156,12 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
 
             <div className="col-span-3">
               <label className="block text-[11px] font-semibold text-subtext0 mb-1">
-                Bot Name *
+                {translateUiText('ai.reviewerBot.nameRequired')}
               </label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Accessibility Auditor"
+                placeholder={translateUiText('ai.reviewerBot.namePlaceholder')}
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand rounded-sm"
@@ -171,10 +171,10 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-subtext0 mb-1">Tagline</label>
+              <label className="block text-[11px] font-semibold text-subtext0 mb-1">{translateUiText('ai.reviewerBot.tagline')}</label>
               <input
                 type="text"
-                placeholder="e.g. WCAG 2.1 & Screen Reader Compliance"
+                placeholder={translateUiText('ai.reviewerBot.taglinePlaceholder')}
                 value={formTagline}
                 onChange={(e) => setFormTagline(e.target.value)}
                 className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand rounded-sm"
@@ -182,7 +182,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-subtext0 mb-1">Role</label>
+              <label className="block text-[11px] font-semibold text-subtext0 mb-1">{translateUiText('ai.reviewerBot.role')}</label>
               <CustomSelect
                 value={formCategory}
                 options={BOT_CATEGORY_OPTIONS}
@@ -191,18 +191,18 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
                 buttonClassName="w-full"
                 dropdownWidth="w-full"
                 align="left"
-                aria-label="Bot role"
+                aria-label={translateUiText('ai.reviewerBot.role')}
               />
             </div>
           </div>
 
           <div>
             <label className="block text-[11px] font-semibold text-subtext0 mb-1">
-              Description
+              {translateUiText('ai.reviewerBot.description')}
             </label>
             <input
               type="text"
-              placeholder="Short explanation of what this bot checks in code reviews..."
+              placeholder={translateUiText('ai.reviewerBot.descriptionPlaceholder')}
               value={formDesc}
               onChange={(e) => setFormDesc(e.target.value)}
               className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand rounded-sm"
@@ -270,7 +270,7 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
               disabled={!canSubmit}
               className="px-5 py-1.5 border-0 bg-brand enabled:hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-xs rounded-sm"
             >
-              {editingBotId ? 'Update Bot' : 'Create Bot'}
+              {editingBotId ? translateUiText('ai.reviewerBot.updateButton') : translateUiText('ai.reviewerBot.createButton')}
             </button>
           </div>
         </form>

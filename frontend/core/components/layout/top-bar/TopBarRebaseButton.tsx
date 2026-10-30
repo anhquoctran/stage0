@@ -64,7 +64,7 @@ export const TopBarRebaseButton: React.FC = () => {
       {isOpen && (
         <div className="absolute start-0 top-full mt-1.5 w-60 shadow-2xl bg-mantle border border-surface0 py-1 z-50 animate-in fade-in duration-100 rounded-sm">
           <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0 mb-1 rounded-sm">
-            Rebase Options
+            {translateUiText('common.layout.rebaseOptions')}
           </div>
           <button
             type="button"
@@ -99,7 +99,7 @@ export const TopBarRebaseButton: React.FC = () => {
           <div className="my-1 border-t border-surface0" />
 
           <div className="px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-subtext0">
-            In-Progress Actions
+            {translateUiText('common.layout.inProgressActions')}
           </div>
 
           <button
@@ -113,7 +113,7 @@ export const TopBarRebaseButton: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <Play className="w-3.5 h-3.5 text-current transition-colors" />
-              <span>Continue Rebase</span>
+              <span>{translateUiText('common.layout.continueRebase')}</span>
             </div>
           </button>
 
@@ -143,7 +143,7 @@ export const TopBarRebaseButton: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <Undo2 className="w-3.5 h-3.5 text-current transition-colors" />
-              <span>Abort Rebase</span>
+              <span>{translateUiText('common.layout.abortRebase')}</span>
             </div>
           </button>
         </div>

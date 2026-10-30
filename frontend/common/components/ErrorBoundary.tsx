@@ -39,10 +39,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </div>
 
             <h2 className="text-lg font-bold text-[#cdd6f4] mb-1">
-              An unexpected error occurred
+              {this.props.translate('common.errorBoundary.title')}
             </h2>
             <p className="text-xs text-[#a6adc8] mb-4">
-              A React component encountered an error while rendering.
+              {this.props.translate('common.errorBoundary.description')}
             </p>
 
             {this.state.error && (
@@ -60,7 +60,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 onClick={this.handleReset}
                 className="px-4 py-2 rounded-sm bg-[#313244] hover:bg-[#45475a] text-xs font-medium text-[#cdd6f4] transition-colors cursor-pointer"
               >
-                Try Again
+                {this.props.translate('common.errorBoundary.tryAgain')}
               </button>
               <button
                 type="button"
@@ -68,7 +68,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 className="px-4 py-2 rounded-sm bg-brand hover:bg-brand/90 text-xs font-semibold text-on-accent flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-brand/20"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                Reload Application
+                {this.props.translate('common.errorBoundary.reload')}
               </button>
             </div>
           </div>

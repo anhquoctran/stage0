@@ -14,14 +14,14 @@ export const TopBarRebasingBanner: React.FC = () => {
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950 text-white text-xs rounded-sm">
       <span className="text-xs font-semibold text-amber-200 uppercase tracking-wider me-1">
-        Rebasing:
+        {translateUiText('common.layout.rebasing')}
       </span>
       <button
         type="button"
         disabled={isSyncing}
         onClick={() => runSync('rebase_continue')}
         className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-900 hover:bg-emerald-800 text-white text-xs font-medium transition-colors cursor-pointer rounded-sm"
-        title="Continue rebase after resolving conflicts"
+        title={translateUiText('common.layout.continueRebaseTitle')}
       >
         <Play className="w-3.5 h-3.5 text-white" />
         <span>{translateUiText('menu.commands.rebase_continue')}</span>
@@ -31,17 +31,17 @@ export const TopBarRebasingBanner: React.FC = () => {
         disabled={isSyncing}
         onClick={() => runSync('rebase_skip')}
         className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white text-xs font-medium transition-colors cursor-pointer rounded-sm"
-        title="Skip this commit"
+        title={translateUiText('common.layout.skipCommitTitle')}
       >
         <SkipForward className="w-3.5 h-3.5 text-white" />
-        <span>Skip</span>
+        <span>{translateUiText('common.layout.skip')}</span>
       </button>
       <button
         type="button"
         disabled={isSyncing}
         onClick={() => runSync('rebase_abort')}
         className="flex items-center gap-1.5 px-2.5 py-1 bg-red-900 hover:bg-red-800 text-white text-xs font-medium transition-colors cursor-pointer rounded-sm"
-        title="Abort rebase and restore original state"
+        title={translateUiText('common.layout.abortRebaseTitle')}
       >
         <Undo2 className="w-3.5 h-3.5 text-white" />
         <span>{translateUiText('menu.commands.rebase_abort')}</span>

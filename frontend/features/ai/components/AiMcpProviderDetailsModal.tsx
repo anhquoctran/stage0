@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { ExternalLink } from '../../../common/components/icons/ExternalLink';
@@ -64,6 +65,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
   onResetAiConfig,
   hasDraftSettings,
 }) => {
+  const { t } = useTranslation();
   const [showApiKey, setShowApiKey] = useState(false);
 
   const ActiveProviderIcon = getProviderIcon(activeProviderPreset.id);
@@ -93,7 +95,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
 
   const modelOptions: CustomSelectOption<string>[] = [
     ...(aiConfig.model && !modelsList.some((model) => model.id === aiConfig.model)
-      ? [{ value: aiConfig.model, label: `${aiConfig.model} (Custom / Active)` }]
+      ? [{ value: aiConfig.model, label: t('ai.providers.customActiveModel', { model: aiConfig.model }) }]
       : []),
     ...modelsList.map((model) => ({
       value: model.id,
@@ -132,7 +134,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
                   {getProviderDisplayName(activeProviderPreset.id, aiConfig.customProviderName)}
                 </h4>
                 <span className="text-[10px] px-2 py-0.5 bg-surface1 text-subtext0 border border-surface2 font-mono shrink-0">
-                  {aiConfig.provider === 'ollama' ? 'Offline Local' : 'API Key'}
+                  {aiConfig.provider === 'ollama' ? t('ai.providers.offlineLocal') : t('ai.providers.apiKey')}
                 </span>
               </div>
               <p className="text-[11px] text-subtext0 mt-0.5">{activeProviderPreset.description}</p>
@@ -153,7 +155,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
                 }}
                 className="flex items-center gap-1 text-[11px] text-subtext0 hover:text-text underline cursor-pointer"
               >
-                <span>Documentation</span>
+                <span>{t('ai.providers.documentation')}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             )}
@@ -161,7 +163,7 @@ export const AiMcpProviderDetailsModal: React.FC<{
               type="button"
               onClick={onClose}
               className="p-1 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
-              aria-label="Close provider details"
+              aria-label={t('ai.providers.closeDetails')}
             >
               <X className="w-4 h-4" />
             </button>
@@ -174,13 +176,13 @@ export const AiMcpProviderDetailsModal: React.FC<{
               htmlFor="custom-provider-display-name"
               className="block text-xs font-semibold text-text mb-1"
             >
-              Provider display name
+              {t('ai.providers.displayName')}
             </label>
             <input
               id="custom-provider-display-name"
               value={aiConfig.customProviderName || ''}
               onChange={(event) => onUpdateAiConfig({ customProviderName: event.target.value })}
-              placeholder="e.g. OpenRouter, DeepSeek, LM Studio"
+              placeholder={t('ai.providers.displayNamePlaceholder')}
               className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
@@ -231,16 +233,16 @@ export const AiMcpProviderDetailsModal: React.FC<{
               type="button"
               onClick={onTestConnection}
               disabled={isTestingAi}
-              title="Native API tests use saved OS credentials, send no repository source and may incur provider charges. Apply API key changes first."
+              title={t('ai.providers.testConnectionSafety')}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer border border-surface2 shadow-xs rounded-sm"
             >
               {isTestingAi ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Testing...</span>
+                  <span>{t('ai.providers.testing')}</span>
                 </>
               ) : (
-                <span>Test Connection</span>
+                <span>{t('ai.providers.testConnection')}</span>
               )}
             </button>
 
@@ -248,10 +250,10 @@ export const AiMcpProviderDetailsModal: React.FC<{
               type="button"
               onClick={onResetAiConfig}
               className="flex items-center gap-1 px-3 py-1.5 text-xs text-subtext0 hover:text-text hover:bg-surface1/40 transition-colors cursor-pointer rounded-sm"
-              title="Reset provider settings to defaults"
+              title={t('ai.providers.resetTitle')}
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Reset</span>
+              <span>{t('ai.providers.reset')}</span>
             </button>
           </div>
 

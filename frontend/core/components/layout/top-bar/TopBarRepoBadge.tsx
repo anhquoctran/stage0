@@ -1,15 +1,17 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FolderGit2 } from '../../../../common/components/icons/FolderGit2';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
 
 export const TopBarRepoBadge: React.FC = () => {
+  const { t } = useTranslation();
   const { currentRepo } = useGitStore();
 
   if (!currentRepo) {
     return (
       <div className="flex items-center gap-2.5 px-3.5 h-12 bg-surface0 text-subtext0 text-xs select-none shrink-0 rounded-sm">
         <FolderGit2 className="w-4 h-4 text-subtext0 shrink-0" />
-        <span>No Repository Opened</span>
+        <span>{t('common.layout.noRepositoryOpened')}</span>
       </div>
     );
   }

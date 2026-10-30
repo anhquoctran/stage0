@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileJson } from '../../../common/components/icons/FileJson';
 import { Plus } from '../../../common/components/icons/Plus';
 import { HarnessConnectionsPanel } from '../../review/components/HarnessConnectionsPanel';
@@ -24,6 +25,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
   activeView,
   onBackToOverview,
 }) => {
+  const { t } = useTranslation();
   const state = useAiMcpTabState({
     draftSettings,
     draftAiConfig,
@@ -107,7 +109,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 onClick={onNavigateToGuardrails}
                 className="text-xs text-subtext0 hover:text-text underline cursor-pointer rounded-sm"
               >
-                Configure AI Security Guardrails &amp; Execution Policies →
+                {t('ai.mcpTab.configureSecurityPolicies')} →
               </button>
             </div>
           )}
@@ -123,10 +125,10 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
               <span className="text-xs font-bold text-text block">
-                Model Context Protocol (MCP) Ecosystem
+                {t('ai.mcpTab.ecosystemTitle')}
               </span>
               <span className="text-[11px] text-subtext0 block">
-                Configure external tools; discovery does not grant access to AI review runs
+                {t('ai.mcpTab.ecosystemDescription')}
               </span>
             </div>
 
@@ -135,10 +137,10 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 type="button"
                 onClick={() => state.mcp.setIsJsonModalOpen(true)}
                 className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 border border-surface1 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer rounded-sm"
-                title="Import or Export JSON configuration"
+                title={t('ai.mcpTab.importExportTitle')}
               >
                 <FileJson className="w-3.5 h-3.5" />
-                <span>Config JSON</span>
+                <span>{t('ai.mcpTab.configJson')}</span>
               </button>
 
               <button
@@ -147,7 +149,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
                 className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer shadow-xs rounded-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add MCP Server</span>
+                <span>{t('ai.mcpTab.addServer')}</span>
               </button>
             </div>
           </div>
@@ -155,7 +157,7 @@ export const AiMcpTab: React.FC<AiMcpTabProps> = ({
           {/* Quick Preset Templates Bar */}
           <div className="p-2.5 bg-surface0/20 border border-surface0/80 flex flex-wrap items-center gap-2 rounded-sm">
             <span className="shrink-0 text-[10px] font-bold text-subtext0 uppercase tracking-wider">
-              Quick Add Presets:
+              {t('ai.mcpTab.quickAddPresets')}
             </span>
             {MCP_PRESET_TEMPLATES.map((preset) => (
               <button

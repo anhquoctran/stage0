@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useId, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown } from './icons/ChevronDown';
 import { Check } from './icons/Check';
 import type { CustomSelectProps } from '../types/CustomSelectProps';
@@ -12,17 +13,20 @@ export function CustomSelect<T extends string>({
   disabled = false,
   autoFocus = false,
   searchable = false,
-  searchPlaceholder = 'Search options...',
+  searchPlaceholder,
   className = '',
   buttonClassName = '',
   menuClassName = '',
   dropdownWidth = 'w-56',
   dropdownPlacement = 'bottom',
   dropdownListMaxHeight,
-  placeholder = 'Select option...',
+  placeholder,
   align = 'right',
   'aria-label': ariaLabel,
 }: CustomSelectProps<T>) {
+  const { t } = useTranslation();
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t('common.select.searchOptions');
+  const resolvedPlaceholder = placeholder ?? t('common.select.placeholder');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [search, setSearch] = useState('');
@@ -148,7 +152,7 @@ export function CustomSelect<T extends string>({
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        aria-label={ariaLabel || selectedOption?.label || placeholder}
+        aria-label={ariaLabel || selectedOption?.label || resolvedPlaceholder}
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
         className={`flex items-center justify-between gap-2.5 px-3 py-1.5 rounded-sm border text-xs transition-colors cursor-pointer select-none focus:outline-none focus:border-brand/70 focus:ring-1 focus:ring-brand/30 ${
           disabled
@@ -161,7 +165,7 @@ export function CustomSelect<T extends string>({
         <div className="flex items-center gap-2 truncate">
           {selectedOption?.icon && <span className="shrink-0">{selectedOption.icon}</span>}
           <span className="truncate font-medium">
-            {selectedOption ? selectedOption.label : placeholder}
+            {selectedOption ? selectedOption.label : resolvedPlaceholder}
           </span>
         </div>
         <ChevronDown
@@ -179,7 +183,7 @@ export function CustomSelect<T extends string>({
         >
           {searchable && <div className="px-2 py-1 border-b border-surface0 rounded-sm">
             <input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)}
-              aria-label={searchPlaceholder} placeholder={searchPlaceholder}
+              aria-label={resolvedSearchPlaceholder} placeholder={resolvedSearchPlaceholder}
               className="w-full px-2 py-1.5 bg-base border border-surface1 text-xs text-text outline-none focus:border-brand rounded-sm" />
           </div>}
           <div ref={listRef} role="listbox" aria-labelledby={selectId}
@@ -248,9 +252,9 @@ export function CustomSelect<T extends string>({
               </React.Fragment>
             );
           })}
-          {visibleOptions.length === 0 && <p className="px-3 py-3 text-xs text-subtext0">No matching options.</p>}
+          {visibleOptions.length === 0 && <p className="px-3 py-3 text-xs text-subtext0">{t('common.select.noMatchingOptions')}</p>}
           </div>
-          {matchingOptions.length > visibleOptions.length && <p className="px-3 py-2 border-t border-surface0 text-[10px] text-subtext0">Showing {visibleOptions.length} of {matchingOptions.length}. Search to narrow the list.</p>}
+          {matchingOptions.length > visibleOptions.length && <p className="px-3 py-2 border-t border-surface0 text-[10px] text-subtext0">{t('common.select.showingOptions', { visible: visibleOptions.length, total: matchingOptions.length })}</p>}
         </div>
       )}
     </div>

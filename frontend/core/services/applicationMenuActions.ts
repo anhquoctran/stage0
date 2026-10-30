@@ -110,8 +110,9 @@ export async function executeMenuAction(id: string, callbacks: MenuCallbacks): P
     await actions[id as MenuActionId]();
   } catch (error) {
     git.showToast(
-      `Menu action failed: ${error instanceof Error ? error.message : String(error)}`,
+      i18n.t('menu.toasts.actionFailed', { error: error instanceof Error ? error.message : String(error) }),
       'error'
     );
   }
 }
+import i18n from '../../features/i18n/i18n';

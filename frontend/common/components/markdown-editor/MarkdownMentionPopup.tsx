@@ -1,4 +1,5 @@
 import type { MarkdownMentionPopupProps } from './MarkdownMentionPopupProps';
+import { useTranslation } from 'react-i18next';
 
 export function MarkdownMentionPopup({
   mentionListId,
@@ -7,11 +8,12 @@ export function MarkdownMentionPopup({
   applyMention,
   mentionOptions,
 }: MarkdownMentionPopupProps) {
+  const { t } = useTranslation();
   return (
     <div
       id={mentionListId}
       role="listbox"
-      aria-label="Mention a participant"
+      aria-label={t('common.markdown.mentionParticipant')}
       className="mt-1 max-h-40 overflow-y-auto border border-surface1 bg-mantle shadow-lg rounded-sm"
     >
       {suggestions.map((option, index) => (
@@ -38,7 +40,7 @@ export function MarkdownMentionPopup({
             )}
           </span>
           <span className="shrink-0 text-[10px] text-subtext0">
-            {option.kind === 'reviewer' ? 'AI reviewer' : 'Assignee'}
+            {option.kind === 'reviewer' ? t('common.markdown.aiReviewer') : t('common.markdown.assignee')}
           </span>
         </button>
       ))}

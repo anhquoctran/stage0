@@ -2,6 +2,7 @@ import { useWindowChromeStore } from '../../../store/useWindowChromeStore';
 import { titleBarMouseDown } from './titleBarMouseDown';
 import { useApplicationServices } from '../../../services/runtime/useApplicationServices';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { clsx } from 'clsx';
 
 import { AppLogo } from '../../../../common/components/AppLogo';
@@ -13,6 +14,7 @@ import { useAboutInfo } from '../../../../features/about/hooks/useAboutInfo';
 export const TopBarTitleRow: React.FC<{
   isMac: boolean;
 }> = ({ isMac }) => {
+  const { t } = useTranslation();
   const appServices = useApplicationServices();
   const { currentRepo, baseBranch, compareBranch } = useGitStore();
   const about = useAboutInfo();
@@ -23,13 +25,13 @@ export const TopBarTitleRow: React.FC<{
 
   const titleText = currentRepo
     ? `${currentRepo.name} — [${compareBranch || '...'} → ${baseBranch || '...'}]`
-    : `Stage0 v${about.packageVersion} — Virtual MR Sandbox`;
-  const visibleTitleText = currentRepo ? titleText : 'Stage0 — Virtual MR Sandbox';
+    : `Stage0 v${about.packageVersion} — ${t('common.layout.productDescriptor')}`;
+  const visibleTitleText = currentRepo ? titleText : `Stage0 — ${t('common.layout.productDescriptor')}`;
   const versionLabel = (
     <span
       data-tauri-drag-region={dragRegion}
-      title={`Stage0 v${about.packageVersion}`}
-      aria-label={`Stage0 version ${about.packageVersion}`}
+      title={t('common.layout.versionTitle', { version: about.packageVersion })}
+      aria-label={t('common.layout.versionLabel', { version: about.packageVersion })}
       className="text-[10px] font-mono text-subtext0 select-none truncate min-w-0"
     >
       v{about.packageVersion}

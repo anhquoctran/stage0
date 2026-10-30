@@ -1,4 +1,5 @@
 import { Trash2 } from '../../../../common/components/icons/Trash2';
+import { useTranslation } from 'react-i18next';
 import { ExternalAgentsModal as Modal } from '../ExternalAgentsModal';
 import { AcpAgentAccountSection } from './AcpAgentAccountSection';
 import type { AcpAgentDetailsProps } from './AcpAgentDetailsProps';
@@ -20,6 +21,7 @@ export function AcpAgentDetails({
   promptSession,
 }: AcpAgentDetailsProps) {
   const { detailAgent } = project;
+  const { t } = useTranslation();
   return (
     <Modal
       title={detailAgent.name}
@@ -52,9 +54,9 @@ export function AcpAgentDetails({
               {detailAgent.version ? ` · ${detailAgent.version}` : ''}
             </p>
             <p className="mt-1 text-xs text-subtext0">
-              {detailAgent.description || 'Custom ACP agent'} ·{' '}
+              {detailAgent.description || t('ai.externalAgents.customAcpAgent')} ·{' '}
               {detailAgent.launchMode === 'binary'
-                ? `Native binary · ${detailAgent.command}`
+                ? t('ai.externalAgents.nativeBinaryCommand', { command: detailAgent.command })
                 : `${detailAgent.command} ${detailAgent.args.join(' ')}`}
             </p>
           </div>
@@ -63,15 +65,14 @@ export function AcpAgentDetails({
             onClick={() => setRemovePending(true)}
             className="flex items-center gap-1.5 border border-red/40 px-2.5 py-1.5 text-xs text-red hover:bg-red/10 rounded-sm"
           >
-            <Trash2 className="h-3.5 w-3.5" /> Uninstall
+            <Trash2 className="h-3.5 w-3.5" /> {t('ai.externalAgents.uninstall')}
           </button>
         </div>
         <AcpAgentProjectInfo project={project} />
         {removePending && (
           <div className="flex flex-wrap items-center justify-between gap-2 border border-red/40 bg-red/5 p-3 text-xs rounded-sm">
             <span>
-              Uninstall this launch config from Stage0? Its package cache may remain on this
-              computer.
+              {t('ai.externalAgents.uninstallConfirmation')}
             </span>
             <div className="flex gap-2">
               <button
@@ -79,23 +80,21 @@ export function AcpAgentDetails({
                 onClick={() => setRemovePending(false)}
                 className="border border-surface2 px-2.5 py-1.5 rounded-sm"
               >
-                Keep
+                {t('ai.externalAgents.keep')}
               </button>
               <button
                 type="button"
                 onClick={removeAgent}
                 className="border border-red/50 px-2.5 py-1.5 text-red rounded-sm"
               >
-                Uninstall
+                {t('ai.externalAgents.uninstall')}
               </button>
             </div>
           </div>
         )}
         <AcpAgentAccountSection account={account} agentId={detailAgent.id} />
         <p className="border border-surface1 px-3 py-2 text-[11px] text-subtext0">
-          When a repository is open, the agent starts there. Stage0 does not yet provide ACP file
-          operations or interactive terminals, so the agent needs its own tools to work with project
-          files.
+          {t('ai.externalAgents.agentWorkspaceNotice')}
         </p>
         <AcpAgentPromptSection promptSession={promptSession} />
       </div>

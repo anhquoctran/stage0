@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Columns2 } from '../../../../common/components/icons/Columns2';
 import { Rows2 } from '../../../../common/components/icons/Rows2';
 import { Keyboard } from '../../../../common/components/icons/Keyboard';
@@ -7,6 +8,7 @@ import { useGitStore } from '../../../../features/git/store/useGitStore';
 export const StatusBarViewModeControls: React.FC<{
   isVisible: boolean;
 }> = ({ isVisible }) => {
+  const { t } = useTranslation();
   const { viewMode, setViewMode } = useGitStore();
 
   if (!isVisible) return null;
@@ -18,14 +20,16 @@ export const StatusBarViewModeControls: React.FC<{
         type="button"
         onClick={() => setViewMode(viewMode === 'split' ? 'unified' : 'split')}
         className="h-5.5 px-2 bg-surface0/40 hover:bg-surface1/70 border border-surface1/40 hover:border-surface2 text-subtext1 hover:text-text flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs rounded-sm"
-        title={`Click to switch to ${viewMode === 'split' ? 'Unified' : 'Split'} view`}
+        title={t('common.layout.switchView', {
+          view: t(viewMode === 'split' ? 'common.layout.viewUnified' : 'common.layout.viewSplit'),
+        })}
       >
         {viewMode === 'split' ? (
           <Columns2 className="w-3 h-3 text-blue shrink-0" />
         ) : (
           <Rows2 className="w-3 h-3 text-blue shrink-0" />
         )}
-        <span className="capitalize max-xl:hidden">{viewMode} View</span>
+        <span className="capitalize max-xl:hidden">{t(viewMode === 'split' ? 'common.layout.viewSplit' : 'common.layout.viewUnified')}</span>
       </button>
 
       {/* Keyboard Shortcuts Hint */}
@@ -33,11 +37,11 @@ export const StatusBarViewModeControls: React.FC<{
         <div className="h-3 w-px bg-surface1/80 ms-1" />
         <Keyboard className="w-3 h-3 text-subtext0/60 shrink-0" />
         <span>
-          <kbd className="font-mono bg-surface0/60 px-1 py-0.2 border border-surface1/40 text-subtext1">↑/↓</kbd> Files
+          <kbd className="font-mono bg-surface0/60 px-1 py-0.2 border border-surface1/40 text-subtext1">↑/↓</kbd> {t('common.layout.files')}
         </span>
         <span className="text-surface2">•</span>
         <span>
-          <kbd className="font-mono bg-surface0/60 px-1 py-0.2 border border-surface1/40 text-subtext1">S/U</kbd> View
+          <kbd className="font-mono bg-surface0/60 px-1 py-0.2 border border-surface1/40 text-subtext1">S/U</kbd> {t('common.layout.view')}
         </span>
       </div>
     </>

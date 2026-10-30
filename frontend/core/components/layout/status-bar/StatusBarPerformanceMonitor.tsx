@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { HeartPulse } from '../../../../common/components/icons/HeartPulse';
 import { usePerformanceMonitorStore } from '../../../../features/performance/store/usePerformanceMonitorStore';
 import { getPerformanceMetrics } from '../../../../features/performance/services/performanceService';
@@ -19,6 +20,7 @@ function formatDetailedMemory(bytes: number): string {
 }
 
 export const StatusBarPerformanceMonitor: React.FC = () => {
+  const { t } = useTranslation();
   const isEnabled = usePerformanceMonitorStore((state) => state.isEnabled);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [performanceMetricsUnavailable, setPerformanceMetricsUnavailable] = useState(false);
@@ -59,12 +61,12 @@ export const StatusBarPerformanceMonitor: React.FC = () => {
     <div
       className="group relative flex h-5.5 items-center gap-2 border-s border-surface1/80 ps-2 text-[10px] text-subtext1 cursor-help focus-visible:outline-none rounded-sm"
       tabIndex={0}
-      aria-label="Performance monitor details"
+      aria-label={t('common.performance.detailsLabel')}
       aria-describedby="performance-monitor-tooltip"
     >
       <HeartPulse className="h-3.5 w-3.5 text-primary shrink-0" />
       {performanceMetricsUnavailable ? (
-        <span className="text-subtext0">Perf unavailable</span>
+        <span className="text-subtext0">{t('common.performance.unavailable')}</span>
       ) : (
         <>
           <span className="whitespace-nowrap">
@@ -72,7 +74,7 @@ export const StatusBarPerformanceMonitor: React.FC = () => {
             <strong className="font-mono font-medium text-text">
               {performanceMetrics?.cpuPercent == null
                 ? performanceMetrics
-                  ? 'Measuring…'
+                  ? t('common.performance.measuring')
                   : '—'
                 : `${performanceMetrics.cpuPercent.toFixed(1)}%`}
             </strong>
@@ -94,30 +96,30 @@ export const StatusBarPerformanceMonitor: React.FC = () => {
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <HeartPulse className="h-4 w-4 text-primary" />
-            <span className="font-semibold">Application Performance</span>
+            <span className="font-semibold">{t('common.performance.title')}</span>
           </div>
           <span className="bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide text-primary">
-            LIVE
+            {t('common.performance.live')}
           </span>
         </div>
 
         {performanceMetricsUnavailable ? (
-          <p className="text-subtext1">Could not read process metrics. Stage0 will retry in 5 seconds.</p>
+          <p className="text-subtext1">{t('common.performance.readFailed')}</p>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-surface0/70 p-2 rounded-sm">
-                <div className="mb-1 text-[10px] text-subtext0">CPU usage</div>
+                <div className="mb-1 text-[10px] text-subtext0">{t('common.performance.cpuUsage')}</div>
                 <div className="font-mono text-sm font-semibold text-text">
                   {performanceMetrics?.cpuPercent == null
                     ? performanceMetrics
-                      ? 'Measuring…'
+                      ? t('common.performance.measuring')
                       : '—'
                     : `${performanceMetrics.cpuPercent.toFixed(1)}%`}
                 </div>
               </div>
               <div className="bg-surface0/70 p-2 rounded-sm">
-                <div className="mb-1 text-[10px] text-subtext0">Resident memory</div>
+                <div className="mb-1 text-[10px] text-subtext0">{t('common.performance.residentMemory')}</div>
                 <div className="font-mono text-sm font-semibold text-text">
                   {performanceMetrics ? formatDetailedMemory(performanceMetrics.memoryBytes) : '—'}
                 </div>
@@ -125,18 +127,18 @@ export const StatusBarPerformanceMonitor: React.FC = () => {
             </div>
 
             <div className="mt-2 flex items-center justify-between gap-3 text-[10px] text-subtext1">
-              <span>Processes tracked</span>
+              <span>{t('common.performance.processesTracked')}</span>
               <span className="font-mono text-text">{performanceMetrics?.processCount ?? '—'}</span>
             </div>
             <div className="mt-1 flex items-center justify-between gap-3 text-[10px] text-subtext1">
-              <span>Refresh interval</span>
-              <span className="font-mono text-text">5 seconds</span>
+              <span>{t('common.performance.refreshInterval')}</span>
+              <span className="font-mono text-text">{t('common.performance.fiveSeconds')}</span>
             </div>
           </>
         )}
 
         <p className="mt-2 border-t border-surface0 pt-2 text-[10px] leading-relaxed text-subtext0">
-          CPU and resident memory are aggregated from the Stage0 process and its discovered child processes.
+          {t('common.performance.description')}
         </p>
       </div>
     </div>

@@ -1,9 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Info } from '../../../../common/components/icons/Info';
 import { useGitStore } from '../../../../features/git/store/useGitStore';
 import { useCommandShortcut } from '../../../hooks/useCommandShortcut';
 
 export const TopBarRepoOverviewButton: React.FC = () => {
+  const { t } = useTranslation();
   const { title } = useCommandShortcut();
   const { currentRepo, setIsRepoOverviewOpen } = useGitStore();
 
@@ -14,12 +16,12 @@ export const TopBarRepoOverviewButton: React.FC = () => {
       type="button"
       onClick={() => setIsRepoOverviewOpen(true)}
       className="h-12 min-w-[58px] px-2.5 flex flex-col items-center justify-center hover:bg-surface0 text-subtext1 hover:text-text transition-colors cursor-pointer group rounded-sm"
-      title={title('repo_overview', 'Repository Information')}
-      aria-label="Repository Information"
+      title={title('repo_overview', t('common.layout.repositoryInformation'))}
+      aria-label={t('common.layout.repositoryInformation')}
     >
       <Info className="w-5 h-5 text-primary shrink-0 transition-colors" />
       <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors whitespace-nowrap">
-        Information
+        {t('common.layout.information')}
       </span>
     </button>
   );

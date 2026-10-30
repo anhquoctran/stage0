@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus } from '../../../common/components/icons/Plus';
 import { Trash2 } from '../../../common/components/icons/Trash2';
 import { AI_PROVIDERS } from '../constants/aiPresets';
@@ -29,13 +30,14 @@ export const AiMcpProviderTable: React.FC<{
   onRequestDeleteProvider,
   isProviderConfigured,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="overflow-hidden border border-surface1 bg-base/60">
       <div className="flex items-center justify-between gap-3 px-3.5 py-3 border-b border-surface1 rounded-sm">
         <div>
-          <h4 className="text-xs font-bold text-text">Providers</h4>
+          <h4 className="text-xs font-bold text-text">{t('ai.providers.title')}</h4>
           <p className="text-[10px] text-subtext0 mt-0.5">
-            Only providers you add and configure appear here. The active provider is marked in the table.
+            {t('ai.providers.tableDescription')}
           </p>
         </div>
         <button
@@ -45,7 +47,7 @@ export const AiMcpProviderTable: React.FC<{
           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-brand text-base text-[11px] font-semibold hover:brightness-110 transition cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed rounded-sm"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>Add provider</span>
+          <span>{t('ai.providers.addProvider')}</span>
         </button>
       </div>
 
@@ -53,10 +55,10 @@ export const AiMcpProviderTable: React.FC<{
         <table className="w-full min-w-[620px] text-start">
           <thead>
             <tr className="border-b border-surface1 bg-surface0/40 text-[9px] uppercase tracking-wider text-subtext0">
-              <th className="px-3.5 py-2 font-semibold">Provider</th>
-              <th className="px-3.5 py-2 font-semibold">Endpoint &amp; model</th>
-              <th className="px-3.5 py-2 font-semibold">Connection</th>
-              <th className="px-3.5 py-2 text-end font-semibold">Actions</th>
+              <th className="px-3.5 py-2 font-semibold">{t('ai.providers.provider')}</th>
+              <th className="px-3.5 py-2 font-semibold">{t('ai.providers.endpointModel')}</th>
+              <th className="px-3.5 py-2 font-semibold">{t('ai.providers.connection')}</th>
+              <th className="px-3.5 py-2 text-end font-semibold">{t('ai.providers.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -110,7 +112,7 @@ export const AiMcpProviderTable: React.FC<{
                           isActive ? 'bg-brand' : configured ? 'bg-green' : 'bg-surface2'
                         }`}
                       />
-                      {isActive ? 'Active' : configured ? 'Ready' : 'Needs sign-in'}
+                      {isActive ? t('ai.providers.active') : configured ? t('ai.providers.ready') : t('ai.providers.needsSignIn')}
                     </span>
                   </td>
                   <td className="px-3.5 py-2.5 text-end whitespace-nowrap">
@@ -120,7 +122,7 @@ export const AiMcpProviderTable: React.FC<{
                         onClick={() => onOpenProviderDetails(provider.id)}
                         className="px-2.5 py-1 border border-surface2 text-[10px] font-semibold text-text hover:bg-surface1 transition cursor-pointer rounded-sm"
                       >
-                        Configure
+                        {t('ai.providers.configure')}
                       </button>
                       {!isActive && (
                         <button
@@ -128,14 +130,14 @@ export const AiMcpProviderTable: React.FC<{
                           onClick={() => onSelectProvider(provider.id)}
                           className="px-2.5 py-1 border border-surface2 text-[10px] font-semibold text-text hover:bg-surface1 transition cursor-pointer rounded-sm"
                         >
-                          Use
+                          {t('ai.providers.use')}
                         </button>
                       )}
                       <button
                         type="button"
                         onClick={() => onRequestDeleteProvider(provider.id)}
-                        aria-label={`Remove ${getProviderDisplayName(provider.id, aiConfig.customProviderName)}`}
-                        title="Remove provider and saved configuration"
+                        aria-label={t('ai.providers.removeProvider', { name: getProviderDisplayName(provider.id, aiConfig.customProviderName) })}
+                        title={t('ai.providers.removeDescription')}
                         className="inline-flex items-center justify-center w-7 h-7 border border-surface2 text-subtext0 hover:border-red/50 hover:text-red transition cursor-pointer rounded-sm"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -148,7 +150,7 @@ export const AiMcpProviderTable: React.FC<{
             {configuredProviders.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-9 text-center text-[11px] text-subtext0">
-                  No providers added yet. Add a supported provider and complete its connection details to get started.
+                  {t('ai.providers.emptyState')}
                 </td>
               </tr>
             )}

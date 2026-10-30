@@ -1,8 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { CustomSelect } from '../../../../common/components/CustomSelect';
 import { AI_PROVIDERS } from '../../constants/aiPresets';
 import {
-  BOT_EXECUTION_OPTIONS,
-  BOT_PROVIDER_OPTIONS,
   CUSTOM_MODEL_OPTION,
 } from '../../constants/botReviewerConstants';
 import type { AiReasoningEffort } from '../../types/AiReasoningEffort';
@@ -50,16 +49,25 @@ export function BotExecutionModelForm({
     setFormAllowAcpSourceTransfer,
   },
 }: BotExecutionModelFormProps) {
+  const { t } = useTranslation();
+  const executionOptions = [
+    { value: 'provider' as const, label: t('ai.execution.builtInProvider') },
+    { value: 'acp' as const, label: t('ai.execution.acpAgent') },
+  ];
+  const providerOptions = [
+    { value: 'global_default', label: t('ai.execution.globalDefaultFromAiTab') },
+    ...AI_PROVIDERS.map((provider) => ({ value: provider.id, label: provider.name })),
+  ];
   return (
     <div className="p-3 bg-surface0/30 border border-surface0 space-y-3 rounded-sm">
       <span className="text-[11px] font-bold text-text uppercase tracking-wider block">
-        Execution &amp; Model
+        {t('ai.execution.sectionTitle')}
       </span>
       <div>
-        <label className="block text-[10px] text-subtext0 mb-1">Execution engine</label>
+        <label className="block text-[10px] text-subtext0 mb-1">{t('ai.execution.engine')}</label>
         <CustomSelect
           value={formExecutionMode}
-          options={BOT_EXECUTION_OPTIONS}
+          options={executionOptions}
           onChange={(mode) => {
             setFormExecutionMode(mode);
             setFormReasoningEffort(undefined);
@@ -69,17 +77,17 @@ export function BotExecutionModelForm({
           buttonClassName="w-full"
           dropdownWidth="w-full"
           align="left"
-          aria-label="Execution engine"
+          aria-label={t('ai.execution.engine')}
         />
       </div>
       {formExecutionMode === 'provider' ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-[10px] text-subtext0 mb-1">LLM Provider</label>
+              <label className="block text-[10px] text-subtext0 mb-1">{t('ai.execution.provider')}</label>
               <CustomSelect
                 value={formProvider}
-                options={BOT_PROVIDER_OPTIONS}
+                options={providerOptions}
                 onChange={(p) => {
                   setFormProvider(p);
                   setIsCustomModel(false);
@@ -96,12 +104,12 @@ export function BotExecutionModelForm({
                 buttonClassName="w-full"
                 dropdownWidth="w-full"
                 align="left"
-                aria-label="Provider override"
+                aria-label={t('ai.execution.providerOverride')}
               />
             </div>
 
             <div>
-              <label className="block text-[10px] text-subtext0 mb-1">Model</label>
+              <label className="block text-[10px] text-subtext0 mb-1">{t('ai.execution.model')}</label>
               <CustomSelect
                 value={isCustomModel ? CUSTOM_MODEL_OPTION : formModel}
                 options={modelOptions}
@@ -141,21 +149,21 @@ export function BotExecutionModelForm({
                   }
                 }}
                 searchable
-                searchPlaceholder="Search models…"
+                searchPlaceholder={t('ai.execution.searchModels')}
                 className="w-full"
                 buttonClassName="w-full"
                 dropdownWidth="w-full"
                 align="left"
-                aria-label="Model override"
+                aria-label={t('ai.execution.modelOverride')}
               />
               {isCustomModel && (
                 <input
                   type="text"
-                  aria-label="Custom model ID"
+                  aria-label={t('ai.execution.customModelId')}
                   required
                   value={formModel}
                   onChange={(e) => setFormModel(e.target.value)}
-                  placeholder="Enter custom model ID"
+                  placeholder={t('ai.execution.enterCustomModelId')}
                   className="mt-2 w-full px-2 py-1.5 bg-surface0 border border-surface1 text-xs text-text focus:outline-none focus:border-brand font-mono rounded-sm"
                 />
               )}
@@ -163,7 +171,7 @@ export function BotExecutionModelForm({
 
             <div>
               <label className="block text-[10px] text-subtext0 mb-1">
-                Temperature ({formTemp})
+                {t('ai.execution.temperature', { temperature: formTemp })}
               </label>
               <input
                 type="range"
@@ -178,11 +186,11 @@ export function BotExecutionModelForm({
           </div>
           <div className="pt-2 border-t border-surface0/70 space-y-2">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-              Reasoning &amp; processing
+              {t('ai.execution.reasoningAndProcessing')}
             </span>
             {inheritsGlobalModel ? (
               <p className="text-[10px] text-subtext0">
-                Uses the global model and its reasoning and Fast mode settings.
+                {t('ai.execution.inheritsGlobalModel')}
               </p>
             ) : (
               <AiModelExecutionOptions
@@ -191,7 +199,7 @@ export function BotExecutionModelForm({
                 fastMode={formFastMode}
                 onReasoningEffortChange={setFormReasoningEffort}
                 onFastModeChange={setFormFastMode}
-                emptyMessage="Stage0 has no declared reasoning or Fast mode capabilities for this provider and model."
+                emptyMessage={t('ai.execution.noProviderCapabilities')}
               />
             )}
           </div>
@@ -199,7 +207,7 @@ export function BotExecutionModelForm({
       ) : (
         <div className="space-y-3 border border-surface0 bg-crust/50 p-3 rounded-sm">
           <div>
-            <label className="block text-[10px] text-subtext0 mb-1">Installed ACP agent</label>
+            <label className="block text-[10px] text-subtext0 mb-1">{t('ai.execution.installedAcpAgent')}</label>
             {externalAgents.length > 0 ? (
               <CustomSelect
                 value={formAcpAgentId}
@@ -213,16 +221,16 @@ export function BotExecutionModelForm({
                   setFormAcpConfigOptions({});
                 }}
                 searchable
-                searchPlaceholder="Search installed agents…"
+                searchPlaceholder={t('ai.execution.searchInstalledAgents')}
                 className="w-full"
                 buttonClassName="w-full"
                 dropdownWidth="w-full"
                 align="left"
-                aria-label="ACP reviewer agent"
+                aria-label={t('ai.execution.acpReviewerAgent')}
               />
             ) : (
               <p className="border border-yellow/40 bg-yellow/5 p-2 text-[10px] text-yellow">
-                No ACP agents are installed. Add one in AI Preferences → External Agents.
+                {t('ai.execution.noAcpAgents')}
               </p>
             )}
           </div>
@@ -239,16 +247,11 @@ export function BotExecutionModelForm({
               className="mt-0.5 accent-brand"
             />
             <span>
-              I allow this ACP agent to receive eligible changed-file diffs and review context.
-              Sensitive paths are excluded and matching secret lines are redacted, but detection
-              cannot catch every secret. This consent is used for automatic reviews assigned to this
-              bot.
+              {t('ai.execution.acpConsent')}
             </span>
           </label>
           <p className="text-[10px] text-subtext0">
-            Stage0 still validates tool requests, finding evidence, and changed-line coordinates.
-            The agent runs outside the repository directory; its own runtime and policies are
-            managed by its publisher.
+            {t('ai.execution.acpTrustBoundary')}
           </p>
         </div>
       )}

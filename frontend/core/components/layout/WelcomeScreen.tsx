@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Folder } from '../../../common/components/icons/Folder';
 import { Download } from '../../../common/components/icons/Download';
 import { Cog } from '../../../common/components/icons/Cog';
@@ -15,6 +16,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   onOpenRepo,
   onCloneRepo,
 }) => {
+  const { t } = useTranslation();
   const {
     recentRepos,
     selectRepo,
@@ -58,10 +60,10 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
           <div className="flex flex-col justify-center">
             <h1 className="text-xl font-normal text-text tracking-tight leading-tight">
-              Welcome back to Stage0
+              {t('common.layout.welcomeBack')}
             </h1>
             <p className="text-xs text-subtext0 italic mt-0.5 leading-snug">
-              The local-first Virtual MR sandbox
+              {t('common.layout.localFirstTagline')}
             </p>
           </div>
         </div>
@@ -69,7 +71,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         {/* Section 1: GET STARTED */}
         <div className="mb-6">
           <div className="flex items-center gap-3 text-[11px] font-mono tracking-wider text-subtext0 uppercase mb-2">
-            <span>GET STARTED</span>
+            <span>{t('common.layout.getStarted')}</span>
             <div className="flex-1 h-px bg-surface0/80" />
           </div>
 
@@ -85,7 +87,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               <div className="flex items-center gap-2.5 min-w-0">
                 <Folder className="w-4 h-4 text-subtext0 group-hover:text-text transition-colors shrink-0" />
                 <span className="text-subtext1 group-hover:text-text transition-colors truncate">
-                  Open local repository
+                  {t('common.layout.openLocalRepository')}
                 </span>
               </div>
               <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors shrink-0">
@@ -104,7 +106,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               <div className="flex items-center gap-2.5 min-w-0">
                 <Download className="w-4 h-4 text-subtext0 group-hover:text-text transition-colors shrink-0" />
                 <span className="text-subtext1 group-hover:text-text transition-colors truncate">
-                  Clone repository
+                  {t('common.layout.cloneRepository')}
                 </span>
               </div>
               <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors shrink-0">
@@ -123,7 +125,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               <div className="flex items-center gap-2.5 min-w-0">
                 <Cog className="w-4 h-4 text-subtext0 group-hover:text-text transition-colors shrink-0" />
                 <span className="text-subtext1 group-hover:text-text transition-colors truncate">
-                  Open Preferences
+                  {t('common.layout.openPreferences')}
                 </span>
               </div>
               <span className="text-sm font-mono text-subtext0 group-hover:text-text transition-colors shrink-0">
@@ -136,16 +138,16 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         {/* Section 2: RECENT PROJECTS */}
         <div>
           <div className="flex items-center gap-3 text-[11px] font-mono tracking-wider text-subtext0 uppercase mb-2">
-            <span>RECENT PROJECTS</span>
+            <span>{t('common.layout.recentProjects')}</span>
             <div className="flex-1 h-px bg-surface0/80" />
             {recentList.length > 0 && (
               <button
                 type="button"
                 onClick={clearRecentRepos}
                 className="text-[10px] lowercase text-subtext0/70 hover:text-red transition-colors cursor-pointer px-1 py-0.5 rounded-sm hover:bg-surface0"
-                title="Clear all recent repositories"
+                title={t('common.layout.clearAllRecentRepositories')}
               >
-                clear all
+                {t('common.layout.clearAll')}
               </button>
             )}
           </div>
@@ -153,7 +155,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           <div className="space-y-0.5">
             {recentList.length === 0 ? (
               <div className="py-2 px-2 text-xs text-subtext0 italic">
-                No recent repositories
+                {t('common.layout.noRecentRepositories')}
               </div>
             ) : (
               recentList.map((repo, idx) => (
@@ -183,7 +185,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                         removeRecentRepo(repo.id);
                       }}
                       className="opacity-0 group-hover:opacity-100 p-0.5 rounded-sm text-subtext0 hover:text-red transition-all cursor-pointer"
-                      title="Remove from recents"
+                      title={t('common.layout.removeFromRecents')}
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -203,7 +205,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             type="button"
             onClick={() => setShowAboutModal(true)}
             className="hover:text-text transition-colors cursor-pointer flex items-center justify-center gap-1.5 group rounded-sm"
-            title="View About Stage0"
+            title={t('common.layout.viewAboutStage0')}
           >
             <span className="font-semibold text-text">{about.name}</span>
             <span className="font-mono text-subtext0 bg-surface0 px-1.5 py-0.5 rounded-sm text-[10px] group-hover:bg-surface1 group-hover:text-text transition-colors">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown } from '../../../common/components/icons/ChevronDown';
 import { ChevronUp } from '../../../common/components/icons/ChevronUp';
 import { Copy } from '../../../common/components/icons/Copy';
@@ -28,7 +29,9 @@ export const BotReviewerCard: React.FC<{
   onCloneBot,
   onDeleteBot,
 }) => {
+  const { t } = useTranslation();
   const cat = getCategoryInfo(bot.category);
+  const categoryLabel = t(`ai.botCategories.${bot.category}`);
 
   return (
     <div
@@ -47,15 +50,15 @@ export const BotReviewerCard: React.FC<{
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-bold text-text truncate">{bot.name}</span>
               <span className={`px-2 py-0.5 text-[10px] font-semibold border ${cat.bg}`}>
-                {cat.label}
+                {categoryLabel}
               </span>
               {bot.isBuiltin ? (
                 <span className="px-1.5 py-0.2 text-[9px] font-mono bg-surface1 text-subtext0 border border-surface2/60">
-                  Built-in
+                  {t('ai.botReviewers.builtIn')}
                 </span>
               ) : (
                 <span className="px-1.5 py-0.2 text-[9px] font-mono bg-brand/10 text-brand border border-brand/20">
-                  Custom
+                  {t('ai.botReviewers.custom')}
                 </span>
               )}
             </div>
@@ -78,7 +81,7 @@ export const BotReviewerCard: React.FC<{
             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-0 p-0.5 transition-colors duration-200 ease-in-out focus:outline-none ${
               bot.enabled ? 'bg-brand' : 'bg-surface1'
             }`}
-            title={bot.enabled ? 'Click to disable globally' : 'Click to enable globally'}
+            title={bot.enabled ? t('ai.botReviewers.disableGlobally') : t('ai.botReviewers.enableGlobally')}
           >
             <span
               className={`pointer-events-none inline-block h-4 w-4 shrink-0 transform rounded-full bg-base shadow-lg ring-0 transition duration-200 ease-in-out ${
@@ -100,12 +103,12 @@ export const BotReviewerCard: React.FC<{
             {isPromptExpanded ? (
               <>
                 <ChevronUp className="w-3.5 h-3.5" />
-                <span>Hide System Prompt</span>
+                <span>{t('ai.botReviewers.hidePrompt')}</span>
               </>
             ) : (
               <>
                 <ChevronDown className="w-3.5 h-3.5" />
-                <span>Inspect System Prompt</span>
+                <span>{t('ai.botReviewers.inspectPrompt')}</span>
               </>
             )}
           </button>
@@ -113,29 +116,29 @@ export const BotReviewerCard: React.FC<{
           <span className="text-surface2">|</span>
 
           <span className="font-mono text-subtext0/80">
-            {bot.acpAgentId ? 'ACP agent: ' : 'Model: '}
+            {bot.acpAgentId ? `${t('ai.botReviewers.acpAgent')}: ` : `${t('ai.botReviewers.model')}: `}
             <strong className="text-text font-normal">
               {bot.acpAgentId
-                ? externalAgents.find((agent) => agent.id === bot.acpAgentId)?.name || 'Agent unavailable'
-                : bot.model === 'global_default' || !bot.model ? 'Global Default' : bot.model}
+                ? externalAgents.find((agent) => agent.id === bot.acpAgentId)?.name || t('ai.botReviewers.agentUnavailable')
+                : bot.model === 'global_default' || !bot.model ? t('ai.botReviewers.globalDefault') : bot.model}
             </strong>
           </span>
           {bot.acpAgentId && !bot.allowAcpSourceTransfer && (
-            <span className="font-mono text-yellow">ACP source consent required</span>
+            <span className="font-mono text-yellow">{t('ai.botReviewers.acpConsentRequired')}</span>
           )}
 
           {bot.temperature !== undefined && (
             <span className="font-mono text-subtext0/80">
-              Temp: <strong className="text-text font-normal">{bot.temperature}</strong>
+              {t('ai.botReviewers.temperature')}: <strong className="text-text font-normal">{bot.temperature}</strong>
             </span>
           )}
           {bot.reasoningEffort && (
             <span className="font-mono text-subtext0/80">
-              Effort: <strong className="text-text font-normal">{bot.reasoningEffort}</strong>
+              {t('ai.botReviewers.effort')}: <strong className="text-text font-normal">{bot.reasoningEffort}</strong>
             </span>
           )}
           {bot.fastMode === true && (
-            <span className="font-mono text-subtext0/80">Fast mode</span>
+            <span className="font-mono text-subtext0/80">{t('ai.botReviewers.fastMode')}</span>
           )}
         </div>
 
@@ -144,7 +147,7 @@ export const BotReviewerCard: React.FC<{
             type="button"
             onClick={() => onCloneBot(bot)}
             className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
-            title="Clone this reviewer bot"
+            title={t('ai.botReviewers.cloneTitle')}
           >
             <Copy className="w-3.5 h-3.5" />
           </button>
@@ -152,7 +155,7 @@ export const BotReviewerCard: React.FC<{
             type="button"
             onClick={() => onOpenEdit(bot)}
             className="p-1.5 hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer rounded-sm"
-            title="Edit bot settings and prompt"
+            title={t('ai.botReviewers.editTitle')}
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
@@ -161,7 +164,7 @@ export const BotReviewerCard: React.FC<{
               type="button"
               onClick={() => onDeleteBot(bot.id)}
               className="p-1.5 hover:bg-red/20 text-subtext0 hover:text-red transition-colors cursor-pointer rounded-sm"
-              title="Delete custom bot"
+              title={t('ai.botReviewers.deleteTitle')}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -173,8 +176,8 @@ export const BotReviewerCard: React.FC<{
       {isPromptExpanded && (
         <div className="mt-3 p-3 bg-crust border border-surface0/80 space-y-1.5 animate-in fade-in duration-150 rounded-sm">
           <div className="flex items-center justify-between text-[11px] text-subtext0 font-mono">
-            <span>STAGE0 ROLE PROMPT · {getCategoryInfo(bot.category).label.toUpperCase()}</span>
-            <span>{getBotRolePrompt(bot.category).length} characters</span>
+            <span>{t('ai.botReviewers.rolePrompt', { role: categoryLabel.toUpperCase() })}</span>
+            <span>{t('ai.botReviewers.characterCount', { count: getBotRolePrompt(bot.category).length })}</span>
           </div>
           <pre className="text-xs font-mono text-subtext1 whitespace-pre-wrap leading-relaxed max-h-56 overflow-y-auto select-text p-1">
             {getBotRolePrompt(bot.category)}
@@ -182,8 +185,8 @@ export const BotReviewerCard: React.FC<{
           {bot.customInstructions.trim() && (
             <>
               <div className="flex items-center justify-between text-[11px] text-subtext0 font-mono pt-2">
-                <span>USER ADDITIONAL INSTRUCTIONS</span>
-                <span>{bot.customInstructions.length} characters</span>
+                <span>{t('ai.botReviewers.userInstructions')}</span>
+                <span>{t('ai.botReviewers.characterCount', { count: bot.customInstructions.length })}</span>
               </div>
               <pre className="text-xs font-mono text-subtext1 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto select-text p-1">
                 {bot.customInstructions}
