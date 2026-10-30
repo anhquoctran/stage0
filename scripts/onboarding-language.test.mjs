@@ -76,7 +76,7 @@ test('failed locale saves retain the committed language; the browser fallback ap
   assert.deepEqual(calls, ['persist', 'persist', 'direction:ar', 'apply:ar']);
 });
 
-test('language wheel offers all 14 locales and commits keyboard and scroll selections explicitly', async (t) => {
+test('language wheel offers all 15 locales and commits keyboard and scroll selections explicitly', async (t) => {
   const runner = componentHarness(), choices = [];
   const previousWindow = globalThis.window;
   globalThis.window = { matchMedia: () => ({ matches: true }) };
@@ -93,7 +93,7 @@ test('language wheel offers all 14 locales and commits keyboard and scroll selec
   let nodes = await render();
   nodes.find((node) => node.props['aria-haspopup'] === 'listbox').props.onClick();
   nodes = await render();
-  assert.equal(nodes.filter((node) => node.props.role === 'option').length, 14);
+  assert.equal(nodes.filter((node) => node.props.role === 'option').length, 15);
   assert.equal(nodes.some((node) => node.type === 'select'), false);
   assert.equal(nodes.filter((node) => node.props.role === 'option' && node.props['aria-selected']).length, 1);
   let list = nodes.find((node) => node.props.role === 'listbox');

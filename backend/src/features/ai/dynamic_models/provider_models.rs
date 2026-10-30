@@ -2,6 +2,7 @@ mod anthropic;
 mod gemini;
 mod ollama;
 mod openai_compatible;
+mod qwen;
 
 use reqwest::Url;
 use std::time::Duration;
@@ -13,25 +14,26 @@ pub(super) fn collection_endpoint(
     base_url: &str,
     default_url: &str,
     collection: &str,
-    provider: &str,
 ) -> Result<String, String> {
     let base = if base_url.trim().is_empty() {
         default_url
     } else {
         base_url.trim()
     };
-    let mut endpoint =
-        Url::parse(base).map_err(|_| format!("Enter a valid {provider} base URL."))?;
+    let mut endpoint = Url::parse(base)
+        .map_err(|_| crate::common::messages::code("backend.ai.modelBaseUrlInvalid"))?;
     if !matches!(endpoint.scheme(), "http" | "https") || endpoint.host_str().is_none() {
-        return Err(format!("{provider} base URL must use HTTP or HTTPS."));
+        return Err(crate::common::messages::code(
+            "backend.ai.modelBaseUrlInvalid",
+        ));
     }
 
     endpoint
         .set_username("")
-        .map_err(|_| format!("Invalid {provider} base URL."))?;
+        .map_err(|_| crate::common::messages::code("backend.ai.modelBaseUrlInvalid"))?;
     endpoint
         .set_password(None)
-        .map_err(|_| format!("Invalid {provider} base URL."))?;
+        .map_err(|_| crate::common::messages::code("backend.ai.modelBaseUrlInvalid"))?;
     endpoint.set_query(None);
     endpoint.set_fragment(None);
     let path = endpoint.path().trim_end_matches('/');
@@ -50,12 +52,20 @@ pub async fn fetch_provider_models(
     base_url: Option<&str>,
 ) -> Result<Vec<DynamicModelInfo>, String> {
     if provider == "custom" && base_url.is_none_or(|url| url.trim().is_empty()) {
-        return Err("Enter a base URL for the custom provider before loading models.".to_string());
+        return Err(crate::common::messages::code(
+            "backend.ai.customModelBaseUrlRequired",
+        ));
     }
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(12))
         .build()
-        .map_err(|error| format!("Failed to create HTTP client: {error}"))?;
+        .map_err(|error| {
+            crate::common::messages::failure(
+                "backend.ai.modelDiscoveryFailed",
+                serde_json::json!({}),
+                format!("Failed to create HTTP client: {error}"),
+            )
+        })?;
 
     let resolved_key = if provider == "ollama" {
         None
@@ -70,14 +80,15 @@ pub async fn fetch_provider_models(
     let resolved_key = resolved_key.as_deref().map(|key| key.as_str());
 
     match provider {
-        "openai" | "xai_grok" | "grok" | "xai" | "custom" => {
+        "openai" | "xai_grok" | "grok" | "xai" | "deepseek" | "kimi" | "custom" => {
             openai_compatible::fetch(&client, provider, resolved_key, base_url).await
         }
+        "qwen" => qwen::fetch(&client, resolved_key, base_url).await,
         "anthropic" => anthropic::fetch(&client, resolved_key, base_url).await,
         "gemini" => gemini::fetch(&client, resolved_key, base_url).await,
         "ollama" => ollama::fetch(&client, base_url).await,
-        other => Err(format!(
-            "Model discovery is not supported for provider '{other}'."
+        _ => Err(crate::common::messages::code(
+            "backend.ai.modelDiscoveryUnsupported",
         )),
     }
 }
@@ -92,7 +103,6 @@ mod tests {
             "https://user:secret@example.test/v1/?token=hidden#fragment",
             "https://fallback.test/v1",
             "models",
-            "Fixture",
         )
         .unwrap();
 
@@ -107,7 +117,6 @@ mod tests {
             "https://example.test/v1/models",
             "https://fallback.test/v1",
             "models",
-            "Fixture",
         )
         .unwrap();
 
@@ -120,7 +129,6 @@ mod tests {
             "http://localhost:11434/api",
             "http://localhost:11434",
             "api/tags",
-            "Ollama",
         )
         .unwrap();
 
@@ -129,12 +137,8 @@ mod tests {
 
     #[test]
     fn collection_endpoint_rejects_non_http_schemes() {
-        let result = collection_endpoint(
-            "file:///tmp/models",
-            "https://fallback.test/v1",
-            "models",
-            "Fixture",
-        );
+        let result =
+            collection_endpoint("file:///tmp/models", "https://fallback.test/v1", "models");
 
         assert!(result.unwrap_err().contains("HTTP or HTTPS"));
     }

@@ -1,7 +1,7 @@
 /** Canonical app locale catalog used by both language controls. */
 export const SUPPORTED_LANGUAGES = [
   { code: 'en', nativeName: 'English', group: 'base', launchTranslation: 'source', dayjsLocale: 'en', dayjsImportPath: null, rtl: false },
-  { code: 'vi', nativeName: 'Tiếng Việt', group: 'base', launchTranslation: 'real', dayjsLocale: 'vi', dayjsImportPath: 'dayjs/locale/vi', rtl: false },
+  { code: 'vi', nativeName: 'Tiếng Việt', group: 'extended', launchTranslation: 'real', dayjsLocale: 'vi', dayjsImportPath: 'dayjs/locale/vi', rtl: false },
   { code: 'ja', nativeName: '日本語', group: 'extended', launchTranslation: 'real', dayjsLocale: 'ja', dayjsImportPath: 'dayjs/locale/ja', rtl: false },
   { code: 'ko', nativeName: '한국어', group: 'extended', launchTranslation: 'real', dayjsLocale: 'ko', dayjsImportPath: 'dayjs/locale/ko', rtl: false },
   { code: 'zh-Hans', nativeName: '简体中文', group: 'extended', launchTranslation: 'real', dayjsLocale: 'zh-cn', dayjsImportPath: 'dayjs/locale/zh-cn', rtl: false },
@@ -14,4 +14,5 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'it', nativeName: 'Italiano', group: 'extended', launchTranslation: 'real', dayjsLocale: 'it', dayjsImportPath: 'dayjs/locale/it', rtl: false },
   { code: 'pt-PT', nativeName: 'Português (Portugal)', group: 'extended', launchTranslation: 'real', dayjsLocale: 'pt', dayjsImportPath: 'dayjs/locale/pt', rtl: false },
   { code: 'ar', nativeName: 'العربية', group: 'extended', launchTranslation: 'real', dayjsLocale: 'ar', dayjsImportPath: 'dayjs/locale/ar', rtl: true },
+  { code: 'hi', nativeName: 'हिन्दी', group: 'extended', launchTranslation: 'placeholder', dayjsLocale: 'hi', dayjsImportPath: 'dayjs/locale/hi', rtl: false },
 ] as const;

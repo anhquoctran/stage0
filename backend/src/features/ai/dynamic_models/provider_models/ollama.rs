@@ -12,7 +12,6 @@ pub(super) async fn fetch(
         base_url.unwrap_or("http://localhost:11434"),
         "http://localhost:11434",
         "api/tags",
-        "Ollama",
     )?;
     let response = client
         .get(endpoint)
@@ -20,9 +19,9 @@ pub(super) async fn fetch(
         .await
         .map_err(|error| format!("Could not query the local Ollama model catalog: {error}"))?;
     if !response.status().is_success() {
-        return Err(format!(
-            "Ollama model API returned HTTP {}.",
-            response.status()
+        return Err(crate::common::messages::message(
+            "backend.ai.modelCatalogHttp",
+            serde_json::json!({ "status": response.status().as_u16() }),
         ));
     }
 

@@ -29,7 +29,9 @@ pub async fn get_clone_remote_refs(
         tauri::async_runtime::spawn_blocking(move || {
             let url = url.trim();
             if url.is_empty() {
-                return Err("Please enter a repository URL.".into());
+                return Err(crate::common::messages::code(
+                    "backend.git.cloneUrlRequired",
+                ));
             }
             crate::features::git::ops::validate_remote_url(url)?;
             let mut command =
@@ -76,22 +78,25 @@ pub async fn clone_repository(
         let clone_args = options.git_arguments()?;
         let trimmed_url = url.trim();
         if trimmed_url.is_empty() {
-            return Err("Repository URL cannot be empty".to_string());
+            return Err(crate::common::messages::code(
+                "backend.git.cloneUrlRequired",
+            ));
         }
         crate::features::git::ops::validate_remote_url(trimmed_url)?;
 
         let trimmed_target = target_path.trim();
         if trimmed_target.is_empty() {
-            return Err("Destination path cannot be empty".to_string());
+            return Err(crate::common::messages::code(
+                "backend.git.cloneDestinationRequired",
+            ));
         }
 
         let dest = Path::new(trimmed_target);
         if dest.exists() {
             if let Ok(entries) = std::fs::read_dir(dest) {
                 if entries.count() > 0 {
-                    return Err(format!(
-                        "Destination directory '{}' already exists and is not empty",
-                        trimmed_target
+                    return Err(crate::common::messages::code(
+                        "backend.git.cloneDestinationNotEmpty",
                     ));
                 }
             }
@@ -140,10 +145,9 @@ pub async fn clone_repository(
         .map_err(|e| format!("Git clone failed: {}", e))?;
 
         if output.output_truncated {
-            return Err(
-                "Git clone produced more than the configured output limit and was stopped."
-                    .to_string(),
-            );
+            return Err(crate::common::messages::code(
+                "backend.git.cloneOutputTooLarge",
+            ));
         }
 
         if !output.status.success() {
@@ -167,7 +171,9 @@ pub async fn clone_repository(
         }
 
         if !dest.join(".git").exists() {
-            return Err("Cloned directory is missing .git metadata".to_string());
+            return Err(crate::common::messages::code(
+                "backend.git.clonedMetadataMissing",
+            ));
         }
 
         let (canonical_path, _, name) = resolve_repository(trimmed_target)?;

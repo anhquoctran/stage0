@@ -6,19 +6,25 @@ use serde_json::Value;
 use std::path::{Path, PathBuf};
 
 pub async fn install(data_dir: &Path, agent: AcpRegistryAgent) -> Result<AcpAgentConfig, String> {
-    let target = binary_platform::current_target()
-        .ok_or("ACP binary packages require Windows, macOS or Linux")?;
+    let target = binary_platform::current_target().ok_or(crate::common::messages::code(
+        "backend.acp.platformUnsupported",
+    ))?;
     let binary = select_binary(&agent.distribution, &target)?;
-    let archive_url = binary
-        .get("archive")
-        .and_then(Value::as_str)
-        .ok_or("ACP Registry binary has no download URL")?;
+    let archive_url =
+        binary
+            .get("archive")
+            .and_then(Value::as_str)
+            .ok_or(crate::common::messages::code(
+                "backend.acp.downloadUrlMissing",
+            ))?;
     let format = ArchiveFormat::from_url(archive_url)?;
     let relative_command = binary_platform::relative_command(
         binary
             .get("cmd")
             .and_then(Value::as_str)
-            .ok_or("ACP Registry binary has no launch command")?,
+            .ok_or(crate::common::messages::code(
+                "backend.acp.launchCommandMissing",
+            ))?,
         &target,
     )?;
     let args = parse_registry_binary_args(binary.get("args"))?;
@@ -27,7 +33,7 @@ pub async fn install(data_dir: &Path, agent: AcpRegistryAgent) -> Result<AcpAgen
         .map(|value| {
             value
                 .as_str()
-                .ok_or("ACP Registry binary SHA-256 checksum is invalid")
+                .ok_or(crate::common::messages::code("backend.acp.checksumInvalid"))
         })
         .transpose()?;
     // Also validate IDs here: this helper must never turn registry data into
@@ -39,17 +45,17 @@ pub async fn install(data_dir: &Path, agent: AcpRegistryAgent) -> Result<AcpAgen
             .bytes()
             .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
     {
-        return Err("Invalid ACP Registry agent ID".into());
+        return Err(crate::common::messages::code("backend.acp.agentIdInvalid").into());
     }
     let agent_dir = data_dir.join("external-agents").join(&agent.id);
     tokio::fs::create_dir_all(&agent_dir)
         .await
-        .map_err(|_| "Could not create the ACP agent install directory")?;
+        .map_err(|_| crate::common::messages::code("backend.acp.installDirectory"))?;
     let install_dir = agent_dir.join(format!("install-{}", uuid::Uuid::new_v4()));
     let staging_dir = agent_dir.join(format!(".stage-{}", uuid::Uuid::new_v4()));
     tokio::fs::create_dir(&staging_dir)
         .await
-        .map_err(|_| "Could not create the ACP agent staging directory")?;
+        .map_err(|_| crate::common::messages::code("backend.acp.stagingDirectory"))?;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -58,7 +64,7 @@ pub async fn install(data_dir: &Path, agent: AcpRegistryAgent) -> Result<AcpAgen
             .is_err()
         {
             let _ = tokio::fs::remove_dir(&staging_dir).await;
-            return Err("Could not secure the ACP staging directory".into());
+            return Err(crate::common::messages::code("backend.acp.stagingSecure").into());
         }
     }
     let archive = staging_dir.join("download");
@@ -66,7 +72,7 @@ pub async fn install(data_dir: &Path, agent: AcpRegistryAgent) -> Result<AcpAgen
     let result: Result<PathBuf, String> = async {
         tokio::fs::create_dir(&extracted)
             .await
-            .map_err(|_| "Could not prepare the ACP agent extraction directory")?;
+            .map_err(|_| crate::common::messages::code("backend.acp.extractDirectory"))?;
         binary_download::download(archive_url, &archive, checksum).await?;
         let (archive, extracted_copy, command, target) = (
             archive.clone(),
@@ -78,10 +84,10 @@ pub async fn install(data_dir: &Path, agent: AcpRegistryAgent) -> Result<AcpAgen
             binary_archive::extract(&archive, &extracted_copy, format, &command, &target)
         })
         .await
-        .map_err(|_| "ACP package extraction failed")??;
+        .map_err(|_| crate::common::messages::code("backend.acp.extractFailed"))??;
         tokio::fs::rename(&extracted, &install_dir)
             .await
-            .map_err(|_| "Could not finalize the ACP agent installation")?;
+            .map_err(|_| crate::common::messages::code("backend.acp.installFinalize"))?;
         Ok(install_dir.join(&relative_command))
     }
     .await;
@@ -105,7 +111,12 @@ fn select_binary<'a>(distribution: &'a Value, target: &str) -> Result<&'a Value,
     distribution
         .get("binary")
         .and_then(|value| value.get(target))
-        .ok_or_else(|| format!("The publisher has not provided an ACP binary package for {target}"))
+        .ok_or_else(|| {
+            crate::common::messages::message(
+                "backend.acp.packageUnavailable",
+                serde_json::json!({ "target": target }),
+            )
+        })
 }
 
 #[cfg(test)]
@@ -148,17 +159,17 @@ fn parse_registry_binary_args(value: Option<&Value>) -> Result<Vec<String>, Stri
     };
     let args = value
         .as_array()
-        .ok_or("ACP Registry binary args are invalid")?;
+        .ok_or(crate::common::messages::code("backend.acp.installFailed"))?;
     if args.len() > 64 {
-        return Err("ACP Registry binary has too many launch arguments".into());
+        return Err(crate::common::messages::code("backend.acp.installFailed").into());
     }
     args.iter()
         .map(|arg| {
             let arg = arg
                 .as_str()
-                .ok_or("ACP Registry binary argument is invalid")?;
+                .ok_or(crate::common::messages::code("backend.acp.installFailed"))?;
             if arg.len() > 2048 || arg.chars().any(char::is_control) {
-                return Err("ACP Registry binary argument is invalid".into());
+                return Err(crate::common::messages::code("backend.acp.installFailed").into());
             }
             Ok(arg.to_owned())
         })

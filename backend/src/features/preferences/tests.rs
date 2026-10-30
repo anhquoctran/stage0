@@ -92,7 +92,7 @@ fn app_and_agent_languages_are_limited_to_the_supported_catalog() {
     let mut settings = parse_and_validate(DEFAULT_PREFERENCES).unwrap();
     assert_eq!(settings["appearance"]["language"], "en");
     assert_eq!(settings["ai"]["agentOutputLanguage"], "follow-app");
-    assert_eq!(super::supported_language::SUPPORTED_APP_LANGUAGES.len(), 14);
+    assert_eq!(super::supported_language::SUPPORTED_APP_LANGUAGES.len(), 15);
 
     for language in super::supported_language::SUPPORTED_APP_LANGUAGES {
         settings["appearance"]["language"] = json!(language);

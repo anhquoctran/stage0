@@ -15,6 +15,7 @@ const localeLoaders: Record<string, () => Promise<unknown>> = {
   it: () => import('dayjs/locale/it.js'),
   'pt-PT': () => import('dayjs/locale/pt.js'),
   ar: () => import('dayjs/locale/ar.js'),
+  hi: () => import('dayjs/locale/hi.js'),
 };
 
 /** Applies the Day.js locale derived from the one persisted app language. */

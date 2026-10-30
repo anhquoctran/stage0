@@ -27,13 +27,26 @@ impl AcpProcess {
     ) -> Result<Self, String> {
         let activity = crate::common::activity::OperationLease::acquire()?;
         validate_config(config)?;
-        let mut child = make_command(config, working_directory).spawn().map_err(|_| {
-            if config.launch_mode.as_deref() == Some("binary") {
-                format!("Could not start the installed binary for {}. Uninstall and install it again.", config.name)
-            } else {
-                format!("Could not start {}. Install Node.js/uv or check the agent command.", config.name)
-            }
-        })?;
+        let mut child = make_command(config, working_directory)
+            .spawn()
+            .map_err(|error| {
+                if config.launch_mode.as_deref() == Some("binary") {
+                    crate::common::messages::failure(
+                        "backend.acp.agentStartFailed",
+                        serde_json::json!({}),
+                        format!(
+                            "Could not start installed binary for {}: {error}",
+                            config.name
+                        ),
+                    )
+                } else {
+                    crate::common::messages::failure(
+                        "backend.acp.agentStartFailed",
+                        serde_json::json!({}),
+                        format!("Could not start {}: {error}", config.name),
+                    )
+                }
+            })?;
         let input = child.stdin.take().ok_or("ACP agent stdin is unavailable")?;
         let output = child
             .stdout

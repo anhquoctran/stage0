@@ -9,14 +9,10 @@ pub(super) async fn fetch(
     api_key: Option<&str>,
     base_url: Option<&str>,
 ) -> Result<Vec<DynamicModelInfo>, String> {
-    let key = api_key.ok_or_else(|| "An API key is required to load Gemini models.".to_string())?;
+    let key =
+        api_key.ok_or_else(|| crate::common::messages::code("backend.ai.modelApiKeyRequired"))?;
     let default_url = "https://generativelanguage.googleapis.com/v1beta";
-    let endpoint = collection_endpoint(
-        base_url.unwrap_or(default_url),
-        default_url,
-        "models",
-        "Gemini",
-    )?;
+    let endpoint = collection_endpoint(base_url.unwrap_or(default_url), default_url, "models")?;
     let response = client
         .get(&endpoint)
         .header("x-goog-api-key", key)
@@ -24,9 +20,9 @@ pub(super) async fn fetch(
         .await
         .map_err(|error| format!("Could not query the Gemini model catalog: {error}"))?;
     if !response.status().is_success() {
-        return Err(format!(
-            "Gemini model API returned HTTP {}.",
-            response.status()
+        return Err(crate::common::messages::message(
+            "backend.ai.modelCatalogHttp",
+            serde_json::json!({ "status": response.status().as_u16() }),
         ));
     }
 

@@ -34,10 +34,14 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
         || config.model.len() > 200
         || config.instructions.len() > 8000
     {
-        return Err("Invalid model or instruction length".into());
+        return Err(crate::common::messages::code(
+            "backend.review.providerSettingsInvalid",
+        ));
     }
     if config.auth_mode != "api_key" {
-        return Err("Built-in providers require API-key authentication. Use External Agents for cloud subscription sign-in.".into());
+        return Err(crate::common::messages::code(
+            "backend.review.apiKeyAuthRequired",
+        ));
     }
     let url =
         reqwest::Url::parse(config.base_url.trim()).map_err(|_| "Invalid provider base URL")?;
@@ -52,12 +56,14 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
         || (!local && url.scheme() != "https")
         || !matches!(url.scheme(), "https" | "http")
     {
-        return Err("Provider URL must be HTTPS (HTTP only on loopback), without credentials/query/fragment".into());
+        return Err(crate::common::messages::code(
+            "backend.review.providerUrlInvalid",
+        ));
     }
     if !local && !config.allow_remote {
-        return Err(
-            "Explicit consent is required before sharing source with a remote provider".into(),
-        );
+        return Err(crate::common::messages::code(
+            "backend.review.remoteSourceConsentRequired",
+        ));
     }
     let root = url.as_str().trim_end_matches('/');
     if let Some(effort) = config.reasoning_effort.as_deref() {
@@ -66,12 +72,20 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
             && openai_reasoning_efforts(&config.model).contains(&effort))
             || (config.provider == "anthropic"
                 && root == "https://api.anthropic.com/v1"
-                && ["low", "medium", "high", "xhigh", "max"].contains(&effort));
+                && ["low", "medium", "high", "xhigh", "max"].contains(&effort))
+            || (config.provider == "deepseek"
+                && matches!(config.model.as_str(), "deepseek-flash" | "deepseek-v4-pro")
+                && matches!(effort, "none" | "low" | "high" | "max"))
+            || (config.provider == "qwen"
+                && config.model.starts_with("qwen3.8")
+                && matches!(effort, "none" | "low" | "medium" | "xhigh"))
+            || (config.provider == "kimi"
+                && matches!(config.model.as_str(), "kimi-k3" | "kimi-k3.1-pro")
+                && matches!(effort, "low" | "high" | "max"));
         if !supported {
-            return Err(
-                "The selected provider/model does not declare support for this reasoning effort"
-                    .into(),
-            );
+            return Err(crate::common::messages::code(
+                "backend.review.reasoningEffortUnsupported",
+            ));
         }
     }
     let fast_supported = (config.provider == "openai"
@@ -81,16 +95,23 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
             && root == "https://api.anthropic.com/v1"
             && config.model == "claude-opus-5-5");
     if config.fast_mode && !fast_supported {
-        return Err("Fast mode is not supported for the selected provider/model".into());
+        return Err(crate::common::messages::code(
+            "backend.review.fastModeUnsupported",
+        ));
     }
-    let suffix=match config.provider.as_str(){
-        "openai" if root=="https://api.openai.com/v1"=>"responses",
-        "anthropic" if root=="https://api.anthropic.com/v1"=>"messages",
-        "gemini" if root=="https://generativelanguage.googleapis.com/v1beta"=>"gemini",
-        "xai_grok" if root=="https://api.x.ai/v1"=>"chat/completions",
-        "custom"=>"chat/completions",
-        "ollama" if local=>"api/chat",
-        _=>return Err("Unsupported provider/base URL combination. Use its official endpoint, or a separately configured Custom API key.".into()),
+    let suffix = match config.provider.as_str() {
+        "openai" if root == "https://api.openai.com/v1" => "responses",
+        "anthropic" if root == "https://api.anthropic.com/v1" => "messages",
+        "gemini" if root == "https://generativelanguage.googleapis.com/v1beta" => "gemini",
+        "xai_grok" if root == "https://api.x.ai/v1" => "chat/completions",
+        "deepseek" | "qwen" | "kimi" => "chat/completions",
+        "custom" => "chat/completions",
+        "ollama" if local => "api/chat",
+        _ => {
+            return Err(crate::common::messages::code(
+                "backend.review.providerEndpointUnsupported",
+            ));
+        }
     };
     if suffix == "gemini" {
         if !config
@@ -98,7 +119,9 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
             .bytes()
             .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b'.')
         {
-            return Err("Invalid Gemini model ID".into());
+            return Err(crate::common::messages::code(
+                "backend.review.modelIdInvalid",
+            ));
         }
         return Ok(format!("{root}/models/{}:generateContent", config.model));
     }

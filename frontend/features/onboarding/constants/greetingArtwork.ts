@@ -5,6 +5,7 @@ import cyrillic from '../assets/greetings/cyrillic.json';
 import cjk from '../assets/greetings/cjk.json';
 import korean from '../assets/greetings/korean.json';
 import arabic from '../assets/greetings/arabic.json';
+import hindi from '../assets/greetings/hindi.json';
 
 /** All artwork is bundled; greetings never depend on installed system fonts. */
 export const GREETING_ARTWORK: Record<AppLanguage, GreetingArtwork> = {
@@ -22,4 +23,5 @@ export const GREETING_ARTWORK: Record<AppLanguage, GreetingArtwork> = {
   it: latin.it,
   'pt-PT': latin['pt-BR'],
   ar: arabic.ar,
+  hi: hindi.hi,
 };

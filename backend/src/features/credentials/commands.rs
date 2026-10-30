@@ -32,12 +32,12 @@ pub async fn list_git_credentials(app: AppHandle) -> Result<Vec<GitCredentialMet
     let result: Result<_, String> = async {
         let db = app.state::<Database>();
         db.list_git_credential_metadata()
-            .map_err(|_| "Git credential metadata could not be loaded from SQLite".to_string())?
+            .map_err(|_| crate::common::messages::code("backend.credentials.loadFailed"))?
             .into_iter()
             .map(|record| {
-                let token_ref = db.get_git_credential_token_ref(&record.id).map_err(|_| {
-                    "Git credential keychain references could not be loaded".to_string()
-                })?;
+                let token_ref = db
+                    .get_git_credential_token_ref(&record.id)
+                    .map_err(|_| crate::common::messages::code("backend.credentials.loadFailed"))?;
                 Ok(output_meta(record, token_ref))
             })
             .collect()
@@ -62,10 +62,14 @@ pub async fn save_git_credential(
         } = payload;
         let secret = Zeroizing::new(secret);
         if account_name.trim().is_empty() {
-            return Err("Account name cannot be empty".into());
+            return Err(crate::common::messages::code(
+                "backend.credentials.accountRequired",
+            ));
         }
         if secret.trim().is_empty() {
-            return Err("Secret / token cannot be empty".into());
+            return Err(crate::common::messages::code(
+                "backend.credentials.secretRequired",
+            ));
         }
 
         let id = uuid::Uuid::new_v4().to_string();
@@ -88,9 +92,9 @@ pub async fn save_git_credential(
         let db = app.state::<Database>();
         if db.upsert_git_credential(&record, &token_ref).is_err() {
             let _ = crate::features::credentials::delete_secret(&token_ref);
-            return Err(
-                "Git credential metadata and keychain mapping could not be saved to SQLite".into(),
-            );
+            return Err(crate::common::messages::code(
+                "backend.credentials.saveFailed",
+            ));
         }
 
         let _ = app.emit("git-credentials-updated", ());
@@ -103,43 +107,43 @@ pub async fn save_git_credential(
 #[tauri::command]
 pub async fn delete_git_credential(app: AppHandle, id: String) -> Result<(), String> {
     let result: Result<_, String> = async {
-    let db = app.state::<Database>();
-    let record = db
-        .get_git_credential_metadata(&id)
-        .map_err(|_| "Credential metadata could not be loaded from SQLite".to_string())?
-        .ok_or_else(|| "Credential not found".to_string())?;
-    if record.source == "system_global" {
-        return Err(
-            "This credential is managed by the system/global Git helper and cannot be deleted here."
-                .into(),
-        );
-    }
-
-    let token_ref = db
-        .get_git_credential_token_ref(&id)
-        .map_err(|_| "Credential keychain mapping could not be loaded".to_string())?;
-    let previous_secret = token_ref
-        .as_deref()
-        .and_then(|reference| crate::features::credentials::retrieve_secret(reference).ok())
-        .map(Zeroizing::new);
-    if let Some(reference) = token_ref.as_deref() {
-        crate::features::credentials::delete_secret(reference)?;
-    }
-
-    if db.delete_git_credential(&id).is_err() {
-        if let (Some(reference), Some(secret)) = (token_ref.as_deref(), previous_secret.as_deref())
-        {
-            let _ = crate::features::credentials::store_secret(reference, secret);
+        let db = app.state::<Database>();
+        let record = db
+            .get_git_credential_metadata(&id)
+            .map_err(|_| crate::common::messages::code("backend.credentials.loadFailed"))?
+            .ok_or_else(|| crate::common::messages::code("backend.credentials.notFound"))?;
+        if record.source == "system_global" {
+            return Err(crate::common::messages::code(
+                "backend.credentials.systemManaged",
+            ));
         }
-        return Err(
-            "Credential metadata could not be removed from SQLite; the keychain entry was restored where possible."
-                .into(),
-        );
-    }
 
-    let _ = app.emit("git-credentials-updated", ());
-    Ok(())
-}.await;
+        let token_ref = db
+            .get_git_credential_token_ref(&id)
+            .map_err(|_| crate::common::messages::code("backend.credentials.loadFailed"))?;
+        let previous_secret = token_ref
+            .as_deref()
+            .and_then(|reference| crate::features::credentials::retrieve_secret(reference).ok())
+            .map(Zeroizing::new);
+        if let Some(reference) = token_ref.as_deref() {
+            crate::features::credentials::delete_secret(reference)?;
+        }
+
+        if db.delete_git_credential(&id).is_err() {
+            if let (Some(reference), Some(secret)) =
+                (token_ref.as_deref(), previous_secret.as_deref())
+            {
+                let _ = crate::features::credentials::store_secret(reference, secret);
+            }
+            return Err(crate::common::messages::code(
+                "backend.credentials.deleteFailed",
+            ));
+        }
+
+        let _ = app.emit("git-credentials-updated", ());
+        Ok(())
+    }
+    .await;
     result.map_err(|error| crate::common::messages::command_error("credentials", error))
 }
 
@@ -149,11 +153,13 @@ pub async fn verify_git_credential(app: AppHandle, id: String) -> Result<bool, S
         let db = app.state::<Database>();
         let token_ref = db
             .get_git_credential_token_ref(&id)
-            .map_err(|_| "Credential mapping could not be loaded".to_string())?;
+            .map_err(|_| crate::common::messages::code("backend.credentials.loadFailed"))?;
         if let Some(token_ref) = token_ref {
             Ok(crate::features::credentials::exists_in_keyring(&token_ref))
         } else {
-            Err("Credential not found".to_string())
+            Err(crate::common::messages::code(
+                "backend.credentials.notFound",
+            ))
         }
     }
     .await;

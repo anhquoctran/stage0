@@ -129,7 +129,11 @@ export const AiMcpProviderDetailsModal: React.FC<{
                   {aiConfig.provider === 'ollama' ? t('ai.providers.offlineLocal') : t('ai.providers.apiKey')}
                 </span>
               </div>
-              <p className="text-[11px] text-subtext0 mt-0.5">{activeProviderPreset.description}</p>
+              <p className="text-[11px] text-subtext0 mt-0.5">
+                {activeProviderPreset.descriptionTranslationKey
+                  ? t(activeProviderPreset.descriptionTranslationKey)
+                  : activeProviderPreset.description}
+              </p>
             </div>
           </div>
 

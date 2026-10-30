@@ -59,7 +59,7 @@ impl UpdateRuntime {
         if !status.supported {
             return Err(status
                 .message
-                .unwrap_or_else(|| "Updates are unavailable in this build".into()));
+                .unwrap_or_else(|| crate::common::messages::code("backend.errors.updates")));
         }
         Ok(())
     }

@@ -9,7 +9,7 @@ pub async fn store_ai_api_key(
         let p = provider.trim();
         let k = api_key.trim();
         if p.is_empty() {
-            return Err("AI provider cannot be empty".to_string());
+            return Err(crate::common::messages::code("backend.ai.providerRequired"));
         }
         let mut keys = std::collections::BTreeMap::new();
         let removals = if k.is_empty() {
@@ -79,5 +79,15 @@ pub async fn fetch_ai_models(
         result
     }
     .await;
-    result.map_err(|error| crate::common::messages::command_error("ai", error))
+    result.map_err(|error| {
+        if error.starts_with(crate::common::messages::PREFIX) {
+            error
+        } else {
+            crate::common::messages::failure(
+                "backend.ai.modelDiscoveryFailed",
+                serde_json::json!({}),
+                error,
+            )
+        }
+    })
 }

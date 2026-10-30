@@ -15,7 +15,7 @@ async function fixture(t, document = settings()) {
   return { ...f, document };
 }
 
-test('language selectors edit only the dialog draft and offer the canonical 14 languages', async (t) => {
+test('language selectors edit only the dialog draft and offer the canonical 15 languages', async (t) => {
   const runner = componentHarness(); t.after(runner.cleanup);
   const { PreferencesLanguageTab } = loadWithMocks(new URL('../frontend/features/i18n/components/PreferencesLanguageTab.tsx', import.meta.url), {
     react: runner.react,
@@ -27,8 +27,8 @@ test('language selectors edit only the dialog draft and offer the canonical 14 l
     value, onChange: (next) => { value = next(value); changes++; }, disabled: false, error: null,
   })).filter((node) => node.props.role === 'combobox');
   let [ui, agent] = await render();
-  assert.equal(ui.props.options.length, 14);
-  assert.equal(agent.props.options.length, 15);
+  assert.equal(ui.props.options.length, 15);
+  assert.equal(agent.props.options.length, 16);
   ui.props.onChange('vi'); agent.props.onChange('ja');
   [ui, agent] = await render();
   assert.equal(ui.props.value, 'vi'); assert.equal(agent.props.value, 'ja');

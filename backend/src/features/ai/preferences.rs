@@ -25,10 +25,18 @@ fn apply_keys(
     let valid_provider = |provider: &str| {
         matches!(
             provider,
-            "openai" | "anthropic" | "gemini" | "xai_grok" | "ollama" | "custom"
+            "openai"
+                | "anthropic"
+                | "gemini"
+                | "xai_grok"
+                | "deepseek"
+                | "qwen"
+                | "kimi"
+                | "ollama"
+                | "custom"
         )
     };
-    if keys.len() + removals.len() > 7
+    if keys.len() + removals.len() > 10
         || keys.iter().any(|(provider, key)| {
             !valid_provider(provider) || key.trim().is_empty() || key.len() > 8192
         })

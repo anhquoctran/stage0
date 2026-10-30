@@ -36,7 +36,7 @@ export interface AiProviderService {
   testAiReviewProvider(input: {
     request: {
       sessionId: string;
-      provider: "openai" | "anthropic" | "gemini" | "xai_grok" | "custom";
+      provider: "openai" | "anthropic" | "gemini" | "xai_grok" | "deepseek" | "qwen" | "kimi" | "custom";
       authMode: string;
       model: string;
       baseUrl: string;

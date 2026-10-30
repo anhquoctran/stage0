@@ -69,6 +69,27 @@ pub fn payload(
                 body["parallel_tool_calls"] = json!(false);
                 body["max_tokens"] = json!(max_tokens);
             }
+            match config.provider.as_str() {
+                "deepseek" => match config.reasoning_effort.as_deref() {
+                    Some("none") => body["thinking"] = json!({"type":"disabled"}),
+                    Some(effort) => {
+                        body["thinking"] = json!({"type":"enabled"});
+                        body["reasoning_effort"] = json!(effort);
+                    }
+                    None => {}
+                },
+                "qwen" => match config.reasoning_effort.as_deref() {
+                    Some("none") => body["enable_thinking"] = json!(false),
+                    Some(effort) => body["reasoning_effort"] = json!(effort),
+                    None => {}
+                },
+                "kimi" => {
+                    if let Some(effort) = config.reasoning_effort.as_deref() {
+                        body["reasoning_effort"] = json!(effort);
+                    }
+                }
+                _ => {}
+            }
             body
         }
     }

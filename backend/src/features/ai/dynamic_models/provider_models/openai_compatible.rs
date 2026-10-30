@@ -11,22 +11,19 @@ pub(super) async fn fetch(
     base_url: Option<&str>,
 ) -> Result<Vec<DynamicModelInfo>, String> {
     if provider != "custom" && api_key.is_none() {
-        return Err(format!(
-            "An API key is required to load models from {provider}."
+        return Err(crate::common::messages::code(
+            "backend.ai.modelApiKeyRequired",
         ));
     }
 
     let default_url = match provider {
         "openai" => "https://api.openai.com/v1",
         "xai_grok" | "grok" | "xai" => "https://api.x.ai/v1",
-        _ => "https://api.deepseek.com/v1",
+        "deepseek" => "https://api.deepseek.com",
+        "kimi" => "https://api.moonshot.ai/v1",
+        _ => "https://api.openai.com/v1",
     };
-    let endpoint = collection_endpoint(
-        base_url.unwrap_or(default_url),
-        default_url,
-        "models",
-        provider,
-    )?;
+    let endpoint = collection_endpoint(base_url.unwrap_or(default_url), default_url, "models")?;
     let mut request = client.get(&endpoint);
     if let Some(key) = api_key {
         request = request.bearer_auth(key);
@@ -36,7 +33,7 @@ pub(super) async fn fetch(
         .send()
         .await
         .map_err(|error| format!("Could not query the {provider} model catalog: {error}"))?;
-    ensure_success(response.status(), provider)?;
+    ensure_success(response.status())?;
     let data: OpenAiModelListResponse = response
         .json()
         .await
@@ -49,11 +46,33 @@ pub(super) async fn fetch(
         .filter(|model| model_is_usable(provider, &model.id))
         .map(|model| {
             let id = model.id;
+            let reasoning_efforts = if provider == "deepseek" {
+                model.effort.and_then(|effort| {
+                    let supported = effort
+                        .get("supported_levels")
+                        .and_then(serde_json::Value::as_array)
+                        .into_iter()
+                        .flatten()
+                        .filter_map(serde_json::Value::as_str)
+                        .filter(|level| matches!(*level, "low" | "high" | "max"))
+                        .map(str::to_string)
+                        .collect::<Vec<_>>();
+                    (!supported.is_empty()).then(|| {
+                        let mut levels = vec!["none".to_string()];
+                        levels.extend(supported);
+                        levels
+                    })
+                })
+            } else if provider == "kimi" && matches!(id.as_str(), "kimi-k3" | "kimi-k3.1-pro") {
+                Some(vec!["low".into(), "high".into(), "max".into()])
+            } else {
+                None
+            };
             DynamicModelInfo {
-                name: id.clone(),
+                name: model.name.unwrap_or_else(|| id.clone()),
                 id,
                 description: None,
-                reasoning_efforts: None,
+                reasoning_efforts,
                 supports_fast_mode: None,
             }
         })
@@ -63,11 +82,14 @@ pub(super) async fn fetch(
     Ok(models)
 }
 
-fn ensure_success(status: StatusCode, provider: &str) -> Result<(), String> {
+fn ensure_success(status: StatusCode) -> Result<(), String> {
     if status.is_success() {
         Ok(())
     } else {
-        Err(format!("{provider} model API returned HTTP {status}."))
+        Err(crate::common::messages::message(
+            "backend.ai.modelCatalogHttp",
+            serde_json::json!({ "status": status.as_u16() }),
+        ))
     }
 }
 
@@ -84,6 +106,7 @@ fn model_is_usable(provider: &str, id: &str) -> bool {
                 || id.starts_with("chatgpt-")
         }
         "xai_grok" | "grok" | "xai" => id.starts_with("grok"),
+        "deepseek" | "kimi" => true,
         _ => true,
     }
 }

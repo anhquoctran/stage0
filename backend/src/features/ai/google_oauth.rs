@@ -320,7 +320,9 @@ pub async fn get_google_access_token() -> Result<String, String> {
         }
     }
 
-    Err("Not signed into Google AI Pro. Please sign in via Google OAuth or gcloud ADC in preferences.".to_string())
+    Err(crate::common::messages::code(
+        "backend.ai.googleSignInRequired",
+    ))
 }
 
 /// Check current Google AI Pro / Gemini OAuth session status

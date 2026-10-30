@@ -42,7 +42,7 @@ pub fn consume_software_update_release_notes(
         let current_version = app.package_info().version.to_string();
         app.state::<Database>()
             .consume_setting_if_value(PENDING_RELEASE_NOTES_VERSION_SETTING, &current_version)
-            .map_err(|_| "Could not load the pending update release notes.".to_string())
+            .map_err(|_| crate::common::messages::code("backend.updates.stateLoadFailed"))
     })();
     result.map_err(|error| crate::common::messages::command_error("updates", error))
 }

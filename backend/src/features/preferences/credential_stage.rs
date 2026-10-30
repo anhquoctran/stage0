@@ -10,10 +10,18 @@ pub(super) fn validate(request: &PreferencesTransactionRequest) -> Result<(), St
     let provider = |p: &str| {
         matches!(
             p,
-            "openai" | "anthropic" | "gemini" | "xai_grok" | "ollama" | "custom"
+            "openai"
+                | "anthropic"
+                | "gemini"
+                | "xai_grok"
+                | "deepseek"
+                | "qwen"
+                | "kimi"
+                | "ollama"
+                | "custom"
         )
     };
-    if request.api_keys.len() + request.api_key_removals.len() > 7
+    if request.api_keys.len() + request.api_key_removals.len() > 10
         || request
             .api_keys
             .iter()

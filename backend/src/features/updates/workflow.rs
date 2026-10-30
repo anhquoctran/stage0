@@ -21,7 +21,7 @@ pub(super) async fn check(app: &AppHandle) -> Result<UpdateStatus, String> {
     let _operation = runtime
         .operation
         .try_lock()
-        .map_err(|_| "An update operation is already running")?;
+        .map_err(|_| crate::common::messages::code("backend.updates.operationBusy"))?;
     runtime.require_supported()?;
     if runtime.snapshot().phase == "ready" {
         return Ok(runtime.snapshot());
@@ -84,16 +84,17 @@ async fn find_update(app: &AppHandle) -> Result<Option<tauri_plugin_updater::Upd
         |_, _| {},
     )
     .await?
-    .ok_or("No update manifest has been published yet. Try again after the first release.")?;
-    let manifest = serde_json::from_slice(&bytes).map_err(|_| "The release manifest is invalid")?;
+    .ok_or_else(|| crate::common::messages::code("backend.updates.manifestUnavailable"))?;
+    let manifest = serde_json::from_slice(&bytes)
+        .map_err(|_| crate::common::messages::code("backend.updates.manifestInvalid"))?;
     let updater = app
         .updater_builder()
         .build()
-        .map_err(|_| "Could not initialize the software updater")?;
+        .map_err(|_| crate::common::messages::code("backend.updates.updaterUnavailable"))?;
     // restore_update uses normal SemVer comparison and requires a version-bound signature.
     let update = updater
         .restore_update(manifest)
-        .map_err(|_| "The release manifest is invalid or has no package for this platform")?
+        .map_err(|_| crate::common::messages::code("backend.updates.packageUnavailable"))?
         .map(|update| update.restart_after_install(true));
     if let Some(update) = &update {
         policy::validate_download(&update.download_url, &update.version)?;
@@ -103,16 +104,18 @@ async fn find_update(app: &AppHandle) -> Result<Option<tauri_plugin_updater::Upd
 
 pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Result<(), String> {
     if !saved_work_confirmed {
-        return Err("Save your work in every Stage0 window and confirm before installing.".into());
+        return Err(crate::common::messages::code(
+            "backend.updates.saveWorkFirst",
+        ));
     }
     let runtime = app.state::<UpdateRuntime>();
     let _operation = runtime
         .operation
         .try_lock()
-        .map_err(|_| "An update operation is already running")?;
+        .map_err(|_| crate::common::messages::code("backend.updates.operationBusy"))?;
     runtime.require_supported()?;
     if runtime.snapshot().phase != "ready" {
-        return Err("Download and verify an update before installing it.".into());
+        return Err(crate::common::messages::code("backend.updates.notReady"));
     }
     // This reservation and operation acquisition use the same atomic gate.
     let installation = InstallationLease::acquire()?;
@@ -124,7 +127,9 @@ pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Resu
         .iter()
         .any(|instance| instance.adapter_type != SandboxType::InMemory)
     {
-        return Err("Close Local Worktree and Docker instances in Sandbox settings before installing the update.".into());
+        return Err(crate::common::messages::code(
+            "backend.updates.sandboxesActive",
+        ));
     }
     let target_version = runtime
         .pending
@@ -132,10 +137,10 @@ pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Resu
         .unwrap_or_else(|error| error.into_inner())
         .as_ref()
         .map(|(update, _)| update.version.clone())
-        .ok_or("The verified update is no longer available. Check again.")?;
+        .ok_or_else(|| crate::common::messages::code("backend.updates.updateExpired"))?;
     app.state::<Database>()
         .set_setting(PENDING_RELEASE_NOTES_VERSION_SETTING, &target_version)
-        .map_err(|_| "Could not save the update restart state. Installation was not started.")?;
+        .map_err(|_| crate::common::messages::code("backend.updates.stateSaveFailed"))?;
     let checkpoint = {
         let database = app.state::<Database>();
         let connection = database.conn();
@@ -147,16 +152,18 @@ pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Resu
             let _ = app
                 .state::<Database>()
                 .delete_settings(&[PENDING_RELEASE_NOTES_VERSION_SETTING]);
-            return Err("Could not flush Stage0's database. Installation was not started.".into());
+            return Err(crate::common::messages::code(
+                "backend.updates.databaseFlushFailed",
+            ));
         }
     };
     if checkpoint_busy != 0 {
         let _ = app
             .state::<Database>()
             .delete_settings(&[PENDING_RELEASE_NOTES_VERSION_SETTING]);
-        return Err(
-            "Stage0's database is busy. Wait for pending writes and retry installation.".into(),
-        );
+        return Err(crate::common::messages::code(
+            "backend.updates.databaseBusy",
+        ));
     }
     let pending = runtime
         .pending
@@ -173,13 +180,15 @@ pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Resu
             let _ = app
                 .state::<Database>()
                 .delete_settings(&[PENDING_RELEASE_NOTES_VERSION_SETTING]);
-            return Err("Download the update before installing it.".into());
+            return Err(crate::common::messages::code("backend.updates.notReady"));
         }
         None => {
             let _ = app
                 .state::<Database>()
                 .delete_settings(&[PENDING_RELEASE_NOTES_VERSION_SETTING]);
-            return Err("The verified update is no longer available. Check again.".into());
+            return Err(crate::common::messages::code(
+                "backend.updates.updateExpired",
+            ));
         }
     };
     runtime.change(app, |status| {
@@ -206,17 +215,17 @@ pub(super) async fn install(app: &AppHandle, saved_work_confirmed: bool) -> Resu
                     "backend.updates.installFailed",
                 ));
             });
-            return Err("Installation failed. The update is still available to retry.".into());
+            return Err(crate::common::messages::code(
+                "backend.updates.installFailed",
+            ));
         }
         handle.restart();
     })
     .await
     .map_err(|_| {
-        runtime.fail(
-            app,
-            "The update installer stopped unexpectedly. Restart Stage0 before retrying.",
-        );
-        "The update installer stopped unexpectedly".to_string()
+        let error = crate::common::messages::code("backend.updates.installerInterrupted");
+        runtime.fail(app, &error);
+        error
     })?
 }
 

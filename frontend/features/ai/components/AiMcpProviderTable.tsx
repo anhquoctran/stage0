@@ -88,7 +88,9 @@ export const AiMcpProviderTable: React.FC<{
                           {getProviderDisplayName(provider.id, aiConfig.customProviderName)}
                         </span>
                         <span className="block text-[9px] text-subtext0 truncate">
-                          {provider.description}
+                          {provider.descriptionTranslationKey
+                            ? t(provider.descriptionTranslationKey)
+                            : provider.description}
                         </span>
                       </span>
                     </div>

@@ -5,6 +5,7 @@ export interface AiProviderPreset {
   id: AiProviderId;
   name: string;
   description: string;
+  descriptionTranslationKey?: string;
   defaultBaseUrl: string;
   /** Default preference/migration metadata; model pickers must use provider API catalogs. */
   defaultModel: string;

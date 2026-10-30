@@ -2,15 +2,16 @@ use sha2::{Digest, Sha256};
 
 pub(crate) fn https_origin(value: &str) -> Result<String, String> {
     crate::features::git::ops::validate_remote_url(value)?;
-    let parsed = reqwest::Url::parse(value).map_err(|_| {
-        "Git credential selection requires a valid HTTPS repository URL.".to_string()
-    })?;
+    let parsed = reqwest::Url::parse(value)
+        .map_err(|_| crate::common::messages::code("backend.git.httpsCredentialRequired"))?;
     if parsed.scheme() != "https"
         || parsed.host_str().is_none()
         || !parsed.username().is_empty()
         || parsed.password().is_some()
     {
-        return Err("Git credentials can only be used with HTTPS repository URLs without embedded credentials.".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.httpsCredentialRequired",
+        ));
     }
     Ok(parsed.origin().ascii_serialization())
 }

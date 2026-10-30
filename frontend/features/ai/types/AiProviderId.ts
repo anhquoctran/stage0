@@ -3,5 +3,8 @@ export type AiProviderId =
   | 'anthropic'
   | 'gemini'
   | 'xai_grok'
+  | 'deepseek'
+  | 'qwen'
+  | 'kimi'
   | 'ollama'
   | 'custom';

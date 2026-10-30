@@ -7,9 +7,10 @@ greeting and UI text; the artwork is the visual lettering of those greetings.
 - `latin.json`: original Stage0 lettering for English, Vietnamese, Spanish,
   Portuguese, German, French and Italian. Vietnamese/Portuguese accents and dots
   are separate strokes. The original English Hello drawing is retained.
-- `cyrillic.json`, `korean.json`, `arabic.json`: original Stage0 centerlines.
+- `cyrillic.json`, `korean.json`, `arabic.json`, `hindi.json`: original Stage0 centerlines.
   Cyrillic uses cursive letterforms; Hangul is written syllable by syllable;
-  Arabic paths follow connected right-to-left writing with separate diacritics.
+  Hindi uses Devanagari strokes; Arabic paths follow connected right-to-left
+  writing with separate diacritics.
 - `cjk.json`: Japanese kana and the character U+597D are adapted from
   [KanjiVG](https://kanjivg.tagaini.net), copyright (C) 2009/2010/2011 Ulrich Apel,
   under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/).

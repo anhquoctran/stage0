@@ -8,7 +8,7 @@ const { SUPPORTED_LANGUAGES } = loadWithMocks(new URL('../frontend/features/i18n
 const { GREETING_ARTWORK } = loadWithMocks(url('constants/greetingArtwork.ts'), {});
 const translation = code => JSON.parse(readFileSync(new URL(`../frontend/features/i18n/locales/${code}.json`, import.meta.url)));
 
-test('the welcome greeting follows all 14 languages using pen strokes and restores the original English drawing', async t => {
+test('the welcome greeting follows all 15 languages using pen strokes and restores the original English drawing', async t => {
   const runner = componentHarness(); t.after(runner.cleanup);
   let language = 'en';
   const { OnboardingHello } = loadWithMocks(url('components/OnboardingHello.tsx'), {

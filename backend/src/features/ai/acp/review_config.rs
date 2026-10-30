@@ -14,7 +14,7 @@ pub async fn acp_agent_review_config_options(
         let working_directory =
             std::env::temp_dir().join(format!("stage0-acp-config-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir(&working_directory)
-            .map_err(|_| "Could not create an isolated ACP configuration directory")?;
+            .map_err(|_| crate::common::messages::code("backend.acp.reviewConfigUnavailable"))?;
         let mut process = match tokio::time::timeout(
             REVIEW_CONFIG_DISCOVERY_TIMEOUT,
             AcpProcess::start(&config, Some(&working_directory)),
@@ -28,7 +28,9 @@ pub async fn acp_agent_review_config_options(
             }
             Err(_) => {
                 let _ = std::fs::remove_dir_all(&working_directory);
-                return Err("ACP agent startup timed out while loading reviewer options.".into());
+                return Err(crate::common::messages::code(
+                    "backend.acp.reviewConfigTimeout",
+                ));
             }
         };
         let result = tokio::time::timeout(REVIEW_CONFIG_DISCOVERY_TIMEOUT, async {
@@ -46,7 +48,9 @@ pub async fn acp_agent_review_config_options(
             let session_id = session
                 .get("sessionId")
                 .and_then(Value::as_str)
-                .ok_or("ACP agent did not return a session ID")?;
+                .ok_or_else(|| {
+                    crate::common::messages::code("backend.acp.reviewConfigUnavailable")
+                })?;
             let mut options = session
                 .get("configOptions")
                 .and_then(Value::as_array)
@@ -65,7 +69,9 @@ pub async fn acp_agent_review_config_options(
         .await;
         let result = match result {
             Ok(result) => result,
-            Err(_) => Err("ACP agent did not return reviewer options within 45 seconds.".into()),
+            Err(_) => Err(crate::common::messages::code(
+                "backend.acp.reviewConfigTimeout",
+            )),
         };
         process.close().await;
         let _ = std::fs::remove_dir_all(&working_directory);

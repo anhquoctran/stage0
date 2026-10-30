@@ -109,14 +109,16 @@ pub async fn poll_copilot_token(
             "expired_token" => Ok(CopilotPollResponse {
                 status: "expired".to_string(),
                 access_token: None,
-                error_message: Some(
-                    "Device authorization code expired. Please restart sign-in.".to_string(),
-                ),
+                error_message: Some(crate::common::messages::code(
+                    "backend.ai.copilotCodeExpired",
+                )),
             }),
             "access_denied" => Ok(CopilotPollResponse {
                 status: "denied".to_string(),
                 access_token: None,
-                error_message: Some("Authorization was cancelled by user.".to_string()),
+                error_message: Some(crate::common::messages::code(
+                    "backend.ai.authorizationCancelled",
+                )),
             }),
             other => Ok(CopilotPollResponse {
                 status: "error".to_string(),
@@ -133,7 +135,9 @@ pub async fn poll_copilot_token(
         Ok(CopilotPollResponse {
             status: "error".to_string(),
             access_token: None,
-            error_message: Some("Unexpected response from GitHub".to_string()),
+            error_message: Some(crate::common::messages::code(
+                "backend.ai.authUnexpectedResponse",
+            )),
         })
     }
 }
@@ -162,7 +166,9 @@ pub async fn get_internal_copilot_token(
         let status = resp.status();
         let body = resp.text().await.unwrap_or_default();
         if status.as_u16() == 403 {
-            return Err("GitHub account is authorized, but no active GitHub Copilot subscription was found.".to_string());
+            return Err(crate::common::messages::code(
+                "backend.ai.copilotSubscriptionRequired",
+            ));
         }
         return Err(format!(
             "Copilot session exchange failed (HTTP {}): {}",
@@ -297,9 +303,8 @@ pub async fn chat_copilot(
     system_prompt: Option<&str>,
     model: Option<&str>,
 ) -> Result<String, String> {
-    let gh_token = crate::features::credentials::get_ai_key("github_copilot").map_err(|_| {
-        "Not signed into GitHub Copilot. Please connect in preferences.".to_string()
-    })?;
+    let gh_token = crate::features::credentials::get_ai_key("github_copilot")
+        .map_err(|_| crate::common::messages::code("backend.ai.copilotSignInRequired"))?;
 
     let session = get_internal_copilot_token(&gh_token).await?;
 

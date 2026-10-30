@@ -25,27 +25,35 @@ impl CloneOptions {
             .depth
             .is_some_and(|depth| depth == 0 || depth > 1_000_000)
         {
-            return Err("Clone depth must be between 1 and 1,000,000 commits.".into());
+            return Err(crate::common::messages::code(
+                "backend.git.cloneDepthInvalid",
+            ));
         }
         if self
             .submodule_jobs
             .is_some_and(|jobs| !(1..=32).contains(&jobs))
         {
-            return Err("Submodule parallel jobs must be between 1 and 32.".into());
+            return Err(crate::common::messages::code(
+                "backend.git.cloneJobsInvalid",
+            ));
         }
         if self
             .timeout_minutes
             .is_some_and(|minutes| !(1..=1440).contains(&minutes))
         {
-            return Err("Clone timeout must be between 1 and 1,440 minutes.".into());
+            return Err(crate::common::messages::code(
+                "backend.git.cloneTimeoutInvalid",
+            ));
         }
         if self.shallow_submodules && !self.recurse_submodules {
-            return Err("Shallow submodules requires recursive submodule cloning.".into());
+            return Err(crate::common::messages::code(
+                "backend.git.cloneSubmodulesRequireRecursive",
+            ));
         }
         if self.filter_submodules && !(self.recurse_submodules && self.blobless) {
-            return Err(
-                "Filtering submodules requires recursive submodules and partial clone.".into(),
-            );
+            return Err(crate::common::messages::code(
+                "backend.git.cloneFilterRequiresBlobless",
+            ));
         }
         let branch = self.branch.trim();
         if !branch.is_empty() {
@@ -54,7 +62,7 @@ impl CloneOptions {
                 || branch.contains('@')
                 || branch.chars().any(char::is_control)
             {
-                return Err("Invalid clone branch or tag name.".into());
+                return Err(crate::common::messages::code("backend.git.cloneRefInvalid"));
             }
             let mut command = Command::new(super::runner::get_active_git_path());
             command.args(["check-ref-format", &format!("refs/heads/{branch}")]);
@@ -65,7 +73,7 @@ impl CloneOptions {
                 Duration::from_secs(5),
             )?;
             if !output.status.success() || output.output_truncated {
-                return Err("Invalid clone branch or tag name.".into());
+                return Err(crate::common::messages::code("backend.git.cloneRefInvalid"));
             }
         }
         let mut args = vec!["clone".into(), "--progress".into()];

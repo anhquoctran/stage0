@@ -7,7 +7,7 @@ pub(super) async fn download(app: &AppHandle) -> Result<(), String> {
     let _operation = runtime
         .operation
         .try_lock()
-        .map_err(|_| "An update operation is already running")?;
+        .map_err(|_| crate::common::messages::code("backend.updates.operationBusy"))?;
     runtime.require_supported()?;
     let update = runtime
         .pending
@@ -15,7 +15,7 @@ pub(super) async fn download(app: &AppHandle) -> Result<(), String> {
         .unwrap_or_else(|error| error.into_inner())
         .as_ref()
         .map(|(update, _)| update.clone())
-        .ok_or("Check for a new version before downloading")?;
+        .ok_or_else(|| crate::common::messages::code("backend.updates.checkFirst"))?;
     policy::validate_download(&update.download_url, &update.version)?;
     runtime.change(app, |status| {
         status.phase = "downloading".into();
@@ -42,8 +42,9 @@ pub(super) async fn download(app: &AppHandle) -> Result<(), String> {
     let bytes = match result {
         Ok(Some(bytes)) => bytes,
         Ok(None) => {
-            runtime.fail(app, "The release package is missing. Check again later.");
-            return Err("The release package is missing. Check again later.".into());
+            let error = crate::common::messages::code("backend.updates.packageUnavailable");
+            runtime.fail(app, &error);
+            return Err(error);
         }
         Err(error) => {
             runtime.fail(app, &error);
@@ -54,11 +55,11 @@ pub(super) async fn download(app: &AppHandle) -> Result<(), String> {
     if update.verify(&bytes).is_err() {
         runtime.fail(
             app,
-            "The update signature or signed version is invalid. Installation was blocked.",
+            &crate::common::messages::code("backend.updates.signatureInvalid"),
         );
-        return Err(
-            "The update signature or signed version is invalid. Installation was blocked.".into(),
-        );
+        return Err(crate::common::messages::code(
+            "backend.updates.signatureInvalid",
+        ));
     }
     let size = bytes.len() as u64;
     *runtime

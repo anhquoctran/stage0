@@ -9,15 +9,13 @@ pub enum ArchiveFormat {
 impl ArchiveFormat {
     pub fn from_url(value: &str) -> Result<Self, String> {
         let url = reqwest::Url::parse(value)
-            .map_err(|_| "ACP Registry returned an invalid download URL")?;
+            .map_err(|_| crate::common::messages::code("backend.acp.archiveUrlInvalid"))?;
         if url.scheme() != "https"
             || !url.username().is_empty()
             || url.password().is_some()
             || url.fragment().is_some()
         {
-            return Err(
-                "ACP Registry binary downloads must use an HTTPS URL without credentials".into(),
-            );
+            return Err(crate::common::messages::code("backend.acp.archiveUrlUnsafe").into());
         }
         let path = url.path().to_ascii_lowercase();
         if path.ends_with(".zip") {
@@ -41,7 +39,7 @@ impl ArchiveFormat {
         .iter()
         .any(|extension| path.ends_with(extension))
         {
-            Err("ACP Registry package uses an unsupported archive or installer format".into())
+            Err(crate::common::messages::code("backend.acp.archiveUnsupported").into())
         } else {
             Ok(Self::Raw)
         }

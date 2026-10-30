@@ -50,6 +50,7 @@ pub(super) fn reviewer_role_prompt(role: Option<&str>) -> &'static str {
 fn output_language_instruction(language: &str) -> &'static str {
     match language {
         "vi" => "Write all reviewer-authored natural-language text in Vietnamese. Keep code, diffs, paths, identifiers, quoted evidence, tool names, and protocol fields unchanged.",
+        "hi" => "समीक्षक द्वारा लिखी गई सभी प्राकृतिक भाषा की सामग्री हिंदी में लिखें। कोड, डिफ़, पथ, पहचानकर्ता, उद्धृत साक्ष्य, टूल नाम और प्रोटोकॉल फ़ील्ड को अपरिवर्तित रखें।",
         "ja" => "レビュー担当者が生成する自然言語の文章はすべて日本語で記述してください。コード、差分、パス、識別子、引用した証拠、ツール名、プロトコル項目は変更しないでください。",
         "ko" => "리뷰어가 작성하는 모든 자연어 문장은 한국어로 작성하세요. 코드, diff, 경로, 식별자, 인용한 근거, 도구 이름, 프로토콜 필드는 그대로 유지하세요.",
         "zh-Hans" => "所有由审查者撰写的自然语言内容都使用简体中文。代码、差异、路径、标识符、引用证据、工具名称和协议字段保持原样。",

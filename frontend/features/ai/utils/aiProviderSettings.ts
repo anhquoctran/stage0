@@ -25,9 +25,20 @@ export function activeProviderSettings(config: AiConfig): AiProviderSettings {
 export function providerSettingsFor(config: AiConfig, providerId: AiProviderId): AiProviderSettings {
   if (providerId === config.provider) return activeProviderSettings(config);
   const saved = config.providerSettings?.[providerId];
-  if (saved) return saved;
+  if (saved) {
+    return {
+      ...saved,
+      reasoningEffort: saved.reasoningEffort,
+      fastMode: saved.fastMode === true,
+    };
+  }
   const preset = AI_PROVIDERS.find((provider) => provider.id === providerId) || AI_PROVIDERS[0];
-  return { model: preset.defaultModel, baseUrl: preset.defaultBaseUrl };
+  return {
+    model: preset.defaultModel,
+    baseUrl: preset.defaultBaseUrl,
+    reasoningEffort: undefined,
+    fastMode: false,
+  };
 }
 
 export function rememberActiveProviderSettings(config: AiConfig): AiConfig {

@@ -152,24 +152,44 @@ pub async fn acp_agent_authenticate(
     method_id: String,
 ) -> Result<Value, String> {
     let result: Result<_, String> = async {
-    if method_id.trim().is_empty() || method_id.len() > 200 {
-        return Err("Invalid ACP authentication method".into());
-    }
-    let mut process = AcpProcess::start(&config, None).await?;
-    let result = async {
-        let initialized = process.initialize().await?;
-        let methods = initialized.get("authMethods").and_then(Value::as_array).ok_or("This agent does not offer ACP sign-in")?;
-        let method = methods.iter().find(|method| method.get("id").and_then(Value::as_str) == Some(method_id.as_str()))
-            .ok_or("The selected authentication method is no longer available")?;
-        if method.get("type").and_then(Value::as_str).unwrap_or("agent") != "agent" {
-            return Err("This login method requires an interactive terminal, which this client does not advertise".into());
+        if method_id.trim().is_empty() || method_id.len() > 200 {
+            return Err(crate::common::messages::code(
+                "backend.acp.authMethodInvalid",
+            ));
         }
-        process.request(1, "authenticate", json!({"methodId":method_id})).await?;
-        Ok(json!({"authStatus": process.auth_status.clone()}))
-    }.await;
-    process.close().await;
-    result
-}.await;
+        let mut process = AcpProcess::start(&config, None).await?;
+        let result = async {
+            let initialized = process.initialize().await?;
+            let methods = initialized
+                .get("authMethods")
+                .and_then(Value::as_array)
+                .ok_or_else(|| crate::common::messages::code("backend.acp.authUnavailable"))?;
+            let method = methods
+                .iter()
+                .find(|method| method.get("id").and_then(Value::as_str) == Some(method_id.as_str()))
+                .ok_or_else(|| {
+                    crate::common::messages::code("backend.acp.authMethodUnavailable")
+                })?;
+            if method
+                .get("type")
+                .and_then(Value::as_str)
+                .unwrap_or("agent")
+                != "agent"
+            {
+                return Err(crate::common::messages::code(
+                    "backend.acp.authInteractiveUnsupported",
+                ));
+            }
+            process
+                .request(1, "authenticate", json!({"methodId":method_id}))
+                .await?;
+            Ok(json!({"authStatus": process.auth_status.clone()}))
+        }
+        .await;
+        process.close().await;
+        result
+    }
+    .await;
     result.map_err(|error| crate::common::messages::command_error("ai", error))
 }
 
@@ -180,7 +200,9 @@ pub async fn acp_agent_logout(config: AcpAgentConfig) -> Result<(), String> {
         let result = async {
             let initialized = process.initialize().await?;
             if !supports_auth_logout(&initialized) {
-                return Err("This agent does not support logout over ACP".into());
+                return Err(crate::common::messages::code(
+                    "backend.acp.logoutUnsupported",
+                ));
             }
             process.request(1, "logout", json!({})).await?;
             Ok(())

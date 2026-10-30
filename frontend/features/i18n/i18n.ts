@@ -15,6 +15,7 @@ import zhHant from './locales/zh-Hant.json';
 import it from './locales/it.json';
 import ptPt from './locales/pt-PT.json';
 import ar from './locales/ar.json';
+import hi from './locales/hi.json';
 import { SUPPORTED_LANGUAGES } from './constants/supportedLanguages';
 
 const resources = {
@@ -32,6 +33,7 @@ const resources = {
   it: { translation: it },
   'pt-PT': { translation: ptPt },
   ar: { translation: ar },
+  hi: { translation: hi },
 } as const;
 
 void i18n.use(initReactI18next).init({

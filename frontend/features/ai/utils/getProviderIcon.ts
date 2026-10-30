@@ -15,6 +15,12 @@ export const getProviderIcon = (providerId: string) => {
       return Globe;
     case 'xai_grok':
       return Zap;
+    case 'deepseek':
+      return Sparkles;
+    case 'qwen':
+      return Bot;
+    case 'kimi':
+      return Globe;
     case 'ollama':
       return HardDrive;
     case 'custom':

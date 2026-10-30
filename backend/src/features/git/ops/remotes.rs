@@ -69,7 +69,9 @@ pub fn test_remote_connection(repo_path: &str, remote_or_url: &str) -> Result<St
     if known_remote {
         validate_fetch_remote_url(repo_path, remote_or_url)?;
     } else if !is_supported_remote_url(remote_or_url) {
-        return Err("Remote must be a configured remote or an HTTPS/SSH Git URL".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.remoteUrlInvalid",
+        ));
     }
     let res = run_git(
         repo_path,
@@ -81,9 +83,10 @@ pub fn test_remote_connection(repo_path: &str, remote_or_url: &str) -> Result<St
         } else {
             "Connection test failed or permission denied."
         };
-        return Err(format!(
-            "Remote connection failed: {}",
-            crate::features::git::runner::redact_sensitive_text(err)
+        return Err(crate::common::messages::failure(
+            "backend.git.remoteConnectionFailed",
+            serde_json::json!({}),
+            crate::features::git::runner::redact_sensitive_text(err),
         ));
     }
     Ok(crate::common::messages::code("backend.git.connected"))
@@ -92,7 +95,9 @@ pub fn test_remote_connection(repo_path: &str, remote_or_url: &str) -> Result<St
 pub fn check_git_remote_url(url: &str) -> Result<String, String> {
     let trimmed = url.trim();
     if trimmed.is_empty() {
-        return Err("Please enter a repository URL.".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.remoteUrlRequired",
+        ));
     }
     validate_remote_url(trimmed)?;
 
@@ -118,28 +123,32 @@ pub fn check_git_remote_url(url: &str) -> Result<String, String> {
     )
     .map_err(|e| format!("Could not run Git: {}", e))?;
     if output.output_truncated {
-        return Err("Git remote check produced too much output and was stopped.".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.remoteOutputTooLarge",
+        ));
     }
     if !output.status.success() {
         let stderr = crate::features::git::runner::redact_sensitive_text(&String::from_utf8_lossy(
             &output.stderr,
         ));
         let err_lower = stderr.to_lowercase();
-        let message =
-            if err_lower.contains("repository not found") || err_lower.contains("not found") {
-                "Repository not found or private (404 Not Found)."
-            } else if err_lower.contains("authentication failed")
-                || err_lower.contains("permission denied")
-            {
-                "Access denied. Check your permissions and SSH or token authentication."
-            } else if err_lower.contains("could not resolve host") {
-                "Could not resolve the host. Please check your network connection."
-            } else if !stderr.trim().is_empty() {
-                stderr.trim()
-            } else {
-                "Could not connect, or the repository is unavailable for cloning."
-            };
-        return Err(message.to_string());
+        let code = if err_lower.contains("repository not found") || err_lower.contains("not found")
+        {
+            "backend.git.remoteNotFound"
+        } else if err_lower.contains("authentication failed")
+            || err_lower.contains("permission denied")
+        {
+            "backend.git.remoteAccessDenied"
+        } else if err_lower.contains("could not resolve host") {
+            "backend.git.remoteHostUnresolved"
+        } else {
+            "backend.git.remoteUnavailable"
+        };
+        return Err(crate::common::messages::failure(
+            code,
+            serde_json::json!({}),
+            stderr.trim().to_string(),
+        ));
     }
 
     Ok(crate::common::messages::code("backend.git.cloneReady"))

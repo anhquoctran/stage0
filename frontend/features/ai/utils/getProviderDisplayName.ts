@@ -8,6 +8,12 @@ export const getProviderDisplayName = (id: string, customName?: string) => {
       return 'Google Gemini';
     case 'xai_grok':
       return 'SuperGrok';
+    case 'deepseek':
+      return 'DeepSeek';
+    case 'qwen':
+      return 'Qwen (Alibaba Cloud)';
+    case 'kimi':
+      return 'Kimi (Moonshot AI)';
     case 'ollama':
       return 'Ollama (Local)';
     case 'custom':

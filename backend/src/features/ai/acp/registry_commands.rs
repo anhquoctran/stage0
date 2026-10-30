@@ -18,27 +18,29 @@ pub async fn acp_fetch_registry() -> Result<AcpRegistry, String> {
             .timeout(Duration::from_secs(20))
             .redirect(reqwest::redirect::Policy::limited(3))
             .build()
-            .map_err(|_| "Could not initialize ACP Registry client")?;
+            .map_err(|_| crate::common::messages::code("backend.acp.registryUnavailable"))?;
         let response = client
             .get(REGISTRY_URL)
             .send()
             .await
-            .map_err(|_| "Could not reach the ACP Registry")?;
+            .map_err(|_| crate::common::messages::code("backend.acp.registryUnavailable"))?;
         if !response.status().is_success() {
-            return Err(format!(
-                "ACP Registry returned HTTP {}",
-                response.status().as_u16()
+            return Err(crate::common::messages::message(
+                "backend.acp.registryHttp",
+                serde_json::json!({ "status": response.status().as_u16() }),
             ));
         }
         let bytes = response
             .bytes()
             .await
-            .map_err(|_| "Could not read the ACP Registry response")?;
+            .map_err(|_| crate::common::messages::code("backend.acp.registryUnavailable"))?;
         if bytes.len() > 5 * 1024 * 1024 {
-            return Err("ACP Registry response is too large".into());
+            return Err(crate::common::messages::code(
+                "backend.acp.registryTooLarge",
+            ));
         }
-        let parsed: RegistryPayload =
-            serde_json::from_slice(&bytes).map_err(|_| "ACP Registry returned invalid JSON")?;
+        let parsed: RegistryPayload = serde_json::from_slice(&bytes)
+            .map_err(|_| crate::common::messages::code("backend.acp.registryInvalid"))?;
         Ok(AcpRegistry {
             agents: parsed.agents,
             supported_binary_target: supported_binary_target(),
@@ -59,32 +61,32 @@ pub async fn acp_prepare_registry_agent(
                 .bytes()
                 .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
         {
-            return Err("Invalid ACP Registry agent ID".into());
+            return Err(crate::common::messages::code("backend.acp.agentIdInvalid"));
         }
         let registry = acp_fetch_registry().await?;
         let agent = registry
             .agents
             .into_iter()
             .find(|agent| agent.id == agent_id)
-            .ok_or("The selected agent is no longer available in the ACP Registry")?;
+            .ok_or_else(|| crate::common::messages::code("backend.acp.agentUnavailable"))?;
         let distribution = &agent.distribution;
         let (command, package, args) = if let Some(value) = distribution.get("npx") {
             let package = value
                 .get("package")
                 .and_then(Value::as_str)
-                .ok_or("ACP Registry npx entry has no package")?;
+                .ok_or_else(|| crate::common::messages::code("backend.acp.registryInvalid"))?;
             ("npx", package, value.get("args"))
         } else if let Some(value) = distribution.get("uvx") {
             let package = value
                 .get("package")
                 .and_then(Value::as_str)
-                .ok_or("ACP Registry uvx entry has no package")?;
+                .ok_or_else(|| crate::common::messages::code("backend.acp.registryInvalid"))?;
             ("uvx", package, value.get("args"))
         } else {
             return prepare_registry_binary_agent(&app, agent).await;
         };
         if !safe_package_name(package) {
-            return Err("ACP Registry returned an unsupported package name".into());
+            return Err(crate::common::messages::code("backend.acp.registryInvalid"));
         }
         let extra_args = parse_safe_args(args)?;
         let mut launch_args = Vec::with_capacity(extra_args.len() + 2);

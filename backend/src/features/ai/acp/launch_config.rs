@@ -15,13 +15,17 @@ pub(super) fn parse_safe_args(value: Option<&Value>) -> Result<Vec<String>, Stri
     let Some(value) = value else {
         return Ok(Vec::new());
     };
-    let args = value.as_array().ok_or("ACP Registry args are invalid")?;
+    let args = value
+        .as_array()
+        .ok_or_else(|| crate::common::messages::code("backend.acp.registryInvalid"))?;
     if args.len() > 64 {
-        return Err("ACP Registry entry has too many launch arguments".into());
+        return Err(crate::common::messages::code("backend.acp.registryInvalid"));
     }
     args.iter()
         .map(|arg| {
-            let arg = arg.as_str().ok_or("ACP Registry argument is invalid")?;
+            let arg = arg
+                .as_str()
+                .ok_or_else(|| crate::common::messages::code("backend.acp.registryInvalid"))?;
             if arg.len() > 1024
                 || !arg.bytes().all(|byte| {
                     byte.is_ascii_alphanumeric()
@@ -31,7 +35,7 @@ pub(super) fn parse_safe_args(value: Option<&Value>) -> Result<Vec<String>, Stri
                         )
                 })
             {
-                return Err("ACP Registry argument contains unsupported characters".into());
+                return Err(crate::common::messages::code("backend.acp.registryInvalid"));
             }
             Ok(arg.to_owned())
         })
@@ -53,7 +57,9 @@ pub(super) fn validate_config(config: &AcpAgentConfig) -> Result<(), String> {
         || config.command.chars().any(char::is_control)
         || !matches!(config.source.as_str(), "registry" | "custom")
     {
-        return Err("Invalid External Agent configuration".into());
+        return Err(crate::common::messages::code(
+            "backend.acp.agentConfigInvalid",
+        ));
     }
     if config
         .launch_mode
@@ -61,7 +67,9 @@ pub(super) fn validate_config(config: &AcpAgentConfig) -> Result<(), String> {
         .is_some_and(|mode| mode != "binary")
         || (config.launch_mode.as_deref() == Some("binary") && config.source != "registry")
     {
-        return Err("Invalid External Agent launch mode".into());
+        return Err(crate::common::messages::code(
+            "backend.acp.agentLaunchInvalid",
+        ));
     }
     #[cfg(target_os = "windows")]
     if config.launch_mode.as_deref() != Some("binary")
@@ -79,7 +87,9 @@ pub(super) fn validate_config(config: &AcpAgentConfig) -> Result<(), String> {
             })
         }))
     {
-        return Err("The Windows ACP launcher cannot safely pass shell control characters".into());
+        return Err(crate::common::messages::code(
+            "backend.acp.agentLaunchInvalid",
+        ));
     }
     if config.source == "registry" {
         if config.launch_mode.as_deref() == Some("binary") {
@@ -87,10 +97,14 @@ pub(super) fn validate_config(config: &AcpAgentConfig) -> Result<(), String> {
                 || (cfg!(target_os = "windows")
                     && !binary_platform::is_windows_executable(Path::new(&config.command)))
             {
-                return Err("ACP Registry binary command must be an absolute executable path (.exe on Windows)".into());
+                return Err(crate::common::messages::code(
+                    "backend.acp.agentLaunchInvalid",
+                ));
             }
         } else if !matches!(config.command.as_str(), "npx" | "uvx") {
-            return Err("Unsupported ACP Registry launch command".into());
+            return Err(crate::common::messages::code(
+                "backend.acp.agentLaunchInvalid",
+            ));
         }
     }
     Ok(())
@@ -103,20 +117,26 @@ pub fn validate_review_agent_config(config: &AcpAgentConfig) -> Result<(), Strin
 pub fn validate_review_config_overrides(overrides: &Value) -> Result<(), String> {
     let options = overrides
         .as_object()
-        .ok_or("ACP reviewer configuration must be an object")?;
+        .ok_or_else(|| crate::common::messages::code("backend.acp.reviewConfigInvalid"))?;
     if options.len() > 32 {
-        return Err("ACP reviewer configuration contains too many options".into());
+        return Err(crate::common::messages::code(
+            "backend.acp.reviewConfigTooManyOptions",
+        ));
     }
     for (id, value) in options {
         if id.is_empty() || id.len() > 128 || id.chars().any(char::is_control) {
-            return Err("ACP reviewer configuration contains an invalid option ID".into());
+            return Err(crate::common::messages::code(
+                "backend.acp.reviewConfigOptionInvalid",
+            ));
         }
         let valid_value = value.as_bool().is_some()
             || value
                 .as_str()
                 .is_some_and(|value| value.len() <= 256 && !value.chars().any(char::is_control));
         if !valid_value {
-            return Err("ACP reviewer configuration contains an invalid option value".into());
+            return Err(crate::common::messages::code(
+                "backend.acp.reviewConfigOptionInvalid",
+            ));
         }
     }
     Ok(())

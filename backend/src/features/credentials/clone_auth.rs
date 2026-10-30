@@ -18,7 +18,9 @@ pub(crate) fn retrieve_system_global_credential_for_clone(
 ) -> Result<zeroize::Zeroizing<String>, String> {
     https_origin(remote_url)?;
     if expected_username.trim().is_empty() || contains_protocol_control(expected_username) {
-        return Err("The selected Git credential has an invalid account name.".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.credentialAccountInvalid",
+        ));
     }
 
     let git_bin = crate::features::git::runner::get_active_git_path();
@@ -30,13 +32,11 @@ pub(crate) fn retrieve_system_global_credential_for_clone(
         remote_url,
         Instant::now() + Duration::from_secs(5),
     )
-    .map_err(|_| {
-        "Could not read the system/global Git credential helper configuration.".to_string()
-    })?;
+    .map_err(|_| crate::common::messages::code("backend.git.credentialHelperUnavailable"))?;
     if helpers.is_empty() {
-        return Err(
-            "No system/global Git credential helper is configured for this HTTPS host.".to_string(),
-        );
+        return Err(crate::common::messages::code(
+            "backend.git.credentialHelperMissing",
+        ));
     }
 
     let mut command = Command::new(&git_bin);
@@ -69,9 +69,8 @@ pub(crate) fn retrieve_system_global_credential_for_clone(
     );
     input.zeroize();
 
-    let mut output = output.map_err(|_| {
-        "The system/global Git credential helper did not return a credential in time.".to_string()
-    })?;
+    let mut output =
+        output.map_err(|_| crate::common::messages::code("backend.git.credentialHelperTimeout"))?;
     let mut username: Option<String> = None;
     let mut password: Option<String> = None;
     let mut unsupported_auth = false;
@@ -94,16 +93,17 @@ pub(crate) fn retrieve_system_global_credential_for_clone(
         if let Some(mut password) = password {
             password.zeroize();
         }
-        return Err(
-            "The system/global Git credential helper could not provide the selected account."
-                .to_string(),
-        );
+        return Err(crate::common::messages::code(
+            "backend.git.credentialHelperCredentialMissing",
+        ));
     }
     if unsupported_auth {
         if let Some(mut password) = password {
             password.zeroize();
         }
-        return Err("This system credential uses an authentication format that Stage0 cannot apply to a one-time clone yet.".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.credentialAuthUnsupported",
+        ));
     }
 
     let username = username.unwrap_or_default();
@@ -111,17 +111,15 @@ pub(crate) fn retrieve_system_global_credential_for_clone(
         if let Some(mut password) = password {
             password.zeroize();
         }
-        return Err(
-            "The system/global Git helper returned a different account than the one selected."
-                .to_string(),
-        );
+        return Err(crate::common::messages::code(
+            "backend.git.credentialAccountMismatch",
+        ));
     }
     let password = zeroize::Zeroizing::new(password.unwrap_or_default());
     if password.is_empty() || contains_protocol_control(&password) {
-        return Err(
-            "The selected system/global Git credential is not a password-based HTTPS credential."
-                .to_string(),
-        );
+        return Err(crate::common::messages::code(
+            "backend.git.credentialPasswordRequired",
+        ));
     }
 
     Ok(password)

@@ -32,9 +32,9 @@ pub async fn test_ai_review_provider(request: ReviewRequest) -> Result<Value, St
         || calls[0].name != "get_diff"
         || super::schemas::validate(&tools[0]["parameters"], &calls[0].arguments).is_err()
     {
-        return Err(
-            "The provider did not return a valid function call. Check model/tool support.".into(),
-        );
+        return Err(crate::common::messages::code(
+            "backend.review.functionCallingUnsupported",
+        ));
     }
     Ok(
         json!({"success":true,"message":format!("Verified function calling for {} / {} ({} reported tokens). No repository source was sent.",request.provider,request.model,usage)}),
@@ -82,27 +82,33 @@ pub async fn start_ai_review(
             .as_deref()
             .is_some_and(|name| name.len() > 200)
     {
-        return Err("Reviewer identity exceeds the supported length".into());
+        return Err(crate::common::messages::code(
+            "backend.review.providerSettingsInvalid",
+        ));
     }
     if request
         .reviewer_role
         .as_deref()
         .is_some_and(|role| !super::runtime::is_supported_reviewer_role(role))
     {
-        return Err("Unsupported reviewer role".into());
+        return Err(crate::common::messages::code(
+            "backend.review.providerSettingsInvalid",
+        ));
     }
     let (endpoint, run_provider, run_model) = match request.execution_mode.as_str() {
         "provider" => {
             if request.acp_agent.is_some() || request.acp_config_options.is_some() {
-                return Err(
-                    "A built-in provider review cannot include ACP agent configuration".into(),
-                );
+                return Err(crate::common::messages::code(
+                    "backend.review.providerSettingsInvalid",
+                ));
             }
             let endpoint = provider::endpoint(&request)?;
             if request.provider != "ollama"
                 && !crate::features::credentials::ai_key_exists(&request.provider)?
             {
-                return Err("Configure an API key in Preferences before starting a review".into());
+                return Err(crate::common::messages::code(
+                    "backend.review.providerApiKeyRequired",
+                ));
             }
             (endpoint, request.provider.clone(), request.model.clone())
         }
@@ -114,10 +120,14 @@ pub async fn start_ai_review(
                 .acp_agent
                 .as_ref()
                 .map(|agent| agent.id.as_str())
-                .ok_or("Select an installed ACP agent for this reviewer")?;
+                .ok_or_else(|| {
+                    crate::common::messages::code("backend.review.acpAgentRequired")
+                })?;
             let agent = resolve_saved_review_agent(&app, requested_id)?;
             if !request.allow_remote {
-                return Err("Explicit consent is required before sending the review snapshot to an ACP agent".into());
+                return Err(crate::common::messages::code(
+                    "backend.review.acpSourceConsentRequired",
+                ));
             }
             request.acp_agent = Some(agent.clone());
             (
@@ -126,7 +136,11 @@ pub async fn start_ai_review(
                 agent.name.clone(),
             )
         }
-        _ => return Err("Unsupported review execution mode".into()),
+        _ => {
+            return Err(crate::common::messages::code(
+                "backend.review.providerSettingsInvalid",
+            ));
+        }
     };
     let session_id = request.session_id.clone();
     super::runtime::validate_request(&app.state::<Database>(), &request)?;
@@ -170,7 +184,7 @@ pub async fn start_ai_review(
                 super::debug_log::safe_label(&session_id, 80),
                 capture_started.elapsed().as_millis()
             ));
-            return Err("Could not capture Git snapshot".into());
+            return Err(crate::common::messages::code("backend.errors.review"));
         }
     };
     super::debug_log::log(format_args!(
@@ -181,7 +195,10 @@ pub async fn start_ai_review(
         snapshot.excluded_files.len()
     ));
     if snapshot.changed_files.len() > 5000 {
-        return Err("More than 5,000 changed files; split the review into smaller changes".into());
+        return Err(crate::common::messages::message(
+            "backend.review.changedFilesLimit",
+            json!({ "limit": 5000 }),
+        ));
     }
     let id = uuid::Uuid::new_v4().to_string();
     let cancellation = app.state::<ReviewCoordinator>().reserve(&session_id, &id)?;

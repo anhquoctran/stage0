@@ -10,24 +10,23 @@ pub(super) fn prepare_clone_credential(
     let target_origin = crate::features::credentials::https_origin(remote_url)?;
     let credential = db
         .get_git_credential_metadata(credential_id)
-        .map_err(|_| {
-            "The selected Git credential metadata could not be loaded from SQLite".to_string()
-        })?
-        .ok_or_else(|| {
-            "The selected Git credential is no longer available. Refresh the list and try again."
-                .to_string()
-        })?;
+        .map_err(|_| crate::common::messages::code("backend.credentials.loadFailed"))?
+        .ok_or_else(|| crate::common::messages::code("backend.credentials.notFound"))?;
     let token_ref = db
         .get_git_credential_token_ref(credential_id)
-        .map_err(|_| "The selected Git credential keychain mapping is unavailable".to_string())?
-        .ok_or_else(|| "The selected Git credential keychain mapping is unavailable".to_string())?;
+        .map_err(|_| crate::common::messages::code("backend.credentials.loadFailed"))?
+        .ok_or_else(|| crate::common::messages::code("backend.credentials.loadFailed"))?;
 
     if credential.token_type == "ssh_key" {
-        return Err("SSH key credentials cannot be selected for an HTTPS clone.".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.httpsCredentialRequired",
+        ));
     }
     let credential_origin = crate::features::credentials::https_origin(&credential.server_url)?;
     if credential_origin != target_origin {
-        return Err("The selected Git credential belongs to a different HTTPS host.".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.credentialHostMismatch",
+        ));
     }
     if credential.account_name.trim().is_empty()
         || credential
@@ -35,14 +34,16 @@ pub(super) fn prepare_clone_credential(
             .bytes()
             .any(|byte| byte == b'\n' || byte == b'\r' || byte == 0)
     {
-        return Err("The selected Git credential has an invalid account name.".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.credentialAccountInvalid",
+        ));
     }
 
     let (token_ref, delete_secret_on_drop) = match credential.source.as_str() {
         "stage0" => {
             let secret =
                 crate::features::credentials::retrieve_secret(&token_ref).map_err(|_| {
-                    "The selected credential is missing from the OS credential store.".to_string()
+                    crate::common::messages::code("backend.git.credentialSecretMissing")
                 })?;
             drop(Zeroizing::new(secret));
             (token_ref, false)
@@ -56,7 +57,11 @@ pub(super) fn prepare_clone_credential(
             crate::features::credentials::store_secret(&token_ref, secret.as_str())?;
             (token_ref, true)
         }
-        _ => return Err("The selected Git credential source is unsupported.".to_string()),
+        _ => {
+            return Err(crate::common::messages::code(
+                "backend.git.credentialSourceUnsupported",
+            ));
+        }
     };
 
     Ok(CloneCredentialLease {

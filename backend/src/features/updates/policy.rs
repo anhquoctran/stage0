@@ -38,10 +38,9 @@ pub(super) fn validate_download(url: &tauri::Url, version: &str) -> Result<(), S
         || !url.path().starts_with(&prefix)
         || url.path().len() <= prefix.len()
     {
-        return Err(
-            "The update package must belong to this version of the official Stage0 GitHub release."
-                .into(),
-        );
+        return Err(crate::common::messages::code(
+            "backend.updates.packageInvalid",
+        ));
     }
     Ok(())
 }

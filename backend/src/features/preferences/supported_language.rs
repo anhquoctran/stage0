@@ -1,6 +1,6 @@
-pub(crate) const SUPPORTED_APP_LANGUAGES: [&str; 14] = [
+pub(crate) const SUPPORTED_APP_LANGUAGES: [&str; 15] = [
     "en", "vi", "ja", "ko", "zh-Hans", "es", "pt-BR", "de", "fr", "ru", "zh-Hant", "it", "pt-PT",
-    "ar",
+    "ar", "hi",
 ];
 
 pub(crate) const DEFAULT_APP_LANGUAGE: &str = "en";

@@ -11,38 +11,47 @@ pub fn validate_remote_url(value: &str) -> Result<(), String> {
         || value.contains('?')
         || value.contains('#')
     {
-        return Err("Remote URL must be a non-empty HTTPS or SSH URL without whitespace, query, or fragment data".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.remoteUrlInvalid",
+        ));
     }
 
     if value.starts_with("git@") {
         let Some((host, path)) = value[4..].rsplit_once(':') else {
-            return Err("SSH remote URL must include a host and repository path".to_string());
+            return Err(crate::common::messages::code(
+                "backend.git.remoteUrlInvalid",
+            ));
         };
         if path.is_empty() || host.contains('@') {
-            return Err("SSH remote URL must include a valid host and repository path".to_string());
+            return Err(crate::common::messages::code(
+                "backend.git.remoteUrlInvalid",
+            ));
         }
         validate_ssh_host(host, false)?;
         return Ok(());
     }
 
     let Some((scheme, remainder)) = value.split_once("://") else {
-        return Err("Remote URL must use HTTPS or SSH (for example, https://host/repo.git or git@host:repo.git)".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.remoteUrlInvalid",
+        ));
     };
     if !matches!(
         scheme.to_ascii_lowercase().as_str(),
         "https" | "http" | "ssh"
     ) {
-        return Err("Only HTTPS, HTTP, and SSH Git remote URLs are supported".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.remoteUrlInvalid",
+        ));
     }
 
     let authority = remainder.split('/').next().unwrap_or_default();
     let host = if scheme.eq_ignore_ascii_case("ssh") {
         if let Some((user, host)) = authority.split_once('@') {
             if !is_safe_ssh_user(user) || host.is_empty() || host.contains('@') {
-                return Err(
-                    "SSH remote URL must not contain a password or malformed user information"
-                        .to_string(),
-                );
+                return Err(crate::common::messages::code(
+                    "backend.git.remoteUrlInvalid",
+                ));
             }
             host
         } else {
@@ -50,15 +59,16 @@ pub fn validate_remote_url(value: &str) -> Result<(), String> {
         }
     } else {
         if authority.contains('@') {
-            return Err(
-                "Remote URL must not embed credentials; use the OS credential store instead"
-                    .to_string(),
-            );
+            return Err(crate::common::messages::code(
+                "backend.git.remoteUrlInvalid",
+            ));
         }
         authority
     };
     if host.is_empty() {
-        return Err("Remote URL must have a host and must not embed credentials; use the OS credential store instead".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.remoteUrlInvalid",
+        ));
     }
     if scheme.eq_ignore_ascii_case("ssh") {
         validate_ssh_host(host, true)?;
@@ -66,7 +76,9 @@ pub fn validate_remote_url(value: &str) -> Result<(), String> {
             .split_once('/')
             .map_or(true, |(_, path)| path.is_empty())
         {
-            return Err("SSH remote URL must include a repository path".to_string());
+            return Err(crate::common::messages::code(
+                "backend.git.remoteUrlInvalid",
+            ));
         }
     }
 

@@ -5,7 +5,7 @@ pub(super) fn validate_remote_name(repo_path: &str, name: &str) -> Result<(), St
     validate_remote_name_syntax(name)?;
     let remotes = list_remotes(repo_path)?;
     if !remotes.iter().any(|remote| remote == name) {
-        return Err("The selected Git remote does not exist".to_string());
+        return Err(crate::common::messages::code("backend.git.remoteMissing"));
     }
     Ok(())
 }
@@ -19,7 +19,9 @@ pub(super) fn validate_fetch_remote_url(repo_path: &str, name: &str) -> Result<(
         .filter(|url| !url.is_empty())
         .collect();
     if urls.is_empty() {
-        return Err("The selected Git remote has no fetch URL".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.remoteFetchUrlMissing",
+        ));
     }
     for url in urls {
         validate_remote_url(url)?;
@@ -44,18 +46,24 @@ pub(super) fn validate_remote_name_syntax(name: &str) -> Result<(), String> {
             .chars()
             .any(|c| c.is_control() || c.is_whitespace() || c == '/')
     {
-        return Err("Invalid Git remote name".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.remoteNameInvalid",
+        ));
     }
     Ok(())
 }
 
 pub(super) fn validate_branch_name(repo_path: &str, name: &str) -> Result<(), String> {
     if name.is_empty() || name.starts_with('-') {
-        return Err("Invalid Git branch name".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.branchNameInvalid",
+        ));
     }
     let check = run_git(repo_path, &["check-ref-format", "--branch", name])?;
     if !check.success {
-        return Err("Invalid Git branch name".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.branchNameInvalid",
+        ));
     }
     Ok(())
 }
@@ -65,12 +73,12 @@ pub(super) fn validate_tag_name(repo_path: &str, name: &str) -> Result<(), Strin
         || name.starts_with('-')
         || name.chars().any(|c| c.is_control() || c.is_whitespace())
     {
-        return Err("Invalid Git tag name".to_string());
+        return Err(crate::common::messages::code("backend.git.tagNameInvalid"));
     }
     let full_ref = format!("refs/tags/{}", name);
     let check = run_git(repo_path, &["check-ref-format", &full_ref])?;
     if !check.success {
-        return Err("Invalid Git tag name".to_string());
+        return Err(crate::common::messages::code("backend.git.tagNameInvalid"));
     }
     Ok(())
 }

@@ -16,7 +16,17 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
                 logical.len() > 280
                     || !(matches!(
                         logical.strip_prefix("ai/"),
-                        Some("openai" | "anthropic" | "gemini" | "xai_grok" | "ollama" | "custom")
+                        Some(
+                            "openai"
+                                | "anthropic"
+                                | "gemini"
+                                | "xai_grok"
+                                | "deepseek"
+                                | "qwen"
+                                | "kimi"
+                                | "ollama"
+                                | "custom"
+                        )
                     ) || logical.strip_prefix("mcp_server/").is_some_and(|id| {
                         !id.is_empty() && id.len() <= 256 && !id.chars().any(char::is_control)
                     }))
@@ -103,6 +113,9 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
                     "anthropic",
                     "gemini",
                     "xai_grok",
+                    "deepseek",
+                    "qwen",
+                    "kimi",
                     "github_copilot",
                     "ollama",
                     "custom",

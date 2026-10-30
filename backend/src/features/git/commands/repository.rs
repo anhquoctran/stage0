@@ -106,13 +106,15 @@ pub async fn validate_repo(repo_path: String) -> Result<RepoValidation, String> 
         }
 
         // Check directory read permission
-        if let Err(e) = std::fs::read_dir(path) {
+        if std::fs::read_dir(path).is_err() {
             return Ok(RepoValidation {
                 is_valid: false,
                 exists: true,
                 has_git: false,
                 has_permission: false,
-                error_message: Some(format!("Permission denied: {}", e)),
+                error_message: Some(crate::common::messages::code(
+                    "backend.repository.permission",
+                )),
             });
         }
 
@@ -128,23 +130,27 @@ pub async fn validate_repo(repo_path: String) -> Result<RepoValidation, String> 
         }
 
         if git_dir.is_dir() {
-            if let Err(e) = std::fs::read_dir(&git_dir) {
+            if std::fs::read_dir(&git_dir).is_err() {
                 return Ok(RepoValidation {
                     is_valid: false,
                     exists: true,
                     has_git: true,
                     has_permission: false,
-                    error_message: Some(format!("Permission denied reading .git directory: {}", e)),
+                    error_message: Some(crate::common::messages::code(
+                        "backend.repository.permission",
+                    )),
                 });
             }
         } else if git_dir.is_file() {
-            if let Err(e) = std::fs::read_to_string(&git_dir) {
+            if std::fs::read_to_string(&git_dir).is_err() {
                 return Ok(RepoValidation {
                     is_valid: false,
                     exists: true,
                     has_git: true,
                     has_permission: false,
-                    error_message: Some(format!("Permission denied reading .git file: {}", e)),
+                    error_message: Some(crate::common::messages::code(
+                        "backend.repository.permission",
+                    )),
                 });
             }
         }
@@ -157,12 +163,12 @@ pub async fn validate_repo(repo_path: String) -> Result<RepoValidation, String> 
                 has_permission: true,
                 error_message: None,
             }),
-            Err(e) => Ok(RepoValidation {
+            Err(_) => Ok(RepoValidation {
                 is_valid: false,
                 exists: true,
                 has_git: true,
                 has_permission: false,
-                error_message: Some(format!("Git error: {}", e)),
+                error_message: Some(crate::common::messages::code("backend.repository.notGit")),
             }),
         }
     }
