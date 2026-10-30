@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trash2 } from '../../../../common/components/icons/Trash2';
 import { formatTime } from '@/common/utils/dateTime';
 import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
@@ -8,13 +9,14 @@ export const GuardrailsAuditLogSection: React.FC<{
   auditLogs: GuardrailAuditEvent[];
   onClearAuditLog: () => void;
 }> = ({ auditLogs, onClearAuditLog }) => {
+  const { t } = useTranslation();
   useDateTimeLanguage();
   return (
     <div className="p-4 bg-surface0/60 border border-surface1 space-y-3 rounded-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h4 className="text-xs font-bold text-text">Guardrails Audit Trail (Recent Activity)</h4>
-          <span className="text-[10px] font-mono text-subtext0">({auditLogs.length} events)</span>
+          <h4 className="text-xs font-bold text-text">{t('ai.guardrails.auditTrail')}</h4>
+          <span className="text-[10px] font-mono text-subtext0">{t('ai.guardrails.eventCount', { count: auditLogs.length })}</span>
         </div>
 
         {auditLogs.length > 0 && (
@@ -24,14 +26,14 @@ export const GuardrailsAuditLogSection: React.FC<{
             className="text-xs text-subtext0 hover:text-red flex items-center gap-1 cursor-pointer rounded-sm"
           >
             <Trash2 className="w-3 h-3" />
-            <span>Clear Log</span>
+            <span>{t('ai.guardrails.clearLog')}</span>
           </button>
         )}
       </div>
 
       {auditLogs.length === 0 ? (
         <div className="py-6 text-center text-xs text-subtext0/60 italic">
-          No tool execution attempts recorded yet.
+          {t('ai.guardrails.noAuditEvents')}
         </div>
       ) : (
         <div className="border border-surface1 overflow-hidden">
@@ -41,11 +43,11 @@ export const GuardrailsAuditLogSection: React.FC<{
                 <div className="flex items-start md:items-center gap-2.5">
                   {event.allowed ? (
                     <span className="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 text-white font-mono rounded-sm shadow-xs">
-                      PASS
+                      {t('ai.guardrails.pass')}
                     </span>
                   ) : (
                     <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white font-mono rounded-sm shadow-xs">
-                      BLOCK
+                      {t('ai.guardrails.block')}
                     </span>
                   )}
 
@@ -64,7 +66,7 @@ export const GuardrailsAuditLogSection: React.FC<{
 
                 <div className="flex items-center gap-3 text-end">
                   <span className="text-[10px] font-mono text-subtext0">
-                    Risk: <span className={event.risk_score > 50 ? 'text-red font-bold' : 'text-green'}>{event.risk_score}</span>
+                    {t('ai.guardrails.risk')}: <span className={event.risk_score > 50 ? 'text-red font-bold' : 'text-green'}>{event.risk_score}</span>
                   </span>
                   <span className="text-[10px] font-mono text-subtext0">
                     {formatTime(event.timestamp)}

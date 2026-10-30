@@ -27,6 +27,7 @@ export function BlameToolbar({
   setIsStatsOpen,
   isStatsOpen,
 }: BlameToolbarProps) {
+  const { t } = useTranslation();
   return (
     <div className="h-10 border-b border-surface0 bg-base px-3 flex items-center justify-between shrink-0 text-xs gap-3 rounded-sm">
       {/* Left: Revision Selector & Whitespace Toggle */}
@@ -37,7 +38,7 @@ export function BlameToolbar({
             type="button"
             onClick={() => setIsRevisionDropdownOpen(!isRevisionDropdownOpen)}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
-            title="Select branch or revision to blame"
+            title={t('git.blame.selectRevision')}
           >
             <GitBranch className="w-3.5 h-3.5 text-subtext0 shrink-0" />
             <span className="font-mono text-text font-medium truncate max-w-[150px]">
@@ -49,7 +50,7 @@ export function BlameToolbar({
           {isRevisionDropdownOpen && (
             <div className="absolute start-0 top-full mt-1 w-64 shadow-2xl bg-mantle border border-surface0 py-1 z-50 rounded-sm text-xs animate-in fade-in duration-75">
               <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/60 mb-1 rounded-sm">
-                Blame Revision
+                {t('git.blame.blameRevision')}
               </div>
 
               {compareBranch && (
@@ -65,7 +66,7 @@ export function BlameToolbar({
                       : 'text-text'
                   }`}
                 >
-                  <span className="truncate">Compare: {compareBranch}</span>
+                  <span className="truncate">{t('git.blame.compare', { branch: compareBranch })}</span>
                   {blameRevision === compareBranch && <Check className="w-3.5 h-3.5 text-text" />}
                 </button>
               )}
@@ -83,7 +84,7 @@ export function BlameToolbar({
                       : 'text-text'
                   }`}
                 >
-                  <span className="truncate">Base: {baseBranch}</span>
+                  <span className="truncate">{t('git.blame.base', { branch: baseBranch })}</span>
                   {blameRevision === baseBranch && <Check className="w-3.5 h-3.5 text-text" />}
                 </button>
               )}
@@ -98,7 +99,7 @@ export function BlameToolbar({
                   blameRevision === 'HEAD' ? 'bg-surface0 text-text font-semibold' : 'text-text'
                 }`}
               >
-                <span>HEAD (Working Commit)</span>
+                <span>{t('git.blame.headWorkingCommit')}</span>
                 {blameRevision === 'HEAD' && <Check className="w-3.5 h-3.5 text-text" />}
               </button>
 
@@ -106,7 +107,7 @@ export function BlameToolbar({
                 <>
                   <div className="my-1 border-t border-surface0" />
                   <div className="px-3 py-0.5 text-[9px] font-bold uppercase tracking-wider text-subtext0">
-                    Local Branches
+                    {t('git.blame.localBranches')}
                   </div>
                   <div className="max-h-36 overflow-y-auto">
                     {branches.local.map((b) => (
@@ -135,7 +136,7 @@ export function BlameToolbar({
         {/* Ignore Whitespace Toggle (-w) */}
         <label
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
-          title="Ignore whitespace changes when attributing lines (-w)"
+          title={t('git.blame.ignoreWhitespaceTooltip')}
         >
           <input
             type="checkbox"
@@ -143,7 +144,7 @@ export function BlameToolbar({
             onChange={(e) => setBlameIgnoreWhitespace(e.target.checked)}
             className="accent-text cursor-pointer w-3.5 h-3.5"
           />
-          <span className="text-[11px] text-subtext0 hover:text-text">Ignore Whitespace</span>
+          <span className="text-[11px] text-subtext0 hover:text-text">{t('git.blame.ignoreWhitespace')}</span>
         </label>
 
         {/* Refresh Button */}
@@ -152,7 +153,7 @@ export function BlameToolbar({
           onClick={() => fetchFileBlame()}
           disabled={isBlameLoading}
           className="p-1.5 rounded-sm bg-mantle hover:bg-surface0 border border-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer disabled:opacity-40"
-          title="Refresh Git Blame"
+          title={t('git.blame.refreshBlame')}
         >
           <RotateCw className={`w-3.5 h-3.5 ${isBlameLoading ? 'animate-spin' : ''}`} />
         </button>
@@ -165,7 +166,7 @@ export function BlameToolbar({
           <Search className="w-3.5 h-3.5 absolute start-2 text-subtext0 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search blame (code, author, commit)..."
+            placeholder={t('git.blame.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="ps-7 pe-6 py-1 w-56 text-xs bg-mantle border border-surface0 rounded-sm text-text placeholder-subtext0 focus:outline-none focus:border-surface2 transition-colors font-mono"
@@ -188,21 +189,21 @@ export function BlameToolbar({
               type="button"
               onClick={() => setIsStatsOpen(!isStatsOpen)}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-mantle hover:bg-surface0 border border-surface0 text-xs text-text transition-colors cursor-pointer"
-              title="View contributor breakdown"
+              title={t('git.blame.contributorBreakdown')}
             >
               <Users className="w-3.5 h-3.5 text-subtext0 shrink-0" />
               <span className="font-medium text-subtext1">
                 {blamePayload.author_stats.length}{' '}
-                {blamePayload.author_stats.length === 1 ? 'author' : 'authors'}
+                {blamePayload.author_stats.length === 1 ? t('git.blame.author') : t('git.blame.authors')}
               </span>
-              <span className="text-subtext0 font-mono">({blamePayload.total_lines} lines)</span>
+              <span className="text-subtext0 font-mono">({t('git.blame.linesCount', { count: blamePayload.total_lines })})</span>
               <ChevronDown className="w-3 h-3 text-subtext0 shrink-0" />
             </button>
 
             {isStatsOpen && (
               <div className="absolute end-0 top-full mt-1 w-72 shadow-2xl bg-mantle border border-surface0 py-2 px-3 z-50 rounded-sm text-xs animate-in fade-in duration-75">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-subtext0 border-b border-surface0/60 pb-1 mb-2">
-                  Line Attribution Breakdown
+                  {t('git.blame.lineAttributionBreakdown')}
                 </div>
                 <div className="space-y-2 max-h-56 overflow-y-auto pe-1">
                   {blamePayload.author_stats.map((st) => (
@@ -237,3 +238,4 @@ export function BlameToolbar({
     </div>
   );
 }
+import { useTranslation } from 'react-i18next';

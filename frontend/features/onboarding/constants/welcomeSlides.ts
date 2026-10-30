@@ -9,53 +9,44 @@ export const WELCOME_SLIDES = [
   },
   {
     id: 'welcome',
-    stepLabel: 'Workspace',
-    eyebrow: 'WELCOME TO STAGE0',
-    title: 'Welcome to Stage0',
-    description:
-      'Compare branches, spot merge conflicts in memory, and keep local Virtual MR reviews organized without touching your working tree.',
-    caption:
-      'System theme and Stage0 shortcuts are selected by default. You can customize fonts and more anytime in Preferences.',
+    stepLabel: 'onboarding.welcomeSlides.workspaceStep',
+    eyebrow: 'onboarding.welcomeSlides.workspaceEyebrow',
+    title: 'onboarding.welcomeSlides.workspaceTitle',
+    description: 'onboarding.welcomeSlides.workspaceDescription',
+    caption: 'onboarding.welcomeSlides.workspaceCaption',
     highlights: [
       {
-        title: 'Compare without checkout',
-        description:
-          'Inspect diffs and likely merge conflicts between any two branches while keeping your working copy clean.',
+        title: 'onboarding.welcomeSlides.compareHighlightTitle',
+        description: 'onboarding.welcomeSlides.compareHighlightDescription',
       },
       {
-        title: 'Local Virtual MRs',
-        description:
-          'Keep descriptions, labels, inline comments, and AI review runs together on your machine.',
+        title: 'onboarding.welcomeSlides.localMrsHighlightTitle',
+        description: 'onboarding.welcomeSlides.localMrsHighlightDescription',
       },
     ],
   },
   {
     id: 'ai-setup',
-    stepLabel: 'AI Connection',
-    eyebrow: 'REQUIRED STEP 1 OF 2',
-    title: 'Set up your AI connection',
-    description:
-      'Connect an LLM provider or install an ACP agent. Your connection is saved automatically.',
-    caption:
-      'API keys are stored in your OS keychain. Saving a connection does not send repository code or start a review.',
+    stepLabel: 'onboarding.welcomeSlides.aiStep',
+    eyebrow: 'onboarding.welcomeSlides.aiEyebrow',
+    title: 'onboarding.welcomeSlides.aiTitle',
+    description: 'onboarding.welcomeSlides.aiDescription',
+    caption: 'onboarding.welcomeSlides.aiCaption',
   },
   {
     id: 'reviewer-setup',
-    stepLabel: 'Reviewer Bot',
-    eyebrow: 'REQUIRED STEP 2 OF 2',
-    title: 'Create your first reviewer bot',
-    description:
-      'Create an enabled custom reviewer bot powered by your AI connection to unlock code reviews.',
-    caption:
-      'You can add more specialized reviewer bots or customize instructions later in AI Preferences.',
+    stepLabel: 'onboarding.welcomeSlides.reviewerStep',
+    eyebrow: 'onboarding.welcomeSlides.reviewerEyebrow',
+    title: 'onboarding.welcomeSlides.reviewerTitle',
+    description: 'onboarding.welcomeSlides.reviewerDescription',
+    caption: 'onboarding.welcomeSlides.reviewerCaption',
   },
   {
     id: 'repository',
-    stepLabel: 'Ready',
-    eyebrow: 'YOUR WORKSPACE IS READY',
-    title: 'Start with a repository',
-    description:
-      'Configure system startup options, then open a local Git project or clone a remote repository to begin your first review.',
-    caption: 'Your appearance, keymap, and startup choices are saved when you continue.',
+    stepLabel: 'onboarding.welcomeSlides.readyStep',
+    eyebrow: 'onboarding.welcomeSlides.readyEyebrow',
+    title: 'onboarding.welcomeSlides.readyTitle',
+    description: 'onboarding.welcomeSlides.readyDescription',
+    caption: 'onboarding.welcomeSlides.readyCaption',
   },
 ] as const;

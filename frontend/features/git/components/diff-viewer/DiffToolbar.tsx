@@ -11,6 +11,7 @@ import { History } from '../../../../common/components/icons/History';
 import { GitCommit } from '../../../../common/components/icons/GitCommit';
 import { GitMerge } from '../../../../common/components/icons/GitMerge';
 import { useCommandShortcut } from '../../../../core/hooks/useCommandShortcut';
+import { useTranslation } from 'react-i18next';
 import { FileActionMenu } from '../FileActionMenu';
 import type { ChangedFile } from '../../types/ChangedFile';
 import type { MrDiffPayload } from '../../types/MrDiffPayload';
@@ -58,6 +59,7 @@ export const DiffToolbar: React.FC<{
 }) => {
   const pathParts = selectedFile.path.split('/');
   const { title: commandTitle } = useCommandShortcut();
+  const { t } = useTranslation();
   const fileName = pathParts.pop();
   const dirPath = pathParts.join('/');
 
@@ -77,7 +79,7 @@ export const DiffToolbar: React.FC<{
           </span>
           {selectedFile.old_path && (
             <span className="text-subtext1 text-[11px] truncate ms-1 max-xl:hidden">
-              (renamed from {selectedFile.old_path})
+              ({t('git.diff.toolbar.renamedFrom', { path: selectedFile.old_path })})
             </span>
           )}
         </div>
@@ -85,7 +87,7 @@ export const DiffToolbar: React.FC<{
         <button
           type="button"
           onClick={onCopyPath}
-          title={commandTitle('copy_rel_path', 'Copy relative file path')}
+          title={commandTitle('copy_rel_path', t('menu.commands.copy_rel_path'))}
           className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors cursor-pointer rounded-sm"
         >
           {copied ? (
@@ -100,13 +102,13 @@ export const DiffToolbar: React.FC<{
         {selectedFile.is_conflicted && (
           <div className="flex items-center gap-1 text-[10px] text-red bg-red/20 border border-red/40 px-2 py-0.5 font-bold uppercase conflict-pulse rounded-sm">
             <AlertTriangle className="w-3.5 h-3.5 text-red" />
-            <span>Conflict</span>
+            <span>{t('git.conflicts.unmerged')}</span>
           </div>
         )}
 
         <div className="flex items-center gap-1.5 font-mono text-xs ms-1 font-semibold max-xl:hidden">
           {selectedFile.is_binary ? (
-            <span className="text-amber-400">Binary · preview unavailable</span>
+            <span className="text-amber-400">{t('git.diff.binary.title')}</span>
           ) : (
             <>
               {selectedFile.additions > 0 && (
@@ -129,19 +131,19 @@ export const DiffToolbar: React.FC<{
               disabled={!hasPrev}
               onClick={selectPrevFile}
               className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer rounded-sm"
-              title={commandTitle('previous_file', 'Previous file')}
+              title={commandTitle('previous_file', t('menu.commands.previous_file'))}
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <span className="text-[11px] text-subtext1 font-mono px-1.5">
-              {currentFileIndex + 1} of {diffPayload.files.length}
+              {currentFileIndex + 1} / {diffPayload.files.length}
             </span>
             <button
               type="button"
               disabled={!hasNext}
               onClick={selectNextFile}
               className="p-1 text-subtext1 hover:text-text hover:bg-surface1 transition-colors disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer rounded-sm"
-              title={commandTitle('next_file', 'Next file')}
+              title={commandTitle('next_file', t('menu.commands.next_file'))}
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -155,7 +157,7 @@ export const DiffToolbar: React.FC<{
               type="button"
               onClick={selectPrevConflictFile}
               className="p-0.5 text-red hover:bg-red/20 transition-colors cursor-pointer rounded-sm"
-              title="Previous conflict file"
+              title={t('git.conflicts.jumpTitle')}
             >
               <ChevronLeft className="w-3 h-3" />
             </button>
@@ -163,17 +165,17 @@ export const DiffToolbar: React.FC<{
               type="button"
               onClick={selectNextConflictFile}
               className="text-[11px] font-mono font-bold text-red hover:underline px-0.5 cursor-pointer rounded-sm"
-              title={commandTitle('next_conflict', 'Jump to next conflict file')}
+              title={commandTitle('next_conflict', t('git.diff.toolbar.nextConflictFile'))}
             >
               {selectedFile?.is_conflicted && currentConflictIndex !== -1
-                ? `Conflict ${currentConflictIndex + 1}/${conflictedFiles.length}`
-                : commandTitle('next_conflict', `${conflictedFiles.length} Conflict${conflictedFiles.length > 1 ? 's' : ''}`)}
+                ? `${currentConflictIndex + 1} / ${conflictedFiles.length}`
+                : commandTitle('next_conflict', t('git.diff.conflict.threeWayCount', { count: conflictedFiles.length }))}
             </button>
             <button
               type="button"
               onClick={selectNextConflictFile}
               className="p-0.5 text-red hover:bg-red/20 transition-colors cursor-pointer rounded-sm"
-              title={commandTitle('next_conflict', 'Next conflict file')}
+              title={commandTitle('next_conflict', t('git.conflicts.jumpTitle'))}
             >
               <ChevronRight className="w-3 h-3" />
             </button>
@@ -194,10 +196,10 @@ export const DiffToolbar: React.FC<{
                   ? 'bg-red-600 text-white shadow-xs'
                   : 'bg-surface1 text-white hover:bg-surface2'
               }`}
-              title="Inspect 3-way collision blocks side-by-side"
+              title={t('git.diff.conflict.inspectThreeWayTitle')}
             >
               <GitMerge className="w-3.5 h-3.5 text-white" />
-              <span className="max-md:hidden">Conflicts 3-Way</span>
+              <span className="max-md:hidden">{t('git.diff.conflict.threeWayView')}</span>
             </button>
           )}
 
@@ -209,10 +211,10 @@ export const DiffToolbar: React.FC<{
                 ? 'bg-surface2 text-white shadow-xs'
                 : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
             }`}
-            title="Inspect file diff"
+            title={t('preferences.headers.editor-diff.title')}
           >
             <FileCode className="w-3.5 h-3.5 text-white" />
-            <span className="max-md:hidden">Diff</span>
+            <span className="max-md:hidden">{t('preferences.nav.editor-diff')}</span>
           </button>
           {!selectedFile.is_binary && (
             <button
@@ -223,10 +225,10 @@ export const DiffToolbar: React.FC<{
                   ? 'bg-surface2 text-white shadow-xs'
                   : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
               }`}
-              title={commandTitle('view_blame', 'Inspect line-by-line git blame')}
+              title={commandTitle('view_blame', t('menu.commands.view_blame'))}
             >
               <History className="w-3.5 h-3.5 text-white" />
-              <span className="max-md:hidden">Blame</span>
+              <span className="max-md:hidden">{t('menu.commands.view_blame')}</span>
             </button>
           )}
         </div>
@@ -242,10 +244,10 @@ export const DiffToolbar: React.FC<{
                   ? 'bg-surface2 text-white shadow-xs'
                   : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
               }`}
-              title="Side-by-side split view"
+              title={t('menu.commands.view_split')}
             >
               <Columns2 className="w-3.5 h-3.5 text-white" />
-              <span className="max-md:hidden">Split</span>
+              <span className="max-md:hidden">{t('common.layout.viewSplit')}</span>
             </button>
             <button
               type="button"
@@ -255,10 +257,10 @@ export const DiffToolbar: React.FC<{
                   ? 'bg-surface2 text-white shadow-xs'
                   : 'bg-surface0 text-white/80 hover:text-white hover:bg-surface1'
               }`}
-              title="Inline unified view"
+              title={t('menu.commands.view_unified')}
             >
               <Rows2 className="w-3.5 h-3.5 text-white" />
-              <span className="max-md:hidden">Unified</span>
+              <span className="max-md:hidden">{t('common.layout.viewUnified')}</span>
             </button>
           </div>
         )}
@@ -273,10 +275,10 @@ export const DiffToolbar: React.FC<{
                 ? 'bg-surface2 text-white shadow-xs'
                 : 'bg-surface1 text-white/80 hover:text-white hover:bg-surface2'
             }`}
-            title={commandTitle('toggle_inline_blame', `Toggle inline git blame on active line - ${showInlineBlame ? 'Active' : 'Disabled'}`)}
+            title={commandTitle('toggle_inline_blame', t('menu.commands.toggle_inline_blame'))}
           >
             <GitCommit className="w-3.5 h-3.5 text-white" />
-            <span className="max-md:hidden">Inline Blame</span>
+            <span className="max-md:hidden">{t('menu.commands.toggle_inline_blame')}</span>
           </button>
         )}
       </div>

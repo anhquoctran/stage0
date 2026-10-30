@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { SettingRow } from '../SettingRow';
 import { Monitor } from '../../../../common/components/icons/Monitor';
 import { Sun } from '../../../../common/components/icons/Sun';
@@ -16,18 +17,19 @@ export const PreferencesThemeTab: React.FC<{
   draftThemeId,
   setDraftThemeId,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       <SettingRow
-        title="Interface Theme Mode"
-        description="Choose whether to follow your system color scheme or lock to light or dark mode."
+        title={t('preferences.theme.modeTitle')}
+        description={t('preferences.theme.modeDescription')}
       >
         <div className="flex items-center gap-1.5 p-0.5 bg-surface0/60 rounded border border-surface1/40">
           {(
             [
-              { id: 'system', label: 'System', icon: Monitor },
-              { id: 'light', label: 'Light', icon: Sun },
-              { id: 'dark', label: 'Dark', icon: Moon },
+              { id: 'system', label: t('preferences.theme.system'), icon: Monitor },
+              { id: 'light', label: t('preferences.theme.light'), icon: Sun },
+              { id: 'dark', label: t('preferences.theme.dark'), icon: Moon },
             ] as const
           ).map(({ id, label, icon: Icon }) => (
             <button
@@ -48,13 +50,13 @@ export const PreferencesThemeTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="Color Palette"
-        description="Catppuccin flavour used when dark mode is active."
+        title={t('preferences.theme.paletteTitle')}
+        description={t('preferences.theme.paletteDescription')}
       >
         <div className="flex items-center gap-2">
           {[
-            { id: 'catppuccin-mocha', label: 'Mocha', color: '#1e1e2e' },
-            { id: 'catppuccin-latte', label: 'Latte', color: '#eff1f5' },
+            { id: 'catppuccin-mocha', label: t('preferences.theme.mocha'), color: '#1e1e2e' },
+            { id: 'catppuccin-latte', label: t('preferences.theme.latte'), color: '#eff1f5' },
           ].map(({ id, label, color }) => (
             <button
               key={id}

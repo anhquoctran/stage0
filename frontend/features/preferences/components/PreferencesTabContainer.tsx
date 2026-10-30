@@ -89,6 +89,7 @@ export function PreferencesTabContainer({
   setDraftGitBinaryId,
   setDraftGitBinaryPath,
 }: PreferencesTabContainerProps) {
+  const { t } = useTranslation();
   const isKnownTab = Boolean(
     currentTabId &&
       [
@@ -132,9 +133,9 @@ export function PreferencesTabContainer({
           <div className="w-16 h-16 bg-surface0/60 border border-surface1 flex items-center justify-center text-subtext0 mb-4 rounded-sm shadow-xs">
             <Cog className="w-8 h-8 text-subtext1" />
           </div>
-          <h3 className="text-base font-bold mb-1.5">No preference selected</h3>
+          <h3 className="text-base font-bold mb-1.5">{t('preferences.empty.title')}</h3>
           <p className="text-xs text-subtext0 max-w-sm mb-6 leading-relaxed">
-            Select a setting category from the navigation sidebar on the left, or search settings using the search box above.
+            {t('preferences.empty.description')}
           </p>
           {/* <button
             type="button"
@@ -342,3 +343,4 @@ export function PreferencesTabContainer({
     </div>
   );
 }
+import { useTranslation } from 'react-i18next';

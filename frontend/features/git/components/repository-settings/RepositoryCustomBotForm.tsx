@@ -41,7 +41,7 @@ export function RepositoryCustomBotForm({
       <div className="flex items-center justify-between">
         <span className="font-semibold text-xs text-text flex items-center gap-1.5">
           <Bot className="w-4 h-4 text-accent" />
-          <span>Create Repo-Exclusive Reviewer Bot</span>
+          <span>{translateUiText('git.repositoryBotForm.title')}</span>
         </span>
         <button
           type="button"
@@ -54,7 +54,7 @@ export function RepositoryCustomBotForm({
 
       <div className="grid grid-cols-4 gap-3">
         <div className="col-span-1">
-          <label className="block text-[10px] text-subtext0 mb-1">Emoji</label>
+          <label className="block text-[10px] text-subtext0 mb-1">{translateUiText('git.repositoryBotForm.emoji')}</label>
           <input
             type="text"
             maxLength={4}
@@ -64,11 +64,11 @@ export function RepositoryCustomBotForm({
           />
         </div>
         <div className="col-span-3">
-          <label className="block text-[10px] text-subtext0 mb-1">Bot Name *</label>
+          <label className="block text-[10px] text-subtext0 mb-1">{translateUiText('git.repositoryBotForm.botName')} *</label>
           <input
             type="text"
             required
-            placeholder="e.g. Migration Linter"
+            placeholder={translateUiText('git.repositoryBotForm.botNameExample')}
             value={repoBotName}
             onChange={(e) => setRepoBotName(e.target.value)}
             className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 text-xs text-text rounded-sm"
@@ -78,17 +78,17 @@ export function RepositoryCustomBotForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-[10px] text-subtext0 mb-1">Tagline</label>
+          <label className="block text-[10px] text-subtext0 mb-1">{translateUiText('git.repositoryBotForm.tagline')}</label>
           <input
             type="text"
-            placeholder="e.g. Database schema backwards compatibility"
+            placeholder={translateUiText('git.repositoryBotForm.taglineExample')}
             value={repoBotTagline}
             onChange={(e) => setRepoBotTagline(e.target.value)}
             className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 text-xs text-text rounded-sm"
           />
         </div>
         <div>
-          <label className="block text-[10px] text-subtext0 mb-1">Role</label>
+          <label className="block text-[10px] text-subtext0 mb-1">{translateUiText('git.repositoryBotForm.role')}</label>
           <CustomSelect
             value={repoBotCategory}
             options={repoBotCategoryOptions}
@@ -97,19 +97,19 @@ export function RepositoryCustomBotForm({
             buttonClassName="w-full"
             dropdownWidth="w-full"
             align="left"
-            aria-label="Reviewer role"
+            aria-label={translateUiText('git.repositoryBotForm.role')}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-[10px] text-subtext0 mb-1">Execution engine</label>
+          <label className="block text-[10px] text-subtext0 mb-1">{translateUiText('git.repositoryBotForm.executionEngine')}</label>
           <CustomSelect
             value={repoBotExecutionMode}
             options={[
-              { value: 'provider', label: 'Global LLM provider' },
-              { value: 'acp', label: 'ACP Agent' },
+              { value: 'provider', label: translateUiText('git.repositoryBotForm.globalProvider') },
+              { value: 'acp', label: translateUiText('git.repositoryBotForm.acpAgent') },
             ]}
             onChange={(mode) => {
               setRepoBotExecutionMode(mode as 'provider' | 'acp');
@@ -120,12 +120,12 @@ export function RepositoryCustomBotForm({
             buttonClassName="w-full"
             dropdownWidth="w-full"
             align="left"
-            aria-label="Repository reviewer execution engine"
+            aria-label={translateUiText('git.repositoryBotForm.executionEngine')}
           />
         </div>
         {repoBotExecutionMode === 'acp' && (
           <div>
-            <label className="block text-[10px] text-subtext0 mb-1">Installed ACP agent</label>
+            <label className="block text-[10px] text-subtext0 mb-1">{translateUiText('git.repositoryBotForm.installedAcpAgent')}</label>
             {externalAgents.length > 0 ? (
               <CustomSelect
                 value={repoBotAcpAgentId}
@@ -139,16 +139,16 @@ export function RepositoryCustomBotForm({
                   setRepoBotAcpConfigOptions({});
                 }}
                 searchable
-                searchPlaceholder="Search installed agents…"
+                searchPlaceholder={translateUiText('git.repositoryBotForm.searchAgents')}
                 className="w-full"
                 buttonClassName="w-full"
                 dropdownWidth="w-full"
                 align="left"
-                aria-label="Repository ACP reviewer agent"
+                aria-label={translateUiText('git.repositoryBotForm.acpReviewerAgent')}
               />
             ) : (
               <p className="border border-yellow/40 bg-yellow/5 p-2 text-[10px] text-yellow">
-                Install an agent in AI Preferences → External Agents first.
+                {translateUiText('git.repositoryBotForm.installAgentFirst')}
               </p>
             )}
           </div>
@@ -173,35 +173,31 @@ export function RepositoryCustomBotForm({
               className="mt-0.5 accent-accent"
             />
             <span>
-              I allow this ACP agent to receive eligible changed-file diffs and review context.
-              Sensitive paths are excluded and matching secret lines are redacted, but detection
-              cannot catch every secret. This consent is used for automatic reviews assigned to this
-              bot.
+              {translateUiText('git.repositoryBotForm.sourceTransferConsent')}
             </span>
           </label>
           <p className="text-[10px] text-subtext0">
-            Stage0 validates tool requests and finding evidence; the agent runs outside the
-            repository directory.
+            {translateUiText('git.repositoryBotForm.agentIsolationNote')}
           </p>
         </div>
       )}
 
       <div>
         <label className="block text-[10px] text-subtext0 mb-1">
-          Stage0 System Prompt ·{' '}
-          {BOT_CATEGORIES.find((category) => category.id === repoBotCategory)?.label} · read-only
+          {translateUiText('git.repositoryBotForm.systemPrompt')} ·{' '}
+          {BOT_CATEGORIES.find((category) => category.id === repoBotCategory)?.label} · {translateUiText('git.repositoryBotForm.readOnly')}
         </label>
         <pre className="max-h-24 overflow-y-auto whitespace-pre-wrap px-2.5 py-1.5 bg-crust border border-surface1 text-[10px] font-mono text-subtext1">
           {getBotRolePrompt(repoBotCategory)}
         </pre>
         <label className="block text-[10px] text-subtext0 mb-1 mt-2">
-          Additional Instructions <span className="font-normal">(optional)</span>
+          {translateUiText('git.repositoryBotForm.additionalInstructions')} <span className="font-normal">({translateUiText('common.optional')})</span>
         </label>
         <textarea
           rows={3}
           value={repoBotInstructions}
           onChange={(e) => setRepoBotInstructions(e.target.value)}
-          placeholder="Add bot-specific review guidance for this repository..."
+          placeholder={translateUiText('git.repositoryBotForm.instructionsPlaceholder')}
           className="w-full px-2.5 py-1.5 bg-surface0 border border-surface1 text-xs font-mono text-text rounded-sm"
         />
       </div>
@@ -219,7 +215,7 @@ export function RepositoryCustomBotForm({
           disabled={!canSubmit}
           className="px-4 py-1 border-0 bg-accent disabled:opacity-50 disabled:cursor-not-allowed text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
         >
-          Save Bot
+          {translateUiText('git.repositoryBotForm.saveBot')}
         </button>
       </div>
     </form>

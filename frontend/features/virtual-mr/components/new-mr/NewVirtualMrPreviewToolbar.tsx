@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { FileCode } from '../../../../common/components/icons/FileCode';
 import { GitCommit } from '../../../../common/components/icons/GitCommit';
 import type { NewVirtualMrPreviewToolbarProps } from './NewVirtualMrPreviewToolbarProps';
@@ -8,6 +9,7 @@ export function NewVirtualMrPreviewToolbar({
   draftMr,
   diffPayload,
 }: NewVirtualMrPreviewToolbarProps) {
+  const { t } = useTranslation();
   return (
     <div className="h-9 border-b border-surface0 bg-crust px-4 flex items-center justify-between shrink-0 rounded-sm">
       <div className="flex items-center gap-1 h-full">
@@ -21,7 +23,7 @@ export function NewVirtualMrPreviewToolbar({
           }`}
         >
           <GitCommit className="w-3.5 h-3.5 text-brand" />
-          <span>Commits</span>
+          <span>{t('virtualMr.previewToolbar.commits')}</span>
           <span className="px-1.5 py-0.2 text-[10px] font-mono bg-surface0 border border-surface1/60 text-subtext0">
             {draftMr.commits.length}
           </span>
@@ -37,7 +39,7 @@ export function NewVirtualMrPreviewToolbar({
           }`}
         >
           <FileCode className="w-3.5 h-3.5 text-subtext0" />
-          <span>Files changed</span>
+          <span>{t('virtualMr.previewToolbar.filesChanged')}</span>
           <span className="px-1.5 py-0.2 text-[10px] font-mono bg-surface0 border border-surface1/60 text-subtext0">
             {diffPayload?.files.length || 0}
           </span>

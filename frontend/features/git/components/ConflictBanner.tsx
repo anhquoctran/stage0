@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown } from '../../../common/components/icons/ChevronDown';
 import { ChevronUp } from '../../../common/components/icons/ChevronUp';
 import { FileWarning } from '../../../common/components/icons/FileWarning';
@@ -19,6 +20,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
   conflictReport,
   onSelectConflictFile,
 }) => {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(true);
   const { title: commandTitle } = useCommandShortcut();
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
   const handleCopyCommand = (cmd: string) => {
     navigator.clipboard.writeText(cmd);
     setCopiedCmd(cmd);
-    showToast('Copied git command to clipboard');
+    showToast(t('git.conflicts.copiedGitCommand'));
     setTimeout(() => setCopiedCmd(null), 2500);
   };
 
@@ -51,7 +53,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
     if (!currentRepo) return;
     try {
       await openFileInEditor(currentRepo.local_path, filePath);
-      showToast(`Opened ${filePath} in VS Code`, 'success');
+      showToast(t('git.conflicts.openedFileInVsCode', { path: filePath }), 'success');
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       showToast(msg, 'error');
@@ -63,9 +65,9 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
     if (!currentRepo) return;
     try {
       await revealInOs(currentRepo.local_path, filePath);
-      showToast(`Revealed file in ${fileManagerName}`);
+      showToast(t('git.conflicts.revealedFileIn', { name: fileManagerName }));
     } catch (err) {
-      showToast(`Failed to reveal file: ${err}`);
+      showToast(t('git.conflicts.failedToRevealFile', { error: String(err) }));
     }
   };
 
@@ -80,7 +82,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-wider text-red">
-                Merge Conflicts Detected
+                {t('git.conflicts.detected')}
               </span>
               <button
                 type="button"
@@ -90,17 +92,18 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                   }
                 }}
                 className="text-[11px] px-2 py-0.5 rounded-sm bg-red/25 hover:bg-red/35 text-red font-mono font-bold border border-red/40 conflict-pulse cursor-pointer transition-colors"
-                title={commandTitle('next_conflict', 'Click to jump directly to first conflicted file')}
+                title={commandTitle('next_conflict', t('git.conflicts.jumpToFirstFile'))}
               >
-                {conflictedCount > 0 ? `${conflictedCount} file(s) in conflict` : 'In-memory conflict'}
+                {conflictedCount > 0
+                  ? t('git.conflicts.fileCount', { count: conflictedCount })
+                  : t('git.conflicts.inMemoryConflict')}
               </button>
               <span className="text-[11px] text-subtext1">
-                between <code className="font-mono text-text bg-surface0 px-1 py-0.5 rounded-sm border border-surface1">{compare}</code> and <code className="font-mono text-text bg-surface0 px-1 py-0.5 rounded-sm border border-surface1">{base}</code>
+                {t('git.conflicts.betweenBranches', { compare, base })}
               </span>
             </div>
             <p className="text-xs text-subtext1 mt-1 leading-relaxed">
-              <strong>Notice:</strong> Stage0 is an in-memory Virtual MR Sandbox and does not resolve conflicts in-app.
-              Please resolve these conflicts in your external Git tool or IDE before continuing with the virtual PR/MR.
+              <strong>{t('git.conflicts.notice')}</strong> {t('git.conflicts.virtualSandboxNotice')}
             </p>
           </div>
         </div>
@@ -114,17 +117,17 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                 onClick={async () => {
                   try {
                     await openRepoInVsCode(currentRepo.local_path);
-                    showToast('Opened repository in VS Code', 'success');
+                    showToast(t('git.conflicts.openedRepositoryInVsCode'), 'success');
                   } catch (err) {
                     const msg = err instanceof Error ? err.message : String(err);
                     showToast(msg, 'error');
                   }
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-                title={commandTitle('open_vscode', 'Open repository in Visual Studio Code')}
+                title={commandTitle('open_vscode', t('git.conflicts.openRepositoryInVsCodeTitle'))}
               >
                 <VsCode className="w-3.5 h-3.5 text-[#007acc]" />
-                <span>Open in VS Code</span>
+                <span>{t('git.conflicts.openInVsCode')}</span>
               </button>
 
               <button
@@ -132,16 +135,16 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                 onClick={async () => {
                   try {
                     await openRepoInTerminal(currentRepo.local_path);
-                    showToast('Opened repository in Terminal');
+                    showToast(t('git.conflicts.openedRepositoryInTerminal'));
                   } catch (err) {
-                    showToast(`Failed to open Terminal: ${err}`);
+                    showToast(t('git.conflicts.failedToOpenTerminal', { error: String(err) }));
                   }
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-                title={commandTitle('open_terminal', 'Open repository in Default Terminal')}
+                title={commandTitle('open_terminal', t('git.conflicts.openDefaultTerminalTitle'))}
               >
                 <Terminal className="w-3.5 h-3.5 text-subtext0" />
-                <span>Terminal</span>
+                <span>{t('git.conflicts.terminal')}</span>
               </button>
             </>
           )}
@@ -150,10 +153,10 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
             type="button"
             onClick={refreshDiff}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-            title={commandTitle('refresh_diff', 'Refresh virtual diff and re-check conflicts')}
+            title={commandTitle('refresh_diff', t('git.conflicts.refreshVirtualDiffTitle'))}
           >
             <RotateCw className="w-3.5 h-3.5 text-subtext0" />
-            <span>Re-check</span>
+            <span>{t('git.conflicts.recheck')}</span>
           </button>
 
           {conflictedCount > 0 && (
@@ -162,7 +165,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
               onClick={() => setIsExpanded(!isExpanded)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-sm bg-red/20 hover:bg-red/30 border border-red/40 text-red transition-colors shadow-xs cursor-pointer"
             >
-              <span>{isExpanded ? 'Hide Details' : 'View Conflicts'}</span>
+              <span>{isExpanded ? t('git.conflicts.hideDetails') : t('git.conflicts.viewConflicts')}</span>
               {isExpanded ? (
                 <ChevronUp className="w-3.5 h-3.5 text-red" />
               ) : (
@@ -181,10 +184,10 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
             <div className="space-y-1">
               <span className="font-semibold text-text flex items-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5 text-red" />
-                How to resolve in your local Git workspace:
+                {t('git.conflicts.localResolutionTitle')}
               </span>
               <p className="text-[11px] text-subtext1">
-                Run either rebase or merge locally, resolve all conflicting blocks in your editor, then commit. Stage0 will auto-refresh.
+                {t('git.conflicts.localResolutionHelp')}
               </p>
             </div>
 
@@ -193,28 +196,28 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                 type="button"
                 onClick={() => handleCopyCommand(rebaseCmd)}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-xs font-mono text-text transition-colors cursor-pointer"
-                title={`Copy command: ${rebaseCmd}`}
+                title={t('git.conflicts.copyCommandTitle', { command: rebaseCmd })}
               >
                 {copiedCmd === rebaseCmd ? (
                   <Check className="w-3 h-3 text-green" />
                 ) : (
                   <Copy className="w-3 h-3 text-subtext0" />
                 )}
-                <span>Copy Rebase Command</span>
+                <span>{t('git.conflicts.copyRebaseCommand')}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleCopyCommand(mergeCmd)}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-xs font-mono text-text transition-colors cursor-pointer"
-                title={`Copy command: ${mergeCmd}`}
+                title={t('git.conflicts.copyCommandTitle', { command: mergeCmd })}
               >
                 {copiedCmd === mergeCmd ? (
                   <Check className="w-3 h-3 text-green" />
                 ) : (
                   <Copy className="w-3 h-3 text-subtext0" />
                 )}
-                <span>Copy Merge Command</span>
+                <span>{t('git.conflicts.copyMergeCommand')}</span>
               </button>
             </div>
           </div>
@@ -222,9 +225,9 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
           {/* Conflicted Files List */}
           <div>
             <div className="text-[11px] font-bold uppercase tracking-wider text-red mb-2 flex items-center justify-between">
-              <span>Conflicted Files ({conflictedCount}):</span>
+              <span>{t('git.conflicts.conflictedFiles', { count: conflictedCount })}</span>
               <span className="text-[10px] text-subtext0 lowercase font-normal">
-                Click any file to inspect in Diff Viewer
+                {t('git.conflicts.inspectFileHint')}
               </span>
             </div>
 
@@ -252,11 +255,11 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                           </span>
                           {markersCount > 0 ? (
                             <span className="text-red font-semibold">
-                              {markersCount} marker(s) on disk
+                              {t('git.conflicts.markersOnDisk', { count: markersCount })}
                             </span>
                           ) : (
                             <span className="text-subtext0">
-                              predicted conflict
+                              {t('git.conflicts.predictedConflict')}
                             </span>
                           )}
                         </div>
@@ -268,7 +271,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                         type="button"
                         onClick={(e) => handleOpenFileInVsCode(filePath, e)}
                         className="p-1 rounded-sm hover:bg-surface1 text-subtext0 hover:text-text transition-colors"
-                        title="Open file in Visual Studio Code to resolve"
+                        title={t('git.conflicts.openFileInVsCodeTitle')}
                       >
                         <VsCode className="w-3.5 h-3.5 text-[#007acc]" />
                       </button>
@@ -276,7 +279,7 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({
                         type="button"
                         onClick={(e) => handleRevealInOs(filePath, e)}
                         className="p-1 rounded-sm hover:bg-surface1 text-subtext0 hover:text-text transition-colors"
-                        title={`Reveal in ${fileManagerName}`}
+                        title={t('git.conflicts.revealIn', { name: fileManagerName })}
                       >
                         <FolderOpen className="w-3.5 h-3.5" />
                       </button>

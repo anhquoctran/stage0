@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { Bot } from '../../../common/components/icons/Bot';
 import { Plus } from '../../../common/components/icons/Plus';
 import { X } from '../../../common/components/icons/X';
@@ -26,18 +27,19 @@ export const NewVirtualMrReviewersSection: React.FC<{
   onRemoveBot,
   botDropdownRef,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="relative p-3 border border-surface1 bg-mantle/70 space-y-2 select-none rounded-sm" ref={botDropdownRef}>
       <div className="flex items-center justify-between">
         <div className="text-[11px] font-bold uppercase tracking-wider text-subtext1 flex items-center gap-1.5">
           <Bot className="w-3.5 h-3.5 text-brand" />
-          <span>Reviewers</span>
+          <span>{translateUiText('virtualMr.newMrReviewers.title')}</span>
         </div>
         <button
           type="button"
           onClick={onToggleReviewerDropdown}
           className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
-          title="Assign Reviewer Bots"
+          title={translateUiText('virtualMr.newMrReviewers.assignTitle')}
         >
           <Plus className="w-3.5 h-3.5" />
         </button>
@@ -46,7 +48,7 @@ export const NewVirtualMrReviewersSection: React.FC<{
       {/* Selected Reviewers Chips or Empty State */}
       {selectedBots.length === 0 ? (
         <div className="text-xs text-subtext0/70 italic py-0.5">
-          No reviewers requested
+          {translateUiText('virtualMr.newMrReviewers.noneRequested')}
         </div>
       ) : (
         <div className="space-y-2">
@@ -65,7 +67,7 @@ export const NewVirtualMrReviewersSection: React.FC<{
                     type="button"
                     onClick={() => onRemoveBot(bot.id)}
                     className="text-brand/60 hover:text-red hover:bg-surface0 transition-colors cursor-pointer ms-0.5 rounded-sm"
-                    title={`Remove ${bot.name}`}
+                    title={translateUiText('virtualMr.newMrReviewers.remove', { name: bot.name })}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -74,7 +76,7 @@ export const NewVirtualMrReviewersSection: React.FC<{
             })}
           </div>
           <p className="text-[10px] leading-relaxed text-subtext0">
-            Creating this MR starts a review with the first selected reviewer. Eligible tracked source may be sent to its configured provider.
+            {translateUiText('virtualMr.newMrReviewers.reviewNotice')}
           </p>
         </div>
       )}
@@ -83,7 +85,7 @@ export const NewVirtualMrReviewersSection: React.FC<{
       {showBotDropdown && (
         <div className="absolute top-full end-0 mt-1 w-64 bg-mantle border border-surface0 shadow-2xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100 rounded-sm">
           <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between rounded-sm">
-            <span>Assign AI Reviewer</span>
+            <span>{translateUiText('virtualMr.newMrReviewers.assignReviewer')}</span>
             <button
               type="button"
               onClick={() => setShowBotDropdown(false)}
@@ -95,11 +97,11 @@ export const NewVirtualMrReviewersSection: React.FC<{
           <div className="max-h-56 overflow-y-auto divide-y divide-surface0/60">
             {isLoadingReviewerOptions ? (
               <div className="px-3 py-6 text-center text-xs text-subtext0/70 italic">
-                Loading reviewers...
+                {translateUiText('virtualMr.newMrReviewers.loading')}
               </div>
             ) : effectiveReviewers.length === 0 ? (
               <div className="px-3 py-6 text-center text-xs text-subtext0/70 italic">
-                No AI reviewers available
+                {translateUiText('virtualMr.newMrReviewers.noneAvailable')}
               </div>
             ) : (
               effectiveReviewers.map((bot: BotReviewer) => {

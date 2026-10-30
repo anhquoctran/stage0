@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Bot } from '../../../../common/components/icons/Bot';
 import { AiBotBadge } from '../AiBotBadge';
 
 export function PendingDiscussionReply({ authorName, label }: { authorName: string; label: string }) {
+  const { t } = useTranslation();
   return (
     <div role="status" aria-live="polite" className="space-y-2 rounded-sm border border-brand/30 bg-brand/5 p-3">
       <div className="flex items-center gap-2 text-xs">
@@ -10,7 +12,7 @@ export function PendingDiscussionReply({ authorName, label }: { authorName: stri
         </span>
         <span className="font-semibold text-text">{authorName.replace(/^Stage0 AI \((.*)\)$/, '$1')}</span>
         <AiBotBadge />
-        <span className="text-subtext0">reviewing now</span>
+        <span className="text-subtext0">{t('virtualMr.discussion.reviewingNow')}</span>
       </div>
       <p className="text-xs text-subtext1">{label}</p>
       <div className="space-y-1.5 animate-pulse" aria-hidden="true">

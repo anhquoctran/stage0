@@ -1,4 +1,5 @@
 import { useGitStore } from '../../git/store/useGitStore';
+import i18n from '../../i18n/i18n';
 import { startAssignedReviewBatchForSession } from '../../review/services/assignedReviewService';
 
 // MR creation remains complete while the assigned review runs in the background.
@@ -9,7 +10,9 @@ export function startNewMrReviewBatch(sessionId: string) {
         useGitStore
           .getState()
           .showToast(
-            `Virtual MR created. AI review failed or incomplete: ${[result.failures[0], !result.descriptionGenerated ? 'The MR description was not updated.' : 'The MR description was saved.'].join(' ')}`,
+            i18n.t('virtualMr.toasts.createdReviewFailed', {
+              detail: `${result.failures[0]} ${i18n.t(result.descriptionGenerated ? 'virtualMr.toasts.descriptionSaved' : 'virtualMr.toasts.descriptionNotUpdated')}`,
+            }),
             'warning'
           );
       } else if (!result.descriptionGenerated) {
@@ -17,8 +20,8 @@ export function startNewMrReviewBatch(sessionId: string) {
           .getState()
           .showToast(
             result.hasChanges
-              ? 'Virtual MR created, but no reviewer could generate its description from the available diff.'
-              : 'Virtual MR created, but no changed files were found in its review snapshot.',
+              ? i18n.t('virtualMr.toasts.createdDescriptionFailed')
+              : i18n.t('virtualMr.toasts.createdNoChangedFiles'),
             result.hasChanges ? 'warning' : 'info'
           );
       } else {
@@ -26,7 +29,10 @@ export function startNewMrReviewBatch(sessionId: string) {
         useGitStore
           .getState()
           .showToast(
-            `AI review ${partial ? 'finished with incomplete coverage' : 'completed'} for ${result.runs.length} assigned reviewers. The MR description was updated.`,
+            i18n.t('virtualMr.toasts.createdReviewCompleted', {
+              status: i18n.t(partial ? 'virtualMr.toasts.partial' : 'virtualMr.toasts.completed'),
+              count: result.runs.length,
+            }),
             partial ? 'warning' : 'success'
           );
       }
@@ -35,7 +41,7 @@ export function startNewMrReviewBatch(sessionId: string) {
       useGitStore
         .getState()
         .showToast(
-          `Virtual MR created, but AI review could not start: ${error instanceof Error ? error.message : String(error)}`,
+          i18n.t('virtualMr.toasts.createdReviewStartFailed', { error: error instanceof Error ? error.message : String(error) }),
           'error'
         );
     });

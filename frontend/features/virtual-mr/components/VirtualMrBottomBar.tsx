@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { XCircle } from '@/common/components/icons';
@@ -11,6 +12,7 @@ import { useGitStore } from '../../git/store/useGitStore';
 import { isResolvableDiscussion } from '../utils/discussionResolvable';
 
 export const VirtualMrBottomBar: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { currentRepo, showToast } = useGitStore();
   const { getActiveSession, updateSessionStatus } = useVirtualMrStore();
 
@@ -24,12 +26,12 @@ export const VirtualMrBottomBar: React.FC = () => {
 
   const handleCloseRequest = async () => {
     await updateSessionStatus(session.id, 'closed');
-    showToast(`Virtual MR #${session.title} closed`);
+    showToast(translateUiText('virtualMr.bottomBar.closedToast', { title: session.title }));
   };
 
   const handleReopenRequest = async () => {
     await useVirtualMrStore.getState().resetReviewerReviews(session.id);
-    showToast(`Virtual MR #${session.title} reopened`);
+    showToast(translateUiText('virtualMr.bottomBar.reopenedToast', { title: session.title }));
   };
 
   return (
@@ -40,26 +42,26 @@ export const VirtualMrBottomBar: React.FC = () => {
         {session.status === 'resolved' ? (
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 shrink-0 shadow-xs rounded-sm"
-            title="All assigned reviewers approved and all discussions are resolved."
+            title={translateUiText('virtualMr.bottomBar.resolvedTitle')}
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span>Resolved</span>
+            <span>{translateUiText('common.resolved')}</span>
           </div>
         ) : session.status === 'closed' ? (
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 shrink-0 shadow-xs"
-            title="Virtual MR is Closed"
+            title={translateUiText('virtualMr.bottomBar.closedTitle')}
           >
             <XCircle className="w-3.5 h-3.5 text-subtext1 shrink-0" />
-            <span>Closed</span>
+            <span>{translateUiText('common.closed')}</span>
           </div>
         ) : (
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0 shadow-xs"
-            title="Virtual MR is Open"
+            title={translateUiText('virtualMr.bottomBar.openTitle')}
           >
             <span className="w-2 h-2 rounded-sm bg-emerald-400 animate-pulse shrink-0" />
-            <span>Open</span>
+            <span>{translateUiText('common.open')}</span>
           </div>
         )}
 
@@ -76,16 +78,16 @@ export const VirtualMrBottomBar: React.FC = () => {
         </div>
 
         {/* AI Auditor Review Status Indicator */}
-        <div className="flex items-center gap-2 ps-3 max-xl:ps-2 border-s border-surface0/60 hidden md:flex rounded-sm" title={unresolvedCount > 0 ? `${unresolvedCount} open discussion${unresolvedCount > 1 ? 's' : ''}` : `${approvedReviewers} of ${session.reviewers.length} reviewers approved`}>
+        <div className="flex items-center gap-2 ps-3 max-xl:ps-2 border-s border-surface0/60 hidden md:flex rounded-sm" title={unresolvedCount > 0 ? translateUiText('virtualMr.bottomBar.openDiscussions', { count: unresolvedCount }) : translateUiText('virtualMr.bottomBar.reviewersApproved', { approved: approvedReviewers, total: session.reviewers.length })}>
           {unresolvedCount > 0 ? (
             <div className="flex items-center gap-1.5 text-xs text-amber-300 font-medium">
               <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span className="max-xl:hidden">{unresolvedCount} open discussion{unresolvedCount > 1 ? 's' : ''}</span>
+              <span className="max-xl:hidden">{translateUiText('virtualMr.bottomBar.openDiscussions', { count: unresolvedCount })}</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-xs text-subtext0 font-medium">
               <Bot className="w-3.5 h-3.5 text-accent shrink-0" />
-              <span className="max-xl:hidden">{session.reviewers.length ? `${approvedReviewers}/${session.reviewers.length} reviewers approved` : 'No reviewers assigned'}</span>
+              <span className="max-xl:hidden">{session.reviewers.length ? translateUiText('virtualMr.bottomBar.reviewersApprovedCompact', { approved: approvedReviewers, total: session.reviewers.length }) : translateUiText('virtualMr.bottomBar.noReviewers')}</span>
             </div>
           )}
         </div>
@@ -99,20 +101,20 @@ export const VirtualMrBottomBar: React.FC = () => {
             type="button"
             onClick={handleReopenRequest}
             className="flex items-center gap-2 px-3 xl:px-6 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer rounded-sm"
-            title={`Reopen this ${session.status === 'resolved' ? 'resolved' : 'manually closed'} Virtual MR`}
+            title={translateUiText('virtualMr.bottomBar.reopenTitle', { status: translateUiText(session.status === 'resolved' ? 'virtualMr.bottomBar.resolved' : 'virtualMr.bottomBar.manuallyClosed') })}
           >
             <RotateCcw className="w-4 h-4 text-white stroke-[2.5]" />
-            <span className="max-sm:hidden">Reopen request</span>
+            <span className="max-sm:hidden">{translateUiText('virtualMr.bottomBar.reopen')}</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={handleCloseRequest}
             className="flex items-center gap-2 px-3 xl:px-6 py-2 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white text-xs font-bold tracking-wide shadow-sm transition-all duration-150 cursor-pointer rounded-sm"
-            title="Close this Virtual MR request"
+            title={translateUiText('virtualMr.bottomBar.closeTitle')}
           >
             <XCircle className="w-4 h-4 text-white stroke-[2.5]" />
-            <span className="max-sm:hidden">Close request</span>
+            <span className="max-sm:hidden">{translateUiText('virtualMr.bottomBar.close')}</span>
           </button>
         )}
       </div>

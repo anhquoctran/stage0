@@ -1,4 +1,5 @@
 import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+import i18n from '../../../i18n/i18n';
 
 import type { StateCreator } from 'zustand';
 import type { GitState } from '../../types/GitState';
@@ -55,14 +56,14 @@ export const createGitSandboxSlice: StateCreator<
       set({ activeSandboxType: active });
       const label =
         active === 'in_memory'
-          ? 'In-Memory Sandbox'
+          ? i18n.t('ai.sandbox.adapters.inMemoryTitle')
           : active === 'local_worktree'
-            ? 'Local Worktree Sandbox'
-            : 'Docker Container Sandbox';
-      get().showToast(`Switched active sandbox to: ${label}`);
+            ? i18n.t('ai.sandbox.adapters.worktreeTitle')
+            : i18n.t('ai.sandbox.adapters.dockerTitle');
+      get().showToast(i18n.t('git.toasts.sandboxSwitched', { label }));
       await get().refreshDiff();
     } catch (err) {
-      get().showToast(`Failed to switch sandbox: ${err}`);
+      get().showToast(i18n.t('git.toasts.sandboxSwitchFailed', { error: String(err) }));
     } finally {
       set({ isSandboxLoading: false });
     }
@@ -80,10 +81,10 @@ export const createGitSandboxSlice: StateCreator<
       set((state) => ({
         activeSandboxInstances: [...state.activeSandboxInstances, instance],
       }));
-      get().showToast(`Created sandbox instance: ${instance.id}`);
+      get().showToast(i18n.t('git.toasts.sandboxCreated', { id: instance.id }));
       return instance;
     } catch (err) {
-      get().showToast(`Failed to create sandbox instance: ${err}`);
+      get().showToast(i18n.t('git.toasts.sandboxCreateFailed', { error: String(err) }));
       return null;
     }
   },
@@ -94,9 +95,9 @@ export const createGitSandboxSlice: StateCreator<
       set((state) => ({
         activeSandboxInstances: state.activeSandboxInstances.filter((i) => i.id !== id),
       }));
-      get().showToast(`Destroyed sandbox instance: ${id}`);
+      get().showToast(i18n.t('git.toasts.sandboxDestroyed', { id }));
     } catch (err) {
-      get().showToast(`Failed to destroy sandbox instance: ${err}`);
+      get().showToast(i18n.t('git.toasts.sandboxDestroyFailed', { error: String(err) }));
     }
   },
 
@@ -109,7 +110,7 @@ export const createGitSandboxSlice: StateCreator<
       });
       return result;
     } catch (err) {
-      get().showToast(`Sandbox command failed: ${err}`);
+      get().showToast(i18n.t('git.toasts.sandboxCommandFailed', { error: String(err) }));
       return null;
     }
   },

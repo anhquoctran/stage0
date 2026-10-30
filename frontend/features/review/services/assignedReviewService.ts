@@ -1,4 +1,5 @@
 import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+import i18n from '../../i18n/i18n';
 
 import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
@@ -168,12 +169,12 @@ export async function queueAssignedDiscussionReply(sessionId: string, discussion
             sourceTransferAllowed(config), { id: reviewer.id, name: reviewer.name }, false, target);
           if (!run) { pending.add(target); break; }
           const finished = await waitForReviewRun(run.id, () => {});
-          if (!['completed', 'partial'].includes(finished.status)) throw new Error(finished.error || 'Discussion reply did not finish.');
+          if (!['completed', 'partial'].includes(finished.status)) throw new Error(finished.error || i18n.t('review.toasts.discussionReplyIncomplete'));
           if (version) attemptedReplyComments.set(key, version);
           if (attemptedReplyComments.size > 500) attemptedReplyComments.delete(attemptedReplyComments.keys().next().value!);
         }
       } catch (error) {
-        useGitStore.getState().showToast(`AI reviewer could not reply: ${error instanceof Error ? error.message : String(error)}`, 'warning');
+        useGitStore.getState().showToast(i18n.t('review.toasts.reviewerCouldNotReply', { error: error instanceof Error ? error.message : String(error) }), 'warning');
       }
     }
   } finally {
@@ -186,7 +187,7 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
   const assigned = reviewersForSession(sessionId);
   if (!assigned) return { runs: [], failures: [], descriptionGenerated: false, hasChanges: false };
   if (assigned.session.status === 'closed') {
-    return { runs: [], failures: ['This Virtual MR is manually closed. Reopen it before starting another review.'], descriptionGenerated: false, hasChanges: false };
+    return { runs: [], failures: [i18n.t('review.toasts.closedMr')], descriptionGenerated: false, hasChanges: false };
   }
 
   const store = useReviewStore.getState();
@@ -213,7 +214,7 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
       });
 
       if (!reviewer.profile) {
-        result.failures.push(`${reviewer.name}: reviewer configuration is unavailable.`);
+        result.failures.push(i18n.t('review.toasts.reviewerConfigurationUnavailable', { reviewer: reviewer.name }));
         continue;
       }
 
@@ -227,7 +228,7 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
           generateDescription,
         );
         if (!run) {
-          result.failures.push(`${reviewer.name}: another review is already running.`);
+          result.failures.push(i18n.t('review.toasts.anotherReviewRunning', { reviewer: reviewer.name }));
           continue;
         }
 
@@ -245,14 +246,17 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
           result.descriptionGenerated = true;
         }
         if (finished.status !== 'completed' && finished.status !== 'partial') {
-          result.failures.push(`${reviewer.name}: ${finished.error || `review ended with status ${finished.status}`}`);
+          result.failures.push(i18n.t('review.toasts.reviewerRunFailed', {
+            reviewer: reviewer.name,
+            error: finished.error || i18n.t('review.toasts.reviewEndedWithStatus', { status: i18n.t(`review.activity.states.${finished.status}`) }),
+          }));
         }
       } catch (error) {
-        result.failures.push(`${reviewer.name}: ${error instanceof Error ? error.message : String(error)}`);
+        result.failures.push(i18n.t('review.toasts.reviewerRunFailed', { reviewer: reviewer.name, error: error instanceof Error ? error.message : String(error) }));
       }
     }
     if (!result.descriptionGenerated && result.runs.some((run) => run.snapshot.changedFiles.length > 0)) {
-      result.failures.push('No assigned reviewer could generate the MR description from the complete diff.');
+      result.failures.push(i18n.t('review.toasts.descriptionNotGenerated'));
     }
     return result;
   } finally {
@@ -274,14 +278,14 @@ export async function reReviewAssignedSession(sessionId: string): Promise<void> 
   try {
     const result = await startAssignedReviewBatchForSession(sessionId);
     if (result.failures.length > 0) {
-      useGitStore.getState().showToast(`Some AI reviewers could not finish: ${result.failures.join('; ')}`, 'warning');
+      useGitStore.getState().showToast(i18n.t('review.toasts.someReviewersCouldNotFinish', { errors: result.failures.join('; ') }), 'warning');
     }
     if (result.runs.length === 0 && (isReviewStartingForSession(sessionId) || Object.values(useReviewStore.getState().activeRuns).some((item) => item.sessionId === sessionId && item.status === 'running'))) {
       queuedReReviewSessions.add(sessionId);
     }
   } catch (error) {
     queuedReReviewSessions.delete(sessionId);
-    useGitStore.getState().showToast(`AI reviewer could not start: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    useGitStore.getState().showToast(i18n.t('review.toasts.reviewerCouldNotStart', { error: error instanceof Error ? error.message : String(error) }), 'error');
   }
 }
 
@@ -322,14 +326,14 @@ export async function reviewAssignedSessionAfterGitChange(repoPath: string): Pro
     attemptedHeadBySession.set(session.id, revisionKey);
     const batch = await startAssignedReviewBatchForSession(session.id);
     if (batch.failures.length > 0) {
-      useGitStore.getState().showToast(`Some AI reviewers could not finish: ${batch.failures.join('; ')}`, 'warning');
+      useGitStore.getState().showToast(i18n.t('review.toasts.someReviewersCouldNotFinish', { errors: batch.failures.join('; ') }), 'warning');
     }
     if (batch.runs.length === 0 && (isReviewStartingForSession(session.id) || Object.values(useReviewStore.getState().activeRuns).some((run) => run.sessionId === session.id && run.status === 'running'))) {
       queuedReReviewSessions.add(session.id);
     }
   } catch (error) {
     queuedReReviewSessions.delete(session.id);
-    useGitStore.getState().showToast(`AI reviewer could not check the updated Virtual MR: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    useGitStore.getState().showToast(i18n.t('review.toasts.reviewerCouldNotCheckUpdatedMr', { error: error instanceof Error ? error.message : String(error) }), 'error');
   } finally {
     checkingSession.delete(session.id);
   }

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Trans, useTranslation as useUiTextTranslation } from 'react-i18next';
 import { MarkdownEditor } from '../../../../common/components/MarkdownEditor';
 import { MarkdownPreview } from '../../../../common/components/MarkdownPreview';
 import { useGitStore } from '../../../git/store/useGitStore';
@@ -10,6 +11,7 @@ import { VirtualMrOverviewSidebar } from '../overview/VirtualMrOverviewSidebar';
 import type { VirtualMrOverviewTabProps } from './VirtualMrOverviewTabProps';
 
 export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ session }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { showToast } = useGitStore();
   const { updateSessionDetails, createDiscussion, consumeDescriptionEditRequest } =
     useVirtualMrStore();
@@ -48,7 +50,7 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
 
   const handleSaveDesc = async () => {
     await updateSessionDetails(session.id, session.title, descValue);
-    showToast('Description saved');
+    showToast(translateUiText('virtualMr.overview.descriptionSaved'));
     setIsEditingDesc(false);
   };
 
@@ -58,18 +60,29 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
     const commitList =
       session.commits.length > 0
         ? session.commits.map((c) => `- ${c.subject} (\`${c.shortHash}\`)`).join('\n')
-        : '- Ongoing changes between branches';
+        : `- ${translateUiText('virtualMr.overview.ongoingChanges')}`;
 
-    const draft = `## Summary\nAutomated overview for \`${session.compareBranch}\` → \`${session.baseBranch}\`.\n\n### Key Changes\n${commitList}\n\n### Testing & Verification\n- [ ] AI review checks verified\n- [ ] Local build & tests pass\n`;
+    const draft = [
+      `## ${translateUiText('virtualMr.overview.summaryHeading')}`,
+      `${translateUiText('virtualMr.overview.automatedOverviewFor')} \`${session.compareBranch}\` → \`${session.baseBranch}\`.`,
+      '',
+      `### ${translateUiText('virtualMr.overview.keyChangesHeading')}`,
+      commitList,
+      '',
+      `### ${translateUiText('virtualMr.overview.testingHeading')}`,
+      `- [ ] ${translateUiText('virtualMr.overview.aiReviewChecksVerified')}`,
+      `- [ ] ${translateUiText('virtualMr.overview.localBuildTestsPass')}`,
+      '',
+    ].join('\n');
 
     if (descValue.trim() && descValue.trim() !== draft.trim()) {
-      if (window.confirm('Replace current description with a draft from commit metadata?')) {
+      if (window.confirm(translateUiText('virtualMr.overview.replaceDescriptionConfirmation'))) {
         setDescValue(draft);
-        showToast('Generated description from commit metadata. No AI request was sent.');
+        showToast(translateUiText('virtualMr.overview.generatedDescriptionFromCommits'));
       }
     } else {
       setDescValue(draft);
-      showToast('Generated description from commit metadata. No AI request was sent.');
+      showToast(translateUiText('virtualMr.overview.generatedDescriptionFromCommits'));
     }
   };
 
@@ -80,10 +93,10 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
     try {
       await createDiscussion(session.id, { initialComment: newGeneralComment.trim() });
       setNewGeneralComment('');
-      showToast('Discussion posted', 'success');
+      showToast(translateUiText('virtualMr.overview.discussionPosted'), 'success');
     } catch (error) {
       showToast(
-        `Could not post discussion: ${error instanceof Error ? error.message : String(error)}`,
+        translateUiText('virtualMr.overview.discussionPostFailed', { error: error instanceof Error ? error.message : String(error) }),
         'error'
       );
     } finally {
@@ -109,14 +122,14 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
             }
           >
             <div className="flex items-center justify-between border-b border-surface0/60 pb-2">
-              <span className="font-semibold text-xs text-text">Description</span>
+              <span className="font-semibold text-xs text-text">{translateUiText('virtualMr.overview.description')}</span>
               {!isEditingDesc ? (
                 <button
                   type="button"
                   onClick={() => setIsEditingDesc(true)}
                   className="text-xs text-primary hover:underline cursor-pointer rounded-sm"
                 >
-                  Edit Description
+                  {translateUiText('virtualMr.overview.editDescription')}
                 </button>
               ) : session.description ? (
                 <button
@@ -124,7 +137,7 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
                   onClick={() => setIsEditingDesc(false)}
                   className="text-xs text-subtext0 hover:text-text cursor-pointer rounded-sm"
                 >
-                  Cancel Edit
+                  {translateUiText('virtualMr.overview.cancelEdit')}
                 </button>
               ) : null}
             </div>
@@ -134,26 +147,26 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
                 <MarkdownEditor
                   value={descValue}
                   onChange={setDescValue}
-                  placeholder="Enter MR overview, motivations, or checklist..."
+                  placeholder={translateUiText('virtualMr.overview.descriptionPlaceholder')}
                   rows={12}
                   minHeight="280px"
                   maxHeight="650px"
                   showActions={true}
                   onGenerateDraft={handleGenerateDescription}
                   onSubmit={handleSaveDesc}
-                  submitLabel="Save Description"
+                  submitLabel={translateUiText('virtualMr.overview.saveDescription')}
                   onCancel={() => {
                     setDescValue(session.description);
                     setIsEditingDesc(false);
                   }}
-                  cancelLabel="Cancel"
+                  cancelLabel={translateUiText('common.cancel')}
                 />
               </div>
             ) : (
               <div className="pt-1 leading-relaxed text-xs">
                 <MarkdownPreview
                   content={session.description}
-                  emptyPlaceholder="No description provided for this Virtual MR."
+                  emptyPlaceholder={translateUiText('virtualMr.overview.emptyDescription')}
                 />
               </div>
             )}
@@ -166,21 +179,24 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
 
           {/* Leave a Comment Box */}
           <div className="p-4 rounded-sm bg-mantle border border-surface0 space-y-2">
-            <span className="font-semibold text-xs text-text">Leave a Comment</span>
+            <span className="font-semibold text-xs text-text">{translateUiText('virtualMr.overview.leaveComment')}</span>
             <p className="text-[11px] leading-relaxed text-subtext0">
-              To request a full review, choose an assigned bot with @ and add <code className="rounded-sm bg-surface0 px-1">review</code> after its mention. The bot checks its open findings first and reports here if any still need resolution. Eligible tracked source may be sent to its configured provider; sensitive paths are excluded and matching secret lines are redacted, but detection can miss secrets. ACP source sharing must already be enabled for that bot.
+              <Trans
+                i18nKey="virtualMr.overview.requestReviewGuide"
+                components={{ command: <code className="rounded-sm bg-surface0 px-1" /> }}
+              />
             </p>
             <MarkdownEditor
               value={newGeneralComment}
               mentionOptions={getDiscussionMentionOptions(session)}
               onChange={setNewGeneralComment}
-              placeholder="Write a comment, or type @Reviewer review to request a review…"
+              placeholder={translateUiText('virtualMr.overview.commentPlaceholder')}
               rows={6}
               minHeight="160px"
               maxHeight="500px"
               showActions={true}
               onSubmit={handleAddGeneralComment}
-              submitLabel="Post Comment"
+              submitLabel={translateUiText('virtualMr.overview.postComment')}
               disabled={isPostingDiscussion}
               isSubmitting={isPostingDiscussion}
             />

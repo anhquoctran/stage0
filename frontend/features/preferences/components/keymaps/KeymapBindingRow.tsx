@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { eventStroke, formatKeybinding, normalizeShortcut } from '../../../../core/services/keymaps/keystroke';
 import { keymapErrors } from '../../../../core/services/keymaps/validation';
 import type { KeymapBindingRowProps } from '../../types/KeymapBindingRowProps';
 
 export function KeymapBindingRow({ command, settings, onChange, mac }: KeymapBindingRowProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   const [editing, setEditing] = useState(false);
   const [recording, setRecording] = useState(false);
   const [steps, setSteps] = useState<string[]>([]);
@@ -37,22 +39,22 @@ export function KeymapBindingRow({ command, settings, onChange, mac }: KeymapBin
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs text-text">{command.label}</p>
-          <p className="font-mono text-[10px] text-subtext0">{command.id} · {command.scope}{customized ? ' · Customized' : ''}</p>
+          <p className="font-mono text-[10px] text-subtext0">{command.id} · {command.scope}{customized ? ` · ${translateUiText('preferences.keymapBinding.customized')}` : ''}</p>
         </div>
         <div className="flex max-w-[50%] flex-wrap justify-end gap-1">
-          {command.keys.length ? command.keys.map((key) => <kbd key={key} className="rounded-sm bg-crust px-1.5 py-1 font-mono text-[11px] text-subtext1">{formatKeybinding(key, mac)}</kbd>) : <span className="text-[11px] text-subtext0">Unassigned</span>}
+          {command.keys.length ? command.keys.map((key) => <kbd key={key} className="rounded-sm bg-crust px-1.5 py-1 font-mono text-[11px] text-subtext1">{formatKeybinding(key, mac)}</kbd>) : <span className="text-[11px] text-subtext0">{translateUiText('preferences.keymapBinding.unassigned')}</span>}
         </div>
-        {command.editable ? <button type="button" className={buttonClass} aria-label={`Edit ${command.label}`} onClick={() => {
+        {command.editable ? <button type="button" className={buttonClass} aria-label={translateUiText('preferences.keymapBinding.editCommand', { command: command.label })} onClick={() => {
           if (editing) { cancel(); return; }
           setOriginalKeys(settings.overrides.find((item) => item.command === command.id)?.keys ?? null);
           setText(command.keys.join('; ')); setEditing(!editing); setRecording(false); setError('');
-        }}>Edit</button> : <span className="w-9 text-end text-[10px] text-subtext0" title="Managed by the OS or text control">System</span>}
+        }}>{translateUiText('preferences.keymapBinding.edit')}</button> : <span className="w-9 text-end text-[10px] text-subtext0" title={translateUiText('preferences.keymapBinding.managedBySystem')}>{translateUiText('preferences.keymapBinding.system')}</span>}
       </div>
       {editing && <div className="mt-3 space-y-2 rounded-sm border border-surface1 bg-crust p-3">
-        <label className="block text-[11px] text-subtext0" htmlFor={`binding-${command.id}`}>Shortcut(s), separated by semicolons · Empty disables this command</label>
+        <label className="block text-[11px] text-subtext0" htmlFor={`binding-${command.id}`}>{translateUiText('preferences.keymapBinding.inputLabel')}</label>
         <div className="flex items-center gap-2">
           <input id={`binding-${command.id}`} value={text} readOnly={recording} autoFocus maxLength={520}
-            placeholder={recording ? 'Press a shortcut, then optionally a second step…' : 'CmdOrCtrl+K CmdOrCtrl+S'}
+            placeholder={recording ? translateUiText('preferences.keymapBinding.recordPlaceholder') : 'CmdOrCtrl+K CmdOrCtrl+S'}
             className="min-w-0 flex-1 rounded-sm border border-surface1 bg-base px-2 py-1.5 font-mono text-xs text-text outline-none focus:border-brand"
             onChange={(event) => editText(event.target.value)}
             onBlur={() => setRecording(false)}
@@ -71,15 +73,15 @@ export function KeymapBindingRow({ command, settings, onChange, mac }: KeymapBin
           <button type="button" className={buttonClass} onMouseDown={(event) => event.preventDefault()} onClick={() => {
             setRecording(!recording); setSteps([]); setError('');
             document.getElementById(`binding-${command.id}`)?.focus();
-          }}>{recording ? 'Stop' : 'Record'}</button>
+          }}>{translateUiText(recording ? 'preferences.keymapBinding.stop' : 'preferences.keymapBinding.record')}</button>
         </div>
-        <p className="text-[10px] text-subtext0">CmdOrCtrl uses Command on macOS and Control elsewhere. Record replaces the field; type “;” to add alternatives. Chords time out after 1.5 seconds.</p>
+        <p className="text-[10px] text-subtext0">{translateUiText('preferences.keymapBinding.help')}</p>
         {error && <p role="alert" className="text-[11px] text-red">{error}</p>}
         <div className="flex flex-wrap gap-2">
-          <button type="button" className={buttonClass} onClick={() => change(text.split(';').map((key) => key.trim()).filter(Boolean))}>Done</button>
-          <button type="button" className={buttonClass} onClick={() => change([])}>Unassign</button>
-          <button type="button" className={buttonClass} disabled={!customized} onClick={() => change(null)}>Use preset</button>
-          <button type="button" className={buttonClass} onClick={cancel}>Cancel edit</button>
+          <button type="button" className={buttonClass} onClick={() => change(text.split(';').map((key) => key.trim()).filter(Boolean))}>{translateUiText('preferences.keymapBinding.done')}</button>
+          <button type="button" className={buttonClass} onClick={() => change([])}>{translateUiText('preferences.keymapBinding.unassign')}</button>
+          <button type="button" className={buttonClass} disabled={!customized} onClick={() => change(null)}>{translateUiText('preferences.keymapBinding.usePreset')}</button>
+          <button type="button" className={buttonClass} onClick={cancel}>{translateUiText('preferences.keymapBinding.cancelEdit')}</button>
         </div>
       </div>}
     </div>

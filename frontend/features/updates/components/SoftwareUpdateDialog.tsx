@@ -27,7 +27,7 @@ export function SoftwareUpdateDialog() {
           else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
         }
       }}>
-      <div ref={panel} role="dialog" aria-modal="true" aria-label="Stage0 software update"
+      <div ref={panel} role="dialog" aria-modal="true" aria-label={translateUiText('updates.dialogLabel')}
         className="w-full max-w-md max-h-[85vh] overflow-auto bg-base p-5 shadow-2xl rounded-sm" onClick={(event) => event.stopPropagation()}>
         <SoftwareUpdatePanel />
         <button type="button" onClick={close} className="mt-4 border-0 rounded-sm bg-surface0 px-3 py-1.5 text-xs hover:bg-surface1">{translateUiText('common.close')}</button>

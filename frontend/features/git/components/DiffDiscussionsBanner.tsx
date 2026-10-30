@@ -11,8 +11,10 @@ import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
 import { DiscussionThread } from '../../virtual-mr/components/DiscussionThread';
 import { getDiscussionMentionOptions } from '../../virtual-mr/utils/discussionMentions';
 import type { DiffDiscussionsBannerProps } from '../types/DiffDiscussionsBannerProps';
+import { useTranslation } from 'react-i18next';
 
 export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ selectedFile }) => {
+  const { t } = useTranslation();
   const { currentRepo, showToast } = useGitStore();
   const { getActiveSession, createDiscussion } = useVirtualMrStore();
 
@@ -31,7 +33,7 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
   const handleOpenInIde = async (line?: number | null) => {
     try {
       await openFileInEditor(currentRepo.local_path, selectedFile.path, line || undefined);
-      showToast(`Opened ${selectedFile.path}${line ? ` at line ${line}` : ''} in VS Code`, 'success');
+      showToast(t('git.diff.conflict.openedInVsCode', { path: selectedFile.path }), 'success');
     } catch (err: any) {
       const msg = err instanceof Error ? err.message : String(err?.message || err);
       showToast(msg, 'error');
@@ -53,9 +55,9 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
       });
       setCommentText('');
       setIsAddingComment(false);
-      showToast('Review comment added', 'success');
+      showToast(t('git.discussions.commentAdded'), 'success');
     } catch (error) {
-      showToast(`Could not post discussion: ${error instanceof Error ? error.message : String(error)}`, 'error');
+      showToast(t('git.discussions.postFailed', { error: error instanceof Error ? error.message : String(error) }), 'error');
     } finally {
       postingDiscussionRef.current = false;
       setIsPostingDiscussion(false);
@@ -69,11 +71,11 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
         <div className="flex items-center gap-2">
           <MessageSquare className="w-3.5 h-3.5 text-accent" />
           <span className="font-semibold text-xs">
-            Review Discussions ({fileDiscussions.length})
+            {t('git.discussions.title', { count: fileDiscussions.length })}
           </span>
           {fileDiscussions.length > 0 && (
             <span className="text-[11px] text-subtext0">
-              ({fileDiscussions.filter((d) => !d.isResolved).length} unresolved)
+              {t('git.discussions.unresolvedCount', { count: fileDiscussions.filter((d) => !d.isResolved).length })}
             </span>
           )}
         </div>
@@ -83,10 +85,10 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
             type="button"
             onClick={() => handleOpenInIde()}
             className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text font-medium text-[11px] transition-colors cursor-pointer rounded-sm"
-            title="Open this file in VS Code to edit code"
+            title={t('menu.commands.open_vscode')}
           >
             <Code2 className="w-3 h-3 text-subtext0" />
-            <span>Open in IDE</span>
+            <span>{t('menu.commands.open_vscode')}</span>
           </button>
           {!selectedFile.is_binary && (
             <button
@@ -95,7 +97,7 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
               className="flex items-center gap-1 px-2.5 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-[11px] transition-colors cursor-pointer shadow-xs rounded-sm"
             >
               <Plus className="w-3 h-3" />
-              <span>Add Comment</span>
+              <span>{t('git.discussions.addComment')}</span>
             </button>
           )}
         </div>
@@ -103,7 +105,7 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
 
       {selectedFile.is_binary && (
         <div className="px-3 py-2 bg-surface0/50 border border-surface1 text-subtext0 rounded-sm">
-          Line comments are unavailable for binary files. Existing discussions are retained below.
+          {t('git.discussions.binaryUnavailable')}
         </div>
       )}
 
@@ -111,7 +113,7 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
       {isAddingComment && !selectedFile.is_binary && (
         <div className="p-3.5 bg-crust border border-surface0 space-y-2.5 shadow-md rounded-sm">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-xs text-text">Add review comment on code line</span>
+            <span className="font-semibold text-xs text-text">{t('git.discussions.addOnLine')}</span>
             <button
               type="button"
               onClick={() => setIsAddingComment(false)}
@@ -123,7 +125,7 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-subtext0 text-[11px]">Line:</span>
+              <span className="text-subtext0 text-[11px]">{t('git.discussions.lineLabel')}</span>
               <input
                 type="number"
                 min={1}
@@ -138,17 +140,17 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
             value={commentText}
             mentionOptions={getDiscussionMentionOptions(session)}
             onChange={setCommentText}
-            placeholder="Enter review comment (Markdown supported)..."
+            placeholder={t('common.markdown.commentPlaceholder')}
             rows={5}
             minHeight="140px"
             maxHeight="500px"
             showActions={true}
             onSubmit={handleCreateDiscussion}
-            submitLabel="Submit Comment"
+            submitLabel={t('git.discussions.submitComment')}
             disabled={isPostingDiscussion}
             isSubmitting={isPostingDiscussion}
             onCancel={() => setIsAddingComment(false)}
-            cancelLabel="Cancel"
+            cancelLabel={t('common.cancel')}
           />
         </div>
       )}

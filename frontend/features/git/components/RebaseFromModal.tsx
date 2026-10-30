@@ -29,14 +29,14 @@ export const RebaseFromModal: React.FC = () => {
   const branchOptions: CustomSelectOption<string>[] = [
     ...(branches?.local ?? []).map((branch) => ({
       value: branch,
-      label: branch === branches?.current ? `${branch} (current branch)` : branch,
-      group: 'Local Branches',
+      label: branch === branches?.current ? `${branch} (${translateUiText('git.rebaseDialog.currentBranch')})` : branch,
+      group: translateUiText('git.rebaseDialog.localBranches'),
       disabled: branch === branches?.current,
     })),
     ...(branches?.remote ?? []).map((branch) => ({
       value: branch,
       label: branch,
-      group: 'Remote Branches',
+      group: translateUiText('git.rebaseDialog.remoteBranches'),
     })),
   ];
 
@@ -95,13 +95,13 @@ export const RebaseFromModal: React.FC = () => {
               <GitMerge className="w-4 h-4 text-subtext0" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-text">Rebase Current Branch</h3>
+              <h3 className="text-sm font-bold text-text">{translateUiText('git.rebaseDialog.title')}</h3>
               <p className="text-[11px] text-subtext0">
-                Replay commits of{' '}
+                {translateUiText('git.rebaseDialog.replayCommitsOf')}{' '}
                 <span className="font-mono text-text font-semibold">
                   {branches?.current || 'HEAD'}
                 </span>{' '}
-                onto another branch
+                {translateUiText('git.rebaseDialog.ontoAnotherBranch')}
               </p>
             </div>
           </div>
@@ -122,7 +122,7 @@ export const RebaseFromModal: React.FC = () => {
           <div>
             <label className="block text-[11px] font-medium text-subtext0 mb-1 flex items-center gap-1.5">
               <GitBranch className="w-3.5 h-3.5 text-subtext0" />
-              <span>Rebase onto Target Branch</span>
+              <span>{translateUiText('git.rebaseDialog.targetBranch')}</span>
             </label>
             <CustomSelect
               value={selectedTargetBranch}
@@ -132,15 +132,15 @@ export const RebaseFromModal: React.FC = () => {
               buttonClassName="w-full font-mono"
               dropdownWidth="w-full"
               align="left"
-              placeholder="Select a branch…"
-              aria-label="Rebase onto Target Branch"
+              placeholder={translateUiText('git.rebaseDialog.selectBranch')}
+              aria-label={translateUiText('git.rebaseDialog.targetBranch')}
             />
           </div>
 
           {/* Advanced Options */}
           <div className="space-y-2 pt-2 border-t border-surface0/80">
             <span className="text-[11px] font-bold uppercase tracking-wider text-subtext0 block mb-1">
-              Options
+              {translateUiText('git.rebaseDialog.options')}
             </span>
 
             {/* --autostash */}
@@ -153,10 +153,10 @@ export const RebaseFromModal: React.FC = () => {
               />
               <div className="min-w-0">
                 <div className="text-xs font-semibold text-text group-hover:text-text transition-colors">
-                  Autostash uncommitted changes (<code className="font-mono">--autostash</code>)
+                  {translateUiText('git.rebaseDialog.autostash')} (<code className="font-mono">--autostash</code>)
                 </div>
                 <div className="text-[10px] text-subtext0">
-                  Automatically stashes your local uncommitted modifications before rebasing and restores them after
+                  {translateUiText('git.rebaseDialog.autostashDescription')}
                 </div>
               </div>
             </label>
@@ -167,7 +167,7 @@ export const RebaseFromModal: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-subtext0 flex items-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5 text-subtext0" />
-                <span>Rebase In-Progress Actions:</span>
+                <span>{translateUiText('git.rebaseDialog.inProgressActions')}</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -176,7 +176,7 @@ export const RebaseFromModal: React.FC = () => {
                 onClick={handleRebaseContinue}
                 disabled={isSyncing || !isRebasing}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-surface1 hover:bg-surface2 text-text text-[11px] font-medium border border-surface2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                title="git rebase --continue"
+                title={translateUiText('git.rebaseDialog.continueTitle')}
               >
                 <Play className="w-3 h-3 text-subtext0" />
                 <span>{translateUiText('menu.commands.rebase_continue')}</span>
@@ -187,10 +187,10 @@ export const RebaseFromModal: React.FC = () => {
                 onClick={handleRebaseSkip}
                 disabled={isSyncing || !isRebasing}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-surface1 hover:bg-surface2 text-text text-[11px] font-medium border border-surface2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                title="git rebase --skip"
+                title={translateUiText('git.rebaseDialog.skipTitle')}
               >
                 <SkipForward className="w-3 h-3 text-subtext0" />
-                <span>Skip</span>
+                <span>{translateUiText('git.rebaseDialog.skip')}</span>
               </button>
 
               <button
@@ -198,10 +198,10 @@ export const RebaseFromModal: React.FC = () => {
                 onClick={handleRebaseAbort}
                 disabled={isSyncing || !isRebasing}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-surface1 hover:bg-surface2 text-text text-[11px] font-medium border border-surface2 transition-colors cursor-pointer ms-auto disabled:opacity-40 disabled:cursor-not-allowed"
-                title="git rebase --abort"
+                title={translateUiText('git.rebaseDialog.abortTitle')}
               >
                 <RotateCcw className="w-3 h-3 text-subtext0" />
-                <span>Abort Rebase</span>
+                <span>{translateUiText('git.rebaseDialog.abort')}</span>
               </button>
             </div>
           </div>
@@ -210,7 +210,7 @@ export const RebaseFromModal: React.FC = () => {
           <div className="p-2.5 bg-base/80 border border-surface0/80 space-y-1 rounded-sm">
             <span className="text-[10px] font-bold uppercase tracking-wider text-subtext0 flex items-center gap-1.5">
               <Terminal className="w-3 h-3" />
-              <span>Command to Execute:</span>
+              <span>{translateUiText('git.rebaseDialog.commandToExecute')}</span>
             </span>
             <div className="font-mono text-xs text-text select-all truncate">
               {commandPreview}
@@ -235,12 +235,12 @@ export const RebaseFromModal: React.FC = () => {
               {isSyncing ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Rebasing...</span>
+                  <span>{translateUiText('git.rebaseDialog.rebasing')}</span>
                 </>
               ) : (
                 <>
                   <GitMerge className="w-3.5 h-3.5" />
-                  <span>Start Rebase</span>
+                  <span>{translateUiText('git.rebaseDialog.start')}</span>
                 </>
               )}
             </button>

@@ -1,4 +1,5 @@
 import React,{ useEffect,useMemo,useRef,useState } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { GitPullRequest } from '../../../common/components/icons/GitPullRequest';
 import { Loader2 } from '../../../common/components/icons/Loader2';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
@@ -19,18 +20,6 @@ import { VirtualMrSearchBox } from './list/VirtualMrSearchBox';
 import { useVirtualMrListSearch } from './useVirtualMrListSearch';
 import { useVirtualMrPagination } from './useVirtualMrPagination';
 
-const SORT_OPTIONS: CustomSelectOption<MrSort>[] = [
-  { value: 'updated', label: 'Recently updated' },
-  { value: 'created', label: 'Creation date' },
-  { value: 'title', label: 'Title' },
-];
-
-const PAGE_SIZE_OPTIONS: CustomSelectOption<string>[] = [
-  { value: '20', label: '20 items / page' },
-  { value: '50', label: '50 items / page' },
-  { value: '100', label: '100 items / page' },
-];
-
 const BOT_DEFAULT_EMOJIS: Record<string, string> = {
   security: '🛡️',
   performance: '⚡',
@@ -41,7 +30,18 @@ const BOT_DEFAULT_EMOJIS: Record<string, string> = {
 };
 
 export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline = false }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   useDateTimeLanguage();
+  const SORT_OPTIONS: CustomSelectOption<MrSort>[] = [
+    { value: 'updated', label: translateUiText('virtualMr.listDialog.sortRecentlyUpdated') },
+    { value: 'created', label: translateUiText('virtualMr.listDialog.sortCreationDate') },
+    { value: 'title', label: translateUiText('virtualMr.listDialog.sortTitle') },
+  ];
+  const PAGE_SIZE_OPTIONS: CustomSelectOption<string>[] = [
+    { value: '20', label: translateUiText('virtualMr.listDialog.pageSize', { count: 20 }) },
+    { value: '50', label: translateUiText('virtualMr.listDialog.pageSize', { count: 50 }) },
+    { value: '100', label: translateUiText('virtualMr.listDialog.pageSize', { count: 100 }) },
+  ];
   const { currentRepo, showToast, setBranchComparison } = useGitStore();
   const {
     sessions,
@@ -121,21 +121,34 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
       await setBranchComparison(session.baseBranch, session.compareBranch);
       switchSession(sessionId);
       setIsMrListOpen(false);
-      showToast(`Opened Virtual MR: ${session.title}`);
+      showToast(translateUiText('virtualMr.listDialog.opened', { title: session.title }));
     } catch (error) {
       showToast(
-        `Could not open branches for ${session.title}: ${error instanceof Error ? error.message : String(error)}`,
+        translateUiText('virtualMr.listDialog.openFailed', {
+          title: session.title,
+          error: error instanceof Error ? error.message : String(error),
+        }),
         'error'
       );
     }
   };
 
   const filters: { id: MrFilter; label: string }[] = [
-    { id: 'open', label: 'Open' },
-    { id: 'resolved', label: 'Resolved' },
-    { id: 'closed', label: 'Closed' },
-    { id: 'all', label: 'All' },
+    { id: 'open', label: translateUiText('virtualMr.listDialog.filterOpen') },
+    { id: 'resolved', label: translateUiText('virtualMr.listDialog.filterResolved') },
+    { id: 'closed', label: translateUiText('virtualMr.listDialog.filterClosed') },
+    { id: 'all', label: translateUiText('virtualMr.listDialog.filterAll') },
   ];
+
+  const emptyTitleKey = searchTerm.trim()
+    ? 'virtualMr.listDialog.noMatches'
+    : activeFilter === 'closed'
+      ? 'virtualMr.listDialog.noClosed'
+      : activeFilter === 'resolved'
+        ? 'virtualMr.listDialog.noResolved'
+        : activeFilter === 'open'
+          ? 'virtualMr.listDialog.noOpen'
+          : 'virtualMr.listDialog.empty';
 
   return (
     <div
@@ -173,7 +186,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
           <div
             className="flex items-center gap-1 border border-surface1 bg-crust p-0.5 rounded-sm"
             role="tablist"
-            aria-label="Filter merge requests"
+            aria-label={translateUiText('virtualMr.listDialog.filterAriaLabel')}
           >
             {filters.map((filter) => (
               <button
@@ -221,14 +234,14 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
           {isLoadingSessions ? (
             <div className="flex items-center justify-center gap-2 py-14 text-xs text-subtext0">
               <Loader2 className="h-4 w-4 animate-spin text-brand" />
-              <span>Loading saved merge requests…</span>
+              <span>{translateUiText('virtualMr.listDialog.loadingSaved')}</span>
             </div>
           ) : visibleSessions.length > 0 ? (
             <div className="divide-y divide-surface0">
               {pagedSessions.map((session) => {
-                const statusLabel = session.status[0].toUpperCase() + session.status.slice(1);
-                const updatedLabel = formatRecentTime(session.updatedAt) || 'just now';
-                const createdLabel = formatRecentTime(session.createdAt) || 'just now';
+                const statusLabel = translateUiText(`virtualMr.listDialog.status.${session.status}`);
+                const updatedLabel = formatRecentTime(session.updatedAt) || translateUiText('dateTime.justNow');
+                const createdLabel = formatRecentTime(session.createdAt) || translateUiText('dateTime.justNow');
                 const sequenceNumber = sessionSequenceMap.get(session.id) ?? 1;
 
                 return (
@@ -250,20 +263,12 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
             <div className="flex flex-col items-center px-6 py-14 text-center">
               <GitPullRequest className="mb-3 h-7 w-7 text-subtext0" />
               <h3 className="text-sm font-semibold text-text">
-                {searchTerm.trim()
-                  ? 'No matching merge requests'
-                  : activeFilter === 'closed'
-                    ? 'No closed merge requests'
-                    : activeFilter === 'resolved'
-                      ? 'No resolved merge requests'
-                      : activeFilter === 'open'
-                        ? 'No open merge requests'
-                        : 'No merge requests yet'}
+                {translateUiText(emptyTitleKey)}
               </h3>
               <p className="mt-1 max-w-sm text-xs leading-relaxed text-subtext0">
-                {searchTerm.trim()
-                  ? 'Try another title, branch, description, or label.'
-                  : 'Virtual MRs are saved with this repository and will be here when you open it again.'}
+                {translateUiText(searchTerm.trim()
+                  ? 'virtualMr.listDialog.searchHint'
+                  : 'virtualMr.listDialog.emptyHint')}
               </p>
               {!searchTerm.trim() && (activeFilter === 'open' || activeFilter === 'all') && (
                 <button
@@ -274,7 +279,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
                   }}
                   className="mt-4 border border-brand bg-brand px-3 py-1.5 text-xs font-semibold text-on-accent hover:bg-brand/90 cursor-pointer rounded-sm"
                 >
-                  Create Virtual MR
+                  {translateUiText('virtualMr.listDialog.create')}
                 </button>
               )}
             </div>

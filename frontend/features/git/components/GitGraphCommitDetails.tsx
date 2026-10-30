@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { Copy } from '../../../common/components/icons/Copy';
 import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { formatDateTime } from '@/common/utils/dateTime';
@@ -21,6 +22,7 @@ export const GitGraphCommitDetails: React.FC<{
     handleCopyCommitHash,
     referenceColor,
 }) => {
+    const { t: translateUiText } = useUiTextTranslation();
     useDateTimeLanguage();
     return (
         <aside className="flex w-[min(36%,440px)] min-w-[300px] shrink-0 flex-col border-s border-surface0 bg-base/40">
@@ -29,14 +31,14 @@ export const GitGraphCommitDetails: React.FC<{
                     <div className="shrink-0 border-b border-surface0 px-4 py-3 rounded-sm">
                         <div className="flex items-center justify-between gap-2">
                             <h3 className="text-[11px] font-bold uppercase tracking-wider text-subtext0">
-                                Commit details
+                                {translateUiText('git.commitDetails.title')}
                             </h3>
                             <span className="shrink-0 font-mono text-[10px] text-subtext0">
                                 {selectedCommit.short_hash}
                             </span>
                         </div>
                         <p className="mt-2 break-words text-sm font-semibold leading-5 text-text">
-                            {selectedCommit.subject || '(no commit message)'}
+                            {selectedCommit.subject || translateUiText('git.commitDetails.noMessage')}
                         </p>
                         {selectedCommit.refs.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-1">
@@ -61,15 +63,15 @@ export const GitGraphCommitDetails: React.FC<{
                         <dl className="space-y-3 text-xs">
                             <div>
                                 <dt className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-                                    Author
+                                    {translateUiText('git.commitDetails.author')}
                                 </dt>
                                 <dd className="mt-2 flex min-w-0 items-center gap-3 text-text">
                                     <CommitAuthorAvatar
-                                        name={selectedCommit.author_name || 'Unknown'}
+                                        name={selectedCommit.author_name || translateUiText('git.commitDetails.unknownAuthor')}
                                         email={selectedCommit.author_email}
                                     />
                                     <span className="min-w-0 break-words">
-                                        {selectedCommit.author_name || 'Unknown'}
+                                        {selectedCommit.author_name || translateUiText('git.commitDetails.unknownAuthor')}
                                         {selectedCommit.author_email && (
                                             <span className="block break-all text-subtext0">
                                                 {selectedCommit.author_email}
@@ -80,7 +82,7 @@ export const GitGraphCommitDetails: React.FC<{
                             </div>
                             <div>
                                 <dt className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-                                    Date
+                                    {translateUiText('git.commitDetails.date')}
                                 </dt>
                                 <dd className="mt-0.5 text-text">
                                     {formatDateTime(selectedCommit.authored_date) || '—'}
@@ -88,7 +90,7 @@ export const GitGraphCommitDetails: React.FC<{
                             </div>
                             <div>
                                 <dt className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-                                    Commit
+                                    {translateUiText('git.commitDetails.commit')}
                                 </dt>
                                 <dd className="mt-0.5 flex min-w-0 items-start gap-2 font-mono text-[11px] text-text">
                                     <span className="min-w-0 flex-1 break-all">
@@ -97,8 +99,8 @@ export const GitGraphCommitDetails: React.FC<{
                                     <button
                                         type="button"
                                         onClick={() => void handleCopyCommitHash(selectedCommit.hash)}
-                                        aria-label="Copy commit hash"
-                                        title="Copy commit hash"
+                                        aria-label={translateUiText('git.commitDetails.copyHash')}
+                                        title={translateUiText('git.commitDetails.copyHash')}
                                         className="flex h-6 w-6 shrink-0 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand cursor-pointer rounded-sm"
                                     >
                                         <Copy className="h-3.5 w-3.5" />
@@ -107,7 +109,7 @@ export const GitGraphCommitDetails: React.FC<{
                             </div>
                             <div>
                                 <dt className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-                                    Parents
+                                    {translateUiText('git.commitDetails.parentsLabel')}
                                 </dt>
                                 <dd className="mt-0.5 space-y-1 font-mono text-[10px] text-text">
                                     {selectedCommit.parents.length > 0 ? (
@@ -118,7 +120,7 @@ export const GitGraphCommitDetails: React.FC<{
                                         ))
                                     ) : (
                                         <span className="text-subtext0">
-                                            Root commit
+                                            {translateUiText('git.commitDetails.rootCommit')}
                                         </span>
                                     )}
                                 </dd>
@@ -127,14 +129,14 @@ export const GitGraphCommitDetails: React.FC<{
 
                         <div className="mt-5 border-t border-surface0 pt-3">
                             <h4 className="text-[10px] font-semibold uppercase tracking-wide text-subtext0">
-                                Commit message
+                                {translateUiText('git.commitDetails.message')}
                             </h4>
                             <pre className="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] leading-5 text-text select-text">
                                 {isLoadingCommitMessage
-                                    ? 'Loading commit message…'
+                                    ? translateUiText('git.commitDetails.loadingMessage')
                                     : commitMessageError
-                                      ? `Could not load commit message: ${commitMessageError}`
-                                      : selectedCommitMessage || '(empty message)'}
+                                      ? translateUiText('git.commitDetails.messageLoadFailed', { error: commitMessageError })
+                                      : selectedCommitMessage || translateUiText('git.commitDetails.emptyMessage')}
                             </pre>
                         </div>
                     </div>
@@ -143,10 +145,10 @@ export const GitGraphCommitDetails: React.FC<{
                 <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
                     <GitBranch className="h-5 w-5 text-subtext1" />
                     <p className="mt-2 text-xs font-semibold text-text">
-                        Select a commit
+                        {translateUiText('git.commitDetails.selectCommit')}
                     </p>
                     <p className="mt-1 text-[11px] leading-4 text-subtext0">
-                        Commit message, author, parents, and refs will appear here.
+                        {translateUiText('git.commitDetails.selectCommitHint')}
                     </p>
                 </div>
             )}

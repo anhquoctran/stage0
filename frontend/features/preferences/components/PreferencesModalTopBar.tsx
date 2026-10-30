@@ -47,7 +47,7 @@ export const PreferencesModalTopBar: React.FC<{
           type="button"
           onClick={onClose}
           className="flex h-full w-11 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0/70 transition-colors cursor-pointer rounded-sm"
-          title={`${t('common.close')} (Esc)`}
+          title={t('preferences.editorActions.closeWithEscapeTitle', { label: t('common.close') })}
           aria-label={`${t('common.close')} ${title}`}
         >
           <X className="w-4 h-4" />

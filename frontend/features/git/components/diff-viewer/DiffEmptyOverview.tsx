@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileText } from '../../../../common/components/icons/FileText';
 import { GitBranch } from '../../../../common/components/icons/GitBranch';
 import type { MrDiffPayload } from '../../types/MrDiffPayload';
@@ -8,6 +9,7 @@ export const DiffEmptyOverview: React.FC<{
   baseBranch: string;
   compareBranch: string;
 }> = ({ diffPayload, baseBranch, compareBranch }) => {
+  const { t } = useTranslation();
   const totalFiles = diffPayload.files.length;
   const totalBinaryFiles = diffPayload.files.filter((file) => file.is_binary).length;
   const totalAdditions = diffPayload.files.reduce((acc, f) => acc + f.additions, 0);
@@ -21,16 +23,14 @@ export const DiffEmptyOverview: React.FC<{
           <GitBranch className="w-6 h-6" />
         </div>
         <h3 className="text-sm font-semibold text-text mb-1.5">
-          {sameCommit ? 'These branches point to the same commit' : 'No file changes to review'}
+          {sameCommit ? t('git.diff.empty.sameCommit') : t('git.diff.empty.noChanges')}
         </h3>
         <p className="text-xs text-subtext1 max-w-lg leading-relaxed">
-          {sameCommit ? (
-            <>Both <code className="font-mono text-text">{baseBranch}</code> and <code className="font-mono text-text">{compareBranch}</code> resolve to the same commit.</>
-          ) : (
-            <>The compare branch <code className="font-mono text-text">{compareBranch}</code> has no file changes relative to the merge base with <code className="font-mono text-text">{baseBranch}</code>.</>
-          )}
+          {sameCommit
+            ? t('git.diff.empty.sameCommitDescription', { base: baseBranch, compare: compareBranch })
+            : t('git.diff.empty.compareBranchNoChanges', { compare: compareBranch, base: baseBranch })}
         </p>
-        <p className="text-xs text-subtext0 mt-2">Choose different branches or refresh the comparison if you expected changes.</p>
+        <p className="text-xs text-subtext0 mt-2">{t('git.diff.empty.chooseDifferentBranches')}</p>
       </div>
     );
   }
@@ -41,36 +41,36 @@ export const DiffEmptyOverview: React.FC<{
         <FileText className="w-8 h-8 text-blue" />
       </div>
       <h3 className="text-[1rem] font-bold text-text mb-1">
-        Branch Comparison Ready
+        {t('git.diff.empty.comparisonReady')}
       </h3>
       <p className="text-xs text-subtext1 max-w-sm mb-6 leading-relaxed">
-        Comparing <code className="text-blue font-mono font-semibold">{compareBranch}</code> into <code className="text-blue font-mono font-semibold">{baseBranch}</code>.
+        {t('git.diff.empty.comparingBranches', { compare: compareBranch, base: baseBranch })}
       </p>
 
       {/* Quick Summary Pill Cards */}
       <div className={`grid ${totalBinaryFiles > 0 ? 'grid-cols-4 max-w-xl' : 'grid-cols-3 max-w-md'} gap-3 w-full mb-6`}>
         <div className="bg-mantle border border-surface0 p-3 text-center rounded-sm">
-          <div className="text-[10px] uppercase font-bold text-subtext1">Files</div>
+          <div className="text-[10px] uppercase font-bold text-subtext1">{t('git.diff.empty.files')}</div>
           <div className="text-lg font-mono font-bold text-text">{totalFiles}</div>
         </div>
         <div className="bg-mantle border border-surface0 p-3 text-center rounded-sm">
-          <div className="text-[10px] uppercase font-bold text-subtext1">Additions</div>
+          <div className="text-[10px] uppercase font-bold text-subtext1">{t('git.diff.empty.additions')}</div>
           <div className="text-lg font-mono font-bold text-green">+{totalAdditions}</div>
         </div>
         <div className="bg-mantle border border-surface0 p-3 text-center rounded-sm">
-          <div className="text-[10px] uppercase font-bold text-subtext1">Deletions</div>
+          <div className="text-[10px] uppercase font-bold text-subtext1">{t('git.diff.empty.deletions')}</div>
           <div className="text-lg font-mono font-bold text-red">-{totalDeletions}</div>
         </div>
         {totalBinaryFiles > 0 && (
           <div className="bg-mantle border border-surface0 p-3 text-center rounded-sm">
-            <div className="text-[10px] uppercase font-bold text-subtext1">Binary</div>
+            <div className="text-[10px] uppercase font-bold text-subtext1">{t('git.diff.empty.binary')}</div>
             <div className="text-lg font-mono font-bold text-amber-400">{totalBinaryFiles}</div>
           </div>
         )}
       </div>
 
       <p className="text-xs text-subtext0">
-        Select any file from the sidebar to inspect its side-by-side or unified diff.
+        {t('git.diff.empty.selectFileToInspect')}
       </p>
     </div>
   );

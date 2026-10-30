@@ -17,11 +17,10 @@ export const PreferencesRestartModal: React.FC<{
       >
         <div className="flex items-center gap-2.5 text-text">
           <AlertTriangle className="w-5 h-5 text-yellow shrink-0" />
-          <h3 className="text-sm font-bold">Restart Required</h3>
+          <h3 className="text-sm font-bold">{translateUiText('preferences.restart.title')}</h3>
         </div>
         <p className="text-xs text-subtext0 leading-relaxed">
-          Restart Stage0 to apply changes to the Git executable or Linux window title bar
-          across all application windows.
+          {translateUiText('preferences.restart.description')}
         </p>
         <div className="flex items-center justify-end gap-2 pt-2">
           <button

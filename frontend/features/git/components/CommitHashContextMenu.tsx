@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Copy } from '../../../common/components/icons/Copy';
 import type { CommitContextMenuState } from '../types/CommitContextMenuState';
 
@@ -7,6 +8,7 @@ export const CommitHashContextMenu: React.FC<{
     onCopy: (hash: string) => void;
     onClose: () => void;
 }> = ({ menu, onCopy, onClose }) => {
+    const { t } = useTranslation();
     const menuRef = useRef<HTMLDivElement>(null);
     const width = 210;
     const height = 44;
@@ -36,7 +38,7 @@ export const CommitHashContextMenu: React.FC<{
         <div
             ref={menuRef}
             role="menu"
-            aria-label="Commit actions"
+            aria-label={t('git.commitDetails.actions')}
             style={{ left, top }}
             className="fixed z-[60] w-[210px] border border-surface1 bg-mantle py-1 shadow-xl rounded-sm"
         >
@@ -47,7 +49,7 @@ export const CommitHashContextMenu: React.FC<{
                 className="flex h-8 w-full items-center gap-2 px-3 text-start text-xs text-text hover:bg-surface0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-brand rounded-sm"
             >
                 <Copy className="h-3.5 w-3.5 text-subtext0" />
-                Copy Commit Hash
+                {t('git.commitDetails.copyHash')}
             </button>
         </div>
     );

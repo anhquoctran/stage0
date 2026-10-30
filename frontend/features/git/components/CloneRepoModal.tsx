@@ -53,8 +53,8 @@ export const CloneRepoModal: React.FC = () => {
   const credentialSelectOptions: CustomSelectOption<string>[] = credentialOptions.map(
     (credential) => ({
       value: credential.id,
-      label: `${credential.account_name} · ${credential.label || credential.provider}${
-        credential.source === 'system_global' ? ' · System' : ''
+        label: `${credential.account_name} · ${credential.label || credential.provider}${
+          credential.source === 'system_global' ? ` · ${translateUiText('git.clone.system')}` : ''
       }`,
     })
   );
@@ -76,9 +76,9 @@ export const CloneRepoModal: React.FC = () => {
               <Download className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-text">Clone Repository</h3>
+              <h3 className="text-sm font-semibold text-text">{translateUiText('git.clone.title')}</h3>
               <p className="text-[11px] text-subtext0">
-                Clone a remote Git repository to your local computer and open in Stage0
+                {translateUiText('git.clone.description')}
               </p>
             </div>
           </div>
@@ -140,7 +140,7 @@ export const CloneRepoModal: React.FC = () => {
             {/* Repository Folder Name */}
             <div>
               <label className="block text-xs font-medium text-text mb-1.5">
-                Target Folder Name
+                {translateUiText('git.clone.targetFolderName')}
               </label>
               <input
                 type="text"
@@ -151,13 +151,12 @@ export const CloneRepoModal: React.FC = () => {
                   setRepoName(e.target.value);
                   setRepoNameEdited(true);
                 }}
-                placeholder="e.g. my-project"
+                placeholder={translateUiText('git.clone.folderNamePlaceholder')}
                 className="w-full px-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 rounded-sm"
               />
               {repoName && !isSafeCloneRepoName(repoName) && (
                 <p role="alert" className="mt-1 text-[11px] text-red">
-                  Use a single folder name with letters, numbers, dots, underscores or hyphens.
-                  Paths and reserved device names are not allowed.
+                  {translateUiText('git.clone.folderNameValidation')}
                 </p>
               )}
             </div>
@@ -165,7 +164,7 @@ export const CloneRepoModal: React.FC = () => {
             {/* Resolved Path Preview */}
             {destinationPath && (
               <div className="bg-surface0/60 border border-surface1/60 p-3 text-[11px] rounded-sm">
-                <span className="text-subtext0 block mb-0.5">Cloning into:</span>
+                <span className="text-subtext0 block mb-0.5">{translateUiText('git.clone.cloningInto')}</span>
                 <code className="text-blue font-mono font-medium break-all select-all">
                   {destinationPath}
                 </code>
@@ -194,7 +193,7 @@ export const CloneRepoModal: React.FC = () => {
               {isCloning && (
                 <span className="flex items-center gap-1.5 text-blue">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Cloning repository, please wait...
+                  {translateUiText('git.clone.cloningPleaseWait')}
                 </span>
               )}
             </div>
@@ -224,12 +223,12 @@ export const CloneRepoModal: React.FC = () => {
                 {isCloning ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Cloning...</span>
+                    <span>{translateUiText('git.clone.cloning')}</span>
                   </>
                 ) : (
                   <>
                     <Download className="w-3.5 h-3.5" />
-                    <span>Clone Repository</span>
+                    <span>{translateUiText('git.clone.title')}</span>
                   </>
                 )}
               </button>

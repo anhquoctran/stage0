@@ -13,6 +13,7 @@ export function ConflictBlocksView({
   enableLigatures,
   compareBranch,
 }: ConflictBlocksViewProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {regions.map((region, idx) => (
@@ -24,15 +25,15 @@ export function ConflictBlocksView({
           <div className="bg-red/15 border-b border-red/30 px-3.5 py-2 flex items-center justify-between gap-2 rounded-sm">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-sm bg-red text-white text-[10px] font-bold uppercase tracking-wider">
-                Conflict Block #{idx + 1}
+                {t('git.conflicts.blockNumber', { number: idx + 1 })}
               </span>
               <span className="text-xs font-mono text-text font-semibold">
-                Lines {region.start_line} – {region.end_line}
+                {t('git.conflicts.lineRange', { start: region.start_line, end: region.end_line })}
               </span>
             </div>
 
             <span className="text-[11px] text-subtext1">
-              Conflicting changes on target branch vs source branch
+              {t('git.conflicts.targetVsSource')}
             </span>
           </div>
 
@@ -44,7 +45,7 @@ export function ConflictBlocksView({
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-2 h-2 rounded-sm bg-red shrink-0" />
                   <span className="text-xs font-bold text-red uppercase tracking-wider">
-                    Current / Target
+                    {t('git.conflicts.currentTarget')}
                   </span>
                   <code className="text-[11px] font-mono text-text bg-surface1 px-1.5 py-0.5 rounded-sm truncate max-w-[200px]">
                     {baseBranch}
@@ -55,7 +56,7 @@ export function ConflictBlocksView({
                   type="button"
                   onClick={() => handleCopy(region.base_code, `base-${idx}`)}
                   className="p-1 rounded-sm text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer"
-                  title="Copy target branch code"
+                  title={t('git.conflicts.copyTargetCode')}
                 >
                   {copiedKey === `base-${idx}` ? (
                     <Check className="w-3.5 h-3.5 text-green" />
@@ -75,7 +76,7 @@ export function ConflictBlocksView({
                 className="p-3 text-xs overflow-x-auto font-mono text-text whitespace-pre flex-1"
               >
                 {region.base_code || (
-                  <em className="text-subtext0 italic">(Empty on {baseBranch})</em>
+                  <em className="text-subtext0 italic">{t('git.conflicts.emptyOn', { branch: baseBranch })}</em>
                 )}
               </pre>
             </div>
@@ -86,7 +87,7 @@ export function ConflictBlocksView({
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-2 h-2 rounded-sm bg-blue shrink-0" />
                   <span className="text-xs font-bold text-blue uppercase tracking-wider">
-                    Incoming / Source
+                    {t('git.conflicts.incomingSource')}
                   </span>
                   <code className="text-[11px] font-mono text-text bg-surface1 px-1.5 py-0.5 rounded-sm truncate max-w-[200px]">
                     {compareBranch}
@@ -97,7 +98,7 @@ export function ConflictBlocksView({
                   type="button"
                   onClick={() => handleCopy(region.compare_code, `compare-${idx}`)}
                   className="p-1 rounded-sm text-subtext0 hover:text-text hover:bg-surface1 transition-colors cursor-pointer"
-                  title="Copy incoming branch code"
+                  title={t('git.conflicts.copyIncomingCode')}
                 >
                   {copiedKey === `compare-${idx}` ? (
                     <Check className="w-3.5 h-3.5 text-green" />
@@ -117,7 +118,7 @@ export function ConflictBlocksView({
                 className="p-3 text-xs overflow-x-auto font-mono text-text whitespace-pre flex-1"
               >
                 {region.compare_code || (
-                  <em className="text-subtext0 italic">(Empty on {compareBranch})</em>
+                  <em className="text-subtext0 italic">{t('git.conflicts.emptyOn', { branch: compareBranch })}</em>
                 )}
               </pre>
             </div>
@@ -127,3 +128,4 @@ export function ConflictBlocksView({
     </div>
   );
 }
+import { useTranslation } from 'react-i18next';

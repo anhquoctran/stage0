@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Trans, useTranslation as useUiTextTranslation } from 'react-i18next';
 import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { Loader2 } from '../../../common/components/icons/Loader2';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
@@ -13,6 +14,7 @@ import { NewVirtualMrPreview } from './new-mr/NewVirtualMrPreview';
 import { useNewMrMetadata } from './useNewMrMetadata';
 
 export const NewVirtualMrView: React.FC = () => {
+  const { t: translateUiText } = useUiTextTranslation();
   const {
     draftMr,
     updateDraftMr,
@@ -131,13 +133,13 @@ export const NewVirtualMrView: React.FC = () => {
     const draft = createNewMrDescriptionDraft(draftMr, diffPayload);
 
     if (draftMr.description.trim() && draftMr.description.trim() !== draft.trim()) {
-      if (window.confirm('Replace current description with a draft from commit metadata?')) {
+      if (window.confirm(translateUiText('virtualMr.newMrView.replaceDescriptionConfirm'))) {
         updateDraftMr({ description: draft });
-        showToast('Generated description from commit metadata. No AI request was sent.');
+        showToast(translateUiText('virtualMr.newMrView.descriptionGenerated'));
       }
     } else {
       updateDraftMr({ description: draft });
-      showToast('Generated description from commit metadata. No AI request was sent.');
+      showToast(translateUiText('virtualMr.newMrView.descriptionGenerated'));
     }
   };
 
@@ -184,9 +186,9 @@ export const NewVirtualMrView: React.FC = () => {
         ) : isDiffLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-subtext1">
             <Loader2 className="w-7 h-7 animate-spin text-brand mb-3" />
-            <span className="text-sm font-medium text-text">Comparing branches…</span>
+            <span className="text-sm font-medium text-text">{translateUiText('virtualMr.newMrView.comparingBranches')}</span>
             <span className="text-xs text-subtext0 mt-1">
-              Loading file changes and mergeability
+              {translateUiText('virtualMr.newMrView.loadingChanges')}
             </span>
           </div>
         ) : noFileChanges ? (
@@ -197,19 +199,19 @@ export const NewVirtualMrView: React.FC = () => {
                 <GitBranch className="w-6 h-6 text-subtext1" />
               </div>
               <h2 className="text-sm font-semibold text-text mb-1.5">
-                There isn't anything to compare
+                {translateUiText('virtualMr.newMrView.noChangesTitle')}
               </h2>
               <p className="text-xs text-subtext0 leading-relaxed mb-4">
-                <code className="px-1.5 py-0.5 bg-surface0 text-brand font-mono font-medium border border-surface1/60">
-                  {draftMr.baseBranch}
-                </code>{' '}
-                and{' '}
-                <code className="px-1.5 py-0.5 bg-surface0 text-brand font-mono font-medium border border-surface1/60">
-                  {draftMr.compareBranch}
-                </code>{' '}
-                {isIdentical
-                  ? 'point to the same commit. Choose a different compare branch to review changes.'
-                  : 'have no file differences from the merge base. Choose another compare branch with changes to open a Virtual MR.'}
+                <Trans
+                  i18nKey={isIdentical
+                    ? 'virtualMr.newMrView.sameCommitBranches'
+                    : 'virtualMr.newMrView.noDiffBranches'}
+                  values={{ base: draftMr.baseBranch, compare: draftMr.compareBranch }}
+                  components={{
+                    base: <code className="px-1.5 py-0.5 bg-surface0 text-brand font-mono font-medium border border-surface1/60" />,
+                    compare: <code className="px-1.5 py-0.5 bg-surface0 text-brand font-mono font-medium border border-surface1/60" />,
+                  }}
+                />
               </p>
             </div>
           </div>

@@ -8,10 +8,11 @@ export function CloneDestinationSection({
   parentDir,
   handleBrowseFolder,
 }: CloneDestinationSectionProps) {
+  const { t } = useTranslation();
   return (
     <div>
       <label className="block text-xs font-medium text-text mb-1.5">
-        Destination Directory <span className="text-red">*</span>
+        {t('git.clone.destinationDirectory')} <span className="text-red">*</span>
       </label>
       <div className="flex gap-2">
         <div className="relative flex-1">
@@ -20,9 +21,9 @@ export function CloneDestinationSection({
             type="text"
             disabled={isCloning}
             readOnly
-            aria-label="Destination Directory"
+            aria-label={t('git.clone.destinationDirectory')}
             value={destinationPath || parentDir}
-            placeholder="Home directory + repository name"
+            placeholder={t('git.clone.destinationPlaceholder')}
             className="w-full ps-9 pe-3 py-2 bg-surface0 border border-surface1 focus:border-blue focus:ring-1 focus:ring-blue text-xs text-text placeholder-subtext0 font-mono outline-hidden transition-all disabled:opacity-60 rounded-sm"
           />
         </div>
@@ -30,16 +31,17 @@ export function CloneDestinationSection({
           type="button"
           disabled={isCloning}
           onClick={handleBrowseFolder}
-          title="Choose a parent folder for the repository"
+          title={t('git.clone.chooseParentFolder')}
           className="px-3.5 py-2 bg-surface1 hover:bg-surface2 text-text border border-surface2 text-xs font-medium transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50 rounded-sm"
         >
           <FolderOpen className="w-3.5 h-3.5 text-blue" />
-          <span>Browse...</span>
+          <span>{t('git.clone.browse')}</span>
         </button>
       </div>
       <p className="mt-1 text-[10px] text-subtext0">
-        Full clone destination: home directory + repository name. Browse changes the parent folder.
+        {t('git.clone.destinationHelp')}
       </p>
     </div>
   );
 }
+import { useTranslation } from 'react-i18next';

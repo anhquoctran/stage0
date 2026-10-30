@@ -1,4 +1,5 @@
 import { useGitStore } from '../../git/store/useGitStore';
+import i18n from '../../i18n/i18n';
 import { type VirtualMrSession } from '../types/VirtualMrSession';
 import type { VirtualMrSessionSaveOutcome } from '../types/VirtualMrSessionSaveOutcome';
 import { enqueueSessionWrite, pendingSessionSnapshot, saveSessionSnapshot } from '../services/sessionPersistence';
@@ -26,13 +27,13 @@ export function openExistingVirtualMr(
     state.switchSession(existing.id);
     void useGitStore.getState().setBranchComparison(existing.baseBranch, existing.compareBranch);
     useGitStore.getState().showToast(
-      `An open Virtual MR already exists for ${sourceToTarget}. Opened “${existing.title}” instead.`,
+      i18n.t('virtualMr.toasts.duplicateOpened', { sourceToTarget, title: existing.title }),
     );
     return;
   }
 
   useGitStore.getState().showToast(
-    `An open Virtual MR already exists for ${sourceToTarget}: “${duplicate.existing_title}”. Open it from the Merge Requests list.`,
+    i18n.t('virtualMr.toasts.duplicateExists', { sourceToTarget, title: duplicate.existing_title }),
   );
 }
 
@@ -73,7 +74,7 @@ export const updateSessionMetadata = async (
     });
   } catch (error) {
     console.error('Failed to save Virtual MR selections:', error);
-    useGitStore.getState().showToast('Could not save MR reviewers or labels. Please try again.');
+    useGitStore.getState().showToast(i18n.t('virtualMr.toasts.reviewerLabelsSaveFailed'));
   }
 };
 

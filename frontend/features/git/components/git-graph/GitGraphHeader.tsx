@@ -23,15 +23,15 @@ export const GitGraphHeader: React.FC<{
                         id="git-graph-title"
                         className="text-sm font-bold text-text"
                     >
-                        Git Graph
+                        {translateUiText('git.graphHeader.title')}
                     </h2>
                     <p className="truncate text-[11px] text-subtext0">
-                        Current branch:{' '}
+                        {translateUiText('git.graphHeader.currentBranch')}{' '}
                         <span className="font-mono font-semibold text-text">
-                            {branch || 'Loading…'}
+                            {branch || translateUiText('common.loading')}
                         </span>
                         {isDetached && (
-                            <span className="ms-1">(detached)</span>
+                            <span className="ms-1">{translateUiText('git.graphHeader.detached')}</span>
                         )}
                     </p>
                 </div>
@@ -42,8 +42,8 @@ export const GitGraphHeader: React.FC<{
                     type="button"
                     onClick={onRefresh}
                     disabled={isLoading}
-                    aria-label="Refresh Git Graph"
-                    title="Refresh Git Graph"
+                    aria-label={translateUiText('git.graphHeader.refresh')}
+                    title={translateUiText('git.graphHeader.refresh')}
                     className="flex h-8 w-8 items-center justify-center text-subtext0 transition-colors hover:bg-surface0 hover:text-text disabled:opacity-40 rounded-sm"
                 >
                     <RotateCw
@@ -53,7 +53,7 @@ export const GitGraphHeader: React.FC<{
                 <button
                     type="button"
                     onClick={onClose}
-                    aria-label="Close Git Graph"
+                    aria-label={translateUiText('git.graphHeader.close')}
                     title={translateUiText('shortcuts.close')}
                     className="flex h-8 w-8 items-center justify-center text-subtext0 transition-colors hover:bg-surface0 hover:text-text rounded-sm"
                 >

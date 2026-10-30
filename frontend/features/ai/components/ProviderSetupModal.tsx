@@ -54,18 +54,18 @@ export const ProviderSetupModal: React.FC<{
           <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
             <Sparkles className="w-4 h-4 text-brand" />
             <span>
-              <h4 className="text-sm font-bold text-text">Add LLM provider</h4>
-              <span className="block text-[10px] text-subtext0 mt-0.5">Choose a provider and save its connection details.</span>
+              <h4 className="text-sm font-bold text-text">{translateUiText('ai.providerSetup.title')}</h4>
+              <span className="block text-[10px] text-subtext0 mt-0.5">{translateUiText('ai.providerSetup.description')}</span>
             </span>
           </div>
-          <button type="button" onClick={onClose} className="p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm" aria-label="Close provider form">
+          <button type="button" onClick={onClose} className="p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm" aria-label={translateUiText('common.close')}>
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="space-y-3">
           <div>
-            <label htmlFor="llm-provider-select" className="block text-[11px] font-semibold text-subtext0 mb-1">Provider</label>
+            <label htmlFor="llm-provider-select" className="block text-[11px] font-semibold text-subtext0 mb-1">{translateUiText('ai.providers.provider')}</label>
             <CustomSelect<AiProviderId>
               id="llm-provider-select"
               value={setupProviderId}
@@ -78,18 +78,18 @@ export const ProviderSetupModal: React.FC<{
               buttonClassName="w-full px-3 py-2"
               dropdownWidth="w-full"
               align="left"
-              aria-label="Provider"
+              aria-label={translateUiText('ai.providers.provider')}
             />
           </div>
 
           {setupProviderId === 'custom' && (
             <div>
-              <label htmlFor="llm-provider-name" className="block text-[11px] font-semibold text-subtext0 mb-1">Display name</label>
+              <label htmlFor="llm-provider-name" className="block text-[11px] font-semibold text-subtext0 mb-1">{translateUiText('ai.providers.displayName')}</label>
               <input
                 id="llm-provider-name"
                 value={setupProviderName}
                 onChange={(event) => setSetupProviderName(event.target.value)}
-                placeholder="e.g. OpenRouter, DeepSeek, LM Studio"
+                placeholder={translateUiText('ai.providers.displayNamePlaceholder')}
                 className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
               />
             </div>
@@ -97,23 +97,23 @@ export const ProviderSetupModal: React.FC<{
 
           {setupProviderId !== 'ollama' && (
             <div>
-              <label htmlFor="llm-provider-api-key" className="block text-[11px] font-semibold text-subtext0 mb-1">API key</label>
+              <label htmlFor="llm-provider-api-key" className="block text-[11px] font-semibold text-subtext0 mb-1">{translateUiText('ai.providers.apiKey')}</label>
               <input
                 id="llm-provider-api-key"
                 type="password"
                 autoComplete="new-password"
                 value={setupApiKey}
                 onChange={(event) => setSetupApiKey(event.target.value)}
-                placeholder={hasProviderApiKey(setupProviderId) ? 'Saved securely · leave empty to keep' : 'Paste your API key'}
+                placeholder={hasProviderApiKey(setupProviderId) ? translateUiText('ai.providerSetup.savedKeyPlaceholder') : translateUiText('ai.providerSetup.apiKeyPlaceholder')}
                 className="w-full px-3 py-2 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
               />
-              <p className="text-[9px] text-subtext0 mt-1">On Apply, the key is saved securely and never written to preferences.json.</p>
+              <p className="text-[9px] text-subtext0 mt-1">{translateUiText('ai.providerSetup.apiKeySecurityNotice')}</p>
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label htmlFor="llm-provider-base-url" className="block text-[11px] font-semibold text-subtext0 mb-1">API base URL</label>
+              <label htmlFor="llm-provider-base-url" className="block text-[11px] font-semibold text-subtext0 mb-1">{translateUiText('ai.providerSetup.baseUrl')}</label>
               <input
                 id="llm-provider-base-url"
                 type="url"
@@ -124,7 +124,7 @@ export const ProviderSetupModal: React.FC<{
               />
             </div>
             <div>
-              <label htmlFor="llm-provider-model" className="block text-[11px] font-semibold text-subtext0 mb-1">Model ID</label>
+              <label htmlFor="llm-provider-model" className="block text-[11px] font-semibold text-subtext0 mb-1">{translateUiText('ai.providerSetup.modelId')}</label>
               <input
                 id="llm-provider-model"
                 value={setupModel}
@@ -149,7 +149,7 @@ export const ProviderSetupModal: React.FC<{
           </button>
           <button type="submit" className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-brand text-base text-xs font-semibold hover:brightness-110 transition cursor-pointer rounded-sm">
             <Check className="w-3.5 h-3.5" />
-            <span>Save provider</span>
+            <span>{translateUiText('ai.providerSetup.saveProvider')}</span>
           </button>
         </div>
       </form>

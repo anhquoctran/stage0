@@ -31,7 +31,7 @@ export const BackgroundTaskCard: React.FC<BackgroundTaskCardProps> = ({ task }) 
           <span className="truncate">{task.title}</span>
         </h3>
         <span className={`text-[10px] ${task.status === 'failed' ? 'text-red' : 'text-subtext0'}`}>
-          {isRunning ? 'Running' : task.status === 'failed' ? 'Failed' : 'Completed'}
+          {isRunning ? translateUiText('git.backgroundTasks.running') : task.status === 'failed' ? translateUiText('git.backgroundTasks.failed') : translateUiText('git.backgroundTasks.completed')}
         </span>
       </div>
       <GitTaskProgress task={task} />
@@ -46,7 +46,7 @@ export const BackgroundTaskCard: React.FC<BackgroundTaskCardProps> = ({ task }) 
             </button>
             {task.resultRepository && (
               <button type="button" onClick={openRepository} className="bg-primary px-2 py-1 text-[11px] font-semibold text-on-accent hover:brightness-110 rounded-sm">
-                Open repository
+              {translateUiText('git.backgroundTasks.openRepository')}
               </button>
             )}
           </div>

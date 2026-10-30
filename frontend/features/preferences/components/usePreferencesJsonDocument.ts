@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import i18n from '../../i18n/i18n';
 import { preferencesJsonService } from '../services/preferencesJsonService';
 import type { PreferencesDocument } from '../types/PreferencesDocument';
 import type { PreferencesJsonEditorSaveState } from '../types/PreferencesJsonEditorSaveState';
@@ -98,7 +99,7 @@ export function usePreferencesJsonDocument({ onClose }: PreferencesJsonDocumentC
           else {
             setSaveState('conflict');
             setError(
-              'preferences.json changed outside Stage0. Reload the latest file to avoid overwriting those edits.'
+              i18n.t('preferences.jsonEditor.changedOutside')
             );
           }
         }

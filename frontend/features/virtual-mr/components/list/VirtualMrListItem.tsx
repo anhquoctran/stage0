@@ -2,6 +2,7 @@ import { CheckCircle2 } from '../../../../common/components/icons/CheckCircle2';
 import { MessageSquare } from '../../../../common/components/icons/MessageSquare';
 import { formatDateTime } from '../../../../common/utils/dateTime';
 import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { GitLabAvatar } from '../GitLabAvatar';
 import type { VirtualMrListItemProps } from './VirtualMrListItemProps';
 
@@ -15,6 +16,7 @@ export function VirtualMrListItem({
   BOT_DEFAULT_EMOJIS,
   updatedLabel,
 }: VirtualMrListItemProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   useDateTimeLanguage();
   return (
     <button
@@ -65,7 +67,8 @@ export function VirtualMrListItem({
 
           {/* Friendly created timestamp & Creator + avatar */}
           <div className="flex items-center gap-1.5">
-            <span>created {createdLabel} by</span>
+            <span>{translateUiText('virtualMr.listItem.createdAt', { time: createdLabel })}</span>
+            <span>{translateUiText('virtualMr.listItem.by')}</span>
             <GitLabAvatar
               name={session.assignee.name}
               email={session.assignee.email}
@@ -96,7 +99,7 @@ export function VirtualMrListItem({
         {session.reviewers.length > 0 && (
           <div
             className="flex items-center -space-x-1 rtl:space-x-reverse"
-            title={`${session.reviewers.length} reviewer bot(s)`}
+            title={translateUiText('virtualMr.listItem.reviewerBotCount', { count: session.reviewers.length })}
           >
             {session.reviewers.map((rev) => {
               const bot = globalReviewers.find((b) => b.id === rev.agentId);
@@ -105,7 +108,7 @@ export function VirtualMrListItem({
                 <span
                   key={rev.agentId}
                   className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 ring-2 ring-mantle flex items-center justify-center text-[10px] shrink-0"
-                  title={`${rev.agentName} (AI Reviewer)`}
+                  title={translateUiText('virtualMr.listItem.reviewerTitle', { name: rev.agentName })}
                 >
                   {emoji}
                 </span>
@@ -115,7 +118,7 @@ export function VirtualMrListItem({
         )}
 
         {/* Assignee icon */}
-        <div title={`Assignee: ${session.assignee.name}`}>
+        <div title={translateUiText('virtualMr.listItem.assigneeTitle', { name: session.assignee.name })}>
           <GitLabAvatar
             name={session.assignee.name}
             email={session.assignee.email}
@@ -128,7 +131,7 @@ export function VirtualMrListItem({
         {session.discussions.length > 0 && (
           <span
             className="inline-flex items-center gap-1 font-mono text-[11px]"
-            title={`${session.discussions.length} discussion(s)`}
+            title={translateUiText('virtualMr.listItem.discussionCount', { count: session.discussions.length })}
           >
             <MessageSquare className="h-3.5 w-3.5" />
             {session.discussions.length}
@@ -141,7 +144,7 @@ export function VirtualMrListItem({
           title={formatDateTime(session.updatedAt)}
           className="text-end text-[11px] text-subtext0 min-w-[70px]"
         >
-          updated {updatedLabel}
+          {translateUiText('virtualMr.listItem.updatedAt', { time: updatedLabel })}
         </time>
       </div>
     </button>

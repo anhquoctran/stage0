@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
@@ -18,8 +19,9 @@ export function OnboardingReviewerSetup({
   hasSavedRequiredReviewer,
   onAutoSave,
 }: OnboardingReviewerSetupProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   const dynamicModels = useAiMcpStore((state) => state.dynamicModels);
-  const [name, setName] = useState('Code Reviewer');
+  const [name, setName] = useState(() => translateUiText('onboarding.reviewerSetup.defaultName'));
   const [connectionId, setConnectionId] = useState('');
   const [consentedAcpAgentId, setConsentedAcpAgentId] = useState<string | null>(null);
   const [providerModel, setProviderModel] = useState('');
@@ -126,8 +128,8 @@ export function OnboardingReviewerSetup({
     ) return;
     draftSettings.addGlobalReviewer({
       name: name.trim(),
-      tagline: 'Code review',
-      description: 'Checks code changes for correctness, reliability, and maintainability.',
+      tagline: translateUiText('onboarding.reviewerSetup.defaultTagline'),
+      description: translateUiText('onboarding.reviewerSetup.defaultDescription'),
       // Selects the product-owned General Code Reviewer system prompt. Runtime adds immutable guardrails.
       category: 'custom',
       avatarEmoji: '🤖',
@@ -161,11 +163,11 @@ export function OnboardingReviewerSetup({
     return (
       <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-surface0 p-4 text-xs leading-5 text-subtext1">
         <div>
-          <p className="font-semibold text-text">{readyReviewer.name} is ready.</p>
-          <p>{hasSavedRequiredReviewer ? 'Your first reviewer is saved.' : 'Saving your first reviewer…'}</p>
+          <p className="font-semibold text-text">{translateUiText('onboarding.reviewerSetup.ready', { name: readyReviewer.name })}</p>
+          <p>{translateUiText(hasSavedRequiredReviewer ? 'onboarding.reviewerSetup.saved' : 'onboarding.reviewerSetup.savingReviewer')}</p>
         </div>
         <span className={`rounded-sm px-2.5 py-1 text-[11px] font-semibold text-white ${hasSavedRequiredReviewer ? 'bg-emerald-600' : 'bg-brand'}`}>
-          {hasSavedRequiredReviewer ? 'Saved & Enabled' : 'Saving…'}
+          {translateUiText(hasSavedRequiredReviewer ? 'onboarding.reviewerSetup.savedEnabled' : 'onboarding.reviewerSetup.saving')}
         </span>
       </div>
     );
@@ -174,10 +176,10 @@ export function OnboardingReviewerSetup({
   return (
     <form onSubmit={createReviewer} className="space-y-4 rounded-sm border border-surface0 bg-mantle/50 p-4">
       <p className="text-xs leading-5 text-subtext0">
-        Start with a general code reviewer. You can fine-tune its role and instructions later in AI Preferences.
+        {translateUiText('onboarding.reviewerSetup.intro')}
       </p>
       <label className="block space-y-1.5 text-xs font-medium text-subtext1">
-        <span>Reviewer name</span>
+        <span>{translateUiText('onboarding.reviewerSetup.reviewerName')}</span>
         <input
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -188,7 +190,7 @@ export function OnboardingReviewerSetup({
       </label>
       {connections.length > 1 ? (
         <label className="block space-y-1.5 text-xs font-medium text-subtext1">
-          <span>AI connection</span>
+          <span>{translateUiText('onboarding.reviewerSetup.aiConnection')}</span>
           <CustomSelect
             id="onboarding-reviewer-connection"
             value={selected?.value ?? ''}
@@ -198,21 +200,21 @@ export function OnboardingReviewerSetup({
             buttonClassName="w-full bg-base px-3 py-2 text-sm"
             dropdownWidth="w-full"
             align="left"
-            aria-label="AI connection"
+            aria-label={translateUiText('onboarding.reviewerSetup.aiConnection')}
           />
         </label>
       ) : (
-        selected && <p className="text-xs text-subtext0">Uses {selected.label}.</p>
+        selected && <p className="text-xs text-subtext0">{translateUiText('onboarding.reviewerSetup.usesConnection', { name: selected.label })}</p>
       )}
       {!selected ? (
         <p role="status" className="text-xs text-subtext0">
-          Add an AI connection in the previous step to continue.
+          {translateUiText('onboarding.reviewerSetup.addConnectionFirst')}
         </p>
       ) : null}
       {selected?.kind === 'provider' && (
         <div className="space-y-3 rounded-sm bg-crust p-3">
           <label className="block space-y-1.5 text-xs font-medium text-subtext1">
-            <span>Model</span>
+            <span>{translateUiText('onboarding.reviewerSetup.model')}</span>
             <CustomSelect
               value={providerModel}
               options={modelOptions}
@@ -235,12 +237,12 @@ export function OnboardingReviewerSetup({
                 setFastMode(model === providerDefaults.model && capabilities?.supportsFastMode === true && providerDefaults.fastMode === true);
               }}
               searchable={modelOptions.length > 8}
-              searchPlaceholder="Search models…"
+              searchPlaceholder={translateUiText('onboarding.reviewerSetup.searchModels')}
               className="w-full"
               buttonClassName="w-full"
               dropdownWidth="w-full"
               align="left"
-              aria-label="Reviewer model"
+              aria-label={translateUiText('onboarding.reviewerSetup.reviewerModel')}
             />
           </label>
           <AiModelExecutionOptions
@@ -249,7 +251,7 @@ export function OnboardingReviewerSetup({
             fastMode={fastMode}
             onReasoningEffortChange={setReasoningEffort}
             onFastModeChange={setFastMode}
-            emptyMessage="Reasoning and Fast mode controls are unavailable for this model."
+            emptyMessage={translateUiText('onboarding.reviewerSetup.modelOptionsUnavailable')}
           />
         </div>
       )}
@@ -268,7 +270,7 @@ export function OnboardingReviewerSetup({
               className="mt-0.5 accent-brand"
             />
             <span>
-              I allow this agent to receive eligible changed-file diffs and review context. Sensitive paths are excluded and matching secret lines are redacted, but detection may miss some secrets.
+              {translateUiText('onboarding.reviewerSetup.sourceTransferConsent')}
             </span>
           </label>
         </div>
@@ -284,7 +286,7 @@ export function OnboardingReviewerSetup({
         }
         className="rounded-sm border-0 bg-brand px-4 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-45"
       >
-        Create first reviewer
+        {translateUiText('onboarding.reviewerSetup.createFirstReviewer')}
       </button>
     </form>
   );

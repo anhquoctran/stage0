@@ -11,17 +11,18 @@ export function BlameLinesTable({
   setSelectedCommit,
   enableLigatures,
 }: BlameLinesTableProps) {
+  const { t } = useTranslation();
   useDateTimeLanguage();
   return (
     <div className="border border-surface0 rounded-sm overflow-hidden bg-base shadow-xs text-xs font-mono">
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b border-surface0 bg-mantle text-[10px] text-subtext0 uppercase font-sans font-bold select-none">
-            <th className="py-1.5 px-3 text-start w-20">Commit</th>
-            <th className="py-1.5 px-2 text-start w-36">Author</th>
-            <th className="py-1.5 px-2 text-start w-24">Date</th>
-            <th className="py-1.5 px-2 text-end w-12 border-e border-surface0">Line</th>
-            <th className="py-1.5 px-3 text-start">Content</th>
+            <th className="py-1.5 px-3 text-start w-20">{t('git.blame.commit')}</th>
+            <th className="py-1.5 px-2 text-start w-36">{t('git.blame.author')}</th>
+            <th className="py-1.5 px-2 text-start w-24">{t('git.blame.date')}</th>
+            <th className="py-1.5 px-2 text-end w-12 border-e border-surface0">{t('git.blame.line')}</th>
+            <th className="py-1.5 px-3 text-start">{t('git.blame.content')}</th>
           </tr>
         </thead>
         <tbody style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight: lineSpacing }}>
@@ -44,7 +45,7 @@ export function BlameLinesTable({
                       type="button"
                       onClick={() => commit && setSelectedCommit(commit)}
                       className="font-mono text-[11px] text-subtext1 hover:text-text hover:underline cursor-pointer flex items-center gap-1 rounded-sm"
-                      title={`Click to inspect commit ${shortSha}: ${commit?.summary || ''}`}
+                      title={t('git.blame.inspectCommit', { sha: shortSha, summary: commit?.summary || '' })}
                     >
                       <GitCommit className="w-3 h-3 text-subtext0 shrink-0" />
                       <span>{shortSha}</span>
@@ -91,3 +92,4 @@ export function BlameLinesTable({
     </div>
   );
 }
+import { useTranslation } from 'react-i18next';

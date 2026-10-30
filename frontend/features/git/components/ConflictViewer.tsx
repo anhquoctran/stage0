@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
 import { ChevronLeft } from '../../../common/components/icons/ChevronLeft';
 import { ChevronRight } from '../../../common/components/icons/ChevronRight';
@@ -13,6 +14,7 @@ import { ConflictMarkedFileView } from './conflict/ConflictMarkedFileView';
 import { ConflictResolutionBar } from './conflict/ConflictResolutionBar';
 
 export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }) => {
+  const { t } = useTranslation();
   const {
     currentRepo,
     selectedFile,
@@ -36,8 +38,8 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-subtext1">
         <AlertTriangle className="w-8 h-8 text-amber-400 mb-2" />
-        <p className="font-semibold text-text text-sm">No file selected</p>
-        <span className="text-xs text-subtext0">Select a file from the sidebar</span>
+        <p className="font-semibold text-text text-sm">{t('git.conflicts.noFileSelected')}</p>
+        <span className="text-xs text-subtext0">{t('git.conflicts.selectFileFromSidebar')}</span>
       </div>
     );
   }
@@ -48,7 +50,7 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
-    showToast('Copied code block to clipboard');
+    showToast(t('git.conflicts.copiedCodeBlock'));
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
@@ -56,7 +58,7 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
     if (!currentRepo) return;
     try {
       await openFileInEditor(currentRepo.local_path, selectedFile.path);
-      showToast(`Opened ${selectedFile.path} in VS Code`, 'success');
+      showToast(t('git.conflicts.openedFileInVsCode', { path: selectedFile.path }), 'success');
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       showToast(msg, 'error');
@@ -67,9 +69,9 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
     if (!currentRepo) return;
     try {
       await revealInOs(currentRepo.local_path, selectedFile.path);
-      showToast(`Revealed file in ${fileManagerName}`);
+      showToast(t('git.conflicts.revealedFileIn', { name: fileManagerName }));
     } catch (err) {
-      showToast(`Failed to reveal file: ${err}`);
+      showToast(t('git.conflicts.failedToRevealFile', { error: String(err) }));
     }
   };
 
@@ -104,10 +106,10 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
                   ? 'bg-surface2 text-text shadow-xs'
                   : 'text-subtext1 hover:text-text'
               }`}
-              title="Compare conflicting blocks side-by-side"
+              title={t('git.conflicts.compareBlocksTitle')}
             >
               <Columns2 className="w-3.5 h-3.5" />
-              <span>Compare Blocks ({regions.length})</span>
+              <span>{t('git.conflicts.compareBlocks', { count: regions.length })}</span>
             </button>
 
             <button
@@ -118,15 +120,15 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
                   ? 'bg-surface2 text-text shadow-xs'
                   : 'text-subtext1 hover:text-text'
               }`}
-              title="Inspect full file with in-memory conflict markers"
+              title={t('git.conflicts.inspectMarkedFileTitle')}
             >
               <GitMerge className="w-3.5 h-3.5" />
-              <span>Full File Markers</span>
+              <span>{t('git.conflicts.fullFileMarkers')}</span>
             </button>
           </div>
 
           <span className="text-[11px] text-subtext0 ms-2 hidden sm:inline">
-            Stage0 Virtual 3-Way Collision Inspector
+            {t('git.conflicts.inspectorTitle')}
           </span>
         </div>
 
@@ -138,19 +140,19 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
               disabled={activeRegionIndex === 0}
               onClick={() => setActiveRegionIndex((prev) => Math.max(0, prev - 1))}
               className="p-1 text-subtext1 hover:text-text rounded-sm hover:bg-surface1 transition-colors disabled:opacity-30 cursor-pointer"
-              title="Previous conflict block"
+              title={t('git.conflicts.previousBlock')}
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <span className="text-[11px] text-subtext1 font-mono px-1.5">
-              Block {activeRegionIndex + 1} of {regions.length}
+              {t('git.conflicts.blockStepper', { active: activeRegionIndex + 1, total: regions.length })}
             </span>
             <button
               type="button"
               disabled={activeRegionIndex === regions.length - 1}
               onClick={() => setActiveRegionIndex((prev) => Math.min(regions.length - 1, prev + 1))}
               className="p-1 text-subtext1 hover:text-text rounded-sm hover:bg-surface1 transition-colors disabled:opacity-30 cursor-pointer"
-              title="Next conflict block"
+              title={t('git.conflicts.nextBlock')}
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -163,13 +165,13 @@ export const ConflictViewer: React.FC<ConflictViewerProps> = ({ onSwitchToDiff }
         {isConflictLoading ? (
           <div className="flex flex-col items-center justify-center h-64 text-subtext1 space-y-3">
             <div className="w-6 h-6 border-2 border-red border-t-transparent rounded-sm animate-spin" />
-            <p className="text-xs font-medium">Computing 3-way in-memory collision...</p>
+            <p className="text-xs font-medium">{t('git.conflicts.computingThreeWay')}</p>
           </div>
         ) : conflictPreviewError ? (
           <div className="p-6 bg-red/10 border border-red/30 rounded-sm text-xs text-red space-y-2">
             <p className="font-bold flex items-center gap-1.5">
               <AlertTriangle className="w-4 h-4" />
-              Failed to load conflict preview
+              {t('git.conflicts.failedPreview')}
             </p>
             <p className="font-mono text-[11px] opacity-90">{conflictPreviewError}</p>
           </div>

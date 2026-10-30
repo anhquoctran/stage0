@@ -43,18 +43,18 @@ export const RepositoryLabelsTab: React.FC = () => {
             color: labelFormColor,
             description: labelFormDesc.trim() || undefined,
           });
-          showToast(`Label updated: ${labelFormName}`);
+          showToast(translateUiText('git.repositoryLabels.updated', { name: labelFormName }));
         }
         setEditingLabelId(null);
       } else {
         await createRepoLabel(labelFormName.trim(), labelFormColor, labelFormDesc.trim());
-        showToast(`Label created: ${labelFormName}`);
+        showToast(translateUiText('git.repositoryLabels.created', { name: labelFormName }));
         setIsAddingLabel(false);
       }
       setLabelFormName('');
       setLabelFormDesc('');
     } catch (err: any) {
-      showToast(`Failed to save label: ${err}`);
+      showToast(translateUiText('git.repositoryLabels.saveFailed', { error: String(err) }));
     }
   };
 
@@ -62,9 +62,9 @@ export const RepositoryLabelsTab: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="text-[1rem] text-text font-medium">Repository Labels</h3>
+          <h3 className="text-[1rem] text-text font-medium">{translateUiText('git.repositoryLabels.title')}</h3>
           <p className="text-xs text-subtext0 mt-0.5">
-            Label taxonomy scoped specifically to this repository (separate from App Preferences)
+            {translateUiText('git.repositoryLabels.description')}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -73,7 +73,7 @@ export const RepositoryLabelsTab: React.FC = () => {
             onClick={loadPresetLabels}
             className="shrink-0 whitespace-nowrap px-2.5 py-1.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer border border-surface1 rounded-sm"
           >
-            Load Presets
+            {translateUiText('git.repositoryLabels.loadPresets')}
           </button>
           <button
             type="button"
@@ -87,7 +87,7 @@ export const RepositoryLabelsTab: React.FC = () => {
             className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40 rounded-sm"
           >
             <Plus className="w-3.5 h-3.5 shrink-0" />
-            <span>New Label</span>
+            <span>{translateUiText('git.repositoryLabels.newLabel')}</span>
           </button>
         </div>
       </div>
@@ -100,7 +100,7 @@ export const RepositoryLabelsTab: React.FC = () => {
         >
           <div className="flex items-center justify-between">
             <span className="font-medium text-xs text-text">
-              {editingLabelId ? 'Edit Label' : 'Create New Label'}
+              {translateUiText(editingLabelId ? 'git.repositoryLabels.editLabel' : 'git.repositoryLabels.createLabel')}
             </span>
             <button
               type="button"
@@ -116,21 +116,21 @@ export const RepositoryLabelsTab: React.FC = () => {
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-[11px] text-subtext0 mb-1">Label Name</label>
+              <label className="block text-[11px] text-subtext0 mb-1">{translateUiText('git.repositoryLabels.name')}</label>
               <input
                 type="text"
                 required
-                placeholder="e.g. priority-high"
+                placeholder={translateUiText('git.repositoryLabels.namePlaceholder')}
                 value={labelFormName}
                 onChange={(e) => setLabelFormName(e.target.value)}
                 className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none rounded-sm"
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-[11px] text-subtext0 mb-1">Description</label>
+              <label className="block text-[11px] text-subtext0 mb-1">{translateUiText('git.repositoryLabels.descriptionLabel')}</label>
               <input
                 type="text"
-                placeholder="Describe the purpose of this label..."
+                placeholder={translateUiText('git.repositoryLabels.descriptionPlaceholder')}
                 value={labelFormDesc}
                 onChange={(e) => setLabelFormDesc(e.target.value)}
                 className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none rounded-sm"
@@ -140,14 +140,14 @@ export const RepositoryLabelsTab: React.FC = () => {
 
           {/* COLOR PICKER & PRESETS */}
           <div>
-            <label className="block text-[11px] text-subtext0 mb-1.5">Color</label>
+            <label className="block text-[11px] text-subtext0 mb-1.5">{translateUiText('git.repositoryLabels.color')}</label>
             <div className="flex items-center gap-2">
               <input
                 type="color"
                 value={labelFormColor}
                 onChange={(e) => setLabelFormColor(e.target.value)}
-                aria-label="Custom label color"
-                title="Choose a custom label color"
+                aria-label={translateUiText('git.repositoryLabels.customColor')}
+                title={translateUiText('git.repositoryLabels.chooseColor')}
                 className="repo-label-color-picker h-6 w-6 cursor-pointer rounded-sm border-0 bg-transparent p-0"
               />
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -179,24 +179,24 @@ export const RepositoryLabelsTab: React.FC = () => {
               type="submit"
               className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
             >
-              Save Label
+              {translateUiText('git.repositoryLabels.saveLabel')}
             </button>
           </div>
         </form>
       )}
 
       {/* LABELS TABLE */}
-      <section aria-label="Repository labels list" className="space-y-2">
+      <section aria-label={translateUiText('git.repositoryLabels.listAria')} className="space-y-2">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-medium text-text">Labels</h4>
+          <h4 className="text-xs font-medium text-text">{translateUiText('git.repositoryLabels.labels')}</h4>
           <span className="text-[11px] text-subtext0">
-            {repoLabels.length} {repoLabels.length === 1 ? 'label' : 'labels'}
+            {repoLabels.length}
           </span>
         </div>
 
         <div className="max-h-80 overflow-y-auto border border-surface0 bg-crust">
           <table className="w-full table-fixed text-start">
-            <caption className="sr-only">Repository labels</caption>
+            <caption className="sr-only">{translateUiText('git.repositoryLabels.listAria')}</caption>
             <colgroup>
               <col className="w-[34%]" />
               <col className="w-[48%]" />
@@ -204,16 +204,16 @@ export const RepositoryLabelsTab: React.FC = () => {
             </colgroup>
             <thead className="sticky top-0 z-10 bg-base">
               <tr className="border-b border-surface0 text-[10px] uppercase tracking-wide text-subtext0">
-                <th scope="col" className="px-3 py-2 font-medium">Label</th>
-                <th scope="col" className="px-3 py-2 font-medium">Description</th>
-                <th scope="col" className="px-2 py-2 text-end font-medium">Actions</th>
+                <th scope="col" className="px-3 py-2 font-medium">{translateUiText('git.repositoryLabels.label')}</th>
+                <th scope="col" className="px-3 py-2 font-medium">{translateUiText('git.repositoryLabels.descriptionLabel')}</th>
+                <th scope="col" className="px-2 py-2 text-end font-medium">{translateUiText('git.fileActions.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface0">
               {repoLabels.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="px-4 py-8 text-center text-xs text-subtext0">
-                    No repository labels yet. Create a label or load presets to get started.
+                    {translateUiText('git.repositoryLabels.empty')}
                   </td>
                 </tr>
               ) : (
@@ -248,8 +248,8 @@ export const RepositoryLabelsTab: React.FC = () => {
                             setIsAddingLabel(false);
                           }}
                           className="p-1.5 text-subtext0 hover:bg-surface1 hover:text-text cursor-pointer rounded-sm"
-                          title={`Edit ${lbl.name}`}
-                          aria-label={`Edit ${lbl.name}`}
+                          title={translateUiText('git.repositoryLabels.editNamed', { name: lbl.name })}
+                          aria-label={translateUiText('git.repositoryLabels.editNamed', { name: lbl.name })}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
@@ -257,8 +257,8 @@ export const RepositoryLabelsTab: React.FC = () => {
                           type="button"
                           onClick={() => deleteRepoLabel(lbl.id)}
                           className="p-1.5 text-subtext0 hover:bg-red-500/20 hover:text-red-400 cursor-pointer rounded-sm"
-                          title={`Delete ${lbl.name}`}
-                          aria-label={`Delete ${lbl.name}`}
+                          title={translateUiText('git.repositoryLabels.deleteNamed', { name: lbl.name })}
+                          aria-label={translateUiText('git.repositoryLabels.deleteNamed', { name: lbl.name })}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

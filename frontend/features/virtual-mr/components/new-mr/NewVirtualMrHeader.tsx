@@ -25,6 +25,7 @@ export function NewVirtualMrHeader({
   conflictCount,
   conflictReport,
 }: NewVirtualMrHeaderProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   const { title: commandTitle } = useCommandShortcut();
   return (
     <div className="border-b border-surface0 bg-crust/50 px-5 py-3 shrink-0 space-y-2.5 rounded-sm">
@@ -35,13 +36,13 @@ export function NewVirtualMrHeader({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xs font-semibold text-text">Comparing changes</h1>
+              <h1 className="text-xs font-semibold text-text">{translateUiText('compareStatus.header')}</h1>
               <span className="text-[10px] font-mono px-1.5 py-0.2 bg-surface0 border border-surface1/60 text-subtext0 font-medium">
-                draft
+                {translateUiText('compareStatus.draft')}
               </span>
             </div>
             <p className="text-[11px] text-subtext0 mt-0.5">
-              Choose two branches to see what's changed or to create a Virtual MR.
+              {translateUiText('compareStatus.branchPairHint')}
             </p>
           </div>
         </div>
@@ -50,7 +51,7 @@ export function NewVirtualMrHeader({
           type="button"
           onClick={closeNewMrDraft}
           className="p-1.5 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
-          title={commandTitle('close_tab', 'Cancel & close comparison')}
+          title={commandTitle('close_tab', translateUiText('compareStatus.cancelClose'))}
         >
           <X className="w-4 h-4" />
         </button>
@@ -62,7 +63,7 @@ export function NewVirtualMrHeader({
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* Base Branch */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-medium text-subtext0 select-none">base:</span>
+            <span className="text-[11px] font-medium text-subtext0 select-none">{translateUiText('compareStatus.baseLabel')}</span>
             <TabBranchSelector
               roleType="target"
               value={draftMr.baseBranch}
@@ -77,14 +78,14 @@ export function NewVirtualMrHeader({
             type="button"
             onClick={handleSwapBranches}
             className="p-1.5 text-subtext0 hover:text-brand hover:bg-surface0 border border-transparent hover:border-surface0 transition-colors cursor-pointer rounded-sm"
-            title="Swap Base and Compare branches"
+            title={translateUiText('compareStatus.swapBranches')}
           >
             <ArrowLeftRight className="w-3.5 h-3.5" />
           </button>
 
           {/* Compare Branch */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-medium text-subtext0 select-none">compare:</span>
+            <span className="text-[11px] font-medium text-subtext0 select-none">{translateUiText('compareStatus.compareLabel')}</span>
             <TabBranchSelector
               roleType="source"
               value={draftMr.compareBranch}
@@ -100,12 +101,12 @@ export function NewVirtualMrHeader({
           {diffError ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red bg-red/10 border border-red/25 rounded-sm">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-              <span>Comparison failed</span>
+              <span>{translateUiText('compareStatus.failed')}</span>
             </div>
           ) : isDiffLoading ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext1 bg-surface0/40 border border-surface0 rounded-sm">
               <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
-              <span>Comparing branches…</span>
+              <span>{translateUiText('compareStatus.comparing')}</span>
             </div>
           ) : conflictCheckError ? (
             <div
@@ -113,30 +114,29 @@ export function NewVirtualMrHeader({
               title={conflictCheckError}
             >
               <AlertTriangle className="w-3.5 h-3.5 text-yellow shrink-0" />
-              <span>Mergeability check unavailable</span>
+              <span>{translateUiText('compareStatus.unavailable')}</span>
             </div>
           ) : noFileChanges ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext0 bg-surface0/60 border border-surface0 rounded-sm">
               <Info className="w-3.5 h-3.5 text-subtext0 shrink-0" />
-              <span>{isIdentical ? 'Same commit · no changes' : 'No file changes'}</span>
+              <span>{translateUiText(isIdentical ? 'compareStatus.sameCommitNoChanges' : 'compareStatus.noFileChanges')}</span>
             </div>
           ) : hasConflicts ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-red bg-red/10 border border-red/20 rounded-sm">
               <AlertTriangle className="w-3.5 h-3.5 text-red shrink-0" />
               <span>
-                Can't automatically merge ({conflictCount}{' '}
-                {conflictCount === 1 ? 'conflict' : 'conflicts'})
+                {translateUiText('compareStatus.cannotAutoMerge', { count: conflictCount })}
               </span>
             </div>
           ) : conflictReport ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-white bg-[#238636] rounded-sm">
               <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0" />
-              <span>Able to merge. These branches can be automatically merged.</span>
+              <span>{translateUiText('compareStatus.mergeable')}</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-subtext0 bg-surface0/40 border border-surface0 rounded-sm">
               <Info className="w-3.5 h-3.5 shrink-0" />
-              <span>Mergeability not checked</span>
+              <span>{translateUiText('compareStatus.notChecked')}</span>
             </div>
           )}
         </div>
@@ -144,3 +144,4 @@ export function NewVirtualMrHeader({
     </div>
   );
 }
+import { useTranslation as useUiTextTranslation } from 'react-i18next';

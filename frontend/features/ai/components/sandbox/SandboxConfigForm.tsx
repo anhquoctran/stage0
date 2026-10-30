@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Radio } from '../../../../common/components/Radio';
 import type { SandboxConfigFormProps } from './SandboxConfigFormProps';
 
@@ -7,6 +8,7 @@ export function SandboxConfigForm({
   committedSandboxType,
   onSelectAdapter,
 }: SandboxConfigFormProps) {
+  const { t } = useTranslation();
   return (
     <div className="border border-surface0 rounded-sm divide-y divide-surface0/60 overflow-hidden bg-base/30">
       {adapters.map((adapter) => {
@@ -35,7 +37,7 @@ export function SandboxConfigForm({
                 checked={isSelected}
                 name="sandbox-adapter"
                 readOnly
-                aria-label={`Select ${adapter.title}`}
+                aria-label={t('ai.sandbox.selectAdapter', { name: adapter.title })}
               />
             </div>
 
@@ -46,7 +48,7 @@ export function SandboxConfigForm({
 
                 {adapter.defaultBadge && (
                   <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2 rounded-sm bg-surface0 border border-surface1 uppercase">
-                    Default
+                    {t('ai.sandbox.default')}
                   </span>
                 )}
 
@@ -58,7 +60,7 @@ export function SandboxConfigForm({
 
                 {isCurrent && (
                   <span className="text-[10px] font-mono text-subtext0 px-1.5 py-0.2 rounded-sm bg-surface1 border border-surface2">
-                    Active
+                    {t('ai.sandbox.active')}
                   </span>
                 )}
               </div>

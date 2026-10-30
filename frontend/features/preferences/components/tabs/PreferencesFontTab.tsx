@@ -11,6 +11,7 @@ import { SUPPORTED_FONTS } from '../../constants/fonts';
 import { formatShortcutText } from '../../../../common/utils/shortcuts';
 import { checkFontLigaturesSupport } from '../../store/usePreferencesStore';
 import { useOutsideDismiss } from '../../../../common/hooks/useOutsideDismiss';
+import { useTranslation } from 'react-i18next';
 
 export const PreferencesFontTab: React.FC<{
   draftFontFamily: string;
@@ -45,6 +46,7 @@ export const PreferencesFontTab: React.FC<{
   draftIsUnderline = false,
   setDraftIsUnderline,
 }) => {
+  const { t } = useTranslation();
   const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
   const [fontSearchQuery, setFontSearchQuery] = useState('');
   const fontSearchInputRef = useRef<HTMLInputElement>(null);
@@ -72,8 +74,8 @@ export const PreferencesFontTab: React.FC<{
     <div className="space-y-1">
       {/* Font Family Row */}
       <SettingRow
-        title="Font Family"
-        description="Monospace font family used across diff viewers, commit logs, and terminal panels."
+        title={t('preferences.font.family')}
+        description={t('preferences.font.familyDescription')}
       >
         <div
           ref={fontDropdownRef}
@@ -90,7 +92,7 @@ export const PreferencesFontTab: React.FC<{
           <button
             ref={fontButtonRef}
             type="button"
-            aria-label="Buffer Font Family"
+            aria-label={t('preferences.font.bufferFamily')}
             aria-expanded={isFontDropdownOpen}
             onClick={() => setIsFontDropdownOpen(!isFontDropdownOpen)}
             className="w-full flex items-center justify-between px-3 py-1.5 border border-surface0 bg-crust hover:bg-base text-text text-xs transition-colors cursor-pointer rounded-sm"
@@ -115,7 +117,7 @@ export const PreferencesFontTab: React.FC<{
                 <input
                   ref={fontSearchInputRef}
                   type="text"
-                  placeholder="Filter monospace fonts..."
+                  placeholder={t('preferences.font.filterPlaceholder')}
                   value={fontSearchQuery}
                   onChange={(e) => setFontSearchQuery(e.target.value)}
                   className="w-full bg-surface0 border border-surface1 px-2 py-1 text-xs text-text placeholder:text-subtext0 focus:outline-hidden rounded-sm"
@@ -126,7 +128,7 @@ export const PreferencesFontTab: React.FC<{
               <div className="overflow-y-auto max-h-60 p-1 divide-y divide-surface0/30">
                 {filteredFonts.length === 0 ? (
                   <div className="p-4 text-center text-xs text-subtext0 italic">
-                    No fonts found
+                    {t('preferences.font.noFonts')}
                   </div>
                 ) : (
                   filteredFonts.map((font) => {
@@ -174,11 +176,11 @@ export const PreferencesFontTab: React.FC<{
                         <div className="flex items-center gap-1.5 shrink-0">
                           {font.ligaturesSupport ? (
                             <span className="text-[9px] px-1.5 py-0.5 bg-crust text-subtext0 border border-surface0 font-mono">
-                              Ligatures
+                              {t('preferences.font.ligaturesBadge')}
                             </span>
                           ) : (
                             <span className="text-[9px] px-1.5 py-0.5 bg-crust text-subtext0/70 border border-surface0">
-                              Mono
+                              {t('preferences.font.monoBadge')}
                             </span>
                           )}
                           {isSelected && <Check className="w-3.5 h-3.5 text-text ms-1" />}
@@ -196,8 +198,8 @@ export const PreferencesFontTab: React.FC<{
       {/* Font Size Row */}
       {!simplified && setDraftFontSize && (
         <SettingRow
-          title="Font Size"
-          description="Font size in pixels for diff lines and editor panes (range: 10px – 24px)."
+          title={t('preferences.font.size')}
+          description={t('preferences.font.sizeDescription')}
         >
           <div className="flex items-center gap-2">
             <input
@@ -217,7 +219,7 @@ export const PreferencesFontTab: React.FC<{
                 type="button"
                 onClick={() => setDraftFontSize((prev) => Math.max(10, prev - 1))}
                 className="px-2 py-1 border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold rounded-sm"
-                title="Decrease font size"
+                title={t('preferences.font.decreaseSize')}
               >
                 -
               </button>
@@ -225,7 +227,7 @@ export const PreferencesFontTab: React.FC<{
                 type="button"
                 onClick={() => setDraftFontSize((prev) => Math.min(24, prev + 1))}
                 className="px-2 py-1 border border-surface0 hover:bg-surface0/50 text-text text-xs cursor-pointer font-bold rounded-sm"
-                title="Increase font size"
+                title={t('preferences.font.increaseSize')}
               >
                 +
               </button>
@@ -237,8 +239,8 @@ export const PreferencesFontTab: React.FC<{
       {/* Font Styling Row */}
       {!simplified && setDraftIsBold && setDraftIsItalic && setDraftIsUnderline && (
         <SettingRow
-          title="Font Weight & Emphasis"
-          description="Apply Bold, Italic, or Underline formatting to diff text."
+          title={t('preferences.font.weightEmphasis')}
+          description={t('preferences.font.weightEmphasisDescription')}
         >
           <div className="flex items-center gap-1 bg-crust p-0.5 border border-surface0 rounded-sm">
             <button
@@ -249,10 +251,10 @@ export const PreferencesFontTab: React.FC<{
                   ? 'bg-surface0 text-text font-bold shadow-xs'
                   : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
               }`}
-              title={formatShortcutText('Bold (Ctrl+B)')}
+              title={formatShortcutText(`${t('preferences.font.bold')} (Ctrl+B)`)}
             >
               <Bold className="w-3 h-3" />
-              <span>Bold</span>
+              <span>{t('preferences.font.bold')}</span>
             </button>
 
             <button
@@ -263,10 +265,10 @@ export const PreferencesFontTab: React.FC<{
                   ? 'bg-surface0 text-text font-bold italic shadow-xs'
                   : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
               }`}
-              title={formatShortcutText('Italic (Ctrl+I)')}
+              title={formatShortcutText(`${t('preferences.font.italic')} (Ctrl+I)`)}
             >
               <Italic className="w-3 h-3" />
-              <span>Italic</span>
+              <span>{t('preferences.font.italic')}</span>
             </button>
 
             <button
@@ -277,10 +279,10 @@ export const PreferencesFontTab: React.FC<{
                   ? 'bg-surface0 text-text font-bold underline shadow-xs'
                   : 'text-subtext0 hover:bg-surface0/40 hover:text-text'
               }`}
-              title={formatShortcutText('Underline (Ctrl+U)')}
+              title={formatShortcutText(`${t('preferences.font.underline')} (Ctrl+U)`)}
             >
               <Underline className="w-3 h-3" />
-              <span>Underline</span>
+              <span>{t('preferences.font.underline')}</span>
             </button>
           </div>
         </SettingRow>
@@ -288,8 +290,8 @@ export const PreferencesFontTab: React.FC<{
 
       {/* Line Spacing Row */}
       <SettingRow
-        title="Line Spacing"
-        description="Vertical line height multiplier for comfortable code reading (1.1x – 2.2x)."
+        title={t('preferences.font.lineSpacing')}
+        description={t('preferences.font.lineSpacingDescription')}
       >
         <div className="flex items-center gap-3 w-56">
           <input
@@ -309,8 +311,8 @@ export const PreferencesFontTab: React.FC<{
 
       {/* Ligatures Row */}
       <SettingRow
-        title="Programming Ligatures"
-        description="Render modern programming ligatures (e.g. !=, ===, =>) if supported by the active font."
+        title={t('preferences.font.programmingLigatures')}
+        description={t('preferences.font.programmingLigaturesDescription')}
       >
         <ZedSwitch
           checked={draftEnableLigatures}
@@ -321,7 +323,7 @@ export const PreferencesFontTab: React.FC<{
 
       {simplified && (
         <p className="pt-2 text-xs text-subtext0">
-          Additional typography settings (font size, bold, italic, underline) can be customized anytime in Preferences.
+          {t('preferences.font.additionalTypography')}
         </p>
       )}
     </div>

@@ -30,9 +30,9 @@ export const ProviderDeleteModal: React.FC<{
             <Trash2 className="w-4 h-4" />
           </span>
           <div>
-            <h4 id="remove-provider-title" className="text-sm font-bold text-text">Remove {getProviderDisplayName(providerToDelete)}?</h4>
+            <h4 id="remove-provider-title" className="text-sm font-bold text-text">{translateUiText('ai.providerDelete.title', { name: getProviderDisplayName(providerToDelete) })}</h4>
             <p className="text-[11px] leading-relaxed text-subtext0 mt-1">
-              This removes its provider entry and all saved connection settings. The saved API key in the OS credential store will also be deleted. In Preferences, the removal takes effect when you apply your changes.
+              {translateUiText('ai.providerDelete.description')}
             </p>
           </div>
         </div>
@@ -50,7 +50,7 @@ export const ProviderDeleteModal: React.FC<{
           </button>
           <button type="button" disabled={isDeletingProvider} onClick={() => void onConfirm()} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red text-base text-xs font-semibold hover:brightness-110 transition cursor-pointer disabled:opacity-50 rounded-sm">
             <Trash2 className="w-3.5 h-3.5" />
-            <span>{isDeletingProvider ? 'Removing…' : 'Remove provider'}</span>
+            <span>{isDeletingProvider ? translateUiText('ai.providerDelete.removing') : translateUiText('ai.providerDelete.removeButton')}</span>
           </button>
         </div>
       </div>

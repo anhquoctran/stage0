@@ -60,10 +60,10 @@ export const InlineDiscussionComposer: React.FC<{
         reviewAction: 'comment',
       });
       onDraftChange?.('');
-      showToast('Comment posted', 'success');
+      showToast(translateUiText('git.inlineDiscussion.commentPosted'), 'success');
       if (mounted.current) onClose();
     } catch (error) {
-      showToast(`Could not post comment: ${error instanceof Error ? error.message : String(error)}`, 'error');
+      showToast(translateUiText('git.inlineDiscussion.postFailed', { error: error instanceof Error ? error.message : String(error) }), 'error');
     } finally {
       submitting.current = false;
       setIsSubmitting(false);
@@ -88,7 +88,7 @@ export const InlineDiscussionComposer: React.FC<{
         minHeight="150px"
         maxHeight="500px"
         mentionOptions={getDiscussionMentionOptions(session)}
-        placeholder="Write a comment or drag your files here…"
+        placeholder={translateUiText('git.inlineDiscussion.placeholder')}
         showActions={false}
         onSubmit={submit}
         disabled={isSubmitting}
@@ -102,7 +102,7 @@ export const InlineDiscussionComposer: React.FC<{
           disabled={isSubmitting || !body.trim()}
           className="px-4 py-1.5 bg-blue hover:bg-blue/90 text-crust font-semibold text-xs shadow-xs disabled:opacity-50 transition-colors cursor-pointer rounded-sm"
         >
-          Add comment now
+          {translateUiText('git.inlineDiscussion.addCommentNow')}
         </button>
 
         <button

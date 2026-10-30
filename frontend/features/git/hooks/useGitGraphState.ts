@@ -1,4 +1,5 @@
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+import i18n from '../../i18n/i18n';
 
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { copyTextToClipboard } from '../constants/gitGraphConstants';
@@ -79,9 +80,9 @@ export function useGitGraphState({ isOpen, repoPath, onClose }: GitGraphModalPro
     setCommitContextMenu(null);
     try {
       await copyTextToClipboard(hash);
-      showToast('Copied commit hash');
+      showToast(i18n.t('git.toasts.commitHashCopied'));
     } catch {
-      showToast('Could not copy commit hash');
+      showToast(i18n.t('git.toasts.commitHashCopyFailed'));
     }
   };
 

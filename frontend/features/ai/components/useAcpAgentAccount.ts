@@ -1,4 +1,5 @@
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
+import i18n from '../../i18n/i18n';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AcpAgentConfig } from '../types/AcpAgentConfig';
@@ -75,7 +76,7 @@ export function useAcpAgentAccount({
           setSupportsAuthStatus(false);
           setSupportsAuthLogout(false);
           setReportedAgentInfo(null);
-          setError(`Could not check this agent's account status: ${String(cause)}`);
+          setError(i18n.t('ai.acpAccount.checkFailed', { error: String(cause) }));
         }
         return null;
       } finally {
@@ -110,10 +111,10 @@ export function useAcpAgentAccount({
       const shouldLogoutFirst = supportsAuthLogout && authStatus?.kind !== 'none';
       setNotice(
         shouldLogoutFirst
-          ? 'Signing out of the current agent account before starting a new sign-in…'
+          ? i18n.t('ai.acpAccount.signingOutBeforeSignIn')
           : isGoogleSignIn
-          ? 'Starting Google sign-in. Antigravity should open your default browser if a new login is needed…'
-          : 'Starting the agent sign-in flow…'
+          ? i18n.t('ai.acpAccount.startingGoogleSignIn')
+          : i18n.t('ai.acpAccount.startingSignIn')
       );
       if (shouldLogoutFirst) {
         await appServices.externalAgents.acpAgentLogout({ config: detailAgent });
@@ -128,16 +129,16 @@ export function useAcpAgentAccount({
       };
       setLastSuccessfulSignIn(completed);
       const saved = saveLastSuccessfulSignIn(detailAgent, completed);
-      setNotice('Sign-in completed. Refreshing the agent-reported account status…');
+      setNotice(i18n.t('ai.acpAccount.refreshingAfterSignIn'));
       const refreshed = await refreshAgentConnection(detailAgent);
       const reportedStatus = refreshed?.authStatus ?? result?.authStatus ?? null;
       if (reportedStatus) setAuthStatus(reportedStatus);
       setNotice(
         reportedStatus
-          ? 'Sign-in completed. The account details shown here are reported by the agent.'
+          ? i18n.t('ai.acpAccount.signInReportedAccount')
           : saved
-            ? 'Sign-in completed. This agent does not provide account details over ACP; Stage0 saved the sign-in result on this device.'
-            : 'Sign-in completed, but Stage0 could not save the local sign-in confirmation. This agent does not provide account details over ACP.'
+            ? i18n.t('ai.acpAccount.signInSavedLocally')
+            : i18n.t('ai.acpAccount.signInSaveFailed')
       );
     } catch (cause) {
       setError(String(cause));

@@ -1,4 +1,5 @@
 import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+import i18n from '../../i18n/i18n';
 
 import { useGitStore } from '../../git/store/useGitStore';
 import { type VirtualMrCommit } from '../types/VirtualMrCommit';
@@ -149,7 +150,7 @@ export const createSessionSlice = (
       useGitStore
         .getState()
         .showToast(
-          'Cannot change branches after discussions or reviews have started in this Virtual MR',
+          i18n.t('virtualMr.toasts.branchesLocked'),
           'warning'
         );
       return;

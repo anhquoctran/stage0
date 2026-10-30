@@ -7,6 +7,7 @@ import { FileListFilterBar } from './file-list/FileListFilterBar';
 import { FlatFileList } from './file-list/FlatFileList';
 import { FolderFileList } from './file-list/FolderFileList';
 import { FileContextMenu } from './FileContextMenu';
+import { useTranslation } from 'react-i18next';
 
 export const FileList: React.FC<FileListProps> = ({
   files,
@@ -15,6 +16,7 @@ export const FileList: React.FC<FileListProps> = ({
   isLoading = false,
   width,
 }) => {
+  const { t } = useTranslation();
   const { fileListLayout, setFileListLayout, diffError } = useGitStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterConflictedOnly, setFilterConflictedOnly] = useState(false);
@@ -92,7 +94,7 @@ export const FileList: React.FC<FileListProps> = ({
       return (
         <span
           className="w-4 h-4 rounded-sm text-[10px] font-bold flex items-center justify-center bg-red/20 text-red border border-red/40 conflict-pulse shrink-0"
-          title="Merge conflict"
+          title={t('git.conflicts.unmerged')}
         >
           !
         </span>
@@ -104,7 +106,7 @@ export const FileList: React.FC<FileListProps> = ({
         return (
           <span
             className="w-4 h-4 rounded-sm text-[10px] font-bold flex items-center justify-center bg-green/20 text-green border border-green/30 shrink-0"
-            title="Added file"
+            title={t('git.fileList.status.added')}
           >
             A
           </span>
@@ -113,7 +115,7 @@ export const FileList: React.FC<FileListProps> = ({
         return (
           <span
             className="w-4 h-4 rounded-sm text-[10px] font-bold flex items-center justify-center bg-red/20 text-red border border-red/30 shrink-0"
-            title="Deleted file"
+            title={t('git.fileList.status.deleted')}
           >
             D
           </span>
@@ -122,7 +124,7 @@ export const FileList: React.FC<FileListProps> = ({
         return (
           <span
             className="w-4 h-4 rounded-sm text-[10px] font-bold flex items-center justify-center bg-mauve/20 text-mauve border border-mauve/30 shrink-0"
-            title="Renamed file"
+            title={t('git.fileList.status.renamed')}
           >
             R
           </span>
@@ -131,7 +133,7 @@ export const FileList: React.FC<FileListProps> = ({
         return (
           <span
             className="w-4 h-4 rounded-sm text-[10px] font-bold flex items-center justify-center bg-yellow/20 text-yellow border border-yellow/30 shrink-0"
-            title="Modified file"
+            title={t('git.fileList.status.modified')}
           >
             M
           </span>
@@ -177,7 +179,7 @@ export const FileList: React.FC<FileListProps> = ({
         {isLoading ? (
           <div className="p-8 text-center text-xs text-subtext1 space-y-2">
             <div className="w-5 h-5 rounded-full border-2 border-blue border-t-transparent animate-spin mx-auto" />
-            <p>Analyzing changes...</p>
+            <p>{t('git.fileList.analyzing')}</p>
           </div>
         ) : diffError ? (
           <div
@@ -185,12 +187,12 @@ export const FileList: React.FC<FileListProps> = ({
             title={diffError}
           >
             <AlertTriangle className="w-4 h-4" />
-            <span>Comparison unavailable</span>
-            <span className="text-subtext0">See the details in the comparison view.</span>
+            <span>{t('compareStatus.unavailable')}</span>
+            <span className="text-subtext0">{t('git.fileList.comparisonDetailsHint')}</span>
           </div>
         ) : filteredFiles.length === 0 ? (
           <div className="p-6 text-center text-xs text-subtext0">
-            {searchTerm ? 'No files match search query' : 'No file changes between branches'}
+            {searchTerm ? t('git.fileList.noSearchMatches') : t('git.diff.empty.noChanges')}
           </div>
         ) : fileListLayout === 'flat' ? (
           /* Flat File List */

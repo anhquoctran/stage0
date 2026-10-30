@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { GitCommit } from '../../../common/components/icons/GitCommit';
 import { Clock } from '../../../common/components/icons/Clock';
 import { Copy } from '../../../common/components/icons/Copy';
@@ -18,6 +19,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
   onOpenFullBlame,
   showToast,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   useDateTimeLanguage();
   const [isCardOpen, setIsCardOpen] = useState(false);
   const [copiedSha, setCopiedSha] = useState(false);
@@ -63,7 +65,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
     if (!commit?.commit_id) return;
     navigator.clipboard.writeText(commit.commit_id);
     setCopiedSha(true);
-    showToast?.(`Copied commit SHA: ${commit.commit_id.substring(0, 7)}`);
+    showToast?.(translateUiText('git.inlineBlame.copiedSha', { sha: commit.commit_id.substring(0, 7) }));
     setTimeout(() => setCopiedSha(false), 2000);
   };
 
@@ -72,7 +74,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
     if (!commit?.summary) return;
     navigator.clipboard.writeText(commit.summary);
     setCopiedMsg(true);
-    showToast?.('Copied commit message');
+    showToast?.(translateUiText('git.inlineBlame.copiedMessage'));
     setTimeout(() => setCopiedMsg(false), 2000);
   };
 
@@ -119,7 +121,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
         setIsCardOpen(!isCardOpen);
       }}
       className="inline-blame-badge relative ms-8 inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm text-[11px] font-mono text-subtext0/45 hover:text-subtext1 select-none cursor-pointer transition-colors duration-150 align-baseline group/blame"
-      title="Click or hover to inspect commit details"
+      title={translateUiText('git.inlineBlame.inspectCommit')}
     >
       <GitCommit className="w-3 h-3 text-subtext0/35 group-hover/blame:text-subtext1 shrink-0 transition-colors" />
 
@@ -154,14 +156,14 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
             <div className="flex items-center gap-1.5 font-mono text-subtext1">
               <GitCommit className="w-3.5 h-3.5 text-subtext0 shrink-0" />
               <span className="font-bold text-text">
-                {isUncommitted ? 'Working Tree' : shortSha}
+                {isUncommitted ? translateUiText('git.inlineBlame.workingTree') : shortSha}
               </span>
               {!isUncommitted && (
                 <button
                   type="button"
                   onClick={handleCopySha}
                   className="p-1 hover:bg-surface0 rounded-sm text-subtext0 hover:text-text transition-colors cursor-pointer"
-                  title="Copy full commit SHA"
+                  title={translateUiText('git.inlineBlame.copyFullSha')}
                 >
                   {copiedSha ? (
                     <Check className="w-3 h-3 text-green" />
@@ -179,14 +181,14 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm hover:bg-surface0 text-[10px] text-subtext0 hover:text-text transition-colors"
-                  title="Open commit in web browser"
+                  title={translateUiText('git.inlineBlame.openRemote')}
                 >
-                  <span>Remote</span>
+                  <span>{translateUiText('git.inlineBlame.remote')}</span>
                   <ExternalLink className="w-2.5 h-2.5" />
                 </a>
               )}
               <span className="text-[10px] text-subtext0 font-mono">
-                Line {lineNo}
+                {translateUiText('git.inlineBlame.line', { line: lineNo })}
               </span>
             </div>
           </div>
@@ -199,7 +201,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-text truncate">
-                  {commit.author} {isYou && <span className="text-subtext0 font-normal">(You)</span>}
+                  {commit.author} {isYou && <span className="text-subtext0 font-normal">({translateUiText('git.inlineBlame.you')})</span>}
                 </div>
                 {commit.author_mail && (
                   <div className="text-[10px] text-subtext0 truncate font-mono">
@@ -223,7 +225,9 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
 
           {/* Commit Message Box */}
           <div className="bg-surface0/60 border border-surface0 rounded-sm p-2 text-xs font-mono text-text whitespace-pre-wrap break-words max-h-32 overflow-y-auto mb-2.5 select-text">
-            {commit.summary || (isUncommitted ? 'Uncommitted changes in working copy' : 'No commit message')}
+            {commit.summary || (isUncommitted
+              ? translateUiText('git.inlineBlame.uncommittedMessage')
+              : translateUiText('git.inlineBlame.noCommitMessage'))}
           </div>
 
           {/* Footer Actions */}
@@ -234,7 +238,7 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
               className="flex items-center gap-1 px-2 py-1 rounded-sm hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
             >
               {copiedMsg ? <Check className="w-3 h-3 text-green" /> : <Copy className="w-3 h-3" />}
-              <span>Copy Message</span>
+              <span>{translateUiText('git.inlineBlame.copyMessage')}</span>
             </button>
 
             {onOpenFullBlame && (
@@ -246,10 +250,10 @@ export const InlineBlame: React.FC<InlineBlameProps> = ({
                   onOpenFullBlame();
                 }}
                 className="flex items-center gap-1 px-2 py-1 rounded-sm bg-surface0 hover:bg-surface1 text-text transition-colors cursor-pointer font-medium"
-                title="Open full file blame table"
+                title={translateUiText('git.inlineBlame.openFileBlame')}
               >
                 <History className="w-3 h-3 text-subtext0" />
-                <span>File Blame</span>
+                <span>{translateUiText('git.inlineBlame.fileBlame')}</span>
               </button>
             )}
           </div>

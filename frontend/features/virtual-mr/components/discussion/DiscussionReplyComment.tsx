@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { MarkdownPreview } from '../../../../common/components/MarkdownPreview';
 import { Quote } from '../../../../common/components/icons/Quote';
 import { GitLabAvatar } from '../GitLabAvatar';
@@ -12,6 +13,7 @@ export function DiscussionReplyComment({
   quote,
   isSubmitting,
 }: DiscussionReplyCommentProps) {
+  const { t } = useTranslation();
   return (
     <div key={reply.id} className="group relative flex gap-3 text-xs text-text transition-colors">
       <GitLabAvatar
@@ -38,7 +40,7 @@ export function DiscussionReplyComment({
 
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="px-1.5 py-0.5 text-[10px] font-medium border border-surface1 bg-surface0/50 text-subtext0 select-none rounded-sm">
-              Reply
+              {t('virtualMr.discussion.replyBadge')}
             </span>
 
             {badges.map((badge) => (
@@ -55,8 +57,8 @@ export function DiscussionReplyComment({
               onClick={() => quote(reply)}
               disabled={isSubmitting}
               className="p-1 text-subtext0 hover:text-brand hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
-              aria-label={`Quote comment ${reply.id}`}
-              title={`Quote comment ${reply.id}`}
+              aria-label={t('virtualMr.discussion.quoteComment', { id: reply.id })}
+              title={t('virtualMr.discussion.quoteComment', { id: reply.id })}
             >
               <Quote className="h-3 w-3" />
             </button>

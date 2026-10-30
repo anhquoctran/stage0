@@ -213,10 +213,13 @@ export const ExternalAgentsTab: React.FC<ExternalAgentsTabProps> = ({
               const description = isCustom
                 ? (item as AcpAgentConfig).command
                 : (item as AcpRegistryAgent).description;
-              const unavailableReason = entry
+              const availabilityIssue = entry
                 ? registryUnavailableReason(entry, supportedBinaryTarget)
                 : undefined;
-              const installable = !isCustom && !unavailableReason;
+              const unavailableReason = availabilityIssue
+                ? t(`ai.externalAgents.unavailableReasons.${availabilityIssue.kind}`, availabilityIssue.kind === 'noPublisherPackage' ? { target: availabilityIssue.target } : undefined)
+                : undefined;
+              const installable = !isCustom && !availabilityIssue;
               return (
                 <AcpAgentCard
                   key={`${isCustom ? 'custom' : 'registry'}-${item.id}`}

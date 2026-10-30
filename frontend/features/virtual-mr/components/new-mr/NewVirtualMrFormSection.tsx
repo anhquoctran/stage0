@@ -46,7 +46,7 @@ export function NewVirtualMrFormSection({
             type="text"
             value={draftMr.title}
             onChange={(e) => updateDraftMr({ title: e.target.value })}
-            placeholder="Virtual MR Title..."
+            placeholder={translateUiText('virtualMr.newMr.titlePlaceholder')}
             className="w-full px-3 py-1.5 bg-mantle border border-surface1 focus:border-brand text-xs text-text font-medium placeholder:text-subtext0 outline-none transition-colors rounded-sm"
           />
 
@@ -55,7 +55,7 @@ export function NewVirtualMrFormSection({
             <MarkdownEditor
               value={draftMr.description}
               onChange={(description) => updateDraftMr({ description })}
-              placeholder="Write your description or notes here..."
+              placeholder={translateUiText('virtualMr.newMr.descriptionPlaceholder')}
               rows={10}
               minHeight="260px"
               maxHeight="650px"
@@ -110,7 +110,7 @@ export function NewVirtualMrFormSection({
               ) : (
                 <GitPullRequest className="w-4 h-4 stroke-[2.5]" />
               )}
-              <span>Create Virtual MR</span>
+              <span>{translateUiText('virtualMr.newMr.create')}</span>
             </button>
 
             <button

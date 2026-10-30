@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { CustomSelect } from '../../../../common/components/CustomSelect';
 import { Search } from '../../../../common/components/icons/Search';
 import { SortAscending } from '../../../../common/components/icons/SortAscending';
@@ -5,6 +6,24 @@ import { SortDescending } from '../../../../common/components/icons/SortDescendi
 import type { MrSort } from '../../types/MrSort';
 import { SearchSuggestionIcon } from '../SearchSuggestionIcon';
 import type { VirtualMrSearchBoxProps } from './VirtualMrSearchBoxProps';
+
+const SUGGESTION_DETAIL_KEYS: Record<string, string> = {
+  Email: 'email',
+  'Local user': 'localUser',
+  Reviewer: 'reviewer',
+  'Approved reviewer': 'approvedReviewer',
+  Label: 'label',
+  'Target branch': 'targetBranch',
+  'Source branch': 'sourceBranch',
+  'MR status': 'mrStatus',
+  'Has discussions': 'hasDiscussions',
+  'Has reviewers': 'hasReviewers',
+  'Has labels': 'hasLabels',
+  'No assignee': 'noAssignee',
+  'No reviewers': 'noReviewers',
+  'No labels': 'noLabels',
+  'No discussions': 'noDiscussions',
+};
 
 export function VirtualMrSearchBox({
   searchScrollLeft,
@@ -26,6 +45,7 @@ export function VirtualMrSearchBox({
   SORT_OPTIONS,
   sortDirection,
 }: VirtualMrSearchBoxProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="flex h-8 min-w-[340px] flex-1 items-stretch border border-surface1 bg-crust focus-within:border-brand">
       <div className="relative min-w-0 flex-1">
@@ -77,9 +97,9 @@ export function VirtualMrSearchBox({
                 setSearchCaret(event.currentTarget.selectionStart ?? searchTerm.length)
               }
               onKeyDown={handleSearchKeyDown}
-              placeholder="Search MRs or type to filter…"
+              placeholder={translateUiText('virtualMr.searchBox.placeholder')}
               className="mr-list-search-input absolute inset-0 h-full w-full min-w-0 bg-transparent text-xs leading-4 text-transparent caret-text placeholder:text-subtext0 focus:outline-none selection:bg-brand/50 selection:text-text rounded-sm"
-              aria-label="Search merge requests"
+              aria-label={translateUiText('virtualMr.searchBox.searchLabel')}
               aria-autocomplete="list"
               aria-controls={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestions`}
               aria-expanded={searchSuggestions.length > 0}
@@ -96,9 +116,23 @@ export function VirtualMrSearchBox({
             id={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestions`}
             className="absolute start-0 top-full z-[120] mt-1 max-h-80 w-[min(26rem,calc(100vw-2rem))] overflow-y-auto border border-surface1 bg-surface0 py-1 text-start shadow-xl rounded-sm"
             role="listbox"
-            aria-label="Search suggestions"
+            aria-label={translateUiText('virtualMr.searchBox.suggestionsLabel')}
           >
-            {searchSuggestions.map((suggestion, index) => (
+            {searchSuggestions.map((suggestion, index) => {
+              const fieldLabel = translateUiText(
+                `virtualMr.searchSuggestions.fieldLabels.${suggestion.field}`
+              );
+              const detail = suggestion.kind === 'field'
+                ? translateUiText('virtualMr.searchBox.fieldSyntax', {
+                    field: suggestion.field,
+                    description: translateUiText(
+                      `virtualMr.searchSuggestions.fieldDescriptions.${suggestion.field}`
+                    ),
+                  })
+                : translateUiText(
+                    `virtualMr.searchSuggestions.details.${SUGGESTION_DETAIL_KEYS[suggestion.detail ?? ''] ?? 'reviewer'}`
+                  );
+              return (
               <button
                 key={`${suggestion.field}:${suggestion.value}`}
                 id={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestion-${index}`}
@@ -118,12 +152,15 @@ export function VirtualMrSearchBox({
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center text-brand">
                   <SearchSuggestionIcon field={suggestion.field} />
                 </span>
-                <span className="min-w-0 flex-1 truncate font-medium">{suggestion.label}</span>
+                <span className="min-w-0 flex-1 truncate font-medium">
+                  {suggestion.kind === 'field' ? fieldLabel : suggestion.label}
+                </span>
                 <span className="shrink-0 truncate text-[10px] text-subtext0">
-                  {suggestion.detail}
+                  {detail}
                 </span>
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -139,15 +176,19 @@ export function VirtualMrSearchBox({
           buttonClassName="h-full min-w-[140px] max-w-[170px]"
           dropdownWidth="w-40"
           align="left"
-          aria-label="Sort merge requests"
+          aria-label={translateUiText('virtualMr.searchBox.sortLabel')}
         />
       </div>
       <button
         type="button"
         onClick={() => setSortDirection((direction) => (direction === 'asc' ? 'desc' : 'asc'))}
         className="flex h-full w-8 shrink-0 items-center justify-center border-s border-surface1 bg-surface0 text-text hover:bg-surface1 focus-visible:outline focus-visible:outline-1 focus-visible:outline-brand cursor-pointer rounded-sm"
-        aria-label={`Switch to ${sortDirection === 'asc' ? 'descending' : 'ascending'} order`}
-        title={`${sortDirection === 'asc' ? 'Ascending' : 'Descending'} order`}
+        aria-label={translateUiText(sortDirection === 'asc'
+          ? 'virtualMr.searchBox.switchToDescending'
+          : 'virtualMr.searchBox.switchToAscending')}
+        title={translateUiText(sortDirection === 'asc'
+          ? 'virtualMr.searchBox.descendingOrder'
+          : 'virtualMr.searchBox.ascendingOrder')}
       >
         {sortDirection === 'asc' ? (
           <SortAscending className="h-3 w-3" />

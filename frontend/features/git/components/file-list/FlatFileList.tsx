@@ -1,4 +1,5 @@
 import type { FlatFileListProps } from './FlatFileListProps';
+import { useTranslation } from 'react-i18next';
 
 export function FlatFileList({
   filteredFiles,
@@ -8,6 +9,7 @@ export function FlatFileList({
   handleContextMenu,
   getStatusBadge,
 }: FlatFileListProps) {
+  const { t } = useTranslation();
   return (
     <div className="divide-y divide-surface0/60">
       {filteredFiles.map((file) => {
@@ -31,7 +33,7 @@ export function FlatFileList({
               {file.is_binary && (
                 <span
                   className="shrink-0 text-[9px] font-bold text-amber-400"
-                  title="Binary file; diff preview is not supported"
+                  title={t('git.diff.binary.title')}
                 >
                   BIN
                 </span>

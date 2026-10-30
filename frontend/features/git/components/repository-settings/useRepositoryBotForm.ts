@@ -1,4 +1,5 @@
 import React, { useMemo, useState, type SetStateAction } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFormDraft } from '../../../../common/hooks/useFormDraft';
 import { useAcpReviewerConfigOptions } from '../../../ai/hooks/useAcpReviewerConfigOptions';
 import type { RepositoryBotDraft } from '../../types/RepositoryBotDraft';
@@ -11,6 +12,7 @@ export function useRepositoryBotForm({
   showToast,
   addRepoCustomReviewer,
 }: RepositoryBotFormContext) {
+  const { t } = useTranslation();
   const [isAddingRepoBot, setIsAddingRepoBot] = useState(false);
 
   const { value: formDraft, setField } = useFormDraft<RepositoryBotDraft>(() => ({
@@ -92,7 +94,7 @@ export function useRepositoryBotForm({
       repoBotExecutionMode === 'acp' &&
       !acpConfig.isReady()
     ) {
-      showToast(acpConfig.error || acpConfig.validationError || 'Finish configuring the ACP agent before saving this bot.');
+      showToast(acpConfig.error || acpConfig.validationError || t('git.repositoryBotForm.finishAcpConfiguration'));
       return;
     }
 
@@ -124,7 +126,7 @@ export function useRepositoryBotForm({
     setRepoBotAcpAgentId('');
     setRepoBotAllowAcpSourceTransfer(false);
     setRepoBotAcpConfigOptions({});
-    showToast(`Added repo reviewer: ${repoBotName.trim()}`);
+    showToast(t('git.repositoryBotForm.repoReviewerAdded', { name: repoBotName.trim() }));
   };
 
   return {

@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { Trash2 } from '../../../../common/components/icons/Trash2';
 import type { RepositoryBotItemProps } from './RepositoryBotItemProps';
 
@@ -10,6 +11,7 @@ export function RepositoryBotItem({
   externalAgents,
   deleteRepoCustomReviewer,
 }: RepositoryBotItemProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div
       key={bot.id}
@@ -35,11 +37,11 @@ export function RepositoryBotItem({
               <span className="font-semibold text-xs text-text truncate">{bot.name}</span>
               {isRepoExclusive ? (
                 <span className="text-[9px] font-mono px-1.5 py-0.2 bg-accent/20 text-accent border border-accent/30">
-                  Repo Custom
+                  {translateUiText('git.repositoryAgents.repoCustom')}
                 </span>
               ) : (
                 <span className="text-[9px] font-mono px-1.5 py-0.2 bg-surface1 text-subtext0">
-                  Global
+                  {translateUiText('git.repositoryAgents.global')}
                 </span>
               )}
             </div>
@@ -48,8 +50,16 @@ export function RepositoryBotItem({
             </span>
             <span className="text-[10px] text-accent font-mono truncate block">
               {bot.acpAgentId
-                ? `ACP · ${externalAgents.find((agent) => agent.id === bot.acpAgentId)?.name || 'Agent unavailable'}${bot.allowAcpSourceTransfer ? '' : ' · source consent required'}`
-                : 'Built-in LLM provider'}
+                ? translateUiText(
+                    bot.allowAcpSourceTransfer
+                      ? 'git.repositoryAgents.acpAgent'
+                      : 'git.repositoryAgents.acpAgentConsent',
+                    {
+                      name: externalAgents.find((agent) => agent.id === bot.acpAgentId)?.name ||
+                        translateUiText('ai.botReviewers.agentUnavailable'),
+                    }
+                  )
+                : translateUiText('ai.execution.builtInProvider')}
             </span>
           </div>
         </div>
@@ -62,7 +72,9 @@ export function RepositoryBotItem({
             isChecked ? 'text-accent font-medium' : 'text-subtext0'
           }`}
         >
-          {isChecked ? '✓ Enabled for repo' : 'Disabled for repo'}
+          {translateUiText(isChecked
+            ? 'git.repositoryAgents.enabledForRepo'
+            : 'git.repositoryAgents.disabledForRepo')}
         </span>
         {isRepoExclusive && (
           <button
@@ -72,7 +84,7 @@ export function RepositoryBotItem({
               deleteRepoCustomReviewer(currentRepoId, bot.id);
             }}
             className="text-subtext0 hover:text-red-400 p-0.5 cursor-pointer rounded-sm"
-            title="Delete repo-exclusive bot"
+            title={translateUiText('git.repositoryAgents.deleteRepoBot')}
           >
             <Trash2 className="w-3 h-3" />
           </button>

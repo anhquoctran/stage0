@@ -93,8 +93,8 @@ export const ReviewPanel: React.FC = () => {
           <button
             type="button"
             onClick={close}
-            aria-label="Close review panel"
-            title="Close panel; running review continues in the background"
+            aria-label={translateUiText('review.panel.close')}
+            title={translateUiText('review.panel.closeTitle')}
             className="w-12 h-12 grid place-items-center hover:bg-surface0 rounded-sm"
           >
             <X className="w-5 h-5" />
@@ -122,9 +122,9 @@ export const ReviewPanel: React.FC = () => {
               onChange={(id) => sessionId && void load(sessionId, id)}
               options={runs.map((item) => ({
                 value: item.id,
-                label: `${formatDateTime(item.startedAt)} · ${item.reviewerName ? `${item.reviewerName} · ` : ''}${item.status} · ${item.model}`,
+                label: `${formatDateTime(item.startedAt)} · ${item.reviewerName ? `${item.reviewerName} · ` : ''}${translateUiText(`review.runSummary.status.${item.status}`)} · ${item.model}`,
               }))}
-              aria-label="Review run history"
+              aria-label={translateUiText('review.panel.runHistory')}
               className="w-full"
               buttonClassName="w-full"
               dropdownWidth="w-full"
@@ -133,7 +133,7 @@ export const ReviewPanel: React.FC = () => {
           )}
           {!run && (
             <p className="text-xs text-subtext0">
-              No review run selected. Request one from the new discussion editor or choose a run from history.
+              {translateUiText('review.panel.noRunSelected')}
             </p>
           )}
           {run && (
@@ -146,7 +146,7 @@ export const ReviewPanel: React.FC = () => {
               </div>
               {detail.events.length > 0 && (
                 <details className="text-xs">
-                  <summary>Run trace (metadata only)</summary>
+                  <summary>{translateUiText('review.panel.runTrace')}</summary>
                   <ol className="mt-2 space-y-1 max-h-40 overflow-auto font-mono text-[11px] text-subtext0">
                     {detail.events.map((event) => (
                       <li key={event.seq}>

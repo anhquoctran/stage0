@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { AiMcpTab } from '../../ai/components/AiMcpTab';
 import { ExternalAgentsTab } from '../../ai/components/ExternalAgentsTab';
 import type { AiConfig } from '../../ai/types/AiConfig';
 import type { WelcomeAiSetupProps } from '../types/WelcomeAiSetupProps';
 
 export function WelcomeAiSetup({ setup }: WelcomeAiSetupProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   const [route, setRoute] = useState<'provider' | 'acp'>('provider');
 
   const triggerAutoSave = () => {
@@ -39,8 +41,8 @@ export function WelcomeAiSetup({ setup }: WelcomeAiSetupProps) {
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-surface0 p-3 text-xs leading-5 text-subtext1" role="status">
         <span>
           {setup.connections.length
-            ? `Saved connection: ${setup.connections.join(', ')}.`
-            : 'AI connection required — add an LLM provider or install an ACP agent to continue.'}
+            ? translateUiText('onboarding.aiSetup.savedConnection', { connections: setup.connections.join(', ') })
+            : translateUiText('onboarding.aiSetup.connectionRequired')}
         </span>
         <div className="flex items-center gap-2">
           {route === 'provider' && (setup.draft.aiConfig.configuredProviders?.length ?? 0) > 0 && (
@@ -52,7 +54,7 @@ export function WelcomeAiSetup({ setup }: WelcomeAiSetupProps) {
               }}
               className="rounded-sm bg-surface1 px-2.5 py-1 text-[11px] font-semibold text-text hover:bg-surface2 disabled:opacity-40"
             >
-              Check saved API keys
+              {translateUiText('onboarding.aiSetup.checkSavedKeys')}
             </button>
           )}
           <span
@@ -60,13 +62,13 @@ export function WelcomeAiSetup({ setup }: WelcomeAiSetupProps) {
               setup.connections.length ? 'bg-emerald-600' : 'bg-amber-600'
             }`}
           >
-            {setup.busy ? 'Saving…' : setup.connections.length ? 'Connected' : 'Required'}
+            {translateUiText(setup.busy ? 'onboarding.aiSetup.saving' : setup.connections.length ? 'onboarding.aiSetup.connected' : 'onboarding.aiSetup.required')}
           </span>
         </div>
       </div>
 
       <fieldset disabled={setup.busy} className="min-w-0 space-y-4">
-        <div className="flex gap-2 rounded-sm" aria-label="AI connection method">
+        <div className="flex gap-2 rounded-sm" aria-label={translateUiText('onboarding.aiSetup.connectionMethod')}>
           {(['provider', 'acp'] as const).map((method) => (
             <button
               key={method}
@@ -79,7 +81,7 @@ export function WelcomeAiSetup({ setup }: WelcomeAiSetupProps) {
                   : 'border border-surface1 bg-crust text-subtext0 hover:text-text'
               }`}
             >
-              {method === 'provider' ? 'LLM Provider' : 'ACP Agent'}
+              {translateUiText(method === 'provider' ? 'onboarding.aiSetup.llmProvider' : 'onboarding.aiSetup.acpAgent')}
             </button>
           ))}
         </div>
@@ -108,14 +110,14 @@ export function WelcomeAiSetup({ setup }: WelcomeAiSetupProps) {
                 }}
                 className="rounded-sm bg-red-600 px-2.5 py-1 text-[11px] font-semibold text-white"
               >
-                Retry save
+                {translateUiText('onboarding.aiSetup.retrySave')}
               </button>
               <button
                 type="button"
                 onClick={setup.discard}
                 className="rounded-sm bg-surface0 px-2.5 py-1 text-[11px] font-semibold text-text hover:bg-surface1"
               >
-                Discard draft
+                {translateUiText('onboarding.aiSetup.discardDraft')}
               </button>
             </div>
           )}

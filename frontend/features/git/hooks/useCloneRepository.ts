@@ -1,6 +1,7 @@
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGitCredentialsStore } from '../../credentials/store/useGitCredentialsStore';
 import { useGitStore } from '../store/useGitStore';
 import { useGitTaskStore } from '../store/useGitTaskStore';
@@ -10,6 +11,7 @@ import { useCloneDestination } from './useCloneDestination';
 import { useCloneRemoteRefs } from './useCloneRemoteRefs';
 
 export function useCloneRepository() {
+  const { t } = useTranslation();
   const appServices = useApplicationServices();
   const { isCloneModalOpen, setIsCloneModalOpen, cloneRepo, pickCloneFolder } = useGitStore();
   const credentials = useGitCredentialsStore((state) => state.credentials);
@@ -177,31 +179,31 @@ export function useCloneRepository() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!remoteUrl.trim()) {
-      setErrorMessage('Please enter a valid repository URL.');
+      setErrorMessage(t('git.clone.enterValidUrl'));
       return;
     }
     if (useSavedCredential && !remoteOrigin) {
-      setErrorMessage('Saved Git credentials can only be used with HTTPS repository URLs.');
+      setErrorMessage(t('git.clone.savedCredentialHttpsOnly'));
       return;
     }
     if (useSavedCredential && !selectedCredential) {
       setErrorMessage(
-        'Select a saved Git credential, or turn off the credential option to clone without one.'
+        t('git.clone.selectCredentialOrDisable')
       );
       return;
     }
     if (urlStatus === 'invalid') {
-      setErrorMessage(urlMessage || 'Repository URL is invalid or inaccessible.');
+      setErrorMessage(urlMessage || t('git.clone.repositoryInvalid'));
       return;
     }
     if (!destinationPath.trim()) {
-      setErrorMessage('Please select a destination folder.');
+      setErrorMessage(t('git.clone.selectDestination'));
       return;
     }
 
     const optionsError = validateCloneOptions(cloneOptions);
     if (optionsError) {
-      setErrorMessage(optionsError);
+      setErrorMessage(t(optionsError));
       return;
     }
 

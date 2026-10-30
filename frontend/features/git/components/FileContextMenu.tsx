@@ -64,9 +64,9 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
     if (!currentRepo) return;
     try {
       await revealInOs(currentRepo.local_path, file.path);
-      showToast('Revealed file in OS File Explorer');
+      showToast(translateUiText('git.fileActions.revealedInExplorer'));
     } catch (err) {
-      showToast(`Failed to open explorer: ${err}`);
+      showToast(translateUiText('git.fileActions.revealFailed', { error: String(err) }));
     }
   };
 
@@ -81,7 +81,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
   const handleCopyRelative = () => {
     onClose();
     navigator.clipboard.writeText(file.path);
-    showToast(`Copied relative path: ${file.path}`);
+    showToast(translateUiText('git.fileActions.copiedRelativePath', { path: file.path }));
   };
 
   const handleCopyAbsolute = () => {
@@ -89,20 +89,20 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
     if (!currentRepo) return;
     const absPath = getAbsoluteFilePath(currentRepo.local_path, file.path);
     navigator.clipboard.writeText(absPath);
-    showToast('Copied absolute path to clipboard');
+    showToast(translateUiText('git.fileActions.copiedAbsolutePath'));
   };
 
   const handleCopyRemoteUrl = () => {
     onClose();
     const effectiveRemote = remoteUrl || (currentRepo ? `https://github.com/${currentRepo.name}` : '');
     if (!effectiveRemote) {
-      showToast('No remote URL configured for this repository');
+      showToast(translateUiText('git.blame.noRemoteUrl'));
       return;
     }
     const ref = compareBranch || 'main';
     const url = buildRemoteFileUrl(effectiveRemote, ref, file.path);
     navigator.clipboard.writeText(url);
-    showToast(`Copied remote file URL (${ref})`);
+    showToast(translateUiText('git.fileActions.copiedRemoteUrl', { ref }));
   };
 
   const handleCopyRemoteUrlFrom = () => {
@@ -128,7 +128,7 @@ export const FileContextMenu: React.FC<FileContextMenuProps> = ({
       >
         <div className="flex items-center gap-2">
           <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
-          <span>Open in File Explorer</span>
+          <span>{translateUiText('menu.commands.open_explorer')}</span>
         </div>
         <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('reveal_file')}</span>
       </button>

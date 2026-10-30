@@ -1,4 +1,5 @@
 import type { StoreApi } from 'zustand';
+import i18n from '../../i18n/i18n';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { type VirtualMrSession } from '../types/VirtualMrSession';
@@ -62,7 +63,7 @@ export const createDraftSubmissionActions = (
       useGitStore
         .getState()
         .showToast(
-          'Could not save this Virtual MR to the database. Your draft is still available; please try again.'
+          i18n.t('virtualMr.toasts.draftSaveFailed')
         );
       return '';
     }
@@ -78,7 +79,7 @@ export const createDraftSubmissionActions = (
       isDraftActive: false,
     });
 
-    useGitStore.getState().showToast(`Created Virtual MR: ${title}`);
+    useGitStore.getState().showToast(i18n.t('virtualMr.toasts.sessionCreated', { title }));
     return newId;
   },
 });

@@ -22,7 +22,11 @@ export function AcpOnboardingProviderPicker({
   const findInstalled = (agentId: string) =>
     externalAgents.find((agent) => agent.id === agentId && agent.source === 'registry');
   const getReason = (entry?: AcpRegistryAgent) => {
-    if (entry) return registryUnavailableReason(entry, supportedBinaryTarget);
+    if (entry) {
+      const issue = registryUnavailableReason(entry, supportedBinaryTarget);
+      if (!issue) return undefined;
+      return t(`ai.externalAgents.unavailableReasons.${issue.kind}`, issue.kind === 'noPublisherPackage' ? { target: issue.target } : undefined);
+    }
     return isLoading ? t('ai.externalAgents.loadingProvider') : t('ai.externalAgents.providerUnavailable');
   };
 

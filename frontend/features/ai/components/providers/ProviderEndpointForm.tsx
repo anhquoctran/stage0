@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { resolveAiModelPreset } from '../../utils/resolveAiModelPreset';
 import type { ProviderEndpointFormProps } from './ProviderEndpointFormProps';
 
@@ -7,11 +8,12 @@ export function ProviderEndpointForm({
   onUpdateAiConfig,
   dynamicModels,
 }: ProviderEndpointFormProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-3 pt-3 border-t border-surface1/60">
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="text-xs font-medium text-text">API Base URL / Endpoint</label>
+          <label className="text-xs font-medium text-text">{t('ai.providerFields.baseUrl')}</label>
           {aiConfig.baseUrl !== activeProviderPreset.defaultBaseUrl && (
             <button
               type="button"
@@ -22,7 +24,7 @@ export function ProviderEndpointForm({
               }
               className="text-[10px] text-subtext0 hover:text-text underline cursor-pointer rounded-sm"
             >
-              Reset default ({activeProviderPreset.defaultBaseUrl})
+              {t('ai.providerFields.resetDefault', { value: activeProviderPreset.defaultBaseUrl })}
             </button>
           )}
         </div>
@@ -56,7 +58,7 @@ export function ProviderEndpointForm({
             onChange={(e) => onUpdateAiConfig({ streamResponse: e.target.checked })}
             className="w-4 h-4 accent-text cursor-pointer"
           />
-          <span>Stream responses in real-time</span>
+          <span>{t('ai.providerFields.streamResponses')}</span>
         </label>
 
         <label className="flex items-center gap-2 cursor-pointer text-xs text-text select-none">
@@ -66,7 +68,7 @@ export function ProviderEndpointForm({
             onChange={(e) => onUpdateAiConfig({ enableCodeReviewAssist: e.target.checked })}
             className="w-4 h-4 accent-text cursor-pointer"
           />
-          <span>Auto-summarize Git commits &amp; diffs</span>
+          <span>{t('ai.providerFields.summarizeCommitsDiffs')}</span>
         </label>
       </div>
     </div>

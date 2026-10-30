@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SandboxCommandContext } from './SandboxCommandContext';
 
 export function useSandboxCommand({
@@ -9,6 +10,7 @@ export function useSandboxCommand({
   activeSandboxInstances,
   executeSandboxCommand,
 }: SandboxCommandContext) {
+  const { t } = useTranslation();
   const [testCmd, setTestCmd] = useState('git status');
 
   const [selectedInstanceId, setSelectedInstanceId] = useState<string>('');
@@ -25,11 +27,16 @@ export function useSandboxCommand({
 
   const handleCreateInstance = async () => {
     if (!currentRepo) {
-      showToast('Please open a repository first');
+      showToast(t('ai.sandbox.openRepositoryFirst'));
       return;
     }
     if (isPendingCommit) {
-      showToast('Click Apply or OK to commit the new engine before provisioning instances');
+      showToast(
+        t('ai.sandbox.commitEngineFirst', {
+          apply: t('common.apply'),
+          ok: t('common.ok'),
+        }),
+      );
       return;
     }
     const inst = await createSandboxInstance();
@@ -44,7 +51,7 @@ export function useSandboxCommand({
     }
     const targetId = selectedInstanceId || activeSandboxInstances[0]?.id;
     if (!targetId) {
-      showToast('Please create or select an active sandbox instance first');
+      showToast(t('ai.sandbox.selectInstanceFirst'));
       return;
     }
 

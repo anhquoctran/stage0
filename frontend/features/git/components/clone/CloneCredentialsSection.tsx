@@ -14,6 +14,7 @@ export function CloneCredentialsSection({
   setSelectedCredentialId,
   remoteOrigin,
 }: CloneCredentialsSectionProps) {
+  const { t } = useTranslation();
   return (
     <div className="border border-surface1 bg-surface0/40 p-3 space-y-2.5 rounded-sm">
       <label className="flex items-center gap-2 text-xs font-medium text-text cursor-pointer">
@@ -27,11 +28,11 @@ export function CloneCredentialsSection({
           }}
           className="accent-brand"
         />
-        <span>Use a saved HTTPS credential (optional)</span>
+        <span>{t('git.clone.useSavedCredential')} ({t('common.optional')})</span>
       </label>
       {isSshRemote && (
         <p className="ps-5 text-[10px] text-subtext0">
-          SSH cloning uses your existing Git/SSH setup. Stage0 credential selection is HTTPS-only.
+          {t('git.clone.sshCredentialNote')}
         </p>
       )}
       {useSavedCredential && (
@@ -49,21 +50,22 @@ export function CloneCredentialsSection({
             dropdownWidth="w-full"
             align="left"
             placeholder={
-              credentialsLoading ? 'Loading saved credentials...' : 'Select a credential'
+              credentialsLoading ? t('git.clone.loadingCredentials') : t('git.clone.selectCredential')
             }
-            aria-label="Saved Git credential"
+            aria-label={t('git.clone.savedCredential')}
           />
           <p className="text-[10px] text-subtext0">
             {remoteOrigin
               ? credentialOptions.length > 0
-                ? 'Only credentials for this HTTPS host are listed. The secret is used for this clone only.'
-                : 'No saved credential matches this HTTPS host. Add one in Preferences or scan a known remote.'
+                ? t('git.clone.credentialsMatchHost')
+                : t('git.clone.noCredentialForHost')
               : isSshRemote
-                ? 'SSH cloning uses your existing Git/SSH setup. Stage0 credential selection is HTTPS-only.'
-                : 'Saved credentials are available for HTTPS repositories only.'}
+                ? t('git.clone.sshCredentialNote')
+                : t('git.clone.httpsCredentialsOnly')}
           </p>
         </div>
       )}
     </div>
   );
 }
+import { useTranslation } from 'react-i18next';

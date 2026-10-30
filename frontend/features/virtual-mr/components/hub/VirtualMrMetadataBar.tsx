@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { useOutsideDismiss } from '../../../../common/hooks/useOutsideDismiss';
 import { Bot } from '../../../../common/components/icons/Bot';
 import { Check } from '../../../../common/components/icons/Check';
@@ -21,6 +22,7 @@ export function VirtualMrMetadataBar({
   activeMrTab,
   diffPayload,
 }: VirtualMrMetadataBarProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   const labelDropdownRef = useRef<HTMLDivElement>(null);
   useOutsideDismiss(labelDropdownRef, showLabelDropdown, () => setShowLabelDropdown(false));
   return (
@@ -37,7 +39,7 @@ export function VirtualMrMetadataBar({
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
-          <span>Overview</span>
+          <span>{translateUiText('virtualMr.metadataBar.overview')}</span>
           {session.discussions.length > 0 && (
             <span
               className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
@@ -61,7 +63,7 @@ export function VirtualMrMetadataBar({
           }`}
         >
           <GitCommit className="w-3.5 h-3.5" />
-          <span>Commits</span>
+          <span>{translateUiText('virtualMr.metadataBar.commits')}</span>
           {session.commits.length > 0 && (
             <span
               className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
@@ -85,7 +87,7 @@ export function VirtualMrMetadataBar({
           }`}
         >
           <Bot className="w-3.5 h-3.5" />
-          <span>AI Reviews</span>
+          <span>{translateUiText('virtualMr.metadataBar.aiReviews')}</span>
           {session.reviewers.length > 0 && (
             <span
               className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
@@ -109,7 +111,7 @@ export function VirtualMrMetadataBar({
           }`}
         >
           <FileCode className="w-3.5 h-3.5" />
-          <span>Changes</span>
+          <span>{translateUiText('virtualMr.metadataBar.changes')}</span>
           <span
             className={`ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
               activeMrTab === 'diff'
@@ -137,7 +139,7 @@ export function VirtualMrMetadataBar({
           type="button"
           onClick={() => void toggleLabelDropdown()}
           className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-subtext0 hover:text-text cursor-pointer"
-          title="Toggle Labels"
+          title={translateUiText('virtualMr.metadataBar.toggleLabels')}
         >
           <Plus className="w-3 h-3" />
         </button>
@@ -146,7 +148,7 @@ export function VirtualMrMetadataBar({
         {showLabelDropdown && (
           <div className="absolute top-full end-0 mt-1 w-56 rounded-sm bg-crust border border-surface0 shadow-xl py-1 z-50">
             <div className="px-3 py-1.5 flex items-center justify-between text-[11px] font-semibold text-subtext0 uppercase tracking-wider border-b border-surface0/60 rounded-sm">
-              <span>Toggle Labels</span>
+              <span>{translateUiText('virtualMr.metadataBar.toggleLabels')}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -155,12 +157,12 @@ export function VirtualMrMetadataBar({
                 }}
                 className="text-accent hover:underline text-[10px] lowercase rounded-sm cursor-pointer"
               >
-                manage
+                {translateUiText('virtualMr.metadataBar.manage')}
               </button>
             </div>
             <div className="max-h-48 overflow-y-auto py-1">
               {isLoadingLabelOptions ? (
-                <div className="px-3 py-3 text-xs text-subtext0">Loading labels...</div>
+                <div className="px-3 py-3 text-xs text-subtext0">{translateUiText('virtualMr.labels.loading')}</div>
               ) : (
                 repoLabels.map((lbl) => {
                   const isChecked = session.labels.some((l) => l.id === lbl.id);

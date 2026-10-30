@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus } from '../../../../common/components/icons/Plus';
 import { X } from '../../../../common/components/icons/X';
 
@@ -27,15 +28,16 @@ export const GuardrailsFilesSection: React.FC<{
   requireConfirmationWrites,
   onToggleConfirmationWrites,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="p-4 bg-surface0/60 border border-surface1 space-y-4 rounded-sm">
       <h4 className="text-xs font-bold text-text">
-        Workspace & Sensitive File Shield
+        {t('ai.guardrails.fileShieldTitle')}
       </h4>
 
       <div className="space-y-2">
         <label className="text-[11px] font-medium text-subtext0">
-          Protected Sensitive File Patterns (Access Blocked)
+          {t('ai.guardrails.protectedPatternsTitle')}
         </label>
         <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center rounded-sm">
           {sensitivePatterns.map((pat) => (
@@ -48,7 +50,7 @@ export const GuardrailsFilesSection: React.FC<{
                 type="button"
                 onClick={() => onRemoveSensitivePattern(pat)}
                 className="text-white/80 hover:text-white cursor-pointer rounded-sm ms-0.5 transition-colors"
-                title="Remove"
+                title={t('ai.guardrails.remove')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -58,7 +60,7 @@ export const GuardrailsFilesSection: React.FC<{
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="e.g. *.key, secrets.yaml"
+            placeholder={t('ai.guardrails.sensitivePatternPlaceholder')}
             value={newSensitivePattern}
             onChange={(e) => setNewSensitivePattern(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), onAddSensitivePattern())}
@@ -70,7 +72,7 @@ export const GuardrailsFilesSection: React.FC<{
             className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 text-text hover:bg-surface2 cursor-pointer transition rounded-sm"
           >
             <Plus className="w-3 h-3" />
-            <span>Add Sensitive Pattern</span>
+            <span>{t('ai.guardrails.addSensitivePattern')}</span>
           </button>
         </div>
       </div>
@@ -79,7 +81,7 @@ export const GuardrailsFilesSection: React.FC<{
       <div className="pt-3 border-t border-surface1">
         <div className="max-w-md">
           <label className="text-[11px] font-medium text-subtext0 block whitespace-nowrap">
-            Max File Read Line Range: <span className="text-text font-mono font-bold">{maxFileReadLines} lines</span>
+            {t('ai.guardrails.maxFileReadLines', { count: maxFileReadLines })}
           </label>
           <input
             type="range"
@@ -104,7 +106,7 @@ export const GuardrailsFilesSection: React.FC<{
             className="rounded-sm border-surface2 text-brand focus:ring-0 cursor-pointer accent-brand"
           />
           <label htmlFor="confirm-commands-chk" className="text-xs text-text cursor-pointer select-none">
-            Require confirmation for all terminal commands
+            {t('ai.guardrails.confirmAllCommands')}
           </label>
         </div>
 
@@ -118,10 +120,10 @@ export const GuardrailsFilesSection: React.FC<{
           />
           <div>
             <label htmlFor="confirm-writes-chk" className="text-xs text-text cursor-pointer select-none">
-              Require confirmation for terminal tools that may write files
+              {t('ai.guardrails.confirmWriteTools')}
             </label>
             <p className="mt-0.5 text-[10px] text-subtext0">
-              No approval dialog is available yet, so commands requiring confirmation are blocked rather than paused.
+              {t('ai.guardrails.confirmationUnavailable')}
             </p>
           </div>
         </div>

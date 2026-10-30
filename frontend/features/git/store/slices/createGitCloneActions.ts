@@ -1,4 +1,5 @@
 import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+import i18n from '../../../i18n/i18n';
 
 import type { StoreApi } from 'zustand';
 import { createGitProgressHandler } from '../../services/createGitProgressHandler';
@@ -60,7 +61,7 @@ export const createGitCloneActions = (
         }
         useGitTaskStore.getState().completeTask(taskId, `Cloned repository ${repo.name}`, repo);
         useGitTaskStore.getState().dismissTask(taskId);
-        get().showToast(`Cloned repository ${repo.name}`);
+        get().showToast(i18n.t('git.toasts.repositoryCloned', { name: repo.name }));
         return repo;
       }
       useGitTaskStore.getState().failTask(taskId, 'Clone did not return a repository.');

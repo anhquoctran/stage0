@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { AcpAgentConfig } from '../types/AcpAgentConfig';
 import type { CustomAcpAgentFormContext } from './CustomAcpAgentFormContext';
 
@@ -8,6 +9,7 @@ export function useCustomAcpAgentForm({
   externalAgents,
   setIsCustomOpen,
 }: CustomAcpAgentFormContext) {
+  const { t } = useTranslation();
   const [customName, setCustomName] = useState('');
 
   const [customCommand, setCustomCommand] = useState('');
@@ -17,7 +19,7 @@ export function useCustomAcpAgentForm({
   const addCustomAgent = (event: React.FormEvent) => {
     event.preventDefault();
     if (!customName.trim() || !customCommand.trim()) {
-      setError('Name and command are required.');
+      setError(t('ai.externalAgents.nameCommandRequired'));
       return;
     }
     const config: AcpAgentConfig = {

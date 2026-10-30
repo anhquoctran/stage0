@@ -33,7 +33,7 @@ export function BlameCommitDetailModal({
         >
           <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
             <GitCommit className="w-4 h-4 text-subtext0" />
-            <h4 className="text-sm font-bold text-text">Commit Details</h4>
+            <h4 className="text-sm font-bold text-text">{translateUiText('git.blame.commitDetails')}</h4>
           </div>
           <button
             type="button"
@@ -46,7 +46,7 @@ export function BlameCommitDetailModal({
 
         {/* Commit Message */}
         <div className="bg-base border border-surface0 rounded-sm p-3">
-          <div className="text-[10px] uppercase font-bold text-subtext0 mb-1">Commit Message</div>
+          <div className="text-[10px] uppercase font-bold text-subtext0 mb-1">{translateUiText('git.blame.commitMessage')}</div>
           <p className="text-xs text-text font-medium whitespace-pre-wrap leading-relaxed">
             {selectedCommit.summary}
           </p>
@@ -58,7 +58,7 @@ export function BlameCommitDetailModal({
           <div className="flex items-center justify-between gap-2 p-2 bg-surface0/40 rounded-sm border border-surface0/60 font-mono">
             <div className="min-w-0 flex-1 truncate">
               <span className="text-[10px] uppercase block font-sans text-subtext0 font-bold">
-                SHA
+                {translateUiText('git.blame.sha')}
               </span>
               <span className="text-xs text-text select-all font-semibold truncate block">
                 {selectedCommit.commit_id}
@@ -68,14 +68,14 @@ export function BlameCommitDetailModal({
               type="button"
               onClick={() => handleCopySha(selectedCommit.commit_id)}
               className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs rounded-sm transition-colors shrink-0 cursor-pointer"
-              title="Copy full SHA"
+              title={translateUiText('git.blame.copyFullSha')}
             >
               {copiedSha ? (
                 <Check className="w-3.5 h-3.5 text-text" />
               ) : (
                 <Copy className="w-3.5 h-3.5 text-subtext0" />
               )}
-              <span>{copiedSha ? 'Copied' : 'Copy'}</span>
+              <span>{copiedSha ? translateUiText('git.blame.copied') : translateUiText('git.blame.copy')}</span>
             </button>
           </div>
 
@@ -85,7 +85,7 @@ export function BlameCommitDetailModal({
             <div className="min-w-0 flex-1">
               <div className="font-semibold text-text">{selectedCommit.author}</div>
               <div className="text-[11px] text-subtext0 font-mono">
-                {selectedCommit.author_mail ? `<${selectedCommit.author_mail}>` : '(no email)'}
+                {selectedCommit.author_mail ? `<${selectedCommit.author_mail}>` : translateUiText('git.blame.noEmail')}
               </div>
             </div>
           </div>
@@ -112,7 +112,7 @@ export function BlameCommitDetailModal({
             className="flex items-center gap-1.5 px-3 py-1.5 bg-surface0 hover:bg-surface1 text-text text-xs rounded-sm transition-colors cursor-pointer"
           >
             <ExternalLink className="w-3.5 h-3.5 text-subtext0" />
-            <span>Copy Remote Link</span>
+            <span>{translateUiText('git.blame.copyRemoteLink')}</span>
           </button>
 
           <button

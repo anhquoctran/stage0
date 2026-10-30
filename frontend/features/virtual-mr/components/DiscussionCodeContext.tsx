@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Copy } from '../../../common/components/icons/Copy';
 import { Check } from '../../../common/components/icons/Check';
 import { useGitStore } from '../../git/store/useGitStore';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import type { VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
 import { getDiscussionCodeRows, getDiscussionPosition } from '../utils/discussionCodeContext';
 
@@ -11,6 +12,7 @@ export const DiscussionCodeContext: React.FC<{
     'filePath' | 'lineNumber' | 'diffSide' | 'commitId' | 'codeSnippet' | 'verificationStatus'
   >;
 }> = ({ discussion }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { showToast } = useGitStore();
   const [copied, setCopied] = useState(false);
   if (!discussion.filePath) return null;
@@ -23,15 +25,15 @@ export const DiscussionCodeContext: React.FC<{
     try {
       await navigator.clipboard.writeText(discussion.filePath || '');
       setCopied(true);
-      showToast('Copied file path to clipboard', 'info');
+      showToast(translateUiText('virtualMr.discussionCode.copiedFilePath'), 'info');
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      showToast('Could not copy file path', 'error');
+      showToast(translateUiText('virtualMr.discussionCode.copyFilePathFailed'), 'error');
     }
   };
 
   return (
-    <section className="overflow-hidden rounded-sm bg-crust text-xs" aria-label="Reviewed code location">
+    <section className="overflow-hidden rounded-sm bg-crust text-xs" aria-label={translateUiText('virtualMr.discussionCode.reviewedCodeLocation')}>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-surface0/30 px-3.5 py-3">
         <div className="flex min-w-0 flex-1 items-start gap-2">
           <span dir="ltr" className="min-w-0 break-all whitespace-normal font-mono text-xs font-semibold leading-5 text-text sm:text-sm">
@@ -41,19 +43,19 @@ export const DiscussionCodeContext: React.FC<{
             type="button"
             onClick={handleCopyPath}
             className="shrink-0 rounded-sm p-1 text-subtext0 transition-colors hover:bg-surface0 hover:text-text"
-            aria-label="Copy file path"
-            title="Copy file path"
+            aria-label={translateUiText('virtualMr.discussionCode.copyFilePath')}
+            title={translateUiText('virtualMr.discussionCode.copyFilePath')}
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2 text-[10px] text-subtext0">
           {discussion.verificationStatus === 'outdated' && (
-            <span className="rounded-sm bg-surface0 px-2 py-0.5 text-subtext1">Outdated</span>
+            <span className="rounded-sm bg-surface0 px-2 py-0.5 text-subtext1">{translateUiText('virtualMr.discussionCode.outdated')}</span>
           )}
           {discussion.commitId && (
-            <span dir="ltr" className="font-mono" title={`Reviewed snapshot: ${discussion.commitId}`}>
-              Reviewed at {discussion.commitId.slice(0, 8)}
+            <span dir="ltr" className="font-mono" title={translateUiText('virtualMr.discussionCode.reviewedSnapshot', { commit: discussion.commitId })}>
+              {translateUiText('virtualMr.discussionCode.reviewedAt', { commit: discussion.commitId.slice(0, 8) })}
             </span>
           )}
         </div>
@@ -61,11 +63,11 @@ export const DiscussionCodeContext: React.FC<{
       {position && (
         <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 text-xs text-subtext1">
           <p className="font-medium text-text">{position.commentLabel}</p>
-          <span>{discussion.diffSide === 'left' ? 'Old version · base' : discussion.diffSide === 'right' ? 'New version · head' : 'Reviewed snapshot'}</span>
+          <span>{translateUiText(discussion.diffSide === 'left' ? 'virtualMr.discussionCode.oldVersionBase' : discussion.diffSide === 'right' ? 'virtualMr.discussionCode.newVersionHead' : 'virtualMr.discussionCode.snapshotVersion')}</span>
         </div>
       )}
       {rows.length > 0 ? (
-        <div dir="ltr" className="overflow-x-auto rounded-sm bg-base select-text" aria-label="Discussion code snippet">
+        <div dir="ltr" className="overflow-x-auto rounded-sm bg-base select-text" aria-label={translateUiText('virtualMr.discussionCode.codeSnippet')}>
           <table className="w-full border-collapse font-mono text-xs leading-6">
             <tbody>
               {rows.map((row) => (
@@ -73,7 +75,7 @@ export const DiscussionCodeContext: React.FC<{
                   key={row.number}
                   data-line-number={row.number}
                   data-selected={row.isSelected}
-                  aria-label={row.isSelected ? `Issue line ${row.number}` : undefined}
+                  aria-label={row.isSelected ? translateUiText('virtualMr.discussionCode.issueLine', { line: row.number }) : undefined}
                   className={`border-0 ${row.isSelected ? 'font-semibold' : ''} ${
                     row.type === 'del' ? 'discussion-diff-deleted text-text'
                       : row.type === 'add' ? 'discussion-diff-added text-text'
@@ -90,12 +92,12 @@ export const DiscussionCodeContext: React.FC<{
           </table>
           {position && lastLine && position.end > lastLine && (
             <p className="px-3.5 py-2 font-sans text-[11px] text-subtext0">
-              Excerpt shows lines {rows[0].number}–{lastLine}. The comment range continues to line {position.end}.
+              {translateUiText('virtualMr.discussionCode.excerptLines', { start: rows[0].number, end: lastLine, continuedEnd: position.end })}
             </p>
           )}
         </div>
       ) : (
-        <p className="px-3.5 py-3 text-[11px] text-subtext0">Code from the reviewed snapshot is unavailable.</p>
+        <p className="px-3.5 py-3 text-[11px] text-subtext0">{translateUiText('virtualMr.discussionCode.snapshotCodeUnavailable')}</p>
       )}
     </section>
   );

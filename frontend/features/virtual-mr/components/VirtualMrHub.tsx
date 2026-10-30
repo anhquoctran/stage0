@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { useGitStore } from '../../git/store/useGitStore';
 import { isReviewStartingForSession, useReviewStore } from '../../review/store/useReviewStore';
@@ -10,6 +11,7 @@ import { VirtualMrMetadataBar } from './hub/VirtualMrMetadataBar';
 import { useMrMetadataDropdowns } from './useMrMetadataDropdowns';
 
 export const VirtualMrHub: React.FC = () => {
+  const { t } = useTranslation();
   const { currentRepo, showToast, diffPayload, branches, setBranchComparison } = useGitStore();
   const {
     sessions,
@@ -87,7 +89,7 @@ export const VirtualMrHub: React.FC = () => {
   const isReviewOngoing = Boolean(reviewBatch) || reviewIsStarting || reviewIsRunning;
   const isBranchLocked = hasVirtualMrActivity(session, { isReviewOngoing });
   const branchLockedReason =
-    'Cannot change branches once discussions or reviews have started in this Virtual MR';
+    t('virtualMr.toasts.branchesLocked');
 
   const handleStartEditTitle = () => {
     setEditTitle(session.title);
@@ -98,13 +100,13 @@ export const VirtualMrHub: React.FC = () => {
     if (!editTitle.trim()) return;
     await updateSessionDetails(session.id, editTitle.trim(), session.description);
     setIsEditingTitle(false);
-    showToast('Title updated');
+    showToast(t('virtualMr.toasts.titleUpdated'));
   };
 
   const handleBranchChange = async (sessionId: string, newBase: string, newCompare: string) => {
     if (isBranchLocked) {
       showToast(
-        'Cannot change branches after discussions or reviews have started in this Virtual MR',
+        t('virtualMr.toasts.branchesLocked'),
         'warning'
       );
       return;
@@ -120,7 +122,7 @@ export const VirtualMrHub: React.FC = () => {
   ) => {
     if (isBranchLocked) {
       showToast(
-        'Cannot change branches after discussions or reviews have started in this Virtual MR',
+        t('virtualMr.toasts.branchesLocked'),
         'warning'
       );
       return;

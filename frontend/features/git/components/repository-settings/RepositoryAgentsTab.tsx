@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { Check } from '../../../../common/components/icons/Check';
 import { Plus } from '../../../../common/components/icons/Plus';
 import { Shield } from '../../../../common/components/icons/Shield';
@@ -18,22 +19,27 @@ import { useRepositoryBotForm } from './useRepositoryBotForm';
 
 const RULE_SNIPPETS = [
   {
+    id: 'strictTypeScript',
     label: 'Strict TypeScript',
     text: 'Enforce strict TypeScript: reject "any", require return types, verify exhaustive union checks.',
   },
   {
+    id: 'securityOwasp',
     label: 'Security & OWASP',
     text: 'Sanitize external inputs against SQLi/XSS, verify auth tokens on mutation endpoints, no secrets in logs.',
   },
   {
+    id: 'performance',
     label: 'Performance',
     text: 'Flag potential N+1 database queries, verify pagination on large listings, check for redundant re-renders.',
   },
   {
+    id: 'cleanArchitecture',
     label: 'Clean Architecture',
     text: 'Enforce SOLID principles, keep business domain decoupled from transport/DB, no circular imports.',
   },
   {
+    id: 'unitTestCoverage',
     label: 'Unit Test Coverage',
     text: 'Ensure every new feature or bug fix includes corresponding automated tests with edge assertions.',
   },
@@ -46,6 +52,7 @@ export const RepositoryAgentsTab: React.FC<{
   setCustomRules: React.Dispatch<React.SetStateAction<string>>;
   onClose: () => void;
 }> = ({ inheritAgents, setInheritAgents, customRules, setCustomRules, onClose }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const { currentRepo, showToast } = useGitStore();
   const { setIsPreferencesOpen } = usePreferencesStore();
   const externalAgents = useAiMcpStore((state) => state.externalAgents);
@@ -100,19 +107,25 @@ export const RepositoryAgentsTab: React.FC<{
   } = useRepositoryBotForm({ currentRepoId, inheritAgents, externalAgents, showToast, addRepoCustomReviewer });
 
   const repoBotCategoryOptions: CustomSelectOption<BotCategory>[] = BOT_CATEGORIES.map(
-    (category) => ({ value: category.id, label: category.label })
+    (category) => ({
+      value: category.id,
+      label: translateUiText(`ai.botCategories.${category.id}`),
+    })
   );
+  const localizedRuleSnippets = RULE_SNIPPETS.map((snippet) => ({
+    ...snippet,
+    label: translateUiText(`git.repositoryAgents.snippets.${snippet.id}`),
+  }));
 
   return (
     <div className="space-y-6">
       <div>
         <h3 className="text-[1rem] text-text font-medium flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-brand" />
-          <span>Repository Bot Reviewers</span>
+          <span>{translateUiText('git.repositoryAgents.title')}</span>
         </h3>
         <p className="text-xs text-subtext0 mt-0.5">
-          Configure which AI Reviewer bots analyze Virtual MRs, catch security vulnerabilities, and
-          inspect code for this repository.
+          {translateUiText('git.repositoryAgents.description')}
         </p>
       </div>
 
@@ -136,8 +149,8 @@ export const RepositoryAgentsTab: React.FC<{
             <Shield className="w-3.5 h-3.5 text-subtext0" />
             <span>
               {inheritAgents
-                ? 'Inherited Reviewer Bots (Read-only)'
-                : 'Repository Reviewer Selection (Custom)'}
+                ? translateUiText('git.repositoryAgents.inheritedReviewers')
+                : translateUiText('git.repositoryAgents.customSelection')}
             </span>
           </span>
 
@@ -148,7 +161,7 @@ export const RepositoryAgentsTab: React.FC<{
               className="flex items-center gap-1 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-text text-xs transition-colors cursor-pointer border border-surface2/40 rounded-sm"
             >
               <Plus className="w-3 h-3" />
-              <span>Add Repo Bot</span>
+              <span>{translateUiText('git.repositoryAgents.addBot')}</span>
             </button>
           )}
         </div>
@@ -203,7 +216,7 @@ export const RepositoryAgentsTab: React.FC<{
                             {bot.name}
                           </span>
                           <span className="text-[10px] font-mono px-1.5 py-0.2 bg-brand/10 text-brand border border-brand/20">
-                            Global
+                            {translateUiText('git.repositoryAgents.global')}
                           </span>
                         </div>
                         <span className="text-[10px] text-subtext0 font-mono truncate block">
@@ -211,8 +224,16 @@ export const RepositoryAgentsTab: React.FC<{
                         </span>
                         <span className="text-[10px] text-accent font-mono truncate block">
                           {bot.acpAgentId
-                            ? `ACP · ${externalAgents.find((agent) => agent.id === bot.acpAgentId)?.name || 'Agent unavailable'}${bot.allowAcpSourceTransfer ? '' : ' · source consent required'}`
-                            : 'Built-in LLM provider'}
+                            ? translateUiText(
+                                bot.allowAcpSourceTransfer
+                                  ? 'git.repositoryAgents.acpAgent'
+                                  : 'git.repositoryAgents.acpAgentConsent',
+                                {
+                                  name: externalAgents.find((agent) => agent.id === bot.acpAgentId)?.name ||
+                                    translateUiText('ai.botReviewers.agentUnavailable'),
+                                }
+                              )
+                            : translateUiText('ai.execution.builtInProvider')}
                         </span>
                       </div>
                     </div>
@@ -220,10 +241,10 @@ export const RepositoryAgentsTab: React.FC<{
                   </div>
                   <div className="pt-2 border-t border-surface0/60 flex items-center justify-between text-[11px]">
                     <span className="text-brand flex items-center gap-1 font-mono font-medium">
-                      <Check className="w-3 h-3 text-brand" /> Active in MRs
+                      <Check className="w-3 h-3 text-brand" /> {translateUiText('git.repositoryAgents.activeInMrs')}
                     </span>
                     <span className="text-subtext1 capitalize font-mono text-[10px]">
-                      {bot.category}
+                      {translateUiText(`ai.botCategories.${bot.category}`)}
                     </span>
                   </div>
                 </div>
@@ -253,7 +274,7 @@ export const RepositoryAgentsTab: React.FC<{
 
       {/* CUSTOM RULES FOR THIS REPOSITORY */}
       <RepositoryCustomRulesSection
-        RULE_SNIPPETS={RULE_SNIPPETS}
+        RULE_SNIPPETS={localizedRuleSnippets}
         handleAppendSnippet={handleAppendSnippet}
         customRules={customRules}
         setCustomRules={setCustomRules}

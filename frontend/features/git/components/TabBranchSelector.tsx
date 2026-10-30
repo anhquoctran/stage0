@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GitBranch } from '../../../common/components/icons/GitBranch';
 import { ChevronDown } from '../../../common/components/icons/ChevronDown';
 import { Search } from '../../../common/components/icons/Search';
@@ -18,6 +19,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
   maxWidthClass,
   buttonClassName,
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -56,7 +58,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
   );
 
   const isSource = roleType === 'source';
-  const roleLabel = isSource ? 'Compare (Source)' : 'Base (Target)';
+  const roleLabel = isSource ? t('git.branchSelector.compareSource') : t('git.branchSelector.baseTarget');
 
   return (
     <div
@@ -68,7 +70,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
         type="button"
         disabled={disabled || !branches}
         onClick={() => setIsOpen(!isOpen)}
-        title={title || `${roleLabel}: ${value || 'Select branch'}`}
+        title={title || `${roleLabel}: ${value || t('git.branchSelector.selectBranch')}`}
         className={`inline-flex items-center gap-2 px-2.5 py-1 text-start transition-colors min-w-[110px] border rounded-sm ${
           maxWidthClass || 'max-w-[360px]'
         } ${
@@ -89,7 +91,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
           {/* Header indicator */}
           <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-subtext0 bg-base/60 border-b border-surface0/60 flex items-center justify-between rounded-sm">
             <span>{roleLabel}</span>
-            <span className="font-mono text-[9px] text-brand lowercase">MR branch</span>
+            <span className="font-mono text-[9px] text-brand lowercase">{t('git.branchSelector.mrBranch')}</span>
           </div>
 
           {/* Search box */}
@@ -99,7 +101,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Filter branches..."
+                placeholder={t('git.branchSelector.filterBranches')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full ps-8 pe-2.5 py-1 bg-mantle border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-none focus:border-brand font-mono rounded-sm"
@@ -112,10 +114,10 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
             <div className="py-1">
               <div className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-subtext0 bg-mantle flex items-center gap-1.5 rounded-sm">
                 <GitBranch className="w-3 h-3 text-brand" />
-                <span>Local Branches ({localBranches.length})</span>
+                <span>{t('git.branchSelector.localBranches', { count: localBranches.length })}</span>
               </div>
               {localBranches.length === 0 ? (
-                <div className="px-3 py-1.5 text-xs text-subtext0 italic">No local branches found</div>
+                <div className="px-3 py-1.5 text-xs text-subtext0 italic">{t('git.branchSelector.noBranchesFound')}</div>
               ) : (
                 localBranches.map((branch) => {
                   const isSelected = branch === value;
@@ -159,7 +161,7 @@ export const TabBranchSelector: React.FC<TabBranchSelectorProps> = ({
               <div className="py-1">
                 <div className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-subtext0 bg-mantle flex items-center gap-1.5 rounded-sm">
                   <Globe className="w-3 h-3 text-subtext0" />
-                  <span>Remote Branches ({remoteBranches.length})</span>
+                <span>{t('git.branchSelector.remoteBranches', { count: remoteBranches.length })}</span>
                 </div>
                 {remoteBranches.map((branch) => {
                   const isSelected = branch === value;

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Trash2 } from '../../../../common/components/icons/Trash2';
 import type { SandboxInstanceCardProps } from './SandboxInstanceCardProps';
 
@@ -8,6 +9,7 @@ export function SandboxInstanceCard({
   activeSandboxInstances,
   destroySandboxInstance,
 }: SandboxInstanceCardProps) {
+  const { t } = useTranslation();
   return (
     <div
       key={inst.id}
@@ -46,7 +48,7 @@ export function SandboxInstanceCard({
           destroySandboxInstance(inst.id);
         }}
         className="p-1 rounded-sm text-subtext0 hover:text-text hover:bg-surface2 transition-colors cursor-pointer"
-        title="Destroy this sandbox instance"
+        title={t('ai.sandbox.destroyInstance')}
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

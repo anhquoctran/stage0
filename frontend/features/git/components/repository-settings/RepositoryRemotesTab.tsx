@@ -42,13 +42,13 @@ export const RepositoryRemotesTab: React.FC = () => {
           ...prev,
           [name]: { success: false, message: res },
         }));
-        showToast(`Test ${name}: Connection failed`);
+        showToast(translateUiText('git.repositoryRemotes.testFailed', { name }));
       } else {
         setRemoteTestResult((prev) => ({
           ...prev,
           [name]: { success: true, message: res },
         }));
-        showToast(`Test ${name}: Connection successful`);
+        showToast(translateUiText('git.repositoryRemotes.testSuccess', { name }));
       }
     } catch (err: any) {
       const errMsg = typeof err === 'string' ? err : err?.message || JSON.stringify(err);
@@ -56,7 +56,7 @@ export const RepositoryRemotesTab: React.FC = () => {
         ...prev,
         [name]: { success: false, message: errMsg.startsWith('Error:') ? errMsg : `Error: ${errMsg}` },
       }));
-      showToast(`Test ${name}: Connection failed`);
+      showToast(translateUiText('git.repositoryRemotes.testFailed', { name }));
     } finally {
       setTestingRemoteName(null);
     }
@@ -67,12 +67,12 @@ export const RepositoryRemotesTab: React.FC = () => {
     if (!newRemoteName.trim() || !newRemoteUrl.trim()) return;
     try {
       await addRemote(newRemoteName.trim(), newRemoteUrl.trim());
-      showToast(`Remote added: ${newRemoteName}`);
+      showToast(translateUiText('git.repositoryRemotes.remoteAdded', { name: newRemoteName }));
       setNewRemoteName('');
       setNewRemoteUrl('');
       setIsAddingRemote(false);
     } catch (err: any) {
-      showToast(`Failed to add remote: ${err}`);
+      showToast(translateUiText('git.repositoryRemotes.addFailed', { error: String(err) }));
     }
   };
 
@@ -80,10 +80,10 @@ export const RepositoryRemotesTab: React.FC = () => {
     if (!editingRemoteUrl.trim()) return;
     try {
       await setRemoteUrl(name, editingRemoteUrl.trim());
-      showToast(`Updated remote URL: ${name}`);
+      showToast(translateUiText('git.repositoryRemotes.urlUpdated', { name }));
       setEditingRemoteName(null);
     } catch (err: any) {
-      showToast(`Failed to update URL: ${err}`);
+      showToast(translateUiText('git.repositoryRemotes.urlUpdateFailed', { error: String(err) }));
     }
   };
 
@@ -91,12 +91,12 @@ export const RepositoryRemotesTab: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="text-[1rem] text-text font-medium">Git Remotes</h3>
+          <h3 className="text-[1rem] text-text font-medium">{translateUiText('git.repositoryRemotes.title')}</h3>
           <p className="text-xs text-subtext0 mt-0.5">
-            Manage remote servers for code synchronization (origin, upstream, forks)
+            {translateUiText('git.repositoryRemotes.description')}
           </p>
           <p className="text-[10px] text-subtext0 mt-1">
-            Embedded URL credentials are masked here. Use Git's credential helper; editing a masked URL requires re-entering any removed credentials.
+            {translateUiText('git.repositoryRemotes.credentialsWarning')}
           </p>
         </div>
         <button
@@ -105,7 +105,7 @@ export const RepositoryRemotesTab: React.FC = () => {
           className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer border border-surface2/40 rounded-sm"
         >
           <Plus className="w-3.5 h-3.5 shrink-0" />
-          <span>Add Remote</span>
+          <span>{translateUiText('git.repositoryRemotes.addRemote')}</span>
         </button>
       </div>
 
@@ -115,7 +115,7 @@ export const RepositoryRemotesTab: React.FC = () => {
           className="p-4 bg-crust border border-surface0 space-y-3"
         >
           <div className="flex items-center justify-between">
-            <span className="font-medium text-xs text-text">Add New Remote</span>
+            <span className="font-medium text-xs text-text">{translateUiText('git.repositoryRemotes.addNewRemote')}</span>
             <button
               type="button"
               onClick={() => setIsAddingRemote(false)}
@@ -126,22 +126,22 @@ export const RepositoryRemotesTab: React.FC = () => {
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-[11px] text-subtext0 mb-1">Remote Name</label>
+              <label className="block text-[11px] text-subtext0 mb-1">{translateUiText('git.repositoryRemotes.remoteName')}</label>
               <input
                 type="text"
                 required
-                placeholder="e.g. upstream"
+                placeholder={translateUiText('git.repositoryRemotes.remoteNamePlaceholder')}
                 value={newRemoteName}
                 onChange={(e) => setNewRemoteName(e.target.value)}
                 className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent rounded-sm"
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-[11px] text-subtext0 mb-1">Remote URL (HTTPS or SSH)</label>
+              <label className="block text-[11px] text-subtext0 mb-1">{translateUiText('git.repositoryRemotes.remoteUrl')}</label>
               <input
                 type="text"
                 required
-                placeholder="https://github.com/org/repo.git"
+                placeholder={translateUiText('git.repositoryRemotes.remoteUrlPlaceholder')}
                 value={newRemoteUrl}
                 onChange={(e) => setNewRemoteUrl(e.target.value)}
                 className="w-full px-3 py-1.5 bg-surface0 border border-surface1 text-text text-xs focus:outline-none focus:border-accent rounded-sm"
@@ -160,7 +160,7 @@ export const RepositoryRemotesTab: React.FC = () => {
               type="submit"
               className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs cursor-pointer shadow-xs rounded-sm"
             >
-              Add
+              {translateUiText('git.repositoryRemotes.add')}
             </button>
           </div>
         </form>
@@ -169,7 +169,7 @@ export const RepositoryRemotesTab: React.FC = () => {
       <div className="space-y-3">
         {remotesDetailed.length === 0 ? (
           <div className="p-8 text-center border border-dashed border-surface0 text-subtext0 text-xs rounded-sm">
-            No remotes configured for this repository yet.
+            {translateUiText('git.repositoryRemotes.empty')}
           </div>
         ) : (
           remotesDetailed.map((rem) => (
@@ -181,7 +181,7 @@ export const RepositoryRemotesTab: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-sm">{rem.name}</span>
                   <span className="text-[10px] px-2 py-0.5 bg-surface0 font-mono text-subtext0">
-                    {rem.name === 'origin' ? 'Default Origin' : 'Secondary'}
+                    {translateUiText(rem.name === 'origin' ? 'git.repositoryRemotes.defaultOrigin' : 'git.repositoryRemotes.secondary')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -194,7 +194,7 @@ export const RepositoryRemotesTab: React.FC = () => {
                     <RefreshCw
                       className={`w-3 h-3 ${testingRemoteName === rem.name ? 'animate-spin' : ''}`}
                     />
-                    <span>Test Ping</span>
+                    <span>{translateUiText('git.repositoryRemotes.testPing')}</span>
                   </button>
                   <button
                     type="button"
@@ -203,19 +203,19 @@ export const RepositoryRemotesTab: React.FC = () => {
                       setEditingRemoteUrl(rem.fetch_url);
                     }}
                     className="p-1 hover:bg-surface1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
-                    title="Edit URL"
+                    title={translateUiText('git.repositoryRemotes.editUrl')}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirm(`Are you sure you want to remove remote '${rem.name}'?`)) {
+                      if (window.confirm(translateUiText('git.repositoryRemotes.removeConfirm', { name: rem.name }))) {
                         removeRemote(rem.name);
                       }
                     }}
                     className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer rounded-sm"
-                    title="Remove Remote"
+                    title={translateUiText('git.repositoryRemotes.removeRemote')}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -248,12 +248,12 @@ export const RepositoryRemotesTab: React.FC = () => {
               ) : (
                 <div className="text-xs text-subtext0 font-mono space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="w-12 text-subtext1">Fetch:</span>
+                    <span className="w-12 text-subtext1">{translateUiText('git.repositoryRemotes.fetch')}</span>
                     <span className="text-text select-all">{rem.fetch_url}</span>
                   </div>
                   {rem.push_url !== rem.fetch_url && (
                     <div className="flex items-center gap-2">
-                      <span className="w-12 text-subtext1">Push:</span>
+                      <span className="w-12 text-subtext1">{translateUiText('git.repositoryRemotes.push')}</span>
                       <span className="text-text select-all">{rem.push_url}</span>
                     </div>
                   )}

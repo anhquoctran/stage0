@@ -9,23 +9,31 @@ export function createCloneOptions(): CloneOptions {
   };
 }
 
-export function validateCloneOptions(options: CloneOptions): string | null {
+export type CloneOptionsValidationError =
+  | 'git.cloneOptions.validation.depth'
+  | 'git.cloneOptions.validation.submoduleJobs'
+  | 'git.cloneOptions.validation.timeout'
+  | 'git.cloneOptions.validation.enableRecursiveSubmodules'
+  | 'git.cloneOptions.validation.partialSubmodules'
+  | 'git.cloneOptions.validation.branch';
+
+export function validateCloneOptions(options: CloneOptions): CloneOptionsValidationError | null {
   if (options.depth !== null && (!Number.isInteger(options.depth) || options.depth < 1 || options.depth > 1_000_000)) {
-    return 'Clone depth must be a whole number between 1 and 1,000,000.';
+    return 'git.cloneOptions.validation.depth';
   }
   if (!Number.isInteger(options.submoduleJobs) || options.submoduleJobs < 1 || options.submoduleJobs > 32) {
-    return 'Submodule parallel jobs must be a whole number between 1 and 32.';
+    return 'git.cloneOptions.validation.submoduleJobs';
   }
   if (!Number.isInteger(options.timeoutMinutes) || options.timeoutMinutes < 1 || options.timeoutMinutes > 1440) {
-    return 'Clone timeout must be a whole number between 1 and 1,440 minutes.';
+    return 'git.cloneOptions.validation.timeout';
   }
-  if (options.shallowSubmodules && !options.recurseSubmodules) return 'Enable recursive submodules before shallow submodules.';
-  if (options.filterSubmodules && !(options.recurseSubmodules && options.blobless)) return 'Submodule filtering requires recursive submodules and partial clone.';
+  if (options.shallowSubmodules && !options.recurseSubmodules) return 'git.cloneOptions.validation.enableRecursiveSubmodules';
+  if (options.filterSubmodules && !(options.recurseSubmodules && options.blobless)) return 'git.cloneOptions.validation.partialSubmodules';
   const branch = options.branch.trim();
   if (branch && (branch.length > 1024 || branch.startsWith('-') || /[\x00-\x20\x7f~^:?*\[\\@]/.test(branch)
     || branch.includes('..') || branch.includes('//') || branch.startsWith('/') || branch.endsWith('/')
     || branch.split('/').some((part) => part.startsWith('.') || part.endsWith('.lock')) || branch.endsWith('.'))) {
-    return 'Enter a valid branch or tag name, not Git command options.';
+    return 'git.cloneOptions.validation.branch';
   }
   return null;
 }

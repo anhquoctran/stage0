@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { formatRecentTime } from '@/common/utils/dateTime';
 import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import { AlertTriangle } from '../../../../common/components/icons/AlertTriangle';
@@ -9,20 +10,21 @@ export function NewVirtualMrCommitsList({
   draftMr,
   changeDraftBranches,
 }: NewVirtualMrCommitsListProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   useDateTimeLanguage();
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-2">
       {draftMr.isCommitsLoading ? (
         <div className="p-8 flex items-center justify-center gap-2 text-subtext0 text-xs">
           <Loader2 className="w-4 h-4 animate-spin text-brand" />
-          <span>Loading commits between branches...</span>
+          <span>{translateUiText('virtualMr.newMrCommits.loading')}</span>
         </div>
       ) : draftMr.commitsError ? (
         <div className="p-6 flex flex-col items-center gap-2 text-center text-xs">
           <AlertTriangle className="w-4 h-4 text-yellow" />
-          <span className="text-text">Couldn't load commits for this comparison.</span>
+          <span className="text-text">{translateUiText('virtualMr.newMrCommits.loadError')}</span>
           <details className="max-w-xl text-start text-subtext0">
-            <summary className="cursor-pointer hover:text-text">Git error details</summary>
+            <summary className="cursor-pointer hover:text-text">{translateUiText('virtualMr.newMrCommits.errorDetails')}</summary>
             <pre className="mt-2 p-3 bg-base border border-surface0 whitespace-pre-wrap break-words select-text">
               {draftMr.commitsError}
             </pre>
@@ -32,12 +34,15 @@ export function NewVirtualMrCommitsList({
             onClick={() => void changeDraftBranches(draftMr.baseBranch, draftMr.compareBranch)}
             className="mt-1 px-3 py-1.5 bg-surface0 hover:bg-surface1 border border-surface1 text-text transition-colors cursor-pointer rounded-sm"
           >
-            Retry loading commits
+            {translateUiText('virtualMr.newMrCommits.retry')}
           </button>
         </div>
       ) : draftMr.commits.length === 0 ? (
         <div className="p-8 text-center text-subtext0 text-xs italic">
-          No commits unique to {draftMr.compareBranch} relative to {draftMr.baseBranch}.
+          {translateUiText('virtualMr.newMrCommits.empty', {
+            compare: draftMr.compareBranch,
+            base: draftMr.baseBranch,
+          })}
         </div>
       ) : (
         draftMr.commits.map((c) => (

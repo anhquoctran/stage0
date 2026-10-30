@@ -28,12 +28,12 @@ export function CustomGitBinaryForm({
           className="flex items-center gap-1.5 text-xs text-brand hover:underline font-medium cursor-pointer rounded-sm"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>Add Custom Git Binary Path...</span>
+          <span>{translateUiText('git.binary.addCustomPath')}</span>
         </button>
       ) : (
         <div className="p-4 bg-surface0/40 border border-surface1 space-y-3 animate-in fade-in duration-100 rounded-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text">Specify Custom Git Executable</span>
+            <span className="text-xs font-bold text-text">{translateUiText('git.binary.specifyCustom')}</span>
             <button
               type="button"
               onClick={() => {
@@ -53,8 +53,8 @@ export function CustomGitBinaryForm({
               onChange={(e) => setCustomPath(e.target.value)}
               placeholder={
                 typeof navigator !== 'undefined' && navigator.userAgent.includes('Win')
-                  ? 'C:\\Path\\To\\git.exe'
-                  : '/usr/local/bin/git'
+                  ? translateUiText('git.binary.windowsPathPlaceholder')
+                  : translateUiText('git.binary.posixPathPlaceholder')
               }
               className="flex-1 px-3 py-1.5 text-xs font-mono bg-base border border-surface1 text-text focus:outline-none focus:border-brand placeholder:text-subtext0/50 rounded-sm"
             />
@@ -62,10 +62,10 @@ export function CustomGitBinaryForm({
               type="button"
               onClick={handleBrowseCustom}
               className="flex items-center gap-1 px-3 py-1.5 border border-surface1 hover:bg-surface1 text-xs text-subtext0 hover:text-text transition-colors cursor-pointer shrink-0 rounded-sm"
-              title="Browse for executable file"
+              title={translateUiText('git.binary.browseExecutable')}
             >
               <FolderOpen className="w-3.5 h-3.5" />
-              <span>Browse...</span>
+              <span>{translateUiText('git.binary.browse')}</span>
             </button>
             <button
               type="button"
@@ -78,7 +78,7 @@ export function CustomGitBinaryForm({
               ) : (
                 <Check className="w-3.5 h-3.5" />
               )}
-              <span>Test &amp; Select</span>
+              <span>{translateUiText('git.binary.testSelect')}</span>
             </button>
           </div>
 

@@ -1,6 +1,7 @@
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { RemoteCloneRefs } from '../types/RemoteCloneRefs';
 import type { UrlValidationStatus } from '../types/UrlValidationStatus';
 import type { CloneRemoteRefsContext } from './CloneRemoteRefsContext';
@@ -13,6 +14,7 @@ export function useCloneRemoteRefs({
   hasSelectedCredential,
   selectedCredentialId,
 }: CloneRemoteRefsContext) {
+  const { t } = useTranslation();
   const appServices = useApplicationServices();
   const [urlStatus, setUrlStatus] = useState<UrlValidationStatus>('idle');
 
@@ -33,7 +35,7 @@ export function useCloneRemoteRefs({
 
     if (useSavedCredential && !hasSelectedCredential) {
       setUrlStatus('idle');
-      setUrlMessage('Select an HTTPS credential to check access and load branches and tags.');
+      setUrlMessage(t('git.clone.selectCredentialToCheck'));
       return;
     }
 
@@ -45,12 +47,12 @@ export function useCloneRemoteRefs({
 
     if (!isBasicFormat) {
       setUrlStatus('invalid');
-      setUrlMessage('Invalid URL format (must start with https://, git@ or ssh://)');
+      setUrlMessage(t('git.clone.invalidUrlFormat'));
       return;
     }
 
     setUrlStatus('validating');
-    setUrlMessage('Checking repository and loading branches and tags...');
+    setUrlMessage(t('git.clone.checkingRepository'));
 
     const timer = setTimeout(async () => {
       try {
@@ -61,12 +63,12 @@ export function useCloneRemoteRefs({
         if (disposed) return;
         setRemoteRefs(refs);
         setUrlStatus('valid');
-        setUrlMessage('Repository is valid and ready to clone.');
+        setUrlMessage(t('git.clone.repositoryReady'));
       } catch (err: unknown) {
         if (disposed) return;
         setUrlStatus('invalid');
         setUrlMessage(
-          typeof err === 'string' ? err : 'Repository does not exist or is inaccessible.'
+          typeof err === 'string' ? err : t('git.clone.repositoryUnavailable')
         );
       }
     }, 1000);

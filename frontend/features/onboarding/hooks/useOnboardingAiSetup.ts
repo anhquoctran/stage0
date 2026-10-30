@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAiMcpStore } from '../../ai/store/useAiMcpStore';
 import { createAiPreferencesDraft } from '../../ai/store/createAiPreferencesDraft';
 import { captureAiPreferences, commitAiPreferences } from '../../ai/services/commitAiPreferences';
@@ -7,6 +8,7 @@ import { useBotReviewersStore } from '../../ai/store/useBotReviewersStore';
 import { hasRequiredOnboardingReviewer, onboardingAiConnections } from '../services/onboardingAiStatus';
 
 export function useOnboardingAiSetup() {
+  const { t } = useTranslation();
   const committed = useAiMcpStore();
   const committedReviewers = useBotReviewersStore();
   const [baseline, setBaseline] = useState(captureAiPreferences);
@@ -34,7 +36,7 @@ export function useOnboardingAiSetup() {
       setBaseline(saved);
       draftStore.getState().replace(saved);
     } catch (cause) {
-      setError(`Could not save AI setup: ${cause instanceof Error ? cause.message : String(cause)} Your draft is still available.`);
+      setError(t('onboarding.aiSetup.saveFailed', { error: cause instanceof Error ? cause.message : String(cause) }));
     } finally { acting.current = false; setBusy(false); }
   };
   const discard = () => {

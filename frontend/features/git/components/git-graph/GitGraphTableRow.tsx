@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '@/common/utils/dateTime';
 import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import { CommitAuthorAvatar } from '../CommitAuthorAvatar';
@@ -34,6 +35,7 @@ export const GitGraphTableRow: React.FC<{
     onContextMenu,
     onRowRef,
 }) => {
+    const { t } = useTranslation();
     useDateTimeLanguage();
     const color = LANE_COLORS[row.lane % LANE_COLORS.length];
 
@@ -66,7 +68,7 @@ export const GitGraphTableRow: React.FC<{
                     height={ROW_HEIGHT}
                     viewBox={`0 0 ${graphWidth - 24} ${ROW_HEIGHT}`}
                     role="img"
-                    aria-label={`Commit graph lane ${row.lane + 1}`}
+                    aria-label={t('git.graphTable.laneLabel', { lane: row.lane + 1 })}
                     className="block"
                 >
                     {hasSearchFilter ? (
@@ -148,7 +150,7 @@ export const GitGraphTableRow: React.FC<{
                         className="truncate text-text"
                         title={commit.subject}
                     >
-                        {commit.subject || '(no commit message)'}
+                        {commit.subject || t('git.graphTable.noCommitMessage')}
                     </span>
                 </div>
             </td>
@@ -164,12 +166,12 @@ export const GitGraphTableRow: React.FC<{
             >
                 <div className="flex min-w-0 items-center gap-1.5">
                     <CommitAuthorAvatar
-                        name={commit.author_name || 'Unknown'}
+                        name={commit.author_name || t('git.graphTable.unknownAuthor')}
                         email={commit.author_email}
                         size={22}
                     />
                     <span className="truncate">
-                        {commit.author_name || 'Unknown'}
+                        {commit.author_name || t('git.graphTable.unknownAuthor')}
                     </span>
                 </div>
             </td>

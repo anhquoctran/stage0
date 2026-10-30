@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { GitCommit } from '../../../../common/components/icons/GitCommit';
 import { formatDateTime } from '../../../../common/utils/dateTime';
 import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
@@ -7,6 +8,7 @@ import { useGitStore } from '../../../git/store/useGitStore';
 import { CommitDetailsModal } from '../../../git/components/CommitDetailsModal';
 
 export const VirtualMrCommitsTab: React.FC<VirtualMrCommitsTabProps> = ({ session }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   useDateTimeLanguage();
   const currentRepo = useGitStore(state => state.currentRepo);
   const [selected, setSelected] = useState<{ sessionId: string; hash: string } | null>(null);
@@ -17,7 +19,7 @@ export const VirtualMrCommitsTab: React.FC<VirtualMrCommitsTabProps> = ({ sessio
         <div className="flex items-center justify-between border-b border-surface0 pb-2">
           <h3 className="font-semibold text-xs text-text flex items-center gap-2">
             <GitCommit className="w-4 h-4 text-primary" />
-            <span>Commits ({session.commits.length})</span>
+            <span>{translateUiText('virtualMr.commitsTab.title', { count: session.commits.length })}</span>
           </h3>
           <span className="text-[11px] font-mono text-subtext0">
             {session.compareBranch} → {session.baseBranch}
@@ -28,8 +30,10 @@ export const VirtualMrCommitsTab: React.FC<VirtualMrCommitsTabProps> = ({ sessio
           <div className="p-8 rounded-sm bg-mantle border border-surface0 text-center space-y-2">
             <GitCommit className="w-8 h-8 text-subtext0 mx-auto" />
             <p className="text-xs text-subtext0">
-              No commits unique to <span className="font-mono text-text">{session.compareBranch}</span> relative to{' '}
-              <span className="font-mono text-text">{session.baseBranch}</span>.
+              {translateUiText('virtualMr.commitsTab.empty', {
+                compare: session.compareBranch,
+                base: session.baseBranch,
+              })}
             </p>
           </div>
         ) : (
@@ -40,7 +44,10 @@ export const VirtualMrCommitsTab: React.FC<VirtualMrCommitsTabProps> = ({ sessio
                 type="button"
                 onClick={() => setSelected({ sessionId: session.id, hash: c.hash })}
                 disabled={!repoPath}
-                aria-label={`View commit ${c.shortHash}: ${c.subject}`}
+                aria-label={translateUiText('virtualMr.commitsTab.viewCommit', {
+                  hash: c.shortHash,
+                  subject: c.subject,
+                })}
                 className="w-full p-3.5 text-start rounded-sm bg-mantle border border-surface0 hover:border-surface1 transition-colors flex items-center justify-between gap-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-brand disabled:opacity-50 disabled:cursor-default"
               >
                 <span className="space-y-1 min-w-0">

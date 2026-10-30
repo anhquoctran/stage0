@@ -1,4 +1,5 @@
 import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
+import i18n from '../../i18n/i18n';
 
 import { useGitStore } from '../../git/store/useGitStore';
 import { type NewMrDraft } from '../types/NewMrDraft';
@@ -29,7 +30,7 @@ export const createDraftMrSlice = (
     }
 
     if (!currentRepoPath) {
-      useGitStore.getState().showToast('No active repository to create Virtual MR');
+      useGitStore.getState().showToast(i18n.t('virtualMr.toasts.noActiveRepository'));
       return;
     }
 

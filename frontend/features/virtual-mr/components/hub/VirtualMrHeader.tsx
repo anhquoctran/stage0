@@ -33,33 +33,33 @@ export function VirtualMrHeader({
         {session.status === 'resolved' ? (
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 select-none shadow-xs shrink-0 rounded-sm"
-            title="All reviewers approved and all discussions are resolved"
+            title={translateUiText('virtualMr.header.resolvedTitle')}
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span>Resolved</span>
+            <span>{translateUiText('virtualMr.listDialog.status.resolved')}</span>
           </div>
         ) : session.status === 'closed' ? (
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 select-none shadow-xs shrink-0"
-            title="Virtual MR is Closed"
+            title={translateUiText('virtualMr.header.closedTitle')}
           >
             <XCircle className="w-3.5 h-3.5 text-subtext1 shrink-0" />
-            <span>Closed</span>
+            <span>{translateUiText('virtualMr.listDialog.status.closed')}</span>
           </div>
         ) : (
           <div
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 select-none shadow-xs shrink-0"
-            title="Virtual MR is Open"
+            title={translateUiText('virtualMr.header.openTitle')}
           >
             <span className="w-2 h-2 rounded-sm bg-emerald-400 animate-pulse shrink-0" />
-            <span>Open</span>
+            <span>{translateUiText('virtualMr.listDialog.status.open')}</span>
           </div>
         )}
 
         {/* Friendly MR Sequence ID */}
         <span
           className="font-mono text-xs font-bold text-subtext0 shrink-0"
-          title={`Virtual MR ${formatMrFriendlyId(sequenceNumber)}`}
+          title={translateUiText('virtualMr.header.idTitle', { id: formatMrFriendlyId(sequenceNumber) })}
         >
           {formatMrFriendlyId(sequenceNumber)}
         </span>
@@ -102,7 +102,7 @@ export function VirtualMrHeader({
               type="button"
               onClick={handleStartEditTitle}
               className="p-1 rounded-sm bg-surface1 hover:bg-surface2 text-subtext0 hover:text-text cursor-pointer"
-              title="Edit title"
+              title={translateUiText('virtualMr.header.editTitle')}
             >
               <Edit2 className="w-3.5 h-3.5" />
             </button>
@@ -123,7 +123,7 @@ export function VirtualMrHeader({
               <Lock className="w-3 h-3 text-subtext0 shrink-0" title={branchLockedReason} />
             )}
             <span className="text-[10px] text-subtext0 uppercase font-mono tracking-wider font-semibold">
-              Branch:
+              {translateUiText('virtualMr.header.branch')}
             </span>
           </div>
           <TabBranchSelector
@@ -140,7 +140,7 @@ export function VirtualMrHeader({
               handleSwapBranches(session.id, session.baseBranch, session.compareBranch)
             }
             disabled={isBranchLocked}
-            title={isBranchLocked ? branchLockedReason : 'Swap Compare and Base branches'}
+            title={isBranchLocked ? branchLockedReason : translateUiText('virtualMr.header.swapBranches')}
             className={`p-1 border border-transparent transition-colors rounded-sm ${
               isBranchLocked
                 ? 'text-subtext0/30 cursor-not-allowed'

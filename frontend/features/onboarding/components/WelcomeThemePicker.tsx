@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Monitor } from '../../../common/components/icons/Monitor';
 import { Sun } from '../../../common/components/icons/Sun';
 import { Moon } from '../../../common/components/icons/Moon';
@@ -5,13 +6,14 @@ import { Check } from '../../../common/components/icons/Check';
 import type { WelcomeSettingsProps } from '../types/WelcomeSettingsProps';
 
 export function WelcomeThemePicker({ settings, onChange }: Omit<WelcomeSettingsProps, 'step'>) {
+  const { t } = useTranslation();
   const choices = [
-    { mode: 'system', label: 'System', description: 'Follow your OS', icon: Monitor },
-    { mode: 'light', label: 'Light', description: 'A bright workspace', icon: Sun },
-    { mode: 'dark', label: 'Dark', description: 'A darker workspace', icon: Moon },
+    { mode: 'system', label: t('onboarding.welcomeSettings.themeModes.system'), description: t('onboarding.welcomeSettings.themeDescriptions.system'), icon: Monitor },
+    { mode: 'light', label: t('onboarding.welcomeSettings.themeModes.light'), description: t('onboarding.welcomeSettings.themeDescriptions.light'), icon: Sun },
+    { mode: 'dark', label: t('onboarding.welcomeSettings.themeModes.dark'), description: t('onboarding.welcomeSettings.themeDescriptions.dark'), icon: Moon },
   ] as const;
   return (
-    <div role="group" aria-label="Theme mode" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div role="group" aria-label={t('onboarding.welcomeSettings.themeMode')} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       {choices.map(({ mode, label, description, icon: Icon }) => (
         <button key={mode} type="button" aria-pressed={settings.themeMode === mode}
           onClick={() => onChange((previous) => ({ ...previous, themeMode: mode }))}

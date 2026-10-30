@@ -1,4 +1,4 @@
-import { useTranslation as useUiTextTranslation } from 'react-i18next';
+import { Trans, useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { GitBranch } from '../../../common/components/icons/GitBranch';
@@ -102,13 +102,13 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
       case 'bundled':
         return (
           <span className="text-[10px] font-medium px-2 py-0.5 bg-sapphire/15 text-sapphire border border-sapphire/30">
-            Bundled
+            {translateUiText('git.binary.sources.bundled')}
           </span>
         );
       case 'system':
         return (
           <span className="text-[10px] font-medium px-2 py-0.5 bg-green/15 text-green border border-green/30">
-            System PATH
+            {translateUiText('git.binary.sources.systemPath')}
           </span>
         );
       case 'github_desktop':
@@ -120,7 +120,7 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
       case 'homebrew':
         return (
           <span className="text-[10px] font-medium px-2 py-0.5 bg-yellow/15 text-yellow border border-yellow/30">
-            Homebrew
+            {translateUiText('git.binary.sources.homebrew')}
           </span>
         );
       case 'xcode':
@@ -132,19 +132,19 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
       case 'scoop':
         return (
           <span className="text-[10px] font-medium px-2 py-0.5 bg-teal/15 text-teal border border-teal/30">
-            Scoop
+            {translateUiText('git.binary.sources.scoop')}
           </span>
         );
       case 'custom':
         return (
           <span className="text-[10px] font-medium px-2 py-0.5 bg-peach/15 text-peach border border-peach/30">
-            Custom
+            {translateUiText('git.binary.sources.custom')}
           </span>
         );
       default:
         return (
           <span className="text-[10px] font-medium px-2 py-0.5 bg-surface2 text-subtext0 border border-surface1">
-            Standard
+            {translateUiText('git.binary.sources.standard')}
           </span>
         );
     }
@@ -157,11 +157,10 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
         <div>
           <h3 className="text-sm font-bold text-text flex items-center gap-2">
             <GitBranch className="w-4 h-4 text-brand" />
-            <span>Git Executable Binary</span>
+            <span>{translateUiText('git.binary.title')}</span>
           </h3>
           <p className="text-xs text-subtext0 mt-0.5 leading-relaxed">
-            Choose between app-bundled Git or system-installed binaries for diffing, merge previews,
-            and sandboxes. Exactly one binary is active at any time.
+            {translateUiText('git.binary.description')}
           </p>
         </div>
 
@@ -170,10 +169,10 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
           onClick={() => scanBinaries()}
           disabled={isScanning}
           className="flex items-center gap-1.5 px-3 py-1.5 border border-surface1 hover:bg-surface0 text-subtext0 hover:text-text text-xs transition-all cursor-pointer shrink-0 disabled:opacity-50 rounded-sm"
-          title="Rescan system paths for available Git binaries"
+          title={translateUiText('git.binary.rescanTitle')}
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin text-brand' : ''}`} />
-          <span>{isScanning ? 'Scanning...' : 'Rescan System'}</span>
+          <span>{isScanning ? translateUiText('common.loading') : translateUiText('git.binary.rescan')}</span>
         </button>
       </div>
 
@@ -182,13 +181,17 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
         <div className="p-3.5 bg-peach/10 border border-peach/30 flex items-start gap-3 rounded-sm">
           <Info className="w-4 h-4 text-peach shrink-0 mt-0.5" />
           <div className="text-xs">
-            <div className="font-semibold text-text">Restart Required upon Applying</div>
+            <div className="font-semibold text-text">{translateUiText('git.binary.restartRequired')}</div>
             <div className="text-subtext0 mt-0.5 leading-relaxed">
-              You selected{' '}
-              <span className="font-mono text-text font-semibold">{selectedDraftBinary?.name}</span>
-              . Clicking <span className="font-semibold text-text">Apply</span> or{' '}
-              <span className="font-semibold text-text">{translateUiText('common.ok')}</span> will save this setting and prompt
-              an application restart to switch all internal Git processes cleanly.
+              <Trans
+                i18nKey="git.binary.restartDescription"
+                values={{ name: selectedDraftBinary?.name }}
+                components={{
+                  name: <span className="font-mono text-text font-semibold" />,
+                  apply: <span className="font-semibold text-text" />,
+                  ok: <span className="font-semibold text-text" />,
+                }}
+              />
             </div>
           </div>
         </div>
@@ -206,9 +209,9 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-text">
-            Available Git Executables ({allBinaries.length})
+            {translateUiText('git.binary.availableCount', { count: allBinaries.length })}
           </span>
-          <span className="text-[11px] text-subtext0">Select one active binary</span>
+          <span className="text-[11px] text-subtext0">{translateUiText('git.binary.selectActive')}</span>
         </div>
 
         {error && (
@@ -221,14 +224,14 @@ export const GitBinaryTab: React.FC<GitBinaryTabProps> = ({
         {isScanning && allBinaries.length === 0 ? (
           <div className="p-8 border border-dashed border-surface1 flex flex-col items-center justify-center text-center gap-2.5 rounded-sm">
             <RefreshCw className="w-5 h-5 text-brand animate-spin" />
-            <div className="text-xs font-semibold text-text">Scanning for Git Binaries...</div>
+            <div className="text-xs font-semibold text-text">{translateUiText('git.binary.scanning')}</div>
             <div className="text-[11px] text-subtext0">
-              Checking PATH, standard program directories, and bundled packages
+              {translateUiText('git.binary.scanningDescription')}
             </div>
           </div>
         ) : allBinaries.length === 0 ? (
           <div className="p-6 border border-dashed border-surface1 text-center text-xs text-subtext0 rounded-sm">
-            No Git binaries found on your system. You can manually specify a custom path below.
+            {translateUiText('git.binary.noneFound')}
           </div>
         ) : (
           <GitBinaryListTable

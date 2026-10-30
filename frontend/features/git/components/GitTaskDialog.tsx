@@ -56,19 +56,19 @@ export const GitTaskDialog: React.FC = () => {
               : <CheckCircle2 className="h-4 w-4 text-green" />}
             <h3 id="git-task-title" className="truncate text-sm font-semibold">{task.title}</h3>
           </div>
-          <button type="button" onClick={close} aria-label={isRunning ? 'Run in background' : 'Dismiss task'} className="flex h-10 w-10 shrink-0 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text rounded-sm">
+          <button type="button" onClick={close} aria-label={translateUiText(isRunning ? 'git.taskDialog.runInBackground' : 'git.taskDialog.dismissTask')} className="flex h-10 w-10 shrink-0 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text rounded-sm">
             <X className="h-4 w-4" />
           </button>
         </div>
         <div className="space-y-3 p-4">
-          {tasks.length > 1 && <CustomSelect value={task.id} onChange={showTask} options={tasks.map((item) => ({ value: item.id, label: `${item.title} · ${item.status}` }))} className="w-full" buttonClassName="w-full" dropdownWidth="w-full" align="left" aria-label="Git task" />}
+          {tasks.length > 1 && <CustomSelect value={task.id} onChange={showTask} options={tasks.map((item) => ({ value: item.id, label: translateUiText('git.taskDialog.taskOption', { title: item.title, status: translateUiText(`git.taskDialog.status.${item.status}`) }) }))} className="w-full" buttonClassName="w-full" dropdownWidth="w-full" align="left" aria-label={translateUiText('git.taskDialog.ariaLabel')} />}
           <GitTaskProgress task={task} />
-          {isRunning && <p className="text-[11px] text-subtext0">You can continue working while this task runs in the background.</p>}
+          {isRunning && <p className="text-[11px] text-subtext0">{translateUiText('git.taskDialog.backgroundHint')}</p>}
         </div>
         <div className="flex items-center justify-end gap-2 border-t border-surface0 px-4 py-3 rounded-sm">
-          <button type="button" disabled={isRunning} title={isRunning ? 'Available when the task finishes. Use Run in background to hide progress.' : 'Dismiss this result'} onClick={() => dismissTask(task.id)} className="border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0 disabled:cursor-not-allowed disabled:opacity-40 rounded-sm">{translateUiText('notifications.dismiss')}</button>
-          {isRunning ? <button type="button" onClick={() => runInBackground(task.id)} className="bg-primary px-3 py-1.5 text-xs font-semibold text-on-accent hover:brightness-110 rounded-sm">Run in background</button>
-            : task.resultRepository && <button type="button" onClick={() => { void useGitStore.getState().selectRepo(task.resultRepository!); dismissTask(task.id); }} className="bg-primary px-3 py-1.5 text-xs font-semibold text-on-accent hover:brightness-110 rounded-sm">Open repository</button>}
+          <button type="button" disabled={isRunning} title={translateUiText(isRunning ? 'git.taskDialog.dismissUnavailableTitle' : 'git.taskDialog.dismissResultTitle')} onClick={() => dismissTask(task.id)} className="border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0 disabled:cursor-not-allowed disabled:opacity-40 rounded-sm">{translateUiText('notifications.dismiss')}</button>
+          {isRunning ? <button type="button" onClick={() => runInBackground(task.id)} className="bg-primary px-3 py-1.5 text-xs font-semibold text-on-accent hover:brightness-110 rounded-sm">{translateUiText('git.taskDialog.runInBackground')}</button>
+            : task.resultRepository && <button type="button" onClick={() => { void useGitStore.getState().selectRepo(task.resultRepository!); dismissTask(task.id); }} className="bg-primary px-3 py-1.5 text-xs font-semibold text-on-accent hover:brightness-110 rounded-sm">{translateUiText('git.taskDialog.openRepository')}</button>}
         </div>
       </div>
     </div>

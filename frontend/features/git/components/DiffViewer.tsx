@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { ReviewableDiff } from './ReviewableDiff';
 import { extractFileHunks, inferLanguage } from '../utils/diffParser';
@@ -30,6 +31,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   isLoading = false,
   onOpenRepo,
 }) => {
+  const { t } = useTranslation();
   const {
     selectNextFile,
     selectPrevFile,
@@ -152,14 +154,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.classList.add('bg-red/30');
         setTimeout(() => el.classList.remove('bg-red/30'), 2500);
-        showToast('Jumped to conflict marker');
+        showToast(t('git.diffViewer.jumpToConflictMarker'));
         return;
       }
     }
     const firstHunk = diffContainerRef.current.querySelector('.diff-line-old, .diff-line-new');
     if (firstHunk) {
       firstHunk.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      showToast('Jumped to first diff modification');
+      showToast(t('git.diffViewer.jumpToFirstChange'));
     }
   };
 

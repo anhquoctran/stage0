@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bot } from '../../../common/components/icons/Bot';
 import type { GitLabAvatarProps } from '../types/GitLabAvatarProps';
 
@@ -30,6 +31,7 @@ export const GitLabAvatar: React.FC<GitLabAvatarProps> = ({
   size = 'md',
   className = '',
 }) => {
+  const { t } = useTranslation();
   const sizeClasses = {
     xs: 'w-5 h-5 text-[9px]',
     sm: 'w-6 h-6 text-[10px]',
@@ -51,7 +53,7 @@ export const GitLabAvatar: React.FC<GitLabAvatarProps> = ({
     return (
       <div
         className={`${sizeClasses} rounded-full bg-purple-500/20 text-purple-300 ring-1 ring-purple-500/40 flex items-center justify-center shrink-0 ${className}`}
-        title={`${name} (AI Agent)`}
+        title={t('virtualMr.discussion.aiAgentTitle', { name })}
       >
         <Bot className="w-3.5 h-3.5" />
       </div>

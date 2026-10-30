@@ -47,10 +47,10 @@ export const RemoteUrlFromModal: React.FC = () => {
     if (compareBranch) {
       list.push({
         key: 'compare_branch',
-        label: 'Compare Branch (MR Source)',
+        label: translateUiText('git.remoteUrlDialog.compareBranch'),
         sublabel: compareBranch,
         ref: compareBranch,
-        badge: 'Compare',
+        badge: translateUiText('git.remoteUrlDialog.compareBadge'),
         icon: <GitBranch className="w-3.5 h-3.5 text-subtext0" />,
         url: buildRemoteFileUrl(effectiveRemoteUrl, compareBranch, file.path),
       });
@@ -59,10 +59,10 @@ export const RemoteUrlFromModal: React.FC = () => {
     if (baseBranch) {
       list.push({
         key: 'base_branch',
-        label: 'Base Branch (MR Target)',
+        label: translateUiText('git.remoteUrlDialog.baseBranch'),
         sublabel: baseBranch,
         ref: baseBranch,
-        badge: 'Base',
+        badge: translateUiText('git.remoteUrlDialog.baseBadge'),
         icon: <GitBranch className="w-3.5 h-3.5 text-subtext0" />,
         url: buildRemoteFileUrl(effectiveRemoteUrl, baseBranch, file.path),
       });
@@ -71,10 +71,10 @@ export const RemoteUrlFromModal: React.FC = () => {
     if (diffPayload?.compare_commit) {
       list.push({
         key: 'compare_commit',
-        label: 'Compare Commit',
+        label: translateUiText('git.remoteUrlDialog.compareCommit'),
         sublabel: diffPayload.compare_commit.substring(0, 7),
         ref: diffPayload.compare_commit,
-        badge: 'Commit',
+        badge: translateUiText('git.remoteUrlDialog.commitBadge'),
         icon: <GitCommit className="w-3.5 h-3.5 text-subtext0" />,
         url: buildRemoteFileUrl(effectiveRemoteUrl, diffPayload.compare_commit, file.path),
       });
@@ -83,17 +83,17 @@ export const RemoteUrlFromModal: React.FC = () => {
     if (diffPayload?.base_commit) {
       list.push({
         key: 'base_commit',
-        label: 'Base Commit',
+        label: translateUiText('git.remoteUrlDialog.baseCommit'),
         sublabel: diffPayload.base_commit.substring(0, 7),
         ref: diffPayload.base_commit,
-        badge: 'Commit',
+        badge: translateUiText('git.remoteUrlDialog.commitBadge'),
         icon: <GitCommit className="w-3.5 h-3.5 text-subtext0" />,
         url: buildRemoteFileUrl(effectiveRemoteUrl, diffPayload.base_commit, file.path),
       });
     }
 
     return list;
-  }, [file, effectiveRemoteUrl, compareBranch, baseBranch, diffPayload]);
+  }, [file, effectiveRemoteUrl, compareBranch, baseBranch, diffPayload, translateUiText]);
 
   const customUrl = useMemo(() => {
     if (!file || !effectiveRemoteUrl || !customRef.trim()) return '';
@@ -105,7 +105,7 @@ export const RemoteUrlFromModal: React.FC = () => {
   const handleCopy = (url: string, key: string) => {
     navigator.clipboard.writeText(url);
     setCopiedKey(key);
-    showToast(`Copied remote URL (${key}) to clipboard!`);
+    showToast(translateUiText('git.fileActions.copiedRemoteUrl', { ref: key }));
     setTimeout(() => {
       setCopiedKey(null);
       setIsRemoteUrlFromOpen(false);
@@ -138,8 +138,8 @@ export const RemoteUrlFromModal: React.FC = () => {
           {/* File path banner */}
           <div className="bg-surface0/60 border border-surface0 px-3 py-2 flex items-center justify-between gap-2 font-mono text-xs rounded-sm">
             <div className="min-w-0 truncate">
-              <span className="text-subtext0 text-[10px] block uppercase font-sans font-bold">Target File</span>
-              <span className="text-text font-semibold truncate block">{file ? file.path : 'No file selected'}</span>
+              <span className="text-subtext0 text-[10px] block uppercase font-sans font-bold">{translateUiText('git.remoteUrlDialog.targetFile')}</span>
+              <span className="text-text font-semibold truncate block">{file ? file.path : translateUiText('git.remoteUrlDialog.noFileSelected')}</span>
             </div>
             {effectiveRemoteUrl && (
               <span className="text-[10px] text-subtext1 truncate max-w-[200px]" title={effectiveRemoteUrl}>
@@ -150,12 +150,12 @@ export const RemoteUrlFromModal: React.FC = () => {
 
           {!file ? (
             <div className="py-6 text-center text-xs text-subtext0">
-              Please select a file to copy its remote URL.
+              {translateUiText('git.remoteUrlDialog.selectFileHint')}
             </div>
           ) : (
             <div className="space-y-2.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-subtext1 block">
-                Select Branch or Commit Reference
+                {translateUiText('git.remoteUrlDialog.selectReference')}
               </span>
 
               <div className="space-y-2">
@@ -193,12 +193,12 @@ export const RemoteUrlFromModal: React.FC = () => {
                         {isCopied ? (
                           <>
                             <Check className="w-3.5 h-3.5" />
-                            <span>Copied</span>
+                            <span>{translateUiText('git.remoteUrlDialog.copied')}</span>
                           </>
                         ) : (
                           <>
                             <Copy className="w-3.5 h-3.5 text-subtext1" />
-                            <span>Copy URL</span>
+                            <span>{translateUiText('git.remoteUrlDialog.copyUrl')}</span>
                           </>
                         )}
                       </button>
@@ -210,14 +210,14 @@ export const RemoteUrlFromModal: React.FC = () => {
               {/* Custom Ref Option */}
               <div className="pt-2 border-t border-surface0/70">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-subtext1 block mb-1.5">
-                  Or Custom Branch / Tag / SHA
+                  {translateUiText('git.remoteUrlDialog.customReference')}
                 </span>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={customRef}
                     onChange={(e) => setCustomRef(e.target.value)}
-                    placeholder="e.g. develop, v1.2.0, or commit hash..."
+                    placeholder={translateUiText('git.remoteUrlDialog.customReferencePlaceholder')}
                     className="flex-1 px-3 py-1.5 bg-base border border-surface0 text-xs text-text placeholder-subtext0 focus:outline-hidden focus:border-surface2 font-mono rounded-sm"
                   />
                   <button
@@ -227,7 +227,7 @@ export const RemoteUrlFromModal: React.FC = () => {
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-surface1 hover:bg-surface2 text-text border border-surface2 rounded-sm transition-colors disabled:opacity-40 cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Copy Custom URL</span>
+                    <span>{translateUiText('git.remoteUrlDialog.copyCustomUrl')}</span>
                   </button>
                 </div>
                 {customUrl && (

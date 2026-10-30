@@ -1,4 +1,5 @@
 import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+import i18n from '../../../i18n/i18n';
 
 import type { StateCreator } from 'zustand';
 import { useGitStore } from '../../../git/store/useGitStore';
@@ -28,7 +29,7 @@ export const createSessionCreationSlice: StateCreator<
 
     if (!currentRepoId || !currentRepoPath) {
       console.warn('createSession: Cannot create session because no repository is active.');
-      useGitStore.getState().showToast('No active repository to create Virtual MR');
+      useGitStore.getState().showToast(i18n.t('virtualMr.toasts.noActiveRepository'));
       return '';
     }
 
@@ -100,7 +101,7 @@ export const createSessionCreationSlice: StateCreator<
       }
     } catch (error) {
       console.error('Failed to persist session:', error);
-      gitStore.showToast('Could not save this Virtual MR to the database. Please try again.');
+      gitStore.showToast(i18n.t('virtualMr.toasts.sessionSaveFailed'));
       return '';
     }
 
@@ -119,7 +120,7 @@ export const createSessionCreationSlice: StateCreator<
       console.warn('Failed to sync branches with gitStore:', err);
     }
 
-    gitStore.showToast(`Created Virtual MR: ${title}`);
+    gitStore.showToast(i18n.t('virtualMr.toasts.sessionCreated', { title }));
 
     return newId;
   },

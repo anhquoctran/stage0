@@ -187,14 +187,14 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                 <div>
                   <div className="text-sm font-semibold tracking-tight">Stage0</div>
                   <div className="mt-0.5 text-[10px] uppercase tracking-[0.16em] text-subtext0">
-                    Virtual MR Sandbox
+                    {t('onboarding.welcome.virtualMrSandbox')}
                   </div>
                 </div>
               </div>
 
               <div
                 className="flex flex-wrap items-center gap-1.5"
-                aria-label={`Slide ${activeSlide + 1} of ${SLIDES.length}`}
+                aria-label={t('onboarding.welcome.slideCount', { current: activeSlide + 1, total: SLIDES.length })}
               >
                 {SLIDES.map((slide, index) => {
                   const isActive = index === activeSlide;
@@ -204,7 +204,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                       key={slide.id}
                       type="button"
                       onClick={() => selectSlide(index)}
-                      aria-label={`Go to slide ${index + 1}: ${slide.id === 'hello' ? t(slide.title) : slide.title}`}
+                      aria-label={t('onboarding.welcome.goToSlide', { index: index + 1, title: t(slide.title) })}
                       aria-current={isActive ? 'step' : undefined}
                       className={`flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs font-medium transition-colors ${
                         isActive
@@ -215,7 +215,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                       }`}
                     >
                       {isCompleted && <Check className="h-3 w-3 shrink-0" />}
-                      <span>{slide.id === 'hello' ? t(slide.stepLabel) : slide.stepLabel}</span>
+                      <span>{t(slide.stepLabel)}</span>
                     </button>
                   );
                 })}
@@ -226,26 +226,26 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
             <ScrollArea
               key={activeSlide}
               role="region"
-              aria-label="Welcome guide content"
+              aria-label={t('onboarding.welcome.guideContent')}
               tabIndex={0}
               className="mt-6 min-h-0 flex-1 pe-1"
             >
               <div className="space-y-6 pb-4">
                 <div>
                   <div className="mb-2 text-[10px] font-semibold tracking-[0.16em] text-brand">
-                    {currentSlide.eyebrow}
+                    {t(currentSlide.eyebrow)}
                   </div>
                   <h1
                     id="first-launch-title"
                     className="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl"
                   >
-                    {currentSlide.title}
+                    {t(currentSlide.title)}
                   </h1>
                   <p
                     id="first-launch-description"
                     className="mt-2 max-w-2xl text-sm leading-6 text-subtext1"
                   >
-                    {currentSlide.description}
+                    {t(currentSlide.description)}
                   </p>
                 </div>
 
@@ -256,9 +256,9 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                         key={highlight.title}
                         className="rounded-sm border border-surface0 bg-mantle/60 p-4"
                       >
-                        <dt className="text-xs font-semibold text-text">{highlight.title}</dt>
+                        <dt className="text-xs font-semibold text-text">{t(highlight.title)}</dt>
                         <dd className="mt-1 text-xs leading-5 text-subtext0">
-                          {highlight.description}
+                          {t(highlight.description)}
                         </dd>
                       </div>
                     ))}
@@ -270,7 +270,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                     role="alert"
                     className="rounded-sm bg-yellow/10 p-3 text-xs leading-5 text-text"
                   >
-                    Save an AI connection and an enabled custom reviewer before continuing.
+                    {t('onboarding.welcome.setupRequired')}
                   </p>
                 )}
 
@@ -293,7 +293,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                 )}
 
                 <div className="border-s-2 border-primary/60 ps-3 text-xs leading-5 text-subtext0 rounded-sm">
-                  <span>{currentSlide.caption}</span>
+                  <span>{t(currentSlide.caption)}</span>
                 </div>
               </div>
             </ScrollArea>
@@ -308,10 +308,10 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                   <button
                     type="button"
                     onClick={reload}
-                    title="Discard choices in this guide and reload saved settings"
+                    title={t('onboarding.welcome.discardChoices')}
                     className="rounded-sm border border-surface0 px-3 py-1.5 text-xs text-subtext1 hover:bg-surface0"
                   >
-                    Reload saved settings
+                    {t('onboarding.welcome.reloadSaved')}
                   </button>
                 </div>
               )}
@@ -324,7 +324,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                       onClick={() => setActiveSlide((slide) => slide - 1)}
                       className="h-10 rounded-sm px-4 text-xs font-medium text-subtext1 transition-colors hover:bg-surface0 hover:text-text"
                     >
-                      Back
+                      {t('onboarding.welcome.back')}
                     </button>
                   ) : (
                     <span aria-hidden="true" />
@@ -336,7 +336,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                       tabIndex={-1}
                       className="rounded-sm px-2 py-1 text-xs text-subtext0 transition-colors hover:text-text"
                     >
-                      Skip tour
+                      {t('onboarding.welcome.skipTour')}
                     </button>
                   )}
                 </div>
@@ -357,14 +357,14 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
                       onClick={cloneRepository}
                       className="inline-flex h-10 items-center rounded-sm bg-surface0 px-3.5 text-xs font-medium text-text transition-colors hover:bg-surface1"
                     >
-                      Clone a repository
+                      {t('onboarding.welcome.cloneRepository')}
                     </button>
                     <button
                       type="button"
                       onClick={openRepository}
                       className="btn-primary flex h-10 items-center gap-2 rounded-sm px-4 text-xs font-semibold"
                     >
-                      {isSaving ? 'Saving…' : 'Open a repository'}{' '}
+                      {isSaving ? t('onboarding.welcome.saving') : t('onboarding.welcome.openRepository')}{' '}
                       <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                     </button>
                   </div>

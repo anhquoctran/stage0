@@ -3,6 +3,7 @@ import { ChevronRight } from '../../../../common/components/icons/ChevronRight';
 import { Folder } from '../../../../common/components/icons/Folder';
 import { FolderOpen } from '../../../../common/components/icons/FolderOpen';
 import type { FolderFileListProps } from './FolderFileListProps';
+import { useTranslation } from 'react-i18next';
 
 export function FolderFileList({
   folderTree,
@@ -13,11 +14,12 @@ export function FolderFileList({
   handleContextMenu,
   getStatusBadge,
 }: FolderFileListProps) {
+  const { t } = useTranslation();
   return (
     <div className="py-1">
       {Object.entries(folderTree).map(([folder, folderFiles]) => {
         const isCollapsed = collapsedFolders[folder];
-        const folderLabel = folder === '.' ? 'Root' : folder;
+        const folderLabel = folder === '.' ? t('git.fileList.rootFolder') : folder;
 
         return (
           <div key={folder} className="mb-0.5">
@@ -65,7 +67,7 @@ export function FolderFileList({
                         {file.is_binary && (
                           <span
                             className="shrink-0 text-[9px] font-bold text-amber-400"
-                            title="Binary file; diff preview is not supported"
+                            title={t('git.diff.binary.title')}
                           >
                             BIN
                           </span>

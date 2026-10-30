@@ -6,6 +6,7 @@ import { ZedSwitch } from '../ZedSwitch';
 import { useCommandShortcut } from '../../../../core/hooks/useCommandShortcut';
 import { useApplicationServices } from '../../../../core/services/runtime/useApplicationServices';
 import type { AiConfig } from '../../../ai/types/AiConfig';
+import { Trans, useTranslation } from 'react-i18next';
 
 export const PreferencesGeneralTab: React.FC<{
   draftShowInlineBlame: boolean;
@@ -40,6 +41,7 @@ export const PreferencesGeneralTab: React.FC<{
   setDraftAiConfig,
   showToast,
 }) => {
+  const { t } = useTranslation();
   const { title: commandTitle } = useCommandShortcut();
   const canAddToPath = useApplicationServices().platform.capabilities.backend;
   const isWindows = typeof navigator !== 'undefined' && /Win/i.test(navigator.platform || navigator.userAgent);
@@ -47,8 +49,8 @@ export const PreferencesGeneralTab: React.FC<{
     <div className="space-y-1">
       <LinuxTitleBarSetting value={draftLinuxTitleBar} onChange={setDraftLinuxTitleBar} />
       <SettingRow
-        title="Start Stage0 on System Boot"
-        description="Automatically launch Stage0 when you log in to Windows."
+        title={t('preferences.general.startOnBoot')}
+        description={t('preferences.general.startOnBootDescription')}
       >
         <ZedSwitch
           checked={draftLaunchAtStartup}
@@ -57,8 +59,8 @@ export const PreferencesGeneralTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="Start in Background"
-        description="Keep Stage0 running in the system tray on startup without opening a window until requested."
+        title={t('preferences.general.startInBackground')}
+        description={t('preferences.general.startInBackgroundDescription')}
       >
         <ZedSwitch
           checked={draftStartInBackground}
@@ -67,15 +69,15 @@ export const PreferencesGeneralTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="File Explorer Context Menu (Windows only)"
-        description="Add 'Open with Stage0' to the right-click context menu for folders and directories in Windows File Explorer."
+        title={t('preferences.general.explorerContextMenu')}
+        description={t('preferences.general.explorerContextMenuDescription')}
       >
         <ZedSwitch
           checked={draftExplorerContextMenu}
           disabled={!isWindows}
           onChange={(val) => {
             if (!isWindows) {
-              showToast('Windows Explorer integration is only available on Windows.');
+              showToast(t('preferences.general.explorerWindowsOnly'));
               return;
             }
             setDraftExplorerContextMenu(val);
@@ -84,10 +86,10 @@ export const PreferencesGeneralTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="Stage0 terminal command"
+        title={t('preferences.general.terminalCommand')}
         description={canAddToPath
-          ? <>Add <code>stage0</code> to your user PATH. Start a new terminal and run <code>stage0 [dir]</code> to open a repository.</>
-          : 'Available in the Stage0 desktop app.'}
+          ? <Trans i18nKey="preferences.general.terminalPathDescription" components={{ command: <code />, usage: <code /> }} />
+          : t('preferences.general.availableInDesktop')}
       >
         <ZedSwitch
           checked={draftAddToPath}
@@ -97,9 +99,9 @@ export const PreferencesGeneralTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="Inline Git Blame"
+        title={t('preferences.general.inlineGitBlame')}
         description={commandTitle('toggle_inline_blame',
-          'Show commit author, relative time, and summary annotation at the end of the active line in diff view.'
+          t('preferences.general.inlineGitBlameDescription')
         )}
       >
         <ZedSwitch
@@ -109,8 +111,8 @@ export const PreferencesGeneralTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="Stream AI Responses"
-        description="Stream token-by-token completion for real-time responsiveness when generating summaries and reviews."
+        title={t('preferences.general.streamAiResponses')}
+        description={t('preferences.general.streamAiResponsesDescription')}
       >
         <ZedSwitch
           checked={draftAiConfig.streamResponse}
@@ -121,8 +123,8 @@ export const PreferencesGeneralTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="AI Code Review Assistance"
-        description="Enable proactive code review suggestions, inline risk detection, and automated MR annotations."
+        title={t('preferences.general.aiCodeReviewAssistance')}
+        description={t('preferences.general.aiCodeReviewAssistanceDescription')}
       >
         <ZedSwitch
           checked={draftAiConfig.enableCodeReviewAssist}
@@ -136,13 +138,13 @@ export const PreferencesGeneralTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="Accessibility & Contrast"
-        description="Enhance focus rings, contrast boundaries, and text legibility across all editor panels."
+        title={t('preferences.general.accessibilityContrast')}
+        description={t('preferences.general.accessibilityContrastDescription')}
       >
         <ZedSwitch
           checked={false}
           onChange={() =>
-            showToast('High contrast mode is currently aligned with OS settings.')
+            showToast(t('preferences.general.highContrastOsAligned'))
           }
         />
       </SettingRow>

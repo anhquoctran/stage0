@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { Search } from '../../../../common/components/icons/Search';
 import { ChevronLeft } from '../../../../common/components/icons/ChevronLeft';
 import { ChevronRight } from '../../../../common/components/icons/ChevronRight';
@@ -26,6 +27,7 @@ export const GitGraphSearchToolbar: React.FC<{
     counterText,
     messageSearchError,
 }) => {
+    const { t: translateUiText } = useUiTextTranslation();
     return (
         <div className="flex shrink-0 items-center gap-1.5 border-b border-surface0 px-3 py-2 rounded-sm">
             <label className="flex min-w-0 flex-1 items-center gap-2 border border-surface1 bg-crust px-2.5 py-1.5 text-subtext0 focus-within:border-brand">
@@ -38,8 +40,8 @@ export const GitGraphSearchToolbar: React.FC<{
                         setActiveMatchIndex(0);
                     }}
                     onKeyDown={onKeyDown}
-                    placeholder="Search commits by message, subject, author name or email, branch name, tag refs, hash…"
-                    aria-label="Search commits"
+                    placeholder={translateUiText('git.graphSearch.placeholder')}
+                    aria-label={translateUiText('git.graphSearch.searchLabel')}
                     className="git-graph-search-input min-w-0 flex-1 bg-transparent text-xs text-text outline-none placeholder:text-subtext0 rounded-sm"
                 />
                 <button
@@ -51,8 +53,8 @@ export const GitGraphSearchToolbar: React.FC<{
                     aria-pressed={caseSensitive}
                     title={
                         caseSensitive
-                            ? 'Case-sensitive search on'
-                            : 'Match case'
+                            ? translateUiText('git.graphSearch.caseSensitiveOn')
+                            : translateUiText('git.graphSearch.matchCase')
                     }
                     className={`px-1 text-[10px] font-semibold transition-colors rounded-sm ${caseSensitive ? 'text-brand' : 'text-subtext0 hover:text-text'}`}
                 >
@@ -63,8 +65,8 @@ export const GitGraphSearchToolbar: React.FC<{
                 type="button"
                 onClick={() => navigateMatches(-1)}
                 disabled={!canNavigate}
-                aria-label="Previous search result"
-                title="Previous match (Shift+Enter)"
+                aria-label={translateUiText('git.graphSearch.previousResult')}
+                title={translateUiText('git.graphSearch.previousMatch')}
                 className="flex h-7 w-6 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text disabled:opacity-35 rounded-sm"
             >
                 <ChevronLeft className="h-3 w-3" />
@@ -73,8 +75,8 @@ export const GitGraphSearchToolbar: React.FC<{
                 type="button"
                 onClick={() => navigateMatches(1)}
                 disabled={!canNavigate}
-                aria-label="Next search result"
-                title="Next match (Enter)"
+                aria-label={translateUiText('git.graphSearch.nextResult')}
+                title={translateUiText('git.graphSearch.nextMatch')}
                 className="flex h-7 w-6 items-center justify-center text-subtext0 hover:bg-surface0 hover:text-text disabled:opacity-35 rounded-sm"
             >
                 <ChevronRight className="h-3 w-3" />

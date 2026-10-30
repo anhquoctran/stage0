@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { KeymapPresetPicker } from '../keymaps/KeymapPresetPicker';
 import {
     KEYMAP_PRESETS,
@@ -14,6 +15,7 @@ export function PreferencesKeymapTab({
     value,
     onChange,
 }: PreferencesKeymapTabProps) {
+    const { t: translateUiText } = useUiTextTranslation();
     const [query, setQuery] = useState('');
     const [modifiedOnly, setModifiedOnly] = useState(false);
     const [resetEpoch, setResetEpoch] = useState(0);
@@ -39,12 +41,11 @@ export function PreferencesKeymapTab({
     ];
     return (
         <div className="space-y-4">
-            <h3 className="text-xs font-semibold text-text">Keymap Preset</h3>
+            <h3 className="text-xs font-semibold text-text">{translateUiText('preferences.keymaps.title')}</h3>
             <KeymapPresetPicker value={value} onChange={onChange} />
             <p className="text-xs leading-relaxed text-subtext0">
-                {preset.description} Presets adapt equivalent actions, not every
-                shortcut of the original app. Your custom bindings are kept when
-                changing presets.
+                {translateUiText(`preferences.keymaps.presetDescriptions.${preset.id}`)}{' '}
+                {translateUiText('preferences.keymaps.description')}
             </p>
             {preset.documentation && (
                 <button
@@ -54,7 +55,7 @@ export function PreferencesKeymapTab({
                     }}
                     className="rounded-sm text-xs text-brand underline"
                 >
-                    Original shortcut reference ↗
+                    {translateUiText('preferences.keymaps.originalReference')}
                 </button>
             )}
             <div className="flex flex-wrap items-center gap-2">
@@ -62,8 +63,8 @@ export function PreferencesKeymapTab({
                     type="search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    aria-label="Search keybindings"
-                    placeholder="Search commands, keys or scope…"
+                    aria-label={translateUiText('preferences.keymaps.searchLabel')}
+                    placeholder={translateUiText('preferences.keymaps.searchPlaceholder')}
                     className="min-w-32 flex-1 rounded-sm border border-surface1 bg-crust px-3 py-2 text-xs text-text outline-none focus:border-brand"
                 />
                 <label className="flex items-center gap-1.5 text-[11px] text-subtext0">
@@ -75,7 +76,7 @@ export function PreferencesKeymapTab({
                         }
                         className="rounded-sm accent-brand"
                     />{' '}
-                    Customized
+                    {translateUiText('preferences.keymaps.customized')}
                 </label>
                 <button
                     type="button"
@@ -86,7 +87,7 @@ export function PreferencesKeymapTab({
                     }}
                     className="rounded-sm border border-surface1 px-2 py-1.5 text-xs text-subtext1 hover:bg-surface0 disabled:opacity-40"
                 >
-                    Reset custom bindings
+                    {translateUiText('preferences.keymaps.resetCustomBindings')}
                 </button>
             </div>
             {errors.length > 0 && (
@@ -94,7 +95,7 @@ export function PreferencesKeymapTab({
                     role="alert"
                     className="rounded-sm border border-red/40 bg-red/10 p-3 text-xs text-red"
                 >
-                    Resolve conflicts before Apply/OK:
+                    {translateUiText('preferences.keymaps.resolveConflicts')}
                     <ul className="mt-1 list-disc ps-4">
                         {errors.map((error) => (
                             <li key={error}>{error}</li>
@@ -103,10 +104,7 @@ export function PreferencesKeymapTab({
                 </div>
             )}
             <p className="text-[11px] text-subtext0">
-                {commands.length} commands · Workspace shortcuts pause while
-                typing or using a dialog. System editing keys stay with the
-                OS/text control. OS-reserved combinations may not reach Stage0.
-                Changes activate after Apply or OK.
+                {translateUiText('preferences.keymaps.behaviorDescription', { count: commands.length })}
             </p>
             <div className="rounded-sm border border-surface0">
                 {commands.map((command) => (
@@ -120,7 +118,7 @@ export function PreferencesKeymapTab({
                 ))}
                 {!commands.length && (
                     <p className="p-4 text-xs text-subtext0">
-                        No matching commands.
+                        {translateUiText('preferences.keymaps.noMatchingCommands')}
                     </p>
                 )}
             </div>

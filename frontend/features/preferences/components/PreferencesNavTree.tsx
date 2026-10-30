@@ -32,7 +32,7 @@ export const PreferencesNavTree: React.FC<{
           <Search className="w-3.5 h-3.5 text-subtext0 absolute start-2.5 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search settings..."
+            placeholder={t('preferences.navSearch.placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-surface0/50 border border-surface1/60 rounded px-2.5 ps-8 pe-7 py-1 text-xs text-text placeholder:text-subtext0 focus:outline-hidden focus:border-brand transition-colors"
@@ -53,7 +53,7 @@ export const PreferencesNavTree: React.FC<{
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {filteredTree.length === 0 ? (
           <div className="px-3 py-6 text-center text-xs text-subtext0 italic">
-            No settings matching &quot;{searchQuery}&quot;
+            {t('preferences.navSearch.noMatches', { query: searchQuery })}
           </div>
         ) : (
           filteredTree.map((group) => {

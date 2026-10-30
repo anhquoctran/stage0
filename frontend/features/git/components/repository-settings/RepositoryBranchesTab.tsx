@@ -30,10 +30,10 @@ export const RepositoryBranchesTab: React.FC<{
   ).map((branch) => ({ value: branch, label: branch }));
 
   const newBranchBaseOptions: CustomSelectOption<string>[] = [
-    { value: 'HEAD', label: 'From HEAD' },
+    { value: 'HEAD', label: translateUiText('git.repositoryBranches.fromHead') },
     ...(branches?.local || []).map((branch) => ({
       value: branch,
-      label: `From ${branch}`,
+      label: translateUiText('git.repositoryBranches.fromBranch', { branch }),
     })),
   ];
 
@@ -43,11 +43,11 @@ export const RepositoryBranchesTab: React.FC<{
     try {
       await createBranch(newBranchName.trim(), newBranchBase === 'HEAD' ? undefined : newBranchBase);
       await fetchBranches(currentRepo.local_path);
-      showToast(`Branch created: ${newBranchName}`);
+      showToast(translateUiText('git.repositoryBranches.branchCreated', { name: newBranchName }));
       setNewBranchName('');
       setIsAddingBranch(false);
     } catch (err: any) {
-      showToast(`Failed to create branch: ${err}`);
+      showToast(translateUiText('git.repositoryBranches.branchCreateFailed', { error: String(err) }));
     }
   };
 
@@ -56,29 +56,29 @@ export const RepositoryBranchesTab: React.FC<{
     if (!newTagName.trim()) return;
     try {
       await createTag(newTagName.trim(), 'HEAD', newTagMessage.trim() || undefined);
-      showToast(`Tag created: ${newTagName}`);
+      showToast(translateUiText('git.repositoryBranches.tagCreated', { name: newTagName }));
       setNewTagName('');
       setNewTagMessage('');
       setIsAddingTag(false);
     } catch (err: any) {
-      showToast(`Failed to create tag: ${err}`);
+      showToast(translateUiText('git.repositoryBranches.tagCreateFailed', { error: String(err) }));
     }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-[1rem] text-text font-medium">Branches &amp; Tags</h3>
+        <h3 className="text-[1rem] text-text font-medium">{translateUiText('git.repositoryBranches.title')}</h3>
         <p className="text-xs text-subtext0 mt-0.5">
-          Manage default branch configuration, create new branches, and manage tags
+          {translateUiText('git.repositoryBranches.description')}
         </p>
       </div>
 
       {/* DEFAULT BASE BRANCH */}
       <div className="p-4 bg-crust border border-surface0 space-y-2 rounded-sm">
-        <label className="block text-xs font-medium text-text">Default Base Branch for Virtual MR</label>
+        <label className="block text-xs font-medium text-text">{translateUiText('git.repositoryBranches.defaultBase')}</label>
         <p className="text-xs text-subtext0">
-          The default target branch automatically selected when opening a new Virtual MR in this repository.
+          {translateUiText('git.repositoryBranches.defaultBaseDescription')}
         </p>
         <CustomSelect
           value={defaultBaseBranch}
@@ -88,8 +88,8 @@ export const RepositoryBranchesTab: React.FC<{
           buttonClassName="w-full"
           dropdownWidth="w-full"
           align="left"
-          placeholder="Select a branch…"
-          aria-label="Default Base Branch for Virtual MR"
+          placeholder={translateUiText('git.repositoryBranches.selectBranch')}
+          aria-label={translateUiText('git.repositoryBranches.defaultBase')}
         />
       </div>
 
@@ -98,14 +98,14 @@ export const RepositoryBranchesTab: React.FC<{
         <div className="flex items-center justify-between">
           <span className="font-semibold text-xs text-text flex items-center gap-1.5">
             <GitBranch className="w-3.5 h-3.5 text-subtext0" />
-            <span>Local Branches ({branches?.local.length || 0})</span>
+            <span>{translateUiText('git.repositoryBranches.localBranches', { count: branches?.local.length || 0 })}</span>
           </span>
           <button
             onClick={() => setIsAddingBranch(true)}
             className="px-2.5 py-1 bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer rounded-sm"
           >
             <Plus className="w-3 h-3" />
-            <span>New Branch</span>
+            <span>{translateUiText('git.repositoryBranches.newBranch')}</span>
           </button>
         </div>
 
@@ -117,7 +117,7 @@ export const RepositoryBranchesTab: React.FC<{
             <input
               type="text"
               required
-              placeholder="New branch name (e.g. feat/checkout)"
+              placeholder={translateUiText('git.repositoryBranches.branchNamePlaceholder')}
               value={newBranchName}
               onChange={(e) => setNewBranchName(e.target.value)}
               className="flex-1 px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none rounded-sm"
@@ -130,13 +130,13 @@ export const RepositoryBranchesTab: React.FC<{
               buttonClassName="min-w-36"
               dropdownWidth="w-56"
               align="left"
-              aria-label="New branch base"
+              aria-label={translateUiText('git.repositoryBranches.branchBase')}
             />
             <button
               type="submit"
               className="px-3 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs rounded-sm"
             >
-              Create
+              {translateUiText('git.repositoryBranches.createBranch')}
             </button>
             <button
               type="button"
@@ -155,12 +155,12 @@ export const RepositoryBranchesTab: React.FC<{
                 <span className="font-mono">{b}</span>
                 {b === branches?.current && (
                   <span className="text-[10px] px-1.5 py-0.2 bg-surface1 text-text font-mono border border-surface2/40">
-                    current HEAD
+                    {translateUiText('git.repositoryBranches.currentHead')}
                   </span>
                 )}
                 {b === defaultBaseBranch && (
                   <span className="text-[10px] px-1.5 py-0.2 bg-surface1 text-subtext0 font-mono border border-surface2/40">
-                    default base
+                    {translateUiText('git.repositoryBranches.defaultBaseBadge')}
                   </span>
                 )}
               </div>
@@ -168,13 +168,13 @@ export const RepositoryBranchesTab: React.FC<{
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm(`Are you sure you want to delete branch '${b}'?`)) {
+                    if (window.confirm(translateUiText('git.repositoryBranches.deleteBranchConfirm', { name: b }))) {
                       deleteBranch(b, true);
                       fetchBranches(currentRepo.local_path);
                     }
                   }}
                   className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer rounded-sm"
-                  title="Delete branch"
+                  title={translateUiText('git.repositoryBranches.deleteBranch')}
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -189,14 +189,14 @@ export const RepositoryBranchesTab: React.FC<{
         <div className="flex items-center justify-between">
           <span className="font-semibold text-xs text-text flex items-center gap-1.5">
             <Tag className="w-3.5 h-3.5 text-subtext0" />
-            <span>Release Tags ({tags.length})</span>
+            <span>{translateUiText('git.repositoryBranches.releaseTags', { count: tags.length })}</span>
           </span>
           <button
             onClick={() => setIsAddingTag(true)}
             className="px-2.5 py-1 bg-surface1 hover:bg-surface2 text-xs flex items-center gap-1 cursor-pointer rounded-sm"
           >
             <Plus className="w-3 h-3" />
-            <span>Create Tag</span>
+            <span>{translateUiText('git.repositoryBranches.createTag')}</span>
           </button>
         </div>
 
@@ -209,14 +209,14 @@ export const RepositoryBranchesTab: React.FC<{
               <input
                 type="text"
                 required
-                placeholder="Tag name (e.g. v1.0.0)"
+                placeholder={translateUiText('git.repositoryBranches.tagNamePlaceholder')}
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
                 className="px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none rounded-sm"
               />
               <input
                 type="text"
-                placeholder="Annotated message"
+                placeholder={translateUiText('git.repositoryBranches.annotatedMessagePlaceholder')}
                 value={newTagMessage}
                 onChange={(e) => setNewTagMessage(e.target.value)}
                 className="px-3 py-1.5 bg-surface0 border border-surface1 text-text focus:outline-none rounded-sm"
@@ -234,7 +234,7 @@ export const RepositoryBranchesTab: React.FC<{
                 type="submit"
                 className="px-3 py-1 bg-brand hover:bg-brand/90 text-on-accent font-semibold cursor-pointer shadow-xs rounded-sm"
               >
-                Create Tag
+                {translateUiText('git.repositoryBranches.createTag')}
               </button>
             </div>
           </form>
@@ -242,7 +242,7 @@ export const RepositoryBranchesTab: React.FC<{
 
         <div className="max-h-40 overflow-y-auto divide-y divide-surface0 border border-surface0 bg-crust/50">
           {tags.length === 0 ? (
-            <div className="p-4 text-center text-subtext0 text-xs">No tags found</div>
+            <div className="p-4 text-center text-subtext0 text-xs">{translateUiText('git.repositoryBranches.noTags')}</div>
           ) : (
             tags.map((t) => (
               <div key={t.name} className="px-3 py-2 flex items-center justify-between text-xs">
@@ -254,12 +254,12 @@ export const RepositoryBranchesTab: React.FC<{
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm(`Are you sure you want to delete tag '${t.name}'?`)) {
+                    if (window.confirm(translateUiText('git.repositoryBranches.deleteTagConfirm', { name: t.name }))) {
                       deleteTag(t.name);
                     }
                   }}
                   className="p-1 hover:bg-red-500/20 text-subtext0 hover:text-red-400 cursor-pointer rounded-sm"
-                  title="Delete tag"
+                  title={translateUiText('git.repositoryBranches.deleteTag')}
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>

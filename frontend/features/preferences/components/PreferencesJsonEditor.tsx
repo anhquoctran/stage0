@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { isMacOS } from '../../../common/utils/shortcuts';
 import type { PreferencesJsonEditorProps } from '../types/PreferencesJsonEditorProps';
@@ -9,6 +10,7 @@ import { usePreferencesJsonDocument } from './usePreferencesJsonDocument';
 const PREFERENCES_SCHEMA_URI = 'https://stage0.app/schemas/preferences-v1.json';
 
 export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ onClose }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const isMac = isMacOS();
   const {
     draft,
@@ -46,17 +48,17 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
   return createPortal(
     <section
       className="fixed inset-x-0 bottom-0 top-8.5 z-[90] flex min-h-0 flex-col bg-mantle text-text"
-      aria-label="Edit preferences.json"
+      aria-label={translateUiText('preferences.jsonEditor.editTitle')}
     >
       <PreferencesJsonEditorHeader isMac={isMac} saveState={saveState} handleClose={handleClose} />
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
         <div className="flex shrink-0 items-center justify-between gap-3 text-[11px] text-subtext0">
           <span className="truncate" title={document?.path}>
-            {document?.path ?? 'Loading preferences file…'}
+            {document?.path ?? translateUiText('preferences.jsonEditor.loadingDocument')}
           </span>
           <div className="flex shrink-0 items-center gap-2">
             <label htmlFor="preferences-json-schema" className="text-overlay1">
-              Schema
+              {translateUiText('preferences.jsonEditor.schema')}
             </label>
             <input
               id="preferences-json-schema"
@@ -70,7 +72,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
                 onClick={() => void reload()}
                 className="border border-surface1 px-2 py-1 hover:bg-surface0 rounded-sm"
               >
-                Reload latest
+                {translateUiText('preferences.jsonEditor.reloadLatest')}
               </button>
             )}
             <button
@@ -78,7 +80,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
               onClick={() => void handleRestoreDefaults()}
               className="border border-surface1 px-2 py-1 hover:bg-surface0 rounded-sm"
             >
-              Restore defaults
+              {translateUiText('preferences.jsonEditor.restoreDefaults')}
             </button>
           </div>
         </div>
@@ -161,14 +163,14 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
               onSelect={(event) => updateActiveLine(event.currentTarget)}
               onScroll={(event) => syncScroll(event.currentTarget)}
               spellCheck={false}
-              aria-label="Preferences JSONC source"
+              aria-label={translateUiText('preferences.jsonEditor.sourceLabel')}
               className="absolute inset-0 h-full w-full resize-none overflow-auto whitespace-pre bg-transparent px-3 py-3 text-transparent caret-primary outline-none selection:bg-primary/25 rounded-sm"
               style={{ ...fontStyle, WebkitTextFillColor: 'transparent', tabSize: 2 }}
             />
             {completion && completionPosition && (
               <div
                 role="listbox"
-                aria-label="JSONC completions"
+                aria-label={translateUiText('preferences.jsonEditor.completionsLabel')}
                 className="absolute z-20 max-h-52 overflow-y-auto rounded-sm border border-surface1 bg-mantle py-1 shadow-xl"
                 style={completionPosition}
               >

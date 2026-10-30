@@ -1,6 +1,7 @@
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { resolveCloneDestination } from '../services/resolveCloneDestination';
 import type { CloneDestinationContext } from './CloneDestinationContext';
 
@@ -9,6 +10,7 @@ export function useCloneDestination({
   setErrorMessage,
   pickCloneFolder,
 }: CloneDestinationContext) {
+  const { t } = useTranslation();
   const appServices = useApplicationServices();
   const [parentDir, setParentDir] = useState('');
 
@@ -29,7 +31,7 @@ export function useCloneDestination({
       .catch(() => {
         if (!disposed)
           setErrorMessage(
-            'Could not resolve your home directory. Please choose a destination with Browse.'
+            t('git.clone.homeDirectoryUnavailable')
           );
       });
     return () => {
@@ -47,7 +49,7 @@ export function useCloneDestination({
       .catch(() => {
         if (!disposed)
           setErrorMessage(
-            'Could not resolve the destination path. Please choose a folder with Browse.'
+            t('git.clone.destinationUnavailable')
           );
       });
     return () => {

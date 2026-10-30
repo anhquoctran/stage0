@@ -12,24 +12,25 @@ export function ConflictMarkedFileView({
   lineSpacing,
   enableLigatures,
 }: ConflictMarkedFileViewProps) {
+  const { t } = useTranslation();
   return (
     <div className="max-w-6xl mx-auto border border-surface0 rounded-sm overflow-hidden bg-mantle shadow-sm">
       <div className="bg-surface0 px-3.5 py-2 border-b border-surface1 flex items-center justify-between rounded-sm">
         <span className="text-xs font-mono font-bold text-text">
-          In-Memory 3-Way Merged File: {selectedFile.path}
+          {t('git.conflicts.mergedFileTitle', { path: selectedFile.path })}
         </span>
         <button
           type="button"
           onClick={() => handleCopy(activeConflictPreview?.merged_content || '', 'full')}
           className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-surface1 hover:bg-surface2 text-xs text-text transition-colors cursor-pointer"
-          title="Copy entire merged file with markers"
+          title={t('git.conflicts.copyMergedFile')}
         >
           {copiedKey === 'full' ? (
             <Check className="w-3 h-3 text-green" />
           ) : (
             <Copy className="w-3 h-3" />
           )}
-          <span>Copy Full File</span>
+          <span>{t('git.conflicts.copyFullFile')}</span>
         </button>
       </div>
 
@@ -55,7 +56,7 @@ export function ConflictMarkedFileView({
                 className="bg-red/25 text-red font-bold px-2 py-1 my-1 rounded-sm border-l-4 border-red flex items-center gap-2"
               >
                 <span className="text-[10px] uppercase px-1.5 py-0.5 rounded-sm bg-red text-white">
-                  Target Change
+                  {t('git.conflicts.targetChange')}
                 </span>
                 <span>{line}</span>
               </div>
@@ -68,7 +69,7 @@ export function ConflictMarkedFileView({
                 key={idx}
                 className="bg-surface1 text-subtext1 font-bold px-2 py-0.5 my-1 border-y border-dashed border-surface2 flex items-center gap-2 text-center justify-center text-[11px] rounded-sm"
               >
-                <span>─── COLLISION BOUNDARY ───</span>
+                <span>{t('git.conflicts.collisionBoundary')}</span>
               </div>
             );
           }
@@ -80,7 +81,7 @@ export function ConflictMarkedFileView({
                 className="bg-blue/25 text-blue font-bold px-2 py-1 my-1 rounded-sm border-l-4 border-blue flex items-center gap-2"
               >
                 <span className="text-[10px] uppercase px-1.5 py-0.5 rounded-sm bg-blue text-white">
-                  Incoming Change
+                  {t('git.conflicts.incomingChange')}
                 </span>
                 <span>{line}</span>
               </div>
@@ -100,3 +101,4 @@ export function ConflictMarkedFileView({
     </div>
   );
 }
+import { useTranslation } from 'react-i18next';

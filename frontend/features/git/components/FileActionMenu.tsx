@@ -50,9 +50,9 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
     if (!currentRepo) return;
     try {
       await revealInOs(currentRepo.local_path, file.path);
-      showToast('Revealed file in OS File Explorer');
+      showToast(translateUiText('git.fileActions.revealedInExplorer'));
     } catch (err) {
-      showToast(`Failed to open explorer: ${err}`);
+      showToast(translateUiText('git.fileActions.revealFailed', { error: String(err) }));
     }
   };
 
@@ -67,7 +67,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
   const handleCopyRelative = () => {
     setIsOpen(false);
     navigator.clipboard.writeText(file.path);
-    showToast(`Copied relative path: ${file.path}`);
+    showToast(translateUiText('git.fileActions.copiedRelativePath', { path: file.path }));
   };
 
   const handleCopyAbsolute = () => {
@@ -75,20 +75,20 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
     if (!currentRepo) return;
     const absPath = getAbsoluteFilePath(currentRepo.local_path, file.path);
     navigator.clipboard.writeText(absPath);
-    showToast('Copied absolute path to clipboard');
+    showToast(translateUiText('git.fileActions.copiedAbsolutePath'));
   };
 
   const handleCopyRemoteUrl = () => {
     setIsOpen(false);
     const effectiveRemote = remoteUrl || (currentRepo ? `https://github.com/${currentRepo.name}` : '');
     if (!effectiveRemote) {
-      showToast('No remote URL configured for this repository');
+      showToast(translateUiText('git.blame.noRemoteUrl'));
       return;
     }
     const ref = compareBranch || 'main';
     const url = buildRemoteFileUrl(effectiveRemote, ref, file.path);
     navigator.clipboard.writeText(url);
-    showToast(`Copied remote file URL (${ref})`);
+    showToast(translateUiText('git.fileActions.copiedRemoteUrl', { ref }));
   };
 
   const handleCopyRemoteUrlFrom = () => {
@@ -102,7 +102,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        title="File actions (Reveal in Explorer, Copy paths, Copy remote URL)"
+        title={translateUiText('git.fileActions.menuTitle')}
         className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-sm transition-colors border cursor-pointer ${
           isOpen
             ? 'bg-surface1 text-text border-surface2'
@@ -110,7 +110,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
         }`}
       >
         <MoreHorizontal className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline">Actions</span>
+        <span className="hidden sm:inline">{translateUiText('git.fileActions.actions')}</span>
         <ChevronDown className="w-2.5 h-2.5 opacity-70" />
       </button>
 
@@ -127,7 +127,7 @@ export const FileActionMenu: React.FC<FileActionMenuProps> = ({ file, className 
           >
             <div className="flex items-center gap-2">
               <FolderOpen className="w-3.5 h-3.5 text-subtext1 group-hover:text-text shrink-0" />
-              <span>Open in File Explorer</span>
+              <span>{translateUiText('menu.commands.open_explorer')}</span>
             </div>
             <span className="text-[10px] text-subtext0 font-mono ms-3">{shortcut('reveal_file')}</span>
           </button>

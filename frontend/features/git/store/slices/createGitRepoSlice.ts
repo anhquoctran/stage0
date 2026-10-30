@@ -1,5 +1,6 @@
 import type { RepositoryInitializationProgress } from '../../types/RepositoryInitializationProgress';
 import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
+import i18n from '../../../i18n/i18n';
 
 import type { StateCreator } from 'zustand';
 import {
@@ -214,7 +215,7 @@ export const createGitRepoSlice: StateCreator<
         await get().attachRepoToCurrentWindow(outcome.repo);
       } else if (outcome) {
         await get().loadRecentRepos();
-        get().showToast(`Opened ${outcome.repo.name} in another window`);
+        get().showToast(i18n.t('git.toasts.repositoryOpenedInAnotherWindow', { name: outcome.repo.name }));
       }
     } catch (err: unknown) {
       set({ error: getErrorMessage(err) });
@@ -235,7 +236,7 @@ export const createGitRepoSlice: StateCreator<
         await get().attachRepoToCurrentWindow(outcome.repo);
       } else {
         await get().loadRecentRepos();
-        get().showToast(`Opened ${repo.name} in another window`);
+        get().showToast(i18n.t('git.toasts.repositoryOpenedInAnotherWindow', { name: repo.name }));
       }
     } catch (err: unknown) {
       set({ error: getErrorMessage(err) });
@@ -275,7 +276,7 @@ export const createGitRepoSlice: StateCreator<
       await getApplicationServices().gitRepositories.clearRecentRepos();
       set({ recentRepos: [] });
       await syncRecentRepositoriesMenu([]);
-      get().showToast('Cleared all recent repositories');
+      get().showToast(i18n.t('git.toasts.recentRepositoriesCleared'));
     } catch (err) {
       console.error('Failed to clear recent repositories:', err);
     }

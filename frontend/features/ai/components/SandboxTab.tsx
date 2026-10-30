@@ -50,11 +50,11 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
   const getAdapterName = (type: SandboxType) => {
     switch (type) {
       case 'in_memory':
-        return 'In-Memory';
+        return translateUiText('ai.sandbox.engineNames.inMemory');
       case 'local_worktree':
-        return 'Local Worktree';
+        return translateUiText('ai.sandbox.engineNames.worktree');
       case 'docker':
-        return 'Docker Container';
+        return translateUiText('ai.sandbox.engineNames.docker');
     }
   };
 
@@ -68,26 +68,28 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
   }[] = [
     {
       id: 'in_memory',
-      title: 'In-Memory Sandbox',
+      title: translateUiText('ai.sandbox.adapters.inMemoryTitle'),
       defaultBadge: true,
       description:
-        'Evaluates branch differences and conflicts without checking out branches or changing the working tree or index. Git may write result objects to the repository object database.',
-      specs: 'No command execution • No worktree or index changes • Fastest',
+        translateUiText('ai.sandbox.adapters.inMemoryDescription'),
+      specs: translateUiText('ai.sandbox.adapters.inMemorySpecs'),
     },
     {
       id: 'local_worktree',
-      title: 'Local Worktree Sandbox',
+      title: translateUiText('ai.sandbox.adapters.worktreeTitle'),
       description:
-        'Allocates a detached Git worktree in the system temp directory. Commands run on the host as the current user and can access files outside the worktree.',
-      specs: 'Separate worktree • Host permissions • Auto-pruned',
+        translateUiText('ai.sandbox.adapters.worktreeDescription'),
+      specs: translateUiText('ai.sandbox.adapters.worktreeSpecs'),
     },
     {
       id: 'docker',
-      title: 'Docker Container Sandbox',
+      title: translateUiText('ai.sandbox.adapters.dockerTitle'),
       description:
-        'Copies the selected source tree into a writable Docker container without mounting host folders. Networking is enabled; Stage0 does not set CPU, memory, or process limits.',
-      specs: 'Writable container • Network enabled • Docker daemon',
-      extraBadge: dockerInfo?.is_available ? 'Daemon ready' : 'Daemon offline',
+        translateUiText('ai.sandbox.adapters.dockerDescription'),
+      specs: translateUiText('ai.sandbox.adapters.dockerSpecs'),
+      extraBadge: dockerInfo?.is_available
+        ? translateUiText('ai.sandbox.daemonReady')
+        : translateUiText('ai.sandbox.daemonOffline'),
     },
   ];
 
@@ -96,9 +98,9 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-surface0">
         <div>
-          <h3 className="text-sm font-bold text-text">Sandbox Engine</h3>
+          <h3 className="text-sm font-bold text-text">{translateUiText('ai.sandbox.title')}</h3>
           <p className="text-[11px] text-subtext0 mt-0.5">
-            Select the branch evaluation and test isolation environment
+            {translateUiText('ai.sandbox.description')}
           </p>
         </div>
 
@@ -106,10 +108,10 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
           type="button"
           onClick={() => fetchAvailableSandboxes()}
           className="flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-sm hover:bg-surface0 text-subtext0 hover:text-text transition-colors cursor-pointer"
-          title="Refresh engine availability"
+          title={translateUiText('ai.sandbox.refreshAvailability')}
         >
           <RotateCw className="w-3 h-3" />
-          <span>Refresh</span>
+          <span>{translateUiText('ai.sandbox.refresh')}</span>
         </button>
       </div>
 
@@ -117,11 +119,14 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
       {isPendingCommit && (
         <div className="px-3 py-2 bg-surface0/50 rounded-sm text-xs flex items-center justify-between text-subtext1">
           <span>
-            Pending change: switch to{' '}
-            <strong className="text-text font-mono">{getAdapterName(draftSandboxType)}</strong>.
-            Click <strong>Apply</strong> or <strong>{translateUiText('common.ok')}</strong> to commit.
+            {translateUiText('ai.sandbox.pendingChange', { name: getAdapterName(draftSandboxType) })}
+            {' '}
+            {translateUiText('ai.sandbox.applyToCommit', {
+              apply: translateUiText('common.apply'),
+              ok: translateUiText('common.ok'),
+            })}
           </span>
-          <span className="text-[10px] text-subtext0 font-mono uppercase">Uncommitted</span>
+          <span className="text-[10px] text-subtext0 font-mono uppercase">{translateUiText('ai.sandbox.uncommitted')}</span>
         </div>
       )}
 
@@ -136,35 +141,35 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
       {/* Engine Technical Specifications */}
       <div className="p-3.5 bg-surface0/20 border border-surface0 rounded-sm text-xs space-y-2">
         <div className="text-[10px] font-bold text-subtext0 uppercase tracking-wider">
-          Technical Specifications
+          {translateUiText('ai.sandbox.technicalSpecifications')}
         </div>
         <div className="grid grid-cols-4 gap-2 text-[11px] font-mono">
           <div>
-            <span className="text-subtext0/70 block text-[10px]">Isolation</span>
+            <span className="text-subtext0/70 block text-[10px]">{translateUiText('ai.sandbox.isolation')}</span>
             <span className="text-text font-medium">
               {draftSandboxType === 'in_memory'
-                ? 'RAM (None)'
+                ? translateUiText('ai.sandbox.ramNone')
                 : draftSandboxType === 'local_worktree'
-                  ? 'Worktree'
-                  : 'Container'}
+                  ? translateUiText('ai.sandbox.worktree')
+                  : translateUiText('ai.sandbox.container')}
             </span>
           </div>
           <div>
-            <span className="text-subtext0/70 block text-[10px]">Command Exec</span>
+            <span className="text-subtext0/70 block text-[10px]">{translateUiText('ai.sandbox.commandExecution')}</span>
             <span className="text-text font-medium">
-              {draftSandboxType === 'in_memory' ? 'No' : 'Supported'}
+              {draftSandboxType === 'in_memory' ? translateUiText('ai.sandbox.no') : translateUiText('ai.sandbox.supported')}
             </span>
           </div>
           <div>
-            <span className="text-subtext0/70 block text-[10px]">Filesystem</span>
+            <span className="text-subtext0/70 block text-[10px]">{translateUiText('ai.sandbox.filesystem')}</span>
             <span className="text-text font-medium">
-              {draftSandboxType === 'in_memory' ? 'Read-only' : 'Isolated write'}
+              {draftSandboxType === 'in_memory' ? translateUiText('ai.sandbox.readOnly') : translateUiText('ai.sandbox.isolatedWrite')}
             </span>
           </div>
           <div>
-            <span className="text-subtext0/70 block text-[10px]">Prerequisites</span>
+            <span className="text-subtext0/70 block text-[10px]">{translateUiText('ai.sandbox.prerequisites')}</span>
             <span className="text-text font-medium">
-              {draftSandboxType === 'docker' ? 'Docker daemon' : 'Native git'}
+              {draftSandboxType === 'docker' ? translateUiText('ai.sandbox.dockerDaemon') : translateUiText('ai.sandbox.nativeGit')}
             </span>
           </div>
         </div>
@@ -176,10 +181,10 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs font-semibold text-text block">
-                Instances ({activeSandboxInstances.length})
+                {translateUiText('ai.sandbox.instances', { count: activeSandboxInstances.length })}
               </span>
               <span className="text-[11px] text-subtext0 block">
-                Detached environments for {getAdapterName(committedSandboxType)}
+                {translateUiText('ai.sandbox.detachedEnvironments', { name: getAdapterName(committedSandboxType) })}
               </span>
             </div>
 
@@ -189,13 +194,13 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
               disabled={isSandboxLoading}
               className="px-2.5 py-1 rounded-sm bg-surface1 hover:bg-surface2 text-text text-xs border border-surface2 transition-colors cursor-pointer disabled:opacity-50 font-medium"
             >
-              + Provision Instance
+              + {translateUiText('ai.sandbox.provisionInstance')}
             </button>
           </div>
 
           {activeSandboxInstances.length === 0 ? (
             <div className="p-3 border border-dashed border-surface1 rounded-sm text-center text-xs text-subtext0">
-              No active sandbox instances provisioned.
+              {translateUiText('ai.sandbox.noInstances')}
             </div>
           ) : (
             <div className="space-y-1.5">
@@ -219,7 +224,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                 htmlFor="sandbox-command-input"
                 className="text-[11px] font-semibold text-text block"
               >
-                Execute Command
+                {translateUiText('ai.sandbox.executeCommand')}
               </label>
 
               <div className="flex items-center gap-2">
@@ -228,7 +233,7 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                   type="text"
                   value={testCmd}
                   onChange={(e) => setTestCmd(e.target.value)}
-                  placeholder="e.g. npm test or cargo test"
+                  placeholder={translateUiText('ai.sandbox.commandPlaceholder')}
                   className="flex-1 bg-base border border-surface1 rounded-sm px-3 py-1.5 text-xs font-mono text-text focus:outline-none focus:border-surface2"
                 />
 
@@ -238,20 +243,19 @@ export const SandboxTab: React.FC<SandboxTabProps> = ({
                   disabled={cmdRunning}
                   className="px-3 py-1.5 rounded-sm bg-surface1 hover:bg-surface2 text-text text-xs font-medium border border-surface2 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {cmdRunning ? 'Running...' : 'Run'}
+                  {cmdRunning ? translateUiText('ai.sandbox.running') : translateUiText('ai.sandbox.run')}
                 </button>
               </div>
 
               {cmdOutput && (
                 <div className="mt-2 bg-crust border border-surface0 rounded-sm p-3 text-xs font-mono space-y-1.5">
                   <div className="flex items-center justify-between text-[10px] text-subtext0 border-b border-surface0/60 pb-1">
-                    <span>Exit code: {cmdOutput.exitCode}</span>
-                    <span>{cmdOutput.durationMs}ms</span>
+                    <span>{translateUiText('ai.sandbox.exitCode', { code: cmdOutput.exitCode })}</span>
+                    <span>{translateUiText('ai.sandbox.durationMs', { duration: cmdOutput.durationMs })}</span>
                   </div>
                   {cmdOutput.outputTruncated && (
                     <div className="text-yellow text-[10px]">
-                      Output limit reached; the process was stopped. Recreate the Docker sandbox if
-                      it was active.
+                      {translateUiText('ai.sandbox.outputTruncated')}
                     </div>
                   )}
                   {cmdOutput.stdout && (

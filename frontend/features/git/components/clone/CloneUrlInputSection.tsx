@@ -11,16 +11,17 @@ export function CloneUrlInputSection({
   handleUrlChange,
   urlMessage,
 }: CloneUrlInputSectionProps) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
         <label className="block text-xs font-medium text-text">
-          Repository URL <span className="text-red">*</span>
+          {t('git.clone.repositoryUrl')} <span className="text-red">*</span>
         </label>
         {urlStatus === 'validating' && (
           <span className="text-[11px] text-blue flex items-center gap-1 font-normal animate-pulse">
             <Loader2 className="w-3 h-3 animate-spin" />
-            Checking...
+            {t('git.clone.checking')}
           </span>
         )}
       </div>
@@ -78,9 +79,10 @@ export function CloneUrlInputSection({
       {urlStatus === 'idle' && (
         <p className="text-[10px] text-subtext0 mt-1">
           {urlMessage ||
-            'Supports HTTPS and SSH URLs from GitHub, GitLab, Bitbucket, or self-hosted Git'}
+            t('git.clone.supportedUrls')}
         </p>
       )}
     </div>
   );
 }
+import { useTranslation } from 'react-i18next';

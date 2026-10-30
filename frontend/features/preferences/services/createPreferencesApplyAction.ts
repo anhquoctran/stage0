@@ -4,6 +4,7 @@ import {
   resolveTheme,
   useThemeStore,
 } from '../../../core/store/useThemeStore';
+import i18n from '../../i18n/i18n';
 import { commitAiPreferences } from '../../ai/services/commitAiPreferences';
 import { useGitBinaryStore } from '../../git/store/useGitBinaryStore';
 import { useGitStore } from '../../git/store/useGitStore';
@@ -195,11 +196,11 @@ export function createPreferencesApplyAction({
       if (sandboxChanged) {
         const label =
           draftSandboxType === 'in_memory'
-            ? 'In-Memory Sandbox'
+            ? i18n.t('ai.sandbox.adapters.inMemoryTitle')
             : draftSandboxType === 'local_worktree'
-              ? 'Local Worktree Sandbox'
-              : 'Docker Container Sandbox';
-        showToast(`Switched active sandbox to: ${label}`);
+              ? i18n.t('ai.sandbox.adapters.worktreeTitle')
+              : i18n.t('ai.sandbox.adapters.dockerTitle');
+        showToast(i18n.t('git.toasts.sandboxSwitched', { label }));
         void useGitStore.getState().refreshDiff();
       }
       useGitBinaryStore.setState((state) => ({
@@ -242,15 +243,15 @@ export function createPreferencesApplyAction({
       setDraftKeymap(committedKeymap);
       setIsApplied(true);
       setTimeout(() => setIsApplied(false), 2000);
-      showToast('Preferences applied successfully');
+      showToast(i18n.t('preferences.appliedToast'));
       if (needsRestart) setShowRestartPrompt(true);
       return true;
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error ?? '').trim();
       setApplyError(
         detail
-          ? `Could not apply preferences: ${detail}. Your drafts are still available.`
-          : 'Could not apply preferences. Your drafts are still available.'
+          ? i18n.t('preferences.applyFailedWithDetail', { error: detail })
+          : i18n.t('preferences.applyFailed')
       );
       return false;
     } finally {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CustomSelect } from '../../../common/components/CustomSelect';
-import { PROMPT_ROLE_OPTIONS } from '../constants/aiMcpConstants';
+import { BOT_CATEGORIES } from '../constants/botPresets';
 import { getBotRolePrompt } from '../utils/botRolePrompts';
 import type { BotCategory } from '../../virtual-mr/types/BotCategory';
 
@@ -10,6 +10,10 @@ export const AiMcpPromptRolesView: React.FC<{
   onUpdateReviewerInstructions: (instructions: string) => void;
 }> = ({ reviewerInstructions = '', onUpdateReviewerInstructions }) => {
   const { t } = useTranslation();
+  const promptRoleOptions = BOT_CATEGORIES.map((category) => ({
+    value: category.id,
+    label: t(`ai.botCategories.${category.id}`),
+  }));
   const [promptPreviewRole, setPromptPreviewRole] = useState<BotCategory>('custom');
 
   return (
@@ -25,7 +29,7 @@ export const AiMcpPromptRolesView: React.FC<{
           <label className="block text-[11px] font-semibold text-subtext0 mb-1">{t('ai.mcpPrompts.previewRole')}</label>
           <CustomSelect
             value={promptPreviewRole}
-            options={PROMPT_ROLE_OPTIONS}
+            options={promptRoleOptions}
             onChange={setPromptPreviewRole}
             className="w-full"
             buttonClassName="w-full"

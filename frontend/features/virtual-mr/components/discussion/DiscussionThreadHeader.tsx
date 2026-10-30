@@ -13,6 +13,7 @@ export function DiscussionThreadHeader({
   quote,
   isSubmitting,
 }: DiscussionThreadHeaderProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
       <div className="flex items-center gap-2 min-w-0">
@@ -30,7 +31,7 @@ export function DiscussionThreadHeader({
           {rootComment?.authorType === 'ai_agent' && <AiBotBadge />}
           <span className="text-subtext0 font-normal">{rootAuthorHandle}</span>
           <span>
-            {discussion.filePath ? 'started a thread on the diff' : 'started a discussion'}
+            {translateUiText(discussion.filePath ? 'virtualMr.discussion.startedThreadOnDiff' : 'virtualMr.discussion.startedDiscussion')}
           </span>
           <time dateTime={discussion.createdAt || rootComment?.createdAt} className="text-subtext0">
             {threadRelativeTime}
@@ -51,12 +52,13 @@ export function DiscussionThreadHeader({
           onClick={() => quote()}
           disabled={isSubmitting}
           className="flex shrink-0 items-center gap-1 text-subtext0 hover:text-brand disabled:opacity-50 text-[11px] p-1 hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
-          aria-label={`Quote discussion ${discussion.id}`}
+          aria-label={translateUiText('virtualMr.discussion.quoteDiscussionWithId', { id: discussion.id })}
         >
           <Quote className="h-3 w-3" />
-          <span>Quote discussion</span>
+          <span>{translateUiText('virtualMr.discussion.quoteDiscussion')}</span>
         </button>
       </div>
     </div>
   );
 }
+import { useTranslation as useUiTextTranslation } from 'react-i18next';

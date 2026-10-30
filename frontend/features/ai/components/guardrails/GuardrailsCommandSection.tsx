@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus } from '../../../../common/components/icons/Plus';
 import { X } from '../../../../common/components/icons/X';
 
@@ -47,16 +48,17 @@ export const GuardrailsCommandSection: React.FC<{
   rateLimit,
   onUpdateRateLimit,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="p-4 bg-surface0/60 border border-surface1 space-y-4 rounded-sm">
       <h4 className="text-xs font-bold text-text">
-        Terminal Command Execution Guardrails
+        {t('ai.guardrails.commandTitle')}
       </h4>
 
       {/* Whitelisted Toolchains */}
       <div className="space-y-2">
         <label className="text-[11px] font-medium text-subtext0">
-          Whitelisted Toolchain Executables
+          {t('ai.guardrails.whitelistedExecutables')}
         </label>
         <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center rounded-sm">
           {allowedCommands.map((cmd) => (
@@ -69,7 +71,7 @@ export const GuardrailsCommandSection: React.FC<{
                 type="button"
                 onClick={() => onRemoveAllowedCmd(cmd)}
                 className="text-white/80 hover:text-white cursor-pointer rounded-sm ms-0.5 transition-colors"
-                title="Remove"
+                title={t('ai.guardrails.remove')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -79,7 +81,7 @@ export const GuardrailsCommandSection: React.FC<{
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="e.g. dotnet, make, go"
+            placeholder={t('ai.guardrails.allowedCommandPlaceholder')}
             value={newAllowedCmd}
             onChange={(e) => setNewAllowedCmd(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), onAddAllowedCmd())}
@@ -91,7 +93,7 @@ export const GuardrailsCommandSection: React.FC<{
             className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 text-text hover:bg-surface2 cursor-pointer transition rounded-sm"
           >
             <Plus className="w-3 h-3" />
-            <span>Add Command</span>
+            <span>{t('ai.guardrails.addCommand')}</span>
           </button>
         </div>
       </div>
@@ -99,7 +101,7 @@ export const GuardrailsCommandSection: React.FC<{
       {/* Explicitly Blocked Commands */}
       <div className="space-y-2 pt-2 border-t border-surface1">
         <label className="text-[11px] font-medium text-red">
-          Explicitly Blocked Destructive Commands (Hard Deny)
+          {t('ai.guardrails.blockedCommandsTitle')}
         </label>
         <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center rounded-sm">
           {blockedCommands.map((cmd) => (
@@ -112,7 +114,7 @@ export const GuardrailsCommandSection: React.FC<{
                 type="button"
                 onClick={() => onRemoveBlockedCmd(cmd)}
                 className="text-white/80 hover:text-white cursor-pointer rounded-sm ms-0.5 transition-colors"
-                title="Remove"
+                title={t('ai.guardrails.remove')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -122,7 +124,7 @@ export const GuardrailsCommandSection: React.FC<{
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="e.g. format, fdisk"
+            placeholder={t('ai.guardrails.blockedCommandPlaceholder')}
             value={newBlockedCmd}
             onChange={(e) => setNewBlockedCmd(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), onAddBlockedCmd())}
@@ -134,7 +136,7 @@ export const GuardrailsCommandSection: React.FC<{
             className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 text-text hover:bg-surface2 cursor-pointer transition rounded-sm"
           >
             <Plus className="w-3 h-3" />
-            <span>Add Blocked</span>
+            <span>{t('ai.guardrails.addBlockedCommand')}</span>
           </button>
         </div>
       </div>
@@ -142,7 +144,7 @@ export const GuardrailsCommandSection: React.FC<{
       {/* Blocked Dangerous Shell Patterns */}
       <div className="space-y-2 pt-2 border-t border-surface1">
         <label className="text-[11px] font-medium text-yellow">
-          Blocked Shell Injection & Malicious Patterns
+          {t('ai.guardrails.blockedPatternsTitle')}
         </label>
         <div className="flex flex-wrap gap-1.5 p-2.5 bg-base border border-surface1 min-h-[42px] items-center rounded-sm">
           {blockedPatterns.map((pat) => (
@@ -155,7 +157,7 @@ export const GuardrailsCommandSection: React.FC<{
                 type="button"
                 onClick={() => onRemoveBlockedPattern(pat)}
                 className="text-white/80 hover:text-white cursor-pointer rounded-sm ms-0.5 transition-colors"
-                title="Remove"
+                title={t('ai.guardrails.remove')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -165,7 +167,7 @@ export const GuardrailsCommandSection: React.FC<{
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="e.g. | bash, >/dev/"
+            placeholder={t('ai.guardrails.blockedPatternPlaceholder')}
             value={newBlockedPattern}
             onChange={(e) => setNewBlockedPattern(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), onAddBlockedPattern())}
@@ -177,7 +179,7 @@ export const GuardrailsCommandSection: React.FC<{
             className="flex items-center gap-1 px-3 py-1 text-xs bg-surface1 text-text hover:bg-surface2 cursor-pointer transition rounded-sm"
           >
             <Plus className="w-3 h-3" />
-            <span>Add Pattern</span>
+            <span>{t('ai.guardrails.addPattern')}</span>
           </button>
         </div>
       </div>
@@ -186,7 +188,7 @@ export const GuardrailsCommandSection: React.FC<{
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-surface1 rounded-sm">
         <div>
           <label className="text-[11px] font-medium text-subtext0 block">
-            Max Execution Timeout: <span className="text-text font-mono font-bold">{maxTimeout}s</span>
+            {t('ai.guardrails.maxTimeout', { seconds: maxTimeout })}
           </label>
           <input
             type="range"
@@ -201,7 +203,7 @@ export const GuardrailsCommandSection: React.FC<{
 
         <div>
           <label className="text-[11px] font-medium text-subtext0 block">
-            Max Output Truncation: <span className="text-text font-mono font-bold">{Math.round(maxOutputBytes / 1024)} KB</span>
+            {t('ai.guardrails.maxOutputSize', { size: Math.round(maxOutputBytes / 1024) })}
           </label>
           <input
             type="range"
@@ -216,7 +218,7 @@ export const GuardrailsCommandSection: React.FC<{
 
         <div>
           <label className="text-[11px] font-medium text-subtext0 block">
-            Rate Limit: <span className="text-text font-mono font-bold">{rateLimit} calls/min</span>
+            {t('ai.guardrails.rateLimit', { count: rateLimit })}
           </label>
           <input
             type="range"

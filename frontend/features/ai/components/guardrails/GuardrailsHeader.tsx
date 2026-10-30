@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw } from '../../../../common/components/icons/RefreshCw';
 import { Check } from '../../../../common/components/icons/Check';
 import type { GuardrailMode } from '../../types/GuardrailMode';
@@ -16,12 +17,13 @@ export const GuardrailsHeader: React.FC<{
   onRefreshAuditLog,
   onSelectPreset,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="p-4 bg-surface0/60 border border-surface1 space-y-4 rounded-sm">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <div>
-            <h4 className="text-sm font-bold text-text">AI Security Guardrails & Policy Enforcement</h4>
+            <h4 className="text-sm font-bold text-text">{t('ai.guardrails.title')}</h4>
             <span
               className={`inline-block mt-1 text-[10px] font-mono px-2 py-0.5 font-semibold uppercase rounded-sm shadow-xs ${
                 activeMode === 'balanced'
@@ -31,12 +33,11 @@ export const GuardrailsHeader: React.FC<{
                   : 'bg-amber-600 text-white'
               }`}
             >
-              {isDraft ? 'Draft' : 'Active'}: {activeMode.toUpperCase()}
+              {isDraft ? t('ai.guardrails.draft') : t('ai.guardrails.active')}: {activeMode.toUpperCase()}
             </span>
           </div>
           <p className="text-xs text-subtext0 mt-1">
-            Active defense boundary for integrated AI models and tool executions.
-            Protects host filesystem, isolates command execution, and prevents credential leakage.
+            {t('ai.guardrails.description')}
           </p>
         </div>
 
@@ -46,10 +47,10 @@ export const GuardrailsHeader: React.FC<{
             onClick={onRefreshAuditLog}
             disabled={isGuardrailLoading}
             className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-surface1 text-text hover:bg-surface2 transition cursor-pointer rounded-sm"
-            title="Refresh audit log"
+            title={t('ai.guardrails.refreshAuditLog')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isGuardrailLoading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
+            <span>{t('ai.guardrails.refresh')}</span>
           </button>
         </div>
       </div>
@@ -69,18 +70,18 @@ export const GuardrailsHeader: React.FC<{
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-text">
-                Strict (Zero Trust)
+                {t('ai.guardrails.strictPreset')}
               </span>
               {activeMode === 'strict' && (
                 <Check className="w-3.5 h-3.5 text-red" />
               )}
             </div>
             <p className="text-[11px] mt-1.5 leading-relaxed text-subtext0">
-              Requires human approval for all terminal operations. Strictly limits file reads to 1,000 lines. Max timeout 15s.
+              {t('ai.guardrails.strictDescription')}
             </p>
           </div>
           <div className="mt-3 text-[10px] font-mono text-subtext0">
-            High-security repositories
+            {t('ai.guardrails.highSecurityUse')}
           </div>
         </button>
 
@@ -97,18 +98,18 @@ export const GuardrailsHeader: React.FC<{
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-text">
-                Balanced (Standard)
+                {t('ai.guardrails.balancedPreset')}
               </span>
               {activeMode === 'balanced' && (
                 <Check className="w-3.5 h-3.5 text-green" />
               )}
             </div>
             <p className="text-[11px] mt-1.5 leading-relaxed text-subtext0">
-              Auto-executes safe toolchains (cargo, npm, pytest). Blocks destructive commands and credential leakage.
+              {t('ai.guardrails.balancedDescription')}
             </p>
           </div>
           <div className="mt-3 text-[10px] font-mono text-subtext0">
-            Recommended for development
+            {t('ai.guardrails.developmentUse')}
           </div>
         </button>
 
@@ -125,18 +126,18 @@ export const GuardrailsHeader: React.FC<{
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-text">
-                Autonomous (Sandbox)
+                {t('ai.guardrails.autonomousPreset')}
               </span>
               {activeMode === 'permissive' && (
                 <Check className="w-3.5 h-3.5 text-yellow" />
               )}
             </div>
             <p className="text-[11px] mt-1.5 leading-relaxed text-subtext0">
-              Permits broader shell toolchain in Docker/Worktree containers with basic boundary and credential shields.
+              {t('ai.guardrails.autonomousDescription')}
             </p>
           </div>
           <div className="mt-3 text-[10px] font-mono text-subtext0">
-            Automated CI/CD agents
+            {t('ai.guardrails.automationUse')}
           </div>
         </button>
       </div>

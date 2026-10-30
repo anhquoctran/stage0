@@ -22,7 +22,7 @@ export function SoftwareUpdatePanel() {
       <div className="flex items-center justify-between gap-3">
         <span className="font-semibold">{t('updates.title')}</span>
         <button type="button" className="text-brand hover:underline rounded-sm" onClick={() => void openReleases().catch(() => {})}>
-          GitHub Releases
+          {t('updates.githubReleases')}
         </button>
       </div>
       <p role="status" aria-live="polite" className="text-subtext0">

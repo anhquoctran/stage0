@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { MarkdownPreview } from '../../../../common/components/MarkdownPreview';
 import { getDiscussionCommentBody } from '../../utils/discussionCommentBody';
 
@@ -17,6 +18,7 @@ export function DiscussionCommentCard({
   isResolvable,
   discussion,
 }: DiscussionCommentCardProps) {
+  const { t } = useTranslation();
   useDateTimeLanguage();
   return (
     <div className="p-3.5 text-xs text-text transition-colors bg-mantle rounded-sm">
@@ -77,7 +79,7 @@ export function DiscussionCommentCard({
                   >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Resolved</span>
+                  <span>{t('virtualMr.discussion.resolvedBadge')}</span>
                 </span>
               )}
             </div>

@@ -20,6 +20,7 @@ export function ConflictResolutionBar({
   refreshDiff,
   onSwitchToDiff,
 }: ConflictResolutionBarProps) {
+  const { t } = useTranslation();
   const { title: commandTitle } = useCommandShortcut();
   return (
     <div className="bg-gradient-to-r from-red/15 via-red/10 to-red/5 border-b border-red/30 px-4 py-3 shrink-0 rounded-sm">
@@ -31,20 +32,20 @@ export function ConflictResolutionBar({
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-wider text-red">
-                Conflict Inspection
+                {t('git.conflicts.inspection')}
               </span>
               <span className="text-[11px] px-2 py-0.5 rounded-sm bg-red/25 text-red font-mono font-bold border border-red/40">
                 {regions.length > 0
-                  ? `${regions.length} conflict block${regions.length > 1 ? 's' : ''}`
-                  : activeConflictPreview?.conflict_type || 'Unmerged conflict'}
+                  ? t('git.conflicts.blockCount', { count: regions.length })
+                  : activeConflictPreview?.conflict_type || t('git.conflicts.unmerged')}
               </span>
             </div>
             <p className="text-xs text-subtext1 mt-1 font-mono truncate">
               <span className="text-text font-bold">{selectedFile.path}</span>
               <span className="mx-2 text-subtext0">•</span>
-              <span>Collision between</span>
+              <span>{t('git.conflicts.collisionBetween')}</span>
               <code className="text-blue font-semibold ms-1 me-1">{baseBranch}</code>
-              <span>and</span>
+              <span>{t('git.conflicts.and')}</span>
               <code className="text-blue font-semibold ms-1">{compareBranch}</code>
             </p>
           </div>
@@ -57,10 +58,10 @@ export function ConflictResolutionBar({
               type="button"
               onClick={handleOpenInVsCode}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-              title="Open this file directly in Visual Studio Code"
+              title={t('git.conflicts.openInVsCodeTitle')}
             >
               <Code2 className="w-3.5 h-3.5 text-subtext0" />
-              <span>Resolve in VS Code</span>
+              <span>{t('git.conflicts.resolveInVsCode')}</span>
             </button>
           )}
 
@@ -68,7 +69,7 @@ export function ConflictResolutionBar({
             type="button"
             onClick={handleRevealInOs}
             className="p-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-subtext0 hover:text-text transition-colors cursor-pointer"
-            title={`Reveal in ${fileManagerName}`}
+            title={t('git.conflicts.revealIn', { name: fileManagerName })}
           >
             <FolderOpen className="w-3.5 h-3.5" />
           </button>
@@ -80,10 +81,10 @@ export function ConflictResolutionBar({
               refreshDiff();
             }}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-surface0 hover:bg-surface1 border border-surface1 text-text text-xs font-medium transition-colors cursor-pointer"
-            title={commandTitle('refresh_diff', 'Refresh virtual conflict analysis')}
+            title={commandTitle('refresh_diff', t('git.conflicts.refreshAnalysis'))}
           >
             <RotateCw className="w-3.5 h-3.5 text-subtext0" />
-            <span>Re-check</span>
+            <span>{t('git.conflicts.recheck')}</span>
           </button>
 
           {onSwitchToDiff && (
@@ -91,10 +92,10 @@ export function ConflictResolutionBar({
               type="button"
               onClick={onSwitchToDiff}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-surface1 hover:bg-surface2 text-text text-xs font-medium transition-colors cursor-pointer"
-              title="Switch back to regular Diff View"
+              title={t('git.conflicts.switchToDiffTitle')}
             >
               <FileCode className="w-3.5 h-3.5 text-blue" />
-              <span>View Diff</span>
+              <span>{t('git.conflicts.viewDiff')}</span>
             </button>
           )}
         </div>
@@ -102,3 +103,4 @@ export function ConflictResolutionBar({
     </div>
   );
 }
+import { useTranslation } from 'react-i18next';

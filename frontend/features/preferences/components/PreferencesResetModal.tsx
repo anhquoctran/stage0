@@ -18,11 +18,10 @@ export const PreferencesResetModal: React.FC<{
       >
         <div className="flex items-center gap-2.5 text-text">
           <AlertCircle className="w-5 h-5 text-subtext0 shrink-0" />
-          <h3 className="text-sm font-bold">Reset All Preferences?</h3>
+          <h3 className="text-sm font-bold">{translateUiText('preferences.reset.title')}</h3>
         </div>
         <p className="text-xs text-subtext0 leading-relaxed">
-          This will restore all theme, font typography, inline blame, and AI configurations
-          back to default values.
+          {translateUiText('preferences.reset.description')}
         </p>
         <div className="flex items-center justify-end gap-2 pt-2">
           <button
@@ -37,7 +36,7 @@ export const PreferencesResetModal: React.FC<{
             onClick={onConfirm}
             className="px-3.5 py-1.5 text-xs bg-surface0 hover:bg-surface1 text-text border border-surface1 font-semibold transition-colors cursor-pointer rounded-sm"
           >
-            Reset to Defaults
+            {translateUiText('preferences.reset.confirm')}
           </button>
         </div>
       </div>

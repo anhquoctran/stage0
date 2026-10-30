@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileList } from '../../../git/components/FileList';
 import { NewVirtualMrViewDiffViewer } from '../NewVirtualMrViewDiffViewer';
 import { NewVirtualMrCommitsList } from './NewVirtualMrCommitsList';
@@ -18,6 +19,7 @@ export function NewVirtualMrPreview({
   setViewMode,
   openRepoDialog,
 }: NewVirtualMrPreviewProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Preview Subtab Navigation */}
@@ -46,7 +48,7 @@ export function NewVirtualMrPreview({
             <React.Suspense
               fallback={
                 <div className="flex-1 grid place-items-center text-subtext0 text-xs">
-                  Loading diff viewer…
+                  {t('common.loadingDiffViewer')}
                 </div>
               }
             >

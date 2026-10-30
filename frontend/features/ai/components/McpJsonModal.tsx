@@ -33,14 +33,14 @@ export const McpJsonModal: React.FC<{
 
   const handleImportJson = () => {
     if (!jsonInput.trim()) {
-      setJsonFeedback({ success: false, text: 'Please enter JSON configuration text.' });
+      setJsonFeedback({ success: false, text: translateUiText('ai.mcpJson.enterJson') });
       return;
     }
     const result = importMcpConfigFile(jsonInput.trim());
     if (result.success) {
       setJsonFeedback({
         success: true,
-        text: `Successfully imported ${result.count || 0} server(s).`,
+        text: translateUiText('ai.mcpJson.importSuccess', { count: result.count || 0 }),
       });
       setTimeout(() => {
         onClose();
@@ -48,7 +48,7 @@ export const McpJsonModal: React.FC<{
         setJsonInput('');
       }, 1200);
     } else {
-      setJsonFeedback({ success: false, text: result.error || 'Failed to import JSON.' });
+      setJsonFeedback({ success: false, text: result.error || translateUiText('ai.mcpJson.importFailed') });
     }
   };
 
@@ -61,12 +61,13 @@ export const McpJsonModal: React.FC<{
         >
           <div data-tauri-drag-region className="flex items-center gap-2 pointer-events-none">
             <FileJson className="w-4 h-4 text-subtext0" />
-            <h4 className="text-sm font-bold text-text">MCP JSON Configuration</h4>
+            <h4 className="text-sm font-bold text-text">{translateUiText('ai.mcpJson.title')}</h4>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
+            aria-label={translateUiText('common.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -86,7 +87,7 @@ export const McpJsonModal: React.FC<{
                 : 'border-transparent text-subtext0 hover:text-text'
             }`}
           >
-            Export JSON (Claude Desktop / VSCode compatible)
+            {translateUiText('ai.mcpJson.exportTab')}
           </button>
           <button
             type="button"
@@ -100,15 +101,14 @@ export const McpJsonModal: React.FC<{
                 : 'border-transparent text-subtext0 hover:text-text'
             }`}
           >
-            Import JSON
+            {translateUiText('ai.mcpJson.importTab')}
           </button>
         </div>
 
         {jsonTab === 'export' ? (
           <div className="space-y-3">
             <p className="text-[11px] text-subtext0">
-              Copy this JSON into your <code>claude_desktop_config.json</code> or VS Code MCP
-              configuration to synchronize servers:
+              {translateUiText('ai.mcpJson.exportInstructionsBefore')} <code>claude_desktop_config.json</code> {translateUiText('ai.mcpJson.exportInstructionsAfter')}
             </p>
             <pre className="p-3 bg-base border border-surface0 text-xs font-mono overflow-auto max-h-60 text-text select-all">
               {exportMcpConfigFile()}
@@ -122,12 +122,12 @@ export const McpJsonModal: React.FC<{
                 {copiedJson ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-text" />
-                    <span className="text-text">Copied to Clipboard!</span>
+                    <span className="text-text">{translateUiText('ai.mcpJson.copied')}</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>Copy JSON</span>
+                    <span>{translateUiText('ai.mcpJson.copyJson')}</span>
                   </>
                 )}
               </button>
@@ -136,8 +136,7 @@ export const McpJsonModal: React.FC<{
         ) : (
           <div className="space-y-3">
             <p className="text-[11px] text-subtext0">
-              Paste standard <code>{`{ "mcpServers": { ... } }`}</code> configuration to import
-              servers directly into Stage0:
+              {translateUiText('ai.mcpJson.importInstructionsBefore')} <code>{`{ "mcpServers": { ... } }`}</code> {translateUiText('ai.mcpJson.importInstructionsAfter')}
             </p>
             <textarea
               rows={8}
@@ -178,7 +177,7 @@ export const McpJsonModal: React.FC<{
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-surface1 hover:bg-surface2 text-text text-xs font-semibold transition-colors cursor-pointer border border-surface2 shadow-xs rounded-sm"
               >
                 <Check className="w-3.5 h-3.5 text-text" />
-                <span>Import Config</span>
+                <span>{translateUiText('ai.mcpJson.importConfig')}</span>
               </button>
             </div>
           </div>

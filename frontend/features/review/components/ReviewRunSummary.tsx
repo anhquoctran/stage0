@@ -1,48 +1,57 @@
 import { formatDateTime } from '../../../common/utils/dateTime';
 import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import type { ReviewRunSummaryProps } from './ReviewRunSummaryProps';
+import { useTranslation } from 'react-i18next';
 
 export function ReviewRunSummary({ run, isPublishing, publish }: ReviewRunSummaryProps) {
   useDateTimeLanguage();
+  const { t } = useTranslation();
   return (
     <section className="border border-surface1 p-3 space-y-2 text-xs">
       <p role="status">
-        <strong className="uppercase">{run.status}</strong>
+        <strong className="uppercase">{t(`review.runSummary.status.${run.status}`)}</strong>
         {run.reviewerName && <> · {run.reviewerName}</>} · {run.provider} / {run.model} ·{' '}
-        {run.findings.length} findings
+        {t('review.runSummary.findingsCount', { count: run.findings.length })}
       </p>
       {run.replyDiscussionId && (
-        <p className="text-subtext0">Discussion reply only. Run a full review to evaluate the MR.</p>
+        <p className="text-subtext0">{t('review.runSummary.replyOnly')}</p>
       )}
-      <p className="break-all text-subtext0">Run endpoint: {run.endpoint}</p>
+      <p className="break-all text-subtext0">{t('review.runSummary.endpoint', { endpoint: run.endpoint })}</p>
       <p className="font-mono text-[11px] break-all">
         {run.snapshot.repoPath}
         <br />
-        base {run.snapshot.baseSha}
+        {t('review.runSummary.base')} {run.snapshot.baseSha}
         <br />
-        head {run.snapshot.headSha}
+        {t('review.runSummary.head')} {run.snapshot.headSha}
         <br />
-        merge-base {run.snapshot.mergeBaseSha}
+        {t('review.runSummary.mergeBase')} {run.snapshot.mergeBaseSha}
       </p>
       <p className="text-subtext0">
-        {run.inspectedFiles.length} inspected paths · {run.snapshot.changedFiles.length} eligible
-        changed paths · {run.snapshot.excludedFiles.length} excluded · {run.turns}/128 turns ·{' '}
-        {run.toolCalls}/256 tool calls · {run.usageTokens} reported tokens
+        {t('review.runSummary.coverage', {
+          inspected: run.inspectedFiles.length,
+          eligible: run.snapshot.changedFiles.length,
+          excluded: run.snapshot.excludedFiles.length,
+          turns: run.turns,
+          toolCalls: run.toolCalls,
+          tokens: run.usageTokens,
+        })}
       </p>
       {run.retry && (
         <p role="status" className="border border-yellow/40 bg-yellow/5 p-2 text-yellow">
           {run.retry.reason === 'rate_limit'
-            ? 'The agent’s provider is rate limiting requests'
-            : 'The agent’s provider is temporarily unavailable'}
-          {run.retry.httpStatus ? ` (HTTP ${run.retry.httpStatus})` : ''}. Waiting before retry{' '}
-          {run.retry.attempt}/{run.retry.maxAttempts}. Next attempt:{' '}
-          {formatDateTime(run.retry.retryAt)}. You can cancel the review while it waits.
+            ? t('review.runSummary.rateLimited')
+            : t('review.runSummary.providerUnavailable')}
+          {run.retry.httpStatus ? ` (${t('review.runSummary.httpStatus', { status: run.retry.httpStatus })})` : ''}.{' '}
+          {t('review.runSummary.retryWaiting', {
+            attempt: run.retry.attempt,
+            maxAttempts: run.retry.maxAttempts,
+            nextAttempt: formatDateTime(run.retry.retryAt),
+          })}
         </p>
       )}
       {(run.status === 'partial' || run.status === 'incomplete') && (
         <p className="text-yellow">
-          Incomplete coverage. Some source was excluded, redacted, unread, or a tool/budget limit
-          was reached. Do not interpret zero findings as approval.
+          {t('review.runSummary.incompleteCoverage')}
         </p>
       )}
       {run.error && (
@@ -53,7 +62,7 @@ export function ReviewRunSummary({ run, isPublishing, publish }: ReviewRunSummar
       <p className="whitespace-pre-wrap select-text">{run.summary}</p>
       {run.snapshot.excludedFiles.length > 0 && (
         <details>
-          <summary>Excluded changed paths</summary>
+          <summary>{t('review.runSummary.excludedPaths')}</summary>
           <pre className="max-h-28 overflow-auto text-[11px]">
             {run.snapshot.excludedFiles.join('\n')}
           </pre>
@@ -67,10 +76,10 @@ export function ReviewRunSummary({ run, isPublishing, publish }: ReviewRunSummar
           className="border border-primary text-primary px-3 py-2 disabled:opacity-40 rounded-sm"
         >
           {run.published
-            ? 'Published to discussions'
+            ? t('review.runSummary.published')
             : isPublishing
-              ? 'Publishing…'
-              : 'Publish findings to discussions'}
+              ? t('review.runSummary.publishing')
+              : t('review.runSummary.publishFindings')}
         </button>
       )}
     </section>

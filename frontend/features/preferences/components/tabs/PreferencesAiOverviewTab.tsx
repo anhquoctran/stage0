@@ -20,110 +20,109 @@ export const PreferencesAiOverviewTab: React.FC<{
     <div className="space-y-3">
       <SettingRow
         title={translateUiText('preferences.nav.ai-providers')}
-        description="Configure natively-included model providers."
+        description={translateUiText('preferences.aiOverview.providersDescription')}
       >
         <button
           type="button"
           onClick={() => setActiveTab('ai-providers')}
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
-          <span>Configure</span>
+          <span>{translateUiText('preferences.aiOverview.configure')}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </SettingRow>
 
       <SettingRow
         title={translateUiText('preferences.nav.ai-external-agents')}
-        description="View, add, and remove agents connected through the Agent Client Protocol."
+        description={translateUiText('preferences.aiOverview.externalAgentsDescription')}
       >
         <button
           type="button"
           onClick={() => setActiveTab('ai-external-agents')}
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
-          <span>Configure</span>
+          <span>{translateUiText('preferences.aiOverview.configure')}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </SettingRow>
 
       <SettingRow
         title={translateUiText('preferences.nav.ai-reviewers')}
-        description="Configure review roles and their additional instructions."
+        description={translateUiText('preferences.aiOverview.reviewersDescription')}
       >
         <button
           type="button"
           onClick={() => setActiveTab('ai-reviewers')}
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
-          <span>Configure</span>
+          <span>{translateUiText('preferences.aiOverview.configure')}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </SettingRow>
 
       <SettingRow
         title={translateUiText('preferences.nav.ai-mcp')}
-        description="View, add, configure, and remove Model Context Protocol servers."
+        description={translateUiText('preferences.aiOverview.mcpDescription')}
       >
         <button
           type="button"
           onClick={() => setActiveTab('ai-mcp')}
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
-          <span>Configure</span>
+          <span>{translateUiText('preferences.aiOverview.configure')}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </SettingRow>
 
-      {/* Subheader: Agent Configuration */}
       <div className="pt-4 pb-1">
-        <div className="text-xs font-semibold text-subtext1">Agent Configuration</div>
+        <div className="text-xs font-semibold text-subtext1">{translateUiText('preferences.aiOverview.agentConfiguration')}</div>
       </div>
 
       <SettingRow
-        title="Skills"
-        description="View and manage agent skills installed globally or in project worktrees."
+        title={translateUiText('preferences.aiOverview.skills')}
+        description={translateUiText('preferences.aiOverview.skillsDescription')}
       >
         <button
           type="button"
           onClick={() => setActiveTab('ai-mcp')}
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
-          <span>Configure</span>
+          <span>{translateUiText('preferences.aiOverview.configure')}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </SettingRow>
 
       <SettingRow
         title={translateUiText('preferences.nav.ai-sandbox')}
-        description="Review and change the elevated terminal sandbox permissions that are always allowed without prompting."
+        description={translateUiText('preferences.aiOverview.sandboxDescription')}
       >
         <button
           type="button"
           onClick={() => setActiveTab('ai-sandbox')}
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
-          <span>Configure</span>
+          <span>{translateUiText('preferences.aiOverview.configure')}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </SettingRow>
 
       <SettingRow
-        title="Tool Permissions"
-        description="Set up regex patterns to auto-allow, auto-deny, or always request confirmation, for specific tool inputs."
+        title={translateUiText('preferences.aiOverview.toolPermissions')}
+        description={translateUiText('preferences.aiOverview.toolPermissionsDescription')}
       >
         <button
           type="button"
           onClick={() => setActiveTab('ai-guardrails')}
           className="px-3 py-1.5 bg-surface0/60 hover:bg-surface0 border border-surface1/40 hover:border-surface2 text-xs text-text flex items-center gap-1.5 transition-colors cursor-pointer font-medium rounded-sm"
         >
-          <span>Configure</span>
+          <span>{translateUiText('preferences.aiOverview.configure')}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </SettingRow>
 
       <SettingRow
-        title="Single File Review"
-        description="When enabled, agent edits will also be displayed in single-file buffers for review."
+        title={translateUiText('preferences.aiOverview.singleFileReview')}
+        description={translateUiText('preferences.aiOverview.singleFileReviewDescription')}
       >
         <ZedSwitch
           checked={draftAiConfig.enableCodeReviewAssist}
@@ -137,8 +136,8 @@ export const PreferencesAiOverviewTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="Stream AI Responses"
-        description="Stream token-by-token completion for real-time responsiveness when generating summaries."
+        title={translateUiText('preferences.aiOverview.streamResponses')}
+        description={translateUiText('preferences.aiOverview.streamResponsesDescription')}
       >
         <ZedSwitch
           checked={draftAiConfig.streamResponse}

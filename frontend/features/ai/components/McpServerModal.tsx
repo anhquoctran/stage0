@@ -12,12 +12,6 @@ import type { CustomSelectOption } from '../../../common/types/CustomSelectOptio
 import type { McpServerType } from '../types/McpServerType';
 import { isLikelySecretMcpEnvValue, isSecretMcpEnvName } from '../utils/listSecretMcpEnv';
 
-const MCP_SERVER_TYPE_OPTIONS: CustomSelectOption<McpServerType>[] = [
-  { value: 'stdio', label: 'stdio (Command / Subprocess)' },
-  { value: 'http', label: 'Streamable HTTP (MCP 2025-11-25 discovery)' },
-  { value: 'sse', label: 'Legacy HTTP+SSE (configuration only)' },
-];
-
 export const McpServerModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -61,6 +55,11 @@ export const McpServerModal: React.FC<{
 }) => {
   const { t: translateUiText } = useUiTextTranslation();
   if (!isOpen) return null;
+  const serverTypeOptions: CustomSelectOption<McpServerType>[] = [
+    { value: 'stdio', label: translateUiText('ai.mcpServerForm.stdioOption') },
+    { value: 'http', label: translateUiText('ai.mcpServerForm.httpOption') },
+    { value: 'sse', label: translateUiText('ai.mcpServerForm.sseOption') },
+  ];
 
   return (
     <form
@@ -70,12 +69,13 @@ export const McpServerModal: React.FC<{
       <div className="flex items-center justify-between pb-2 border-b border-surface1/60">
         <span className="text-xs font-bold text-text flex items-center gap-1.5">
           <Cable className="w-3.5 h-3.5 text-subtext0" />
-          {editingServerId ? 'Edit MCP Server' : 'Add New MCP Server'}
+          {editingServerId ? translateUiText('ai.mcpServerForm.editTitle') : translateUiText('ai.mcpServerForm.addTitle')}
         </span>
         <button
           type="button"
           onClick={onClose}
           className="p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
+          aria-label={translateUiText('common.close')}
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -92,13 +92,13 @@ export const McpServerModal: React.FC<{
         {/* Server Name */}
         <div className="col-span-2">
           <label className="block text-[11px] font-medium text-subtext0 mb-1">
-            Server Name <span className="text-red">*</span>
+            {translateUiText('ai.mcpServerForm.serverName')} <span className="text-red">*</span>
           </label>
           <input
             type="text"
             value={serverName}
             onChange={(e) => setServerName(e.target.value)}
-            placeholder="e.g. Git Context, Workspace Filesystem"
+            placeholder={translateUiText('ai.mcpServerForm.serverNamePlaceholder')}
             required
             className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
           />
@@ -107,17 +107,17 @@ export const McpServerModal: React.FC<{
         {/* Transport Type */}
         <div>
           <label className="block text-[11px] font-medium text-subtext0 mb-1">
-            Transport Protocol
+            {translateUiText('ai.mcpServerForm.transportProtocol')}
           </label>
           <CustomSelect
             value={serverType}
-            options={MCP_SERVER_TYPE_OPTIONS}
+            options={serverTypeOptions}
             onChange={setServerType}
             className="w-full"
             buttonClassName="w-full"
             dropdownWidth="w-full"
             align="left"
-            aria-label="Transport Protocol"
+            aria-label={translateUiText('ai.mcpServerForm.transportProtocol')}
           />
         </div>
       </div>
@@ -125,13 +125,13 @@ export const McpServerModal: React.FC<{
       {/* Description */}
       <div>
         <label className="block text-[11px] font-medium text-subtext0 mb-1">
-          Description <span className="text-subtext0/60 font-normal">(Optional)</span>
+          {translateUiText('ai.mcpServerForm.description')} <span className="text-subtext0/60 font-normal">({translateUiText('common.optional')})</span>
         </label>
         <input
           type="text"
           value={serverDesc}
           onChange={(e) => setServerDesc(e.target.value)}
-          placeholder="e.g. Provides read access to git branches and diff graphs"
+          placeholder={translateUiText('ai.mcpServerForm.descriptionPlaceholder')}
           className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
         />
       </div>
@@ -142,7 +142,7 @@ export const McpServerModal: React.FC<{
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-[11px] font-medium text-subtext0 mb-1">
-                Executable Command <span className="text-red">*</span>
+                {translateUiText('ai.mcpServerForm.executableCommand')} <span className="text-red">*</span>
               </label>
               <div className="relative flex items-center">
                 <Terminal className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
@@ -159,7 +159,7 @@ export const McpServerModal: React.FC<{
 
             <div className="col-span-2">
               <label className="block text-[11px] font-medium text-subtext0 mb-1">
-                Arguments (space-separated)
+                {translateUiText('ai.mcpServerForm.argumentsSpaceSeparated')}
               </label>
               <input
                 type="text"
@@ -175,7 +175,7 @@ export const McpServerModal: React.FC<{
         /* HTTP endpoint */
         <div>
           <label className="block text-[11px] font-medium text-subtext0 mb-1">
-            {serverType === 'http' ? 'Streamable HTTP Endpoint URL' : 'Legacy SSE Endpoint URL'} <span className="text-red">*</span>
+            {serverType === 'http' ? translateUiText('ai.mcpServerForm.httpEndpoint') : translateUiText('ai.mcpServerForm.sseEndpoint')} <span className="text-red">*</span>
           </label>
           <div className="relative flex items-center">
             <Globe className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
@@ -195,7 +195,7 @@ export const McpServerModal: React.FC<{
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <label className="text-[11px] font-medium text-subtext0">
-            Environment Variables
+            {translateUiText('ai.mcpServerForm.environmentVariables')}
           </label>
           <button
             type="button"
@@ -205,12 +205,12 @@ export const McpServerModal: React.FC<{
             className="flex items-center gap-1 text-[10px] text-subtext0 hover:text-text px-2 py-0.5 hover:bg-surface1 transition-colors cursor-pointer rounded-sm"
           >
             <Plus className="w-3 h-3" />
-            <span>Add Variable</span>
+            <span>{translateUiText('ai.mcpServerForm.addVariable')}</span>
           </button>
         </div>
 
         <p className="text-[10px] text-subtext0 mb-2">
-          Secret-named variables are stored in your OS keychain and never included in preferences or exports. Leave a saved secret blank to keep it unchanged; enter a new value to replace it.
+          {translateUiText('ai.mcpServerForm.secretExplanation')}
         </p>
 
         {serverEnvPairs.length > 0 ? (
@@ -236,7 +236,7 @@ export const McpServerModal: React.FC<{
                     copy[idx].value = e.target.value;
                     setServerEnvPairs(copy);
                   }}
-                  placeholder={pair.secretConfigured && pair.savedKey === pair.key ? 'Saved in OS Keychain · blank keeps current value' : 'value'}
+                  placeholder={pair.secretConfigured && pair.savedKey === pair.key ? translateUiText('ai.mcpServerForm.savedSecretPlaceholder') : 'value'}
                   className="flex-1 px-2.5 py-1 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none rounded-sm"
                 />
                 <button
@@ -246,14 +246,15 @@ export const McpServerModal: React.FC<{
                   }}
                   className="p-1 text-subtext0 hover:text-red cursor-pointer rounded-sm"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span className="sr-only">{translateUiText('ai.mcpServerForm.removeVariable')}</span>
                 </button>
               </div>
             ))}
           </div>
         ) : (
           <div className="p-2 bg-base/40 border border-surface1/60 text-[11px] text-subtext0 italic rounded-sm">
-            No custom environment variables configured.
+            {translateUiText('ai.mcpServerForm.noCustomEnvironmentVariables')}
           </div>
         )}
       </div>
@@ -272,7 +273,7 @@ export const McpServerModal: React.FC<{
           className="px-4 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand flex items-center gap-1.5 rounded-sm"
         >
           <Check className="w-3.5 h-3.5 text-on-accent" />
-          <span>{editingServerId ? 'Save Changes' : 'Register Server'}</span>
+          <span>{editingServerId ? translateUiText('ai.mcpServerForm.saveChanges') : translateUiText('ai.mcpServerForm.registerServer')}</span>
         </button>
       </div>
     </form>

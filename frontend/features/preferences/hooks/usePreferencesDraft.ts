@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import i18n from '../../i18n/i18n';
 import {
   applyThemeToDocument,
   resolveTheme,
@@ -269,7 +270,7 @@ export function usePreferencesDraft() {
     });
 
     session.setShowResetConfirm(false);
-    showToast('Reset all draft settings to defaults (click Apply to save)');
+    showToast(i18n.t('preferences.draftResetToast'));
   };
 
   return {

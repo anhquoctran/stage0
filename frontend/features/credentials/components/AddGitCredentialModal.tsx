@@ -44,7 +44,7 @@ export function AddGitCredentialModal({
       <div className="flex items-center justify-between pb-2 border-b border-surface1/60">
         <span className="text-xs font-bold text-text flex items-center gap-1.5">
           <Plus className="w-3.5 h-3.5 text-subtext0" />
-          New Git Credential
+          {translateUiText('credentials.newCredential')}
         </span>
         <button
           type="button"
@@ -60,7 +60,7 @@ export function AddGitCredentialModal({
 
       {/* Provider Selection */}
       <div>
-        <label className="block text-[11px] font-medium text-subtext0 mb-1.5">Git Provider</label>
+        <label className="block text-[11px] font-medium text-subtext0 mb-1.5">{translateUiText('credentials.provider')}</label>
         <div className="grid grid-cols-5 gap-1.5">
           {PROVIDER_PRESETS.map((p) => (
             <button
@@ -73,7 +73,7 @@ export function AddGitCredentialModal({
                   : 'bg-surface0/40 border-surface0/80 text-subtext0 hover:bg-surface0 hover:text-text'
               }`}
             >
-              {p.name}
+              {p.id === 'custom' ? translateUiText('credentials.customGitHost') : p.name}
             </button>
           ))}
         </div>
@@ -83,7 +83,7 @@ export function AddGitCredentialModal({
         {/* Host / Server URL */}
         <div>
           <label className="block text-[11px] font-medium text-subtext0 mb-1">
-            Server / Host URL
+            {translateUiText('credentials.serverHostUrl')}
           </label>
           <div className="relative flex items-center">
             <Globe className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
@@ -100,7 +100,7 @@ export function AddGitCredentialModal({
         {/* Account / Username */}
         <div>
           <label className="block text-[11px] font-medium text-subtext0 mb-1">
-            Account / Username <span className="text-red">*</span>
+            {translateUiText('credentials.accountUsername')} <span className="text-red">*</span>
           </label>
           <div className="relative flex items-center">
             <User className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
@@ -108,7 +108,7 @@ export function AddGitCredentialModal({
               type="text"
               value={accountName}
               onChange={(e) => setAccountName(e.target.value)}
-              placeholder="e.g. octocat, john.doe"
+              placeholder={translateUiText('credentials.accountPlaceholder')}
               required
               className="w-full ps-8 pe-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
@@ -120,7 +120,7 @@ export function AddGitCredentialModal({
         {/* Token Type */}
         <div>
           <label className="block text-[11px] font-medium text-subtext0 mb-1">
-            Credential Type
+            {translateUiText('credentials.credentialType')}
           </label>
           <CustomSelect
             value={tokenType}
@@ -130,14 +130,14 @@ export function AddGitCredentialModal({
             buttonClassName="w-full"
             dropdownWidth="w-full"
             align="left"
-            aria-label="Credential Type"
+            aria-label={translateUiText('credentials.credentialType')}
           />
         </div>
 
         {/* Label (Optional) */}
         <div>
           <label className="block text-[11px] font-medium text-subtext0 mb-1">
-            Label <span className="text-subtext0/60 font-normal">(Optional)</span>
+            {translateUiText('credentials.label')} <span className="text-subtext0/60 font-normal">({translateUiText('common.optional')})</span>
           </label>
           <div className="relative flex items-center">
             <Tag className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
@@ -145,7 +145,7 @@ export function AddGitCredentialModal({
               type="text"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="e.g. Work PAT, Personal GitHub"
+              placeholder={translateUiText('credentials.labelPlaceholder')}
               className="w-full ps-8 pe-3 py-1.5 bg-base border border-surface1 text-xs text-text placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
             />
           </div>
@@ -156,9 +156,9 @@ export function AddGitCredentialModal({
       <div>
         <div className="flex items-center justify-between mb-1">
           <label className="text-[11px] font-medium text-subtext0">
-            Secret Token / Password <span className="text-red">*</span>
+            {translateUiText('credentials.secretTokenPassword')} <span className="text-red">*</span>
           </label>
-          <span className="text-[10px] text-subtext0/70 font-mono">Secured in {keyringName}</span>
+          <span className="text-[10px] text-subtext0/70 font-mono">{translateUiText('credentials.securedIn', { keyring: keyringName })}</span>
         </div>
         <div className="relative flex items-center">
           <Lock className="w-3.5 h-3.5 text-subtext0 absolute start-2.5" />
@@ -166,7 +166,7 @@ export function AddGitCredentialModal({
             type={showSecret ? 'text' : 'password'}
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
-            placeholder="ghp_..., glpat-..., or account password"
+            placeholder={translateUiText('credentials.secretPlaceholder')}
             required
             className="w-full ps-8 pe-9 py-1.5 bg-base border border-surface1 text-xs text-text font-mono placeholder:text-subtext0 focus:outline-none focus:border-surface2 rounded-sm"
           />
@@ -174,7 +174,7 @@ export function AddGitCredentialModal({
             type="button"
             onClick={() => setShowSecret(!showSecret)}
             className="absolute end-2.5 p-1 text-subtext0 hover:text-text cursor-pointer rounded-sm"
-            title={showSecret ? 'Hide secret' : 'Show secret'}
+            title={showSecret ? translateUiText('credentials.hideSecret') : translateUiText('credentials.showSecret')}
           >
             {showSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
@@ -201,12 +201,12 @@ export function AddGitCredentialModal({
           {isLoading ? (
             <>
               <RefreshCw className="w-3.5 h-3.5 animate-spin text-on-accent" />
-              <span>Saving to {keyringName}...</span>
+              <span>{translateUiText('credentials.savingTo', { keyring: keyringName })}</span>
             </>
           ) : (
             <>
               <ShieldCheck className="w-3.5 h-3.5 text-on-accent" />
-              <span>Save to {keyringName}</span>
+              <span>{translateUiText('credentials.saveTo', { keyring: keyringName })}</span>
             </>
           )}
         </button>

@@ -12,39 +12,40 @@ import { GitLabAvatar } from '../GitLabAvatar';
 import { AiBotBadge } from '../AiBotBadge';
 import { useMrMetadataDropdowns } from '../useMrMetadataDropdowns';
 import type { VirtualMrOverviewSidebarProps } from './VirtualMrOverviewSidebarProps';
+import { useTranslation } from 'react-i18next';
 
-function renderReviewerStatusBadge(status: ReviewerState) {
+function renderReviewerStatusBadge(status: ReviewerState, t: (key: string) => string) {
   switch (status) {
     case 'approved':
       return (
         <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center gap-1">
           <Check className="w-2.5 h-2.5" />
-          <span>Approved</span>
+          <span>{t('virtualMr.overview.approved')}</span>
         </span>
       );
     case 'changes_requested':
       return (
         <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-300">
-          Changes requested
+          {t('virtualMr.overview.changesRequested')}
         </span>
       );
     case 'reviewing':
       return (
         <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-purple-500/15 border border-purple-500/30 text-purple-300 animate-pulse">
-          Reviewing
+          {t('virtualMr.overview.reviewing')}
         </span>
       );
     case 'commented':
       return (
         <span className="px-1.5 py-0.5 rounded-sm text-[10px] bg-surface1 text-subtext0">
-          Commented
+          {t('virtualMr.overview.commented')}
         </span>
       );
     case 'pending':
     default:
       return (
         <span className="px-1.5 py-0.5 rounded-sm text-[10px] bg-surface0 text-subtext0">
-          Pending
+          {t('virtualMr.overview.pending')}
         </span>
       );
   }
@@ -53,6 +54,7 @@ function renderReviewerStatusBadge(status: ReviewerState) {
 export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> = ({
   session,
 }) => {
+  const { t } = useTranslation();
   const { currentRepo } = useGitStore();
   const {
     removeReviewerBot,
@@ -113,7 +115,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
       {/* 1. ASSIGNEE */}
       <div className="space-y-2">
         <div className="text-[11px] font-semibold text-subtext0 uppercase tracking-wider">
-          Assignee
+          {t('virtualMr.overview.assignee')}
         </div>
         {session.assignee?.name ? (
           <div className="flex items-center gap-2.5">
@@ -133,7 +135,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
             </div>
           </div>
         ) : (
-          <p className="text-xs text-subtext0 italic">None</p>
+          <p className="text-xs text-subtext0 italic">{t('virtualMr.overview.none')}</p>
         )}
       </div>
 
@@ -143,16 +145,16 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
       <div ref={reviewerDropdownRef} className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold text-subtext0 uppercase tracking-wider">
-            Reviewers
+            {t('virtualMr.overview.reviewers')}
           </span>
           <button
             type="button"
             onClick={() => void toggleReviewerDropdown()}
             className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer rounded-sm"
-            title="Add AI reviewer bot"
+            title={t('virtualMr.overview.addReviewerTitle')}
           >
             <Plus className="w-3 h-3" />
-            <span>Add</span>
+            <span>{t('virtualMr.overview.add')}</span>
           </button>
         </div>
 
@@ -161,12 +163,12 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
           <div className="relative z-50">
             <div className="rounded-sm bg-crust border border-surface0 shadow-xl py-1 my-1">
               <div className="px-3 py-1.5 text-[11px] font-semibold text-subtext0 uppercase tracking-wider border-b border-surface0/60">
-                Select AI Reviewer Bot
+                {t('virtualMr.overview.selectReviewer')}
               </div>
               {isLoadingReviewerOptions ? (
-                <div className="px-3 py-3 text-xs text-subtext0">Loading reviewers...</div>
+                <div className="px-3 py-3 text-xs text-subtext0">{t('virtualMr.overview.loadingReviewers')}</div>
               ) : effectiveReviewers.length === 0 ? (
-                <div className="px-3 py-3 text-xs text-subtext0">No reviewers configured.</div>
+                <div className="px-3 py-3 text-xs text-subtext0">{t('virtualMr.overview.noReviewersConfigured')}</div>
               ) : (
                 <div className="max-h-48 overflow-y-auto py-1">
                   {effectiveReviewers.map((bot) => {
@@ -203,7 +205,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
 
         {/* Assigned Reviewers List */}
         {session.reviewers.length === 0 ? (
-          <p className="text-xs text-subtext0 italic">No reviewers assigned</p>
+          <p className="text-xs text-subtext0 italic">{t('virtualMr.overview.noReviewersAssigned')}</p>
         ) : (
           <div className="space-y-2">
             {session.reviewers.map((rev) => (
@@ -219,12 +221,12 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
                   <AiBotBadge />
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {renderReviewerStatusBadge(rev.reviewStatus)}
+                  {renderReviewerStatusBadge(rev.reviewStatus, t)}
                   <button
                     type="button"
                     onClick={() => void removeReviewerBot(session.id, rev.agentId)}
                     className="p-1 text-subtext0 hover:text-red-400 cursor-pointer rounded-sm"
-                    title={`Remove ${rev.agentName}`}
+                    title={t('virtualMr.overview.removeReviewer', { name: rev.agentName })}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -241,16 +243,16 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
       <div ref={labelDropdownRef} className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold text-subtext0 uppercase tracking-wider">
-            Labels
+            {t('virtualMr.overview.labels')}
           </span>
           <button
             type="button"
             onClick={() => void toggleLabelDropdown()}
             className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer rounded-sm"
-            title="Edit labels"
+            title={t('virtualMr.overview.editLabelsTitle')}
           >
             <Plus className="w-3 h-3" />
-            <span>Edit</span>
+            <span>{t('virtualMr.overview.edit')}</span>
           </button>
         </div>
 
@@ -259,7 +261,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
           <div className="relative z-50">
             <div className="rounded-sm bg-crust border border-surface0 shadow-xl py-1 my-1">
               <div className="px-3 py-1.5 flex items-center justify-between text-[11px] font-semibold text-subtext0 uppercase tracking-wider border-b border-surface0/60">
-                <span>Assign Labels</span>
+                <span>{t('virtualMr.overview.assignLabels')}</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -268,14 +270,14 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
                   }}
                   className="text-accent hover:underline text-[10px] lowercase rounded-sm cursor-pointer"
                 >
-                  manage
+                  {t('virtualMr.overview.manage')}
                 </button>
               </div>
               <div className="max-h-48 overflow-y-auto py-1">
                 {isLoadingLabelOptions ? (
-                  <div className="px-3 py-3 text-xs text-subtext0">Loading labels...</div>
+                  <div className="px-3 py-3 text-xs text-subtext0">{t('virtualMr.overview.loadingLabels')}</div>
                 ) : repoLabels.length === 0 ? (
-                  <div className="px-3 py-3 text-xs text-subtext0">No labels configured.</div>
+                  <div className="px-3 py-3 text-xs text-subtext0">{t('virtualMr.overview.noLabelsConfigured')}</div>
                 ) : (
                   repoLabels.map((lbl) => {
                     const isChecked = session.labels.some((l) => l.id === lbl.id);
@@ -305,7 +307,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
 
         {/* Assigned Labels List */}
         {session.labels.length === 0 ? (
-          <p className="text-xs text-subtext0 italic">None</p>
+          <p className="text-xs text-subtext0 italic">{t('virtualMr.overview.none')}</p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {session.labels.map((lbl) => (
@@ -319,7 +321,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
                   type="button"
                   onClick={() => void toggleSessionLabel(session.id, lbl.id)}
                   className="hover:opacity-75 cursor-pointer ms-0.5"
-                  title={`Remove ${lbl.name}`}
+                  title={t('virtualMr.overview.removeLabel', { name: lbl.name })}
                 >
                   <X className="w-2.5 h-2.5 text-white" />
                 </button>
@@ -334,7 +336,7 @@ export const VirtualMrOverviewSidebar: React.FC<VirtualMrOverviewSidebarProps> =
       {/* 4. PARTICIPANTS */}
       <div className="space-y-2">
         <div className="text-[11px] font-semibold text-subtext0 uppercase tracking-wider">
-          {participants.length} Participant{participants.length === 1 ? '' : 's'}
+          {t('virtualMr.overview.participants', { count: participants.length })}
         </div>
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {participants.map((p) => (

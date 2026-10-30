@@ -54,10 +54,10 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
         inheritGlobalAgents: inheritAgents,
         customAgentRules: customRules,
       });
-      showToast('Repository settings saved');
+      showToast(translateUiText('git.repoSettingsModal.saved'));
       onClose();
     } catch (err: any) {
-      showToast(`Failed to save settings: ${err}`);
+      showToast(translateUiText('git.repoSettingsModal.saveFailed', { error: err }));
     }
   };
 
@@ -79,7 +79,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-semibold text-text">
-                  Repository Settings
+                  {translateUiText('git.repoSettingsModal.title')}
                 </h2>
                 <span className="text-[11px] font-mono px-2 py-0.5 bg-surface0 text-subtext0">
                   {currentRepo.name}
@@ -94,7 +94,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
             type="button"
             onClick={onClose}
             className="p-1.5 text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
-            aria-label="Close modal"
+            aria-label={translateUiText('git.repoSettingsModal.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -116,9 +116,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               >
                 <Globe className="w-4 h-4 shrink-0 text-subtext0" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs leading-tight font-medium">Remotes</div>
+                  <div className="text-xs leading-tight font-medium">{translateUiText('git.repoSettingsModal.remotes')}</div>
                   <div className="text-[10px] text-subtext0 truncate mt-0.5">
-                    Git remote endpoints
+                    {translateUiText('git.repoSettingsModal.remoteDescription')}
                   </div>
                 </div>
               </button>
@@ -134,9 +134,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               >
                 <GitBranch className="w-4 h-4 shrink-0 text-subtext0" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs leading-tight font-medium">Branches &amp; Tags</div>
+                  <div className="text-xs leading-tight font-medium">{translateUiText('git.repoSettingsModal.branchesAndTags')}</div>
                   <div className="text-[10px] text-subtext0 truncate mt-0.5">
-                    Default base &amp; releases
+                    {translateUiText('git.repoSettingsModal.branchesDescription')}
                   </div>
                 </div>
               </button>
@@ -152,9 +152,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               >
                 <Tag className="w-4 h-4 shrink-0 text-subtext0" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs leading-tight font-medium">Labels</div>
+                  <div className="text-xs leading-tight font-medium">{translateUiText('git.repoSettingsModal.labels')}</div>
                   <div className="text-[10px] text-subtext0 truncate mt-0.5">
-                    Repo-scoped taxonomy
+                    {translateUiText('git.repoSettingsModal.labelsDescription')}
                   </div>
                 </div>
               </button>
@@ -170,9 +170,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               >
                 <Bot className="w-4 h-4 shrink-0 text-subtext0" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs leading-tight font-medium">AI Reviewers</div>
+                  <div className="text-xs leading-tight font-medium">{translateUiText('git.repoSettingsModal.aiReviewers')}</div>
                   <div className="text-[10px] text-subtext0 truncate mt-0.5">
-                    Bots &amp; prompt directives
+                    {translateUiText('git.repoSettingsModal.reviewersDescription')}
                   </div>
                 </div>
               </button>
@@ -216,7 +216,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
               onClick={handleSaveSettings}
               className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand rounded-sm"
             >
-              Save Settings
+              {translateUiText('git.repoSettingsModal.save')}
             </button>
           </div>
         </div>

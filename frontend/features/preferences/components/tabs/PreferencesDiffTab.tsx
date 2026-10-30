@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { SettingRow } from '../SettingRow';
 import { ZedSwitch } from '../ZedSwitch';
 
@@ -17,11 +18,12 @@ export const PreferencesDiffTab: React.FC<{
   draftWordWrap,
   setDraftWordWrap,
 }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="space-y-3">
       <SettingRow
-        title="Diff Visualization Mode"
-        description="Side-by-side split layout vs unified continuous inline diff view."
+        title={translateUiText('preferences.diffOptions.visualizationTitle')}
+        description={translateUiText('preferences.diffOptions.visualizationDescription')}
       >
         <div className="flex items-center gap-1.5 p-0.5 bg-surface0/60 rounded border border-surface1/40">
           <button
@@ -33,7 +35,7 @@ export const PreferencesDiffTab: React.FC<{
                 : 'text-subtext0 hover:text-text hover:bg-surface0/40'
             }`}
           >
-            Split
+            {translateUiText('common.layout.viewSplit')}
           </button>
           <button
             type="button"
@@ -44,14 +46,14 @@ export const PreferencesDiffTab: React.FC<{
                 : 'text-subtext0 hover:text-text hover:bg-surface0/40'
             }`}
           >
-            Unified
+            {translateUiText('common.layout.viewUnified')}
           </button>
         </div>
       </SettingRow>
 
       <SettingRow
-        title="Ignore Whitespace Changes"
-        description="Suppress whitespace-only modifications to focus on pure structural logic changes."
+        title={translateUiText('preferences.diffOptions.ignoreWhitespaceTitle')}
+        description={translateUiText('preferences.diffOptions.ignoreWhitespaceDescription')}
       >
         <ZedSwitch
           checked={draftIgnoreWhitespace}
@@ -60,8 +62,8 @@ export const PreferencesDiffTab: React.FC<{
       </SettingRow>
 
       <SettingRow
-        title="Soft Word Wrap"
-        description="Wrap overflowing code lines at the edge of the diff pane viewport."
+        title={translateUiText('preferences.diffOptions.wordWrapTitle')}
+        description={translateUiText('preferences.diffOptions.wordWrapDescription')}
       >
         <ZedSwitch
           checked={draftWordWrap}

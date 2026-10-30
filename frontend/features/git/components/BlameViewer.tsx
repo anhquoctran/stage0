@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Info } from '../../../common/components/icons/Info';
 import { usePreferencesStore } from '../../preferences/store/usePreferencesStore';
 import { useGitStore } from '../store/useGitStore';
@@ -10,6 +11,7 @@ import { BlameLinesTable } from './blame/BlameLinesTable';
 import { BlameToolbar } from './blame/BlameToolbar';
 
 export const BlameViewer: React.FC = () => {
+  const { t } = useTranslation();
   const {
     selectedFile,
     blamePayload,
@@ -116,7 +118,7 @@ export const BlameViewer: React.FC = () => {
   const handleCopySha = (sha: string) => {
     navigator.clipboard.writeText(sha);
     setCopiedSha(true);
-    showToast(`Copied commit SHA: ${sha.substring(0, 10)}...`);
+    showToast(t('git.blame.copiedCommitSha', { sha: sha.substring(0, 10) }));
     setTimeout(() => setCopiedSha(false), 2000);
   };
 
@@ -124,21 +126,21 @@ export const BlameViewer: React.FC = () => {
     const effectiveRemote =
       remoteUrl || (currentRepo ? `https://github.com/${currentRepo.name}` : '');
     if (!effectiveRemote) {
-      showToast('No remote URL configured for this repository');
+      showToast(t('git.blame.noRemoteUrl'));
       return;
     }
     const url = buildRemoteCommitUrl(effectiveRemote, sha);
     navigator.clipboard.writeText(url);
-    showToast('Copied remote commit link to clipboard');
+    showToast(t('git.blame.copiedRemoteLink'));
   };
 
   if (!selectedFile) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-base text-subtext0 text-xs">
         <Info className="w-8 h-8 text-subtext0 mb-2" />
-        <p className="font-semibold text-text">No File Selected</p>
+        <p className="font-semibold text-text">{t('git.blame.noFileSelected')}</p>
         <span className="text-[11px] text-subtext0 mt-0.5">
-          Select a file from the sidebar to inspect its git blame.
+          {t('git.blame.selectFileHint')}
         </span>
       </div>
     );
@@ -173,29 +175,29 @@ export const BlameViewer: React.FC = () => {
         {isBlameLoading ? (
           <div className="flex flex-col items-center justify-center h-64 text-subtext1 text-xs space-y-2">
             <div className="w-6 h-6 border-2 border-subtext0 border-t-text rounded-sm animate-spin" />
-            <span className="font-medium text-text">Loading Git Blame...</span>
+            <span className="font-medium text-text">{t('git.blame.loading')}</span>
             <span className="text-[11px] text-subtext0">
-              Running git blame for {selectedFile.path}
+              {t('git.blame.runningFor', { path: selectedFile.path })}
             </span>
           </div>
         ) : blameError ? (
           <div className="flex flex-col items-center justify-center h-64 text-center p-6 bg-mantle border border-surface0  rounded-sm">
             <Info className="w-8 h-8 text-subtext0 mb-2" />
-            <h4 className="text-sm font-bold text-text mb-1">Failed to Blame File</h4>
+            <h4 className="text-sm font-bold text-text mb-1">{t('git.blame.failed')}</h4>
             <p className="text-xs text-subtext0 font-mono max-w-md mb-4 break-all">{blameError}</p>
             <button
               type="button"
               onClick={() => fetchFileBlame()}
               className="px-3.5 py-1.5 rounded-sm bg-surface1 hover:bg-surface2 text-text text-xs font-medium border border-surface2 transition-colors cursor-pointer"
             >
-              Try Again
+              {t('common.retry')}
             </button>
           </div>
         ) : filteredLines.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-subtext0 text-xs">
             {searchQuery
-              ? 'No lines match your search query.'
-              : 'Empty file or no blame lines available.'}
+              ? t('git.blame.noSearchMatches')
+              : t('git.blame.emptyBlame')}
           </div>
         ) : (
           <BlameLinesTable

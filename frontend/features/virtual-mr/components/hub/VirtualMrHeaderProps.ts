@@ -12,7 +12,7 @@ export interface VirtualMrHeaderProps {
   setIsEditingTitle: React.Dispatch<React.SetStateAction<boolean>>;
   handleStartEditTitle: () => void;
   isBranchLocked: boolean;
-  branchLockedReason: 'Cannot change branches once discussions or reviews have started in this Virtual MR';
+  branchLockedReason: string;
   branches: BranchList | null;
   handleBranchChange: (sessionId: string, newBase: string, newCompare: string) => Promise<void>;
   handleSwapBranches: (

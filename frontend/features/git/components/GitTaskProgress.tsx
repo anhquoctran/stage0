@@ -1,7 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { GitTaskProgressProps } from '../types/GitTaskProgressProps';
 
 export const GitTaskProgress: React.FC<GitTaskProgressProps> = ({ task }) => {
+  const { t } = useTranslation();
   const isRunning = task.status === 'running';
   return (
     <div className="space-y-3">
@@ -11,12 +13,12 @@ export const GitTaskProgress: React.FC<GitTaskProgressProps> = ({ task }) => {
       <div className="flex items-center justify-between gap-3 text-xs">
         <span className="min-w-0 truncate">{task.phase}</span>
         <span className="shrink-0 font-mono text-subtext0">
-          {task.progress !== null ? `${Math.round(task.progress)}%` : isRunning ? 'Working…' : ''}
+          {task.progress !== null ? `${Math.round(task.progress)}%` : isRunning ? t('git.taskProgress.working') : ''}
         </span>
       </div>
       <div
         role="progressbar"
-        aria-label={`${task.title}: ${task.phase}`}
+        aria-label={t('git.taskProgress.ariaLabel', { title: task.title, phase: task.phase })}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={task.progress ?? undefined}

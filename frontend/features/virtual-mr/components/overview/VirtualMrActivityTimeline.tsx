@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { Bot } from '../../../../common/components/icons/Bot';
 import { Edit2 } from '../../../../common/components/icons/Edit2';
 import { GitCommit } from '../../../../common/components/icons/GitCommit';
@@ -18,6 +19,7 @@ import type { VirtualMrTimelineEvent } from './types/VirtualMrTimelineEvent';
 import type { VirtualMrActivityTimelineProps } from './VirtualMrActivityTimelineProps';
 
 export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps> = ({ session }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   const uiLanguage = useDateTimeLanguage();
   const [filter, setFilter] = useState<ActivityFilter>('all');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -34,7 +36,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
       render: () => (
         <div className="flex items-center gap-1.5 text-xs text-subtext0 flex-wrap">
           <span className="font-semibold text-text">{session.assignee.name}</span>
-          <span>created this Virtual MR</span>
+          <span>{translateUiText('virtualMr.activity.created')}</span>
           <span className="text-subtext1">({session.compareBranch} → {session.baseBranch})</span>
           <span>·</span>
           <span className="text-subtext0">{formatRelativeTime(session.createdAt)}</span>
@@ -52,7 +54,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
         render: () => (
           <div className="flex items-center gap-1.5 text-xs text-subtext0 flex-wrap">
             <span className="font-semibold text-text">{session.assignee.name}</span>
-            <span>added</span>
+            <span>{translateUiText('virtualMr.activity.added')}</span>
             <div className="flex items-center gap-1 flex-wrap">
               {session.labels.map((lbl) => (
                 <span
@@ -64,7 +66,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
                 </span>
               ))}
             </div>
-            <span>labels</span>
+            <span>{translateUiText('virtualMr.activity.labels')}</span>
             <span>·</span>
             <span className="text-subtext0">{formatRelativeTime(session.createdAt)}</span>
           </div>
@@ -81,7 +83,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
       render: () => (
         <div className="flex items-center gap-1.5 text-xs text-subtext0 flex-wrap">
           <span className="font-semibold text-text">{session.assignee.name}</span>
-          <span>assigned to</span>
+          <span>{translateUiText('virtualMr.activity.assignedTo')}</span>
           <span className="text-primary font-medium">
             {getAuthorHandle(session.assignee.name, session.assignee.email)}
           </span>
@@ -101,7 +103,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
         render: () => (
           <div className="flex items-center gap-1.5 text-xs text-subtext0 flex-wrap">
             <span className="font-semibold text-text">{session.assignee.name}</span>
-            <span>requested review from</span>
+            <span>{translateUiText('virtualMr.activity.requestedReviewFrom')}</span>
             <span className="text-primary font-medium">@{rev.agentName}</span>
             <span>·</span>
             <span className="text-subtext0">{formatRelativeTime(session.createdAt)}</span>
@@ -121,7 +123,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-1.5 text-subtext0 flex-wrap">
               <span className="font-semibold text-text">{c.authorName}</span>
-              <span>added 1 commit</span>
+              <span>{translateUiText('virtualMr.activity.commitAdded')}</span>
               <span>·</span>
               <span className="text-subtext0">{formatRelativeTime(c.authoredDate)}</span>
             </div>
@@ -148,7 +150,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
           return (
             <div className="text-xs text-subtext0 leading-relaxed break-words">
               <span className="font-semibold text-text me-1.5">{change.authorName}</span>
-              <span className="me-1.5">changed title from</span>
+              <span className="me-1.5">{translateUiText('virtualMr.activity.changedTitleFrom')}</span>
               <span className="text-text me-1.5">
                 {diff.prefix}
                 {diff.oldDiff ? (
@@ -158,7 +160,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
                 ) : null}
                 {diff.suffix}
               </span>
-              <span className="me-1.5">to</span>
+              <span className="me-1.5">{translateUiText('virtualMr.activity.to')}</span>
               <span className="text-text me-1.5">
                 {diff.prefix}
                 {diff.newDiff ? (
@@ -189,7 +191,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
         render: () => (
           <div className="flex items-center gap-1.5 text-xs text-subtext0 flex-wrap">
             <span className="font-semibold text-text">{session.assignee.name}</span>
-            <span>changed the description</span>
+            <span>{translateUiText('virtualMr.activity.changedDescription')}</span>
             <span>·</span>
             <span className="text-subtext0">
               {formatRelativeTime(session.descriptionUpdatedAt || session.createdAt)}
@@ -224,7 +226,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
     });
 
     return list;
-  }, [session, sortOrder, uiLanguage]);
+  }, [session, sortOrder, uiLanguage, translateUiText]);
 
   const filteredEvents = useMemo(() => {
     if (filter === 'comments') {
@@ -257,13 +259,13 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
   };
 
   return (
-    <div className="space-y-4" aria-label="Activity timeline">
+    <div className="space-y-4" aria-label={translateUiText('virtualMr.activity.timeline')}>
       {/* Activity Filter & Sort Header Bar */}
       <div className="flex items-center justify-between pb-2 border-b border-surface0/60 gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <h3 className="font-bold text-sm text-text">Activity</h3>
+          <h3 className="font-bold text-sm text-text">{translateUiText('virtualMr.activity.title')}</h3>
           <span className="text-[11px] font-mono text-subtext0">
-            ({filteredEvents.length} item{filteredEvents.length === 1 ? '' : 's'})
+            {translateUiText('virtualMr.activity.entriesCount', { count: filteredEvents.length })}
           </span>
         </div>
 
@@ -279,7 +281,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
                   : 'text-subtext0 hover:text-text'
               }`}
             >
-              All activity
+              {translateUiText('virtualMr.activity.all')}
             </button>
             <button
               type="button"
@@ -290,7 +292,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
                   : 'text-subtext0 hover:text-text'
               }`}
             >
-              Comments only ({session.discussions.length})
+              {translateUiText('virtualMr.activity.comments', { count: session.discussions.length })}
             </button>
             <button
               type="button"
@@ -301,7 +303,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
                   : 'text-subtext0 hover:text-text'
               }`}
             >
-              History only
+              {translateUiText('virtualMr.activity.history')}
             </button>
           </div>
 
@@ -309,7 +311,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
           <button
             type="button"
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            title={sortOrder === 'asc' ? 'Oldest first (click for newest)' : 'Newest first (click for oldest)'}
+            title={translateUiText(sortOrder === 'asc' ? 'virtualMr.activity.oldestFirstTitle' : 'virtualMr.activity.newestFirstTitle')}
             className="p-1.5 rounded-sm bg-surface0 hover:bg-surface1 text-subtext1 hover:text-text cursor-pointer transition-colors border border-surface1 flex items-center gap-1 text-xs"
           >
             {sortOrder === 'asc' ? (
@@ -317,7 +319,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
             ) : (
               <SortDescending className="w-3.5 h-3.5" />
             )}
-            <span className="text-[11px] font-medium">{sortOrder === 'asc' ? 'Oldest' : 'Newest'}</span>
+            <span className="text-[11px] font-medium">{translateUiText(sortOrder === 'asc' ? 'virtualMr.activity.oldest' : 'virtualMr.activity.newest')}</span>
           </button>
         </div>
       </div>
@@ -325,7 +327,7 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
       {/* Vertical Timeline Feed */}
       {filteredEvents.length === 0 ? (
         <div className="p-8 text-center text-subtext0 text-xs bg-mantle border border-surface0/60 rounded-sm">
-          No activity matching this filter.
+          {translateUiText('virtualMr.activity.noMatchingActivity')}
         </div>
       ) : (
         <div className="relative ps-6 ms-3 border-s-2 border-surface1/70 space-y-4">

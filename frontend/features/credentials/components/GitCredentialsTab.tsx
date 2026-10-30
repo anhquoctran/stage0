@@ -1,11 +1,11 @@
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Key } from '../../../common/components/icons/Key';
 import { Plus } from '../../../common/components/icons/Plus';
 import { X } from '../../../common/components/icons/X';
-import type { CustomSelectOption } from '../../../common/types/CustomSelectOption';
 import { useGitCredentialsStore } from '../store/useGitCredentialsStore';
 import { type GitCredentialProvider } from '../types/GitCredentialProvider';
 import { type GitCredentialType } from '../types/GitCredentialType';
@@ -29,17 +29,11 @@ const PROVIDER_PRESETS: {
     defaultUrl: 'https://dev.azure.com',
     defaultType: 'pat',
   },
-  { id: 'custom', name: 'Custom Git Host', defaultUrl: 'https://', defaultType: 'pat' },
-];
-
-const CREDENTIAL_TYPE_OPTIONS: CustomSelectOption<GitCredentialType>[] = [
-  { value: 'pat', label: 'Personal Access Token (PAT)' },
-  { value: 'password', label: 'Password / HTTP Basic' },
-  { value: 'oauth', label: 'OAuth Token' },
-  { value: 'ssh_key', label: 'SSH Key Passphrase' },
+  { id: 'custom', name: '', defaultUrl: 'https://', defaultType: 'pat' },
 ];
 
 export const GitCredentialsTab: React.FC = () => {
+  const { t } = useTranslation();
   const appServices = useApplicationServices();
   const {
     credentials,
@@ -95,7 +89,13 @@ export const GitCredentialsTab: React.FC = () => {
     };
   }, [fetchCredentials]);
 
-  const keyringName = osInfo?.keyring_name || 'OS Credential Manager';
+  const keyringName = osInfo?.keyring_name || t('credentials.osCredentialManager');
+  const credentialTypeOptions = [
+    { value: 'pat' as const, label: t('credentials.types.personalAccessToken') },
+    { value: 'password' as const, label: t('credentials.types.passwordHttpBasic') },
+    { value: 'oauth' as const, label: t('credentials.types.oauthToken') },
+    { value: 'ssh_key' as const, label: t('credentials.types.sshKeyPassphrase') },
+  ];
 
   const handleProviderChange = (newProvider: GitCredentialProvider) => {
     setProvider(newProvider);
@@ -130,15 +130,15 @@ export const GitCredentialsTab: React.FC = () => {
     setFormError(null);
 
     if (!accountName.trim()) {
-      setFormError('Account name or username is required');
+      setFormError(t('credentials.validation.accountRequired'));
       return;
     }
     if (!secret.trim()) {
-      setFormError('Token or secret password is required');
+      setFormError(t('credentials.validation.secretRequired'));
       return;
     }
     if (!serverUrl.trim()) {
-      setFormError('Server URL is required');
+      setFormError(t('credentials.validation.serverRequired'));
       return;
     }
 
@@ -206,7 +206,7 @@ export const GitCredentialsTab: React.FC = () => {
           accountName={accountName}
           setAccountName={setAccountName}
           tokenType={tokenType}
-          CREDENTIAL_TYPE_OPTIONS={CREDENTIAL_TYPE_OPTIONS}
+          CREDENTIAL_TYPE_OPTIONS={credentialTypeOptions}
           setTokenType={setTokenType}
           label={label}
           setLabel={setLabel}
@@ -227,10 +227,9 @@ export const GitCredentialsTab: React.FC = () => {
               <Key className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-text">No Git Credentials Configured</h4>
+              <h4 className="text-xs font-bold text-text">{t('credentials.noConfigured')}</h4>
               <p className="text-[11px] text-subtext0 max-w-sm mx-auto mt-0.5">
-                Stage0 will show credentials discovered through Git helpers for known remotes,
-                alongside credentials added here.
+                {t('credentials.discoveredDescription')}
               </p>
             </div>
             {!isAdding && (
@@ -240,7 +239,7 @@ export const GitCredentialsTab: React.FC = () => {
                 className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent text-xs font-semibold rounded-sm transition-colors cursor-pointer border border-brand shadow-xs mt-1"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add First Credential</span>
+                <span>{t('credentials.addFirstCredential')}</span>
               </button>
             )}
           </div>

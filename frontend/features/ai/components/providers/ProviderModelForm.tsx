@@ -1,5 +1,5 @@
+import { useTranslation } from 'react-i18next';
 import { CustomSelect } from '../../../../common/components/CustomSelect';
-import { MAX_TOKEN_OPTIONS } from '../../constants/aiMcpConstants';
 import { AiModelExecutionOptions } from '../AiModelExecutionOptions';
 import type { ProviderModelFormProps } from './ProviderModelFormProps';
 
@@ -14,19 +14,24 @@ export function ProviderModelForm({
   selectedModelInfo,
   onUpdateAiConfig,
 }: ProviderModelFormProps) {
+  const { t } = useTranslation();
+  const tokenOptions = ['1024', '2048', '4096', '8192', '16384'].map((value) => ({
+    value,
+    label: t(`ai.providerModel.tokenOptions.${value}`),
+  }));
   return (
     <div className="space-y-3 pt-3 border-t border-surface1/60">
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="text-xs font-semibold text-text">Model</label>
+          <label className="text-xs font-semibold text-text">{t('ai.execution.model')}</label>
           <button
             type="button"
             disabled={isFetchingDynamicModels || !!apiKeyDraft.trim()}
             onClick={() => void onFetchDynamicModels(aiConfig)}
             className="text-[11px] text-subtext0 hover:text-text disabled:opacity-40 rounded-sm"
-            title="Refresh models using saved API credentials. Apply key changes first."
+            title={t('ai.providerModel.refreshModelsTitle')}
           >
-            {isFetchingDynamicModels ? 'Refreshing…' : 'Refresh models'}
+            {isFetchingDynamicModels ? t('ai.providerModel.refreshing') : t('ai.providerModel.refreshModels')}
           </button>
         </div>
         <CustomSelect
@@ -37,7 +42,7 @@ export function ProviderModelForm({
           buttonClassName="w-full py-2 font-mono"
           dropdownWidth="w-full"
           align="left"
-          aria-label="Model"
+          aria-label={t('ai.execution.model')}
         />
         {dynamicModelError && (
           <p role="alert" className="mt-1 text-xs text-red">
@@ -46,7 +51,7 @@ export function ProviderModelForm({
         )}
         {selectedModelInfo?.recommendedFor && (
           <div className="text-[10px] text-subtext0 italic px-1 mt-1">
-            Recommended: {selectedModelInfo.recommendedFor}
+            {t('ai.providerModel.recommended')}: {selectedModelInfo.recommendedFor}
           </div>
         )}
       </div>
@@ -55,10 +60,10 @@ export function ProviderModelForm({
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-medium text-text">
-              Temperature: <span className="font-mono text-text">{aiConfig.temperature}</span>
+              {t('ai.providerModel.temperature', { value: aiConfig.temperature })}
             </label>
             <span className="text-[10px] text-subtext0 font-mono">
-              {aiConfig.temperature <= 0.2 ? 'Deterministic' : 'Balanced'}
+              {aiConfig.temperature <= 0.2 ? t('ai.providerModel.deterministic') : t('ai.providerModel.balanced')}
             </span>
           </div>
           <input
@@ -74,18 +79,18 @@ export function ProviderModelForm({
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-medium text-text">Max Output Tokens</label>
-            <span className="text-[10px] text-subtext0 font-mono">{aiConfig.maxTokens} tokens</span>
+            <label className="text-xs font-medium text-text">{t('ai.providerModel.maxOutputTokens')}</label>
+            <span className="text-[10px] text-subtext0 font-mono">{aiConfig.maxTokens} {t('ai.providerModel.tokens')}</span>
           </div>
           <CustomSelect
             value={String(aiConfig.maxTokens)}
-            options={MAX_TOKEN_OPTIONS}
+            options={tokenOptions}
             onChange={(tokens) => onUpdateAiConfig({ maxTokens: parseInt(tokens, 10) })}
             className="w-full"
             buttonClassName="w-full font-mono"
             dropdownWidth="w-full"
             align="left"
-            aria-label="Max Output Tokens"
+            aria-label={t('ai.providerModel.maxOutputTokens')}
           />
         </div>
       </div>
@@ -97,7 +102,7 @@ export function ProviderModelForm({
           fastMode={aiConfig.fastMode === true}
           onReasoningEffortChange={(reasoningEffort) => onUpdateAiConfig({ reasoningEffort })}
           onFastModeChange={(fastMode) => onUpdateAiConfig({ fastMode })}
-          emptyMessage="Stage0 has no declared reasoning or Fast mode capabilities for this provider and model."
+          emptyMessage={t('ai.execution.noProviderCapabilities')}
         />
       </div>
     </div>

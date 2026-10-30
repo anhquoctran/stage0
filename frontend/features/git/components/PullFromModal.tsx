@@ -96,9 +96,9 @@ export const PullFromModal: React.FC = () => {
               <Download className="w-4 h-4 text-subtext0" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-text">Pull From Remote</h3>
+              <h3 className="text-sm font-bold text-text">{translateUiText('git.pullDialog.title')}</h3>
               <p className="text-[11px] text-subtext0">
-                Pull changes into current branch{' '}
+                {translateUiText('git.pullDialog.description')}{' '}
                 <span className="font-mono text-text font-semibold">
                   {branches?.current || 'HEAD'}
                 </span>
@@ -123,7 +123,7 @@ export const PullFromModal: React.FC = () => {
             <div>
               <label className="block text-[11px] font-medium text-subtext0 mb-1 flex items-center gap-1.5">
                 <Globe className="w-3.5 h-3.5 text-subtext0" />
-                <span>Remote Repository</span>
+                <span>{translateUiText('git.pullDialog.remoteRepository')}</span>
               </label>
               <CustomSelect
                 value={selectedRemote}
@@ -133,7 +133,7 @@ export const PullFromModal: React.FC = () => {
                 buttonClassName="w-full font-mono"
                 dropdownWidth="w-full"
                 align="left"
-                aria-label="Remote Repository"
+                aria-label={translateUiText('git.pullDialog.remoteRepository')}
               />
             </div>
 
@@ -141,7 +141,7 @@ export const PullFromModal: React.FC = () => {
             <div>
               <label className="block text-[11px] font-medium text-subtext0 mb-1 flex items-center gap-1.5">
                 <GitBranch className="w-3.5 h-3.5 text-subtext0" />
-                <span>Remote Branch</span>
+                <span>{translateUiText('git.pullDialog.remoteBranch')}</span>
               </label>
               {availableBranches.length > 0 ? (
                 <CustomSelect
@@ -152,14 +152,14 @@ export const PullFromModal: React.FC = () => {
                   buttonClassName="w-full font-mono"
                   dropdownWidth="w-full"
                   align="left"
-                  aria-label="Remote Branch"
+                  aria-label={translateUiText('git.pullDialog.remoteBranch')}
                 />
               ) : (
                 <input
                   type="text"
                   value={selectedBranch}
                   onChange={(e) => setSelectedBranch(e.target.value)}
-                  placeholder="e.g. main, master"
+                  placeholder={translateUiText('git.pullDialog.branchPlaceholder')}
                   className="w-full px-3 py-1.5 bg-base border border-surface1 text-xs text-text focus:outline-none focus:border-surface2 font-mono rounded-sm"
                 />
               )}
@@ -182,7 +182,7 @@ export const PullFromModal: React.FC = () => {
           <div className="p-2.5 bg-base/80 border border-surface0/80 space-y-1 rounded-sm">
             <span className="text-[10px] font-bold uppercase tracking-wider text-subtext0 flex items-center gap-1.5">
               <Terminal className="w-3 h-3" />
-              <span>Command to Execute:</span>
+              <span>{translateUiText('git.pullDialog.commandToExecute')}</span>
             </span>
             <div className="font-mono text-xs text-text select-all truncate">{commandPreview}</div>
           </div>
@@ -205,7 +205,7 @@ export const PullFromModal: React.FC = () => {
               {isSyncing ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Pulling...</span>
+                  <span>{translateUiText('git.pullDialog.pulling')}</span>
                 </>
               ) : (
                 <>

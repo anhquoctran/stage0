@@ -1,3 +1,4 @@
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import type { PullAdvancedOptionsProps } from './PullAdvancedOptionsProps';
 
 export function PullAdvancedOptions({
@@ -10,10 +11,11 @@ export function PullAdvancedOptions({
   useNoCommit,
   setUseNoCommit,
 }: PullAdvancedOptionsProps) {
+  const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="space-y-2 pt-2 border-t border-surface0/80">
       <span className="text-[11px] font-bold uppercase tracking-wider text-subtext0 block mb-1">
-        Advanced Options
+        {translateUiText('git.pullOptions.advancedOptions')}
       </span>
 
       {/* --rebase */}
@@ -29,10 +31,10 @@ export function PullAdvancedOptions({
         />
         <div className="min-w-0">
           <div className="text-xs font-semibold text-text group-hover:text-text transition-colors">
-            Rebase local commits onto upstream (<code className="font-mono">--rebase</code>)
+            {translateUiText('git.pullOptions.rebaseLabel')} (<code className="font-mono">--rebase</code>)
           </div>
           <div className="text-[10px] text-subtext0">
-            Maintains a clean, linear git history without creating superfluous merge commits
+            {translateUiText('git.pullOptions.rebaseDescription')}
           </div>
         </div>
       </label>
@@ -47,10 +49,10 @@ export function PullAdvancedOptions({
         />
         <div className="min-w-0">
           <div className="text-xs font-semibold text-text group-hover:text-text transition-colors">
-            Autostash uncommitted changes (<code className="font-mono">--autostash</code>)
+            {translateUiText('git.pullOptions.autostashLabel')} (<code className="font-mono">--autostash</code>)
           </div>
           <div className="text-[10px] text-subtext0">
-            Automatically stashes modified workspace files before pull and restores them afterward
+            {translateUiText('git.pullOptions.autostashDescription')}
           </div>
         </div>
       </label>
@@ -66,10 +68,10 @@ export function PullAdvancedOptions({
         />
         <div className={`min-w-0 ${useRebase ? 'opacity-40' : ''}`}>
           <div className="text-xs font-semibold text-text group-hover:text-text transition-colors">
-            Fast-forward only (<code className="font-mono">--ff-only</code>)
+            {translateUiText('git.pullOptions.fastForwardOnlyLabel')} (<code className="font-mono">--ff-only</code>)
           </div>
           <div className="text-[10px] text-subtext0">
-            Refuses to merge if local branch has diverged, preventing accidental merge commits
+            {translateUiText('git.pullOptions.fastForwardOnlyDescription')}
           </div>
         </div>
       </label>
@@ -85,10 +87,10 @@ export function PullAdvancedOptions({
         />
         <div className={`min-w-0 ${useRebase ? 'opacity-40' : ''}`}>
           <div className="text-xs font-semibold text-text group-hover:text-text transition-colors">
-            No commit (<code className="font-mono">--no-commit</code>)
+            {translateUiText('git.pullOptions.noCommitLabel')} (<code className="font-mono">--no-commit</code>)
           </div>
           <div className="text-[10px] text-subtext0">
-            Merges changes into working directory but does not auto-commit, allowing review
+            {translateUiText('git.pullOptions.noCommitDescription')}
           </div>
         </div>
       </label>

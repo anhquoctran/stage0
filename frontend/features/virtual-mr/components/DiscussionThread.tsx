@@ -1,4 +1,5 @@
 import React,{ useCallback,useRef,useState } from 'react';
+import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import { parseMentionReference } from '../../../common/utils/mentions';
 import { useGitStore } from '../../git/store/useGitStore';
@@ -29,6 +30,7 @@ export const DiscussionThread: React.FC<{
   session: VirtualMrSession;
   discussion: VirtualMrDiscussion;
 }> = ({ session, discussion }) => {
+  const { t: translateUiText } = useUiTextTranslation();
   useDateTimeLanguage();
   const { replyToDiscussion, resolveDiscussion, createDiscussion } = useVirtualMrStore();
   const { showToast } = useGitStore();
@@ -72,10 +74,10 @@ export const DiscussionThread: React.FC<{
     try {
       if (resolveDiscussion) {
         await resolveDiscussion(discussion.id, !discussion.isResolved);
-        showToast(discussion.isResolved ? 'Thread reopened' : 'Thread resolved', 'success');
+        showToast(translateUiText(discussion.isResolved ? 'virtualMr.discussion.threadReopened' : 'virtualMr.discussion.threadResolved'), 'success');
       }
     } catch (err: any) {
-      showToast(`Could not update thread: ${err?.message || err}`, 'error');
+      showToast(translateUiText('virtualMr.discussion.updateFailed', { error: err?.message || err }), 'error');
     }
   };
 
@@ -96,10 +98,10 @@ export const DiscussionThread: React.FC<{
       setTargetId(discussion.id);
       setIsReplying(false);
       setResolveThread(false);
-      showToast(andResolve ? 'Replied and resolved thread' : 'Comment posted', 'success');
+      showToast(translateUiText(andResolve ? 'virtualMr.discussion.repliedAndResolved' : 'virtualMr.discussion.commentPosted'), 'success');
     } catch (error) {
       showToast(
-        `Could not post: ${error instanceof Error ? error.message : String(error)}`,
+        translateUiText('virtualMr.discussion.postFailed', { error: error instanceof Error ? error.message : String(error) }),
         'error'
       );
     } finally {
@@ -120,8 +122,8 @@ export const DiscussionThread: React.FC<{
       );
       showToast(
         person
-          ? `${person.label} · ${person.kind === 'reviewer' ? 'AI reviewer' : 'Assignee'}`
-          : 'This participant is no longer assigned to this MR.',
+          ? translateUiText('virtualMr.discussion.participant', { name: person.label, kind: translateUiText(person.kind === 'reviewer' ? 'virtualMr.discussion.reviewerKind' : 'virtualMr.discussion.assigneeKind') })
+          : translateUiText('virtualMr.discussion.participantUnassigned'),
         person ? 'info' : 'warning'
       );
       return;
@@ -136,10 +138,10 @@ export const DiscussionThread: React.FC<{
         : getDiscussionComments(item).some((comment) => comment.id === parsed.id)
     );
     if (exists) setReference(parsed);
-    else showToast('The quoted source is no longer available in this MR.', 'warning');
+    else showToast(translateUiText('virtualMr.discussion.quoteUnavailable'), 'warning');
   };
 
-  const rootAuthorName = rootComment?.authorName || 'Reviewer';
+  const rootAuthorName = rootComment?.authorName || translateUiText('virtualMr.discussion.reviewerFallback');
   const rootAuthorHandle = getAuthorHandle(
     rootAuthorName,
     rootComment?.authorId || session?.assignee?.email,
@@ -206,12 +208,12 @@ export const DiscussionThread: React.FC<{
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
                 <span>
-                  {isCollapsed ? `Expand replies (${replies.length})` : 'Collapse replies'}
+                  {isCollapsed ? translateUiText('virtualMr.discussion.expandReplies', { count: replies.length }) : translateUiText('virtualMr.discussion.collapseReplies')}
                 </span>
               </button>
 
               <span className="text-[11px] text-subtext0 font-mono">
-                {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+                {translateUiText('virtualMr.discussion.repliesCount', { count: replies.length })}
               </span>
             </div>
 
@@ -225,7 +227,7 @@ export const DiscussionThread: React.FC<{
                         <PendingDiscussionReply
                           key={reply.id}
                           authorName={reply.authorName}
-                          label={reply.pendingLabel || 'Reviewing this MR…'}
+                          label={reply.pendingLabel || translateUiText('virtualMr.discussion.reviewingFallback')}
                         />
                       );
                     }

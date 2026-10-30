@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from '../../../../common/components/icons/AlertTriangle';
 import { GitMerge } from '../../../../common/components/icons/GitMerge';
 import { ArrowDown } from '../../../../common/components/icons/ArrowDown';
@@ -30,6 +31,7 @@ export const DiffConflictNotificationBar: React.FC<{
   onRefreshDiff,
   onShowToast,
 }) => {
+  const { t } = useTranslation();
   const detail = conflictReport?.details?.find((d) => d.path === selectedFile.path);
   const { title: commandTitle } = useCommandShortcut();
 
@@ -42,7 +44,7 @@ export const DiffConflictNotificationBar: React.FC<{
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-bold text-red">
-              Unmerged Conflict in this file
+              {t('git.diff.conflict.unmergedInFile')}
             </span>
             {detail?.conflict_type && (
               <span className="text-[10px] uppercase px-1.5 py-0.2 bg-surface1 text-subtext1 font-bold">
@@ -51,13 +53,13 @@ export const DiffConflictNotificationBar: React.FC<{
             )}
             {detail?.conflict_markers_count ? (
               <span className="text-[10px] text-red font-semibold">
-                ({detail.conflict_markers_count} active marker(s) on disk)
+                {t('git.diff.conflict.activeMarkers', { count: detail.conflict_markers_count })}
               </span>
             ) : null}
           </div>
           <p className="text-[11px] text-subtext1 mt-0.5 truncate max-w-2xl">
             {detail?.message ||
-              'Stage0 is a virtual sandbox and does not modify your repository. Please resolve this conflict in your external editor.'}
+              t('git.diff.conflict.virtualSandboxNote')}
           </p>
         </div>
       </div>
@@ -69,11 +71,13 @@ export const DiffConflictNotificationBar: React.FC<{
               type="button"
               onClick={onSwitchToConflicts}
               className="flex items-center gap-1.5 px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold transition-colors cursor-pointer text-xs shadow-xs rounded-sm"
-              title="Inspect 3-way collision blocks side-by-side"
+              title={t('git.diff.conflict.inspectThreeWayTitle')}
             >
               <GitMerge className="w-3.5 h-3.5 text-white" />
               <span>
-                3-Way Conflict View {activeConflictPreview?.conflict_regions.length ? `(${activeConflictPreview.conflict_regions.length})` : ''}
+                {activeConflictPreview?.conflict_regions.length
+                  ? t('git.diff.conflict.threeWayCount', { count: activeConflictPreview.conflict_regions.length })
+                  : t('git.diff.conflict.threeWayView')}
               </span>
             </button>
 
@@ -81,10 +85,10 @@ export const DiffConflictNotificationBar: React.FC<{
               type="button"
               onClick={onScrollToFirstConflict}
               className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-semibold transition-colors cursor-pointer text-xs shadow-xs rounded-sm"
-              title="Scroll directly to conflict marker or first conflict change in this file"
+              title={t('git.diff.conflict.jumpTitle')}
             >
               <ArrowDown className="w-3.5 h-3.5 text-white" />
-              <span>Jump to Conflict</span>
+              <span>{t('git.diff.conflict.jump')}</span>
             </button>
           </>
         )}
@@ -95,17 +99,17 @@ export const DiffConflictNotificationBar: React.FC<{
             onClick={async () => {
               try {
                 await openFileInEditor(currentRepo.local_path, selectedFile.path);
-                onShowToast(`Opened ${selectedFile.path} in VS Code`, 'success');
+                onShowToast(t('git.diff.conflict.openedInVsCode', { path: selectedFile.path }), 'success');
               } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
                 onShowToast(msg, 'error');
               }
             }}
             className="flex items-center gap-1.5 px-2.5 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs rounded-sm"
-            title="Open this file directly in Visual Studio Code to resolve conflict"
+            title={t('git.conflicts.openInVsCodeTitle')}
           >
             <VsCode className="w-3.5 h-3.5 text-[#007acc]" />
-            <span>Resolve in VS Code</span>
+            <span>{t('git.conflicts.resolveInVsCode')}</span>
           </button>
         )}
 
@@ -113,10 +117,10 @@ export const DiffConflictNotificationBar: React.FC<{
           type="button"
           onClick={onRefreshDiff}
           className="flex items-center gap-1.5 px-2 py-1 bg-surface1 hover:bg-surface2 text-white font-medium transition-colors cursor-pointer text-xs rounded-sm"
-          title={commandTitle('refresh_diff', 'Re-check diff after resolving conflict in external tool')}
+          title={commandTitle('refresh_diff', t('git.diff.conflict.refreshTitle'))}
         >
           <RotateCw className="w-3 h-3 text-white" />
-          <span>Refresh Diff</span>
+          <span>{t('git.diff.conflict.refresh')}</span>
         </button>
       </div>
     </div>
