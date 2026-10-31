@@ -162,3 +162,54 @@ async fn fabricated_evidence_is_returned_as_an_error_before_corrected_submission
         .to_string()
         .contains("exact non-redacted source evidence"));
 }
+
+#[tokio::test]
+async fn quota_and_billing_during_a_review_stop_without_replaying_or_approving() {
+    for (status, code, expected) in [(429, "insufficient_quota", "providerQuota"), (402, "billing_error", "providerBilling"), (429, "budget_exceeded", "providerCostLimit")] {
+        let repo = TestRepo::new();
+        let (mut run, ctx) = repo.review();
+        let db = test_database(&run);
+        db.save_review_run(&run).unwrap();
+        let (url, requests) = server(vec![reply("get_diff", json!({})), json!({"fixtureHttpStatus":status,"error":{"code":code,"message":"private sk-EXAMPLE"}})]).await;
+        let result = execute(&db, &config(url), &mut run, &Arc::new(Mutex::new(ctx))).await;
+        let error = result.as_ref().unwrap_err();
+        assert!(error.contains(expected), "{error}");
+        assert!(!error.contains("sk-EXAMPLE"));
+        run.finish(result);
+        db.save_review_run(&run).unwrap();
+        let saved = db.get_review_run(&run.id).unwrap();
+        assert_eq!(saved.status, "failed");
+        assert!(!saved.published);
+        assert!(saved.retry.is_none());
+        assert_eq!(requests.await.unwrap().len(), 2, "Only the initial turn and rejected turn may be sent");
+    }
+}
+
+#[tokio::test]
+async fn connection_loss_mid_response_never_replays_a_potentially_billed_request() {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}", listener.local_addr().unwrap());
+    let task = tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+        let mut buffer = [0; 8192];
+        socket.read(&mut buffer).await.unwrap();
+        socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 10000\r\n\r\n{\"message\":").await.unwrap();
+        drop(socket);
+        assert!(tokio::time::timeout(Duration::from_millis(200), listener.accept()).await.is_err(), "Interrupted requests must not be retried");
+    });
+    let error = provider::request(&config(url.clone()), &format!("{url}/api/chat"), &json!({})).await.unwrap_err();
+    assert!(error.contains("providerInterrupted"), "{error}");
+    task.await.unwrap();
+}
+
+#[test]
+fn coded_cancellation_and_local_budgets_keep_their_terminal_status() {
+    let repo = TestRepo::new();
+    for (code, status) in [("backend.review.cancelled", "cancelled"), ("backend.review.deadlineExceeded", "incomplete"), ("backend.ai.providerCostLimit", "failed")] {
+        let (mut run, _) = repo.review();
+        run.finish(Err(crate::common::messages::code(code)));
+        assert_eq!(run.status, status);
+        assert!(run.finished_at.is_some());
+        assert!(run.retry.is_none());
+    }
+}

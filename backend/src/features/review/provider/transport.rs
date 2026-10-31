@@ -19,7 +19,7 @@ pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<
     if config.provider != "ollama" {
         let key = Zeroizing::new(
             crate::features::credentials::get_ai_key(&config.provider).map_err(|_| {
-                "Provider API key is missing or unavailable in the OS credential store"
+                crate::common::messages::code("backend.review.providerApiKeyRequired")
             })?,
         );
         request = match config.provider.as_str() {
@@ -30,70 +30,45 @@ pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<
             _ => request.bearer_auth(key.as_str()),
         };
     }
-    let mut response = request
-        .try_clone()
-        .ok_or_else(|| {
-            crate::common::messages::failure(
-                "backend.review.providerRequestPrepareFailed",
-                serde_json::json!({}),
-                "Could not prepare provider request".into(),
-            )
-        })?
-        .send()
-        .await
-        .map_err(|_| {
-            "Provider request failed or timed out; check your connection and configuration"
-        })?;
-    // Retry once only for explicit transient HTTP statuses. Do not replay an
-    // ambiguous network timeout or interrupted successful response (billing).
-    if matches!(response.status().as_u16(), 429 | 502 | 503 | 504) {
+    // Retry only explicit transient rejections, never ambiguous transport loss.
+    for attempt in 0..2 {
+        let response = request
+            .try_clone()
+            .ok_or_else(|| {
+                crate::common::messages::code("backend.review.providerRequestPrepareFailed")
+            })?
+            .send()
+            .await
+            .map_err(|error| crate::features::ai::provider_errors::network_error(&error))?;
+        let status = response.status().as_u16();
         let delay = response
             .headers()
             .get("retry-after")
             .and_then(|v| v.to_str().ok())
             .and_then(|v| v.parse::<u64>().ok())
-            .unwrap_or(1)
-            .clamp(1, 2);
-        drop(response);
-        tokio::time::sleep(Duration::from_secs(delay)).await;
-        response = request.send().await.map_err(|_| {
-            crate::common::messages::failure(
-                "backend.review.providerRetryFailedOrTimeout",
-                serde_json::json!({}),
-                "Provider retry failed or timed out".into(),
-            )
-        })?;
-    }
-    let status = response.status();
-    if !status.is_success() {
-        return Err(crate::common::messages::failure(
-            "backend.review.providerHttpError",
-            serde_json::json!({ "status": status.as_u16().to_string() }),
-            format!("Provider returned HTTP {}. Check authentication, model/tool support and rate limits (at most one retry for transient HTTP errors).", status.as_u16()),
-        ));
-    }
-    let mut bytes = Vec::new();
-    while let Some(chunk) = response.chunk().await.map_err(|_| {
-        crate::common::messages::failure(
-            "backend.review.providerResponseInterrupted",
-            serde_json::json!({}),
-            "Provider response interrupted".into(),
-        )
-    })? {
-        if bytes.len() + chunk.len() > 512 * 1024 {
-            return Err(crate::common::messages::failure(
-                "backend.review.providerResponseSafetyLimit",
-                serde_json::json!({}),
-                "Provider response exceeded the safety limit".into(),
-            ));
+            .unwrap_or(1);
+        let body = crate::features::ai::provider_errors::read_json(response).await;
+        if (200..300).contains(&status) {
+            let body = body?;
+            if body.get("error").is_some_and(|v| !v.is_null()) {
+                return Err(crate::features::ai::provider_errors::http_error(
+                    status, &body,
+                ));
+            }
+            return Ok(body);
         }
-        bytes.extend_from_slice(&chunk);
+        // HTML/invalid JSON errors still retain their HTTP classification.
+        let error =
+            crate::features::ai::provider_errors::http_error(status, &body.unwrap_or(Value::Null));
+        let transient = error.contains("backend.ai.providerRateLimit")
+            || error.contains("backend.ai.providerUnavailable");
+        if attempt == 0 && transient && delay <= 2 {
+            tokio::time::sleep(Duration::from_secs(delay.max(1))).await;
+        } else {
+            return Err(error);
+        }
     }
-    serde_json::from_slice(&bytes).map_err(|_| {
-        crate::common::messages::failure(
-            "backend.review.providerResponseJsonInvalid",
-            serde_json::json!({}),
-            "Provider returned invalid JSON".into(),
-        )
-    })
+    Err(crate::common::messages::code(
+        "backend.ai.providerUnavailable",
+    ))
 }

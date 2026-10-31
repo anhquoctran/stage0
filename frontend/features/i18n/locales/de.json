@@ -3359,7 +3359,17 @@
       "chatgptInvalidResponse": "OpenAI-Anmeldung hat eine ungültige Antwort zurückgegeben.",
       "chatgptResponseInterrupted": "OpenAI-Anmeldeantwort wurde unterbrochen.",
       "chatgptResponseTooLarge": "OpenAI-Anmeldeantwort hat das Größenlimit überschritten.",
-      "chatgptInvalidCredentials": "OpenAI hat ungültige Sitzungsanmeldeinformationen zurückgegeben."
+      "chatgptInvalidCredentials": "OpenAI hat ungültige Sitzungsanmeldeinformationen zurückgegeben.",
+      "providerQuota": "Anbieterkontingent aufgebraucht. Tarif und Nutzung prüfen.",
+      "providerBilling": "Guthaben- oder Abrechnungsproblem. Zahlungseinstellungen prüfen.",
+      "providerCostLimit": "Budget oder Ausgabenlimit erreicht. Limit anpassen.",
+      "providerRateLimit": "Anfragelimit erreicht. Vor einem neuen Versuch warten.",
+      "providerAuthentication": "Authentifizierung fehlgeschlagen. API-Schlüssel oder Anmeldung prüfen.",
+      "providerAccessDenied": "Zugriff verweigert. Konto- und Modellberechtigungen prüfen.",
+      "providerUnavailable": "Anbieter vorübergehend nicht verfügbar. Später erneut versuchen.",
+      "providerTimeout": "Zeitüberschreitung. Ergebnis und Abrechnung sind ungewiss; manuell erneut versuchen.",
+      "providerConnection": "Verbindung nicht möglich. Netzwerk und API-Adresse prüfen.",
+      "providerInterrupted": "Verbindung unterbrochen. Die Anfrage wurde nicht automatisch erneut gesendet."
     },
     "notifications": {
       "hostCreationFailed": "Der Stage0-Benachrichtigungshost konnte nicht erstellt werden.",

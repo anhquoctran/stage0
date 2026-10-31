@@ -3366,7 +3366,17 @@
       "chatgptInvalidResponse": "La connexion OpenAI a renvoyé une réponse non valide.",
       "chatgptResponseInterrupted": "La réponse de connexion OpenAI a été interrompue.",
       "chatgptResponseTooLarge": "La réponse de connexion OpenAI a dépassé sa limite de taille.",
-      "chatgptInvalidCredentials": "OpenAI a renvoyé des informations de session non valides."
+      "chatgptInvalidCredentials": "OpenAI a renvoyé des informations de session non valides.",
+      "providerQuota": "Quota du fournisseur épuisé. Vérifiez votre forfait et votre utilisation.",
+      "providerBilling": "Solde ou facturation du fournisseur insuffisant. Vérifiez les paiements.",
+      "providerCostLimit": "Budget ou plafond de dépenses atteint. Ajustez la limite.",
+      "providerRateLimit": "Limite de requêtes atteinte. Patientez avant de réessayer.",
+      "providerAuthentication": "Échec de l’authentification. Vérifiez la clé API ou la connexion.",
+      "providerAccessDenied": "Accès refusé. Vérifiez les autorisations du compte et du modèle.",
+      "providerUnavailable": "Fournisseur temporairement indisponible. Réessayez plus tard.",
+      "providerTimeout": "Délai dépassé. Résultat et facturation incertains ; réessayez manuellement.",
+      "providerConnection": "Connexion impossible. Vérifiez le réseau et l’adresse API.",
+      "providerInterrupted": "Connexion interrompue. La requête n’a pas été renvoyée automatiquement."
     },
     "notifications": {
       "hostCreationFailed": "L'hôte de notification Stage0 n'a pas pu être créé.",

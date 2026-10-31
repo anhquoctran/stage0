@@ -85,3 +85,38 @@ Protocol references: [OpenAI function calling](https://developers.openai.com/api
 Run `pnpm typecheck`, `pnpm check:architecture`, `pnpm test`, and `cargo test --manifest-path backend/Cargo.toml --lib`.
 
 Tests use temporary repositories, an in-memory SQLite database, protocol fixtures and a local HTTP fake provider. They cover fixed snapshots vs checkout/replacement refs, missing partial-clone objects without implicit network requests, deleted files, symlinks/path traversal, sensitive source/diff/search filtering (including private-key middle hunks and custom color/indicator settings), strict schemas, native call ID/signature continuation, HTTP retries, forbidden tools, evidence validation, no-change/prose/empty submissions, turn exhaustion/cancellation, durable/idempotent publishing without approval/resolution, interrupted-run recovery, remote consent, background lifecycle and stale frontend responses. They do not use real provider credentials, incur model charges, verify model review quality, or establish native behavior on untested operating systems.
+
+## Operational provider failures
+
+`ai/provider_errors.rs` owns bounded error-envelope classification and sanitized
+message codes for native review transport and model discovery. Distinguish
+transient rate limits from terminal quota, billing/credit and spending-cap
+failures, including financial errors returned with 400/403/429 or HTTP 200 error
+envelopes. Unknown errors retain their HTTP category; an opaque 429 alone cannot
+prove that an account has no funds. Provider error bodies and credential-bearing
+reqwest URLs are never copied to UI or diagnostics by this classifier.
+
+Native review transport retries at most once for explicit transient rejections,
+respecting a Retry-After hint only when it fits the two-second retry window.
+Quota, billing, cost limits, authentication, access denial and ambiguous transport
+failures are not replayed. An interrupted response may already have been billed;
+automatic continuation is deliberately avoided. ACP operational error envelopes
+and recognizable error-shaped output use the same financial rules; quota/cost,
+authentication and connection errors never enter tool-envelope correction loops.
+Arbitrary source or successful tool-call envelopes mentioning such words remain
+data, not operational failures.
+
+A failure during later model turns propagates through the existing final-save
+and coordinator-release lifecycle. It cannot create a success/approval verdict.
+Account cost caps are failures, distinct from Stage0's local context/token limits
+(incomplete); coded cancellation and deadlines retain their terminal statuses.
+The existing review worker monitor persists unexpected task failures and releases
+the coordinator. This is not a guarantee against process-level faults or OOM.
+
+Verification for operational-error handling: all 288 Rust tests passed with
+`--test-threads=1`, including second-turn quota/billing/cost failures and truncated
+HTTP responses without replay. Architecture, Cargo check, TypeScript and all 15
+locale key checks passed; 13 focused manual-review/notification Node tests passed.
+A wider selection of 31 frontend review/readiness tests had six failures in
+translation fixtures/readiness assertions; those UI source files were unchanged.
+These checks use local fake providers/agents, not billed live provider accounts.

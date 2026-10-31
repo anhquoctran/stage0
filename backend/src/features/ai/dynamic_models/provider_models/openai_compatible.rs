@@ -1,4 +1,4 @@
-use reqwest::{Client, StatusCode};
+use reqwest::Client;
 
 use super::collection_endpoint;
 use crate::features::ai::dynamic_models::open_ai_model_list_response::OpenAiModelListResponse;
@@ -34,13 +34,9 @@ pub(super) async fn fetch(
     let response = request
         .send()
         .await
-        .map_err(|error| format!("Could not query the {provider} model catalog: {error}"))?;
-    ensure_success(response.status())?;
-    let data: OpenAiModelListResponse = response
-        .json()
-        .await
-        .map_err(|error| format!("Could not read the {provider} model catalog: {error}"))?;
-
+        .map_err(|error| crate::features::ai::provider_errors::network_error(&error))?;
+    let data: OpenAiModelListResponse =
+        crate::features::ai::provider_errors::response_json(response).await?;
     let mut models = data
         .data
         .unwrap_or_default()
@@ -82,17 +78,6 @@ pub(super) async fn fetch(
     models.sort_by(|left, right| left.id.cmp(&right.id));
     models.dedup_by(|left, right| left.id == right.id);
     Ok(models)
-}
-
-fn ensure_success(status: StatusCode) -> Result<(), String> {
-    if status.is_success() {
-        Ok(())
-    } else {
-        Err(crate::common::messages::message(
-            "backend.ai.modelCatalogHttp",
-            serde_json::json!({ "status": status.as_u16() }),
-        ))
-    }
 }
 
 fn model_is_usable(provider: &str, id: &str) -> bool {

@@ -43,9 +43,25 @@ impl ReviewRun {
     pub fn finish(&mut self, outcome: Result<(), String>) {
         self.retry = None;
         if let Err(error) = outcome {
-            self.status = if error.starts_with("Review cancelled") {
+            let code = error
+                .strip_prefix(crate::common::messages::PREFIX)
+                .and_then(|value| serde_json::from_str::<serde_json::Value>(value).ok())
+                .and_then(|value| value["code"].as_str().map(str::to_owned));
+            self.status = if code.as_deref() == Some("backend.review.cancelled")
+                || error.starts_with("Review cancelled")
+            {
                 "cancelled"
-            } else if error.contains("budget") || error.contains("deadline") {
+            } else if matches!(
+                code.as_deref(),
+                Some(
+                    "backend.review.deadlineExceeded"
+                        | "backend.review.tokenBudgetExceeded"
+                        | "backend.review.toolCallBudgetExceeded"
+                        | "backend.review.turnBudgetExceeded"
+                )
+            ) || (code.is_none()
+                && (error.contains("budget") || error.contains("deadline")))
+            {
                 "incomplete"
             } else {
                 "failed"

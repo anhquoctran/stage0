@@ -19,18 +19,9 @@ pub(super) async fn fetch(
         .header("anthropic-version", "2023-06-01")
         .send()
         .await
-        .map_err(|error| format!("Could not query the Anthropic model catalog: {error}"))?;
-    if !response.status().is_success() {
-        return Err(crate::common::messages::message(
-            "backend.ai.modelCatalogHttp",
-            serde_json::json!({ "status": response.status().as_u16() }),
-        ));
-    }
-
-    let data: AnthropicModelListResponse = response
-        .json()
-        .await
-        .map_err(|error| format!("Could not read the Anthropic model catalog: {error}"))?;
+        .map_err(|error| crate::features::ai::provider_errors::network_error(&error))?;
+    let data: AnthropicModelListResponse =
+        crate::features::ai::provider_errors::response_json(response).await?;
     let mut models = data
         .data
         .unwrap_or_default()

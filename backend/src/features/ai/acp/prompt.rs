@@ -72,7 +72,9 @@ async fn prompt_agent_in_directory(
                 continue;
             }
             if message.get("id").and_then(Value::as_u64) == Some(2) {
-                if let Some(error) = message.get("error") { return Err(error.get("message").and_then(Value::as_str).unwrap_or("ACP prompt failed").to_owned()); }
+                if message.get("error").is_some() {
+                    return Err(crate::features::ai::provider_errors::http_error(0, &message));
+                }
                 return if output.trim().is_empty() { Err(crate::common::messages::code("backend.acp.emptyResponse")) } else { Ok(output) };
             }
         }

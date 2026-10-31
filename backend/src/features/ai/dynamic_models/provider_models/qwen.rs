@@ -34,26 +34,9 @@ pub(super) async fn fetch(
             .bearer_auth(api_key)
             .send()
             .await
-            .map_err(|error| {
-                crate::common::messages::failure(
-                    "backend.ai.modelDiscoveryFailed",
-                    serde_json::json!({}),
-                    format!("Qwen model catalog request failed: {error}"),
-                )
-            })?;
-        if !response.status().is_success() {
-            return Err(crate::common::messages::message(
-                "backend.ai.modelCatalogHttp",
-                serde_json::json!({ "status": response.status().as_u16() }),
-            ));
-        }
-        let catalog: serde_json::Value = response.json().await.map_err(|error| {
-            crate::common::messages::failure(
-                "backend.ai.modelDiscoveryFailed",
-                serde_json::json!({}),
-                format!("Qwen model catalog response was invalid: {error}"),
-            )
-        })?;
+            .map_err(|error| crate::features::ai::provider_errors::network_error(&error))?;
+        let catalog: serde_json::Value =
+            crate::features::ai::provider_errors::response_json(response).await?;
         let page_models = catalog
             .pointer("/output/models")
             .and_then(serde_json::Value::as_array)

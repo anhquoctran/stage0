@@ -3359,7 +3359,17 @@
       "chatgptInvalidResponse": "OpenAI 로그인에서 유효하지 않은 응답을 반환했습니다.",
       "chatgptResponseInterrupted": "OpenAI 로그인 응답이 중단되었습니다.",
       "chatgptResponseTooLarge": "OpenAI 로그인 응답이 크기 제한을 초과했습니다.",
-      "chatgptInvalidCredentials": "OpenAI에서 유효하지 않은 세션 자격 증명을 반환했습니다."
+      "chatgptInvalidCredentials": "OpenAI에서 유효하지 않은 세션 자격 증명을 반환했습니다.",
+      "providerQuota": "공급자 할당량을 소진했습니다. 요금제와 사용량을 확인하세요.",
+      "providerBilling": "잔액 또는 결제 문제입니다. 결제 설정을 확인하세요.",
+      "providerCostLimit": "예산 또는 지출 한도에 도달했습니다. 한도를 조정하세요.",
+      "providerRateLimit": "요청 속도 한도에 도달했습니다. 잠시 기다리세요.",
+      "providerAuthentication": "인증에 실패했습니다. API 키 또는 로그인을 확인하세요.",
+      "providerAccessDenied": "접근이 거부되었습니다. 계정과 모델 권한을 확인하세요.",
+      "providerUnavailable": "공급자를 일시적으로 사용할 수 없습니다. 나중에 다시 시도하세요.",
+      "providerTimeout": "요청 시간이 초과되었습니다. 처리 및 과금 여부가 불확실하니 수동으로 재시도하세요.",
+      "providerConnection": "연결할 수 없습니다. 네트워크와 API 주소를 확인하세요.",
+      "providerInterrupted": "연결이 끊어졌습니다. 요청을 자동으로 재전송하지 않았습니다."
     },
     "notifications": {
       "hostCreationFailed": "Stage0 알림 호스트를 생성할 수 없습니다.",

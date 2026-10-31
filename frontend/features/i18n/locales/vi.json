@@ -3359,7 +3359,17 @@
       "chatgptInvalidResponse": "Đăng nhập OpenAI đã trả về phản hồi không hợp lệ.",
       "chatgptResponseInterrupted": "Phản hồi đăng nhập OpenAI đã bị gián đoạn.",
       "chatgptResponseTooLarge": "Phản hồi đăng nhập OpenAI đã vượt quá giới hạn kích thước.",
-      "chatgptInvalidCredentials": "OpenAI đã trả về thông tin xác thực phiên không hợp lệ."
+      "chatgptInvalidCredentials": "OpenAI đã trả về thông tin xác thực phiên không hợp lệ.",
+      "providerQuota": "Đã hết quota của nhà cung cấp. Kiểm tra gói và mức sử dụng trước khi thử lại.",
+      "providerBilling": "Số dư hoặc thanh toán của nhà cung cấp không cho phép yêu cầu này. Kiểm tra thanh toán.",
+      "providerCostLimit": "Đã chạm ngân sách hoặc giới hạn chi tiêu của nhà cung cấp. Điều chỉnh giới hạn trước khi thử lại.",
+      "providerRateLimit": "Đã chạm giới hạn tốc độ của nhà cung cấp. Chờ trước khi thử lại.",
+      "providerAuthentication": "Xác thực nhà cung cấp thất bại. Kiểm tra API key hoặc đăng nhập.",
+      "providerAccessDenied": "Nhà cung cấp từ chối truy cập. Kiểm tra quyền tài khoản và model.",
+      "providerUnavailable": "Nhà cung cấp tạm thời không khả dụng. Thử lại sau.",
+      "providerTimeout": "Yêu cầu AI hết thời gian chờ. Chưa rõ kết quả và phí; hãy thử lại thủ công.",
+      "providerConnection": "Không kết nối được nhà cung cấp. Kiểm tra mạng và địa chỉ API.",
+      "providerInterrupted": "Kết nối AI bị gián đoạn. Yêu cầu không được tự động gửi lại."
     },
     "notifications": {
       "hostCreationFailed": "Không thể tạo máy chủ thông báo Stage0.",

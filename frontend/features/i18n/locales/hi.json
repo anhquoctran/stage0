@@ -3359,7 +3359,17 @@
       "chatgptInvalidResponse": "OpenAI साइन-इन ने एक अमान्य प्रतिक्रिया दी।",
       "chatgptResponseInterrupted": "OpenAI साइन-इन प्रतिक्रिया बाधित हुई थी।",
       "chatgptResponseTooLarge": "OpenAI साइन-इन प्रतिक्रिया ने अपनी आकार सीमा पार कर ली है।",
-      "chatgptInvalidCredentials": "OpenAI ने अमान्य सत्र क्रेडेंशियल लौटाए।"
+      "chatgptInvalidCredentials": "OpenAI ने अमान्य सत्र क्रेडेंशियल लौटाए।",
+      "providerQuota": "प्रदाता का कोटा समाप्त हो गया। योजना और उपयोग जाँचें।",
+      "providerBilling": "बैलेंस या बिलिंग में समस्या है। भुगतान जाँचें।",
+      "providerCostLimit": "बजट या खर्च सीमा पूरी हो गई। सीमा बदलें।",
+      "providerRateLimit": "अनुरोध दर सीमा पूरी हो गई। दोबारा प्रयास करने से पहले प्रतीक्षा करें।",
+      "providerAuthentication": "प्रमाणीकरण विफल हुआ। API कुंजी या लॉगिन जाँचें।",
+      "providerAccessDenied": "प्रवेश अस्वीकृत है। खाते और मॉडल की अनुमतियाँ जाँचें।",
+      "providerUnavailable": "प्रदाता अस्थायी रूप से अनुपलब्ध है। बाद में प्रयास करें।",
+      "providerTimeout": "अनुरोध की समय सीमा समाप्त हुई। परिणाम और शुल्क अनिश्चित हैं; स्वयं दोबारा प्रयास करें।",
+      "providerConnection": "कनेक्ट नहीं हो सका। नेटवर्क और API पता जाँचें।",
+      "providerInterrupted": "कनेक्शन टूट गया। अनुरोध अपने आप दोबारा नहीं भेजा गया।"
     },
     "notifications": {
       "hostCreationFailed": "The Stage0 notification host could not be created.",

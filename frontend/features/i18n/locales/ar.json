@@ -3393,7 +3393,17 @@
       "chatgptInvalidResponse": "أعاد تسجيل الدخول إلى OpenAI استجابة غير صالحة.",
       "chatgptResponseInterrupted": "تمت مقاطعة استجابة تسجيل الدخول إلى OpenAI.",
       "chatgptResponseTooLarge": "تجاوزت استجابة تسجيل الدخول إلى OpenAI الحد الأقصى للحجم.",
-      "chatgptInvalidCredentials": "أعادت OpenAI بيانات اعتماد جلسة غير صالحة."
+      "chatgptInvalidCredentials": "أعادت OpenAI بيانات اعتماد جلسة غير صالحة.",
+      "providerQuota": "نفدت حصة المزود. تحقق من الخطة والاستخدام.",
+      "providerBilling": "مشكلة في الرصيد أو الفوترة. تحقق من المدفوعات.",
+      "providerCostLimit": "تم بلوغ الميزانية أو حد الإنفاق. عدّل الحد.",
+      "providerRateLimit": "تم بلوغ حد الطلبات. انتظر قبل المحاولة مجدداً.",
+      "providerAuthentication": "فشلت المصادقة. تحقق من مفتاح API أو تسجيل الدخول.",
+      "providerAccessDenied": "تم رفض الوصول. تحقق من صلاحيات الحساب والنموذج.",
+      "providerUnavailable": "المزود غير متاح مؤقتاً. حاول لاحقاً.",
+      "providerTimeout": "انتهت مهلة الطلب. النتيجة والتكلفة غير مؤكدتين؛ أعد المحاولة يدوياً.",
+      "providerConnection": "تعذر الاتصال. تحقق من الشبكة وعنوان API.",
+      "providerInterrupted": "انقطع الاتصال. لم تتم إعادة إرسال الطلب تلقائياً."
     },
     "notifications": {
       "hostCreationFailed": "تعذر إنشاء مضيف إشعارات Stage0.",

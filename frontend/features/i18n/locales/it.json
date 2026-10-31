@@ -3366,7 +3366,17 @@
       "chatgptInvalidResponse": "L'accesso a OpenAI ha restituito una risposta non valida.",
       "chatgptResponseInterrupted": "La risposta di accesso a OpenAI è stata interrotta.",
       "chatgptResponseTooLarge": "La risposta di accesso a OpenAI ha superato il limite di dimensione.",
-      "chatgptInvalidCredentials": "OpenAI ha restituito credenziali di sessione non valide."
+      "chatgptInvalidCredentials": "OpenAI ha restituito credenziali di sessione non valide.",
+      "providerQuota": "Quota del fornitore esaurita. Controlla piano e utilizzo.",
+      "providerBilling": "Problema di saldo o fatturazione. Controlla i pagamenti.",
+      "providerCostLimit": "Budget o limite di spesa raggiunto. Modifica il limite.",
+      "providerRateLimit": "Limite di richieste raggiunto. Attendi prima di riprovare.",
+      "providerAuthentication": "Autenticazione non riuscita. Controlla chiave API o accesso.",
+      "providerAccessDenied": "Accesso negato. Controlla i permessi di account e modello.",
+      "providerUnavailable": "Fornitore temporaneamente non disponibile. Riprova più tardi.",
+      "providerTimeout": "Richiesta scaduta. Esito e addebito incerti; riprova manualmente.",
+      "providerConnection": "Connessione impossibile. Controlla rete e indirizzo API.",
+      "providerInterrupted": "Connessione interrotta. La richiesta non è stata reinviata automaticamente."
     },
     "notifications": {
       "hostCreationFailed": "Impossibile creare l'host di notifica di Stage0.",

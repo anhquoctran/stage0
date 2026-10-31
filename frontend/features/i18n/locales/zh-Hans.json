@@ -3359,7 +3359,17 @@
       "chatgptInvalidResponse": "OpenAI 登录返回了无效响应。",
       "chatgptResponseInterrupted": "OpenAI 登录响应中断。",
       "chatgptResponseTooLarge": "OpenAI 登录响应超出了大小限制。",
-      "chatgptInvalidCredentials": "OpenAI 返回了无效的会话凭据。"
+      "chatgptInvalidCredentials": "OpenAI 返回了无效的会话凭据。",
+      "providerQuota": "供应商配额已用完。请检查套餐和用量。",
+      "providerBilling": "供应商余额或账单异常。请检查付款设置。",
+      "providerCostLimit": "已达到供应商预算或支出上限。请调整限额。",
+      "providerRateLimit": "已达到供应商速率限制。请稍后重试。",
+      "providerAuthentication": "供应商认证失败。请检查 API 密钥或登录状态。",
+      "providerAccessDenied": "供应商拒绝访问。请检查账户和模型权限。",
+      "providerUnavailable": "供应商暂时不可用。请稍后重试。",
+      "providerTimeout": "供应商请求超时。处理结果和计费情况不确定，请手动重试。",
+      "providerConnection": "无法连接供应商。请检查网络和 API 地址。",
+      "providerInterrupted": "供应商连接中断。未自动重发请求。"
     },
     "notifications": {
       "hostCreationFailed": "无法创建 Stage0 通知主机。",

@@ -3373,7 +3373,17 @@
       "chatgptInvalidResponse": "Вход OpenAI вернул недопустимый ответ.",
       "chatgptResponseInterrupted": "Ответ на вход в OpenAI был прерван.",
       "chatgptResponseTooLarge": "Ответ на вход в OpenAI превысил ограничение по размеру.",
-      "chatgptInvalidCredentials": "OpenAI вернула недопустимые учетные данные сеанса."
+      "chatgptInvalidCredentials": "OpenAI вернула недопустимые учетные данные сеанса.",
+      "providerQuota": "Квота провайдера исчерпана. Проверьте тариф и использование.",
+      "providerBilling": "Проблема с балансом или оплатой. Проверьте платежи.",
+      "providerCostLimit": "Достигнут бюджет или лимит расходов. Измените лимит.",
+      "providerRateLimit": "Достигнут лимит запросов. Подождите перед повторной попыткой.",
+      "providerAuthentication": "Ошибка аутентификации. Проверьте ключ API или вход в аккаунт.",
+      "providerAccessDenied": "Доступ запрещён. Проверьте права аккаунта и модели.",
+      "providerUnavailable": "Провайдер временно недоступен. Повторите позже.",
+      "providerTimeout": "Время ожидания истекло. Результат и списание средств неизвестны; повторите вручную.",
+      "providerConnection": "Нет соединения. Проверьте сеть и адрес API.",
+      "providerInterrupted": "Соединение прервано. Запрос не отправлялся повторно автоматически."
     },
     "notifications": {
       "hostCreationFailed": "Не удалось создать хост уведомлений Stage0.",

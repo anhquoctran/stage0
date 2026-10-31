@@ -3359,7 +3359,17 @@
       "chatgptInvalidResponse": "OpenAI sign-in returned an invalid response.",
       "chatgptResponseInterrupted": "OpenAI sign-in response was interrupted.",
       "chatgptResponseTooLarge": "OpenAI sign-in response exceeded its size limit.",
-      "chatgptInvalidCredentials": "OpenAI returned invalid session credentials."
+      "chatgptInvalidCredentials": "OpenAI returned invalid session credentials.",
+      "providerQuota": "Provider quota exhausted. Check your plan and usage before retrying.",
+      "providerBilling": "Provider credit balance or billing prevents this request. Check billing.",
+      "providerCostLimit": "Provider budget or spending limit reached. Adjust the limit before retrying.",
+      "providerRateLimit": "Provider rate limit reached. Wait before retrying.",
+      "providerAuthentication": "Provider authentication failed. Check the API key or sign-in.",
+      "providerAccessDenied": "Provider denied access. Check account and model permissions.",
+      "providerUnavailable": "Provider is temporarily unavailable. Try again later.",
+      "providerTimeout": "Provider request timed out. Completion and billing are uncertain; retry manually.",
+      "providerConnection": "Cannot connect to the provider. Check your network and endpoint.",
+      "providerInterrupted": "Provider connection was interrupted. The request was not automatically replayed."
     },
     "notifications": {
       "hostCreationFailed": "The Stage0 notification host could not be created.",

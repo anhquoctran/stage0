@@ -3359,7 +3359,17 @@
       "chatgptInvalidResponse": "OpenAI 登入傳回了無效回應。",
       "chatgptResponseInterrupted": "OpenAI 登入回應中斷。",
       "chatgptResponseTooLarge": "OpenAI 登入回應超出了大小限制。",
-      "chatgptInvalidCredentials": "OpenAI 傳回了無效的工作階段憑證。"
+      "chatgptInvalidCredentials": "OpenAI 傳回了無效的工作階段憑證。",
+      "providerQuota": "供應商配額已用完。請檢查方案與用量。",
+      "providerBilling": "供應商餘額或帳單異常。請檢查付款設定。",
+      "providerCostLimit": "已達供應商預算或支出上限。請調整限額。",
+      "providerRateLimit": "已達供應商速率限制。請稍後重試。",
+      "providerAuthentication": "供應商驗證失敗。請檢查 API 金鑰或登入狀態。",
+      "providerAccessDenied": "供應商拒絕存取。請檢查帳戶與模型權限。",
+      "providerUnavailable": "供應商暫時無法使用。請稍後重試。",
+      "providerTimeout": "供應商請求逾時。處理結果與計費狀況不確定，請手動重試。",
+      "providerConnection": "無法連線供應商。請檢查網路與 API 位址。",
+      "providerInterrupted": "供應商連線中斷。未自動重送請求。"
     },
     "notifications": {
       "hostCreationFailed": "無法建立 Stage0 通知主機。",

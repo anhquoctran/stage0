@@ -3359,7 +3359,17 @@
       "chatgptInvalidResponse": "OpenAI ログインが無効な応答を返しました。",
       "chatgptResponseInterrupted": "OpenAI ログインの応答が中断されました。",
       "chatgptResponseTooLarge": "OpenAI ログインの応答がサイズ制限を超えました。",
-      "chatgptInvalidCredentials": "OpenAI が無効なセッション資格情報を返しました。"
+      "chatgptInvalidCredentials": "OpenAI が無効なセッション資格情報を返しました。",
+      "providerQuota": "プロバイダーの割り当てを使い切りました。プランと使用量を確認してください。",
+      "providerBilling": "残高または請求の問題です。支払い設定を確認してください。",
+      "providerCostLimit": "予算または支出上限に達しました。上限を確認してください。",
+      "providerRateLimit": "レート制限に達しました。しばらく待ってください。",
+      "providerAuthentication": "認証に失敗しました。APIキーまたはログインを確認してください。",
+      "providerAccessDenied": "アクセスが拒否されました。アカウントとモデルの権限を確認してください。",
+      "providerUnavailable": "プロバイダーが一時的に利用できません。後で再試行してください。",
+      "providerTimeout": "要求がタイムアウトしました。処理結果と課金は不明です。手動で再試行してください。",
+      "providerConnection": "接続できません。ネットワークとAPI接続先を確認してください。",
+      "providerInterrupted": "接続が中断されました。要求は自動再送されませんでした。"
     },
     "notifications": {
       "hostCreationFailed": "Stage0通知ホストを作成できませんでした。",

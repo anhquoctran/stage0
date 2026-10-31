@@ -2,6 +2,7 @@ pub mod acp;
 pub mod dynamic_models;
 pub(crate) mod keyring_write_progress;
 pub mod preferences;
+pub(crate) mod provider_errors;
 pub mod review_availability;
 
 /// Open URL in the operating system's default web browser
