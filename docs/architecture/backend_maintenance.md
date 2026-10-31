@@ -103,8 +103,8 @@ Keep types narrow and imports explicit; use feature facades across boundaries.
   local macOS execution does not verify Windows/Linux native behavior.
 
 The size check is part of the Node test suite and production build preflight.
-Build preflight runs before the existing version bump. Use direct verification
-commands when no new release/version is intended.
+Builds preserve the selected version. Use `pnpm version:set -- <version>` when
+preparing an intentional release version.
 
 Git discussion identity reads configured origin-scoped `credential.username`, then
 Git author name/email (including an email username fallback) in

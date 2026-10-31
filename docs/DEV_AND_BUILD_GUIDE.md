@@ -88,9 +88,9 @@ The custom `--port` option applies only to web mode. Tauri desktop development u
 
 ## 3. Optimized Production Packaging (Build + Release)
 
-Every project build entry point (`scripts/build.mjs`, `build.ps1`, `build.sh`, `build.cmd`, `pnpm run build`, `pnpm run build:web`, `pnpm run build:app`, and `pnpm run build:prod`) first checks source ownership and backend file-size budgets. Architecture failures stop before metadata changes. After preflight passes, the build increments the SemVer PATCH component once and synchronizes npm, Cargo, Tauri, and About metadata. Web-only builds also increment PATCH. A later build failure keeps the incremented version; fix the issue and run another build to get the next PATCH version.
+All build entry points delegate to `scripts/build.mjs`, which checks architecture and type correctness, synchronizes About metadata, and builds the selected targets. Building does not change the SemVer version; this keeps local builds and retries from consuming release numbers. Set a version explicitly with `pnpm version:set -- <version>` when preparing a release. The scheduled and one-click release workflows prepare the channel-specific version and immutable tag.
 
-For verification without packaging or a version bump, run `pnpm check:architecture`,
+For verification without packaging, run `pnpm check:architecture`,
 `pnpm typecheck`, `pnpm test`, and `cargo test --manifest-path backend/Cargo.toml --lib`
 as appropriate. The backend file limit is 500 lines, including tests. The
 [maintenance guide](architecture/backend_maintenance.md) explains module ownership,
@@ -138,6 +138,9 @@ node scripts/build.mjs --web-only
   chmod +x scripts/build.sh
   ./scripts/build.sh
   ```
+
+These scripts are thin wrappers around `scripts/build.mjs`; they keep the same
+flags while sharing one build implementation across operating systems.
 
 ---
 

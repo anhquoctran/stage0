@@ -1,18 +1,13 @@
 <#
 .SYNOPSIS
-    Stage0 Optimized Production Builder for Windows
+    Stage0 production builder for Windows.
 .DESCRIPTION
-    Builds the optimized production installer for Windows (.exe NSIS installer and .msi).
-    Applies LTO, binary stripping, and creates SHA-256 integrity checksums.
+    Delegates to the cross-platform Node.js builder.
 .PARAMETER WebOnly
-    Only build the frontend web assets in dist/ directory.
+    Build web assets only.
 .PARAMETER SkipTypeCheck
-    Skip the TypeScript verification phase.
-.EXAMPLE
-    .\scripts\build.ps1
-    .\scripts\build.ps1 -WebOnly
+    Skip TypeScript verification.
 #>
-
 param(
     [switch]$WebOnly,
     [switch]$SkipTypeCheck
@@ -21,128 +16,18 @@ param(
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RootDir = Split-Path -Parent $ScriptDir
-$BackendDir = Join-Path $RootDir "backend"
-$DistDir = Join-Path $RootDir "dist"
 Set-Location $RootDir
 
-Write-Host ""
-Write-Host "======================================================" -ForegroundColor Cyan
-Write-Host "  * Stage0 Virtual MR Sandbox - Production Build (Win)" -ForegroundColor Magenta
-Write-Host "======================================================" -ForegroundColor Cyan
-Write-Host "Platform : Windows ($([System.Environment]::GetEnvironmentVariable('PROCESSOR_ARCHITECTURE')))" -ForegroundColor DarkGray
-Write-Host "Mode     : $(if ($WebOnly) { 'Web Only' } else { 'Full Windows Desktop Release' })" -ForegroundColor White
-Write-Host "------------------------------------------------------" -ForegroundColor Cyan
-Write-Host ""
-
-# 0. Increment PATCH version and synchronize release metadata
-node scripts/bump-version.mjs
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Failed to bump project version." -ForegroundColor Red
-    exit 1
-}
-
-node scripts/generate-about-info.mjs
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Failed to synchronize release metadata." -ForegroundColor Red
-    exit 1
-}
-
-# Verify Node.js & nvm/nvm-windows support
-if (Test-Path "$RootDir\.nvmrc") {
-    $TargetNodeVer = (Get-Content "$RootDir\.nvmrc" -Raw).Trim()
+if (Test-Path (Join-Path $RootDir ".nvmrc")) {
+    $TargetNodeVer = (Get-Content (Join-Path $RootDir ".nvmrc") -Raw).Trim()
     if (Get-Command "nvm" -ErrorAction SilentlyContinue) {
-        $CurrentNode = if (Get-Command "node" -ErrorAction SilentlyContinue) { (node -v).TrimStart('v') } else { "" }
-        if ($CurrentNode -ne $TargetNodeVer -and -not $CurrentNode.StartsWith($TargetNodeVer.Split('.')[0])) {
-            Write-Host "[INFO] nvm detected. Switching to Node $TargetNodeVer from .nvmrc..." -ForegroundColor Cyan
-            try {
-                nvm use $TargetNodeVer | Out-Null
-            } catch {
-                Write-Host "[WARN] Could not automatically switch Node version with nvm. You can run: nvm use $TargetNodeVer" -ForegroundColor Yellow
-            }
-        }
+        try { nvm use $TargetNodeVer | Out-Null } catch { }
     }
 }
 
-if (-not (Get-Command "pnpm" -ErrorAction SilentlyContinue)) {
-    Write-Host "[ERROR] pnpm is not found in PATH. Stage0 enforces pnpm." -ForegroundColor Red
-    Write-Host "Install pnpm via: corepack enable  OR  npm install -g pnpm" -ForegroundColor Yellow
-    exit 1
-}
+$NodeArgs = @()
+if ($WebOnly) { $NodeArgs += "--web-only" }
+if ($SkipTypeCheck) { $NodeArgs += "--skip-typecheck" }
 
-# 1. TypeScript Verification
-if (-not $SkipTypeCheck) {
-    Write-Host "[1/4] Running TypeScript strict type checking..." -ForegroundColor Cyan
-    pnpm run typecheck
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] TypeScript validation failed." -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "[OK] TypeScript check passed cleanly." -ForegroundColor Green
-    Write-Host ""
-}
-
-# 2. Clean previous dist
-Write-Host "[2/4] Cleaning previous build artifacts..." -ForegroundColor Cyan
-if (Test-Path $DistDir) {
-    Remove-Item -Recurse -Force $DistDir
-}
-Write-Host "[OK] Cleaned $DistDir" -ForegroundColor Green
-Write-Host ""
-
-# 3. Compile Frontend with Vite
-Write-Host "[3/4] Compiling optimized frontend bundle with Vite..." -ForegroundColor Cyan
-pnpm vite build
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Vite build failed." -ForegroundColor Red
-    exit 1
-}
-Write-Host "[OK] Frontend assets compiled to dist/" -ForegroundColor Green
-Write-Host ""
-
-if ($WebOnly) {
-    Write-Host "[SUCCESS] Web production build completed at $DistDir" -ForegroundColor Green
-    exit 0
-}
-
-# 4. Build Native Desktop Installer with Tauri
-Write-Host "[4/4] Compiling release binary and packaging Windows installers (.exe / .msi)..." -ForegroundColor Cyan
-Write-Host "      Optimizations: LTO=true, Opt-level=3, Strip=true, Codegen-units=1" -ForegroundColor DarkGray
-Write-Host ""
-
-if (-not $env:RUSTFLAGS) {
-    # Keep standard target CPU architecture compatibility
-}
-pnpm tauri build
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Tauri build failed." -ForegroundColor Red
-    exit 1
-}
-
-# 5. Output Summary & Checksums
-Write-Host ""
-Write-Host "======================================================" -ForegroundColor Cyan
-Write-Host "  [OK] Production Build Succeeded!" -ForegroundColor Green
-Write-Host "======================================================" -ForegroundColor Cyan
-
-$BundleDir = Join-Path $BackendDir "target\release\bundle"
-if (Test-Path $BundleDir) {
-    $Installers = Get-ChildItem -Path $BundleDir -Recurse -Include *.exe, *.msi
-
-    if ($Installers.Count -gt 0) {
-        Write-Host ""
-        Write-Host "Generated Installers and Checksums:" -ForegroundColor White
-        Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkGray
-        foreach ($item in $Installers) {
-            $SizeMB = [math]::Round($item.Length / 1MB, 2)
-            $Hash = (Get-FileHash -Path $item.FullName -Algorithm SHA256).Hash
-            Write-Host "  * $($item.Name) ($SizeMB MB) - SHA256: $Hash" -ForegroundColor Green
-            Write-Host "    Path: $($item.FullName)" -ForegroundColor DarkGray
-        }
-        Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkGray
-    }
-}
-
-Write-Host ""
-Write-Host "[DONE] Ready for distribution." -ForegroundColor Green
-Write-Host ""
+& node (Join-Path $ScriptDir "build.mjs") @NodeArgs
+exit $LASTEXITCODE
