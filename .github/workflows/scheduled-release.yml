@@ -1,0 +1,50 @@
+name: Scheduled release channels
+on:
+  schedule:
+    - cron: '17 17 * * *'
+    - cron: '47 17 * * 0'
+    - cron: '17 0 1 1,4,7,10 *'
+permissions:
+  contents: write
+concurrency:
+  group: stage0-release-preparation
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.repository == 'anhquoctran/stage0'
+    runs-on: ubuntu-22.04
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - id: version
+        env:
+          RELEASE_SCHEDULE: ${{ github.event.schedule }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: node scripts/prepare-release.mjs schedule "$RELEASE_SCHEDULE" "$BUILD_NUMBER"
+      - name: Create an immutable version commit and tag, without changing main
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/$RELEASE_TAG" >/dev/null; then
+            exit 0
+          fi
+          node scripts/prepare-release.mjs set "${RELEASE_TAG#v}"
+          node scripts/generate-about-info.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json backend/Cargo.toml backend/Cargo.lock backend/tauri.conf.json backend/about.json backend/Info.plist backend/hooks.nsh frontend/features/about/config/about.ts frontend/features/about/config/releaseNotes.ts website/index.html RELEASE_NOTES.md
+          git diff --cached --quiet || git commit -m "chore: prepare $RELEASE_TAG"
+          git tag "$RELEASE_TAG"
+          git push origin "refs/tags/$RELEASE_TAG"
+  release:
+    needs: prepare
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.prepare.outputs.tag }}
+    secrets: inherit

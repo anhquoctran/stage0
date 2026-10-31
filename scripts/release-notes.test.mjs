@@ -23,8 +23,8 @@ test('MenuBarHelpMenu renders View release notes menu item above About Stage0', 
     releaseNotesIndex < aboutIndex,
     'View release notes must be positioned above About Stage0'
   );
-  assert.equal(menu.commands.release_notes.label, 'View release notes');
-  assert.equal(menu.commands.about.label, 'About Stage0');
+  assert.equal(menu.commands.release_notes.label, 'menu.commands.release_notes');
+  assert.equal(menu.commands.about.label, 'menu.commands.about');
   const actions = readFileSync(new URL('../frontend/core/services/applicationMenuActions.ts', import.meta.url), 'utf8');
   assert.match(actions, /release_notes:\s*callbacks.onOpenReleaseNotes/);
 });
@@ -48,7 +48,7 @@ test('ReleaseNotesModal uses enlarged dimensions and MarkdownPreview for rich me
 
   assert.match(modalSrc, /max-w-4xl/);
   assert.match(modalSrc, /MarkdownPreview/);
-  assert.match(modalSrc, /Release Notes/);
+  assert.match(modalSrc, /translateUiText\('about\.releaseNotes'\)/);
   assert.match(modalSrc, /useReleaseNotes/);
 });
 

@@ -12,7 +12,7 @@ test('official GitHub updater requires signed versions without exposing raw plug
   const config = JSON.parse(source('backend/tauri.conf.json'));
   assert.equal(config.bundle.createUpdaterArtifacts, true);
   assert.equal(config.plugins.updater.requireSignedVersion, true);
-  assert.deepEqual(config.plugins.updater.endpoints, ['https://github.com/anhquoctran/stage0/releases/latest/download/latest.json']);
+  assert.deepEqual(config.plugins.updater.endpoints, ['https://github.com/anhquoctran/stage0/releases/download/channel-stable/latest.json']);
   assert.equal(config.plugins.updater.allowDowngrades ?? false, false);
   assert.doesNotMatch(source('backend/capabilities/default.json'), /updater:/);
   assert.doesNotMatch(source('backend/tauri.conf.json'), /downloadcenter\.quoctran\.space/);
@@ -32,7 +32,7 @@ test('mounting the main window initializes repositories and notifications withou
     setTimeout() { assert.fail('Unexpected startup timer'); },
     setInterval() { assert.fail('Unexpected background scheduler'); },
   };
-  globalThis.document = { getElementById: () => null, addEventListener() {}, removeEventListener() {} };
+  globalThis.document = { getElementById: () => null, addEventListener() {}, removeEventListener() {}, documentElement: { classList: { add() {} }, style: {} }, body: { classList: { add() {} }, style: {} } };
   const git = { isInitializing: false, currentRepo: { local_path: '/fixture' }, initApp: async () => { initialized++; }, attachRepoToCurrentWindow: async (repo) => attached.push(repo), refreshDiff: () => { refreshed++; } };
   const useGitStore = Object.assign(() => git, { getState: () => git });
   try {
@@ -47,6 +47,7 @@ test('mounting the main window initializes repositories and notifications withou
       '@tauri-apps/api/event': { listen: async (name, handler) => { listeners.set(name, handler); return () => listeners.delete(name); } },
       './components/layout/MainLayout': { MainLayout: () => null },
       './hooks/useDesktopWindowChrome': { useDesktopWindowChrome: () => true },
+      './hooks/useWindowFrameClipping': { useWindowFrameClipping() {} },
       '../features/virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: (selector) => selector({ currentRepoId: 'repo-a', currentRepoPath: '/fixture', isLoadingSessions: false }) },
       '../features/notifications/services/notificationService': { notificationService: { init: async () => { notified++; }, destroy: () => { destroyed++; } } },
       '../features/notifications/services/notificationBadgeService': { syncUnreadBadge: async () => {} },

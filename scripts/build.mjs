@@ -20,7 +20,6 @@ import crypto from 'crypto';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { syncAllMetadata } from './generate-about-info.mjs';
-import { bumpProjectPatchVersion } from './bump-version.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,8 +79,7 @@ if (architectureCheck.error || architectureCheck.status !== 0) {
   process.exit(architectureCheck.status || 1);
 }
 
-const versionBump = bumpProjectPatchVersion(ROOT_DIR);
-console.log(`Project version bumped: ${versionBump.previousVersion} -> ${versionBump.version}`);
+// Packaging preserves the selected channel/version. Only release preparation changes it.
 const releaseInfo = syncAllMetadata({
   arch: ARCH,
   os: PLATFORM === 'win32' ? 'windows' : PLATFORM === 'darwin' ? 'macos' : 'linux',

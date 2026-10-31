@@ -80,7 +80,7 @@ test('release validation rejects tag and package version drift without bumping f
   try {
     assert.equal(verifyReleaseVersion(root, 'v2.0.0'), '2.0.0');
     assert.throws(() => verifyReleaseVersion(root, 'v2.0.1'), /must match/);
-    assert.throws(() => verifyReleaseVersion(root, 'v2.0.0-beta.1'), /stable channel/);
+    assert.throws(() => verifyReleaseVersion(root, 'v2.0.0-beta.1'), /Release version/);
     fs.writeFileSync(path.join(root, 'backend/Cargo.lock'), '[[package]]\nname = "stage0"\nversion = "1.0.0"\n');
     assert.throws(() => verifyReleaseVersion(root, 'v2.0.0'), /must match/);
     assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'package.json'))).version, '2.0.0');

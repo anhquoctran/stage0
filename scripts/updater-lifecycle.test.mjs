@@ -79,12 +79,13 @@ test('install action requires a fresh saved-work confirmation and displays downl
   };
   const { SoftwareUpdatePanel } = loadWithMocks(new URL('../frontend/features/updates/components/SoftwareUpdatePanel.tsx', import.meta.url), {
     react: harness.react,
+    'react-i18next': { useTranslation: () => ({ t: key => key }) },
     '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ platform: { capabilities: { backend: true } } }) },
     '../store/useSoftwareUpdateStore': { useSoftwareUpdateStore: () => state },
     '../hooks/useAutomaticUpdatePreference': { useAutomaticUpdatePreference: () => ({ enabled: true, change() {} }) },
   });
   let nodes = componentNodes(await harness.render(SoftwareUpdatePanel));
-  const installButton = (nodes) => nodes.find((node) => node.type === 'button' && JSON.stringify(node.props.children).includes('Install and Restart'));
+  const installButton = (nodes) => nodes.find((node) => node.type === 'button' && JSON.stringify(node.props.children).includes('updates.installAndRestart'));
   assert.equal(installButton(nodes).props.disabled, true);
   nodes.filter((node) => node.type === 'input').at(-1).props.onChange({ target: { checked: true } });
   nodes = componentNodes(await harness.render(SoftwareUpdatePanel));

@@ -78,7 +78,7 @@ pub(super) async fn check(app: &AppHandle) -> Result<UpdateStatus, String> {
 
 async fn find_update(app: &AppHandle) -> Result<Option<tauri_plugin_updater::Update>, String> {
     let bytes = transport::fetch(
-        policy::MANIFEST_URL,
+        policy::manifest_url(&app.package_info().version.to_string()),
         policy::MANIFEST_LIMIT,
         Duration::from_secs(30),
         |_, _| {},
@@ -97,6 +97,9 @@ async fn find_update(app: &AppHandle) -> Result<Option<tauri_plugin_updater::Upd
         .map_err(|_| crate::common::messages::code("backend.updates.packageUnavailable"))?
         .map(|update| update.restart_after_install(true));
     if let Some(update) = &update {
+        if !policy::same_channel(&app.package_info().version.to_string(), &update.version) {
+            return Err(crate::common::messages::code("backend.updates.manifestInvalid"));
+        }
         policy::validate_download(&update.download_url, &update.version)?;
     }
     Ok(update)

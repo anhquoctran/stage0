@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { releaseChannel } from './release-channels.mjs';
 import { fileURLToPath } from 'node:url';
 
 const platforms = {
@@ -18,10 +19,9 @@ function filesIn(directory) {
 }
 
 export function verifyReleaseVersion(root, tag) {
-  if (!/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag)) {
-    throw new Error('Release tags must use vMAJOR.MINOR.PATCH (stable channel).');
-  }
+  if (!tag?.startsWith('v')) throw new Error('Release tag must start with v');
   const version = tag.slice(1);
+  releaseChannel(version);
   const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
   const config = JSON.parse(fs.readFileSync(path.join(root, 'backend/tauri.conf.json'), 'utf8'));
   const cargo = fs.readFileSync(path.join(root, 'backend/Cargo.toml'), 'utf8');
@@ -51,7 +51,7 @@ export function collectReleaseArtifacts(bundleDir, destination, target) {
 }
 
 export function createUpdateManifest(directory, version, notes, pubDate = new Date().toISOString()) {
-  if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version)) throw new Error('Invalid release version');
+  releaseChannel(version);
   const files = filesIn(directory);
   const manifest = { version, notes, pub_date: pubDate, platforms: {} };
   for (const [platform, [target, extension]] of Object.entries(platforms)) {

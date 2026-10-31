@@ -1,7 +1,34 @@
 use tauri::utils::{config::BundleType, platform::bundle_type};
 
-pub(super) const MANIFEST_URL: &str =
-    "https://github.com/anhquoctran/stage0/releases/latest/download/latest.json";
+pub(super) fn manifest_url(version: &str) -> &'static str {
+    match channel(version) {
+        Some("nightly") => {
+            "https://github.com/anhquoctran/stage0/releases/download/channel-nightly/latest.json"
+        }
+        Some("beta") => {
+            "https://github.com/anhquoctran/stage0/releases/download/channel-beta/latest.json"
+        }
+        _ => "https://github.com/anhquoctran/stage0/releases/download/channel-stable/latest.json",
+    }
+}
+
+fn channel(version: &str) -> Option<&'static str> {
+    let version = semver::Version::parse(version).ok()?;
+    if version.pre.is_empty() {
+        Some("stable")
+    } else if version.pre.as_str().starts_with("nightly.") {
+        Some("nightly")
+    } else if version.pre.as_str().starts_with("beta.") {
+        Some("beta")
+    } else {
+        None
+    }
+}
+
+pub(super) fn same_channel(current: &str, candidate: &str) -> bool {
+    channel(current).is_some() && channel(current) == channel(candidate)
+}
+
 pub(super) const MANIFEST_LIMIT: usize = 1024 * 1024;
 pub(super) const PACKAGE_LIMIT: usize = 512 * 1024 * 1024;
 

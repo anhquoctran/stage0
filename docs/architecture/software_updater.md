@@ -13,8 +13,12 @@ GitHub-only URL policy and check/download/install workflows. IPC commands are
 `install_software_update` and `consume_software_update_release_notes`. Callers
 cannot supply URLs, keys or packages.
 
-The fixed endpoint is
-`https://github.com/anhquoctran/stage0/releases/latest/download/latest.json`.
+The installed package SemVer selects one fixed channel endpoint:
+`https://github.com/anhquoctran/stage0/releases/download/channel-stable/latest.json`,
+`channel-beta/latest.json` or `channel-nightly/latest.json`.
+Unknown prereleases cannot cross into a supported channel. Manifest candidate
+versions must match the installed channel. Changing channels requires installing
+the desired build; no new user preference or client-supplied URL is introduced.
 Manifest responses are limited to 1 MiB, downloads to 512 MiB. Only GitHub and
 its release asset hosts are allowed, with HTTPS and at most five redirects.
 Checks time out after thirty seconds and downloads after ten minutes. Selected
@@ -86,11 +90,11 @@ workflow credentials when they are available.
 2. Set Actions secret `TAURI_SIGNING_PRIVATE_KEY` to the private key matching
    `plugins.updater.pubkey`; set `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` for an
    encrypted key. Never commit either private value.
-3. Push the commit and stable `vMAJOR.MINOR.PATCH` tag. The workflow can also be
+3. Push the commit and `vMAJOR.MINOR.PATCH` or dated nightly/beta tag. The workflow can also be
    dispatched with an existing tag. Tag/version drift blocks the build.
 4. `.github/workflows/release.yml` checks architecture, TypeScript and Node tests,
    runs Rust tests on Linux and builds four targets. It calls `tauri build`
-   directly: **do not use auto-bumping `scripts/build.mjs` in the build matrix**.
+   directly: **the build matrix never bumps versions**. Local packaging also preserves the selected version; use `pnpm version:set VERSION` to change it explicitly.
    Target OS/architecture metadata is explicit for cross-architecture Mac builds.
 5. After all builds succeed, the publisher assembles `latest.json` and checksums.
    Its offline Rust verifier authenticates every update package and signed
@@ -127,3 +131,49 @@ cargo run --locked --manifest-path scripts/release-verifier/Cargo.toml -- \
 
 Local verification on Fedora 44 does not establish compatibility with older
 Ubuntu systems; the published Linux packages are built on Ubuntu 22.04 by CI.
+
+## Release channels and version reset
+
+`shared/release-channels.json` is the canonical base/cadence policy. Stage0
+restarts at **0.0.1** in Q4 2026. `scripts/release-channels.mjs` validates
+channel versions and derives scheduled versions in UTC. Stable has no suffix;
+`-stable` is a SemVer prerelease and is rejected by the release gate.
+
+- Nightly: `0.0.2-nightly.20261031.42`, daily at 17:17 UTC (00:17 Vietnam next day).
+- Beta: `0.0.2-beta.20261101.43`, Sundays at 17:47 UTC (Monday 00:47 Vietnam).
+- Stable: first day of January/April/July/October at 00:17 UTC. The next
+  scheduled stable is `0.0.2` on January 1, 2027.
+
+Each quarter advances the base PATCH once from the configured epoch; previews
+target the following stable core. The date is the UTC build date and the last
+identifier is the Actions run number. SemVer compares `nightly` above `beta`
+lexically for an equal core; separate feeds intentionally avoid cross-channel
+promotion. Calendar cadence does not infer API compatibility. Maintainers must
+change the base/epoch deliberately for a future MINOR/MAJOR release.
+
+`scheduled-release.yml` prepares a detached release commit with synchronized
+versions and metadata, pushes only its immutable tag, and calls the existing
+release workflow directly (GITHUB_TOKEN tag pushes do not trigger another
+workflow). Main remains unchanged. Every platform builds the exact tag; per-target
+About metadata is regenerated before packaging. Successful signed publication
+marks nightly/beta as GitHub prereleases with latest=false; only stable becomes
+latest. Channel alias releases are prereleases containing only latest.json;
+the manifest points at immutable version-tagged, signature-verified assets.
+A single publication concurrency group protects channel-feed updates.
+
+Schedules become active after these workflows reach the default branch and
+Actions is enabled. Signing secrets remain required. GitHub cron is best-effort
+and may be delayed; this task does not push tags or publish remote releases.
+
+The deliberate reset from 0.1.x to 0.0.1 is a SemVer downgrade. Existing 0.1.x
+installations need one manual installation; the updater's downgrade/replay
+protections remain enabled. The new stable feed also avoids accidentally
+offering legacy 0.1.x releases to a fresh 0.0.1 installation. No old Git tags
+or GitHub Releases are deleted or rewritten.
+
+Verification for the reset/channel change: architecture, TypeScript, Cargo check,
+30 focused release/version/About/updater Node tests and 8 updater Rust tests
+passed. Both workflow files parse as YAML. Older UI assertions in the selected
+release-notes/updater tests were updated to use translation keys, retaining
+ordering, saved-work confirmation and progress assertions. No remote Actions
+run, multi-platform installer build, tag push or publication was performed.

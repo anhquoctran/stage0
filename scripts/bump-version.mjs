@@ -65,14 +65,14 @@ function writeFileAtomically(filePath, contents) {
   }
 }
 
-export function bumpProjectPatchVersion(rootDir = DEFAULT_ROOT_DIR) {
+export function setProjectVersion(nextVersion, rootDir = DEFAULT_ROOT_DIR) {
+  incrementPatch(nextVersion); // Validate full SemVer before changing any files.
   const packagePath = path.join(rootDir, 'package.json');
   const cargoTomlPath = path.join(rootDir, 'backend', 'Cargo.toml');
   const cargoLockPath = path.join(rootDir, 'backend', 'Cargo.lock');
   const tauriConfigPath = path.join(rootDir, 'backend', 'tauri.conf.json');
 
   const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-  const nextVersion = incrementPatch(packageJson.version);
   const tauriConfig = JSON.parse(fs.readFileSync(tauriConfigPath, 'utf8'));
   const cargoToml = fs.readFileSync(cargoTomlPath, 'utf8');
   const cargoLock = fs.readFileSync(cargoLockPath, 'utf8');
@@ -93,6 +93,11 @@ export function bumpProjectPatchVersion(rootDir = DEFAULT_ROOT_DIR) {
   }
 
   return { previousVersion, version: nextVersion };
+}
+
+export function bumpProjectPatchVersion(rootDir = DEFAULT_ROOT_DIR) {
+  const current = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8')).version;
+  return setProjectVersion(incrementPatch(current), rootDir);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -35,7 +35,7 @@ export function computeAboutInfo(options = {}) {
 
   const name = 'Stage0';
   const author = 'Anh Quoc Tran';
-  const packageVersion = pkg.version || '0.1.0';
+  const packageVersion = pkg.version || '0.0.1';
 
   // 1. Partial SHA1 Commit
   let gitCommit = 'dev0000';

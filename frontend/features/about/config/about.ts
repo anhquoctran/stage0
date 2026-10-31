@@ -7,10 +7,10 @@ export type { SoftwareAboutInfo } from '../types/SoftwareAboutInfo';
 export const SOFTWARE_ABOUT: SoftwareAboutInfo = {
   "name": "Stage0",
   "author": "Anh Quoc Tran",
-  "packageVersion": "0.1.12",
-  "gitCommit": "5d7a78d",
+  "packageVersion": "0.0.1",
+  "gitCommit": "e6b8fa8",
   "arch": "aarch64",
-  "version": "0.1.12+5d7a78d.macos.aarch64",
+  "version": "0.0.1+e6b8fa8.macos.aarch64",
   "releaseDate": "2026-10-31",
   "currentYear": "2026",
   "copyright": "Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",

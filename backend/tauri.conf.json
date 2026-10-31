@@ -75,7 +75,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDgxNDE1RUREQjIxOTYxQkQKUldTOVlSbXkzVjVCZ2RYQURWUzA2YnppQitmcHhNRVo3ZFk5NWVCOHNGdm1DQzJmNkVlb0diak0K",
       "endpoints": [
-        "https://github.com/anhquoctran/stage0/releases/latest/download/latest.json"
+        "https://github.com/anhquoctran/stage0/releases/download/channel-stable/latest.json"
       ],
       "requireSignedVersion": true,
       "windows": {
@@ -84,5 +84,5 @@
     }
   },
   "productName": "Stage0",
-  "version": "0.1.12"
+  "version": "0.0.1"
 }
