@@ -32,7 +32,7 @@ test('MenuBarRepositoryMenu contains Repository Overview action with circle Info
   assert.match(menuSrc, /Info/);
   const config = JSON.parse(readFileSync(new URL('../shared/application-menu.json', import.meta.url), 'utf8'));
   assert.equal(config.commands.repo_overview.icon, 'Info');
-  assert.equal(config.commands.repo_overview.label, 'Repository Overview...');
+  assert.equal(config.commands.repo_overview.label, 'menu.commands.repo_overview');
   assert.equal(config.commands.repo_overview.shortcut, 'CmdOrCtrl+I');
   assert.ok(config.menus.find((node) => node.id === 'repository_menu').items.some((node) => node.command === 'repo_overview'));
   const actions = readFileSync(new URL('../frontend/core/services/applicationMenuActions.ts', import.meta.url), 'utf8');

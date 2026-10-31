@@ -20,6 +20,7 @@ function applyFixture(draft = custom, current = original) {
     '../../git/store/useGitBinaryStore': { useGitBinaryStore: { setState() {} } },
     '../../git/store/useGitStore': { useGitStore: { setState() {}, getState: () => ({ refreshDiff() {} }) } },
     '../store/usePreferencesStore': { usePreferencesStore: store, applyViewerFontToDocument() {} },
+    '../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({ platform: { capabilities: { preferencesFile: false } } }) },
     '../utils/applyMarkdownFontToDocument': { applyMarkdownFontToDocument() {} },
   });
   const baseline = { keymap: original, linuxTitleBar: 'system', themeMode: 'system', fontFamily: 'Fira Code', fontSize: 13,

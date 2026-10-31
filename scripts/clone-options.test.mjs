@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import ts from 'typescript';
+import { loadWithMocks } from './helpers/componentHarness.mjs';
 
 const source = fs.readFileSync(new URL('../frontend/features/git/utils/cloneOptions.ts', import.meta.url), 'utf8');
 const { outputText } = ts.transpileModule(source, {
@@ -54,17 +55,12 @@ test('command preview contains matching flags and quotes user-controlled operand
 test('clone options are always visible without presets and every checkbox remains independently editable', () => {
   const react = { createElement: (type, props, ...children) => ({ type, props: { ...props, children } }) };
   const formSource = fs.readFileSync(new URL('../frontend/features/git/components/CloneOptionsForm.tsx', import.meta.url), 'utf8');
-  const { outputText: formOutput } = ts.transpileModule(formSource, {
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React },
+  const formExports = loadWithMocks(new URL('../frontend/features/git/components/CloneOptionsForm.tsx', import.meta.url), {
+    react: { ...react, default: react },
+    '../utils/cloneOptions': helpers,
+    '../../../common/components/CustomSelect': { CustomSelect: () => null },
+    '../utils/cloneRefOptions': { cloneRefOptions: () => [] },
   });
-  const formExports = {};
-  new Function('require', 'exports', formOutput)((id) => {
-    if (id === 'react') return { ...react, default: react };
-    if (id === '../utils/cloneOptions') return helpers;
-    if (id === '../../../common/components/CustomSelect') return { CustomSelect: () => null };
-    if (id === '../utils/cloneRefOptions') return { cloneRefOptions: () => [] };
-    throw new Error(`Unexpected import: ${id}`);
-  }, formExports);
   let options = createCloneOptions();
   const render = () => formExports.CloneOptionsForm({ options, onChange: (next) => { options = next; }, disabled: false });
   function nodes(node) {

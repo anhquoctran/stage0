@@ -35,7 +35,7 @@ test('retired browser registration code keeps exact profile identity and is not 
     const action = native.slice(native.indexOf(start), native.indexOf(end));
     assert.match(action, /profile_id/);
     assert.match(action, /find\(\|p\| p\.id == (?:id|profile_id)\)/);
-    assert.match(action, /Saved ChatGPT registration not found/);
+    assert.match(action, /backend\.ai\.chatgptProfileNotFound/);
     assert.doesNotMatch(action, /client_id:\s*(?:String|&str)/);
   }
   const { store, calls } = deviceAuthFixture(() => deviceStatus('signed_out'));
@@ -138,5 +138,5 @@ test('native provider UI keeps retired browser/device cards out and ACP owns ext
   assert.doesNotMatch(external, /chatgpt_oauth_start|store_ai_api_key|ai_chat_dispatch/);
   const backend = source('backend/src/features/ai/chatgpt_oauth.rs');
   assert.doesNotMatch(backend, /Command::|CODEX_HOME|openai_subscription|chat\/completions|PENDING_CHATGPT_VERIFIER/);
-  assert.match(backend, /general AI chat adapter is not connected to Responses API yet/);
+  assert.match(backend, /backend\.ai\.chatgptGeneralChatUnavailable/);
 });

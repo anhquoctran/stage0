@@ -59,7 +59,7 @@ test('Simulate Policy Check button uses solid emerald background, white text, an
   );
 
   assert.match(simSectionSrc, /bg-emerald-600 hover:bg-emerald-500 text-white/);
-  assert.match(simSectionSrc, /Simulate Policy Check/);
+  assert.match(simSectionSrc, /ai\.guardrails\.simulatePolicy/);
   assert.doesNotMatch(simSectionSrc, /bg-green\/15 hover:bg-green\/25 text-green/);
 });
 

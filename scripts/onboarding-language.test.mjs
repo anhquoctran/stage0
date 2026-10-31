@@ -101,7 +101,7 @@ test('language wheel offers all 15 locales and commits keyboard and scroll selec
   nodes = await render();
   list = nodes.find((node) => node.props.role === 'listbox');
   list.props.onKeyDown({ key: 'Enter', preventDefault() {} });
-  assert.deepEqual(choices, ['vi']);
+  assert.deepEqual(choices, ['ar']);
   nodes = await render();
   assert.equal(nodes.some((node) => node.props.role === 'listbox'), false);
   nodes.find((node) => node.props['aria-haspopup'] === 'listbox').props.onClick();
@@ -110,10 +110,10 @@ test('language wheel offers all 15 locales and commits keyboard and scroll selec
   list.props.ref.current = { scrollTop: 13 * 44 };
   list.props.onScroll();
   await new Promise((resolve) => setTimeout(resolve, 140));
-  assert.deepEqual(choices, ['vi'], 'Scrolling alone must not spam global preference writes');
+  assert.deepEqual(choices, ['ar'], 'Scrolling alone must not spam global preference writes');
   nodes = await render();
   list = nodes.find((node) => node.props.role === 'listbox');
-  assert.ok(list.props['aria-activedescendant'].endsWith('-ar'));
+  assert.ok(list.props['aria-activedescendant'].endsWith('-zh-Hans'));
   list.props.onKeyDown({ key: 'Enter', preventDefault() {} });
-  assert.deepEqual(choices, ['vi', 'ar']);
+  assert.deepEqual(choices, ['ar', 'zh-Hans']);
 });

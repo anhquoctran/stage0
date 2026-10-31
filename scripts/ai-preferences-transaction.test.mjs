@@ -454,7 +454,7 @@ test('reloading the AI store preserves provider/model/preferences and discards r
   const originalWindow = globalThis.window; const originalStorage = globalThis.localStorage;
   try {
     globalThis.window = { setTimeout() {} };
-    for (const [provider, model] of presets.AI_PROVIDERS.map((preset) => [preset.id, preset.id === 'openai' ? 'gpt-4o' : preset.id === 'anthropic' ? 'claude-3-7-sonnet-20250219' : preset.defaultModel])) {
+    for (const [provider, model] of presets.AI_PROVIDERS.map((preset) => [preset.id, preset.id === 'openai' ? 'gpt-4o' : preset.id === 'anthropic' ? 'claude-3-7-sonnet-20250219' : preset.defaultModel || 'saved-custom-model'])) {
       const saved = baseline(); saved.aiConfig = { ...saved.aiConfig, provider, model, authMode: 'subscription_oauth', baseUrl: 'https://fixture.test/v1', temperature: 0.6, maxTokens: 2048, reviewerInstructions: 'My saved instructions', streamResponse: false, enableCodeReviewAssist: false };
       globalThis.localStorage = { getItem: () => JSON.stringify(saved), setItem() {} };
       const { useAiMcpStore: store } = loadWithMocks(url('features/ai/store/useAiMcpStore.ts'), {

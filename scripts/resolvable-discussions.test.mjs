@@ -74,7 +74,7 @@ test('DiscussionThread only displays Resolve features for code review discussion
       '../../../common/components/MarkdownEditor': { MarkdownEditor: 'Editor' },
       '../../../common/components/MarkdownPreview': { MarkdownPreview: 'Preview' },
       '../../../common/components/icons/Quote': { Quote: 'Quote' },
-      '../../../common/utils/dateTime': { formatTime: () => 'Today' },
+      '../../../common/utils/dateTime': { formatTime: () => 'Today', formatRelativeTime: () => 'just now' },
       '../../git/store/useGitStore': { useGitStore: () => ({ showToast: () => {} }) },
       '../store/useVirtualMrStore': {
         useVirtualMrStore: () => ({

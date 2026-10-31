@@ -154,10 +154,10 @@ test('VirtualMrOverviewSidebar and VirtualMrOverviewTab do NOT contain forbidden
   }
 
   // Sidebar must contain Assignee, Reviewers, Labels, and Participants
-  assert.match(sidebarSource, /Assignee/);
-  assert.match(sidebarSource, /Reviewers/);
-  assert.match(sidebarSource, /Labels/);
-  assert.match(sidebarSource, /Participant/);
+  assert.match(sidebarSource, /virtualMr\.overview\.assignee/);
+  assert.match(sidebarSource, /virtualMr\.overview\.reviewers/);
+  assert.match(sidebarSource, /virtualMr\.overview\.labels/);
+  assert.match(sidebarSource, /virtualMr\.overview\.participants/);
 });
 
 test('VirtualMrMetadataBar contains AI Reviews tab and NOT Pipelines or Bot Reviews', () => {
@@ -166,7 +166,7 @@ test('VirtualMrMetadataBar contains AI Reviews tab and NOT Pipelines or Bot Revi
     'utf-8'
   );
 
-  assert.match(metadataBarSource, />AI Reviews</);
+  assert.match(metadataBarSource, /virtualMr\.metadataBar\.aiReviews/);
   assert.doesNotMatch(metadataBarSource, />Pipelines</i);
   assert.doesNotMatch(metadataBarSource, />Bot Reviews</);
 });

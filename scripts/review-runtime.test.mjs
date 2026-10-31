@@ -111,7 +111,7 @@ test('manual review startup rechecks open code discussions and resumes only afte
   store.getState().open('a');
   await store.getState().start(config, true);
   assert.equal(calls.length, 0);
-  assert.match(store.getState().error, /Resolve 1 open code discussion/);
+  assert.match(store.getState().error, /Resolve open code discussions.*Open: 1\./);
   discussion.isResolved = true;
   await store.getState().start(config, true);
   assert.equal(calls.length, 1);
@@ -222,10 +222,12 @@ function assignedBatchFixture(finished) {
     syncRun: async (detail) => { synchronized.push(detail.run); },
   };
   const service = loadWithMocks(new URL('../frontend/features/review/services/assignedReviewService.ts', import.meta.url), {
-    '@tauri-apps/api/core': { invoke: async (name) => { assert.equal(name, 'get_ai_review'); return { run: finished, events: [] }; } },
+    '../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({ reviews: {
+      getAiReview: async ({ runId }) => { assert.equal(runId, 'run-a'); return { run: finished, events: [] }; },
+    } }) },
     '../../ai/store/useAiMcpStore': { useAiMcpStore: { getState: () => ({ aiConfig: { provider: 'ollama' }, dynamicModels: {}, externalAgents: [] }) } },
     '../../ai/store/useBotReviewersStore': { useBotReviewersStore: { getState: () => ({ globalReviewers: [{ id: 'bot-a', name: 'Reviewer 01' }], repoCustomReviewers: {} }) } },
-    '../utils/resolveReviewBotConfig': { resolveReviewBotConfig: () => ({ provider: 'ollama' }) },
+    '../utils/resolveReviewBotConfig': { resolveReviewBotConfig: () => ({ provider: 'ollama', baseUrl: 'http://localhost:11434' }) },
     '../store/useReviewStore': { useReviewStore: { getState: () => reviewState }, isReviewStartingForSession: () => false },
     '../../git/store/useGitStore': { useGitStore: { getState: () => ({ showToast: () => {} }) } },
     '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: { getState: () => ({ sessions: [session], resetReviewerReviews: async () => {} }) } },

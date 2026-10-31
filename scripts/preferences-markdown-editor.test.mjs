@@ -146,7 +146,7 @@ test('Markdown font tab exposes a shared select, reset and editor preview withou
   assert.equal(previews.at(-1).fontFamily, 'Arial');
   assert.equal(previews.at(-1).codeFontFamily, 'Fira Code');
   assert.ok(nodes.some((node) => node.type === 'textarea' && node.props.readOnly && node.props.className.includes('markdown-editor-textarea')));
-  nodes.find((node) => node.props.title === 'Reset markdown editor font to default (Fira Code)').props.onClick();
+  nodes.find((node) => node.props.title === 'Reset Markdown Editor Font to default (Fira Code)').props.onClick();
   assert.equal(props.draftMarkdownEditorFontFamily, 'Fira Code');
   const css = readFileSync(new URL('../frontend/core/styles/index.css', import.meta.url), 'utf8');
   assert.match(css, /\.markdown-editor-textarea\s*\{\s*font-family:\s*var\(--markdown-editor-font-family, var\(--viewer-font-family, monospace\)\)/);

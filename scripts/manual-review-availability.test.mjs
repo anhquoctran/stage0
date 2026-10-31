@@ -12,7 +12,7 @@ test('only unresolved code threads block manual reviews, including outdated find
   assert.equal(getManualReviewBlockReason(null), null);
   assert.equal(getManualReviewBlockReason({ discussions: [{ isResolved: false, filePath: null }] }), null);
   assert.equal(getManualReviewBlockReason({ discussions: [{ ...openThread(), isResolved: true }] }), null);
-  assert.match(getManualReviewBlockReason({ discussions: [openThread(), { ...openThread(), verificationStatus: 'outdated' }] }), /Resolve 2 open code discussions/);
+  assert.match(getManualReviewBlockReason({ discussions: [openThread(), { ...openThread(), verificationStatus: 'outdated' }] }), /Resolve open code discussions.*Open: 2\./);
 });
 
 test('the MR review action checks live discussions even if its captured session was stale', async () => {
@@ -30,7 +30,7 @@ test('the MR review action checks live discussions even if its captured session 
   const start = createStartMrReviewAction(stale, (...args) => toasts.push(args));
   await start();
   assert.equal(starts, 0);
-  assert.match(toasts[0][0], /Resolve 1 open code discussion/);
+  assert.match(toasts[0][0], /Resolve open code discussions.*Open: 1\./);
   session.discussions[0].isResolved = true;
   await start();
   assert.equal(starts, 1);

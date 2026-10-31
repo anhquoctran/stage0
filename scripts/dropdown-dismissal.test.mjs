@@ -79,7 +79,7 @@ const controls = [
   ['common select', '../frontend/common/components/CustomSelect.tsx', 'CustomSelect', {
     value: 'main', options: [{ value: 'main', label: 'main' }, { value: 'feature', label: 'feature' }], searchable: true,
     dropdownPlacement: 'top', dropdownListMaxHeight: '9rem',
-  }, 'Search options...'],
+  }, 'Search options…'],
   ['buffer font', '../frontend/features/preferences/components/tabs/PreferencesFontTab.tsx', 'PreferencesFontTab', {
     draftFontFamily: 'JetBrains Mono', draftFontSize: 13, draftLineSpacing: 1.5,
   }, 'Filter monospace fonts...'],

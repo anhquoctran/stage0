@@ -46,7 +46,7 @@ test('clone URL validation uses a UI message code, English diagnostics and a sta
   assert.ok(validation.includes('backend.git.cloneReady'));
   const english = JSON.parse(fs.readFileSync(path.join(projectRoot, 'frontend/features/i18n/locales/en.json'), 'utf8'));
   assert.equal(english.backend.git.cloneReady, 'The repository is valid and ready to clone.');
-  assert.ok(validation.includes('Please enter a repository URL.'));
+  assert.ok(validation.includes('backend.git.remoteUrlRequired'));
   assert.ok(validation.includes('cmd.env("LC_ALL", "C")'));
 });
 

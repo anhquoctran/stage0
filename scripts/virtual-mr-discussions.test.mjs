@@ -114,7 +114,7 @@ async function threadFixture(reply = async () => {}) {
     '../../../common/components/MarkdownEditor': { MarkdownEditor: 'Editor' },
     '../../../common/components/MarkdownPreview': { MarkdownPreview: 'Preview' },
     '../../../common/components/icons/Quote': { Quote: 'Quote' },
-    '../../../common/utils/dateTime': { formatTime: () => 'Today' },
+    '../../../common/utils/dateTime': { formatTime: () => 'Today', formatRelativeTime: () => 'just now' },
     '../../git/store/useGitStore': { useGitStore: () => ({ showToast: (...args) => toasts.push(args) }) },
     '../store/useVirtualMrStore': { useVirtualMrStore: () => ({
       replyToDiscussion: async (...args) => { posts.push(['reply', ...args]); await reply(); },

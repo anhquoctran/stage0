@@ -143,7 +143,7 @@ test('appearance and keymap steps remain optional once required AI setup is save
   const dialog = componentNodes(tree).find((node) => node.props.role === 'dialog');
   assert.equal(dialog.props.tabIndex, -1, 'Initial focus belongs to the dialog, not a call-to-action');
   assert.match(dialog.props.className, /\bh-full\b.*\bw-full\b/);
-  assert.match(dialog.props.className, /\brounded-none\b/, 'Onboarding is the full window, not an inset card');
+  assert.match(dialog.props.className, /\brounded-sm\b/, 'Onboarding preserves its rounded content surface');
   const continueButton = componentNodes(tree).find((node) => node.type === 'button' && node.props.children.includes('Continue'));
   assert.ok(continueButton, 'Language welcome precedes the existing setup screens');
   await continueButton.props.onClick(); tree = await render();

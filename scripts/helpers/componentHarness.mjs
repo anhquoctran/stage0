@@ -1,13 +1,14 @@
 import fs from 'node:fs';
 import ts from 'typescript';
+import { createInstance } from 'i18next';
+import { createRequire } from 'node:module';
+
+const requirePackage = createRequire(import.meta.url);
 
 const english = JSON.parse(fs.readFileSync(new URL('../../frontend/features/i18n/locales/en.json', import.meta.url), 'utf8'));
-const translate = (key, options = {}) => {
-  const value = key.split('.').reduce((node, part) => node?.[part], english);
-  return typeof value === 'string'
-    ? value.replace(/\{\{(\w+)\}\}/g, (token, name) => String(options[name] ?? token))
-    : key;
-};
+const testI18n = createInstance();
+await testI18n.init({ lng: 'en', fallbackLng: 'en', resources: { en: { translation: english } }, interpolation: { escapeValue: false } });
+const translate = testI18n.t.bind(testI18n);
 
 export function loadWithMocks(url, dependencies, context) {
   if (!context) {
@@ -16,7 +17,10 @@ export function loadWithMocks(url, dependencies, context) {
       get: (target, key) => Object.hasOwn(target, key) ? target[key] : originalDependencies[key],
     });
     if (!Object.hasOwn(dependencies, 'react-i18next')) {
-      dependencies['react-i18next'] = { useTranslation: () => ({ t: translate, i18n: { language: 'en' } }) };
+      dependencies['react-i18next'] = {
+        useTranslation: () => ({ t: translate, i18n: testI18n }),
+        Trans: ({ i18nKey, values }) => dependencies.react?.createElement('span', {}, translate(i18nKey, values).replace(/<\/?\w+>/g, '')),
+      };
     }
     // Legacy workflow fixtures exercise the native adapter. Explicit browser
     // fixtures retain isTauri: false; missing SDK pieces remain unavailable.
@@ -57,7 +61,9 @@ export function loadWithMocks(url, dependencies, context) {
     if (id.startsWith('.') || id.startsWith('@/')) {
       const mock = resolveModule(id, url);
       if (context.mocks.has(mock)) return context.mocks.get(mock);
+      if (mock === new URL('../../frontend/features/i18n/i18n', import.meta.url).href) return { default: testI18n };
     } else if (Object.hasOwn(dependencies, id)) return dependencies[id];
+    if (id === 'dayjs' || id.startsWith('dayjs/')) return { default: requirePackage(id) };
     if (id === 'zustand') {
       return {
         create: (initializer) => {

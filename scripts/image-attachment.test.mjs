@@ -89,7 +89,8 @@ test('processAndSaveImage rejects non-image files with guardrail notification', 
   assert.equal(notificationsSent.length, 1);
   assert.equal(notificationsSent[0].channel, 'guardrails');
   assert.equal(notificationsSent[0].level, 'warning');
-  assert.match(notificationsSent[0].body, /Only image files/);
+  assert.equal(notificationsSent[0].bodyKey, 'attachments.unsupportedBody');
+  assert.equal(notificationsSent[0].values.fileName, 'contract.pdf');
 });
 
 test('MarkdownEditor renders image attachment input with image-only MIME accept', async (t) => {

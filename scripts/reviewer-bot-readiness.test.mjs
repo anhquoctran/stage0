@@ -178,7 +178,7 @@ test('removed or invalid saved options block saving and can be reset to agent de
   assert.deepEqual(form.formAcpConfigOptions, {});
 });
 
-test('missing agents and blank required fields block submit; provider mode performs no discovery', async (t) => {
+test('missing agents and blank required fields block submit; provider mode requires an explicit provider and model without ACP discovery', async (t) => {
   const f = fixture(t);
   f.form.setFormAcpAgentId('missing');
   let form = f.render();
@@ -187,6 +187,10 @@ test('missing agents and blank required fields block submit; provider mode perfo
   assert.deepEqual(f.writes, []);
   assert.equal(f.requests.length, 1);
   form.setFormExecutionMode('provider');
+  form = f.render();
+  assert.equal(form.canSubmit, false);
+  form.setFormProvider('openai');
+  form.setFormModel('fixture-model');
   form = f.render();
   assert.equal(form.canSubmit, true);
   form.setFormName('   ');

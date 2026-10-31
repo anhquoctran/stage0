@@ -124,6 +124,10 @@ separate sibling files; pure helpers must have a named responsibility.
 Run `pnpm typecheck`, `pnpm check:architecture`, relevant `node --test` suites and
 `pnpm test`. The shared component harness resolves mocks by canonical module
 identity, caches loaded modules and uses the production automatic JSX runtime.
+Its default translation fixture uses an isolated English i18next instance for
+both hooks and direct imports; date formatting loads the real Day.js modules.
+Explicit dependency mocks take precedence. Workflow fixtures should mock the
+runtime service used by their owner rather than retired direct SDK imports.
 Tests must follow the owning implementation after moves, retain assertions, and
 traverse child components rather than assume all JSX lives in a facade.
 

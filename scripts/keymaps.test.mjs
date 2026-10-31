@@ -135,6 +135,6 @@ test('macOS native accelerators own only eligible single bindings and suspend du
 test('shortcut help uses effective bindings, including unassignment and chords', () => {
   const { getMenuShortcutCategories } = loadWithMocks(new URL('../frontend/core/services/applicationMenuShortcuts.ts', import.meta.url), {});
   const help = getMenuShortcutCategories('linux', 'File Manager', settings([{ command: 'pull', keys: [] }], 'vscode'));
-  assert.ok(!help.flatMap((item) => item.items).some((item) => item.label === 'Pull'));
-  assert.ok(help.flatMap((item) => item.items).some((item) => item.label === 'Customize Keymap...' && item.keys === 'Ctrl+K Ctrl+S'));
+  assert.ok(!help.flatMap((item) => item.items).some((item) => item.label === 'menu.commands.pull'));
+  assert.ok(help.flatMap((item) => item.items).some((item) => item.label === 'menu.commands.keymaps' && item.keys === 'Ctrl+K Ctrl+S'));
 });
