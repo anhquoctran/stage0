@@ -1,7 +1,7 @@
-# Stage0 v0.0.1 Release Notes
+# Stage0 v0.0.3 Release Notes
 
 Stage0 is a local-first Virtual Merge Request and conflict prediction sandbox.
-This document describes the current release (v0.0.1).
+This document describes the current release (v0.0.3).
 
 ## Highlights
 

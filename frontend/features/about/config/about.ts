@@ -7,10 +7,10 @@ export type { SoftwareAboutInfo } from '../types/SoftwareAboutInfo';
 export const SOFTWARE_ABOUT: SoftwareAboutInfo = {
   "name": "Stage0",
   "author": "Anh Quoc Tran",
-  "packageVersion": "0.0.1",
-  "gitCommit": "b96aaec",
-  "arch": "aarch64",
-  "version": "0.0.1+b96aaec.macos.aarch64",
+  "packageVersion": "0.0.3",
+  "gitCommit": "dbd9279",
+  "arch": "amd64",
+  "version": "0.0.3+dbd9279.linux.amd64",
   "releaseDate": "2026-10-31",
   "currentYear": "2026",
   "copyright": "Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",
@@ -18,5 +18,5 @@ export const SOFTWARE_ABOUT: SoftwareAboutInfo = {
   "tagline": "Local-First Virtual MR / PR Sandbox",
   "description": "Stage0 reviews branch comparisons and predicts merge conflicts without checking out or merging into the user's working tree or index. Git may still write objects to the repository's object database.",
   "website": "https://github.com/anhquoctran/stage0",
-  "os": "macos"
+  "os": "linux"
 };
