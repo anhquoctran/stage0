@@ -90,7 +90,7 @@ workflow credentials when they are available.
 2. Set Actions secret `TAURI_SIGNING_PRIVATE_KEY` to the private key matching
    `plugins.updater.pubkey`; set `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` for an
    encrypted key. Never commit either private value.
-3. Push the version commit and its tag. For Stable, open **Actions → Release Stage0 → Run workflow** and enter the existing stable tag (for example `v0.0.1`). A stable tag push alone does not release. Nightly/Beta tags may trigger automatically. Tag/version drift blocks the build.
+3. For Stable, open **Actions → Release Stage0 → Run workflow**, select the source branch and run it without entering a tag. CI chooses a free stable version, synchronizes metadata, creates a detached release commit and pushes its tag. A stable tag push alone does not release. Nightly/Beta tags may trigger automatically. Tag/version drift blocks the build.
 4. `.github/workflows/release.yml` checks architecture, TypeScript and Node tests,
    runs Rust tests on Linux and builds four targets. It calls `tauri build`
    directly: **the build matrix never bumps versions**. Local packaging also preserves the selected version; use `pnpm version:set VERSION` to change it explicitly.
@@ -140,13 +140,13 @@ channel versions and derives scheduled versions in UTC. Stable has no suffix;
 
 - Nightly: `0.0.2-nightly.20261031.42`, daily at 17:17 UTC (00:17 Vietnam next day).
 - Beta: `0.0.2-beta.20261101.43`, Sundays at 17:47 UTC (Monday 00:47 Vietnam).
-- Stable: **manual only** through GitHub Actions → Release Stage0 → Run workflow,
-  with an existing version tag. There is no quarterly cron or automatic Stable
+- Stable: **manual only** through GitHub Actions → Release Stage0 → Run workflow.
+  No tag input or local release commands are required. There is no quarterly cron or automatic Stable
   publication on tag pushes or reusable workflow calls.
 
 Preview target cores advance quarterly from the configured epoch. This only
 numbers Nightly/Beta builds; it never creates or publishes a Stable release.
-The maintainer selects the actual Stable version and release date manually. The date is the UTC build date and the last
+The maintainer chooses the Stable release date and source version line; CI selects the next free PATCH when manually triggered. The date is the UTC build date and the last
 identifier is the Actions run number. SemVer compares `nightly` above `beta`
 lexically for an equal core; separate feeds intentionally avoid cross-channel
 promotion. Calendar cadence does not infer API compatibility. Maintainers must
@@ -182,3 +182,34 @@ run, multi-platform installer build, tag push or publication was performed.
 Stable trigger restriction: only workflow_dispatch can start a Stable release.
 The shared validation dependency skips builds/publication for stable tag pushes
 and automatic workflow calls. The schedule generator also rejects Stable.
+
+## One-click manual Stable release
+
+`release.yml` starts with a write-scoped preparation job. On workflow_dispatch,
+`scripts/manual-release.mjs` uses the selected branch SHA and the package's stable
+version line. It selects the first available PATCH above existing stable tags in
+that MAJOR.MINOR line; unrelated legacy 0.1.x tags do not undo the 0.0 reset.
+The initial unused 0.0.1 is kept. A new Run workflow invocation can advance PATCH;
+major/minor changes remain an explicit source-version decision.
+
+Preparation synchronizes package/Cargo/Tauri/About/release notes, creates a
+detached commit and pushes only its immutable tag. It does not commit to or push
+the selected branch. Commit trailers bind the Actions run ID and original SHA;
+Re-run jobs reuses that exact snapshot and rejects a source mismatch. Failed
+release runs may leave reserved version tags; a new run selects a new free patch.
+The resolved SHA feeds validation, every platform build and publication.
+Already-published releases remain protected from replacement. Automatic callers
+can only resolve existing nightly/beta tags. Signing credentials and passing
+checks are still required; tag preparation does not bypass release verification.
+
+Local verification covers a temporary bare Git remote: initial automatic tag
+creation, version synchronization, retry identity, next PATCH selection and
+unchanged source-branch/previous-tag refs. No GitHub release was created by these
+tests.
+
+One-click verification: actionlint 1.7.7 passed for release.yml and
+scheduled-release.yml (shellcheck integration disabled); architecture,
+TypeScript, Cargo check and 34 focused Node tests passed. Tests pushed tags only
+to temporary local bare repositories. Remote GitHub permissions, signing secrets,
+full matrix builds and actual publication still require an Actions run after
+these changes are merged.

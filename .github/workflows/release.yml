@@ -4,11 +4,6 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Existing stable, nightly or beta version tag to build and publish
-        required: true
-        type: string
 
   workflow_call:
     inputs:
@@ -24,11 +19,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
   CARGO_TERM_COLOR: always
 
 jobs:
-  validate:
+  prepare:
     # Stable publication requires a deliberate Run workflow action on GitHub.
     # A stable tag push or scheduled/reusable call cannot publish it.
     if: >-
@@ -37,10 +31,37 @@ jobs:
        contains(inputs.tag || github.ref_name, '-nightly.') ||
        contains(inputs.tag || github.ref_name, '-beta.'))
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.snapshot.outputs.tag }}
+      sha: ${{ steps.snapshot.outputs.sha }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Prepare immutable release snapshot and tag
+        id: snapshot
+        env:
+          RELEASE_EVENT: ${{ github.event_name }}
+          RELEASE_RUN_ID: ${{ github.run_id }}
+          RELEASE_SOURCE_SHA: ${{ github.sha }}
+          RELEASE_INPUT_TAG: ${{ inputs.tag || github.ref_name }}
+        run: node scripts/manual-release.mjs
+
+  validate:
+    needs: prepare
+    runs-on: ubuntu-22.04
+    env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
@@ -53,7 +74,7 @@ jobs:
       - run: pnpm test
 
   build:
-    needs: validate
+    needs: [prepare, validate]
     strategy:
       fail-fast: false
       matrix:
@@ -80,6 +101,7 @@ jobs:
             bundles: app,dmg
     runs-on: ${{ matrix.os }}
     env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
       TARGET_OS: ${{ matrix.target_os }}
       TARGET_ARCH: ${{ matrix.arch }}
       RELEASE_TARGET: ${{ matrix.target }}
@@ -87,7 +109,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          ref: ${{ needs.prepare.outputs.sha }}
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
@@ -138,14 +160,16 @@ jobs:
           retention-days: 7
 
   publish:
-    needs: build
+    needs: [prepare, build]
     runs-on: ubuntu-22.04
+    env:
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          ref: ${{ needs.prepare.outputs.sha }}
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
