@@ -30,12 +30,12 @@ impl ReviewCoordinator {
         let mut map = self
             .active
             .lock()
-            .map_err(|_| "Review coordinator unavailable")?;
+            .map_err(|_| crate::common::messages::code("backend.review.coordinatorUnavailable"))?;
         if map.contains_key(session) {
-            return Err("A review is already running for this Virtual MR".into());
+            return Err(crate::common::messages::code("backend.review.alreadyRunning"));
         }
         if map.len() >= 2 {
-            return Err("At most two reviews may run concurrently".into());
+            return Err(crate::common::messages::code("backend.review.concurrencyLimit"));
         }
         let cancellation = Arc::new(AtomicBool::new(false));
         map.insert(session.into(), (run.into(), Arc::clone(&cancellation)));
@@ -50,7 +50,7 @@ impl ReviewCoordinator {
         let map = self
             .active
             .lock()
-            .map_err(|_| "Review coordinator unavailable")?;
+            .map_err(|_| crate::common::messages::code("backend.review.coordinatorUnavailable"))?;
         if let Some((_, flag)) = map.values().find(|(id, _)| id == run) {
             flag.store(true, Ordering::SeqCst);
         }

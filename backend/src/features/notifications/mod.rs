@@ -299,7 +299,7 @@ pub fn send_test_notification(app: AppHandle) -> Result<(), String> {
         #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
         {
             let _ = (app, payload);
-            Err("Stage0 notifications are not supported on this platform".to_string())
+            Err(crate::common::messages::code("backend.notifications.unsupportedPlatform"))
         }
     })();
     result.map_err(|error| crate::common::messages::command_error("notifications", error))

@@ -10,6 +10,14 @@ use crate::features::git::{
 use crate::features::sandbox::SandboxManager;
 use tauri::{AppHandle, Manager};
 
+fn task_failed(error: impl std::fmt::Display) -> String {
+    crate::common::messages::failure(
+        "backend.git.taskExecutionFailed",
+        serde_json::json!({}),
+        format!("Task execution failed: {error}"),
+    )
+}
+
 #[tauri::command]
 pub async fn get_git_commit_details(
     repo_path: String,
@@ -20,7 +28,7 @@ pub async fn get_git_commit_details(
             crate::features::git::commit_details::get_commit_details(&repo_path, &commit_hash)
         })
         .await
-        .map_err(|error| format!("Task execution failed: {error}"))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -33,7 +41,7 @@ pub async fn get_current_branch_graph(
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || load_current_branch_graph(&repo_path))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -47,7 +55,7 @@ pub async fn get_git_commit_message(
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || load_commit_message(&repo_path, &commit_hash))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -65,7 +73,7 @@ pub async fn search_git_commit_messages(
             search_branch_commit_messages(&repo_path, &query, case_sensitive, &commit_hashes)
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -84,7 +92,7 @@ pub async fn get_mr_diff(
             manager.get_mr_diff(&repo_path, &base, &compare)
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -103,7 +111,7 @@ pub async fn check_merge_conflicts(
             manager.check_conflicts(&repo_path, &base, &compare)
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -123,7 +131,7 @@ pub async fn get_conflicted_file_preview(
             manager.get_conflict_preview(&repo_path, &base, &compare, &file_path)
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -146,7 +154,7 @@ pub async fn get_file_blame(
             )
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))

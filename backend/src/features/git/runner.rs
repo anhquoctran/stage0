@@ -44,7 +44,7 @@ pub fn run_git(repo_path: &str, args: &[&str]) -> Result<CmdResult, String> {
         DEFAULT_GIT_TIMEOUT,
     )?;
     if result.output_truncated {
-        return Err("Git command output exceeded the configured safety limit".to_string());
+        return Err(crate::common::messages::code("backend.git.outputLimitExceeded"));
     }
     Ok(result)
 }
@@ -69,9 +69,15 @@ pub fn run_git_with_progress(
         4 * 1024 * 1024,
         Duration::from_secs(30 * 60),
     )
-    .map_err(|error| format!("Git command failed: {error}"))?;
+    .map_err(|error| {
+        crate::common::messages::failure(
+            "backend.git.commandFailed",
+            serde_json::json!({ "error": error }),
+            format!("Git command failed: {error}"),
+        )
+    })?;
     if output.output_truncated {
-        return Err("Git command output exceeded the configured safety limit".to_string());
+        return Err(crate::common::messages::code("backend.git.outputLimitExceeded"));
     }
     Ok(CmdResult {
         stdout: String::from_utf8_lossy(&output.stdout).to_string(),
@@ -103,7 +109,13 @@ pub fn run_git_with_limits(
     cmd.env("GIT_ALLOW_PROTOCOL", "git:http:https:ssh");
     let output =
         crate::common::process::run_bounded_command(&mut cmd, stdout_limit, stderr_limit, timeout)
-            .map_err(|e| format!("Git command failed: {}", e))?;
+            .map_err(|e| {
+                crate::common::messages::failure(
+                    "backend.git.commandFailed",
+                    serde_json::json!({ "error": e }),
+                    format!("Git command failed: {}", e),
+                )
+            })?;
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
@@ -120,7 +132,7 @@ pub fn run_git_with_limits(
 pub fn run_git_strict(repo_path: &str, args: &[&str]) -> Result<String, String> {
     let res = run_git(repo_path, args)?;
     if res.output_truncated {
-        return Err("Git command output exceeded the configured safety limit".to_string());
+        return Err(crate::common::messages::code("backend.git.outputLimitExceeded"));
     }
     if !res.success {
         let err_msg = if !res.stderr.trim().is_empty() {
@@ -128,7 +140,11 @@ pub fn run_git_strict(repo_path: &str, args: &[&str]) -> Result<String, String> 
         } else {
             redact_sensitive_text(res.stdout.trim())
         };
-        return Err(format!("Git command failed: {}", err_msg));
+        return Err(crate::common::messages::failure(
+            "backend.git.commandFailed",
+            serde_json::json!({ "error": err_msg }),
+            format!("Git command failed: {}", err_msg),
+        ));
     }
     Ok(res.stdout)
 }
@@ -230,17 +246,15 @@ fn redact_sensitive_line(line: &str) -> String {
 pub fn resolve_ref(repo_path: &str, r: &str) -> Result<(String, String), String> {
     let trimmed = r.trim();
     if trimmed.is_empty() {
-        return Err("Cannot resolve empty reference".to_string());
+        return Err(crate::common::messages::code("backend.git.resolveRefEmpty"));
     }
 
     if trimmed.starts_with('-') {
-        return Err("Invalid Git reference: option-like values are not accepted".to_string());
+        return Err(crate::common::messages::code("backend.git.resolveRefOptionNotAllowed"));
     }
 
     if trimmed.chars().any(|c| c.is_control() || c == ' ') {
-        return Err(
-            "Invalid Git reference: whitespace and control characters are not accepted".to_string(),
-        );
+        return Err(crate::common::messages::code("backend.git.resolveRefWhitespaceNotAllowed"));
     }
 
     let mut candidates = vec![trimmed.to_string()];

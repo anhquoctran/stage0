@@ -23,7 +23,13 @@ pub async fn start_copilot_device_flow(
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.ai.copilotHttpClientFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Failed to create HTTP client: {}", e),
+            )
+        })?;
 
     let payload = serde_json::json!({
         "client_id": cid,
@@ -37,17 +43,33 @@ pub async fn start_copilot_device_flow(
         .json(&payload)
         .send()
         .await
-        .map_err(|e| format!("Network error contacting GitHub device endpoint: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.ai.copilotDeviceEndpointNetworkError",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Network error contacting GitHub device endpoint: {}", e),
+            )
+        })?;
 
     if !resp.status().is_success() {
         let err_text = resp.text().await.unwrap_or_default();
-        return Err(format!("GitHub device code request failed: {}", err_text));
+        return Err(crate::common::messages::failure(
+            "backend.ai.copilotDeviceCodeRequestFailed",
+            serde_json::json!({ "error": err_text }),
+            format!("GitHub device code request failed: {}", err_text),
+        ));
     }
 
     let result: CopilotDeviceCodeResponse = resp
         .json()
         .await
-        .map_err(|e| format!("Failed to parse GitHub device code response: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.ai.copilotDeviceCodeParseFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Failed to parse GitHub device code response: {}", e),
+            )
+        })?;
 
     Ok(result)
 }
@@ -61,7 +83,13 @@ pub async fn poll_copilot_token(
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.ai.copilotHttpClientFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Failed to create HTTP client: {}", e),
+            )
+        })?;
 
     let payload = serde_json::json!({
         "client_id": cid,
@@ -76,12 +104,24 @@ pub async fn poll_copilot_token(
         .json(&payload)
         .send()
         .await
-        .map_err(|e| format!("Network error polling GitHub token: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.ai.copilotTokenPollNetworkError",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Network error polling GitHub token: {}", e),
+            )
+        })?;
 
     let val: serde_json::Value = resp
         .json()
         .await
-        .map_err(|e| format!("Failed to parse GitHub response: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.ai.copilotTokenParseFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Failed to parse GitHub response: {}", e),
+            )
+        })?;
 
     if let Some(token) = val.get("access_token").and_then(|t| t.as_str()) {
         // Successfully authorized! Save to Keyring
@@ -149,7 +189,13 @@ pub async fn get_internal_copilot_token(
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.ai.copilotHttpClientFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Failed to create HTTP client: {}", e),
+            )
+        })?;
 
     let resp = client
         .get("https://api.github.com/copilot_internal/v2/token")
@@ -160,7 +206,13 @@ pub async fn get_internal_copilot_token(
         .header("Accept", "application/json")
         .send()
         .await
-        .map_err(|e| format!("Error contacting Copilot token endpoint: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.ai.copilotTokenEndpointFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Error contacting Copilot token endpoint: {}", e),
+            )
+        })?;
 
     if !resp.status().is_success() {
         let status = resp.status();
@@ -170,21 +222,34 @@ pub async fn get_internal_copilot_token(
                 "backend.ai.copilotSubscriptionRequired",
             ));
         }
-        return Err(format!(
-            "Copilot session exchange failed (HTTP {}): {}",
-            status, body
+        return Err(crate::common::messages::failure(
+            "backend.ai.copilotSessionExchangeFailed",
+            serde_json::json!({ "status": status.to_string(), "error": body }),
+            format!("Copilot session exchange failed (HTTP {}): {}", status, body),
         ));
     }
 
     let val: serde_json::Value = resp
         .json()
         .await
-        .map_err(|e| format!("Failed to parse Copilot token JSON: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.ai.copilotTokenJsonParseFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Failed to parse Copilot token JSON: {}", e),
+            )
+        })?;
 
     let token = val
         .get("token")
         .and_then(|t| t.as_str())
-        .ok_or_else(|| "Missing token field in Copilot internal response".to_string())?
+        .ok_or_else(|| {
+            crate::common::messages::failure(
+                "backend.ai.copilotTokenFieldMissing",
+                serde_json::json!({}),
+                "Missing token field in Copilot internal response".to_string(),
+            )
+        })?
         .to_string();
 
     let expires_at = val
@@ -341,7 +406,7 @@ pub async fn chat_copilot(
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(90))
         .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        .map_err(|e| crate::common::messages::failure("backend.ai.copilotHttpClientFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to create HTTP client: {}", e)))?;
 
     let resp = client
         .post(&chat_endpoint)
@@ -356,21 +421,22 @@ pub async fn chat_copilot(
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("Copilot Chat network request failed: {}", e))?;
+        .map_err(|e| crate::common::messages::failure("backend.ai.copilotChatNetworkFailed", serde_json::json!({ "error": e.to_string() }), format!("Copilot Chat network request failed: {}", e)))?;
 
     if !resp.status().is_success() {
         let status = resp.status();
         let err_body = resp.text().await.unwrap_or_default();
-        return Err(format!(
-            "Copilot Chat error (HTTP {}): {}",
-            status, err_body
+        return Err(crate::common::messages::failure(
+            "backend.ai.copilotChatError",
+            serde_json::json!({ "status": status.to_string(), "error": err_body }),
+            format!("Copilot Chat error (HTTP {}): {}", status, err_body),
         ));
     }
 
     let resp_json: serde_json::Value = resp
         .json()
         .await
-        .map_err(|e| format!("Failed to parse Copilot Chat response: {}", e))?;
+        .map_err(|e| crate::common::messages::failure("backend.ai.copilotChatParseFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to parse Copilot Chat response: {}", e)))?;
 
     let content = resp_json
         .get("choices")
@@ -378,7 +444,7 @@ pub async fn chat_copilot(
         .and_then(|c0| c0.get("message"))
         .and_then(|m| m.get("content"))
         .and_then(|text| text.as_str())
-        .ok_or_else(|| "No completion choices received from Copilot".to_string())?;
+        .ok_or_else(|| crate::common::messages::failure("backend.ai.copilotNoChoicesReceived", serde_json::json!({}), "No completion choices received from Copilot".to_string()))?;
 
     Ok(content.to_string())
 }

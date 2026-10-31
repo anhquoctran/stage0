@@ -24,7 +24,7 @@ pub fn get_app_info() -> Result<SoftwareAboutInfo, String> {
     let result = (|| -> Result<_, String> {
         const RAW_JSON: &str = include_str!("../../../about.json");
         let mut info: SoftwareAboutInfo = serde_json::from_str(RAW_JSON)
-            .map_err(|e| format!("Failed to parse embedded about metadata: {e}"))?;
+            .map_err(|e| crate::common::messages::failure("backend.about.parseFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to parse embedded about metadata: {e}")))?;
         info.os = std::env::consts::OS.to_string();
         Ok(info)
     })();

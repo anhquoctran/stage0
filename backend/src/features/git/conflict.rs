@@ -26,7 +26,7 @@ pub fn check_conflicts(
         ],
     )?;
     if res.output_truncated {
-        return Err("Git merge-tree output exceeded the configured safety limit".to_string());
+        return Err(crate::common::messages::code("backend.git.mergeTreeOutputLimitExceeded"));
     }
 
     // `merge-tree --write-tree` uses status 1 to mean a merge conflict. Other
@@ -139,24 +139,39 @@ pub fn get_conflicted_file_preview(
     let clean_path = file_path.replace('\\', "/");
     let on_disk_path = match super::resolve_safe_repo_path(repo_path, &clean_path) {
         Ok(safe_p) => safe_p,
-        Err(e) => return Err(format!("Invalid file path for conflict preview: {}", e)),
+        Err(e) => return Err(crate::common::messages::failure(
+            "backend.git.conflictInvalidPath",
+            serde_json::json!({ "error": e }),
+            format!("Invalid file path for conflict preview: {}", e),
+        )),
     };
     let mut on_disk_markers_count = 0;
     let mut on_disk_content: Option<String> = None;
 
     if let Ok(metadata) = std::fs::symlink_metadata(&on_disk_path) {
         if metadata.file_type().is_file() && metadata.len() > MAX_CONFLICT_FILE_BYTES {
-            return Err("Conflict preview is limited to files up to 8 MiB".to_string());
+            return Err(crate::common::messages::code("backend.git.conflictFileTooLarge"));
         }
         if metadata.file_type().is_file() {
-            let file = std::fs::File::open(&on_disk_path)
-                .map_err(|error| format!("Failed to open conflict preview file: {}", error))?;
+            let file = std::fs::File::open(&on_disk_path).map_err(|error| {
+                crate::common::messages::failure(
+                    "backend.git.openConflictFileFailed",
+                    serde_json::json!({ "error": error.to_string() }),
+                    format!("Failed to open conflict preview file: {}", error),
+                )
+            })?;
             let mut bytes = Vec::with_capacity(metadata.len() as usize);
             file.take(MAX_CONFLICT_FILE_BYTES + 1)
                 .read_to_end(&mut bytes)
-                .map_err(|error| format!("Failed to read conflict preview file: {}", error))?;
+                .map_err(|error| {
+                    crate::common::messages::failure(
+                        "backend.git.readConflictFileFailed",
+                        serde_json::json!({ "error": error.to_string() }),
+                        format!("Failed to read conflict preview file: {}", error),
+                    )
+                })?;
             if bytes.len() as u64 > MAX_CONFLICT_FILE_BYTES {
-                return Err("Conflict preview is limited to files up to 8 MiB".to_string());
+                return Err(crate::common::messages::code("backend.git.conflictFileTooLarge"));
             }
             if let Ok(content) = String::from_utf8(bytes) {
                 on_disk_markers_count = content
@@ -187,7 +202,7 @@ pub fn get_conflicted_file_preview(
             .as_deref()
             .is_some_and(|content| content.contains('\0'))
     {
-        return Err("Binary conflict previews are not supported".to_string());
+        return Err(crate::common::messages::code("backend.git.conflictBinaryNotSupported"));
     }
 
     // 2. Find common ancestor

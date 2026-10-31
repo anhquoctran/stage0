@@ -22,7 +22,13 @@ pub async fn close_preferences_window(window: WebviewWindow) -> Result<(), Strin
         }
         // Cancel/OK already completed the draft lifecycle. Bypass CloseRequested so
         // the native close button and menu cannot recursively reopen the close flow.
-        window.destroy().map_err(|error| error.to_string())
+        window.destroy().map_err(|error| {
+            crate::common::messages::failure(
+                "backend.window.destroyFailed",
+                serde_json::json!({}),
+                error.to_string(),
+            )
+        })
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("operation", error))

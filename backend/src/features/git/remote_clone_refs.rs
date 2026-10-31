@@ -29,18 +29,25 @@ impl RemoteCloneRefs {
             std::time::Duration::from_secs(120),
         )
         .map_err(|error| {
-            super::runner::redact_sensitive_text(&format!(
+            let detail = super::runner::redact_sensitive_text(&format!(
                 "Could not load remote branches and tags: {error}"
-            ))
+            ));
+            crate::common::messages::failure(
+                "backend.git.loadRemoteRefsFailed",
+                serde_json::json!({ "error": error.to_string() }),
+                detail,
+            )
         })?;
         if output.output_truncated {
-            return Err("Remote branch and tag listing exceeded the safety limit. Please narrow the repository's advertised refs.".into());
+            return Err(crate::common::messages::code(
+                "backend.git.remoteRefsLimitExceeded",
+            ));
         }
         if !output.status.success() {
             let stderr =
                 super::runner::redact_sensitive_text(&String::from_utf8_lossy(&output.stderr));
             return Err(if stderr.trim().is_empty() {
-                "Could not access the repository. Check the URL, network connection and authentication.".into()
+                crate::common::messages::code("backend.git.accessRepositoryFailed")
             } else {
                 stderr.trim().to_string()
             });

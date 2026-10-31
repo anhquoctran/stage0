@@ -76,7 +76,13 @@ pub(super) fn clone_credential_helper_config(
     credential: &CloneCredentialLease,
 ) -> Result<String, String> {
     let executable = std::env::current_exe()
-        .map_err(|error| format!("Could not locate the Stage0 executable: {error}"))?
+        .map_err(|error| {
+            crate::common::messages::failure(
+                "backend.git.executableLocateFailed",
+                serde_json::json!({ "error": error.to_string() }),
+                format!("Could not locate the Stage0 executable: {error}"),
+            )
+        })?
         .to_string_lossy()
         .replace('\\', "/");
     Ok(format!(

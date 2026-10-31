@@ -11,7 +11,7 @@ pub(super) async fn update_mr_description(
 ) -> Result<(), String> {
     let snapshot = context
         .lock()
-        .map_err(|_| "Review context unavailable")?
+        .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
         .snapshot
         .clone();
     let (repo_path, base_branch, source_branch) = {
@@ -20,7 +20,7 @@ pub(super) async fn update_mr_description(
             "SELECT r.local_path,s.base_branch,s.compare_branch FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",
             [&run.session_id],
             |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?)),
-        ).map_err(|_| "Virtual MR or repository no longer exists")?
+        ).map_err(|_| crate::common::messages::failure("backend.review.virtualMrOrRepoNoLongerExists", serde_json::json!({}), "Virtual MR or repository no longer exists".into()))?
     };
     if repo_path != snapshot.repo_path {
         return Err(
@@ -37,7 +37,7 @@ pub(super) async fn update_mr_description(
         ))
     })
     .await
-    .map_err(|_| "Could not verify the current Virtual MR snapshot")??;
+    .map_err(|_| crate::common::messages::failure("backend.review.verifySnapshotFailed", serde_json::json!({}), "Could not verify the current Virtual MR snapshot".into()))??;
     if actual_base != expected_base || actual_head != expected_head {
         return Err(crate::common::messages::code("backend.review.branchesChanged"));
     }
@@ -53,11 +53,11 @@ pub(super) async fn validate_findings(
     tauri::async_runtime::spawn_blocking(move || {
         context
             .lock()
-            .map_err(|_| "Review context unavailable".to_string())?
+            .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
             .validate_findings(&findings)
     })
     .await
-    .map_err(|_| "Finding validation task failed")?
+    .map_err(|_| crate::common::messages::failure("backend.review.findingValidationTaskFailed", serde_json::json!({}), "Finding validation task failed".into()))?
 }
 
 pub(super) async fn validate_reverted_finding(
@@ -70,11 +70,11 @@ pub(super) async fn validate_reverted_finding(
     tauri::async_runtime::spawn_blocking(move || {
         context
             .lock()
-            .map_err(|_| "Review context unavailable".to_string())?
+            .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
             .validate_reverted_finding(&finding, &original_commit_id, &original_side)
     })
     .await
-    .map_err(|_| "Revert verification task failed")?
+    .map_err(|_| crate::common::messages::failure("backend.review.revertVerificationTaskFailed", serde_json::json!({}), "Revert verification task failed".into()))?
 }
 
 pub(super) async fn validate_resolution_change(
@@ -88,11 +88,11 @@ pub(super) async fn validate_resolution_change(
     tauri::async_runtime::spawn_blocking(move || {
         context
             .lock()
-            .map_err(|_| "Review context unavailable")?
+            .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
             .validate_resolution_change(&path, &original_sha)
     })
     .await
-    .map_err(|_| "Fix verification task failed")?
+    .map_err(|_| crate::common::messages::failure("backend.review.fixVerificationTaskFailed", serde_json::json!({}), "Fix verification task failed".into()))?
 }
 
 pub(super) fn deduplicate(findings: Vec<ReviewFinding>) -> Vec<ReviewFinding> {

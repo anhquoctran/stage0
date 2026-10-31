@@ -6,5 +6,7 @@ export type AiProviderId =
   | 'deepseek'
   | 'qwen'
   | 'kimi'
+  | 'zai'
+  | 'opencode'
   | 'ollama'
   | 'custom';

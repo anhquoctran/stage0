@@ -15,6 +15,6 @@ pub(super) fn apply_stage0_path(enable: bool) -> Result<(), String> {
     #[cfg(not(any(unix, windows)))]
     {
         let _ = enable;
-        Err("Adding the Stage0 command to PATH is not supported on this platform".into())
+        Err(crate::common::messages::code("backend.preferences.cliPathUnsupported"))
     }
 }

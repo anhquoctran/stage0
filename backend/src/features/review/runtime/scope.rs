@@ -12,27 +12,24 @@ pub(crate) fn validate_request(db: &Database, config: &ReviewRequest) -> Result<
         let reviewer = config
             .reviewer_id
             .as_deref()
-            .ok_or("Discussion replies require an assigned reviewer")?;
+            .ok_or_else(|| crate::common::messages::code("backend.review.replyRequiresReviewer"))?;
         let assigned: bool = db.conn().query_row("SELECT EXISTS(SELECT 1 FROM virtual_mr_session_reviewers WHERE session_id=?1 AND agent_id=?2)", [&config.session_id, reviewer], |row| row.get(0)).map_err(|e| e.to_string())?;
         if !assigned {
             return Err(crate::common::messages::code("backend.review.reviewerUnassigned"));
         }
         if id.is_empty() || id.len() > 200 || config.generate_description {
-            return Err(
-                "A discussion reply must name one thread and cannot generate an MR description"
-                    .into(),
-            );
+            return Err(crate::common::messages::code("backend.review.replyCannotGenerateDescription"));
         }
         let thread = db
             .list_discussions(&config.session_id)
             .map_err(|e| e.to_string())?
             .into_iter()
             .find(|d| d.id == id && !d.is_resolved)
-            .ok_or("Open discussion not found in this Virtual MR")?;
+            .ok_or_else(|| crate::common::messages::code("backend.review.openDiscussionNotFound"))?;
         let latest = thread
             .comments
             .last()
-            .ok_or("The discussion has no comment")?;
+            .ok_or_else(|| crate::common::messages::code("backend.review.discussionHasNoComment"))?;
         if !mentions::can_reply_to_comment(
             &db.conn(),
             &config.session_id,
@@ -41,7 +38,7 @@ pub(crate) fn validate_request(db: &Database, config: &ReviewRequest) -> Result<
             &latest.author_id,
             &latest.body,
         ) {
-            return Err("This comment is not addressed to the selected reviewer".into());
+            return Err(crate::common::messages::code("backend.review.commentNotAddressedToReviewer"));
         }
     }
     if let Some(id) = config.manual_review_discussion_id.as_deref() {
@@ -58,13 +55,13 @@ fn validate_manual_review_request(
     let reviewer_id = config
         .reviewer_id
         .as_deref()
-        .ok_or("Manual full reviews require an assigned reviewer")?;
+        .ok_or_else(|| crate::common::messages::code("backend.review.manualReviewRequiresReviewer"))?;
     if discussion_id.is_empty()
         || discussion_id.len() > 200
         || config.reply_discussion_id.is_some()
         || config.generate_description
     {
-        return Err("Invalid manual full-review request".into());
+        return Err(crate::common::messages::code("backend.review.invalidManualReviewRequest"));
     }
     let conn = db.conn();
     let reviewer_name: String = conn
@@ -73,13 +70,13 @@ fn validate_manual_review_request(
             [&config.session_id, reviewer_id],
             |row| row.get(0),
         )
-        .map_err(|_| "This reviewer is no longer assigned to the Virtual MR")?;
+        .map_err(|_| crate::common::messages::code("backend.review.reviewerNotAssignedToMr"))?;
     if config
         .reviewer_name
         .as_deref()
         .is_some_and(|name| name != reviewer_name)
     {
-        return Err("Manual review reviewer identity does not match the assigned bot".into());
+        return Err(crate::common::messages::code("backend.review.reviewerIdentityMismatch"));
     }
     let (session_id, file_path, is_resolved): (String, Option<String>, bool) = conn
         .query_row(
@@ -87,9 +84,9 @@ fn validate_manual_review_request(
             [discussion_id],
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )
-        .map_err(|_| "Manual review request discussion was not found")?;
+        .map_err(|_| crate::common::messages::code("backend.review.manualReviewDiscussionNotFound"))?;
     if session_id != config.session_id || file_path.is_some() || is_resolved {
-        return Err("Manual review requests must use a new, open MR-level discussion".into());
+        return Err(crate::common::messages::code("backend.review.manualReviewMustUseNewDiscussion"));
     }
     let (author_type, body): (String, String) = conn
         .query_row(
@@ -97,12 +94,16 @@ fn validate_manual_review_request(
             [discussion_id],
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
-        .map_err(|_| "Manual review request has no root comment")?;
+        .map_err(|_| crate::common::messages::code("backend.review.manualReviewNoRootComment"))?;
     if author_type != "user"
         || !mentions::is_manual_review_command(&body)
         || !mentions::has_reviewer_mention(&body, reviewer_id)
     {
-        return Err("Manual review request must be the exact assigned-bot mention command".into());
+        return Err(crate::common::messages::failure(
+            "backend.review.manualReviewCommandInvalid",
+            serde_json::json!({}),
+            "Manual review request must be the exact assigned-bot mention command".into(),
+        ));
     }
     let unresolved: i64 = conn
         .query_row(
@@ -112,8 +113,10 @@ fn validate_manual_review_request(
         )
         .map_err(|error| error.to_string())?;
     if unresolved > 0 {
-        return Err(format!(
-            "Resolve the {unresolved} open code discussion(s) from this reviewer before starting another review"
+        return Err(crate::common::messages::failure(
+            "backend.review.openCodeDiscussionsPending",
+            serde_json::json!({ "count": unresolved }),
+            format!("Resolve the {unresolved} open code discussion(s) from this reviewer before starting another review"),
         ));
     }
     Ok(())
@@ -148,16 +151,16 @@ pub(super) fn validate_call(state: &ReviewToolState, call: &ReviewToolCall) -> R
                 | "reply_to_discussion"
                 | "submit_review"
         ) {
-            return Err("This tool is not authorized in a discussion-reply-only run".into());
+            return Err(crate::common::messages::code("backend.review.toolUnauthorizedInReplyOnly"));
         }
         if let Some(target) = call.arguments["discussionId"].as_str() {
             if target != id {
-                return Err("This reply run can access only its assigned discussion".into());
+                return Err(crate::common::messages::code("backend.review.replyRunOnlyAssignedDiscussion"));
             }
         }
         if let Some(path) = call.arguments["filePath"].as_str() {
             if state.reply_file_path.as_deref() != Some(path) {
-                return Err("This reply run can read only the discussion's file".into());
+                return Err(crate::common::messages::code("backend.review.replyRunOnlyDiscussionFile"));
             }
         }
         if call.name == "submit_review"
@@ -166,7 +169,7 @@ pub(super) fn validate_call(state: &ReviewToolState, call: &ReviewToolCall) -> R
                     .as_array()
                     .is_none_or(|items| !items.is_empty()))
         {
-            return Err("A discussion reply can submit only comment with no findings; it cannot decide an MR verdict".into());
+            return Err(crate::common::messages::code("backend.review.replyCannotDecideVerdict"));
         }
     }
     Ok(())

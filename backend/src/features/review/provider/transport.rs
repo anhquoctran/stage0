@@ -8,7 +8,7 @@ pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<
         .timeout(Duration::from_secs(60))
         .redirect(reqwest::redirect::Policy::none())
         .build()
-        .map_err(|_| "Could not initialize provider client")?;
+        .map_err(|_| crate::common::messages::failure("backend.review.providerClientInitFailed", serde_json::json!({}), "Could not initialize provider client".into()))?;
     let mut request = client.post(url).json(body);
     if config.provider != "ollama" {
         let key = Zeroizing::new(
@@ -26,7 +26,7 @@ pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<
     }
     let mut response = request
         .try_clone()
-        .ok_or("Could not prepare provider request")?
+        .ok_or_else(|| crate::common::messages::failure("backend.review.providerRequestPrepareFailed", serde_json::json!({}), "Could not prepare provider request".into()))?
         .send()
         .await
         .map_err(|_| {
@@ -47,22 +47,26 @@ pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<
         response = request
             .send()
             .await
-            .map_err(|_| "Provider retry failed or timed out")?;
+            .map_err(|_| crate::common::messages::failure("backend.review.providerRetryFailedOrTimeout", serde_json::json!({}), "Provider retry failed or timed out".into()))?;
     }
     let status = response.status();
     if !status.is_success() {
-        return Err(format!("Provider returned HTTP {}. Check authentication, model/tool support and rate limits (at most one retry for transient HTTP errors).",status.as_u16()));
+        return Err(crate::common::messages::failure(
+            "backend.review.providerHttpError",
+            serde_json::json!({ "status": status.as_u16().to_string() }),
+            format!("Provider returned HTTP {}. Check authentication, model/tool support and rate limits (at most one retry for transient HTTP errors).", status.as_u16()),
+        ));
     }
     let mut bytes = Vec::new();
     while let Some(chunk) = response
         .chunk()
         .await
-        .map_err(|_| "Provider response interrupted")?
+        .map_err(|_| crate::common::messages::failure("backend.review.providerResponseInterrupted", serde_json::json!({}), "Provider response interrupted".into()))?
     {
         if bytes.len() + chunk.len() > 512 * 1024 {
-            return Err("Provider response exceeded the safety limit".into());
+            return Err(crate::common::messages::failure("backend.review.providerResponseSafetyLimit", serde_json::json!({}), "Provider response exceeded the safety limit".into()));
         }
         bytes.extend_from_slice(&chunk);
     }
-    serde_json::from_slice(&bytes).map_err(|_| "Provider returned invalid JSON".into())
+    serde_json::from_slice(&bytes).map_err(|_| crate::common::messages::failure("backend.review.providerResponseJsonInvalid", serde_json::json!({}), "Provider returned invalid JSON".into()))
 }

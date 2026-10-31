@@ -52,10 +52,10 @@ impl CodexAuthManager {
             .lock()
             .map_err(|_| "Codex auth state unavailable")?;
         if expected.is_some_and(|id| id != state.status.attempt_id) {
-            return Err("ChatGPT authentication state changed; refresh before signing out".into());
+            return Err(crate::common::messages::code("backend.ai.chatGptStateChanged"));
         }
         if state.sender.is_some() {
-            return Err("A ChatGPT authentication operation is already active. Cancel it or wait for completion.".into());
+            return Err(crate::common::messages::code("backend.ai.chatGptAuthActive"));
         }
         let id = uuid::Uuid::new_v4().to_string();
         let (sender, receiver) = mpsc::channel();
@@ -78,14 +78,14 @@ impl CodexAuthManager {
             let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 worker::run(&profile, action, &id, &runtime, &receiver)
             }))
-            .unwrap_or_else(|_| Err("Codex authentication worker stopped unexpectedly".into()));
+            .unwrap_or_else(|_| Err(crate::common::messages::code("backend.ai.codexWorkerStopped")));
             if let Ok(mut state) = runtime.lock() {
                 if state.status.attempt_id == id {
                     if state.status.phase == "cancelling" {
                         state.status.phase = "cancelled".into();
                         state.status.account_email = None;
                         state.status.plan_type = None;
-                        state.status.error = Some("Device-code sign-in cancelled locally. Authorization may already have completed; sign out the Stage0 Codex profile to remove any saved session.".into());
+                        state.status.error = Some(crate::common::messages::code("backend.ai.deviceCodeCancelledLocally"));
                     } else if let Err(error) = outcome {
                         state.status.clear_pending();
                         state.status.phase = if error == worker::CANCELLED {
@@ -118,7 +118,7 @@ impl CodexAuthManager {
             || !state.status.busy()
             || matches!(state.status.phase.as_str(), "signing_out" | "checking")
         {
-            return Err("No matching pending device-code sign-in".into());
+            return Err(crate::common::messages::code("backend.ai.noPendingDeviceCode"));
         }
         if state.status.phase == "cancelling" {
             return Ok(state.status.clone());
@@ -126,7 +126,7 @@ impl CodexAuthManager {
         state
             .sender
             .as_ref()
-            .ok_or("No active device-code worker")?
+            .ok_or_else(|| crate::common::messages::code("backend.ai.noActiveDeviceCodeWorker"))?
             .send(AuthCommand::Cancel)
             .map_err(|_| "Device-code worker stopped")?;
         state.status.phase = "cancelling".into();

@@ -88,7 +88,7 @@ pub async fn commit_preferences_transaction(
         }
         tauri::async_runtime::spawn_blocking(move || commit_transaction(&app, &request))
             .await
-            .map_err(|_| "Preferences transaction worker stopped unexpectedly".to_string())?
+            .map_err(|_| crate::common::messages::failure("backend.preferences.transactionWorkerStopped", serde_json::json!({}), "Preferences transaction worker stopped unexpectedly".into()))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("preferences", error))

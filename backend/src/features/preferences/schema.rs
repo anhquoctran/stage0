@@ -10,7 +10,7 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     if let Some(references) = value.get("credentialReferences") {
         let references = references
             .as_object()
-            .ok_or("credentialReferences must be an object")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.preferences.credentialReferencesMustBeObject", serde_json::json!({}), "credentialReferences must be an object".into()))?;
         if references.len() > 512
             || references.iter().any(|(logical, id)| {
                 logical.len() > 280
@@ -26,6 +26,9 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
                                 | "kimi"
                                 | "ollama"
                                 | "custom"
+                                | "zai"
+                                | "z_ai"
+                                | "opencode"
                         )
                     ) || logical.strip_prefix("mcp_server/").is_some_and(|id| {
                         !id.is_empty() && id.len() <= 256 && !id.chars().any(char::is_control)
@@ -38,7 +41,7 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
                         }))
             })
         {
-            return Err("Invalid credential reference metadata".into());
+            return Err(crate::common::messages::failure("backend.preferences.credentialReferenceMetadataInvalid", serde_json::json!({}), "Invalid credential reference metadata".into()));
         }
     }
     if let Some(keymap) = value.get("keymap") {
@@ -58,31 +61,31 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     if let Some(language) = appearance.get("language") {
         let language = language
             .as_str()
-            .ok_or("appearance.language must be a supported app locale")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.preferences.appearanceLanguageInvalid", serde_json::json!({}), "appearance.language must be one of the supported app locales".into()))?;
         if !is_supported_app_language(language) {
-            return Err("appearance.language must be one of the supported app locales".into());
+            return Err(crate::common::messages::failure("backend.preferences.appearanceLanguageInvalid", serde_json::json!({}), "appearance.language must be one of the supported app locales".into()));
         }
     }
     if let Some(font) = appearance.get("uiFont") {
         let font = font
             .as_object()
-            .ok_or("appearance.uiFont must be an object")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.preferences.uiFontMustBeObject", serde_json::json!({}), "appearance.uiFont must be an object".into()))?;
         validate_optional_string(font, "fontFamily", "appearance.uiFont", 128, false)?;
     }
     if let Some(mode) = appearance.get("linuxTitleBar") {
         if !matches!(mode.as_str(), Some("system" | "custom")) {
-            return Err("appearance.linuxTitleBar must be system or custom".into());
+            return Err(crate::common::messages::failure("backend.preferences.linuxTitleBarInvalid", serde_json::json!({}), "appearance.linuxTitleBar must be system or custom".into()));
         }
     }
     if let Some(theme) = appearance.get("themeMode") {
         if !matches!(theme.as_str(), Some("system" | "dark" | "light")) {
-            return Err("appearance.themeMode must be 'system', 'dark', or 'light'".into());
+            return Err(crate::common::messages::failure("backend.preferences.themeModeInvalid", serde_json::json!({}), "appearance.themeMode must be 'system', 'dark', or 'light'".into()));
         }
     }
     if let Some(font) = appearance.get("viewerFont") {
         let font = font
             .as_object()
-            .ok_or("appearance.viewerFont must be an object")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.preferences.viewerFontMustBeObject", serde_json::json!({}), "appearance.viewerFont must be an object".into()))?;
         validate_optional_string(font, "fontFamily", "appearance.viewerFont", 128, false)?;
         validate_optional_number(font, "fontSize", "appearance.viewerFont", 6.0, 96.0)?;
         validate_optional_bool(font, "isBold", "appearance.viewerFont")?;
@@ -96,13 +99,13 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     if let Some(language) = ai.get("agentOutputLanguage") {
         let language = language
             .as_str()
-            .ok_or("ai.agentOutputLanguage must be a supported locale or follow-app")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.preferences.agentOutputLanguageInvalid", serde_json::json!({}), "ai.agentOutputLanguage must be a supported locale or follow-app".into()))?;
         if !is_supported_agent_output_language(language) {
-            return Err("ai.agentOutputLanguage must be a supported locale or follow-app".into());
+            return Err(crate::common::messages::failure("backend.preferences.agentOutputLanguageInvalid", serde_json::json!({}), "ai.agentOutputLanguage must be a supported locale or follow-app".into()));
         }
     }
     if let Some(config) = ai.get("aiConfig") {
-        let config = config.as_object().ok_or("ai.aiConfig must be an object")?;
+        let config = config.as_object().ok_or_else(|| crate::common::messages::failure("backend.preferences.aiConfigMustBeObject", serde_json::json!({}), "ai.aiConfig must be an object".into()))?;
         if !config.is_empty() {
             validate_enum_string(
                 config,
@@ -119,6 +122,9 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
                     "github_copilot",
                     "ollama",
                     "custom",
+                    "zai",
+                    "z_ai",
+                    "opencode",
                 ],
             )?;
             validate_optional_enum(
@@ -137,7 +143,7 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
             validate_optional_string(config, "baseUrl", "ai.aiConfig", 4096, false)?;
             if let Some(api_key) = config.get("apiKey") {
                 if api_key.as_str().is_none_or(|key| !key.is_empty()) {
-                    return Err("ai.aiConfig.apiKey must be omitted or empty; credentials belong in the OS keychain".into());
+                    return Err(crate::common::messages::failure("backend.preferences.apiKeyMustBeOmitted", serde_json::json!({}), "ai.aiConfig.apiKey must be omitted or empty; credentials belong in the OS keychain".into()));
                 }
             }
             validate_optional_number(config, "temperature", "ai.aiConfig", 0.0, 2.0)?;
@@ -155,9 +161,9 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
         }
     }
     if let Some(servers) = ai.get("mcpServers") {
-        let servers = servers.as_array().ok_or("ai.mcpServers must be an array")?;
+        let servers = servers.as_array().ok_or_else(|| crate::common::messages::failure("backend.preferences.mcpServersMustBeArray", serde_json::json!({}), "ai.mcpServers must be an array".into()))?;
         if servers.len() > 256 {
-            return Err("ai.mcpServers cannot contain more than 256 entries".into());
+            return Err(crate::common::messages::failure("backend.preferences.mcpServersLimitExceeded", serde_json::json!({}), "ai.mcpServers cannot contain more than 256 entries".into()));
         }
         for (index, server) in servers.iter().enumerate() {
             validate_mcp_server(server, index)?;
@@ -172,9 +178,9 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
 
     let reviewers = value["reviewers"]
         .as_array()
-        .ok_or("reviewers must be an array")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.preferences.reviewersMustBeArray", serde_json::json!({}), "reviewers must be an array".into()))?;
     if reviewers.len() > 256 {
-        return Err("reviewers cannot contain more than 256 entries".into());
+        return Err(crate::common::messages::failure("backend.preferences.reviewersLimitExceeded", serde_json::json!({}), "reviewers cannot contain more than 256 entries".into()));
     }
     for (index, reviewer) in reviewers.iter().enumerate() {
         validate_reviewer(reviewer, index)?;
@@ -195,7 +201,7 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     if let Some(channels) = notifications.get("channels") {
         let channels = channels
             .as_object()
-            .ok_or("notifications.channels must be an object")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.preferences.notificationChannelsMustBeObject", serde_json::json!({}), "notifications.channels must be an object".into()))?;
         validate_optional_bool(channels, "aiReview", "notifications.channels")?;
         validate_optional_bool(channels, "gitSync", "notifications.channels")?;
         validate_optional_bool(channels, "guardrails", "notifications.channels")?;
@@ -204,9 +210,9 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     if let Some(credentials) = value.get("gitCredentials") {
         let credentials = credentials
             .as_array()
-            .ok_or("gitCredentials must be an array")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.preferences.gitCredentialsMustBeArray", serde_json::json!({}), "gitCredentials must be an array".into()))?;
         if credentials.len() > 10_000 {
-            return Err("gitCredentials cannot contain more than 10,000 entries".into());
+            return Err(crate::common::messages::failure("backend.preferences.gitCredentialsLimitExceeded", serde_json::json!({}), "gitCredentials cannot contain more than 10,000 entries".into()));
         }
         for (index, credential) in credentials.iter().enumerate() {
             validate_git_credential(credential, index)?;

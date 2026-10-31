@@ -25,10 +25,10 @@ impl CodexAuthProcess {
             .stderr(Stdio::null());
         crate::common::process::configure_process_group(&mut command);
         let mut child = command.spawn().map_err(|_| {
-            "Could not start the official Codex executable. Install/update Codex and check PATH."
+            crate::common::messages::code("backend.ai.codexStartFailed")
         })?;
-        let input = child.stdin.take().ok_or("Codex stdin is unavailable")?;
-        let stdout = child.stdout.take().ok_or("Codex stdout is unavailable")?;
+        let input = child.stdin.take().ok_or_else(|| crate::common::messages::code("backend.ai.codexStdinUnavailable"))?;
+        let stdout = child.stdout.take().ok_or_else(|| crate::common::messages::code("backend.ai.codexStdoutUnavailable"))?;
         let (sender, output) = mpsc::sync_channel(16);
         std::thread::spawn(move || {
             let mut reader = BufReader::new(stdout);
@@ -41,7 +41,7 @@ impl CodexAuthProcess {
                     Ok(0) => break,
                     Ok(_) if total <= 512 * 1024 => serde_json::from_slice::<Value>(&line)
                         .map_err(|_| "Codex returned invalid auth JSON".to_string()),
-                    _ => Err("Codex auth output exceeded limits or was interrupted".into()),
+                    _ => Err(crate::common::messages::code("backend.ai.codexOutputLimitExceeded")),
                 };
                 let failed = message.is_err();
                 if sender.try_send(message).is_err() || failed {
@@ -58,7 +58,7 @@ impl CodexAuthProcess {
     pub fn send(&mut self, value: &Value) -> Result<(), String> {
         let bytes = serde_json::to_vec(value).map_err(|_| "Could not encode Codex auth request")?;
         if bytes.len() > 4096 {
-            return Err("Codex auth request exceeds limit".into());
+            return Err(crate::common::messages::code("backend.ai.codexRequestLimitExceeded"));
         }
         self.input
             .write_all(&bytes)
@@ -70,7 +70,7 @@ impl CodexAuthProcess {
         match self.output.recv_timeout(timeout) {
             Ok(value) => value.map(Some),
             Err(mpsc::RecvTimeoutError::Timeout) => Ok(None),
-            Err(_) => Err("Codex auth process stopped. Update Codex or check OS keyring availability; no raw process output was retained.".into()),
+            Err(_) => Err(crate::common::messages::code("backend.ai.codexProcessStopped")),
         }
     }
 }
@@ -195,5 +195,5 @@ fn find_codex() -> Result<PathBuf, String> {
             }
         }
     }
-    Err("Official Codex CLI not found on PATH. Install Codex and restart Stage0. Windows requires a native codex.exe; shell .cmd/.bat wrappers are not launched.".into())
+    Err(crate::common::messages::code("backend.ai.codexNotFoundPath"))
 }

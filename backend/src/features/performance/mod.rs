@@ -18,11 +18,17 @@ pub async fn get_performance_metrics() -> Result<PerformanceMetrics, String> {
             let sampler = PERFORMANCE_SAMPLER.get_or_init(|| Mutex::new(PerformanceSampler::new()));
             sampler
                 .lock()
-                .map_err(|_| "Performance metrics sampler is unavailable".to_string())?
+                .map_err(|_| crate::common::messages::code("backend.performance.samplerUnavailable"))?
                 .refresh()
         })
         .await
-        .map_err(|error| format!("Performance metrics task failed: {error}"))?
+        .map_err(|error| {
+            crate::common::messages::failure(
+                "backend.performance.taskFailed",
+                serde_json::json!({}),
+                format!("Performance metrics task failed: {error}"),
+            )
+        })?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("performance", error))

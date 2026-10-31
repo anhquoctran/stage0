@@ -251,9 +251,19 @@ pub(super) async fn apply_review_config_options(
     for (config_id, value) in requested {
         let option = current_options.iter().find(|option| option.get("id").and_then(Value::as_str) == Some(config_id.as_str()))
             .filter(|option| review_config_option_kind(option).is_some())
-            .ok_or_else(|| format!("ACP reviewer option “{config_id}” is no longer available. Update the reviewer profile."))?;
+            .ok_or_else(|| {
+                crate::common::messages::failure(
+                    "backend.acp.reviewerOptionUnavailable",
+                    serde_json::json!({ "configId": config_id }),
+                    format!("ACP reviewer option “{config_id}” is no longer available. Update the reviewer profile."),
+                )
+            })?;
         if !config_option_value_is_valid(option, value) {
-            return Err(format!("Saved ACP reviewer value for “{config_id}” is no longer supported. Update the reviewer profile."));
+            return Err(crate::common::messages::failure(
+                "backend.acp.reviewerValueUnsupported",
+                serde_json::json!({ "configId": config_id }),
+                format!("Saved ACP reviewer value for “{config_id}” is no longer supported. Update the reviewer profile."),
+            ));
         }
         let mut params = json!({"sessionId":session_id,"configId":config_id,"value":value});
         if option.get("type").and_then(Value::as_str) == Some("boolean") {

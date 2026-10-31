@@ -14,7 +14,7 @@ fn validate_tab(tab: &Option<String>) -> Result<(), String> {
                 .bytes()
                 .all(|c| c.is_ascii_alphanumeric() || c == b'-')
     }) {
-        return Err("Invalid Preferences section".into());
+        return Err(crate::common::messages::code("backend.preferences.invalidSection"));
     }
     Ok(())
 }
@@ -103,14 +103,18 @@ pub async fn open(app: &AppHandle, tab: Option<String>) -> Result<(), String> {
         }
         Err(error) => {
             state.destroyed();
-            Err(format!("Could not open Preferences: {error}"))
+            Err(crate::common::messages::failure(
+                "backend.preferences.openFailed",
+                serde_json::json!({}),
+                format!("Could not open Preferences: {error}"),
+            ))
         }
     }
 }
 
 pub async fn ready(window: &WebviewWindow) -> Result<(), String> {
     if window.label() != LABEL {
-        return Err("Only the Preferences window can finish its initialization".into());
+        return Err(crate::common::messages::code("backend.preferences.initUnauthorized"));
     }
     let app = window.app_handle();
     let state = app.state::<PreferencesWindowState>();

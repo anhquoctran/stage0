@@ -19,7 +19,7 @@ pub(super) fn advance_sequence() -> u64 {
 pub(crate) fn run<T>(operation: impl FnOnce() -> Result<T, String>) -> Result<T, String> {
     let _guard = PUBLICATION
         .lock()
-        .map_err(|_| "Preferences publication is unavailable".to_string())?;
+        .map_err(|_| crate::common::messages::code("backend.preferences.publicationUnavailable"))?;
     operation()
 }
 
@@ -28,7 +28,7 @@ pub(crate) async fn run_async<T: Send + 'static>(
 ) -> Result<T, String> {
     tauri::async_runtime::spawn_blocking(move || run(operation))
         .await
-        .map_err(|_| "Preferences worker stopped unexpectedly".to_string())?
+        .map_err(|_| crate::common::messages::code("backend.preferences.workerStopped"))?
 }
 
 #[cfg(test)]

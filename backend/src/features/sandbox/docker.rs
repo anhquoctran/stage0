@@ -345,7 +345,7 @@ impl SandboxAdapter for DockerSandboxAdapter {
         let container_id = instance
             .container_id
             .as_deref()
-            .ok_or_else(|| "Instance does not have an active Docker container ID".to_string())?;
+            .ok_or_else(|| crate::common::messages::code("backend.sandbox.containerIdMissing"))?;
 
         let start = Instant::now();
         let mut cmd = Command::new("docker");

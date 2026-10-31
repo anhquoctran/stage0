@@ -147,7 +147,7 @@ pub async fn start_ai_review(
     let (repo, base, head) = {
         let db = app.state::<Database>();
         let conn = db.conn();
-        conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&session_id],|row|Ok((row.get::<_,String>(0)?,row.get::<_,String>(1)?,row.get::<_,String>(2)?))).map_err(|_|"Virtual MR or repository not found")?
+        conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&session_id],|row|Ok((row.get::<_,String>(0)?,row.get::<_,String>(1)?,row.get::<_,String>(2)?))).map_err(|_| crate::common::messages::failure("backend.review.virtualMrOrRepoNotFound", serde_json::json!({}), "Virtual MR or repository not found".into()))?
     };
     let guards = Arc::new(
         app.state::<SandboxManager>()
@@ -155,7 +155,7 @@ pub async fn start_ai_review(
             .fork_with_policy_snapshot(),
     );
     let policy = serde_json::to_string(&guards.get_policy())
-        .map_err(|_| "Could not capture review policy")?;
+        .map_err(|_| crate::common::messages::failure("backend.review.capturePolicyFailed", serde_json::json!({}), "Could not capture review policy".into()))?;
     let policy_guards = Arc::clone(&guards);
     super::debug_log::log(format_args!(
         "event=snapshot_capture_started session={} mode={}",
@@ -315,18 +315,18 @@ fn resolve_saved_review_agent(
         .state::<crate::features::preferences::PreferencesManager>()
         .read()?
         .settings
-        .ok_or("Could not load saved ACP agent configuration")?;
+        .ok_or_else(|| crate::common::messages::code("backend.acp.agentConfigUnavailable"))?;
     let agents = settings
         .pointer("/ai/externalAgents")
         .and_then(Value::as_array)
-        .ok_or("No ACP agents are saved in Preferences")?;
+        .ok_or_else(|| crate::common::messages::code("backend.acp.noAgentsSaved"))?;
     let saved = agents
         .iter()
         .find(|agent| agent.get("id").and_then(Value::as_str) == Some(requested_id))
         .cloned()
-        .ok_or("The selected ACP agent is not installed in Preferences")?;
+        .ok_or_else(|| crate::common::messages::code("backend.acp.agentNotInstalled"))?;
     let agent: AcpAgentConfig = serde_json::from_value(saved)
-        .map_err(|_| "The saved ACP agent configuration is invalid")?;
+        .map_err(|_| crate::common::messages::code("backend.acp.agentConfigInvalid"))?;
     crate::features::ai::acp::validate_review_agent_config(&agent)?;
     Ok(agent)
 }
@@ -360,13 +360,13 @@ pub async fn publish_ai_review(app: AppHandle, run_id: String) -> Result<(), Str
     let result: Result<_, String> = async {
     tauri::async_runtime::spawn_blocking(move||{
         let db=app.state::<Database>();let run=db.get_review_run(&run_id)?;
-        let (repo,base,head)={let conn=db.conn();conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&run.session_id],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?))).map_err(|_|"Virtual MR no longer exists")?};
-        if repo!=run.snapshot.repo_path||super::context::resolve_snapshot_ref(&repo,&base)?!=run.snapshot.base_sha||super::context::resolve_snapshot_ref(&repo,&head)?!=run.snapshot.head_sha{return Err("Review snapshot is stale. Start a new run before publishing findings.".into());}
+        let (repo,base,head)={let conn=db.conn();conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&run.session_id],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?))).map_err(|_| crate::common::messages::code("backend.virtualMr.sessionNotFound"))?};
+        if repo!=run.snapshot.repo_path||super::context::resolve_snapshot_ref(&repo,&base)?!=run.snapshot.base_sha||super::context::resolve_snapshot_ref(&repo,&head)?!=run.snapshot.head_sha{return Err(crate::common::messages::code("backend.review.snapshotStale"));}
         let guards = Arc::new(GuardrailsEngine::new());
         let context = super::context::ReviewContext::new(run.snapshot.clone(), guards);
         context.validate_findings(&run.findings)?;
         db.publish_review(&run)
-    }).await.map_err(|_|"Could not publish review findings")?
+    }).await.map_err(|_| crate::common::messages::code("backend.review.publishFailed"))?
 }.await;
     result.map_err(|error| crate::common::messages::command_error("review", error))
 }

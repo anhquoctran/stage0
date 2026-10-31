@@ -11,12 +11,12 @@ pub async fn acp_agent_prompt(
 ) -> Result<String, String> {
     let result: Result<_, String> = async {
         if prompt.trim().is_empty() || prompt.len() > 64 * 1024 {
-            return Err("Enter a prompt under 64 KB".into());
+            return Err(crate::common::messages::code("backend.acp.promptTooLarge"));
         }
         let working_directory = match cwd.filter(|path| !path.trim().is_empty()) {
             Some(path) => PathBuf::from(path),
             None => std::env::current_dir()
-                .map_err(|_| "Could not determine the default working directory")?,
+                .map_err(|_| crate::common::messages::code("backend.acp.cwdUnavailable"))?,
         };
         if working_directory.as_os_str().len() > 4096
             || !working_directory.is_absolute()
@@ -26,7 +26,7 @@ pub async fn acp_agent_prompt(
                 .any(char::is_control)
             || !working_directory.is_dir()
         {
-            return Err("Working directory must be an existing absolute path".into());
+            return Err(crate::common::messages::code("backend.acp.cwdInvalid"));
         }
         prompt_agent_in_directory(&config, &prompt, &working_directory).await
     }
@@ -45,13 +45,13 @@ async fn prompt_agent_in_directory(
         || working_directory_text.chars().any(char::is_control)
         || !working_directory.is_dir()
     {
-        return Err("Working directory must be an existing absolute path".into());
+        return Err(crate::common::messages::code("backend.acp.cwdInvalid"));
     }
     let mut process = AcpProcess::start(config, Some(working_directory)).await?;
     let result = async {
         process.initialize().await?;
         let session = process.request(1, "session/new", json!({"cwd":working_directory_text,"mcpServers":[]})).await?;
-        let session_id = session.get("sessionId").and_then(Value::as_str).ok_or("ACP agent did not return a session ID")?;
+        let session_id = session.get("sessionId").and_then(Value::as_str).ok_or_else(|| crate::common::messages::code("backend.acp.sessionIdMissing"))?;
         process.send(&json!({"jsonrpc":"2.0","id":2,"method":"session/prompt","params":{"sessionId":session_id,"prompt":[{"type":"text","text":prompt}]}})).await?;
         let mut output = String::new();
         loop {
@@ -60,7 +60,7 @@ async fn prompt_agent_in_directory(
                 let update = &message["params"]["update"];
                 if update.get("sessionUpdate").and_then(Value::as_str) == Some("agent_message_chunk") {
                     if let Some(text) = update["content"]["text"].as_str() {
-                        if output.len() + text.len() > 128 * 1024 { return Err("ACP response exceeded the 128 KB limit".into()); }
+                        if output.len() + text.len() > 128 * 1024 { return Err(crate::common::messages::code("backend.acp.responseTooLarge")); }
                         output.push_str(text);
                     }
                 }
@@ -73,7 +73,7 @@ async fn prompt_agent_in_directory(
             }
             if message.get("id").and_then(Value::as_u64) == Some(2) {
                 if let Some(error) = message.get("error") { return Err(error.get("message").and_then(Value::as_str).unwrap_or("ACP prompt failed").to_owned()); }
-                return if output.trim().is_empty() { Err("ACP agent completed without a text response".into()) } else { Ok(output) };
+                return if output.trim().is_empty() { Err(crate::common::messages::code("backend.acp.emptyResponse")) } else { Ok(output) };
             }
         }
     }.await;

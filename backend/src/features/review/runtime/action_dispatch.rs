@@ -32,7 +32,7 @@ pub(super) async fn dispatch_action(
                     .trim()
                     .to_string();
                 let complete = {
-                    let ctx = context.lock().map_err(|_| "Review context unavailable")?;
+                    let ctx = context.lock().map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?;
                     ctx.snapshot
                         .changed_files
                         .iter()
@@ -64,7 +64,7 @@ pub(super) async fn dispatch_action(
         }
         "create_review_discussion" => {
             let finding: ReviewFinding = serde_json::from_value(call.arguments.clone())
-                .map_err(|_| "Malformed inline review finding")?;
+                .map_err(|_| crate::common::messages::failure("backend.review.inlineFindingMalformed", serde_json::json!({}), "Malformed inline review finding".into()))?;
             match validate_findings(context, vec![finding.clone()]).await {
                 Ok(()) => {
                     let mut candidate = state.pending_findings.clone();
@@ -226,11 +226,11 @@ pub(super) async fn dispatch_action(
             tauri::async_runtime::spawn_blocking(move || {
                 context
                     .lock()
-                    .map_err(|_| "Review context unavailable".to_string())?
+                    .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
                     .execute(&name, &args)
             })
             .await
-            .map_err(|_| "Review tool task failed")?
+            .map_err(|_| crate::common::messages::failure("backend.review.reviewToolTaskFailed", serde_json::json!({}), "Review tool task failed".into()))?
         }
     })
 }

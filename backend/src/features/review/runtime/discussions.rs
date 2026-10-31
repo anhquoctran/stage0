@@ -85,7 +85,7 @@ pub(super) fn list(
             "discussionRevision":discussion_revision::of(discussion),"targetCommentId":latest.map(|c| &c.id),
             "rootCommentId":root.map(|c| &c.id),"commentCount":discussion.comments.len(),"comments":comments}));
     }
-    let value = context.lock().map_err(|_| "Review context unavailable")?.deliver_external("list_open_discussions",
+    let value = context.lock().map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?.deliver_external("list_open_discussions",
         json!({"threads":threads,"totalOpen":open.len(),"nextOffset":if end < open.len(){Some(end)}else{None}}))?;
     // A rejected/oversized response must never authorize a later write.
     for thread in value["threads"].as_array().unwrap() {
@@ -124,28 +124,28 @@ pub(super) fn read_comment(
     let observation = state
         .observations
         .get_mut(id)
-        .ok_or("List the discussion before reading comment pages")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.review.listDiscussionBeforePages", serde_json::json!({}), "List the discussion before reading comment pages".into()))?;
     let discussion = db
         .list_discussions(&run.session_id)
         .map_err(|e| e.to_string())?
         .into_iter()
         .find(|d| d.id == id && !d.is_resolved)
-        .ok_or("Open discussion not found")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.review.openDiscussionNotFound", serde_json::json!({}), "Open discussion not found".into()))?;
     if observation.revision != revision || discussion_revision::of(&discussion) != revision {
-        return Err("The discussion changed; list it again before reading more context".into());
+        return Err(crate::common::messages::failure("backend.review.discussionChangedRelist", serde_json::json!({}), "The discussion changed; list it again before reading more context".into()));
     }
     let comment = discussion
         .comments
         .iter()
         .find(|c| Some(c.id.as_str()) == call.arguments["commentId"].as_str())
-        .ok_or("Comment not found in this discussion")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.review.commentNotFoundInDiscussion", serde_json::json!({}), "Comment not found in this discussion".into()))?;
     let offset = call.arguments["offset"].as_u64().unwrap() as usize;
     if offset > security::redact(&comment.body).chars().count() {
-        return Err("Comment offset is outside the body".into());
+        return Err(crate::common::messages::failure("backend.review.commentOffsetOutsideBody", serde_json::json!({}), "Comment offset is outside the body".into()));
     }
     let value = context
         .lock()
-        .map_err(|_| "Review context unavailable")?
+        .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
         .deliver_external("read_discussion_comment", present(comment, offset, 1200))?;
     record(observation, &value);
     Ok(value)
@@ -159,13 +159,13 @@ pub(super) fn observed(
 ) -> Result<Result<VirtualMrDiscussionDb, String>, String> {
     let id = call.arguments["discussionId"]
         .as_str()
-        .ok_or("Missing discussion ID")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.review.discussionIdMissing", serde_json::json!({}), "Missing discussion ID".into()))?;
     let revision = call.arguments["discussionRevision"]
         .as_str()
-        .ok_or("Missing discussion revision")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.review.discussionRevisionMissing", serde_json::json!({}), "Missing discussion revision".into()))?;
     let target = call.arguments["targetCommentId"]
         .as_str()
-        .ok_or("Missing target comment ID")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.review.targetCommentIdMissing", serde_json::json!({}), "Missing target comment ID".into()))?;
     let validation = state
         .observations
         .get(id)
@@ -180,7 +180,7 @@ pub(super) fn observed(
         .into_iter()
         .find(|d| d.id == id && !d.is_resolved);
     let Some(discussion) = discussion else {
-        return Ok(Err("Open discussion not found in this Virtual MR".into()));
+        return Ok(Err(crate::common::messages::failure("backend.review.openDiscussionNotFoundMr", serde_json::json!({}), "Open discussion not found in this Virtual MR".into())));
     };
     if discussion_revision::of(&discussion) != revision {
         return Ok(Err(

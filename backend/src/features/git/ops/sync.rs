@@ -131,9 +131,7 @@ pub fn git_sync_with_progress(
             let no_ff = opts.and_then(|o| o.no_ff).unwrap_or(false);
             let ff_only = opts.and_then(|o| o.ff_only).unwrap_or(false);
             if no_ff && ff_only {
-                return Err(
-                    "Merge options --no-ff and --ff-only cannot be used together".to_string(),
-                );
+                return Err(crate::common::messages::code("backend.git.mergeConflictingOptions"));
             }
             if no_ff {
                 args.push("--no-ff".to_string());
@@ -153,7 +151,11 @@ pub fn git_sync_with_progress(
                 .unwrap_or("@{upstream}");
             let (commit, _) = resolve_ref(repo_path, branch).map_err(|error| {
                 if branch == "@{upstream}" {
-                    format!("Could not determine the current branch's upstream: {error}")
+                    crate::common::messages::failure(
+                        "backend.git.upstreamUnresolved",
+                        serde_json::json!({ "error": error }),
+                        format!("Could not determine the current branch's upstream: {error}"),
+                    )
                 } else {
                     error
                 }
@@ -172,7 +174,10 @@ pub fn git_sync_with_progress(
             args.push("rebase".to_string());
             args.push("--skip".to_string());
         }
-        other => return Err(format!("Unsupported sync operation: {}", other)),
+        other => return Err(crate::common::messages::message(
+            "backend.git.unsupportedSyncOp",
+            serde_json::json!({ "operation": other }),
+        )),
     }
 
     let str_args: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
@@ -185,10 +190,11 @@ pub fn git_sync_with_progress(
         } else {
             res.stdout.trim()
         };
-        return Err(format!(
-            "Git {} failed: {}",
-            operation,
-            crate::features::git::runner::redact_sensitive_text(err_msg)
+        let redacted = crate::features::git::runner::redact_sensitive_text(err_msg);
+        return Err(crate::common::messages::failure(
+            "backend.git.operationFailed",
+            serde_json::json!({ "operation": operation, "error": redacted }),
+            format!("Git {} failed: {}", operation, redacted),
         ));
     }
 

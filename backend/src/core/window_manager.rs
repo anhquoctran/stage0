@@ -84,7 +84,7 @@ pub fn resolve_repository(
     }
 
     let canonical = dunce::canonicalize(input)
-        .map_err(|error| format!("Could not canonicalize repository path: {error}"))?;
+        .map_err(|error| crate::common::messages::failure("backend.window.canonicalizeRepoFailed", serde_json::json!({ "error": error.to_string() }), format!("Could not canonicalize repository path: {error}")))?;
     if !canonical.is_dir() {
         return Err(crate::common::messages::code("backend.repository.notDirectory"));
     }
@@ -95,7 +95,7 @@ pub fn resolve_repository(
     #[cfg(unix)]
     let identity = {
         let metadata = fs::metadata(&canonical)
-            .map_err(|error| format!("Could not inspect repository directory: {error}"))?;
+            .map_err(|error| crate::common::messages::failure("backend.window.inspectRepoDirFailed", serde_json::json!({ "error": error.to_string() }), format!("Could not inspect repository directory: {error}")))?;
         use std::os::unix::fs::MetadataExt;
         RepoIdentity::File {
             volume: metadata.dev(),
@@ -127,7 +127,7 @@ pub fn open_repo_path(
     let db = app.state::<Database>();
     let repo = db
         .upsert_repository("", &name, &canonical_path.to_string_lossy())
-        .map_err(|error| format!("Failed to register repository: {error}"))?;
+        .map_err(|error| crate::common::messages::failure("backend.window.registerRepoFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to register repository: {error}")))?;
     crate::features::credentials::schedule_system_git_credential_rescan(app);
     let context = RepositoryContext {
         identity,
@@ -139,10 +139,11 @@ pub fn open_repo_path(
         OpenPlan::Existing(label) | OpenPlan::Opening(label) => {
             let target = wait_for_window(app, &label);
             let Some(window) = target else {
-                return Err(
-                    "A window for this repository is still being created. Retry shortly."
-                        .to_string(),
-                );
+                return Err(crate::common::messages::failure(
+                    "backend.window.windowStillCreating",
+                    serde_json::json!({}),
+                    "A window for this repository is still being created. Retry shortly.".into(),
+                ));
             };
             let _ = request_maximize(&window.as_ref().window());
             focus_window(&window)?;
@@ -236,7 +237,7 @@ fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWind
 
     let window = builder
         .build()
-        .map_err(|error| format!("Failed to create window: {error}"))?;
+        .map_err(|error| crate::common::messages::failure("backend.window.createWindowFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to create window: {error}")))?;
     crate::features::notifications::ensure_notification_host(app);
     Ok(window)
 }

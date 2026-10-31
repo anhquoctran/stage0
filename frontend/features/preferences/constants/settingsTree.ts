@@ -88,7 +88,7 @@ export const SETTINGS_TREE: TreeCategory[] = [
         label: 'LLM Providers',
         title: 'LLM Providers',
         description: 'Configure natively-included model providers (OpenAI, Anthropic, DeepSeek, Ollama, etc.).',
-        keywords: ['openai', 'anthropic', 'deepseek', 'ollama', 'model', 'api key', 'provider', 'groq'],
+        keywords: ['openai', 'anthropic', 'deepseek', 'ollama', 'model', 'api key', 'provider', 'groq', 'zai', 'opencode', 'glm'],
       },
       {
         id: 'ai-mcp',

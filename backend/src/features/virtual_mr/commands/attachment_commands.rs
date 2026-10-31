@@ -80,16 +80,26 @@ pub async fn save_mr_image_attachment(
 
             let decoded_bytes = BASE64
                 .decode(pure_base64.trim())
-                .map_err(|e| format!("Invalid base64 image data: {}", e))?;
+                .map_err(|e| {
+                    crate::common::messages::failure(
+                        "backend.virtualMr.imageBase64Invalid",
+                        serde_json::json!({ "error": e.to_string() }),
+                        format!("Invalid base64 image data: {e}"),
+                    )
+                })?;
 
             if decoded_bytes.is_empty() {
                 return Err(crate::common::messages::code("backend.virtualMr.imageEmpty"));
             }
 
             if decoded_bytes.len() > MAX_IMAGE_ATTACHMENT_BYTES {
-                return Err(format!(
-                    "Image size ({} bytes) exceeds the sandbox limit of 15 MiB",
-                    decoded_bytes.len()
+                return Err(crate::common::messages::failure(
+                    "backend.virtualMr.imageSizeLimit",
+                    serde_json::json!({ "bytes": decoded_bytes.len(), "limit": "15 MiB" }),
+                    format!(
+                        "Image size ({} bytes) exceeds the sandbox limit of 15 MiB",
+                        decoded_bytes.len()
+                    ),
                 ));
             }
 
@@ -101,8 +111,13 @@ pub async fn save_mr_image_attachment(
                     .join("attachments"),
             };
 
-            std::fs::create_dir_all(&tmp_root)
-                .map_err(|e| format!("Failed to create temporary attachment directory: {}", e))?;
+            std::fs::create_dir_all(&tmp_root).map_err(|e| {
+                crate::common::messages::failure(
+                    "backend.virtualMr.createAttachmentDirFailed",
+                    serde_json::json!({ "error": e.to_string() }),
+                    format!("Failed to create temporary attachment directory: {e}"),
+                )
+            })?;
 
             let sanitized_base = sanitize_attachment_filename(&file_name);
             let safe_stem = Path::new(&sanitized_base)
@@ -118,8 +133,13 @@ pub async fn save_mr_image_attachment(
             );
 
             let target_file_path = tmp_root.join(&unique_filename);
-            std::fs::write(&target_file_path, &decoded_bytes)
-                .map_err(|e| format!("Failed to write temporary image file: {}", e))?;
+            std::fs::write(&target_file_path, &decoded_bytes).map_err(|e| {
+                crate::common::messages::failure(
+                    "backend.virtualMr.writeAttachmentFailed",
+                    serde_json::json!({ "error": e.to_string() }),
+                    format!("Failed to write temporary image file: {e}"),
+                )
+            })?;
 
             let relative_path = format!("tmp/attachments/{}", unique_filename);
             let data_url = format!("data:{};base64,{}", canonical_mime, pure_base64.trim());
@@ -134,7 +154,7 @@ pub async fn save_mr_image_attachment(
             })
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(|e| crate::common::messages::failure("backend.virtualMr.taskExecutionFailed", serde_json::json!({ "error": e.to_string() }), format!("Task execution failed: {}", e)))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))

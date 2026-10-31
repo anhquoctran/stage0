@@ -23,10 +23,14 @@ pub struct PreferencesManager {
     write_lock: Mutex<()>,
 }
 
+fn service_unavailable() -> String {
+    crate::common::messages::failure("backend.preferences.serviceUnavailable", serde_json::json!({}), "Preferences service is unavailable".into())
+}
+
 impl PreferencesManager {
     pub fn new(directory: PathBuf) -> Result<Self, String> {
         fs::create_dir_all(&directory)
-            .map_err(|_| "Could not prepare the preferences directory".to_string())?;
+            .map_err(|_| crate::common::messages::failure("backend.preferences.prepareDirectoryFailed", serde_json::json!({}), "Could not prepare the preferences directory".into()))?;
         reject_symlink(&directory)?;
         secure_directory(&directory)?;
         Ok(Self {
@@ -49,11 +53,11 @@ impl PreferencesManager {
             .read(true)
             .write(true)
             .open(&path)
-            .map_err(|_| "Could not open the preferences write lock".to_string())?;
+            .map_err(|_| crate::common::messages::failure("backend.preferences.openWriteLockFailed", serde_json::json!({}), "Could not open the preferences write lock".into()))?;
         secure_file(&path)
-            .map_err(|_| "Could not secure the preferences write lock".to_string())?;
+            .map_err(|_| crate::common::messages::failure("backend.preferences.secureWriteLockFailed", serde_json::json!({}), "Could not secure the preferences write lock".into()))?;
         FileExt::lock_exclusive(&file)
-            .map_err(|_| "Could not acquire the preferences write lock".to_string())?;
+            .map_err(|_| crate::common::messages::failure("backend.preferences.acquireWriteLockFailed", serde_json::json!({}), "Could not acquire the preferences write lock".into()))?;
         Ok(file)
     }
 
@@ -65,10 +69,10 @@ impl PreferencesManager {
         let _guard = self
             .write_lock
             .lock()
-            .map_err(|_| "Preferences service is unavailable".to_string())?;
+            .map_err(|_| service_unavailable())?;
         let _process_guard = PROCESS_PREFERENCES_WRITE_LOCK
             .lock()
-            .map_err(|_| "Preferences service is unavailable".to_string())?;
+            .map_err(|_| service_unavailable())?;
         let _process_lock = self.acquire_process_lock()?;
         let path = self.file_path();
         reject_symlink(&path)?;
@@ -81,7 +85,7 @@ impl PreferencesManager {
             .map_err(|error| format_parse_error(&error))?;
         let root_object = root
             .object_value()
-            .ok_or_else(|| "Packaged preferences defaults are invalid".to_string())?;
+            .ok_or_else(|| crate::common::messages::failure("backend.preferences.invalidDefaults", serde_json::json!({}), "Packaged preferences defaults are invalid".to_string()))?;
         let mut migrated = sanitize_legacy(legacy);
         if let Some((id, binary_path)) = legacy_git {
             migrated.insert(
@@ -154,19 +158,21 @@ impl PreferencesManager {
         let _guard = self
             .write_lock
             .lock()
-            .map_err(|_| "Preferences service is unavailable".to_string())?;
+            .map_err(|_| service_unavailable())?;
         let _process_guard = PROCESS_PREFERENCES_WRITE_LOCK
             .lock()
-            .map_err(|_| "Preferences service is unavailable".to_string())?;
+            .map_err(|_| service_unavailable())?;
         let _process_lock = self.acquire_process_lock()?;
         let path = self.file_path();
         reject_symlink(&path)?;
         let current = read_limited(&path)?;
         if revision(&current) != expected_revision {
-            return Err(
+            return Err(crate::common::messages::failure(
+                "backend.preferences.changed",
+                serde_json::json!({}),
                 "Preferences changed while Git credentials were being migrated. Retry the migration."
                     .into(),
-            );
+            ));
         }
         let root = CstRootNode::parse(&current, &strict_jsonc_options())
             .map_err(|error| format_parse_error(&error))?;
@@ -242,10 +248,10 @@ impl PreferencesManager {
         let _guard = self
             .write_lock
             .lock()
-            .map_err(|_| "Preferences service is unavailable".to_string())?;
+            .map_err(|_| service_unavailable())?;
         let _process_guard = PROCESS_PREFERENCES_WRITE_LOCK
             .lock()
-            .map_err(|_| "Preferences service is unavailable".to_string())?;
+            .map_err(|_| service_unavailable())?;
         let _process_lock = self.acquire_process_lock()?;
         let path = self.file_path();
         reject_symlink(&path)?;
@@ -260,7 +266,11 @@ impl PreferencesManager {
         }
         let prior = parse_and_validate(&current).unwrap_or_else(|_| self.recovery_settings());
         if prior.get("credentialReferences") != value.get("credentialReferences") {
-            return Err("Credential references cannot be edited in preferences.json".into());
+            return Err(crate::common::messages::failure(
+                "backend.preferences.credentialReferencesNotEditable",
+                serde_json::json!({}),
+                "Credential references cannot be edited in preferences.json".into(),
+            ));
         }
         // Invalid drafts never reach disk. Keep the last valid file as a recovery copy.
         if parse_and_validate(&current).is_ok() {
@@ -295,19 +305,27 @@ impl PreferencesManager {
         prepare: impl FnOnce(&Value) -> Result<Value, String>,
     ) -> Result<PreferencesDocument, String> {
         if !patch.is_object() {
-            return Err("Preferences updates must be a JSON object".into());
+            return Err(crate::common::messages::failure(
+                "backend.preferences.updatesMustBeObject",
+                serde_json::json!({}),
+                "Preferences updates must be a JSON object".into(),
+            ));
         }
         if patch.get("credentialReferences").is_some() {
-            return Err("Credential references are managed by the native transaction".into());
+            return Err(crate::common::messages::failure(
+                "backend.preferences.credentialReferencesManagedByTransaction",
+                serde_json::json!({}),
+                "Credential references are managed by the native transaction".into(),
+            ));
         }
         reject_git_credentials(&patch, "")?;
         let _guard = self
             .write_lock
             .lock()
-            .map_err(|_| "Preferences service is unavailable".to_string())?;
+            .map_err(|_| service_unavailable())?;
         let _process_guard = PROCESS_PREFERENCES_WRITE_LOCK
             .lock()
-            .map_err(|_| "Preferences service is unavailable".to_string())?;
+            .map_err(|_| service_unavailable())?;
         let _process_lock = self.acquire_process_lock()?;
         let path = self.file_path();
         reject_symlink(&path)?;
@@ -322,7 +340,7 @@ impl PreferencesManager {
             .map_err(|error| format_parse_error(&error))?;
         let object = root
             .object_value()
-            .ok_or_else(|| "Preferences root must be an object".to_string())?;
+            .ok_or_else(|| crate::common::messages::failure("backend.preferences.mustBeObject", serde_json::json!({}), "Preferences root must be an object".to_string()))?;
         merge_object(&object, patch.as_object().unwrap())?;
         let candidate = parse_and_validate(&root.to_string())?;
         reject_secrets(&candidate, "")?;
@@ -365,10 +383,10 @@ impl PreferencesManager {
         let _guard = self
             .write_lock
             .lock()
-            .map_err(|_| "Preferences service is unavailable".to_string())?;
+            .map_err(|_| service_unavailable())?;
         let _process_guard = PROCESS_PREFERENCES_WRITE_LOCK
             .lock()
-            .map_err(|_| "Preferences service is unavailable".to_string())?;
+            .map_err(|_| service_unavailable())?;
         let _process_lock = self.acquire_process_lock()?;
         let path = self.file_path();
         reject_symlink(&path)?;
@@ -388,7 +406,13 @@ impl PreferencesManager {
         let content = if value.get("credentialReferences").is_some() {
             let root = CstRootNode::parse(DEFAULT_PREFERENCES, &strict_jsonc_options())
                 .map_err(|error| format_parse_error(&error))?;
-            let object = root.object_value().ok_or("Invalid defaults")?;
+            let object = root.object_value().ok_or_else(|| {
+                crate::common::messages::failure(
+                    "backend.preferences.invalidDefaults",
+                    serde_json::json!({}),
+                    "Invalid defaults".into(),
+                )
+            })?;
             let patch = serde_json::json!({"credentialReferences": value["credentialReferences"]});
             merge_object(&object, patch.as_object().unwrap())?;
             root.to_string()

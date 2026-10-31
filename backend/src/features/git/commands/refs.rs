@@ -5,12 +5,20 @@ use crate::features::git::ops::{
 };
 use crate::features::git::{branches::list_branches, BranchList};
 
+fn task_failed(error: impl std::fmt::Display) -> String {
+    crate::common::messages::failure(
+        "backend.git.taskExecutionFailed",
+        serde_json::json!({}),
+        format!("Task execution failed: {error}"),
+    )
+}
+
 #[tauri::command]
 pub async fn get_branches(repo_path: String) -> Result<BranchList, String> {
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || list_branches(&repo_path))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -21,7 +29,7 @@ pub async fn list_git_remotes(repo_path: String) -> Result<Vec<String>, String> 
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || list_remotes(&repo_path))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -35,7 +43,7 @@ pub async fn get_git_remote_url(
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || get_remote_url(&repo_path, remote.as_deref()))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -46,7 +54,7 @@ pub async fn list_git_remotes_detailed(repo_path: String) -> Result<Vec<GitRemot
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || list_remotes_detailed(&repo_path))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -57,7 +65,7 @@ pub async fn add_git_remote(repo_path: String, name: String, url: String) -> Res
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || add_remote(&repo_path, &name, &url))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -68,7 +76,7 @@ pub async fn remove_git_remote(repo_path: String, name: String) -> Result<(), St
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || remove_remote(&repo_path, &name))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -83,7 +91,7 @@ pub async fn set_git_remote_url(
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || set_remote_url(&repo_path, &name, &url))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -96,7 +104,7 @@ pub async fn test_git_remote(repo_path: String, remote_or_url: String) -> Result
             test_remote_connection(&repo_path, &remote_or_url)
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -111,7 +119,7 @@ pub async fn list_git_tags(repo_path: String) -> Result<Vec<GitTagInfo>, String>
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || list_tags_detailed(&repo_path))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -134,7 +142,7 @@ pub async fn create_git_tag(
             )
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -145,7 +153,7 @@ pub async fn delete_git_tag(repo_path: String, tag_name: String) -> Result<(), S
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || delete_tag(&repo_path, &tag_name))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -162,7 +170,7 @@ pub async fn create_git_branch(
             create_branch(&repo_path, &branch_name, start_point.as_deref())
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -177,7 +185,7 @@ pub async fn delete_git_branch(
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || delete_branch(&repo_path, &branch_name, force))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -194,7 +202,7 @@ pub async fn rename_git_branch(
             rename_branch(&repo_path, &old_name, &new_name)
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))

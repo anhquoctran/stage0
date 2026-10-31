@@ -14,6 +14,10 @@ export const getProviderDisplayName = (id: string, customName?: string) => {
       return 'Qwen (Alibaba Cloud)';
     case 'kimi':
       return 'Kimi (Moonshot AI)';
+    case 'zai':
+      return 'Z.ai (GLM Coding Plan)';
+    case 'opencode':
+      return 'OpenCode';
     case 'ollama':
       return 'Ollama (Local)';
     case 'custom':

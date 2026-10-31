@@ -24,7 +24,11 @@ impl WatcherState {
         path: PathBuf,
     ) -> Result<(), String> {
         if !path.exists() {
-            return Err(format!("Path does not exist: {}", path.display()));
+            return Err(crate::common::messages::failure(
+                "backend.git.pathDoesNotExist",
+                serde_json::json!({ "path": path.display().to_string() }),
+                format!("Path does not exist: {}", path.display()),
+            ));
         }
 
         let target_repo = path.to_string_lossy().into_owned();
@@ -51,12 +55,24 @@ impl WatcherState {
                 }
             },
         )
-        .map_err(|e| format!("Failed to create file watcher: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.git.createWatcherFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Failed to create file watcher: {}", e),
+            )
+        })?;
 
         debouncer
             .watcher()
             .watch(&path, RecursiveMode::Recursive)
-            .map_err(|e| format!("Failed to watch directory: {}", e))?;
+            .map_err(|e| {
+                crate::common::messages::failure(
+                    "backend.git.watchDirectoryFailed",
+                    serde_json::json!({ "error": e.to_string() }),
+                    format!("Failed to watch directory: {}", e),
+                )
+            })?;
 
         let previous = self
             .0

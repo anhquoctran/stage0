@@ -2,6 +2,14 @@ use crate::core::db::Database;
 use crate::features::git::persistence::{RepoLabelDb, RepoSettingsDb};
 use tauri::{AppHandle, Emitter, Manager};
 
+fn task_failed(error: impl std::fmt::Display) -> String {
+    crate::common::messages::failure(
+        "backend.git.taskExecutionFailed",
+        serde_json::json!({}),
+        format!("Task execution failed: {error}"),
+    )
+}
+
 #[tauri::command]
 pub async fn get_repo_settings(
     app: AppHandle,
@@ -98,7 +106,7 @@ pub async fn scan_git_binaries(
             ))
         })
         .await
-        .map_err(|error| format!("Task execution failed: {}", error))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -139,10 +147,10 @@ pub async fn get_active_git_binary(
             binaries
                 .into_iter()
                 .find(|binary| binary.is_active)
-                .ok_or_else(|| "No active Git binary detected".to_string())
+                .ok_or_else(|| crate::common::messages::code("backend.git.noActiveGitBinary"))
         })
         .await
-        .map_err(|error| format!("Task execution failed: {}", error))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -156,8 +164,13 @@ pub async fn set_active_git_binary(
 ) -> Result<crate::features::git::GitBinaryInfo, String> {
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || {
-            let version = crate::features::git::test_git_version(&path)
-                .map_err(|error| format!("Cannot select invalid Git binary: {}", error))?;
+            let version = crate::features::git::test_git_version(&path).map_err(|error| {
+                crate::common::messages::failure(
+                    "backend.git.selectInvalidBinaryFailed",
+                    serde_json::json!({ "error": &error }),
+                    format!("Cannot select invalid Git binary: {}", error),
+                )
+            })?;
 
             crate::features::preferences::transaction::run(|| {
                 let preferences = app.state::<crate::features::preferences::PreferencesManager>();
@@ -190,7 +203,7 @@ pub async fn set_active_git_binary(
             })
         })
         .await
-        .map_err(|error| format!("Task execution failed: {}", error))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -202,8 +215,13 @@ pub async fn validate_custom_git_binary(
 ) -> Result<crate::features::git::GitBinaryInfo, String> {
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || {
-            let version = crate::features::git::test_git_version(&path)
-                .map_err(|error| format!("Failed to validate Git executable: {}", error))?;
+            let version = crate::features::git::test_git_version(&path).map_err(|error| {
+                crate::common::messages::failure(
+                    "backend.git.validateExecutableFailed",
+                    serde_json::json!({ "error": &error }),
+                    format!("Failed to validate Git executable: {}", error),
+                )
+            })?;
 
             Ok(crate::features::git::GitBinaryInfo {
                 id: "custom-candidate".to_string(),
@@ -216,7 +234,7 @@ pub async fn validate_custom_git_binary(
             })
         })
         .await
-        .map_err(|error| format!("Task execution failed: {}", error))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))

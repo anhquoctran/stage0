@@ -27,7 +27,7 @@ impl AuthProfile {
             .flatten()
             .map(|raw| {
                 serde_json::from_str(&raw)
-                    .map_err(|_| "Saved ChatGPT session is invalid. Sign in again.".into())
+                    .map_err(|_| crate::common::messages::failure("backend.ai.chatGptSavedSessionInvalid", serde_json::json!({}), "Saved ChatGPT session is invalid. Sign in again.".into()))
             })
             .transpose()
     }

@@ -44,7 +44,7 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
         ));
     }
     let url =
-        reqwest::Url::parse(config.base_url.trim()).map_err(|_| "Invalid provider base URL")?;
+        reqwest::Url::parse(config.base_url.trim()).map_err(|_| crate::common::messages::failure("backend.review.providerBaseUrlInvalid", serde_json::json!({}), "Invalid provider base URL".into()))?;
     let local = matches!(
         url.host_str(),
         Some("localhost" | "127.0.0.1" | "[::1]" | "::1")
@@ -104,7 +104,7 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
         "anthropic" if root == "https://api.anthropic.com/v1" => "messages",
         "gemini" if root == "https://generativelanguage.googleapis.com/v1beta" => "gemini",
         "xai_grok" if root == "https://api.x.ai/v1" => "chat/completions",
-        "deepseek" | "qwen" | "kimi" => "chat/completions",
+        "deepseek" | "qwen" | "kimi" | "zai" | "z_ai" | "opencode" => "chat/completions",
         "custom" => "chat/completions",
         "ollama" if local => "api/chat",
         _ => {

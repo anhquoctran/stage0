@@ -33,16 +33,29 @@ impl Database {
         let changed = self.conn().execute(
             "UPDATE virtual_mr_sessions SET description=?2, updated_at=CURRENT_TIMESTAMP WHERE id=?1",
             params![session_id, description],
-        ).map_err(|error| format!("Could not update the Virtual MR description: {error}"))?;
+        ).map_err(|error| {
+            crate::common::messages::failure(
+                "backend.review.updateDescriptionFailed",
+                serde_json::json!({ "error": error.to_string() }),
+                format!("Could not update the Virtual MR description: {error}"),
+            )
+        })?;
         if changed != 1 {
-            return Err("Virtual MR no longer exists; description was not updated".into());
+            return Err(crate::common::messages::code("backend.review.mrNoLongerExists"));
         }
         Ok(())
     }
 
     pub fn save_review_run(&self, run: &ReviewRun) -> Result<(), String> {
-        let payload = serde_json::to_string(run).map_err(|_| "Could not serialize review run")?;
-        self.conn().execute("INSERT INTO ai_review_runs(id,session_id,status,payload,started_at) VALUES(?1,?2,?3,?4,?5) ON CONFLICT(id) DO UPDATE SET status=excluded.status,payload=excluded.payload",params![run.id,run.session_id,run.status,payload,run.started_at]).map_err(|e|format!("Could not save review state: {e}"))?;
+        let payload = serde_json::to_string(run)
+            .map_err(|_| crate::common::messages::code("backend.review.serializeRunFailed"))?;
+        self.conn().execute("INSERT INTO ai_review_runs(id,session_id,status,payload,started_at) VALUES(?1,?2,?3,?4,?5) ON CONFLICT(id) DO UPDATE SET status=excluded.status,payload=excluded.payload",params![run.id,run.session_id,run.status,payload,run.started_at]).map_err(|e| {
+            crate::common::messages::failure(
+                "backend.review.saveRunStateFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Could not save review state: {e}"),
+            )
+        })?;
         Ok(())
     }
     pub fn get_review_run(&self, id: &str) -> Result<ReviewRun, String> {
@@ -53,12 +66,14 @@ impl Database {
                 [id],
                 |r| Ok((r.get(0)?, r.get(1)?)),
             )
-            .map_err(|_| "Review run not found")?;
-        let mut run: ReviewRun =
-            serde_json::from_str(&payload).map_err(|_| "Invalid stored review run")?;
+            .map_err(|_| crate::common::messages::code("backend.review.runNotFound"))?;
+        let mut run: ReviewRun = serde_json::from_str(&payload)
+            .map_err(|_| crate::common::messages::code("backend.review.invalidStoredRun"))?;
         if status == "interrupted" {
             run.status = status;
-            run.error=Some("Application stopped before this run finished. Start a new review; it was not completed or approved.".into());
+            run.error = Some(crate::common::messages::code(
+                "backend.review.interruptedByShutdown",
+            ));
         }
         Ok(run)
     }

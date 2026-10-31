@@ -35,7 +35,7 @@ static AUTH: Mutex<AuthRuntime> = Mutex::const_new(AuthRuntime::new());
 pub async fn start_chatgpt_oauth(profile_id: Option<String>) -> Result<ChatGptAuthStatus, String> {
     let mut runtime = AUTH.lock().await;
     if runtime.pending.is_some() {
-        return Err("A ChatGPT browser sign-in is already pending. Cancel it first.".into());
+        return Err(crate::common::messages::code("backend.ai.chatgptSignInPending"));
     }
     let mut catalog = AuthCatalog::load_for_sign_in(profile_id.is_none())?;
     let host = catalog.host_id.clone();
@@ -45,23 +45,23 @@ pub async fn start_chatgpt_oauth(profile_id: Option<String>) -> Result<ChatGptAu
             .iter()
             .find(|p| p.id == id)
             .cloned()
-            .ok_or("Saved ChatGPT registration not found")?
+            .ok_or_else(|| crate::common::messages::code("backend.ai.chatgptProfileNotFound"))?
     } else {
         if catalog.profiles.len() >= 12 {
-            return Err("The saved ChatGPT registration limit has been reached.".into());
+            return Err(crate::common::messages::code("backend.ai.chatgptRegistrationLimitReached"));
         }
         auth_profile::AuthProfile::new()
     };
     catalog.save()?;
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
         .await
-        .map_err(|_| "Could not start the local ChatGPT callback listener")?;
+        .map_err(|_| crate::common::messages::code("backend.ai.chatgptCallbackListenerFailed"))?;
     let pending = pending_login::PendingLogin::new(
         profile,
         host,
         listener
             .local_addr()
-            .map_err(|_| "Could not inspect callback port")?
+            .map_err(|_| crate::common::messages::code("backend.ai.chatgptCallbackPortFailed"))?
             .port(),
     );
     let attempt = pending.id.clone();
@@ -76,16 +76,16 @@ pub async fn start_chatgpt_oauth(profile_id: Option<String>) -> Result<ChatGptAu
         runtime.pending = None;
         runtime.cancel = None;
         runtime.phase = "failed".into();
-        runtime.error = Some(
-            "Could not open your system browser. Check your default browser and retry.".into(),
-        );
+        runtime.error = Some(crate::common::messages::code(
+            "backend.ai.chatgptOpenBrowserFailed",
+        ));
         return runtime.snapshot(&catalog);
     }
     tokio::spawn(async move {
         let outcome = tokio::select! {
-            _ = cancelled => Err("ChatGPT sign-in cancelled locally. Browser authorization may already have completed.".into()),
+            _ = cancelled => Err(crate::common::messages::code("backend.ai.chatgptSignInCancelled")),
             result = tokio::time::timeout(std::time::Duration::from_secs(600), flow::complete(listener, pending)) => {
-                result.unwrap_or_else(|_| Err("ChatGPT browser sign-in timed out. Please try again.".into()))
+                result.unwrap_or_else(|_| Err(crate::common::messages::code("backend.ai.chatgptSignInTimedOut")))
             }
         };
         let mut runtime = AUTH.lock().await;
@@ -130,7 +130,7 @@ pub async fn load_saved_chatgpt_auth() -> Result<ChatGptAuthStatus, String> {
 pub async fn cancel_chatgpt_oauth(attempt_id: &str) -> Result<ChatGptAuthStatus, String> {
     let mut runtime = AUTH.lock().await;
     if runtime.pending.as_deref() != Some(attempt_id) {
-        return Err("No matching pending ChatGPT sign-in".into());
+        return Err(crate::common::messages::code("backend.ai.chatgptNoMatchingSignIn"));
     }
     if let Some(cancel) = runtime.cancel.take() {
         let _ = cancel.send(());
@@ -144,7 +144,7 @@ pub async fn cancel_chatgpt_oauth(attempt_id: &str) -> Result<ChatGptAuthStatus,
 pub async fn refresh_chatgpt_session(profile_id: &str) -> Result<ChatGptAuthStatus, String> {
     let mut runtime = AUTH.lock().await;
     if runtime.pending.is_some() {
-        return Err("Finish or cancel the pending sign-in first".into());
+        return Err(crate::common::messages::code("backend.ai.chatgptPendingSignInExists"));
     }
     let mut catalog = AuthCatalog::load()?;
     let profile = catalog
@@ -152,10 +152,10 @@ pub async fn refresh_chatgpt_session(profile_id: &str) -> Result<ChatGptAuthStat
         .iter()
         .find(|p| p.id == profile_id)
         .cloned()
-        .ok_or("Saved ChatGPT registration not found")?;
+        .ok_or_else(|| crate::common::messages::code("backend.ai.chatgptProfileNotFound"))?;
     let session = profile
         .session()?
-        .ok_or("Sign in again to restore this ChatGPT session")?;
+        .ok_or_else(|| crate::common::messages::code("backend.ai.chatgptSignInAgain"))?;
     match flow::refresh(&profile, session).await {
         Ok(session) => {
             catalog.commit(profile, &session)?;
@@ -179,7 +179,7 @@ pub async fn disconnect_chatgpt_subscription(
 ) -> Result<ChatGptAuthStatus, String> {
     let mut runtime = AUTH.lock().await;
     if runtime.pending.is_some() {
-        return Err("Finish or cancel the pending sign-in before signing out".into());
+        return Err(crate::common::messages::code("backend.ai.chatgptFinishPendingBeforeSignOut"));
     }
     let mut catalog = AuthCatalog::load()?;
     let profile = catalog
@@ -187,7 +187,7 @@ pub async fn disconnect_chatgpt_subscription(
         .iter()
         .find(|p| p.id == profile_id)
         .cloned()
-        .ok_or("Saved ChatGPT registration not found")?;
+        .ok_or_else(|| crate::common::messages::code("backend.ai.chatgptProfileNotFound"))?;
     let session = profile.session()?;
     let revoked = match session {
         Some(session) => flow::revoke(&profile, &session).await,
@@ -199,7 +199,9 @@ pub async fn disconnect_chatgpt_subscription(
     runtime.error = if revoked {
         None
     } else {
-        Some("Signed out locally, but remote revocation was not confirmed. Disconnect Stage0 in ChatGPT Settings.".into())
+        Some(crate::common::messages::code(
+            "backend.ai.chatgptRemoteRevocationUnconfirmed",
+        ))
     };
     runtime.snapshot(&catalog)
 }
@@ -211,5 +213,7 @@ pub async fn chat_chatgpt_subscription(
     _: Option<&str>,
     _: Option<&str>,
 ) -> Result<String, String> {
-    Err("ChatGPT subscription sign-in is currently available for native AI code reviews; the general AI chat adapter is not connected to Responses API yet.".into())
+    Err(crate::common::messages::code(
+        "backend.ai.chatgptGeneralChatUnavailable",
+    ))
 }

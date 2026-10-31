@@ -11,7 +11,7 @@ const LAUNCHER_MARKER: &str = "# Stage0 managed CLI launcher v1";
 pub(super) fn apply(enable: bool) -> Result<(), String> {
     let Some(home) = home_dir() else {
         return if enable {
-            Err("The user home directory is unavailable".into())
+            Err(crate::common::messages::code("backend.preferences.userHomeUnavailable"))
         } else {
             Ok(())
         };
@@ -48,9 +48,9 @@ fn install(home: &Path, launcher: &Path) -> Result<(), String> {
     let target = target_executable()?;
     let target = target
         .to_str()
-        .ok_or("Stage0 executable path is not valid UTF-8")?;
+        .ok_or_else(|| crate::common::messages::code("backend.preferences.executablePathNotUtf8"))?;
     if target.contains('\n') || target.contains('\r') {
-        return Err("Stage0 executable path contains a line break".into());
+        return Err(crate::common::messages::code("backend.preferences.executablePathLineBreak"));
     }
     let script = format!(
         "#!/bin/sh\n{LAUNCHER_MARKER}\nexec {} \"$@\"\n",
@@ -113,13 +113,24 @@ const FISH_BLOCK: &str = "# >>> Stage0 CLI PATH >>>\nif not contains -- \"$HOME/
 
 fn add_path_block(path: &Path, block: &str) -> Result<bool, String> {
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|error| format!("Could not create {}: {error}", parent.display()))?;
+        fs::create_dir_all(parent).map_err(|error| {
+            crate::common::messages::failure(
+                "backend.preferences.createDirFailed",
+                serde_json::json!({ "path": parent.display().to_string() }),
+                format!("Could not create {}: {error}", parent.display()),
+            )
+        })?;
     }
     let current = match fs::read_to_string(path) {
         Ok(value) => value,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
-        Err(error) => return Err(format!("Could not read {}: {error}", path.display())),
+        Err(error) => {
+            return Err(crate::common::messages::failure(
+                "backend.preferences.readConfigFailed",
+                serde_json::json!({ "path": path.display().to_string() }),
+                format!("Could not read {}: {error}", path.display()),
+            ));
+        }
     };
     let has_begin = current.contains(BEGIN);
     let has_end = current.contains(END);
@@ -127,9 +138,13 @@ fn add_path_block(path: &Path, block: &str) -> Result<bool, String> {
         return Ok(false);
     }
     if has_begin || has_end {
-        return Err(format!(
-            "Stage0 PATH block in {} is incomplete",
-            path.display()
+        return Err(crate::common::messages::failure(
+            "backend.preferences.pathBlockIncomplete",
+            serde_json::json!({ "path": path.display().to_string() }),
+            format!(
+                "Stage0 PATH block in {} is incomplete",
+                path.display()
+            ),
         ));
     }
 
@@ -137,16 +152,31 @@ fn add_path_block(path: &Path, block: &str) -> Result<bool, String> {
     options.create(true).append(true);
     #[cfg(unix)]
     options.mode(0o600);
-    let mut file = options
-        .open(path)
-        .map_err(|error| format!("Could not update {}: {error}", path.display()))?;
+    let mut file = options.open(path).map_err(|error| {
+        crate::common::messages::failure(
+            "backend.preferences.updateConfigFailed",
+            serde_json::json!({ "path": path.display().to_string() }),
+            format!("Could not update {}: {error}", path.display()),
+        )
+    })?;
     if !current.is_empty() {
-        file.write_all(b"\n")
-            .map_err(|error| format!("Could not update {}: {error}", path.display()))?;
+        file.write_all(b"\n").map_err(|error| {
+            crate::common::messages::failure(
+                "backend.preferences.updateConfigFailed",
+                serde_json::json!({ "path": path.display().to_string() }),
+                format!("Could not update {}: {error}", path.display()),
+            )
+        })?;
     }
     file.write_all(block.as_bytes())
         .and_then(|_| file.write_all(b"\n"))
-        .map_err(|error| format!("Could not update {}: {error}", path.display()))?;
+        .map_err(|error| {
+            crate::common::messages::failure(
+                "backend.preferences.updateConfigFailed",
+                serde_json::json!({ "path": path.display().to_string() }),
+                format!("Could not update {}: {error}", path.display()),
+            )
+        })?;
     Ok(true)
 }
 

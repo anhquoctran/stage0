@@ -6,6 +6,14 @@ use crate::features::git::RepoInfo;
 use std::path::Path;
 use tauri::{AppHandle, Manager};
 
+fn task_failed(error: impl std::fmt::Display) -> String {
+    crate::common::messages::failure(
+        "backend.git.taskExecutionFailed",
+        serde_json::json!({}),
+        format!("Task execution failed: {error}"),
+    )
+}
+
 #[tauri::command]
 pub async fn check_remote_repo_url(url: String) -> Result<String, String> {
     let result: Result<_, String> = async {
@@ -13,7 +21,7 @@ pub async fn check_remote_repo_url(url: String) -> Result<String, String> {
             crate::features::git::ops::check_git_remote_url(&url)
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -57,7 +65,7 @@ pub async fn get_clone_remote_refs(
             crate::features::git::RemoteCloneRefs::read(&mut command, url)
         })
         .await
-        .map_err(|error| format!("Task execution failed: {error}"))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -142,7 +150,13 @@ pub async fn clone_repository(
             4 * 1024 * 1024,
             options.timeout(),
         )
-        .map_err(|e| format!("Git clone failed: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.git.cloneCommandFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Git clone failed: {e}"),
+            )
+        })?;
 
         if output.output_truncated {
             return Err(crate::common::messages::code(
@@ -164,9 +178,13 @@ pub async fn clone_repository(
             } else {
                 "Git clone command failed with unknown error".to_string()
             };
-            return Err(format!(
-                "{}\nThe destination may contain partially cloned data. Inspect it before retrying, or choose a new empty folder.",
-                err_msg.trim()
+            return Err(crate::common::messages::failure(
+                "backend.git.cloneFailedPartial",
+                serde_json::json!({ "error": err_msg.trim() }),
+                format!(
+                    "{}\nThe destination may contain partially cloned data. Inspect it before retrying, or choose a new empty folder.",
+                    err_msg.trim()
+                ),
             ));
         }
 
@@ -179,10 +197,16 @@ pub async fn clone_repository(
         let (canonical_path, _, name) = resolve_repository(trimmed_target)?;
         let db = app.state::<Database>();
         db.upsert_repository("", &name, &canonical_path.to_string_lossy())
-            .map_err(|e| format!("Failed to save repository to database: {}", e))
+            .map_err(|e| {
+                crate::common::messages::failure(
+                    "backend.git.saveRepoFailed",
+                    serde_json::json!({ "error": e.to_string() }),
+                    format!("Failed to save repository to database: {e}"),
+                )
+            })
     })
     .await
-    .map_err(|e| format!("Task execution failed: {}", e))?
+    .map_err(task_failed)?
 }.await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
 }

@@ -13,7 +13,7 @@ impl ReviewContext {
             return Ok(None);
         }
         if !(entry.starts_with("100644 blob ") || entry.starts_with("100755 blob ")) {
-            return Err("Only regular files from the selected snapshot can be read (no symlinks or submodules)".into());
+            return Err(crate::common::messages::failure("backend.review.reviewRegularFileOnly", serde_json::json!({}), "Only regular files from the selected snapshot can be read (no symlinks or submodules)".into()));
         }
         let content = git(
             &self.snapshot.repo_path,
@@ -21,7 +21,7 @@ impl ReviewContext {
             256 * 1024,
         )?;
         if content.contains('\0') {
-            return Err("Binary files are not reviewable as text".into());
+            return Err(crate::common::messages::failure("backend.review.reviewBinaryFileUnsupported", serde_json::json!({}), "Binary files are not reviewable as text".into()));
         }
         Ok(Some(content))
     }
@@ -30,7 +30,7 @@ impl ReviewContext {
         let sha = match side {
             "base" => &self.snapshot.merge_base_sha,
             "head" => &self.snapshot.head_sha,
-            _ => return Err("side must be base or head".into()),
+            _ => return Err(crate::common::messages::failure("backend.review.reviewSideInvalid", serde_json::json!({}), "side must be base or head".into())),
         };
         self.raw_blob_at(path, sha)
     }

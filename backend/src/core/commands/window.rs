@@ -167,7 +167,7 @@ pub async fn get_window_chrome(
     let result: Result<_, String> = async {
         let mut profile = tauri::async_runtime::spawn_blocking(crate::core::desktop::read_profile)
             .await
-            .map_err(|_| "Could not read desktop window settings".to_string())?;
+            .map_err(|_| crate::common::messages::failure("backend.window.readDesktopSettingsFailed", serde_json::json!({}), "Could not read desktop window settings".into()))?;
         profile.native_frame = if window
             .app_handle()
             .state::<WindowManagerState>()

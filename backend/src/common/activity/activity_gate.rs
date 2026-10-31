@@ -16,7 +16,7 @@ impl ActivityGate {
         let mut state = self
             .state
             .lock()
-            .map_err(|_| "Application activity is unavailable")?;
+            .map_err(|_| crate::common::messages::code("backend.activity.unavailable"))?;
         if state.1 {
             return Err(crate::common::messages::code(
                 "backend.updates.installingRestart",
@@ -35,7 +35,7 @@ impl ActivityGate {
         let mut state = self
             .state
             .lock()
-            .map_err(|_| "Application activity is unavailable")?;
+            .map_err(|_| crate::common::messages::code("backend.activity.unavailable"))?;
         if state.1 || state.0 != 0 {
             return Err(crate::common::messages::code(
                 "backend.updates.activeOperations",

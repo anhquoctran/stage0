@@ -34,14 +34,26 @@ pub fn test_git_version(path: &str) -> Result<String, String> {
         64 * 1024,
         std::time::Duration::from_secs(5),
     )
-    .map_err(|error| format!("Failed to run Git executable: {}", error))?;
+    .map_err(|error| {
+        crate::common::messages::failure(
+            "backend.git.runExecutableFailed",
+            serde_json::json!({ "error": error.to_string() }),
+            format!("Failed to run Git executable: {}", error),
+        )
+    })?;
     if output.output_truncated {
-        return Err("Git executable produced too much output".to_string());
+        return Err(crate::common::messages::code(
+            "backend.git.executableOutputTooLarge",
+        ));
     }
     if !output.status.success() {
-        return Err(format!(
-            "Command exited with error code {:?}",
-            output.status.code()
+        return Err(crate::common::messages::failure(
+            "backend.git.executableExitError",
+            serde_json::json!({ "code": output.status.code() }),
+            format!(
+                "Command exited with error code {:?}",
+                output.status.code()
+            ),
         ));
     }
 
@@ -49,7 +61,11 @@ pub fn test_git_version(path: &str) -> Result<String, String> {
     if stdout.contains("git version") {
         Ok(stdout)
     } else {
-        Err(format!("Unexpected output: {}", stdout))
+        Err(crate::common::messages::failure(
+            "backend.git.unexpectedOutput",
+            serde_json::json!({ "output": &stdout }),
+            format!("Unexpected output: {}", stdout),
+        ))
     }
 }
 

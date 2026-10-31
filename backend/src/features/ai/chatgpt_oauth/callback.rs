@@ -21,7 +21,7 @@ pub(super) fn parse(
         return Ok(None);
     }
     let expected =
-        reqwest::Url::parse(&pending.redirect).map_err(|_| "Invalid callback configuration")?;
+        reqwest::Url::parse(&pending.redirect).map_err(|_| crate::common::messages::failure("backend.ai.chatGptCallbackConfigInvalid", serde_json::json!({}), "Invalid callback configuration".into()))?;
     let hosts = lines
         .filter_map(|line| line.split_once(':'))
         .filter(|(name, _)| name.eq_ignore_ascii_case("host"))
@@ -31,7 +31,7 @@ pub(super) fn parse(
         return Ok(None);
     }
     let url = reqwest::Url::parse(&format!("http://127.0.0.1{}", parts[1]))
-        .map_err(|_| "Invalid callback URL")?;
+        .map_err(|_| crate::common::messages::failure("backend.ai.chatGptCallbackUrlInvalid", serde_json::json!({}), "Invalid callback URL".into()))?;
     if url.path() != "/auth/callback" || url.fragment().is_some() {
         return Ok(None);
     }
@@ -62,7 +62,7 @@ pub(super) fn parse(
             )?
     } else {
         if client.is_some_and(|value| value != pending.profile.client_id) {
-            return Err("Callback client ID did not match the selected registration".into());
+            return Err(crate::common::messages::failure("backend.ai.chatGptCallbackClientIdMismatch", serde_json::json!({}), "Callback client ID did not match the selected registration".into()));
         }
         &pending.profile.client_id
     };
@@ -76,7 +76,7 @@ pub(super) async fn receive(
         let (mut socket, peer) = listener
             .accept()
             .await
-            .map_err(|_| "ChatGPT callback listener stopped")?;
+            .map_err(|_| crate::common::messages::failure("backend.ai.chatGptCallbackListenerStopped", serde_json::json!({}), "ChatGPT callback listener stopped".into()))?;
         if !peer.ip().is_loopback() {
             continue;
         }
@@ -87,12 +87,12 @@ pub(super) async fn receive(
                 let n = socket
                     .read(&mut chunk)
                     .await
-                    .map_err(|_| "Callback connection interrupted")?;
+                    .map_err(|_| crate::common::messages::failure("backend.ai.chatGptCallbackInterrupted", serde_json::json!({}), "Callback connection interrupted".into()))?;
                 if n == 0 {
-                    return Err("Incomplete callback headers");
+                    return Err(crate::common::messages::failure("backend.ai.chatGptCallbackHeadersIncomplete", serde_json::json!({}), "Incomplete callback headers".into()));
                 }
                 if bytes.len() + n > 16 * 1024 {
-                    return Err("Callback headers exceeded limit");
+                    return Err(crate::common::messages::failure("backend.ai.chatGptCallbackHeadersLimit", serde_json::json!({}), "Callback headers exceeded limit".into()));
                 }
                 bytes.extend_from_slice(&chunk[..n]);
                 if bytes.windows(4).any(|s| s == b"\r\n\r\n") {
@@ -100,7 +100,7 @@ pub(super) async fn receive(
                 }
             }
             Ok(parse(
-                std::str::from_utf8(&bytes).map_err(|_| "Invalid callback encoding")?,
+                std::str::from_utf8(&bytes).map_err(|_| crate::common::messages::failure("backend.ai.chatGptCallbackEncodingInvalid", serde_json::json!({}), "Invalid callback encoding".into()))?,
                 pending,
             ))
         };

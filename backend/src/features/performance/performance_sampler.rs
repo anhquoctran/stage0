@@ -36,7 +36,7 @@ impl PerformanceSampler {
             .last_refresh
             .is_some_and(|last_refresh| now.duration_since(last_refresh) <= CPU_SAMPLE_MAX_AGE);
         let Some(root_pid) = self.root_pid else {
-            return Err("Could not determine the Stage0 process ID".to_string());
+            return Err(crate::common::messages::code("backend.performance.pidUnavailable"));
         };
 
         // Refresh the process table without reading details for every process,
@@ -47,7 +47,7 @@ impl PerformanceSampler {
             ProcessRefreshKind::nothing(),
         );
         if !self.system.processes().contains_key(&root_pid) {
-            return Err("Stage0 process metrics are temporarily unavailable".to_string());
+            return Err(crate::common::messages::code("backend.performance.metricsUnavailable"));
         }
 
         let mut children_by_parent: HashMap<sysinfo::Pid, Vec<sysinfo::Pid>> = HashMap::new();

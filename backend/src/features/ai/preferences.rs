@@ -34,9 +34,12 @@ fn apply_keys(
                 | "kimi"
                 | "ollama"
                 | "custom"
+                | "zai"
+                | "z_ai"
+                | "opencode"
         )
     };
-    if keys.len() + removals.len() > 10
+    if keys.len() + removals.len() > 16
         || keys.iter().any(|(provider, key)| {
             !valid_provider(provider) || key.trim().is_empty() || key.len() > 8192
         })
@@ -45,7 +48,7 @@ fn apply_keys(
             .any(|provider| !valid_provider(provider) || keys.contains_key(provider))
         || removals.iter().collect::<BTreeSet<_>>().len() != removals.len()
     {
-        return Err("Invalid AI provider key changes. Nothing was saved.".into());
+        return Err(crate::common::messages::code("backend.ai.invalidProviderKeyChanges"));
     }
     if keys.is_empty() && removals.is_empty() {
         return Ok((BTreeMap::new(), BTreeMap::new()));
@@ -80,7 +83,19 @@ fn apply_keys(
                     restored = false;
                 }
             }
-            return Err(if restored { "Could not save AI keys to the OS keyring. Previous keys were restored; preferences were not applied." } else { "AI key save failed and keyring rollback was incomplete. Check the OS credential store before retrying." }.into());
+            return Err(if restored {
+                crate::common::messages::failure(
+                    "backend.ai.keyringSaveFailedRestored",
+                    serde_json::json!({}),
+                    "Could not save AI keys to the OS keyring. Previous keys were restored; preferences were not applied.".into(),
+                )
+            } else {
+                crate::common::messages::failure(
+                    "backend.ai.keyringSaveFailedIncomplete",
+                    serde_json::json!({}),
+                    "AI key save failed and keyring rollback was incomplete. Check the OS credential store before retrying.".into(),
+                )
+            });
         }
     }
     progress.commit();
@@ -144,7 +159,7 @@ fn resolve_mcp_env_with_record(
         || secret_env_keys.iter().any(|name| !valid_env_name(name))
         || secret_env_keys.iter().collect::<BTreeSet<_>>().len() != secret_env_keys.len()
     {
-        return Err("Invalid MCP server environment configuration.".into());
+        return Err(crate::common::messages::code("backend.ai.invalidMcpServerEnvConfig"));
     }
     let mut resolved = public_env
         .iter()
@@ -154,14 +169,14 @@ fn resolve_mcp_env_with_record(
         return Ok(resolved);
     }
     let record = Zeroizing::new(
-        read(server_id)?.ok_or("The MCP server has no saved OS-keychain credential record.")?,
+        read(server_id)?.ok_or_else(|| crate::common::messages::code("backend.ai.mcpCredentialMissing"))?,
     );
     if record.len() > 2_048 {
-        return Err("The saved MCP credential record exceeds the supported size limit.".into());
+        return Err(crate::common::messages::code("backend.ai.mcpCredentialSizeLimit"));
     }
     let mut values = match serde_json::from_str::<BTreeMap<String, String>>(&record) {
         Ok(values) => values,
-        Err(_) => return Err("The saved MCP credential record is invalid.".into()),
+        Err(_) => return Err(crate::common::messages::code("backend.ai.mcpCredentialInvalid")),
     };
     if values.len() > 256
         || values
@@ -171,7 +186,7 @@ fn resolve_mcp_env_with_record(
         for value in values.values_mut() {
             zeroize::Zeroize::zeroize(value);
         }
-        return Err("The saved MCP credential record is outside supported limits.".into());
+        return Err(crate::common::messages::code("backend.ai.mcpCredentialOutsideLimits"));
     }
     for name in secret_env_keys {
         match values.remove(name) {
@@ -182,7 +197,11 @@ fn resolve_mcp_env_with_record(
                 for value in values.values_mut() {
                     zeroize::Zeroize::zeroize(value);
                 }
-                return Err("A configured MCP secret is missing from the OS keychain.".into());
+                return Err(crate::common::messages::failure(
+                    "backend.ai.mcpSecretMissing",
+                    serde_json::json!({}),
+                    "A configured MCP secret is missing from the OS keychain.".into(),
+                ));
             }
         }
     }
@@ -214,7 +233,7 @@ fn apply_mcp_env_changes(
                 || names.iter().collect::<BTreeSet<_>>().len() != names.len()
         })
     {
-        return Err("Invalid MCP credential changes. Nothing was saved.".into());
+        return Err(crate::common::messages::code("backend.ai.invalidMcpCredentialChanges"));
     }
     let server_ids = updates
         .keys()
@@ -273,7 +292,7 @@ fn apply_mcp_env_changes(
         changes.insert(server_id.clone(), after);
     }
     if total_bytes > 64 * 1024 {
-        return Err("MCP credentials exceed the total batch size limit.".into());
+        return Err(crate::common::messages::code("backend.ai.mcpBatchSizeExceeded"));
     }
     let mut attempted = Vec::new();
     for (server_id, secret_record) in &changes {

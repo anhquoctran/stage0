@@ -180,8 +180,13 @@ pub async fn validate_repo(repo_path: String) -> Result<RepoValidation, String> 
 pub async fn get_recent_repos(app: AppHandle) -> Result<Vec<RepoInfo>, String> {
     let result: Result<_, String> = async {
         let db = app.state::<Database>();
-        db.get_recent_repositories()
-            .map_err(|e| format!("Database error: {}", e))
+        db.get_recent_repositories().map_err(|e| {
+            crate::common::messages::failure(
+                "backend.repository.databaseError",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Database error: {e}"),
+            )
+        })
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -191,8 +196,13 @@ pub async fn get_recent_repos(app: AppHandle) -> Result<Vec<RepoInfo>, String> {
 pub async fn delete_recent_repo(app: AppHandle, id: String) -> Result<(), String> {
     let result: Result<_, String> = async {
         let db = app.state::<Database>();
-        db.delete_repository(&id)
-            .map_err(|e| format!("Failed to delete repository: {}", e))
+        db.delete_repository(&id).map_err(|e| {
+            crate::common::messages::failure(
+                "backend.repository.deleteFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Failed to delete repository: {e}"),
+            )
+        })
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -202,8 +212,13 @@ pub async fn delete_recent_repo(app: AppHandle, id: String) -> Result<(), String
 pub async fn clear_recent_repos(app: AppHandle) -> Result<(), String> {
     let result: Result<_, String> = async {
         let db = app.state::<Database>();
-        db.clear_all_repositories()
-            .map_err(|e| format!("Failed to clear repositories: {}", e))
+        db.clear_all_repositories().map_err(|e| {
+            crate::common::messages::failure(
+                "backend.repository.clearFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Failed to clear repositories: {e}"),
+            )
+        })
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))

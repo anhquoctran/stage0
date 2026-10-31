@@ -18,15 +18,15 @@ impl Discovery {
             ))
             .send()
             .await
-            .map_err(|_| "Could not load OpenAI sign-in configuration")?;
+            .map_err(|_| crate::common::messages::code("backend.ai.chatgptDiscoveryFailed"))?;
         let value: Self = super::http::json(response).await?;
         if value.issuer != super::ISSUER
             || value.authorization_endpoint != format!("{}/api/accounts/authorize", super::ISSUER)
             || value.token_endpoint != format!("{}/api/accounts/oauth/token", super::ISSUER)
         {
-            return Err(
-                "OpenAI sign-in discovery returned an unexpected issuer or endpoint".into(),
-            );
+            return Err(crate::common::messages::code(
+                "backend.ai.chatgptUnexpectedIssuer",
+            ));
         }
         Self::trusted_url(&value.jwks_uri)?;
         if let Some(url) = &value.revocation_endpoint {
@@ -35,7 +35,8 @@ impl Discovery {
         Ok(value)
     }
     pub fn trusted_url(value: &str) -> Result<(), String> {
-        let url = reqwest::Url::parse(value).map_err(|_| "Invalid OpenAI auth endpoint")?;
+        let url = reqwest::Url::parse(value)
+            .map_err(|_| crate::common::messages::code("backend.ai.chatgptInvalidAuthEndpoint"))?;
         if url.scheme() != "https"
             || url.host_str() != Some("auth.openai.com")
             || url.port().is_some()
@@ -44,7 +45,9 @@ impl Discovery {
             || url.query().is_some()
             || url.fragment().is_some()
         {
-            return Err("Refusing an untrusted OpenAI auth endpoint".into());
+            return Err(crate::common::messages::code(
+                "backend.ai.chatgptUntrustedAuthEndpoint",
+            ));
         }
         Ok(())
     }

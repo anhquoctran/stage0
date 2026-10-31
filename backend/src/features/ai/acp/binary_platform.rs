@@ -52,10 +52,9 @@ pub fn relative_command(value: &str, target: &str) -> Result<PathBuf, String> {
     if path.as_os_str().is_empty()
         || (target.starts_with("windows-") && !is_windows_executable(&path))
     {
-        return Err(
-            "ACP Registry launch command must be relative and Windows binaries must use .exe"
-                .into(),
-        );
+        return Err(crate::common::messages::code(
+            "backend.acp.archiveLaunchCommandInvalid",
+        ));
     }
     Ok(path)
 }

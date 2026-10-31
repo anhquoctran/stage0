@@ -60,7 +60,11 @@ mod windows {
                     std::ptr::null_mut(),
                 );
                 if status != ERROR_SUCCESS {
-                    return Err(format!("Failed to open Run registry key: {status}"));
+                    return Err(crate::common::messages::failure(
+                        "backend.preferences.openRegistryKeyFailed",
+                        serde_json::json!({ "status": status }),
+                        format!("Failed to open Run registry key: {status}"),
+                    ));
                 }
                 let command = if start_in_background {
                     format!("\"{}\" --background", exe_path.display())
@@ -79,7 +83,11 @@ mod windows {
                 );
                 RegCloseKey(hkey);
                 if set_status != ERROR_SUCCESS {
-                    return Err(format!("Failed to set Run registry value: {set_status}"));
+                    return Err(crate::common::messages::failure(
+                        "backend.preferences.setRegistryValueFailed",
+                        serde_json::json!({ "status": set_status }),
+                        format!("Failed to set Run registry value: {set_status}"),
+                    ));
                 }
             } else {
                 let status = RegOpenKeyExW(

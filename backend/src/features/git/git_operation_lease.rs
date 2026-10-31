@@ -13,16 +13,31 @@ pub struct GitOperationLease {
 impl GitOperationLease {
     pub fn acquire(path: &str) -> Result<Self, String> {
         let activity = crate::common::activity::OperationLease::acquire()?;
-        let absolute = std::path::absolute(Path::new(path))
-            .map_err(|error| format!("Invalid repository path: {error}"))?;
+        let absolute = std::path::absolute(Path::new(path)).map_err(|error| {
+            crate::common::messages::failure(
+                "backend.git.invalidRepoPath",
+                serde_json::json!({ "error": error.to_string() }),
+                format!("Invalid repository path: {error}"),
+            )
+        })?;
         let resolved = if absolute.exists() {
             dunce::canonicalize(&absolute)
         } else {
-            let parent = absolute.parent().ok_or("Invalid repository path")?;
-            let name = absolute.file_name().ok_or("Invalid repository path")?;
+            let parent = absolute
+                .parent()
+                .ok_or_else(|| crate::common::messages::code("backend.git.invalidRepoPath"))?;
+            let name = absolute
+                .file_name()
+                .ok_or_else(|| crate::common::messages::code("backend.git.invalidRepoPath"))?;
             dunce::canonicalize(parent).map(|parent| parent.join(name))
         }
-        .map_err(|error| format!("Could not resolve repository path: {error}"))?;
+        .map_err(|error| {
+            crate::common::messages::failure(
+                "backend.git.resolveRepoPathFailed",
+                serde_json::json!({ "error": error.to_string() }),
+                format!("Could not resolve repository path: {error}"),
+            )
+        })?;
         #[cfg(target_os = "windows")]
         let resolved = PathBuf::from(resolved.to_string_lossy().to_lowercase());
         let mut running = RUNNING_OPERATIONS
@@ -30,10 +45,12 @@ impl GitOperationLease {
             .lock()
             .unwrap_or_else(|error| error.into_inner());
         if !running.insert(resolved.clone()) {
-            return Err(
+            return Err(crate::common::messages::failure(
+                "backend.git.operationAlreadyRunning",
+                serde_json::json!({}),
                 "A Git operation is already running for this repository. Wait for it to finish."
                     .to_string(),
-            );
+            ));
         }
         Ok(Self {
             path: resolved,

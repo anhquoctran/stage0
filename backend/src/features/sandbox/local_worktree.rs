@@ -213,8 +213,9 @@ impl SandboxAdapter for LocalWorktreeSandboxAdapter {
         base: &str,
         compare: &str,
     ) -> Result<SandboxInstanceInfo, String> {
-        ensure_private_worktree_dir(&self.base_worktree_dir)
-            .map_err(|error| format!("Unable to prepare private worktree cache: {}", error))?;
+        ensure_private_worktree_dir(&self.base_worktree_dir).map_err(|error| {
+            crate::common::messages::failure("backend.sandbox.worktreeCachePrepFailed", serde_json::json!({ "error": error.to_string() }), format!("Unable to prepare private worktree cache: {error}"))
+        })?;
 
         let instance_id = format!("wt-{}", uuid::Uuid::new_v4());
         let worktree_path = self.base_worktree_dir.join(&instance_id);
@@ -278,12 +279,11 @@ impl SandboxAdapter for LocalWorktreeSandboxAdapter {
             let p = Path::new(wt_path);
             if p.exists() {
                 if !p.starts_with(&self.base_worktree_dir) {
-                    return Err(
-                        "Refusing to remove a worktree outside Stage0's private cache".to_string(),
-                    );
+                    return Err(crate::common::messages::failure("backend.sandbox.worktreeOutsideCache", serde_json::json!({}), "Refusing to remove a worktree outside Stage0's private cache".into()));
                 }
-                std::fs::remove_dir_all(p)
-                    .map_err(|error| format!("Failed to remove worktree directory: {}", error))?;
+                std::fs::remove_dir_all(p).map_err(|error| {
+                    crate::common::messages::failure("backend.sandbox.worktreeRemoveFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to remove worktree directory: {error}"))
+                })?;
             }
 
             let prune = crate::features::git::runner::run_git_with_limits(
@@ -293,12 +293,12 @@ impl SandboxAdapter for LocalWorktreeSandboxAdapter {
                 64 * 1024,
                 std::time::Duration::from_secs(5),
             )
-            .map_err(|error| format!("Failed to prune Git worktree metadata: {}", error))?;
+            .map_err(|error| {
+                crate::common::messages::failure("backend.sandbox.worktreePruneFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to prune Git worktree metadata: {error}"))
+            })?;
             if !prune.success {
-                return Err(format!(
-                    "Failed to prune Git worktree metadata: {}",
-                    crate::features::git::runner::redact_sensitive_text(prune.stderr.trim())
-                ));
+                let detail = crate::features::git::runner::redact_sensitive_text(prune.stderr.trim());
+                return Err(crate::common::messages::failure("backend.sandbox.worktreePruneFailed", serde_json::json!({ "error": detail }), format!("Failed to prune Git worktree metadata: {detail}")));
             }
         }
         Ok(())
@@ -316,17 +316,15 @@ impl SandboxAdapter for LocalWorktreeSandboxAdapter {
         let worktree_dir = instance
             .worktree_path
             .as_deref()
-            .ok_or_else(|| "Instance does not have an active worktree path".to_string())?;
+            .ok_or_else(|| crate::common::messages::code("backend.sandbox.worktreePathMissing"))?;
 
         let canonical_worktree = Path::new(worktree_dir)
             .canonicalize()
-            .map_err(|e| format!("Invalid worktree path '{}': {}", worktree_dir, e))?;
+            .map_err(|e| crate::common::messages::failure("backend.sandbox.worktreePathInvalid", serde_json::json!({ "path": worktree_dir }), format!("Invalid worktree path '{}': {}", worktree_dir, e)))?;
 
         if !canonical_worktree.exists() {
-            return Err(format!(
-                "Worktree path does not exist on disk: {}",
-                canonical_worktree.display()
-            ));
+            let path_display = canonical_worktree.display().to_string();
+            return Err(crate::common::messages::failure("backend.sandbox.worktreeMissingOnDisk", serde_json::json!({ "path": path_display }), format!("Worktree path does not exist on disk: {path_display}")));
         }
 
         let start = Instant::now();
@@ -344,7 +342,9 @@ impl SandboxAdapter for LocalWorktreeSandboxAdapter {
             1024 * 1024,
             timeout,
         )
-        .map_err(|e| format!("Failed to execute command in worktree: {}", e))?;
+        .map_err(|e| {
+            crate::common::messages::failure("backend.sandbox.worktreeExecFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to execute command in worktree: {e}"))
+        })?;
 
         let duration_ms = start.elapsed().as_millis() as u64;
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();

@@ -49,7 +49,11 @@ pub(super) async fn complete(
     {
         let runtime = super::AUTH.lock().await;
         if runtime.pending.as_deref() != Some(&pending.id) {
-            return Err("ChatGPT sign-in was cancelled".into());
+            return Err(crate::common::messages::failure(
+                "backend.ai.chatGptSignInCancelled",
+                serde_json::json!({}),
+                "ChatGPT sign-in was cancelled".into(),
+            ));
         }
         // Retain the issued ID before exchange, even if the code expires. Never activate it here.
         AuthCatalog::load()?.register(pending.profile.clone())?;
@@ -75,7 +79,13 @@ pub(super) async fn complete(
     let id_token = tokens
         .id_token
         .as_deref()
-        .ok_or("OpenAI did not return an ID token; no session was activated")?;
+        .ok_or_else(|| {
+            crate::common::messages::failure(
+                "backend.ai.chatGptIdTokenMissing",
+                serde_json::json!({}),
+                "OpenAI did not return an ID token; no session was activated".into(),
+            )
+        })?;
     let identity = super::identity::fetch_and_verify(
         &client,
         &discovery,
@@ -164,7 +174,11 @@ pub(super) async fn refresh(
         )
         .await?;
         if profile.subject.as_deref() != Some(&identity.sub) {
-            return Err("Refreshed ChatGPT identity did not match the saved registration".into());
+            return Err(crate::common::messages::failure(
+                "backend.ai.chatGptIdentityMismatch",
+                serde_json::json!({}),
+                "Refreshed ChatGPT identity did not match the saved registration".into(),
+            ));
         }
     }
     let mut next = tokens.session(&old.scopes)?;
@@ -172,7 +186,11 @@ pub(super) async fn refresh(
         next.id_token = old.id_token.clone();
     }
     if next.refresh_token.as_ref().is_none_or(|s| s.is_empty()) {
-        return Err("OpenAI did not return a replacement refresh token. Sign in again.".into());
+        return Err(crate::common::messages::failure(
+            "backend.ai.chatGptRefreshTokenMissing",
+            serde_json::json!({}),
+            "OpenAI did not return a replacement refresh token. Sign in again.".into(),
+        ));
     }
     Ok(next)
 }

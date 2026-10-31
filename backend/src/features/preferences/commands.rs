@@ -108,7 +108,7 @@ fn migrate_git_credentials_to_sqlite(
             continue;
         };
         db.upsert_git_credential_metadata(&record)
-            .map_err(|_| "Git credential metadata could not be migrated to SQLite".to_string())?;
+            .map_err(|_| crate::common::messages::failure("backend.preferences.gitCredentialMigrateFailed", serde_json::json!({}), "Git credential metadata could not be migrated to SQLite".into()))?;
     }
 
     if had_file_records {
@@ -156,7 +156,7 @@ pub async fn patch_preferences(
             super::commit::commit_transaction(&app, &request).map(|result| result.document)
         })
         .await
-        .map_err(|_| "Preferences worker stopped unexpectedly".to_string())?
+        .map_err(|_| crate::common::messages::failure("backend.preferences.workerStopped", serde_json::json!({}), "Preferences worker stopped unexpectedly".into()))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("preferences", error))

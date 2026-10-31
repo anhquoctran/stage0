@@ -65,7 +65,7 @@ fn read_docker_file_range(
     manager
         .guardrails()
         .evaluate_resolved_read_path(canonical_relative_path)
-        .map_err(|violation| format!("🛡️ Guardrail Policy Blocked: {}", violation.message))?;
+        .map_err(|violation| guardrail_error(&violation.message))?;
 
     // The path is an argument, never shell-interpolated. Use the container's
     // shell only to reject non-regular files before `cat` (for example FIFOs).
@@ -86,7 +86,7 @@ fn read_docker_file_range(
         DOCKER_READ_TIMEOUT,
     )?;
     if !output.status.success() && !output.output_truncated {
-        return Err("File not found or unreadable in Docker sandbox".to_string());
+        return Err(crate::common::messages::code("backend.sandbox.dockerFileNotFound"));
     }
 
     read_file_range(
@@ -120,7 +120,7 @@ fn read_file_range<R: BufRead>(
     loop {
         let available = reader
             .fill_buf()
-            .map_err(|error| format!("Failed to read file range: {}", error))?;
+            .map_err(|error| crate::common::messages::failure("backend.sandbox.readFileRangeFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to read file range: {}", error)))?;
         if available.is_empty() {
             if current_line_has_bytes {
                 completed_lines += 1;
@@ -201,7 +201,7 @@ fn read_file_range<R: BufRead>(
             if line_number > end_line {
                 let more = reader
                     .fill_buf()
-                    .map_err(|error| format!("Failed to inspect file range: {}", error))?;
+                    .map_err(|error| crate::common::messages::failure("backend.sandbox.inspectFileRangeFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to inspect file range: {}", error)))?;
                 let total_lines = if more.is_empty() {
                     Some(completed_lines)
                 } else {
@@ -235,7 +235,7 @@ pub fn dispatch_tool_call(
     match tool_name {
         "read_file_range" => {
             let args: ReadFileRangeArgs = serde_json::from_value(arguments)
-                .map_err(|e| format!("Invalid arguments for read_file_range: {}", e))?;
+                .map_err(|e| crate::common::messages::failure("backend.sandbox.invalidReadFileRangeArgs", serde_json::json!({ "error": e.to_string() }), format!("Invalid arguments for read_file_range: {}", e)))?;
 
             if args.start_line == 0 || args.end_line < args.start_line {
                 return Err(crate::common::messages::code("backend.sandbox.invalidLineBounds"));
@@ -247,7 +247,7 @@ pub fn dispatch_tool_call(
             manager
                 .guardrails()
                 .evaluate_read_file(&args.file_path, args.start_line, args.end_line)
-                .map_err(|v| format!("🛡️ Guardrail Policy Blocked: {}", v.message))?;
+                .map_err(|v| guardrail_error(&v.message))?;
 
             let range = match instance.adapter_type {
                 SandboxType::InMemory => {
@@ -267,7 +267,7 @@ pub fn dispatch_tool_call(
                     let worktree_dir = instance
                         .worktree_path
                         .as_deref()
-                        .ok_or_else(|| "Worktree path missing for sandbox instance".to_string())?;
+                        .ok_or_else(|| crate::common::messages::code("backend.sandbox.worktreePathMissing"))?;
                     let safe_path = crate::features::git::resolve_safe_repo_path(
                         worktree_dir,
                         &args.file_path,
@@ -321,7 +321,7 @@ pub fn dispatch_tool_call(
         }
         "execute_terminal_cmd" => {
             let args: ExecuteTerminalCmdArgs = serde_json::from_value(arguments)
-                .map_err(|e| format!("Invalid arguments for execute_terminal_cmd: {}", e))?;
+                .map_err(|e| crate::common::messages::failure("backend.sandbox.invalidExecuteTerminalCmdArgs", serde_json::json!({ "error": e.to_string() }), format!("Invalid arguments for execute_terminal_cmd: {}", e)))?;
 
             if instance.adapter_type == SandboxType::LocalWorktree {
                 let violation = super::guardrails::GuardrailViolation {
@@ -365,7 +365,7 @@ pub fn dispatch_tool_call(
             let eval = manager
                 .guardrails()
                 .evaluate_command(&args.command, &args.args, &instance.adapter_type)
-                .map_err(|v| format!("🛡️ Guardrail Policy Blocked: {}", v.message))?;
+                .map_err(|v| guardrail_error(&v.message))?;
 
             if eval.requires_confirmation {
                 manager.guardrails().record_policy_denial(
@@ -399,7 +399,10 @@ pub fn dispatch_tool_call(
 
             serde_json::to_value(res).map_err(|e| e.to_string())
         }
-        unknown => Err(format!("Unknown sandbox tool '{}'", unknown)),
+        unknown => Err(crate::common::messages::message(
+            "backend.sandbox.unknownTool",
+            serde_json::json!({ "tool": unknown }),
+        )),
     }
 }
 
@@ -410,17 +413,25 @@ fn read_local_file_range(
     manager: &SandboxManager,
 ) -> Result<FileRangeResult, String> {
     let metadata = std::fs::symlink_metadata(path)
-        .map_err(|error| format!("Failed to inspect repository file: {}", error))?;
+        .map_err(|error| crate::common::messages::failure("backend.sandbox.inspectRepoFileFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to inspect repository file: {}", error)))?;
     if !metadata.file_type().is_file() {
         return Err(crate::common::messages::code("backend.sandbox.onlyRegularFiles"));
     }
     let file = File::open(path)
-        .map_err(|error| format!("Failed to read file in repository: {}", error))?;
+        .map_err(|error| crate::common::messages::failure("backend.sandbox.readRepoFileFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to read file in repository: {}", error)))?;
     read_file_range(
         &mut BufReader::new(file),
         start_line,
         end_line,
         manager.guardrails().get_policy().max_output_bytes,
+    )
+}
+
+fn guardrail_error(message: &str) -> String {
+    crate::common::messages::failure(
+        "backend.sandbox.guardrailPolicyBlocked",
+        serde_json::json!({ "message": message }),
+        format!("🛡️ Guardrail Policy Blocked: {}", message),
     )
 }
 

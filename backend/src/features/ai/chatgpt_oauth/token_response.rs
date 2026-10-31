@@ -24,7 +24,9 @@ impl TokenResponse {
             })
             || self.scope.as_ref().is_some_and(|s| s.len() > 4096)
         {
-            return Err("OpenAI returned invalid session credentials".into());
+            return Err(crate::common::messages::code(
+                "backend.ai.chatgptInvalidCredentials",
+            ));
         }
         Ok(StoredSession {
             access_token: std::mem::take(&mut self.access_token),

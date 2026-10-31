@@ -54,7 +54,7 @@ impl ReviewToolRegistry {
             .native
             .iter()
             .find(|tool| tool["name"] == name)
-            .ok_or("Unknown or unauthorized review tool")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.review.unknownOrUnauthorizedTool", serde_json::json!({}), "Unknown or unauthorized review tool".into()))?;
         schemas::validate(&tool["parameters"], arguments)
     }
 }

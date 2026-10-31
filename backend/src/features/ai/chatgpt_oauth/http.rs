@@ -5,17 +5,22 @@ pub(super) fn client() -> Result<reqwest::Client, String> {
         .timeout(std::time::Duration::from_secs(15))
         .redirect(reqwest::redirect::Policy::none())
         .build()
-        .map_err(|_| "Could not initialize the OpenAI sign-in client".into())
+        .map_err(|_| crate::common::messages::code("backend.ai.chatgptClientInitFailed"))
 }
 pub(super) async fn json<T: DeserializeOwned>(response: reqwest::Response) -> Result<T, String> {
     if !response.status().is_success() {
-        return Err(format!(
-            "OpenAI sign-in request failed (HTTP {}). No raw server payload was retained.",
-            response.status().as_u16()
+        return Err(crate::common::messages::failure(
+            "backend.ai.chatgptRequestFailed",
+            serde_json::json!({ "status": response.status().as_u16() }),
+            format!(
+                "OpenAI sign-in request failed (HTTP {}). No raw server payload was retained.",
+                response.status().as_u16()
+            ),
         ));
     }
     let bytes = body(response, 256 * 1024).await?;
-    serde_json::from_slice(&bytes).map_err(|_| "OpenAI sign-in returned an invalid response".into())
+    serde_json::from_slice(&bytes)
+        .map_err(|_| crate::common::messages::code("backend.ai.chatgptInvalidResponse"))
 }
 pub(super) async fn body(
     mut response: reqwest::Response,
@@ -25,10 +30,10 @@ pub(super) async fn body(
     while let Some(chunk) = response
         .chunk()
         .await
-        .map_err(|_| "OpenAI sign-in response was interrupted")?
+        .map_err(|_| crate::common::messages::code("backend.ai.chatgptResponseInterrupted"))?
     {
         if bytes.len() + chunk.len() > limit {
-            return Err("OpenAI sign-in response exceeded its size limit".into());
+            return Err(crate::common::messages::code("backend.ai.chatgptResponseTooLarge"));
         }
         bytes.extend_from_slice(&chunk);
     }

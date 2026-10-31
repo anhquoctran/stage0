@@ -9,7 +9,7 @@ pub async fn list_system_font_families() -> Result<Vec<String>, String> {
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(installed_font_families)
             .await
-            .map_err(|_| "System font discovery could not complete".to_string())?
+            .map_err(|_| crate::common::messages::failure("backend.preferences.fontDiscoveryFailed", serde_json::json!({}), "System font discovery could not complete".into()))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("preferences", error))
@@ -18,7 +18,7 @@ pub async fn list_system_font_families() -> Result<Vec<String>, String> {
 fn installed_font_families() -> Result<Vec<String>, String> {
     let families = SystemSource::new()
         .all_families()
-        .map_err(|error| format!("Could not read installed font families: {error}"))?;
+        .map_err(|error| crate::common::messages::failure("backend.preferences.fontFamiliesReadFailed", serde_json::json!({ "error": error.to_string() }), format!("Could not read installed font families: {error}")))?;
     Ok(normalize_families(families))
 }
 

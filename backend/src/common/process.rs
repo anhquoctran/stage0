@@ -79,9 +79,13 @@ fn run_bounded_command_inner(
         .stderr(Stdio::piped());
     configure_process_group(command);
 
-    let mut child = command
-        .spawn()
-        .map_err(|error| format!("Failed to start subprocess: {}", error))?;
+    let mut child = command.spawn().map_err(|error| {
+        crate::common::messages::failure(
+            "backend.process.startFailed",
+            serde_json::json!({}),
+            format!("Failed to start subprocess: {}", error),
+        )
+    })?;
 
     let output_truncated = Arc::new(AtomicBool::new(false));
     let stdout_bytes = Arc::new(Mutex::new(Vec::new()));
@@ -130,9 +134,13 @@ fn run_bounded_command_inner(
             drop(stdout_task);
             drop(stderr_task);
             drop(stdin_task);
-            return Err(format!(
-                "Subprocess timed out after {} seconds",
-                timeout.as_secs()
+            return Err(crate::common::messages::failure(
+                "backend.process.timedOut",
+                serde_json::json!({ "seconds": timeout.as_secs() }),
+                format!(
+                    "Subprocess timed out after {} seconds",
+                    timeout.as_secs()
+                ),
             ));
         }
 
@@ -145,7 +153,11 @@ fn run_bounded_command_inner(
                 drop(stdout_task);
                 drop(stderr_task);
                 drop(stdin_task);
-                return Err(format!("Failed while waiting for subprocess: {}", error));
+                return Err(crate::common::messages::failure(
+                    "backend.process.waitFailed",
+                    serde_json::json!({}),
+                    format!("Failed while waiting for subprocess: {}", error),
+                ));
             }
         }
     };
@@ -224,7 +236,11 @@ fn run_bounded_command_inner(
 
     if status.success() {
         if let Some(error) = input_write_error {
-            return Err(format!("Failed to send input to subprocess: {}", error));
+            return Err(crate::common::messages::failure(
+                "backend.process.sendInputFailed",
+                serde_json::json!({}),
+                format!("Failed to send input to subprocess: {}", error),
+            ));
         }
     }
 

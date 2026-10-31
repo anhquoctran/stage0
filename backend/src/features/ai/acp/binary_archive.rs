@@ -25,7 +25,11 @@ pub fn extract(
             let mut zip = zip::ZipArchive::new(file)
                 .map_err(|_| crate::common::messages::code("backend.acp.archiveInvalid"))?;
             if zip.len() > MAX_ENTRIES {
-                return Err(crate::common::messages::code("backend.acp.archiveTooLarge").into());
+                return Err(crate::common::messages::failure(
+                    "backend.acp.archiveTooLarge",
+                    serde_json::json!({}),
+                    "Archive has too many entries".into(),
+                ).into());
             }
             let mut links = Vec::new();
             for index in 0..zip.len() {
@@ -132,7 +136,11 @@ fn extract_tar(reader: impl Read, destination: &Path, remaining: &mut u64) -> Re
     let mut links = Vec::new();
     for (index, entry) in entries.enumerate() {
         if index >= MAX_ENTRIES {
-            return Err(crate::common::messages::code("backend.acp.archiveTooLarge").into());
+            return Err(crate::common::messages::failure(
+                "backend.acp.archiveTooLarge",
+                serde_json::json!({}),
+                "Archive has too many entries".into(),
+            ).into());
         }
         let mut entry =
             entry.map_err(|_| crate::common::messages::code("backend.acp.archiveInvalid"))?;

@@ -117,6 +117,6 @@ async fn prepare_registry_binary_agent(
     let data_dir = app
         .path()
         .app_local_data_dir()
-        .map_err(|_| "Could not locate Stage0's local data directory")?;
+        .map_err(|_| crate::common::messages::code("backend.acp.dataDirectoryUnavailable"))?;
     binary_install::install(&data_dir, agent).await
 }

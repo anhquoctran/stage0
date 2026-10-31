@@ -47,11 +47,20 @@ impl AcpProcess {
                     )
                 }
             })?;
-        let input = child.stdin.take().ok_or("ACP agent stdin is unavailable")?;
-        let output = child
-            .stdout
-            .take()
-            .ok_or("ACP agent stdout is unavailable")?;
+        let input = child.stdin.take().ok_or_else(|| {
+            crate::common::messages::failure(
+                "backend.acp.agentStdinUnavailable",
+                serde_json::json!({}),
+                "ACP agent stdin is unavailable".into(),
+            )
+        })?;
+        let output = child.stdout.take().ok_or_else(|| {
+            crate::common::messages::failure(
+                "backend.acp.agentStdoutUnavailable",
+                serde_json::json!({}),
+                "ACP agent stdout is unavailable".into(),
+            )
+        })?;
         Ok(Self {
             _activity: activity,
             child,
@@ -62,16 +71,28 @@ impl AcpProcess {
     }
 
     pub(super) async fn send(&mut self, message: &Value) -> Result<(), String> {
-        let mut bytes = serde_json::to_vec(message).map_err(|_| "Could not encode ACP message")?;
+        let mut bytes = serde_json::to_vec(message).map_err(|_| {
+            crate::common::messages::failure(
+                "backend.acp.encodeMessageFailed",
+                serde_json::json!({}),
+                "Could not encode ACP message".into(),
+            )
+        })?;
         bytes.push(b'\n');
-        self.input
-            .write_all(&bytes)
-            .await
-            .map_err(|_| "ACP agent closed its input")?;
-        self.input
-            .flush()
-            .await
-            .map_err(|_| "Could not flush ACP message".to_owned())
+        self.input.write_all(&bytes).await.map_err(|_| {
+            crate::common::messages::failure(
+                "backend.acp.agentClosedInput",
+                serde_json::json!({}),
+                "ACP agent closed its input".into(),
+            )
+        })?;
+        self.input.flush().await.map_err(|_| {
+            crate::common::messages::failure(
+                "backend.acp.flushMessageFailed",
+                serde_json::json!({}),
+                "Could not flush ACP message".into(),
+            )
+        })
     }
 
     pub(super) async fn next_message(&mut self) -> Result<Value, String> {
@@ -81,16 +102,34 @@ impl AcpProcess {
             let read =
                 tokio::time::timeout(Duration::from_secs(180), self.output.read_line(&mut line))
                     .await
-                    .map_err(|_| "ACP agent timed out")?
-                    .map_err(|_| "Could not read ACP agent response")?;
+                    .map_err(|_| {
+                        crate::common::messages::failure(
+                            "backend.acp.agentTimedOut",
+                            serde_json::json!({}),
+                            "ACP agent timed out".into(),
+                        )
+                    })?
+                    .map_err(|_| {
+                        crate::common::messages::failure(
+                            "backend.acp.readResponseFailed",
+                            serde_json::json!({}),
+                            "Could not read ACP agent response".into(),
+                        )
+                    })?;
             if read == 0 {
-                return Err(
+                return Err(crate::common::messages::failure(
+                    "backend.acp.agentStartFailed",
+                    serde_json::json!({}),
                     "ACP agent exited before replying. Check its installation and sign-in state."
                         .into(),
-                );
+                ));
             }
             if line.len() > 1024 * 1024 {
-                return Err("ACP agent response exceeded the 1 MB limit".into());
+                return Err(crate::common::messages::failure(
+                    "backend.acp.responseSizeLimit",
+                    serde_json::json!({}),
+                    "ACP agent response exceeded the 1 MB limit".into(),
+                ));
             }
             if let Ok(value) = serde_json::from_str::<Value>(&line) {
                 return Ok(value);

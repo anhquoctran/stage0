@@ -13,7 +13,7 @@ pub fn result(message: &Value, id: u64) -> Result<Value, String> {
         || message["id"].as_u64() != Some(id)
         || message.get("method").is_some()
     {
-        return Err("Invalid or mismatched MCP response ID".into());
+        return Err(crate::common::messages::failure("backend.review.mcpResponseIdMismatched", serde_json::json!({}), "Invalid or mismatched MCP response ID".into()));
     }
     if message.get("error").is_some() {
         return Err(
@@ -24,7 +24,7 @@ pub fn result(message: &Value, id: u64) -> Result<Value, String> {
         .get("result")
         .filter(|v| v.is_object())
         .cloned()
-        .ok_or("Missing MCP response result".into())
+        .ok_or_else(|| crate::common::messages::failure("backend.review.mcpResponseResultMissing", serde_json::json!({}), "Missing MCP response result".into()))
 }
 
 /// SSE is parsed incrementally by the bounded HTTP reader. No server requests,
@@ -33,7 +33,7 @@ pub fn sse_result(bytes: &[u8], id: u64, eof: bool) -> Result<Option<Value>, Str
     let text = match std::str::from_utf8(bytes) {
         Ok(s) => s,
         Err(e) if e.error_len().is_none() && !eof => return Ok(None),
-        Err(_) => return Err("Invalid UTF-8 MCP stream".into()),
+        Err(_) => return Err(crate::common::messages::failure("backend.review.mcpStreamUtf8Invalid", serde_json::json!({}), "Invalid UTF-8 MCP stream".into())),
     };
     let text = text.replace("\r\n", "\n").replace('\r', "\n");
     let end = if eof {
@@ -43,7 +43,7 @@ pub fn sse_result(bytes: &[u8], id: u64, eof: bool) -> Result<Option<Value>, Str
     };
     for (count, event) in text[..end].split("\n\n").enumerate() {
         if count >= 32 {
-            return Err("Too many MCP stream events".into());
+            return Err(crate::common::messages::failure("backend.review.mcpStreamTooManyEvents", serde_json::json!({}), "Too many MCP stream events".into()));
         }
         let data = event
             .lines()
@@ -56,10 +56,10 @@ pub fn sse_result(bytes: &[u8], id: u64, eof: bool) -> Result<Option<Value>, Str
         if data.trim().is_empty() {
             continue;
         }
-        let message: Value = serde_json::from_str(&data).map_err(|_| "Invalid MCP stream JSON")?;
+        let message: Value = serde_json::from_str(&data).map_err(|_| crate::common::messages::failure("backend.review.mcpStreamJsonInvalid", serde_json::json!({}), "Invalid MCP stream JSON".into()))?;
         if message.get("method").is_some() {
             if message.get("id").is_some() {
-                return Err("Server-initiated MCP requests are not supported by discovery".into());
+                return Err(crate::common::messages::failure("backend.review.mcpServerInitiatedUnsupported", serde_json::json!({}), "Server-initiated MCP requests are not supported by discovery".into()));
             }
             continue;
         }
@@ -71,9 +71,9 @@ pub fn sse_result(bytes: &[u8], id: u64, eof: bool) -> Result<Option<Value>, Str
 pub fn catalog_page(connection: &str, page: &Value) -> Result<Vec<DiscoveredMcpTool>, String> {
     let items = page["tools"]
         .as_array()
-        .ok_or("MCP tools/list did not return tools")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.review.mcpToolsListEmpty", serde_json::json!({}), "MCP tools/list did not return tools".into()))?;
     if items.len() > 100 {
-        return Err("MCP catalog exceeds 100 tools".into());
+        return Err(crate::common::messages::failure("backend.review.mcpCatalogLimitExceeded", serde_json::json!({}), "MCP catalog exceeds 100 tools".into()));
     }
     items
         .iter()
@@ -81,13 +81,13 @@ pub fn catalog_page(connection: &str, page: &Value) -> Result<Vec<DiscoveredMcpT
             let name = tool["name"]
                 .as_str()
                 .filter(|s| !s.is_empty() && s.len() <= 128 && !s.chars().any(char::is_control))
-                .ok_or("Invalid MCP tool name")?;
+                .ok_or_else(|| crate::common::messages::failure("backend.review.mcpToolNameInvalid", serde_json::json!({}), "Invalid MCP tool name".into()))?;
             let schema = tool
                 .get("inputSchema")
                 .filter(|s| s.is_object())
-                .ok_or("MCP tool requires a JSON Schema object")?;
+                .ok_or_else(|| crate::common::messages::failure("backend.review.mcpToolSchemaRequired", serde_json::json!({}), "MCP tool requires a JSON Schema object".into()))?;
             if schema.to_string().len() > 16 * 1024 {
-                return Err("MCP tool schema exceeds safety limit".into());
+                return Err(crate::common::messages::failure("backend.review.mcpToolSchemaLimitExceeded", serde_json::json!({}), "MCP tool schema exceeds safety limit".into()));
             }
             Ok(DiscoveredMcpTool {
                 name: name.into(),

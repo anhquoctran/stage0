@@ -92,11 +92,11 @@ pub async fn start_google_oauth(
     // Bind local listener to ephemeral port
     let listener = TcpListener::bind("127.0.0.1:0")
         .await
-        .map_err(|e| format!("Failed to start loopback server for OAuth callback: {}", e))?;
+        .map_err(|e| crate::common::messages::failure("backend.ai.googleLoopbackStartFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to start loopback server for OAuth callback: {}", e)))?;
 
     let port = listener
         .local_addr()
-        .map_err(|e| format!("Failed to read local loopback port: {}", e))?
+        .map_err(|e| crate::common::messages::failure("backend.ai.googleLoopbackPortFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to read local loopback port: {}", e)))?
         .port();
 
     let redirect_uri = format!("http://127.0.0.1:{}/callback", port);
@@ -213,13 +213,13 @@ async fn exchange_google_code(
     let verifier = {
         let mut lock = PENDING_VERIFIER.lock().await;
         lock.take()
-            .ok_or_else(|| "No pending PKCE verifier found".to_string())?
+            .ok_or_else(|| crate::common::messages::failure("backend.ai.googleNoPendingVerifier", serde_json::json!({}), "No pending PKCE verifier found".to_string()))?
     };
 
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .build()
-        .map_err(|e| format!("HTTP client error: {}", e))?;
+        .map_err(|e| crate::common::messages::failure("backend.ai.googleHttpClientError", serde_json::json!({ "error": e.to_string() }), format!("HTTP client error: {}", e)))?;
 
     let params = [
         ("client_id", client_id),
@@ -234,17 +234,21 @@ async fn exchange_google_code(
         .form(&params)
         .send()
         .await
-        .map_err(|e| format!("Failed to contact Google token endpoint: {}", e))?;
+        .map_err(|e| crate::common::messages::failure("backend.ai.googleTokenEndpointFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to contact Google token endpoint: {}", e)))?;
 
     if !resp.status().is_success() {
         let err_body = resp.text().await.unwrap_or_default();
-        return Err(format!("Google OAuth token exchange failed: {}", err_body));
+        return Err(crate::common::messages::failure(
+            "backend.ai.googleTokenExchangeFailed",
+            serde_json::json!({ "error": err_body }),
+            format!("Google OAuth token exchange failed: {}", err_body),
+        ));
     }
 
     let token_data: GoogleTokenResponse = resp
         .json()
         .await
-        .map_err(|e| format!("Failed to parse Google token JSON: {}", e))?;
+        .map_err(|e| crate::common::messages::failure("backend.ai.googleTokenParseFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to parse Google token JSON: {}", e)))?;
 
     if let Some(refresh_token) = token_data.refresh_token {
         crate::features::credentials::store_ai_key("google_gemini_oauth", &refresh_token)?;
@@ -267,7 +271,7 @@ pub async fn get_google_access_token() -> Result<String, String> {
                 let client = reqwest::Client::builder()
                     .timeout(Duration::from_secs(15))
                     .build()
-                    .map_err(|e| format!("HTTP client error: {}", e))?;
+                    .map_err(|e| crate::common::messages::failure("backend.ai.googleHttpClientError", serde_json::json!({ "error": e.to_string() }), format!("HTTP client error: {}", e)))?;
 
                 let params = [
                     ("client_id", DEFAULT_GOOGLE_CLIENT_ID),
@@ -298,7 +302,7 @@ pub async fn get_google_access_token() -> Result<String, String> {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(15))
             .build()
-            .map_err(|e| format!("HTTP client error: {}", e))?;
+            .map_err(|e| crate::common::messages::failure("backend.ai.googleHttpClientError", serde_json::json!({ "error": e.to_string() }), format!("HTTP client error: {}", e)))?;
 
         let params = [
             ("client_id", DEFAULT_GOOGLE_CLIENT_ID),
@@ -396,7 +400,7 @@ pub async fn chat_gemini_oauth(
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(90))
         .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        .map_err(|e| crate::common::messages::failure("backend.ai.copilotHttpClientFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to create HTTP client: {}", e)))?;
 
     let resp = client
         .post(&url)
@@ -405,18 +409,22 @@ pub async fn chat_gemini_oauth(
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("Network request to Gemini API failed: {}", e))?;
+        .map_err(|e| crate::common::messages::failure("backend.ai.geminiNetworkRequestFailed", serde_json::json!({ "error": e.to_string() }), format!("Network request to Gemini API failed: {}", e)))?;
 
     if !resp.status().is_success() {
         let status = resp.status();
         let err_body = resp.text().await.unwrap_or_default();
-        return Err(format!("Gemini API error (HTTP {}): {}", status, err_body));
+        return Err(crate::common::messages::failure(
+            "backend.ai.geminiApiError",
+            serde_json::json!({ "status": status.to_string(), "error": err_body }),
+            format!("Gemini API error (HTTP {}): {}", status, err_body),
+        ));
     }
 
     let val: serde_json::Value = resp
         .json()
         .await
-        .map_err(|e| format!("Failed to parse Gemini API JSON: {}", e))?;
+        .map_err(|e| crate::common::messages::failure("backend.ai.geminiJsonParseFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to parse Gemini API JSON: {}", e)))?;
 
     let text = val
         .get("candidates")
@@ -426,7 +434,7 @@ pub async fn chat_gemini_oauth(
         .and_then(|p| p.get(0))
         .and_then(|part0| part0.get("text"))
         .and_then(|t| t.as_str())
-        .ok_or_else(|| "No text candidates returned from Gemini API".to_string())?;
+        .ok_or_else(|| crate::common::messages::failure("backend.ai.geminiNoCandidates", serde_json::json!({}), "No text candidates returned from Gemini API".to_string()))?;
 
     Ok(text.to_string())
 }

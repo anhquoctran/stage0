@@ -64,7 +64,7 @@ pub async fn get_commits_between_refs(
             get_commits_between(&repo_path, &base, &compare)
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(|e| crate::common::messages::failure("backend.virtualMr.taskExecutionFailed", serde_json::json!({ "error": e.to_string() }), format!("Task execution failed: {}", e)))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))
@@ -77,7 +77,7 @@ pub async fn get_git_ref_sha(repo_path: String, reference: String) -> Result<Str
             crate::features::git::runner::resolve_ref(&repo_path, &reference).map(|(sha, _)| sha)
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(|e| crate::common::messages::failure("backend.virtualMr.taskExecutionFailed", serde_json::json!({ "error": e.to_string() }), format!("Task execution failed: {}", e)))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))
@@ -88,7 +88,7 @@ pub async fn get_git_user_identity_cmd(repo_path: String) -> Result<(String, Str
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || get_git_user_identity(&repo_path))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(|e| crate::common::messages::failure("backend.virtualMr.taskExecutionFailed", serde_json::json!({ "error": e.to_string() }), format!("Task execution failed: {}", e)))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))
@@ -101,8 +101,9 @@ pub async fn get_git_user_identity_cmd(repo_path: String) -> Result<(String, Str
 const MAX_DISCUSSION_SOURCE_BYTES: u64 = 16 * 1024 * 1024;
 
 fn read_regular_text_file_capped(path: &Path, max_bytes: u64) -> Result<String, String> {
-    let metadata = std::fs::symlink_metadata(path)
-        .map_err(|error| format!("Unable to inspect source file: {}", error))?;
+    let metadata = std::fs::symlink_metadata(path).map_err(|error| {
+        crate::common::messages::failure("backend.virtualMr.inspectSourceFailed", serde_json::json!({ "error": error.to_string() }), format!("Unable to inspect source file: {error}"))
+    })?;
     if !metadata.file_type().is_file() {
         return Err(crate::common::messages::code("backend.virtualMr.sourceNotRegularFile"));
     }
@@ -113,7 +114,9 @@ fn read_regular_text_file_capped(path: &Path, max_bytes: u64) -> Result<String, 
     let mut bytes = Vec::with_capacity(metadata.len() as usize);
     std::fs::File::open(path)
         .and_then(|file| file.take(max_bytes + 1).read_to_end(&mut bytes))
-        .map_err(|error| format!("Unable to read source file: {}", error))?;
+        .map_err(|error| {
+            crate::common::messages::failure("backend.virtualMr.readSourceFailed", serde_json::json!({ "error": error.to_string() }), format!("Unable to read source file: {error}"))
+        })?;
     if bytes.len() as u64 > max_bytes {
         return Err(crate::common::messages::code("backend.virtualMr.sourceFileTooLarge"));
     }
@@ -136,7 +139,7 @@ pub async fn list_mr_discussions(
             )
         })
         .await
-        .map_err(|_| "Could not load discussion code context".to_string())?
+        .map_err(|_| crate::common::messages::failure("backend.virtualMr.loadContextFailed", serde_json::json!({}), "Could not load discussion code context".into()))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))
@@ -161,7 +164,7 @@ pub async fn create_mr_discussion(
             if let Some(snippet) = &mut discussion.code_snippet {
                 let line = discussion
                     .line_number
-                    .ok_or("A code snippet requires a selected line")?;
+                    .ok_or_else(|| crate::common::messages::code("backend.virtualMr.snippetRequiresLine"))?;
                 if snippet.start_line < 1
                     || snippet.lines.is_empty()
                     || snippet.lines.len() > 15
@@ -229,7 +232,7 @@ pub async fn create_mr_discussion(
                 .map_err(|e| e.to_string())
         })
         .await
-        .map_err(|error| format!("Task execution failed: {}", error))?
+        .map_err(|error| crate::common::messages::failure("backend.virtualMr.taskExecutionFailed", serde_json::json!({ "error": error.to_string() }), format!("Task execution failed: {}", error)))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))
@@ -309,7 +312,7 @@ pub async fn reanchor_file_discussions(
             let repo_path = db
                 .get_repo_path_for_session(&session_id)
                 .map_err(|e| e.to_string())?
-                .ok_or_else(|| "Session not associated with a repository".to_string())?;
+                .ok_or_else(|| crate::common::messages::code("backend.virtualMr.sessionNoRepository"))?;
 
             let target_discussions: Vec<_> = discussions
                 .into_iter()
@@ -321,7 +324,7 @@ pub async fn reanchor_file_discussions(
 
             let safe_path = crate::features::git::resolve_safe_repo_path(&repo_path, &file_path)?;
             let content = read_regular_text_file_capped(&safe_path, MAX_DISCUSSION_SOURCE_BYTES)
-                .map_err(|error| format!("Failed to read file for re-anchoring: {}", error))?;
+                .map_err(|error| crate::common::messages::failure("backend.virtualMr.reanchorFileReadFailed", serde_json::json!({}), format!("Failed to read file for re-anchoring: {}", error)))?;
 
             let reanchored = crate::features::git::anchor::reanchor_discussions(
                 &repo_path,
@@ -331,13 +334,14 @@ pub async fn reanchor_file_discussions(
             );
 
             // Persist any updated line numbers or outdated status
-            db.update_discussion_anchors(&reanchored)
-                .map_err(|error| format!("Failed to persist discussion anchors: {}", error))?;
+            db.update_discussion_anchors(&reanchored).map_err(|error| {
+                crate::common::messages::failure("backend.virtualMr.persistAnchorsFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to persist discussion anchors: {error}"))
+            })?;
 
             Ok(reanchored)
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(|e| crate::common::messages::failure("backend.virtualMr.taskExecutionFailed", serde_json::json!({ "error": e.to_string() }), format!("Task execution failed: {}", e)))?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))

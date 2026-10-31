@@ -11,21 +11,21 @@ pub(super) fn revision(text: &str) -> String {
 pub(super) fn read_limited(path: &Path) -> Result<String, String> {
     reject_symlink(path)?;
     let metadata =
-        fs::metadata(path).map_err(|_| "Preferences file could not be read".to_string())?;
+        fs::metadata(path).map_err(|_| crate::common::messages::code("backend.preferences.fileReadFailed"))?;
     if metadata.len() as usize > MAX_PREFERENCES_BYTES {
-        return Err("Preferences file is too large (maximum 2 MiB)".into());
+        return Err(crate::common::messages::code("backend.preferences.fileTooLarge"));
     }
-    fs::read_to_string(path).map_err(|_| "Preferences file is not readable UTF-8 text".to_string())
+    fs::read_to_string(path).map_err(|_| crate::common::messages::code("backend.preferences.fileNotUtf8"))
 }
 
 pub(super) fn reject_symlink(path: &Path) -> Result<(), String> {
     match fs::symlink_metadata(path) {
         Ok(metadata) if metadata.file_type().is_symlink() => {
-            Err("Preferences paths cannot be symbolic links".into())
+            Err(crate::common::messages::code("backend.preferences.symlinkNotAllowed"))
         }
         Ok(_) => Ok(()),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
-        Err(_) => Err("Preferences path could not be inspected".into()),
+        Err(_) => Err(crate::common::messages::code("backend.preferences.pathInspectionFailed")),
     }
 }
 
@@ -34,7 +34,7 @@ pub(super) fn secure_directory(path: &Path) -> Result<(), String> {
     {
         use std::os::unix::fs::PermissionsExt;
         fs::set_permissions(path, fs::Permissions::from_mode(0o700))
-            .map_err(|_| "Preferences directory permissions could not be secured".to_string())?;
+            .map_err(|_| crate::common::messages::code("backend.preferences.directoryPermissionFailed"))?;
     }
     #[cfg(not(unix))]
     let _ = path;
@@ -55,7 +55,7 @@ pub(super) fn secure_file(path: &Path) -> io::Result<()> {
 pub(super) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
     let parent = path
         .parent()
-        .ok_or_else(|| "Invalid preferences path".to_string())?;
+        .ok_or_else(|| crate::common::messages::code("backend.preferences.invalidPath"))?;
     reject_symlink(parent)?;
     reject_symlink(path)?;
     let temp = parent.join(format!(".preferences-{}.tmp", uuid::Uuid::new_v4()));
@@ -69,16 +69,16 @@ pub(super) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
         }
         let mut file = options
             .open(&temp)
-            .map_err(|_| "Could not create a temporary preferences file".to_string())?;
+            .map_err(|_| crate::common::messages::code("backend.preferences.tempFileCreateFailed"))?;
         file.write_all(content)
-            .map_err(|_| "Could not write preferences to disk".to_string())?;
+            .map_err(|_| crate::common::messages::code("backend.preferences.writeFailed"))?;
         file.sync_all()
-            .map_err(|_| "Could not flush preferences to disk".to_string())?;
+            .map_err(|_| crate::common::messages::code("backend.preferences.flushFailed"))?;
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             fs::set_permissions(&temp, fs::Permissions::from_mode(0o600))
-                .map_err(|_| "Preferences file permissions could not be secured".to_string())?;
+                .map_err(|_| crate::common::messages::code("backend.preferences.filePermissionFailed"))?;
         }
         #[cfg(windows)]
         {
@@ -96,18 +96,18 @@ pub(super) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
                 )
             };
             if moved == 0 {
-                return Err("Could not atomically replace preferences.json".to_string());
+                return Err(crate::common::messages::code("backend.preferences.atomicReplaceFailed"));
             }
         }
         #[cfg(not(windows))]
         fs::rename(&temp, path)
-            .map_err(|_| "Could not atomically replace preferences.json".to_string())?;
+            .map_err(|_| crate::common::messages::code("backend.preferences.atomicReplaceFailed"))?;
         #[cfg(unix)]
         OpenOptions::new()
             .read(true)
             .open(parent)
             .and_then(|directory| directory.sync_all())
-            .map_err(|_| "Preferences replacement could not be durably flushed".to_string())?;
+            .map_err(|_| crate::common::messages::code("backend.preferences.durableFlushFailed"))?;
         Ok(())
     })();
     if result.is_err() {

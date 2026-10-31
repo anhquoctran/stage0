@@ -163,16 +163,16 @@ mod tests {
 impl McpHttpClient {
     pub fn new(request: &McpDiscoveryRequest) -> Result<Self, String> {
         if !request.allow_network {
-            return Err("Explicit discovery consent is required; no server was contacted".into());
+            return Err(crate::common::messages::failure("backend.review.mcpConsentRequired", serde_json::json!({}), "Explicit discovery consent is required; no server was contacted".into()));
         }
         if request.connection_id.is_empty()
             || request.connection_id.len() > 128
             || request.connection_id.chars().any(char::is_control)
             || request.url.len() > 2048
         {
-            return Err("Invalid MCP connection identity or URL length".into());
+            return Err(crate::common::messages::failure("backend.review.mcpIdentityOrUrlLengthInvalid", serde_json::json!({}), "Invalid MCP connection identity or URL length".into()));
         }
-        let url = reqwest::Url::parse(request.url.trim()).map_err(|_| "Invalid MCP URL")?;
+        let url = reqwest::Url::parse(request.url.trim()).map_err(|_| crate::common::messages::failure("backend.review.mcpUrlInvalid", serde_json::json!({}), "Invalid MCP URL".into()))?;
         let local = matches!(
             url.host_str(),
             Some("localhost" | "127.0.0.1" | "[::1]" | "::1")
@@ -184,14 +184,14 @@ impl McpHttpClient {
             || url.host_str().is_none()
             || !(url.scheme() == "https" || local && url.scheme() == "http")
         {
-            return Err("MCP URL must use HTTPS (HTTP only on loopback), without credentials, query strings or fragments".into());
+            return Err(crate::common::messages::failure("backend.review.mcpUrlHttpsRequired", serde_json::json!({}), "MCP URL must use HTTPS (HTTP only on loopback), without credentials, query strings or fragments".into()));
         }
         let client = reqwest::Client::builder()
             .no_proxy()
             .redirect(reqwest::redirect::Policy::none())
             .timeout(Duration::from_secs(10))
             .build()
-            .map_err(|_| "Could not create MCP client")?;
+            .map_err(|_| crate::common::messages::failure("backend.review.mcpClientCreateFailed", serde_json::json!({}), "Could not create MCP client".into()))?;
         Ok(Self {
             client,
             url,
@@ -210,7 +210,7 @@ impl McpHttpClient {
             method,
             "initialize" | "notifications/initialized" | "tools/list"
         ) {
-            return Err("MCP method is not authorized for discovery".into());
+            return Err(crate::common::messages::failure("backend.review.mcpMethodUnauthorized", serde_json::json!({}), "MCP method is not authorized for discovery".into()));
         }
         let mut body = json!({"jsonrpc":"2.0","method":method,"params":params});
         if let Some(id) = id {
@@ -230,18 +230,22 @@ impl McpHttpClient {
         let mut response = request
             .send()
             .await
-            .map_err(|_| "MCP connection failed or timed out")?;
+            .map_err(|_| crate::common::messages::failure("backend.review.mcpConnectionFailedOrTimeout", serde_json::json!({}), "MCP connection failed or timed out".into()))?;
         if !response.status().is_success() {
-            return Err(format!("MCP discovery returned HTTP {}. No credentials were sent; OAuth/authenticated connectors are not implemented.",response.status().as_u16()));
+            return Err(crate::common::messages::failure(
+                "backend.review.mcpDiscoveryHttpFailed",
+                serde_json::json!({ "status": response.status().as_u16().to_string() }),
+                format!("MCP discovery returned HTTP {}. No credentials were sent; OAuth/authenticated connectors are not implemented.", response.status().as_u16()),
+            ));
         }
         if method == "initialize" {
             if let Some(session) = response.headers().get("Mcp-Session-Id") {
-                let session = session.to_str().map_err(|_| "Invalid MCP session header")?;
+                let session = session.to_str().map_err(|_| crate::common::messages::failure("backend.review.mcpSessionHeaderInvalid", serde_json::json!({}), "Invalid MCP session header".into()))?;
                 if session.is_empty()
                     || session.len() > 512
                     || !session.bytes().all(|b| (0x21..=0x7e).contains(&b))
                 {
-                    return Err("Invalid MCP session header".into());
+                    return Err(crate::common::messages::failure("backend.review.mcpSessionHeaderInvalid", serde_json::json!({}), "Invalid MCP session header".into()));
                 }
                 self.session = Some(session.into());
             }
@@ -265,17 +269,17 @@ impl McpHttpClient {
             .trim();
         let sse = content_type == "text/event-stream";
         if !sse && content_type != "application/json" {
-            return Err("Unsupported MCP response content type".into());
+            return Err(crate::common::messages::failure("backend.review.mcpResponseContentTypeUnsupported", serde_json::json!({}), "Unsupported MCP response content type".into()));
         }
         let mut bytes = Vec::new();
         while let Some(chunk) = response
             .chunk()
             .await
-            .map_err(|_| "MCP response interrupted")?
+            .map_err(|_| crate::common::messages::failure("backend.review.mcpResponseInterrupted", serde_json::json!({}), "MCP response interrupted".into()))?
         {
             self.bytes += chunk.len();
             if bytes.len() + chunk.len() > 256 * 1024 || self.bytes > 512 * 1024 {
-                return Err("MCP discovery response budget exceeded".into());
+                return Err(crate::common::messages::failure("backend.review.mcpResponseBudgetExceeded", serde_json::json!({}), "MCP discovery response budget exceeded".into()));
             }
             bytes.extend_from_slice(&chunk);
             if sse {
@@ -286,27 +290,27 @@ impl McpHttpClient {
         }
         if sse {
             return protocol::sse_result(&bytes, id, true)?
-                .ok_or("MCP stream ended without a matching response".into());
+                .ok_or_else(|| crate::common::messages::failure("backend.review.mcpStreamEndedNoResponse", serde_json::json!({}), "MCP stream ended without a matching response".into()));
         }
         let message: Value =
-            serde_json::from_slice(&bytes).map_err(|_| "Invalid MCP response JSON")?;
+            serde_json::from_slice(&bytes).map_err(|_| crate::common::messages::failure("backend.review.mcpResponseJsonInvalid", serde_json::json!({}), "Invalid MCP response JSON".into()))?;
         protocol::result(&message, id)
     }
     async fn discover(&mut self, id: &str) -> Result<McpDiscoveryReport, String> {
         let initialized=self.post("initialize",json!({"protocolVersion":protocol::VERSION,"capabilities":{},"clientInfo":{"name":"stage0-discovery","version":env!("CARGO_PKG_VERSION")}}),Some(1)).await?;
         if initialized["protocolVersion"] != protocol::VERSION {
-            return Err("Unsupported MCP protocol revision. This connector is pinned to 2025-11-25; it does not silently downgrade or claim newer revision support.".into());
+            return Err(crate::common::messages::failure("backend.review.mcpProtocolRevisionUnsupported", serde_json::json!({}), "Unsupported MCP protocol revision. This connector is pinned to 2025-11-25; it does not silently downgrade or claim newer revision support.".into()));
         }
         let name = initialized["serverInfo"]["name"]
             .as_str()
             .filter(|s| !s.is_empty() && s.len() <= 200)
-            .ok_or("MCP server identity missing or invalid")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.review.mcpServerIdentityInvalid", serde_json::json!({}), "MCP server identity missing or invalid".into()))?;
         let version = initialized["serverInfo"]["version"]
             .as_str()
             .filter(|s| s.len() <= 100)
-            .ok_or("MCP server version missing or invalid")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.review.mcpServerVersionInvalid", serde_json::json!({}), "MCP server version missing or invalid".into()))?;
         if !initialized["capabilities"]["tools"].is_object() {
-            return Err("MCP server does not advertise tool discovery".into());
+            return Err(crate::common::messages::failure("backend.review.mcpToolsNotAdvertised", serde_json::json!({}), "MCP server does not advertise tool discovery".into()));
         }
         self.post("notifications/initialized", json!({}), None)
             .await?;
@@ -322,12 +326,12 @@ impl McpHttpClient {
             let result = self.post("tools/list", params, Some(page + 2)).await?;
             for tool in protocol::catalog_page(id, &result)? {
                 if !names.insert(tool.name.clone()) {
-                    return Err("Duplicate MCP tool name".into());
+                    return Err(crate::common::messages::failure("backend.review.mcpDuplicateToolName", serde_json::json!({}), "Duplicate MCP tool name".into()));
                 }
                 tools.push(tool);
             }
             if tools.len() > 100 {
-                return Err("MCP catalog exceeds 100 tools".into());
+                return Err(crate::common::messages::failure("backend.review.mcpCatalogLimitExceeded", serde_json::json!({}), "MCP catalog exceeds 100 tools".into()));
             }
             match result.get("nextCursor") {
                 None | Some(Value::Null) => {
@@ -336,7 +340,7 @@ impl McpHttpClient {
                         endpoint_fingerprint: protocol::fingerprint(self.url.as_str()),
                         catalog_fingerprint: protocol::fingerprint(
                             &serde_json::to_string(&tools)
-                                .map_err(|_| "Could not fingerprint MCP catalog")?,
+                                .map_err(|_| crate::common::messages::failure("backend.review.mcpCatalogFingerprintFailed", serde_json::json!({}), "Could not fingerprint MCP catalog".into()))?,
                         ),
                         protocol_version: protocol::VERSION.into(),
                         server_name: name.into(),
@@ -351,7 +355,7 @@ impl McpHttpClient {
                 {
                     cursor = Some(next.clone())
                 }
-                _ => return Err("Invalid or repeated MCP pagination cursor".into()),
+                _ => return Err(crate::common::messages::failure("backend.review.mcpPaginationCursorInvalid", serde_json::json!({}), "Invalid or repeated MCP pagination cursor".into())),
             }
         }
         Err("MCP discovery exceeds five catalog pages".into())
@@ -375,7 +379,7 @@ impl McpHttpClient {
             client.discover(&request.connection_id),
         )
         .await
-        .map_err(|_| "MCP discovery deadline exceeded".to_string())
+        .map_err(|_| crate::common::messages::failure("backend.review.mcpDiscoveryDeadlineExceeded", serde_json::json!({}), "MCP discovery deadline exceeded".into()))
         .and_then(|v| v);
         client.close().await;
         outcome

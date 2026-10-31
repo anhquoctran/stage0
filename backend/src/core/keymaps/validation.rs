@@ -6,12 +6,14 @@ use serde_json::Value;
 use std::collections::BTreeSet;
 
 pub fn validate_settings(settings: &Value) -> Result<(), String> {
-    let object = settings.as_object().ok_or("keymap must be an object")?;
+    let object = settings.as_object().ok_or_else(|| {
+        crate::common::messages::failure("backend.keymaps.mustBeObject", serde_json::json!({}), "keymap must be an object".into())
+    })?;
     if object
         .keys()
         .any(|key| !["preset", "overrides"].contains(&key.as_str()))
     {
-        return Err("Unknown keymap property".into());
+        return Err(crate::common::messages::failure("backend.keymaps.unknownProperty", serde_json::json!({}), "Unknown keymap property".into()));
     }
     if !config()["presets"]
         .as_array()
@@ -19,13 +21,13 @@ pub fn validate_settings(settings: &Value) -> Result<(), String> {
         .iter()
         .any(|item| item["id"] == settings["preset"] && settings["preset"].is_string())
     {
-        return Err("keymap.preset is not supported".into());
+        return Err(crate::common::messages::failure("backend.keymaps.presetUnsupported", serde_json::json!({}), "keymap.preset is not supported".into()));
     }
     let overrides = settings["overrides"]
         .as_array()
-        .ok_or("keymap.overrides must be an array")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.keymaps.overridesMustBeArray", serde_json::json!({}), "keymap.overrides must be an array".into()))?;
     if overrides.len() > 256 {
-        return Err("keymap.overrides cannot exceed 256 entries".into());
+        return Err(crate::common::messages::failure("backend.keymaps.overridesLimitExceeded", serde_json::json!({}), "keymap.overrides cannot exceed 256 entries".into()));
     }
     let mut known = resolve(&serde_json::json!({}), "macos");
     known.extend(resolve(&serde_json::json!({}), "windows"));
@@ -34,29 +36,29 @@ pub fn validate_settings(settings: &Value) -> Result<(), String> {
     for item in overrides {
         let item = item
             .as_object()
-            .ok_or("Every keymap override must be an object")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.keymaps.overrideMustBeObject", serde_json::json!({}), "Every keymap override must be an object".into()))?;
         if item
             .keys()
             .any(|key| !["command", "keys"].contains(&key.as_str()))
         {
-            return Err("Unknown keymap override property".into());
+            return Err(crate::common::messages::failure("backend.keymaps.unknownOverrideProperty", serde_json::json!({}), "Unknown keymap override property".into()));
         }
         let id = item
             .get("command")
             .and_then(Value::as_str)
-            .ok_or("keymap override needs a command")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.keymaps.overrideNeedsCommand", serde_json::json!({}), "keymap override needs a command".into()))?;
         if !known.get(id).is_some_and(|command| command.editable) {
-            return Err(format!("Unknown or system-managed keymap command: {id}"));
+            return Err(crate::common::messages::failure("backend.keymaps.unknownCommand", serde_json::json!({ "command": id }), format!("Unknown or system-managed keymap command: {id}")));
         }
         if !seen.insert(id) {
-            return Err(format!("Duplicate keymap override: {id}"));
+            return Err(crate::common::messages::failure("backend.keymaps.duplicateOverride", serde_json::json!({ "command": id }), format!("Duplicate keymap override: {id}")));
         }
         let keys = item
             .get("keys")
             .and_then(Value::as_array)
-            .ok_or("keymap keys must be an array")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.keymaps.keysMustBeArray", serde_json::json!({}), "keymap keys must be an array".into()))?;
         if keys.len() > 4 || keys.iter().any(|key| !key.is_string()) {
-            return Err("Use up to four keymap shortcuts, or an empty array to unbind".into());
+            return Err(crate::common::messages::failure("backend.keymaps.keysLimit", serde_json::json!({}), "Use up to four keymap shortcuts, or an empty array to unbind".into()));
         }
     }
     for platform in ["macos", "windows", "linux"] {
@@ -81,7 +83,7 @@ fn validate_conflicts(settings: &Value, platform: &str) -> Result<(), String> {
                     .split(' ')
                     .any(|stroke| ["Escape", "Tab", "Shift+Escape", "Shift+Tab"].contains(&stroke))
             {
-                return Err("Escape and Tab are reserved for cancel and focus navigation".into());
+                return Err(crate::common::messages::failure("backend.keymaps.reservedKeys", serde_json::json!({}), "Escape and Tab are reserved for cancel and focus navigation".into()));
             }
             for (other, previous) in &entries {
                 if overlaps(command, other)
@@ -89,9 +91,10 @@ fn validate_conflicts(settings: &Value, platform: &str) -> Result<(), String> {
                         || normalized.starts_with(&format!("{previous} "))
                         || previous.starts_with(&format!("{normalized} ")))
                 {
-                    return Err(format!(
-                        "Keymap conflict on {platform}: {} and {} use {normalized}",
-                        command.label, other.label
+                    return Err(crate::common::messages::failure(
+                        "backend.keymaps.conflict",
+                        serde_json::json!({ "platform": platform, "a": command.label, "b": other.label, "shortcut": normalized }),
+                        format!("Keymap conflict on {platform}: {} and {} use {normalized}", command.label, other.label),
                     ));
                 }
             }

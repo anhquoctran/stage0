@@ -29,7 +29,7 @@ pub(super) async fn submit_review(
     }
     let submitted_findings: Vec<ReviewFinding> =
         serde_json::from_value(call.arguments["findings"].clone())
-            .map_err(|_| "Malformed structured findings")?;
+            .map_err(|_| crate::common::messages::failure("backend.review.structuredFindingsMalformed", serde_json::json!({}), "Malformed structured findings".into()))?;
     let submitted_decision = call.arguments["decision"].as_str().unwrap().to_owned();
     let mut findings = state.pending_findings.clone();
     findings.extend(submitted_findings);
@@ -54,14 +54,14 @@ pub(super) async fn submit_review(
         tauri::async_runtime::spawn_blocking(move || {
             context
                 .lock()
-                .map_err(|_| "Review context unavailable".to_string())?
+                .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
                 .validate_findings(&findings)
         })
         .await
-        .map_err(|_| "Finding validation task failed")?
+        .map_err(|_| crate::common::messages::failure("backend.review.findingValidationTaskFailed", serde_json::json!({}), "Finding validation task failed".into()))?
     };
     if validation.is_ok() {
-        let ctx = context.lock().map_err(|_| "Review context unavailable")?;
+        let ctx = context.lock().map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?;
         run.findings = findings;
         run.summary = security::redact(call.arguments["summary"].as_str().unwrap());
         run.decision = Some(submitted_decision.clone());

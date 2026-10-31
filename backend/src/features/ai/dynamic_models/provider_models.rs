@@ -23,8 +23,10 @@ pub(super) fn collection_endpoint(
     let mut endpoint = Url::parse(base)
         .map_err(|_| crate::common::messages::code("backend.ai.modelBaseUrlInvalid"))?;
     if !matches!(endpoint.scheme(), "http" | "https") || endpoint.host_str().is_none() {
-        return Err(crate::common::messages::code(
+        return Err(crate::common::messages::failure(
             "backend.ai.modelBaseUrlInvalid",
+            serde_json::json!({}),
+            "Base URL must use HTTP or HTTPS and include a host".into(),
         ));
     }
 
@@ -80,7 +82,7 @@ pub async fn fetch_provider_models(
     let resolved_key = resolved_key.as_deref().map(|key| key.as_str());
 
     match provider {
-        "openai" | "xai_grok" | "grok" | "xai" | "deepseek" | "kimi" | "custom" => {
+        "openai" | "xai_grok" | "grok" | "xai" | "deepseek" | "kimi" | "custom" | "zai" | "z_ai" | "opencode" => {
             openai_compatible::fetch(&client, provider, resolved_key, base_url).await
         }
         "qwen" => qwen::fetch(&client, resolved_key, base_url).await,

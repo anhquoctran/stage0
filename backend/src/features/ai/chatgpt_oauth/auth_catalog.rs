@@ -35,7 +35,7 @@ impl AuthCatalog {
         match read_secret(CATALOG)? {
             Some(raw) => {
                 let value: Self = serde_json::from_str(&raw)
-                    .map_err(|_| "Saved ChatGPT registrations are invalid")?;
+                    .map_err(|_| crate::common::messages::failure("backend.ai.chatGptSavedRegistrationsInvalid", serde_json::json!({}), "Saved ChatGPT registrations are invalid".into()))?;
                 if value.profiles.len() > 12
                     || uuid::Uuid::parse_str(value.host_id.trim_start_matches("urn:uuid:")).is_err()
                     || value.profiles.iter().any(|p| {
@@ -43,7 +43,7 @@ impl AuthCatalog {
                             || !super::flow::issued_client(&p.client_id)
                     })
                 {
-                    return Err("Saved ChatGPT registration metadata is invalid".into());
+                    return Err(crate::common::messages::failure("backend.ai.chatGptSavedRegistrationMetadataInvalid", serde_json::json!({}), "Saved ChatGPT registration metadata is invalid".into()));
                 }
                 Ok(value)
             }
@@ -52,16 +52,16 @@ impl AuthCatalog {
     }
     pub fn save(&mut self) -> Result<(), String> {
         let raw =
-            serde_json::to_string(self).map_err(|_| "Could not encode ChatGPT registrations")?;
+            serde_json::to_string(self).map_err(|_| crate::common::messages::failure("backend.ai.chatGptEncodeRegistrationsFailed", serde_json::json!({}), "Could not encode ChatGPT registrations".into()))?;
         super::secret_storage::write(CATALOG, &raw)
-            .map_err(|_| "Could not save ChatGPT registrations to the OS keyring".into())
+            .map_err(|_| crate::common::messages::failure("backend.ai.chatGptSaveKeyringFailed", serde_json::json!({}), "Could not save ChatGPT registrations to the OS keyring".into()))
     }
     pub fn register(&mut self, profile: AuthProfile) -> Result<(), String> {
         if let Some(existing) = self.profiles.iter_mut().find(|p| p.id == profile.id) {
             *existing = profile;
         } else {
             if self.profiles.len() >= 12 {
-                return Err("Saved registration limit reached".into());
+                return Err(crate::common::messages::failure("backend.ai.chatGptSavedRegistrationLimit", serde_json::json!({}), "Saved registration limit reached".into()));
             }
             self.profiles.push(profile);
         }
@@ -75,7 +75,7 @@ impl AuthCatalog {
         let old = profile.secret.clone();
         let key = format!("chatgpt_browser_v2_session_{}", uuid::Uuid::new_v4());
         let raw = Zeroizing::new(
-            serde_json::to_string(&session).map_err(|_| "Could not encode ChatGPT session")?,
+            serde_json::to_string(&session).map_err(|_| crate::common::messages::failure("backend.ai.chatGptEncodeSessionFailed", serde_json::json!({}), "Could not encode ChatGPT session".into()))?,
         );
         super::secret_storage::write(&key, &raw)?;
         profile.secret = Some(key.clone());
@@ -94,7 +94,7 @@ impl AuthCatalog {
             .profiles
             .iter_mut()
             .find(|p| p.id == id)
-            .ok_or("Registration not found")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.ai.chatGptRegistrationNotFound", serde_json::json!({}), "Registration not found".into()))?;
         let old = profile.secret.take();
         if self.active.as_deref() == Some(id) {
             self.active = None;

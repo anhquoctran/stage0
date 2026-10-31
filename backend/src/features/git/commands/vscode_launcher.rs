@@ -94,7 +94,11 @@ pub fn launch_vscode(target: VsCodeTarget) -> Result<(), String> {
         }
     }
 
-    Err("Visual Studio Code is not installed or not configured in system PATH. Please ensure VS Code is installed and 'code' is available in your PATH.".to_string())
+    Err(crate::common::messages::failure(
+        "backend.git.vscodeNotFoundPath",
+        serde_json::json!({}),
+        "Visual Studio Code is not installed or not configured in system PATH. Please ensure VS Code is installed and 'code' is available in your PATH.".into(),
+    ))
 }
 
 #[cfg(target_os = "macos")]
@@ -182,7 +186,11 @@ pub fn launch_vscode(target: VsCodeTarget) -> Result<(), String> {
         }
     }
 
-    Err("Visual Studio Code is not installed or not found in /Applications. Please install VS Code or run 'Shell Command: Install code command in PATH' from VS Code Command Palette.".to_string())
+    Err(crate::common::messages::failure(
+        "backend.git.vscodeNotFoundMac",
+        serde_json::json!({}),
+        "Visual Studio Code is not installed or not found in /Applications. Please install VS Code or run 'Shell Command: Install code command in PATH' from VS Code Command Palette.".into(),
+    ))
 }
 
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
@@ -231,5 +239,9 @@ pub fn launch_vscode(target: VsCodeTarget) -> Result<(), String> {
         }
     }
 
-    Err("Visual Studio Code is not installed or not found in PATH, Snap, or Flatpak. Please ensure VS Code is installed and available.".to_string())
+    Err(crate::common::messages::failure(
+        "backend.git.vscodeNotFoundLinux",
+        serde_json::json!({}),
+        "Visual Studio Code is not installed or not found in PATH, Snap, or Flatpak. Please ensure VS Code is installed and available.".into(),
+    ))
 }

@@ -12,11 +12,11 @@ pub fn turn_request(
     max_tokens: u64,
 ) -> Result<Value, String> {
     if max_tokens == 0 || max_tokens > 2048 {
-        return Err("CLI output budget exceeds harness policy".into());
+        return Err(crate::common::messages::failure("backend.review.cliOutputBudgetExceeded", serde_json::json!({}), "CLI output budget exceeds harness policy".into()));
     }
     let value = json!({"protocolVersion":VERSION,"system":system,"history":history,"tools":tools,"maxOutputTokens":max_tokens,"capabilities":{"hostExecution":false,"hostFilesystem":false,"automaticApproval":false}});
     if value.to_string().len() > 160 * 1024 {
-        return Err("CLI request exceeds context budget".into());
+        return Err(crate::common::messages::failure("backend.review.cliContextBudgetExceeded", serde_json::json!({}), "CLI request exceeds context budget".into()));
     }
     Ok(value)
 }
@@ -26,27 +26,27 @@ pub fn decode_turn(
     registry: &ReviewToolRegistry,
 ) -> Result<(Vec<ReviewToolCall>, u64), String> {
     if bytes.len() > 512 * 1024 {
-        return Err("CLI response exceeds safety limit".into());
+        return Err(crate::common::messages::failure("backend.review.cliResponseSafetyLimit", serde_json::json!({}), "CLI response exceeds safety limit".into()));
     }
     let value: Value = serde_json::from_slice(bytes).map_err(|_| {
         "CLI wrapper must return one structured JSON object, not prose or raw agent events"
     })?;
-    let object = value.as_object().ok_or("Invalid CLI turn response")?;
+    let object = value.as_object().ok_or_else(|| crate::common::messages::failure("backend.review.cliTurnResponseInvalid", serde_json::json!({}), "Invalid CLI turn response".into()))?;
     if object.len() != 3
         || value["protocolVersion"] != VERSION
         || !object
             .keys()
             .all(|k| ["protocolVersion", "toolCalls", "usageTokens"].contains(&k.as_str()))
     {
-        return Err("Unsupported CLI protocol or unknown response fields".into());
+        return Err(crate::common::messages::failure("backend.review.cliProtocolUnsupported", serde_json::json!({}), "Unsupported CLI protocol or unknown response fields".into()));
     }
     let usage = value["usageTokens"]
         .as_u64()
-        .ok_or("Missing CLI usage counter")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.review.cliUsageCounterMissing", serde_json::json!({}), "Missing CLI usage counter".into()))?;
     let items = value["toolCalls"]
         .as_array()
         .filter(|v| !v.is_empty() && v.len() <= 8)
-        .ok_or("CLI must return 1–8 tool calls")?;
+        .ok_or_else(|| crate::common::messages::failure("backend.review.cliToolCallsCountInvalid", serde_json::json!({}), "CLI must return 1–8 tool calls".into()))?;
     let mut seen = std::collections::HashSet::new();
     let mut calls = Vec::new();
     for item in items {
@@ -57,14 +57,14 @@ pub fn decode_turn(
                     && v.keys()
                         .all(|k| ["id", "name", "arguments"].contains(&k.as_str()))
             })
-            .ok_or("Malformed CLI tool call")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.review.cliToolCallMalformed", serde_json::json!({}), "Malformed CLI tool call".into()))?;
         let id = object["id"]
             .as_str()
             .filter(|s| !s.is_empty() && s.len() <= 200 && !s.chars().any(char::is_control))
-            .ok_or("Invalid CLI call ID")?;
-        let name = object["name"].as_str().ok_or("Missing CLI tool name")?;
+            .ok_or_else(|| crate::common::messages::failure("backend.review.cliCallIdInvalid", serde_json::json!({}), "Invalid CLI call ID".into()))?;
+        let name = object["name"].as_str().ok_or_else(|| crate::common::messages::failure("backend.review.cliToolNameMissing", serde_json::json!({}), "Missing CLI tool name".into()))?;
         if !seen.insert(id.to_string()) {
-            return Err("Duplicate CLI call ID".into());
+            return Err(crate::common::messages::failure("backend.review.cliCallIdDuplicate", serde_json::json!({}), "Duplicate CLI call ID".into()));
         }
         registry.validate_call(name, &object["arguments"])?;
         calls.push(ReviewToolCall {
@@ -75,7 +75,7 @@ pub fn decode_turn(
         });
     }
     if calls.len() != 1 && calls.iter().any(|c| c.name == "submit_review") {
-        return Err("CLI final submission must be exclusive".into());
+        return Err(crate::common::messages::failure("backend.review.cliFinalSubmissionExclusive", serde_json::json!({}), "CLI final submission must be exclusive".into()));
     }
     Ok((calls, usage))
 }

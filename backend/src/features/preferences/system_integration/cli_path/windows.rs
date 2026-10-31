@@ -42,12 +42,17 @@ fn enable_path(launcher_dir: &Path) -> Result<(), String> {
         .map_err(|error| error.to_string())?;
     let executable = executable
         .to_str()
-        .ok_or("Stage0 executable path is not valid Unicode")?;
+        .ok_or_else(|| crate::common::messages::code("backend.preferences.executablePathNotUnicode"))?;
     if executable.contains('\n') || executable.contains('\r') {
-        return Err("Stage0 executable path contains a line break".into());
+        return Err(crate::common::messages::code("backend.preferences.executablePathLineBreak"));
     }
-    fs::create_dir_all(launcher_dir)
-        .map_err(|error| format!("Could not create {}: {error}", launcher_dir.display()))?;
+    fs::create_dir_all(launcher_dir).map_err(|error| {
+        crate::common::messages::failure(
+            "backend.preferences.createDirFailed",
+            serde_json::json!({ "path": launcher_dir.display().to_string() }),
+            format!("Could not create {}: {error}", launcher_dir.display()),
+        )
+    })?;
     write_launcher_files(launcher_dir, executable)?;
 
     let state_path = launcher_dir.join("path-state.txt");
@@ -101,8 +106,13 @@ fn disable_path(launcher_dir: &Path) -> Result<(), String> {
                 broadcast_environment_change();
             }
         }
-        fs::remove_file(&state_path)
-            .map_err(|error| format!("Could not remove {}: {error}", state_path.display()))?;
+        fs::remove_file(&state_path).map_err(|error| {
+            crate::common::messages::failure(
+                "backend.preferences.removeFileFailed",
+                serde_json::json!({ "path": state_path.display().to_string() }),
+                format!("Could not remove {}: {error}", state_path.display()),
+            )
+        })?;
     }
     remove_managed_file(&launcher_dir.join("stage0.cmd"), CMD_MARKER)?;
     remove_managed_file(&launcher_dir.join("stage0.ps1"), SCRIPT_MARKER)?;

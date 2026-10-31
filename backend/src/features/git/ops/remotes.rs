@@ -121,7 +121,13 @@ pub fn check_git_remote_url(url: &str) -> Result<String, String> {
         1024 * 1024,
         std::time::Duration::from_secs(120),
     )
-    .map_err(|e| format!("Could not run Git: {}", e))?;
+    .map_err(|e| {
+        crate::common::messages::failure(
+            "backend.git.couldNotRunGit",
+            serde_json::json!({ "error": e.to_string() }),
+            format!("Could not run Git: {}", e),
+        )
+    })?;
     if output.output_truncated {
         return Err(crate::common::messages::code(
             "backend.git.remoteOutputTooLarge",

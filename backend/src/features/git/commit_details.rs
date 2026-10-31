@@ -21,12 +21,16 @@ fn read_git(
         Duration::from_secs(120),
     )?;
     if result.output_truncated && !allow_truncation {
-        return Err("Commit metadata exceeds the display limit".into());
+        return Err(crate::common::messages::code("backend.git.commitMetadataLimitExceeded"));
     }
     if !result.success && !result.output_truncated {
-        return Err(format!(
-            "Could not load commit details: {}",
-            super::runner::redact_sensitive_text(&result.stderr)
+        return Err(crate::common::messages::failure(
+            "backend.git.commitDetailsLoadFailed",
+            serde_json::json!({}),
+            format!(
+                "Could not load commit details: {}",
+                super::runner::redact_sensitive_text(&result.stderr)
+            ),
         ));
     }
     Ok((result.stdout, result.output_truncated))
@@ -34,7 +38,7 @@ fn read_git(
 
 pub fn get_commit_details(repo: &str, hash: &str) -> Result<CommitDetail, String> {
     if !matches!(hash.len(), 40 | 64) || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        return Err("Invalid commit hash".into());
+        return Err(crate::common::messages::code("backend.git.invalidCommitHash"));
     }
     let (hash, _) = resolve_ref(repo, hash)?;
     let (metadata, _) = read_git(
@@ -52,7 +56,7 @@ pub fn get_commit_details(repo: &str, hash: &str) -> Result<CommitDetail, String
     )?;
     let fields: Vec<_> = metadata.splitn(6, '\0').collect();
     if fields.len() != 6 {
-        return Err("Git returned malformed commit details".into());
+        return Err(crate::common::messages::code("backend.git.malformedCommitDetails"));
     }
     let parents: Vec<String> = fields[1].split_whitespace().map(str::to_owned).collect();
     let diff_args = |mode| {

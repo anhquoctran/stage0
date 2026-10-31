@@ -21,6 +21,8 @@ pub(super) async fn fetch(
         "xai_grok" | "grok" | "xai" => "https://api.x.ai/v1",
         "deepseek" => "https://api.deepseek.com",
         "kimi" => "https://api.moonshot.ai/v1",
+        "zai" | "z_ai" => "https://api.z.ai/api/coding/paas/v4",
+        "opencode" => "https://opencode.ai/zen/v1",
         _ => "https://api.openai.com/v1",
     };
     let endpoint = collection_endpoint(base_url.unwrap_or(default_url), default_url, "models")?;
@@ -106,7 +108,7 @@ fn model_is_usable(provider: &str, id: &str) -> bool {
                 || id.starts_with("chatgpt-")
         }
         "xai_grok" | "grok" | "xai" => id.starts_with("grok"),
-        "deepseek" | "kimi" => true,
+        "deepseek" | "kimi" | "zai" | "z_ai" | "opencode" => true,
         _ => true,
     }
 }

@@ -1,5 +1,13 @@
 use crate::features::git::ops::{git_sync_with_progress, is_rebase_in_progress, GitSyncOptions};
 
+fn task_failed(error: impl std::fmt::Display) -> String {
+    crate::common::messages::failure(
+        "backend.git.taskExecutionFailed",
+        serde_json::json!({}),
+        format!("Task execution failed: {error}"),
+    )
+}
+
 #[tauri::command]
 pub async fn run_git_sync(
     repo_path: String,
@@ -13,7 +21,7 @@ pub async fn run_git_sync(
             git_sync_with_progress(&repo_path, &operation, options, Some(on_progress))
         })
         .await
-        .map_err(|e| format!("Task execution failed: {}", e))?
+        .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))
@@ -24,7 +32,7 @@ pub async fn check_rebase_status(repo_path: String) -> Result<bool, String> {
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || Ok(is_rebase_in_progress(&repo_path)))
             .await
-            .map_err(|e| format!("Task execution failed: {}", e))?
+            .map_err(task_failed)?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("git", error))

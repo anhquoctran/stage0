@@ -171,7 +171,11 @@ impl SandboxManager {
             let map = self.instances_lock();
             map.get(instance_id)
                 .cloned()
-                .ok_or_else(|| format!("Sandbox instance not found: {}", instance_id))?
+                .ok_or_else(|| crate::common::messages::failure(
+                    "backend.sandbox.instanceNotFound",
+                    serde_json::json!({ "instanceId": instance_id }),
+                    format!("Sandbox instance not found: {}", instance_id),
+                ))?
         };
 
         let adapter = self.get_adapter(&instance.adapter_type);
@@ -191,7 +195,11 @@ impl SandboxManager {
     pub fn sync_instance(&self, instance_id: &str, repo_path: &str) -> Result<(), String> {
         let instance = self
             .get_instance(instance_id)
-            .ok_or_else(|| format!("Sandbox instance not found: {}", instance_id))?;
+            .ok_or_else(|| crate::common::messages::failure(
+                "backend.sandbox.instanceNotFound",
+                serde_json::json!({ "instanceId": instance_id }),
+                format!("Sandbox instance not found: {}", instance_id),
+            ))?;
         super::sync::sync_changes_to_sandbox(&instance, repo_path)
     }
 
@@ -203,7 +211,11 @@ impl SandboxManager {
     ) -> Result<serde_json::Value, String> {
         let instance = self
             .get_instance(instance_id)
-            .ok_or_else(|| format!("Sandbox instance not found: {}", instance_id))?;
+            .ok_or_else(|| crate::common::messages::failure(
+                "backend.sandbox.instanceNotFound",
+                serde_json::json!({ "instanceId": instance_id }),
+                format!("Sandbox instance not found: {}", instance_id),
+            ))?;
         super::tool_bridge::dispatch_tool_call(self, &instance, tool_name, arguments)
     }
 

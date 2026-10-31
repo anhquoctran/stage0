@@ -18,7 +18,13 @@ pub async fn reveal_file_in_os(repo_path: String, file_path: String) -> Result<(
             std::process::Command::new("explorer")
                 .arg(arg)
                 .spawn()
-                .map_err(|e| format!("Failed to open file explorer: {}", e))?;
+                .map_err(|e| {
+                    crate::common::messages::failure(
+                        "backend.git.openExplorerFailed",
+                        serde_json::json!({ "error": e.to_string() }),
+                        format!("Failed to open file explorer: {}", e),
+                    )
+                })?;
             Ok(())
         }
         #[cfg(target_os = "macos")]
@@ -27,7 +33,13 @@ pub async fn reveal_file_in_os(repo_path: String, file_path: String) -> Result<(
                 .arg("-R")
                 .arg(&full_path)
                 .spawn()
-                .map_err(|e| format!("Failed to open in Finder: {}", e))?;
+                .map_err(|e| {
+                    crate::common::messages::failure(
+                        "backend.git.openFinderFailed",
+                        serde_json::json!({ "error": e.to_string() }),
+                        format!("Failed to open in Finder: {}", e),
+                    )
+                })?;
             Ok(())
         }
         #[cfg(not(any(target_os = "windows", target_os = "macos")))]
@@ -40,7 +52,13 @@ pub async fn reveal_file_in_os(repo_path: String, file_path: String) -> Result<(
             std::process::Command::new("xdg-open")
                 .arg(target)
                 .spawn()
-                .map_err(|e| format!("Failed to open file manager: {}", e))?;
+                .map_err(|e| {
+                    crate::common::messages::failure(
+                        "backend.git.openFileManagerFailed",
+                        serde_json::json!({ "error": e.to_string() }),
+                        format!("Failed to open file manager: {}", e),
+                    )
+                })?;
             Ok(())
         }
     }
@@ -56,11 +74,19 @@ pub async fn open_repo_in(
     let result: Result<_, String> = async {
         let path = std::path::Path::new(&repo_path);
         if !path.exists() {
-            return Err(format!("Repository path does not exist: {}", repo_path));
+            return Err(crate::common::messages::failure(
+                "backend.repository.missing",
+                serde_json::json!({ "path": repo_path }),
+                format!("Repository path does not exist: {}", repo_path),
+            ));
         }
-        let canonical_repo = path
-            .canonicalize()
-            .map_err(|e| format!("Invalid repository path '{}': {}", repo_path, e))?;
+        let canonical_repo = path.canonicalize().map_err(|e| {
+            crate::common::messages::failure(
+                "backend.git.invalidRepoPath",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Invalid repository path '{}': {}", repo_path, e),
+            )
+        })?;
 
         match target.as_str() {
             "explorer" => {
@@ -70,7 +96,13 @@ pub async fn open_repo_in(
                     std::process::Command::new("explorer")
                         .arg(&win_path)
                         .spawn()
-                        .map_err(|e| format!("Failed to open Explorer: {}", e))?;
+                        .map_err(|e| {
+                            crate::common::messages::failure(
+                                "backend.git.openExplorerFailed",
+                                serde_json::json!({ "error": e.to_string() }),
+                                format!("Failed to open Explorer: {}", e),
+                            )
+                        })?;
                     Ok(())
                 }
                 #[cfg(target_os = "macos")]
@@ -78,7 +110,13 @@ pub async fn open_repo_in(
                     std::process::Command::new("open")
                         .arg(&canonical_repo)
                         .spawn()
-                        .map_err(|e| format!("Failed to open in Finder: {}", e))?;
+                        .map_err(|e| {
+                            crate::common::messages::failure(
+                                "backend.git.openFinderFailed",
+                                serde_json::json!({ "error": e.to_string() }),
+                                format!("Failed to open in Finder: {}", e),
+                            )
+                        })?;
                     Ok(())
                 }
                 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
@@ -86,7 +124,13 @@ pub async fn open_repo_in(
                     std::process::Command::new("xdg-open")
                         .arg(&canonical_repo)
                         .spawn()
-                        .map_err(|e| format!("Failed to open file manager: {}", e))?;
+                        .map_err(|e| {
+                            crate::common::messages::failure(
+                                "backend.git.openFileManagerFailed",
+                                serde_json::json!({ "error": e.to_string() }),
+                                format!("Failed to open file manager: {}", e),
+                            )
+                        })?;
                     Ok(())
                 }
             }
@@ -132,7 +176,13 @@ pub async fn open_repo_in(
                             ])
                             .env("STAGE0_REPO_PATH", &win_path)
                             .spawn()
-                            .map_err(|e| format!("Failed to launch terminal: {}", e))?;
+                            .map_err(|e| {
+                                crate::common::messages::failure(
+                                    "backend.git.openTerminalFailed",
+                                    serde_json::json!({ "error": e.to_string() }),
+                                    format!("Failed to launch terminal: {}", e),
+                                )
+                            })?;
                     }
                     Ok(())
                 }
@@ -142,7 +192,13 @@ pub async fn open_repo_in(
                         .args(&["-a", "Terminal"])
                         .arg(&canonical_repo)
                         .spawn()
-                        .map_err(|e| format!("Failed to open Terminal: {}", e))?;
+                        .map_err(|e| {
+                            crate::common::messages::failure(
+                                "backend.git.openTerminalFailed",
+                                serde_json::json!({ "error": e.to_string() }),
+                                format!("Failed to open Terminal: {}", e),
+                            )
+                        })?;
                     Ok(())
                 }
                 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
@@ -168,12 +224,16 @@ pub async fn open_repo_in(
                         }
                     }
                     if !launched {
-                        return Err("No supported terminal emulator found".to_string());
+                        return Err(crate::common::messages::code("backend.git.noTerminalEmulator"));
                     }
                     Ok(())
                 }
             }
-            _ => Err(format!("Unknown target: {}", target)),
+            _ => Err(crate::common::messages::failure(
+                "backend.git.unknownAppTarget",
+                serde_json::json!({ "target": target }),
+                format!("Unknown target: {}", target),
+            )),
         }
     }
     .await;

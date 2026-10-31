@@ -97,7 +97,13 @@ fn is_safe_ssh_user(user: &str) -> bool {
 }
 
 fn validate_ssh_host(host: &str, allow_port: bool) -> Result<(), String> {
-    let invalid = || "SSH remote URL must use a valid host, not an option-like value".to_string();
+    let invalid = || {
+        crate::common::messages::failure(
+            "backend.git.remoteSshHostInvalid",
+            serde_json::json!({}),
+            "SSH remote URL must use a valid host, not an option-like value".into(),
+        )
+    };
     let is_ipv6 = host.starts_with('[');
     let (host_name, port) = if let Some(ipv6_and_suffix) = host.strip_prefix('[') {
         let (ipv6, suffix) = ipv6_and_suffix.split_once(']').ok_or_else(invalid)?;
