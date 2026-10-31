@@ -68,14 +68,17 @@ agents. Existing process limits, cancellation and review publication checks rema
 
 | Platform | Updater payload | Initial installation |
 |---|---|---|
-| Linux x86_64 | AppImage | AppImage |
+| Linux x86_64 | AppImage, `.deb`, `.rpm` | AppImage, `.deb`, `.rpm` |
+| Linux aarch64 | `.deb`, `.rpm` | `.deb`, `.rpm` |
 | Windows x86_64 | NSIS installer | NSIS installer |
+| Windows ARM64 | NSIS installer | NSIS installer |
 | macOS Apple Silicon | `.app.tar.gz` | DMG/app |
 | macOS Intel | `.app.tar.gz` | DMG/app |
 
-Debian/RPM packages are also distributed. This initial integration leaves their
-upgrades to the package manager/manual installation; other Linux bundle types
-cannot install the manifest's AppImage. Linux ARM and Windows ARM are not built.
+The updater manifest uses bundle-specific targets for Linux, Windows and macOS;
+legacy target aliases remain for already installed clients. Debian/RPM updates
+use Tauri's native package installer and may request OS authorization. AppImage
+is produced for x86_64 only.
 Older Stage0 versions without updater support need one manual upgrade.
 
 The first workflow uses macOS ad-hoc signing, without Apple notarization;
@@ -92,9 +95,12 @@ workflow credentials when they are available.
    encrypted key. Never commit either private value.
 3. For Stable, open **Actions → Release Stage0 → Run workflow**, select the source branch and run it without entering a tag. CI chooses a free stable version, synchronizes metadata, creates a detached release commit and pushes its tag. A stable tag push alone does not release. Nightly/Beta tags may trigger automatically. Tag/version drift blocks the build.
 4. `.github/workflows/release.yml` checks architecture, TypeScript and Node tests,
-   runs Rust tests on Linux and builds four targets. It calls `tauri build`
-   directly: **the build matrix never bumps versions**. Local packaging also preserves the selected version; use `pnpm version:set VERSION` to change it explicitly.
-   Target OS/architecture metadata is explicit for cross-architecture Mac builds.
+   runs Rust tests on Linux and builds all nine required editions across six native
+   OS/architecture targets. The artifact gate checks every required bundle before
+   publication. It calls `tauri build` directly: **the build matrix never bumps
+   versions**. Local packaging also preserves the selected version; use
+   `pnpm version:set VERSION` to change it explicitly. Target OS/architecture
+   metadata is explicit for each build.
 5. After all builds succeed, the publisher assembles `latest.json` and checksums.
    Its offline Rust verifier authenticates every update package and signed
    version against the embedded public key, using Tauri's Minisign library.
@@ -119,7 +125,8 @@ Run architecture/type checks, Node tests, backend Cargo check/tests and
 Validate the workflow with `actionlint .github/workflows/release.yml`. Signature
 fixtures use a discarded test key, never the production private key, and make
 no network/installation calls. Installed-app smoke tests are still needed on
-Windows, both Mac architectures and supported Linux desktops.
+Windows x86_64/ARM64, both Mac architectures, and Linux x86_64/aarch64 across
+AppImage, Debian and RPM packages.
 
 The local package verifier can authenticate one package without installing it:
 

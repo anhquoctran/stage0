@@ -84,17 +84,27 @@ jobs:
             target_os: linux
             arch: x64
             bundles: appimage,deb,rpm
+          - os: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            target_os: linux
+            arch: arm64
+            bundles: deb,rpm
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             target_os: windows
             arch: x64
+            bundles: nsis
+          - os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            target_os: windows
+            arch: arm64
             bundles: nsis
           - os: macos-latest
             target: aarch64-apple-darwin
             target_os: macos
             arch: arm64
             bundles: app,dmg
-          - os: macos-latest
+          - os: macos-15-intel
             target: x86_64-apple-darwin
             target_os: macos
             arch: x64
@@ -145,6 +155,9 @@ jobs:
           # Git Bash's bundled Perl lacks Locale::Maketext::Simple, which
           # vendored OpenSSL needs while building SQLCipher on Windows.
           if [[ "$RUNNER_OS" == "Windows" ]]; then
+            if ! perl -MLocale::Maketext::Simple -e 'exit 0' 2>/dev/null; then
+              choco install strawberryperl --no-progress --yes
+            fi
             export PATH="/c/Strawberry/perl/bin:$PATH"
             perl -MLocale::Maketext::Simple -e 'exit 0'
           fi

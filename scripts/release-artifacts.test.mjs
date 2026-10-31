@@ -9,14 +9,21 @@ function fixture() {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'stage0-release-'));
   const files = [
     'x86_64-unknown-linux-gnu-Stage0_2.0.0.AppImage',
+    'x86_64-unknown-linux-gnu-Stage0_2.0.0_amd64.deb',
+    'x86_64-unknown-linux-gnu-Stage0-2.0.0-1.x86_64.rpm',
+    'aarch64-unknown-linux-gnu-Stage0_2.0.0_arm64.deb',
+    'aarch64-unknown-linux-gnu-Stage0-2.0.0-1.aarch64.rpm',
     'x86_64-pc-windows-msvc-Stage0_2.0.0-setup.exe',
+    'aarch64-pc-windows-msvc-Stage0_2.0.0-arm64-setup.exe',
     'aarch64-apple-darwin-Stage0.app.tar.gz',
+    'aarch64-apple-darwin-Stage0_2.0.0_arm64.dmg',
     'x86_64-apple-darwin-Stage0.app.tar.gz',
+    'x86_64-apple-darwin-Stage0_2.0.0_x64.dmg',
   ];
   const signature = fs.readFileSync(new URL('../backend/src/features/updates/fixtures/payload.sig', import.meta.url));
   for (const name of files) {
     fs.writeFileSync(path.join(directory, name), 'stage0-updater-test-payload');
-    fs.writeFileSync(path.join(directory, `${name}.sig`), signature);
+    if (!name.endsWith('.dmg')) fs.writeFileSync(path.join(directory, `${name}.sig`), signature);
   }
   return directory;
 }
@@ -25,7 +32,13 @@ test('complete release manifest contains exact tags, platform packages and signa
   const directory = fixture();
   try {
     const manifest = createUpdateManifest(directory, '2.0.0', 'Notes', '2026-10-26T00:00:00Z');
-    assert.deepEqual(Object.keys(manifest.platforms), ['linux-x86_64', 'windows-x86_64', 'darwin-aarch64', 'darwin-x86_64']);
+    assert.deepEqual(Object.keys(manifest.platforms), [
+      'linux-x86_64-appimage', 'linux-x86_64-deb', 'linux-x86_64-rpm',
+      'linux-aarch64-deb', 'linux-aarch64-rpm',
+      'windows-x86_64-nsis', 'windows-aarch64-nsis',
+      'darwin-aarch64-app', 'darwin-x86_64-app',
+      'linux-x86_64', 'windows-x86_64', 'darwin-aarch64', 'darwin-x86_64',
+    ]);
     for (const platform of Object.values(manifest.platforms)) {
       assert.match(platform.url, /^https:\/\/github.com\/anhquoctran\/stage0\/releases\/download\/v2\.0\.0\//);
       assert.match(Buffer.from(platform.signature, 'base64').toString(), /\tversion:2\.0\.0/);
@@ -51,21 +64,34 @@ test('duplicate packages, missing signatures and unversioned signatures block pu
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
 
+test('release edition gate blocks a missing required architecture package', () => {
+  const directory = fixture();
+  try {
+    fs.rmSync(path.join(directory, 'aarch64-unknown-linux-gnu-Stage0-2.0.0-1.aarch64.rpm'));
+    assert.throws(
+      () => createUpdateManifest(directory, '2.0.0', 'Notes'),
+      /Expected exactly one linux-aarch64-rpm updater package/,
+    );
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});
+
 test('collector prevents macOS architecture collisions and checksums remain repeatable', () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'stage0-collect-'));
   const bundle = path.join(directory, 'bundle'), output = path.join(directory, 'output');
-  fs.mkdirSync(bundle); fs.writeFileSync(path.join(bundle, 'Stage0.app.tar.gz'), 'package');
+  fs.mkdirSync(bundle);
+  fs.writeFileSync(path.join(bundle, 'Stage0.app.tar.gz'), 'package');
   fs.writeFileSync(path.join(bundle, 'Stage0.app.tar.gz.sig'), 'signature');
+  fs.writeFileSync(path.join(bundle, 'Stage0.dmg'), 'disk image');
   try {
     collectReleaseArtifacts(bundle, output, 'aarch64-apple-darwin');
     collectReleaseArtifacts(bundle, output, 'x86_64-apple-darwin');
-    assert.equal(fs.readdirSync(output).length, 4);
+    assert.equal(fs.readdirSync(output).length, 6);
     assert.throws(() => collectReleaseArtifacts(bundle, output, 'x86_64-apple-darwin'), /Duplicate/);
     writeChecksums(output);
     const checksums = fs.readFileSync(path.join(output, 'SHA256SUMS.txt'), 'utf8');
     writeChecksums(output);
     assert.equal(fs.readFileSync(path.join(output, 'SHA256SUMS.txt'), 'utf8'), checksums);
-    assert.equal(checksums.trim().split('\n').length, 4);
+    assert.equal(checksums.trim().split('\n').length, 6);
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
 

@@ -23,7 +23,7 @@ pub(super) fn install_maximize_hit_test(window: &Window) -> Result<(), String> {
                 .map_err(|error| error.to_string())
                 .and_then(|hwnd| {
                     let installed = unsafe {
-                        SetWindowSubclass(hwnd, Some(snap_layout_subclass), SUBCLASS_ID, 0)
+                        SetWindowSubclass(hwnd.0, Some(snap_layout_subclass), SUBCLASS_ID, 0)
                     };
                     if installed == 0 {
                         Err(format!(

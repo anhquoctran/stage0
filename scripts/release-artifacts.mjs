@@ -4,11 +4,32 @@ import crypto from 'node:crypto';
 import { releaseChannel } from './release-channels.mjs';
 import { fileURLToPath } from 'node:url';
 
-const platforms = {
-  'linux-x86_64': ['x86_64-unknown-linux-gnu', '.AppImage'],
-  'windows-x86_64': ['x86_64-pc-windows-msvc', '.exe'],
-  'darwin-aarch64': ['aarch64-apple-darwin', '.app.tar.gz'],
-  'darwin-x86_64': ['x86_64-apple-darwin', '.app.tar.gz'],
+const updaterPlatforms = {
+  'linux-x86_64-appimage': ['x86_64-unknown-linux-gnu', '.AppImage'],
+  'linux-x86_64-deb': ['x86_64-unknown-linux-gnu', '.deb'],
+  'linux-x86_64-rpm': ['x86_64-unknown-linux-gnu', '.rpm'],
+  'linux-aarch64-deb': ['aarch64-unknown-linux-gnu', '.deb'],
+  'linux-aarch64-rpm': ['aarch64-unknown-linux-gnu', '.rpm'],
+  'windows-x86_64-nsis': ['x86_64-pc-windows-msvc', '.exe'],
+  'windows-aarch64-nsis': ['aarch64-pc-windows-msvc', '.exe'],
+  'darwin-aarch64-app': ['aarch64-apple-darwin', '.app.tar.gz'],
+  'darwin-x86_64-app': ['x86_64-apple-darwin', '.app.tar.gz'],
+};
+
+const legacyUpdaterAliases = {
+  'linux-x86_64': 'linux-x86_64-appimage',
+  'windows-x86_64': 'windows-x86_64-nsis',
+  'darwin-aarch64': 'darwin-aarch64-app',
+  'darwin-x86_64': 'darwin-x86_64-app',
+};
+
+const requiredReleaseBundles = {
+  'x86_64-unknown-linux-gnu': ['.AppImage', '.deb', '.rpm'],
+  'aarch64-unknown-linux-gnu': ['.deb', '.rpm'],
+  'x86_64-pc-windows-msvc': ['.exe'],
+  'aarch64-pc-windows-msvc': ['.exe'],
+  'aarch64-apple-darwin': ['.dmg', '.app.tar.gz'],
+  'x86_64-apple-darwin': ['.dmg', '.app.tar.gz'],
 };
 
 function filesIn(directory) {
@@ -38,10 +59,16 @@ export function verifyReleaseVersion(root, tag) {
 }
 
 export function collectReleaseArtifacts(bundleDir, destination, target) {
-  if (!Object.values(platforms).some(([expected]) => expected === target)) throw new Error('Unsupported release target');
+  if (!requiredReleaseBundles[target]) throw new Error('Unsupported release target');
   fs.mkdirSync(destination, { recursive: true });
   const packages = filesIn(bundleDir).filter((file) => /(?:\.AppImage|\.exe|\.msi|\.deb|\.rpm|\.dmg|\.app\.tar\.gz)$/.test(file));
   if (!packages.length) throw new Error('No release packages were produced');
+  const producedNames = packages.map((file) => path.basename(file));
+  for (const extension of requiredReleaseBundles[target]) {
+    if (!producedNames.some((name) => name.endsWith(extension))) {
+      throw new Error(`Missing required ${target} release bundle: ${extension}`);
+    }
+  }
   for (const file of packages) {
     const output = path.join(destination, `${target}-${path.basename(file)}`);
     if (fs.existsSync(output)) throw new Error(`Duplicate release asset: ${path.basename(output)}`);
@@ -54,7 +81,7 @@ export function createUpdateManifest(directory, version, notes, pubDate = new Da
   releaseChannel(version);
   const files = filesIn(directory);
   const manifest = { version, notes, pub_date: pubDate, platforms: {} };
-  for (const [platform, [target, extension]] of Object.entries(platforms)) {
+  for (const [platform, [target, extension]] of Object.entries(updaterPlatforms)) {
     const matches = files.filter((file) => path.basename(file).startsWith(`${target}-`) && file.endsWith(extension));
     if (matches.length !== 1) throw new Error(`Expected exactly one ${platform} updater package, found ${matches.length}`);
     const file = matches[0];
@@ -67,6 +94,16 @@ export function createUpdateManifest(directory, version, notes, pubDate = new Da
       signature,
       url: `https://github.com/anhquoctran/stage0/releases/download/v${version}/${encodeURIComponent(path.basename(file))}`,
     };
+  }
+  for (const [alias, platform] of Object.entries(legacyUpdaterAliases)) {
+    manifest.platforms[alias] = manifest.platforms[platform];
+  }
+
+  for (const [target, extensions] of Object.entries(requiredReleaseBundles)) {
+    for (const extension of extensions) {
+      const matches = files.filter((file) => path.basename(file).startsWith(`${target}-`) && file.endsWith(extension));
+      if (matches.length !== 1) throw new Error(`Expected exactly one ${target} release bundle ${extension}, found ${matches.length}`);
+    }
   }
   return manifest;
 }

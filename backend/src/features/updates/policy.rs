@@ -45,7 +45,10 @@ pub(super) fn unsupported_reason() -> Option<String> {
         return Some(crate::common::messages::code("backend.updates.development"));
     }
     let packaged = match std::env::consts::OS {
-        "linux" => matches!(bundle_type(), Some(BundleType::AppImage)),
+        "linux" => matches!(
+            bundle_type(),
+            Some(BundleType::AppImage | BundleType::Deb | BundleType::Rpm)
+        ),
         "macos" => matches!(bundle_type(), Some(BundleType::App)),
         "windows" => matches!(bundle_type(), Some(BundleType::Nsis | BundleType::Msi)),
         _ => false,

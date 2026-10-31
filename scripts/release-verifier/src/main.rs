@@ -33,8 +33,27 @@ fn main() -> Result<(), Box<dyn Error>> {
     let platforms = manifest["platforms"]
         .as_object()
         .ok_or("Missing release platforms")?;
-    if platforms.len() != 4 {
-        return Err("Expected all four release platforms".into());
+    const REQUIRED_PLATFORMS: [&str; 13] = [
+        "linux-x86_64-appimage",
+        "linux-x86_64-deb",
+        "linux-x86_64-rpm",
+        "linux-aarch64-deb",
+        "linux-aarch64-rpm",
+        "windows-x86_64-nsis",
+        "windows-aarch64-nsis",
+        "darwin-aarch64-app",
+        "darwin-x86_64-app",
+        "linux-x86_64",
+        "windows-x86_64",
+        "darwin-aarch64",
+        "darwin-x86_64",
+    ];
+    if platforms.len() != REQUIRED_PLATFORMS.len()
+        || REQUIRED_PLATFORMS
+            .iter()
+            .any(|platform| !platforms.contains_key(*platform))
+    {
+        return Err("Expected all required architecture and installer update targets".into());
     }
     for (platform, package) in platforms {
         let url = package["url"].as_str().ok_or("Missing package URL")?;
