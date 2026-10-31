@@ -31,6 +31,10 @@
       if (typeof s0.fns?.fetchLatestReleaseAssets === 'function') s0.fns.fetchLatestReleaseAssets();
     }
 
+    // 2b. Load the historical archive only when its view is opened.
+    const releaseHistory = s0.modules?.releaseHistory || s0.releaseHistory;
+    if (typeof releaseHistory?.init === 'function') releaseHistory.init();
+
     // 3. UI Components (Tabs, Copy Buttons, Drawer, Accordion, Filter)
     const comp = s0.modules?.components || s0.components;
     if (comp) {

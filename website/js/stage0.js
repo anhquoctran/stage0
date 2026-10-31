@@ -307,7 +307,9 @@
   const GITHUB_REPO = 'anhquoctran/stage0';
   const RELEASES_PAGE_URL = `https://github.com/${GITHUB_REPO}/releases/latest`;
   const RELEASES_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+  const RELEASES_LIST_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=100`;
   const CACHE_KEY = 'stage0_latest_release_cache';
+  const RELEASES_LIST_CACHE_KEY = 'stage0_release_list_cache';
   const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache to stay well within GitHub API rate limits (60 req/hr)
 
   const defaultAssets = {
@@ -323,8 +325,10 @@
   // Register in constants (immutable, deep-frozen, cannot be overwritten at runtime)
   defineConstant('GITHUB_REPO', GITHUB_REPO);
   defineConstant('RELEASES_API_URL', RELEASES_API_URL);
+  defineConstant('RELEASES_LIST_API_URL', RELEASES_LIST_API_URL);
   defineConstant('RELEASES_PAGE_URL', RELEASES_PAGE_URL);
   defineConstant('CACHE_KEY', CACHE_KEY);
+  defineConstant('RELEASES_LIST_CACHE_KEY', RELEASES_LIST_CACHE_KEY);
   defineConstant('CACHE_TTL_MS', CACHE_TTL_MS);
   defineConstant('DEFAULT_ASSETS', defaultAssets);
 

@@ -7,7 +7,7 @@
    - System cards & containers: rounded-sm (4px) with subtle surface border
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap');
 
 :root,
 [data-theme="mocha"],
@@ -155,6 +155,12 @@ code, pre {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.5rem;
+}
+
+.container-fluid {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 4rem);
 }
 
 /* Header & Navigation */
@@ -328,7 +334,7 @@ code, pre {
 /* Hero Section */
 .hero {
   padding: 5rem 0 3.5rem;
-  text-align: center;
+  text-align: start;
   position: relative;
   overflow: hidden;
 }
@@ -336,32 +342,55 @@ code, pre {
 .hero::before {
   content: '';
   position: absolute;
-  inset: -15px;
-  background-image: url('./assets/page-bg.svg');
-  background-position: center bottom;
-  background-repeat: no-repeat;
-  background-size: cover;
-  filter: brightness(0.74) contrast(1.12);
-  opacity: 0.9;
-  transform: scale(1.02);
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+  background-size: 36px 36px;
+  opacity: 0.48;
   z-index: 0;
   pointer-events: none;
-  /* Start the fade earlier and finish before overflow clipping can leave a faint edge. */
-  mask-image: linear-gradient(to bottom, #000 0%, #000 60%, rgba(0, 0, 0, 0.9) 75%, rgba(0, 0, 0, 0.62) 87%, rgba(0, 0, 0, 0.22) 95%, transparent 98.5%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 60%, rgba(0, 0, 0, 0.9) 75%, rgba(0, 0, 0, 0.62) 87%, rgba(0, 0, 0, 0.22) 95%, transparent 98.5%);
-}
-
-.hero > .container {
-  position: relative;
-  z-index: 2;
+  mask-image: radial-gradient(ellipse 76% 72% at 18% 38%, #000 0%, rgba(0, 0, 0, 0.82) 48%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 76% 72% at 18% 38%, #000 0%, rgba(0, 0, 0, 0.82) 48%, transparent 100%);
 }
 
 [data-theme="latte"] .hero::before,
 [data-theme="light"] .hero::before {
-  background-image: url('./assets/page-bg-light.svg');
-  background-position: 68% bottom;
-  filter: none;
-  opacity: 1;
+  background-image:
+    linear-gradient(to right, rgba(100, 116, 139, 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(100, 116, 139, 0.18) 1px, transparent 1px);
+  opacity: 0.65;
+}
+
+.hero > .container-fluid {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: clamp(1.5rem, 3vw, 3rem);
+}
+
+.hero-copy {
+  min-width: 0;
+  align-self: start;
+  margin-top: 1.5rem;
+  text-align: start;
+}
+
+.hero-visual {
+  min-width: 0;
+  justify-self: end;
+  width: 100%;
+}
+
+.hero-visual .mockup-wrapper {
+  width: 100%;
+  margin-inline-start: auto;
+  margin-inline-end: 0;
 }
 
 [data-theme="latte"] .hero-title,
@@ -387,17 +416,74 @@ code, pre {
   font-weight: 600;
   margin-bottom: 1.5rem;
   border: 1px solid rgba(147, 51, 234, 0.3);
+  text-align: start;
+  font-family: 'Fira Code', 'IBM Plex Mono', monospace;
 }
 
 .hero-title {
-  font-size: 3.25rem;
-  font-weight: 800;
-  letter-spacing: -0.035em;
+  font-size: clamp(1.8rem, 2.25vw, 2.5rem);
+  font-family: 'Fira Code', 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  letter-spacing: -0.07em;
   line-height: 1.15;
   margin-bottom: 1.25rem;
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: 100%;
+  margin-inline: 0 auto;
+  text-align: start;
+}
+
+.hero-typing-line {
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.hero-typing-line:first-child {
+  animation: hero-type-first 1.3s steps(26, end) forwards;
+}
+
+.hero-typing-accent {
+  animation: hero-type-second 0.85s steps(17, end) 1.45s forwards;
+}
+
+.hero-typing-accent::after {
+  content: '';
+  display: inline-block;
+  width: 0.55ch;
+  height: 0.92em;
+  margin-inline-start: 0.35ch;
+  background: var(--ctp-brand);
+  vertical-align: -0.08em;
+  opacity: 0;
+  animation: hero-caret-blink 0.85s steps(1, end) 2.35s infinite;
+}
+
+@keyframes hero-type-first {
+  to { width: 26ch; }
+}
+
+@keyframes hero-type-second {
+  to { width: 17ch; }
+}
+
+@keyframes hero-caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-typing-line {
+    width: auto;
+    overflow: visible;
+    animation: none;
+  }
+
+  .hero-typing-accent::after {
+    display: none;
+    animation: none;
+  }
 }
 
 .hero-title .text-highlight,
@@ -412,14 +498,15 @@ code, pre {
   font-size: 1.2rem;
   color: var(--ctp-subtext0);
   max-width: 660px;
-  margin: 0 auto 2.25rem;
+  margin: 0 0 2.25rem;
   line-height: 1.6;
+  text-align: start;
 }
 
 .hero-cta {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 1rem;
   flex-wrap: wrap;
   margin-bottom: 2.5rem;
@@ -438,6 +525,7 @@ code, pre {
   align-items: baseline;
   gap: 0.45rem;
   white-space: nowrap;
+  text-align: start;
 }
 
 .hero-platform-label {
@@ -449,7 +537,7 @@ code, pre {
 .hero-alt-platforms {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.5rem;
   margin-top: -1.5rem;
   margin-bottom: 2.5rem;
@@ -509,7 +597,7 @@ code, pre {
 .hero-stats {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.85rem;
   margin-bottom: 3.5rem;
   flex-wrap: wrap;
@@ -640,6 +728,23 @@ code, pre {
   }
 }
 
+@media (max-width: 1200px) {
+  .hero-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+  .hero-copy {
+    max-width: 900px;
+    margin-top: 0;
+  }
+  .hero-visual {
+    justify-self: stretch;
+  }
+  .hero-visual .mockup-wrapper {
+    margin-inline: 0;
+  }
+}
+
 @media (max-width: 640px) {
   .ai-persona-grid {
     grid-template-columns: 1fr;
@@ -710,6 +815,520 @@ code, pre {
 }
 
 /* Download Section */
+.release-browser {
+  margin: 0 0 1.75rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-card);
+}
+
+.release-browser-heading,
+.release-browser-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.release-browser-heading {
+  margin-bottom: 1rem;
+}
+
+.release-browser-heading h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.release-browser-heading p,
+.release-channel-status {
+  margin: 0;
+  color: var(--ctp-subtext0);
+  font-size: 0.8125rem;
+}
+
+.release-browser-heading a {
+  color: var(--ctp-brand);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.release-browser-heading a:hover {
+  text-decoration: underline;
+}
+
+.release-browser-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+}
+
+.release-browser-links a:last-child {
+  color: var(--ctp-subtext0);
+}
+
+.release-browser-controls {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.release-channel-picker {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-elevated);
+}
+
+.release-channel-button {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.85rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ctp-subtext1);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.release-channel-button:hover,
+.release-channel-button.is-active {
+  background: var(--ctp-surface0);
+  color: var(--ctp-text);
+}
+
+.release-channel-button.is-active {
+  color: var(--ctp-brand);
+  font-weight: 700;
+}
+
+.release-version-control {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--ctp-subtext0);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.release-version-picker {
+  position: relative;
+  min-width: 12rem;
+}
+
+.release-version-picker summary {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  color: var(--ctp-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.release-version-picker summary::-webkit-details-marker {
+  display: none;
+}
+
+.release-version-picker summary > i {
+  color: var(--ctp-subtext0);
+  font-size: 0.7rem;
+  transition: transform 0.15s ease;
+}
+
+.release-version-picker[open] summary > i {
+  transform: rotate(180deg);
+}
+
+.release-version-picker.is-disabled summary {
+  opacity: 0.65;
+  cursor: default;
+  pointer-events: none;
+}
+
+.release-version-options {
+  position: absolute;
+  z-index: 20;
+  inset-inline: 0;
+  top: calc(100% + 0.35rem);
+  display: grid;
+  max-height: 18rem;
+  overflow: auto;
+  padding: 0.25rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  box-shadow: 0 0.75rem 1.5rem rgb(0 0 0 / 22%);
+}
+
+.release-version-picker:not([open]) .release-version-options {
+  display: none;
+}
+
+.release-version-option {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ctp-subtext1);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.release-version-option:hover,
+.release-version-option[aria-selected="true"] {
+  background: var(--ctp-surface0);
+  color: var(--ctp-text);
+}
+
+.release-channel-status {
+  flex: 1 1 12rem;
+}
+
+.release-history {
+  background: var(--bg-card);
+}
+
+.release-history-panel {
+  padding: 1.25rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-body);
+}
+
+.release-history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.25rem 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.release-history-filter {
+  min-width: 0;
+  border: 0;
+}
+
+.release-history-filter legend {
+  margin-bottom: 0.55rem;
+  color: var(--ctp-subtext0);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.release-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.release-filter-button {
+  min-height: 2.25rem;
+  padding: 0.4rem 0.75rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ctp-subtext1);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.release-filter-button:hover,
+.release-filter-button.is-active {
+  background: var(--ctp-surface0);
+  color: var(--ctp-text);
+}
+
+.release-filter-button.is-active {
+  color: var(--ctp-brand);
+  font-weight: 700;
+}
+
+.release-history-status {
+  margin: 1rem 0;
+  color: var(--ctp-subtext0);
+  font-size: 0.875rem;
+}
+
+.release-history-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.release-history-card {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-card);
+}
+
+.release-history-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.release-history-title-row,
+.release-history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.release-history-card h3 {
+  margin: 0;
+  color: var(--ctp-text);
+  font-family: 'Fira Code', 'IBM Plex Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.release-history-meta {
+  justify-content: flex-end;
+  color: var(--ctp-subtext0);
+  font-size: 0.75rem;
+}
+
+.release-channel-tag {
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: var(--ctp-surface0);
+  color: var(--ctp-subtext1);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.release-channel-tag.stable {
+  color: var(--ctp-green);
+}
+
+.release-channel-tag.beta {
+  color: var(--ctp-yellow);
+}
+
+.release-channel-tag.nightly {
+  color: var(--ctp-mauve);
+}
+
+.release-history-notes-link {
+  color: var(--ctp-brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.release-history-notes-link:hover {
+  text-decoration: underline;
+}
+
+.release-history-assets {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.release-history-asset-item {
+  min-width: 0;
+}
+
+.release-history-asset-row {
+  display: grid;
+  grid-template-areas: "logo details digest download";
+  grid-template-columns: 1.15rem minmax(0, 2.8fr) minmax(13rem, 3fr) minmax(5.5rem, auto);
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.6rem;
+  padding: 0.45rem 0.65rem;
+  color: var(--ctp-subtext1);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.release-history-asset-logo {
+  grid-area: logo;
+  color: var(--ctp-brand);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.release-history-asset-details {
+  display: grid;
+  grid-area: details;
+  grid-template-columns: minmax(5.25rem, 0.8fr) minmax(4.5rem, 0.7fr) minmax(4.5rem, 0.65fr) minmax(4.5rem, 0.65fr);
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.release-history-asset-os,
+.release-history-asset-arch,
+.release-history-asset-format {
+  white-space: nowrap;
+}
+
+.release-history-asset-digest { grid-area: digest; }
+.release-history-download-button { grid-area: download; }
+
+.release-history-asset-os {
+  color: var(--ctp-text);
+  font-weight: 650;
+}
+
+.release-history-asset-size {
+  color: var(--ctp-subtext0);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.release-history-asset-size.is-unavailable {
+  color: var(--ctp-overlay1);
+}
+
+.release-history-asset-digest {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 0;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  color: var(--ctp-subtext0);
+  font-size: 0.68rem;
+  text-align: left;
+  cursor: copy;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.release-history-asset-digest code {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-mono, monospace);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.release-history-asset-digest:hover:not(:disabled) {
+  background: var(--ctp-surface0);
+  transform: none;
+}
+
+.release-history-asset-digest:active {
+  transform: none;
+}
+
+.release-history-asset-digest.is-unavailable,
+.release-history-asset-digest:disabled {
+  color: var(--ctp-overlay1);
+  cursor: not-allowed;
+}
+
+.release-history-download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.55rem;
+  border: 0;
+  border-radius: 4px;
+  background: var(--ctp-brand);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.release-history-download-button:hover {
+  filter: brightness(1.08);
+}
+
+.release-history-download-button:active {
+  transform: none;
+}
+
+.release-history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+  color: var(--ctp-subtext0);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 1150px) {
+  .release-history-asset-row {
+    grid-template-columns: 1.15rem minmax(0, 1fr) minmax(5.5rem, auto);
+    grid-template-areas:
+      "logo details download"
+      "logo digest digest";
+  }
+  .release-history-asset-details {
+    grid-template-columns: minmax(5rem, 1fr) repeat(3, minmax(4.5rem, 0.7fr));
+  }
+}
+
+.release-history-page-button,
+.release-history-retry {
+  min-height: 2.35rem;
+  padding: 0.4rem 0.8rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ctp-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.release-history-page-button:hover:not(:disabled),
+.release-history-retry:hover {
+  background: var(--ctp-surface0);
+  color: var(--ctp-text);
+  outline: 1px solid var(--border-muted);
+}
+
+.release-history-page-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.release-history-retry[hidden] {
+  display: none;
+}
+
 .download-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -734,6 +1353,11 @@ code, pre {
   background-color: var(--bg-elevated);
   box-shadow: none !important;
   transform: none;
+}
+
+[data-theme="latte"] .download-card:not(.highlight),
+[data-theme="light"] .download-card:not(.highlight) {
+  background-color: var(--ctp-base);
 }
 
 .card-detected-badge {
@@ -855,6 +1479,14 @@ code, pre {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+.download-asset-size {
+  color: currentColor;
+  font-size: 0.72em;
+  font-weight: 500;
+  opacity: 0.78;
+  white-space: nowrap;
 }
 
 /* Refined, airy pill button for platform download cards */
@@ -1628,7 +2260,7 @@ code {
     display: none;
   }
   .hero-title {
-    font-size: 2.75rem;
+    font-size: clamp(2.1rem, 4.3vw, 2.75rem);
   }
   .feature-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1645,34 +2277,96 @@ code {
   .hero-stats {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, auto));
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0.65rem 0.85rem;
     max-width: 520px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline: 0;
     margin-bottom: 2rem;
   }
   .hero-stat-item {
     font-size: 0.8125rem;
     padding: 0.45rem 0.85rem;
-    justify-content: center;
+    justify-content: flex-start;
   }
 }
 
 @media (max-width: 860px) {
-  .hero::before {
-    background-position: 68% bottom;
-  }
-  /* Hide the desktop mockup window completely on responsive devices (tablet & mobile) */
-  .mockup-wrapper {
-    display: none !important;
-  }
   .hidden-mobile {
     display: none !important;
   }
 }
 
+@media (max-width: 640px) {
+  .hero-visual,
+  .mockup-wrapper {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
+  .release-browser {
+    padding: 1rem;
+  }
+  .release-browser-heading,
+  .release-browser-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .release-browser-heading a {
+    white-space: normal;
+  }
+  .release-browser-links {
+    align-items: flex-start;
+  }
+  .release-channel-picker {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .release-channel-button {
+    padding-inline: 0.5rem;
+  }
+  .release-version-control {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .release-version-picker {
+    width: 100%;
+  }
+  .release-channel-status {
+    flex: 0 1 auto;
+    width: 100%;
+  }
+  .release-history-panel {
+    padding: 0.85rem;
+  }
+  .release-history-asset-row {
+    grid-template-columns: 1.15rem minmax(0, 1fr) minmax(5.5rem, auto);
+    grid-template-areas:
+      "logo details download"
+      "digest digest digest";
+    gap: 0.3rem 0.55rem;
+  }
+  .release-history-asset-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.5rem;
+  }
+  .release-history-filters {
+    gap: 1rem;
+  }
+  .release-history-filter,
+  .release-filter-options {
+    width: 100%;
+  }
+  .release-history-card-header {
+    flex-direction: column;
+  }
+  .release-history-meta {
+    justify-content: flex-start;
+  }
+  .release-history-pagination {
+    gap: 0.5rem;
+  }
   .btn-nav-download {
     display: none !important;
   }
@@ -1691,11 +2385,12 @@ code {
     flex-direction: column;
     width: 100%;
     max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
+    align-items: flex-start;
+    margin-inline: 0;
   }
   .hero-download-btn {
     width: 100%;
+    justify-content: flex-start;
   }
   .step-card {
     padding: 1.35rem 1.15rem;
@@ -1752,7 +2447,7 @@ code {
     padding: 0.3rem 0.75rem;
   }
   .hero-title {
-    font-size: 1.75rem;
+    font-size: clamp(1.15rem, 5vw, 1.75rem);
     line-height: 1.2;
     margin-bottom: 0.75rem;
   }
@@ -1766,6 +2461,7 @@ code {
     max-width: 360px;
     gap: 0.65rem;
     margin-bottom: 1.25rem;
+    margin-inline: 0;
   }
   .hero-download-btn {
     padding: 0.65rem 1rem;
@@ -1774,16 +2470,16 @@ code {
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
   }
   .hero-btn-content {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-start;
     gap: 0.1rem;
     line-height: 1.25;
-    text-align: center;
+    text-align: start;
   }
   #hero-btn-text {
     font-size: 0.95rem;
@@ -1808,14 +2504,13 @@ code {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.45rem;
     max-width: 420px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline: 0;
     margin-bottom: 1.5rem;
   }
   .hero-stat-item {
     font-size: 0.735rem;
     padding: 0.38rem 0.5rem;
-    justify-content: center;
+    justify-content: flex-start;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1865,6 +2560,21 @@ code {
 }
 
 @media (max-width: 420px) {
+  .release-history-asset-row {
+    grid-template-columns: 1.15rem minmax(0, 1fr) minmax(5.5rem, auto);
+    grid-template-areas:
+      "logo details download"
+      "digest digest digest";
+    gap: 0.25rem 0.55rem;
+  }
+  .release-history-asset-details {
+    gap: 0.2rem 0.45rem;
+    font-size: 0.72rem;
+  }
+  .release-history-download-button {
+    align-self: center;
+    justify-self: end;
+  }
   .brand-link {
     gap: 0.35rem;
   }
@@ -1903,7 +2613,7 @@ code {
     padding: 0.25rem 0.65rem;
   }
   .hero-title {
-    font-size: 1.45rem;
+    font-size: clamp(1rem, 5.2vw, 1.45rem);
     margin-bottom: 0.65rem;
   }
   .hero-subtitle {
@@ -1915,6 +2625,7 @@ code {
     max-width: 100%;
     margin-bottom: 1.15rem;
     gap: 0.55rem;
+    align-items: flex-start;
   }
   .hero-download-btn {
     padding: 0.58rem 0.75rem;
@@ -1940,7 +2651,7 @@ code {
     font-size: 0.6875rem;
     padding: 0.35rem 0.35rem;
     gap: 0.3rem;
-    justify-content: center;
+    justify-content: flex-start;
   }
   .hero-stat-item i {
     font-size: 0.725rem;
