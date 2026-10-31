@@ -17,7 +17,18 @@ use window_manager::{
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let context = tauri::generate_context!();
+    let mut context = tauri::generate_context!();
+    #[cfg(target_os = "macos")]
+    if let Some(main_window) = context
+        .config_mut()
+        .app
+        .windows
+        .iter_mut()
+        .find(|window| window.label == "main")
+    {
+        main_window.transparent = true;
+        main_window.background_color = None;
+    }
     #[cfg(not(dev))]
     let context = {
         let mut context = context;
@@ -84,6 +95,7 @@ pub fn run() {
 
     builder
         .on_page_load(|webview, payload| {
+            if payload.event() == PageLoadEvent::Started { notifications::forget_window(webview.app_handle(), webview.window().label()); }
             if webview.label() != "main" || payload.event() != PageLoadEvent::Finished {
                 return;
             }
@@ -100,25 +112,17 @@ pub fn run() {
         .on_window_event(|window, event| {
             match event {
                 WindowEvent::Focused(true) => {
-                    if window.label() != notifications::NOTIFICATION_HOST_LABEL {
-                        menu::sync_repo_dependent_menus_for_window(
-                            &window.app_handle(),
-                            window.label(),
-                        );
-                    }
+                    menu::sync_repo_dependent_menus_for_window(
+                        &window.app_handle(), window.label(),
+                    );
                 }
                 WindowEvent::Destroyed => {
                     if window.label() == window_manager::preferences_window::LABEL {
                         window.app_handle().state::<window_manager::PreferencesWindowState>().destroyed();
                     }
+                    notifications::forget_window(window.app_handle(), window.label());
                     menu::forget_window(&window.app_handle(), window.label());
-                    if window.label() != notifications::NOTIFICATION_HOST_LABEL {
-                        destroy_window(&window.app_handle(), window.label());
-                        notifications::close_notification_host_if_unused(
-                            &window.app_handle(),
-                            window.label(),
-                        );
-                    }
+                    destroy_window(&window.app_handle(), window.label());
                 }
                 WindowEvent::CloseRequested { api, .. }
                     if window.label() == window_manager::preferences_window::LABEL
@@ -232,7 +236,7 @@ pub fn run() {
                 }
             }
 
-            notifications::ensure_notification_host(handle);
+            notifications::initialize(handle);
             features::updates::start_background_checks(handle);
 
             #[cfg(target_os = "macos")]
@@ -399,11 +403,13 @@ pub fn run() {
             commands::download_software_update,
             commands::install_software_update,
             commands::consume_software_update_release_notes,
-            // Stage0 toast notifications
+            // Native OS notifications
             notifications::dispatch_notification,
             notifications::send_test_notification,
-            notifications::notification_host_ready,
-            notifications::set_notification_host_visibility,
+            notifications::set_notification_service_ready,
+            notifications::get_notification_permission,
+            notifications::request_notification_permission,
+            notifications::open_notification_settings,
             notifications::dispatch_notification_action,
             performance::get_performance_metrics,
         ])
@@ -411,8 +417,6 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|app, event| {
             if matches!(event, tauri::RunEvent::Exit) {
-                #[cfg(target_os = "linux")]
-                notifications::close_linux_notifications(app);
                 for error in app.state::<SandboxManager>().cleanup_all() {
                     eprintln!("{error}");
                 }

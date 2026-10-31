@@ -2,8 +2,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from '../../../common/components/icons/X';
 import { isMacOS } from '../../../common/utils/shortcuts';
-import { WindowControls } from '../../../core/components/layout/WindowControls';
-import { titleBarMouseDown } from '../../../core/components/layout/top-bar/titleBarMouseDown';
 import { useWindowChromeStore } from '../../../core/store/useWindowChromeStore';
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 
@@ -19,17 +17,37 @@ export const PreferencesModalTopBar: React.FC<{
   const profile = useWindowChromeStore(state => state.profile);
   const custom = standalone && !profile.nativeFrame;
   const mac = standalone && (profile.platform === 'macos' || (!profile.platform && isMacOS()));
-  const linux = profile.platform === 'linux';
+  const closeButton = <button
+    type="button"
+    disabled={disabled}
+    onClick={onClose}
+    data-macos-traffic-light={custom && mac ? true : undefined}
+    className={custom && mac
+      ? 'btn-solid preferences-window-close rounded-full bg-[#ff5f56] cursor-pointer'
+      : 'me-2 flex h-7 w-7 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0/70 transition-colors cursor-pointer rounded-sm'}
+    title={custom && mac ? undefined : t('common.close')}
+    aria-label={`${t('common.close')} ${title}`}
+  >
+    {custom && mac ? <svg
+      width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"
+      fill="#4d0000"
+    >
+      <path d="M1.8 1 4 3.2 6.2 1 7 1.8 4.8 4 7 6.2 6.2 7 4 4.8 1.8 7 1 6.2 3.2 4 1 1.8Z" />
+    </svg> : <X className="h-4 w-4" />}
+  </button>;
   return (
     <div
       dir="ltr"
-      data-tauri-drag-region={custom && !linux}
-      onMouseDown={custom ? titleBarMouseDown(profile, services.application, mac) : undefined}
-      className={`${standalone ? 'h-8.5' : 'h-10'} bg-crust border-b border-surface0/80 flex items-center justify-between shrink-0 select-none rounded-none cursor-default`}
+      onMouseDown={custom ? event => {
+        if (event.button !== 0 || event.detail !== 1) return;
+        if ((event.target as Element).closest('button, input, select, textarea, a, [role="button"], [contenteditable]')) return;
+        event.preventDefault();
+        void services.application.windowStartDragging().catch(error => console.warn('Could not move Preferences:', error));
+      } : undefined}
+      className={`${standalone ? 'h-8.5' : 'h-10'} bg-mantle/60 border-b border-surface0/50 flex items-center justify-between shrink-0 select-none rounded-t-sm cursor-default`}
     >
       <div className="flex h-full min-w-0 items-center gap-4 ps-3">
-        {custom && mac && <WindowControls style="mac" />}
-        {custom && linux && profile.controlsLeft.length > 0 && <WindowControls style="windows" buttons={profile.controlsLeft} />}
+        {custom && mac && closeButton}
         <span dir="auto" className="text-xs font-bold tracking-tight text-text">{title}</span>
       </div>
       <div className="flex h-full items-center">
@@ -42,16 +60,7 @@ export const PreferencesModalTopBar: React.FC<{
         >
           {t('preferences.editorActions.editFile')}
         </button>
-        {custom && !mac && <WindowControls style="windows" buttons={linux ? profile.controlsRight : undefined} />}
-        {!standalone && <button
-          type="button"
-          onClick={onClose}
-          className="flex h-full w-11 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0/70 transition-colors cursor-pointer rounded-sm"
-          title={t('preferences.editorActions.closeWithEscapeTitle', { label: t('common.close') })}
-          aria-label={`${t('common.close')} ${title}`}
-        >
-          <X className="w-4 h-4" />
-        </button>}
+        {(!standalone || (custom && !mac)) && closeButton}
       </div>
     </div>
   );

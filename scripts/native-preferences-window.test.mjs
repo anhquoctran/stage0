@@ -7,6 +7,31 @@ const url = path => new URL(`../frontend/${path}`, import.meta.url);
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const deferred = () => { let resolve; const promise = new Promise(yes => { resolve = yes; }); return { promise, resolve }; };
 
+test('Preferences custom title bar offers only Close and single-click dragging on each desktop', async t => {
+  for (const platform of ['macos', 'windows', 'linux']) {
+    const runner = componentHarness(); t.after(runner.cleanup);
+    let moved = 0, closed = 0;
+    const { PreferencesModalTopBar } = loadWithMocks(url('features/preferences/components/PreferencesModalTopBar.tsx'), {
+      react: runner.react,
+      'react-i18next': { useTranslation: () => ({ t: key => key }) },
+      '@/common/components/icons/X': { X: () => null },
+      '@/core/store/useWindowChromeStore': { useWindowChromeStore: selector => selector({ profile: { platform, nativeFrame: false } }) },
+      '@/core/services/runtime/useApplicationServices': { useApplicationServices: () => ({ application: { windowStartDragging: async () => { moved++; } } }) },
+    });
+    const tree = await runner.render(PreferencesModalTopBar, { standalone: true, onClose: () => { closed++; }, onOpenJsonEditor() {} });
+    const buttons = componentNodes(tree).filter(node => node.type === 'button');
+    assert.equal(buttons.length, 2, 'One editor action and one Close control; no minimize/maximize controls');
+    const close = buttons.find(node => node.props['aria-label']?.startsWith('common.close'));
+    assert.ok(close);
+    close.props.onClick(); assert.equal(closed, 1);
+    const pointer = (detail, interactive = false) => ({ button: 0, detail, target: { closest: () => interactive ? {} : null }, preventDefault() {} });
+    tree.props.onMouseDown(pointer(1));
+    tree.props.onMouseDown(pointer(2));
+    tree.props.onMouseDown(pointer(1, true));
+    assert.equal(moved, 1, 'Double-click and interactive controls cannot trigger a native frame action');
+  }
+});
+
 test('every repo routes Preferences/deep links to Rust without opening a local draft; the utility and browser keep local editing', async t => {
   const previous = globalThis.window, previousStorage = globalThis.localStorage;
   globalThis.window = { __STAGE0_PREFERENCES__: {}, addEventListener() {}, removeEventListener() {} };
@@ -98,17 +123,15 @@ test('late native listener registrations are disposed without acknowledging a de
 test('the preferences window boots independently of repo and notification surfaces', async t => {
   const runner = componentHarness(); t.after(runner.cleanup);
   let label = 'preferences';
-  const MainApp = () => null, PreferencesWindow = () => null, NotificationHost = () => null;
+  const MainApp = () => null, PreferencesWindow = () => null;
   const { App } = loadWithMocks(url('core/App.tsx'), {
     react: runner.react,
     './services/runtime/useApplicationServices': { useApplicationServices: () => ({ platform: { capabilities: { windows: true }, windows: { current: () => ({ label }) } } }) },
     './MainApp': { MainApp },
     '../features/preferences/components/PreferencesWindow': { PreferencesWindow },
-    '../features/notifications/components/NotificationHost': { NotificationHost },
   });
   assert.equal((await runner.render(App)).type, PreferencesWindow);
   label = 'win_repo_b'; assert.equal((await runner.render(App)).type, MainApp);
-  label = 'notification-host'; assert.equal((await runner.render(App)).type, NotificationHost);
 });
 
 test('repo window modal composition omits the native Preferences editor', async t => {

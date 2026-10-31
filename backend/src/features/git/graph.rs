@@ -35,7 +35,9 @@ pub fn get_current_branch_graph(repo_path: &str) -> Result<GitGraph, String> {
                 commits: Vec::new(),
             });
         }
-        return Err(crate::common::messages::code("backend.git.resolveHeadFailed"));
+        return Err(crate::common::messages::code(
+            "backend.git.resolveHeadFailed",
+        ));
     }
 
     // Read one extra record so the UI can accurately indicate when history is
@@ -63,7 +65,9 @@ pub fn get_current_branch_graph(repo_path: &str) -> Result<GitGraph, String> {
         }
         let fields: Vec<&str> = record.split('\x1f').collect();
         if fields.len() != 8 {
-            return Err(crate::common::messages::code("backend.git.malformedGraphData"));
+            return Err(crate::common::messages::code(
+                "backend.git.malformedGraphData",
+            ));
         }
         commits.push(GitGraphCommit {
             hash: fields[0].to_string(),
@@ -101,7 +105,9 @@ pub fn get_commit_message(repo_path: &str, commit_hash: &str) -> Result<String, 
             .chars()
             .all(|character| character.is_ascii_hexdigit())
     {
-        return Err(crate::common::messages::code("backend.git.invalidCommitHash"));
+        return Err(crate::common::messages::code(
+            "backend.git.invalidCommitHash",
+        ));
     }
 
     let (commit_oid, _) = super::runner::resolve_ref(repo_path, commit_hash)?;
@@ -132,7 +138,9 @@ pub fn search_commit_messages(
         return Ok(Vec::new());
     }
     if query.chars().count() > 256 || query.chars().any(char::is_control) {
-        return Err(crate::common::messages::code("backend.git.searchQueryInvalid"));
+        return Err(crate::common::messages::code(
+            "backend.git.searchQueryInvalid",
+        ));
     }
     if commit_hashes.len() > GRAPH_COMMIT_LIMIT
         || commit_hashes.iter().any(|hash| {
@@ -140,7 +148,9 @@ pub fn search_commit_messages(
                 || !hash.chars().all(|character| character.is_ascii_hexdigit())
         })
     {
-        return Err(crate::common::messages::code("backend.git.searchCommitListInvalid"));
+        return Err(crate::common::messages::code(
+            "backend.git.searchCommitListInvalid",
+        ));
     }
     if commit_hashes.is_empty() {
         return Ok(Vec::new());

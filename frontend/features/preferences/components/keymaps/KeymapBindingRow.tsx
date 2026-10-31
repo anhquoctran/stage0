@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
+import { getOsFileManagerName } from '../../../git/utils/fileActions';
+import { menuLabel } from '../../../../core/constants/applicationMenu';
 import { eventStroke, formatKeybinding, normalizeShortcut } from '../../../../core/services/keymaps/keystroke';
 import { keymapErrors } from '../../../../core/services/keymaps/validation';
 import type { KeymapBindingRowProps } from '../../types/KeymapBindingRowProps';
@@ -13,6 +15,8 @@ export function KeymapBindingRow({ command, settings, onChange, mac }: KeymapBin
   const [error, setError] = useState('');
   const [originalKeys, setOriginalKeys] = useState<string[] | null>(null);
   const customized = settings.overrides.some((item) => item.command === command.id);
+  const fileManager = getOsFileManagerName();
+  const displayLabel = menuLabel(translateUiText(command.label), fileManager);
   const withKeys = (keys: string[] | null) => ({
     ...settings,
     overrides: [...settings.overrides.filter((item) => item.command !== command.id), ...(keys ? [{ command: command.id, keys }] : [])],
@@ -38,13 +42,13 @@ export function KeymapBindingRow({ command, settings, onChange, mac }: KeymapBin
     <div className="rounded-sm px-3 py-2.5 even:bg-surface0/20">
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-text">{command.label}</p>
+          <p className="text-xs text-text">{displayLabel}</p>
           <p className="font-mono text-[10px] text-subtext0">{command.id} · {command.scope}{customized ? ` · ${translateUiText('preferences.keymapBinding.customized')}` : ''}</p>
         </div>
         <div className="flex max-w-[50%] flex-wrap justify-end gap-1">
           {command.keys.length ? command.keys.map((key) => <kbd key={key} className="rounded-sm bg-crust px-1.5 py-1 font-mono text-[11px] text-subtext1">{formatKeybinding(key, mac)}</kbd>) : <span className="text-[11px] text-subtext0">{translateUiText('preferences.keymapBinding.unassigned')}</span>}
         </div>
-        {command.editable ? <button type="button" className={buttonClass} aria-label={translateUiText('preferences.keymapBinding.editCommand', { command: command.label })} onClick={() => {
+        {command.editable ? <button type="button" className={buttonClass} aria-label={translateUiText('preferences.keymapBinding.editCommand', { command: displayLabel })} onClick={() => {
           if (editing) { cancel(); return; }
           setOriginalKeys(settings.overrides.find((item) => item.command === command.id)?.keys ?? null);
           setText(command.keys.join('; ')); setEditing(!editing); setRecording(false); setError('');

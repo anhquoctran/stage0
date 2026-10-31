@@ -67,7 +67,7 @@ test('RepositoryOverviewModal handles VS Code click with try/catch and error toa
   );
   assert.match(modalSrc, /handleOpenInVsCode/);
   assert.match(modalSrc, /showToast\(msg,\s*['"]error['"]\)/);
-  assert.match(modalSrc, /showToast\(['"]Opened repository in VS Code['"],\s*['"]success['"]\)/);
+  assert.match(modalSrc, /showToast\((?:['"]Opened repository in VS Code['"]|(?:t|translateUiText)\(['"][^'"]*openedInVsCode['"]\)),\s*['"]success['"]\)/);
 });
 
 test('RepositoryOpenSubmenu handles VS Code click with error toast level', () => {
@@ -76,7 +76,7 @@ test('RepositoryOpenSubmenu handles VS Code click with error toast level', () =>
     'utf-8'
   );
   assert.match(submenuSrc, /showToast\(msg,\s*['"]error['"]\)/);
-  assert.match(submenuSrc, /showToast\(['"]Opened repository in VS Code['"],\s*['"]success['"]\)/);
+  assert.match(submenuSrc, /showToast\((?:['"]Opened repository in VS Code['"]|i18n\.t\(['"]menu\.toasts\.openedInVsCode['"]\)),\s*['"]success['"]\)/);
 });
 
 test('ConflictBanner uses official VsCode icon and displays error toast on launch failure', () => {

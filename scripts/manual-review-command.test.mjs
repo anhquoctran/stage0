@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import fs from 'node:fs';
+import { createInstance } from 'i18next';
 import { loadWithMocks } from './helpers/componentHarness.mjs';
 
 const virtualMr = '../frontend/features/virtual-mr/';
 const review = '../frontend/features/review/';
+const i18n = createInstance();
+await i18n.init({ lng: 'en', resources: { en: { translation: JSON.parse(fs.readFileSync(new URL('../frontend/features/i18n/locales/en.json', import.meta.url), 'utf8')) } } });
 const { parseReviewerReviewCommand } = loadWithMocks(
   new URL(`${virtualMr}utils/parseReviewerReviewCommand.ts`, import.meta.url),
   { '../../../common/utils/mentions': {
@@ -63,6 +67,7 @@ function setupManualRequest({ unresolved = false, waitPromise } = {}) {
   let resolveWait;
   const deferred = waitPromise || new Promise((resolve) => { resolveWait = resolve; });
   const module = loadWithMocks(new URL(`${review}services/manualReviewerRequestService.ts`, import.meta.url), {
+    '../../i18n/i18n': { default: i18n },
     '../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({}) },
     '../../notifications/services/notificationService': { notificationService: { notify: async (item) => notifications.push(item) } },
     '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: store },
@@ -78,7 +83,7 @@ function setupManualRequest({ unresolved = false, waitPromise } = {}) {
   return { request: module.requestManualReviewerReview, state: () => state, replies, notifications, starts: () => starts, resolveWait, addFinding: () => setState((current) => ({ sessions: current.sessions.map((session) => ({ ...session, discussions: [...session.discussions, { ...finding, id: 'finding-new', rootComment: { ...finding.rootComment, id: 'new-root' } }] })) })) };
 }
 
-test('manual request posts bot progress, shows a pending skeleton, reports findings and notifies', async () => {
+test('manual request posts bot progress, shows a pending skeleton, reports findings without duplicating backend notifications', async () => {
   const harness = setupManualRequest();
   const request = harness.request('mr-1', 'request-1', 'bot-1');
   await new Promise((resolve) => setImmediate(resolve));
@@ -91,8 +96,7 @@ test('manual request posts bot progress, shows a pending skeleton, reports findi
   assert.equal(harness.starts(), 1);
   assert.ok(!harness.state().sessions[0].discussions.find((item) => item.id === 'request-1').children.some((comment) => comment.isPending));
   assert.match(harness.replies.at(-1).body, /created 1 new code discussion/);
-  assert.equal(harness.notifications.length, 1);
-  assert.equal(harness.notifications[0].channel, 'aiReview');
+  assert.equal(harness.notifications.length, 0, 'Native completion is owned by the backend lifecycle');
 });
 
 test('manual request refuses to run while that reviewer has an unresolved code finding', async () => {

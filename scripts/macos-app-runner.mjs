@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const cargoPid = process.ppid;
@@ -26,7 +27,6 @@ const contentsPath = path.join(bundlePath, 'Contents');
 const executableDirectory = path.join(contentsPath, 'MacOS');
 const resourcesDirectory = path.join(contentsPath, 'Resources');
 const bundleExecutable = path.join(executableDirectory, path.basename(executablePath));
-const appIcon = path.join(resourcesDirectory, 'AppIcon.icns');
 
 function escapePlistValue(value) {
   return String(value)
@@ -39,6 +39,10 @@ function writeBundleInfo() {
   const iconSource = fileURLToPath(new URL('../backend/icons/icon.icns', import.meta.url));
   fs.mkdirSync(executableDirectory, { recursive: true });
   fs.mkdirSync(resourcesDirectory, { recursive: true });
+  // A stable filename can keep an older icon alive in macOS's identity caches
+  // even after its bytes change. Version the resource, never the bundle ID.
+  const icon = fs.readFileSync(iconSource);
+  const iconName = `AppIcon-${createHash('sha256').update(icon).digest('hex').slice(0, 16)}`;
 
   const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -46,7 +50,7 @@ function writeBundleInfo() {
 <dict>
   <key>CFBundleDevelopmentRegion</key><string>en</string>
   <key>CFBundleExecutable</key><string>${escapePlistValue(path.basename(executablePath))}</string>
-  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundleIconFile</key><string>${iconName}.icns</string>
   <key>CFBundleIdentifier</key><string>${escapePlistValue(config.identifier)}</string>
   <key>CFBundleName</key><string>${escapePlistValue(config.productName)}</string>
   <key>CFBundlePackageType</key><string>APPL</string>
@@ -57,7 +61,12 @@ function writeBundleInfo() {
 `;
 
   fs.writeFileSync(path.join(contentsPath, 'Info.plist'), plist);
-  fs.copyFileSync(iconSource, appIcon);
+  fs.writeFileSync(path.join(resourcesDirectory, `${iconName}.icns`), icon);
+  for (const name of fs.readdirSync(resourcesDirectory)) {
+    if (/^AppIcon(?:-[a-f0-9]{16})?\.icns$/.test(name) && name !== `${iconName}.icns`) {
+      fs.unlinkSync(path.join(resourcesDirectory, name));
+    }
+  }
 
   // Signing modifies the executable. Remove any old hard link before copying
   // so codesign cannot change Cargo's original binary. APFS clones keep this

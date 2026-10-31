@@ -73,9 +73,9 @@ export const BackgroundTaskManager: React.FC = () => {
           role="dialog"
           aria-modal="false"
           aria-labelledby="background-task-manager-title"
-          className="absolute bottom-full end-0 z-50 mb-2 flex max-h-[calc(100dvh-5rem)] w-[min(420px,calc(100vw-2rem))] flex-col border border-surface1 bg-mantle text-start text-text shadow-2xl"
+          className="absolute bottom-full end-0 z-50 mb-2 flex max-h-[calc(100dvh-5rem)] w-[min(420px,calc(100vw-2rem))] flex-col border border-surface1 bg-mantle text-start text-text shadow-2xl rounded-sm overflow-hidden"
         >
-          <header className="flex shrink-0 items-center justify-between border-b border-surface0 ps-4">
+          <header className="flex shrink-0 items-center justify-between border-b border-surface0 ps-4 rounded-t-sm">
             <div className="flex items-center gap-2">
               <h2 id="background-task-manager-title" className="text-xs font-semibold">{t('git.backgroundTasks.title')}</h2>
               {runningCount > 0 && <span className="text-[10px] text-primary">{t('git.backgroundTasks.runningCount', { count: runningCount })}</span>}

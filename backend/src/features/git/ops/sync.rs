@@ -131,7 +131,9 @@ pub fn git_sync_with_progress(
             let no_ff = opts.and_then(|o| o.no_ff).unwrap_or(false);
             let ff_only = opts.and_then(|o| o.ff_only).unwrap_or(false);
             if no_ff && ff_only {
-                return Err(crate::common::messages::code("backend.git.mergeConflictingOptions"));
+                return Err(crate::common::messages::code(
+                    "backend.git.mergeConflictingOptions",
+                ));
             }
             if no_ff {
                 args.push("--no-ff".to_string());
@@ -174,10 +176,12 @@ pub fn git_sync_with_progress(
             args.push("rebase".to_string());
             args.push("--skip".to_string());
         }
-        other => return Err(crate::common::messages::message(
-            "backend.git.unsupportedSyncOp",
-            serde_json::json!({ "operation": other }),
-        )),
+        other => {
+            return Err(crate::common::messages::message(
+                "backend.git.unsupportedSyncOp",
+                serde_json::json!({ "operation": other }),
+            ))
+        }
     }
 
     let str_args: Vec<&str> = args.iter().map(|s| s.as_str()).collect();

@@ -41,27 +41,27 @@ export const VirtualMrBottomBar: React.FC = () => {
         {/* Status Badge */}
         {session.status === 'resolved' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 shrink-0 shadow-xs rounded-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 shrink-0 whitespace-nowrap shadow-xs rounded-sm"
             title={translateUiText('virtualMr.bottomBar.resolvedTitle')}
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span>{translateUiText('common.resolved')}</span>
+            <span>{translateUiText('virtualMr.listDialog.status.resolved')}</span>
           </div>
         ) : session.status === 'closed' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 shrink-0 shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 shrink-0 whitespace-nowrap shadow-xs"
             title={translateUiText('virtualMr.bottomBar.closedTitle')}
           >
             <XCircle className="w-3.5 h-3.5 text-subtext1 shrink-0" />
-            <span>{translateUiText('common.closed')}</span>
+            <span>{translateUiText('virtualMr.listDialog.status.closed')}</span>
           </div>
         ) : (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0 shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0 whitespace-nowrap shadow-xs"
             title={translateUiText('virtualMr.bottomBar.openTitle')}
           >
             <span className="w-2 h-2 rounded-sm bg-emerald-400 animate-pulse shrink-0" />
-            <span>{translateUiText('common.open')}</span>
+            <span>{translateUiText('virtualMr.listDialog.status.open')}</span>
           </div>
         )}
 

@@ -152,7 +152,10 @@
     "disabled": "Desativado",
     "confirm": "Confirmar",
     "optional": "opcional",
-    "apply": "Aplicar"
+    "apply": "Aplicar",
+    "open": "Aberto",
+    "resolved": "Resolvido",
+    "closed": "Fechado"
   },
   "preferences": {
     "appearance": "Aparência",
@@ -566,13 +569,13 @@
       "repo_overview": "Visão geral do repositório...",
       "new_mr": "Novo Virtual MR...",
       "fetch": "Fetch (tudo e limpar)",
-      "pull": "Pull",
-      "pull_from": "Pull de...",
+      "pull": "Puxar (Pull)",
+      "pull_from": "Puxar de...",
       "merge": "Mesclar upstream",
       "merge_from": "Mesclar de...",
       "rebase": "Rebase",
       "rebase_from": "Rebase de...",
-      "rebase_continue": "Continuar",
+      "rebase_continue": "Continuar rebase",
       "rebase_skip": "Ignorar commit",
       "rebase_abort": "Abortar rebase",
       "swap_branches": "Trocar base e comparação",
@@ -587,7 +590,23 @@
       "shortcuts": "Atalhos de teclado",
       "keymaps": "Personalizar mapa de teclas...",
       "open_webview_devtools": "Ferramentas do desenvolvedor",
-      "release_notes": "Ver notas da versão"
+      "release_notes": "Ver notas da versão",
+      "next_conflict": "Ficheiro em conflito seguinte",
+      "close_tab": "Fechar separador / rascunho de MR",
+      "tab_1": "Mudar para o separador de MR 1",
+      "tab_2": "Mudar para o separador de MR 2",
+      "tab_3": "Mudar para o separador de MR 3",
+      "tab_4": "Mudar para o separador de MR 4",
+      "tab_5": "Mudar para o separador de MR 5",
+      "tab_6": "Mudar para o separador de MR 6",
+      "tab_7": "Mudar para o separador de MR 7",
+      "tab_8": "Mudar para o separador de MR 8",
+      "tab_9": "Mudar para o separador de MR 9",
+      "recent_1": "Abrir repositório recente 1",
+      "recent_2": "Abrir repositório recente 2",
+      "recent_3": "Abrir repositório recente 3",
+      "recent_4": "Abrir repositório recente 4",
+      "recent_5": "Abrir repositório recente 5"
     },
     "recent": {
       "emptyLabel": "Nenhum repositório recente",
@@ -633,16 +652,16 @@
   },
   "notifications": {
     "categoryHeading": "Categorias de notificações",
-    "categoryDescription": "Escolha quais eventos do Stage0 podem exibir uma notificação. O Stage0 define a posição e o fechamento para cada evento.",
+    "categoryDescription": "Escolha os eventos que podem enviar notificações do sistema. O sistema operativo controla a apresentação e o fecho.",
     "aiReviewTitle": "Revisão de código com IA",
     "aiReviewDescription": "Quando uma revisão com IA ou uma nova verificação terminar.",
     "gitSyncTitle": "Monitorização e sincronização do Git",
     "gitSyncDescription": "Alterações remotas, novas branches e eventos de sincronização.",
     "guardrailsTitle": "Proteções de segurança",
     "guardrailsDescription": "Comandos com privilégios elevados, bloqueios de acesso e violações de políticas.",
-    "previewTitle": "Pré-visualização da notificação",
+    "previewTitle": "Pré-visualizar notificações do sistema",
     "previewDescription": "Envie um teste com o estilo de notificação desta plataforma. Ele não será adicionado ao histórico nem à contagem de não lidas.",
-    "previewSent": "Notificação de teste enviada. Ela não afeta o histórico nem a contagem de não lidas.",
+    "previewSent": "Notificação de teste enviada. O sistema operativo controla a sua apresentação.",
     "previewFailed": "Não foi possível exibir uma notificação de teste neste sistema.",
     "testTooltip": "Exibir uma notificação de teste sem guardá-la",
     "desktopOnly": "Disponível no aplicação para desktop",
@@ -667,7 +686,19 @@
     "dismiss": "Dispensar",
     "dismissLabel": "Dispensar notificação",
     "deliveryFailed": "Falha ao entregar a notificação do Stage0.",
-    "unreadCount_many": "{{count}} não lidas"
+    "unreadCount_many": "{{count}} não lidas",
+    "permission": {
+      "title": "Notificações do sistema",
+      "description": "Receba alertas do Stage0 através do sistema operativo. Este passo é opcional.",
+      "granted": "As notificações estão permitidas. O sistema controla a posição, o som e a visibilidade.",
+      "denied": "As notificações estão bloqueadas. Pode continuar a usar o Stage0; os eventos ficam no histórico. Ative os alertas nas definições do sistema.",
+      "prompt": "Permita que o Stage0 envie notificações. Pode continuar sem conceder permissão.",
+      "unsupported": "As notificações nativas não estão disponíveis. No macOS/Windows, use o Stage0 instalado; no Linux, verifique o serviço de notificações do ambiente de trabalho.",
+      "request": "Permitir notificações",
+      "settings": "Abrir definições de notificações",
+      "error": "Não foi possível consultar ou alterar a permissão de notificações. Tente novamente ou abra as definições do sistema.",
+      "system_managed": "Este ambiente de trabalho gere as permissões de notificação. Se os alertas não aparecerem, verifique as definições de notificações do sistema."
+    }
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} concluiu uma revisão de MR",
@@ -2215,6 +2246,7 @@
       "openIn": "Abrir em {{name}}"
     },
     "repositoryLabels": {
+      "label": "Etiqueta",
       "updated": "Etiqueta atualizada: {{name}}",
       "created": "Etiqueta criada: {{name}}",
       "saveFailed": "Não foi possível guardar a etiqueta: {{error}}",
@@ -3341,7 +3373,10 @@
       "runtimeUnavailable": "O runtime de notificações do Stage0 está indisponível.",
       "queueUnavailable": "A fila de notificações do Stage0 está indisponível.",
       "unsupportedPlatform": "As notificações do Stage0 não são suportadas nesta plataforma.",
-      "dispatchFailed": "Falha na tarefa de envio de notificações."
+      "dispatchFailed": "Falha na tarefa de envio de notificações.",
+      "permissionDenied": "As notificações estão bloqueadas. Pode continuar a usar o Stage0; os eventos ficam no histórico. Ative os alertas nas definições do sistema.",
+      "permissionRequired": "Permita que o Stage0 envie notificações. Pode continuar sem conceder permissão.",
+      "settingsFailed": "Não foi possível consultar ou alterar a permissão de notificações. Tente novamente ou abra as definições do sistema."
     },
     "sandbox": {
       "dockerRunning": "O daemon do Docker está em execução (Imagem predefinida: {{image}}).",

@@ -83,10 +83,17 @@ pub fn resolve_repository(
         return Err(crate::common::messages::code("backend.repository.missing"));
     }
 
-    let canonical = dunce::canonicalize(input)
-        .map_err(|error| crate::common::messages::failure("backend.window.canonicalizeRepoFailed", serde_json::json!({ "error": error.to_string() }), format!("Could not canonicalize repository path: {error}")))?;
+    let canonical = dunce::canonicalize(input).map_err(|error| {
+        crate::common::messages::failure(
+            "backend.window.canonicalizeRepoFailed",
+            serde_json::json!({ "error": error.to_string() }),
+            format!("Could not canonicalize repository path: {error}"),
+        )
+    })?;
     if !canonical.is_dir() {
-        return Err(crate::common::messages::code("backend.repository.notDirectory"));
+        return Err(crate::common::messages::code(
+            "backend.repository.notDirectory",
+        ));
     }
     if !canonical.join(".git").exists() {
         return Err(crate::common::messages::code("backend.repository.notGit"));
@@ -94,8 +101,13 @@ pub fn resolve_repository(
 
     #[cfg(unix)]
     let identity = {
-        let metadata = fs::metadata(&canonical)
-            .map_err(|error| crate::common::messages::failure("backend.window.inspectRepoDirFailed", serde_json::json!({ "error": error.to_string() }), format!("Could not inspect repository directory: {error}")))?;
+        let metadata = fs::metadata(&canonical).map_err(|error| {
+            crate::common::messages::failure(
+                "backend.window.inspectRepoDirFailed",
+                serde_json::json!({ "error": error.to_string() }),
+                format!("Could not inspect repository directory: {error}"),
+            )
+        })?;
         use std::os::unix::fs::MetadataExt;
         RepoIdentity::File {
             volume: metadata.dev(),
@@ -127,7 +139,13 @@ pub fn open_repo_path(
     let db = app.state::<Database>();
     let repo = db
         .upsert_repository("", &name, &canonical_path.to_string_lossy())
-        .map_err(|error| crate::common::messages::failure("backend.window.registerRepoFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to register repository: {error}")))?;
+        .map_err(|error| {
+            crate::common::messages::failure(
+                "backend.window.registerRepoFailed",
+                serde_json::json!({ "error": error.to_string() }),
+                format!("Failed to register repository: {error}"),
+            )
+        })?;
     crate::features::credentials::schedule_system_git_credential_rescan(app);
     let context = RepositoryContext {
         identity,
@@ -216,29 +234,36 @@ pub fn create_welcome_window(app: &AppHandle) -> Result<String, String> {
 fn build_window(app: &AppHandle, label: &str, title: &str) -> Result<WebviewWindow, String> {
     let focus_after_initial_load = Arc::new(AtomicBool::new(true));
     let focus_after_initial_load_callback = Arc::clone(&focus_after_initial_load);
-    let builder = WebviewWindowBuilder::new(app, label, app_webview_url(app, "index.html"))
+    let mut builder = WebviewWindowBuilder::new(app, label, app_webview_url(app, "index.html"))
         .title(title)
         .inner_size(SPLASH_WIDTH, SPLASH_HEIGHT)
         .center()
         .resizable(false)
         .maximizable(false)
         .decorations(false)
-        .shadow(true)
-        .on_page_load(move |window, payload| {
-            if matches!(payload.event(), PageLoadEvent::Finished)
-                && focus_after_initial_load_callback.swap(false, Ordering::AcqRel)
-            {
-                // Re-assert focus after the new WebView is ready. On some platforms,
-                // focusing immediately after build can happen before native window
-                // activation completes, leaving the first window in front.
-                let _ = focus_window(&window);
-            }
-        });
+        .shadow(true);
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.transparent(true);
+    }
+    let builder = builder.on_page_load(move |window, payload| {
+        if matches!(payload.event(), PageLoadEvent::Finished)
+            && focus_after_initial_load_callback.swap(false, Ordering::AcqRel)
+        {
+            // Re-assert focus after the new WebView is ready. On some platforms,
+            // focusing immediately after build can happen before native window
+            // activation completes, leaving the first window in front.
+            let _ = focus_window(&window);
+        }
+    });
 
-    let window = builder
-        .build()
-        .map_err(|error| crate::common::messages::failure("backend.window.createWindowFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to create window: {error}")))?;
-    crate::features::notifications::ensure_notification_host(app);
+    let window = builder.build().map_err(|error| {
+        crate::common::messages::failure(
+            "backend.window.createWindowFailed",
+            serde_json::json!({ "error": error.to_string() }),
+            format!("Failed to create window: {error}"),
+        )
+    })?;
     Ok(window)
 }
 

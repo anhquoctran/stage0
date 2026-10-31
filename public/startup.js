@@ -8,6 +8,16 @@ window.$RefreshSig$ = window.$RefreshSig$ || function () {
 };
 window.__stage0_has_error__ = false;
 
+// Preferences is a standalone utility window; set this before the document's
+// splash styles are parsed so its first painted frame is the Preferences UI.
+(function identifyPreferencesWindow() {
+  var currentWindow = window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.metadata
+    && window.__TAURI_INTERNALS__.metadata.currentWindow;
+  if (currentWindow && currentWindow.label === 'preferences') {
+    document.documentElement.setAttribute('data-suppress-startup-splash', 'true');
+  }
+})();
+
 // Match the compact splash edge to Stage0's undecorated macOS window before
 // index.html paints. Browser previews and other platforms keep square edges.
 (function identifyMacOSWindowFrame() {
@@ -17,6 +27,7 @@ window.__stage0_has_error__ = false;
   var userAgent = String(navigator.userAgent || '');
   if (/Mac|iPod|iPhone|iPad/.test(platform) || /Macintosh|Mac OS X/.test(userAgent)) {
     document.documentElement.setAttribute('data-platform', 'macos');
+    document.documentElement.setAttribute('data-window-rounded', 'true');
   }
 })();
 

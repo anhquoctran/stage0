@@ -5,10 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from '../../../common/components/icons/AlertTriangle';
 import { CheckCircle2 } from '../../../common/components/icons/CheckCircle2';
 import { RefreshCw } from '../../../common/components/icons/RefreshCw';
-import { Sparkles } from '../../../common/components/icons/Sparkles';
+import { Send } from '../../../common/components/icons/Send';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { type NotificationChannel } from '../types/NotificationChannel';
 import { ToggleSwitch } from './ToggleSwitch';
+import { useNotificationPermission } from '../hooks/useNotificationPermission';
+import { NotificationPermissionPanel } from './NotificationPermissionPanel';
 
 const categories: Array<{
   key: NotificationChannel;
@@ -42,7 +44,8 @@ export const NotificationsTab: React.FC = () => {
   const { settings, updateChannel } = useNotificationStore();
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
-  const canTestNotifications = appServices.platform.capabilities.notifications;
+  const { permission } = useNotificationPermission();
+  const canTestNotifications = appServices.platform.capabilities.notifications && (permission === 'granted' || permission === 'system_managed');
 
   const handleTestNotification = async () => {
     setIsTesting(true);
@@ -59,6 +62,7 @@ export const NotificationsTab: React.FC = () => {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-100 select-none pb-6">
+      <NotificationPermissionPanel />
       <div>
         <h3 className="border-b border-surface0/50 pb-1 font-mono text-xs font-bold uppercase tracking-tight text-text">
           {t('notifications.categoryHeading')}
@@ -84,10 +88,10 @@ export const NotificationsTab: React.FC = () => {
           type="button"
           onClick={() => void handleTestNotification()}
           disabled={!canTestNotifications || isTesting}
-          title={t(canTestNotifications ? 'notifications.testTooltip' : 'notifications.desktopOnly')}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-sm bg-brand px-3 text-xs font-semibold text-on-accent shadow-xs transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+          title={t(canTestNotifications ? 'notifications.testTooltip' : permission ? `notifications.permission.${permission}` : 'common.loading')}
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-sm border-0 bg-brand px-3 text-xs font-semibold text-on-accent shadow-xs transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Sparkles className={`h-3.5 w-3.5 ${isTesting ? 'animate-pulse' : ''}`} />
+          <Send className={`h-3.5 w-3.5 ${isTesting ? 'animate-pulse' : ''}`} />
           {isTesting ? t('notifications.sending') : t('notifications.testButton')}
         </button>
       </div>

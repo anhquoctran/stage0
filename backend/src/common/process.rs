@@ -137,10 +137,7 @@ fn run_bounded_command_inner(
             return Err(crate::common::messages::failure(
                 "backend.process.timedOut",
                 serde_json::json!({ "seconds": timeout.as_secs() }),
-                format!(
-                    "Subprocess timed out after {} seconds",
-                    timeout.as_secs()
-                ),
+                format!("Subprocess timed out after {} seconds", timeout.as_secs()),
             ));
         }
 

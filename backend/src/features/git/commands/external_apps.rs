@@ -224,7 +224,9 @@ pub async fn open_repo_in(
                         }
                     }
                     if !launched {
-                        return Err(crate::common::messages::code("backend.git.noTerminalEmulator"));
+                        return Err(crate::common::messages::code(
+                            "backend.git.noTerminalEmulator",
+                        ));
                     }
                     Ok(())
                 }

@@ -218,11 +218,7 @@ pub fn sync_changes_to_sandbox(
     }
 }
 
-fn run_maintenance_command(
-    command: &mut Command,
-    code: &str,
-    context: &str,
-) -> Result<(), String> {
+fn run_maintenance_command(command: &mut Command, code: &str, context: &str) -> Result<(), String> {
     let output = crate::common::process::run_bounded_command(
         command,
         64 * 1024,

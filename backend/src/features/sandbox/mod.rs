@@ -43,7 +43,9 @@ pub(crate) fn validate_sandbox_command(command: &str, args: &[String]) -> Result
 
     let trimmed_command = command.trim();
     if trimmed_command.is_empty() || trimmed_command.len() > MAX_COMMAND_BYTES {
-        return Err(crate::common::messages::code("backend.sandbox.commandNameInvalid"));
+        return Err(crate::common::messages::code(
+            "backend.sandbox.commandNameInvalid",
+        ));
     }
     if trimmed_command.contains('/')
         || trimmed_command.contains('\\')
@@ -66,7 +68,9 @@ pub(crate) fn validate_sandbox_command(command: &str, args: &[String]) -> Result
         total.checked_add(arg.len())
     });
     if !matches!(total_arg_bytes, Some(size) if size <= MAX_TOTAL_ARG_BYTES) {
-        return Err(crate::common::messages::code("backend.sandbox.commandArgsInvalid"));
+        return Err(crate::common::messages::code(
+            "backend.sandbox.commandArgsInvalid",
+        ));
     }
 
     let command_lower = trimmed_command.to_ascii_lowercase();

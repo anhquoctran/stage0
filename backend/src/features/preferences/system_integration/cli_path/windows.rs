@@ -40,11 +40,13 @@ fn enable_path(launcher_dir: &Path) -> Result<(), String> {
         .map_err(|error| error.to_string())?
         .canonicalize()
         .map_err(|error| error.to_string())?;
-    let executable = executable
-        .to_str()
-        .ok_or_else(|| crate::common::messages::code("backend.preferences.executablePathNotUnicode"))?;
+    let executable = executable.to_str().ok_or_else(|| {
+        crate::common::messages::code("backend.preferences.executablePathNotUnicode")
+    })?;
     if executable.contains('\n') || executable.contains('\r') {
-        return Err(crate::common::messages::code("backend.preferences.executablePathLineBreak"));
+        return Err(crate::common::messages::code(
+            "backend.preferences.executablePathLineBreak",
+        ));
     }
     fs::create_dir_all(launcher_dir).map_err(|error| {
         crate::common::messages::failure(

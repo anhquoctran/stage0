@@ -173,7 +173,8 @@ test('useThemeStore and createPreferencesApplyAction persist theme mode to local
 
 test('splash frame uses the same subtle rounded border as the custom macOS main frame', () => {
   const html = fs.readFileSync('index.html', 'utf8');
-  assert.match(html, /\[data-platform="macos"\]\s+#startup-splash\s*\{[^}]*border: 1px solid var\(--splash-frame-border\);[^}]*border-radius: 4px;/);
+  assert.match(html, /--window-frame-radius:\s*12px;/);
+  assert.match(html, /\[data-platform="macos"\]\s+#startup-splash\s*\{[^}]*border: 1px solid var\(--splash-frame-border\);[^}]*border-radius: var\(--window-frame-radius\);/);
   assert.match(html, /--splash-frame-border:\s*#313244;/);
   assert.match(html, /--splash-frame-border:\s*#bec4d0;/);
 });

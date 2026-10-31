@@ -41,7 +41,9 @@ impl Database {
             )
         })?;
         if changed != 1 {
-            return Err(crate::common::messages::code("backend.review.mrNoLongerExists"));
+            return Err(crate::common::messages::code(
+                "backend.review.mrNoLongerExists",
+            ));
         }
         Ok(())
     }

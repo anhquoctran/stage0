@@ -1,7 +1,11 @@
 pub fn normalize(source: &str, mac: bool) -> Result<String, String> {
     let steps: Vec<_> = source.split_whitespace().collect();
     if source.len() > 128 || steps.is_empty() || steps.len() > 2 {
-        return Err(crate::common::messages::failure("backend.keymaps.shortcutLengthLimit", serde_json::json!({}), "Use one keystroke or a two-step chord (maximum 128 characters)".into()));
+        return Err(crate::common::messages::failure(
+            "backend.keymaps.shortcutLengthLimit",
+            serde_json::json!({}),
+            "Use one keystroke or a two-step chord (maximum 128 characters)".into(),
+        ));
     }
     steps
         .into_iter()
@@ -66,7 +70,11 @@ fn stroke(source: &str, mac: bool) -> Result<String, String> {
             .and_then(|number| number.parse::<u8>().ok())
             .is_some_and(|number| (1..=24).contains(&number) && key == format!("F{number}"));
     if !valid {
-        return Err(crate::common::messages::failure("backend.keymaps.unsupportedKey", serde_json::json!({ "key": raw }), format!("Unsupported key: {raw}")));
+        return Err(crate::common::messages::failure(
+            "backend.keymaps.unsupportedKey",
+            serde_json::json!({ "key": raw }),
+            format!("Unsupported key: {raw}"),
+        ));
     }
     let mut mods = Vec::new();
     let mut primary = false;
@@ -91,15 +99,29 @@ fn stroke(source: &str, mac: bool) -> Result<String, String> {
             }
             "alt" | "option" => "Alt",
             "shift" => "Shift",
-            _ => return Err(crate::common::messages::failure("backend.keymaps.unsupportedModifier", serde_json::json!({ "modifier": part }), format!("Unsupported modifier: {part}"))),
+            _ => {
+                return Err(crate::common::messages::failure(
+                    "backend.keymaps.unsupportedModifier",
+                    serde_json::json!({ "modifier": part }),
+                    format!("Unsupported modifier: {part}"),
+                ))
+            }
         };
         if mods.contains(&modifier) {
-            return Err(crate::common::messages::failure("backend.keymaps.duplicateModifier", serde_json::json!({}), "Duplicate modifier".into()));
+            return Err(crate::common::messages::failure(
+                "backend.keymaps.duplicateModifier",
+                serde_json::json!({}),
+                "Duplicate modifier".into(),
+            ));
         }
         mods.push(modifier);
     }
     if primary && explicit {
-        return Err(crate::common::messages::failure("backend.keymaps.cmdOrCtrlConflict", serde_json::json!({}), "CmdOrCtrl cannot be combined with Ctrl or Cmd".into()));
+        return Err(crate::common::messages::failure(
+            "backend.keymaps.cmdOrCtrlConflict",
+            serde_json::json!({}),
+            "CmdOrCtrl cannot be combined with Ctrl or Cmd".into(),
+        ));
     }
     let mut result: Vec<_> = ["Ctrl", "Cmd", "Alt", "Shift"]
         .into_iter()

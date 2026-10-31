@@ -349,6 +349,8 @@ function mainFixture(t) {
     './services/runtime/useApplicationServices': { useApplicationServices: () => services },
     './services/startup/startupProgress': { startupProgress: Object.fromEntries(['begin', 'complete', 'update', 'fail'].map(method => [method, (...args) => reports.push([method, ...args])])) },
     './hooks/useStartupSplash': { useStartupSplash: ready => readiness.push(ready) },
+    './hooks/useWindowFrameClipping': { useWindowFrameClipping() {} },
+    '../common/utils/shortcuts': { isMacOS: () => false },
     './services/autoHideScrollbars': { installAutoHideScrollbars: () => () => {} },
     './components/layout/MainLayout': { MainLayout: () => null },
     '../features/git/store/useGitStore': { useGitStore: Object.assign(() => git, { getState: () => git }) },

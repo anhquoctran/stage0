@@ -116,7 +116,7 @@ export function PreferencesTabContainer({
 
   return (
     <div
-      className={`flex-1 overflow-y-auto rounded-sm ${currentTabId === 'ai-external-agents' ? 'px-5 py-4' : 'p-8'} bg-base flex flex-col`}
+      className={`flex-1 overflow-y-auto ${currentTabId === 'ai-external-agents' ? 'px-5 py-4' : 'p-8'} bg-base flex flex-col`}
     >
       {/* Header Description */}
       {isKnownTab && (
@@ -133,7 +133,7 @@ export function PreferencesTabContainer({
           <div className="w-16 h-16 bg-surface0/60 border border-surface1 flex items-center justify-center text-subtext0 mb-4 rounded-sm shadow-xs">
             <Cog className="w-8 h-8 text-subtext1" />
           </div>
-          <h3 className="text-base font-bold mb-1.5">{t('preferences.empty.title')}</h3>
+          <h3 className="text-base font-bold mb-1.5">{t('preferences.empty.title', { defaultValue: 'No preference selected' })}</h3>
           <p className="text-xs text-subtext0 max-w-sm mb-6 leading-relaxed">
             {t('preferences.empty.description')}
           </p>

@@ -73,7 +73,6 @@ const initialHistory = loadStoredNotifications();
 export const useNotificationStore = create<NotificationState>((set) => ({
   settings: initialSettings,
   notifications: initialHistory,
-  activeToasts: [],
   unreadCount: initialHistory.filter((n) => !n.isRead).length,
   isHistoryDrawerOpen: false,
 
@@ -131,19 +130,6 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     });
   },
 
-  showToast: (notification: AppNotification) => {
-    set((state) => {
-      if (state.activeToasts.some((toast) => toast.id === notification.id)) return state;
-      return { activeToasts: [...state.activeToasts, notification] };
-    });
-  },
-
-  dismissToast: (id: string) => {
-    set((state) => ({
-      activeToasts: state.activeToasts.filter((t) => t.id !== id),
-    }));
-  },
-
   markAsRead: (id: string) => {
     set((state) => {
       const updated = state.notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n));
@@ -170,7 +156,6 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     persistNotifications([]);
     set({
       notifications: [],
-      activeToasts: [],
       unreadCount: 0,
     });
   },

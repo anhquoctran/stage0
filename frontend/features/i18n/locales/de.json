@@ -152,7 +152,10 @@
     "disabled": "Deaktiviert",
     "confirm": "Bestätigen",
     "optional": "optional",
-    "apply": "Anwenden"
+    "apply": "Anwenden",
+    "open": "Offen",
+    "resolved": "Gelöst",
+    "closed": "Geschlossen"
   },
   "preferences": {
     "appearance": "Erscheinungsbild",
@@ -561,13 +564,13 @@
       "repo_overview": "Repository-Übersicht...",
       "new_mr": "Neues Virtual MR...",
       "fetch": "Fetch (alle und bereinigen)",
-      "pull": "Pull",
-      "pull_from": "Pull von...",
+      "pull": "Pullen",
+      "pull_from": "Pullen von...",
       "merge": "Upstream zusammenführen",
       "merge_from": "Zusammenführen von...",
-      "rebase": "Rebase",
-      "rebase_from": "Rebase von...",
-      "rebase_continue": "Fortfahren",
+      "rebase": "Rebasen",
+      "rebase_from": "Rebasen von...",
+      "rebase_continue": "Rebase fortfahren",
       "rebase_skip": "Commit überspringen",
       "rebase_abort": "Rebase abbrechen",
       "swap_branches": "Base und Compare tauschen",
@@ -582,7 +585,23 @@
       "shortcuts": "Tastenkombinationen",
       "keymaps": "Tastaturbelegung anpassen...",
       "open_webview_devtools": "Entwicklertools",
-      "release_notes": "Versionshinweise anzeigen"
+      "release_notes": "Versionshinweise anzeigen",
+      "next_conflict": "Nächste Konfliktdatei",
+      "close_tab": "MR-Tab / Entwurf schließen",
+      "tab_1": "Zu MR-Tab 1 wechseln",
+      "tab_2": "Zu MR-Tab 2 wechseln",
+      "tab_3": "Zu MR-Tab 3 wechseln",
+      "tab_4": "Zu MR-Tab 4 wechseln",
+      "tab_5": "Zu MR-Tab 5 wechseln",
+      "tab_6": "Zu MR-Tab 6 wechseln",
+      "tab_7": "Zu MR-Tab 7 wechseln",
+      "tab_8": "Zu MR-Tab 8 wechseln",
+      "tab_9": "Zu MR-Tab 9 wechseln",
+      "recent_1": "Zuletzt verwendetes Repository 1 öffnen",
+      "recent_2": "Zuletzt verwendetes Repository 2 öffnen",
+      "recent_3": "Zuletzt verwendetes Repository 3 öffnen",
+      "recent_4": "Zuletzt verwendetes Repository 4 öffnen",
+      "recent_5": "Zuletzt verwendetes Repository 5 öffnen"
     },
     "recent": {
       "emptyLabel": "Keine zuletzt verwendeten Repositories",
@@ -628,16 +647,16 @@
   },
   "notifications": {
     "categoryHeading": "Benachrichtigungskategorien",
-    "categoryDescription": "Wähle aus, welche Stage0-Ereignisse eine Benachrichtigung anzeigen dürfen. Stage0 legt Position und Schließen für jedes Ereignis fest.",
+    "categoryDescription": "Wähle die Ereignisse für Systembenachrichtigungen. Das Betriebssystem steuert Anzeige und Schließen.",
     "aiReviewTitle": "KI-Code-Review",
     "aiReviewDescription": "Wenn ein KI-Review oder eine erneute Prüfung abgeschlossen ist.",
     "gitSyncTitle": "Git-Überwachung und Synchronisierung",
     "gitSyncDescription": "Remote-Änderungen, neue Branches und Synchronisierungsereignisse.",
     "guardrailsTitle": "Sicherheitsvorkehrungen",
     "guardrailsDescription": "Befehle mit erhöhten Rechten, Zugriffssperren und Richtlinienverstöße.",
-    "previewTitle": "Benachrichtigungsvorschau",
+    "previewTitle": "Systembenachrichtigungen testen",
     "previewDescription": "Sende einen Test im Benachrichtigungsstil dieser Plattform. Er wird weder im Verlauf noch als ungelesen gezählt.",
-    "previewSent": "Testbenachrichtigung gesendet. Verlauf und Anzahl ungelesener Benachrichtigungen bleiben unverändert.",
+    "previewSent": "Testbenachrichtigung gesendet. Das Betriebssystem steuert, ob sie angezeigt wird.",
     "previewFailed": "Auf diesem System konnte keine Testbenachrichtigung angezeigt werden.",
     "testTooltip": "Testbenachrichtigung anzeigen, ohne sie zu speichern",
     "desktopOnly": "In der Desktop-App verfügbar",
@@ -661,7 +680,19 @@
     "toastView": "Anzeigen",
     "dismiss": "Verwerfen",
     "dismissLabel": "Benachrichtigung verwerfen",
-    "deliveryFailed": "Stage0-Benachrichtigung konnte nicht zugestellt werden."
+    "deliveryFailed": "Stage0-Benachrichtigung konnte nicht zugestellt werden.",
+    "permission": {
+      "title": "Systembenachrichtigungen",
+      "description": "Erhalte Stage0-Hinweise über dein Betriebssystem. Dieser Schritt ist optional.",
+      "granted": "Benachrichtigungen sind erlaubt. Das Betriebssystem steuert Position, Ton und Sichtbarkeit.",
+      "denied": "Benachrichtigungen sind blockiert. Du kannst Stage0 weiter nutzen; Ereignisse bleiben im Benachrichtigungsverlauf. Aktiviere Hinweise in den Systemeinstellungen.",
+      "prompt": "Erlaube Stage0, Benachrichtigungen zu senden. Du kannst auch ohne Erlaubnis fortfahren.",
+      "unsupported": "Native Benachrichtigungen sind nicht verfügbar. Verwende unter macOS/Windows eine installierte Stage0-App; prüfe unter Linux den Benachrichtigungsdienst der Desktopumgebung.",
+      "request": "Benachrichtigungen erlauben",
+      "settings": "Benachrichtigungseinstellungen öffnen",
+      "error": "Die Berechtigung konnte nicht gelesen oder geändert werden. Versuche es erneut oder öffne die Systemeinstellungen.",
+      "system_managed": "Diese Desktopumgebung verwaltet die Benachrichtigungsrechte. Prüfe die Systemeinstellungen, wenn keine Hinweise erscheinen."
+    }
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} hat ein MR-Review abgeschlossen",
@@ -2208,6 +2239,7 @@
       "openIn": "In {{name}} öffnen"
     },
     "repositoryLabels": {
+      "label": "Label",
       "updated": "Label aktualisiert: {{name}}",
       "created": "Label erstellt: {{name}}",
       "saveFailed": "Label konnte nicht gespeichert werden: {{error}}",
@@ -3334,7 +3366,10 @@
       "runtimeUnavailable": "Die Stage0-Benachrichtigungslaufzeit ist nicht verfügbar.",
       "queueUnavailable": "Die Stage0-Benachrichtigungswarteschlange ist nicht verfügbar.",
       "unsupportedPlatform": "Stage0-Benachrichtigungen werden auf dieser Plattform nicht unterstützt.",
-      "dispatchFailed": "Die Benachrichtigungsübermittlung ist fehlgeschlagen."
+      "dispatchFailed": "Die Benachrichtigungsübermittlung ist fehlgeschlagen.",
+      "permissionDenied": "Benachrichtigungen sind blockiert. Du kannst Stage0 weiter nutzen; Ereignisse bleiben im Benachrichtigungsverlauf. Aktiviere Hinweise in den Systemeinstellungen.",
+      "permissionRequired": "Erlaube Stage0, Benachrichtigungen zu senden. Du kannst auch ohne Erlaubnis fortfahren.",
+      "settingsFailed": "Die Berechtigung konnte nicht gelesen oder geändert werden. Versuche es erneut oder öffne die Systemeinstellungen."
     },
     "sandbox": {
       "dockerRunning": "Docker-Daemon läuft (Standard-Image: {{image}}).",

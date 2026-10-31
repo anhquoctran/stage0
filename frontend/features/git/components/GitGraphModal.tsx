@@ -74,7 +74,7 @@ export const GitGraphModal: React.FC<GitGraphModalProps> = ({ isOpen, repoPath, 
         role="dialog"
         aria-modal="true"
         aria-labelledby="git-graph-title"
-        className="flex h-[82vh] max-h-[calc(100vh-5rem)] w-[96vw] max-w-[1600px] flex-col overflow-hidden border border-surface0 bg-mantle shadow-2xl animate-in zoom-in-95 duration-150"
+        className="flex h-[82vh] max-h-[calc(100vh-5rem)] w-[96vw] max-w-[1600px] flex-col overflow-hidden border border-surface0 bg-mantle shadow-2xl animate-in zoom-in-95 duration-150 rounded-sm"
       >
         <GitGraphHeader
           branch={graph?.branch}

@@ -21,7 +21,13 @@ pub(super) async fn prepare(
     }
     let mut initial = initial.clone();
     let mut limit = {
-        let context = context.lock().map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?;
+        let context = context.lock().map_err(|_| {
+            crate::common::messages::failure(
+                "backend.review.contextUnavailable",
+                serde_json::json!({}),
+                "Review context unavailable".into(),
+            )
+        })?;
         if context.snapshot.changed_files.is_empty() {
             return Ok((adapter.initial_history(&initial.to_string()), None));
         }
@@ -36,11 +42,23 @@ pub(super) async fn prepare(
         let prepared = tauri::async_runtime::spawn_blocking(move || {
             worker_context
                 .lock()
-                .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
+                .map_err(|_| {
+                    crate::common::messages::failure(
+                        "backend.review.contextUnavailable",
+                        serde_json::json!({}),
+                        "Review context unavailable".into(),
+                    )
+                })?
                 .prepare_diff_batch(0, 0, limit, true)
         })
         .await
-        .map_err(|_| crate::common::messages::failure("backend.review.initialDiffsPrepareFailed", serde_json::json!({}), "Could not prepare initial review diffs".into()))?;
+        .map_err(|_| {
+            crate::common::messages::failure(
+                "backend.review.initialDiffsPrepareFailed",
+                serde_json::json!({}),
+                "Could not prepare initial review diffs".into(),
+            )
+        })?;
         let batch = match prepared {
             Ok(batch) => batch,
             Err(error) => {
@@ -68,7 +86,13 @@ fn authorize(
 ) -> Result<(Vec<Value>, Option<PreparedDiffBatch>), String> {
     context
         .lock()
-        .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
+        .map_err(|_| {
+            crate::common::messages::failure(
+                "backend.review.contextUnavailable",
+                serde_json::json!({}),
+                "Review context unavailable".into(),
+            )
+        })?
         .authorize_diff_batch(&batch, limit)?;
     Ok((history, Some(batch)))
 }
@@ -81,7 +105,13 @@ pub(super) fn delivered(
 ) -> Result<(), String> {
     let segments = batch.value["files"].as_array().map_or(0, Vec::len);
     let remaining = !batch.value["next"].is_null();
-    let mut ctx = context.lock().map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?;
+    let mut ctx = context.lock().map_err(|_| {
+        crate::common::messages::failure(
+            "backend.review.contextUnavailable",
+            serde_json::json!({}),
+            "Review context unavailable".into(),
+        )
+    })?;
     ctx.commit_diff_batch(batch);
     run.context_bytes = ctx.bytes;
     run.inspected_files = ctx.inspected.iter().cloned().collect();

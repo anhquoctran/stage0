@@ -37,7 +37,7 @@ export const TopBarPullButton: React.FC = () => {
         disabled={isSyncing}
         onClick={() => runSync('pull')}
         className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[54px] rounded-sm"
-        title={title('pull', 'Pull')}
+        title={title('pull', translateUiText('menu.commands.pull'))}
       >
         <Download className="w-5 h-5 text-primary shrink-0 transition-colors" />
         <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">

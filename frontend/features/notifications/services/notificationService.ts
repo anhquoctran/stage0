@@ -1,3 +1,4 @@
+import { openUrl } from '../../../common/utils/openUrl';
 import type { Unsubscribe } from '../../../common/services/ipc/contracts/Unsubscribe';
 import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 
@@ -10,6 +11,7 @@ import { usePreferencesStore } from '../../preferences/store/usePreferencesStore
 import i18n from '../../i18n/i18n';
 
 let isListening = false;
+let generation = 0;
 
 let unlistenFns: Unsubscribe[] = [];
 
@@ -20,9 +22,11 @@ export const notificationService = {
   async init(): Promise<void> {
     if (isListening || !getApplicationServices().platform.capabilities.notifications) return;
     isListening = true;
+    const current = ++generation;
 
     try {
       const stopNotifications = await getApplicationServices().platform.events.subscribe<Record<string, unknown>>('app-notification', (event) => {
+        if (current !== generation) return;
         const payload = event;
         const level = (payload.level as AppNotification['level']) || 'info';
         const notification: AppNotification = {
@@ -47,23 +51,27 @@ export const notificationService = {
                 : 6000,
         };
 
-        // Main windows keep the shared unread history; the notification host
-        // receives a separate event for its transient toast queue.
+        // Every window receives the same history item, even when OS delivery is denied.
         useNotificationStore.getState().addNotification(notification);
       });
+      if (current !== generation) { stopNotifications(); return; }
+      unlistenFns = [stopNotifications];
       try {
         const stopActions = await getApplicationServices().platform.events.subscribe<{
           notificationId?: string;
           action: AppNotificationAction;
         }>('notification-action', (event) => {
-          this.handleAction(event.action, event.notificationId);
+          if (current === generation) this.handleAction(event.action, event.notificationId);
         });
+        if (current !== generation) { stopActions(); return; }
         unlistenFns = [stopNotifications, stopActions];
+        await getApplicationServices().notifications.setReady({ ready: true, generation: current });
       } catch (error) {
-        stopNotifications();
+        if (current === generation) { unlistenFns.forEach(stop => stop()); unlistenFns = []; }
         throw error;
       }
     } catch (err) {
+      if (current !== generation) return;
       isListening = false;
       console.warn('[NotificationService] Failed to listen to backend notifications:', err);
     }
@@ -73,15 +81,16 @@ export const notificationService = {
    * Cleans up listeners on app unmount
    */
   destroy(): void {
+    generation++;
+    if (isListening) void getApplicationServices().notifications.setReady({ ready: false, generation }).catch(error => console.warn('Could not release notification action routing:', error));
     unlistenFns.forEach((unlisten) => unlisten());
     unlistenFns = [];
     isListening = false;
   },
 
   /**
-   * Dispatches a Stage0 notification using the current platform's presentation:
-   * - Custom Stage0 toast window on Windows and macOS
-   * - Freedesktop notification service on Linux, which chooses placement
+   * Dispatches through the native OS notification center without prompting.
+   * OS authorization is requested explicitly in onboarding or Preferences.
    * - Stores event in notification history for auditing
    * - Guaranteed never to throw an unhandled exception
    */
@@ -155,8 +164,12 @@ export const notificationService = {
           });
           delivery = 'sent';
         } catch (err) {
-          delivery = 'failed';
-          deliveryError = i18n.t('notifications.deliveryFailed');
+          const code = (err as { code?: string })?.code;
+          delivery = code === 'backend.notifications.permissionDenied' ? 'denied'
+            : code === 'backend.notifications.permissionRequired' ? 'permission_required'
+            : code === 'backend.notifications.unsupportedPlatform' ? 'unsupported' : 'failed';
+          deliveryError = delivery === 'denied' || delivery === 'permission_required'
+            ? i18n.t(`notifications.permission.${delivery === 'denied' ? 'denied' : 'prompt'}`) : i18n.t('notifications.deliveryFailed');
           console.warn('[NotificationService] Stage0 notification delivery failed:', err);
         }
       }
@@ -197,16 +210,18 @@ export const notificationService = {
   handleAction(action: AppNotificationAction, notificationId?: string): void {
     if (notificationId) {
       useNotificationStore.getState().markAsRead(notificationId);
-      useNotificationStore.getState().dismissToast(notificationId);
     }
 
     switch (action.actionType) {
+      case 'show_notifications':
+        useNotificationStore.getState().setHistoryDrawerOpen(true);
+        break;
       case 'open_preferences':
         usePreferencesStore.getState().openPreferences(action.payload || undefined);
         break;
       case 'open_url':
         if (action.payload) {
-          window.open(action.payload, '_blank');
+          void openUrl(action.payload);
         }
         break;
       default:

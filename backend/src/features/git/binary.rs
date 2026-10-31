@@ -50,10 +50,7 @@ pub fn test_git_version(path: &str) -> Result<String, String> {
         return Err(crate::common::messages::failure(
             "backend.git.executableExitError",
             serde_json::json!({ "code": output.status.code() }),
-            format!(
-                "Command exited with error code {:?}",
-                output.status.code()
-            ),
+            format!("Command exited with error code {:?}", output.status.code()),
         ));
     }
 

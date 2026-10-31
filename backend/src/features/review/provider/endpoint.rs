@@ -43,8 +43,13 @@ pub fn endpoint(config: &ReviewRequest) -> Result<String, String> {
             "backend.review.apiKeyAuthRequired",
         ));
     }
-    let url =
-        reqwest::Url::parse(config.base_url.trim()).map_err(|_| crate::common::messages::failure("backend.review.providerBaseUrlInvalid", serde_json::json!({}), "Invalid provider base URL".into()))?;
+    let url = reqwest::Url::parse(config.base_url.trim()).map_err(|_| {
+        crate::common::messages::failure(
+            "backend.review.providerBaseUrlInvalid",
+            serde_json::json!({}),
+            "Invalid provider base URL".into(),
+        )
+    })?;
     let local = matches!(
         url.host_str(),
         Some("localhost" | "127.0.0.1" | "[::1]" | "::1")

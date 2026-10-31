@@ -1,33 +1,39 @@
-import { Sparkles } from '../../../common/components/icons/Sparkles';
-import { Bot } from '../../../common/components/icons/Bot';
-import { Globe } from '../../../common/components/icons/Globe';
-import { Zap } from '../../../common/components/icons/Zap';
-import { HardDrive } from '../../../common/components/icons/HardDrive';
 import { Cog } from '../../../common/components/icons/Cog';
-import { SquareCode } from '../../../common/components/icons/SquareCode';
+import {
+  OpenAiIcon,
+  DeepSeekIcon,
+  AnthropicIcon,
+  GeminiIcon,
+  XaiGrokIcon,
+  QwenIcon,
+  KimiIcon,
+  ZaiIcon,
+  OpenCodeIcon,
+  OllamaIcon,
+} from '../components/icons';
 
 export const getProviderIcon = (providerId: string) => {
   switch (providerId) {
     case 'openai':
-      return Sparkles;
-    case 'anthropic':
-      return Bot;
-    case 'gemini':
-      return Globe;
-    case 'xai_grok':
-      return Zap;
+      return OpenAiIcon;
     case 'deepseek':
-      return Sparkles;
+      return DeepSeekIcon;
+    case 'anthropic':
+      return AnthropicIcon;
+    case 'gemini':
+      return GeminiIcon;
+    case 'xai_grok':
+      return XaiGrokIcon;
     case 'qwen':
-      return Bot;
+      return QwenIcon;
     case 'kimi':
-      return Globe;
+      return KimiIcon;
     case 'zai':
-      return Zap;
+      return ZaiIcon;
     case 'opencode':
-      return SquareCode;
+      return OpenCodeIcon;
     case 'ollama':
-      return HardDrive;
+      return OllamaIcon;
     case 'custom':
     default:
       return Cog;

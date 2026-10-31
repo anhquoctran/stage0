@@ -53,7 +53,8 @@ export const TopBarTitleRow: React.FC<{
       data-tauri-drag-region={linux ? false : true}
       onMouseDown={titleBarMouseDown(profile, appServices.application, isMac)}
       className={clsx(
-        'h-8.5 bg-crust border-b border-surface0/70 rounded-none items-center shrink-0 select-none transition-all relative z-[100]',
+        'h-8.5 bg-crust border-b border-surface0/70 items-center shrink-0 select-none transition-all relative z-[100]',
+        isMac && !profile.nativeFrame ? 'rounded-t-sm' : 'rounded-none',
         isMac
           ? 'grid grid-cols-[5rem_minmax(0,1fr)_5rem] px-3'
           : 'flex justify-between pl-2.5 pr-0'

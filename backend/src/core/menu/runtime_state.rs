@@ -189,7 +189,9 @@ pub fn update_application_menu_state(
 
 pub fn set_application_menu_language(app: &AppHandle, language: &str) -> Result<(), String> {
     if !crate::features::preferences::is_supported_app_language(language) {
-        return Err(crate::common::messages::code("backend.preferences.unsupportedLanguage"));
+        return Err(crate::common::messages::code(
+            "backend.preferences.unsupportedLanguage",
+        ));
     }
     if let Some(state) = app.try_state::<MenuRuntimeState>() {
         *state

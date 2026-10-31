@@ -13,29 +13,48 @@ impl NativeMenuKeymap {
         labels: HashMap<String, String>,
     ) -> Result<Self, String> {
         if accelerators.len() > 256 || labels.len() > 256 {
-            return Err(crate::common::messages::failure("backend.menu.keymapLimitExceeded", serde_json::json!({}), "Native menu keymap exceeds its entry limit".into()));
+            return Err(crate::common::messages::failure(
+                "backend.menu.keymapLimitExceeded",
+                serde_json::json!({}),
+                "Native menu keymap exceeds its entry limit".into(),
+            ));
         }
         for (id, key) in &accelerators {
-            let command = definition()
-                .commands
-                .get(id)
-                .ok_or_else(|| crate::common::messages::failure("backend.menu.unknownCommand", serde_json::json!({}), "Unknown native menu command".into()))?;
+            let command = definition().commands.get(id).ok_or_else(|| {
+                crate::common::messages::failure(
+                    "backend.menu.unknownCommand",
+                    serde_json::json!({}),
+                    "Unknown native menu command".into(),
+                )
+            })?;
             if command.native.is_some()
                 || !key.contains('+')
                 || key.contains(' ')
                 || key.len() > 128
             {
-                return Err(crate::common::messages::failure("backend.menu.unsupportedAccelerator", serde_json::json!({}), "Unsupported native menu accelerator".into()));
+                return Err(crate::common::messages::failure(
+                    "backend.menu.unsupportedAccelerator",
+                    serde_json::json!({}),
+                    "Unsupported native menu accelerator".into(),
+                ));
             }
             // The frontend uses a bounded portable syntax; validate it before handing it to AppKit.
             crate::core::keymaps::validate_native_shortcut(key)?;
         }
         for (id, text) in &labels {
             if !definition().commands.contains_key(id) {
-                return Err(crate::common::messages::failure("backend.menu.unknownCommandLabel", serde_json::json!({}), "Unknown native menu command label".into()));
+                return Err(crate::common::messages::failure(
+                    "backend.menu.unknownCommandLabel",
+                    serde_json::json!({}),
+                    "Unknown native menu command label".into(),
+                ));
             }
             if text.len() > 256 || text.chars().any(char::is_control) {
-                return Err(crate::common::messages::failure("backend.menu.invalidShortcutLabel", serde_json::json!({}), "Invalid native menu shortcut label".into()));
+                return Err(crate::common::messages::failure(
+                    "backend.menu.invalidShortcutLabel",
+                    serde_json::json!({}),
+                    "Invalid native menu shortcut label".into(),
+                ));
             }
         }
         Ok(Self {

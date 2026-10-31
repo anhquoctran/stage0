@@ -3,6 +3,10 @@ use std::{collections::HashMap, sync::OnceLock};
 
 fn source(code: &str) -> &'static str {
     match code {
+        "hi" => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../frontend/features/i18n/locales/hi.json"
+        )),
         "vi" => include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/../frontend/features/i18n/locales/vi.json"
@@ -67,7 +71,7 @@ fn catalogs() -> &'static HashMap<&'static str, Value> {
     CATALOGS.get_or_init(|| {
         [
             "en", "vi", "ja", "ko", "zh-Hans", "es", "pt-BR", "de", "fr", "ru", "zh-Hant", "it",
-            "pt-PT", "ar",
+            "pt-PT", "ar", "hi",
         ]
         .into_iter()
         .map(|code| {

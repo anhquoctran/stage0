@@ -35,7 +35,7 @@ export function VirtualMrListItem({
             {session.title}
           </span>
           <span
-            className={`inline-flex shrink-0 items-center gap-1 border px-1.5 py-0.5 text-[10px] font-semibold select-none ${
+            className={`inline-flex shrink-0 whitespace-nowrap rounded-sm items-center gap-1 border px-1.5 py-0.5 text-[10px] font-semibold select-none ${
               session.status === 'closed'
                 ? 'border-surface1 bg-surface0 text-subtext1'
                 : session.status === 'resolved'

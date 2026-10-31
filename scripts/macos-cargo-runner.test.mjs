@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
@@ -80,6 +81,11 @@ test('the dev bundle has a valid app signing identity without modifying the Carg
   const build = spawnSync('/usr/bin/clang', [source, '-o', executable], { encoding: 'utf8' });
   assert.equal(build.status, 0, build.stderr);
   const original = fs.readFileSync(executable);
+  const bundle = path.join(context.directory, 'Stage0-dev.app');
+  const resources = path.join(bundle, 'Contents', 'Resources');
+  fs.mkdirSync(resources, { recursive: true });
+  fs.writeFileSync(path.join(resources, 'AppIcon.icns'), 'stale icon');
+  fs.writeFileSync(path.join(resources, 'AppIcon-0000000000000000.icns'), 'stale version');
 
   const result = spawnSync(process.execPath, [
     fileURLToPath(new URL('./macos-app-runner.mjs', import.meta.url)),
@@ -90,7 +96,13 @@ test('the dev bundle has a valid app signing identity without modifying the Carg
   assert.equal(result.stdout.trim(), 'app argument with spaces');
   assert.deepEqual(fs.readFileSync(executable), original, 'signing must not change Cargo output');
 
-  const bundle = path.join(context.directory, 'Stage0-dev.app');
+  const icon = fs.readFileSync(fileURLToPath(new URL('../backend/icons/icon.icns', import.meta.url)));
+  const iconName = `AppIcon-${createHash('sha256').update(icon).digest('hex').slice(0, 16)}.icns`;
+  const plist = fs.readFileSync(path.join(bundle, 'Contents', 'Info.plist'), 'utf8');
+  assert.ok(plist.includes(`<key>CFBundleIconFile</key><string>${iconName}</string>`));
+  assert.deepEqual(fs.readFileSync(path.join(resources, iconName)), icon, 'the native bundle must use the current logo');
+  assert.equal(fs.existsSync(path.join(resources, 'AppIcon.icns')), false);
+  assert.equal(fs.existsSync(path.join(resources, 'AppIcon-0000000000000000.icns')), false);
   const bundleExecutable = path.join(bundle, 'Contents', 'MacOS', path.basename(executable));
   assert.notEqual(fs.statSync(executable).ino, fs.statSync(bundleExecutable).ino);
   const verify = spawnSync('/usr/bin/codesign', ['--verify', '--strict', bundle], { encoding: 'utf8' });

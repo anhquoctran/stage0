@@ -26,13 +26,21 @@ pub(super) async fn dispatch_action(
     Ok(match call.name.as_str() {
         "update_mr_description" => {
             if state.description_updated {
-                Err(crate::common::messages::code("backend.review.mrDescriptionAlreadyGenerated"))
+                Err(crate::common::messages::code(
+                    "backend.review.mrDescriptionAlreadyGenerated",
+                ))
             } else {
                 let description = security::redact(call.arguments["description"].as_str().unwrap())
                     .trim()
                     .to_string();
                 let complete = {
-                    let ctx = context.lock().map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?;
+                    let ctx = context.lock().map_err(|_| {
+                        crate::common::messages::failure(
+                            "backend.review.contextUnavailable",
+                            serde_json::json!({}),
+                            "Review context unavailable".into(),
+                        )
+                    })?;
                     ctx.snapshot
                         .changed_files
                         .iter()
@@ -63,15 +71,23 @@ pub(super) async fn dispatch_action(
             }
         }
         "create_review_discussion" => {
-            let finding: ReviewFinding = serde_json::from_value(call.arguments.clone())
-                .map_err(|_| crate::common::messages::failure("backend.review.inlineFindingMalformed", serde_json::json!({}), "Malformed inline review finding".into()))?;
+            let finding: ReviewFinding =
+                serde_json::from_value(call.arguments.clone()).map_err(|_| {
+                    crate::common::messages::failure(
+                        "backend.review.inlineFindingMalformed",
+                        serde_json::json!({}),
+                        "Malformed inline review finding".into(),
+                    )
+                })?;
             match validate_findings(context, vec![finding.clone()]).await {
                 Ok(()) => {
                     let mut candidate = state.pending_findings.clone();
                     candidate.push(finding);
                     let candidate = deduplicate(candidate);
                     if candidate.len() > 50 {
-                        Err(crate::common::messages::code("backend.review.tooManyFindings"))
+                        Err(crate::common::messages::code(
+                            "backend.review.tooManyFindings",
+                        ))
                     } else {
                         state.pending_findings = candidate;
                         run.findings = state.pending_findings.clone();
@@ -213,7 +229,9 @@ pub(super) async fn dispatch_action(
                                 }
                             }
                         } else {
-                            Err(crate::common::messages::code("backend.review.noCommentToResolve"))
+                            Err(crate::common::messages::code(
+                                "backend.review.noCommentToResolve",
+                            ))
                         }
                     }
                 }
@@ -226,11 +244,23 @@ pub(super) async fn dispatch_action(
             tauri::async_runtime::spawn_blocking(move || {
                 context
                     .lock()
-                    .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
+                    .map_err(|_| {
+                        crate::common::messages::failure(
+                            "backend.review.contextUnavailable",
+                            serde_json::json!({}),
+                            "Review context unavailable".into(),
+                        )
+                    })?
                     .execute(&name, &args)
             })
             .await
-            .map_err(|_| crate::common::messages::failure("backend.review.reviewToolTaskFailed", serde_json::json!({}), "Review tool task failed".into()))?
+            .map_err(|_| {
+                crate::common::messages::failure(
+                    "backend.review.reviewToolTaskFailed",
+                    serde_json::json!({}),
+                    "Review tool task failed".into(),
+                )
+            })?
         }
     })
 }

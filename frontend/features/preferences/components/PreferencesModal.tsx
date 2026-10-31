@@ -116,7 +116,7 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({ standalone =
     <div className={standalone ? 'flex min-h-0 flex-1 flex-col select-none' : 'fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[var(--backdrop-modal)] backdrop-blur-xs animate-in fade-in duration-150 select-none'}>
       <div
         role="dialog" aria-modal={!standalone} aria-label={t('menu.commands.preferences').replace(/[.…]+$/u, '')}
-        className={standalone ? 'relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-mantle text-text' : 'relative w-full max-w-5xl h-[760px] max-h-[calc(100vh-2rem)] bg-mantle border border-surface0 shadow-2xl flex flex-col overflow-hidden text-text rounded-sm'}
+        className={standalone ? 'relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-base text-text rounded-sm' : 'relative w-full max-w-5xl h-[760px] max-h-[calc(100vh-2rem)] bg-base border border-surface0/60 shadow-2xl flex flex-col overflow-hidden text-text rounded-sm'}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Window Bar */}

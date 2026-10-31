@@ -21,25 +21,47 @@ pub(super) fn strict_jsonc_options() -> ParseOptions {
 
 pub(super) fn parse_and_validate(content: &str) -> Result<Value, String> {
     if content.len() > MAX_PREFERENCES_BYTES {
-        return Err(crate::common::messages::failure("backend.preferences.fileTooLarge", serde_json::json!({}), "Preferences file is too large (maximum 2 MiB)".into()));
+        return Err(crate::common::messages::failure(
+            "backend.preferences.fileTooLarge",
+            serde_json::json!({}),
+            "Preferences file is too large (maximum 2 MiB)".into(),
+        ));
     }
     let value: Value = parse_to_serde_value(content, &strict_jsonc_options())
         .map_err(|error| format_parse_error(&error))?;
     if !value.is_object() {
-        return Err(crate::common::messages::failure("backend.preferences.mustBeObject", serde_json::json!({}), "Preferences JSONC must contain a top-level object".into()));
+        return Err(crate::common::messages::failure(
+            "backend.preferences.mustBeObject",
+            serde_json::json!({}),
+            "Preferences JSONC must contain a top-level object".into(),
+        ));
     }
     if depth(&value, 0) > MAX_JSON_DEPTH {
-        return Err(crate::common::messages::failure("backend.preferences.nestingDepthExceeded", serde_json::json!({}), "Preferences JSONC exceeds the maximum nesting depth of 64".into()));
+        return Err(crate::common::messages::failure(
+            "backend.preferences.nestingDepthExceeded",
+            serde_json::json!({}),
+            "Preferences JSONC exceeds the maximum nesting depth of 64".into(),
+        ));
     }
     let version = value
         .get("schemaVersion")
         .and_then(Value::as_u64)
-        .ok_or_else(|| crate::common::messages::failure("backend.preferences.schemaVersionRequired", serde_json::json!({}), "Preferences must include an integer schemaVersion".into()))?;
+        .ok_or_else(|| {
+            crate::common::messages::failure(
+                "backend.preferences.schemaVersionRequired",
+                serde_json::json!({}),
+                "Preferences must include an integer schemaVersion".into(),
+            )
+        })?;
     if version > SUPPORTED_SCHEMA_VERSION {
         return Err(crate::common::messages::failure("backend.preferences.schemaVersionNewer", serde_json::json!({ "version": version }), format!("Preferences schema version {version} is newer than this Stage0 build supports. The file was left unchanged.")));
     }
     if version == 0 {
-        return Err(crate::common::messages::failure("backend.preferences.schemaVersionMin", serde_json::json!({}), "Preferences schemaVersion must be at least 1".into()));
+        return Err(crate::common::messages::failure(
+            "backend.preferences.schemaVersionMin",
+            serde_json::json!({}),
+            "Preferences schemaVersion must be at least 1".into(),
+        ));
     }
     for key in [
         "general",
@@ -51,7 +73,11 @@ pub(super) fn parse_and_validate(content: &str) -> Result<Value, String> {
         "notifications",
     ] {
         if value.get(key).is_none() {
-            return Err(crate::common::messages::failure("backend.preferences.missingRequiredField", serde_json::json!({ "field": key }), format!("Preferences are missing required field '{key}'")));
+            return Err(crate::common::messages::failure(
+                "backend.preferences.missingRequiredField",
+                serde_json::json!({ "field": key }),
+                format!("Preferences are missing required field '{key}'"),
+            ));
         }
     }
     validate_schema(&value)?;

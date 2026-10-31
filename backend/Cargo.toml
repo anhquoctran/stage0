@@ -43,6 +43,8 @@ bzip2 = "0.6"
 tauri-plugin-updater = "2.14"
 
 [target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.62", features = ["UI_Notifications", "Data_Xml_Dom", "Foundation"] }
+tauri-winrt-notification = "0.8"
 keyring = { version = "3", features = ["windows-native"] }
 windows-sys = {
     version = "0.61",
@@ -59,12 +61,14 @@ windows-sys = {
 }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+block2 = "0.6"
+objc2-user-notifications = "0.3"
 keyring = { version = "3", features = ["apple-native"] }
 core-foundation = "0.10"
 security-framework-sys = "2"
 objc2 = "0.6"
 objc2-app-kit = { version = "0.3", default-features = false, features = ["NSMenu", "NSMenuItem", "NSApplication"] }
-objc2-foundation = { version = "0.3", default-features = false, features = ["NSString", "NSObject"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["NSString", "NSObject", "NSBundle", "NSDictionary", "NSArray", "NSSet", "NSError"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = "0.18"

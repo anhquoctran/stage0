@@ -18,8 +18,13 @@ pub fn open_system_browser(url: &str) -> Result<(), String> {
             &format!("Start-Process '{}'", url.replace('\'', "''")),
         ]);
         cmd.creation_flags(CREATE_NO_WINDOW);
-        cmd.spawn()
-            .map_err(|e| crate::common::messages::failure("backend.ai.launchBrowserFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to launch system browser on Windows: {}", e)))?;
+        cmd.spawn().map_err(|e| {
+            crate::common::messages::failure(
+                "backend.ai.launchBrowserFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Failed to launch system browser on Windows: {}", e),
+            )
+        })?;
         Ok(())
     }
     #[cfg(target_os = "macos")]
@@ -27,7 +32,13 @@ pub fn open_system_browser(url: &str) -> Result<(), String> {
         std::process::Command::new("open")
             .arg(url)
             .spawn()
-            .map_err(|e| crate::common::messages::failure("backend.ai.launchBrowserFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to launch system browser on macOS: {}", e)))?;
+            .map_err(|e| {
+                crate::common::messages::failure(
+                    "backend.ai.launchBrowserFailed",
+                    serde_json::json!({ "error": e.to_string() }),
+                    format!("Failed to launch system browser on macOS: {}", e),
+                )
+            })?;
         Ok(())
     }
     #[cfg(target_os = "linux")]
@@ -35,7 +46,13 @@ pub fn open_system_browser(url: &str) -> Result<(), String> {
         std::process::Command::new("xdg-open")
             .arg(url)
             .spawn()
-            .map_err(|e| crate::common::messages::failure("backend.ai.launchBrowserFailed", serde_json::json!({ "error": e.to_string() }), format!("Failed to launch system browser on Linux: {}", e)))?;
+            .map_err(|e| {
+                crate::common::messages::failure(
+                    "backend.ai.launchBrowserFailed",
+                    serde_json::json!({ "error": e.to_string() }),
+                    format!("Failed to launch system browser on Linux: {}", e),
+                )
+            })?;
         Ok(())
     }
 }

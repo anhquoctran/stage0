@@ -16,7 +16,13 @@ pub async fn get_available_sandboxes(app: AppHandle) -> Result<Vec<SandboxAdapte
             Ok(manager.list_available_adapters())
         })
         .await
-        .map_err(|error| crate::common::messages::failure("backend.sandbox.taskExecutionFailed", serde_json::json!({ "error": error.to_string() }), format!("Task execution failed: {}", error)))?
+        .map_err(|error| {
+            crate::common::messages::failure(
+                "backend.sandbox.taskExecutionFailed",
+                serde_json::json!({ "error": error.to_string() }),
+                format!("Task execution failed: {}", error),
+            )
+        })?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("sandbox", error))
@@ -69,7 +75,13 @@ pub async fn create_sandbox_instance(
             manager.create_instance(&repo_path, &base, &compare)
         })
         .await
-        .map_err(|error| crate::common::messages::failure("backend.sandbox.taskExecutionFailed", serde_json::json!({ "error": error.to_string() }), format!("Task execution failed: {}", error)))?
+        .map_err(|error| {
+            crate::common::messages::failure(
+                "backend.sandbox.taskExecutionFailed",
+                serde_json::json!({ "error": error.to_string() }),
+                format!("Task execution failed: {}", error),
+            )
+        })?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("sandbox", error))
@@ -83,7 +95,13 @@ pub async fn destroy_sandbox_instance(app: AppHandle, instance_id: String) -> Re
             manager.destroy_instance(&instance_id)
         })
         .await
-        .map_err(|error| crate::common::messages::failure("backend.sandbox.taskExecutionFailed", serde_json::json!({ "error": error.to_string() }), format!("Task execution failed: {}", error)))?
+        .map_err(|error| {
+            crate::common::messages::failure(
+                "backend.sandbox.taskExecutionFailed",
+                serde_json::json!({ "error": error.to_string() }),
+                format!("Task execution failed: {}", error),
+            )
+        })?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("sandbox", error))
@@ -177,7 +195,13 @@ pub async fn sync_active_sandbox(
             manager.sync_instance(&instance_id, &repo_path)
         })
         .await
-        .map_err(|e| crate::common::messages::failure("backend.sandbox.taskExecutionFailed", serde_json::json!({ "error": e.to_string() }), format!("Task execution failed: {}", e)))?
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.sandbox.taskExecutionFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Task execution failed: {}", e),
+            )
+        })?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("sandbox", error))
@@ -210,7 +234,13 @@ pub async fn dispatch_sandbox_tool(
             manager.dispatch_tool(&instance_id, &tool_name, arguments)
         })
         .await
-        .map_err(|e| crate::common::messages::failure("backend.sandbox.taskExecutionFailed", serde_json::json!({ "error": e.to_string() }), format!("Task execution failed: {}", e)))?
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.sandbox.taskExecutionFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Task execution failed: {}", e),
+            )
+        })?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("sandbox", error))

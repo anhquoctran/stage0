@@ -21,7 +21,9 @@ const DOCKER_READ_TIMEOUT: Duration = Duration::from_secs(120);
 
 fn normalize_tool_file_path(file_path: &str) -> Result<String, String> {
     if file_path.len() > 4096 {
-        return Err(crate::common::messages::code("backend.sandbox.filePathTooLong"));
+        return Err(crate::common::messages::code(
+            "backend.sandbox.filePathTooLong",
+        ));
     }
     let normalized = file_path.replace('\\', "/");
     let components = normalized.split('/').collect::<Vec<_>>();
@@ -33,7 +35,9 @@ fn normalize_tool_file_path(file_path: &str) -> Result<String, String> {
             .iter()
             .any(|part| part.is_empty() || *part == "." || *part == ".." || part.contains(':'))
     {
-        return Err(crate::common::messages::code("backend.sandbox.filePathNotRelative"));
+        return Err(crate::common::messages::code(
+            "backend.sandbox.filePathNotRelative",
+        ));
     }
 
     Ok(components.join("/"))
@@ -52,15 +56,21 @@ fn read_docker_file_range(
     resolve.args(["exec", cid, "readlink", "-f", &requested_path]);
     let resolved = run_bounded_command(&mut resolve, 4096, 16 * 1024, Duration::from_secs(5))?;
     if !resolved.status.success() || resolved.output_truncated {
-        return Err(crate::common::messages::code("backend.sandbox.fileNotFound"));
+        return Err(crate::common::messages::code(
+            "backend.sandbox.fileNotFound",
+        ));
     }
 
     let canonical_path = String::from_utf8_lossy(&resolved.stdout).trim().to_string();
     let Some(canonical_relative_path) = canonical_path.strip_prefix("/workspace/") else {
-        return Err(crate::common::messages::code("backend.sandbox.filePathOutsideWorkspace"));
+        return Err(crate::common::messages::code(
+            "backend.sandbox.filePathOutsideWorkspace",
+        ));
     };
     if canonical_relative_path.is_empty() {
-        return Err(crate::common::messages::code("backend.sandbox.fileOutsideWorkspace"));
+        return Err(crate::common::messages::code(
+            "backend.sandbox.fileOutsideWorkspace",
+        ));
     }
     manager
         .guardrails()
@@ -86,7 +96,9 @@ fn read_docker_file_range(
         DOCKER_READ_TIMEOUT,
     )?;
     if !output.status.success() && !output.output_truncated {
-        return Err(crate::common::messages::code("backend.sandbox.dockerFileNotFound"));
+        return Err(crate::common::messages::code(
+            "backend.sandbox.dockerFileNotFound",
+        ));
     }
 
     read_file_range(
@@ -118,9 +130,13 @@ fn read_file_range<R: BufRead>(
     let mut scanned_bytes = 0usize;
 
     loop {
-        let available = reader
-            .fill_buf()
-            .map_err(|error| crate::common::messages::failure("backend.sandbox.readFileRangeFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to read file range: {}", error)))?;
+        let available = reader.fill_buf().map_err(|error| {
+            crate::common::messages::failure(
+                "backend.sandbox.readFileRangeFailed",
+                serde_json::json!({ "error": error.to_string() }),
+                format!("Failed to read file range: {}", error),
+            )
+        })?;
         if available.is_empty() {
             if current_line_has_bytes {
                 completed_lines += 1;
@@ -140,7 +156,9 @@ fn read_file_range<R: BufRead>(
 
         if scanned_bytes >= MAX_TOOL_FILE_SCAN_BYTES {
             if line_number < end_line {
-                return Err(crate::common::messages::code("backend.sandbox.fileRangeTooLarge"));
+                return Err(crate::common::messages::code(
+                    "backend.sandbox.fileRangeTooLarge",
+                ));
             }
             output_truncated = true;
             let mut content = String::from_utf8_lossy(&output).into_owned();
@@ -199,9 +217,13 @@ fn read_file_range<R: BufRead>(
             line_started = false;
 
             if line_number > end_line {
-                let more = reader
-                    .fill_buf()
-                    .map_err(|error| crate::common::messages::failure("backend.sandbox.inspectFileRangeFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to inspect file range: {}", error)))?;
+                let more = reader.fill_buf().map_err(|error| {
+                    crate::common::messages::failure(
+                        "backend.sandbox.inspectFileRangeFailed",
+                        serde_json::json!({ "error": error.to_string() }),
+                        format!("Failed to inspect file range: {}", error),
+                    )
+                })?;
                 let total_lines = if more.is_empty() {
                     Some(completed_lines)
                 } else {
@@ -234,11 +256,18 @@ pub fn dispatch_tool_call(
 ) -> Result<serde_json::Value, String> {
     match tool_name {
         "read_file_range" => {
-            let args: ReadFileRangeArgs = serde_json::from_value(arguments)
-                .map_err(|e| crate::common::messages::failure("backend.sandbox.invalidReadFileRangeArgs", serde_json::json!({ "error": e.to_string() }), format!("Invalid arguments for read_file_range: {}", e)))?;
+            let args: ReadFileRangeArgs = serde_json::from_value(arguments).map_err(|e| {
+                crate::common::messages::failure(
+                    "backend.sandbox.invalidReadFileRangeArgs",
+                    serde_json::json!({ "error": e.to_string() }),
+                    format!("Invalid arguments for read_file_range: {}", e),
+                )
+            })?;
 
             if args.start_line == 0 || args.end_line < args.start_line {
-                return Err(crate::common::messages::code("backend.sandbox.invalidLineBounds"));
+                return Err(crate::common::messages::code(
+                    "backend.sandbox.invalidLineBounds",
+                ));
             }
 
             let relative_path = normalize_tool_file_path(&args.file_path)?;
@@ -264,10 +293,9 @@ pub fn dispatch_tool_call(
                     read_local_file_range(&safe_path, args.start_line, args.end_line, manager)?
                 }
                 SandboxType::LocalWorktree => {
-                    let worktree_dir = instance
-                        .worktree_path
-                        .as_deref()
-                        .ok_or_else(|| crate::common::messages::code("backend.sandbox.worktreePathMissing"))?;
+                    let worktree_dir = instance.worktree_path.as_deref().ok_or_else(|| {
+                        crate::common::messages::code("backend.sandbox.worktreePathMissing")
+                    })?;
                     let safe_path = crate::features::git::resolve_safe_repo_path(
                         worktree_dir,
                         &args.file_path,
@@ -320,8 +348,13 @@ pub fn dispatch_tool_call(
             serde_json::to_value(diff_payload).map_err(|e| e.to_string())
         }
         "execute_terminal_cmd" => {
-            let args: ExecuteTerminalCmdArgs = serde_json::from_value(arguments)
-                .map_err(|e| crate::common::messages::failure("backend.sandbox.invalidExecuteTerminalCmdArgs", serde_json::json!({ "error": e.to_string() }), format!("Invalid arguments for execute_terminal_cmd: {}", e)))?;
+            let args: ExecuteTerminalCmdArgs = serde_json::from_value(arguments).map_err(|e| {
+                crate::common::messages::failure(
+                    "backend.sandbox.invalidExecuteTerminalCmdArgs",
+                    serde_json::json!({ "error": e.to_string() }),
+                    format!("Invalid arguments for execute_terminal_cmd: {}", e),
+                )
+            })?;
 
             if instance.adapter_type == SandboxType::LocalWorktree {
                 let violation = super::guardrails::GuardrailViolation {
@@ -412,13 +445,25 @@ fn read_local_file_range(
     end_line: usize,
     manager: &SandboxManager,
 ) -> Result<FileRangeResult, String> {
-    let metadata = std::fs::symlink_metadata(path)
-        .map_err(|error| crate::common::messages::failure("backend.sandbox.inspectRepoFileFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to inspect repository file: {}", error)))?;
+    let metadata = std::fs::symlink_metadata(path).map_err(|error| {
+        crate::common::messages::failure(
+            "backend.sandbox.inspectRepoFileFailed",
+            serde_json::json!({ "error": error.to_string() }),
+            format!("Failed to inspect repository file: {}", error),
+        )
+    })?;
     if !metadata.file_type().is_file() {
-        return Err(crate::common::messages::code("backend.sandbox.onlyRegularFiles"));
+        return Err(crate::common::messages::code(
+            "backend.sandbox.onlyRegularFiles",
+        ));
     }
-    let file = File::open(path)
-        .map_err(|error| crate::common::messages::failure("backend.sandbox.readRepoFileFailed", serde_json::json!({ "error": error.to_string() }), format!("Failed to read file in repository: {}", error)))?;
+    let file = File::open(path).map_err(|error| {
+        crate::common::messages::failure(
+            "backend.sandbox.readRepoFileFailed",
+            serde_json::json!({ "error": error.to_string() }),
+            format!("Failed to read file in repository: {}", error),
+        )
+    })?;
     read_file_range(
         &mut BufReader::new(file),
         start_line,

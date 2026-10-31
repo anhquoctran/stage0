@@ -3,16 +3,33 @@ use tauri::{AppHandle, Manager};
 
 pub(super) fn validate_runtime_preferences(settings: &Value) -> Result<(), String> {
     if let Some(kind) = settings.pointer("/sandbox/type") {
-        serde_json::from_value::<crate::features::sandbox::SandboxType>(kind.clone())
-            .map_err(|_| crate::common::messages::failure("backend.preferences.unsupportedSandboxType", serde_json::json!({}), "Unsupported sandbox type in preferences.json".into()))?;
+        serde_json::from_value::<crate::features::sandbox::SandboxType>(kind.clone()).map_err(
+            |_| {
+                crate::common::messages::failure(
+                    "backend.preferences.unsupportedSandboxType",
+                    serde_json::json!({}),
+                    "Unsupported sandbox type in preferences.json".into(),
+                )
+            },
+        )?;
     }
     if let Some(policy) = settings.pointer("/ai/guardrailPolicy") {
         serde_json::from_value::<crate::features::sandbox::GuardrailPolicy>(policy.clone())
-            .map_err(|_| crate::common::messages::failure("backend.preferences.invalidAiGuardrailPolicy", serde_json::json!({}), "Invalid AI guardrail policy in preferences.json".into()))?;
+            .map_err(|_| {
+                crate::common::messages::failure(
+                    "backend.preferences.invalidAiGuardrailPolicy",
+                    serde_json::json!({}),
+                    "Invalid AI guardrail policy in preferences.json".into(),
+                )
+            })?;
     }
     if let Some(path) = settings.pointer("/git/binaryPath").and_then(Value::as_str) {
         if path.trim().is_empty() || path.len() > 4096 {
-            return Err(crate::common::messages::failure("backend.preferences.gitBinaryPathInvalid", serde_json::json!({}), "Git binary path is empty or too long".into()));
+            return Err(crate::common::messages::failure(
+                "backend.preferences.gitBinaryPathInvalid",
+                serde_json::json!({}),
+                "Git binary path is empty or too long".into(),
+            ));
         }
         if path != "git" && path != "system" {
             crate::features::git::test_git_version(path).map_err(|_| {

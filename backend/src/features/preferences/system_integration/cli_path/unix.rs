@@ -11,7 +11,9 @@ const LAUNCHER_MARKER: &str = "# Stage0 managed CLI launcher v1";
 pub(super) fn apply(enable: bool) -> Result<(), String> {
     let Some(home) = home_dir() else {
         return if enable {
-            Err(crate::common::messages::code("backend.preferences.userHomeUnavailable"))
+            Err(crate::common::messages::code(
+                "backend.preferences.userHomeUnavailable",
+            ))
         } else {
             Ok(())
         };
@@ -46,11 +48,13 @@ fn target_executable() -> Result<PathBuf, String> {
 
 fn install(home: &Path, launcher: &Path) -> Result<(), String> {
     let target = target_executable()?;
-    let target = target
-        .to_str()
-        .ok_or_else(|| crate::common::messages::code("backend.preferences.executablePathNotUtf8"))?;
+    let target = target.to_str().ok_or_else(|| {
+        crate::common::messages::code("backend.preferences.executablePathNotUtf8")
+    })?;
     if target.contains('\n') || target.contains('\r') {
-        return Err(crate::common::messages::code("backend.preferences.executablePathLineBreak"));
+        return Err(crate::common::messages::code(
+            "backend.preferences.executablePathLineBreak",
+        ));
     }
     let script = format!(
         "#!/bin/sh\n{LAUNCHER_MARKER}\nexec {} \"$@\"\n",
@@ -141,10 +145,7 @@ fn add_path_block(path: &Path, block: &str) -> Result<bool, String> {
         return Err(crate::common::messages::failure(
             "backend.preferences.pathBlockIncomplete",
             serde_json::json!({ "path": path.display().to_string() }),
-            format!(
-                "Stage0 PATH block in {} is incomplete",
-                path.display()
-            ),
+            format!("Stage0 PATH block in {} is incomplete", path.display()),
         ));
     }
 

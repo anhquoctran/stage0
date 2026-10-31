@@ -7,12 +7,20 @@ use serde_json::Value;
 
 pub(super) fn validate_mcp_server(value: &Value, index: usize) -> Result<(), String> {
     let path = format!("ai.mcpServers[{index}]");
-    let server = value
-        .as_object()
-        .ok_or_else(|| crate::common::messages::failure("backend.preferences.mustBeObjectSection", serde_json::json!({ "name": path }), format!("{path} must be an object")))?;
+    let server = value.as_object().ok_or_else(|| {
+        crate::common::messages::failure(
+            "backend.preferences.mustBeObjectSection",
+            serde_json::json!({ "name": path }),
+            format!("{path} must be an object"),
+        )
+    })?;
     for key in ["id", "name", "type", "command", "args", "env", "enabled"] {
         if !server.contains_key(key) {
-            return Err(crate::common::messages::failure("backend.preferences.recordFieldRequired", serde_json::json!({ "field": format!("{path}.{key}") }), format!("{path}.{key} is required")));
+            return Err(crate::common::messages::failure(
+                "backend.preferences.recordFieldRequired",
+                serde_json::json!({ "field": format!("{path}.{key}") }),
+                format!("{path}.{key} is required"),
+            ));
         }
     }
     validate_optional_string(server, "id", &path, 256, false)?;
@@ -26,19 +34,35 @@ pub(super) fn validate_mcp_server(value: &Value, index: usize) -> Result<(), Str
             .and_then(Value::as_str)
             .is_none_or(str::is_empty)
     {
-        return Err(crate::common::messages::failure("backend.preferences.commandRequiredStdio", serde_json::json!({ "path": path }), format!("{path}.command is required for stdio servers")));
+        return Err(crate::common::messages::failure(
+            "backend.preferences.commandRequiredStdio",
+            serde_json::json!({ "path": path }),
+            format!("{path}.command is required for stdio servers"),
+        ));
     }
     validate_string_array(&server["args"], &format!("{path}.args"), 256, 8192)?;
     validate_optional_bool(server, "enabled", &path)?;
-    let env = server["env"]
-        .as_object()
-        .ok_or_else(|| crate::common::messages::failure("backend.preferences.mustBeObjectSection", serde_json::json!({ "name": format!("{path}.env") }), format!("{path}.env must be an object")))?;
+    let env = server["env"].as_object().ok_or_else(|| {
+        crate::common::messages::failure(
+            "backend.preferences.mustBeObjectSection",
+            serde_json::json!({ "name": format!("{path}.env") }),
+            format!("{path}.env must be an object"),
+        )
+    })?;
     if env.len() > 256 {
-        return Err(crate::common::messages::failure("backend.preferences.envTooManyEntries", serde_json::json!({ "path": path }), format!("{path}.env has too many entries")));
+        return Err(crate::common::messages::failure(
+            "backend.preferences.envTooManyEntries",
+            serde_json::json!({ "path": path }),
+            format!("{path}.env has too many entries"),
+        ));
     }
     for (name, value) in env {
         let text = value.as_str().ok_or_else(|| {
-            crate::common::messages::failure("backend.preferences.fieldOnlyStrings", serde_json::json!({ "path": format!("{path}.env") }), format!("{path}.env entries must be strings within the supported size limit"))
+            crate::common::messages::failure(
+                "backend.preferences.fieldOnlyStrings",
+                serde_json::json!({ "path": format!("{path}.env") }),
+                format!("{path}.env entries must be strings within the supported size limit"),
+            )
         })?;
         if name.len() > 256 || text.len() > 16_384 {
             return Err(crate::common::messages::failure(
@@ -68,7 +92,11 @@ pub(super) fn validate_mcp_server(value: &Value, index: usize) -> Result<(), Str
         Some("http" | "sse")
     ) && server.get("url").and_then(Value::as_str).is_none()
     {
-        return Err(crate::common::messages::failure("backend.preferences.urlRequiredHttp", serde_json::json!({ "path": path }), format!("{path}.url is required for HTTP/SSE servers")));
+        return Err(crate::common::messages::failure(
+            "backend.preferences.urlRequiredHttp",
+            serde_json::json!({ "path": path }),
+            format!("{path}.url is required for HTTP/SSE servers"),
+        ));
     }
     Ok(())
 }
@@ -95,7 +123,11 @@ pub(super) fn validate_reviewer(value: &Value, index: usize) -> Result<(), Strin
         "enabled",
     ] {
         if !reviewer.contains_key(key) {
-            return Err(crate::common::messages::failure("backend.preferences.recordFieldRequired", serde_json::json!({ "field": format!("{path}.{key}") }), format!("{path}.{key} is required")));
+            return Err(crate::common::messages::failure(
+                "backend.preferences.recordFieldRequired",
+                serde_json::json!({ "field": format!("{path}.{key}") }),
+                format!("{path}.{key} is required"),
+            ));
         }
     }
     for key in [
@@ -146,11 +178,19 @@ pub(super) fn validate_reviewer(value: &Value, index: usize) -> Result<(), Strin
     validate_optional_bool(reviewer, "fastMode", &path)?;
     validate_optional_bool(reviewer, "allowAcpSourceTransfer", &path)?;
     if let Some(options) = reviewer.get("acpConfigOptions") {
-        let options = options
-            .as_object()
-            .ok_or_else(|| crate::common::messages::failure("backend.preferences.mustBeObjectSection", serde_json::json!({ "name": format!("{path}.acpConfigOptions") }), format!("{path}.acpConfigOptions must be an object")))?;
+        let options = options.as_object().ok_or_else(|| {
+            crate::common::messages::failure(
+                "backend.preferences.mustBeObjectSection",
+                serde_json::json!({ "name": format!("{path}.acpConfigOptions") }),
+                format!("{path}.acpConfigOptions must be an object"),
+            )
+        })?;
         if options.len() > 32 {
-            return Err(crate::common::messages::failure("backend.preferences.acpOptionsTooMany", serde_json::json!({ "path": path }), format!("{path}.acpConfigOptions has too many options")));
+            return Err(crate::common::messages::failure(
+                "backend.preferences.acpOptionsTooMany",
+                serde_json::json!({ "path": path }),
+                format!("{path}.acpConfigOptions has too many options"),
+            ));
         }
         for (id, value) in options {
             if id.is_empty() || id.len() > 128 || id.chars().any(char::is_control) {
@@ -190,7 +230,11 @@ pub(super) fn validate_git_credential(value: &Value, index: usize) -> Result<(),
     ] {
         validate_optional_string(credential, key, &path, 4096, false)?;
         if !credential.contains_key(key) {
-            return Err(crate::common::messages::failure("backend.preferences.recordFieldRequired", serde_json::json!({ "field": format!("{path}.{key}") }), format!("{path}.{key} is required")));
+            return Err(crate::common::messages::failure(
+                "backend.preferences.recordFieldRequired",
+                serde_json::json!({ "field": format!("{path}.{key}") }),
+                format!("{path}.{key} is required"),
+            ));
         }
     }
     for key in ["label", "helper_name"] {

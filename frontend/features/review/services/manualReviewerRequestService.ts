@@ -1,4 +1,3 @@
-import { notificationService } from '../../notifications/services/notificationService';
 import i18n from '../../i18n/i18n';
 import { formatMention } from '../../../common/utils/mentions';
 import type { VirtualMrComment } from '../../virtual-mr/types/VirtualMrComment';
@@ -182,21 +181,7 @@ export async function requestManualReviewerReview(
     const summary = newFindings.length
       ? i18n.t('reviewFlow.completeWithFindings', { count: newFindings.length, incomplete })
       : i18n.t('reviewFlow.completeNoFindings', { incomplete });
-    if (newFindings.length) {
-      const latestSession = currentSession(sessionId);
-      void notificationService.notify({
-        titleKey: 'reviewFlow.completedTitle',
-        bodyKey: 'reviewFlow.completedBody',
-        values: {
-          reviewer: assigned.name,
-          count: newFindings.length,
-          title: latestSession?.title || i18n.t('reviewFlow.virtualMrFallback'),
-        },
-        channel: 'aiReview',
-        level: 'success',
-        autoDismissMs: 8000,
-      }).catch((error) => console.warn('Could not notify about the completed AI review:', error));
-    }
+    // The backend delivers completion once for every successful run.
     await botReply(discussionId, reviewerId, assigned.name, summary);
   } catch (error) {
     removePendingReply(sessionId, discussionId, pendingId);

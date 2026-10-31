@@ -1,8 +1,12 @@
+use crate::core::window_manager::preferences_window::LABEL as PREFERENCES_WINDOW_LABEL;
 use crate::core::window_manager::{default_window_size, minimum_window_size, WindowManagerState};
 use tauri::{AppHandle, Manager, WebviewWindow, Window};
 
 #[tauri::command]
 pub async fn window_minimize(window: Window) -> Result<(), String> {
+    if window.label() == PREFERENCES_WINDOW_LABEL {
+        return Ok(());
+    }
     let result: Result<_, String> = async { window.minimize().map_err(|e| e.to_string()) }.await;
     result.map_err(|error| crate::common::messages::command_error("operation", error))
 }
@@ -19,6 +23,9 @@ pub async fn open_webview_devtools(window: WebviewWindow) -> Result<(), String> 
 
 #[tauri::command]
 pub async fn window_toggle_maximize(window: Window) -> Result<bool, String> {
+    if window.label() == PREFERENCES_WINDOW_LABEL {
+        return Ok(false);
+    }
     let result: Result<_, String> = async {
         let manager = window.app_handle().state::<WindowManagerState>();
         if let Some(maximized) = manager.startup_geometry(window.label()) {
@@ -40,6 +47,9 @@ pub async fn window_toggle_maximize(window: Window) -> Result<bool, String> {
 
 #[tauri::command]
 pub async fn window_toggle_fullscreen(window: Window) -> Result<bool, String> {
+    if window.label() == PREFERENCES_WINDOW_LABEL {
+        return Ok(false);
+    }
     let result: Result<_, String> = async {
         let is_fullscreen = window.is_fullscreen().map_err(|error| error.to_string())?;
         let next = !is_fullscreen;
@@ -74,6 +84,9 @@ pub async fn window_is_fullscreen(window: Window) -> Result<bool, String> {
 
 #[tauri::command]
 pub async fn window_maximize(window: Window) -> Result<(), String> {
+    if window.label() == PREFERENCES_WINDOW_LABEL {
+        return Ok(());
+    }
     let result: Result<_, String> =
         async { crate::core::window_manager::startup_window::request_maximize(&window) }.await;
     result.map_err(|error| crate::common::messages::command_error("operation", error))
@@ -81,6 +94,9 @@ pub async fn window_maximize(window: Window) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn window_reset_size(window: Window) -> Result<(), String> {
+    if window.label() == PREFERENCES_WINDOW_LABEL {
+        return Ok(());
+    }
     let result: Result<_, String> = async {
         if window
             .app_handle()
@@ -167,7 +183,13 @@ pub async fn get_window_chrome(
     let result: Result<_, String> = async {
         let mut profile = tauri::async_runtime::spawn_blocking(crate::core::desktop::read_profile)
             .await
-            .map_err(|_| crate::common::messages::failure("backend.window.readDesktopSettingsFailed", serde_json::json!({}), "Could not read desktop window settings".into()))?;
+            .map_err(|_| {
+                crate::common::messages::failure(
+                    "backend.window.readDesktopSettingsFailed",
+                    serde_json::json!({}),
+                    "Could not read desktop window settings".into(),
+                )
+            })?;
         profile.native_frame = if window
             .app_handle()
             .state::<WindowManagerState>()

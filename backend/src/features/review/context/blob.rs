@@ -21,7 +21,11 @@ impl ReviewContext {
             256 * 1024,
         )?;
         if content.contains('\0') {
-            return Err(crate::common::messages::failure("backend.review.reviewBinaryFileUnsupported", serde_json::json!({}), "Binary files are not reviewable as text".into()));
+            return Err(crate::common::messages::failure(
+                "backend.review.reviewBinaryFileUnsupported",
+                serde_json::json!({}),
+                "Binary files are not reviewable as text".into(),
+            ));
         }
         Ok(Some(content))
     }
@@ -30,7 +34,13 @@ impl ReviewContext {
         let sha = match side {
             "base" => &self.snapshot.merge_base_sha,
             "head" => &self.snapshot.head_sha,
-            _ => return Err(crate::common::messages::failure("backend.review.reviewSideInvalid", serde_json::json!({}), "side must be base or head".into())),
+            _ => {
+                return Err(crate::common::messages::failure(
+                    "backend.review.reviewSideInvalid",
+                    serde_json::json!({}),
+                    "side must be base or head".into(),
+                ))
+            }
         };
         self.raw_blob_at(path, sha)
     }

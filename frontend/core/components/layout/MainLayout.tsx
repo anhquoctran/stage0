@@ -16,6 +16,7 @@ import { VirtualMrHub } from '../../../features/virtual-mr/components/VirtualMrH
 import { VirtualMrListDialog } from '../../../features/virtual-mr/components/VirtualMrListDialog';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
 import { useWindowChromeStore } from '../../store/useWindowChromeStore';
+import { isMacOS } from '../../../common/utils/shortcuts';
 import { useMainLayoutCoordination } from '../hooks/useMainLayoutCoordination';
 import { MainLayoutDiffWorkspace } from './MainLayoutDiffWorkspace';
 import { MainLayoutModals } from './MainLayoutModals';
@@ -58,7 +59,7 @@ export const MainLayout: React.FC = () => {
 
   const activeMrTab = useVirtualMrStore((state) => state.activeMrTab);
   const isCustomMacFrame = useWindowChromeStore(
-    (state) => state.profile.platform === 'macos' && !state.profile.nativeFrame,
+    (state) => (state.profile.platform === 'macos' || (!state.profile.platform && isMacOS())) && !state.profile.nativeFrame,
   );
   const currentSession = sessions.find((s) => s.id === activeSessionId) || null;
 

@@ -10,18 +10,30 @@ pub fn decode(
     match provider {
         "openai" => {
             if response["status"] != "completed" {
-                return Err(crate::common::messages::failure("backend.review.providerResponseIncomplete", serde_json::json!({}), "Provider response was incomplete, refused or truncated".into()));
+                return Err(crate::common::messages::failure(
+                    "backend.review.providerResponseIncomplete",
+                    serde_json::json!({}),
+                    "Provider response was incomplete, refused or truncated".into(),
+                ));
             }
-            let output = response["output"]
-                .as_array()
-                .ok_or_else(|| crate::common::messages::failure("backend.review.providerResponseMissingOutput", serde_json::json!({}), "Missing response output".into()))?;
+            let output = response["output"].as_array().ok_or_else(|| {
+                crate::common::messages::failure(
+                    "backend.review.providerResponseMissingOutput",
+                    serde_json::json!({}),
+                    "Missing response output".into(),
+                )
+            })?;
             for item in output {
                 if item["type"] == "function_call" {
                     if item
                         .get("status")
                         .is_some_and(|status| status != "completed")
                     {
-                        return Err(crate::common::messages::failure("backend.review.providerUnfinishedFunctionCall", serde_json::json!({}), "Provider returned an unfinished function call".into()));
+                        return Err(crate::common::messages::failure(
+                            "backend.review.providerUnfinishedFunctionCall",
+                            serde_json::json!({}),
+                            "Provider returned an unfinished function call".into(),
+                        ));
                     }
                     calls.push(ReviewToolCall {
                         id: text(item, "call_id")?,
@@ -38,11 +50,19 @@ pub fn decode(
                 response["stop_reason"].as_str(),
                 Some("end_turn" | "tool_use")
             ) {
-                return Err(crate::common::messages::failure("backend.review.providerResponseRefusedOrTruncated", serde_json::json!({}), "Provider response was refused or truncated".into()));
+                return Err(crate::common::messages::failure(
+                    "backend.review.providerResponseRefusedOrTruncated",
+                    serde_json::json!({}),
+                    "Provider response was refused or truncated".into(),
+                ));
             }
-            let content = response["content"]
-                .as_array()
-                .ok_or_else(|| crate::common::messages::failure("backend.review.claudeContentMissing", serde_json::json!({}), "Missing Claude content".into()))?;
+            let content = response["content"].as_array().ok_or_else(|| {
+                crate::common::messages::failure(
+                    "backend.review.claudeContentMissing",
+                    serde_json::json!({}),
+                    "Missing Claude content".into(),
+                )
+            })?;
             for item in content {
                 if item["type"] == "tool_use" {
                     calls.push(ReviewToolCall {
@@ -56,15 +76,27 @@ pub fn decode(
             history.push(json!({"role":"assistant","content":content}));
         }
         "gemini" => {
-            let candidate = response["candidates"]
-                .get(0)
-                .ok_or_else(|| crate::common::messages::failure("backend.review.geminiNoCandidate", serde_json::json!({}), "No Gemini candidate (possibly blocked)".into()))?;
+            let candidate = response["candidates"].get(0).ok_or_else(|| {
+                crate::common::messages::failure(
+                    "backend.review.geminiNoCandidate",
+                    serde_json::json!({}),
+                    "No Gemini candidate (possibly blocked)".into(),
+                )
+            })?;
             if candidate["finishReason"] != "STOP" {
-                return Err(crate::common::messages::failure("backend.review.geminiResponseBlockedOrTruncated", serde_json::json!({}), "Gemini response was blocked or truncated".into()));
+                return Err(crate::common::messages::failure(
+                    "backend.review.geminiResponseBlockedOrTruncated",
+                    serde_json::json!({}),
+                    "Gemini response was blocked or truncated".into(),
+                ));
             }
-            let parts = candidate["content"]["parts"]
-                .as_array()
-                .ok_or_else(|| crate::common::messages::failure("backend.review.geminiPartsMissing", serde_json::json!({}), "Missing Gemini parts".into()))?;
+            let parts = candidate["content"]["parts"].as_array().ok_or_else(|| {
+                crate::common::messages::failure(
+                    "backend.review.geminiPartsMissing",
+                    serde_json::json!({}),
+                    "Missing Gemini parts".into(),
+                )
+            })?;
             for (i, item) in parts.iter().enumerate() {
                 if let Some(call) = item.get("functionCall") {
                     calls.push(ReviewToolCall {
@@ -85,22 +117,40 @@ pub fn decode(
             let message = if provider == "ollama" {
                 &response["message"]
             } else {
-                let choice = response["choices"].get(0).ok_or_else(|| crate::common::messages::failure("backend.review.providerNoCompletionChoice", serde_json::json!({}), "No completion choice".into()))?;
+                let choice = response["choices"].get(0).ok_or_else(|| {
+                    crate::common::messages::failure(
+                        "backend.review.providerNoCompletionChoice",
+                        serde_json::json!({}),
+                        "No completion choice".into(),
+                    )
+                })?;
                 if !matches!(
                     choice["finish_reason"].as_str(),
                     Some("stop" | "tool_calls")
                 ) {
-                    return Err(crate::common::messages::failure("backend.review.providerResponseRefusedOrTruncated", serde_json::json!({}), "Provider response was refused or truncated".into()));
+                    return Err(crate::common::messages::failure(
+                        "backend.review.providerResponseRefusedOrTruncated",
+                        serde_json::json!({}),
+                        "Provider response was refused or truncated".into(),
+                    ));
                 }
                 &choice["message"]
             };
             if !message.is_object() {
-                return Err(crate::common::messages::failure("backend.review.providerMissingAssistantMessage", serde_json::json!({}), "Missing assistant message".into()));
+                return Err(crate::common::messages::failure(
+                    "backend.review.providerMissingAssistantMessage",
+                    serde_json::json!({}),
+                    "Missing assistant message".into(),
+                ));
             }
             if provider == "ollama"
                 && (response["done"] != true || response["done_reason"] == "length")
             {
-                return Err(crate::common::messages::failure("backend.review.localResponseIncomplete", serde_json::json!({}), "Local response was incomplete or truncated".into()));
+                return Err(crate::common::messages::failure(
+                    "backend.review.localResponseIncomplete",
+                    serde_json::json!({}),
+                    "Local response was incomplete or truncated".into(),
+                ));
             }
             if let Some(items) = message["tool_calls"].as_array() {
                 for (i, item) in items.iter().enumerate() {
@@ -127,11 +177,19 @@ pub fn decode(
             c.id.is_empty() || c.id.len() > 200 || c.name.len() > 100 || !c.arguments.is_object()
         })
     {
-        return Err(crate::common::messages::failure("backend.review.providerToolCallsInvalid", serde_json::json!({}), "Invalid or excessive tool calls".into()));
+        return Err(crate::common::messages::failure(
+            "backend.review.providerToolCallsInvalid",
+            serde_json::json!({}),
+            "Invalid or excessive tool calls".into(),
+        ));
     }
     let mut ids = std::collections::HashSet::new();
     if calls.iter().any(|c| !ids.insert(c.id.clone())) {
-        return Err(crate::common::messages::failure("backend.review.providerDuplicateToolCallIds", serde_json::json!({}), "Duplicate tool call IDs".into()));
+        return Err(crate::common::messages::failure(
+            "backend.review.providerDuplicateToolCallIds",
+            serde_json::json!({}),
+            "Duplicate tool call IDs".into(),
+        ));
     }
     let usage = response["usage"]["total_tokens"]
         .as_u64()
@@ -156,7 +214,13 @@ fn text(value: &Value, key: &str) -> Result<String, String> {
 }
 fn parse_arguments(value: &Value) -> Result<Value, String> {
     if let Some(s) = value.as_str() {
-        serde_json::from_str(s).map_err(|_| crate::common::messages::failure("backend.review.providerToolArgJsonInvalid", serde_json::json!({}), "Invalid tool argument JSON".into()))
+        serde_json::from_str(s).map_err(|_| {
+            crate::common::messages::failure(
+                "backend.review.providerToolArgJsonInvalid",
+                serde_json::json!({}),
+                "Invalid tool argument JSON".into(),
+            )
+        })
     } else {
         Ok(value.clone())
     }

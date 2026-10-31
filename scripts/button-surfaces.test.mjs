@@ -25,7 +25,7 @@ test('onboarding wizard uses single-canvas 4-step flow and borderless solid bran
   const { WELCOME_SLIDES } = loadWithMocks(new URL('../frontend/features/onboarding/constants/welcomeSlides.ts', import.meta.url), {});
   assert.deepEqual(
     WELCOME_SLIDES.map((slide) => slide.id),
-    ['welcome', 'ai-setup', 'reviewer-setup', 'repository']
+    ['hello', 'welcome', 'ai-setup', 'reviewer-setup', 'repository']
   );
   const welcome = read('frontend/features/onboarding/components/FirstLaunchWelcome.tsx');
   assert.ok(welcome.includes('max-w-4xl'));

@@ -1,3 +1,4 @@
+import type { NotificationPermissionState } from '../../types/NotificationPermissionState';
 import type { AppNotificationAction } from '../../types/AppNotificationAction';
 import type { NotificationChannel } from '../../types/NotificationChannel';
 import type { NotificationDismissPolicy } from '../../types/NotificationDismissPolicy';
@@ -24,9 +25,9 @@ export interface NotificationTransportService {
     notificationId: string | undefined;
     action: AppNotificationAction;
   }): Promise<unknown>;
-  notificationHostReady(): Promise<unknown>;
   sendTestNotification(): Promise<unknown>;
-  setNotificationHostVisibility(input: {
-    visible: boolean;
-  }): Promise<unknown>;
+  setReady(input: { ready: boolean; generation: number }): Promise<void>;
+  getPermission(): Promise<NotificationPermissionState>;
+  requestPermission(): Promise<NotificationPermissionState>;
+  openSettings(): Promise<void>;
 }

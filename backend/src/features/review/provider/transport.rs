@@ -8,7 +8,13 @@ pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<
         .timeout(Duration::from_secs(60))
         .redirect(reqwest::redirect::Policy::none())
         .build()
-        .map_err(|_| crate::common::messages::failure("backend.review.providerClientInitFailed", serde_json::json!({}), "Could not initialize provider client".into()))?;
+        .map_err(|_| {
+            crate::common::messages::failure(
+                "backend.review.providerClientInitFailed",
+                serde_json::json!({}),
+                "Could not initialize provider client".into(),
+            )
+        })?;
     let mut request = client.post(url).json(body);
     if config.provider != "ollama" {
         let key = Zeroizing::new(
@@ -26,7 +32,13 @@ pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<
     }
     let mut response = request
         .try_clone()
-        .ok_or_else(|| crate::common::messages::failure("backend.review.providerRequestPrepareFailed", serde_json::json!({}), "Could not prepare provider request".into()))?
+        .ok_or_else(|| {
+            crate::common::messages::failure(
+                "backend.review.providerRequestPrepareFailed",
+                serde_json::json!({}),
+                "Could not prepare provider request".into(),
+            )
+        })?
         .send()
         .await
         .map_err(|_| {
@@ -44,10 +56,13 @@ pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<
             .clamp(1, 2);
         drop(response);
         tokio::time::sleep(Duration::from_secs(delay)).await;
-        response = request
-            .send()
-            .await
-            .map_err(|_| crate::common::messages::failure("backend.review.providerRetryFailedOrTimeout", serde_json::json!({}), "Provider retry failed or timed out".into()))?;
+        response = request.send().await.map_err(|_| {
+            crate::common::messages::failure(
+                "backend.review.providerRetryFailedOrTimeout",
+                serde_json::json!({}),
+                "Provider retry failed or timed out".into(),
+            )
+        })?;
     }
     let status = response.status();
     if !status.is_success() {
@@ -58,15 +73,27 @@ pub async fn request(config: &ReviewRequest, url: &str, body: &Value) -> Result<
         ));
     }
     let mut bytes = Vec::new();
-    while let Some(chunk) = response
-        .chunk()
-        .await
-        .map_err(|_| crate::common::messages::failure("backend.review.providerResponseInterrupted", serde_json::json!({}), "Provider response interrupted".into()))?
-    {
+    while let Some(chunk) = response.chunk().await.map_err(|_| {
+        crate::common::messages::failure(
+            "backend.review.providerResponseInterrupted",
+            serde_json::json!({}),
+            "Provider response interrupted".into(),
+        )
+    })? {
         if bytes.len() + chunk.len() > 512 * 1024 {
-            return Err(crate::common::messages::failure("backend.review.providerResponseSafetyLimit", serde_json::json!({}), "Provider response exceeded the safety limit".into()));
+            return Err(crate::common::messages::failure(
+                "backend.review.providerResponseSafetyLimit",
+                serde_json::json!({}),
+                "Provider response exceeded the safety limit".into(),
+            ));
         }
         bytes.extend_from_slice(&chunk);
     }
-    serde_json::from_slice(&bytes).map_err(|_| crate::common::messages::failure("backend.review.providerResponseJsonInvalid", serde_json::json!({}), "Provider returned invalid JSON".into()))
+    serde_json::from_slice(&bytes).map_err(|_| {
+        crate::common::messages::failure(
+            "backend.review.providerResponseJsonInvalid",
+            serde_json::json!({}),
+            "Provider returned invalid JSON".into(),
+        )
+    })
 }

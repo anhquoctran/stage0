@@ -1,6 +1,6 @@
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { XCircle } from '@/common/components/icons';
-import { ArrowLeftRight } from '../../../../common/components/icons/ArrowLeftRight';
+import { ArrowRight } from '../../../../common/components/icons/ArrowRight';
 import { Check } from '../../../../common/components/icons/Check';
 import { CheckCircle2 } from '../../../../common/components/icons/CheckCircle2';
 import { Edit2 } from '../../../../common/components/icons/Edit2';
@@ -32,7 +32,7 @@ export function VirtualMrHeader({
         {/* Read-only MR Status Badge */}
         {session.status === 'resolved' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 select-none shadow-xs shrink-0 rounded-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 select-none shadow-xs shrink-0 whitespace-nowrap rounded-sm"
             title={translateUiText('virtualMr.header.resolvedTitle')}
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -40,7 +40,7 @@ export function VirtualMrHeader({
           </div>
         ) : session.status === 'closed' ? (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 select-none shadow-xs shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-surface1/80 border border-surface2 text-subtext0 select-none shadow-xs shrink-0 whitespace-nowrap"
             title={translateUiText('virtualMr.header.closedTitle')}
           >
             <XCircle className="w-3.5 h-3.5 text-subtext1 shrink-0" />
@@ -48,7 +48,7 @@ export function VirtualMrHeader({
           </div>
         ) : (
           <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 select-none shadow-xs shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 select-none shadow-xs shrink-0 whitespace-nowrap"
             title={translateUiText('virtualMr.header.openTitle')}
           >
             <span className="w-2 h-2 rounded-sm bg-emerald-400 animate-pulse shrink-0" />
@@ -126,37 +126,63 @@ export function VirtualMrHeader({
               {translateUiText('virtualMr.header.branch')}
             </span>
           </div>
-          <TabBranchSelector
-            roleType="source"
-            disabled={isBranchLocked}
-            title={isBranchLocked ? branchLockedReason : undefined}
-            value={session.compareBranch}
-            branches={branches}
-            onChange={(branch) => handleBranchChange(session.id, session.baseBranch, branch)}
-          />
+
+          {/* Source / Compare Branch */}
+          <div className="flex items-center gap-1">
+            <span
+              className="text-[10px] text-accent font-mono font-semibold uppercase px-1 py-0.5 bg-surface1/60 rounded-sm select-none"
+              title={translateUiText('git.branchSelector.compareSource')}
+            >
+              {translateUiText('compareStatus.compareLabel')}
+            </span>
+            <TabBranchSelector
+              roleType="source"
+              disabled={isBranchLocked}
+              title={isBranchLocked ? branchLockedReason : undefined}
+              value={session.compareBranch}
+              branches={branches}
+              onChange={(branch) => handleBranchChange(session.id, session.baseBranch, branch)}
+            />
+          </div>
+
+          {/* Merge Direction & Swap Button */}
           <button
             type="button"
             onClick={() =>
               handleSwapBranches(session.id, session.baseBranch, session.compareBranch)
             }
             disabled={isBranchLocked}
-            title={isBranchLocked ? branchLockedReason : translateUiText('virtualMr.header.swapBranches')}
-            className={`p-1 border border-transparent transition-colors rounded-sm ${
+            title={
+              isBranchLocked
+                ? branchLockedReason
+                : `${session.compareBranch} → ${session.baseBranch} (${translateUiText('virtualMr.header.swapBranches')})`
+            }
+            className={`group/swap p-1 border border-transparent transition-colors rounded-sm ${
               isBranchLocked
                 ? 'text-subtext0/30 cursor-not-allowed'
                 : 'text-subtext0 hover:text-brand hover:bg-surface0 hover:border-surface0 cursor-pointer'
             }`}
           >
-            <ArrowLeftRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3.5 h-3.5 group-hover/swap:translate-x-0.5 transition-transform rtl:rotate-180" />
           </button>
-          <TabBranchSelector
-            roleType="target"
-            disabled={isBranchLocked}
-            title={isBranchLocked ? branchLockedReason : undefined}
-            value={session.baseBranch}
-            branches={branches}
-            onChange={(branch) => handleBranchChange(session.id, branch, session.compareBranch)}
-          />
+
+          {/* Target / Base Branch */}
+          <div className="flex items-center gap-1">
+            <span
+              className="text-[10px] text-subtext0 font-mono font-semibold uppercase px-1 py-0.5 bg-surface1/60 rounded-sm select-none"
+              title={translateUiText('git.branchSelector.baseTarget')}
+            >
+              {translateUiText('compareStatus.baseLabel')}
+            </span>
+            <TabBranchSelector
+              roleType="target"
+              disabled={isBranchLocked}
+              title={isBranchLocked ? branchLockedReason : undefined}
+              value={session.baseBranch}
+              branches={branches}
+              onChange={(branch) => handleBranchChange(session.id, branch, session.compareBranch)}
+            />
+          </div>
         </div>
       </div>
 

@@ -33,7 +33,7 @@ export const PreferencesModalFooter: React.FC<{
           {applyError}
         </p>
       )}
-      <div className="px-6 py-3 border-t border-surface0/60 flex items-center justify-between bg-crust/80 select-none shrink-0 rounded-sm">
+      <div className="px-6 py-3 border-t border-surface0/50 flex items-center justify-between bg-mantle/60 select-none shrink-0 rounded-b-sm">
         <div className="flex items-center gap-3">
           <button
             type="button"

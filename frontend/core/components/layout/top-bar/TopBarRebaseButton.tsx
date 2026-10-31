@@ -39,7 +39,7 @@ export const TopBarRebaseButton: React.FC = () => {
         disabled={isSyncing}
         onClick={() => runSync('rebase')}
         className="h-12 px-3 flex flex-col items-center justify-center transition-colors disabled:opacity-40 cursor-pointer min-w-[58px] rounded-sm"
-        title={title('rebase', 'Rebase')}
+        title={title('rebase', translateUiText('menu.commands.rebase'))}
       >
         <GitBranch className="w-5 h-5 text-primary shrink-0 transition-colors" />
         <span className="text-[11px] font-medium leading-none mt-1.5 tracking-tight transition-colors">
@@ -52,7 +52,7 @@ export const TopBarRebaseButton: React.FC = () => {
         disabled={isSyncing}
         onClick={() => setIsOpen((prev) => !prev)}
         className="relative flex items-center justify-center px-1.5 h-12 transition-colors cursor-pointer rounded-sm"
-        title={title('rebase_from', 'Rebase options')}
+        title={title('rebase_from', translateUiText('common.layout.rebaseOptions'))}
       >
         <span
           aria-hidden="true"

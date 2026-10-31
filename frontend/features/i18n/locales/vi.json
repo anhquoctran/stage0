@@ -152,7 +152,10 @@
     "disabled": "Đã tắt",
     "confirm": "Xác nhận",
     "optional": "không bắt buộc",
-    "apply": "Áp dụng"
+    "apply": "Áp dụng",
+    "open": "Đang mở",
+    "resolved": "Đã giải quyết",
+    "closed": "Đã đóng"
   },
   "preferences": {
     "appearance": "Giao diện",
@@ -561,13 +564,13 @@
       "repo_overview": "Tổng quan kho lưu trữ...",
       "new_mr": "Virtual MR mới...",
       "fetch": "Fetch (tất cả và dọn dẹp)",
-      "pull": "Pull",
-      "pull_from": "Pull từ...",
+      "pull": "Kéo về (Pull)",
+      "pull_from": "Kéo về từ...",
       "merge": "Hợp nhất upstream",
       "merge_from": "Hợp nhất từ...",
       "rebase": "Rebase",
       "rebase_from": "Rebase từ...",
-      "rebase_continue": "Tiếp tục",
+      "rebase_continue": "Tiếp tục rebase",
       "rebase_skip": "Bỏ qua commit",
       "rebase_abort": "Hủy rebase",
       "swap_branches": "Đổi Base và Compare",
@@ -582,7 +585,23 @@
       "shortcuts": "Phím tắt bàn phím",
       "keymaps": "Tùy chỉnh phím tắt...",
       "open_webview_devtools": "Công cụ dành cho nhà phát triển",
-      "release_notes": "Xem ghi chú phát hành"
+      "release_notes": "Xem ghi chú phát hành",
+      "next_conflict": "Tập tin xung đột tiếp theo",
+      "close_tab": "Đóng tab / bản nháp MR",
+      "tab_1": "Chuyển sang tab MR 1",
+      "tab_2": "Chuyển sang tab MR 2",
+      "tab_3": "Chuyển sang tab MR 3",
+      "tab_4": "Chuyển sang tab MR 4",
+      "tab_5": "Chuyển sang tab MR 5",
+      "tab_6": "Chuyển sang tab MR 6",
+      "tab_7": "Chuyển sang tab MR 7",
+      "tab_8": "Chuyển sang tab MR 8",
+      "tab_9": "Chuyển sang tab MR 9",
+      "recent_1": "Mở kho lưu trữ gần đây 1",
+      "recent_2": "Mở kho lưu trữ gần đây 2",
+      "recent_3": "Mở kho lưu trữ gần đây 3",
+      "recent_4": "Mở kho lưu trữ gần đây 4",
+      "recent_5": "Mở kho lưu trữ gần đây 5"
     },
     "recent": {
       "emptyLabel": "Không có kho lưu trữ gần đây",
@@ -628,16 +647,16 @@
   },
   "notifications": {
     "categoryHeading": "Danh mục thông báo",
-    "categoryDescription": "Chọn sự kiện Stage0 được phép hiển thị thông báo. Stage0 đặt vị trí và cách đóng cho từng sự kiện.",
+    "categoryDescription": "Chọn sự kiện được gửi thông báo hệ thống. Hệ điều hành quản lý hiển thị và đóng thông báo.",
     "aiReviewTitle": "AI review mã nguồn",
     "aiReviewDescription": "Khi AI review hoặc xác minh lại hoàn tất.",
     "gitSyncTitle": "Theo dõi và đồng bộ Git",
     "gitSyncDescription": "Thay đổi từ remote, nhánh mới và sự kiện đồng bộ.",
     "guardrailsTitle": "Bảo vệ an toàn",
     "guardrailsDescription": "Lệnh cần nâng quyền, chặn truy cập và vi phạm chính sách.",
-    "previewTitle": "Xem trước thông báo",
+    "previewTitle": "Xem thử thông báo hệ thống",
     "previewDescription": "Gửi thử theo kiểu thông báo của nền tảng này. Thông báo không được thêm vào lịch sử hoặc số chưa đọc.",
-    "previewSent": "Đã gửi thông báo thử. Không ảnh hưởng lịch sử hoặc số thông báo chưa đọc.",
+    "previewSent": "Đã gửi thông báo thử. Hệ điều hành quyết định việc hiển thị.",
     "previewFailed": "Không thể hiển thị thông báo thử trên hệ thống này.",
     "testTooltip": "Hiển thị thông báo thử mà không lưu",
     "desktopOnly": "Chỉ khả dụng trong ứng dụng desktop",
@@ -661,7 +680,19 @@
     "toastView": "Xem",
     "dismiss": "Đóng",
     "dismissLabel": "Đóng thông báo",
-    "deliveryFailed": "Không thể gửi thông báo Stage0."
+    "deliveryFailed": "Không thể gửi thông báo Stage0.",
+    "permission": {
+      "title": "Thông báo hệ thống",
+      "description": "Nhận thông báo Stage0 qua hệ điều hành. Bước này không bắt buộc.",
+      "granted": "Đã cho phép thông báo. Hệ điều hành quản lý vị trí, âm thanh và cách hiển thị.",
+      "denied": "Thông báo đang bị chặn. Bạn vẫn dùng Stage0 bình thường; sự kiện được giữ trong lịch sử thông báo. Hãy bật thông báo trong cài đặt hệ thống.",
+      "prompt": "Cho phép Stage0 gửi thông báo. Bạn có thể tiếp tục mà không cấp quyền.",
+      "unsupported": "Không có thông báo native. Trên macOS/Windows, hãy dùng bản Stage0 đã cài đặt; trên Linux, kiểm tra dịch vụ thông báo của desktop.",
+      "request": "Cho phép thông báo",
+      "settings": "Mở cài đặt thông báo",
+      "error": "Không thể đọc hoặc thay đổi quyền thông báo. Hãy thử lại hoặc mở cài đặt hệ thống.",
+      "system_managed": "Desktop này tự quản lý quyền thông báo. Nếu không thấy thông báo, hãy kiểm tra cài đặt thông báo hệ thống."
+    }
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} đã hoàn tất review MR",
@@ -2208,6 +2239,7 @@
       "openIn": "Mở bằng {{name}}"
     },
     "repositoryLabels": {
+      "label": "Nhãn",
       "updated": "Đã cập nhật nhãn: {{name}}",
       "created": "Đã tạo nhãn: {{name}}",
       "saveFailed": "Không thể lưu nhãn: {{error}}",
@@ -3334,7 +3366,10 @@
       "runtimeUnavailable": "Môi trường thực thi thông báo Stage0 không khả dụng.",
       "queueUnavailable": "Hàng đợi thông báo Stage0 không khả dụng.",
       "unsupportedPlatform": "Thông báo Stage0 không được hỗ trợ trên nền tảng này.",
-      "dispatchFailed": "Tác vụ gửi thông báo đã thất bại."
+      "dispatchFailed": "Tác vụ gửi thông báo đã thất bại.",
+      "permissionDenied": "Thông báo đang bị chặn. Bạn vẫn dùng Stage0 bình thường; sự kiện được giữ trong lịch sử thông báo. Hãy bật thông báo trong cài đặt hệ thống.",
+      "permissionRequired": "Cho phép Stage0 gửi thông báo. Bạn có thể tiếp tục mà không cấp quyền.",
+      "settingsFailed": "Không thể đọc hoặc thay đổi quyền thông báo. Hãy thử lại hoặc mở cài đặt hệ thống."
     },
     "sandbox": {
       "dockerRunning": "Docker daemon đang chạy (Image mặc định: {{image}}).",

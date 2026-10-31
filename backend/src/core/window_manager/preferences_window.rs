@@ -14,7 +14,9 @@ fn validate_tab(tab: &Option<String>) -> Result<(), String> {
                 .bytes()
                 .all(|c| c.is_ascii_alphanumeric() || c == b'-')
     }) {
-        return Err(crate::common::messages::code("backend.preferences.invalidSection"));
+        return Err(crate::common::messages::code(
+            "backend.preferences.invalidSection",
+        ));
     }
     Ok(())
 }
@@ -70,15 +72,22 @@ pub async fn open(app: &AppHandle, tab: Option<String>) -> Result<(), String> {
         .and_then(|settings| settings.pointer("/appearance/language"))
         .and_then(|value| value.as_str())
         .unwrap_or("en");
-    let result = WebviewWindowBuilder::new(app, LABEL, app_webview_url(app, "index.html"))
+    let mut builder = WebviewWindowBuilder::new(app, LABEL, app_webview_url(app, "index.html"))
         .title(title(language))
         .inner_size(1100.0, 800.0)
         .min_inner_size(900.0, 620.0)
-        .resizable(true)
+        .resizable(false)
+        .minimizable(false)
+        .maximizable(false)
         .decorations(system_frame)
         .shadow(true)
         .visible(false)
-        .center()
+        .center();
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.transparent(true).shadow(false);
+    }
+    let result = builder
         .on_page_load(|window, payload| {
             if payload.event() == PageLoadEvent::Started {
                 window
@@ -94,10 +103,8 @@ pub async fn open(app: &AppHandle, tab: Option<String>) -> Result<(), String> {
         .build();
     match result {
         Ok(window) => {
-            #[cfg(target_os = "windows")]
-            if let Err(error) = super::snap_layout::install_maximize_hit_test(window.as_ref()) {
-                eprintln!("Could not enable Preferences Snap Layouts: {error}");
-            }
+            #[cfg(target_os = "linux")]
+            limit_linux_controls(&window);
             let _ = window;
             Ok(())
         }
@@ -112,9 +119,33 @@ pub async fn open(app: &AppHandle, tab: Option<String>) -> Result<(), String> {
     }
 }
 
+#[cfg(target_os = "linux")]
+fn limit_linux_controls(window: &WebviewWindow) {
+    let native_window = window.clone();
+    let _ = window.run_on_main_thread(move || {
+        use gtk::prelude::{Cast, GtkWindowExt, HeaderBarExt, WidgetExt};
+
+        if let Ok(native) = native_window.gtk_window() {
+            // Tauri's minimizable/maximizable flags are unsupported on Linux.
+            native.set_type_hint(gtk::gdk::WindowTypeHint::Dialog);
+            if let Some(header) = native
+                .titlebar()
+                .and_then(|bar| bar.downcast::<gtk::HeaderBar>().ok())
+            {
+                header.set_decoration_layout(Some(":close"));
+            }
+            if let Some(surface) = WidgetExt::window(&native) {
+                surface.set_functions(gtk::gdk::WMFunction::MOVE | gtk::gdk::WMFunction::CLOSE);
+            }
+        }
+    });
+}
+
 pub async fn ready(window: &WebviewWindow) -> Result<(), String> {
     if window.label() != LABEL {
-        return Err(crate::common::messages::code("backend.preferences.initUnauthorized"));
+        return Err(crate::common::messages::code(
+            "backend.preferences.initUnauthorized",
+        ));
     }
     let app = window.app_handle();
     let state = app.state::<PreferencesWindowState>();

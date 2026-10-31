@@ -18,7 +18,9 @@ pub async fn get_performance_metrics() -> Result<PerformanceMetrics, String> {
             let sampler = PERFORMANCE_SAMPLER.get_or_init(|| Mutex::new(PerformanceSampler::new()));
             sampler
                 .lock()
-                .map_err(|_| crate::common::messages::code("backend.performance.samplerUnavailable"))?
+                .map_err(|_| {
+                    crate::common::messages::code("backend.performance.samplerUnavailable")
+                })?
                 .refresh()
         })
         .await

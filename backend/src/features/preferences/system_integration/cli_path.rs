@@ -15,6 +15,8 @@ pub(super) fn apply_stage0_path(enable: bool) -> Result<(), String> {
     #[cfg(not(any(unix, windows)))]
     {
         let _ = enable;
-        Err(crate::common::messages::code("backend.preferences.cliPathUnsupported"))
+        Err(crate::common::messages::code(
+            "backend.preferences.cliPathUnsupported",
+        ))
     }
 }

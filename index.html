@@ -14,6 +14,10 @@
     />
     <title>Stage0 - Virtual MR Sandbox</title>
     <style>
+      :root {
+        --window-frame-radius: 12px;
+      }
+
       :root,
       [data-theme="mocha"],
       [data-theme="dark"] {
@@ -70,6 +74,16 @@
         color: var(--splash-text);
       }
 
+      html[data-platform="macos"],
+      html[data-platform="macos"] body {
+        background-color: transparent !important;
+      }
+
+      /* Clip fixed elements and body portals as well as the React frame. */
+      html[data-window-rounded="true"] body {
+        clip-path: inset(0 round var(--window-frame-radius));
+      }
+
       #startup-splash {
         position: fixed;
         inset: 0;
@@ -88,10 +102,18 @@
         transition: opacity 180ms ease, transform 180ms ease;
       }
 
+      [data-suppress-startup-splash="true"] #startup-splash {
+        display: none;
+      }
+
       [data-platform="macos"] #startup-splash {
         box-sizing: border-box;
         border: 1px solid var(--splash-frame-border);
-        border-radius: 4px;
+        border-radius: var(--window-frame-radius);
+      }
+
+      [data-window-rounded="false"] #startup-splash {
+        border-radius: 0;
       }
 
       #startup-splash.is-hidden {

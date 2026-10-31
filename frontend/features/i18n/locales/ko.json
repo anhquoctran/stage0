@@ -152,7 +152,10 @@
     "disabled": "사용 안 함",
     "confirm": "확인",
     "optional": "선택 사항",
-    "apply": "적용"
+    "apply": "적용",
+    "open": "열림",
+    "resolved": "해결됨",
+    "closed": "닫힘"
   },
   "preferences": {
     "appearance": "모양",
@@ -561,15 +564,15 @@
       "repo_overview": "저장소 개요...",
       "new_mr": "새 Virtual MR...",
       "fetch": "Fetch (전체 및 정리)",
-      "pull": "Pull",
-      "pull_from": "다음에서 Pull...",
+      "pull": "가져오기",
+      "pull_from": "다음에서 가져오기...",
       "merge": "업스트림 병합",
       "merge_from": "다음에서 병합...",
-      "rebase": "Rebase",
-      "rebase_from": "다음에서 Rebase...",
-      "rebase_continue": "계속",
+      "rebase": "리베이스",
+      "rebase_from": "다음에서 리베이스...",
+      "rebase_continue": "리베이스 계속",
       "rebase_skip": "커밋 건너뛰기",
-      "rebase_abort": "Rebase 중단",
+      "rebase_abort": "리베이스 중단",
       "swap_branches": "Base와 Compare 바꾸기",
       "refresh_diff": "Diff 및 충돌 새로고침",
       "open_terminal": "터미널",
@@ -582,7 +585,23 @@
       "shortcuts": "키보드 단축키",
       "keymaps": "키맵 사용자 지정...",
       "open_webview_devtools": "개발자 도구",
-      "release_notes": "릴리스 노트 보기"
+      "release_notes": "릴리스 노트 보기",
+      "next_conflict": "다음 충돌 파일",
+      "close_tab": "MR 탭 / 초안 닫기",
+      "tab_1": "MR 탭 1로 전환",
+      "tab_2": "MR 탭 2로 전환",
+      "tab_3": "MR 탭 3로 전환",
+      "tab_4": "MR 탭 4로 전환",
+      "tab_5": "MR 탭 5로 전환",
+      "tab_6": "MR 탭 6로 전환",
+      "tab_7": "MR 탭 7로 전환",
+      "tab_8": "MR 탭 8로 전환",
+      "tab_9": "MR 탭 9로 전환",
+      "recent_1": "최근 저장소 1 열기",
+      "recent_2": "최근 저장소 2 열기",
+      "recent_3": "최근 저장소 3 열기",
+      "recent_4": "최근 저장소 4 열기",
+      "recent_5": "최근 저장소 5 열기"
     },
     "recent": {
       "emptyLabel": "최근 저장소 없음",
@@ -628,16 +647,16 @@
   },
   "notifications": {
     "categoryHeading": "알림 종류",
-    "categoryDescription": "알림을 표시할 수 있는 Stage0 이벤트를 선택하세요. 표시 위치와 닫기 방식은 이벤트별로 Stage0가 설정합니다.",
+    "categoryDescription": "시스템 알림을 보낼 이벤트를 선택하세요. 표시와 닫기는 운영체제가 관리합니다.",
     "aiReviewTitle": "AI 코드 리뷰",
     "aiReviewDescription": "AI 리뷰 또는 재검증이 완료되었을 때.",
     "gitSyncTitle": "Git 감시 및 동기화",
     "gitSyncDescription": "원격 변경 사항, 새 브랜치 및 동기화 이벤트.",
     "guardrailsTitle": "보안 보호 장치",
     "guardrailsDescription": "권한 상승 명령, 접근 차단 및 정책 위반.",
-    "previewTitle": "알림 미리 보기",
+    "previewTitle": "시스템 알림 미리 보기",
     "previewDescription": "이 플랫폼의 알림 스타일로 테스트를 보냅니다. 기록이나 읽지 않은 알림 수에는 추가되지 않습니다.",
-    "previewSent": "테스트 알림을 보냈습니다. 기록이나 읽지 않은 알림 수에는 영향을 주지 않습니다.",
+    "previewSent": "테스트 알림을 보냈습니다. 표시 여부는 OS 설정에 따릅니다.",
     "previewFailed": "이 시스템에서 테스트 알림을 표시할 수 없습니다.",
     "testTooltip": "저장하지 않고 테스트 알림 표시",
     "desktopOnly": "데스크톱 앱에서 사용 가능",
@@ -661,7 +680,19 @@
     "toastView": "보기",
     "dismiss": "닫기",
     "dismissLabel": "알림 닫기",
-    "deliveryFailed": "Stage0 알림 전송에 실패했습니다."
+    "deliveryFailed": "Stage0 알림 전송에 실패했습니다.",
+    "permission": {
+      "title": "시스템 알림",
+      "description": "운영체제를 통해 Stage0 알림을 받습니다. 이 단계는 선택 사항입니다.",
+      "granted": "알림이 허용되어 있습니다. 위치, 소리, 표시 방식은 운영체제가 관리합니다.",
+      "denied": "알림이 차단되어 있습니다. Stage0는 계속 사용할 수 있으며 이벤트는 알림 기록에 남습니다. 시스템 설정에서 알림을 켜세요.",
+      "prompt": "Stage0가 알림을 보내도록 허용하세요. 허용하지 않고 계속할 수도 있습니다.",
+      "unsupported": "기본 시스템 알림을 사용할 수 없습니다. macOS/Windows에서는 설치된 Stage0 앱을 사용하고 Linux에서는 데스크톱 알림 서비스를 확인하세요.",
+      "request": "알림 허용",
+      "settings": "알림 설정 열기",
+      "error": "알림 권한을 확인하거나 변경하지 못했습니다. 다시 시도하거나 시스템 설정을 여세요.",
+      "system_managed": "이 데스크톱 환경이 알림 권한을 관리합니다. 알림이 표시되지 않으면 시스템 알림 설정을 확인하세요."
+    }
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} 님이 MR 리뷰를 완료했습니다",
@@ -2208,6 +2239,7 @@
       "openIn": "{{name}}에서 열기"
     },
     "repositoryLabels": {
+      "label": "라벨",
       "updated": "라벨 업데이트됨: {{name}}",
       "created": "라벨 생성됨: {{name}}",
       "saveFailed": "라벨을 저장하지 못했습니다: {{error}}",
@@ -3334,7 +3366,10 @@
       "runtimeUnavailable": "Stage0 알림 런타임을 사용할 수 없습니다.",
       "queueUnavailable": "Stage0 알림 대기열을 사용할 수 없습니다.",
       "unsupportedPlatform": "이 플랫폼에서는 Stage0 알림이 지원되지 않습니다.",
-      "dispatchFailed": "알림 전달 작업이 실패했습니다."
+      "dispatchFailed": "알림 전달 작업이 실패했습니다.",
+      "permissionDenied": "알림이 차단되어 있습니다. Stage0는 계속 사용할 수 있으며 이벤트는 알림 기록에 남습니다. 시스템 설정에서 알림을 켜세요.",
+      "permissionRequired": "Stage0가 알림을 보내도록 허용하세요. 허용하지 않고 계속할 수도 있습니다.",
+      "settingsFailed": "알림 권한을 확인하거나 변경하지 못했습니다. 다시 시도하거나 시스템 설정을 여세요."
     },
     "sandbox": {
       "dockerRunning": "Docker 데몬이 실행 중입니다 (기본 이미지: {{image}}).",

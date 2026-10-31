@@ -10,22 +10,27 @@ pub(super) fn revision(text: &str) -> String {
 
 pub(super) fn read_limited(path: &Path) -> Result<String, String> {
     reject_symlink(path)?;
-    let metadata =
-        fs::metadata(path).map_err(|_| crate::common::messages::code("backend.preferences.fileReadFailed"))?;
+    let metadata = fs::metadata(path)
+        .map_err(|_| crate::common::messages::code("backend.preferences.fileReadFailed"))?;
     if metadata.len() as usize > MAX_PREFERENCES_BYTES {
-        return Err(crate::common::messages::code("backend.preferences.fileTooLarge"));
+        return Err(crate::common::messages::code(
+            "backend.preferences.fileTooLarge",
+        ));
     }
-    fs::read_to_string(path).map_err(|_| crate::common::messages::code("backend.preferences.fileNotUtf8"))
+    fs::read_to_string(path)
+        .map_err(|_| crate::common::messages::code("backend.preferences.fileNotUtf8"))
 }
 
 pub(super) fn reject_symlink(path: &Path) -> Result<(), String> {
     match fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.file_type().is_symlink() => {
-            Err(crate::common::messages::code("backend.preferences.symlinkNotAllowed"))
-        }
+        Ok(metadata) if metadata.file_type().is_symlink() => Err(crate::common::messages::code(
+            "backend.preferences.symlinkNotAllowed",
+        )),
         Ok(_) => Ok(()),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
-        Err(_) => Err(crate::common::messages::code("backend.preferences.pathInspectionFailed")),
+        Err(_) => Err(crate::common::messages::code(
+            "backend.preferences.pathInspectionFailed",
+        )),
     }
 }
 
@@ -33,8 +38,9 @@ pub(super) fn secure_directory(path: &Path) -> Result<(), String> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o700))
-            .map_err(|_| crate::common::messages::code("backend.preferences.directoryPermissionFailed"))?;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o700)).map_err(|_| {
+            crate::common::messages::code("backend.preferences.directoryPermissionFailed")
+        })?;
     }
     #[cfg(not(unix))]
     let _ = path;
@@ -67,9 +73,9 @@ pub(super) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
             use std::os::unix::fs::OpenOptionsExt;
             options.mode(0o600);
         }
-        let mut file = options
-            .open(&temp)
-            .map_err(|_| crate::common::messages::code("backend.preferences.tempFileCreateFailed"))?;
+        let mut file = options.open(&temp).map_err(|_| {
+            crate::common::messages::code("backend.preferences.tempFileCreateFailed")
+        })?;
         file.write_all(content)
             .map_err(|_| crate::common::messages::code("backend.preferences.writeFailed"))?;
         file.sync_all()
@@ -77,8 +83,9 @@ pub(super) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            fs::set_permissions(&temp, fs::Permissions::from_mode(0o600))
-                .map_err(|_| crate::common::messages::code("backend.preferences.filePermissionFailed"))?;
+            fs::set_permissions(&temp, fs::Permissions::from_mode(0o600)).map_err(|_| {
+                crate::common::messages::code("backend.preferences.filePermissionFailed")
+            })?;
         }
         #[cfg(windows)]
         {
@@ -96,12 +103,15 @@ pub(super) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
                 )
             };
             if moved == 0 {
-                return Err(crate::common::messages::code("backend.preferences.atomicReplaceFailed"));
+                return Err(crate::common::messages::code(
+                    "backend.preferences.atomicReplaceFailed",
+                ));
             }
         }
         #[cfg(not(windows))]
-        fs::rename(&temp, path)
-            .map_err(|_| crate::common::messages::code("backend.preferences.atomicReplaceFailed"))?;
+        fs::rename(&temp, path).map_err(|_| {
+            crate::common::messages::code("backend.preferences.atomicReplaceFailed")
+        })?;
         #[cfg(unix)]
         OpenOptions::new()
             .read(true)

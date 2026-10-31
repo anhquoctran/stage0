@@ -152,7 +152,10 @@
     "disabled": "Désactivé",
     "confirm": "Confirmer",
     "optional": "facultatif",
-    "apply": "Appliquer"
+    "apply": "Appliquer",
+    "open": "Ouvert",
+    "resolved": "Résolu",
+    "closed": "Fermé"
   },
   "preferences": {
     "appearance": "Apparence",
@@ -566,13 +569,13 @@
       "repo_overview": "Aperçu du dépôt...",
       "new_mr": "Nouveau Virtual MR...",
       "fetch": "Fetch (tout et nettoyer)",
-      "pull": "Pull",
-      "pull_from": "Pull depuis...",
+      "pull": "Tirer (Pull)",
+      "pull_from": "Tirer depuis...",
       "merge": "Fusionner la branche amont",
       "merge_from": "Fusionner depuis...",
-      "rebase": "Rebase",
-      "rebase_from": "Rebase depuis...",
-      "rebase_continue": "Continuer",
+      "rebase": "Rebaser",
+      "rebase_from": "Rebaser depuis...",
+      "rebase_continue": "Continuer le rebase",
       "rebase_skip": "Ignorer le commit",
       "rebase_abort": "Annuler le rebase",
       "swap_branches": "Permuter base et comparaison",
@@ -587,7 +590,23 @@
       "shortcuts": "Raccourcis clavier",
       "keymaps": "Personnaliser les raccourcis...",
       "open_webview_devtools": "Outils de développement",
-      "release_notes": "Afficher les notes de version"
+      "release_notes": "Afficher les notes de version",
+      "next_conflict": "Fichier en conflit suivant",
+      "close_tab": "Fermer l'onglet MR / le brouillon",
+      "tab_1": "Basculer vers l'onglet MR 1",
+      "tab_2": "Basculer vers l'onglet MR 2",
+      "tab_3": "Basculer vers l'onglet MR 3",
+      "tab_4": "Basculer vers l'onglet MR 4",
+      "tab_5": "Basculer vers l'onglet MR 5",
+      "tab_6": "Basculer vers l'onglet MR 6",
+      "tab_7": "Basculer vers l'onglet MR 7",
+      "tab_8": "Basculer vers l'onglet MR 8",
+      "tab_9": "Basculer vers l'onglet MR 9",
+      "recent_1": "Ouvrir le dépôt récent 1",
+      "recent_2": "Ouvrir le dépôt récent 2",
+      "recent_3": "Ouvrir le dépôt récent 3",
+      "recent_4": "Ouvrir le dépôt récent 4",
+      "recent_5": "Ouvrir le dépôt récent 5"
     },
     "recent": {
       "emptyLabel": "Aucun dépôt récent",
@@ -633,21 +652,21 @@
   },
   "notifications": {
     "categoryHeading": "Catégories de notifications",
-    "categoryDescription": "Choisissez les événements Stage0 pouvant afficher une notification. Stage0 définit sa position et sa fermeture pour chaque événement.",
+    "categoryDescription": "Choisissez les événements autorisés à envoyer des notifications système. Le système gère leur affichage et leur fermeture.",
     "aiReviewTitle": "Revue de code par IA",
     "aiReviewDescription": "À la fin d’une revue IA ou d’une nouvelle vérification.",
     "gitSyncTitle": "Surveillance et synchronisation Git",
     "gitSyncDescription": "Modifications distantes, nouvelles branches et événements de synchronisation.",
     "guardrailsTitle": "Protections de sécurité",
     "guardrailsDescription": "Commandes avec privilèges élevés, accès bloqués et violations des règles.",
-    "previewTitle": "Aperçu de la notification",
+    "previewTitle": "Aperçu des notifications système",
     "previewDescription": "Envoyez un test utilisant le style de notification de cette plateforme. Il ne sera pas ajouté à l’historique ni au nombre de notifications non lues.",
-    "previewSent": "Notification de test envoyée. Elle ne modifie ni l’historique ni le nombre de notifications non lues.",
+    "previewSent": "Notification de test envoyée. Le système détermine si elle apparaît.",
     "previewFailed": "Impossible d’afficher une notification de test sur ce système.",
     "testTooltip": "Afficher une notification de test sans l’enregistrer",
     "desktopOnly": "Disponible dans l’application de bureau",
     "sending": "Envoi…",
-    "testButton": "Tester la notification",
+    "testButton": "Tester une notification",
     "testTitle": "Aperçu des notifications Stage0",
     "testBody": "Aperçu uniquement. Non enregistré.",
     "viewAction": "Afficher les notifications",
@@ -667,7 +686,19 @@
     "dismiss": "Ignorer",
     "dismissLabel": "Ignorer la notification",
     "deliveryFailed": "Échec de l’envoi de la notification Stage0.",
-    "unreadCount_many": "{{count}} non lues"
+    "unreadCount_many": "{{count}} non lues",
+    "permission": {
+      "title": "Notifications système",
+      "description": "Recevez les alertes de Stage0 via votre système. Cette étape est facultative.",
+      "granted": "Les notifications sont autorisées. Le système gère leur position, leur son et leur visibilité.",
+      "denied": "Les notifications sont bloquées. Vous pouvez continuer à utiliser Stage0 ; les événements restent dans l’historique. Activez les alertes dans les réglages système.",
+      "prompt": "Autorisez Stage0 à envoyer des notifications. Vous pouvez continuer sans autorisation.",
+      "unsupported": "Les notifications natives sont indisponibles. Sur macOS/Windows, utilisez Stage0 installé ; sur Linux, vérifiez le service de notifications du bureau.",
+      "request": "Autoriser les notifications",
+      "settings": "Ouvrir les réglages de notifications",
+      "error": "Impossible de lire ou de modifier l’autorisation. Réessayez ou ouvrez les réglages système.",
+      "system_managed": "Cet environnement de bureau gère les autorisations de notification. Si les alertes ne s’affichent pas, vérifiez les réglages de notifications du système."
+    }
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} a terminé la revue d’une MR",
@@ -2215,6 +2246,7 @@
       "openIn": "Ouvrir dans {{name}}"
     },
     "repositoryLabels": {
+      "label": "Étiquette",
       "updated": "Étiquette mise à jour : {{name}}",
       "created": "Étiquette créée : {{name}}",
       "saveFailed": "Impossible d’enregistrer l’étiquette : {{error}}",
@@ -3341,7 +3373,10 @@
       "runtimeUnavailable": "Le moteur d'exécution des notifications Stage0 est indisponible.",
       "queueUnavailable": "La file d'attente des notifications Stage0 est indisponible.",
       "unsupportedPlatform": "Les notifications Stage0 ne sont pas prises en charge sur cette plateforme.",
-      "dispatchFailed": "La tâche de distribution des notifications a échoué."
+      "dispatchFailed": "La tâche de distribution des notifications a échoué.",
+      "permissionDenied": "Les notifications sont bloquées. Vous pouvez continuer à utiliser Stage0 ; les événements restent dans l’historique. Activez les alertes dans les réglages système.",
+      "permissionRequired": "Autorisez Stage0 à envoyer des notifications. Vous pouvez continuer sans autorisation.",
+      "settingsFailed": "Impossible de lire ou de modifier l’autorisation. Réessayez ou ouvrez les réglages système."
     },
     "sandbox": {
       "dockerRunning": "Le démon Docker est en cours d'exécution (Image par défaut : {{image}}).",

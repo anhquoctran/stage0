@@ -152,7 +152,10 @@
     "disabled": "Disabled",
     "confirm": "Confirm",
     "optional": "optional",
-    "apply": "Apply"
+    "apply": "Apply",
+    "open": "Open",
+    "resolved": "Resolved",
+    "closed": "Closed"
   },
   "shortcuts": {
     "title": "Keyboard Shortcuts",
@@ -588,7 +591,23 @@
       "shortcuts": "Keyboard Shortcuts",
       "keymaps": "Customize Keymap...",
       "open_webview_devtools": "Developer Tools",
-      "release_notes": "View release notes"
+      "release_notes": "View release notes",
+      "next_conflict": "Next Conflict File",
+      "close_tab": "Close MR Tab / Draft",
+      "tab_1": "Switch to MR Tab 1",
+      "tab_2": "Switch to MR Tab 2",
+      "tab_3": "Switch to MR Tab 3",
+      "tab_4": "Switch to MR Tab 4",
+      "tab_5": "Switch to MR Tab 5",
+      "tab_6": "Switch to MR Tab 6",
+      "tab_7": "Switch to MR Tab 7",
+      "tab_8": "Switch to MR Tab 8",
+      "tab_9": "Switch to MR Tab 9",
+      "recent_1": "Open Recent Repository 1",
+      "recent_2": "Open Recent Repository 2",
+      "recent_3": "Open Recent Repository 3",
+      "recent_4": "Open Recent Repository 4",
+      "recent_5": "Open Recent Repository 5"
     },
     "recent": {
       "emptyLabel": "No Recent Repositories",
@@ -628,21 +647,21 @@
   },
   "notifications": {
     "categoryHeading": "Notification categories",
-    "categoryDescription": "Choose which Stage0 events can show a toast. Position and dismissal are set by Stage0 for each event.",
+    "categoryDescription": "Choose which events may send system notifications. Your OS controls display and dismissal.",
     "aiReviewTitle": "AI code review",
     "aiReviewDescription": "When an AI review or re-verification finishes.",
     "gitSyncTitle": "Git watchers and sync",
     "gitSyncDescription": "Remote changes, new branches, and sync events.",
     "guardrailsTitle": "Security guardrails",
     "guardrailsDescription": "Elevated commands, access blocks, and policy violations.",
-    "previewTitle": "Preview the notification toast",
+    "previewTitle": "Preview system notifications",
     "previewDescription": "Send a test using this platform’s notification style. It is not added to history or unread count.",
-    "previewSent": "Test toast sent. It does not affect notification history or unread count.",
+    "previewSent": "Test notification sent. Your OS controls whether it appears.",
     "previewFailed": "Could not display a test notification on this system.",
     "testTooltip": "Show a test notification without saving it",
     "desktopOnly": "Available in the desktop app",
     "sending": "Sending…",
-    "testButton": "Test Toast",
+    "testButton": "Test notification",
     "testTitle": "Stage0 notification preview",
     "testBody": "Preview only. Not saved.",
     "viewAction": "View notifications",
@@ -661,7 +680,19 @@
     "toastView": "View",
     "dismiss": "Dismiss",
     "dismissLabel": "Dismiss notification",
-    "deliveryFailed": "Stage0 notification delivery failed."
+    "deliveryFailed": "Stage0 notification delivery failed.",
+    "permission": {
+      "title": "System notifications",
+      "description": "Receive Stage0 alerts through your operating system. This step is optional.",
+      "granted": "Notifications are allowed. Your OS controls placement, sound, and visibility.",
+      "denied": "Notifications are blocked. You can continue using Stage0; events remain in notification history. Enable alerts in system settings.",
+      "prompt": "Allow Stage0 to send notifications. You can continue without allowing them.",
+      "unsupported": "Native notifications are unavailable. On macOS/Windows, use an installed Stage0 app; on Linux, check the desktop notification service.",
+      "request": "Allow notifications",
+      "settings": "Open notification settings",
+      "error": "Could not read or change notification permission. Try again or open system settings.",
+      "system_managed": "This desktop manages notification permissions. If alerts do not appear, check system notification settings."
+    }
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} finished an MR review",
@@ -2208,6 +2239,7 @@
       "openIn": "Open in {{name}}"
     },
     "repositoryLabels": {
+      "label": "Label",
       "updated": "Label updated: {{name}}",
       "created": "Label created: {{name}}",
       "saveFailed": "Failed to save label: {{error}}",
@@ -3334,7 +3366,10 @@
       "runtimeUnavailable": "The Stage0 notification runtime is unavailable.",
       "queueUnavailable": "The Stage0 notification queue is unavailable.",
       "unsupportedPlatform": "Stage0 notifications are not supported on this platform.",
-      "dispatchFailed": "The notification dispatch task failed."
+      "dispatchFailed": "The notification dispatch task failed.",
+      "permissionDenied": "Notifications are blocked. You can continue using Stage0; events remain in notification history. Enable alerts in system settings.",
+      "permissionRequired": "Allow Stage0 to send notifications. You can continue without allowing them.",
+      "settingsFailed": "Could not read or change notification permission. Try again or open system settings."
     },
     "sandbox": {
       "dockerRunning": "Docker daemon is running (Default image: {{image}}).",

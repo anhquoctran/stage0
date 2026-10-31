@@ -44,7 +44,9 @@ pub fn run_git(repo_path: &str, args: &[&str]) -> Result<CmdResult, String> {
         DEFAULT_GIT_TIMEOUT,
     )?;
     if result.output_truncated {
-        return Err(crate::common::messages::code("backend.git.outputLimitExceeded"));
+        return Err(crate::common::messages::code(
+            "backend.git.outputLimitExceeded",
+        ));
     }
     Ok(result)
 }
@@ -77,7 +79,9 @@ pub fn run_git_with_progress(
         )
     })?;
     if output.output_truncated {
-        return Err(crate::common::messages::code("backend.git.outputLimitExceeded"));
+        return Err(crate::common::messages::code(
+            "backend.git.outputLimitExceeded",
+        ));
     }
     Ok(CmdResult {
         stdout: String::from_utf8_lossy(&output.stdout).to_string(),
@@ -132,7 +136,9 @@ pub fn run_git_with_limits(
 pub fn run_git_strict(repo_path: &str, args: &[&str]) -> Result<String, String> {
     let res = run_git(repo_path, args)?;
     if res.output_truncated {
-        return Err(crate::common::messages::code("backend.git.outputLimitExceeded"));
+        return Err(crate::common::messages::code(
+            "backend.git.outputLimitExceeded",
+        ));
     }
     if !res.success {
         let err_msg = if !res.stderr.trim().is_empty() {
@@ -250,11 +256,15 @@ pub fn resolve_ref(repo_path: &str, r: &str) -> Result<(String, String), String>
     }
 
     if trimmed.starts_with('-') {
-        return Err(crate::common::messages::code("backend.git.resolveRefOptionNotAllowed"));
+        return Err(crate::common::messages::code(
+            "backend.git.resolveRefOptionNotAllowed",
+        ));
     }
 
     if trimmed.chars().any(|c| c.is_control() || c == ' ') {
-        return Err(crate::common::messages::code("backend.git.resolveRefWhitespaceNotAllowed"));
+        return Err(crate::common::messages::code(
+            "backend.git.resolveRefWhitespaceNotAllowed",
+        ));
     }
 
     let mut candidates = vec![trimmed.to_string()];

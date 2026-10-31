@@ -106,7 +106,13 @@ pub(super) async fn execute_tool_calls(
             json!({"tool":call.name,"isError":value["isError"],"outputBytes":output_bytes}),
         )?;
         let (complete_diffs, context_bytes, inspected_files) = {
-            let ctx = context.lock().map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?;
+            let ctx = context.lock().map_err(|_| {
+                crate::common::messages::failure(
+                    "backend.review.contextUnavailable",
+                    serde_json::json!({}),
+                    "Review context unavailable".into(),
+                )
+            })?;
             run.context_bytes = ctx.bytes;
             run.inspected_files = ctx.inspected.iter().cloned().collect();
             (ctx.complete_diffs.len(), ctx.bytes, ctx.inspected.len())

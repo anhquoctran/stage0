@@ -18,7 +18,7 @@ export const TabBarDraftItem: React.FC<{
   return (
     <div
       onClick={onActivate}
-      className={`group relative h-8 px-2.5 border-t border-x flex items-center gap-2 cursor-pointer transition-colors shrink-0 max-w-[260px] rounded-sm ${
+      className={`group relative h-8 px-2.5 border-t border-x flex items-center gap-2 cursor-pointer transition-colors shrink-0 max-w-[280px] rounded-sm ${
         isActive
           ? 'bg-mantle border-surface1 text-text font-medium shadow-xs'
           : 'bg-crust/50 border-transparent text-subtext0 hover:text-text hover:bg-surface0/40'
@@ -30,12 +30,12 @@ export const TabBarDraftItem: React.FC<{
         }`}
       />
       <span
-        className={`truncate text-xs ${isActive ? 'font-medium text-text' : 'text-subtext0'}`}
+        className={`min-w-0 flex-1 truncate text-xs ${isActive ? 'font-medium text-text' : 'text-subtext0'}`}
         title={displayTitle}
       >
         {draftMr.title || t('common.tabs.newVirtualMr')}
       </span>
-      <span className="text-[10px] px-1.5 py-[0.2rem] bg-brand/20 text-brand font-mono font-medium">
+      <span className="shrink-0 whitespace-nowrap rounded-sm text-[10px] px-1.5 py-[0.2rem] bg-brand/20 text-brand font-mono font-medium select-none">
         {t('common.tabs.draft')}
       </span>
       <button

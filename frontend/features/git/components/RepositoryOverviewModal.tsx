@@ -147,7 +147,7 @@ export const RepositoryOverviewModal: React.FC = () => {
     >
       <div className="w-full max-w-2xl bg-mantle border border-surface0 shadow-2xl overflow-hidden flex flex-col max-h-full rounded-sm">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-surface0 bg-crust">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-surface0 bg-crust rounded-t-sm">
           <div className="flex items-center gap-2.5 min-w-0">
             <Info className="w-5 h-5 text-primary shrink-0" />
             <div className="min-w-0">

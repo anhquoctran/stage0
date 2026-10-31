@@ -9,7 +9,11 @@ pub fn safe_path(path: &str, guards: &GuardrailsEngine) -> Result<(), String> {
             .split('/')
             .any(|part| part.is_empty() || part == "." || part == "..")
     {
-        return Err(crate::common::messages::failure("backend.review.literalRelativeRepoPathRequired", serde_json::json!({}), "Expected a literal relative repository file path".into()));
+        return Err(crate::common::messages::failure(
+            "backend.review.literalRelativeRepoPathRequired",
+            serde_json::json!({}),
+            "Expected a literal relative repository file path".into(),
+        ));
     }
     let lower = path.to_ascii_lowercase();
     if [
@@ -28,14 +32,22 @@ pub fn safe_path(path: &str, guards: &GuardrailsEngine) -> Result<(), String> {
     .iter()
     .any(|part| lower.contains(part))
     {
-        return Err(crate::common::messages::failure("backend.review.fileExcludedEgressPolicy", serde_json::json!({}), "File excluded by mandatory review egress policy".into()));
+        return Err(crate::common::messages::failure(
+            "backend.review.fileExcludedEgressPolicy",
+            serde_json::json!({}),
+            "File excluded by mandatory review egress policy".into(),
+        ));
     }
     // Inventory scans and repeated snapshot checks are not tool invocations.
     // Consult the sensitive-path policy without consuming the sandbox read
     // rate limit; the review runtime enforces its own tool/context budgets.
-    guards
-        .evaluate_resolved_read_path(path)
-        .map_err(|_| crate::common::messages::failure("backend.review.fileExcludedSensitivePolicy", serde_json::json!({}), "File excluded by sensitive-path policy".into()))?;
+    guards.evaluate_resolved_read_path(path).map_err(|_| {
+        crate::common::messages::failure(
+            "backend.review.fileExcludedSensitivePolicy",
+            serde_json::json!({}),
+            "File excluded by sensitive-path policy".into(),
+        )
+    })?;
     Ok(())
 }
 

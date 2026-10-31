@@ -199,6 +199,6 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
         )}
       </div>
     </section>,
-    globalThis.document.body
+    globalThis.document.getElementById('preferences-window-content') ?? globalThis.document.body
   );
 };

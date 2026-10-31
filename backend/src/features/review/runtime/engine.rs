@@ -46,7 +46,13 @@ pub(super) async fn execute_with_adapter(
     if reply_only {
         context
             .lock()
-            .map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?
+            .map_err(|_| {
+                crate::common::messages::failure(
+                    "backend.review.contextUnavailable",
+                    serde_json::json!({}),
+                    "Review context unavailable".into(),
+                )
+            })?
             .max_bytes = 32 * 1024;
     }
     let system = build_system_prompt(config);
@@ -63,12 +69,23 @@ pub(super) async fn execute_with_adapter(
                 ))
             },
         )
-        .map_err(|_| crate::common::messages::failure("backend.review.virtualMrNoLongerExists", serde_json::json!({}), "Virtual MR no longer exists".into()))?
+        .map_err(|_| {
+            crate::common::messages::failure(
+                "backend.review.virtualMrNoLongerExists",
+                serde_json::json!({}),
+                "Virtual MR no longer exists".into(),
+            )
+        })?
     };
     let participants = mentions::participants(&db.conn(), &run.session_id)?;
     let prompt=json!({"task":"Review this Virtual MR snapshot. Compare the source branch with the target branch, inspect unresolved discussions, publish evidence-backed inline findings, reply to users or AI peers who directly mention you when needed, and resolve only verified fixes", "mrTitle":mr_title,"targetBranch":target_branch,"sourceBranch":source_branch,"reviewerId":run.reviewer_id,"participants":participants,"baseSha":run.snapshot.base_sha,"headSha":run.snapshot.head_sha,"mergeBaseSha":run.snapshot.merge_base_sha,"changedFileCount":run.snapshot.changed_files.len(),"excludedFileCount":run.snapshot.excluded_files.len()}).to_string();
-    let mut initial: serde_json::Value =
-        serde_json::from_str(&prompt).map_err(|_| crate::common::messages::failure("backend.review.buildContextFailed", serde_json::json!({}), "Could not build review context".into()))?;
+    let mut initial: serde_json::Value = serde_json::from_str(&prompt).map_err(|_| {
+        crate::common::messages::failure(
+            "backend.review.buildContextFailed",
+            serde_json::json!({}),
+            "Could not build review context".into(),
+        )
+    })?;
     initial["reviewPreferences"] = super::prompt::review_preferences(config);
     initial["replyDiscussionId"] = json!(config.reply_discussion_id);
     if reply_only {
@@ -374,7 +391,9 @@ pub(super) async fn execute_with_adapter(
                 calls.len(),
                 max_calls
             ));
-            return Err(crate::common::messages::code("backend.review.toolCallBudgetExceeded"));
+            return Err(crate::common::messages::code(
+                "backend.review.toolCallBudgetExceeded",
+            ));
         }
         if calls.iter().any(|call| call.name == "submit_review") && calls.len() != 1 {
             debug_log::log(format_args!(
@@ -383,7 +402,9 @@ pub(super) async fn execute_with_adapter(
                 run.turns,
                 calls.len()
             ));
-            return Err(crate::common::messages::code("backend.review.submitReviewSingleCall"));
+            return Err(crate::common::messages::code(
+                "backend.review.submitReviewSingleCall",
+            ));
         }
         let (submitted, results) =
             execute_tool_calls(db, config, run, context, &mut state, calls, &registry).await?;

@@ -172,11 +172,12 @@ Preserve these lifecycle contracts at callers:
   paths. Failed registration must not publish listener readiness.
 - Two subscribers to one event remain independent, including their targets and
   cleanup. React Strict Mode setup/cleanup must not leak a late subscription.
-- Preserve listener-ready handshakes, such as `notification_host_ready`, after
-  successful registration and in their existing order.
+- Preserve listener-ready handshakes after successful registration and in their
+  existing order. The old notification-host handshake was retired when push
+  delivery moved to native OS notification centers.
 
 Existing examples are `useCloneRepository.ts`, `useApplicationMenu.ts` and
-`NotificationHost.tsx`. Any future lifecycle helper needs a separate API with an
+`useNotificationPermission.ts`. Any future lifecycle helper needs a separate API with an
 explicit owner/dispose or abort contract, defined repeated-dispose behavior and
 coverage for late resolution, rejection, concurrent subscribers and remounts.
 

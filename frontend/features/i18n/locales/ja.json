@@ -152,7 +152,10 @@
     "disabled": "無効",
     "confirm": "確認",
     "optional": "任意",
-    "apply": "適用"
+    "apply": "適用",
+    "open": "オープン",
+    "resolved": "解決済み",
+    "closed": "クローズ"
   },
   "preferences": {
     "appearance": "外観",
@@ -561,15 +564,15 @@
       "repo_overview": "リポジトリの概要...",
       "new_mr": "新しい Virtual MR...",
       "fetch": "Fetch (すべて・整理)",
-      "pull": "Pull",
-      "pull_from": "Pull 元...",
+      "pull": "プル",
+      "pull_from": "指定元からプル...",
       "merge": "上流をマージ",
       "merge_from": "マージ元...",
-      "rebase": "Rebase",
-      "rebase_from": "Rebase 元...",
-      "rebase_continue": "続行",
+      "rebase": "リベース",
+      "rebase_from": "指定元からリベース...",
+      "rebase_continue": "リベースを続行",
       "rebase_skip": "コミットをスキップ",
-      "rebase_abort": "Rebase を中止",
+      "rebase_abort": "リベースを中止",
       "swap_branches": "Base と Compare を入れ替え",
       "refresh_diff": "差分と競合を更新",
       "open_terminal": "ターミナル",
@@ -582,7 +585,23 @@
       "shortcuts": "キーボードショートカット",
       "keymaps": "キーマップをカスタマイズ...",
       "open_webview_devtools": "開発者ツール",
-      "release_notes": "リリースノートを表示"
+      "release_notes": "リリースノートを表示",
+      "next_conflict": "次の競合ファイル",
+      "close_tab": "MR タブ / 下書きを閉じる",
+      "tab_1": "MR タブ 1 に切り替え",
+      "tab_2": "MR タブ 2 に切り替え",
+      "tab_3": "MR タブ 3 に切り替え",
+      "tab_4": "MR タブ 4 に切り替え",
+      "tab_5": "MR タブ 5 に切り替え",
+      "tab_6": "MR タブ 6 に切り替え",
+      "tab_7": "MR タブ 7 に切り替え",
+      "tab_8": "MR タブ 8 に切り替え",
+      "tab_9": "MR タブ 9 に切り替え",
+      "recent_1": "最近のリポジトリ 1 を開く",
+      "recent_2": "最近のリポジトリ 2 を開く",
+      "recent_3": "最近のリポジトリ 3 を開く",
+      "recent_4": "最近のリポジトリ 4 を開く",
+      "recent_5": "最近のリポジトリ 5 を開く"
     },
     "recent": {
       "emptyLabel": "最近使ったリポジトリはありません",
@@ -628,16 +647,16 @@
   },
   "notifications": {
     "categoryHeading": "通知の種類",
-    "categoryDescription": "通知を表示できるStage0イベントを選択します。表示位置と閉じ方はイベントごとにStage0が設定します。",
+    "categoryDescription": "システム通知を送るイベントを選びます。表示と終了はOSが管理します。",
     "aiReviewTitle": "AIコードレビュー",
     "aiReviewDescription": "AIレビューまたは再検証が完了したとき。",
     "gitSyncTitle": "Gitの監視と同期",
     "gitSyncDescription": "リモートの変更、新しいブランチ、同期イベント。",
     "guardrailsTitle": "セキュリティ保護",
     "guardrailsDescription": "権限昇格コマンド、アクセスのブロック、ポリシー違反。",
-    "previewTitle": "通知のプレビュー",
+    "previewTitle": "システム通知をプレビュー",
     "previewDescription": "このプラットフォームの通知スタイルでテストを送信します。履歴や未読件数には追加されません。",
-    "previewSent": "テスト通知を送信しました。履歴や未読件数には影響しません。",
+    "previewSent": "テスト通知を送信しました。表示はOSの設定に従います。",
     "previewFailed": "このシステムではテスト通知を表示できませんでした。",
     "testTooltip": "保存せずにテスト通知を表示",
     "desktopOnly": "デスクトップアプリで利用できます",
@@ -661,7 +680,19 @@
     "toastView": "表示",
     "dismiss": "閉じる",
     "dismissLabel": "通知を閉じる",
-    "deliveryFailed": "Stage0の通知を送信できませんでした。"
+    "deliveryFailed": "Stage0の通知を送信できませんでした。",
+    "permission": {
+      "title": "システム通知",
+      "description": "OSを通じてStage0の通知を受け取ります。この手順は任意です。",
+      "granted": "通知は許可されています。表示位置、音、表示方法はOSが管理します。",
+      "denied": "通知はブロックされています。Stage0は引き続き使用でき、イベントは通知履歴に残ります。システム設定で通知を有効にしてください。",
+      "prompt": "Stage0の通知を許可します。許可せずに続行することもできます。",
+      "unsupported": "ネイティブ通知を利用できません。macOS/Windowsではインストール済みのStage0を使用し、Linuxではデスクトップの通知サービスを確認してください。",
+      "request": "通知を許可",
+      "settings": "通知設定を開く",
+      "error": "通知の権限を確認または変更できませんでした。再試行するかシステム設定を開いてください。",
+      "system_managed": "このデスクトップ環境が通知の権限を管理します。通知が表示されない場合は、システムの通知設定を確認してください。"
+    }
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}}がMRのレビューを完了しました",
@@ -2208,6 +2239,7 @@
       "openIn": "{{name}}で開く"
     },
     "repositoryLabels": {
+      "label": "ラベル",
       "updated": "ラベルを更新しました: {{name}}",
       "created": "ラベルを作成しました: {{name}}",
       "saveFailed": "ラベルを保存できませんでした: {{error}}",
@@ -3334,7 +3366,10 @@
       "runtimeUnavailable": "Stage0通知ランタイムは利用できません。",
       "queueUnavailable": "Stage0通知キューは利用できません。",
       "unsupportedPlatform": "Stage0通知はこのプラットフォームではサポートされていません。",
-      "dispatchFailed": "通知ディスパッチタスクが失敗しました。"
+      "dispatchFailed": "通知ディスパッチタスクが失敗しました。",
+      "permissionDenied": "通知はブロックされています。Stage0は引き続き使用でき、イベントは通知履歴に残ります。システム設定で通知を有効にしてください。",
+      "permissionRequired": "Stage0の通知を許可します。許可せずに続行することもできます。",
+      "settingsFailed": "通知の権限を確認または変更できませんでした。再試行するかシステム設定を開いてください。"
     },
     "sandbox": {
       "dockerRunning": "Dockerデーモンが実行中です (デフォルトイメージ: {{image}})。",

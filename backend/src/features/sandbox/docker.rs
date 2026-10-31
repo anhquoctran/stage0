@@ -370,7 +370,9 @@ impl SandboxAdapter for DockerSandboxAdapter {
             Ok(output) => output,
             Err(error) if error.contains("timed out") => {
                 stop_container(container_id);
-                return Err(crate::common::messages::code("backend.sandbox.dockerTimeout"));
+                return Err(crate::common::messages::code(
+                    "backend.sandbox.dockerTimeout",
+                ));
             }
             Err(error) => {
                 return Err(format!(

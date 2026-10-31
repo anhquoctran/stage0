@@ -32,10 +32,14 @@ impl ReviewCoordinator {
             .lock()
             .map_err(|_| crate::common::messages::code("backend.review.coordinatorUnavailable"))?;
         if map.contains_key(session) {
-            return Err(crate::common::messages::code("backend.review.alreadyRunning"));
+            return Err(crate::common::messages::code(
+                "backend.review.alreadyRunning",
+            ));
         }
         if map.len() >= 2 {
-            return Err(crate::common::messages::code("backend.review.concurrencyLimit"));
+            return Err(crate::common::messages::code(
+                "backend.review.concurrencyLimit",
+            ));
         }
         let cancellation = Arc::new(AtomicBool::new(false));
         map.insert(session.into(), (run.into(), Arc::clone(&cancellation)));

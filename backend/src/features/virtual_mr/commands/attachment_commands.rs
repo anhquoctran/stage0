@@ -78,18 +78,18 @@ pub async fn save_mr_image_attachment(
                 &data_base64
             };
 
-            let decoded_bytes = BASE64
-                .decode(pure_base64.trim())
-                .map_err(|e| {
-                    crate::common::messages::failure(
-                        "backend.virtualMr.imageBase64Invalid",
-                        serde_json::json!({ "error": e.to_string() }),
-                        format!("Invalid base64 image data: {e}"),
-                    )
-                })?;
+            let decoded_bytes = BASE64.decode(pure_base64.trim()).map_err(|e| {
+                crate::common::messages::failure(
+                    "backend.virtualMr.imageBase64Invalid",
+                    serde_json::json!({ "error": e.to_string() }),
+                    format!("Invalid base64 image data: {e}"),
+                )
+            })?;
 
             if decoded_bytes.is_empty() {
-                return Err(crate::common::messages::code("backend.virtualMr.imageEmpty"));
+                return Err(crate::common::messages::code(
+                    "backend.virtualMr.imageEmpty",
+                ));
             }
 
             if decoded_bytes.len() > MAX_IMAGE_ATTACHMENT_BYTES {
@@ -154,7 +154,13 @@ pub async fn save_mr_image_attachment(
             })
         })
         .await
-        .map_err(|e| crate::common::messages::failure("backend.virtualMr.taskExecutionFailed", serde_json::json!({ "error": e.to_string() }), format!("Task execution failed: {}", e)))?
+        .map_err(|e| {
+            crate::common::messages::failure(
+                "backend.virtualMr.taskExecutionFailed",
+                serde_json::json!({ "error": e.to_string() }),
+                format!("Task execution failed: {}", e),
+            )
+        })?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))

@@ -25,9 +25,9 @@ export const PreferencesNavTree: React.FC<{
 }) => {
   const { t } = useTranslation();
   return (
-    <div className="w-60 border-e border-surface0/60 flex flex-col bg-mantle/50 shrink-0">
+    <div className="w-60 border-e border-surface0/50 flex flex-col bg-mantle/40 shrink-0">
       {/* Search Input Box */}
-      <div className="p-3 border-b border-surface0/60 rounded-sm">
+      <div className="p-3 border-b border-surface0/50">
         <div className="relative flex items-center">
           <Search className="w-3.5 h-3.5 text-subtext0 absolute start-2.5 pointer-events-none" />
           <input
@@ -35,7 +35,7 @@ export const PreferencesNavTree: React.FC<{
             placeholder={t('preferences.navSearch.placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface0/50 border border-surface1/60 rounded px-2.5 ps-8 pe-7 py-1 text-xs text-text placeholder:text-subtext0 focus:outline-hidden focus:border-brand transition-colors"
+            className="w-full bg-surface0/50 border border-surface1/60 rounded-sm px-2.5 ps-8 pe-7 py-1 text-xs text-text placeholder:text-subtext0 focus:outline-hidden focus:border-brand transition-colors"
           />
           {searchQuery && (
             <button

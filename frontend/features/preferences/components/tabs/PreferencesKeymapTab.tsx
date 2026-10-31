@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { KeymapPresetPicker } from '../keymaps/KeymapPresetPicker';
+import { getOsFileManagerName } from '../../../git/utils/fileActions';
+import { menuLabel } from '../../../../core/constants/applicationMenu';
 import {
     KEYMAP_PRESETS,
     keymapPlatform,
@@ -25,13 +27,14 @@ export function PreferencesKeymapTab({
         KEYMAP_PRESETS[0];
     const customized = new Set(value.overrides.map((item) => item.command));
     const search = query.trim().toLowerCase();
-    const commands = resolveKeymap(value, platform).filter(
-        (command) =>
-            (!modifiedOnly || customized.has(command.id)) &&
-            `${command.id} ${command.label} ${command.scope} ${command.keys.join(' ')}`
-                .toLowerCase()
-                .includes(search),
-    );
+    const fileManager = getOsFileManagerName();
+    const commands = resolveKeymap(value, platform).filter((command) => {
+        if (modifiedOnly && !customized.has(command.id)) return false;
+        const translatedLabel = menuLabel(translateUiText(command.label), fileManager);
+        return `${command.id} ${command.label} ${translatedLabel} ${command.scope} ${command.keys.join(' ')}`
+            .toLowerCase()
+            .includes(search);
+    });
     const errors = [
         ...new Set(
             ['macos', 'windows', 'linux'].flatMap((os) =>

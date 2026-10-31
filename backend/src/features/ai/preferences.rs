@@ -48,7 +48,9 @@ fn apply_keys(
             .any(|provider| !valid_provider(provider) || keys.contains_key(provider))
         || removals.iter().collect::<BTreeSet<_>>().len() != removals.len()
     {
-        return Err(crate::common::messages::code("backend.ai.invalidProviderKeyChanges"));
+        return Err(crate::common::messages::code(
+            "backend.ai.invalidProviderKeyChanges",
+        ));
     }
     if keys.is_empty() && removals.is_empty() {
         return Ok((BTreeMap::new(), BTreeMap::new()));
@@ -159,7 +161,9 @@ fn resolve_mcp_env_with_record(
         || secret_env_keys.iter().any(|name| !valid_env_name(name))
         || secret_env_keys.iter().collect::<BTreeSet<_>>().len() != secret_env_keys.len()
     {
-        return Err(crate::common::messages::code("backend.ai.invalidMcpServerEnvConfig"));
+        return Err(crate::common::messages::code(
+            "backend.ai.invalidMcpServerEnvConfig",
+        ));
     }
     let mut resolved = public_env
         .iter()
@@ -169,14 +173,21 @@ fn resolve_mcp_env_with_record(
         return Ok(resolved);
     }
     let record = Zeroizing::new(
-        read(server_id)?.ok_or_else(|| crate::common::messages::code("backend.ai.mcpCredentialMissing"))?,
+        read(server_id)?
+            .ok_or_else(|| crate::common::messages::code("backend.ai.mcpCredentialMissing"))?,
     );
     if record.len() > 2_048 {
-        return Err(crate::common::messages::code("backend.ai.mcpCredentialSizeLimit"));
+        return Err(crate::common::messages::code(
+            "backend.ai.mcpCredentialSizeLimit",
+        ));
     }
     let mut values = match serde_json::from_str::<BTreeMap<String, String>>(&record) {
         Ok(values) => values,
-        Err(_) => return Err(crate::common::messages::code("backend.ai.mcpCredentialInvalid")),
+        Err(_) => {
+            return Err(crate::common::messages::code(
+                "backend.ai.mcpCredentialInvalid",
+            ))
+        }
     };
     if values.len() > 256
         || values
@@ -186,7 +197,9 @@ fn resolve_mcp_env_with_record(
         for value in values.values_mut() {
             zeroize::Zeroize::zeroize(value);
         }
-        return Err(crate::common::messages::code("backend.ai.mcpCredentialOutsideLimits"));
+        return Err(crate::common::messages::code(
+            "backend.ai.mcpCredentialOutsideLimits",
+        ));
     }
     for name in secret_env_keys {
         match values.remove(name) {
@@ -233,7 +246,9 @@ fn apply_mcp_env_changes(
                 || names.iter().collect::<BTreeSet<_>>().len() != names.len()
         })
     {
-        return Err(crate::common::messages::code("backend.ai.invalidMcpCredentialChanges"));
+        return Err(crate::common::messages::code(
+            "backend.ai.invalidMcpCredentialChanges",
+        ));
     }
     let server_ids = updates
         .keys()
@@ -292,7 +307,9 @@ fn apply_mcp_env_changes(
         changes.insert(server_id.clone(), after);
     }
     if total_bytes > 64 * 1024 {
-        return Err(crate::common::messages::code("backend.ai.mcpBatchSizeExceeded"));
+        return Err(crate::common::messages::code(
+            "backend.ai.mcpBatchSizeExceeded",
+        ));
     }
     let mut attempted = Vec::new();
     for (server_id, secret_record) in &changes {

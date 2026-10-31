@@ -1,5 +1,5 @@
 import { AlertTriangle } from '../../../../common/components/icons/AlertTriangle';
-import { ArrowLeftRight } from '../../../../common/components/icons/ArrowLeftRight';
+import { ArrowRight } from '../../../../common/components/icons/ArrowRight';
 import { CheckCircle2 } from '../../../../common/components/icons/CheckCircle2';
 import { GitPullRequest } from '../../../../common/components/icons/GitPullRequest';
 import { Info } from '../../../../common/components/icons/Info';
@@ -61,14 +61,19 @@ export function NewVirtualMrHeader({
       <div className="flex items-center justify-between flex-wrap gap-3 px-3.5 py-2 bg-base/50 border border-surface0 rounded-sm">
         {/* Branch Selectors */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Base Branch */}
+          {/* Compare Branch (Source) */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-medium text-subtext0 select-none">{translateUiText('compareStatus.baseLabel')}</span>
+            <span
+              className="text-[10px] text-accent font-mono font-semibold uppercase px-1 py-0.5 bg-surface1/60 rounded-sm select-none"
+              title={translateUiText('git.branchSelector.compareSource')}
+            >
+              {translateUiText('compareStatus.compareLabel')}
+            </span>
             <TabBranchSelector
-              roleType="target"
-              value={draftMr.baseBranch}
+              roleType="source"
+              value={draftMr.compareBranch}
               branches={branches}
-              onChange={handleBaseChange}
+              onChange={handleCompareChange}
               maxWidthClass="max-w-[240px] lg:max-w-[340px]"
             />
           </div>
@@ -77,20 +82,25 @@ export function NewVirtualMrHeader({
           <button
             type="button"
             onClick={handleSwapBranches}
-            className="p-1.5 text-subtext0 hover:text-brand hover:bg-surface0 border border-transparent hover:border-surface0 transition-colors cursor-pointer rounded-sm"
-            title={translateUiText('compareStatus.swapBranches')}
+            className="group/swap p-1.5 text-subtext0 hover:text-brand hover:bg-surface0 border border-transparent hover:border-surface0 transition-colors cursor-pointer rounded-sm"
+            title={`${draftMr.compareBranch} → ${draftMr.baseBranch} (${translateUiText('compareStatus.swapBranches')})`}
           >
-            <ArrowLeftRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3.5 h-3.5 group-hover/swap:translate-x-0.5 transition-transform rtl:rotate-180" />
           </button>
 
-          {/* Compare Branch */}
+          {/* Base Branch (Target) */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-medium text-subtext0 select-none">{translateUiText('compareStatus.compareLabel')}</span>
+            <span
+              className="text-[10px] text-subtext0 font-mono font-semibold uppercase px-1 py-0.5 bg-surface1/60 rounded-sm select-none"
+              title={translateUiText('git.branchSelector.baseTarget')}
+            >
+              {translateUiText('compareStatus.baseLabel')}
+            </span>
             <TabBranchSelector
-              roleType="source"
-              value={draftMr.compareBranch}
+              roleType="target"
+              value={draftMr.baseBranch}
               branches={branches}
-              onChange={handleCompareChange}
+              onChange={handleBaseChange}
               maxWidthClass="max-w-[240px] lg:max-w-[340px]"
             />
           </div>

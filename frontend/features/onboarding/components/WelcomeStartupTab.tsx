@@ -1,4 +1,5 @@
 import React from 'react';
+import { NotificationPermissionPanel } from '../../notifications/components/NotificationPermissionPanel';
 import { Trans, useTranslation as useUiTextTranslation } from 'react-i18next';
 import { useApplicationServices } from '../../../core/services/runtime/useApplicationServices';
 import { SettingRow } from '../../preferences/components/SettingRow';
@@ -10,6 +11,7 @@ export const WelcomeStartupTab: React.FC<Omit<WelcomeSettingsProps, 'step'>> = (
   const canAddToPath = useApplicationServices().platform.capabilities.backend;
   return (
     <div className="space-y-1">
+      <NotificationPermissionPanel />
       <SettingRow
         title={translateUiText('onboarding.startup.launchAtStartup')}
         description={translateUiText('onboarding.startup.launchAtStartupDescription')}

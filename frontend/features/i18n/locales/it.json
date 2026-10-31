@@ -152,7 +152,10 @@
     "disabled": "Disattivato",
     "confirm": "Conferma",
     "optional": "facoltativo",
-    "apply": "Applica"
+    "apply": "Applica",
+    "open": "Aperto",
+    "resolved": "Risolto",
+    "closed": "Chiuso"
   },
   "shortcuts": {
     "title": "Scorciatoie da tastiera",
@@ -578,9 +581,9 @@
       "merge_from": "Unisci da...",
       "rebase": "Esegui rebase",
       "rebase_from": "Esegui rebase da...",
-      "rebase_continue": "Continua",
+      "rebase_continue": "Continua rebase",
       "rebase_skip": "Salta commit",
-      "rebase_abort": "Interrompi",
+      "rebase_abort": "Interrompi rebase",
       "swap_branches": "Scambia base e confronto",
       "refresh_diff": "Aggiorna differenze e conflitti",
       "open_terminal": "Terminale",
@@ -593,7 +596,23 @@
       "shortcuts": "Scorciatoie da tastiera",
       "keymaps": "Personalizza scorciatoie...",
       "open_webview_devtools": "Strumenti per sviluppatori",
-      "release_notes": "Visualizza note di rilascio"
+      "release_notes": "Visualizza note di rilascio",
+      "next_conflict": "File in conflitto successivo",
+      "close_tab": "Chiudi scheda / bozza MR",
+      "tab_1": "Passa alla scheda MR 1",
+      "tab_2": "Passa alla scheda MR 2",
+      "tab_3": "Passa alla scheda MR 3",
+      "tab_4": "Passa alla scheda MR 4",
+      "tab_5": "Passa alla scheda MR 5",
+      "tab_6": "Passa alla scheda MR 6",
+      "tab_7": "Passa alla scheda MR 7",
+      "tab_8": "Passa alla scheda MR 8",
+      "tab_9": "Passa alla scheda MR 9",
+      "recent_1": "Apri repository recente 1",
+      "recent_2": "Apri repository recente 2",
+      "recent_3": "Apri repository recente 3",
+      "recent_4": "Apri repository recente 4",
+      "recent_5": "Apri repository recente 5"
     },
     "recent": {
       "emptyLabel": "Nessun repository recente",
@@ -633,16 +652,16 @@
   },
   "notifications": {
     "categoryHeading": "Categorie di notifiche",
-    "categoryDescription": "Scegli quali eventi di Stage0 possono mostrare una notifica. Stage0 imposta posizione e chiusura per ogni evento.",
+    "categoryDescription": "Scegli gli eventi che possono inviare notifiche di sistema. Il sistema operativo ne gestisce visualizzazione e chiusura.",
     "aiReviewTitle": "Revisione del codice con IA",
     "aiReviewDescription": "Quando termina una revisione IA o una nuova verifica.",
     "gitSyncTitle": "Monitoraggio e sincronizzazione Git",
     "gitSyncDescription": "Modifiche remote, nuovi rami ed eventi di sincronizzazione.",
     "guardrailsTitle": "Protezioni di sicurezza",
     "guardrailsDescription": "Comandi con privilegi elevati, accessi bloccati e violazioni delle regole.",
-    "previewTitle": "Anteprima della notifica",
+    "previewTitle": "Anteprima delle notifiche di sistema",
     "previewDescription": "Invia una prova nello stile delle notifiche di questa piattaforma. Non viene aggiunta alla cronologia o al conteggio delle non lette.",
-    "previewSent": "Notifica di prova inviata. Non modifica la cronologia né il conteggio delle non lette.",
+    "previewSent": "Notifica di prova inviata. Il sistema operativo decide se mostrarla.",
     "previewFailed": "Impossibile mostrare una notifica di prova su questo sistema.",
     "testTooltip": "Mostra una notifica di prova senza salvarla",
     "desktopOnly": "Disponibile nell’app desktop",
@@ -667,7 +686,19 @@
     "dismiss": "Ignora",
     "dismissLabel": "Ignora notifica",
     "deliveryFailed": "Invio della notifica di Stage0 non riuscito.",
-    "unreadCount_many": "{{count}} non lette"
+    "unreadCount_many": "{{count}} non lette",
+    "permission": {
+      "title": "Notifiche di sistema",
+      "description": "Ricevi gli avvisi di Stage0 tramite il sistema operativo. Questo passaggio è facoltativo.",
+      "granted": "Le notifiche sono consentite. Il sistema controlla posizione, suono e visibilità.",
+      "denied": "Le notifiche sono bloccate. Puoi continuare a usare Stage0; gli eventi rimangono nella cronologia. Abilita gli avvisi nelle impostazioni di sistema.",
+      "prompt": "Consenti a Stage0 di inviare notifiche. Puoi continuare senza autorizzazione.",
+      "unsupported": "Le notifiche native non sono disponibili. Su macOS/Windows usa Stage0 installato; su Linux controlla il servizio di notifiche del desktop.",
+      "request": "Consenti notifiche",
+      "settings": "Apri impostazioni notifiche",
+      "error": "Impossibile leggere o modificare l’autorizzazione. Riprova o apri le impostazioni di sistema.",
+      "system_managed": "Questo ambiente desktop gestisce le autorizzazioni delle notifiche. Se gli avvisi non compaiono, controlla le impostazioni di sistema."
+    }
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} ha terminato la revisione di una MR",
@@ -2215,6 +2246,7 @@
       "openIn": "Apri in {{name}}"
     },
     "repositoryLabels": {
+      "label": "Etichetta",
       "updated": "Etichetta aggiornata: {{name}}",
       "created": "Etichetta creata: {{name}}",
       "saveFailed": "Impossibile salvare l’etichetta: {{error}}",
@@ -3341,7 +3373,10 @@
       "runtimeUnavailable": "Il runtime delle notifiche di Stage0 non è disponibile.",
       "queueUnavailable": "La coda delle notifiche di Stage0 non è disponibile.",
       "unsupportedPlatform": "Le notifiche di Stage0 non sono supportate su questa piattaforma.",
-      "dispatchFailed": "Attività di invio delle notifiche non riuscita."
+      "dispatchFailed": "Attività di invio delle notifiche non riuscita.",
+      "permissionDenied": "Le notifiche sono bloccate. Puoi continuare a usare Stage0; gli eventi rimangono nella cronologia. Abilita gli avvisi nelle impostazioni di sistema.",
+      "permissionRequired": "Consenti a Stage0 di inviare notifiche. Puoi continuare senza autorizzazione.",
+      "settingsFailed": "Impossibile leggere o modificare l’autorizzazione. Riprova o apri le impostazioni di sistema."
     },
     "sandbox": {
       "dockerRunning": "Il daemon Docker è in esecuzione (Immagine predefinita: {{image}}).",

@@ -306,8 +306,37 @@ samp {
   }
 }
 
-body.notification-host-window {
+html.transparent-window,
+body.transparent-window {
   background-color: transparent !important;
+}
+
+.preferences-window-shadow {
+  box-shadow: 0 4px 10px rgb(0 0 0 / 0.22), 0 1px 3px rgb(0 0 0 / 0.12);
+}
+
+.preferences-window-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  flex-shrink: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.preferences-window-close > svg {
+  display: block;
+  width: 8px;
+  height: 8px;
+  opacity: 0;
+}
+
+.preferences-window-close:hover:not(:disabled) > svg {
+  opacity: 1;
 }
 
 .preferences-panel-card {

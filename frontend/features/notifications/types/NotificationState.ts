@@ -4,7 +4,6 @@ import { type NotificationSettings } from './NotificationSettings';
 export interface NotificationState {
   settings: NotificationSettings;
   notifications: AppNotification[];
-  activeToasts: AppNotification[];
   unreadCount: number;
   isHistoryDrawerOpen: boolean;
 
@@ -13,8 +12,6 @@ export interface NotificationState {
   updateChannel: (channel: keyof NotificationSettings['channels'], enabled: boolean) => void;
   resetSettings: () => void;
   addNotification: (notification: AppNotification) => void;
-  showToast: (notification: AppNotification) => void;
-  dismissToast: (id: string) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   clearAll: () => void;

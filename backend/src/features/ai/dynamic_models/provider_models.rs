@@ -82,7 +82,8 @@ pub async fn fetch_provider_models(
     let resolved_key = resolved_key.as_deref().map(|key| key.as_str());
 
     match provider {
-        "openai" | "xai_grok" | "grok" | "xai" | "deepseek" | "kimi" | "custom" | "zai" | "z_ai" | "opencode" => {
+        "openai" | "xai_grok" | "grok" | "xai" | "deepseek" | "kimi" | "custom" | "zai"
+        | "z_ai" | "opencode" => {
             openai_compatible::fetch(&client, provider, resolved_key, base_url).await
         }
         "qwen" => qwen::fetch(&client, resolved_key, base_url).await,

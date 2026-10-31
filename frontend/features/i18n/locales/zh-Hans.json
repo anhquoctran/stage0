@@ -152,7 +152,10 @@
     "disabled": "已禁用",
     "confirm": "确认",
     "optional": "可选",
-    "apply": "应用"
+    "apply": "应用",
+    "open": "开放",
+    "resolved": "已解决",
+    "closed": "已关闭"
   },
   "preferences": {
     "appearance": "外观",
@@ -561,15 +564,15 @@
       "repo_overview": "仓库概览...",
       "new_mr": "新建 Virtual MR...",
       "fetch": "Fetch（全部并清理）",
-      "pull": "Pull",
-      "pull_from": "从... Pull",
+      "pull": "拉取",
+      "pull_from": "从...拉取",
       "merge": "合并上游",
       "merge_from": "从...合并",
-      "rebase": "Rebase",
-      "rebase_from": "从... Rebase",
-      "rebase_continue": "继续",
+      "rebase": "变基",
+      "rebase_from": "从...变基",
+      "rebase_continue": "继续变基",
       "rebase_skip": "跳过提交",
-      "rebase_abort": "中止 Rebase",
+      "rebase_abort": "中止变基",
       "swap_branches": "交换 Base 和 Compare",
       "refresh_diff": "刷新差异与冲突",
       "open_terminal": "终端",
@@ -582,7 +585,23 @@
       "shortcuts": "键盘快捷键",
       "keymaps": "自定义快捷键映射...",
       "open_webview_devtools": "开发者工具",
-      "release_notes": "查看发行说明"
+      "release_notes": "查看发行说明",
+      "next_conflict": "下一个冲突文件",
+      "close_tab": "关闭 MR 标签页 / 草稿",
+      "tab_1": "切换到 MR 标签页 1",
+      "tab_2": "切换到 MR 标签页 2",
+      "tab_3": "切换到 MR 标签页 3",
+      "tab_4": "切换到 MR 标签页 4",
+      "tab_5": "切换到 MR 标签页 5",
+      "tab_6": "切换到 MR 标签页 6",
+      "tab_7": "切换到 MR 标签页 7",
+      "tab_8": "切换到 MR 标签页 8",
+      "tab_9": "切换到 MR 标签页 9",
+      "recent_1": "打开最近仓库 1",
+      "recent_2": "打开最近仓库 2",
+      "recent_3": "打开最近仓库 3",
+      "recent_4": "打开最近仓库 4",
+      "recent_5": "打开最近仓库 5"
     },
     "recent": {
       "emptyLabel": "没有最近打开的仓库",
@@ -628,16 +647,16 @@
   },
   "notifications": {
     "categoryHeading": "通知类别",
-    "categoryDescription": "选择哪些 Stage0 事件可以显示通知。Stage0 会为各个事件设置通知的位置和关闭方式。",
+    "categoryDescription": "选择可发送系统通知的事件。显示和关闭由操作系统管理。",
     "aiReviewTitle": "AI 代码审查",
     "aiReviewDescription": "AI 审查或重新验证完成时。",
     "gitSyncTitle": "Git 监控与同步",
     "gitSyncDescription": "远程更改、新分支和同步事件。",
     "guardrailsTitle": "安全防护",
     "guardrailsDescription": "提权命令、访问拦截和策略违规。",
-    "previewTitle": "通知预览",
+    "previewTitle": "预览系统通知",
     "previewDescription": "使用此平台的通知样式发送测试，不会加入历史记录或未读计数。",
-    "previewSent": "测试通知已发送，不会影响历史记录或未读计数。",
+    "previewSent": "测试通知已发送。是否显示由操作系统设置决定。",
     "previewFailed": "无法在此系统上显示测试通知。",
     "testTooltip": "显示测试通知但不保存",
     "desktopOnly": "可在桌面应用中使用",
@@ -661,7 +680,19 @@
     "toastView": "查看",
     "dismiss": "忽略",
     "dismissLabel": "忽略通知",
-    "deliveryFailed": "Stage0 通知发送失败。"
+    "deliveryFailed": "Stage0 通知发送失败。",
+    "permission": {
+      "title": "系统通知",
+      "description": "通过操作系统接收 Stage0 提醒。此步骤可选。",
+      "granted": "已允许通知。操作系统负责管理位置、声音和显示方式。",
+      "denied": "通知已被阻止。你仍可继续使用 Stage0，事件会保留在通知历史中。请在系统设置中启用提醒。",
+      "prompt": "允许 Stage0 发送通知。你也可以不授权并继续。",
+      "unsupported": "原生通知不可用。macOS/Windows 请使用已安装的 Stage0 应用；Linux 请检查桌面通知服务。",
+      "request": "允许通知",
+      "settings": "打开通知设置",
+      "error": "无法读取或更改通知权限。请重试或打开系统设置。",
+      "system_managed": "此桌面环境管理通知权限。如果没有显示提醒，请检查系统通知设置。"
+    }
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} 已完成 MR 审查",
@@ -2208,6 +2239,7 @@
       "openIn": "在{{name}}中打开"
     },
     "repositoryLabels": {
+      "label": "标签",
       "updated": "已更新标签：{{name}}",
       "created": "已创建标签：{{name}}",
       "saveFailed": "无法保存标签：{{error}}",
@@ -3334,7 +3366,10 @@
       "runtimeUnavailable": "Stage0 通知运行时不可用。",
       "queueUnavailable": "Stage0 通知队列不可用。",
       "unsupportedPlatform": "此平台不支持 Stage0 通知。",
-      "dispatchFailed": "通知分发任务失败。"
+      "dispatchFailed": "通知分发任务失败。",
+      "permissionDenied": "通知已被阻止。你仍可继续使用 Stage0，事件会保留在通知历史中。请在系统设置中启用提醒。",
+      "permissionRequired": "允许 Stage0 发送通知。你也可以不授权并继续。",
+      "settingsFailed": "无法读取或更改通知权限。请重试或打开系统设置。"
     },
     "sandbox": {
       "dockerRunning": "Docker 守护进程正在运行 (默认镜像: {{image}})。",

@@ -166,11 +166,19 @@ impl ReviewModelAdapter for AcpModelAdapter {
         if let Some(failure) = self.response_failure(response) {
             return Err(failure.message);
         }
-        let text = response["output"]
-            .as_str()
-            .ok_or_else(|| crate::common::messages::failure("backend.review.acpNoTextResponse", serde_json::json!({}), "ACP agent returned no text response".into()))?;
+        let text = response["output"].as_str().ok_or_else(|| {
+            crate::common::messages::failure(
+                "backend.review.acpNoTextResponse",
+                serde_json::json!({}),
+                "ACP agent returned no text response".into(),
+            )
+        })?;
         if text.len() > 128 * 1024 {
-            return Err(crate::common::messages::failure("backend.review.acpSafetyLimitExceeded", serde_json::json!({}), "ACP agent response exceeded the review safety limit".into()));
+            return Err(crate::common::messages::failure(
+                "backend.review.acpSafetyLimitExceeded",
+                serde_json::json!({}),
+                "ACP agent response exceeded the review safety limit".into(),
+            ));
         }
         let trimmed = text.trim();
         // Accept one complete JSON code fence, but never extract a tool call
@@ -184,16 +192,33 @@ impl ReviewModelAdapter for AcpModelAdapter {
             .and_then(|(_, document)| document.trim_end().strip_suffix("```"))
             .map(str::trim)
             .unwrap_or(trimmed);
-        let envelope: Value = serde_json::from_str(document)
-            .map_err(|_| crate::common::messages::failure("backend.review.acpToolEnvelopeRequired", serde_json::json!({}), "ACP reviewer must return the required JSON tool-call envelope".into()))?;
+        let envelope: Value = serde_json::from_str(document).map_err(|_| {
+            crate::common::messages::failure(
+                "backend.review.acpToolEnvelopeRequired",
+                serde_json::json!({}),
+                "ACP reviewer must return the required JSON tool-call envelope".into(),
+            )
+        })?;
         let object = envelope
             .as_object()
             .filter(|object| object.len() == 1 && object.contains_key("calls"))
-            .ok_or_else(|| crate::common::messages::failure("backend.review.acpCallsArrayRequired", serde_json::json!({}), "ACP reviewer response must contain only a calls array".into()))?;
+            .ok_or_else(|| {
+                crate::common::messages::failure(
+                    "backend.review.acpCallsArrayRequired",
+                    serde_json::json!({}),
+                    "ACP reviewer response must contain only a calls array".into(),
+                )
+            })?;
         let requested_calls = object["calls"]
             .as_array()
             .filter(|calls| !calls.is_empty() && calls.len() <= 8)
-            .ok_or_else(|| crate::common::messages::failure("backend.review.acpCallsCountInvalid", serde_json::json!({}), "ACP reviewer must request between one and eight tool calls".into()))?;
+            .ok_or_else(|| {
+                crate::common::messages::failure(
+                    "backend.review.acpCallsCountInvalid",
+                    serde_json::json!({}),
+                    "ACP reviewer must request between one and eight tool calls".into(),
+                )
+            })?;
         let mut calls = Vec::with_capacity(requested_calls.len());
         for call in requested_calls {
             let call = call
@@ -201,13 +226,29 @@ impl ReviewModelAdapter for AcpModelAdapter {
                 .filter(|call| {
                     call.len() == 2 && call.contains_key("name") && call.contains_key("arguments")
                 })
-                .ok_or_else(|| crate::common::messages::failure("backend.review.acpCallPropertiesInvalid", serde_json::json!({}), "ACP tool calls must contain only name and arguments".into()))?;
+                .ok_or_else(|| {
+                    crate::common::messages::failure(
+                        "backend.review.acpCallPropertiesInvalid",
+                        serde_json::json!({}),
+                        "ACP tool calls must contain only name and arguments".into(),
+                    )
+                })?;
             let name = call["name"]
                 .as_str()
                 .filter(|name| !name.is_empty() && name.len() <= 128)
-                .ok_or_else(|| crate::common::messages::failure("backend.review.acpToolNameInvalid", serde_json::json!({}), "ACP tool call has an invalid name".into()))?;
+                .ok_or_else(|| {
+                    crate::common::messages::failure(
+                        "backend.review.acpToolNameInvalid",
+                        serde_json::json!({}),
+                        "ACP tool call has an invalid name".into(),
+                    )
+                })?;
             if !call["arguments"].is_object() {
-                return Err(crate::common::messages::failure("backend.review.acpToolArgsObjectRequired", serde_json::json!({}), "ACP tool call arguments must be a JSON object".into()));
+                return Err(crate::common::messages::failure(
+                    "backend.review.acpToolArgsObjectRequired",
+                    serde_json::json!({}),
+                    "ACP tool call arguments must be a JSON object".into(),
+                ));
             }
             calls.push(ReviewToolCall {
                 id: uuid::Uuid::new_v4().to_string(),

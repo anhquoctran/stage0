@@ -1,6 +1,7 @@
 import { useDesktopWindowChrome } from './hooks/useDesktopWindowChrome';
 import { useWindowChromeStore } from './store/useWindowChromeStore';
 import { useStartupSplash } from './hooks/useStartupSplash';
+import { useWindowFrameClipping } from './hooks/useWindowFrameClipping';
 import { startupProgress } from './services/startup/startupProgress';
 import type { WindowStartupContext } from '../features/git/types/WindowStartupContext';
 import { useVirtualMrStore } from '../features/virtual-mr/store/useVirtualMrStore';
@@ -19,6 +20,7 @@ import { useOnboardingStore } from '../features/onboarding/store/useOnboardingSt
 import { reviewAssignedSessionAfterGitChange } from '../features/review/services/assignedReviewService';
 import { installAutoHideScrollbars } from './services/autoHideScrollbars';
 import { SoftwareUpdateNotice } from '../features/updates/components/SoftwareUpdateNotice';
+import { isMacOS } from '../common/utils/shortcuts';
 
 export const MainApp: React.FC = () => {
   const appServices = useApplicationServices();
@@ -37,9 +39,19 @@ export const MainApp: React.FC = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const hideCustomFrame = nativeFrame || isFullscreen || isMaximized;
-  const isCustomMacWindow = platform === 'macos' && !hideCustomFrame;
+  const isMac = platform === 'macos' || (!platform && isMacOS());
+  const isCustomMacWindow = isMac && !hideCustomFrame;
+  useWindowFrameClipping(isCustomMacWindow);
 
-  useEffect(() => installAutoHideScrollbars(), []);
+  useEffect(() => {
+    installAutoHideScrollbars();
+    if (isMacOS()) {
+      document.documentElement.classList.add('transparent-window');
+      document.body.classList.add('transparent-window');
+      document.documentElement.style.backgroundColor = 'transparent';
+      document.body.style.backgroundColor = 'transparent';
+    }
+  }, []);
 
   useEffect(() => {
     let disposed = false;
@@ -141,7 +153,7 @@ export const MainApp: React.FC = () => {
       className={clsx(
         'relative flex flex-col h-screen w-screen overflow-hidden box-border bg-crust select-none transition-all duration-150',
         hideCustomFrame ? 'border-0 rounded-none' : 'border border-surface0',
-        isCustomMacWindow ? 'rounded-sm' : 'rounded-none',
+        isCustomMacWindow ? 'rounded-(--window-frame-radius)' : 'rounded-none',
       )}
     >
       <MainLayout />

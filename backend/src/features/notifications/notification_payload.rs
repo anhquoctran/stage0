@@ -19,3 +19,15 @@ pub struct NotificationPayload {
     pub dismiss_policy: NotificationDismissPolicy,
     pub auto_dismiss_ms: Option<u64>,
 }
+
+impl NotificationPayload {
+    pub(super) fn primary_action(&self) -> NotificationAction {
+        self.click_action
+            .clone()
+            .unwrap_or_else(|| NotificationAction {
+                label: "Stage0".into(),
+                action_type: "show_notifications".into(),
+                payload: None,
+            })
+    }
+}

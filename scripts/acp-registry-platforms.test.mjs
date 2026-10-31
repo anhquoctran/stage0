@@ -23,8 +23,8 @@ test('supports all archive forms and raw native downloads without requiring a .e
 
 test('missing publisher architecture is explicit and never falls back to a different CPU', () => {
   const agent = entry({ 'darwin-x86_64': { archive: 'https://example.com/agent.zip', cmd: './agent' } });
-  assert.equal(registryUnavailableReason(agent, 'darwin-aarch64'), 'No publisher package for darwin-aarch64');
-  assert.match(registryUnavailableReason(agent), /Platform information is unavailable/);
+  assert.deepEqual(registryUnavailableReason(agent, 'darwin-aarch64'), { kind: 'noPublisherPackage', target: 'darwin-aarch64' });
+  assert.deepEqual(registryUnavailableReason(agent), { kind: 'platformInfoUnavailable' });
 });
 
 test('package-manager agents remain available across platforms', () => {

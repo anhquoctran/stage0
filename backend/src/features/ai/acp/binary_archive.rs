@@ -29,7 +29,8 @@ pub fn extract(
                     "backend.acp.archiveTooLarge",
                     serde_json::json!({}),
                     "Archive has too many entries".into(),
-                ).into());
+                )
+                .into());
             }
             let mut links = Vec::new();
             for index in 0..zip.len() {
@@ -140,7 +141,8 @@ fn extract_tar(reader: impl Read, destination: &Path, remaining: &mut u64) -> Re
                 "backend.acp.archiveTooLarge",
                 serde_json::json!({}),
                 "Archive has too many entries".into(),
-            ).into());
+            )
+            .into());
         }
         let mut entry =
             entry.map_err(|_| crate::common::messages::code("backend.acp.archiveInvalid"))?;

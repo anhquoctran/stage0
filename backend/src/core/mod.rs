@@ -1,9 +1,9 @@
 pub mod commands;
 pub mod db;
+pub mod desktop;
 pub mod dock;
 pub mod i18n;
 pub mod keymaps;
 pub mod menu;
 pub mod tray;
 pub mod window_manager;
-pub mod desktop;

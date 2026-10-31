@@ -173,7 +173,7 @@ export const FirstLaunchWelcome: React.FC<FirstLaunchWelcomeProps> = ({ onComple
         aria-describedby="first-launch-description"
         aria-busy={isBusy}
         tabIndex={-1}
-        className="flex h-full w-full flex-col overflow-hidden rounded-none focus:outline-none!"
+        className="flex h-full w-full flex-col overflow-hidden rounded-sm focus:outline-none!"
       >
         <OnboardingWindowChrome />
         <fieldset disabled={isBusy} className="contents">

@@ -84,9 +84,9 @@ export const ReviewPanel: React.FC = () => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-panel-title"
-        className="w-full max-w-5xl max-h-full bg-mantle border border-surface1 shadow-2xl flex flex-col text-text rounded-sm"
+        className="w-full max-w-5xl max-h-full bg-mantle border border-surface1 shadow-2xl flex flex-col text-text rounded-sm overflow-hidden"
       >
-        <header className="flex items-center justify-between border-b border-surface0 ps-5 shrink-0">
+        <header className="flex items-center justify-between border-b border-surface0 ps-5 shrink-0 rounded-t-sm">
           <h2 id="review-panel-title" className="text-sm font-semibold">
             {translateUiText('notifications.aiReviewTitle')}
           </h2>

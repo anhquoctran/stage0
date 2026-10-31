@@ -1,5 +1,6 @@
 //! Review lifecycle and stable entry points. The bounded loop and tool actions live in child modules.
 mod action_dispatch;
+mod completion_notification;
 mod audit;
 mod discussion_observation;
 mod discussions;
@@ -87,11 +88,18 @@ pub async fn run(
         "finished",
         json!({"status":run.status,"error":run.error}),
     );
-    if let Err(error) = db.save_review_run(&run) {
-        eprintln!("Could not persist final review state: {error}");
-    }
+    let saved = match db.save_review_run(&run) {
+        Ok(_) => true,
+        Err(error) => {
+            eprintln!("Could not persist final review state: {error}");
+            false
+        }
+    };
     app.state::<super::coordinator::ReviewCoordinator>()
         .release(&run.session_id);
+    if saved {
+        completion_notification::send(app.clone(), run).await;
+    }
 }
 
 async fn wait_cancel(cancel: Arc<AtomicBool>) {
@@ -132,7 +140,9 @@ async fn execute(
             adapter.close().await;
             result
         }
-        _ => Err(crate::common::messages::code("backend.review.executionModeUnsupported")),
+        _ => Err(crate::common::messages::code(
+            "backend.review.executionModeUnsupported",
+        )),
     }
 }
 

@@ -13,7 +13,7 @@ export const GitGraphHeader: React.FC<{
 }> = ({ branch, isDetached, isLoading, onRefresh, onClose }) => {
   const { t: translateUiText } = useUiTextTranslation();
     return (
-        <header className="flex shrink-0 items-center justify-between border-b border-surface0 bg-base/60 px-5 py-3.5">
+        <header className="flex shrink-0 items-center justify-between border-b border-surface0 bg-base/60 px-5 py-3.5 rounded-t-sm">
             <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-surface1 bg-surface0 text-brand">
                     <GitBranch className="h-4 w-4" />

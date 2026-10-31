@@ -7,8 +7,8 @@ const MAX_REGISTRY_ICON_BYTES: usize = 128 * 1024;
 #[command]
 pub async fn acp_fetch_registry_icon(icon_url: String) -> Result<String, String> {
     let result: Result<_, String> = async {
-        let parsed_url =
-            reqwest::Url::parse(&icon_url).map_err(|_| crate::common::messages::code("backend.acp.iconUrlInvalid"))?;
+        let parsed_url = reqwest::Url::parse(&icon_url)
+            .map_err(|_| crate::common::messages::code("backend.acp.iconUrlInvalid"))?;
         if !is_registry_icon_url(&parsed_url) {
             return Err(crate::common::messages::code("backend.acp.iconCdnRequired"));
         }
@@ -30,7 +30,9 @@ pub async fn acp_fetch_registry_icon(icon_url: String) -> Result<String, String>
             .await
             .map_err(|_| crate::common::messages::code("backend.acp.iconLoadFailed"))?;
         if !response.status().is_success() || !is_registry_icon_url(response.url()) {
-            return Err(crate::common::messages::code("backend.acp.iconResponseInvalid"));
+            return Err(crate::common::messages::code(
+                "backend.acp.iconResponseInvalid",
+            ));
         }
         if response
             .content_length()
@@ -50,7 +52,8 @@ pub async fn acp_fetch_registry_icon(icon_url: String) -> Result<String, String>
             }
             bytes.extend_from_slice(&chunk);
         }
-        let svg = std::str::from_utf8(&bytes).map_err(|_| crate::common::messages::code("backend.acp.iconSvgInvalid"))?;
+        let svg = std::str::from_utf8(&bytes)
+            .map_err(|_| crate::common::messages::code("backend.acp.iconSvgInvalid"))?;
         if !svg.to_ascii_lowercase().contains("<svg") {
             return Err(crate::common::messages::code("backend.acp.iconSvgInvalid"));
         }

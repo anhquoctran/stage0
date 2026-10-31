@@ -40,10 +40,18 @@ pub(super) fn validate(request: &PreferencesTransactionRequest) -> Result<(), St
             .len()
             != request.api_key_removals.len()
     {
-        return Err(crate::common::messages::failure("backend.preferences.invalidAiCredentialChanges", serde_json::json!({}), "Invalid AI credential changes".into()));
+        return Err(crate::common::messages::failure(
+            "backend.preferences.invalidAiCredentialChanges",
+            serde_json::json!({}),
+            "Invalid AI credential changes".into(),
+        ));
     }
     if request.mcp_env_secrets.len() + request.mcp_env_removals.len() > 256 {
-        return Err(crate::common::messages::failure("backend.preferences.tooManyMcpCredentialChanges", serde_json::json!({}), "Too many MCP credential changes".into()));
+        return Err(crate::common::messages::failure(
+            "backend.preferences.tooManyMcpCredentialChanges",
+            serde_json::json!({}),
+            "Too many MCP credential changes".into(),
+        ));
     }
     for (id, env) in &request.mcp_env_secrets {
         if !valid_id(id)
@@ -52,12 +60,20 @@ pub(super) fn validate(request: &PreferencesTransactionRequest) -> Result<(), St
                 .iter()
                 .any(|(k, v)| !valid_name(k) || v.trim().is_empty() || v.len() > 16384)
         {
-            return Err(crate::common::messages::failure("backend.preferences.invalidMcpCredentialChanges", serde_json::json!({}), "Invalid MCP credential changes".into()));
+            return Err(crate::common::messages::failure(
+                "backend.preferences.invalidMcpCredentialChanges",
+                serde_json::json!({}),
+                "Invalid MCP credential changes".into(),
+            ));
         }
     }
     for (id, names) in &request.mcp_env_removals {
         if !valid_id(id) || names.len() > 256 || names.iter().any(|n| !valid_name(n)) {
-            return Err(crate::common::messages::failure("backend.preferences.invalidMcpCredentialRemovals", serde_json::json!({}), "Invalid MCP credential removals".into()));
+            return Err(crate::common::messages::failure(
+                "backend.preferences.invalidMcpCredentialRemovals",
+                serde_json::json!({}),
+                "Invalid MCP credential removals".into(),
+            ));
         }
     }
     Ok(())
@@ -92,7 +108,13 @@ pub(super) fn prepare(
             Some(value) => Ok(value),
             None => db
                 .get_preference_secret_ref(logical)
-                .map_err(|_| crate::common::messages::failure("backend.preferences.readMcpMappingFailed", serde_json::json!({}), "Could not read MCP credential mapping".into()))?
+                .map_err(|_| {
+                    crate::common::messages::failure(
+                        "backend.preferences.readMcpMappingFailed",
+                        serde_json::json!({}),
+                        "Could not read MCP credential mapping".into(),
+                    )
+                })?
                 .map(|reference| {
                     credentials::retrieve_preference_secret(&reference).map(Zeroizing::new)
                 })
@@ -129,7 +151,13 @@ pub(super) fn prepare_with(
         let previous = read(&logical)?;
         let mut env: BTreeMap<String, Zeroizing<String>> = match previous {
             Some(record) => serde_json::from_str::<BTreeMap<String, String>>(&record)
-                .map_err(|_| crate::common::messages::failure("backend.preferences.savedMcpCredentialsInvalid", serde_json::json!({}), "Saved MCP credentials are invalid".into()))?
+                .map_err(|_| {
+                    crate::common::messages::failure(
+                        "backend.preferences.savedMcpCredentialsInvalid",
+                        serde_json::json!({}),
+                        "Saved MCP credentials are invalid".into(),
+                    )
+                })?
                 .into_iter()
                 .map(|(k, v)| (k, Zeroizing::new(v)))
                 .collect(),
@@ -151,11 +179,19 @@ pub(super) fn prepare_with(
             // Serialize directly into a zeroizing buffer; no credential value enters preferences JSON.
             let public: BTreeMap<_, _> =
                 env.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
-            let record = Zeroizing::new(
-                serde_json::to_string(&public).map_err(|_| crate::common::messages::failure("backend.preferences.encodeMcpCredentialsFailed", serde_json::json!({}), "Could not encode MCP credentials".into()))?,
-            );
+            let record = Zeroizing::new(serde_json::to_string(&public).map_err(|_| {
+                crate::common::messages::failure(
+                    "backend.preferences.encodeMcpCredentialsFailed",
+                    serde_json::json!({}),
+                    "Could not encode MCP credentials".into(),
+                )
+            })?);
             if record.len() > 2048 {
-                return Err(crate::common::messages::failure("backend.preferences.mcpRecordSizeLimit", serde_json::json!({}), "MCP credential record exceeds the supported size limit".into()));
+                return Err(crate::common::messages::failure(
+                    "backend.preferences.mcpRecordSizeLimit",
+                    serde_json::json!({}),
+                    "MCP credential record exceeds the supported size limit".into(),
+                ));
             }
             write(&record)?
         };
