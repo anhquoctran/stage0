@@ -73,7 +73,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDgxNDE1RUREQjIxOTYxQkQKUldTOVlSbXkzVjVCZ2RYQURWUzA2YnppQitmcHhNRVo3ZFk5NWVCOHNGdm1DQzJmNkVlb0diak0K",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUzMzQ2REIxN0NFNTM2NUEKUldSYU51VjhzVzAwNHhTaFF0TFhkZ2c3bGVObzROSDA4RUhTeWEzeWxmYVdlSmdpTjY5bGhCTFkK",
       "endpoints": [
         "https://github.com/anhquoctran/stage0/releases/download/channel-stable/latest.json"
       ],

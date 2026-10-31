@@ -108,10 +108,11 @@ workflow credentials when they are available.
    cannot be overwritten by this workflow. Failed builds/signature checks leave
    the previous stable release available.
 
-The initial private key lives outside Git under the release operator's private
-`~/.local/share/stage0-release/` directory. Back it up securely and reuse it for
-future releases. Losing it requires a manual migration; rotation needs a planned
-transition release.
+The active private key lives outside Git at `~/.tauri/stage0.key`; the matching
+`~/.tauri/stage0.key.pub` is embedded in `backend/tauri.conf.json`. The GitHub
+Actions secret must contain that private key's exact file contents. Back it up
+securely and reuse it for future releases. Losing it requires a manual migration;
+rotation needs a planned transition release.
 
 `scripts/release-artifacts.mjs` owns asset naming, manifest/checksum generation
 and version consistency. `scripts/release-verifier/` is a small standalone tool
