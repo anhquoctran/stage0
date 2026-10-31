@@ -4,6 +4,6 @@
   "channels": {
     "nightly": { "cron": "17 17 * * *", "cadence": "daily" },
     "beta": { "cron": "47 17 * * 0", "cadence": "weekly" },
-    "stable": { "cron": "17 0 1 1,4,7,10 *", "cadence": "quarterly" }
+    "stable": { "cadence": "manual" }
   }
 }

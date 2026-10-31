@@ -90,8 +90,7 @@ workflow credentials when they are available.
 2. Set Actions secret `TAURI_SIGNING_PRIVATE_KEY` to the private key matching
    `plugins.updater.pubkey`; set `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` for an
    encrypted key. Never commit either private value.
-3. Push the commit and `vMAJOR.MINOR.PATCH` or dated nightly/beta tag. The workflow can also be
-   dispatched with an existing tag. Tag/version drift blocks the build.
+3. Push the version commit and its tag. For Stable, open **Actions → Release Stage0 → Run workflow** and enter the existing stable tag (for example `v0.0.1`). A stable tag push alone does not release. Nightly/Beta tags may trigger automatically. Tag/version drift blocks the build.
 4. `.github/workflows/release.yml` checks architecture, TypeScript and Node tests,
    runs Rust tests on Linux and builds four targets. It calls `tauri build`
    directly: **the build matrix never bumps versions**. Local packaging also preserves the selected version; use `pnpm version:set VERSION` to change it explicitly.
@@ -141,11 +140,13 @@ channel versions and derives scheduled versions in UTC. Stable has no suffix;
 
 - Nightly: `0.0.2-nightly.20261031.42`, daily at 17:17 UTC (00:17 Vietnam next day).
 - Beta: `0.0.2-beta.20261101.43`, Sundays at 17:47 UTC (Monday 00:47 Vietnam).
-- Stable: first day of January/April/July/October at 00:17 UTC. The next
-  scheduled stable is `0.0.2` on January 1, 2027.
+- Stable: **manual only** through GitHub Actions → Release Stage0 → Run workflow,
+  with an existing version tag. There is no quarterly cron or automatic Stable
+  publication on tag pushes or reusable workflow calls.
 
-Each quarter advances the base PATCH once from the configured epoch; previews
-target the following stable core. The date is the UTC build date and the last
+Preview target cores advance quarterly from the configured epoch. This only
+numbers Nightly/Beta builds; it never creates or publishes a Stable release.
+The maintainer selects the actual Stable version and release date manually. The date is the UTC build date and the last
 identifier is the Actions run number. SemVer compares `nightly` above `beta`
 lexically for an equal core; separate feeds intentionally avoid cross-channel
 promotion. Calendar cadence does not infer API compatibility. Maintainers must
@@ -177,3 +178,7 @@ passed. Both workflow files parse as YAML. Older UI assertions in the selected
 release-notes/updater tests were updated to use translation keys, retaining
 ordering, saved-work confirmation and progress assertions. No remote Actions
 run, multi-platform installer build, tag push or publication was performed.
+
+Stable trigger restriction: only workflow_dispatch can start a Stable release.
+The shared validation dependency skips builds/publication for stable tag pushes
+and automatic workflow calls. The schedule generator also rejects Stable.

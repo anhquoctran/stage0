@@ -18,12 +18,13 @@ export function releaseChannel(version) {
 
 export function scheduledVersion(channel, now = new Date(), build = '1') {
   if (!Object.hasOwn(policy.channels, channel)) throw new Error('Unknown release channel');
+  if (!policy.channels[channel].cron) throw new Error('Stable releases require manual workflow dispatch');
   if (!/^(0|[1-9]\d*)$/.test(String(build))) throw new Error('Invalid build number');
   const epoch = new Date(policy.epoch);
   if (!Number.isFinite(now.getTime()) || now < epoch) throw new Error('Invalid release time');
   const quarter = date => date.getUTCFullYear() * 4 + Math.floor(date.getUTCMonth() / 3);
   const elapsed = quarter(now) - quarter(epoch);
   const [major, minor, patch] = policy.baseVersion.split('.');
-  const base = `${major}.${minor}.${BigInt(patch) + BigInt(elapsed + (channel === 'stable' ? 0 : 1))}`;
-  return channel === 'stable' ? base : `${base}-${channel}.${now.toISOString().slice(0, 10).replaceAll('-', '')}.${build}`;
+  const base = `${major}.${minor}.${BigInt(patch) + BigInt(elapsed + 1)}`;
+  return `${base}-${channel}.${now.toISOString().slice(0, 10).replaceAll('-', '')}.${build}`;
 }

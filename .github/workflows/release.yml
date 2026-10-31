@@ -29,7 +29,13 @@ env:
 
 jobs:
   validate:
-    if: github.repository == 'anhquoctran/stage0'
+    # Stable publication requires a deliberate Run workflow action on GitHub.
+    # A stable tag push or scheduled/reusable call cannot publish it.
+    if: >-
+      github.repository == 'anhquoctran/stage0' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(inputs.tag || github.ref_name, '-nightly.') ||
+       contains(inputs.tag || github.ref_name, '-beta.'))
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6

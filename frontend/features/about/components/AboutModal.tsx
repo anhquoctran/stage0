@@ -76,11 +76,11 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         <button
           type="button"
           onClick={onClose}
-          className="absolute end-0 top-0 flex h-11 w-12 items-center justify-center text-subtext0 hover:text-text hover:bg-surface0 transition-colors cursor-pointer rounded-sm"
+          className="absolute end-3 top-3 flex h-7 w-7 items-center justify-center rounded-sm border-0 bg-transparent text-subtext0 hover:text-text hover:bg-surface0/50 transition-colors cursor-pointer"
           title={translateUiText('shortcuts.close')}
           aria-label={translateUiText('about.closeDialog')}
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
         {/* Header with AppLogo */}

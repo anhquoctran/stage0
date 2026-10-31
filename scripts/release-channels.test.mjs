@@ -7,13 +7,13 @@ import { policy, releaseChannel, scheduledVersion } from './release-channels.mjs
 import { setProjectVersion } from './bump-version.mjs';
 import { verifyReleaseVersion, createUpdateManifest } from './release-artifacts.mjs';
 
-test('quarter cadence promotes the next preview core; UTC date/build identify prereleases', () => {
+test('only preview channels are scheduled; Stable requires a manual release', () => {
   const now = new Date('2026-10-31T17:17:00Z');
-  assert.equal(scheduledVersion('stable', now), '0.0.1');
+  assert.throws(() => scheduledVersion('stable', now), /manual workflow dispatch/);
   assert.equal(scheduledVersion('nightly', now, '42'), '0.0.2-nightly.20261031.42');
   assert.equal(scheduledVersion('beta', now, '43'), '0.0.2-beta.20261031.43');
-  assert.equal(scheduledVersion('stable', new Date('2027-01-01Z')), '0.0.2');
-  assert.equal(scheduledVersion('stable', new Date('2027-04-01Z')), '0.0.3');
+  assert.throws(() => scheduledVersion('stable', new Date('2027-01-01Z')), /manual workflow dispatch/);
+  assert.throws(() => scheduledVersion('stable', new Date('2027-04-01Z')), /manual workflow dispatch/);
   assert.equal(scheduledVersion('nightly', new Date('2027-01-01Z')), '0.0.3-nightly.20270101.1');
   assert.throws(() => scheduledVersion('rc', now));
   assert.throws(() => scheduledVersion('beta', now, '01'));
@@ -47,8 +47,14 @@ test('all release channels round-trip package/config/Cargo and signed-version ma
 
 test('workflow cron matches the canonical policy and prereleases never become latest', () => {
   const schedule = fs.readFileSync(new URL('../.github/workflows/scheduled-release.yml', import.meta.url), 'utf8');
-  for (const { cron } of Object.values(policy.channels)) assert.ok(schedule.includes(`cron: '${cron}'`));
+  for (const { cron } of Object.values(policy.channels)) {
+    if (cron) assert.ok(schedule.includes(`cron: '${cron}'`));
+  }
+  assert.equal((schedule.match(/- cron:/g) || []).length, 2);
+  assert.equal(policy.channels.stable.cadence, 'manual');
+  assert.equal(policy.channels.stable.cron, undefined);
   const release = fs.readFileSync(new URL('../.github/workflows/release.yml', import.meta.url), 'utf8');
+  assert.match(release, /github\.event_name == 'workflow_dispatch' \|\|\s+contains\(inputs\.tag \|\| github\.ref_name, '-nightly\.'\) \|\|\s+contains\(inputs\.tag \|\| github\.ref_name, '-beta\.'\)/);
   assert.match(release, /--draft=false --prerelease --latest=false/);
   assert.match(release, /--draft=false --prerelease=false --latest/);
 });
@@ -78,4 +84,21 @@ test('preparing a prerelease synchronizes About, release notes and website witho
   assert.equal(notes, fs.readFileSync(path.join(root, 'RELEASE_NOTES.md'), 'utf8'));
   assert.ok(notes.includes(`v${version}`));
   assert.ok(notes.includes('`x` ${literal}'));
+});
+
+test('the actual CI gate allows Stable only for a manual dispatch', () => {
+  const workflow = fs.readFileSync(new URL('../.github/workflows/release.yml', import.meta.url), 'utf8');
+  const expression = workflow.match(/    if: >-\n([\s\S]*?)\n    runs-on:/)?.[1];
+  assert.ok(expression);
+  const gate = new Function('github', 'inputs', 'contains', `return (${expression.trim()});`);
+  const allowed = (event, tag, repository = 'anhquoctran/stage0') => gate(
+    { event_name: event, ref_name: tag, repository },
+    event === 'push' ? {} : { tag },
+    (value, part) => value.includes(part),
+  );
+  assert.equal(allowed('workflow_dispatch', 'v0.0.1'), true);
+  for (const event of ['push', 'schedule', 'workflow_call']) assert.equal(allowed(event, 'v0.0.1'), false);
+  assert.equal(allowed('push', 'v0.0.2-nightly.20261031.1'), true);
+  assert.equal(allowed('schedule', 'v0.0.2-beta.20261031.2'), true);
+  assert.equal(allowed('workflow_dispatch', 'v0.0.1', 'another/repo'), false);
 });
