@@ -38,6 +38,7 @@ export function VirtualMrSearchBox({
   inline,
   searchSuggestions,
   activeSuggestionIndex,
+  setActiveSuggestionIndex,
   applySearchSuggestion,
   sortBy,
   setSortBy,
@@ -48,13 +49,13 @@ export function VirtualMrSearchBox({
   const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="flex h-8 min-w-[340px] flex-1 items-stretch border border-surface1 bg-crust focus-within:border-brand">
-      <div className="relative min-w-0 flex-1">
+      <div className="relative min-w-0 flex-1 bg-[var(--interactive-input-bg)]">
         <label className="flex h-full items-center gap-2 px-2.5 text-subtext0">
           <Search className="h-3.5 w-3.5 shrink-0" />
           <div className="relative h-full min-w-0 flex-1 overflow-hidden">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 flex items-center overflow-hidden"
+              className="pointer-events-none absolute inset-0 flex items-center overflow-hidden ps-1"
             >
               <span
                 className="block w-max whitespace-pre text-xs leading-4 text-text"
@@ -98,7 +99,7 @@ export function VirtualMrSearchBox({
               }
               onKeyDown={handleSearchKeyDown}
               placeholder={translateUiText('virtualMr.searchBox.placeholder')}
-              className="mr-list-search-input absolute inset-0 h-full w-full min-w-0 bg-transparent text-xs leading-4 text-transparent caret-text placeholder:text-subtext0 focus:outline-none selection:bg-brand/50 selection:text-text rounded-sm"
+              className="mr-list-search-input absolute inset-0 h-full w-full min-w-0 appearance-none border-0 bg-transparent ps-1 text-xs leading-4 text-transparent caret-text placeholder:text-subtext0 shadow-none focus:outline-none selection:bg-brand/50 selection:text-text rounded-none"
               aria-label={translateUiText('virtualMr.searchBox.searchLabel')}
               aria-autocomplete="list"
               aria-controls={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestions`}
@@ -114,7 +115,7 @@ export function VirtualMrSearchBox({
         {searchSuggestions.length > 0 && (
           <div
             id={`virtual-mr-${inline ? 'inline' : 'dialog'}-search-suggestions`}
-            className="absolute start-0 top-full z-[120] mt-1 max-h-80 w-[min(26rem,calc(100vw-2rem))] overflow-y-auto border border-surface1 bg-surface0 py-1 text-start shadow-xl rounded-sm"
+            className="absolute start-0 top-full z-[120] mt-1 max-h-80 w-[min(26rem,calc(100vw-2rem))] overflow-y-auto border border-surface1 bg-[var(--interactive-input-bg)] py-1 text-start shadow-xl rounded-sm"
             role="listbox"
             aria-label={translateUiText('virtualMr.searchBox.suggestionsLabel')}
           >
@@ -139,23 +140,24 @@ export function VirtualMrSearchBox({
                 type="button"
                 role="option"
                 aria-selected={activeSuggestionIndex === index}
+                onMouseEnter={() => setActiveSuggestionIndex(index)}
                 onMouseDown={(event) => {
                   event.preventDefault();
                   applySearchSuggestion(suggestion);
                 }}
-                className={`flex w-full items-center gap-2.5 px-3 py-2 text-xs transition-colors cursor-pointer rounded-sm ${
+                className={`grid w-full grid-cols-[1.25rem_minmax(6.5rem,1fr)_minmax(0,2fr)] items-center gap-2.5 px-3 py-2 text-start text-xs transition-colors cursor-pointer rounded-sm ${
                   activeSuggestionIndex === index
-                    ? 'bg-surface2 text-text'
-                    : 'text-subtext1 hover:bg-surface1 hover:text-text'
+                    ? 'bg-brand/15 text-text'
+                    : 'text-subtext1 hover:text-text'
                 }`}
               >
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center text-brand">
                   <SearchSuggestionIcon field={suggestion.field} />
                 </span>
-                <span className="min-w-0 flex-1 truncate font-medium">
+                <span className="min-w-0 truncate font-medium">
                   {suggestion.kind === 'field' ? fieldLabel : suggestion.label}
                 </span>
-                <span className="shrink-0 truncate text-[10px] text-subtext0">
+                <span className="min-w-0 truncate text-start text-[10px] text-subtext0">
                   {detail}
                 </span>
               </button>

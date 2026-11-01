@@ -87,6 +87,7 @@ export function BotExecutionModelForm({
           className="w-full"
           buttonClassName="w-full"
           dropdownWidth="w-full"
+          dropdownPlacement="top"
           align="left"
           aria-label={t('ai.execution.engine')}
         />
@@ -113,6 +114,7 @@ export function BotExecutionModelForm({
                 className="w-full"
                 buttonClassName="w-full"
                 dropdownWidth="w-full"
+                dropdownPlacement="top"
                 align="left"
                 aria-label={t('ai.execution.providerOverride')}
               />
@@ -150,6 +152,7 @@ export function BotExecutionModelForm({
                 className="w-full"
                 buttonClassName="w-full"
                 dropdownWidth="w-full"
+                dropdownPlacement="top"
                 align="left"
                 aria-label={t('ai.execution.modelOverride')}
               />
@@ -214,6 +217,7 @@ export function BotExecutionModelForm({
                 className="w-full"
                 buttonClassName="w-full"
                 dropdownWidth="w-full"
+                dropdownPlacement="top"
                 align="left"
                 aria-label={t('ai.execution.acpReviewerAgent')}
               />

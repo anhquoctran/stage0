@@ -654,6 +654,9 @@
     "categoryHeading": "Categorias de notificações",
     "categoryDescription": "Escolha os eventos que podem enviar notificações do sistema. O sistema operativo controla a apresentação e o fecho.",
     "aiReviewTitle": "Revisão de código com IA",
+    "mrStatusTitle": "Estado da MR",
+    "mrStatusDescription": "Quando o estado de um pedido de integração muda.",
+    "mrStatusNotificationTitle": "O estado da MR mudou",
     "aiReviewDescription": "Quando uma revisão com IA ou uma nova verificação terminar.",
     "gitSyncTitle": "Monitorização e sincronização do Git",
     "gitSyncDescription": "Alterações remotas, novas branches e eventos de sincronização.",
@@ -702,6 +705,9 @@
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} concluiu uma revisão de MR",
+    "failedNotificationTitle": "{{reviewer}} não conseguiu concluir a revisão da MR",
+    "incompleteNotificationTitle": "{{reviewer}} parou antes de concluir a revisão da MR",
+    "reviewHistorySuffix": " Abra o histórico de revisão para ver os detalhes.",
     "completedBody_one": "Criada {{count}} discussão de revisão em {{title}}.",
     "completedBody_other": "Criadas {{count}} discussões de revisão em {{title}}.",
     "pendingLabel": "A rever este MR e a preparar os resultados…",
@@ -978,8 +984,8 @@
       "comparingBranches": "A comparar ramos…",
       "loadingChanges": "A carregar alterações de ficheiros e possibilidade de integração",
       "noChangesTitle": "Não há nada para comparar",
-      "sameCommitBranches": "<base>{{base}}</base> e <compare>{{compare}}</compare> apontam para o mesmo commit. Escolha outro ramo de comparação para rever as alterações.",
-      "noDiffBranches": "<base>{{base}}</base> e <compare>{{compare}}</compare> não têm diferenças em relação à base de integração. Escolha outro ramo com alterações para abrir uma Virtual MR."
+      "sameCommitBranches": "<code>{{base}}</code> e <code>{{compare}}</code> apontam para o mesmo commit. Escolha outro ramo de comparação para rever as alterações.",
+      "noDiffBranches": "<code>{{base}}</code> e <code>{{compare}}</code> não têm diferenças em relação à base de integração. Escolha outro ramo com alterações para abrir uma Virtual MR."
     },
     "discussionReference": {
       "quotedSource": "Origem citada",

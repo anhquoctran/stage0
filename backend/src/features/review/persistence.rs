@@ -113,14 +113,23 @@ impl Database {
             .map_err(|e| e.to_string())
     }
     pub fn publish_review(&self, run: &ReviewRun) -> Result<(), String> {
-        self.publish_review_actions(run, &[])
+        self.publish_review_actions(run, &[]).map(|_| ())
     }
 
     pub fn publish_review_actions(
         &self,
         run: &ReviewRun,
         actions: &[ReviewDiscussionAction],
-    ) -> Result<(), String> {
+    ) -> Result<bool, String> {
+        self.publish_review_actions_with_origin(run, actions, true)
+    }
+
+    pub fn publish_review_actions_with_origin(
+        &self,
+        run: &ReviewRun,
+        actions: &[ReviewDiscussionAction],
+        notify_from_runtime: bool,
+    ) -> Result<bool, String> {
         if !matches!(run.status.as_str(), "completed" | "partial") {
             return Err("Only finished review findings may be published".into());
         }
@@ -132,6 +141,7 @@ impl Database {
         }
         let mut conn = self.conn();
         let tx = conn.transaction().map_err(|e| e.to_string())?;
+        let mut status_changed = false;
         if run.reply_discussion_id.is_some() {
             let reviewer = run
                 .reviewer_id
@@ -328,11 +338,20 @@ impl Database {
                     )
                     .map_err(|e| e.to_string())?;
                 if assigned_count > 0 && unapproved_count == 0 && unresolved_count == 0 {
-                    tx.execute(
+                    let changed = tx.execute(
                         "UPDATE virtual_mr_sessions SET status='resolved', updated_at=CURRENT_TIMESTAMP WHERE id=?1 AND status='open'",
                         [&run.session_id],
                     )
                     .map_err(|e| e.to_string())?;
+                    if changed == 1 {
+                        status_changed = true;
+                        if notify_from_runtime {
+                            tx.execute(
+                            "INSERT INTO ai_review_events(run_id,kind,detail,created_at) VALUES(?1,'mr_status_changed',?2,?3)",
+                            params![run.id, json!({"before":"open","after":"resolved"}).to_string(), chrono::Utc::now().to_rfc3339()],
+                        ).map_err(|e| e.to_string())?;
+                        }
+                    }
                 }
             }
         }
@@ -346,7 +365,8 @@ impl Database {
             ],
         )
         .map_err(|e| e.to_string())?;
-        tx.commit().map_err(|e| e.to_string())
+        tx.commit().map_err(|e| e.to_string())?;
+        Ok(status_changed)
     }
 }
 

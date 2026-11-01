@@ -1,7 +1,7 @@
 //! Review lifecycle and stable entry points. The bounded loop and tool actions live in child modules.
 mod action_dispatch;
-mod completion_notification;
 mod audit;
+pub(super) mod completion_notification;
 mod discussion_observation;
 mod discussions;
 mod engine;
@@ -97,8 +97,23 @@ pub async fn run(
     };
     app.state::<super::coordinator::ReviewCoordinator>()
         .release(&run.session_id);
-    if saved {
-        completion_notification::send(app.clone(), run).await;
+    crate::features::virtual_mr::status_notification::send_review_transition(
+        app.clone(),
+        run.id.clone(),
+        run.session_id.clone(),
+    )
+    .await;
+    if saved || matches!(run.status.as_str(), "failed" | "incomplete") {
+        completion_notification::send(app.clone(), run, saved).await;
+    } else if run.status != "cancelled" {
+        completion_notification::send_failure(
+            app.clone(),
+            run.id,
+            run.session_id,
+            run.reviewer_name,
+            false,
+        )
+        .await;
     }
 }
 

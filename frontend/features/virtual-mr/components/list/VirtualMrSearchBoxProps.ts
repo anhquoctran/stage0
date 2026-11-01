@@ -18,6 +18,7 @@ export interface VirtualMrSearchBoxProps {
   inline: boolean;
   searchSuggestions: VirtualMrSearchSuggestion[];
   activeSuggestionIndex: number;
+  setActiveSuggestionIndex: React.Dispatch<React.SetStateAction<number>>;
   applySearchSuggestion: (suggestion: VirtualMrSearchSuggestion) => void;
   sortBy: MrSort;
   setSortBy: React.Dispatch<React.SetStateAction<MrSort>>;

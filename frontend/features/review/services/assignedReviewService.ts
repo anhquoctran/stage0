@@ -13,6 +13,7 @@ import { discussionReplyRecipients } from '../utils/discussionReplyRecipients';
 import { getDiscussionComments } from '../../virtual-mr/utils/discussionReferences';
 import { discussionReplyVersion } from '../utils/discussionReplyVersion';
 import { getProviderModelCatalog } from '../../ai/utils/providerModelCatalog';
+import { notificationService } from '../../notifications/services/notificationService';
 
 const attemptedHeadBySession = new Map<string, string>();
 const checkingSession = new Set<string>();
@@ -77,14 +78,32 @@ function sourceTransferAllowed(config: ReturnType<typeof configForReviewer>): bo
   return config.provider !== 'ollama';
 }
 
+function notifyReviewerSetupFailure(sessionId: string, reviewer: string) {
+  const title = useVirtualMrStore.getState().sessions.find((session) => session.id === sessionId)?.title || '';
+  void notificationService.notify({
+    titleKey: 'reviewFlow.failedNotificationTitle', values: { reviewer }, body: title,
+    level: 'error', channel: 'aiReview',
+  });
+}
+
+function reviewerStartSettings(sessionId: string, reviewer: BotReviewer) {
+  try {
+    const config = configForReviewer(reviewer);
+    return { config, allowRemote: sourceTransferAllowed(config) };
+  } catch (error) {
+    notifyReviewerSetupFailure(sessionId, reviewer.name);
+    throw error;
+  }
+}
+
 export async function startAssignedReviewForSession(sessionId: string): Promise<ReviewRun | null> {
   const assigned = reviewersForSession(sessionId)?.reviewers.find((reviewer) => reviewer.profile);
   if (!assigned?.profile) return null;
-  const config = configForReviewer(assigned.profile);
+  const { config, allowRemote } = reviewerStartSettings(sessionId, assigned.profile);
   return useReviewStore.getState().startForSession(
     sessionId,
     config,
-    sourceTransferAllowed(config),
+    allowRemote,
     { id: assigned.id, name: assigned.name },
   );
 }
@@ -96,11 +115,11 @@ export async function startAssignedReviewerReview(
 ): Promise<ReviewRun | null> {
   const assigned = getAssignedReviewerForSession(sessionId, reviewerId);
   if (!assigned?.profile) return null;
-  const config = configForReviewer(assigned.profile);
+  const { config, allowRemote } = reviewerStartSettings(sessionId, assigned.profile);
   return useReviewStore.getState().startForSession(
     sessionId,
     config,
-    sourceTransferAllowed(config),
+    allowRemote,
     { id: assigned.id, name: assigned.name },
     false,
     undefined,
@@ -168,9 +187,9 @@ export async function queueAssignedDiscussionReply(sessionId: string, discussion
           const version = await discussionReplyVersion(latest);
           if (version && attemptedReplyComments.get(key) === version) continue;
           await waitForSessionIdle(sessionId, true);
-          const config = configForReviewer(reviewer.profile);
+          const { config, allowRemote } = reviewerStartSettings(sessionId, reviewer.profile);
           const run = await useReviewStore.getState().startForSession(sessionId, config,
-            sourceTransferAllowed(config), { id: reviewer.id, name: reviewer.name }, false, target);
+            allowRemote, { id: reviewer.id, name: reviewer.name }, false, target);
           if (!run) { pending.add(target); break; }
           const finished = await waitForReviewRun(run.id, () => {});
           if (!['completed', 'partial'].includes(finished.status)) throw new Error(finished.error || i18n.t('review.toasts.discussionReplyIncomplete'));
@@ -218,16 +237,17 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
       });
 
       if (!reviewer.profile) {
+        notifyReviewerSetupFailure(sessionId, reviewer.name);
         result.failures.push(i18n.t('review.toasts.reviewerConfigurationUnavailable', { reviewer: reviewer.name }));
         continue;
       }
 
       try {
-        const config = configForReviewer(reviewer.profile);
+        const { config, allowRemote } = reviewerStartSettings(sessionId, reviewer.profile);
         const run = await useReviewStore.getState().startForSession(
           sessionId,
           config,
-          sourceTransferAllowed(config),
+          allowRemote,
           { id: reviewer.id, name: reviewer.name },
           generateDescription,
         );

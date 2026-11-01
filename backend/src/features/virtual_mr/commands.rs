@@ -35,8 +35,18 @@ pub async fn save_virtual_mr_session(
 ) -> Result<VirtualMrSessionSaveOutcome, String> {
     let result: Result<_, String> = async {
         let db = app.state::<Database>();
-        db.save_virtual_mr_session(&session)
-            .map_err(|e| e.to_string())
+        let (outcome, previous) = db
+            .save_virtual_mr_session_with_status_change(&session)
+            .map_err(|e| e.to_string())?;
+        if let Some(previous) = previous {
+            tauri::async_runtime::spawn(crate::features::virtual_mr::status_notification::send(
+                app.clone(),
+                session.title.clone(),
+                previous,
+                session.status.clone(),
+            ));
+        }
+        Ok(outcome)
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))

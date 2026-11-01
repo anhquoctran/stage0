@@ -654,6 +654,9 @@
     "categoryHeading": "Catégories de notifications",
     "categoryDescription": "Choisissez les événements autorisés à envoyer des notifications système. Le système gère leur affichage et leur fermeture.",
     "aiReviewTitle": "Revue de code par IA",
+    "mrStatusTitle": "État de la MR",
+    "mrStatusDescription": "Lorsque l’état d’une demande de fusion change.",
+    "mrStatusNotificationTitle": "État de la MR modifié",
     "aiReviewDescription": "À la fin d’une revue IA ou d’une nouvelle vérification.",
     "gitSyncTitle": "Surveillance et synchronisation Git",
     "gitSyncDescription": "Modifications distantes, nouvelles branches et événements de synchronisation.",
@@ -702,6 +705,9 @@
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} a terminé la revue d’une MR",
+    "failedNotificationTitle": "{{reviewer}} n’a pas pu terminer la revue de la MR",
+    "incompleteNotificationTitle": "{{reviewer}} s’est arrêté avant la fin de la revue de la MR",
+    "reviewHistorySuffix": " Ouvrez l’historique des revues pour les détails.",
     "completedBody_one": "{{count}} discussion de revue créée dans {{title}}.",
     "completedBody_other": "{{count}} discussions de revue créées dans {{title}}.",
     "pendingLabel": "Revue de cette MR et préparation des observations…",
@@ -978,8 +984,8 @@
       "comparingBranches": "Comparaison des branches…",
       "loadingChanges": "Chargement des modifications des fichiers et de la possibilité de fusion",
       "noChangesTitle": "Il n’y a rien à comparer",
-      "sameCommitBranches": "<base>{{base}}</base> et <compare>{{compare}}</compare> pointent vers le même commit. Choisissez une autre branche de comparaison pour examiner les changements.",
-      "noDiffBranches": "<base>{{base}}</base> et <compare>{{compare}}</compare> ne présentent aucune différence depuis la base de fusion. Choisissez une autre branche avec des changements pour ouvrir une Virtual MR."
+      "sameCommitBranches": "<code>{{base}}</code> et <code>{{compare}}</code> pointent vers le même commit. Choisissez une autre branche de comparaison pour examiner les changements.",
+      "noDiffBranches": "<code>{{base}}</code> et <code>{{compare}}</code> ne présentent aucune différence depuis la base de fusion. Choisissez une autre branche avec des changements pour ouvrir une Virtual MR."
     },
     "discussionReference": {
       "quotedSource": "Source citée",

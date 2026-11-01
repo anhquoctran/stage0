@@ -649,6 +649,9 @@
     "categoryHeading": "Notification categories",
     "categoryDescription": "वे घटनाएँ चुनें जो सिस्टम सूचनाएँ भेज सकती हैं। दिखाने और बंद करने का नियंत्रण ऑपरेटिंग सिस्टम के पास है।",
     "aiReviewTitle": "AI code review",
+    "mrStatusTitle": "MR स्थिति",
+    "mrStatusDescription": "जब मर्ज अनुरोध की स्थिति बदलती है।",
+    "mrStatusNotificationTitle": "MR की स्थिति बदली",
     "aiReviewDescription": "When an AI review or re-verification finishes.",
     "gitSyncTitle": "Git watchers and sync",
     "gitSyncDescription": "Remote changes, new branches, and sync events.",
@@ -696,6 +699,9 @@
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} finished an MR review",
+    "failedNotificationTitle": "{{reviewer}} MR समीक्षा पूरी नहीं कर सका",
+    "incompleteNotificationTitle": "{{reviewer}} MR समीक्षा पूरी होने से पहले रुक गया",
+    "reviewHistorySuffix": " विवरण के लिए समीक्षा इतिहास खोलें।",
     "completedBody_one": "Created {{count}} review discussion in {{title}}.",
     "completedBody_other": "Created {{count}} review discussions in {{title}}.",
     "pendingLabel": "Reviewing this MR and preparing findings…",
@@ -971,8 +977,8 @@
       "comparingBranches": "Comparing branches…",
       "loadingChanges": "Loading file changes and mergeability",
       "noChangesTitle": "There isn’t anything to compare",
-      "sameCommitBranches": "<base>{{base}}</base> and <compare>{{compare}}</compare> point to the same commit. Choose a different compare branch to review changes.",
-      "noDiffBranches": "<base>{{base}}</base> and <compare>{{compare}}</compare> have no file differences from the merge base. Choose another compare branch with changes to open a Virtual MR."
+      "sameCommitBranches": "<code>{{base}}</code> and <code>{{compare}}</code> point to the same commit. Choose a different compare branch to review changes.",
+      "noDiffBranches": "<code>{{base}}</code> and <code>{{compare}}</code> have no file differences from the merge base. Choose another compare branch with changes to open a Virtual MR."
     },
     "discussionReference": {
       "quotedSource": "Quoted source",

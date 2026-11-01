@@ -649,6 +649,9 @@
     "categoryHeading": "Notification categories",
     "categoryDescription": "Choose which events may send system notifications. Your OS controls display and dismissal.",
     "aiReviewTitle": "AI code review",
+    "mrStatusTitle": "MR status",
+    "mrStatusDescription": "When a merge request changes status.",
+    "mrStatusNotificationTitle": "MR status changed",
     "aiReviewDescription": "When an AI review or re-verification finishes.",
     "gitSyncTitle": "Git watchers and sync",
     "gitSyncDescription": "Remote changes, new branches, and sync events.",
@@ -696,6 +699,9 @@
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} finished an MR review",
+    "failedNotificationTitle": "{{reviewer}} could not finish the MR review",
+    "incompleteNotificationTitle": "{{reviewer}} stopped before finishing the MR review",
+    "reviewHistorySuffix": " Open review history for details.",
     "completedBody_one": "Created {{count}} review discussion in {{title}}.",
     "completedBody_other": "Created {{count}} review discussions in {{title}}.",
     "pendingLabel": "Reviewing this MR and preparing findings…",
@@ -971,8 +977,8 @@
       "comparingBranches": "Comparing branches…",
       "loadingChanges": "Loading file changes and mergeability",
       "noChangesTitle": "There isn’t anything to compare",
-      "sameCommitBranches": "<base>{{base}}</base> and <compare>{{compare}}</compare> point to the same commit. Choose a different compare branch to review changes.",
-      "noDiffBranches": "<base>{{base}}</base> and <compare>{{compare}}</compare> have no file differences from the merge base. Choose another compare branch with changes to open a Virtual MR."
+      "sameCommitBranches": "<code>{{base}}</code> and <code>{{compare}}</code> point to the same commit. Choose a different compare branch to review changes.",
+      "noDiffBranches": "<code>{{base}}</code> and <code>{{compare}}</code> have no file differences from the merge base. Choose another compare branch with changes to open a Virtual MR."
     },
     "discussionReference": {
       "quotedSource": "Quoted source",

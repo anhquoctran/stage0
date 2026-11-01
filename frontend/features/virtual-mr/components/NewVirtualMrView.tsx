@@ -208,8 +208,7 @@ export const NewVirtualMrView: React.FC = () => {
                     : 'virtualMr.newMrView.noDiffBranches'}
                   values={{ base: draftMr.baseBranch, compare: draftMr.compareBranch }}
                   components={{
-                    base: <code className="px-1.5 py-0.5 bg-surface0 text-brand font-mono font-medium border border-surface1/60" />,
-                    compare: <code className="px-1.5 py-0.5 bg-surface0 text-brand font-mono font-medium border border-surface1/60" />,
+                    code: <code className="px-1.5 py-0.5 bg-surface0 text-brand font-mono font-medium border border-surface1/60" />,
                   }}
                 />
               </p>

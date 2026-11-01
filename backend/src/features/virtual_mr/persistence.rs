@@ -147,6 +147,14 @@ impl Database {
         &self,
         s: &VirtualMrSessionDb,
     ) -> Result<VirtualMrSessionSaveOutcome, rusqlite::Error> {
+        self.save_virtual_mr_session_with_status_change(s)
+            .map(|(outcome, _)| outcome)
+    }
+
+    pub fn save_virtual_mr_session_with_status_change(
+        &self,
+        s: &VirtualMrSessionDb,
+    ) -> Result<(VirtualMrSessionSaveOutcome, Option<String>), rusqlite::Error> {
         let mut conn = self.conn();
         let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
@@ -163,14 +171,25 @@ impl Database {
                 .optional()?;
 
             if let Some((existing_id, existing_title)) = duplicate {
-                return Ok(VirtualMrSessionSaveOutcome::DuplicateOpen {
-                    existing_id,
-                    existing_title,
-                    base_branch: s.base_branch.clone(),
-                    compare_branch: s.compare_branch.clone(),
-                });
+                return Ok((
+                    VirtualMrSessionSaveOutcome::DuplicateOpen {
+                        existing_id,
+                        existing_title,
+                        base_branch: s.base_branch.clone(),
+                        compare_branch: s.compare_branch.clone(),
+                    },
+                    None,
+                ));
             }
         }
+
+        let previous_status: Option<String> = tx
+            .query_row(
+                "SELECT status FROM virtual_mr_sessions WHERE id=?1",
+                [&s.id],
+                |row| row.get(0),
+            )
+            .optional()?;
 
         // Atomic session upsert within transaction
         tx.execute(
@@ -229,7 +248,10 @@ impl Database {
         }
 
         tx.commit()?;
-        Ok(VirtualMrSessionSaveOutcome::Saved)
+        Ok((
+            VirtualMrSessionSaveOutcome::Saved,
+            previous_status.filter(|status| status != &s.status),
+        ))
     }
 
     pub fn delete_virtual_mr_session(&self, session_id: &str) -> Result<(), rusqlite::Error> {

@@ -649,6 +649,9 @@
     "categoryHeading": "Benachrichtigungskategorien",
     "categoryDescription": "Wähle die Ereignisse für Systembenachrichtigungen. Das Betriebssystem steuert Anzeige und Schließen.",
     "aiReviewTitle": "KI-Code-Review",
+    "mrStatusTitle": "MR-Status",
+    "mrStatusDescription": "Wenn sich der Status eines Merge Requests ändert.",
+    "mrStatusNotificationTitle": "MR-Status geändert",
     "aiReviewDescription": "Wenn ein KI-Review oder eine erneute Prüfung abgeschlossen ist.",
     "gitSyncTitle": "Git-Überwachung und Synchronisierung",
     "gitSyncDescription": "Remote-Änderungen, neue Branches und Synchronisierungsereignisse.",
@@ -696,6 +699,9 @@
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} hat ein MR-Review abgeschlossen",
+    "failedNotificationTitle": "{{reviewer}} konnte das MR-Review nicht abschließen",
+    "incompleteNotificationTitle": "{{reviewer}} hat das MR-Review vorzeitig beendet",
+    "reviewHistorySuffix": " Öffne den Reviewverlauf für Details.",
     "completedBody_one": "{{count}} Review-Diskussion in {{title}} erstellt.",
     "completedBody_other": "{{count}} Review-Diskussionen in {{title}} erstellt.",
     "pendingLabel": "Diese MR wird geprüft, Ergebnisse werden vorbereitet…",
@@ -971,8 +977,8 @@
       "comparingBranches": "Branches werden verglichen…",
       "loadingChanges": "Dateiänderungen und Zusammenführbarkeit werden geladen",
       "noChangesTitle": "Es gibt nichts zu vergleichen",
-      "sameCommitBranches": "<base>{{base}}</base> und <compare>{{compare}}</compare> zeigen auf denselben Commit. Wähle einen anderen Vergleichsbranch, um Änderungen zu prüfen.",
-      "noDiffBranches": "<base>{{base}}</base> und <compare>{{compare}}</compare> weisen gegenüber der Merge-Basis keine Dateiänderungen auf. Wähle einen anderen Branch mit Änderungen für eine Virtual MR."
+      "sameCommitBranches": "<code>{{base}}</code> und <code>{{compare}}</code> zeigen auf denselben Commit. Wähle einen anderen Vergleichsbranch, um Änderungen zu prüfen.",
+      "noDiffBranches": "<code>{{base}}</code> und <code>{{compare}}</code> weisen gegenüber der Merge-Basis keine Dateiänderungen auf. Wähle einen anderen Branch mit Änderungen für eine Virtual MR."
     },
     "discussionReference": {
       "quotedSource": "Zitierte Quelle",

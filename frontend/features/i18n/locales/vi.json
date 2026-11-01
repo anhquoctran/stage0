@@ -649,6 +649,9 @@
     "categoryHeading": "Danh mục thông báo",
     "categoryDescription": "Chọn sự kiện được gửi thông báo hệ thống. Hệ điều hành quản lý hiển thị và đóng thông báo.",
     "aiReviewTitle": "AI review mã nguồn",
+    "mrStatusTitle": "Trạng thái MR",
+    "mrStatusDescription": "Khi trạng thái merge request thay đổi.",
+    "mrStatusNotificationTitle": "Trạng thái MR đã thay đổi",
     "aiReviewDescription": "Khi AI review hoặc xác minh lại hoàn tất.",
     "gitSyncTitle": "Theo dõi và đồng bộ Git",
     "gitSyncDescription": "Thay đổi từ remote, nhánh mới và sự kiện đồng bộ.",
@@ -696,6 +699,9 @@
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} đã hoàn tất review MR",
+    "failedNotificationTitle": "{{reviewer}} không thể hoàn tất review MR",
+    "incompleteNotificationTitle": "{{reviewer}} đã dừng trước khi hoàn tất review MR",
+    "reviewHistorySuffix": " Mở lịch sử review để xem chi tiết.",
     "completedBody_one": "Đã tạo {{count}} thảo luận review trong {{title}}.",
     "completedBody_other": "Đã tạo {{count}} thảo luận review trong {{title}}.",
     "pendingLabel": "Đang review MR này và chuẩn bị các phát hiện…",
@@ -971,8 +977,8 @@
       "comparingBranches": "Đang so sánh các nhánh…",
       "loadingChanges": "Đang tải thay đổi tệp và kiểm tra khả năng merge",
       "noChangesTitle": "Không có gì để so sánh",
-      "sameCommitBranches": "<base>{{base}}</base> và <compare>{{compare}}</compare> trỏ đến cùng một commit. Hãy chọn nhánh so sánh khác để review thay đổi.",
-      "noDiffBranches": "<base>{{base}}</base> và <compare>{{compare}}</compare> không có khác biệt tệp so với merge base. Hãy chọn nhánh so sánh khác có thay đổi để mở Virtual MR."
+      "sameCommitBranches": "<code>{{base}}</code> và <code>{{compare}}</code> trỏ đến cùng một commit. Hãy chọn nhánh so sánh khác để review thay đổi.",
+      "noDiffBranches": "<code>{{base}}</code> và <code>{{compare}}</code> không có khác biệt tệp so với merge base. Hãy chọn nhánh so sánh khác có thay đổi để mở Virtual MR."
     },
     "discussionReference": {
       "quotedSource": "Nguồn được trích dẫn",

@@ -654,6 +654,9 @@
     "categoryHeading": "Categorías de notificaciones",
     "categoryDescription": "Elige qué eventos pueden enviar notificaciones del sistema. El sistema operativo controla su visualización y cierre.",
     "aiReviewTitle": "Revisión de código con IA",
+    "mrStatusTitle": "Estado de la MR",
+    "mrStatusDescription": "Cuando cambia el estado de una solicitud de fusión.",
+    "mrStatusNotificationTitle": "Cambió el estado de la MR",
     "aiReviewDescription": "Cuando termina una revisión con IA o una nueva verificación.",
     "gitSyncTitle": "Supervisión y sincronización de Git",
     "gitSyncDescription": "Cambios remotos, nuevas ramas y eventos de sincronización.",
@@ -702,6 +705,9 @@
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} ha terminado de revisar una MR",
+    "failedNotificationTitle": "{{reviewer}} no pudo completar la revisión de la MR",
+    "incompleteNotificationTitle": "{{reviewer}} se detuvo antes de completar la revisión de la MR",
+    "reviewHistorySuffix": " Abre el historial de revisiones para ver los detalles.",
     "completedBody_one": "Se ha creado {{count}} discusión de revisión en {{title}}.",
     "completedBody_other": "Se han creado {{count}} discusiones de revisión en {{title}}.",
     "pendingLabel": "Revisando esta MR y preparando los hallazgos…",
@@ -978,8 +984,8 @@
       "comparingBranches": "Comparando ramas…",
       "loadingChanges": "Cargando cambios de archivos y capacidad de fusión",
       "noChangesTitle": "No hay nada que comparar",
-      "sameCommitBranches": "<base>{{base}}</base> y <compare>{{compare}}</compare> apuntan al mismo commit. Elige otra rama de comparación para revisar los cambios.",
-      "noDiffBranches": "<base>{{base}}</base> y <compare>{{compare}}</compare> no tienen diferencias respecto a la base de fusión. Elige otra rama con cambios para abrir una Virtual MR."
+      "sameCommitBranches": "<code>{{base}}</code> y <code>{{compare}}</code> apuntan al mismo commit. Elige otra rama de comparación para revisar los cambios.",
+      "noDiffBranches": "<code>{{base}}</code> y <code>{{compare}}</code> no tienen diferencias respecto a la base de fusión. Elige otra rama con cambios para abrir una Virtual MR."
     },
     "discussionReference": {
       "quotedSource": "Fuente citada",

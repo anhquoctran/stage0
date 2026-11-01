@@ -66,6 +66,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
     handleSearchKeyDown,
     searchSuggestions,
     activeSuggestionIndex,
+    setActiveSuggestionIndex,
     applySearchSuggestion,
   } = useVirtualMrListSearch({ sessions });
 
@@ -221,6 +222,7 @@ export const VirtualMrListDialog: React.FC<VirtualMrListDialogProps> = ({ inline
             inline={inline}
             searchSuggestions={searchSuggestions}
             activeSuggestionIndex={activeSuggestionIndex}
+            setActiveSuggestionIndex={setActiveSuggestionIndex}
             applySearchSuggestion={applySearchSuggestion}
             sortBy={sortBy}
             setSortBy={setSortBy}

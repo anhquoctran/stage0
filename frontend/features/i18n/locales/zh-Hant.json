@@ -649,6 +649,9 @@
     "categoryHeading": "通知類別",
     "categoryDescription": "選擇可傳送系統通知的事件。顯示和關閉由作業系統管理。",
     "aiReviewTitle": "AI 程式碼審查",
+    "mrStatusTitle": "MR 狀態",
+    "mrStatusDescription": "合併請求狀態變更時。",
+    "mrStatusNotificationTitle": "MR 狀態已變更",
     "aiReviewDescription": "AI 審查或重新驗證完成時。",
     "gitSyncTitle": "Git 監控與同步",
     "gitSyncDescription": "遠端更改、新分支和同步事件。",
@@ -696,6 +699,9 @@
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} 已完成 MR 審查",
+    "failedNotificationTitle": "{{reviewer}} 無法完成 MR 審查",
+    "incompleteNotificationTitle": "{{reviewer}} 在完成 MR 審查前停止",
+    "reviewHistorySuffix": " 請開啟審查記錄查看詳情。",
     "completedBody_one": "已在 {{title}} 中建立 {{count}} 條審查討論。",
     "completedBody_other": "已在 {{title}} 中建立 {{count}} 條審查討論。",
     "pendingLabel": "正在審查此 MR 並整理發現的問題…",
@@ -971,8 +977,8 @@
       "comparingBranches": "正在比較分支…",
       "loadingChanges": "正在載入檔案變更和可合併性",
       "noChangesTitle": "沒有可比較的內容",
-      "sameCommitBranches": "<base>{{base}}</base> 和 <compare>{{compare}}</compare> 指向相同提交。請選擇其他比較分支以檢視變更。",
-      "noDiffBranches": "<base>{{base}}</base> 和 <compare>{{compare}}</compare> 相對於合併基底沒有檔案差異。請選擇含有變更的其他分支以開啟 Virtual MR。"
+      "sameCommitBranches": "<code>{{base}}</code> 和 <code>{{compare}}</code> 指向相同提交。請選擇其他比較分支以檢視變更。",
+      "noDiffBranches": "<code>{{base}}</code> 和 <code>{{compare}}</code> 相對於合併基底沒有檔案差異。請選擇含有變更的其他分支以開啟 Virtual MR。"
     },
     "discussionReference": {
       "quotedSource": "引用來源",

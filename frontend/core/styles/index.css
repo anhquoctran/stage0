@@ -61,6 +61,7 @@
   --bg-subtle: var(--ctp-mantle);
   --bg-surface: var(--ctp-base);
   --bg-overlay: var(--ctp-surface0);
+  --interactive-input-bg: var(--ctp-base);
   --border-default: var(--ctp-surface0);
   --border-muted: var(--ctp-surface1);
   --text-primary: var(--ctp-text);
@@ -120,6 +121,7 @@
   --bg-subtle: var(--ctp-mantle);
   --bg-surface: var(--ctp-base);
   --bg-overlay: var(--ctp-surface0);
+  --interactive-input-bg: #ffffff;
   --border-default: var(--ctp-surface0);
   --border-muted: var(--ctp-surface1);
   --text-primary: var(--ctp-text);
@@ -147,9 +149,9 @@
   outline-color: var(--color-brand) !important;
 }
 
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) input:focus-visible,
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) textarea:focus-visible,
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) select:focus-visible {
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) input:not([class~="bg-transparent"]):focus-visible,
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) textarea:not([class~="bg-transparent"]):focus-visible,
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) select:not([class~="bg-transparent"]):focus-visible {
   border-color: var(--color-brand) !important;
   box-shadow: 0 0 0 1px var(--color-brand) !important;
 }
@@ -158,6 +160,17 @@
 :is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) textarea::placeholder {
   color: var(--ctp-overlay2) !important;
   opacity: 1;
+}
+
+/* Keep editable controls visually distinct from disabled surfaces in light themes. */
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light)
+  :is(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not(:disabled):not([class~="bg-transparent"]),
+    textarea:not(:disabled):not([class~="bg-transparent"]),
+    select:not(:disabled):not([class~="bg-transparent"]),
+    button[aria-haspopup="listbox"]:not(:disabled):not([class~="bg-transparent"])
+  ) {
+  background-color: var(--interactive-input-bg);
 }
 
 @theme {
@@ -844,6 +857,18 @@ select:focus-visible {
   background-color: var(--ctp-surface0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
   pointer-events: none;
+}
+
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .mr-list-search-filter-badge::before {
+  inset: -2px -3px;
+  border-color: color-mix(in srgb, var(--color-brand) 24%, white);
+  border-radius: var(--radius-sm);
+  background-color: color-mix(in srgb, var(--color-brand) 8%, white);
+  box-shadow: none;
+}
+
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .mr-list-search-filter-badge > span:last-child {
+  background-color: transparent;
 }
 
 .mr-list-sort-custom-select > button {

@@ -166,6 +166,41 @@ fn old_session_payload_without_reviewers_is_still_readable() {
 }
 
 #[test]
+fn status_transition_is_reported_only_after_a_successful_existing_session_save() {
+    let conn = Connection::open_in_memory().unwrap();
+    seed(&conn);
+    let db = Database::from_connection(conn);
+    let mut mr = session("mr", "repo-a");
+    assert_eq!(
+        db.save_virtual_mr_session_with_status_change(&mr)
+            .unwrap()
+            .1,
+        None
+    );
+    assert_eq!(
+        db.save_virtual_mr_session_with_status_change(&mr)
+            .unwrap()
+            .1,
+        None
+    );
+    mr.status = "resolved".into();
+    assert_eq!(
+        db.save_virtual_mr_session_with_status_change(&mr)
+            .unwrap()
+            .1
+            .as_deref(),
+        Some("open")
+    );
+    mr.status = "closed".into();
+    mr.reviewers = vec![reviewer(), reviewer()];
+    assert!(db.save_virtual_mr_session_with_status_change(&mr).is_err());
+    assert_eq!(
+        db.list_virtual_mr_sessions("repo-a").unwrap()[0].status,
+        "resolved"
+    );
+}
+
+#[test]
 fn only_one_open_session_can_use_a_repo_and_source_target_pair() {
     let conn = Connection::open_in_memory().unwrap();
     seed(&conn);

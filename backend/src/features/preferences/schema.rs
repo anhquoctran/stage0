@@ -271,6 +271,7 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
             )
         })?;
         validate_optional_bool(channels, "aiReview", "notifications.channels")?;
+        validate_optional_bool(channels, "mrStatus", "notifications.channels")?;
         validate_optional_bool(channels, "gitSync", "notifications.channels")?;
         validate_optional_bool(channels, "guardrails", "notifications.channels")?;
     }

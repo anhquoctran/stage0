@@ -1,5 +1,6 @@
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { CustomSelect } from '../../../common/components/CustomSelect';
 import { AlertCircle } from '../../../common/components/icons/AlertCircle';
 import { Bot } from '../../../common/components/icons/Bot';
@@ -87,9 +88,14 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
       : []),
   ];
 
-  return (
-    <div className="fixed inset-0 z-50 bg-[var(--backdrop-modal)] backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-mantle border border-surface0 w-full max-w-2xl shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto rounded-sm">
+  const modalContent = (
+    <div className="fixed inset-0 z-[70] bg-[var(--backdrop-modal)] flex items-center justify-center p-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={editingBotId ? translateUiText('ai.reviewerBot.editTitle') : translateUiText('ai.reviewerBot.createTitle')}
+        className="bg-mantle border border-surface0 w-full max-w-2xl shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto rounded-sm"
+      >
         <div className="flex items-center justify-between border-b border-surface0 pb-3">
           <h4 className="text-sm font-bold text-text flex items-center gap-2">
             <Bot className="w-4 h-4 text-brand" />
@@ -261,5 +267,11 @@ export const BotReviewerModal: React.FC<BotReviewerModalProps> = ({
         </form>
       </div>
     </div>
+  );
+
+  if (typeof document === 'undefined') return modalContent;
+  return createPortal(
+    modalContent,
+    document.getElementById('preferences-window-content') ?? document.body,
   );
 };

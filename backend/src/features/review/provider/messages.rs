@@ -65,7 +65,13 @@ pub fn payload(
             if config.provider == "ollama" {
                 body["options"] = json!({"num_predict":max_tokens});
             } else {
-                body["tool_choice"] = json!("required");
+                body["tool_choice"] = json!(if config.provider == "deepseek"
+                    && config.reasoning_effort.as_deref() != Some("none")
+                {
+                    "auto"
+                } else {
+                    "required"
+                });
                 body["parallel_tool_calls"] = json!(false);
                 body["max_tokens"] = json!(max_tokens);
             }

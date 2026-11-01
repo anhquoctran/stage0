@@ -25,6 +25,12 @@ const categories: Array<{
     icon: CheckCircle2,
   },
   {
+    key: 'mrStatus',
+    titleKey: 'notifications.mrStatusTitle',
+    descriptionKey: 'notifications.mrStatusDescription',
+    icon: CheckCircle2,
+  },
+  {
     key: 'gitSync',
     titleKey: 'notifications.gitSyncTitle',
     descriptionKey: 'notifications.gitSyncDescription',

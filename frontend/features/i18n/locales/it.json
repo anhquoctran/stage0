@@ -654,6 +654,9 @@
     "categoryHeading": "Categorie di notifiche",
     "categoryDescription": "Scegli gli eventi che possono inviare notifiche di sistema. Il sistema operativo ne gestisce visualizzazione e chiusura.",
     "aiReviewTitle": "Revisione del codice con IA",
+    "mrStatusTitle": "Stato MR",
+    "mrStatusDescription": "Quando cambia lo stato di una richiesta di merge.",
+    "mrStatusNotificationTitle": "Stato della MR modificato",
     "aiReviewDescription": "Quando termina una revisione IA o una nuova verifica.",
     "gitSyncTitle": "Monitoraggio e sincronizzazione Git",
     "gitSyncDescription": "Modifiche remote, nuovi rami ed eventi di sincronizzazione.",
@@ -702,6 +705,9 @@
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} ha terminato la revisione di una MR",
+    "failedNotificationTitle": "{{reviewer}} non ha potuto completare la revisione della MR",
+    "incompleteNotificationTitle": "{{reviewer}} si è fermato prima di completare la revisione della MR",
+    "reviewHistorySuffix": " Apri la cronologia delle revisioni per i dettagli.",
     "completedBody_one": "Creata {{count}} discussione di revisione in {{title}}.",
     "completedBody_other": "Create {{count}} discussioni di revisione in {{title}}.",
     "pendingLabel": "Revisione della MR e preparazione dei risultati…",
@@ -978,8 +984,8 @@
       "comparingBranches": "Confronto dei branch…",
       "loadingChanges": "Caricamento delle modifiche ai file e della possibilità di merge",
       "noChangesTitle": "Non c’è nulla da confrontare",
-      "sameCommitBranches": "<base>{{base}}</base> e <compare>{{compare}}</compare> puntano allo stesso commit. Scegli un altro branch di confronto per esaminare le modifiche.",
-      "noDiffBranches": "<base>{{base}}</base> e <compare>{{compare}}</compare> non presentano differenze di file rispetto alla base di merge. Scegli un altro branch con modifiche per aprire una Virtual MR."
+      "sameCommitBranches": "<code>{{base}}</code> e <code>{{compare}}</code> puntano allo stesso commit. Scegli un altro branch di confronto per esaminare le modifiche.",
+      "noDiffBranches": "<code>{{base}}</code> e <code>{{compare}}</code> non presentano differenze di file rispetto alla base di merge. Scegli un altro branch con modifiche per aprire una Virtual MR."
     },
     "discussionReference": {
       "quotedSource": "Fonte citata",

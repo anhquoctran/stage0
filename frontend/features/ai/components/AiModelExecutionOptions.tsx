@@ -18,13 +18,14 @@ export const AiModelExecutionOptions: React.FC<{
   fastMode,
   onReasoningEffortChange,
   onFastModeChange,
+  emptyMessage,
 }) => {
   const { t } = useTranslation();
   const efforts = model?.reasoningEfforts || [];
   const supportsFastMode = model?.supportsFastMode === true;
 
   if (!efforts.length && !supportsFastMode) {
-    return null;
+    return emptyMessage ? <p className="text-[10px] text-subtext0">{emptyMessage}</p> : null;
   }
 
   const effortOptions: CustomSelectOption<string>[] = [

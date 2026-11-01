@@ -15,8 +15,12 @@ export function resolveAiModelPreset(
   if (!model) return undefined;
 
   const root = baseUrl.replace(/\/+$/, '');
-  if (!((providerId === 'openai' && root === OPENAI_API_BASE_URL) ||
-    (providerId === 'anthropic' && root === 'https://api.anthropic.com/v1' && dynamic))) {
+  const providerDeclaredCapabilities =
+    providerId === 'deepseek' || providerId === 'qwen' || providerId === 'kimi';
+  const officialProviderCapabilities =
+    (providerId === 'openai' && root === OPENAI_API_BASE_URL) ||
+    (providerId === 'anthropic' && root === 'https://api.anthropic.com/v1' && dynamic);
+  if (!(providerDeclaredCapabilities || officialProviderCapabilities)) {
     return { id: model.id, name: model.name, recommendedFor: model.recommendedFor };
   }
   return model;

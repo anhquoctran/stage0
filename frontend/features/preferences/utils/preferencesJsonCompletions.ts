@@ -27,7 +27,7 @@ const PROPERTY_NAMES: Record<string, string[]> = {
   sandbox: ['type'],
   git: ['binaryId', 'binaryPath'],
   notifications: ['channels'],
-  'notifications.channels': ['aiReview', 'gitSync', 'guardrails'],
+  'notifications.channels': ['aiReview', 'mrStatus', 'gitSync', 'guardrails'],
 };
 
 const VALUE_OPTIONS: Record<string, string[]> = {
@@ -54,7 +54,7 @@ const BOOLEAN_PROPERTIES = new Set([
   'appearance.viewerFont.enableLigatures', 'ai.aiConfig.fastMode', 'ai.aiConfig.streamResponse',
   'ai.aiConfig.enableCodeReviewAssist', 'ai.mcpServers.[].enabled', 'reviewers.[].enabled',
   'reviewers.[].fastMode', 'reviewers.[].isBuiltin', 'notifications.channels.aiReview',
-  'notifications.channels.gitSync', 'notifications.channels.guardrails',
+  'notifications.channels.mrStatus', 'notifications.channels.gitSync', 'notifications.channels.guardrails',
   'ai.guardrailPolicy.require_human_confirmation_for_commands',
   'ai.guardrailPolicy.require_human_confirmation_for_writes',
 ]);

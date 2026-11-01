@@ -74,12 +74,27 @@ The action queue is in memory while Stage0 runs. Relaunching a terminated app
 from a retained Windows notification would require a separate COM activation
 registration; this adapter does not implement that lifecycle.
 
+## Virtual MR status
+
+The `mrStatus` channel defaults to enabled and can be changed in Preferences.
+Virtual MR session saves detect changes against the previous status inside the
+same transaction; only committed transitions send a notification. AI approval
+records its open-to-resolved transition in the publication transaction, and the
+review lifecycle sends the corresponding notification after publication.
+Creation, unchanged saves, rejected duplicate requests and cancelled saves do
+not send a status-change notification. Delivery uses the saved UI language and
+the same OS permission and channel gates as other native notifications.
+
 ## Reviewer completion
 
 Review runtime completion sends once after final state persistence and coordinator
 release, independent of frontend polling, open windows, manual commands or new
 finding counts. Completed and partial runs notify (including zero findings and
-discussion replies); unsuccessful or unsaved final states do not claim completion.
+discussion replies). Failed and incomplete runs send distinct error or warning
+notifications directing the user to review history when the run was saved.
+Startup errors, unexpected worker termination and final-state persistence errors
+also send failure notifications; unsaved runs do not claim history is available.
+User-cancelled runs do not send failure notifications.
 The notification ID derives from the run ID. Delivery runs in a blocking worker,
 reads the global UI language and reuses backend channel/OS authorization gates.
 Notification delivery failure is diagnostic and cannot turn a saved successful

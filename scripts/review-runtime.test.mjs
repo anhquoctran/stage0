@@ -212,9 +212,9 @@ test('a failed first phase cannot report a generated description or an approved 
   assert.deepEqual(store.getState().activeRuns, {});
 });
 
-function assignedBatchFixture(finished) {
-  const started = []; const synchronized = [];
-  const session = { id: 'a', repoId: 'repo-a', status: 'open', reviewers: [{ agentId: 'bot-a', agentName: 'Reviewer 01' }] };
+function assignedBatchFixture(finished, options = {}) {
+  const started = []; const synchronized = []; const notifications = [];
+  const session = { id: 'a', title: 'Fixture MR', repoId: 'repo-a', status: 'open', reviewers: [{ agentId: 'bot-a', agentName: 'Reviewer 01' }] };
   const reviewState = {
     activeRuns: {}, reviewBatches: {},
     setReviewBatch: (id, progress) => { if (progress) reviewState.reviewBatches[id] = progress; else delete reviewState.reviewBatches[id]; },
@@ -227,13 +227,29 @@ function assignedBatchFixture(finished) {
     } }) },
     '../../ai/store/useAiMcpStore': { useAiMcpStore: { getState: () => ({ aiConfig: { provider: 'ollama' }, dynamicModels: {}, externalAgents: [] }) } },
     '../../ai/store/useBotReviewersStore': { useBotReviewersStore: { getState: () => ({ globalReviewers: [{ id: 'bot-a', name: 'Reviewer 01' }], repoCustomReviewers: {} }) } },
-    '../utils/resolveReviewBotConfig': { resolveReviewBotConfig: () => ({ provider: 'ollama', baseUrl: 'http://localhost:11434' }) },
+    '../utils/resolveReviewBotConfig': { resolveReviewBotConfig: () => { if (options.configError) throw Error('Reviewer setup failed'); return { provider: 'ollama', baseUrl: 'http://localhost:11434' }; } },
+    '../../notifications/services/notificationService': { notificationService: { notify: async (item) => { notifications.push(item); } } },
     '../store/useReviewStore': { useReviewStore: { getState: () => reviewState }, isReviewStartingForSession: () => false },
     '../../git/store/useGitStore': { useGitStore: { getState: () => ({ showToast: () => {} }) } },
     '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: { getState: () => ({ sessions: [session], resetReviewerReviews: async () => {} }) } },
   });
-  return { service, started, synchronized, reviewState, session };
+  return { service, started, synchronized, reviewState, session, notifications };
 }
+
+test('reviewer setup failures notify once before starting, while backend failures are not duplicated', async () => {
+  const setup = assignedBatchFixture(run(), { configError: true });
+  const failed = await setup.service.startAssignedReviewBatchForSession('a');
+  assert.equal(setup.started.length, 0);
+  assert.match(failed.failures[0], /Reviewer setup failed/);
+  assert.equal(setup.notifications.length, 1);
+  assert.equal(setup.notifications[0].channel, 'aiReview');
+  assert.equal(setup.notifications[0].body, 'Fixture MR');
+
+  const backend = assignedBatchFixture(run());
+  backend.reviewState.startForSession = async () => { throw Error('backend failure'); };
+  await backend.service.startAssignedReviewBatchForSession('a');
+  assert.equal(backend.notifications.length, 0);
+});
 
 test('discussion replies send thread scope and cannot change frontend MR descriptions or reviewer verdicts', async () => {
   const current = { ...run(), reviewerId: 'bot-a', replyDiscussionId: 'thread' };

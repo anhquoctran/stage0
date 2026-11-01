@@ -1,5 +1,38 @@
 use super::*;
 
+#[test]
+fn approval_records_a_status_transition_only_when_the_mr_changes() {
+    let repo = TestRepo::new();
+    let (mut run, _) = repo.review();
+    run.reviewer_id = Some("bot".into());
+    run.status = "completed".into();
+    run.decision = Some("approve".into());
+    let db = test_database(&run);
+    db.save_review_run(&run).unwrap();
+    db.conn().execute("INSERT INTO virtual_mr_session_reviewers(session_id,agent_id,agent_name) VALUES('session','bot','Bot')", []).unwrap();
+    assert!(db.publish_review_actions(&run, &[]).unwrap());
+    assert!(!db.publish_review_actions(&run, &[]).unwrap());
+    let events = db.review_events(&run.id).unwrap();
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| event["kind"] == "mr_status_changed")
+            .count(),
+        1
+    );
+    assert_eq!(events[0]["detail"]["after"], "resolved");
+    db.conn()
+        .execute(
+            "UPDATE virtual_mr_sessions SET status='open' WHERE id='session'",
+            [],
+        )
+        .unwrap();
+    assert!(db
+        .publish_review_actions_with_origin(&run, &[], false)
+        .unwrap());
+    assert_eq!(db.review_events(&run.id).unwrap().len(), 1);
+}
+
 #[tokio::test]
 async fn prose_and_uninspected_empty_findings_cannot_manufacture_complete_coverage() {
     let repo = TestRepo::new();

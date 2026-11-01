@@ -669,6 +669,9 @@
     "categoryHeading": "فئات الإشعارات",
     "categoryDescription": "اختر الأحداث التي يمكنها إرسال إشعارات النظام. يتحكم نظام التشغيل في عرضها وإغلاقها.",
     "aiReviewTitle": "مراجعة الشيفرة بالذكاء الاصطناعي",
+    "mrStatusTitle": "حالة طلب الدمج",
+    "mrStatusDescription": "عند تغير حالة طلب الدمج.",
+    "mrStatusNotificationTitle": "تغيرت حالة طلب الدمج",
     "aiReviewDescription": "عند انتهاء مراجعة ذكية أو إعادة التحقق.",
     "gitSyncTitle": "مراقبة Git ومزامنته",
     "gitSyncDescription": "التغييرات البعيدة والفروع الجديدة وأحداث المزامنة.",
@@ -720,6 +723,9 @@
   },
   "reviewFlow": {
     "completedTitle": "أنهى {{reviewer}} مراجعة طلب دمج",
+    "failedNotificationTitle": "تعذر على {{reviewer}} إكمال مراجعة طلب الدمج",
+    "incompleteNotificationTitle": "توقف {{reviewer}} قبل إكمال مراجعة طلب الدمج",
+    "reviewHistorySuffix": " افتح سجل المراجعات للاطلاع على التفاصيل.",
     "completedBody_one": "أُنشئت {{count}} مناقشة مراجعة في {{title}}.",
     "completedBody_other": "أُنشئ {{count}} من مناقشات المراجعة في {{title}}.",
     "pendingLabel": "جارٍ مراجعة طلب الدمج وإعداد الملاحظات…",
@@ -1005,8 +1011,8 @@
       "comparingBranches": "جارٍ مقارنة الفروع…",
       "loadingChanges": "جارٍ تحميل تغييرات الملفات وإمكانية الدمج",
       "noChangesTitle": "لا يوجد ما يمكن مقارنته",
-      "sameCommitBranches": "يشير <base>{{base}}</base> و<compare>{{compare}}</compare> إلى الإيداع نفسه. اختر فرع مقارنة مختلفًا لمراجعة التغييرات.",
-      "noDiffBranches": "لا توجد فروق ملفات بين <base>{{base}}</base> و<compare>{{compare}}</compare> نسبةً إلى أساس الدمج. اختر فرع مقارنة آخر يتضمن تغييرات لفتح Virtual MR."
+      "sameCommitBranches": "يشير <code>{{base}}</code> و<code>{{compare}}</code> إلى الإيداع نفسه. اختر فرع مقارنة مختلفًا لمراجعة التغييرات.",
+      "noDiffBranches": "لا توجد فروق ملفات بين <code>{{base}}</code> و<code>{{compare}}</code> نسبةً إلى أساس الدمج. اختر فرع مقارنة آخر يتضمن تغييرات لفتح Virtual MR."
     },
     "discussionReference": {
       "quotedSource": "المصدر المقتبس",

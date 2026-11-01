@@ -7,6 +7,7 @@ import { preferencesJsonService } from '../../preferences/services/preferencesJs
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   channels: {
     aiReview: true,
+    mrStatus: true,
     gitSync: true,
     guardrails: true,
   },
@@ -22,6 +23,7 @@ function normalizeSettings(value: Partial<NotificationSettings> | null | undefin
   return {
     channels: {
       aiReview: typeof value?.channels?.aiReview === 'boolean' ? value.channels.aiReview : DEFAULT_NOTIFICATION_SETTINGS.channels.aiReview,
+      mrStatus: typeof value?.channels?.mrStatus === 'boolean' ? value.channels.mrStatus : DEFAULT_NOTIFICATION_SETTINGS.channels.mrStatus,
       gitSync: typeof value?.channels?.gitSync === 'boolean' ? value.channels.gitSync : DEFAULT_NOTIFICATION_SETTINGS.channels.gitSync,
       guardrails: typeof value?.channels?.guardrails === 'boolean' ? value.channels.guardrails : DEFAULT_NOTIFICATION_SETTINGS.channels.guardrails,
     },

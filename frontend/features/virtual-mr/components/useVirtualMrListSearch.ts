@@ -90,6 +90,7 @@ export function useVirtualMrListSearch({ sessions }: VirtualMrListSearchContext)
     handleSearchKeyDown,
     searchSuggestions,
     activeSuggestionIndex,
+    setActiveSuggestionIndex,
     applySearchSuggestion,
   };
 }

@@ -17,7 +17,12 @@ export function BotPromptConfigForm({
         </label>
         <span className="text-[10px] text-subtext0 font-mono">{t('ai.reviewerBotConfig.readOnlyByRole')}</span>
       </div>
-      <pre className="w-full max-h-36 overflow-y-auto whitespace-pre-wrap px-3 py-2 bg-crust border border-surface1 text-xs font-mono text-subtext1 leading-relaxed select-text">
+      <pre
+        key={formCategory}
+        tabIndex={0}
+        aria-label={t('ai.reviewerBotConfig.systemPrompt')}
+        className="w-full max-h-36 overflow-y-auto overscroll-contain whitespace-pre-wrap px-3 py-2 bg-crust border border-surface1 text-xs font-mono text-subtext1 leading-relaxed select-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+      >
         {getBotRolePrompt(formCategory)}
       </pre>
       <label className="block text-[11px] font-semibold text-subtext0 mt-3 mb-1">

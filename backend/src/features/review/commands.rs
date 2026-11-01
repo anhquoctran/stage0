@@ -48,6 +48,9 @@ pub async fn start_ai_review(
     app: AppHandle,
     mut request: ReviewRequest,
 ) -> Result<ReviewRun, String> {
+    let notification_session = request.session_id.clone();
+    let notification_reviewer = request.reviewer_name.clone();
+    let notification_id = uuid::Uuid::new_v4().to_string();
     let result: Result<_, String> = async {
     let activity = crate::common::activity::OperationLease::acquire()?;
     let preferences = app
@@ -273,6 +276,7 @@ pub async fn start_ai_review(
     let context = Arc::new(Mutex::new(ReviewContext::new(snapshot, guards)));
     let task_app = app.clone();
     let task_run = run.clone();
+    let fallback_reviewer = run.reviewer_name.clone();
     tauri::async_runtime::spawn(async move {
         let _activity = activity;
         let worker_app = task_app.clone();
@@ -289,18 +293,33 @@ pub async fn start_ai_review(
                 super::debug_log::safe_label(&id, 80),
                 super::debug_log::safe_label(&session_id, 80)
             ));
+            let mut saved_failure = None;
             if let Ok(mut failed) = task_app.state::<Database>().get_review_run(&id) {
                 failed.status = "failed".into();
                 failed.error =
                     Some("Review worker stopped unexpectedly; no approval was recorded".into());
                 failed.finished_at = Some(chrono::Utc::now().to_rfc3339());
-                let _ = task_app.state::<Database>().save_review_run(&failed);
+                let saved = task_app.state::<Database>().save_review_run(&failed).is_ok();
+                saved_failure = Some((failed.reviewer_name, saved));
             }
             task_app.state::<ReviewCoordinator>().release(&session_id);
+            let (reviewer, saved) = saved_failure.unwrap_or((fallback_reviewer, false));
+            super::runtime::completion_notification::send_failure(
+                task_app.clone(), id, session_id, reviewer, saved,
+            ).await;
         }
     });
     Ok(run)
 }.await;
+    if result.is_err() {
+        tauri::async_runtime::spawn(super::runtime::completion_notification::send_failure(
+            app.clone(),
+            notification_id,
+            notification_session,
+            notification_reviewer,
+            false,
+        ));
+    }
     result.map_err(|error| crate::common::messages::command_error("review", error))
 }
 
@@ -358,15 +377,21 @@ pub async fn cancel_ai_review(app: AppHandle, run_id: String) -> Result<(), Stri
 #[tauri::command]
 pub async fn publish_ai_review(app: AppHandle, run_id: String) -> Result<(), String> {
     let result: Result<_, String> = async {
-    tauri::async_runtime::spawn_blocking(move||{
-        let db=app.state::<Database>();let run=db.get_review_run(&run_id)?;
-        let (repo,base,head)={let conn=db.conn();conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&run.session_id],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?))).map_err(|_| crate::common::messages::code("backend.virtualMr.sessionNotFound"))?};
+    let worker_app = app.clone();
+    let (changed, title) = tauri::async_runtime::spawn_blocking(move||{
+        let db=worker_app.state::<Database>();let run=db.get_review_run(&run_id)?;
+        let (repo,base,head,title)={let conn=db.conn();conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch,s.title FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&run.session_id],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?,r.get::<_,String>(3)?))).map_err(|_| crate::common::messages::code("backend.virtualMr.sessionNotFound"))?};
         if repo!=run.snapshot.repo_path||super::context::resolve_snapshot_ref(&repo,&base)?!=run.snapshot.base_sha||super::context::resolve_snapshot_ref(&repo,&head)?!=run.snapshot.head_sha{return Err(crate::common::messages::code("backend.review.snapshotStale"));}
         let guards = Arc::new(GuardrailsEngine::new());
         let context = super::context::ReviewContext::new(run.snapshot.clone(), guards);
         context.validate_findings(&run.findings)?;
-        db.publish_review(&run)
-    }).await.map_err(|_| crate::common::messages::code("backend.review.publishFailed"))?
+        let changed = db.publish_review_actions_with_origin(&run, &[], false)?;
+        Ok::<_, String>((changed, title))
+    }).await.map_err(|_| crate::common::messages::code("backend.review.publishFailed"))??;
+    if changed {
+        tauri::async_runtime::spawn(crate::features::virtual_mr::status_notification::send(app.clone(), title, "open".into(), "resolved".into()));
+    }
+    Ok(())
 }.await;
     result.map_err(|error| crate::common::messages::command_error("review", error))
 }

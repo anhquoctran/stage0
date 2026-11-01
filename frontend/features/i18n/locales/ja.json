@@ -649,6 +649,9 @@
     "categoryHeading": "通知の種類",
     "categoryDescription": "システム通知を送るイベントを選びます。表示と終了はOSが管理します。",
     "aiReviewTitle": "AIコードレビュー",
+    "mrStatusTitle": "MRの状態",
+    "mrStatusDescription": "マージリクエストの状態が変わったとき。",
+    "mrStatusNotificationTitle": "MRの状態が変わりました",
     "aiReviewDescription": "AIレビューまたは再検証が完了したとき。",
     "gitSyncTitle": "Gitの監視と同期",
     "gitSyncDescription": "リモートの変更、新しいブランチ、同期イベント。",
@@ -696,6 +699,9 @@
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}}がMRのレビューを完了しました",
+    "failedNotificationTitle": "{{reviewer}}はMRレビューを完了できませんでした",
+    "incompleteNotificationTitle": "{{reviewer}}はMRレビューの完了前に停止しました",
+    "reviewHistorySuffix": " 詳細はレビュー履歴を確認してください。",
     "completedBody_one": "{{title}}にレビューのディスカッションを{{count}}件作成しました。",
     "completedBody_other": "{{title}}にレビューのディスカッションを{{count}}件作成しました。",
     "pendingLabel": "このMRをレビューして指摘事項を準備しています…",
@@ -971,8 +977,8 @@
       "comparingBranches": "ブランチを比較中…",
       "loadingChanges": "ファイルの変更とマージ可能性を読み込み中",
       "noChangesTitle": "比較できる変更がありません",
-      "sameCommitBranches": "<base>{{base}}</base> と <compare>{{compare}}</compare> は同じコミットを指しています。変更を確認するには別の比較ブランチを選択してください。",
-      "noDiffBranches": "<base>{{base}}</base> と <compare>{{compare}}</compare> には merge base からのファイル差分がありません。変更を含む別の比較ブランチを選択してください。"
+      "sameCommitBranches": "<code>{{base}}</code> と <code>{{compare}}</code> は同じコミットを指しています。変更を確認するには別の比較ブランチを選択してください。",
+      "noDiffBranches": "<code>{{base}}</code> と <code>{{compare}}</code> には merge base からのファイル差分がありません。変更を含む別の比較ブランチを選択してください。"
     },
     "discussionReference": {
       "quotedSource": "引用元",

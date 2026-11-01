@@ -117,6 +117,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
                 className="w-full"
                 buttonClassName="w-full"
                 dropdownWidth="w-full"
+                dropdownPlacement="top"
                 align="left"
                 aria-label={t('ai.acp.labelForAgent', { label, name: agent.name })}
               />
@@ -155,6 +156,7 @@ export const AcpReviewerConfigOptions: React.FC<AcpReviewerConfigOptionsProps> =
               className="w-full"
               buttonClassName="w-full"
               dropdownWidth="w-full"
+              dropdownPlacement="top"
               align="left"
               aria-label={t('ai.acp.labelForAgent', { label, name: agent.name })}
             />

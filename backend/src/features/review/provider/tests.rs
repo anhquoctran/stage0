@@ -189,6 +189,43 @@ fn tool_call_policy_matches_the_configured_provider_and_model() {
     );
     assert!(ollama.get("tool_choice").is_none());
 }
+
+#[test]
+fn deepseek_thinking_allows_tools_and_preserves_reasoning_for_continuation() {
+    let mut cfg = config("deepseek", "https://api.deepseek.com");
+    cfg.model = "deepseek-flash".into();
+    let tools = super::super::schemas::tools();
+    for effort in [None, Some("high")] {
+        cfg.reasoning_effort = effort.map(str::to_string);
+        assert_eq!(
+            payload(&cfg, "policy", &[], &tools, 2048)["tool_choice"],
+            "auto"
+        );
+    }
+    cfg.reasoning_effort = Some("none".into());
+    let body = payload(&cfg, "policy", &[], &tools, 2048);
+    assert_eq!(body["tool_choice"], "required");
+    assert_eq!(body["thinking"]["type"], "disabled");
+
+    let response = json!({"choices":[{"finish_reason":"tool_calls","message":{
+        "role":"assistant","content":null,"reasoning_content":"private reasoning",
+        "tool_calls":[{"id":"call-1","type":"function","function":{"name":"get_diff","arguments":"{}"}}]
+    }}]});
+    let mut history = initial_history("deepseek", "fixture");
+    let (calls, _) = decode("deepseek", &response, &mut history).unwrap();
+    append_results(
+        "deepseek",
+        &mut history,
+        &[(calls[0].clone(), json!({"result":"fixture"}))],
+    );
+    cfg.reasoning_effort = Some("high".into());
+    let continuation = payload(&cfg, "policy", &history, &tools, 2048);
+    assert_eq!(
+        continuation["messages"][2]["reasoning_content"],
+        "private reasoning"
+    );
+    assert_eq!(continuation["messages"][3]["tool_call_id"], "call-1");
+}
 #[test]
 fn gemini_native_ids_are_echoed_exactly_even_with_fallback_like_prefixes() {
     for id in [Some("gemini-actual-provider-id"), None] {
