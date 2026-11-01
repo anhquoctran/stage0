@@ -16,6 +16,8 @@ import {
   scheduledVersion,
   scheduledReleasePlan,
   waitForReleaseWindow,
+  branchRiskProfile,
+  validateGitFlowBranch,
 } from './release-channels.mjs';
 import { prepareScheduledBranch } from './prepare-release.mjs';
 import { setProjectVersion } from './bump-version.mjs';
@@ -270,4 +272,69 @@ test('the actual CI gate allows Stable for scheduled, reusable and manual workfl
   assert.equal(allowed('push', 'v0.0.2-nightly'), true);
   assert.equal(allowed('schedule', 'v0.0.3-beta'), true);
   assert.equal(allowed('workflow_dispatch', 'v0.0.1', 'another/repo'), false);
+});
+
+test('git flow policy forbids direct work on protected branches, enforces develop PRs and requires hotfix back-sync', () => {
+  assert.deepEqual(branchRiskProfile('develop'), { risk: 'highest', stability: 'unstable' });
+  assert.deepEqual(branchRiskProfile('feat/new-ui'), { risk: 'highest', stability: 'unstable' });
+  assert.deepEqual(branchRiskProfile('fix/race'), { risk: 'highest', stability: 'unstable' });
+  assert.deepEqual(branchRiskProfile('origin/nightly'), { risk: 'high', stability: 'preview' });
+  assert.deepEqual(branchRiskProfile('origin/beta'), { risk: 'medium', stability: 'stabilizing' });
+  assert.deepEqual(branchRiskProfile('origin/main'), { risk: 'low', stability: 'stable' });
+
+  for (const protectedBranch of ['main', 'beta', 'nightly', 'develop', 'origin/main', 'refs/heads/develop']) {
+    assert.throws(
+      () => validateGitFlowBranch({ headBranch: protectedBranch, baseBranch: 'develop' }),
+      /Direct commits or pushes to protected branch/,
+    );
+  }
+
+  for (const branch of ['feat/ci-schedule', 'fix/updater-lock', 'refactor/git-ops', 'perf/diff', 'docs/git-flow', 'test/channels', 'chore/deps']) {
+    assert.deepEqual(validateGitFlowBranch({ headBranch: branch, baseBranch: 'origin/develop' }), {
+      kind: 'standard',
+      headBranch: branch,
+      baseBranch: 'develop',
+      prTarget: 'develop',
+      riskProfile: { risk: 'highest', stability: 'unstable' },
+      syncBranches: [],
+    });
+    assert.throws(
+      () => validateGitFlowBranch({ headBranch: branch, baseBranch: 'main' }),
+      /Standard work branches must branch off and target develop/,
+    );
+  }
+
+  assert.deepEqual(validateGitFlowBranch({ headBranch: 'hotfix/main/signing-key', baseBranch: 'origin/main' }), {
+    kind: 'hotfix',
+    headBranch: 'hotfix/main/signing-key',
+    baseBranch: 'main',
+    prTarget: 'main',
+    riskProfile: { risk: 'low', stability: 'stable' },
+    syncBranches: ['beta', 'nightly', 'develop'],
+  });
+  assert.deepEqual(validateGitFlowBranch({ headBranch: 'hotfix/beta/crash-on-open', baseBranch: 'beta' }), {
+    kind: 'hotfix',
+    headBranch: 'hotfix/beta/crash-on-open',
+    baseBranch: 'beta',
+    prTarget: 'beta',
+    riskProfile: { risk: 'medium', stability: 'stabilizing' },
+    syncBranches: ['nightly', 'develop'],
+  });
+  assert.deepEqual(validateGitFlowBranch({ headBranch: 'hotfix/nightly/parser', baseBranch: 'nightly' }), {
+    kind: 'hotfix',
+    headBranch: 'hotfix/nightly/parser',
+    baseBranch: 'nightly',
+    prTarget: 'nightly',
+    riskProfile: { risk: 'high', stability: 'preview' },
+    syncBranches: ['develop'],
+  });
+
+  assert.throws(
+    () => validateGitFlowBranch({ headBranch: 'hotfix/dev-only', baseBranch: 'develop' }),
+    /Hotfix branches must branch off and target main, beta or nightly/,
+  );
+  assert.throws(
+    () => validateGitFlowBranch({ headBranch: 'random-branch', baseBranch: 'develop' }),
+    /Branch name must use/,
+  );
 });

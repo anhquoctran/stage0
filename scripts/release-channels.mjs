@@ -130,3 +130,60 @@ export async function waitForReleaseWindow(publishAt, now = Date.now(), sleep = 
   if (delayMs > 0) await sleep(delayMs);
   return delayMs;
 }
+
+export function branchRiskProfile(branchName) {
+  const normalized = String(branchName || '').trim().replace(/^(?:refs\/heads\/|origin\/)/, '');
+  if (!normalized) throw new Error('Branch name is required');
+  if (Object.hasOwn(policy.gitFlow.riskLevels, normalized)) {
+    return policy.gitFlow.riskLevels[normalized];
+  }
+  if (normalized.startsWith(policy.gitFlow.hotfixPrefix)) {
+    const target = normalized.slice(policy.gitFlow.hotfixPrefix.length).split('/')[0];
+    return policy.gitFlow.riskLevels[target] ?? policy.gitFlow.riskLevels.work;
+  }
+  if (policy.gitFlow.workBranchPrefixes.some(prefix => normalized.startsWith(prefix))) {
+    return policy.gitFlow.riskLevels.work;
+  }
+  throw new Error(`Unknown branch risk profile for '${normalized}'`);
+}
+
+export function validateGitFlowBranch({ headBranch, baseBranch = policy.gitFlow.defaultBaseBranch }) {
+  const head = String(headBranch || '').trim().replace(/^(?:refs\/heads\/|origin\/)/, '');
+  const base = String(baseBranch || '').trim().replace(/^(?:refs\/heads\/|origin\/)/, '');
+  if (!head) throw new Error('Working branch name is required');
+  if (policy.gitFlow.protectedBranches.includes(head)) {
+    throw new Error(`Direct commits or pushes to protected branch '${head}' are forbidden`);
+  }
+  if (head.startsWith(policy.gitFlow.hotfixPrefix)) {
+    const slug = head.slice(policy.gitFlow.hotfixPrefix.length);
+    if (!slug || !/^[a-z0-9][a-z0-9._/-]*$/i.test(slug)) throw new Error('Invalid hotfix branch name');
+    if (!Object.hasOwn(policy.gitFlow.syncTargets, base)) {
+      throw new Error('Hotfix branches must branch off and target main, beta or nightly');
+    }
+    return {
+      kind: 'hotfix',
+      headBranch: head,
+      baseBranch: base,
+      prTarget: base,
+      riskProfile: policy.gitFlow.riskLevels[base],
+      syncBranches: [...policy.gitFlow.syncTargets[base]],
+    };
+  }
+  const hasWorkPrefix = policy.gitFlow.workBranchPrefixes.some(
+    prefix => head.startsWith(prefix) && /^[a-z0-9][a-z0-9._/-]*$/i.test(head.slice(prefix.length)),
+  );
+  if (!hasWorkPrefix) {
+    throw new Error('Branch name must use feat/, fix/, refactor/, perf/, docs/, test/, chore/ or hotfix/');
+  }
+  if (base !== policy.gitFlow.defaultBaseBranch) {
+    throw new Error('Standard work branches must branch off and target develop');
+  }
+  return {
+    kind: 'standard',
+    headBranch: head,
+    baseBranch: policy.gitFlow.defaultBaseBranch,
+    prTarget: policy.gitFlow.defaultBaseBranch,
+    riskProfile: policy.gitFlow.riskLevels.work,
+    syncBranches: [],
+  };
+}

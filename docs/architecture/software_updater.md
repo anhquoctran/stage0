@@ -161,6 +161,12 @@ published later always has the strictly largest SemVer. When two schedules share
 the same `00:00 UTC` window (such as Nightly + Beta on the 27th, or Nightly +
 Stable on day 1 of a quarter), `prepareScheduledBranch` assigns versions in fixed
 ascending order (`nightly` first, then `beta` / `stable` with a higher SemVer).
+At any given moment, `main` may not carry the highest SemVer number, because Nightly
+(daily) and Beta (monthly) preview releases continue to advance their patch numbers
+(`0.0.x-nightly`, `0.0.x-beta`) between quarterly Stable releases. However, `main`
+is authoritative as the official production release with the highest stability. The updater
+feed `channel-stable` serves only stable builds, GitHub marks `main` as `--latest`
+(while preview channels are marked `--prerelease`), and the website downloads always prioritize `main`.
 When CI starts during the 60-minute pre-build lead window (`23:00 UTC`),
 `targetReleaseTime` resolves to the upcoming `00:00:00 UTC` boundary so `About`
 metadata and `latest.json` match the exact publication date. Separate feeds

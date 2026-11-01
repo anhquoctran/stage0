@@ -3,16 +3,38 @@
   "epoch": "2026-10-01T00:00:00Z",
   "developmentBranch": "origin/develop",
   "leadMinutes": 60,
+  "gitFlow": {
+    "protectedBranches": ["main", "beta", "nightly", "develop"],
+    "defaultBaseBranch": "develop",
+    "workBranchPrefixes": ["feat/", "fix/", "refactor/", "perf/", "docs/", "test/", "chore/"],
+    "hotfixPrefix": "hotfix/",
+    "riskLevels": {
+      "work": { "risk": "highest", "stability": "unstable" },
+      "develop": { "risk": "highest", "stability": "unstable" },
+      "nightly": { "risk": "high", "stability": "preview" },
+      "beta": { "risk": "medium", "stability": "stabilizing" },
+      "main": { "risk": "low", "stability": "stable" }
+    },
+    "syncTargets": {
+      "main": ["beta", "nightly", "develop"],
+      "beta": ["nightly", "develop"],
+      "nightly": ["develop"]
+    }
+  },
   "channels": {
     "nightly": {
       "branch": "origin/nightly",
       "cadence": "daily",
+      "risk": "high",
+      "stability": "preview",
       "releaseTimeUtc": "00:00",
       "cron": "0 23 * * *"
     },
     "beta": {
       "branch": "origin/beta",
       "cadence": "monthly",
+      "risk": "medium",
+      "stability": "stabilizing",
       "releaseDayOfMonth": 27,
       "releaseTimeUtc": "00:00",
       "cron": "0 23 26 * *"
@@ -20,6 +42,8 @@
     "stable": {
       "branch": "origin/main",
       "cadence": "quarterly",
+      "risk": "low",
+      "stability": "stable",
       "releaseDayOfQuarter": 1,
       "releaseTimeUtc": "00:00",
       "cron": "0 23 31 3,12 *",

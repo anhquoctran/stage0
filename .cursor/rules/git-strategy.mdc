@@ -1,0 +1,18 @@
+---
+description: Enforce Stage0 Git Flow, protected build branches, develop PR workflow, and hotfix synchronization
+globs: *
+alwaysApply: true
+---
+
+# Git strategy and branch protection
+
+- Follow `docs/architecture/git_strategy.md` and `AGENTS.md`.
+- **Branch risk hierarchy**: `develop`/`feat/*`/`fix/*` (Highest risk, least stable) -> `nightly` (High risk) -> `beta` (Medium risk) -> `main` (Stable).
+- **SemVer vs. Stability**: `main` có thể không phải là bản có SemVer lớn nhất tại một thời điểm (do nightly/beta ra thường xuyên hơn), nhưng luôn là bản chính thức có độ ổn định cao nhất (`stable`).
+- **Never commit or push directly** to `main`, `beta`, `nightly`, or `develop`.
+- **Standard tasks**:
+  - Branch off `origin/develop` using `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `perf/<slug>`, `docs/<slug>`, `test/<slug>`, or `chore/<slug>`.
+  - Open Pull Requests into `develop` only.
+- **Hotfix exception**:
+  - Branch directly off the affected release branch (`origin/main`, `origin/beta`, or `origin/nightly`) as `hotfix/<target>/<slug>`.
+  - Open the primary PR into `<target>`, then synchronize the fix to all remaining branches (`main` -> `beta`, `nightly`, `develop`; `beta` -> `nightly`, `develop`; `nightly` -> `develop`).
