@@ -3245,6 +3245,7 @@
       "providerResponseIncomplete": "استجابة المزود غير مكتملة أو تم رفضها أو تم اقتطاعها",
       "providerResponseMissingOutput": "مخرجات الاستجابة مفقودة",
       "providerUnfinishedFunctionCall": "أرجع المزود استدعاء دالة غير مكتمل",
+      "providerOutputTruncated": "وصل المزود إلى حد رموز الإخراج. تم تجاهل الاستجابة غير المكتملة؛ جرّب مستوى استدلال أقل أو مراجعة أصغر.",
       "providerResponseRefusedOrTruncated": "تم رفض استجابة المزود أو اقتطاعها",
       "claudeContentMissing": "محتوى Claude مفقود",
       "geminiNoCandidate": "لا يوجد مرشح من Gemini (ربما تم حظره)",

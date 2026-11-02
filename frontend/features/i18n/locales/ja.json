@@ -3211,6 +3211,7 @@
       "providerResponseIncomplete": "プロバイダーの応答が不完全であるか、拒否されたか、切り詰められました",
       "providerResponseMissingOutput": "応答出力が不足しています",
       "providerUnfinishedFunctionCall": "プロバイダーが未完了の関数呼び出しを返しました",
+      "providerOutputTruncated": "プロバイダーが出力トークンの上限に達しました。不完全な応答は破棄されました。推論レベルを下げるか、レビュー範囲を小さくしてください。",
       "providerResponseRefusedOrTruncated": "プロバイダーの応答が拒否されたか、切り詰められました",
       "claudeContentMissing": "Claudeコンテンツが不足しています",
       "geminiNoCandidate": "Gemini候補がありません（ブロックされた可能性があります）",

@@ -3211,6 +3211,7 @@
       "providerResponseIncomplete": "提供商响应不完整、被拒绝或被截断",
       "providerResponseMissingOutput": "缺少响应输出",
       "providerUnfinishedFunctionCall": "提供商返回了未完成的函数调用",
+      "providerOutputTruncated": "提供商已达到输出 token 上限。不完整的响应已被丢弃；请降低推理级别或缩小审查范围。",
       "providerResponseRefusedOrTruncated": "提供商响应被拒绝或被截断",
       "claudeContentMissing": "缺少 Claude 内容",
       "geminiNoCandidate": "无 Gemini 候选结果（可能被屏蔽）",

@@ -3211,6 +3211,7 @@
       "providerResponseIncomplete": "Provider response was incomplete, refused or truncated",
       "providerResponseMissingOutput": "Missing response output",
       "providerUnfinishedFunctionCall": "Provider returned an unfinished function call",
+      "providerOutputTruncated": "The provider reached its output token limit. The incomplete response was discarded; try a lower reasoning level or a smaller review.",
       "providerResponseRefusedOrTruncated": "Provider response was refused or truncated",
       "claudeContentMissing": "Missing Claude content",
       "geminiNoCandidate": "No Gemini candidate (possibly blocked)",

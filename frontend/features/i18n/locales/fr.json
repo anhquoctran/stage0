@@ -3218,6 +3218,7 @@
       "providerResponseIncomplete": "La réponse du fournisseur était incomplète, refusée ou tronquée",
       "providerResponseMissingOutput": "Sortie de réponse manquante",
       "providerUnfinishedFunctionCall": "Le fournisseur a renvoyé un appel de fonction inachevé",
+      "providerOutputTruncated": "Le fournisseur a atteint la limite de tokens de sortie. La réponse incomplète a été ignorée ; essayez un niveau de raisonnement inférieur ou une revue plus petite.",
       "providerResponseRefusedOrTruncated": "La réponse du fournisseur a été refusée ou tronquée",
       "claudeContentMissing": "Contenu Claude manquant",
       "geminiNoCandidate": "Aucun candidat Gemini (peut-être bloqué)",

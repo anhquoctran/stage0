@@ -128,10 +128,17 @@ pub fn decode(
                     choice["finish_reason"].as_str(),
                     Some("stop" | "tool_calls")
                 ) {
+                    let reason = choice["finish_reason"].as_str().unwrap_or("unknown");
+                    let key = match reason {
+                        "length" => "backend.review.providerOutputTruncated",
+                        "insufficient_system_resource" => "backend.ai.providerUnavailable",
+                        "aborted" => "backend.ai.providerInterrupted",
+                        _ => "backend.review.providerResponseRefusedOrTruncated",
+                    };
                     return Err(crate::common::messages::failure(
-                        "backend.review.providerResponseRefusedOrTruncated",
-                        serde_json::json!({}),
-                        "Provider response was refused or truncated".into(),
+                        key,
+                        serde_json::json!({"finishReason":reason}),
+                        format!("Provider stopped with finish reason {reason}"),
                     ));
                 }
                 &choice["message"]

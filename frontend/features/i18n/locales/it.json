@@ -3218,6 +3218,7 @@
       "providerResponseIncomplete": "La risposta del provider era incompleta, rifiutata o troncata",
       "providerResponseMissingOutput": "Output della risposta mancante",
       "providerUnfinishedFunctionCall": "Il provider ha restituito una chiamata di funzione incompleta",
+      "providerOutputTruncated": "Il provider ha raggiunto il limite di token di output. La risposta incompleta è stata scartata; prova un livello di ragionamento inferiore o una revisione più piccola.",
       "providerResponseRefusedOrTruncated": "La risposta del provider è stata rifiutata o troncata",
       "claudeContentMissing": "Contenuto di Claude mancante",
       "geminiNoCandidate": "Nessun candidato Gemini (probabilmente bloccato)",
