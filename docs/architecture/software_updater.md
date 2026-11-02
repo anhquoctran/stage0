@@ -141,38 +141,55 @@ Ubuntu systems; the published Linux packages are built on Ubuntu 22.04 by CI.
 
 ## Release channels and version reset
 
-`shared/release-channels.json` is the canonical base/cadence policy. Stage0
-restarts at **0.0.1** in Q4 2026. `scripts/release-channels.mjs` validates
-channel versions and derives scheduled versions in UTC. Stable has no suffix;
-`-stable` is a SemVer prerelease and is rejected by the release gate.
+`shared/release-channels.json` is the canonical base/cadence/branch policy. Stage0
+restarts at **0.0.1** in Q4 2026. Code is branched from `origin/develop` into
+channel source branches. `scripts/release-channels.mjs` validates channel
+versions, resolves scheduled source branches, derives scheduled versions in UTC,
+and holds final publication until the exact `00:00:00 UTC` release window. Stable
+has no suffix; `-stable` is a SemVer prerelease and is rejected by the release gate.
 
-- Nightly: `0.0.2-nightly.20261031.42`, daily at 17:17 UTC (00:17 Vietnam next day).
-- Beta: `0.0.2-beta.20261101.43`, Sundays at 17:47 UTC (Monday 00:47 Vietnam).
-- Stable: **manual only** through GitHub Actions → Release Stage0 → Run workflow.
-  No tag input or local release commands are required. There is no quarterly cron or automatic Stable
-  publication on tag pushes or reusable workflow calls.
+- Development branch: `origin/develop` (feature integration branch from which release channels are branched).
+- Nightly (`origin/nightly`): `0.0.2-nightly`, published daily at **00:00 UTC** (pre-build cron starts 60 minutes earlier at `23:00 UTC` daily: `0 23 * * *`).
+- Beta (`origin/beta`): `0.0.3-beta`, published monthly on the **27th at 00:00 UTC** (pre-build cron starts on the 26th at `23:00 UTC`: `0 23 26 * *`).
+- Stable (`origin/main`): `0.0.4`, published quarterly on the **1st day of the first month of each quarter (Jan 1, Apr 1, Jul 1, Oct 1) at 00:00 UTC** (pre-build crons start at `23:00 UTC` on the preceding day: `0 23 31 3,12 *` and `0 23 30 6,9 *`), or manually on demand via **GitHub Actions → Release Stage0 → Run workflow**.
 
-Preview target cores advance quarterly from the configured epoch. This only
-numbers Nightly/Beta builds; it never creates or publishes a Stable release.
-The maintainer chooses the Stable release date and source version line; CI selects the next free PATCH when manually triggered. The date is the UTC build date and the last
-identifier is the Actions run number. SemVer compares `nightly` above `beta`
-lexically for an equal core; separate feeds intentionally avoid cross-channel
-promotion. Calendar cadence does not infer API compatibility. Maintainers must
-change the base/epoch deliberately for a future MINOR/MAJOR release.
+Every release across all channels increments `PATCH` (`0.0.x`) sequentially above
+the highest existing release tag in the current `MAJOR.MINOR` line (`0.0.1` ->
+`0.0.2-nightly` -> `0.0.3-beta` -> `0.0.4`), appending `-nightly` or `-beta` for
+prereleases and no suffix for Stable. This guarantees that whichever release is
+published later always has the strictly largest SemVer. When two schedules share
+the same `00:00 UTC` window (such as Nightly + Beta on the 27th, or Nightly +
+Stable on day 1 of a quarter), `prepareScheduledBranch` assigns versions in fixed
+ascending order (`nightly` first, then `beta` / `stable` with a higher SemVer).
+At any given moment, `main` may not carry the highest SemVer number, because Nightly
+(daily) and Beta (monthly) preview releases continue to advance their patch numbers
+(`0.0.x-nightly`, `0.0.x-beta`) between quarterly Stable releases. However, `main`
+is authoritative as the official production release with the highest stability. The updater
+feed `channel-stable` serves only stable builds, GitHub marks `main` as `--latest`
+(while preview channels are marked `--prerelease`), and the website downloads always prioritize `main`.
+When CI starts during the 60-minute pre-build lead window (`23:00 UTC`),
+`targetReleaseTime` resolves to the upcoming `00:00:00 UTC` boundary so `About`
+metadata and `latest.json` match the exact publication date. Separate feeds
+intentionally avoid cross-channel promotion. Maintainers must change the base
+version deliberately for a future MINOR/MAJOR release.
 
-`scheduled-release.yml` prepares a detached release commit with synchronized
-versions and metadata, pushes only its immutable tag, and calls the existing
-release workflow directly (GITHUB_TOKEN tag pushes do not trigger another
-workflow). Main remains unchanged. Every platform builds the exact tag; per-target
-About metadata is regenerated before packaging. Successful signed publication
-marks nightly/beta as GitHub prereleases with latest=false; only stable becomes
-latest. Channel alias releases are prereleases containing only latest.json;
-the manifest points at immutable version-tagged, signature-verified assets.
-A single publication concurrency group protects channel-feed updates.
+`scheduled-release.yml` fetches and detaches the channel's configured source branch
+(`origin/nightly`, `origin/beta` or `origin/main`), prepares a detached release
+commit with synchronized versions and metadata, pushes only its immutable tag, and
+calls `release.yml` with both `tag` and `publish_at` (`YYYY-MM-DDT00:00:00.000Z`).
+Branch refs remain unchanged. Every platform builds the exact tag; per-target
+About metadata is regenerated before packaging. In `publish`, all bundles and
+signatures are verified and uploaded to the draft release first; `prepare-release.mjs wait`
+then holds until exact `00:00:00 UTC` before flipping `draft=false` and updating
+`channel-<channel>/latest.json`. Per-channel publication concurrency groups allow
+simultaneous channel schedules (such as Nightly + Beta on the 27th, or Nightly +
+Stable at quarter start) to build and publish on time at `00:00 UTC` without blocking
+each other.
 
 Schedules become active after these workflows reach the default branch and
 Actions is enabled. Signing secrets remain required. GitHub cron is best-effort
-and may be delayed; this task does not push tags or publish remote releases.
+and may be delayed; the 60-minute pre-build window absorbs runner startup and
+multi-platform build time.
 
 The deliberate reset from 0.1.x to 0.0.1 is a SemVer downgrade. Existing 0.1.x
 installations need one manual installation; the updater's downgrade/replay
@@ -180,16 +197,8 @@ protections remain enabled. The new stable feed also avoids accidentally
 offering legacy 0.1.x releases to a fresh 0.0.1 installation. No old Git tags
 or GitHub Releases are deleted or rewritten.
 
-Verification for the reset/channel change: architecture, TypeScript, Cargo check,
-30 focused release/version/About/updater Node tests and 8 updater Rust tests
-passed. Both workflow files parse as YAML. Older UI assertions in the selected
-release-notes/updater tests were updated to use translation keys, retaining
-ordering, saved-work confirmation and progress assertions. No remote Actions
-run, multi-platform installer build, tag push or publication was performed.
-
-Stable trigger restriction: only workflow_dispatch can start a Stable release.
-The shared validation dependency skips builds/publication for stable tag pushes
-and automatic workflow calls. The schedule generator also rejects Stable.
+Stable trigger restriction: scheduled/reusable channel workflows and manual
+`workflow_dispatch` can publish Stable releases; raw stable tag pushes are rejected.
 
 ## One-click manual Stable release
 

@@ -86,11 +86,21 @@ export function computeAboutInfo(options = {}) {
   const version = `${packageVersion}+${gitCommit}.${osName}.${arch}`;
 
   // 4. Release date in yyyy-MM-dd
-  const now = new Date();
-  const year = String(now.getFullYear());
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const releaseDate = `${year}-${month}-${day}`;
+  const datedPrerelease = packageVersion.match(/-(?:nightly|beta)\.(\d{4})(\d{2})(\d{2})\./);
+  const explicitDate = String(options.releaseDate || process.env.STAGE0_RELEASE_DATE || '').slice(0, 10);
+  let releaseDate;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(explicitDate)) {
+    releaseDate = explicitDate;
+  } else if (datedPrerelease) {
+    releaseDate = `${datedPrerelease[1]}-${datedPrerelease[2]}-${datedPrerelease[3]}`;
+  } else {
+    const now = new Date();
+    const currentYear = String(now.getFullYear());
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    releaseDate = `${currentYear}-${month}-${day}`;
+  }
+  const year = releaseDate.slice(0, 4);
 
   // 5. Copyright format: Copyright @ curreny_year Author name. Licensed under the MIT license.
   const copyright = `Copyright @ ${year} ${author}. Licensed under the MIT license.`;

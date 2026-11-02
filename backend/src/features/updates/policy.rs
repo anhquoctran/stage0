@@ -16,9 +16,9 @@ fn channel(version: &str) -> Option<&'static str> {
     let version = semver::Version::parse(version).ok()?;
     if version.pre.is_empty() {
         Some("stable")
-    } else if version.pre.as_str().starts_with("nightly.") {
+    } else if version.pre.as_str() == "nightly" || version.pre.as_str().starts_with("nightly.") {
         Some("nightly")
-    } else if version.pre.as_str().starts_with("beta.") {
+    } else if version.pre.as_str() == "beta" || version.pre.as_str().starts_with("beta.") {
         Some("beta")
     } else {
         None
