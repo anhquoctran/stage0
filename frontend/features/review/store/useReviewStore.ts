@@ -1,3 +1,4 @@
+import { reviewerRunStatus } from '../utils/reviewerRunStatus';
 import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 import { create } from 'zustand';
 
@@ -60,16 +61,21 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       await useVirtualMrStore.getState().applyReviewGeneratedDescription(run.sessionId, run.generatedDescription);
     }
     if (!finished) return;
-    await useVirtualMrStore.getState().refreshDiscussions(run.sessionId);
-    if (run.reviewerId && !run.replyDiscussionId) {
-      const reviewerStatus = run.status === 'completed' && run.decision === 'approve'
-        ? 'approved'
-        : run.decision === 'request_changes' || run.findings.length > 0
-          ? 'changes_requested'
-          : ['completed', 'partial'].includes(run.status)
-            ? 'commented'
-            : 'pending';
-      await useVirtualMrStore.getState().setReviewerReviewStatus(run.sessionId, run.reviewerId, reviewerStatus);
+    const unsuccessful = !['completed', 'partial'].includes(run.status);
+    const assignedFullReview = run.reviewerId && !run.replyDiscussionId;
+    if (assignedFullReview && unsuccessful) {
+      await useVirtualMrStore.getState().setReviewerReviewStatus(run.sessionId, run.reviewerId!, reviewerRunStatus(run));
+    }
+    let refreshed = false;
+    try {
+      await useVirtualMrStore.getState().refreshDiscussions(run.sessionId);
+      refreshed = true;
+    } catch (error) {
+      console.warn('Could not refresh discussions after review completion:', error);
+    }
+    // Successful verdicts still require the fresh discussion state before resolution.
+    if (assignedFullReview && !unsuccessful && refreshed) {
+      await useVirtualMrStore.getState().setReviewerReviewStatus(run.sessionId, run.reviewerId!, reviewerRunStatus(run));
       await useVirtualMrStore.getState().tryResolveSession(run.sessionId);
     }
     const { flushQueuedReReviewAfterActive } = await import('../services/assignedReviewService');
@@ -174,6 +180,13 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       }
       return run;
     } catch (error) {
+      if (!admitted && reviewer?.id && !replyDiscussionId) {
+        try {
+          await useVirtualMrStore.getState().setReviewerReviewStatus(sessionId, reviewer.id, 'failed');
+        } catch (statusError) {
+          console.warn('Could not persist reviewer startup failure:', statusError);
+        }
+      }
       if (!admitted) set((state) => {
         const descriptionGenerationSessions = { ...state.descriptionGenerationSessions };
         delete descriptionGenerationSessions[sessionId];

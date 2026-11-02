@@ -80,6 +80,7 @@ impl Database {
             "UPDATE ai_review_runs SET status='interrupted' WHERE status='running'",
             [],
         )?;
+        crate::features::review::persistence::recover_reviewer_states(&conn)?;
         Self::migrate_discussions_fingerprint(&conn)?;
         Self::migrate_git_credentials(&conn)?;
 
