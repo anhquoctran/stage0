@@ -908,7 +908,9 @@
       "replyBadge": "Reply",
       "quoteComment": "Quote comment {{id}}",
       "reviewingNow": "reviewing now",
-      "aiAgentTitle": "{{name}} (AI Agent)"
+      "aiAgentTitle": "{{name}} (AI Agent)",
+      "deleteOwnContent": "अपनी टिप्पणी या चर्चा हटाएँ",
+      "deleteFailed": "हटाया नहीं जा सका: {{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "Recently updated",
@@ -3459,7 +3461,8 @@
       "imageSizeLimit": "Image size ({{bytes}} bytes) exceeds the sandbox limit of {{limit}}",
       "createAttachmentDirFailed": "Failed to create temporary attachment directory: {{error}}",
       "writeAttachmentFailed": "Failed to write temporary image file: {{error}}",
-      "taskExecutionFailed": "Task execution failed: {{error}}"
+      "taskExecutionFailed": "Task execution failed: {{error}}",
+      "deleteCommentDenied": "केवल अपनी ऐसी सामग्री हटा सकते हैं जिस पर कोई जवाब या उद्धरण न हो। चर्चा रीफ़्रेश करके फिर कोशिश करें।"
     },
     "keymaps": {
       "shortcutLengthLimit": "Use one keystroke or a two-step chord (maximum 128 characters)",

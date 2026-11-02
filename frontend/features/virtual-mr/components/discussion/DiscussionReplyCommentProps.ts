@@ -7,4 +7,5 @@ export interface DiscussionReplyCommentProps {
   badges: string[];
   quote: (comment?: VirtualMrComment) => void;
   isSubmitting: boolean;
+  onDelete?: (element: HTMLElement) => void;
 }

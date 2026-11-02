@@ -908,7 +908,9 @@
       "replyBadge": "Trả lời",
       "quoteComment": "Trích dẫn bình luận {{id}}",
       "reviewingNow": "đang review",
-      "aiAgentTitle": "{{name}} (tác nhân AI)"
+      "aiAgentTitle": "{{name}} (tác nhân AI)",
+      "deleteOwnContent": "Xóa bình luận hoặc thảo luận của bạn",
+      "deleteFailed": "Không thể xóa: {{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "Mới cập nhật gần đây",
@@ -3459,7 +3461,8 @@
       "imageSizeLimit": "Kích thước hình ảnh ({{bytes}} byte) vượt quá giới hạn hộp cát {{limit}}",
       "createAttachmentDirFailed": "Không thể tạo thư mục đính kèm tạm thời: {{error}}",
       "writeAttachmentFailed": "Không thể ghi tệp hình ảnh tạm thời: {{error}}",
-      "taskExecutionFailed": "Thực thi tác vụ thất bại: {{error}}"
+      "taskExecutionFailed": "Thực thi tác vụ thất bại: {{error}}",
+      "deleteCommentDenied": "Chỉ có thể xóa nội dung của bạn khi chưa có trả lời hoặc trích dẫn. Hãy tải lại thảo luận và thử lại."
     },
     "keymaps": {
       "shortcutLengthLimit": "Sử dụng một phím gõ hoặc tổ hợp hai bước (tối đa 128 ký tự)",

@@ -908,7 +908,9 @@
       "replyBadge": "返信",
       "quoteComment": "コメント {{id}} を引用",
       "reviewingNow": "レビュー中",
-      "aiAgentTitle": "{{name}} (AI エージェント)"
+      "aiAgentTitle": "{{name}} (AI エージェント)",
+      "deleteOwnContent": "自分のコメントまたはディスカッションを削除",
+      "deleteFailed": "削除できませんでした：{{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "最近更新",
@@ -3459,7 +3461,8 @@
       "imageSizeLimit": "画像サイズ（{{bytes}} バイト）がサンドボックス制限 {{limit}} を超えています",
       "createAttachmentDirFailed": "一時添付ファイルディレクトリの作成に失敗しました: {{error}}",
       "writeAttachmentFailed": "一時画像ファイルの書き込みに失敗しました: {{error}}",
-      "taskExecutionFailed": "タスクの実行に失敗しました: {{error}}"
+      "taskExecutionFailed": "タスクの実行に失敗しました: {{error}}",
+      "deleteCommentDenied": "返信や引用のない自分の投稿のみ削除できます。ディスカッションを再読み込みして、もう一度お試しください。"
     },
     "keymaps": {
       "shortcutLengthLimit": "1つのキーストロークまたは2段階のコードを使用してください（最大128文字）",

@@ -908,7 +908,9 @@
       "replyBadge": "回复",
       "quoteComment": "引用评论 {{id}}",
       "reviewingNow": "正在审查",
-      "aiAgentTitle": "{{name}}（AI 代理）"
+      "aiAgentTitle": "{{name}}（AI 代理）",
+      "deleteOwnContent": "删除自己的评论或讨论",
+      "deleteFailed": "无法删除：{{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "最近更新",
@@ -3459,7 +3461,8 @@
       "imageSizeLimit": "图像大小（{{bytes}} 字节）超出沙箱限制 {{limit}}",
       "createAttachmentDirFailed": "无法创建临时附件目录：{{error}}",
       "writeAttachmentFailed": "无法写入临时图像文件：{{error}}",
-      "taskExecutionFailed": "任务执行失败: {{error}}"
+      "taskExecutionFailed": "任务执行失败: {{error}}",
+      "deleteCommentDenied": "只能删除没有回复或引用的本人内容。请刷新讨论后重试。"
     },
     "keymaps": {
       "shortcutLengthLimit": "使用单次按键或两步组合键（最多 128 个字符）",

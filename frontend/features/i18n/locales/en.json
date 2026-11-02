@@ -908,7 +908,9 @@
       "replyBadge": "Reply",
       "quoteComment": "Quote comment {{id}}",
       "reviewingNow": "reviewing now",
-      "aiAgentTitle": "{{name}} (AI Agent)"
+      "aiAgentTitle": "{{name}} (AI Agent)",
+      "deleteOwnContent": "Delete your comment or discussion",
+      "deleteFailed": "Could not delete: {{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "Recently updated",
@@ -3459,7 +3461,8 @@
       "imageSizeLimit": "Image size ({{bytes}} bytes) exceeds the sandbox limit of {{limit}}",
       "createAttachmentDirFailed": "Failed to create temporary attachment directory: {{error}}",
       "writeAttachmentFailed": "Failed to write temporary image file: {{error}}",
-      "taskExecutionFailed": "Task execution failed: {{error}}"
+      "taskExecutionFailed": "Task execution failed: {{error}}",
+      "deleteCommentDenied": "Only your own content without replies or quotes can be deleted. Refresh the discussion and try again."
     },
     "keymaps": {
       "shortcutLengthLimit": "Use one keystroke or a two-step chord (maximum 128 characters)",

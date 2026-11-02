@@ -5,6 +5,7 @@ import type { ReviewActionType } from '../../types/ReviewActionType';
 
 /** Feature-owned backend contract. Inputs retain the existing wire field names. */
 export interface DiscussionService {
+  deleteMrComment(input: { commentId: string }): Promise<{ discussionId: string; deletedDiscussion: boolean }>;
   addMrComment(input: {
     comment: {
       id: string;
