@@ -907,7 +907,9 @@
       "replyBadge": "回覆",
       "quoteComment": "引用留言 {{id}}",
       "reviewingNow": "正在審查",
-      "aiAgentTitle": "{{name}}（AI 代理）"
+      "aiAgentTitle": "{{name}}（AI 代理）",
+      "deleteOwnContent": "刪除自己的留言或討論",
+      "deleteFailed": "無法刪除：{{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "最近更新",
@@ -3457,7 +3459,8 @@
       "imageSizeLimit": "影像大小（{{bytes}} 位元組）超出沙盒限制 {{limit}}",
       "createAttachmentDirFailed": "無法建立暫存附件目錄：{{error}}",
       "writeAttachmentFailed": "無法寫入暫存影像檔案：{{error}}",
-      "taskExecutionFailed": "任務執行失敗: {{error}}"
+      "taskExecutionFailed": "任務執行失敗: {{error}}",
+      "deleteCommentDenied": "只能刪除沒有回覆或引用的本人內容。請重新整理討論後再試。"
     },
     "keymaps": {
       "shortcutLengthLimit": "使用單次按鍵或兩步組合鍵（最多 128 個字元）",

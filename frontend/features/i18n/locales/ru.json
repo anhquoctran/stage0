@@ -921,7 +921,9 @@
       "replyBadge": "Ответ",
       "quoteComment": "Цитировать комментарий {{id}}",
       "reviewingNow": "идёт проверка",
-      "aiAgentTitle": "{{name}} (ИИ-агент)"
+      "aiAgentTitle": "{{name}} (ИИ-агент)",
+      "deleteOwnContent": "Удалить свой комментарий или обсуждение",
+      "deleteFailed": "Не удалось удалить: {{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "Сначала недавно обновлённые",
@@ -3471,7 +3473,8 @@
       "imageSizeLimit": "Размер изображения ({{bytes}} байт) превышает ограничение песочницы {{limit}}",
       "createAttachmentDirFailed": "Не удалось создать временный каталог вложений: {{error}}",
       "writeAttachmentFailed": "Не удалось записать временный файл изображения: {{error}}",
-      "taskExecutionFailed": "Сбой выполнения задачи: {{error}}"
+      "taskExecutionFailed": "Сбой выполнения задачи: {{error}}",
+      "deleteCommentDenied": "Можно удалять только свой контент без ответов и цитат. Обновите обсуждение и повторите попытку."
     },
     "keymaps": {
       "shortcutLengthLimit": "Используйте одно нажатие клавиши или двухшаговый аккорд (максимум 128 символов)",

@@ -1,5 +1,7 @@
 mod attachment_commands;
+mod discussion_deletion;
 pub use attachment_commands::*;
+pub use discussion_deletion::*;
 
 use crate::core::db::Database;
 use crate::features::git::ops::{get_commits_between, get_git_user_identity, GitCommitItem};
@@ -170,16 +172,17 @@ fn read_regular_text_file_capped(path: &Path, max_bytes: u64) -> Result<String, 
 pub async fn list_mr_discussions(
     app: AppHandle,
     session_id: String,
-) -> Result<Vec<VirtualMrDiscussionDb>, String> {
+) -> Result<serde_json::Value, String> {
     let result: Result<_, String> = async {
         tauri::async_runtime::spawn_blocking(move || {
             let db = app.state::<Database>();
             let manager = app.state::<crate::features::sandbox::SandboxManager>();
-            crate::features::review::discussion_snippets::list_with_code_context(
+            let discussions = crate::features::review::discussion_snippets::list_with_code_context(
                 &db,
                 &session_id,
                 std::sync::Arc::clone(manager.guardrails()),
-            )
+            )?;
+            super::discussion_deletion::with_permissions(&db, &session_id, discussions)
         })
         .await
         .map_err(|_| {

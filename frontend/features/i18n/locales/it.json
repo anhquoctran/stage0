@@ -914,7 +914,9 @@
       "replyBadge": "Risposta",
       "quoteComment": "Cita il commento {{id}}",
       "reviewingNow": "revisione in corso",
-      "aiAgentTitle": "{{name}} (agente IA)"
+      "aiAgentTitle": "{{name}} (agente IA)",
+      "deleteOwnContent": "Elimina il tuo commento o la tua discussione",
+      "deleteFailed": "Impossibile eliminare: {{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "Aggiornati di recente",
@@ -3464,7 +3466,8 @@
       "imageSizeLimit": "La dimensione dell'immagine ({{bytes}} byte) supera il limite della sandbox di {{limit}}",
       "createAttachmentDirFailed": "Impossibile creare la directory temporanea degli allegati: {{error}}",
       "writeAttachmentFailed": "Impossibile scrivere il file immagine temporaneo: {{error}}",
-      "taskExecutionFailed": "Esecuzione dell'attività non riuscita: {{error}}"
+      "taskExecutionFailed": "Esecuzione dell'attività non riuscita: {{error}}",
+      "deleteCommentDenied": "Puoi eliminare solo i tuoi contenuti senza risposte o citazioni. Aggiorna la discussione e riprova."
     },
     "keymaps": {
       "shortcutLengthLimit": "Usa una sequenza di tasti o un accordo a due passaggi (massimo 128 caratteri)",

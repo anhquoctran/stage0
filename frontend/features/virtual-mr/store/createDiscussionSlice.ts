@@ -8,6 +8,8 @@ import { fromDbDiscussion } from '../utils/fromDbDiscussion';
 import { parseReviewerReviewCommand } from '../utils/parseReviewerReviewCommand';
 import { AI_REVIEW_UNAVAILABLE } from '../../ai/constants/runtimeAvailability';
 import type { VirtualMrState } from '../types/VirtualMrState';
+import { refreshCommentPermissions } from './refreshCommentPermissions';
+import { loadLocalGitAuthor } from '../services/loadLocalGitAuthor';
 
 export const createDiscussionSlice = (
   set: (partial: Partial<VirtualMrState> | ((state: VirtualMrState) => Partial<VirtualMrState>)) => void,
@@ -29,6 +31,8 @@ export const createDiscussionSlice = (
     const targetSession = sessions.find((s) => s.id === sessionId);
     if (!targetSession) throw new Error('The target MR is no longer available.');
     if (!payload.initialComment.trim()) throw new Error('A discussion cannot be empty.');
+    const repoPath = get().currentRepoPath;
+    const author = repoPath ? await loadLocalGitAuthor(repoPath, targetSession.assignee) : targetSession.assignee;
 
     const discId = `disc-${crypto.randomUUID()}`;
     const commentId = `comm-${crypto.randomUUID()}`;
@@ -38,8 +42,8 @@ export const createDiscussionSlice = (
       id: commentId,
       discussionId: discId,
       authorType: 'user',
-      authorId: targetSession.assignee.email,
-      authorName: targetSession.assignee.name,
+      authorId: author.email,
+      authorName: author.name,
       body: payload.initialComment,
       reviewAction: payload.reviewAction,
       createdAt: now,
@@ -111,6 +115,7 @@ export const createDiscussionSlice = (
       ),
     }));
     await get().invalidateReviewerApprovals(sessionId);
+    await refreshCommentPermissions(sessionId, set, get);
     const reviewerId = parseReviewerReviewCommand(payload.initialComment);
     if (reviewerId) {
       void import('../../review/services/manualReviewerRequestService')
@@ -135,14 +140,17 @@ export const createDiscussionSlice = (
     const targetSession = sessions.find((s) => s.discussions.some((d) => d.id === discussionId));
     if (!targetSession) throw new Error('The target discussion is no longer available.');
     if (!body.trim()) throw new Error('A reply cannot be empty.');
+    const repoPath = get().currentRepoPath;
+    const author = authorType === 'user' && repoPath
+      ? await loadLocalGitAuthor(repoPath, targetSession.assignee) : targetSession.assignee;
     const commentId = `comm-${crypto.randomUUID()}`;
     const now = new Date().toISOString();
     const newComm: VirtualMrComment = {
       id: commentId,
       discussionId,
       authorType,
-      authorId: authorId || (authorType === 'ai_agent' ? 'ai-bot' : targetSession.assignee.email),
-      authorName: authorName || (authorType === 'ai_agent' ? 'Security Bot' : targetSession.assignee.name),
+      authorId: authorId || (authorType === 'ai_agent' ? 'ai-bot' : author.email),
+      authorName: authorName || (authorType === 'ai_agent' ? 'Security Bot' : author.name),
       body,
       reviewAction,
       createdAt: now,
@@ -184,6 +192,7 @@ export const createDiscussionSlice = (
     }));
     if (authorType === 'user') {
       await get().invalidateReviewerApprovals(targetSession.id);
+      await refreshCommentPermissions(targetSession.id, set, get);
       void import('../../review/services/assignedReviewService')
         .then(({ queueAssignedDiscussionReply }) => queueAssignedDiscussionReply(targetSession.id, discussionId))
         .catch((error) => console.warn('Could not re-review the reply:', error));
@@ -263,7 +272,12 @@ export const createDiscussionSlice = (
     set((state) => ({
       sessions: state.sessions.map((session) =>
         session.id === sessionId
-          ? { ...session, discussions: items.map((item) => fromDbDiscussion(item, session.assignee)) }
+          ? { ...session, discussions: items.map((item) => {
+              const loaded = fromDbDiscussion(item, session.assignee);
+              const pending = session.discussions.find((discussion) => discussion.id === item.id)
+                ?.children.filter((comment) => comment.isPending) ?? [];
+              return { ...loaded, children: [...loaded.children, ...pending] };
+            }) }
           : session
       ),
     }));

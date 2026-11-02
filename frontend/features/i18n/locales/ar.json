@@ -941,7 +941,9 @@
       "replyBadge": "رد",
       "quoteComment": "اقتباس التعليق {{id}}",
       "reviewingNow": "جارٍ إجراء المراجعة",
-      "aiAgentTitle": "{{name}} (وكيل ذكاء اصطناعي)"
+      "aiAgentTitle": "{{name}} (وكيل ذكاء اصطناعي)",
+      "deleteOwnContent": "حذف تعليقك أو مناقشتك",
+      "deleteFailed": "تعذّر الحذف: {{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "الأحدث تحديثًا",
@@ -3491,7 +3493,8 @@
       "imageSizeLimit": "يتجاوز حجم الصورة ({{bytes}} بايت) حد بيئة الاختبار المعزولة {{limit}}",
       "createAttachmentDirFailed": "فشل إنشاء دليل المرفقات المؤقت: {{error}}",
       "writeAttachmentFailed": "فشل كتابة ملف الصورة المؤقت: {{error}}",
-      "taskExecutionFailed": "فشل تنفيذ المهمة: {{error}}"
+      "taskExecutionFailed": "فشل تنفيذ المهمة: {{error}}",
+      "deleteCommentDenied": "يمكنك حذف محتواك فقط إذا لم يتلقَّ ردودًا أو اقتباسات. حدّث المناقشة وحاول مجددًا."
     },
     "keymaps": {
       "shortcutLengthLimit": "استخدم ضغطة مفتاح واحدة أو نغمة ثنائية الخطوات (بحد أقصى 128 حرفًا)",

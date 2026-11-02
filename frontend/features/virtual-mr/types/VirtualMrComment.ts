@@ -12,6 +12,8 @@ export interface VirtualMrComment {
   reviewAction?: ReviewActionType;
   createdAt: string;
   updatedAt: string;
+  /** Backend hint; deletion rechecks ownership and references atomically. */
+  canDelete?: boolean;
   /** Frontend-only placeholder while a manual reviewer request is running. */
   isPending?: boolean;
   pendingLabel?: string;

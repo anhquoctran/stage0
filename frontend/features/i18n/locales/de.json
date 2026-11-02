@@ -907,7 +907,9 @@
       "replyBadge": "Antwort",
       "quoteComment": "Kommentar {{id}} zitieren",
       "reviewingNow": "wird geprüft",
-      "aiAgentTitle": "{{name}} (KI-Agent)"
+      "aiAgentTitle": "{{name}} (KI-Agent)",
+      "deleteOwnContent": "Eigenen Kommentar oder Diskussion löschen",
+      "deleteFailed": "Löschen fehlgeschlagen: {{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "Zuletzt aktualisiert",
@@ -3457,7 +3459,8 @@
       "imageSizeLimit": "Bildgröße ({{bytes}} Bytes) überschreitet das Sandbox-Limit von {{limit}}",
       "createAttachmentDirFailed": "Temporäres Anhangsverzeichnis konnte nicht erstellt werden: {{error}}",
       "writeAttachmentFailed": "Temporäre Bilddatei konnte nicht geschrieben werden: {{error}}",
-      "taskExecutionFailed": "Aufgabenausführung fehlgeschlagen: {{error}}"
+      "taskExecutionFailed": "Aufgabenausführung fehlgeschlagen: {{error}}",
+      "deleteCommentDenied": "Nur eigene Inhalte ohne Antworten oder Zitate können gelöscht werden. Laden Sie die Diskussion neu und versuchen Sie es erneut."
     },
     "keymaps": {
       "shortcutLengthLimit": "Verwenden Sie einen Tastenanschlag oder einen zweistufigen Akkord (maximal 128 Zeichen)",

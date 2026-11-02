@@ -20,6 +20,7 @@ export function normalizeDbTimestamp(ts: string | null | undefined): string {
 export function fromDbDiscussion(item: DbDiscussion, localAuthor?: VirtualMrSession['assignee']): VirtualMrDiscussion {
   const [rootComment = null, ...children] = (item.comments || []).map((comment) => ({
     id: comment.id,
+    canDelete: comment.can_delete === true,
     discussionId: comment.discussion_id,
     authorType: comment.author_type,
     authorId: comment.author_type === 'user' && localAuthor
