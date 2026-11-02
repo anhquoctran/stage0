@@ -19,5 +19,5 @@ export interface DbDiscussion {
   verified_by_bot: string | null;
   verified_at: string | null;
   created_at: string;
-  comments: Array<{ id: string; discussion_id: string; author_type: 'user' | 'ai_agent'; author_id: string; author_name: string; author_avatar: string | null; body: string; review_action: 'comment' | 'approve' | 'request_changes' | null; created_at: string; updated_at: string }>;
+  comments: Array<{ can_delete?: boolean; id: string; discussion_id: string; author_type: 'user' | 'ai_agent'; author_id: string; author_name: string; author_avatar: string | null; body: string; review_action: 'comment' | 'approve' | 'request_changes' | null; created_at: string; updated_at: string }>;
 }

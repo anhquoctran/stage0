@@ -8,6 +8,7 @@ pub(super) async fn update_mr_description(
     run: &ReviewRun,
     context: &Arc<Mutex<ReviewContext>>,
     description: &str,
+    only_if_empty: bool,
 ) -> Result<(), String> {
     let snapshot = context
         .lock()
@@ -56,7 +57,7 @@ pub(super) async fn update_mr_description(
         ));
     }
 
-    db.update_review_generated_description(&run.session_id, description)
+    db.update_review_generated_description(&run.session_id, description, only_if_empty)
 }
 
 pub(super) async fn validate_findings(

@@ -68,7 +68,7 @@ pub(super) async fn prepare(
         };
         initial["diffBatch"] = batch.value.clone();
         let history = adapter.initial_history(&initial.to_string());
-        let body = adapter.payload(system, &history, tools, 2048);
+        let body = adapter.payload(system, &history, tools, adapter.output_token_limit(false));
         if adapter.request_size(&body) <= request_target {
             return authorize(Arc::clone(context), batch, history, limit);
         }

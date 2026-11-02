@@ -2,22 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { releaseChannel } from './release-channels.mjs';
-import { incrementPatch } from './bump-version.mjs';
+import { nextReleaseVersion, releaseChannel } from './release-channels.mjs';
 
 /** Legacy releases from other version lines do not undo the deliberate 0.0 reset. */
 export function nextStableVersion(current, tags) {
   if (releaseChannel(current) !== 'stable') throw new Error('Select a branch with a stable package version');
-  const [major, minor] = current.split('.');
-  let version = current;
-  for (const tag of tags) {
-    if (!/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag)) continue;
-    const candidate = tag.slice(1).split('.');
-    if (candidate[0] === major && candidate[1] === minor && BigInt(candidate[2]) >= BigInt(version.split('.')[2])) {
-      version = incrementPatch(tag.slice(1));
-    }
-  }
-  return version;
+  return nextReleaseVersion('stable', tags, current);
 }
 
 export function prepareManualRelease({ runId, sourceSha, root = process.cwd() }) {
@@ -55,9 +45,16 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     result = prepareManualRelease({ runId: process.env.RELEASE_RUN_ID, sourceSha: process.env.RELEASE_SOURCE_SHA });
   } else {
     const tag = process.env.RELEASE_INPUT_TAG;
-    if (!tag?.startsWith('v') || releaseChannel(tag.slice(1)) === 'stable') throw new Error('Automatic releases require a nightly/beta tag');
+    if (!tag?.startsWith('v')) throw new Error('Release tag must start with v');
+    const channel = releaseChannel(tag.slice(1));
+    if (process.env.RELEASE_EVENT === 'push' && channel === 'stable') {
+      throw new Error('Stable tag pushes require scheduled or manual workflow execution');
+    }
     result = { tag, sha: execFileSync('git', ['rev-parse', '--verify', `${tag}^{commit}`], { encoding: 'utf8' }).trim() };
   }
-  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${result.tag}\nsha=${result.sha}\n`);
+  const channel = releaseChannel(result.tag.slice(1));
+  if (process.env.GITHUB_OUTPUT) {
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${result.tag}\nsha=${result.sha}\nchannel=${channel}\n`);
+  }
   console.log(`Release snapshot: ${result.tag} (${result.sha})`);
 }

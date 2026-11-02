@@ -1,3 +1,4 @@
+import { useDiscussionDeletion } from '../hooks/useDiscussionDeletion';
 import React,{ useCallback,useRef,useState } from 'react';
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
@@ -45,6 +46,8 @@ export const DiscussionThread: React.FC<{
   const submittingRef = useRef(false);
   const closeReference = useCallback(() => setReference(null), []);
 
+  const deletion = useDiscussionDeletion(session.id);
+  const busy = isSubmitting || deletion.isDeleting;
   const comments = getDiscussionComments(discussion);
   const rootComment = discussion.rootComment || comments[0];
   const replies = discussion.rootComment ? discussion.children : comments.slice(1);
@@ -150,16 +153,18 @@ export const DiscussionThread: React.FC<{
   const threadRelativeTime = formatGitLabTime(discussion.createdAt || rootComment?.createdAt || '');
 
   return (
-    <div className="space-y-2 select-text font-sans" onClick={openReference}>
+    <div data-delete-comment-id={rootComment?.id} className="space-y-2 select-text font-sans" onClick={openReference}>
       {/* 1. Outer GitLab Thread Summary Header */}
       <DiscussionThreadHeader
+        onDelete={rootComment?.canDelete && rootComment.authorType === 'user' && replies.length === 0
+          ? (element) => void deletion.remove(rootComment.id, element) : undefined}
         rootAuthorName={rootAuthorName}
         rootComment={rootComment}
         rootAuthorHandle={rootAuthorHandle}
         discussion={discussion}
         threadRelativeTime={threadRelativeTime}
         quote={quote}
-        isSubmitting={isSubmitting}
+        isSubmitting={busy}
       />
 
       {/* 2. The GitLab Discussion Box / Card (No rounded style - sharp borders) */}
@@ -242,12 +247,14 @@ export const DiscussionThread: React.FC<{
                     return (
                       <DiscussionReplyComment
                         key={reply.id}
+                        onDelete={reply.canDelete && reply.authorType === 'user' && reply.id === replies.at(-1)?.id
+                          ? (element) => void deletion.remove(reply.id, element) : undefined}
                         reply={reply}
                         handle={handle}
                         relativeTime={relativeTime}
                         badges={badges}
                         quote={quote}
-                        isSubmitting={isSubmitting}
+                        isSubmitting={busy}
                       />
                     );
                   })}
@@ -262,7 +269,7 @@ export const DiscussionThread: React.FC<{
           isReplying={isReplying}
           targetId={targetId}
           setTargetId={setTargetId}
-          isSubmitting={isSubmitting}
+          isSubmitting={busy}
           discussion={discussion}
           rootComment={rootComment}
           session={session}

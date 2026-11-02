@@ -128,10 +128,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (command === 'version') console.log(verifyReleaseVersion(process.cwd(), args[0]));
   else if (command === 'collect') collectReleaseArtifacts(...args);
   else if (command === 'manifest') {
-    const [directory, tag] = args;
+    const [directory, tag, pubDate] = args;
     const version = verifyReleaseVersion(process.cwd(), tag);
     const notes = fs.readFileSync('RELEASE_NOTES.md', 'utf8');
-    fs.writeFileSync(path.join(directory, 'latest.json'), `${JSON.stringify(createUpdateManifest(directory, version, notes), null, 2)}\n`);
+    fs.writeFileSync(path.join(directory, 'latest.json'), `${JSON.stringify(createUpdateManifest(directory, version, notes, pubDate || undefined), null, 2)}\n`);
     writeChecksums(directory);
-  } else throw new Error('Usage: release-artifacts.mjs version TAG | collect BUNDLE_DIR OUTPUT TARGET | manifest DIRECTORY TAG');
+  } else throw new Error('Usage: release-artifacts.mjs version TAG | collect BUNDLE_DIR OUTPUT TARGET | manifest DIRECTORY TAG [PUB_DATE]');
 }

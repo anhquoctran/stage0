@@ -1,3 +1,4 @@
+import { DiscussionDeleteButton } from './DiscussionDeleteButton';
 import { Quote } from '../../../../common/components/icons/Quote';
 import { GitLabAvatar } from '../GitLabAvatar';
 import { AiBotBadge } from '../AiBotBadge';
@@ -12,6 +13,7 @@ export function DiscussionThreadHeader({
   threadRelativeTime,
   quote,
   isSubmitting,
+  onDelete,
 }: DiscussionThreadHeaderProps) {
   const { t: translateUiText } = useUiTextTranslation();
   return (
@@ -46,6 +48,8 @@ export function DiscussionThreadHeader({
             {getDiscussionPosition(discussion)?.shortLabel}
           </span>
         )}
+
+        {onDelete && <DiscussionDeleteButton onDelete={onDelete} disabled={isSubmitting} />}
 
         <button
           type="button"

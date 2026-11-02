@@ -35,7 +35,7 @@
 
   function releaseChannelFromTag(tag) {
     if (/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(String(tag || ''))) return 'stable';
-    const match = String(tag || '').match(/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)-(nightly|beta)\.[1-9]\d{7}\.(?:0|[1-9]\d*)$/);
+    const match = String(tag || '').match(/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)-(nightly|beta)(?:\.[1-9]\d{7}\.(?:0|[1-9]\d*))?$/);
     return match?.[1] || null;
   }
 

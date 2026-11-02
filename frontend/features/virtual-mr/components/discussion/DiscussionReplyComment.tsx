@@ -1,3 +1,4 @@
+import { DiscussionDeleteButton } from './DiscussionDeleteButton';
 import { useTranslation } from 'react-i18next';
 import { MarkdownPreview } from '../../../../common/components/MarkdownPreview';
 import { Quote } from '../../../../common/components/icons/Quote';
@@ -12,10 +13,11 @@ export function DiscussionReplyComment({
   badges,
   quote,
   isSubmitting,
+  onDelete,
 }: DiscussionReplyCommentProps) {
   const { t } = useTranslation();
   return (
-    <div key={reply.id} className="group relative flex gap-3 text-xs text-text transition-colors">
+    <div data-delete-comment-id={reply.id} key={reply.id} className="group relative flex gap-3 text-xs text-text transition-colors">
       <GitLabAvatar
         name={reply.authorName}
         email={reply.authorId}
@@ -51,6 +53,8 @@ export function DiscussionReplyComment({
                 {badge}
               </span>
             ))}
+
+            {onDelete && <DiscussionDeleteButton onDelete={onDelete} disabled={isSubmitting} />}
 
             <button
               type="button"

@@ -796,6 +796,7 @@
       "descriptionPlaceholder": "Inserisci panoramica MR, motivazioni o checklist...",
       "saveDescription": "Salva descrizione",
       "emptyDescription": "Questa Virtual MR non ha una descrizione.",
+      "retryEmptyDescriptionHint": "Per riprovare a generare la descrizione con IA, menziona un revisore assegnato seguito da “review” in una nuova discussione. Compilerà la descrizione vuota prima di rivedere la MR.",
       "leaveComment": "Lascia un commento",
       "requestReviewGuide": "Per richiedere una revisione completa, menziona con @ un bot assegnato e aggiungi <command>review</command> dopo la menzione. Il bot controlla prima le segnalazioni aperte e le riporta qui se devono ancora essere risolte. Il codice sorgente tracciato idoneo può essere inviato al provider configurato; i percorsi sensibili sono esclusi e le righe corrispondenti a segreti vengono oscurate, ma il rilevamento può non individuare tutti i segreti. La condivisione del sorgente ACP deve essere già attiva per quel bot.",
       "commentPlaceholder": "Scrivi un commento o digita @Reviewer review per richiedere una revisione…",
@@ -914,7 +915,9 @@
       "replyBadge": "Risposta",
       "quoteComment": "Cita il commento {{id}}",
       "reviewingNow": "revisione in corso",
-      "aiAgentTitle": "{{name}} (agente IA)"
+      "aiAgentTitle": "{{name}} (agente IA)",
+      "deleteOwnContent": "Elimina il tuo commento o la tua discussione",
+      "deleteFailed": "Impossibile eliminare: {{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "Aggiornati di recente",
@@ -3107,6 +3110,7 @@
       "instructionsTooLong": "Le istruzioni del revisore superano il limite di 8000 byte.",
       "reviewerUnassigned": "Questo revisore non è più assegnato alla Virtual MR.",
       "branchesChanged": "I rami del Virtual MR sono cambiati durante la revisione. Avvia una nuova revisione prima di aggiornare la descrizione.",
+      "descriptionChanged": "La descrizione della MR è cambiata durante la generazione o non è più disponibile. Ricarica la MR prima di riprovare.",
       "mrDescriptionAlreadyGenerated": "La descrizione della MR può essere generata una sola volta in questa revisione.",
       "tooManyFindings": "Una revisione può contenere al massimo 50 rilievi incorporati.",
       "discussionActionQueued": "Questa discussione ha già un'azione IA in coda in questa revisione.",
@@ -3216,6 +3220,7 @@
       "providerResponseIncomplete": "La risposta del provider era incompleta, rifiutata o troncata",
       "providerResponseMissingOutput": "Output della risposta mancante",
       "providerUnfinishedFunctionCall": "Il provider ha restituito una chiamata di funzione incompleta",
+      "providerOutputTruncated": "Il provider ha raggiunto il limite di token di output. La risposta incompleta è stata scartata; prova un livello di ragionamento inferiore o una revisione più piccola.",
       "providerResponseRefusedOrTruncated": "La risposta del provider è stata rifiutata o troncata",
       "claudeContentMissing": "Contenuto di Claude mancante",
       "geminiNoCandidate": "Nessun candidato Gemini (probabilmente bloccato)",
@@ -3463,7 +3468,8 @@
       "imageSizeLimit": "La dimensione dell'immagine ({{bytes}} byte) supera il limite della sandbox di {{limit}}",
       "createAttachmentDirFailed": "Impossibile creare la directory temporanea degli allegati: {{error}}",
       "writeAttachmentFailed": "Impossibile scrivere il file immagine temporaneo: {{error}}",
-      "taskExecutionFailed": "Esecuzione dell'attività non riuscita: {{error}}"
+      "taskExecutionFailed": "Esecuzione dell'attività non riuscita: {{error}}",
+      "deleteCommentDenied": "Puoi eliminare solo i tuoi contenuti senza risposte o citazioni. Aggiorna la discussione e riprova."
     },
     "keymaps": {
       "shortcutLengthLimit": "Usa una sequenza di tasti o un accordo a due passaggi (massimo 128 caratteri)",

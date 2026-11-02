@@ -14,6 +14,7 @@ export interface ReviewState {
   isStarting: boolean;
   isPublishing: boolean;
   activeRuns: Record<string, ReviewRun>;
+  descriptionGenerationSessions: Record<string, boolean>;
   lastFinishedRun: ReviewRun | null;
   reviewBatches: Record<string, ReviewBatchProgress>;
   setReviewBatch: (sessionId: string, progress: ReviewBatchProgress | null) => void;

@@ -789,6 +789,7 @@
       "descriptionPlaceholder": "输入 MR 概述、动机或检查清单…",
       "saveDescription": "保存说明",
       "emptyDescription": "此 Virtual MR 尚无说明。",
+      "retryEmptyDescriptionHint": "要重试 AI 说明生成，请在新讨论中提及已分配的审查者并加上“review”。审查者会先填写空白说明，再审查 MR。",
       "leaveComment": "发表评论",
       "requestReviewGuide": "要请求完整审查，请使用 @ 提及一个已分配的机器人，并在提及后添加 <command>review</command>。机器人会先检查尚未解决的问题，并在仍有未解决项时在此报告。符合条件的受跟踪源代码可能会发送到已配置的提供商；敏感路径会被排除，匹配的机密行会被隐藏，但检测可能会遗漏机密。必须先为该机器人启用 ACP 源代码共享。",
       "commentPlaceholder": "发表评论，或输入 @Reviewer review 以请求审查…",
@@ -907,7 +908,9 @@
       "replyBadge": "回复",
       "quoteComment": "引用评论 {{id}}",
       "reviewingNow": "正在审查",
-      "aiAgentTitle": "{{name}}（AI 代理）"
+      "aiAgentTitle": "{{name}}（AI 代理）",
+      "deleteOwnContent": "删除自己的评论或讨论",
+      "deleteFailed": "无法删除：{{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "最近更新",
@@ -3100,6 +3103,7 @@
       "instructionsTooLong": "评审员指令超出 8000 字节限制。",
       "reviewerUnassigned": "此评审员不再分配给该虚拟 MR。",
       "branchesChanged": "虚拟 MR 分支在评审期间发生变更。在更新描述之前请开始新的评审。",
+      "descriptionChanged": "生成期间 MR 说明已更改或 MR 已不可用。请重新加载 MR 后再试。",
       "mrDescriptionAlreadyGenerated": "在此次评审中，MR 描述只能生成一次。",
       "tooManyFindings": "一次评审最多只能包含 50 个内联发现。",
       "discussionActionQueued": "此讨论在此次评审中已包含排队的 AI 操作。",
@@ -3209,6 +3213,7 @@
       "providerResponseIncomplete": "提供商响应不完整、被拒绝或被截断",
       "providerResponseMissingOutput": "缺少响应输出",
       "providerUnfinishedFunctionCall": "提供商返回了未完成的函数调用",
+      "providerOutputTruncated": "提供商已达到输出 token 上限。不完整的响应已被丢弃；请降低推理级别或缩小审查范围。",
       "providerResponseRefusedOrTruncated": "提供商响应被拒绝或被截断",
       "claudeContentMissing": "缺少 Claude 内容",
       "geminiNoCandidate": "无 Gemini 候选结果（可能被屏蔽）",
@@ -3456,7 +3461,8 @@
       "imageSizeLimit": "图像大小（{{bytes}} 字节）超出沙箱限制 {{limit}}",
       "createAttachmentDirFailed": "无法创建临时附件目录：{{error}}",
       "writeAttachmentFailed": "无法写入临时图像文件：{{error}}",
-      "taskExecutionFailed": "任务执行失败: {{error}}"
+      "taskExecutionFailed": "任务执行失败: {{error}}",
+      "deleteCommentDenied": "只能删除没有回复或引用的本人内容。请刷新讨论后重试。"
     },
     "keymaps": {
       "shortcutLengthLimit": "使用单次按键或两步组合键（最多 128 个字符）",
