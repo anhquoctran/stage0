@@ -7,6 +7,22 @@ current component, hook and slice ownership. Frontend TypeScript files have an
 enforced 450-physical-line limit; aim for 100–300 and review boundaries at 400.
 For backend work, consult [backend maintenance](docs/architecture/backend_maintenance.md)
 and the measured [refactor report](docs/architecture/backend_refactor_analysis.md).
+For Git branching, PR targets and release promotion, follow [Git strategy](docs/architecture/git_strategy.md).
+
+## Git strategy and branching contracts
+
+- **Branch risk and stability hierarchy**:
+  - `develop`, `feat/*`, `fix/*` (and other working branches): **Highest risk / least stable** (`unstable`).
+  - `nightly`: **High risk** (`preview` daily channel).
+  - `beta`: **Medium risk** (`stabilizing` monthly channel).
+  - `main`: **Stable** (`low` risk production channel). `main` là bản chính thức có độ ổn định cao nhất; tại một thời điểm `main` có thể không phải là bản có SemVer lớn nhất (do các bản `nightly`/`beta` liên tục tăng theo ngày/tháng), nhưng luôn là bản chính thức đáng tin cậy nhất và là bản `--latest` mặc định cho người dùng.
+- **Protected build/integration branches**: `main` (Stable), `beta` (Beta), `nightly` (Nightly), and `develop` (Development) are protected. Never commit or push directly to `main`, `beta`, `nightly`, or `develop`, and never force-push or rewrite their history.
+- **Standard work branches off `develop` only**:
+  - Always create working branches from `origin/develop` using an approved prefix: `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `perf/<slug>`, `docs/<slug>`, `test/<slug>`, or `chore/<slug>`.
+  - When work is complete and verified, push the working branch and open a Pull Request targeting `develop` (`base: develop`).
+- **Hotfix exception and mandatory multi-branch sync**:
+  - If a hotfix targets `main`, `beta`, or `nightly` directly, branch off that exact branch (`hotfix/<target-branch>/<slug>` from `origin/<target-branch>`) and open the primary PR against `<target-branch>`.
+  - Every hotfix MUST be synchronized back to the remaining branches (`main` -> `beta`, `nightly`, `develop`; `beta` -> `nightly`, `develop`; `nightly` -> `develop`) via back-merge or cherry-pick PRs so no fix is lost on subsequent promotions.
 
 ## Code organization
 
