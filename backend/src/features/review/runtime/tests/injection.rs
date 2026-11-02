@@ -119,6 +119,19 @@ fn manual_review_start_requires_the_exact_command_and_resolved_findings_from_tha
         .unwrap();
     assert!(scope::validate_request(&db, &request).is_ok());
 
+    request.generate_description = true;
+    assert!(scope::validate_request(&db, &request).is_ok());
+    db.conn()
+        .execute(
+            "UPDATE virtual_mr_sessions SET description='User description' WHERE id='session'",
+            [],
+        )
+        .unwrap();
+    assert!(scope::validate_request(&db, &request)
+        .unwrap_err()
+        .contains("descriptionChanged"));
+    request.generate_description = false;
+
     db.conn().execute("UPDATE virtual_mr_comments SET body='[@Bot](#mr-mention/reviewer/other) review' WHERE id='request-root'", []).unwrap();
     assert!(scope::validate_request(&db, &request)
         .unwrap_err()
