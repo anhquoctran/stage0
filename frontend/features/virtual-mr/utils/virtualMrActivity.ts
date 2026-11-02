@@ -16,6 +16,9 @@ export function hasVirtualMrActivity(
 ): boolean {
   if (!session) return false;
 
+  // Deleted discussions still count as prior activity and keep branches locked.
+  if (session.deletionActivity?.length) return true;
+
   // 1. Any discussion thread exists (general or inline diff discussions)
   if (Array.isArray(session.discussions) && session.discussions.length > 0) {
     return true;

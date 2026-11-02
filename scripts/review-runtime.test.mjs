@@ -208,12 +208,12 @@ test('a failed first phase cannot report a generated description or an approved 
   await store.getState().syncActive();
   assert.deepEqual(descriptions, []);
   assert.equal(store.getState().lastFinishedRun.status, 'failed');
-  assert.deepEqual(reviewerStatuses, [['a', 'bot-a', 'pending']]);
+  assert.deepEqual(reviewerStatuses, [['a', 'bot-a', 'failed']]);
   assert.deepEqual(store.getState().activeRuns, {});
 });
 
 function assignedBatchFixture(finished, options = {}) {
-  const started = []; const synchronized = []; const notifications = [];
+  const started = []; const synchronized = []; const notifications = []; const reviewerStatuses = [];
   const session = { id: 'a', title: 'Fixture MR', repoId: 'repo-a', status: 'open', reviewers: [{ agentId: 'bot-a', agentName: 'Reviewer 01' }] };
   const reviewState = {
     activeRuns: {}, reviewBatches: {},
@@ -231,9 +231,9 @@ function assignedBatchFixture(finished, options = {}) {
     '../../notifications/services/notificationService': { notificationService: { notify: async (item) => { notifications.push(item); } } },
     '../store/useReviewStore': { useReviewStore: { getState: () => reviewState }, isReviewStartingForSession: () => false },
     '../../git/store/useGitStore': { useGitStore: { getState: () => ({ showToast: () => {} }) } },
-    '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: { getState: () => ({ sessions: [session], resetReviewerReviews: async () => {} }) } },
+    '../../virtual-mr/store/useVirtualMrStore': { useVirtualMrStore: { getState: () => ({ sessions: [session], resetReviewerReviews: async () => {}, setReviewerReviewStatus: async (...args) => { reviewerStatuses.push(args); } }) } },
   });
-  return { service, started, synchronized, reviewState, session, notifications };
+  return { service, started, synchronized, reviewState, session, notifications, reviewerStatuses };
 }
 
 test('reviewer setup failures notify once before starting, while backend failures are not duplicated', async () => {
@@ -244,6 +244,7 @@ test('reviewer setup failures notify once before starting, while backend failure
   assert.equal(setup.notifications.length, 1);
   assert.equal(setup.notifications[0].channel, 'aiReview');
   assert.equal(setup.notifications[0].body, 'Fixture MR');
+  assert.deepEqual(setup.reviewerStatuses, [['a', 'bot-a', 'failed']]);
 
   const backend = assignedBatchFixture(run());
   backend.reviewState.startForSession = async () => { throw Error('backend failure'); };
@@ -406,4 +407,24 @@ test('review panel has no direct start button and closing it does not cancel an 
     if (originalDocument === undefined) delete globalThis.document; else globalThis.document = originalDocument;
     if (originalElement === undefined) delete globalThis.HTMLElement; else globalThis.HTMLElement = originalElement;
   }
+});
+
+
+test('terminal failures override staged decisions and are synchronized before discussion refresh', async (t) => {
+  for (const status of ['failed', 'incomplete', 'interrupted', 'cancelled']) {
+    const fixture = storeFixture(() => {});
+    fixture.store.setState({ activeRuns: { 'run-a': run() } });
+    await fixture.store.getState().syncRun({ run: { ...run('run-a', 'a', status), reviewerId: 'bot-a', decision: 'approve', findings: [{ title: 'Unpublished' }] }, events: [] });
+    assert.deepEqual(fixture.reviewerStatuses, [['a', 'bot-a', status]]);
+  }
+});
+
+test('admission failure marks only full-review assignments failed and allows a subsequent retry', async () => {
+  const fixture = storeFixture(() => { throw new Error('Provider configuration unavailable'); });
+  await assert.rejects(fixture.store.getState().startForSession('a', config, true, { id: 'bot-a', name: 'Bot' }), /configuration unavailable/);
+  assert.deepEqual(fixture.reviewerStatuses, [['a', 'bot-a', 'failed']]);
+  assert.equal(fixture.store.getState().isStarting, false);
+  const reply = storeFixture(() => { throw new Error('Provider unavailable'); });
+  await assert.rejects(reply.store.getState().startForSession('a', config, true, { id: 'bot-a', name: 'Bot' }, false, 'thread'), /unavailable/);
+  assert.deepEqual(reply.reviewerStatuses, []);
 });

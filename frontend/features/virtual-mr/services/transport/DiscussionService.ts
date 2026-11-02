@@ -1,3 +1,4 @@
+import type { VirtualMrDeletionActivity } from '../../types/VirtualMrDeletionActivity';
 import type { AuthorType } from '../../types/AuthorType';
 import type { DbDiscussion } from '../../types/DbDiscussion';
 import type { DiscussionCodeSnippet } from '../../types/DiscussionCodeSnippet';
@@ -5,7 +6,8 @@ import type { ReviewActionType } from '../../types/ReviewActionType';
 
 /** Feature-owned backend contract. Inputs retain the existing wire field names. */
 export interface DiscussionService {
-  deleteMrComment(input: { commentId: string }): Promise<{ discussionId: string; deletedDiscussion: boolean }>;
+  deleteMrComment(input: { commentId: string }): Promise<{ discussionId: string; deletedDiscussion: boolean; activity: VirtualMrDeletionActivity }>;
+  listMrDeletionActivity(input: { sessionId: string }): Promise<VirtualMrDeletionActivity[]>;
   addMrComment(input: {
     comment: {
       id: string;
