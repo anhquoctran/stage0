@@ -789,6 +789,7 @@
       "descriptionPlaceholder": "Enter MR overview, motivations, or checklist...",
       "saveDescription": "Save Description",
       "emptyDescription": "No description provided for this Virtual MR.",
+      "retryEmptyDescriptionHint": "To retry AI description generation, mention an assigned reviewer followed by “review” in a new discussion. The reviewer will fill the empty description before reviewing the MR.",
       "leaveComment": "Leave a Comment",
       "requestReviewGuide": "To request a full review, choose an assigned bot with @ and add <command>review</command> after its mention. The bot checks its open findings first and reports here if any still need resolution. Eligible tracked source may be sent to its configured provider; sensitive paths are excluded and matching secret lines are redacted, but detection can miss secrets. ACP source sharing must already be enabled for that bot.",
       "commentPlaceholder": "Write a comment, or type @Reviewer review to request a review…",
@@ -907,7 +908,9 @@
       "replyBadge": "Reply",
       "quoteComment": "Quote comment {{id}}",
       "reviewingNow": "reviewing now",
-      "aiAgentTitle": "{{name}} (AI Agent)"
+      "aiAgentTitle": "{{name}} (AI Agent)",
+      "deleteOwnContent": "Delete your comment or discussion",
+      "deleteFailed": "Could not delete: {{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "Recently updated",
@@ -3100,6 +3103,7 @@
       "instructionsTooLong": "Reviewer instructions exceed the 8000-byte limit.",
       "reviewerUnassigned": "This reviewer is no longer assigned to the Virtual MR.",
       "branchesChanged": "The Virtual MR branches changed during review. Start a new review before updating its description.",
+      "descriptionChanged": "The MR description changed during generation or is no longer available. Reload the MR before retrying.",
       "mrDescriptionAlreadyGenerated": "The MR description can be generated only once in this review.",
       "tooManyFindings": "A review may contain at most 50 inline findings.",
       "discussionActionQueued": "This discussion already has a queued AI action in this review.",
@@ -3209,6 +3213,7 @@
       "providerResponseIncomplete": "Provider response was incomplete, refused or truncated",
       "providerResponseMissingOutput": "Missing response output",
       "providerUnfinishedFunctionCall": "Provider returned an unfinished function call",
+      "providerOutputTruncated": "The provider reached its output token limit. The incomplete response was discarded; try a lower reasoning level or a smaller review.",
       "providerResponseRefusedOrTruncated": "Provider response was refused or truncated",
       "claudeContentMissing": "Missing Claude content",
       "geminiNoCandidate": "No Gemini candidate (possibly blocked)",
@@ -3456,7 +3461,8 @@
       "imageSizeLimit": "Image size ({{bytes}} bytes) exceeds the sandbox limit of {{limit}}",
       "createAttachmentDirFailed": "Failed to create temporary attachment directory: {{error}}",
       "writeAttachmentFailed": "Failed to write temporary image file: {{error}}",
-      "taskExecutionFailed": "Task execution failed: {{error}}"
+      "taskExecutionFailed": "Task execution failed: {{error}}",
+      "deleteCommentDenied": "Only your own content without replies or quotes can be deleted. Refresh the discussion and try again."
     },
     "keymaps": {
       "shortcutLengthLimit": "Use one keystroke or a two-step chord (maximum 128 characters)",

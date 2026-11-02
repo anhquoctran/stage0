@@ -2,6 +2,13 @@
 
 ## Scope and use
 
+When an earlier run failed before saving a description, a new assigned-reviewer
+mention command also retries description generation if the MR description is
+empty. Existing descriptions are preserved. The backend checks emptiness before
+starting and conditionally saves the description so an edit made in another
+window during generation cannot be overwritten. The description skeleton covers
+manual startup and generation and clears when content is saved or the run ends.
+
 To request a manual review, start a new Virtual MR discussion, mention one assigned reviewer, and add `review` after the mention. Stage0 checks that reviewer's unresolved findings before starting a single full review. Remote review sends eligible tracked source to the configured provider; ACP source transfer must be enabled in that reviewer profile. Validated findings and queued discussion actions publish when `submit_review` succeeds. Closing the panel or choosing **Run in background** does not cancel the task; use the status-bar activity button to return, or **Cancel review** to stop it.
 
 This is a native Tauri feature. A browser-only development session cannot access the Rust runtime or OS credential store. The panel can run using global AI preferences or an assigned reviewer profile. A profile supplies subordinate review preferences and, when explicitly configured, provider, model, reasoning effort and Fast mode. Profiles run one at a time per Virtual MR. Git-change automation uses full reviews; user discussion comments enqueue scoped replies. See [review input trust and prompt injection](review_prompt_injection.md) for the current capabilities, delivery/version checks and ACP limitations.
@@ -19,6 +26,16 @@ Stage0's review tools cannot run terminal commands, install dependencies, write 
 7. Publication inserts deterministic discussion/comment IDs in one transaction and rechecks pending actions' thread revisions and reply eligibility. The explicit publish IPC also checks current refs against the snapshot. Findings create open threads; verified resolution actions can close existing ones. A full review's guarded local verdict may update assigned reviewer/MR status; reply-only runs cannot. Repeated explicit publication does not duplicate findings.
 
 The frontend guards stale history and polling responses when sessions/repositories change. Backend tasks survive panel closure, not application exit. On startup, persisted `running` records become `interrupted`; there is no implicit request replay or crash resume. History currently exposes the latest ten runs per session; no automated retention/deletion policy is configured.
+
+DeepSeek requests reserve 16,384 output tokens in thinking mode (including
+reasoning), or 8,192 with thinking disabled. A `length` response is discarded
+without decoding or executing tools and may be retried once with twice the
+output allowance from the same complete history.
+Reported usage from discarded responses still counts against the existing run
+token budget. The retry also consumes the existing turn, wire and deadline
+budgets; it never retries a content-filter refusal. Output allowances are capped
+by the remaining run token budget, and repeated truncation returns a localized
+output-limit error. Other adapters retain their existing output allowances.
 
 ## Available tools
 

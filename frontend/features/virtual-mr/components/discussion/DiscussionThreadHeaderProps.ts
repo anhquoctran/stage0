@@ -9,4 +9,5 @@ export interface DiscussionThreadHeaderProps {
   threadRelativeTime: string;
   quote: (comment?: VirtualMrComment) => void;
   isSubmitting: boolean;
+  onDelete?: (element: HTMLElement) => void;
 }
