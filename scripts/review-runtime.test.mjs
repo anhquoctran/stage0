@@ -251,6 +251,40 @@ test('reviewer setup failures notify once before starting, while backend failure
   assert.equal(backend.notifications.length, 0);
 });
 
+test('manual reviewer commands regenerate only missing descriptions and retain the request thread', async () => {
+  const fixture = assignedBatchFixture(run());
+  fixture.session.description = '  ';
+  await fixture.service.startAssignedReviewerReview('a', 'bot-a', 'command-1');
+  assert.equal(fixture.started[0][4], true);
+  assert.equal(fixture.started[0][6], 'command-1');
+  fixture.session.description = 'Description already saved';
+  await fixture.service.startAssignedReviewerReview('a', 'bot-a', 'command-2');
+  assert.equal(fixture.started[1][4], false);
+  assert.equal(fixture.started[1][6], 'command-2');
+});
+
+test('description retry loading spans startup and clears on saved content or failure', async () => {
+  const pending = deferred();
+  const f = storeFixture(() => pending.promise);
+  const startup = f.store.getState().startForSession('a', config, true, undefined, true);
+  assert.equal(f.store.getState().descriptionGenerationSessions.a, true);
+  pending.resolve(run());
+  await startup;
+  assert.equal(f.store.getState().descriptionGenerationSessions.a, true);
+  await f.store.getState().syncRun({ run: { ...run(), generatedDescription: 'Saved description' }, events: [] });
+  assert.equal(f.store.getState().descriptionGenerationSessions.a, undefined);
+  assert.deepEqual(f.descriptions, [['a', 'Saved description']]);
+
+  const failed = storeFixture(() => run());
+  await failed.store.getState().startForSession('a', config, true, undefined, true);
+  await failed.store.getState().syncRun({ run: run('run-a', 'a', 'failed'), events: [] });
+  assert.equal(failed.store.getState().descriptionGenerationSessions.a, undefined);
+
+  const rejected = storeFixture(() => { throw Error('startup rejected'); });
+  await assert.rejects(rejected.store.getState().startForSession('a', config, true, undefined, true), /startup rejected/);
+  assert.equal(rejected.store.getState().descriptionGenerationSessions.a, undefined);
+});
+
 test('discussion replies send thread scope and cannot change frontend MR descriptions or reviewer verdicts', async () => {
   const current = { ...run(), reviewerId: 'bot-a', replyDiscussionId: 'thread' };
   const { store, calls, refreshed, descriptions, reviewerStatuses, sessions } = storeFixture((name) => {

@@ -2,6 +2,7 @@ use super::ReviewRun;
 use crate::core::db::Database;
 use rusqlite::params;
 use serde_json::{json, Value};
+mod description;
 
 pub enum ReviewDiscussionAction {
     Reply {
@@ -25,29 +26,6 @@ pub enum ReviewDiscussionAction {
 }
 
 impl Database {
-    pub fn update_review_generated_description(
-        &self,
-        session_id: &str,
-        description: &str,
-    ) -> Result<(), String> {
-        let changed = self.conn().execute(
-            "UPDATE virtual_mr_sessions SET description=?2, updated_at=CURRENT_TIMESTAMP WHERE id=?1",
-            params![session_id, description],
-        ).map_err(|error| {
-            crate::common::messages::failure(
-                "backend.review.updateDescriptionFailed",
-                serde_json::json!({ "error": error.to_string() }),
-                format!("Could not update the Virtual MR description: {error}"),
-            )
-        })?;
-        if changed != 1 {
-            return Err(crate::common::messages::code(
-                "backend.review.mrNoLongerExists",
-            ));
-        }
-        Ok(())
-    }
-
     pub fn save_review_run(&self, run: &ReviewRun) -> Result<(), String> {
         let payload = serde_json::to_string(run)
             .map_err(|_| crate::common::messages::code("backend.review.serializeRunFailed"))?;

@@ -4,7 +4,7 @@ import { componentHarness, componentNodes, loadWithMocks } from './helpers/compo
 
 function setup() {
   const runner = componentHarness();
-  const state = { reviewBatches: {} };
+  const state = { reviewBatches: {}, descriptionGenerationSessions: {} };
   const Editor = () => null;
   const Preview = () => null;
   const noop = () => null;
@@ -55,4 +55,17 @@ test('description skeleton is scoped to its MR and disappears when content is re
   nodes = await fixture.render();
   assert.ok(editButton(nodes));
   assert.ok(nodes.some((node) => node.type === fixture.Preview && node.props.content === 'Generated description'));
+});
+
+test('manual description retries use the same skeleton without an automatic batch', async () => {
+  const fixture = setup();
+  fixture.session.description = '';
+  fixture.state.descriptionGenerationSessions['mr-1'] = true;
+  let nodes = await fixture.render();
+  assert.ok(nodes.some((node) => node.props['aria-busy'] === 'true'));
+  assert.equal(editButton(nodes), undefined);
+  delete fixture.state.descriptionGenerationSessions['mr-1'];
+  nodes = await fixture.render();
+  assert.ok(editButton(nodes));
+  assert.ok(!nodes.some((node) => node.props['aria-busy'] === 'true'));
 });

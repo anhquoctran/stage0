@@ -19,6 +19,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   isOpen: false, sessionId: null, runs: [], detail: null, error: null,
   isStarting: false, isPublishing: false,
   activeRuns: {},
+  descriptionGenerationSessions: {},
   lastFinishedRun: null,
   reviewBatches: {},
   setReviewBatch: (sessionId, progress) => set((state) => {
@@ -45,7 +46,9 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       if (!state.activeRuns[run.id]) return state;
       const activeRuns = { ...state.activeRuns };
       if (finished) delete activeRuns[run.id]; else activeRuns[run.id] = run;
-      return { activeRuns,
+      const descriptionGenerationSessions = { ...state.descriptionGenerationSessions };
+      if (finished || run.generatedDescription?.trim()) delete descriptionGenerationSessions[run.sessionId];
+      return { activeRuns, descriptionGenerationSessions,
         ...(finished ? { lastFinishedRun: run } : {}),
         ...(state.detail?.run.id === run.id ? { detail } : {}),
         ...(state.sessionId === run.sessionId ? { runs: state.runs.map((item) => item.id === run.id ? run : item) } : {}),
@@ -141,7 +144,12 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   startForSession: async (sessionId, config, allowRemote, reviewer, generateDescription = false, replyDiscussionId, manualReviewDiscussionId) => {
     if (startingSessionIds.has(sessionId) || Object.values(get().activeRuns).some((run) => run.sessionId === sessionId && run.status === 'running')) return null;
     startingSessionIds.add(sessionId);
-    set({ isStarting: true, error: null });
+    set((state) => ({ isStarting: true, error: null,
+      ...(generateDescription && !replyDiscussionId ? { descriptionGenerationSessions: {
+        ...state.descriptionGenerationSessions, [sessionId]: true,
+      } } : {}),
+    }));
+    let admitted = false;
     try {
       const run = await getApplicationServices().reviews.startAiReview({ request: {
         sessionId, provider: config.provider, authMode: 'api_key',
@@ -156,6 +164,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         ...(manualReviewDiscussionId ? { manualReviewDiscussionId } : {}),
       } });
       set((state) => ({ activeRuns: { ...state.activeRuns, [run.id]: run } }));
+      admitted = true;
       if (run.reviewerId && !run.replyDiscussionId) {
         await useVirtualMrStore.getState().setReviewerReviewStatus(sessionId, run.reviewerId, 'reviewing');
       }
@@ -165,6 +174,11 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       }
       return run;
     } catch (error) {
+      if (!admitted) set((state) => {
+        const descriptionGenerationSessions = { ...state.descriptionGenerationSessions };
+        delete descriptionGenerationSessions[sessionId];
+        return { descriptionGenerationSessions };
+      });
       if (get().sessionId === sessionId) set({ error: message(error) });
       throw error;
     }

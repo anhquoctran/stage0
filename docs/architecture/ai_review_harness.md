@@ -2,6 +2,13 @@
 
 ## Scope and use
 
+When an earlier run failed before saving a description, a new assigned-reviewer
+mention command also retries description generation if the MR description is
+empty. Existing descriptions are preserved. The backend checks emptiness before
+starting and conditionally saves the description so an edit made in another
+window during generation cannot be overwritten. The description skeleton covers
+manual startup and generation and clears when content is saved or the run ends.
+
 To request a manual review, start a new Virtual MR discussion, mention one assigned reviewer, and add `review` after the mention. Stage0 checks that reviewer's unresolved findings before starting a single full review. Remote review sends eligible tracked source to the configured provider; ACP source transfer must be enabled in that reviewer profile. Validated findings and queued discussion actions publish when `submit_review` succeeds. Closing the panel or choosing **Run in background** does not cancel the task; use the status-bar activity button to return, or **Cancel review** to stop it.
 
 This is a native Tauri feature. A browser-only development session cannot access the Rust runtime or OS credential store. The panel can run using global AI preferences or an assigned reviewer profile. A profile supplies subordinate review preferences and, when explicitly configured, provider, model, reasoning effort and Fast mode. Profiles run one at a time per Virtual MR. Git-change automation uses full reviews; user discussion comments enqueue scoped replies. See [review input trust and prompt injection](review_prompt_injection.md) for the current capabilities, delivery/version checks and ACP limitations.
