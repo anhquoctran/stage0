@@ -186,9 +186,7 @@ export const createRepoDataSlice: StateCreator<
                   agentId: reviewer.agent_id,
                   agentName: reviewer.agent_name,
                   reviewStatus:
-                    reviewer.review_status === 'reviewing'
-                      ? 'pending'
-                      : reviewer.review_status || 'pending',
+                    reviewer.review_status || 'pending',
                   assignedAt: reviewer.assigned_at,
                 })),
                 labels: attachedLabels,

@@ -86,11 +86,15 @@ function notifyReviewerSetupFailure(sessionId: string, reviewer: string) {
   });
 }
 
-function reviewerStartSettings(sessionId: string, reviewer: BotReviewer) {
+async function reviewerStartSettings(sessionId: string, reviewer: BotReviewer, replyOnly = false) {
   try {
     const config = configForReviewer(reviewer);
     return { config, allowRemote: sourceTransferAllowed(config) };
   } catch (error) {
+    if (!replyOnly) {
+      try { await useVirtualMrStore.getState().setReviewerReviewStatus(sessionId, reviewer.id, 'failed'); }
+      catch (statusError) { console.warn('Could not persist reviewer setup failure:', statusError); }
+    }
     notifyReviewerSetupFailure(sessionId, reviewer.name);
     throw error;
   }
@@ -99,7 +103,7 @@ function reviewerStartSettings(sessionId: string, reviewer: BotReviewer) {
 export async function startAssignedReviewForSession(sessionId: string): Promise<ReviewRun | null> {
   const assigned = reviewersForSession(sessionId)?.reviewers.find((reviewer) => reviewer.profile);
   if (!assigned?.profile) return null;
-  const { config, allowRemote } = reviewerStartSettings(sessionId, assigned.profile);
+  const { config, allowRemote } = await reviewerStartSettings(sessionId, assigned.profile);
   return useReviewStore.getState().startForSession(
     sessionId,
     config,
@@ -115,7 +119,7 @@ export async function startAssignedReviewerReview(
 ): Promise<ReviewRun | null> {
   const assigned = getAssignedReviewerForSession(sessionId, reviewerId);
   if (!assigned?.profile) return null;
-  const { config, allowRemote } = reviewerStartSettings(sessionId, assigned.profile);
+  const { config, allowRemote } = await reviewerStartSettings(sessionId, assigned.profile);
   const generateDescription = !useVirtualMrStore.getState().sessions
     .find((session) => session.id === sessionId)?.description?.trim();
   return useReviewStore.getState().startForSession(
@@ -189,7 +193,7 @@ export async function queueAssignedDiscussionReply(sessionId: string, discussion
           const version = await discussionReplyVersion(latest);
           if (version && attemptedReplyComments.get(key) === version) continue;
           await waitForSessionIdle(sessionId, true);
-          const { config, allowRemote } = reviewerStartSettings(sessionId, reviewer.profile);
+          const { config, allowRemote } = await reviewerStartSettings(sessionId, reviewer.profile, true);
           const run = await useReviewStore.getState().startForSession(sessionId, config,
             allowRemote, { id: reviewer.id, name: reviewer.name }, false, target);
           if (!run) { pending.add(target); break; }
@@ -239,13 +243,15 @@ export async function startAssignedReviewBatchForSession(sessionId: string): Pro
       });
 
       if (!reviewer.profile) {
+        try { await useVirtualMrStore.getState().setReviewerReviewStatus(sessionId, reviewer.id, 'failed'); }
+        catch (statusError) { console.warn('Could not persist missing reviewer configuration:', statusError); }
         notifyReviewerSetupFailure(sessionId, reviewer.name);
         result.failures.push(i18n.t('review.toasts.reviewerConfigurationUnavailable', { reviewer: reviewer.name }));
         continue;
       }
 
       try {
-        const { config, allowRemote } = reviewerStartSettings(sessionId, reviewer.profile);
+        const { config, allowRemote } = await reviewerStartSettings(sessionId, reviewer.profile);
         const run = await useReviewStore.getState().startForSession(
           sessionId,
           config,
