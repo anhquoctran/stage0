@@ -43,12 +43,14 @@
       if (typeof comp.initDistroTabs === 'function') comp.initDistroTabs();
       if (typeof comp.initCopyButtons === 'function') comp.initCopyButtons();
       if (typeof comp.initFaqAccordion === 'function') comp.initFaqAccordion();
+      if (typeof comp.registerBrandLogoClick === 'function') comp.registerBrandLogoClick();
     } else {
       if (typeof s0.fns?.initMobileMenu === 'function') s0.fns.initMobileMenu();
       if (typeof s0.fns?.initComparisonFilter === 'function') s0.fns.initComparisonFilter();
       if (typeof s0.fns?.initDistroTabs === 'function') s0.fns.initDistroTabs();
       if (typeof s0.fns?.initCopyButtons === 'function') s0.fns.initCopyButtons();
       if (typeof s0.fns?.initFaqAccordion === 'function') s0.fns.initFaqAccordion();
+      if (typeof s0.fns?.registerBrandLogoClick === 'function') s0.fns.registerBrandLogoClick();
     }
 
     // 4. Interactive Desktop Mockup Simulation
