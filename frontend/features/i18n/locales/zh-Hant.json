@@ -3209,6 +3209,7 @@
       "providerResponseIncomplete": "提供者回應不完整、遭拒絕或遭截斷",
       "providerResponseMissingOutput": "缺少回應輸出",
       "providerUnfinishedFunctionCall": "提供者傳回了未完成的函式呼叫",
+      "providerOutputTruncated": "供應商已達輸出 token 上限。不完整的回應已捨棄；請降低推理等級或縮小審查範圍。",
       "providerResponseRefusedOrTruncated": "提供者回應遭拒絕或遭截斷",
       "claudeContentMissing": "缺少 Claude 內容",
       "geminiNoCandidate": "無 Gemini 候選結果（可能已被封鎖）",

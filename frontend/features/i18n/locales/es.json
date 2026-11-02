@@ -3216,6 +3216,7 @@
       "providerResponseIncomplete": "La respuesta del proveedor estaba incompleta, fue rechazada o truncada",
       "providerResponseMissingOutput": "Falta la salida de la respuesta",
       "providerUnfinishedFunctionCall": "El proveedor devolvió una llamada de función incompleta",
+      "providerOutputTruncated": "El proveedor alcanzó el límite de tokens de salida. Se descartó la respuesta incompleta; prueba un nivel de razonamiento inferior o una revisión más pequeña.",
       "providerResponseRefusedOrTruncated": "La respuesta del proveedor fue rechazada o truncada",
       "claudeContentMissing": "Falta el contenido de Claude",
       "geminiNoCandidate": "Sin candidatos de Gemini (posiblemente bloqueado)",

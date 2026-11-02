@@ -20,6 +20,16 @@ Stage0's review tools cannot run terminal commands, install dependencies, write 
 
 The frontend guards stale history and polling responses when sessions/repositories change. Backend tasks survive panel closure, not application exit. On startup, persisted `running` records become `interrupted`; there is no implicit request replay or crash resume. History currently exposes the latest ten runs per session; no automated retention/deletion policy is configured.
 
+DeepSeek requests reserve 16,384 output tokens in thinking mode (including
+reasoning), or 8,192 with thinking disabled. A `length` response is discarded
+without decoding or executing tools and may be retried once with twice the
+output allowance from the same complete history.
+Reported usage from discarded responses still counts against the existing run
+token budget. The retry also consumes the existing turn, wire and deadline
+budgets; it never retries a content-filter refusal. Output allowances are capped
+by the remaining run token budget, and repeated truncation returns a localized
+output-limit error. Other adapters retain their existing output allowances.
+
 ## Available tools
 
 | Tool | Contract |

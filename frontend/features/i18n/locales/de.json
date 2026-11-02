@@ -3209,6 +3209,7 @@
       "providerResponseIncomplete": "Antwort des Anbieters war unvollständig, abgelehnt oder abgeschnitten",
       "providerResponseMissingOutput": "Fehlende Antwortausgabe",
       "providerUnfinishedFunctionCall": "Anbieter hat einen unvollständigen Funktionsaufruf zurückgegeben",
+      "providerOutputTruncated": "Der Anbieter hat das Ausgabetokenlimit erreicht. Die unvollständige Antwort wurde verworfen. Versuche eine niedrigere Denkstufe oder ein kleineres Review.",
       "providerResponseRefusedOrTruncated": "Antwort des Anbieters wurde verweigert oder abgeschnitten",
       "claudeContentMissing": "Claude-Inhalt fehlt",
       "geminiNoCandidate": "Kein Gemini-Kandidat (möglicherweise blockiert)",

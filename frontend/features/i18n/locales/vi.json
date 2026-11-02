@@ -3209,6 +3209,7 @@
       "providerResponseIncomplete": "Phản hồi của nhà cung cấp chưa hoàn chỉnh, bị từ chối hoặc bị cắt cụt",
       "providerResponseMissingOutput": "Thiếu kết quả phản hồi",
       "providerUnfinishedFunctionCall": "Nhà cung cấp trả về lệnh gọi hàm chưa hoàn thành",
+      "providerOutputTruncated": "Provider đã chạm giới hạn token đầu ra. Phản hồi chưa hoàn chỉnh đã bị loại bỏ; hãy thử mức reasoning thấp hơn hoặc lượt review nhỏ hơn.",
       "providerResponseRefusedOrTruncated": "Phản hồi của nhà cung cấp bị từ chối hoặc bị cắt bớt",
       "claudeContentMissing": "Thiếu nội dung từ Claude",
       "geminiNoCandidate": "Không có ứng viên Gemini (có thể đã bị chặn)",
