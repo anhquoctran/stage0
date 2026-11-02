@@ -3,7 +3,7 @@ import type { VirtualMrDiscussion } from '../../../types/VirtualMrDiscussion';
 
 export interface VirtualMrTimelineEvent {
   id: string;
-  type: 'created' | 'label' | 'assignee' | 'reviewer' | 'commit' | 'title' | 'description' | 'discussion';
+  type: 'created' | 'label' | 'assignee' | 'reviewer' | 'commit' | 'title' | 'description' | 'discussion' | 'deletion';
   author: string;
   timestamp: string;
   discussion?: VirtualMrDiscussion;

@@ -649,8 +649,8 @@
     "categoryHeading": "通知の種類",
     "categoryDescription": "システム通知を送るイベントを選びます。表示と終了はOSが管理します。",
     "aiReviewTitle": "AIコードレビュー",
-    "mrStatusTitle": "MRの状態",
-    "mrStatusDescription": "マージリクエストの状態が変わったとき。",
+    "mrStatusTitle": "MRのアクティビティ",
+    "mrStatusDescription": "マージリクエストのステータス変更と、ディスカッションや返信の削除。",
     "mrStatusNotificationTitle": "MRの状態が変わりました",
     "aiReviewDescription": "AIレビューまたは再検証が完了したとき。",
     "gitSyncTitle": "Gitの監視と同期",
@@ -695,7 +695,8 @@
       "settings": "通知設定を開く",
       "error": "通知の権限を確認または変更できませんでした。再試行するかシステム設定を開いてください。",
       "system_managed": "このデスクトップ環境が通知の権限を管理します。通知が表示されない場合は、システムの通知設定を確認してください。"
-    }
+    },
+    "discussionDeletionTitle": "ディスカッションのアクティビティ"
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}}がMRのレビューを完了しました",
@@ -831,7 +832,9 @@
       "newestFirstTitle": "新しい順 (クリックで古い順)",
       "oldest": "古い順",
       "newest": "新しい順",
-      "noMatchingActivity": "このフィルターに一致するアクティビティはありません。"
+      "noMatchingActivity": "このフィルターに一致するアクティビティはありません。",
+      "deletedDiscussion": "がディスカッションを削除しました",
+      "deletedReply": "が返信を削除しました"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} をクローズしました",

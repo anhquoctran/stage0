@@ -649,8 +649,8 @@
     "categoryHeading": "알림 종류",
     "categoryDescription": "시스템 알림을 보낼 이벤트를 선택하세요. 표시와 닫기는 운영체제가 관리합니다.",
     "aiReviewTitle": "AI 코드 리뷰",
-    "mrStatusTitle": "MR 상태",
-    "mrStatusDescription": "머지 요청의 상태가 변경될 때.",
+    "mrStatusTitle": "MR 활동",
+    "mrStatusDescription": "병합 요청 상태 변경 및 토론이나 답글 삭제.",
     "mrStatusNotificationTitle": "MR 상태가 변경되었습니다",
     "aiReviewDescription": "AI 리뷰 또는 재검증이 완료되었을 때.",
     "gitSyncTitle": "Git 감시 및 동기화",
@@ -695,7 +695,8 @@
       "settings": "알림 설정 열기",
       "error": "알림 권한을 확인하거나 변경하지 못했습니다. 다시 시도하거나 시스템 설정을 여세요.",
       "system_managed": "이 데스크톱 환경이 알림 권한을 관리합니다. 알림이 표시되지 않으면 시스템 알림 설정을 확인하세요."
-    }
+    },
+    "discussionDeletionTitle": "토론 활동"
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} 님이 MR 리뷰를 완료했습니다",
@@ -831,7 +832,9 @@
       "newestFirstTitle": "최신 순 (클릭하면 오래된 순)",
       "oldest": "오래된 순",
       "newest": "최신 순",
-      "noMatchingActivity": "이 필터에 해당하는 활동이 없습니다."
+      "noMatchingActivity": "이 필터에 해당하는 활동이 없습니다.",
+      "deletedDiscussion": "님이 토론을 삭제했습니다",
+      "deletedReply": "님이 답글을 삭제했습니다"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}}을 닫았습니다",

@@ -1,3 +1,6 @@
+mod virtual_mr_deletion_activity;
+pub use virtual_mr_deletion_activity::VirtualMrDeletionActivity;
+pub(super) mod deletion_activity;
 mod virtual_mr_session_db;
 pub use virtual_mr_session_db::VirtualMrSessionDb;
 mod virtual_mr_session_save_outcome;
