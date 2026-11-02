@@ -70,6 +70,7 @@ test('DiscussionThread only displays Resolve features for code review discussion
     new URL('../frontend/features/virtual-mr/components/DiscussionThread.tsx', import.meta.url),
     {
       react: harness.react,
+      '../hooks/useDiscussionDeletion': { useDiscussionDeletion: () => ({ isDeleting: false, remove: async () => {} }) },
       '../../../common/components/CustomSelect': { CustomSelect: 'Select' },
       '../../../common/components/MarkdownEditor': { MarkdownEditor: 'Editor' },
       '../../../common/components/MarkdownPreview': { MarkdownPreview: 'Preview' },

@@ -116,12 +116,14 @@ export async function startAssignedReviewerReview(
   const assigned = getAssignedReviewerForSession(sessionId, reviewerId);
   if (!assigned?.profile) return null;
   const { config, allowRemote } = reviewerStartSettings(sessionId, assigned.profile);
+  const generateDescription = !useVirtualMrStore.getState().sessions
+    .find((session) => session.id === sessionId)?.description?.trim();
   return useReviewStore.getState().startForSession(
     sessionId,
     config,
     allowRemote,
     { id: assigned.id, name: assigned.name },
-    false,
+    generateDescription,
     undefined,
     manualReviewDiscussionId,
   );

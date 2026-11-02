@@ -372,6 +372,7 @@ pub fn run() {
             commands::get_git_user_identity_cmd,
             // Discussions & Comments
             commands::list_mr_discussions,
+            commands::delete_mr_comment,
             commands::create_mr_discussion,
             commands::add_mr_comment,
             commands::resolve_mr_discussion,

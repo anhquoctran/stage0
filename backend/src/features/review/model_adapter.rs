@@ -8,6 +8,15 @@ pub trait ReviewModelAdapter: Send + Sync {
     fn initial_history(&self, prompt: &str) -> Vec<Value>;
     fn payload(&self, system: &str, history: &[Value], tools: &[Value], max_tokens: u64) -> Value;
 
+    fn output_token_limit(&self, _expanded: bool) -> u64 {
+        2048
+    }
+
+    /// A truncated response is discarded in full, including any partial calls.
+    fn truncated_output_usage(&self, _response: &Value) -> Option<u64> {
+        None
+    }
+
     /// Approximate bytes sent for this turn. Stateful adapters may send only a
     /// delta while retaining the full in-memory harness history.
     fn request_size(&self, body: &Value) -> usize {

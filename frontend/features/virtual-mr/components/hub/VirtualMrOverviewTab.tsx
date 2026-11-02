@@ -14,7 +14,8 @@ import type { VirtualMrOverviewTabProps } from './VirtualMrOverviewTabProps';
 export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ session }) => {
   const { t: translateUiText } = useUiTextTranslation();
   const isGeneratingDescription = useReviewStore((state) =>
-    state.reviewBatches[session.id]?.phase === 'preparing-description');
+    state.descriptionGenerationSessions[session.id]
+    || state.reviewBatches[session.id]?.phase === 'preparing-description');
   const { showToast } = useGitStore();
   const { updateSessionDetails, createDiscussion, consumeDescriptionEditRequest } =
     useVirtualMrStore();
@@ -186,6 +187,9 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
                   content={session.description}
                   emptyPlaceholder={translateUiText('virtualMr.overview.emptyDescription')}
                 />
+                {!session.description?.trim() && session.status !== 'closed' && (
+                  <p className="mt-2 text-xs text-subtext0">{translateUiText('virtualMr.overview.retryEmptyDescriptionHint')}</p>
+                )}
               </div>
             )}
           </div>

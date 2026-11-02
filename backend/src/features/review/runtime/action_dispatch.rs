@@ -51,7 +51,15 @@ pub(super) async fn dispatch_action(
                 } else if description.is_empty() {
                     Err("The generated MR description is empty after source redaction.".into())
                 } else {
-                    match update_mr_description(db, run, context, &description).await {
+                    match update_mr_description(
+                        db,
+                        run,
+                        context,
+                        &description,
+                        state.description_must_be_empty,
+                    )
+                    .await
+                    {
                         Ok(()) => {
                             run.generated_description = Some(description.clone());
                             state.description_updated = true;

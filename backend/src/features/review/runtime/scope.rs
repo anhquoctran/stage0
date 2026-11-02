@@ -64,16 +64,27 @@ fn validate_manual_review_request(
     let reviewer_id = config.reviewer_id.as_deref().ok_or_else(|| {
         crate::common::messages::code("backend.review.manualReviewRequiresReviewer")
     })?;
-    if discussion_id.is_empty()
-        || discussion_id.len() > 200
-        || config.reply_discussion_id.is_some()
-        || config.generate_description
+    if discussion_id.is_empty() || discussion_id.len() > 200 || config.reply_discussion_id.is_some()
     {
         return Err(crate::common::messages::code(
             "backend.review.invalidManualReviewRequest",
         ));
     }
     let conn = db.conn();
+    if config.generate_description {
+        let description: Option<String> = conn
+            .query_row(
+                "SELECT description FROM virtual_mr_sessions WHERE id=?1",
+                [&config.session_id],
+                |row| row.get(0),
+            )
+            .map_err(|error| error.to_string())?;
+        if description.is_some_and(|description| !description.trim().is_empty()) {
+            return Err(crate::common::messages::code(
+                "backend.review.descriptionChanged",
+            ));
+        }
+    }
     let reviewer_name: String = conn
         .query_row(
             "SELECT agent_name FROM virtual_mr_session_reviewers WHERE session_id=?1 AND agent_id=?2",
@@ -145,6 +156,7 @@ pub(super) fn configure(
 ) -> Result<(), String> {
     validate_request(db, config)?;
     state.reply_discussion_id = config.reply_discussion_id.clone();
+    state.description_must_be_empty = config.manual_review_discussion_id.is_some();
     if let Some(id) = config.reply_discussion_id.as_deref() {
         state.reply_file_path = db
             .list_discussions(&config.session_id)

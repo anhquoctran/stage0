@@ -789,6 +789,7 @@
       "descriptionPlaceholder": "MR-Überblick, Beweggründe oder Checkliste eingeben…",
       "saveDescription": "Beschreibung speichern",
       "emptyDescription": "Für diesen Virtual MR wurde keine Beschreibung angegeben.",
+      "retryEmptyDescriptionHint": "Um die KI-Beschreibung erneut zu erstellen, erwähne einen zugewiesenen Reviewer mit anschließendem „review“ in einer neuen Diskussion. Er ergänzt die leere Beschreibung vor dem MR-Review.",
       "leaveComment": "Kommentar hinterlassen",
       "requestReviewGuide": "Für ein vollständiges Review erwähne mit @ einen zugewiesenen Bot und füge danach <command>review</command> hinzu. Der Bot prüft zuerst offene Befunde und meldet hier, falls noch etwas ungelöst ist. Geeigneter getrackter Quellcode kann an den konfigurierten Anbieter gesendet werden; sensible Pfade werden ausgeschlossen und passende Geheimniszeilen maskiert, aber die Erkennung kann Geheimnisse übersehen. ACP-Quellcodefreigabe muss für diesen Bot aktiviert sein.",
       "commentPlaceholder": "Kommentar schreiben oder @Reviewer review eingeben, um ein Review anzufordern…",
@@ -907,7 +908,9 @@
       "replyBadge": "Antwort",
       "quoteComment": "Kommentar {{id}} zitieren",
       "reviewingNow": "wird geprüft",
-      "aiAgentTitle": "{{name}} (KI-Agent)"
+      "aiAgentTitle": "{{name}} (KI-Agent)",
+      "deleteOwnContent": "Eigenen Kommentar oder Diskussion löschen",
+      "deleteFailed": "Löschen fehlgeschlagen: {{error}}"
     },
     "listDialog": {
       "sortRecentlyUpdated": "Zuletzt aktualisiert",
@@ -3100,6 +3103,7 @@
       "instructionsTooLong": "Anweisungen für Reviewer überschreiten das Limit von 8000 Bytes.",
       "reviewerUnassigned": "Dieser Reviewer ist dem virtuellen MR nicht mehr zugewiesen.",
       "branchesChanged": "Die Zweige des virtuellen MR haben sich während des Reviews geändert. Starten Sie ein neues Review, bevor Sie die Beschreibung aktualisieren.",
+      "descriptionChanged": "Die MR-Beschreibung wurde während der Erstellung geändert oder ist nicht mehr verfügbar. Lade die MR vor einem erneuten Versuch neu.",
       "mrDescriptionAlreadyGenerated": "Die MR-Beschreibung kann in diesem Review nur einmal generiert werden.",
       "tooManyFindings": "Ein Review darf höchstens 50 Inline-Befunde enthalten.",
       "discussionActionQueued": "Für diese Diskussion steht in diesem Review bereits eine KI-Aktion in der Warteschlange.",
@@ -3209,6 +3213,7 @@
       "providerResponseIncomplete": "Antwort des Anbieters war unvollständig, abgelehnt oder abgeschnitten",
       "providerResponseMissingOutput": "Fehlende Antwortausgabe",
       "providerUnfinishedFunctionCall": "Anbieter hat einen unvollständigen Funktionsaufruf zurückgegeben",
+      "providerOutputTruncated": "Der Anbieter hat das Ausgabetokenlimit erreicht. Die unvollständige Antwort wurde verworfen. Versuche eine niedrigere Denkstufe oder ein kleineres Review.",
       "providerResponseRefusedOrTruncated": "Antwort des Anbieters wurde verweigert oder abgeschnitten",
       "claudeContentMissing": "Claude-Inhalt fehlt",
       "geminiNoCandidate": "Kein Gemini-Kandidat (möglicherweise blockiert)",
@@ -3456,7 +3461,8 @@
       "imageSizeLimit": "Bildgröße ({{bytes}} Bytes) überschreitet das Sandbox-Limit von {{limit}}",
       "createAttachmentDirFailed": "Temporäres Anhangsverzeichnis konnte nicht erstellt werden: {{error}}",
       "writeAttachmentFailed": "Temporäre Bilddatei konnte nicht geschrieben werden: {{error}}",
-      "taskExecutionFailed": "Aufgabenausführung fehlgeschlagen: {{error}}"
+      "taskExecutionFailed": "Aufgabenausführung fehlgeschlagen: {{error}}",
+      "deleteCommentDenied": "Nur eigene Inhalte ohne Antworten oder Zitate können gelöscht werden. Laden Sie die Diskussion neu und versuchen Sie es erneut."
     },
     "keymaps": {
       "shortcutLengthLimit": "Verwenden Sie einen Tastenanschlag oder einen zweistufigen Akkord (maximal 128 Zeichen)",

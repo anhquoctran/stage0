@@ -226,6 +226,30 @@ fn deepseek_thinking_allows_tools_and_preserves_reasoning_for_continuation() {
     );
     assert_eq!(continuation["messages"][3]["tool_call_id"], "call-1");
 }
+
+#[test]
+fn deepseek_finish_reasons_distinguish_output_limits_from_provider_failures() {
+    for (reason, code) in [
+        ("length", "backend.review.providerOutputTruncated"),
+        (
+            "insufficient_system_resource",
+            "backend.ai.providerUnavailable",
+        ),
+        ("aborted", "backend.ai.providerInterrupted"),
+        (
+            "content_filter",
+            "backend.review.providerResponseRefusedOrTruncated",
+        ),
+    ] {
+        let response = json!({"choices":[{"finish_reason":reason,"message":{"role":"assistant","content":"incomplete"}}]});
+        let mut history = initial_history("deepseek", "fixture");
+        let original = history.clone();
+        assert!(decode("deepseek", &response, &mut history)
+            .unwrap_err()
+            .contains(code));
+        assert_eq!(history, original);
+    }
+}
 #[test]
 fn gemini_native_ids_are_echoed_exactly_even_with_fallback_like_prefixes() {
     for id in [Some("gemini-actual-provider-id"), None] {

@@ -100,3 +100,4 @@ mod discussion_security;
 mod http;
 mod injection;
 mod policy;
+mod truncation;

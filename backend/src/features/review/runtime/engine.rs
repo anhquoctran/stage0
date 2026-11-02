@@ -37,7 +37,7 @@ pub(super) async fn execute_with_adapter(
     } else {
         MAX_REVIEW_TOOL_CALLS
     };
-    let token_limit = if reply_only { 32_000 } else { 64_000 };
+    let token_limit: u64 = if reply_only { 32_000 } else { 64_000 };
     let wire_limit = if reply_only {
         384 * 1024
     } else {
@@ -97,6 +97,7 @@ pub(super) async fn execute_with_adapter(
     let mut recovered_missing_tool_call = false;
     let mut decode_recoveries = 0;
     let mut provider_retries = 0;
+    let mut expanded_output = false;
     let mut state = ReviewToolState::new(config.generate_description);
     super::scope::configure(db, config, &mut state)?;
     let has_open_discussions = db
@@ -147,13 +148,21 @@ pub(super) async fn execute_with_adapter(
     }))?;
     for turn in 0..max_turns {
         run.turns = turn + 1;
-        let body = adapter.payload(&system, &history, tools, 2048);
+        if run.usage_tokens >= token_limit {
+            return Err(crate::common::messages::code(
+                "backend.review.tokenBudgetExceeded",
+            ));
+        }
+        let output_tokens = adapter
+            .output_token_limit(expanded_output)
+            .min(token_limit.saturating_sub(run.usage_tokens));
+        let body = adapter.payload(&system, &history, tools, output_tokens);
         let bytes = adapter.request_size(&body);
         // Stateless HTTP providers reserve their transport retry. Every ACP
         // continuation, including a delayed provider retry, is counted here.
         wire_bytes =
             wire_bytes.saturating_add(bytes.saturating_mul(adapter.retry_reserve_factor()));
-        if bytes > MAX_REQUEST_BYTES || wire_bytes > wire_limit || run.usage_tokens >= token_limit {
+        if bytes > MAX_REQUEST_BYTES || wire_bytes > wire_limit {
             debug_log::log(format_args!(
                 "event=review_budget_exhausted run={} turn={} request_bytes={} estimated_wire_bytes={} usage_tokens={}",
                 debug_log::safe_label(&run.id, 80),
@@ -171,7 +180,7 @@ pub(super) async fn execute_with_adapter(
         db.review_event(
             &run.id,
             "model_request",
-            json!({"turn":run.turns,"requestBytes":bytes}),
+            json!({"turn":run.turns,"requestBytes":bytes,"maxOutputTokens":output_tokens}),
         )?;
         db.save_review_run(run)?;
         debug_log::log(format_args!(
@@ -250,6 +259,37 @@ pub(super) async fn execute_with_adapter(
         }
         if let Some(batch) = initial_diff.take() {
             super::initial_context::delivered(db, run, context, batch)?;
+        }
+        if let Some(usage) = adapter.truncated_output_usage(&response) {
+            run.usage_tokens = run.usage_tokens.saturating_add(usage);
+            let retry = !expanded_output
+                && run.turns < max_turns
+                && run.usage_tokens < token_limit
+                && adapter
+                    .output_token_limit(true)
+                    .min(token_limit - run.usage_tokens)
+                    > output_tokens;
+            db.review_event(
+                &run.id,
+                "model_output_truncated",
+                json!({
+                    "turn":run.turns,"finishReason":"length","usageTokens":usage,
+                    "maxOutputTokens":output_tokens,"retry":retry,
+                }),
+            )?;
+            db.save_review_run(run)?;
+            if run.usage_tokens >= token_limit {
+                return Err(crate::common::messages::code(
+                    "backend.review.tokenBudgetExceeded",
+                ));
+            }
+            if retry {
+                expanded_output = true;
+                continue;
+            }
+            return Err(crate::common::messages::code(
+                "backend.review.providerOutputTruncated",
+            ));
         }
         let (calls, usage) = match adapter.decode(&response, &mut history) {
             Ok(decoded) => decoded,
