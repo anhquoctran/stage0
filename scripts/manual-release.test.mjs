@@ -34,12 +34,13 @@ function fixture(t) {
   return { root, origin, git, sourceSha, branch };
 }
 
-test('manual dispatch chooses the next free stable patch without reviving legacy 0.1.x', () => {
+test('manual dispatch chooses the next free stable patch across all channel tags without reviving legacy 0.1.x', () => {
   assert.equal(nextStableVersion('0.0.1', []), '0.0.1');
-  assert.equal(nextStableVersion('0.0.1', ['v0.1.12', 'v0.0.2-beta.20261101.7']), '0.0.1');
+  assert.equal(nextStableVersion('0.0.1', ['v0.1.12']), '0.0.1');
+  assert.equal(nextStableVersion('0.0.1', ['v0.1.12', 'v0.0.2-nightly', 'v0.0.3-beta']), '0.0.4');
   assert.equal(nextStableVersion('0.0.1', ['v0.0.8', 'v0.0.1', 'v0.0.3']), '0.0.9');
   assert.equal(nextStableVersion('0.0.10', ['v0.0.1']), '0.0.10');
-  assert.throws(() => nextStableVersion('0.0.2-beta.20261101.1', []), /stable package/);
+  assert.throws(() => nextStableVersion('0.0.2-beta', []), /stable package/);
 });
 
 test('one click prepares and pushes an immutable version tag; reruns reuse it and main stays unchanged', t => {

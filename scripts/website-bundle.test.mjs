@@ -22,4 +22,9 @@ test('GitHub Pages builder emits bundled CSS and JS and rewrites the deploy page
   assert.ok(statSync(stylesheet).size > 0);
   assert.ok(existsSync(path.join(websiteOutput, 'assets', 'app-icon.svg')));
   assert.equal(existsSync(path.join(websiteOutput, 'js')), false);
+  assert.match(html, /id="release-schedule"/);
+  assert.match(html, /Quarterly \(00:00 UTC\)/);
+  assert.match(html, /27th of every month at 00:00:00 UTC/);
+  assert.match(html, /Every day at 00:00:00 UTC/);
+  assert.match(html, /00:00:00 UTC Release Guarantee/);
 });

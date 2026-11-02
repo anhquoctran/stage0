@@ -50,21 +50,26 @@ To work on Stage0 locally, you will need:
 
 ### Branching Strategy
 
-Create a descriptive feature branch from `main`:
+Protected build and integration branches (`main`, `beta`, `nightly`, `develop`) do not accept direct commits or direct pushes. See [docs/architecture/git_strategy.md](./docs/architecture/git_strategy.md) for the full Git Flow and release promotion diagram.
+
+For all standard work, create a descriptive branch off `origin/develop`:
 
 ```bash
-git checkout -b feat/your-feature-name
+git fetch origin develop
+git checkout -b feat/your-feature-name origin/develop
 # or
-git checkout -b fix/your-bugfix-name
+git checkout -b fix/your-bugfix-name origin/develop
 ```
 
 Common prefixes:
 - `feat/`: New user-facing features or capabilities
-- `fix/`: Bug fixes
+- `fix/`: Bug fixes targeting `develop`
 - `perf/`: Performance optimizations
 - `docs/`: Documentation updates
 - `refactor/`: Code reorganization without functional changes
+- `test/`: Test additions and harness improvements
 - `chore/`: Dependency updates, tooling, and build scripts
+- `hotfix/<target-branch>/`: Urgent fixes branched directly from `origin/main`, `origin/beta`, or `origin/nightly` (must be synchronized back to the remaining branches after merge)
 
 ---
 
@@ -139,11 +144,11 @@ Examples:
 
 ## Submitting a Pull Request
 
-1. Push your branch to your GitHub fork:
+1. Push your working branch to your remote/fork:
    ```bash
-   git push origin feat/your-feature-name
+   git push -u origin feat/your-feature-name
    ```
-2. Open a Pull Request against the `main` branch of `anhquoctran/stage0`.
+2. Open a Pull Request against the `develop` branch of `anhquoctran/stage0` (or against the target release branch for a `hotfix/*`, followed by synchronization PRs to the remaining protected branches).
 3. Provide a clear description of the problem solved, changes made, and include screenshots or GIFs for UI updates.
 4. Respond promptly to any reviewer feedback.
 
