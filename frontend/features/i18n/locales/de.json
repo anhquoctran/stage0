@@ -649,8 +649,8 @@
     "categoryHeading": "Benachrichtigungskategorien",
     "categoryDescription": "Wähle die Ereignisse für Systembenachrichtigungen. Das Betriebssystem steuert Anzeige und Schließen.",
     "aiReviewTitle": "KI-Code-Review",
-    "mrStatusTitle": "MR-Status",
-    "mrStatusDescription": "Wenn sich der Status eines Merge Requests ändert.",
+    "mrStatusTitle": "MR-Aktivität",
+    "mrStatusDescription": "Statusänderungen von Merge Requests und gelöschte Diskussionen oder Antworten.",
     "mrStatusNotificationTitle": "MR-Status geändert",
     "aiReviewDescription": "Wenn ein KI-Review oder eine erneute Prüfung abgeschlossen ist.",
     "gitSyncTitle": "Git-Überwachung und Synchronisierung",
@@ -695,7 +695,8 @@
       "settings": "Benachrichtigungseinstellungen öffnen",
       "error": "Die Berechtigung konnte nicht gelesen oder geändert werden. Versuche es erneut oder öffne die Systemeinstellungen.",
       "system_managed": "Diese Desktopumgebung verwaltet die Benachrichtigungsrechte. Prüfe die Systemeinstellungen, wenn keine Hinweise erscheinen."
-    }
+    },
+    "discussionDeletionTitle": "Diskussionsaktivität"
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} hat ein MR-Review abgeschlossen",
@@ -831,7 +832,9 @@
       "newestFirstTitle": "Neueste zuerst (klicken für älteste)",
       "oldest": "Älteste",
       "newest": "Neueste",
-      "noMatchingActivity": "Keine Aktivität entspricht diesem Filter."
+      "noMatchingActivity": "Keine Aktivität entspricht diesem Filter.",
+      "deletedDiscussion": "hat eine Diskussion gelöscht",
+      "deletedReply": "hat eine Antwort gelöscht"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} geschlossen",

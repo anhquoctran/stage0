@@ -137,13 +137,14 @@ export const createRepoDataSlice: StateCreator<
         if (dbSessions && dbSessions.length > 0) {
           sessions = await Promise.all(
             dbSessions.map(async (ds) => {
-              const [discRes, commitRes] = await Promise.allSettled([
+              const [discRes, commitRes, activityRes] = await Promise.allSettled([
                 getApplicationServices().discussions.listMrDiscussions({ sessionId: ds.id }),
                 getApplicationServices().gitHistory.getCommitsBetweenRefs({
                   repoPath,
                   base: ds.base_branch,
                   compare: ds.compare_branch,
                 }),
+                getApplicationServices().discussions.listMrDeletionActivity({ sessionId: ds.id }),
               ]);
 
               let discussions: VirtualMrDiscussion[] = [];
@@ -193,6 +194,7 @@ export const createRepoDataSlice: StateCreator<
                 })),
                 labels: attachedLabels,
                 discussions,
+                deletionActivity: activityRes.status === 'fulfilled' ? activityRes.value : [],
                 commits,
                 isPinned: Boolean(ds.is_pinned),
                 createdAt: ds.created_at,

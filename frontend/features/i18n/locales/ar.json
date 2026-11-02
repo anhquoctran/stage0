@@ -669,8 +669,8 @@
     "categoryHeading": "فئات الإشعارات",
     "categoryDescription": "اختر الأحداث التي يمكنها إرسال إشعارات النظام. يتحكم نظام التشغيل في عرضها وإغلاقها.",
     "aiReviewTitle": "مراجعة الشيفرة بالذكاء الاصطناعي",
-    "mrStatusTitle": "حالة طلب الدمج",
-    "mrStatusDescription": "عند تغير حالة طلب الدمج.",
+    "mrStatusTitle": "نشاط طلبات الدمج",
+    "mrStatusDescription": "تغييرات حالة طلبات الدمج وحذف المناقشات أو الردود.",
     "mrStatusNotificationTitle": "تغيرت حالة طلب الدمج",
     "aiReviewDescription": "عند انتهاء مراجعة ذكية أو إعادة التحقق.",
     "gitSyncTitle": "مراقبة Git ومزامنته",
@@ -719,7 +719,8 @@
       "settings": "فتح إعدادات الإشعارات",
       "error": "تعذرت قراءة إذن الإشعارات أو تغييره. أعد المحاولة أو افتح إعدادات النظام.",
       "system_managed": "تدير بيئة سطح المكتب هذه أذونات الإشعارات. إذا لم تظهر التنبيهات، فتحقق من إعدادات إشعارات النظام."
-    }
+    },
+    "discussionDeletionTitle": "نشاط المناقشات"
   },
   "reviewFlow": {
     "completedTitle": "أنهى {{reviewer}} مراجعة طلب دمج",
@@ -865,7 +866,9 @@
       "newestFirstTitle": "الأحدث أولًا (انقر لعرض الأقدم)",
       "oldest": "الأقدم",
       "newest": "الأحدث",
-      "noMatchingActivity": "لا يوجد نشاط يطابق عامل التصفية هذا."
+      "noMatchingActivity": "لا يوجد نشاط يطابق عامل التصفية هذا.",
+      "deletedDiscussion": "حذف مناقشة",
+      "deletedReply": "حذف ردًا"
     },
     "bottomBar": {
       "closedToast": "تم إغلاق طلب الدمج الافتراضي #{{title}}",

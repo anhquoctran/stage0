@@ -146,6 +146,20 @@ CREATE TABLE IF NOT EXISTS virtual_mr_comments (
     FOREIGN KEY(discussion_id) REFERENCES virtual_mr_discussions(id) ON DELETE CASCADE
 );
 
+-- Deletion history survives deletion of the referenced discussion/comment.
+CREATE TABLE IF NOT EXISTS virtual_mr_deletion_activity (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    discussion_id TEXT NOT NULL,
+    comment_id TEXT NOT NULL,
+    target_kind TEXT NOT NULL CHECK(target_kind IN ('discussion','reply')),
+    actor_id TEXT NOT NULL,
+    actor_name TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(session_id) REFERENCES virtual_mr_sessions(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_vmr_deletion_activity_session ON virtual_mr_deletion_activity(session_id);
+
 CREATE INDEX IF NOT EXISTS idx_vmr_repo ON virtual_mr_sessions(repo_id);
 CREATE INDEX IF NOT EXISTS idx_vmr_repo_updated ON virtual_mr_sessions(repo_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_labels_repo ON repo_labels(repo_id);

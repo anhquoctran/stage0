@@ -649,8 +649,8 @@
     "categoryHeading": "Notification categories",
     "categoryDescription": "Choose which events may send system notifications. Your OS controls display and dismissal.",
     "aiReviewTitle": "AI code review",
-    "mrStatusTitle": "MR status",
-    "mrStatusDescription": "When a merge request changes status.",
+    "mrStatusTitle": "MR activity",
+    "mrStatusDescription": "Merge request status changes and deleted discussions or replies.",
     "mrStatusNotificationTitle": "MR status changed",
     "aiReviewDescription": "When an AI review or re-verification finishes.",
     "gitSyncTitle": "Git watchers and sync",
@@ -695,7 +695,8 @@
       "settings": "Open notification settings",
       "error": "Could not read or change notification permission. Try again or open system settings.",
       "system_managed": "This desktop manages notification permissions. If alerts do not appear, check system notification settings."
-    }
+    },
+    "discussionDeletionTitle": "Discussion activity"
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} finished an MR review",
@@ -831,7 +832,9 @@
       "newestFirstTitle": "Newest first (click for oldest)",
       "oldest": "Oldest",
       "newest": "Newest",
-      "noMatchingActivity": "No activity matching this filter."
+      "noMatchingActivity": "No activity matching this filter.",
+      "deletedDiscussion": "deleted a discussion",
+      "deletedReply": "deleted a reply"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} closed",

@@ -30,6 +30,7 @@ export function useDiscussionDeletion(sessionId: string) {
       useVirtualMrStore.setState((state) => ({
         sessions: state.sessions.map((session) => session.id !== sessionId ? session : {
           ...session,
+          deletionActivity: [...(session.deletionActivity ?? []).filter((item) => item.id !== result.activity.id), result.activity],
           discussions: session.discussions
             .filter((item) => !(result.deletedDiscussion && item.id === result.discussionId))
             .map((item) => item.id !== result.discussionId ? item : {

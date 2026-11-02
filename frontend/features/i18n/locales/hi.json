@@ -649,8 +649,8 @@
     "categoryHeading": "Notification categories",
     "categoryDescription": "वे घटनाएँ चुनें जो सिस्टम सूचनाएँ भेज सकती हैं। दिखाने और बंद करने का नियंत्रण ऑपरेटिंग सिस्टम के पास है।",
     "aiReviewTitle": "AI code review",
-    "mrStatusTitle": "MR स्थिति",
-    "mrStatusDescription": "जब मर्ज अनुरोध की स्थिति बदलती है।",
+    "mrStatusTitle": "MR गतिविधि",
+    "mrStatusDescription": "मर्ज अनुरोध की स्थिति में बदलाव और चर्चाओं या जवाबों को हटाना।",
     "mrStatusNotificationTitle": "MR की स्थिति बदली",
     "aiReviewDescription": "When an AI review or re-verification finishes.",
     "gitSyncTitle": "Git watchers and sync",
@@ -695,7 +695,8 @@
       "settings": "सूचना सेटिंग खोलें",
       "error": "सूचना अनुमति पढ़ी या बदली नहीं जा सकी। फिर कोशिश करें या सिस्टम सेटिंग खोलें।",
       "system_managed": "यह डेस्कटॉप सूचना अनुमतियाँ नियंत्रित करता है। सूचनाएँ न दिखने पर सिस्टम की सूचना सेटिंग जाँचें।"
-    }
+    },
+    "discussionDeletionTitle": "चर्चा गतिविधि"
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} finished an MR review",
@@ -831,7 +832,9 @@
       "newestFirstTitle": "Newest first (click for oldest)",
       "oldest": "Oldest",
       "newest": "Newest",
-      "noMatchingActivity": "No activity matching this filter."
+      "noMatchingActivity": "No activity matching this filter.",
+      "deletedDiscussion": "ने एक चर्चा हटाई",
+      "deletedReply": "ने एक जवाब हटाया"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} closed",

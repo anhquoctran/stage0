@@ -649,8 +649,8 @@
     "categoryHeading": "通知类别",
     "categoryDescription": "选择可发送系统通知的事件。显示和关闭由操作系统管理。",
     "aiReviewTitle": "AI 代码审查",
-    "mrStatusTitle": "MR 状态",
-    "mrStatusDescription": "合并请求状态发生变化时。",
+    "mrStatusTitle": "MR 活动",
+    "mrStatusDescription": "合并请求状态变更以及讨论或回复的删除。",
     "mrStatusNotificationTitle": "MR 状态已更改",
     "aiReviewDescription": "AI 审查或重新验证完成时。",
     "gitSyncTitle": "Git 监控与同步",
@@ -695,7 +695,8 @@
       "settings": "打开通知设置",
       "error": "无法读取或更改通知权限。请重试或打开系统设置。",
       "system_managed": "此桌面环境管理通知权限。如果没有显示提醒，请检查系统通知设置。"
-    }
+    },
+    "discussionDeletionTitle": "讨论活动"
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} 已完成 MR 审查",
@@ -831,7 +832,9 @@
       "newestFirstTitle": "从最新开始（点击切换到最早）",
       "oldest": "最早",
       "newest": "最新",
-      "noMatchingActivity": "没有符合此筛选条件的活动。"
+      "noMatchingActivity": "没有符合此筛选条件的活动。",
+      "deletedDiscussion": "删除了一个讨论",
+      "deletedReply": "删除了一条回复"
     },
     "bottomBar": {
       "closedToast": "已关闭 Virtual MR #{{title}}",
