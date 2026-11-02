@@ -3223,6 +3223,7 @@
       "providerResponseIncomplete": "Ответ провайдера был неполным, отклонен или усечен",
       "providerResponseMissingOutput": "Отсутствует вывод ответа",
       "providerUnfinishedFunctionCall": "Провайдер вернул незавершенный вызов функции",
+      "providerOutputTruncated": "Провайдер достиг лимита выходных токенов. Неполный ответ отброшен; попробуйте снизить уровень рассуждения или уменьшить объём проверки.",
       "providerResponseRefusedOrTruncated": "Ответ провайдера отклонен или усечен",
       "claudeContentMissing": "Отсутствует содержимое Claude",
       "geminiNoCandidate": "Нет вариантов Gemini (возможно, заблокировано)",

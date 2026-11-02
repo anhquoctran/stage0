@@ -3209,6 +3209,7 @@
       "providerResponseIncomplete": "Provider response was incomplete, refused or truncated",
       "providerResponseMissingOutput": "Missing response output",
       "providerUnfinishedFunctionCall": "Provider returned an unfinished function call",
+      "providerOutputTruncated": "प्रदाता आउटपुट टोकन सीमा तक पहुँच गया। अधूरी प्रतिक्रिया हटा दी गई है; कम तर्क स्तर या छोटी समीक्षा आज़माएँ।",
       "providerResponseRefusedOrTruncated": "Provider response was refused or truncated",
       "claudeContentMissing": "Missing Claude content",
       "geminiNoCandidate": "No Gemini candidate (possibly blocked)",
