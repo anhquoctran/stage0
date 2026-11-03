@@ -43,6 +43,11 @@ test('complete release manifest contains exact tags, platform packages and signa
       assert.match(platform.url, /^https:\/\/github.com\/anhquoctran\/stage0\/releases\/download\/v2\.0\.0\//);
       assert.match(Buffer.from(platform.signature, 'base64').toString(), /\tversion:2\.0\.0/);
     }
+    for (const [target, platform] of Object.entries(manifest.platforms)) {
+      const extension = target.startsWith('darwin-') ? /\.app\.tar\.gz$/
+        : target.startsWith('windows-') ? /\.exe$/ : /\.(?:AppImage|deb|rpm)$/;
+      assert.match(platform.url, extension, 'Updater feeds must not require the legacy ZIP/gzipped-AppImage feature');
+    }
     assert.throws(() => createUpdateManifest(directory, '2.0.1', ''), /signed version/);
     fs.rmSync(path.join(directory, 'aarch64-apple-darwin-Stage0.app.tar.gz'));
     assert.throws(() => createUpdateManifest(directory, '2.0.0', ''), /darwin-aarch64/);

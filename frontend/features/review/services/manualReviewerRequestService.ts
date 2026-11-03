@@ -1,3 +1,4 @@
+import { escapeMarkdownText } from '../../../common/utils/escapeMarkdownText';
 import i18n from '../../i18n/i18n';
 import { formatMention } from '../../../common/utils/mentions';
 import type { VirtualMrComment } from '../../virtual-mr/types/VirtualMrComment';
@@ -96,9 +97,9 @@ function unresolvedReport(findings: ReturnType<typeof reviewerFindings>, reviewe
       && (comment.authorId === reviewerId || comment.authorName === `Stage0 AI (${reviewerName})`),
     );
     const title = finding?.body.split(/\r?\n/).find((line) => line.trim())
-      ?.replace(/^\*\*|\*\*$/g, '').trim().replace(/[\\`*_{}\[\]()!|]/g, '\\$&');
+      ?.replace(/^\*\*|\*\*$/g, '').trim();
     const reference = `#mr-discussion/${encodeURIComponent(discussion.id)}`;
-    return `- [\`${location.replace(/`/g, '\\`')}\`](${reference})${title ? ` — ${title.slice(0, 140)}` : ''}`;
+    return `- [${escapeMarkdownText(location)}](${reference})${title ? ` — ${escapeMarkdownText(title.slice(0, 140))}` : ''}`;
   });
   if (findings.length > lines.length) {
     lines.push(`- ${i18n.t('reviewFlow.moreFindings', { count: findings.length - lines.length })}`);
