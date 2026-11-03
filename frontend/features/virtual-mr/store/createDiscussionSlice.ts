@@ -267,12 +267,18 @@ export const createDiscussionSlice = (
 
   refreshDiscussions: async (sessionId: string) => {
     const repoId = get().currentRepoId;
-    const items = await getApplicationServices().discussions.listMrDiscussions({ sessionId });
+    const [items, deletionActivity] = await Promise.all([
+      getApplicationServices().discussions.listMrDiscussions({ sessionId }),
+      getApplicationServices().discussions.listMrDeletionActivity({ sessionId }).catch((error) => {
+        console.warn('Could not refresh discussion deletion activity:', error);
+        return undefined;
+      }),
+    ]);
     if (get().currentRepoId !== repoId) return;
     set((state) => ({
       sessions: state.sessions.map((session) =>
         session.id === sessionId
-          ? { ...session, discussions: items.map((item) => {
+          ? { ...session, deletionActivity: deletionActivity ?? session.deletionActivity, discussions: items.map((item) => {
               const loaded = fromDbDiscussion(item, session.assignee);
               const pending = session.discussions.find((discussion) => discussion.id === item.id)
                 ?.children.filter((comment) => comment.isPending) ?? [];

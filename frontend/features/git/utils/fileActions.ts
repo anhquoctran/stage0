@@ -5,59 +5,54 @@ import { getApplicationServices } from '../../../core/services/runtime/applicati
  * e.g. git@github.com:anhquoctran/stage0.git -> https://github.com/anhquoctran/stage0
  */
 export function formatRemoteWebUrl(remoteUrl: string): string {
-  let url = remoteUrl.trim();
-  if (url.startsWith('git@')) {
-    url = url.replace(/^git@([^:]+):/, 'https://$1/');
-  } else if (url.startsWith('ssh://git@')) {
-    url = url.replace(/^ssh:\/\/git@([^/]+)\//, 'https://$1/');
-  }
-  url = url.replace(/\.git$/, '');
-  return url;
+  let value = remoteUrl.trim();
+  if (value.startsWith('git@')) value = value.replace(/^git@([^:]+):/, 'https://$1/');
+  try {
+    const url = new URL(value);
+    const web = url.protocol === 'ssh:' ? new URL(`https://${url.host}${url.pathname}`) : url;
+    if (!['https:', 'http:'].includes(web.protocol)) return '';
+    web.username = '';
+    web.password = '';
+    web.search = '';
+    web.hash = '';
+    web.pathname = web.pathname.replace(/\.git\/?$/, '');
+    return web.href.replace(/\/$/, '');
+  } catch { return ''; }
 }
 
-/**
- * Builds the direct remote web link for a file on a specific branch or commit hash.
- */
-export function buildRemoteFileUrl(
-  remoteUrl: string,
-  ref: string,
-  filePath: string
-): string {
+/** Provider detection uses only the parsed hostname, never credentials, path or query substrings. */
+function remoteProvider(url: URL): 'azure' | 'gitlab' | 'bitbucket' | 'other' {
+  const host = url.hostname.toLowerCase();
+  if (host === 'dev.azure.com' || host === 'visualstudio.com' || host.endsWith('.visualstudio.com')) return 'azure';
+  if (host === 'gitlab.com' || host.startsWith('gitlab.')) return 'gitlab';
+  if (host === 'bitbucket.org' || host.startsWith('bitbucket.')) return 'bitbucket';
+  return 'other';
+}
+
+/** Builds a remote file link with repository-relative path and ref data encoded separately. */
+export function buildRemoteFileUrl(remoteUrl: string, ref: string, filePath: string): string {
   const base = formatRemoteWebUrl(remoteUrl);
+  if (!base) return '';
   const cleanRef = ref.replace(/^origin\//, '');
   const cleanPath = filePath.replace(/^\/+/, '');
-
-  if (base.includes('gitlab.')) {
-    return `${base}/-/blob/${encodeURIComponent(cleanRef)}/${cleanPath}`;
+  const url = new URL(base);
+  const provider = remoteProvider(url);
+  if (provider === 'azure') {
+    url.searchParams.set('path', `/${cleanPath}`);
+    url.searchParams.set('version', `GB${cleanRef}`);
+    return url.href;
   }
-  if (base.includes('bitbucket.')) {
-    return `${base}/src/${encodeURIComponent(cleanRef)}/${cleanPath}`;
-  }
-  if (base.includes('dev.azure.com') || base.includes('visualstudio.com')) {
-    return `${base}?path=/${cleanPath}&version=GB${encodeURIComponent(cleanRef)}`;
-  }
-  // GitHub / Gitea / Forgejo standard
-  return `${base}/blob/${encodeURIComponent(cleanRef)}/${cleanPath}`;
+  const encodedPath = cleanPath.split('/').map(encodeURIComponent).join('/');
+  const route = provider === 'gitlab' ? '/-/blob' : provider === 'bitbucket' ? '/src' : '/blob';
+  return `${base}${route}/${encodeURIComponent(cleanRef)}/${encodedPath}`;
 }
 
-/**
- * Builds the direct remote web link for a specific commit hash.
- */
-export function buildRemoteCommitUrl(
-  remoteUrl: string,
-  commitSha: string
-): string {
+export function buildRemoteCommitUrl(remoteUrl: string, commitSha: string): string {
   const base = formatRemoteWebUrl(remoteUrl);
-  if (base.includes('gitlab.')) {
-    return `${base}/-/commit/${commitSha}`;
-  }
-  if (base.includes('bitbucket.')) {
-    return `${base}/commits/${commitSha}`;
-  }
-  if (base.includes('dev.azure.com') || base.includes('visualstudio.com')) {
-    return `${base}/commit/${commitSha}`;
-  }
-  return `${base}/commit/${commitSha}`;
+  if (!base) return '';
+  const provider = remoteProvider(new URL(base));
+  const route = provider === 'gitlab' ? '/-/commit' : provider === 'bitbucket' ? '/commits' : '/commit';
+  return `${base}${route}/${encodeURIComponent(commitSha)}`;
 }
 
 /**

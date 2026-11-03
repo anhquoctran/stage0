@@ -44,8 +44,8 @@ fn unreferenced_own_discussion_is_deleted_with_its_root() {
     let db = fixture();
     assert_eq!(allowed(&db), ["root"]);
     let result = delete_for_author(&db, "mr", "root", EMAIL).unwrap();
-    assert_eq!(result["deletedDiscussion"], true);
-    assert_eq!(result["discussionId"], "thread");
+    assert_eq!(result.deleted_discussion, true);
+    assert_eq!(result.discussion_id, "thread");
     assert!(db.list_discussions("mr").unwrap().is_empty());
     let count: i64 = db
         .conn()
@@ -91,7 +91,7 @@ fn deleting_last_reply_preserves_root_and_enables_it_again() {
     let db = fixture();
     comment(&db, "reply", "thread", "user", EMAIL, "Last reply");
     let result = delete_for_author(&db, "mr", "reply", EMAIL).unwrap();
-    assert_eq!(result["deletedDiscussion"], false);
+    assert_eq!(result.deleted_discussion, false);
     assert_eq!(db.list_discussions("mr").unwrap()[0].comments[0].id, "root");
     assert_eq!(allowed(&db), ["root"]);
 }

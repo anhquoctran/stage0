@@ -3,6 +3,8 @@ use crate::core::db::Database;
 use rusqlite::params;
 use serde_json::{json, Value};
 mod description;
+mod reviewer_state;
+pub(crate) use reviewer_state::recover_reviewer_states;
 
 pub enum ReviewDiscussionAction {
     Reply {
@@ -29,13 +31,17 @@ impl Database {
     pub fn save_review_run(&self, run: &ReviewRun) -> Result<(), String> {
         let payload = serde_json::to_string(run)
             .map_err(|_| crate::common::messages::code("backend.review.serializeRunFailed"))?;
-        self.conn().execute("INSERT INTO ai_review_runs(id,session_id,status,payload,started_at) VALUES(?1,?2,?3,?4,?5) ON CONFLICT(id) DO UPDATE SET status=excluded.status,payload=excluded.payload",params![run.id,run.session_id,run.status,payload,run.started_at]).map_err(|e| {
+        let mut conn = self.conn();
+        let tx = conn.transaction().map_err(|error| error.to_string())?;
+        tx.execute("INSERT INTO ai_review_runs(id,session_id,status,payload,started_at) VALUES(?1,?2,?3,?4,?5) ON CONFLICT(id) DO UPDATE SET status=excluded.status,payload=excluded.payload",params![run.id,run.session_id,run.status,payload,run.started_at]).map_err(|e| {
             crate::common::messages::failure(
                 "backend.review.saveRunStateFailed",
                 serde_json::json!({ "error": e.to_string() }),
                 format!("Could not save review state: {e}"),
             )
         })?;
+        reviewer_state::sync_run_state(&tx, run, false).map_err(|error| error.to_string())?;
+        tx.commit().map_err(|error| error.to_string())?;
         Ok(())
     }
     pub fn get_review_run(&self, id: &str) -> Result<ReviewRun, String> {

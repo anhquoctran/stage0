@@ -1,4 +1,5 @@
 use super::deletion_policy::deletable_comments;
+use super::discussion_deletion_outcome::DiscussionDeletionOutcome;
 use super::persistence::VirtualMrDiscussionDb;
 use crate::core::db::Database;
 use rusqlite::{params, OptionalExtension, TransactionBehavior};
@@ -48,7 +49,7 @@ pub(super) fn with_permissions(
     Ok(output)
 }
 
-pub(super) fn delete(db: &Database, comment_id: &str) -> Result<Value, String> {
+pub(super) fn delete(db: &Database, comment_id: &str) -> Result<DiscussionDeletionOutcome, String> {
     let session_id: String = db
         .conn()
         .query_row(
@@ -69,7 +70,7 @@ pub(super) fn delete_for_author(
     session_id: &str,
     comment_id: &str,
     email: &str,
-) -> Result<Value, String> {
+) -> Result<DiscussionDeletionOutcome, String> {
     let mut conn = db.conn();
     let tx = conn
         .transaction_with_behavior(TransactionBehavior::Immediate)
@@ -90,6 +91,16 @@ pub(super) fn delete_for_author(
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .map_err(|error| error.to_string())?;
+    let activity =
+        super::persistence::deletion_activity::record(&tx, session_id, comment_id, root, email)
+            .map_err(|error| error.to_string())?;
+    let session_title: String = tx
+        .query_row(
+            "SELECT title FROM virtual_mr_sessions WHERE id=?1",
+            [session_id],
+            |row| row.get(0),
+        )
+        .map_err(|error| error.to_string())?;
     if root {
         tx.execute(
             "DELETE FROM virtual_mr_discussions WHERE id=?1",
@@ -105,5 +116,24 @@ pub(super) fn delete_for_author(
     )
     .map_err(|error| error.to_string())?;
     tx.commit().map_err(|error| error.to_string())?;
-    Ok(json!({"discussionId": discussion_id, "deletedDiscussion": root}))
+    Ok(DiscussionDeletionOutcome {
+        discussion_id,
+        deleted_discussion: root,
+        activity,
+        session_title,
+    })
+}
+
+/// The worker owns both commit and one delivery attempt, independent of WebView lifetime.
+/// A permission or OS delivery error must never report a committed deletion as failed.
+pub(super) fn delete_and_notify(
+    db: &Database,
+    comment_id: &str,
+    notify: impl FnOnce(&DiscussionDeletionOutcome) -> Result<(), String>,
+) -> Result<DiscussionDeletionOutcome, String> {
+    let outcome = delete(db, comment_id)?;
+    if let Err(error) = notify(&outcome) {
+        eprintln!("Discussion deletion notification delivery: {error}");
+    }
+    Ok(outcome)
 }

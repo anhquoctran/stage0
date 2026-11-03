@@ -26,7 +26,13 @@ async function deletionFixture({ persist, animate = async () => {}, children = [
   const { useDiscussionDeletion } = loadWithMocks(new URL('hooks/useDiscussionDeletion.ts', base), {
     react: harness.react,
     '../../../core/services/runtime/useApplicationServices': { useApplicationServices: () => ({
-      discussions: { deleteMrComment: async (args) => { calls.push(args); return persist(args); } },
+      discussions: { deleteMrComment: async (args) => { calls.push(args);
+        const result = await persist(args);
+        return { ...result, activity: {
+          id: 'deletion-event', sessionId: 'mr', discussionId: 'thread', commentId: args.commentId,
+          targetKind: result.deletedDiscussion ? 'discussion' : 'reply', actorName: 'Alice', actorId: 'alice@test',
+          createdAt: '2026-11-02T00:00:00Z',
+        } }; } },
     }) },
     '../../git/store/useGitStore': { useGitStore: { getState: () => ({ showToast: (...args) => toasts.push(args) }) } },
     '../store/useVirtualMrStore': { useVirtualMrStore: store },
@@ -58,12 +64,14 @@ test('deletion persists before animation, waits for disappearance, and ignores r
   assert.equal(fixture.state().sessions[0].discussions[0].children.length, 0);
   assert.equal(fixture.state().sessions[0].discussions[0].rootComment.id, 'root');
   assert.equal(fixture.refreshes(), 1);
+  assert.equal(fixture.state().sessions[0].deletionActivity[0].targetKind, 'reply');
 });
 
 test('root deletion removes the discussion; a rejected deletion preserves it and refreshes stale permissions', async () => {
   const success = await deletionFixture({ persist: async () => ({ discussionId: 'thread', deletedDiscussion: true }) });
   await success.hook.remove('root', {});
   assert.deepEqual(success.state().sessions[0].discussions, []);
+  assert.equal(success.state().sessions[0].deletionActivity[0].targetKind, 'discussion');
   let animations = 0;
   const failure = await deletionFixture({
     persist: async () => { throw new Error('A reply was just added'); },
@@ -72,6 +80,7 @@ test('root deletion removes the discussion; a rejected deletion preserves it and
   await failure.hook.remove('root', {});
   assert.equal(failure.state().sessions[0].discussions[0].rootComment.id, 'root');
   assert.equal(animations, 0);
+  assert.equal(failure.state().sessions[0].deletionActivity, undefined);
   assert.equal(failure.refreshes(), 1);
   assert.match(failure.toasts[0][0], /A reply was just added/);
   assert.equal(failure.toasts[0][1], 'error');

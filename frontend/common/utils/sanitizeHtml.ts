@@ -1,7 +1,6 @@
-/**
- * Pure DOM-based HTML Sanitizer for Webview environment.
- * Zero external dependencies, eliminates XSS vectors from untrusted Markdown inputs.
- */
+import createDOMPurify from 'dompurify';
+
+/** DOMPurify enforces HTML safety; local hooks retain Stage0's link/attachment privacy policy. */
 
 const ALLOWED_TAGS = new Set([
   'a', 'b', 'blockquote', 'br', 'code', 'dd', 'del', 'details', 'div', 'dl', 'dt',
@@ -27,10 +26,11 @@ const SAFE_ASSET_IMAGE_PATTERN = /^(?:asset:\/\/|https?:\/\/asset\.localhost\/)/
 
 export function isSafeUrl(url: string, isImage = false): boolean {
   const trimmed = url.trim();
+  if (/[\u0000-\u001f\u007f]/.test(trimmed)) return false;
   if (isImage) {
     // Markdown is user-controlled. Remote images create silent third-party
     // requests whenever a review/comment is opened, so only allow local paths
-    // and raster data images in previews.
+    // and supported data images in previews.
     if (SAFE_DATA_IMAGE_PATTERN.test(trimmed) || SAFE_ASSET_IMAGE_PATTERN.test(trimmed)) return true;
     if (trimmed.startsWith('//') || trimmed.startsWith('\\')) return false;
     if (trimmed.startsWith('/') && !trimmed.includes('\\')) return true;
@@ -45,81 +45,48 @@ export function isSafeUrl(url: string, isImage = false): boolean {
   return false;
 }
 
-function sanitizeNode(node: Node, doc: Document): void {
-  const children = Array.from(node.childNodes);
-  for (const child of children) {
-    if (child.nodeType === Node.ELEMENT_NODE) {
-      const element = child as HTMLElement;
-      const tagName = element.tagName.toLowerCase();
+const purifiers = new WeakMap<Window, ReturnType<typeof createDOMPurify>>();
 
-      // Drop disallowed tags entirely
-      if (!ALLOWED_TAGS.has(tagName)) {
-        element.remove();
-        continue;
-      }
-
-      // Sanitize attributes
-      const allowedAttrsForTag = ALLOWED_ATTRIBUTES[tagName] || new Set(['class', 'title']);
-      const attrNames = element.getAttributeNames();
-
-      for (const attr of attrNames) {
-        const lowerAttr = attr.toLowerCase();
-
-        // Strictly reject event handlers (onclick, onerror, onload, etc.)
-        if (lowerAttr.startsWith('on')) {
-          element.removeAttribute(attr);
-          continue;
-        }
-
-        // Check if attribute is whitelisted for this tag
-        if (!allowedAttrsForTag.has(lowerAttr)) {
-          element.removeAttribute(attr);
-          continue;
-        }
-
-        // Validate URLs in href and src
-        const attrVal = element.getAttribute(attr) || '';
-        if (lowerAttr === 'href') {
-          if (!isSafeUrl(attrVal, false)) {
-            element.removeAttribute(attr);
-          } else {
-            // Force noopener noreferrer for target=_blank
-            element.setAttribute('target', '_blank');
-            element.setAttribute('rel', 'noopener noreferrer');
-          }
-        } else if (lowerAttr === 'src') {
-          if (!isSafeUrl(attrVal, true)) {
-            element.removeAttribute(attr);
-          }
-        }
-      }
-
-      // Recurse into valid child elements
-      sanitizeNode(element, doc);
-    } else if (child.nodeType === Node.COMMENT_NODE) {
-      // Remove comments to prevent conditional parsing exploits
-      child.remove();
-    }
-  }
+/** A non-DOM caller receives escaped text, never partially stripped HTML. */
+function escapedText(value: string): string {
+  const entities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return value.replace(/[&<>"']/g, (character) => entities[character]);
 }
 
 export function sanitizeHtml(rawHtml: string): string {
-  if (!rawHtml || typeof rawHtml !== 'string') {
-    return '';
-  }
-
-  if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
-    // Fallback: strip tags via regex if outside browser
-    return rawHtml.replace(/<[^>]*>/g, '');
-  }
-
+  if (!rawHtml || typeof rawHtml !== 'string') return '';
+  if (typeof window === 'undefined' || !window.document?.createElement
+    || typeof createDOMPurify !== 'function') return escapedText(rawHtml);
   try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(rawHtml, 'text/html');
-    sanitizeNode(doc.body, doc);
-    return doc.body.innerHTML;
-  } catch (err) {
-    console.error('HTML Sanitization error:', err);
-    return '';
+    let purifier = purifiers.get(window);
+    if (!purifier) {
+      purifier = createDOMPurify(window);
+      purifier.addHook('uponSanitizeAttribute', (node, data) => {
+        const tag = node.nodeName.toLowerCase();
+        if (!ALLOWED_ATTRIBUTES[tag]?.has(data.attrName)
+          || (data.attrName === 'href' && !isSafeUrl(data.attrValue))
+          || (data.attrName === 'src' && !isSafeUrl(data.attrValue, true))) data.keepAttr = false;
+      });
+      purifier.addHook('afterSanitizeAttributes', (node) => {
+        if (node.nodeName.toLowerCase() === 'a' && node.hasAttribute('href')) {
+          node.setAttribute('target', '_blank');
+          node.setAttribute('rel', 'noopener noreferrer');
+        }
+      });
+      purifiers.set(window, purifier);
+    }
+    if (!purifier.isSupported) return escapedText(rawHtml);
+    return purifier.sanitize(rawHtml, {
+      ALLOWED_TAGS: [...ALLOWED_TAGS, '#text'],
+      ALLOWED_ATTR: [...new Set(Object.values(ALLOWED_ATTRIBUTES).flatMap((attrs) => [...attrs]))],
+      ALLOWED_NAMESPACES: ['http://www.w3.org/1999/xhtml'],
+      // Retain native attachment URLs; the hook applies the stricter per-attribute privacy policy.
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|asset):|data:image\/(?:png|jpeg|jpg|gif|webp|svg\+xml);base64,|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+      ALLOW_ARIA_ATTR: false, ALLOW_DATA_ATTR: false, KEEP_CONTENT: false,
+      RETURN_TRUSTED_TYPE: false,
+    });
+  } catch (error) {
+    console.error('HTML sanitization failed:', error);
+    return escapedText(rawHtml);
   }
 }
