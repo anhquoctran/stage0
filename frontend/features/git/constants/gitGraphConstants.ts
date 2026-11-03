@@ -15,6 +15,12 @@ export const LANE_COLORS = [
     'var(--color-yellow)',
 ];
 
+// Opaque ref badge fills keep white text readable independently of the theme's pastel lane colors.
+const REFERENCE_COLORS = [
+    '#7c3aed', '#1d4ed8', '#0f766e', '#15803d',
+    '#c2410c', '#a21caf', '#0369a1', '#a16207',
+];
+
 export function laneX(lane: number) {
     return NODE_X_OFFSET + lane * LANE_STEP;
 }
@@ -26,7 +32,7 @@ export function referenceColor(reference: string) {
         hash ^= character.codePointAt(0) ?? 0;
         hash = Math.imul(hash, 0x01000193);
     }
-    return LANE_COLORS[(hash >>> 0) % LANE_COLORS.length];
+    return REFERENCE_COLORS[(hash >>> 0) % REFERENCE_COLORS.length];
 }
 
 export async function copyTextToClipboard(value: string) {
