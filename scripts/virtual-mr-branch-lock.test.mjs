@@ -195,3 +195,8 @@ test('updateSessionBranches in store allows branch changes when no activity, but
   assert.equal(current.compareBranch, 'feature-b');
   assert.ok(toasts.some((t) => t.msg.includes('Cannot change branches') && t.type === 'warning'));
 });
+
+
+test('deleting the final discussion does not erase prior activity or unlock MR branches', () => {
+  assert.equal(hasVirtualMrActivity({ discussions: [], reviewers: [], deletionActivity: [{ id: 'deleted-thread' }] }), true);
+});

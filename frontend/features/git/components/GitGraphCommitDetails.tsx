@@ -46,11 +46,9 @@ export const GitGraphCommitDetails: React.FC<{
                                     <span
                                         key={reference}
                                         style={{
-                                            color: referenceColor(reference),
-                                            borderColor: referenceColor(reference),
-                                            backgroundColor: `color-mix(in srgb, ${referenceColor(reference)} 12%, var(--color-surface0))`,
+                                            backgroundColor: referenceColor(reference),
                                         }}
-                                        className="max-w-full truncate border px-1.5 py-0.5 font-mono text-[10px]"
+                                        className="max-w-full truncate rounded-sm border-0 px-1.5 py-0.5 font-mono text-[10px] font-medium text-white"
                                     >
                                         {reference}
                                     </span>

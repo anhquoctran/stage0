@@ -649,8 +649,8 @@
     "categoryHeading": "通知類別",
     "categoryDescription": "選擇可傳送系統通知的事件。顯示和關閉由作業系統管理。",
     "aiReviewTitle": "AI 程式碼審查",
-    "mrStatusTitle": "MR 狀態",
-    "mrStatusDescription": "合併請求狀態變更時。",
+    "mrStatusTitle": "MR 活動",
+    "mrStatusDescription": "合併請求狀態變更以及討論或回覆的刪除。",
     "mrStatusNotificationTitle": "MR 狀態已變更",
     "aiReviewDescription": "AI 審查或重新驗證完成時。",
     "gitSyncTitle": "Git 監控與同步",
@@ -695,7 +695,8 @@
       "settings": "開啟通知設定",
       "error": "無法讀取或變更通知權限。請重試或開啟系統設定。",
       "system_managed": "此桌面環境管理通知權限。如果未顯示提醒，請檢查系統通知設定。"
-    }
+    },
+    "discussionDeletionTitle": "討論活動"
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} 已完成 MR 審查",
@@ -831,7 +832,9 @@
       "newestFirstTitle": "由新到舊（按一下切換為由舊到新）",
       "oldest": "最舊",
       "newest": "最新",
-      "noMatchingActivity": "沒有符合此篩選條件的活動。"
+      "noMatchingActivity": "沒有符合此篩選條件的活動。",
+      "deletedDiscussion": "刪除了一個討論",
+      "deletedReply": "刪除了一則回覆"
     },
     "bottomBar": {
       "closedToast": "已關閉 Virtual MR #{{title}}",

@@ -654,8 +654,8 @@
     "categoryHeading": "Catégories de notifications",
     "categoryDescription": "Choisissez les événements autorisés à envoyer des notifications système. Le système gère leur affichage et leur fermeture.",
     "aiReviewTitle": "Revue de code par IA",
-    "mrStatusTitle": "État de la MR",
-    "mrStatusDescription": "Lorsque l’état d’une demande de fusion change.",
+    "mrStatusTitle": "Activité des MR",
+    "mrStatusDescription": "Changements de statut des demandes de fusion et suppressions de discussions ou de réponses.",
     "mrStatusNotificationTitle": "État de la MR modifié",
     "aiReviewDescription": "À la fin d’une revue IA ou d’une nouvelle vérification.",
     "gitSyncTitle": "Surveillance et synchronisation Git",
@@ -701,7 +701,8 @@
       "settings": "Ouvrir les réglages de notifications",
       "error": "Impossible de lire ou de modifier l’autorisation. Réessayez ou ouvrez les réglages système.",
       "system_managed": "Cet environnement de bureau gère les autorisations de notification. Si les alertes ne s’affichent pas, vérifiez les réglages de notifications du système."
-    }
+    },
+    "discussionDeletionTitle": "Activité des discussions"
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} a terminé la revue d’une MR",
@@ -838,7 +839,9 @@
       "newestFirstTitle": "Plus récents en premier (cliquer pour les plus anciens)",
       "oldest": "Plus anciens",
       "newest": "Plus récents",
-      "noMatchingActivity": "Aucune activité ne correspond à ce filtre."
+      "noMatchingActivity": "Aucune activité ne correspond à ce filtre.",
+      "deletedDiscussion": "a supprimé une discussion",
+      "deletedReply": "a supprimé une réponse"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} fermé",

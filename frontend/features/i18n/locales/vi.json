@@ -649,8 +649,8 @@
     "categoryHeading": "Danh mục thông báo",
     "categoryDescription": "Chọn sự kiện được gửi thông báo hệ thống. Hệ điều hành quản lý hiển thị và đóng thông báo.",
     "aiReviewTitle": "AI review mã nguồn",
-    "mrStatusTitle": "Trạng thái MR",
-    "mrStatusDescription": "Khi trạng thái merge request thay đổi.",
+    "mrStatusTitle": "Hoạt động MR",
+    "mrStatusDescription": "Thay đổi trạng thái MR và thao tác xóa thảo luận hoặc trả lời.",
     "mrStatusNotificationTitle": "Trạng thái MR đã thay đổi",
     "aiReviewDescription": "Khi AI review hoặc xác minh lại hoàn tất.",
     "gitSyncTitle": "Theo dõi và đồng bộ Git",
@@ -695,7 +695,8 @@
       "settings": "Mở cài đặt thông báo",
       "error": "Không thể đọc hoặc thay đổi quyền thông báo. Hãy thử lại hoặc mở cài đặt hệ thống.",
       "system_managed": "Desktop này tự quản lý quyền thông báo. Nếu không thấy thông báo, hãy kiểm tra cài đặt thông báo hệ thống."
-    }
+    },
+    "discussionDeletionTitle": "Hoạt động thảo luận"
   },
   "reviewFlow": {
     "completedTitle": "{{reviewer}} đã hoàn tất review MR",
@@ -831,7 +832,9 @@
       "newestFirstTitle": "Mới nhất trước (nhấn để xem cũ nhất)",
       "oldest": "Cũ nhất",
       "newest": "Mới nhất",
-      "noMatchingActivity": "Không có hoạt động nào khớp với bộ lọc này."
+      "noMatchingActivity": "Không có hoạt động nào khớp với bộ lọc này.",
+      "deletedDiscussion": "đã xóa một thảo luận",
+      "deletedReply": "đã xóa một trả lời"
     },
     "bottomBar": {
       "closedToast": "Đã đóng Virtual MR #{{title}}",

@@ -41,6 +41,18 @@ function renderReviewerStatusBadge(status: ReviewerState, t: (key: string) => st
           {t('virtualMr.overview.commented')}
         </span>
       );
+    case 'failed':
+    case 'incomplete':
+    case 'interrupted':
+    case 'cancelled':
+      return (
+        <span data-reviewer-status={status} className={`px-1.5 py-0.5 rounded-sm text-[10px] font-semibold capitalize ${
+          status === 'failed' ? 'bg-red/15 text-red'
+            : status === 'cancelled' ? 'bg-surface0 text-subtext0' : 'bg-yellow/15 text-yellow'
+        }`}>
+          {t(`review.activity.states.${status}`)}
+        </span>
+      );
     case 'pending':
     default:
       return (
