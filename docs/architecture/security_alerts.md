@@ -2,7 +2,10 @@
 
 This review covers GitHub Dependabot alerts 1–3 and CodeQL alerts 1–20,
 plus a fresh npm/RustSec dependency audit. Alerts were read from the default
-branch, `main`; fixes are submitted to `develop` under the Git strategy.
+branch, `main`; the original fix was merged into `develop` through PR #16.
+The same security changes are backported through `hotfix/main/security-alerts`
+and synchronized through `hotfix/beta/security-alerts` and
+`hotfix/nightly/security-alerts`. No integration/release branch is pushed directly.
 GitHub counters are not evidence that a working-branch fix has reached a
 published release. Merge, promotion and a new default-branch scan are required.
 
@@ -107,7 +110,7 @@ existing VariantStrIter backport; it does not exercise every flagged FFI path.
 
 ## Verification
 
-Verified locally on macOS ARM64 with Node 22.23.1:
+Original `develop` fix verified locally on macOS ARM64 with Node 22.23.1:
 
 - `pnpm check:architecture`, `pnpm typecheck`, `pnpm check:i18n`: passed.
 - `pnpm test`: 612 passed; no failures or skipped tests.
@@ -125,3 +128,25 @@ Verified locally on macOS ARM64 with Node 22.23.1:
 
 No native Windows/Linux packaging, notarization or live update installation was
 performed locally. No GitHub alert was dismissed or hidden by this change.
+
+## Default-branch follow-up
+
+The later eight-alert list consists of the original ZIP alerts 1–3 plus five
+Vite/embedded launch-editor alerts 4–8 listed above. It is not eight additional
+vulnerabilities introduced by the fix. PR #17 independently upgraded `main` to
+Vite 6.4.5, but `main` still contained ZIP 4.6.1 after PR #16 merged into
+`develop`. Dependabot scans the default branch, so an integration-branch fix
+alone cannot close those ZIP alerts.
+
+The `main` hotfix backports the security commit without promoting unrelated
+development changes. Fresh verification on that source passed 596 Node tests,
+313 Rust library tests, architecture, TypeScript, i18n and `cargo check --locked`.
+Its Cargo/npm dependency manifests and lockfiles match the original verified
+fix. RustSec again reports zero vulnerabilities and seven maintenance notices.
+The `beta` backport has the same complete source tree as this `main` hotfix;
+`nightly` preserves its existing UI changes. Both include the Vite 6.4.5 update
+and passed focused security tests, architecture and TypeScript checks.
+
+The equivalent changes already exist in `develop` through PR #16; no redundant
+development backport is required. GitHub's alert state must still be checked
+after the `main` hotfix merges and dependency analysis completes.
