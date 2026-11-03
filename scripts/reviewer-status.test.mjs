@@ -77,7 +77,7 @@ test('repository hydration preserves persisted terminal reviewer states', async 
     '../../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({
       repositorySettings: { getRepoSettings: async () => null, listRepoLabels: async () => [] },
       virtualMrs: { listVirtualMrSessions: async () => [{ id: 'mr', repo_id: 'repo', reviewers: statuses.map((review_status) => ({ agent_id: review_status, review_status })) }] },
-      discussions: { listMrDiscussions: async () => [] },
+      discussions: { listMrDiscussions: async () => [], listMrDeletionActivity: async () => [] },
       gitHistory: { getCommitsBetweenRefs: async () => [], getGitUserIdentityCmd: async () => ['Alice', 'alice@test'] },
     }) },
     '../../services/sessionPersistence': { flushSessionWrites: async () => {} },
