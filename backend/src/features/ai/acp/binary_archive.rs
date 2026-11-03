@@ -32,6 +32,11 @@ pub fn extract(
                 )
                 .into());
             }
+            // Random-access by_index() does not enforce the ZIP 9.0.5 header
+            // checks automatically. Validate all local/central headers before
+            // writing anything, including duplicate names and overlapping data.
+            zip.validate_header_consistency()
+                .map_err(|_| crate::common::messages::code("backend.acp.archiveUnsafe"))?;
             let mut links = Vec::new();
             for index in 0..zip.len() {
                 let mut entry = zip
@@ -350,3 +355,7 @@ fn copy_alias(
 #[cfg(test)]
 #[path = "binary_archive_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "binary_archive_security_tests.rs"]
+mod security_tests;
