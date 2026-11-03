@@ -22,13 +22,21 @@ test('Markdown HTML removes active/mutation content, handlers, clobbering and ja
     '<svg><g/onload=alert(1)//<p>',
     '<math><mtext><table><mglyph><style><!--</style><img title="--><img src=x onerror=alert(1)>">',
     '<a href="jav&#x61;script:alert(1)">bad</a><iframe srcdoc="<script>alert(2)</script>"></iframe>',
+    '<a href="vbscript:msgbox(1)">bad</a><a href="data:text/html,unsafe">bad</a>',
     '<form id=attributes><input name=__proto__></form><div style="color:red" onclick="alert(1)">text</div>',
     '<svg><foreignObject><p onclick="alert(1)">bad</p></foreignObject></svg>',
   ]) {
     const document = new dom.window.DOMParser().parseFromString(sanitizeHtml(raw), 'text/html');
     assert.equal(document.querySelector('script,svg,math,iframe,form,input,style'), null, raw);
     assert.equal(document.querySelector('[onerror],[onclick],[onload],[style],[id],[name]'), null, raw);
-    for (const anchor of document.querySelectorAll('a[href]')) assert.ok(!anchor.href.startsWith('javascript:'));
+    for (const anchor of document.querySelectorAll('a[href]')) {
+      const protocol = new URL(anchor.getAttribute('href'), 'https://stage0.test/').protocol;
+      assert.ok(['https:', 'http:', 'mailto:'].includes(protocol), raw);
+    }
+  }
+  for (const href of ['javascript:alert(1)', 'vbscript:msgbox(1)', 'data:text/html,unsafe']) {
+    const doc = new dom.window.DOMParser().parseFromString(sanitizeHtml(`<a href="${href}">bad</a>`), 'text/html');
+    assert.equal(doc.querySelector('a').hasAttribute('href'), false, href);
   }
 });
 
