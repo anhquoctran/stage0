@@ -1,6 +1,9 @@
 //! Optimized regression coverage for RUSTSEC-2024-0429.
 
 #[cfg(test)]
+mod ffi_contract_tests;
+
+#[cfg(test)]
 mod tests {
     use glib::variant::ToVariant;
 

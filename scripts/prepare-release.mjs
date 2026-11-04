@@ -62,11 +62,9 @@ export function prepareScheduledBranch({ schedule, now = new Date(), root = proc
       git('checkout', '--detach', branch);
       const version = nextReleaseVersion(ch, tags);
       const tag = `v${version}`;
-      execFileSync(process.execPath, ['scripts/prepare-release.mjs', 'set', version, releaseDate], {
-        cwd: root,
-        env: { ...process.env, STAGE0_RELEASE_DATE: releaseDate },
-        stdio: 'pipe',
-      });
+      // Use controller code loaded before checkout, never execute a script
+      // supplied by the selected channel revision in the main cache scope.
+      setReleaseVersion(version, releaseDate, root);
       git('config', 'user.name', 'github-actions[bot]');
       git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com');
       git('add', 'package.json', 'backend/Cargo.toml', 'backend/Cargo.lock', 'backend/tauri.conf.json',
@@ -94,6 +92,21 @@ export function prepareScheduledBranch({ schedule, now = new Date(), root = proc
   return targetResult;
 }
 
+export function setReleaseVersion(value, releaseDate, root = process.cwd()) {
+  releaseChannel(value);
+  const { previousVersion } = setProjectVersion(value, root);
+  const notesPath = path.join(root, 'RELEASE_NOTES.md');
+  const notes = fs.readFileSync(notesPath, 'utf8')
+    .replace(/^# Stage0 v[^ ]+ Release Notes/m, `# Stage0 v${value} Release Notes`)
+    .replace(/This document describes the current release \(v[^)]+\)\./, `This document describes the current release (v${value}).`);
+  fs.writeFileSync(notesPath, notes);
+  syncAllMetadata({ root, ...(releaseDate ? { releaseDate } : {}) });
+  const literal = notes.replaceAll('\\', '\\\\').replaceAll('`', '\\`').replaceAll('${', '\\${');
+  fs.writeFileSync(path.join(root, 'frontend/features/about/config/releaseNotes.ts'), `export const DEFAULT_RELEASE_NOTES = \`${literal}\`;\n`);
+  const website = path.join(root, 'website/index.html');
+  if (fs.existsSync(website)) fs.writeFileSync(website, fs.readFileSync(website, 'utf8').replaceAll(previousVersion, value));
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [mode, value] = process.argv.slice(2);
   if (mode === 'prepare' || mode === 'schedule') {
@@ -108,19 +121,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     }
     console.log(plan.tag);
   } else if (mode === 'set') {
-    releaseChannel(value);
-    const releaseDate = process.argv[4] || process.env.STAGE0_RELEASE_DATE;
-    const { previousVersion } = setProjectVersion(value);
-    const notes = fs.readFileSync('RELEASE_NOTES.md', 'utf8')
-      .replace(/^# Stage0 v[^ ]+ Release Notes/m, `# Stage0 v${value} Release Notes`)
-      .replace(/This document describes the current release \(v[^)]+\)\./, `This document describes the current release (v${value}).`);
-    fs.writeFileSync('RELEASE_NOTES.md', notes);
-    syncAllMetadata(releaseDate ? { releaseDate } : {});
-    const literal = notes.replaceAll('\\', '\\\\').replaceAll('`', '\\`').replaceAll('${', '\\${');
-    fs.writeFileSync('frontend/features/about/config/releaseNotes.ts', `export const DEFAULT_RELEASE_NOTES = \`${literal}\`;\n`);
-    if (fs.existsSync('website/index.html')) {
-      fs.writeFileSync('website/index.html', fs.readFileSync('website/index.html', 'utf8').replaceAll(previousVersion, value));
-    }
+    setReleaseVersion(value, process.argv[4] || process.env.STAGE0_RELEASE_DATE);
   } else if (mode === 'wait') {
     await waitForReleaseWindow(value);
   } else throw new Error('Usage: prepare-release.mjs prepare|schedule CHANNEL_OR_CRON | set VERSION [RELEASE_DATE] | wait [PUBLISH_AT]');
