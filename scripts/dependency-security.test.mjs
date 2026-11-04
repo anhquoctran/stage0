@@ -9,6 +9,60 @@ import test from 'node:test';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const read = (file) => readFileSync(path.join(root, file), 'utf8');
 
+function lockedCrates(name) {
+  return read('backend/Cargo.lock').split('[[package]]')
+    .filter((entry) => entry.includes(`\nname = "${name}"\n`))
+    .map((entry) => entry.match(/^version = "([^"]+)"$/m)?.[1]);
+}
+
+function atLeast(actual, minimum) {
+  const left = actual.split('.').map(Number), right = minimum.split('.').map(Number);
+  for (let index = 0; index < 3; index++) {
+    if (left[index] !== right[index]) return left[index] > right[index];
+  }
+  return true;
+}
+
+test('all locked ZIP parsers include header, symlink and AES authentication security fixes', () => {
+  const versions = lockedCrates('zip');
+  assert.ok(versions.length > 0);
+  for (const version of versions) assert.ok(atLeast(version, '9.0.5'), version);
+  const manifest = read('backend/Cargo.toml');
+  const updater = manifest.match(/^tauri-plugin-updater = (.+)$/m)?.[1];
+  assert.match(updater, /default-features = false/);
+  assert.match(updater, /"rustls-tls"/);
+  assert.match(updater, /"system-proxy"/);
+  assert.doesNotMatch(updater, /"zip"/, 'Legacy Windows ZIP compatibility pulls an affected parser');
+});
+
+test('TLS, async runtime and OAuth crypto dependencies avoid known vulnerable implementations', () => {
+  for (const [crate, minimum] of [['rustls-webpki', '0.103.16'], ['tokio', '1.53.3']]) {
+    const versions = lockedCrates(crate);
+    assert.ok(versions.length > 0, crate);
+    for (const version of versions) assert.ok(atLeast(version, minimum), `${crate} ${version}`);
+  }
+  assert.deepEqual(lockedCrates('rsa'), [], 'Use the supported AWS-LC JWT backend instead of the Marvin-affected RSA crate');
+  assert.deepEqual(lockedCrates('crypto-bigint'), [], 'Avoid the affected RustCrypto branch');
+});
+
+test('release source validation never shares automatic package-manager caches', () => {
+  const workflow = read('.github/workflows/release.yml');
+  const setups = workflow.split(/- uses: actions\/setup-node@/).slice(1);
+  assert.ok(setups.length > 0);
+  for (const setup of setups) {
+    const inputs = setup.split(/\n      - /)[0];
+    assert.match(inputs, /package-manager-cache: false/);
+    assert.doesNotMatch(inputs, /\n\s+cache:/);
+  }
+  assert.doesNotMatch(workflow, /uses: actions\/cache@/);
+});
+
+test('all locked Vite copies include the development-server security fixes', () => {
+  const versions = [...read('pnpm-lock.yaml').matchAll(/^\s+vite@([\d.]+)(?:\([^\n]*)?:/gm)].map((match) => match[1]);
+  assert.ok(versions.length > 0);
+  for (const version of versions) assert.ok(atLeast(version, '6.4.4'), version);
+});
+
 test('all locked source-map-js copies include the indexed source-map DoS fix', () => {
   const lock = read('pnpm-lock.yaml');
   const versions = [...lock.matchAll(/^\s+source-map-js@([\d.]+):/gm)].map((match) => match[1]);
