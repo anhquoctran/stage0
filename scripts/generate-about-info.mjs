@@ -25,11 +25,10 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.resolve(__dirname, '..');
-const BACKEND_DIR = path.resolve(ROOT_DIR, 'backend');
-const FRONTEND_DIR = path.resolve(ROOT_DIR, 'frontend');
+const DEFAULT_ROOT_DIR = path.resolve(__dirname, '..');
 
 export function computeAboutInfo(options = {}) {
+  const ROOT_DIR = path.resolve(options.root || DEFAULT_ROOT_DIR);
   const pkgPath = path.resolve(ROOT_DIR, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 
@@ -140,6 +139,9 @@ export const SOFTWARE_ABOUT: SoftwareAboutInfo = ${JSON.stringify(info, null, 2)
 }
 
 export function syncAllMetadata(optionsOrInfo = {}) {
+  const ROOT_DIR = path.resolve(optionsOrInfo.root || DEFAULT_ROOT_DIR);
+  const BACKEND_DIR = path.join(ROOT_DIR, 'backend');
+  const FRONTEND_DIR = path.join(ROOT_DIR, 'frontend');
   const info = optionsOrInfo.name ? optionsOrInfo : computeAboutInfo(optionsOrInfo);
 
   const frontendConfigDir = path.resolve(FRONTEND_DIR, 'features', 'about', 'config');
