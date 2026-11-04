@@ -218,6 +218,8 @@ test('scheduled preparation checks out origin/nightly, origin/beta and origin/ma
   const betaSha = git('rev-parse', 'HEAD');
 
   git('checkout', '-b', 'nightly', 'develop');
+  fs.writeFileSync(path.join(root, 'scripts/prepare-release.mjs'), 'throw new Error("channel tooling must not execute in the main controller");');
+  git('commit', '-am', 'Untrusted channel tooling fixture');
   git('push', '-u', 'origin', 'nightly');
   const nightlySha = git('rev-parse', 'HEAD');
   git('checkout', 'main');
@@ -260,8 +262,8 @@ test('the actual CI gate allows Stable for scheduled, reusable and manual workfl
   const expression = workflow.match(/    if: >-\n([\s\S]*?)\n    runs-on:/)?.[1];
   assert.ok(expression);
   const gate = new Function('github', 'inputs', 'contains', `return (${expression.trim()});`);
-  const allowed = (event, tag, repository = 'anhquoctran/stage0') => gate(
-    { event_name: event, ref_name: tag, repository },
+  const allowed = (event, tag, repository = 'anhquoctran/stage0', ref = event === 'push' ? `refs/tags/${tag}` : 'refs/heads/main') => gate(
+    { event_name: event, ref_name: tag, repository, ref, ref_type: ref.startsWith('refs/tags/') ? 'tag' : 'branch' },
     event === 'push' ? {} : { tag },
     (value, part) => value.includes(part),
   );
@@ -272,6 +274,8 @@ test('the actual CI gate allows Stable for scheduled, reusable and manual workfl
   assert.equal(allowed('push', 'v0.0.2-nightly'), true);
   assert.equal(allowed('schedule', 'v0.0.3-beta'), true);
   assert.equal(allowed('workflow_dispatch', 'v0.0.1', 'another/repo'), false);
+  assert.equal(allowed('workflow_dispatch', 'v0.0.1', 'anhquoctran/stage0', 'refs/heads/feat/untrusted'), false);
+  assert.equal(allowed('workflow_dispatch', 'v0.0.1', 'anhquoctran/stage0', 'refs/tags/v0.0.1'), true);
 });
 
 test('git flow policy forbids direct work on protected branches, enforces develop PRs and requires hotfix back-sync', () => {
