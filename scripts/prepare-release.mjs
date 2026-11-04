@@ -62,11 +62,9 @@ export function prepareScheduledBranch({ schedule, now = new Date(), root = proc
       git('checkout', '--detach', branch);
       const version = nextReleaseVersion(ch, tags);
       const tag = `v${version}`;
-      execFileSync(process.execPath, ['scripts/prepare-release.mjs', 'set', version, releaseDate], {
-        cwd: root,
-        env: { ...process.env, STAGE0_RELEASE_DATE: releaseDate },
-        stdio: 'pipe',
-      });
+      // Use controller code loaded before checkout, never execute a script
+      // supplied by the selected channel revision in the main cache scope.
+      setReleaseVersion(version, releaseDate, root);
       git('config', 'user.name', 'github-actions[bot]');
       git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com');
       git('add', 'package.json', 'backend/Cargo.toml', 'backend/Cargo.lock', 'backend/tauri.conf.json',
