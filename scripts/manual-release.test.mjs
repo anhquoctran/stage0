@@ -18,7 +18,7 @@ function fixture(t) {
   git('config', 'user.email', 'fixture@example.test');
   git('remote', 'add', 'origin', origin);
   for (const dir of ['scripts', 'shared', 'backend', 'website']) fs.mkdirSync(path.join(root, dir));
-  for (const name of ['prepare-release.mjs', 'release-channels.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
+  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-channels.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
     fs.copyFileSync(new URL(name, import.meta.url), path.join(root, 'scripts', name));
   }
   fs.copyFileSync(new URL('../shared/release-channels.json', import.meta.url), path.join(root, 'shared/release-channels.json'));
@@ -61,10 +61,38 @@ test('one click prepares and pushes an immutable version tag; reruns reuse it an
   assert.throws(() => prepareManualRelease({ root: f.root, runId: '101', sourceSha: second.sha }), /source mismatch/);
 });
 
-test('manual UI has no required tag field and all jobs consume the resolved immutable SHA', () => {
+test('tag dispatch reuses the prepared release without creating another stable version', t => {
+  const f = fixture(t);
+  const release = prepareManualRelease({ root: f.root, runId: '101', sourceSha: f.sourceSha });
+  const output = path.join(f.root, 'outputs');
+  execFileSync(process.execPath, ['scripts/manual-release.mjs'], { cwd: f.root, env: {
+    ...process.env, RELEASE_EVENT: 'workflow_dispatch', RELEASE_REF_TYPE: 'tag',
+    RELEASE_INPUT_TAG: release.tag, RELEASE_SOURCE_SHA: release.sha, GITHUB_OUTPUT: output,
+  } });
+  assert.equal(fs.readFileSync(output, 'utf8'), `tag=${release.tag}\nsha=${release.sha}\nchannel=stable\n`);
+  assert.equal(f.git('tag', '--list'), release.tag);
+  assert.equal(f.git('rev-parse', 'HEAD'), release.sha);
+});
+
+test('release preparation uses preloaded controller code rather than executing checked-out tooling', t => {
+  const f = fixture(t);
+  fs.writeFileSync(path.join(f.root, 'scripts/prepare-release.mjs'), 'throw new Error("untrusted source code executed");');
+  f.git('add', 'scripts/prepare-release.mjs');
+  f.git('commit', '-m', 'Change source tooling');
+  const sourceSha = f.git('rev-parse', 'HEAD');
+  const release = prepareManualRelease({ root: f.root, runId: '103', sourceSha });
+  assert.equal(JSON.parse(f.git('show', `${release.sha}:package.json`)).version, '0.0.1');
+  assert.equal(f.git('show', `${release.sha}:scripts/prepare-release.mjs`), 'throw new Error("untrusted source code executed");');
+});
+
+test('manual UI needs no tag and release jobs pin the event SHA inside the tag run', () => {
   const workflow = fs.readFileSync(new URL('../.github/workflows/release.yml', import.meta.url), 'utf8');
-  assert.match(workflow, /workflow_dispatch:\s+workflow_call:/);
-  assert.equal((workflow.match(/ref: \$\{\{ needs.prepare.outputs.sha \}\}/g) || []).length, 3);
+  assert.doesNotMatch(workflow.match(/workflow_dispatch:([\s\S]*?)workflow_call:/)[1], /\n\s+tag:/);
+  assert.equal((workflow.match(/ref: \$\{\{ github.sha \}\}/g) || []).length, 4);
+  assert.doesNotMatch(workflow, /ref: \$\{\{ needs.prepare.outputs.sha \}\}/);
+  assert.match(workflow, /validate:\s+(?:#[^\n]*\n\s+)?if: github.ref_type == 'tag'/);
+  assert.match(workflow, /if: github.ref_type != 'tag'/);
+  assert.match(workflow, /node scripts\/dispatch-tag-release.mjs/);
   assert.match(workflow, /needs: \[prepare, validate\]/);
   assert.match(workflow, /needs: \[prepare, build\]/);
   assert.match(workflow, /Refusing to replace an already published release/);

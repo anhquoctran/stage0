@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import { createInstance } from 'i18next';
 import { createRequire } from 'node:module';
+import { translationText } from './translationText.mjs';
 
 const requirePackage = createRequire(import.meta.url);
 
@@ -19,7 +20,7 @@ export function loadWithMocks(url, dependencies, context) {
     if (!Object.hasOwn(dependencies, 'react-i18next')) {
       dependencies['react-i18next'] = {
         useTranslation: () => ({ t: translate, i18n: testI18n }),
-        Trans: ({ i18nKey, values }) => dependencies.react?.createElement('span', {}, translate(i18nKey, values).replace(/<\/?\w+>/g, '')),
+        Trans: ({ i18nKey, values }) => dependencies.react?.createElement('span', {}, translationText(translate(i18nKey, values))),
       };
     }
     // Legacy workflow fixtures exercise the native adapter. Explicit browser

@@ -9,7 +9,7 @@ publish = false
 [workspace]
 
 [dependencies]
-glib = { path = "../../vendor/glib" }
+glib = { path = "../../vendor/glib", features = ["v2_66"] }
 
 [profile.release]
 opt-level = 3

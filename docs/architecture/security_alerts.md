@@ -77,13 +77,13 @@ backport remains byte-verified against upstream provenance.
 
 | Alert | Location | Disposition |
 |---|---|---|
-| 1–5 | Release workflow | Disable setup-node's automatic package-manager cache in every job; release source validation cannot populate a shared automatic cache. Checkout SHA, credentials, permissions and signing gates stay unchanged. |
+| 1–5 | Release workflow | Main-ref preparation dispatches a separate tag-ref run. Only tag runs validate/build/publish, each pinning `github.sha`; the controller never executes the prepared tag's code in main's cache scope. Preloaded trusted tooling prepares version data. Automatic caching remains disabled. |
 | 6–7 | `common/utils/sanitizeHtml.ts` | Replace bespoke DOM rewriting/regex fallback with DOMPurify. Keep explicit HTML/attribute allowlists, internal references, local attachments, external-link isolation and remote-image privacy. Reject control characters in URLs. Without a supported DOM, escape the entire input as text. Test mutation payloads, namespace switches, DOM clobbering, event handlers and tracking URLs. |
 | 9 | `manualReviewerRequestService.ts` | Escape untrusted Markdown link labels and titles, including backslashes and backticks; do not attempt to escape backticks inside an inline-code span. Malicious filenames cannot inject another link/image. |
 | 10–13 | Git `fileActions.ts` | Parse URLs and inspect hostname boundaries; path, credentials or suffix lookalikes cannot select Azure routing. Encode refs, file paths, commits and query parameters separately. |
-| 8 | `scripts/helpers/componentHarness.mjs` | Test-only `Trans` mock strips simple translation formatting before passing a string to React `createElement`. It is not an HTML sanitizer or HTML sink; React renders the remaining string as text. Leave production sanitization tests independent of this mock. |
-| 14–19 | Vendored GLib FFI | Requires contextual triage rather than mechanical null-check insertion. See invariants below. No source exclusion or automatic dismissal is applied. |
-| 20 | Vendored GLib `log.rs` | The reported sink formats the `u32` log-level flags as a number. The traced UUID validator returns a boolean; neither the UUID text nor credential material is formatted at this sink. No secret disclosure demonstrated by this path. |
+| 8 | `scripts/helpers/componentHarness.mjs` | Replace regex tag stripping with parse5 tree-to-text projection. React receives text children; nested malformed markup and encoded tags are verified against actual React DOM output. |
+| 14–19 | Vendored GLib FFI | Complete SARIF paths join incompatible generic conversions or confuse an element's pointee with its array allocation. Native optimized probes verify actual typed/ownership contracts. Classified as false positives with individual evidence; see [flow review](codeql_ffi_review.md). |
+| 20 | Vendored GLib `log.rs` | The actual UUID path returns `gboolean` → `bool`; the reported panic is in the distinct `FromGlib<u32>` LogLevel implementation. No UUID text reaches that sink. Classified as a false positive; see [flow review](codeql_ffi_review.md). |
 
 The six pointer alerts cover these upstream FFI boundaries:
 
@@ -102,11 +102,10 @@ The six pointer alerts cover these upstream FFI boundaries:
   Allocation, length and element validity are the owning collection's invariants.
 
 These observations do not constitute a proof of memory safety for all GLib
-callers. The alerts remain reviewable and open until their flow evidence is
-accepted upstream or manually triaged on GitHub. Do not alter verified vendor
-sources, delete assertions, hide the directory from CodeQL, or claim all 23
-GitHub alerts are closed. The optimized GLib regression probe validates the
-existing VariantStrIter backport; it does not exercise every flagged FFI path.
+callers. The exact seven findings have now been reviewed against the complete
+SARIF paths and additional native tests; their false-positive assessment is
+documented in [the flow review](codeql_ffi_review.md). Vendor sources and
+analyzer coverage remain unchanged. New findings require a fresh assessment.
 
 ## Verification
 
@@ -127,7 +126,8 @@ Original `develop` fix verified locally on macOS ARM64 with Node 22.23.1:
   only `zip 9.0.5`, directly owned by Stage0.
 
 No native Windows/Linux packaging, notarization or live update installation was
-performed locally. No GitHub alert was dismissed or hidden by this change.
+performed locally. The original dependency fix did not dismiss alerts; the
+later FFI review supplies evidence for triaging the seven remaining library findings.
 
 ## Default-branch follow-up
 
@@ -150,3 +150,40 @@ and passed focused security tests, architecture and TypeScript checks.
 The equivalent changes already exist in `develop` through PR #16; no redundant
 development backport is required. GitHub's alert state must still be checked
 after the `main` hotfix merges and dependency analysis completes.
+
+## Remaining CodeQL findings — 2026-11-04
+
+Disabling automatic package-manager caching did not resolve alerts 1–5:
+an executed checkout can obtain runtime cache credentials even without an
+explicit save step. The release controller now runs trusted preparation code
+on `main`, then dispatches `release.yml` with `ref` set to the prepared tag.
+Only that tag-scoped run executes validation/build/publication, pinning the
+event's immutable SHA and checking it against the controller's expected SHA
+before checkout. The cache write scope is the tag, not `main`.
+
+Manual stable preparation and cron scheduling keep their existing version,
+immutable rerun, architecture, signature and publication-time contracts. A tag
+dispatch resolves the existing version instead of preparing another stable
+release, and the tag run cannot recursively dispatch itself. The controller
+uses metadata/version functions loaded before switching source revisions;
+checked-out channel scripts are never executed in its main-ref context.
+
+The controller needs `actions: write` to dispatch its child run. The scheduled
+caller delegates that permission explicitly. The Actions summary links the
+tag-scoped build and says it was requested, not that it has published.
+Synchronize this workflow change to `nightly` and `beta` before enabling the
+new controller on `main`: tag dispatch uses the workflow definition at that tag.
+
+Alert 8 is addressed by parse5 tree-to-text projection in the test-only Trans
+fixture, replacing regex tag stripping. React DOM tests confirm malformed
+markup and encoded tags remain inert text children.
+
+For alerts 14–20, the complete SARIF paths and native ownership regressions
+support individual false-positive dispositions. See [the GLib flow
+review](codeql_ffi_review.md); vendor hashes and CodeQL coverage are unchanged.
+
+Follow-up validation on macOS ARM64: 620 Node tests, eight optimized native
+GLib tests, architecture, TypeScript, actionlint 1.7.12 and application
+`cargo check --locked` passed. npm audit reports zero advisories. The dispatch
+API is tested through an injected HTTP client; no real release was triggered
+to validate these changes.
