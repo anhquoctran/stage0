@@ -33,6 +33,9 @@ jobs:
         run: node scripts/prepare-release.mjs prepare "$RELEASE_SCHEDULE"
   release:
     needs: prepare
+    permissions:
+      contents: write
+      actions: write
     uses: ./.github/workflows/release.yml
     with:
       tag: ${{ needs.prepare.outputs.tag }}

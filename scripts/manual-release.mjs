@@ -3,6 +3,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { nextReleaseVersion, releaseChannel } from './release-channels.mjs';
+import { setReleaseVersion } from './prepare-release.mjs';
 
 /** Legacy releases from other version lines do not undo the deliberate 0.0 reset. */
 export function nextStableVersion(current, tags) {
@@ -25,7 +26,7 @@ export function prepareManualRelease({ runId, sourceSha, root = process.cwd() })
   git('checkout', '--detach', sourceSha);
   const current = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
   const version = nextStableVersion(current, tags);
-  execFileSync(process.execPath, ['scripts/prepare-release.mjs', 'set', version], { cwd: root, stdio: 'pipe' });
+  setReleaseVersion(version, undefined, root);
   git('config', 'user.name', 'github-actions[bot]');
   git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com');
   git('add', 'package.json', 'backend/Cargo.toml', 'backend/Cargo.lock', 'backend/tauri.conf.json',
@@ -41,7 +42,7 @@ export function prepareManualRelease({ runId, sourceSha, root = process.cwd() })
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   let result;
-  if (process.env.RELEASE_EVENT === 'workflow_dispatch') {
+  if (process.env.RELEASE_EVENT === 'workflow_dispatch' && process.env.RELEASE_REF_TYPE !== 'tag') {
     result = prepareManualRelease({ runId: process.env.RELEASE_RUN_ID, sourceSha: process.env.RELEASE_SOURCE_SHA });
   } else {
     const tag = process.env.RELEASE_INPUT_TAG;
