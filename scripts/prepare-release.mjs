@@ -15,8 +15,10 @@ import {
 } from './release-channels.mjs';
 import { setProjectVersion } from './bump-version.mjs';
 import { syncAllMetadata } from './generate-about-info.mjs';
+import { publishedReleases, previewBuildDecision } from './release-history.mjs';
+import { createReleaseChangelog, writeReleaseChangelog } from './release-changelog.mjs';
 
-export function prepareScheduledBranch({ schedule, now = new Date(), root = process.cwd() }) {
+export function prepareScheduledBranch({ schedule, now = new Date(), root = process.cwd(), releases = publishedReleases(root) }) {
   const channel = resolveScheduledChannel(schedule);
   const releaseTime = targetReleaseTime(now);
   const publishAt = releaseTime.toISOString();
@@ -25,11 +27,7 @@ export function prepareScheduledBranch({ schedule, now = new Date(), root = proc
   const orderedChannels = CHANNEL_PRIORITY.filter(ch => due.includes(ch) || ch === channel);
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
 
-  try {
-    git('fetch', 'origin', '--tags');
-  } catch {
-    // Allow offline local repositories without fetched remote tags.
-  }
+  git('fetch', 'origin', '--tags');
   const tags = git('tag', '--list', 'v*').split('\n').filter(Boolean);
 
   const findWindowTag = ch => {
@@ -54,24 +52,31 @@ export function prepareScheduledBranch({ schedule, now = new Date(), root = proc
 
   let targetResult = null;
   for (const ch of orderedChannels) {
+    const branch = policy.channels[ch].branch;
+    const remoteBranch = branch.replace(/^origin\//, '');
+    git('fetch', 'origin', `${remoteBranch}:refs/remotes/${branch}`);
     let prepared = findWindowTag(ch);
+    const sourceSha = prepared?.sha || git('rev-parse', branch);
+    const decision = previewBuildDecision({ root, channel: ch, sourceSha, releases, tag: prepared?.tag, now });
+    if (!decision.shouldBuild) {
+      if (ch === channel) targetResult = { channel: ch, branch, publishAt, releaseDate, tag: '', skipped: true, ...decision };
+      continue;
+    }
     if (!prepared) {
-      const branch = policy.channels[ch].branch;
-      const remoteBranch = branch.replace(/^origin\//, '');
-      git('fetch', 'origin', `${remoteBranch}:refs/remotes/${branch}`);
       git('checkout', '--detach', branch);
       const version = nextReleaseVersion(ch, tags);
       const tag = `v${version}`;
       // Use controller code loaded before checkout, never execute a script
       // supplied by the selected channel revision in the main cache scope.
-      setReleaseVersion(version, releaseDate, root);
+      const notes = createReleaseChangelog({ root, version, sourceSha, previousTag: decision.previousTag });
+      setReleaseVersion(version, releaseDate, root, notes);
       git('config', 'user.name', 'github-actions[bot]');
       git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com');
       git('add', 'package.json', 'backend/Cargo.toml', 'backend/Cargo.lock', 'backend/tauri.conf.json',
         'backend/about.json', 'backend/Info.plist', 'backend/hooks.nsh', 'frontend/features/about/config/about.ts',
         'frontend/features/about/config/releaseNotes.ts', 'website/index.html', 'RELEASE_NOTES.md', 'LICENSE');
       git('commit', '--allow-empty', '-m', `chore: prepare ${tag}`, '-m',
-        `Stage0-Release-Channel: ${ch}\nStage0-Release-Date: ${releaseDate}\nStage0-Source-Branch: ${branch}`);
+        `Stage0-Release-Channel: ${ch}\nStage0-Release-Date: ${releaseDate}\nStage0-Source-Branch: ${branch}\nStage0-Source-Commit: ${sourceSha}`);
       git('tag', tag);
       git('push', 'origin', `refs/tags/${tag}`);
       tags.push(tag);
@@ -87,22 +92,20 @@ export function prepareScheduledBranch({ schedule, now = new Date(), root = proc
         reused: false,
       };
     }
-    if (ch === channel) targetResult = prepared;
+    if (ch === channel) targetResult = { ...prepared, ...decision };
   }
   return targetResult;
 }
 
-export function setReleaseVersion(value, releaseDate, root = process.cwd()) {
+export function setReleaseVersion(value, releaseDate, root = process.cwd(), releaseNotes) {
   releaseChannel(value);
   const { previousVersion } = setProjectVersion(value, root);
   const notesPath = path.join(root, 'RELEASE_NOTES.md');
-  const notes = fs.readFileSync(notesPath, 'utf8')
+  const notes = releaseNotes ?? fs.readFileSync(notesPath, 'utf8')
     .replace(/^# Stage0 v[^ ]+ Release Notes/m, `# Stage0 v${value} Release Notes`)
     .replace(/This document describes the current release \(v[^)]+\)\./, `This document describes the current release (v${value}).`);
-  fs.writeFileSync(notesPath, notes);
+  writeReleaseChangelog(root, notes);
   syncAllMetadata({ root, ...(releaseDate ? { releaseDate } : {}) });
-  const literal = notes.replaceAll('\\', '\\\\').replaceAll('`', '\\`').replaceAll('${', '\\${');
-  fs.writeFileSync(path.join(root, 'frontend/features/about/config/releaseNotes.ts'), `export const DEFAULT_RELEASE_NOTES = \`${literal}\`;\n`);
   const website = path.join(root, 'website/index.html');
   if (fs.existsSync(website)) fs.writeFileSync(website, fs.readFileSync(website, 'utf8').replaceAll(previousVersion, value));
 }
@@ -116,10 +119,13 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     if (process.env.GITHUB_OUTPUT) {
       fs.appendFileSync(
         process.env.GITHUB_OUTPUT,
-        `channel=${plan.channel}\nbranch=${plan.branch}\ntag=${plan.tag}\npublish_at=${plan.publishAt}\nrelease_date=${plan.releaseDate}\n`,
+        `channel=${plan.channel}\nbranch=${plan.branch}\ntag=${plan.tag}\npublish_at=${plan.publishAt}\nrelease_date=${plan.releaseDate}\nshould_build=${plan.shouldBuild ?? true}\n`,
       );
     }
-    console.log(plan.tag);
+    if (plan.skipped && process.env.GITHUB_STEP_SUMMARY) {
+      fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\nSkipped ${plan.channel}: ${plan.reason}.\n`);
+    }
+    console.log(plan.skipped ? `Skipped: ${plan.reason}` : plan.tag);
   } else if (mode === 'set') {
     setReleaseVersion(value, process.argv[4] || process.env.STAGE0_RELEASE_DATE);
   } else if (mode === 'wait') {
