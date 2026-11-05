@@ -281,6 +281,7 @@ pub fn run() {
             commands::open_file_in_editor,
             commands::check_rebase_status,
             commands::get_file_blame,
+            commands::get_file_text_diff,
             commands::window_minimize,
             commands::open_webview_devtools,
             commands::window_toggle_maximize,

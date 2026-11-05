@@ -2633,6 +2633,11 @@
     "taskProgress": {
       "working": "処理中…",
       "ariaLabel": "{{title}}: {{phase}}"
+    },
+    "encoding": {
+      "label": "ファイルの文字コード",
+      "automatic": "自動判定",
+      "loading": "ファイルをデコード中…"
     }
   },
   "review": {

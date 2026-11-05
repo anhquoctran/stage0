@@ -22,9 +22,11 @@ import { DiffBinaryPlaceholder } from './diff-viewer/DiffBinaryPlaceholder';
 import { DiffNoChangesPlaceholder } from './diff-viewer/DiffNoChangesPlaceholder';
 import { useInlineBlamePortal } from './diff-viewer/useInlineBlamePortal';
 import type { DiffViewerProps } from '../types/DiffViewerProps';
+import { useFileDiffEncoding } from '../hooks/useFileDiffEncoding';
+import { FileEncodingPicker } from './diff-viewer/FileEncodingPicker';
 
 export const DiffViewer: React.FC<DiffViewerProps> = ({
-  selectedFile,
+  selectedFile: originalFile,
   diffPayload,
   viewMode,
   onToggleViewMode,
@@ -66,15 +68,21 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   } = usePreferencesStore();
 
   const [copied, setCopied] = useState(false);
+  const fileEncoding = useFileDiffEncoding(currentRepo?.local_path ?? '',
+    diffPayload?.merge_base_commit ?? diffPayload?.base_commit ?? null,
+    diffPayload?.compare_commit ?? '', originalFile?.path ?? '', originalFile?.old_path);
+  const selectedFile = useMemo(() => originalFile && fileEncoding.data ? {
+    ...originalFile, is_binary: false, additions: fileEncoding.data.additions, deletions: fileEncoding.data.deletions,
+  } : originalFile, [originalFile, fileEncoding.data]);
 
   const hunks = useMemo(() => {
     if (!diffPayload || !selectedFile) return [];
     return extractFileHunks(
-      diffPayload.raw_diff,
+      fileEncoding.data?.raw_diff ?? diffPayload.raw_diff,
       selectedFile.path,
       selectedFile.old_path
     );
-  }, [diffPayload, selectedFile]);
+  }, [diffPayload, selectedFile, fileEncoding.data]);
 
   const fileLang = useMemo(() => {
     if (!selectedFile) return 'text';
@@ -254,7 +262,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
           <DiffDiscussionsBanner selectedFile={selectedFile} />
 
-          {selectedFile.is_binary ? (
+          {fileEncoding.loading ? <p role="status" className="p-4 text-xs text-subtext0">{t('git.encoding.loading')}</p>
+          : fileEncoding.error ? <p role="alert" className="p-4 text-xs text-red whitespace-pre-wrap">{fileEncoding.error}</p>
+          : selectedFile.is_binary ? (
             <DiffBinaryPlaceholder />
           ) : diffData && hunks.length > 0 && diffPayload ? (
             <div className="border border-surface0 overflow-hidden bg-base shadow-sm rounded-sm">
@@ -273,7 +283,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <DiffNoChangesPlaceholder status={selectedFile.status} />
           )}
 
-          {showInlineBlame &&
+          {showInlineBlame && !fileEncoding.manual &&
             !selectedFile.is_binary &&
             portalMount &&
             activeBlameCommit &&
@@ -294,6 +304,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             )}
         </div>
       )}
+      {fileViewTab === 'diff' && <footer className="flex shrink-0 justify-end border-t border-surface0 bg-mantle px-3 py-1">
+        <FileEncodingPicker encoding={fileEncoding.encoding} onChange={fileEncoding.setEncoding} />
+      </footer>}
     </section>
   );
 };

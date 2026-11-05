@@ -23,6 +23,14 @@ pub mod blame;
 pub mod branches;
 mod clone_options;
 pub mod commands;
+#[cfg(test)]
+mod encoding_tests;
+pub mod file_text_diff;
+#[cfg(test)]
+mod file_text_diff_tests;
+mod text_content;
+mod text_merge;
+mod text_patch;
 pub use clone_options::CloneOptions;
 mod remote_clone_refs;
 pub use remote_clone_refs::RemoteCloneRefs;
@@ -463,7 +471,7 @@ mod tests {
         run_git(dir_str, &["add", "."]);
         run_git(dir_str, &["commit", "-m", "Initial"]);
         run_git(dir_str, &["checkout", "-b", "large-change"]);
-        fs::write(&file_path, format!("{}\n", "界".repeat(2_000_000))).unwrap();
+        fs::write(&file_path, format!("{}\n", "\u{754c}".repeat(2_000_000))).unwrap();
         run_git(dir_str, &["commit", "-am", "Large UTF-8 diff"]);
 
         let diff = get_mr_diff(dir_str, "main", "large-change").unwrap();

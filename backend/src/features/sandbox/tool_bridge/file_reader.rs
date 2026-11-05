@@ -2,12 +2,28 @@ use super::{
     FileRangeResult, HARD_MAX_TOOL_OUTPUT_BYTES, MAX_TOOL_FILE_SCAN_BYTES,
     TOOL_OUTPUT_TRUNCATION_NOTICE,
 };
-use std::io::BufRead;
+use std::io::{BufRead, BufReader};
 
 /// Reads only the requested line range, retaining at most the configured
 /// response size and scanning at most 64 MiB. It never accumulates the file or
 /// an individual giant line in memory.
 pub(super) fn read_file_range<R: BufRead>(
+    reader: &mut R,
+    start_line: usize,
+    end_line: usize,
+    output_limit: usize,
+) -> Result<FileRangeResult, String> {
+    let decoded = crate::common::text_encoding::TextReader::new(reader, MAX_TOOL_FILE_SCAN_BYTES)
+        .map_err(|_| "File is binary, malformed or exceeds the text read safety limit")?;
+    read_utf8_range(
+        &mut BufReader::new(decoded),
+        start_line,
+        end_line,
+        output_limit,
+    )
+}
+
+fn read_utf8_range<R: BufRead>(
     reader: &mut R,
     start_line: usize,
     end_line: usize,
@@ -37,7 +53,7 @@ pub(super) fn read_file_range<R: BufRead>(
                 completed_lines += 1;
             }
             let actual_end_line = end_line.min(completed_lines);
-            let mut content = String::from_utf8_lossy(&output).into_owned();
+            let mut content = utf8_prefix(&output);
             if output_truncated {
                 content.push_str(TOOL_OUTPUT_TRUNCATION_NOTICE);
             }
@@ -56,7 +72,7 @@ pub(super) fn read_file_range<R: BufRead>(
                 ));
             }
             output_truncated = true;
-            let mut content = String::from_utf8_lossy(&output).into_owned();
+            let mut content = utf8_prefix(&output);
             content.push_str(TOOL_OUTPUT_TRUNCATION_NOTICE);
             return Ok(FileRangeResult {
                 content,
@@ -124,7 +140,7 @@ pub(super) fn read_file_range<R: BufRead>(
                 } else {
                     None
                 };
-                let mut content = String::from_utf8_lossy(&output).into_owned();
+                let mut content = utf8_prefix(&output);
                 if output_truncated {
                     content.push_str(TOOL_OUTPUT_TRUNCATION_NOTICE);
                 }
@@ -137,4 +153,11 @@ pub(super) fn read_file_range<R: BufRead>(
             }
         }
     }
+}
+
+fn utf8_prefix(bytes: &[u8]) -> String {
+    let end = std::str::from_utf8(bytes)
+        .map(|_| bytes.len())
+        .unwrap_or_else(|error| error.valid_up_to());
+    String::from_utf8(bytes[..end].to_vec()).expect("validated UTF-8 prefix")
 }
