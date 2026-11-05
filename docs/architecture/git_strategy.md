@@ -28,6 +28,39 @@ predictably from integration (`develop`) through preview channels (`nightly`,
 - **No force-pushes (`--force` / `--force-with-lease`)** or history rewrites on any protected branch.
 - Canonical branch, risk and channel metadata is defined in `shared/release-channels.json` and validated by `validateGitFlowBranch` and `branchRiskProfile` in `scripts/release-channels.mjs`.
 
+### Preview activity gate and per-release changelog
+
+- Nightly and Beta only build when their own source branch has at least one
+  commit not included in the last **published release of the same channel**,
+  with a committer timestamp inside the inclusive UTC interval `[now - 24h, now]`.
+  `previewActivityHours` in the shared policy owns the window. Merge commits count
+  as new integration work; generated release preparation commits do not count.
+- Check before allocating a scheduled version/tag and again at the tag workflow's
+  preparation job, before validation or the build matrix. The second check also
+  applies to manual tag dispatches, pushed preview tags and delayed retries. An
+  already published preview tag is skipped. Skips record their reason in the
+  Actions summary; eligible channels still run when another due channel is idle.
+- Stable retains its existing manual/quarterly release policy. Preview inactivity
+  does not prevent a due Stable release or consume a version number.
+- The baseline comes from the paginated GitHub Releases API, using publication
+  time. Draft releases, failed/unpublished tags and channel feed aliases are not
+  baselines. API or Git history failures fail preparation instead of assuming an
+  empty release history. Checkouts used for changelog generation fetch full history.
+- `scripts/release-history.mjs` resolves generated snapshots to their source parent
+  because release commits are detached siblings of source branches. Its source
+  ranges drive both activity checks and changelog generation.
+- `scripts/release-changelog.mjs` lists only commits introduced since the previous
+  published source snapshot, with commit/comparison links. Commit subjects are
+  escaped as literal Markdown. The first release of a channel explicitly lists
+  its source history; an unchanged manual Stable release explicitly says there
+  are no source changes. Fixed feature lists are not copied into new releases.
+- Freeze the baseline in tag preparation and pass it to both bundle generation
+  and publication. `RELEASE_NOTES.md`, the embedded About release notes and the
+  GitHub Release body use the same generated text. Draft retries refresh that body.
+- Promote this workflow and its helper scripts together through `nightly`, `beta`
+  and `main`: the scheduled controller runs on `main`, while isolated builds run
+  the workflow stored at the selected channel tag.
+
 ---
 
 ## 2. Standard Development Flow (Feature / Fix / Refactor / Chore)

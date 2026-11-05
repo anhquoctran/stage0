@@ -19,6 +19,7 @@ jobs:
     outputs:
       tag: ${{ steps.version.outputs.tag }}
       publish_at: ${{ steps.version.outputs.publish_at }}
+      should_build: ${{ steps.version.outputs.should_build }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -30,9 +31,11 @@ jobs:
         id: version
         env:
           RELEASE_SCHEDULE: ${{ github.event.schedule }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/prepare-release.mjs prepare "$RELEASE_SCHEDULE"
   release:
     needs: prepare
+    if: needs.prepare.outputs.should_build == 'true'
     permissions:
       contents: write
       actions: write

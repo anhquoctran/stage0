@@ -3,6 +3,7 @@
   "epoch": "2026-10-01T00:00:00Z",
   "developmentBranch": "origin/develop",
   "leadMinutes": 60,
+  "previewActivityHours": 24,
   "gitFlow": {
     "protectedBranches": ["main", "beta", "nightly", "develop"],
     "defaultBaseBranch": "develop",
