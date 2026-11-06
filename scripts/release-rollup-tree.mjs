@@ -71,6 +71,6 @@ export function composeRollup(root, manifest) {
   const blob = plumbing(root, ['hash-object', '-w', '--stdin'], { input: `${JSON.stringify(manifest, null, 2)}\n` });
   const tree = ledgerTree(root, contentTree, blob);
   const sha = commitTree(root, tree, [current], `chore(release): assemble ${manifest.channel} ${manifest.releaseDate}\n`, manifest.window.end);
-  assertRegressionRefs(root, manifest.baseSha, sha);
-  return { sha, tree, changed };
+  const regressionPolicyChanges = assertRegressionRefs(root, manifest.baseSha, sha);
+  return { sha, tree, changed, regressionPolicyChanges };
 }

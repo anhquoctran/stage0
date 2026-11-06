@@ -8,6 +8,8 @@ export function seedRegressionFixture(root) {
     'backend/src/fixture_tests.rs': '#[test]\nfn holds() { assert!(true); }\n',
     'scripts/release-regression-runner.mjs': '// baseline controller\n',
     '.github/workflows/regression.yml': '# baseline workflow\n',
+    '.github/workflows/release.yml': '# baseline release workflow\n',
+    'scripts/release-regression-preservation.mjs': '// baseline policy\n',
   };
   const catalog = { version: 1, support: [], cases: [
     { id: 'fixture-safety', runner: 'node', path: 'scripts/fixture.test.mjs' },

@@ -16,12 +16,15 @@ fn request() -> ReviewRequest {
 
 #[test]
 fn deepseek_thinking_continuations_keep_reasoning_and_matching_tool_results() {
-    let cfg = request();
+    let mut cfg = request();
     let tools = super::super::schemas::tools();
-    assert_eq!(
-        payload(&cfg, "policy", &[], &tools, 2048)["tool_choice"],
-        "auto"
-    );
+    for effort in [None, Some("high")] {
+        cfg.reasoning_effort = effort.map(str::to_string);
+        assert_eq!(
+            payload(&cfg, "policy", &[], &tools, 2048)["tool_choice"],
+            "auto"
+        );
+    }
     let response = json!({"choices":[{"finish_reason":"tool_calls","message":{
         "role":"assistant","content":null,"reasoning_content":"reasoning",
         "tool_calls":[{"id":"call-1","type":"function","function":{"name":"get_diff","arguments":"{}"}}]
@@ -40,16 +43,24 @@ fn deepseek_thinking_continuations_keep_reasoning_and_matching_tool_results() {
 
 #[test]
 fn truncated_refused_or_interrupted_responses_never_publish_or_modify_history() {
-    for reason in [
-        "length",
-        "content_filter",
-        "insufficient_system_resource",
-        "aborted",
+    for (reason, code) in [
+        ("length", "backend.review.providerOutputTruncated"),
+        (
+            "content_filter",
+            "backend.review.providerResponseRefusedOrTruncated",
+        ),
+        (
+            "insufficient_system_resource",
+            "backend.ai.providerUnavailable",
+        ),
+        ("aborted", "backend.ai.providerInterrupted"),
     ] {
         let mut history = initial_history("deepseek", "fixture");
         let original = history.clone();
         let response = json!({"choices":[{"finish_reason":reason,"message":{"role":"assistant","content":"incomplete"}}]});
-        assert!(decode("deepseek", &response, &mut history).is_err());
+        assert!(decode("deepseek", &response, &mut history)
+            .unwrap_err()
+            .contains(code));
         assert_eq!(history, original);
     }
 }

@@ -32,6 +32,7 @@ export function createRollupPullRequest({ root, channel, releaseDate, now = new 
         + 'Do not remove individual commits from this frozen head: fix/revert in the source channel and regenerate a tested batch.\n\n'
         + '- [ ] Smoke-tested install/update, launch, diff and reviewer on supported platforms.\n'
         + '- [ ] Reviewed changes and known issues; ready for this channel.\n\n'
+        + (composed.regressionPolicyChanges.length ? '- [ ] Regression control-plane changes reviewed.\n\n' : '')
         + 'Approve this exact head and create a merge commit on the scheduled UTC release date. The complete assembled batch is rebuilt and signed before publication.',
     } });
   }

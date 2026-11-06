@@ -12,7 +12,7 @@ function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'stage0-regression-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
-  git('init', '-b', 'main'); git('config', 'user.name', 'Fixture'); git('config', 'user.email', 'fixture@example.test');
+  git('init', '-b', 'main'); git('config', 'commit.gpgSign', 'false'); git('config', 'user.name', 'Fixture'); git('config', 'user.email', 'fixture@example.test');
   const catalog = seedRegressionFixture(root); git('add', '.'); git('commit', '-m', 'fix: preserve old safety contract');
   return { root, git, catalog, base: git('rev-parse', 'HEAD'), file: name => path.join(root, name) };
 }
@@ -53,7 +53,10 @@ test('Node skip/todo/zero-test reports fail and unsupported/symlink paths are re
   const f = fixture(t);
   assert.throws(() => runFrozenRegressions({ root: f.root, baselineSha: f.base, execute: () => '# tests 0\n# fail 0\n# skipped 0\n# todo 0\n' }), /must pass/);
   fs.unlinkSync(f.file('scripts/fixture.test.mjs'));
-  fs.symlinkSync(f.file('missing-outside'), f.file('scripts/fixture.test.mjs'));
+  if (process.platform === 'win32') {
+    fs.renameSync(f.file('scripts'), f.file('scripts-kept'));
+    fs.symlinkSync(f.file('scripts-kept'), f.file('scripts'), 'junction');
+  } else fs.symlinkSync(f.file('missing-outside'), f.file('scripts/fixture.test.mjs'));
   assert.throws(() => regressionPlan(f.root, f.base), /symlink/);
 });
 
@@ -73,4 +76,25 @@ test('an explicit revert of a target commit is blocked even though Git would mer
   f.git('revert', '--no-edit', target);
   assert.throws(() => assertNoTargetReverts(f.root, target, [{ sourceSha: f.git('rev-parse', 'HEAD') }]), /reverts target commit/);
   assert.doesNotThrow(() => assertNoTargetReverts(f.root, f.base, [{ sourceSha: f.git('rev-parse', 'HEAD') }]), 'New unstable work may be reverted within its own period');
+});
+
+test('newly registered cases run immediately; additive reference inputs cannot replace an old fixture', t => {
+  const f = fixture(t);
+  fs.writeFileSync(f.file('scripts/new-case.test.mjs'), "import test from 'node:test'; import assert from 'node:assert/strict'; test('new regression', () => assert.fail('new contract fails'));\n");
+  f.catalog.cases.push({ id: 'new-case', runner: 'node', path: 'scripts/new-case.test.mjs' });
+  fs.writeFileSync(f.file('shared/release-regressions.json'), JSON.stringify(f.catalog));
+  assert.throws(() => runFrozenRegressions({ root: f.root, baselineSha: f.base }), /Command failed/);
+});
+
+test('native test summaries remain strict with Windows line endings and release color output', t => {
+  const f = fixture(t);
+  let calls = 0;
+  assert.doesNotThrow(() => runFrozenRegressions({ root: f.root, baselineSha: f.base, mode: 'rust', execute: (_command, args) => {
+    calls++;
+    return args.includes('--list') ? '\x1b[32mfixture_tests::holds: test\x1b[0m\r\n'
+      : '\x1b[32mtest result: ok. 1 passed; 0 failed; 0 ignored;\x1b[0m\r\n';
+  } }));
+  assert.equal(calls, 4, 'Both frozen and current native contracts must execute');
+  assert.doesNotThrow(() => runFrozenRegressions({ root: f.root, baselineSha: f.base,
+    execute: () => '# tests 1\r\n# fail 0\r\n# skipped 0\r\n# todo 0\r\n' }));
 });

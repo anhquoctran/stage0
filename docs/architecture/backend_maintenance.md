@@ -115,3 +115,10 @@ Git discussion identity reads configured origin-scoped `credential.username`, th
 Git author name/email (including an email username fallback) in
 `git/ops/history.rs`. It never invokes credential helpers, OS-vault reads or
 network authentication to determine the display author.
+
+Release regression contracts live with their feature: provider wire contracts use
+serialized requests in `review/provider/regression_test_contracts.rs`; codec
+contracts in `common/text_encoding/regression_test_contracts.rs` preserve the
+independent reference corpus while allowing additional codecs. The release
+registry pins these and existing security/persistence tests. See
+[release regression gates](release_promotion.md#regression-protection-and-its-limits).
