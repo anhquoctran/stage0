@@ -1,0 +1,47 @@
+name: Promote tested release
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: 'Target channel (only adjacent promotion is permitted)'
+        required: true
+        type: choice
+        options: [beta, stable]
+      candidate:
+        description: 'Published source tag, e.g. v0.0.10-nightly or v0.0.11-beta'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage0-promotion-${{ inputs.channel }}
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    if: github.repository == 'anhquoctran/stage0' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+      security-events: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Verify candidate and open a frozen promotion PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROMOTION_CHANNEL: ${{ inputs.channel }}
+          PROMOTION_TAG: ${{ inputs.candidate }}
+        run: node scripts/release-promotion-cli.mjs create

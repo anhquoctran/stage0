@@ -151,12 +151,12 @@ test('scheduled skip creates no release tags, including when another due preview
   f.commit('fix: beta only change', '2026-11-26T22:00:00Z');
   f.git('push', 'origin', 'main', 'nightly', 'beta', '--tags');
   const tagsBefore = f.git('tag');
-  const skip = prepareScheduledBranch({ root: f.root, schedule: 'nightly', releases: [], now: new Date('2026-11-26T22:59:00Z') });
+  const skip = prepareScheduledBranch({ promotionGuard: () => null, root: f.root, schedule: 'nightly', releases: [], now: new Date('2026-11-26T22:59:00Z') });
   assert.equal(skip.shouldBuild, false);
   assert.equal(skip.tag, '');
   assert.match(skip.reason, /24 hours/);
   assert.equal(f.git('tag'), tagsBefore);
-  const beta = prepareScheduledBranch({ root: f.root, schedule: 'beta', releases: [published('v0.0.2-beta')], now });
+  const beta = prepareScheduledBranch({ promotionGuard: () => null, root: f.root, schedule: 'beta', releases: [published('v0.0.2-beta')], now });
   assert.equal(beta.shouldBuild, true);
   assert.equal(beta.tag, 'v0.0.4-beta', 'Skipped Nightly does not allocate a version');
   assert.match(f.git('show', `${beta.tag}:RELEASE_NOTES.md`), /beta only change/);

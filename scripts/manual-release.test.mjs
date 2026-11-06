@@ -19,7 +19,7 @@ function fixture(t, date) {
   git('config', 'user.email', 'fixture@example.test');
   git('remote', 'add', 'origin', origin);
   for (const dir of ['scripts', 'shared', 'backend', 'website']) fs.mkdirSync(path.join(root, dir));
-  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-channels.mjs', 'release-history.mjs', 'release-changelog.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
+  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-promotion.mjs', 'release-promotion-github.mjs', 'release-channels.mjs', 'release-history.mjs', 'release-changelog.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
     fs.copyFileSync(new URL(name, import.meta.url), path.join(root, 'scripts', name));
   }
   fs.copyFileSync(new URL('../shared/release-channels.json', import.meta.url), path.join(root, 'shared/release-channels.json'));
@@ -49,31 +49,29 @@ test('manual dispatch chooses the next free stable patch across all channel tags
 
 test('one click prepares and pushes an immutable version tag; reruns reuse it and main stays unchanged', t => {
   const f = fixture(t);
-  const first = prepareManualRelease({ root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] });
+  const first = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] });
   assert.equal(first.tag, 'v0.0.1');
   assert.equal(f.git('rev-parse', `refs/heads/${f.branch}`), f.sourceSha);
   assert.notEqual(first.sha, f.sourceSha);
   const remote = execFileSync('git', ['--git-dir', f.origin, 'rev-parse', first.tag], { encoding: 'utf8' }).trim();
   assert.equal(remote, first.sha);
   assert.equal(JSON.parse(f.git('show', `${first.tag}:package.json`)).version, '0.0.1');
-  assert.deepEqual(prepareManualRelease({ root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] }), first);
-  const second = prepareManualRelease({ root: f.root, runId: '102', sourceSha: f.sourceSha, releases: [] });
+  assert.deepEqual(prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] }), first);
+  const second = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '102', sourceSha: f.sourceSha, releases: [] });
   assert.equal(second.tag, 'v0.0.2');
   assert.equal(JSON.parse(f.git('show', `${second.tag}:backend/about.json`)).packageVersion, '0.0.2');
   assert.equal(f.git('rev-parse', first.tag), first.sha, 'Earlier tags are never rewritten');
   assert.equal(f.git('rev-parse', `refs/heads/${f.branch}`), f.sourceSha);
-  assert.throws(() => prepareManualRelease({ root: f.root, runId: '101', sourceSha: second.sha, releases: [] }), /source mismatch/);
+  assert.throws(() => prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: second.sha, releases: [] }), /source mismatch/);
 });
 
-test('tag dispatch reuses the prepared release without creating another stable version', t => {
+test('actual stable tag dispatch refuses uncertified source without changing tags', t => {
   const f = fixture(t);
-  const release = prepareManualRelease({ root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] });
-  const output = path.join(f.root, 'outputs');
-  execFileSync(process.execPath, ['scripts/manual-release.mjs'], { cwd: f.root, env: {
+  const release = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] });
+  assert.throws(() => execFileSync(process.execPath, ['scripts/manual-release.mjs'], { cwd: f.root, stdio: 'pipe', env: {
     ...process.env, PATH: `${f.bin}${path.delimiter}${process.env.PATH}`, RELEASE_EVENT: 'workflow_dispatch', RELEASE_REF_TYPE: 'tag',
-    RELEASE_INPUT_TAG: release.tag, RELEASE_SOURCE_SHA: release.sha, GITHUB_OUTPUT: output,
-  } });
-  assert.equal(fs.readFileSync(output, 'utf8'), `tag=${release.tag}\nsha=${release.sha}\nchannel=stable\nshould_build=true\nprevious_tag=\nsource_sha=${f.sourceSha}\n`);
+    RELEASE_INPUT_TAG: release.tag, RELEASE_SOURCE_SHA: release.sha,
+  } }), /approved beta promotion PR/);
   assert.equal(f.git('tag', '--list'), release.tag);
   assert.equal(f.git('rev-parse', 'HEAD'), release.sha);
 });
@@ -84,7 +82,7 @@ test('release preparation uses preloaded controller code rather than executing c
   f.git('add', 'scripts/prepare-release.mjs');
   f.git('commit', '-m', 'Change source tooling');
   const sourceSha = f.git('rev-parse', 'HEAD');
-  const release = prepareManualRelease({ root: f.root, runId: '103', sourceSha, releases: [] });
+  const release = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '103', sourceSha, releases: [] });
   assert.equal(JSON.parse(f.git('show', `${release.sha}:package.json`)).version, '0.0.1');
   assert.equal(f.git('show', `${release.sha}:scripts/prepare-release.mjs`), 'throw new Error("untrusted source code executed");');
 });
@@ -94,7 +92,7 @@ test('actual preview tag entry points skip stale sources and accept fresh source
     for (const stale of [true, false]) {
       await t.test(`${event}, ${stale ? 'stale' : 'fresh'}`, t => {
         const f = fixture(t, stale ? '2000-01-01T00:00:00Z' : undefined);
-        const tag = 'v0.0.2-beta';
+        const tag = 'v0.0.2-nightly';
         f.git('tag', tag);
         const output = path.join(f.root, 'outputs'), summary = path.join(f.root, 'summary');
         execFileSync(process.execPath, ['scripts/manual-release.mjs'], { cwd: f.root, env: {
@@ -105,7 +103,7 @@ test('actual preview tag entry points skip stale sources and accept fresh source
         assert.match(fs.readFileSync(output, 'utf8'), new RegExp(`should_build=${!stale}\\n`));
         assert.equal(f.git('tag', '--list'), tag);
         assert.equal(f.git('rev-parse', 'HEAD'), f.sourceSha);
-        if (stale) assert.match(fs.readFileSync(summary, 'utf8'), /Skipped beta: No new source commits in the last 24 hours/);
+        if (stale) assert.match(fs.readFileSync(summary, 'utf8'), /Skipped nightly: No new source commits in the last 24 hours/);
       });
     }
   }

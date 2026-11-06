@@ -1,0 +1,47 @@
+name: Release promotion guard
+
+on:
+  pull_request_target:
+    branches: [beta, main]
+    types: [opened, reopened, synchronize, edited, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: 'Promotion PR number (also dispatched after bot-created PRs)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage0-promotion-check-${{ github.event.number || inputs.pr }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify promotion
+    if: github.repository == 'anhquoctran/stage0'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+      actions: read
+      security-events: read
+    steps:
+      # Trusted base/controller only. PR files are Git objects, never code to run.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Verify and set policy status on exact PR head
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROMOTION_PR: ${{ inputs.pr || '' }}
+        run: node scripts/release-promotion-cli.mjs check-pr

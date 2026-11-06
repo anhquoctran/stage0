@@ -45,6 +45,8 @@ jobs:
     permissions:
       contents: write
       actions: write
+      pull-requests: read
+      security-events: read
     concurrency:
       group: stage0-release-prepare-${{ inputs.tag || github.ref_name || 'manual' }}
       cancel-in-progress: false
@@ -230,12 +232,16 @@ jobs:
       group: stage0-release-publication-${{ needs.prepare.outputs.channel }}
       cancel-in-progress: false
     env:
+      RELEASE_CHANNEL: ${{ needs.prepare.outputs.channel }}
       RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
       RELEASE_PUBLISH_AT: ${{ needs.prepare.outputs.publish_at }}
       RELEASE_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
       RELEASE_PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}
     permissions:
       contents: write
+      pull-requests: read
+      security-events: read
+      actions: read
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -271,6 +277,7 @@ jobs:
           gh release edit "$RELEASE_TAG" --notes-file RELEASE_NOTES.md
           gh release upload "$RELEASE_TAG" release-assets/* --clobber
           node scripts/prepare-release.mjs wait "$RELEASE_PUBLISH_AT"
+          RELEASE_CHANNEL="$RELEASE_CHANNEL" node scripts/release-promotion-cli.mjs verify-release
           CHANNEL=$(node --input-type=module -e 'import {releaseChannel} from "./scripts/release-channels.mjs"; console.log(releaseChannel(process.env.RELEASE_TAG.slice(1)))')
           if [[ "$CHANNEL" == "stable" ]]; then
             gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest

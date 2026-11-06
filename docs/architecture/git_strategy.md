@@ -11,8 +11,8 @@ predictably from integration (`develop`) through preview channels (`nightly`,
 |---|---|---|---|---|---|---|
 | `feat/*`, `fix/*`, `refactor/*`, `origin/develop` | **Highest (`highest`)** | Least stable (`unstable`) | Active feature/bugfix work & primary integration branch | **Forbidden on `develop`** (PR only) | Continuous integration | Unreleased working tree |
 | `origin/nightly` | **High (`high`)** | Preview (`preview`) | Nightly build channel (promoted from `develop`) | **Forbidden** (PR only) | Daily at `00:00 UTC` (build starts `23:00 UTC`) | `0.0.x-nightly` |
-| `origin/beta` | **Medium (`medium`)** | Stabilizing (`stabilizing`) | Beta build channel (promoted from `develop` / `nightly`) | **Forbidden** (PR only) | Monthly on the 27th at `00:00 UTC` (build starts 26th `23:00 UTC`) | `0.0.x-beta` |
-| `origin/main` | **Low (`low`)** | **Stable (`stable`)** | Production release channel (promoted from `beta` / `develop`) | **Forbidden** (PR only) | Quarterly on day 1 of month 1 (`01/01`, `01/04`, `01/07`, `01/10`) at `00:00 UTC` | `0.0.x` |
+| `origin/beta` | **Medium (`medium`)** | Stabilizing (`stabilizing`) | Beta build channel (promoted from a certified `nightly` release) | **Forbidden** (PR only) | Monthly on the 27th at `00:00 UTC` (build starts 26th `23:00 UTC`) | `0.0.x-beta` |
+| `origin/main` | **Low (`low`)** | **Stable (`stable`)** | Production release channel (promoted from a certified `beta` release) | **Forbidden** (PR only) | Quarterly on day 1 of month 1 (`01/01`, `01/04`, `01/07`, `01/10`) at `00:00 UTC` | `0.0.x` |
 
 - **Risk progression (`develop`/`feat`/`fix` [Highest] → `nightly` [High] → `beta` [Medium] → `main` [Stable])**:
   - Code promotions always flow from higher-risk branches toward lower-risk branches only after verification gates pass.
@@ -28,6 +28,17 @@ predictably from integration (`develop`) through preview channels (`nightly`,
 - **No force-pushes (`--force` / `--force-with-lease`)** or history rewrites on any protected branch.
 - Canonical branch, risk and channel metadata is defined in `shared/release-channels.json` and validated by `validateGitFlowBranch` and `branchRiskProfile` in `scripts/release-channels.mjs`.
 
+### Strict release promotion
+
+Beta and Stable require a frozen, published candidate from the immediately
+preceding channel, successful complete release CI, observation (24h / 7 days),
+smoke-test acknowledgement and an approved promotion PR. See the
+[release promotion runbook](release_promotion.md) for automation, hotfix
+certification, audit evidence and the mandatory ruleset rollout procedure.
+`promotion/beta/<nightly-tag>` and `promotion/stable/<beta-tag>` are automation-only
+frozen source refs, an explicit exception to ordinary work branches from develop.
+They must never be amended or conflict-resolved in place.
+
 ### Preview activity gate and per-release changelog
 
 - Nightly and Beta only build when their own source branch has at least one
@@ -40,7 +51,8 @@ predictably from integration (`develop`) through preview channels (`nightly`,
   applies to manual tag dispatches, pushed preview tags and delayed retries. An
   already published preview tag is skipped. Skips record their reason in the
   Actions summary; eligible channels still run when another due channel is idle.
-- Stable retains its existing manual/quarterly release policy. Preview inactivity
+- Stable retains its manual/quarterly cadence, subject to the mandatory certified
+  Beta promotion gate. Preview inactivity
   does not prevent a due Stable release or consume a version number.
 - The baseline comes from the paginated GitHub Releases API, using publication
   time. Draft releases, failed/unpublished tags and channel feed aliases are not
