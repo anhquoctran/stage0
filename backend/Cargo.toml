@@ -29,6 +29,10 @@ sha2 = "0.10"
 fs2 = "0.4"
 font-kit = "0.14.3"
 zeroize = "1"
+encoding_rs = "0.8.35"
+chardetng = "0.1.17"
+oem_cp = "2.1.2"
+tempfile = "3"
 jsonwebtoken = { version = "11.1.0", default-features = false, features = ["aws_lc_rs"] }
 tokio = { version = "1", features = ["fs", "io-util", "macros", "time", "process", "net", "sync"] }
 notify = "6.1"
@@ -99,4 +103,3 @@ debug = 1
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
 tokio = { version = "1", features = ["test-util"] }
-tempfile = "3"

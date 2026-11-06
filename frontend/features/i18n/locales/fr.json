@@ -2640,6 +2640,11 @@
     "taskProgress": {
       "working": "Traitement…",
       "ariaLabel": "{{title}} : {{phase}}"
+    },
+    "encoding": {
+      "label": "Encodage du fichier",
+      "automatic": "Automatique",
+      "loading": "Décodage du fichier…"
     }
   },
   "review": {

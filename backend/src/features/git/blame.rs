@@ -5,6 +5,7 @@ pub use blame_line::BlameLine;
 mod blame_author_stat;
 pub use blame_author_stat::BlameAuthorStat;
 mod file_blame_payload;
+mod text;
 pub use file_blame_payload::FileBlamePayload;
 
 use super::runner::run_git;
@@ -20,6 +21,8 @@ pub fn get_file_blame(
     super::resolve_safe_repo_path(repo_path, &clean_path)?;
 
     let mut args: Vec<String> = vec![
+        "-c".to_string(),
+        "core.quotePath=false".to_string(),
         "--literal-pathspecs".to_string(),
         "blame".to_string(),
         "--line-porcelain".to_string(),
@@ -67,8 +70,14 @@ pub fn get_file_blame(
         .map(|r| r.stdout.trim().to_string())
         .filter(|s| !s.is_empty());
 
-    let mut payload = parse_blame_porcelain(
+    let normalized = text::normalize(
+        repo_path,
+        &clean_path,
+        effective_rev.as_deref(),
         &res.stdout,
+    )?;
+    let mut payload = parse_blame_porcelain(
+        &normalized,
         &clean_path,
         effective_rev.as_deref().unwrap_or("HEAD"),
     );

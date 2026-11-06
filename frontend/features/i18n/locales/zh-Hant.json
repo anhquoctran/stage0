@@ -2633,6 +2633,11 @@
     "taskProgress": {
       "working": "處理中…",
       "ariaLabel": "{{title}}：{{phase}}"
+    },
+    "encoding": {
+      "label": "檔案編碼",
+      "automatic": "自動偵測",
+      "loading": "正在解碼檔案…"
     }
   },
   "review": {

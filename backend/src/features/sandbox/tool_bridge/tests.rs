@@ -53,3 +53,20 @@ fn caps_a_single_oversized_line_without_buffering_it_all() {
     assert!(range.content.len() <= 128);
     assert!(range.content.ends_with(TOOL_OUTPUT_TRUNCATION_NOTICE));
 }
+
+#[test]
+fn reads_decoded_utf16_ranges_and_clips_utf8_on_character_boundaries() {
+    let mut bytes = vec![0xff, 0xfe];
+    for unit in "first\n\u{4e16}\u{754c}\u{1f600}\nlast\n".encode_utf16() {
+        bytes.extend_from_slice(&unit.to_le_bytes());
+    }
+    let mut reader = Cursor::new(bytes);
+    let range = read_file_range(&mut reader, 2, 2, 1024).unwrap();
+    assert_eq!(range.content, "\u{4e16}\u{754c}\u{1f600}");
+    assert_eq!(range.actual_end_line, 2);
+    let mut reader = Cursor::new("\u{1f600}".repeat(100).into_bytes());
+    let range = read_file_range(&mut reader, 1, 1, 128).unwrap();
+    assert!(range.output_truncated);
+    assert!(!range.content.contains('\u{fffd}'));
+    assert!(range.content.len() <= 128);
+}

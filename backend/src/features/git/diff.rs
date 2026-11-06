@@ -25,6 +25,8 @@ pub fn get_mr_diff(repo_path: &str, base: &str, compare: &str) -> Result<MrDiffP
     let diff_result = run_git_with_limits(
         repo_path,
         &[
+            "-c",
+            "core.quotePath=false",
             "diff",
             "--no-ext-diff",
             "--no-textconv",
@@ -117,6 +119,15 @@ pub fn get_mr_diff(repo_path: &str, base: &str, compare: &str) -> Result<MrDiffP
         });
     }
 
+    raw_diff = super::text_patch::normalize_encoded_files(
+        repo_path,
+        Some(&merge_base_commit),
+        &compare_commit,
+        &mut files,
+        &raw_diff,
+        MAX_RAW_DIFF_BYTES,
+    )
+    .0;
     Ok(MrDiffPayload {
         base_commit,
         merge_base_commit,

@@ -3,6 +3,7 @@ mod clone;
 mod clone_credential_lease;
 mod clone_credentials;
 mod external_apps;
+mod file_encoding;
 mod history;
 mod refs;
 mod repo_validation;
@@ -13,6 +14,7 @@ mod vscode_launcher;
 
 pub use clone::*;
 pub use external_apps::*;
+pub use file_encoding::*;
 pub use history::*;
 pub use refs::*;
 pub use repo_validation::RepoValidation;
