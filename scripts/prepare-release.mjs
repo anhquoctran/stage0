@@ -19,13 +19,14 @@ import { publishedReleases, previewBuildDecision } from './release-history.mjs';
 import { assertPublishedPromotion } from './release-promotion.mjs';
 import { createReleaseChangelog, writeReleaseChangelog } from './release-changelog.mjs';
 
-export function prepareScheduledBranch({ schedule, now = new Date(), root = process.cwd(), releases = publishedReleases(root), promotionGuard = assertPublishedPromotion }) {
+export function prepareScheduledBranch({ schedule, now = new Date(), root = process.cwd(), releases = publishedReleases(root), promotionGuard = assertPublishedPromotion, onlyChannel = false, releaseDateOverride }) {
   const channel = resolveScheduledChannel(schedule);
-  const releaseTime = targetReleaseTime(now);
+  if (releaseDateOverride && !/^\d{4}-\d\d-\d\d$/.test(releaseDateOverride)) throw new Error('Invalid frozen release date');
+  const releaseTime = releaseDateOverride ? new Date(`${releaseDateOverride}T00:00:00Z`) : targetReleaseTime(now);
   const publishAt = releaseTime.toISOString();
   const releaseDate = publishAt.slice(0, 10);
   const due = dueReleaseChannels(now);
-  const orderedChannels = CHANNEL_PRIORITY.filter(ch => due.includes(ch) || ch === channel);
+  const orderedChannels = onlyChannel ? [channel] : CHANNEL_PRIORITY.filter(ch => due.includes(ch) || ch === channel);
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
 
   git('fetch', 'origin', '--tags');

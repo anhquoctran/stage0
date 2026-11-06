@@ -1,5 +1,6 @@
 import { policy, releaseChannel } from './release-channels.mjs';
 import { RELEASE_REPOSITORY, releaseGit, releaseSource } from './release-history.mjs';
+import { assertRollupPullRequest, rollupBranchDate } from './release-rollup.mjs';
 import { fetchPromotionSource } from './release-promotion-source.mjs';
 export { fetchPromotionSource } from './release-promotion-source.mjs';
 import { promotionApi, assertPromotionSecurity } from './release-promotion-github.mjs';
@@ -21,7 +22,7 @@ export function parsePromotionBranch(branch, channel) {
 }
 
 export function assertCandidateAge(candidate, channel, now = new Date()) {
-  const hours = promotionRoute(channel).minimumAgeHours;
+  const hours = promotionRoute(channel).hotfixMinimumAgeHours;
   if (!Number.isFinite(now.getTime()) || !Number.isFinite(candidate.readySince)
     || now.getTime() - candidate.readySince < hours * 3600000) {
     throw new Error(`${candidate.tag} requires ${hours} hours of observation after successful publication/build`);
@@ -46,24 +47,37 @@ export function assertPromotionPullRequest(root, pr, { api = promotionApi, now =
     throw new Error('Promotion requires a ready PR inside the canonical repository');
   }
   const hotfix = new RegExp(`^hotfix/(?:${pr.base.ref}|sync-${pr.base.ref})/[a-z0-9][a-z0-9._/-]*$`, 'i').test(pr.head.ref);
-  const declared = pr.body?.match(/^Stage0-Candidate: (v[^\s]+)$/gm) || [];
-  const tag = hotfix && declared.length === 1
-    ? parsePromotionBranch(`promotion/${channel}/${declared[0].slice('Stage0-Candidate: '.length)}`, channel)
-    : parsePromotionBranch(pr.head.ref, channel);
-  const candidate = fetchPromotionSource(root, tag, api);
-  assertCandidateAge(candidate, channel, now);
-  let baseSha = pr.base.sha;
-  if (merged) {
-    releaseGit(root, 'fetch', 'origin', pr.merge_commit_sha);
-    const parents = releaseGit(root, 'show', '-s', '--format=%P', pr.merge_commit_sha).split(' ');
-    if (parents.length !== 2 || parents[1] !== pr.head.sha) throw new Error('Use a merge commit, never squash/rebase a promotion');
-    baseSha = parents[0];
+  let candidate;
+  if (rollupBranchDate(pr.head.ref, channel)) {
+    if (merged) {
+      releaseGit(root, 'fetch', 'origin', pr.merge_commit_sha);
+      const parents = releaseGit(root, 'show', '-s', '--format=%P', pr.merge_commit_sha).split(' ');
+      if (parents.length !== 2 || parents[1] !== pr.head.sha) throw new Error('Use a merge commit, never squash/rebase a promotion');
+    }
+    candidate = assertRollupPullRequest(root, pr, channel, { api, now, merged });
+    const base = merged ? releaseGit(root, 'show', '-s', '--format=%P', pr.merge_commit_sha).split(' ')[0] : pr.base.sha;
+    assertPromotionTree(root, base, pr.head.sha, pr.head.sha);
+  } else {
+    // Urgent certified hotfixes retain the explicit adjacent-candidate route.
+    if (!hotfix) throw new Error('Regular promotions require a complete calendar-period rollup, not one candidate tag');
+    const declared = pr.body?.match(/^Stage0-Candidate: (v[^\s]+)$/gm) || [];
+    if (declared.length !== 1) throw new Error('Declare exactly one Stage0-Candidate for a certified hotfix');
+    const tag = parsePromotionBranch(`promotion/${channel}/${declared[0].slice('Stage0-Candidate: '.length)}`, channel);
+    candidate = fetchPromotionSource(root, tag, api);
+    assertCandidateAge(candidate, channel, now);
+    let baseSha = pr.base.sha;
+    if (merged) {
+      releaseGit(root, 'fetch', 'origin', pr.merge_commit_sha);
+      const parents = releaseGit(root, 'show', '-s', '--format=%P', pr.merge_commit_sha).split(' ');
+      if (parents.length !== 2 || parents[1] !== pr.head.sha) throw new Error('Use a merge commit, never squash/rebase a promotion');
+      baseSha = parents[0];
+    }
+    releaseGit(root, 'fetch', 'origin', baseSha, pr.head.sha);
+    if (releaseGit(root, 'rev-parse', `${pr.head.sha}^{tree}`) !== releaseGit(root, 'rev-parse', `${candidate.sourceSha}^{tree}`)) {
+      throw new Error('Hotfix must have the exact content of its certified lower-channel candidate');
+    }
+    assertPromotionTree(root, baseSha, pr.head.sha, pr.head.sha);
   }
-  releaseGit(root, 'fetch', 'origin', baseSha, pr.head.sha);
-  if (hotfix && releaseGit(root, 'rev-parse', `${pr.head.sha}^{tree}`) !== releaseGit(root, 'rev-parse', `${candidate.sourceSha}^{tree}`)) {
-    throw new Error('Hotfix must have the exact content of its certified lower-channel candidate');
-  }
-  assertPromotionTree(root, baseSha, pr.head.sha, hotfix ? pr.head.sha : candidate.sourceSha);
   assertPromotionSecurity(pr, api, { merged });
   if (!pr.body?.includes('- [x] Smoke-tested install/update, launch, diff and reviewer on supported platforms.')
     || !pr.body?.includes('- [x] Reviewed changes and known issues; ready for this channel.')) {

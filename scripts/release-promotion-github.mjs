@@ -14,6 +14,8 @@ export function promotionApi(endpoint, { method = 'GET', body, paginated = false
   return paginated ? value.flat() : value;
 }
 
+export class InvalidReleaseCandidate extends Error {}
+
 export const releaseTargets = {
   'x86_64-unknown-linux-gnu': ['.AppImage', '.deb', '.rpm'],
   'aarch64-unknown-linux-gnu': ['.deb', '.rpm'],
@@ -24,27 +26,28 @@ export const releaseTargets = {
 };
 
 export function assertCandidateBuild({ release, tagSha, runs, jobsForRun }) {
-  if (release.draft || !release.prerelease || !release.published_at) throw new Error('Candidate must be a published preview release');
+  if (release.draft || !release.prerelease || !release.published_at) throw new InvalidReleaseCandidate('Candidate must be a published preview release');
   const run = runs.filter(run => run.head_sha === tagSha && run.head_branch === release.tag_name
     && run.path === '.github/workflows/release.yml')
     .sort((a, b) => b.run_number - a.run_number || b.run_attempt - a.run_attempt)[0];
   if (!run || run.conclusion !== 'success' || run.status !== 'completed') {
-    throw new Error('Latest Release Stage0 run for the exact candidate tag/SHA must complete successfully');
+    throw new InvalidReleaseCandidate('Latest Release Stage0 run for the exact candidate tag/SHA must complete successfully');
   }
+  if (!Number.isFinite(Date.parse(run.updated_at))) throw new InvalidReleaseCandidate('Candidate build completion timestamp is invalid');
   const jobs = jobsForRun(run);
   const success = name => jobs.some(job => job.name.split(' / ').at(-1) === name && job.conclusion === 'success');
-  if (!success('validate') || !success('publish')) throw new Error('Candidate validation/publication did not succeed');
+  if (!success('validate') || !success('publish')) throw new InvalidReleaseCandidate('Candidate validation/publication did not succeed');
   for (const target of Object.keys(releaseTargets)) {
     if (!jobs.some(job => job.name.split(' / ').at(-1).startsWith('build (')
-      && job.name.includes(target) && job.conclusion === 'success')) throw new Error(`Candidate build missing: ${target}`);
+      && job.name.includes(target) && job.conclusion === 'success')) throw new InvalidReleaseCandidate(`Candidate build missing: ${target}`);
   }
   const assets = release.assets || [];
-  if (new Set(assets.map(asset => asset.name)).size !== assets.length) throw new Error('Duplicate candidate assets');
+  if (new Set(assets.map(asset => asset.name)).size !== assets.length) throw new InvalidReleaseCandidate('Duplicate candidate assets');
   const requireAsset = name => {
     const asset = assets.find(asset => asset.name === name);
     if (!asset || asset.state !== 'uploaded' || !(asset.size > 0)
       || !Number.isFinite(Date.parse(asset.updated_at)) || Date.parse(asset.updated_at) > Date.parse(run.updated_at)) {
-      throw new Error(`Missing, incomplete or replaced candidate asset: ${name}`);
+      throw new InvalidReleaseCandidate(`Missing, incomplete or replaced candidate asset: ${name}`);
     }
     return asset;
   };
@@ -53,7 +56,7 @@ export function assertCandidateBuild({ release, tagSha, runs, jobsForRun }) {
   for (const [target, extensions] of Object.entries(releaseTargets)) {
     for (const extension of extensions) {
       const matches = assets.filter(asset => asset.name.startsWith(`${target}-`) && asset.name.endsWith(extension));
-      if (matches.length !== 1) throw new Error(`Candidate package missing/ambiguous: ${target} ${extension}`);
+      if (matches.length !== 1) throw new InvalidReleaseCandidate(`Candidate package missing/ambiguous: ${target} ${extension}`);
       requireAsset(matches[0].name);
       // Tauri signs updater archives; DMGs are covered by published checksums.
       if (extension !== '.dmg') requireAsset(`${matches[0].name}.sig`);
@@ -62,8 +65,7 @@ export function assertCandidateBuild({ release, tagSha, runs, jobsForRun }) {
   return { run, readySince: Math.max(Date.parse(release.published_at), Date.parse(run.updated_at)) };
 }
 
-export function candidateEvidence(tag, tagSha, api = promotionApi) {
-  const release = api(`releases/tags/${encodeURIComponent(tag)}`);
+export function candidateEvidence(tag, tagSha, api = promotionApi, { release = api(`releases/tags/${encodeURIComponent(tag)}`) } = {}) {
   const pages = api(`actions/workflows/release.yml/runs?head_sha=${tagSha}&per_page=100`, { paginated: true });
   const runs = pages.flatMap(page => page.workflow_runs);
   const result = assertCandidateBuild({ release, tagSha, runs,

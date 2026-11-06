@@ -1,6 +1,9 @@
-name: Promote tested release
+name: Accumulate periodic releases
 
 on:
+  schedule:
+    - cron: '0 0 27 * *'
+    - cron: '0 0 1 1,4,7,10 *'
   workflow_dispatch:
     inputs:
       channel:
@@ -8,16 +11,16 @@ on:
         required: true
         type: choice
         options: [beta, stable]
-      candidate:
-        description: 'Published source tag, e.g. v0.0.10-nightly or v0.0.11-beta'
-        required: true
+      release_date:
+        description: 'UTC release date: Beta YYYY-MM-27 or Stable quarter day 1 (default: today)'
+        required: false
         type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: stage0-promotion-${{ inputs.channel }}
+  group: stage0-promotion-${{ inputs.channel || github.event.schedule }}
   cancel-in-progress: false
 
 jobs:
@@ -34,14 +37,14 @@ jobs:
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: true
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24'
           package-manager-cache: false
-      - name: Verify candidate and open a frozen promotion PR
+      - name: Accumulate all eligible source builds and open a reviewed rollup PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PROMOTION_CHANNEL: ${{ inputs.channel }}
-          PROMOTION_TAG: ${{ inputs.candidate }}
+          PROMOTION_CHANNEL: ${{ inputs.channel || (github.event.schedule == '0 0 27 * *' && 'beta' || 'stable') }}
+          PROMOTION_DATE: ${{ inputs.release_date }}
         run: node scripts/release-promotion-cli.mjs create

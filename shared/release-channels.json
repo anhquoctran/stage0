@@ -6,16 +6,18 @@
   "previewActivityHours": 24,
   "promotion": {
     "requiredCheck": "Release promotion policy",
+    "periodTimeZone": "UTC",
+    "selection": "all-eligible-published-builds-with-human-QA",
     "routes": {
       "beta": {
         "from": "nightly",
         "branch": "beta",
-        "minimumAgeHours": 24
+        "hotfixMinimumAgeHours": 24
       },
       "stable": {
         "from": "beta",
         "branch": "main",
-        "minimumAgeHours": 168
+        "hotfixMinimumAgeHours": 168
       }
     }
   },
@@ -53,7 +55,7 @@
       "stability": "stabilizing",
       "releaseDayOfMonth": 27,
       "releaseTimeUtc": "00:00",
-      "cron": "0 23 26 * *"
+      "cron": "0 0 27 * *"
     },
     "stable": {
       "branch": "origin/main",
@@ -62,8 +64,8 @@
       "stability": "stable",
       "releaseDayOfQuarter": 1,
       "releaseTimeUtc": "00:00",
-      "cron": "0 23 31 3,12 *",
-      "crons": ["0 23 31 3,12 *", "0 23 30 6,9 *"]
+      "cron": "0 0 1 1,4,7,10 *",
+      "crons": ["0 0 1 1,4,7,10 *"]
     }
   }
 }

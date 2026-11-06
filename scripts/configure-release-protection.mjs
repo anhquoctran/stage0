@@ -6,9 +6,13 @@ import { promotionApi } from './release-promotion-github.mjs';
 
 export const enforcementFiles = [
   '.github/workflows/promotion-policy.yml', '.github/workflows/promote-release.yml',
+  '.github/workflows/publish-rollup.yml',
   '.github/workflows/release.yml', '.github/workflows/scheduled-release.yml',
   'scripts/release-promotion.mjs', 'scripts/release-promotion-github.mjs',
-  'scripts/release-promotion-cli.mjs', 'scripts/manual-release.mjs',
+  'scripts/release-promotion-source.mjs', 'scripts/release-period.mjs',
+  'scripts/release-rollup.mjs', 'scripts/release-rollup-tree.mjs',
+  'scripts/release-rollup-controller.mjs', 'scripts/release-rollup-publish.mjs',
+  'scripts/dispatch-tag-release.mjs', 'scripts/release-promotion-cli.mjs', 'scripts/manual-release.mjs',
   'scripts/prepare-release.mjs', 'scripts/release-channels.mjs',
   'scripts/release-history.mjs', 'shared/release-channels.json',
 ];
