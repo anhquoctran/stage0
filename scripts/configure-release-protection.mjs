@@ -2,9 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { policy } from './release-channels.mjs';
+import { validateCatalog } from './release-regression-runner.mjs';
 import { promotionApi } from './release-promotion-github.mjs';
 
 export const enforcementFiles = [
+  '.github/workflows/regression.yml', 'scripts/release-regression-runner.mjs',
+  'scripts/release-regression-preservation.mjs',
   '.github/workflows/promotion-policy.yml', '.github/workflows/promote-release.yml',
   '.github/workflows/publish-rollup.yml',
   '.github/workflows/release.yml', '.github/workflows/scheduled-release.yml',
@@ -19,6 +22,7 @@ export const enforcementFiles = [
 
 export function releaseProtectionRules() {
   const common = [{ type: 'deletion' }, { type: 'non_fast_forward' }];
+  const regressions = ['ubuntu-22.04', 'macos-latest', 'windows-latest'].map(os => ({ context: `Regression gate (${os})`, integration_id: 15368 }));
   const pr = approvals => ({ type: 'pull_request', parameters: {
     required_approving_review_count: approvals, dismiss_stale_reviews_on_push: true,
     require_code_owner_review: false, require_last_push_approval: approvals > 0,
@@ -28,7 +32,9 @@ export function releaseProtectionRules() {
     bypass_actors: [], conditions: { ref_name: { include: branches.map(branch => `refs/heads/${branch}`), exclude: [] } }, rules,
   });
   return [
-    ruleset('Stage0 protected channel branches', policy.gitFlow.protectedBranches, [...common, pr(0)]),
+    ruleset('Stage0 protected channel branches', policy.gitFlow.protectedBranches, [...common, pr(0), { type: 'required_status_checks', parameters: {
+      strict_required_status_checks_policy: true, do_not_enforce_on_create: false, required_status_checks: regressions,
+    } }]),
     ruleset('Stage0 adjacent release promotion', ['beta', 'main'], [pr(1), { type: 'required_status_checks', parameters: {
       strict_required_status_checks_policy: true, do_not_enforce_on_create: false,
       required_status_checks: [{ context: policy.promotion.requiredCheck, integration_id: 15368 }],
@@ -53,6 +59,12 @@ export function configureReleaseProtection({ apply = false, api = promotionApi }
         if (remote.encoding !== 'base64' || !Buffer.from(remote.content, 'base64').equals(bytes)) issues.push(`${branch}: deploy ${file}`);
       } catch { issues.push(`${branch}: unavailable ${file}`); }
     }
+  }
+  for (const branch of policy.gitFlow.protectedBranches) {
+    try {
+      const remote = api(`contents/shared/release-regressions.json?ref=${branch}`);
+      validateCatalog(JSON.parse(Buffer.from(remote.content, 'base64')));
+    } catch { issues.push(`${branch}: deploy a valid feature-appropriate protected regression catalog`); }
   }
   const workflowPermissions = api('actions/permissions/workflow');
   if (!workflowPermissions.can_approve_pull_request_reviews) issues.push('Enable Actions → General → Allow GitHub Actions to create and approve pull requests (the controller never approves).');

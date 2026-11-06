@@ -1,3 +1,4 @@
+import { seedRegressionFixture } from './helpers/regressionFixture.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs';
@@ -86,6 +87,7 @@ function gitFixture(t) {
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
   git('init', '-b', 'main'); git('config', 'user.name', 'Fixture'); git('config', 'user.email', 'test@example.test');
+  seedRegressionFixture(root);
   fs.writeFileSync(path.join(root, 'app.txt'), 'original'); git('add', '.'); git('commit', '-m', 'Base');
   const base = git('rev-parse', 'HEAD');
   git('checkout', '-b', 'nightly'); fs.writeFileSync(path.join(root, 'app.txt'), 'tested candidate');

@@ -38,7 +38,7 @@ test('rules protect all channels without bypass and require reviewed, current, a
 test('dry run never writes and missing rollout/PR permissions fail before any server mutation', () => {
   const missing = fakeApi({ missing: true });
   const report = configureReleaseProtection({ api: missing.api });
-  assert.equal(report.ready, false); assert.equal(report.issues.length, enforcementFiles.length * 4);
+  assert.equal(report.ready, false); assert.equal(report.issues.length, (enforcementFiles.length + 1) * 4);
   assert.equal(missing.writes.length, 0);
   assert.throws(() => configureReleaseProtection({ api: missing.api, apply: true }), /complete rollout/);
   assert.equal(missing.writes.length, 0);

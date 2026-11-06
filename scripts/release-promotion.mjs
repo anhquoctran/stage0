@@ -1,5 +1,6 @@
 import { policy, releaseChannel } from './release-channels.mjs';
 import { RELEASE_REPOSITORY, releaseGit, releaseSource } from './release-history.mjs';
+import { assertRegressionRefs } from './release-regression-preservation.mjs';
 import { assertRollupPullRequest, rollupBranchDate } from './release-rollup.mjs';
 import { fetchPromotionSource } from './release-promotion-source.mjs';
 export { fetchPromotionSource } from './release-promotion-source.mjs';
@@ -77,6 +78,11 @@ export function assertPromotionPullRequest(root, pr, { api = promotionApi, now =
       throw new Error('Hotfix must have the exact content of its certified lower-channel candidate');
     }
     assertPromotionTree(root, baseSha, pr.head.sha, pr.head.sha);
+  }
+  const regressionBase = merged ? releaseGit(root, 'show', '-s', '--format=%P', pr.merge_commit_sha).split(' ')[0] : pr.base.sha;
+  const policyChanges = assertRegressionRefs(root, regressionBase, pr.head.sha);
+  if (policyChanges.length && !pr.body?.includes('- [x] Regression control-plane changes reviewed.')) {
+    throw new Error('Regression control-plane changes require explicit review acknowledgement');
   }
   assertPromotionSecurity(pr, api, { merged });
   if (!pr.body?.includes('- [x] Smoke-tested install/update, launch, diff and reviewer on supported platforms.')

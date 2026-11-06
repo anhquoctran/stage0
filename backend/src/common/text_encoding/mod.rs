@@ -39,3 +39,6 @@ pub fn decode_buffer(bytes: &[u8], encoding: Option<TextEncoding>) -> Result<Dec
 mod reader_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod regression_test_contracts;

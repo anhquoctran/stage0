@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { assertNoTargetReverts, assertRegressionRefs } from './release-regression-preservation.mjs';
 import { releaseGit, isReleaseMetadata } from './release-history.mjs';
 
 export const ROLLUP_PATH = '.github/release-rollup.json';
@@ -52,6 +53,7 @@ export function rollupCommits(root, baseSha, sources) {
 
 /** Merge every eligible snapshot, retaining fix/revert order and original ancestry. */
 export function composeRollup(root, manifest) {
+  assertNoTargetReverts(root, manifest.baseSha, manifest.sources);
   let current = manifest.baseSha;
   const ledger = releaseGit(root, 'ls-tree', manifest.baseSha, '--', ROLLUP_PATH).match(/^100644 blob ([a-f0-9]{40})\t/)?.[1];
   for (const source of manifest.sources) {
@@ -69,5 +71,6 @@ export function composeRollup(root, manifest) {
   const blob = plumbing(root, ['hash-object', '-w', '--stdin'], { input: `${JSON.stringify(manifest, null, 2)}\n` });
   const tree = ledgerTree(root, contentTree, blob);
   const sha = commitTree(root, tree, [current], `chore(release): assemble ${manifest.channel} ${manifest.releaseDate}\n`, manifest.window.end);
+  assertRegressionRefs(root, manifest.baseSha, sha);
   return { sha, tree, changed };
 }
