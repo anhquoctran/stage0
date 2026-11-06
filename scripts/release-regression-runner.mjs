@@ -91,7 +91,7 @@ export function regressionPlan(root, baselineSha, { bootstrap = false } = {}) {
     if (!hasBaseline && fs.existsSync(safeFile(root, prefix.replace(/\/$/, '')))) {
       if (fs.statSync(path.join(root, prefix)).isFile()) candidates.add(prefix);
       else for (const file of fs.readdirSync(path.join(root, prefix), { recursive: true })) {
-        if (fs.statSync(path.join(root, prefix, file)).isFile()) candidates.add(prefix + file);
+        if (fs.statSync(path.join(root, prefix, file)).isFile()) candidates.add(prefix + file.split(path.sep).join('/'));
       }
     }
     for (const file of candidates) collect(file);
