@@ -2640,6 +2640,11 @@
     "taskProgress": {
       "working": "A processar…",
       "ariaLabel": "{{title}}: {{phase}}"
+    },
+    "encoding": {
+      "label": "Codificação do ficheiro",
+      "automatic": "Automática",
+      "loading": "A descodificar ficheiro…"
     }
   },
   "review": {

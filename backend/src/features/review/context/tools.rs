@@ -1,4 +1,4 @@
-use super::{git, ReviewContext};
+use super::ReviewContext;
 use crate::features::review::{schemas, security};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -106,7 +106,7 @@ impl ReviewContext {
                 self.guards
                     .evaluate_review_read("search_code", None, max_matches)
                     .map_err(|_| "Code search blocked by Stage0 guardrail policy")?;
-                let output = git(
+                let output = super::snapshot::git_bytes(
                     &self.snapshot.repo_path,
                     &[
                         "grep",
@@ -122,6 +122,10 @@ impl ReviewContext {
                     ],
                     128 * 1024,
                 )?;
+                // Grep's source bytes may use a legacy encoding. Only parse
+                // UTF-8 path/line metadata here; source text below is re-read
+                // and decoded from the complete immutable blob before egress.
+                let output = String::from_utf8_lossy(&output);
                 let mut matches = Vec::new();
                 let mut blobs = HashMap::new();
                 let mut more = false;

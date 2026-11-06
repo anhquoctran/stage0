@@ -5,6 +5,11 @@ use std::collections::BTreeSet;
 use std::time::Duration;
 
 pub fn git(repo: &str, args: &[&str], cap: usize) -> Result<String, String> {
+    String::from_utf8(git_bytes(repo, args, cap)?)
+        .map_err(|_| "Non-UTF-8 Git metadata is not supported".into())
+}
+
+pub(super) fn git_bytes(repo: &str, args: &[&str], cap: usize) -> Result<Vec<u8>, String> {
     let mut literal = vec![
         "--no-pager",
         "--literal-pathspecs",
@@ -44,8 +49,7 @@ pub fn git(repo: &str, args: &[&str], cap: usize) -> Result<String, String> {
     {
         return Err("Could not read the requested Git snapshot object".into());
     }
-    String::from_utf8(result.stdout)
-        .map_err(|_| "Non-UTF-8 Git objects are not reviewable as text".into())
+    Ok(result.stdout)
 }
 
 pub fn resolve_snapshot_ref(repo: &str, reference: &str) -> Result<String, String> {

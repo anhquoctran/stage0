@@ -2633,6 +2633,11 @@
     "taskProgress": {
       "working": "Working…",
       "ariaLabel": "{{title}}: {{phase}}"
+    },
+    "encoding": {
+      "label": "फ़ाइल एन्कोडिंग",
+      "automatic": "स्वचालित",
+      "loading": "फ़ाइल डिकोड की जा रही है…"
     }
   },
   "review": {

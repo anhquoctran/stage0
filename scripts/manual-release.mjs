@@ -4,6 +4,9 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { nextReleaseVersion, releaseChannel } from './release-channels.mjs';
 import { setReleaseVersion } from './prepare-release.mjs';
+import { publishedReleases, previewBuildDecision, releaseSource } from './release-history.mjs';
+import { assertPublishedPromotion } from './release-promotion.mjs';
+import { createReleaseChangelog } from './release-changelog.mjs';
 
 /** Legacy releases from other version lines do not undo the deliberate 0.0 reset. */
 export function nextStableVersion(current, tags) {
@@ -11,8 +14,9 @@ export function nextStableVersion(current, tags) {
   return nextReleaseVersion('stable', tags, current);
 }
 
-export function prepareManualRelease({ runId, sourceSha, root = process.cwd() }) {
+export function prepareManualRelease({ runId, sourceSha, root = process.cwd(), releases = publishedReleases(root), promotionGuard = assertPublishedPromotion }) {
   if (!/^\d+$/.test(runId) || !/^[a-f0-9]{40}$/.test(sourceSha)) throw new Error('Invalid Actions release identity');
+  promotionGuard({ root, channel: 'stable', sourceSha });
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
   const tags = git('tag', '--list', 'v*').split('\n').filter(Boolean);
   // A rerun of the same Actions run must rebuild the same immutable snapshot.
@@ -26,7 +30,9 @@ export function prepareManualRelease({ runId, sourceSha, root = process.cwd() })
   git('checkout', '--detach', sourceSha);
   const current = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
   const version = nextStableVersion(current, tags);
-  setReleaseVersion(version, undefined, root);
+  const { previousTag } = previewBuildDecision({ root, channel: 'stable', sourceSha, releases });
+  const notes = createReleaseChangelog({ root, version, sourceSha, previousTag });
+  setReleaseVersion(version, undefined, root, notes);
   git('config', 'user.name', 'github-actions[bot]');
   git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com');
   git('add', 'package.json', 'backend/Cargo.toml', 'backend/Cargo.lock', 'backend/tauri.conf.json',
@@ -41,9 +47,11 @@ export function prepareManualRelease({ runId, sourceSha, root = process.cwd() })
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const root = process.cwd();
+  const releases = publishedReleases(root);
   let result;
   if (process.env.RELEASE_EVENT === 'workflow_dispatch' && process.env.RELEASE_REF_TYPE !== 'tag') {
-    result = prepareManualRelease({ runId: process.env.RELEASE_RUN_ID, sourceSha: process.env.RELEASE_SOURCE_SHA });
+    result = prepareManualRelease({ runId: process.env.RELEASE_RUN_ID, sourceSha: process.env.RELEASE_SOURCE_SHA, releases });
   } else {
     const tag = process.env.RELEASE_INPUT_TAG;
     if (!tag?.startsWith('v')) throw new Error('Release tag must start with v');
@@ -54,8 +62,14 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     result = { tag, sha: execFileSync('git', ['rev-parse', '--verify', `${tag}^{commit}`], { encoding: 'utf8' }).trim() };
   }
   const channel = releaseChannel(result.tag.slice(1));
+  const sourceSha = releaseSource(root, result.sha);
+  assertPublishedPromotion({ root, channel, sourceSha });
+  const decision = previewBuildDecision({ root, channel, sourceSha, releases, tag: result.tag });
   if (process.env.GITHUB_OUTPUT) {
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${result.tag}\nsha=${result.sha}\nchannel=${channel}\n`);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${result.tag}\nsha=${result.sha}\nchannel=${channel}\nshould_build=${decision.shouldBuild}\nprevious_tag=${decision.previousTag}\nsource_sha=${sourceSha}\n`);
+  }
+  if (!decision.shouldBuild && process.env.GITHUB_STEP_SUMMARY) {
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\nSkipped ${channel}: ${decision.reason}.\n`);
   }
   console.log(`Release snapshot: ${result.tag} (${result.sha})`);
 }

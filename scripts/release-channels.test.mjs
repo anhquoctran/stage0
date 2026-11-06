@@ -186,14 +186,14 @@ test('scheduled preparation checks out origin/nightly, origin/beta and origin/ma
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const origin = path.join(dir, 'origin.git'), root = path.join(dir, 'source');
   fs.mkdirSync(root);
-  const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, GIT_AUTHOR_DATE: '2026-11-01T22:00:00Z', GIT_COMMITTER_DATE: '2026-11-01T22:00:00Z' } }).trim();
   git('init', '--bare', origin);
   git('init', '-b', 'main');
   git('config', 'user.name', 'Fixture');
   git('config', 'user.email', 'fixture@example.test');
   git('remote', 'add', 'origin', origin);
   for (const sub of ['scripts', 'shared', 'backend', 'website']) fs.mkdirSync(path.join(root, sub));
-  for (const name of ['prepare-release.mjs', 'release-channels.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
+  for (const name of ['prepare-release.mjs', 'release-promotion.mjs', 'release-promotion-github.mjs', 'release-channels.mjs', 'release-history.mjs', 'release-changelog.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
     fs.copyFileSync(new URL(name, import.meta.url), path.join(root, 'scripts', name));
   }
   fs.copyFileSync(new URL('../shared/release-channels.json', import.meta.url), path.join(root, 'shared/release-channels.json'));
@@ -215,25 +215,37 @@ test('scheduled preparation checks out origin/nightly, origin/beta and origin/ma
 
   git('checkout', '-b', 'beta', 'develop');
   git('push', '-u', 'origin', 'beta');
-  const betaSha = git('rev-parse', 'HEAD');
+  let betaSha = git('rev-parse', 'HEAD');
 
   git('checkout', '-b', 'nightly', 'develop');
   fs.writeFileSync(path.join(root, 'scripts/prepare-release.mjs'), 'throw new Error("channel tooling must not execute in the main controller");');
   git('commit', '-am', 'Untrusted channel tooling fixture');
   git('push', '-u', 'origin', 'nightly');
-  const nightlySha = git('rev-parse', 'HEAD');
+  let nightlySha = git('rev-parse', 'HEAD');
   git('checkout', 'main');
 
   // 1. Regular day (Nov 2, 00:00 UTC): Nightly gets v0.0.2-nightly from origin/nightly
-  const nightlyDay1 = prepareScheduledBranch({ schedule: '0 23 * * *', now: new Date('2026-11-01T23:00:00Z'), root });
+  const nightlyDay1 = prepareScheduledBranch({ promotionGuard: () => null, schedule: '0 23 * * *', now: new Date('2026-11-01T23:00:00Z'), root, releases: [] });
   assert.equal(nightlyDay1.tag, 'v0.0.2-nightly');
   assert.equal(nightlyDay1.branch, 'origin/nightly');
   assert.equal(git('rev-parse', `${nightlyDay1.tag}^`), nightlySha);
   assert.equal(JSON.parse(git('show', `${nightlyDay1.tag}:backend/about.json`)).releaseDate, '2026-11-02');
 
+  const updateBranch = (branch, date) => {
+    git('checkout', branch);
+    fs.writeFileSync(path.join(root, 'change.txt'), date);
+    git('add', 'change.txt');
+    execFileSync('git', ['commit', '-m', `Source change on ${date}`], { cwd: root,
+      env: { ...process.env, GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date } });
+    git('push', 'origin', branch);
+    return git('rev-parse', 'HEAD');
+  };
+  nightlySha = updateBranch('nightly', '2026-11-26T22:00:00Z');
+  betaSha = updateBranch('beta', '2026-11-26T22:00:00Z');
+
   // 2. 27th of month (Nov 27, 00:00 UTC): even if Beta's cron runs first, Nightly gets v0.0.3-nightly and Beta gets v0.0.4-beta
-  const betaOn27 = prepareScheduledBranch({ schedule: '0 23 26 * *', now: new Date('2026-11-26T23:00:00Z'), root });
-  const nightlyOn27 = prepareScheduledBranch({ schedule: '0 23 * * *', now: new Date('2026-11-26T23:02:00Z'), root });
+  const betaOn27 = prepareScheduledBranch({ promotionGuard: () => null, schedule: '0 23 26 * *', now: new Date('2026-11-26T23:00:00Z'), root, releases: [] });
+  const nightlyOn27 = prepareScheduledBranch({ promotionGuard: () => null, schedule: '0 23 * * *', now: new Date('2026-11-26T23:02:00Z'), root, releases: [] });
   assert.equal(nightlyOn27.tag, 'v0.0.3-nightly');
   assert.equal(nightlyOn27.reused, true);
   assert.equal(betaOn27.tag, 'v0.0.4-beta');
@@ -242,9 +254,11 @@ test('scheduled preparation checks out origin/nightly, origin/beta and origin/ma
   assert.equal(git('rev-parse', `${betaOn27.tag}^`), betaSha);
   assert.equal(JSON.parse(git('show', `${betaOn27.tag}:backend/about.json`)).releaseDate, '2026-11-27');
 
+  nightlySha = updateBranch('nightly', '2026-12-31T22:00:00Z');
+
   // 3. 1st of quarter (Jan 1, 2027, 00:00 UTC): even if Stable's cron runs first, Nightly gets v0.0.5-nightly and Stable gets v0.0.6
-  const stableOnQ1 = prepareScheduledBranch({ schedule: '0 23 31 3,12 *', now: new Date('2026-12-31T23:00:00Z'), root });
-  const nightlyOnQ1 = prepareScheduledBranch({ schedule: '0 23 * * *', now: new Date('2026-12-31T23:01:00Z'), root });
+  const stableOnQ1 = prepareScheduledBranch({ promotionGuard: () => null, schedule: '0 23 31 3,12 *', now: new Date('2026-12-31T23:00:00Z'), root, releases: [] });
+  const nightlyOnQ1 = prepareScheduledBranch({ promotionGuard: () => null, schedule: '0 23 * * *', now: new Date('2026-12-31T23:01:00Z'), root, releases: [] });
   assert.equal(nightlyOnQ1.tag, 'v0.0.5-nightly');
   assert.equal(nightlyOnQ1.reused, true);
   assert.equal(stableOnQ1.tag, 'v0.0.6');

@@ -3,6 +3,22 @@
   "epoch": "2026-10-01T00:00:00Z",
   "developmentBranch": "origin/develop",
   "leadMinutes": 60,
+  "previewActivityHours": 24,
+  "promotion": {
+    "requiredCheck": "Release promotion policy",
+    "routes": {
+      "beta": {
+        "from": "nightly",
+        "branch": "beta",
+        "minimumAgeHours": 24
+      },
+      "stable": {
+        "from": "beta",
+        "branch": "main",
+        "minimumAgeHours": 168
+      }
+    }
+  },
   "gitFlow": {
     "protectedBranches": ["main", "beta", "nightly", "develop"],
     "defaultBaseBranch": "develop",

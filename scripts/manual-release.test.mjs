@@ -6,19 +6,20 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { nextStableVersion, prepareManualRelease } from './manual-release.mjs';
 
-function fixture(t) {
+function fixture(t, date) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'stage0-manual-release-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const origin = path.join(dir, 'origin.git'), root = path.join(dir, 'source');
   fs.mkdirSync(root);
-  const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, ...(date ? { GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date } : {}) } }).trim();
   git('init', '--bare', origin);
   git('init');
   git('config', 'user.name', 'Fixture');
   git('config', 'user.email', 'fixture@example.test');
   git('remote', 'add', 'origin', origin);
   for (const dir of ['scripts', 'shared', 'backend', 'website']) fs.mkdirSync(path.join(root, dir));
-  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-channels.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
+  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-promotion.mjs', 'release-promotion-github.mjs', 'release-channels.mjs', 'release-history.mjs', 'release-changelog.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
     fs.copyFileSync(new URL(name, import.meta.url), path.join(root, 'scripts', name));
   }
   fs.copyFileSync(new URL('../shared/release-channels.json', import.meta.url), path.join(root, 'shared/release-channels.json'));
@@ -31,7 +32,10 @@ function fixture(t) {
   git('add', '.'); git('commit', '-m', 'Source snapshot');
   const sourceSha = git('rev-parse', 'HEAD');
   const branch = git('branch', '--show-current');
-  return { root, origin, git, sourceSha, branch };
+  const bin = path.join(dir, 'bin');
+  fs.mkdirSync(bin);
+  fs.writeFileSync(path.join(bin, 'gh'), '#!/bin/sh\nprintf \'[[]]\\n\'\n', { mode: 0o755 });
+  return { root, origin, git, sourceSha, branch, bin };
 }
 
 test('manual dispatch chooses the next free stable patch across all channel tags without reviving legacy 0.1.x', () => {
@@ -45,31 +49,29 @@ test('manual dispatch chooses the next free stable patch across all channel tags
 
 test('one click prepares and pushes an immutable version tag; reruns reuse it and main stays unchanged', t => {
   const f = fixture(t);
-  const first = prepareManualRelease({ root: f.root, runId: '101', sourceSha: f.sourceSha });
+  const first = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] });
   assert.equal(first.tag, 'v0.0.1');
   assert.equal(f.git('rev-parse', `refs/heads/${f.branch}`), f.sourceSha);
   assert.notEqual(first.sha, f.sourceSha);
   const remote = execFileSync('git', ['--git-dir', f.origin, 'rev-parse', first.tag], { encoding: 'utf8' }).trim();
   assert.equal(remote, first.sha);
   assert.equal(JSON.parse(f.git('show', `${first.tag}:package.json`)).version, '0.0.1');
-  assert.deepEqual(prepareManualRelease({ root: f.root, runId: '101', sourceSha: f.sourceSha }), first);
-  const second = prepareManualRelease({ root: f.root, runId: '102', sourceSha: f.sourceSha });
+  assert.deepEqual(prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] }), first);
+  const second = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '102', sourceSha: f.sourceSha, releases: [] });
   assert.equal(second.tag, 'v0.0.2');
   assert.equal(JSON.parse(f.git('show', `${second.tag}:backend/about.json`)).packageVersion, '0.0.2');
   assert.equal(f.git('rev-parse', first.tag), first.sha, 'Earlier tags are never rewritten');
   assert.equal(f.git('rev-parse', `refs/heads/${f.branch}`), f.sourceSha);
-  assert.throws(() => prepareManualRelease({ root: f.root, runId: '101', sourceSha: second.sha }), /source mismatch/);
+  assert.throws(() => prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: second.sha, releases: [] }), /source mismatch/);
 });
 
-test('tag dispatch reuses the prepared release without creating another stable version', t => {
+test('actual stable tag dispatch refuses uncertified source without changing tags', t => {
   const f = fixture(t);
-  const release = prepareManualRelease({ root: f.root, runId: '101', sourceSha: f.sourceSha });
-  const output = path.join(f.root, 'outputs');
-  execFileSync(process.execPath, ['scripts/manual-release.mjs'], { cwd: f.root, env: {
-    ...process.env, RELEASE_EVENT: 'workflow_dispatch', RELEASE_REF_TYPE: 'tag',
-    RELEASE_INPUT_TAG: release.tag, RELEASE_SOURCE_SHA: release.sha, GITHUB_OUTPUT: output,
-  } });
-  assert.equal(fs.readFileSync(output, 'utf8'), `tag=${release.tag}\nsha=${release.sha}\nchannel=stable\n`);
+  const release = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] });
+  assert.throws(() => execFileSync(process.execPath, ['scripts/manual-release.mjs'], { cwd: f.root, stdio: 'pipe', env: {
+    ...process.env, PATH: `${f.bin}${path.delimiter}${process.env.PATH}`, RELEASE_EVENT: 'workflow_dispatch', RELEASE_REF_TYPE: 'tag',
+    RELEASE_INPUT_TAG: release.tag, RELEASE_SOURCE_SHA: release.sha,
+  } }), /approved beta promotion PR/);
   assert.equal(f.git('tag', '--list'), release.tag);
   assert.equal(f.git('rev-parse', 'HEAD'), release.sha);
 });
@@ -80,9 +82,31 @@ test('release preparation uses preloaded controller code rather than executing c
   f.git('add', 'scripts/prepare-release.mjs');
   f.git('commit', '-m', 'Change source tooling');
   const sourceSha = f.git('rev-parse', 'HEAD');
-  const release = prepareManualRelease({ root: f.root, runId: '103', sourceSha });
+  const release = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '103', sourceSha, releases: [] });
   assert.equal(JSON.parse(f.git('show', `${release.sha}:package.json`)).version, '0.0.1');
   assert.equal(f.git('show', `${release.sha}:scripts/prepare-release.mjs`), 'throw new Error("untrusted source code executed");');
+});
+
+test('actual preview tag entry points skip stale sources and accept fresh sources without preparing another tag', async t => {
+  for (const event of ['push', 'workflow_dispatch']) {
+    for (const stale of [true, false]) {
+      await t.test(`${event}, ${stale ? 'stale' : 'fresh'}`, t => {
+        const f = fixture(t, stale ? '2000-01-01T00:00:00Z' : undefined);
+        const tag = 'v0.0.2-nightly';
+        f.git('tag', tag);
+        const output = path.join(f.root, 'outputs'), summary = path.join(f.root, 'summary');
+        execFileSync(process.execPath, ['scripts/manual-release.mjs'], { cwd: f.root, env: {
+          ...process.env, PATH: `${f.bin}${path.delimiter}${process.env.PATH}`,
+          RELEASE_EVENT: event, RELEASE_REF_TYPE: 'tag', RELEASE_INPUT_TAG: tag,
+          GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: summary,
+        } });
+        assert.match(fs.readFileSync(output, 'utf8'), new RegExp(`should_build=${!stale}\\n`));
+        assert.equal(f.git('tag', '--list'), tag);
+        assert.equal(f.git('rev-parse', 'HEAD'), f.sourceSha);
+        if (stale) assert.match(fs.readFileSync(summary, 'utf8'), /Skipped nightly: No new source commits in the last 24 hours/);
+      });
+    }
+  }
 });
 
 test('manual UI needs no tag and release jobs pin the event SHA inside the tag run', () => {

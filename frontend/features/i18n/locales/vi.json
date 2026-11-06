@@ -2633,6 +2633,11 @@
     "taskProgress": {
       "working": "Đang xử lý…",
       "ariaLabel": "{{title}}: {{phase}}"
+    },
+    "encoding": {
+      "label": "Encoding của tệp",
+      "automatic": "Tự động",
+      "loading": "Đang giải mã tệp…"
     }
   },
   "review": {

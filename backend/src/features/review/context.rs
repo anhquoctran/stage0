@@ -66,4 +66,6 @@ impl ReviewContext {
 }
 
 #[cfg(test)]
+mod encoding_tests;
+#[cfg(test)]
 mod tests;
