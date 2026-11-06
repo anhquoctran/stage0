@@ -80,6 +80,20 @@ They must never be amended or conflict-resolved in place.
 All standard development **must** branch off `origin/develop` and merge back
 into `develop` via Pull Request.
 
+### One worktree, sequential task branches
+
+Use only `/Users/anhquoctran/Workspaces/stage0`. Do not create additional
+worktrees or temporary checkouts for features, fixes, reviews or parallel tasks.
+Before changing tasks, inspect staged, unstaged and untracked changes and commit
+the current work on its working branch. Preserve unfinished work; do not discard
+it or leave it in a second checkout. If changes are currently on a protected
+branch, move them onto an appropriate working branch before committing.
+
+For each new standard task, fetch `origin`, create a new branch from
+`origin/develop` with an approved prefix, and switch to it in this same directory.
+Keep existing branches and commits available when switching tasks. Hotfixes still
+use the release-branch bases and back-sync requirements in section 3.
+
 ```mermaid
 flowchart LR
     DEV["origin/develop"] -->|"git checkout -b feat/..."| WORK["Working Branch (feat/*, fix/*, refactor/*, ...)"]
