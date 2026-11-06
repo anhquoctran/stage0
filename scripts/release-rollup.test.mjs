@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import test from 'node:test';
 import { releasePeriod, inReleasePeriod, assertPeriodClosed, assertReleaseDay } from './release-period.mjs';
 import { planRollup, assertRollupPullRequest } from './release-rollup.mjs';
@@ -141,7 +140,8 @@ test('a complete reviewed period authorizes only its current merged target, with
   pr.head.ref = 'promotion/beta/v0.0.4-nightly'; assert.throws(() => assertPublishedPromotion(args), /not one candidate tag/);
 });
 
-test('quarterly Stable assembly retains target-only hotfixes missing from every Beta snapshot', t => {
+test('quarterly Stable assembly retains target-only hotfixes missing from every Beta snapshot', async t => {
+  const fs = await import('node:fs');
   const f = rollupFixture(t, { channel: 'beta' });
   f.git('checkout', 'main');
   fs.writeFileSync(`${f.root}/README`, 'stable security hotfix');
