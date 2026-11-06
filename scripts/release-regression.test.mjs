@@ -98,3 +98,15 @@ test('native test summaries remain strict with Windows line endings and release 
   assert.doesNotThrow(() => runFrozenRegressions({ root: f.root, baselineSha: f.base,
     execute: () => '# tests 1\r\n# fail 0\r\n# skipped 0\r\n# todo 0\r\n' }));
 });
+
+test('initial rollout finds nested reference corpora using canonical Git paths on every host', t => {
+  const f = fixture(t);
+  fs.unlinkSync(f.file('shared/release-regressions.json'));
+  fs.mkdirSync(f.file('backend/test-data/nested'), { recursive: true });
+  fs.writeFileSync(f.file('backend/test-data/nested/corpus.json'), '[{"text":"reference"}]\n');
+  f.git('add', '.'); f.git('commit', '-m', 'Baseline predates regression registry');
+  const base = f.git('rev-parse', 'HEAD');
+  f.catalog.support.push('backend/test-data/');
+  fs.writeFileSync(f.file('shared/release-regressions.json'), JSON.stringify(f.catalog));
+  assert.ok(regressionPlan(f.root, base, { bootstrap: true }).files.has('backend/test-data/nested/corpus.json'));
+});
