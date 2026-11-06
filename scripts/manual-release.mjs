@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { nextReleaseVersion, releaseChannel } from './release-channels.mjs';
 import { setReleaseVersion } from './prepare-release.mjs';
 import { publishedReleases, previewBuildDecision, releaseSource } from './release-history.mjs';
+import { assertPublishedPromotion } from './release-promotion.mjs';
 import { createReleaseChangelog } from './release-changelog.mjs';
 
 /** Legacy releases from other version lines do not undo the deliberate 0.0 reset. */
@@ -13,8 +14,9 @@ export function nextStableVersion(current, tags) {
   return nextReleaseVersion('stable', tags, current);
 }
 
-export function prepareManualRelease({ runId, sourceSha, root = process.cwd(), releases = publishedReleases(root) }) {
+export function prepareManualRelease({ runId, sourceSha, root = process.cwd(), releases = publishedReleases(root), promotionGuard = assertPublishedPromotion }) {
   if (!/^\d+$/.test(runId) || !/^[a-f0-9]{40}$/.test(sourceSha)) throw new Error('Invalid Actions release identity');
+  promotionGuard({ root, channel: 'stable', sourceSha });
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
   const tags = git('tag', '--list', 'v*').split('\n').filter(Boolean);
   // A rerun of the same Actions run must rebuild the same immutable snapshot.
@@ -61,6 +63,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   }
   const channel = releaseChannel(result.tag.slice(1));
   const sourceSha = releaseSource(root, result.sha);
+  assertPublishedPromotion({ root, channel, sourceSha });
   const decision = previewBuildDecision({ root, channel, sourceSha, releases, tag: result.tag });
   if (process.env.GITHUB_OUTPUT) {
     fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${result.tag}\nsha=${result.sha}\nchannel=${channel}\nshould_build=${decision.shouldBuild}\nprevious_tag=${decision.previousTag}\nsource_sha=${sourceSha}\n`);

@@ -16,9 +16,10 @@ import {
 import { setProjectVersion } from './bump-version.mjs';
 import { syncAllMetadata } from './generate-about-info.mjs';
 import { publishedReleases, previewBuildDecision } from './release-history.mjs';
+import { assertPublishedPromotion } from './release-promotion.mjs';
 import { createReleaseChangelog, writeReleaseChangelog } from './release-changelog.mjs';
 
-export function prepareScheduledBranch({ schedule, now = new Date(), root = process.cwd(), releases = publishedReleases(root) }) {
+export function prepareScheduledBranch({ schedule, now = new Date(), root = process.cwd(), releases = publishedReleases(root), promotionGuard = assertPublishedPromotion }) {
   const channel = resolveScheduledChannel(schedule);
   const releaseTime = targetReleaseTime(now);
   const publishAt = releaseTime.toISOString();
@@ -60,6 +61,13 @@ export function prepareScheduledBranch({ schedule, now = new Date(), root = proc
     const decision = previewBuildDecision({ root, channel: ch, sourceSha, releases, tag: prepared?.tag, now });
     if (!decision.shouldBuild) {
       if (ch === channel) targetResult = { channel: ch, branch, publishAt, releaseDate, tag: '', skipped: true, ...decision };
+      continue;
+    }
+    try { promotionGuard({ root, channel: ch, sourceSha, now }); }
+    catch (error) {
+      const reason = `Promotion blocked: ${error.message}`;
+      console.log(`Skipped ${ch}: ${reason}`);
+      if (ch === channel) targetResult = { channel: ch, branch, publishAt, releaseDate, tag: '', skipped: true, shouldBuild: false, reason };
       continue;
     }
     if (!prepared) {
