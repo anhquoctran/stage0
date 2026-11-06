@@ -29,6 +29,12 @@ function isReleasePreparation(message) {
     && /^Stage0-Release-(?:Channel|Run): /m.test(message);
 }
 
+/** Assembly bookkeeping is not a product change or a new source snapshot. */
+export function isReleaseMetadata(message) {
+  return isReleasePreparation(message) || (/^(?:Stage0 (?:rollup source|accumulate) v|chore\(release\): assemble (?:beta|stable) )/.test(message)
+    && /^Stage0-Rollup-Metadata: true$/m.test(message));
+}
+
 /** Release snapshots are sibling commits; compare their source parents, not metadata. */
 export function releaseSource(root, ref) {
   const sha = releaseGit(root, 'rev-parse', '--verify', `${ref}^{commit}`);
@@ -46,7 +52,7 @@ export function sourceChanges(root, sourceSha, previousTag = '') {
   const commits = [];
   for (let i = 0; i < fields.length - 3; i += 4) {
     const [sha, timestamp, subject, message] = fields.slice(i, i + 4);
-    if (!isReleasePreparation(message)) commits.push({ sha, timestamp: Number(timestamp) * 1000, subject });
+    if (!isReleaseMetadata(message)) commits.push({ sha, timestamp: Number(timestamp) * 1000, subject });
   }
   return commits;
 }
@@ -57,6 +63,10 @@ export function previewBuildDecision({ root, channel, sourceSha, releases, tag =
   if (channel === 'stable') return { shouldBuild: true, previousTag, reason: '' };
   if (releases.some(release => release.tag_name === tag && !release.draft && release.published_at)) {
     return { shouldBuild: false, previousTag, reason: `${tag} is already published` };
+  }
+  if (channel === 'beta') {
+    const changed = sourceChanges(root, sourceSha, previousTag).length > 0;
+    return { shouldBuild: changed, previousTag, reason: changed ? '' : 'No new source changes since the previous Beta' };
   }
   const cutoff = now.getTime() - policy.previewActivityHours * 60 * 60 * 1000;
   const recent = sourceChanges(root, sourceSha, previousTag)

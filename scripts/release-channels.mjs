@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { releasePeriod } from './release-period.mjs';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -137,7 +138,7 @@ export function branchRiskProfile(branchName) {
   if (Object.hasOwn(policy.gitFlow.riskLevels, normalized)) {
     return policy.gitFlow.riskLevels[normalized];
   }
-  if (/^promotion\/(beta|stable)\/v/.test(normalized)) return policy.gitFlow.riskLevels.work;
+  if (/^promotion\/(beta|stable)\/\d{4}-\d\d-\d\d$/.test(normalized)) return policy.gitFlow.riskLevels.work;
   if (normalized.startsWith(policy.gitFlow.hotfixPrefix)) {
     const target = normalized.slice(policy.gitFlow.hotfixPrefix.length).split('/')[0];
     return policy.gitFlow.riskLevels[target] ?? policy.gitFlow.riskLevels.work;
@@ -156,11 +157,10 @@ export function validateGitFlowBranch({ headBranch, baseBranch = policy.gitFlow.
     throw new Error(`Direct commits or pushes to protected branch '${head}' are forbidden`);
   }
   if (head.startsWith('promotion/')) {
-    const match = /^promotion\/(beta|stable)\/(v.+)$/.exec(head);
+    const match = /^promotion\/(beta|stable)\/(\d{4}-\d\d-\d\d)$/.exec(head);
     const route = policy.promotion.routes[match?.[1]];
-    if (!route || base !== route.branch || releaseChannel(match[2].slice(1)) !== route.from) {
-      throw new Error('Promotion branches must pin an adjacent-channel release tag and target its configured branch');
-    }
+    if (!route || base !== route.branch) throw new Error('Promotion branches must identify a complete calendar period and target its configured branch');
+    releasePeriod(match[1], match[2]);
     return { kind: 'promotion', headBranch: head, baseBranch: base, prTarget: base,
       riskProfile: policy.gitFlow.riskLevels.work, syncBranches: [] };
   }

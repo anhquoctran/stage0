@@ -19,7 +19,7 @@ function fixture(t, date) {
   git('config', 'user.email', 'fixture@example.test');
   git('remote', 'add', 'origin', origin);
   for (const dir of ['scripts', 'shared', 'backend', 'website']) fs.mkdirSync(path.join(root, dir));
-  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-promotion.mjs', 'release-promotion-github.mjs', 'release-channels.mjs', 'release-history.mjs', 'release-changelog.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
+  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-promotion.mjs', 'release-promotion-source.mjs', 'release-rollup.mjs', 'release-rollup-tree.mjs', 'release-period.mjs', 'release-promotion-github.mjs', 'release-channels.mjs', 'release-history.mjs', 'release-changelog.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
     fs.copyFileSync(new URL(name, import.meta.url), path.join(root, 'scripts', name));
   }
   fs.copyFileSync(new URL('../shared/release-channels.json', import.meta.url), path.join(root, 'shared/release-channels.json'));

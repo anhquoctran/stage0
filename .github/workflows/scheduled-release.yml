@@ -4,9 +4,6 @@ on:
     # Start 60 minutes before 00:00 UTC so validation, multi-platform builds and
     # draft upload finish beforehand; publication holds until exact 00:00:00 UTC.
     - cron: '0 23 * * *'
-    - cron: '0 23 26 * *'
-    - cron: '0 23 31 3,12 *'
-    - cron: '0 23 30 6,9 *'
 permissions:
   contents: write
   actions: read
