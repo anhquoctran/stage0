@@ -9,7 +9,8 @@ import { fileURLToPath } from 'node:url';
 const CATALOG = 'shared/release-regressions.json';
 const SUPPORT = new Set(['scripts/helpers/componentHarness.mjs', 'scripts/helpers/translationText.mjs', 'scripts/helpers/hookHarness.mjs', 'scripts/helpers/regressionFixture.mjs', 'scripts/helpers/releaseRollupFixture.mjs', 'backend/src/features/updates/fixtures/', 'backend/test-data/']);
 export const PINNED = ['scripts/release-regression-runner.mjs', '.github/workflows/regression.yml',
-  '.github/workflows/release.yml', 'scripts/release-regression-preservation.mjs'];
+  '.github/workflows/release.yml', 'scripts/release-regression-preservation.mjs',
+  'backend/build.rs', 'backend/test-windows.manifest.xml'];
 function git(root, ...args) { return execFileSync('git', args, { cwd: root, maxBuffer: 32 * 1024 * 1024 }); }
 function pathsAt(root, sha, prefix) {
   return git(root, 'ls-tree', '-r', '-z', '--name-only', sha, '--', prefix).toString().split('\0').filter(Boolean);
@@ -123,6 +124,7 @@ function executeCases(cases, mode, execute) {
 export function runFrozenRegressions({ root = process.cwd(), baselineSha, mode = 'node', bootstrap = false,
   execute = (command, args) => {
     const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
+    if (command === 'cargo' && process.platform === 'win32') env.STAGE0_RUST_TEST_MANIFEST = '1';
     return execFileSync(command, args, { cwd: root, env, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   } }) {
   if (!['node', 'rust'].includes(mode)) throw new Error('Mode must be node or rust');

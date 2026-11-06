@@ -8,6 +8,7 @@ import { promotionApi } from './release-promotion-github.mjs';
 export const enforcementFiles = [
   '.github/workflows/regression.yml', 'scripts/release-regression-runner.mjs',
   'scripts/release-regression-preservation.mjs',
+  'backend/build.rs', 'backend/test-windows.manifest.xml',
   '.github/workflows/promotion-policy.yml', '.github/workflows/promote-release.yml',
   '.github/workflows/publish-rollup.yml',
   '.github/workflows/release.yml', '.github/workflows/scheduled-release.yml',

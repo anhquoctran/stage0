@@ -10,6 +10,8 @@ export function seedRegressionFixture(root) {
     '.github/workflows/regression.yml': '# baseline workflow\n',
     '.github/workflows/release.yml': '# baseline release workflow\n',
     'scripts/release-regression-preservation.mjs': '// baseline policy\n',
+    'backend/build.rs': '// baseline build\n',
+    'backend/test-windows.manifest.xml': '<assembly />\n',
   };
   const catalog = { version: 1, support: [], cases: [
     { id: 'fixture-safety', runner: 'node', path: 'scripts/fixture.test.mjs' },

@@ -217,6 +217,8 @@ jobs:
           git show "$REGRESSION_BASE:scripts/release-regression-runner.mjs" > "$RUNNER_TEMP/stage0-regressions.mjs"
           node "$RUNNER_TEMP/stage0-regressions.mjs" "$REGRESSION_BASE" rust
       - name: Run Rust tests
+        env:
+          STAGE0_RUST_TEST_MANIFEST: ${{ runner.os == 'Windows' && '1' || '0' }}
         run: cargo test --locked --manifest-path backend/Cargo.toml --lib
       - name: Generate changelog for this release snapshot
         shell: bash
@@ -225,6 +227,7 @@ jobs:
       - name: Build versioned and signed packages
         shell: bash
         env:
+          STAGE0_RUST_TEST_MANIFEST: '0'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && '-' || '' }}

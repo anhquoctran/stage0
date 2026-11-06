@@ -94,4 +94,6 @@ jobs:
           node "$RUNNER_TEMP/stage0-regressions.mjs" "$BASELINE_SHA" node
           node "$RUNNER_TEMP/stage0-regressions.mjs" "$BASELINE_SHA" rust
       - name: Run complete candidate Rust suite
+        env:
+          STAGE0_RUST_TEST_MANIFEST: ${{ runner.os == 'Windows' && '1' || '0' }}
         run: cargo test --locked --manifest-path backend/Cargo.toml --lib
