@@ -1,0 +1,76 @@
+name: Protected regressions
+
+on:
+  pull_request:
+    branches: [develop, nightly, beta, main]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Regression gate (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - name: Preserve canonical test bytes across platforms
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Preserve trusted baseline runner before switching to candidate
+        shell: bash
+        run: |
+          if [[ -f scripts/release-regression-runner.mjs ]]; then
+            cp scripts/release-regression-runner.mjs "$RUNNER_TEMP/stage0-regressions.mjs"
+          else
+            echo 'REGRESSION_BOOTSTRAP=true' >> "$GITHUB_ENV"
+          fi
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+      - name: Install Linux test dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev libssl-dev libfontconfig1-dev libfreetype6-dev xdg-utils
+      - name: Prepare Windows OpenSSL Perl
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          choco install strawberryperl --no-progress --yes
+          echo 'C:\Strawberry\perl\bin' >> "$GITHUB_PATH"
+      - run: npm install --global pnpm@12.14.0
+      - run: pnpm install --frozen-lockfile
+      - name: Bootstrap only the first control-plane rollout
+        if: env.REGRESSION_BOOTSTRAP == 'true'
+        shell: bash
+        run: cp scripts/release-regression-runner.mjs "$RUNNER_TEMP/stage0-regressions.mjs"
+      - run: pnpm check:architecture
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Run frozen target regressions against candidate code
+        shell: bash
+        env:
+          BASELINE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node "$RUNNER_TEMP/stage0-regressions.mjs" "$BASELINE_SHA" node
+          node "$RUNNER_TEMP/stage0-regressions.mjs" "$BASELINE_SHA" rust
+      - name: Run complete candidate Rust suite
+        run: cargo test --locked --manifest-path backend/Cargo.toml --lib
