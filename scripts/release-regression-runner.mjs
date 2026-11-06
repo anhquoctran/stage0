@@ -3,12 +3,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { isDeepStrictEqual } from 'node:util';
+import { isDeepStrictEqual, stripVTControlCharacters } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
 const CATALOG = 'shared/release-regressions.json';
-const SUPPORT = new Set(['scripts/helpers/componentHarness.mjs', 'scripts/helpers/translationText.mjs', 'scripts/helpers/hookHarness.mjs', 'backend/src/features/updates/fixtures/', 'backend/test-data/']);
-export const PINNED = ['scripts/release-regression-runner.mjs', '.github/workflows/regression.yml'];
+const SUPPORT = new Set(['scripts/helpers/componentHarness.mjs', 'scripts/helpers/translationText.mjs', 'scripts/helpers/hookHarness.mjs', 'scripts/helpers/regressionFixture.mjs', 'scripts/helpers/releaseRollupFixture.mjs', 'backend/src/features/updates/fixtures/', 'backend/test-data/']);
+export const PINNED = ['scripts/release-regression-runner.mjs', '.github/workflows/regression.yml',
+  '.github/workflows/release.yml', 'scripts/release-regression-preservation.mjs'];
 function git(root, ...args) { return execFileSync('git', args, { cwd: root, maxBuffer: 32 * 1024 * 1024 }); }
 function pathsAt(root, sha, prefix) {
   return git(root, 'ls-tree', '-r', '-z', '--name-only', sha, '--', prefix).toString().split('\0').filter(Boolean);
@@ -62,6 +63,9 @@ export function regressionPlan(root, baselineSha, { bootstrap = false } = {}) {
   const candidate = validateCatalog(JSON.parse(fs.readFileSync(safeFile(root, CATALOG), 'utf8')));
   const hasBaseline = pathsAt(root, baselineSha, CATALOG).length > 0;
   if (!hasBaseline && !bootstrap) throw new Error('Baseline regression catalog missing; roll out the control plane before release');
+  for (const item of candidate.cases) {
+    if (!fs.existsSync(safeFile(root, item.path))) throw new Error(`Protected regression file missing: ${item.path}`);
+  }
   const baseline = hasBaseline ? validateCatalog(JSON.parse(bytesAt(root, baselineSha, CATALOG))) : candidate;
   assertCatalogSuperset(baseline, candidate);
   const controlPlaneChanges = PINNED.filter(file => hasBaseline
@@ -92,12 +96,35 @@ export function regressionPlan(root, baselineSha, { bootstrap = false } = {}) {
     }
     for (const file of candidates) collect(file);
   }
-  return { baseline, files, bootstrap: !hasBaseline, controlPlaneChanges };
+  return { baseline, candidate, files, bootstrap: !hasBaseline, controlPlaneChanges };
+}
+
+function executeCases(cases, mode, execute) {
+  const run = (command, args) => stripVTControlCharacters(execute(command, args)).replace(/\r\n/g, '\n');
+  if (mode === 'node') {
+    const output = run(process.execPath, ['--test', '--test-reporter=tap', ...new Set(cases.map(item => item.path))]);
+    const tests = Number(output.match(/^# tests (\d+)$/m)?.[1]), failures = Number(output.match(/^# fail (\d+)$/m)?.[1]);
+    if (!(tests > 0) || failures !== 0 || !/^# skipped 0$/m.test(output) || !/^# todo 0$/m.test(output)) throw new Error('Frozen Node suite must pass without skipped/todo tests');
+    console.log(output);
+  } else {
+    const expected = [...new Set(cases.flatMap(item => item.tests))];
+    const listing = run('cargo', ['test', '--locked', '--manifest-path', 'backend/Cargo.toml', '--lib', '--', '--list']);
+    const listed = new Set(listing.split(/\r?\n/).filter(line => line.endsWith(': test')).map(line => line.slice(0, -6)));
+    for (const name of expected) if (!listed.has(name)) throw new Error(`Protected Rust test is no longer registered: ${name}`);
+    for (const name of expected) {
+      const output = run('cargo', ['test', '--locked', '--manifest-path', 'backend/Cargo.toml', '--lib', '--', '--exact', name, '--include-ignored']);
+      if (!/test result: ok\. 1 passed; 0 failed; 0 ignored;/.test(output)) throw new Error(`Protected Rust test did not run successfully: ${name}`);
+      console.log(`Protected Rust regression passed: ${name}`);
+    }
+  }
 }
 
 /** Same checkout, frozen tests only; restore bytes/modes even when a test fails. */
 export function runFrozenRegressions({ root = process.cwd(), baselineSha, mode = 'node', bootstrap = false,
-  execute = (command, args) => execFileSync(command, args, { cwd: root, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 }) }) {
+  execute = (command, args) => {
+    const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
+    return execFileSync(command, args, { cwd: root, env, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+  } }) {
   if (!['node', 'rust'].includes(mode)) throw new Error('Mode must be node or rust');
   const plan = regressionPlan(root, baselineSha, { bootstrap }), backups = [];
   const cases = plan.baseline.cases.filter(item => item.runner === mode);
@@ -110,26 +137,12 @@ export function runFrozenRegressions({ root = process.cwd(), baselineSha, mode =
       backups.push({ location, bytes: fs.readFileSync(location), mode: fs.statSync(location).mode });
       fs.writeFileSync(location, bytes);
     }
-    if (mode === 'node') {
-      const output = execute(process.execPath, ['--test', '--test-reporter=tap', ...new Set(cases.map(item => item.path))]);
-      const tests = Number(output.match(/^# tests (\d+)$/m)?.[1]), failures = Number(output.match(/^# fail (\d+)$/m)?.[1]);
-      if (!(tests > 0) || failures !== 0 || !/^# skipped 0$/m.test(output) || !/^# todo 0$/m.test(output)) throw new Error('Frozen Node suite must pass without skipped/todo tests');
-      console.log(output);
-    } else {
-      const expected = [...new Set(cases.flatMap(item => item.tests))];
-      const listing = execute('cargo', ['test', '--locked', '--manifest-path', 'backend/Cargo.toml', '--lib', '--', '--list']);
-      const listed = new Set(listing.split(/\r?\n/).filter(line => line.endsWith(': test')).map(line => line.slice(0, -6)));
-      for (const name of expected) if (!listed.has(name)) throw new Error(`Protected Rust test is no longer registered: ${name}`);
-      for (const name of expected) {
-        const output = execute('cargo', ['test', '--locked', '--manifest-path', 'backend/Cargo.toml', '--lib', '--', '--exact', name, '--include-ignored']);
-        if (!/test result: ok\. 1 passed; 0 failed; 0 ignored;/.test(output)) throw new Error(`Protected Rust test did not run successfully: ${name}`);
-        console.log(`Protected Rust regression passed: ${name}`);
-      }
-    }
-    return { cases: cases.length, bootstrap: plan.bootstrap };
+    executeCases(cases, mode, execute);
   } finally {
     for (const backup of backups.reverse()) { fs.writeFileSync(backup.location, backup.bytes); fs.chmodSync(backup.location, backup.mode); }
   }
+  executeCases(plan.candidate.cases.filter(item => item.runner === mode), mode, execute);
+  return { cases: cases.length, bootstrap: plan.bootstrap, controlPlaneChanges: plan.controlPlaneChanges };
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [baselineSha, mode] = process.argv.slice(2);

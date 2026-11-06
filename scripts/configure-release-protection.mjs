@@ -63,7 +63,19 @@ export function configureReleaseProtection({ apply = false, api = promotionApi }
   for (const branch of policy.gitFlow.protectedBranches) {
     try {
       const remote = api(`contents/shared/release-regressions.json?ref=${branch}`);
-      validateCatalog(JSON.parse(Buffer.from(remote.content, 'base64')));
+      const catalog = validateCatalog(JSON.parse(Buffer.from(remote.content, 'base64')));
+      for (const item of catalog.cases) api(`contents/${item.path}?ref=${branch}`);
+      const expectedCatalog = validateCatalog(JSON.parse(fs.readFileSync(new URL('../shared/release-regressions.json', import.meta.url))));
+      for (const expected of expectedCatalog.cases) {
+        if (expected.requires) {
+          try { api(`contents/${expected.requires}?ref=${branch}`); }
+          catch (error) {
+            if (String(error.stderr || error.message).includes('404')) continue;
+            throw error;
+          }
+        }
+        if (!catalog.cases.some(item => item.id === expected.id)) throw new Error(`Missing known regression ${expected.id}`);
+      }
     } catch { issues.push(`${branch}: deploy a valid feature-appropriate protected regression catalog`); }
   }
   const workflowPermissions = api('actions/permissions/workflow');

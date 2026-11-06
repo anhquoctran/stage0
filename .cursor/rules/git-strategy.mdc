@@ -24,3 +24,7 @@ alwaysApply: true
 - **Hotfix exception**:
   - Branch directly off the affected release branch (`origin/main`, `origin/beta`, or `origin/nightly`) as `hotfix/<target>/<slug>`.
   - Open the primary PR into `<target>`, then synchronize the fix to all remaining branches (`main` -> `beta`, `nightly`, `develop`; `beta` -> `nightly`, `develop`; `nightly` -> `develop`).
+
+- Critical fixes need behavior regression tests registered in `shared/release-regressions.json`.
+- Preserve protected target fixes/assertions; clean merges and green source builds alone do not establish regression safety.
+- Run the frozen target contracts and the complete candidate suites before release; skipped/empty/failed native checks block publication.

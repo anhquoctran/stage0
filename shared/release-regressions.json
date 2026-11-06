@@ -3,6 +3,8 @@
   "support": [
     "scripts/helpers/componentHarness.mjs",
     "scripts/helpers/translationText.mjs",
+    "scripts/helpers/regressionFixture.mjs",
+    "scripts/helpers/releaseRollupFixture.mjs",
     "backend/src/features/updates/fixtures/",
     "backend/test-data/"
   ],
@@ -163,7 +165,23 @@
       "tests": [
         "common::text_encoding::regression_test_contracts::every_previously_supported_codec_still_decodes_the_independent_reference_bytes",
         "common::text_encoding::regression_test_contracts::malformed_utf8_and_utf16_never_silently_replace_or_discard_data"
-      ]
+      ],
+      "requires": "backend/src/common/text_encoding/mod.rs"
+    },
+    {
+      "id": "release-rollup-preservation",
+      "runner": "node",
+      "path": "scripts/release-rollup.test.mjs"
+    },
+    {
+      "id": "release-publication-authorization",
+      "runner": "node",
+      "path": "scripts/release-rollup-controller.test.mjs"
+    },
+    {
+      "id": "regression-gate-self-defense",
+      "runner": "node",
+      "path": "scripts/release-regression.test.mjs"
     }
   ]
 }

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import test from 'node:test';
 import { releasePeriod, inReleasePeriod, assertPeriodClosed, assertReleaseDay } from './release-period.mjs';
 import { planRollup, assertRollupPullRequest } from './release-rollup.mjs';
@@ -138,4 +139,17 @@ test('a complete reviewed period authorizes only its current merged target, with
   assert.equal(result.pr, 60); assert.equal(result.candidate.manifest.sources.length, 3);
   pr.body = ''; assert.throws(() => assertPublishedPromotion(args), /checklist/);
   pr.head.ref = 'promotion/beta/v0.0.4-nightly'; assert.throws(() => assertPublishedPromotion(args), /not one candidate tag/);
+});
+
+test('quarterly Stable assembly retains target-only hotfixes missing from every Beta snapshot', t => {
+  const f = rollupFixture(t, { channel: 'beta' });
+  f.git('checkout', 'main');
+  fs.writeFileSync(`${f.root}/README`, 'stable security hotfix');
+  f.git('commit', '-am', 'hotfix: protect stable behavior');
+  const baseSha = f.git('rev-parse', 'HEAD');
+  const manifest = planRollup({ ...options(f), baseSha, channel: 'stable', releaseDate: '2027-01-01', now: new Date('2027-01-01T00:10:00Z') });
+  const result = composeRollup(f.root, manifest);
+  assert.equal(f.git('show', `${result.sha}:README`), 'stable security hotfix');
+  assert.equal(f.git('show', `${result.sha}:feature`), 'fixed');
+  f.git('merge-base', '--is-ancestor', baseSha, result.sha);
 });
