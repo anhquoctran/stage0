@@ -83,6 +83,12 @@ source fixes/reverts remain in the normal same-channel release delta.
    immediately. It prepares only this channel's immutable version tag and
    dispatches the existing isolated tag build/signature-verification pipeline.
    It can be rerun manually on `beta`/`main` after transient failures.
+   During the initial policy rollout, `beta` may already contain this workflow
+   while trusted `main` has neither the workflow nor its controller script.
+   That state records an explicit deployment-pending notice and requests no
+   build/tag/release. Deploy the reviewed policy to `main` before retrying.
+   A partial deployment (only one of the workflow/script present) fails closed.
+   The workflow never substitutes candidate-channel code for the trusted controller.
 6. The release is published after approval/build/checks finish on day 27 or the
    quarter's first day; midnight is the cutoff/start, not a promised instant of
    publication. A missed day fails closed rather than silently publishing an old
