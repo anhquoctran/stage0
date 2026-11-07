@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "support": [
+    "scripts/helpers/componentHarness.mjs",
+    "scripts/helpers/translationText.mjs",
+    "scripts/helpers/regressionFixture.mjs",
+    "scripts/helpers/releaseRollupFixture.mjs",
+    "backend/src/features/updates/fixtures/",
+    "backend/test-data/"
+  ],
+  "cases": [
+    {
+      "id": "security-rendering",
+      "runner": "node",
+      "path": "scripts/security-rendering.test.mjs"
+    },
+    {
+      "id": "security-remote-urls",
+      "runner": "node",
+      "path": "scripts/security-remote-urls.test.mjs"
+    },
+    {
+      "id": "dependency-security",
+      "runner": "node",
+      "path": "scripts/dependency-security.test.mjs"
+    },
+    {
+      "id": "discussion-deletion",
+      "runner": "node",
+      "path": "scripts/discussion-deletion.test.mjs"
+    },
+    {
+      "id": "discussion-deletion-activity",
+      "runner": "node",
+      "path": "scripts/discussion-deletion-activity.test.mjs"
+    },
+    {
+      "id": "reviewer-status",
+      "runner": "node",
+      "path": "scripts/reviewer-status.test.mjs"
+    },
+    {
+      "id": "review-runtime",
+      "runner": "node",
+      "path": "scripts/review-runtime.test.mjs"
+    },
+    {
+      "id": "mr-description-loading",
+      "runner": "node",
+      "path": "scripts/mr-description-loading.test.mjs"
+    },
+    {
+      "id": "manual-review-availability",
+      "runner": "node",
+      "path": "scripts/manual-review-availability.test.mjs"
+    },
+    {
+      "id": "updater-integration",
+      "runner": "node",
+      "path": "scripts/updater-integration.test.mjs"
+    },
+    {
+      "id": "updater-lifecycle",
+      "runner": "node",
+      "path": "scripts/updater-lifecycle.test.mjs"
+    },
+    {
+      "id": "release-artifacts",
+      "runner": "node",
+      "path": "scripts/release-artifacts.test.mjs"
+    },
+    {
+      "id": "website-download-detection",
+      "runner": "node",
+      "path": "scripts/website-download-detection.test.mjs"
+    },
+    {
+      "id": "git-graph-context-menu",
+      "runner": "node",
+      "path": "scripts/git-graph-context-menu.test.mjs"
+    },
+    {
+      "id": "review-reply-recipients",
+      "runner": "node",
+      "path": "scripts/review-reply-recipients.test.mjs"
+    },
+    {
+      "id": "ai-keyring-access",
+      "runner": "node",
+      "path": "scripts/ai-keyring-access.test.mjs"
+    },
+    {
+      "id": "signed-updater",
+      "runner": "rust",
+      "path": "backend/src/features/updates/signature_tests.rs",
+      "tests": [
+        "features::updates::signature_tests::valid_version_bound_package_verifies_without_installation",
+        "features::updates::signature_tests::inflated_manifest_version_cannot_replay_an_older_signed_package",
+        "features::updates::signature_tests::same_or_older_release_does_not_offer_an_update",
+        "features::updates::signature_tests::malformed_or_missing_signature_cannot_verify"
+      ]
+    },
+    {
+      "id": "archive-security",
+      "runner": "rust",
+      "path": "backend/src/features/ai/acp/binary_archive_security_tests.rs",
+      "tests": [
+        "features::ai::acp::binary_archive::security_tests::rejects_zip_cloaking_with_different_local_and_central_filenames",
+        "features::ai::acp::binary_archive::security_tests::refuses_huge_zip_symlink_target_before_allocation_or_write"
+      ]
+    },
+    {
+      "id": "archive-positive-controls",
+      "runner": "rust",
+      "path": "backend/src/features/ai/acp/binary_archive_tests.rs",
+      "tests": [
+        "features::ai::acp::binary_archive::tests::zip_par_and_all_tar_formats_extract_nested_executables_with_safe_permissions",
+        "features::ai::acp::binary_archive::tests::recognizes_all_registry_formats_and_refuses_installers_or_insecure_urls",
+        "features::ai::acp::binary_archive::tests::zip_and_tar_paths_cannot_escape_staging_or_use_windows_device_names",
+        "features::ai::acp::binary_archive::tests::expansion_limits_duplicates_and_missing_executables_fail_closed"
+      ]
+    },
+    {
+      "id": "deletion-permissions",
+      "runner": "rust",
+      "path": "backend/src/features/virtual_mr/deletion_tests.rs",
+      "tests": [
+        "features::virtual_mr::deletion_policy::tests::unreferenced_own_discussion_is_deleted_with_its_root",
+        "features::virtual_mr::deletion_policy::tests::ownership_is_email_based_and_never_grants_ai_or_other_users_access",
+        "features::virtual_mr::deletion_policy::tests::replies_protect_roots_and_earlier_comments_even_at_identical_timestamps",
+        "features::virtual_mr::deletion_policy::tests::deleting_last_reply_preserves_root_and_enables_it_again",
+        "features::virtual_mr::deletion_policy::tests::cross_mr_comment_and_discussion_quotes_block_deletion_by_any_author",
+        "features::virtual_mr::deletion_policy::tests::reference_ids_match_exactly_and_decode_unicode",
+        "features::virtual_mr::deletion_policy::tests::description_quotes_and_new_replies_recheck_stale_permissions",
+        "features::virtual_mr::deletion_policy::tests::legacy_local_comments_follow_existing_identity_mapping_but_unknown_identity_fails_closed",
+        "features::virtual_mr::deletion_policy::tests::permission_hints_and_public_deletion_use_repository_git_identity",
+        "features::virtual_mr::deletion_policy::tests::unavailable_repository_keeps_content_readable_without_delete_permission"
+      ]
+    },
+    {
+      "id": "deletion-audit",
+      "runner": "rust",
+      "path": "backend/src/features/virtual_mr/persistence/deletion_activity_tests.rs",
+      "tests": [
+        "features::virtual_mr::persistence::deletion_activity::tests::deleting_root_keeps_durable_activity_after_reopening_without_retaining_the_body",
+        "features::virtual_mr::persistence::deletion_activity::tests::reply_deletion_keeps_its_parent_and_records_a_separate_event",
+        "features::virtual_mr::persistence::deletion_activity::tests::rejected_deletions_do_not_leave_success_activity",
+        "features::virtual_mr::persistence::deletion_activity::tests::audit_insert_or_delete_failure_rolls_back_both_content_and_history",
+        "features::virtual_mr::persistence::deletion_activity::tests::existing_databases_gain_the_new_table_idempotently"
+      ]
+    },
+    {
+      "id": "deepseek-wire-contracts",
+      "runner": "rust",
+      "path": "backend/src/features/review/provider/regression_test_contracts.rs",
+      "tests": [
+        "features::review::provider::regression_test_contracts::deepseek_thinking_continuations_keep_reasoning_and_matching_tool_results",
+        "features::review::provider::regression_test_contracts::truncated_refused_or_interrupted_responses_never_publish_or_modify_history"
+      ]
+    },
+    {
+      "id": "text-encoding-contracts",
+      "runner": "rust",
+      "path": "backend/src/common/text_encoding/regression_test_contracts.rs",
+      "tests": [
+        "common::text_encoding::regression_test_contracts::every_previously_supported_codec_still_decodes_the_independent_reference_bytes",
+        "common::text_encoding::regression_test_contracts::malformed_utf8_and_utf16_never_silently_replace_or_discard_data"
+      ],
+      "requires": "backend/src/common/text_encoding/mod.rs"
+    },
+    {
+      "id": "release-rollup-preservation",
+      "runner": "node",
+      "path": "scripts/release-rollup.test.mjs"
+    },
+    {
+      "id": "release-publication-authorization",
+      "runner": "node",
+      "path": "scripts/release-rollup-controller.test.mjs"
+    },
+    {
+      "id": "regression-gate-self-defense",
+      "runner": "node",
+      "path": "scripts/release-regression.test.mjs"
+    }
+  ]
+}

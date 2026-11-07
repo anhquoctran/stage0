@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { nextStableVersion, prepareManualRelease } from './manual-release.mjs';
+import { commandFixture } from './helpers/commandFixture.mjs';
 
 function fixture(t, date) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'stage0-manual-release-'));
@@ -19,7 +20,7 @@ function fixture(t, date) {
   git('config', 'user.email', 'fixture@example.test');
   git('remote', 'add', 'origin', origin);
   for (const dir of ['scripts', 'shared', 'backend', 'website']) fs.mkdirSync(path.join(root, dir));
-  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-promotion.mjs', 'release-promotion-source.mjs', 'release-rollup.mjs', 'release-rollup-tree.mjs', 'release-period.mjs', 'release-promotion-github.mjs', 'release-channels.mjs', 'release-history.mjs', 'release-changelog.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
+  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-promotion.mjs', 'release-regression-preservation.mjs', 'release-regression-runner.mjs', 'release-promotion-source.mjs', 'release-rollup.mjs', 'release-rollup-tree.mjs', 'release-period.mjs', 'release-promotion-github.mjs', 'release-channels.mjs', 'release-history.mjs', 'release-changelog.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
     fs.copyFileSync(new URL(name, import.meta.url), path.join(root, 'scripts', name));
   }
   fs.copyFileSync(new URL('../shared/release-channels.json', import.meta.url), path.join(root, 'shared/release-channels.json'));
@@ -32,10 +33,8 @@ function fixture(t, date) {
   git('add', '.'); git('commit', '-m', 'Source snapshot');
   const sourceSha = git('rev-parse', 'HEAD');
   const branch = git('branch', '--show-current');
-  const bin = path.join(dir, 'bin');
-  fs.mkdirSync(bin);
-  fs.writeFileSync(path.join(bin, 'gh'), '#!/bin/sh\nprintf \'[[]]\\n\'\n', { mode: 0o755 });
-  return { root, origin, git, sourceSha, branch, bin };
+  const mock = commandFixture(dir, 'gh', () => '[[]]');
+  return { root, origin, git, sourceSha, branch, mock };
 }
 
 test('manual dispatch chooses the next free stable patch across all channel tags without reviving legacy 0.1.x', () => {
@@ -68,8 +67,8 @@ test('one click prepares and pushes an immutable version tag; reruns reuse it an
 test('actual stable tag dispatch refuses uncertified source without changing tags', t => {
   const f = fixture(t);
   const release = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] });
-  assert.throws(() => execFileSync(process.execPath, ['scripts/manual-release.mjs'], { cwd: f.root, stdio: 'pipe', env: {
-    ...process.env, PATH: `${f.bin}${path.delimiter}${process.env.PATH}`, RELEASE_EVENT: 'workflow_dispatch', RELEASE_REF_TYPE: 'tag',
+  assert.throws(() => execFileSync(process.execPath, [...f.mock, 'scripts/manual-release.mjs'], { cwd: f.root, stdio: 'pipe', env: {
+    ...process.env, RELEASE_EVENT: 'workflow_dispatch', RELEASE_REF_TYPE: 'tag',
     RELEASE_INPUT_TAG: release.tag, RELEASE_SOURCE_SHA: release.sha,
   } }), /approved beta promotion PR/);
   assert.equal(f.git('tag', '--list'), release.tag);
@@ -95,8 +94,8 @@ test('actual preview tag entry points skip stale sources and accept fresh source
         const tag = 'v0.0.2-nightly';
         f.git('tag', tag);
         const output = path.join(f.root, 'outputs'), summary = path.join(f.root, 'summary');
-        execFileSync(process.execPath, ['scripts/manual-release.mjs'], { cwd: f.root, env: {
-          ...process.env, PATH: `${f.bin}${path.delimiter}${process.env.PATH}`,
+        execFileSync(process.execPath, [...f.mock, 'scripts/manual-release.mjs'], { cwd: f.root, env: {
+          ...process.env,
           RELEASE_EVENT: event, RELEASE_REF_TYPE: 'tag', RELEASE_INPUT_TAG: tag,
           GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: summary,
         } });
