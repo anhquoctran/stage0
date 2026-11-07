@@ -134,3 +134,68 @@ test('trusted controller rollout skips only an uninstalled main and blocks parti
     }
   });
 });
+
+import { fileURLToPath } from 'node:url';
+import { commandFixture } from './helpers/commandFixture.mjs';
+import { assertPromotionPullRequest } from './release-promotion.mjs';
+
+test('release workflow routes only candidate Beta/Stable PRs and trusted manual checks into approval', () => {
+  const workflow = fs.readFileSync(new URL('../.github/workflows/promotion-policy.yml', import.meta.url), 'utf8');
+  const expression = job => workflow.match(new RegExp(`  ${job}:\\n[\\s\\S]*?\\n    if: >-\\n([\\s\\S]*?)\\n    runs-on:`))[1];
+  const evaluate = (job, github) => new Function('github', 'startsWith', 'contains', 'fromJSON', `return (${expression(job)});`)(
+    github, (value, prefix) => value.toLowerCase().startsWith(prefix.toLowerCase()), (values, value) => values.includes(value), JSON.parse,
+  );
+  const event = (base, head) => ({ repository: 'anhquoctran/stage0', event_name: 'pull_request_target',
+    event: { pull_request: { base: { ref: base }, head: { ref: head } } } });
+  for (const [base, head] of [['nightly', 'develop'], ['beta', 'develop'], ['beta', 'nightly'], ['main', 'beta']]) {
+    assert.equal(evaluate('verify', event(base, head)), false);
+    assert.equal(evaluate('integration', event(base, head)), base !== 'nightly');
+  }
+  for (const [base, head] of [['beta', 'promotion/beta/2026-11-27'], ['main', 'promotion/stable/2027-01-01'],
+    ['beta', 'hotfix/beta/security'], ['main', 'hotfix/main/security'], ['main', 'HOTFIX/main/security']]) {
+    assert.equal(evaluate('verify', event(base, head)), true);
+    assert.equal(evaluate('integration', event(base, head)), false);
+  }
+  assert.equal(evaluate('verify', { ...event('beta', 'promotion/beta/2026-11-27'), repository: 'other/repo' }), false);
+  for (const ref of ['refs/heads/main', 'refs/heads/develop']) {
+    const manual = { repository: 'anhquoctran/stage0', event_name: 'workflow_dispatch', ref, event: {} };
+    assert.equal(evaluate('verify', manual), ref === 'refs/heads/main');
+    assert.equal(evaluate('integration', manual), false);
+  }
+});
+
+test('live PR scope prevents any release-status writes for ordinary, retargeted or closed PRs sharing a SHA', async t => {
+  for (const [base, head, state] of [
+    ['nightly', 'develop', 'open'], ['develop', 'feat/example', 'open'],
+    ['beta', 'develop', 'open'], ['beta', 'nightly', 'open'], ['main', 'beta', 'open'],
+    ['beta', 'promotion/beta/2026-11-27', 'closed'], ['main', 'hotfix/main/security', 'closed'],
+  ]) await t.test(`${head} → ${base} (${state})`, t => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'stage0-promotion-scope-'));
+    t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+    const data = path.join(root, 'pr.json'), event = path.join(root, 'event.json'), writes = path.join(root, 'writes');
+    fs.writeFileSync(event, '{"number":54}');
+    const repo = { full_name: 'anhquoctran/stage0' };
+    const pr = { number: 54, state, base: { ref: base, repo }, head: { ref: head, sha: 'a'.repeat(40), repo } };
+    fs.writeFileSync(data, JSON.stringify(pr));
+    const mock = commandFixture(root, 'gh', args => {
+      if (args.includes('--method')) {
+        fs.appendFileSync(process.env.FAKE_GH_WRITES, JSON.stringify(args));
+        throw new Error('No status writes allowed');
+      }
+      if (args[0] !== 'api' || args[1] !== 'repos/anhquoctran/stage0/pulls/54') throw new Error('Unexpected API request');
+      return fs.readFileSync(process.env.FAKE_GH_PR, 'utf8');
+    });
+    const output = execFileSync(process.execPath, [...mock, fileURLToPath(new URL('./release-promotion-cli.mjs', import.meta.url)), 'check-pr'], {
+      cwd: root, encoding: 'utf8', stdio: 'pipe', env: { ...process.env,
+        GITHUB_REPOSITORY: 'anhquoctran/stage0', GITHUB_EVENT_NAME: 'pull_request_target', GITHUB_EVENT_PATH: event,
+        GITHUB_STEP_SUMMARY: path.join(root, 'summary'),
+        FAKE_GH_PR: data, FAKE_GH_WRITES: writes,
+      },
+    });
+    assert.match(output, /No release approval status was published/);
+    assert.equal(fs.existsSync(writes), false);
+    if (state === 'open' && ['beta', 'main'].includes(base)) {
+      assert.throws(() => assertPromotionPullRequest(root, pr), /Regular promotions require a complete calendar-period rollup/);
+    }
+  });
+});
