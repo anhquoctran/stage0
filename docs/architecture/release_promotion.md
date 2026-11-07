@@ -63,6 +63,13 @@ source fixes/reverts remain in the normal same-channel release delta.
 
 1. Merge work through `develop` → `nightly` using PRs. Nightly retains its daily
    schedule and 24-hour new-source activity rule.
+   These integrations use regression CI, not Beta/Stable promotion approval.
+   The promotion guard writes approval statuses only for open `promotion/*` or
+   `hotfix/*` PRs targeting `beta`/`main`. Ordinary integration requests receive
+   no release approval; a skipped guard does not satisfy the required policy
+   status, and publication still independently verifies the approved source.
+   GitHub commit statuses are shared across PRs using the same head SHA, so an
+   invalid release PR must not attach a release decision to an integration head.
 2. **Accumulate periodic releases** runs on `main` at the cutoff (Beta day 27;
    Stable quarter day 1). It opens a bot-authored frozen branch/PR such as
    `promotion/beta/2026-11-27` → `beta`, or

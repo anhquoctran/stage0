@@ -19,9 +19,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  integration:
+    name: No release approval for ordinary integration
+    if: >-
+      github.repository == 'anhquoctran/stage0' &&
+      github.event_name == 'pull_request_target' &&
+      contains(fromJSON('["beta","main"]'), github.event.pull_request.base.ref) &&
+      !(startsWith(github.event.pull_request.head.ref, 'promotion/') || startsWith(github.event.pull_request.head.ref, 'hotfix/'))
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Explain required release route
+        run: |
+          printf '%s\n' 'No release approval status was published. Beta/Stable require a frozen calendar rollup or certified hotfix; an ordinary branch integration does not satisfy the required release policy check.' >> "$GITHUB_STEP_SUMMARY"
   verify:
     name: Verify promotion
-    if: github.repository == 'anhquoctran/stage0'
+    if: >-
+      github.repository == 'anhquoctran/stage0' &&
+      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request_target' &&
+      contains(fromJSON('["beta","main"]'), github.event.pull_request.base.ref) &&
+      (startsWith(github.event.pull_request.head.ref, 'promotion/') || startsWith(github.event.pull_request.head.ref, 'hotfix/'))))
     runs-on: ubuntu-22.04
     permissions:
       contents: read
