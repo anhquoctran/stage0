@@ -1,8 +1,8 @@
 name: Protected regressions
 
 on:
-  push:
-    branches: ['feat/**', 'fix/**', 'refactor/**', 'perf/**', 'docs/**', 'test/**', 'chore/**', 'hotfix/**']
+  # One required-check suite per PR head. A second push suite with the same
+  # job names leaves cancelled required checks when PR concurrency supersedes it.
   pull_request:
     branches: [develop, nightly, beta, main]
     types: [opened, reopened, synchronize, ready_for_review]
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: protected-regressions-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  group: protected-regressions-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
