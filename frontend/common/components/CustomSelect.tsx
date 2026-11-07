@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useId, useMemo } from 
 import { useTranslation } from 'react-i18next';
 import { ChevronDown } from './icons/ChevronDown';
 import { Check } from './icons/Check';
+import { CustomSelectPortal } from './CustomSelectPortal';
 import type { CustomSelectProps } from '../types/CustomSelectProps';
 import { useOutsideDismiss } from '../hooks/useOutsideDismiss';
 
@@ -20,6 +21,7 @@ export function CustomSelect<T extends string>({
   dropdownWidth = 'w-56',
   dropdownPlacement = 'bottom',
   dropdownListMaxHeight,
+  portal = false,
   placeholder,
   align = 'right',
   'aria-label': ariaLabel,
@@ -36,6 +38,10 @@ export function CustomSelect<T extends string>({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [portalPosition, setPortalPosition] = useState<{
+    top: number; left: number; width: number; maxHeight: number;
+  } | null>(null);
 
   const matchingOptions = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -72,7 +78,48 @@ export function CustomSelect<T extends string>({
     listRef.current?.querySelectorAll('[role="option"]')[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
   }, [highlightedIndex]);
 
-  useOutsideDismiss(containerRef, isOpen, () => setIsOpen(false));
+  useOutsideDismiss(containerRef, isOpen, () => setIsOpen(false), portal ? menuRef : undefined);
+
+  useEffect(() => {
+    if (!portal || !isOpen) {
+      setPortalPosition(null);
+      return;
+    }
+
+    const reposition = () => {
+      const trigger = buttonRef.current;
+      if (!trigger) return;
+      const rect = trigger.getBoundingClientRect();
+      const gap = 6;
+      const viewportPadding = 8;
+      const menuHeight = 250;
+      const below = Math.max(0, window.innerHeight - rect.bottom - gap - viewportPadding);
+      const above = Math.max(0, rect.top - gap - viewportPadding);
+      const placement = dropdownPlacement === 'auto'
+        ? below >= menuHeight || below >= above ? 'bottom' : 'top'
+        : dropdownPlacement;
+      const availableHeight = placement === 'bottom' ? below : above;
+      const maxHeight = Math.max(48, Math.min(menuHeight, availableHeight));
+      const width = Math.min(rect.width, Math.max(0, window.innerWidth - viewportPadding * 2));
+      const desiredLeft = align === 'left' ? rect.left : rect.right - width;
+      const left = Math.max(viewportPadding, Math.min(desiredLeft, window.innerWidth - width - viewportPadding));
+      const top = placement === 'bottom'
+        ? rect.bottom + gap
+        : Math.max(viewportPadding, rect.top - maxHeight - gap);
+
+      setPortalPosition({ top, left, width, maxHeight });
+    };
+
+    reposition();
+    window.addEventListener('resize', reposition);
+    window.addEventListener('scroll', reposition, true);
+    window.visualViewport?.addEventListener('resize', reposition);
+    return () => {
+      window.removeEventListener('resize', reposition);
+      window.removeEventListener('scroll', reposition, true);
+      window.visualViewport?.removeEventListener('resize', reposition);
+    };
+  }, [align, dropdownPlacement, isOpen, portal]);
 
   // Sync highlighted index when opened
   useEffect(() => {
@@ -175,8 +222,23 @@ export function CustomSelect<T extends string>({
         />
       </button>
 
-      {isOpen && (
+      {isOpen && <CustomSelectPortal portal={portal} render={() => (
         <div
+          ref={menuRef}
+          style={portal ? {
+            position: 'fixed',
+            top: portalPosition?.top ?? 0,
+            left: portalPosition?.left ?? 0,
+            right: 'auto',
+            bottom: 'auto',
+            insetInlineStart: 'auto',
+            insetInlineEnd: 'auto',
+            width: portalPosition?.width ?? 0,
+            maxHeight: portalPosition?.maxHeight ?? 0,
+            margin: 0,
+            zIndex: 1000,
+            visibility: portalPosition ? 'visible' : 'hidden',
+          } : undefined}
           className={`absolute ${
             align === 'left' ? 'start-0' : 'end-0'
           } ${dropdownPlacement === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'} ${dropdownWidth} bg-mantle border border-surface0 rounded-sm shadow-2xl z-50 py-1 overflow-hidden animate-in fade-in duration-100 ${menuClassName}`}
@@ -187,7 +249,9 @@ export function CustomSelect<T extends string>({
               className="w-full px-2 py-1.5 bg-base border border-surface1 text-xs text-text outline-none focus:border-brand rounded-sm" />
           </div>}
           <div ref={listRef} role="listbox" aria-labelledby={selectId}
-            style={dropdownListMaxHeight ? { maxHeight: dropdownListMaxHeight } : undefined}
+            style={portal
+              ? portalPosition ? { maxHeight: String(Math.max(48, portalPosition.maxHeight - 10)) + 'px' } : undefined
+              : dropdownListMaxHeight ? { maxHeight: dropdownListMaxHeight } : undefined}
             className="max-h-60 overflow-y-auto overscroll-contain">
           {visibleOptions.map((option, idx) => {
             const isSelected = option.value === value;
@@ -256,7 +320,7 @@ export function CustomSelect<T extends string>({
           </div>
           {matchingOptions.length > visibleOptions.length && <p className="px-3 py-2 border-t border-surface0 text-[10px] text-subtext0">{t('common.select.showingOptions', { visible: visibleOptions.length, total: matchingOptions.length })}</p>}
         </div>
-      )}
+      )} />}
     </div>
   );
 }
