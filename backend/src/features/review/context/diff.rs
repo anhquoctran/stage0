@@ -1,4 +1,5 @@
-use super::{git, ReviewContext};
+use super::ReviewContext;
+use crate::common::text_encoding::TextEncoding;
 use crate::features::review::security;
 use std::{collections::BTreeSet, sync::Arc};
 
@@ -35,7 +36,7 @@ impl ReviewContext {
         if let Some(diff) = self.diff_cache.get(path) {
             return Ok(Arc::clone(diff));
         }
-        let raw = git(
+        let native = super::snapshot::git_bytes(
             &self.snapshot.repo_path,
             &[
                 "diff",
@@ -56,14 +57,40 @@ impl ReviewContext {
             ],
             512 * 1024,
         )?;
+        let base = self.decoded_blob_at(path, &self.snapshot.merge_base_sha)?;
+        let head = self.decoded_blob_at(path, &self.snapshot.head_sha)?;
+        let encoded = base
+            .iter()
+            .chain(head.iter())
+            .any(|blob| blob.guess.encoding != TextEncoding::Utf8);
+        let raw = if encoded {
+            let patch = crate::common::text_diff::decoded_patch(
+                &crate::features::git::runner::get_active_git_path(),
+                base.as_ref().map(|blob| blob.text.as_str()),
+                head.as_ref().map(|blob| blob.text.as_str()),
+                path,
+                path,
+                512 * 1024,
+            )?;
+            let patch = crate::common::text_diff::preserve_file_metadata(
+                &patch,
+                &String::from_utf8_lossy(&native),
+            );
+            if patch.len() > 512 * 1024 {
+                return Err("Git object exceeds the review safety limit".into());
+            }
+            patch
+        } else {
+            String::from_utf8(native)
+                .map_err(|_| "Non-UTF-8 Git objects are not reviewable as text")?
+        };
         let mut sensitive_lines = BTreeSet::new();
-        for side in ["base", "head"] {
-            if let Some(content) = self.raw_blob(path, side)? {
-                let sanitized = security::redact(&content);
-                for (original, filtered) in content.lines().zip(sanitized.lines()) {
-                    if original != filtered {
-                        sensitive_lines.insert(original.to_string());
-                    }
+        for blob in [base, head].into_iter().flatten() {
+            let content = blob.text;
+            let sanitized = security::redact(&content);
+            for (original, filtered) in content.lines().zip(sanitized.lines()) {
+                if original != filtered {
+                    sensitive_lines.insert(original.to_string());
                 }
             }
         }

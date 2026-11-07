@@ -1,0 +1,50 @@
+name: Accumulate periodic releases
+
+on:
+  schedule:
+    - cron: '0 0 27 * *'
+    - cron: '0 0 1 1,4,7,10 *'
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: 'Target channel (only adjacent promotion is permitted)'
+        required: true
+        type: choice
+        options: [beta, stable]
+      release_date:
+        description: 'UTC release date: Beta YYYY-MM-27 or Stable quarter day 1 (default: today)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage0-promotion-${{ inputs.channel || github.event.schedule }}
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    if: github.repository == 'anhquoctran/stage0' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+      security-events: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Accumulate all eligible source builds and open a reviewed rollup PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROMOTION_CHANNEL: ${{ inputs.channel || (github.event.schedule == '0 0 27 * *' && 'beta' || 'stable') }}
+          PROMOTION_DATE: ${{ inputs.release_date }}
+        run: node scripts/release-promotion-cli.mjs create

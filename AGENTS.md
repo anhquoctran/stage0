@@ -11,6 +11,16 @@ For Git branching, PR targets and release promotion, follow [Git strategy](docs/
 
 ## Git strategy and branching contracts
 
+- **Exactly one worktree for this repository**:
+  - Work only in `/Users/anhquoctran/Workspaces/stage0`. Never create additional
+    worktrees or temporary checkouts for features, fixes, reviews, or parallel tasks.
+  - Before switching tasks, inspect staged, unstaged and untracked changes and
+    commit the current work on its working branch. Do not discard changes or
+    leave unfinished work in another checkout. Never checkpoint on a protected branch;
+    move those changes to an appropriate working branch first.
+  - For a new feature or standard task, fetch `origin`, create a new approved
+    working branch from `origin/develop`, and switch to it in this same directory.
+    Existing hotfix base/target requirements below still apply.
 - **Branch risk and stability hierarchy**:
   - `develop`, `feat/*`, `fix/*` (and other working branches): **Highest risk / least stable** (`unstable`).
   - `nightly`: **High risk** (`preview` daily channel).

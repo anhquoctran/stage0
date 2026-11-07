@@ -2667,6 +2667,11 @@
     "taskProgress": {
       "working": "جارٍ العمل…",
       "ariaLabel": "{{title}}: {{phase}}"
+    },
+    "encoding": {
+      "label": "ترميز الملف",
+      "automatic": "تلقائي",
+      "loading": "جارٍ فك ترميز الملف…"
     }
   },
   "review": {

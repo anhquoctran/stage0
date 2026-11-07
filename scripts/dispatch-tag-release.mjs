@@ -3,10 +3,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { releaseChannel } from './release-channels.mjs';
 
-/** The main-ref controller dispatches data; only the tag-ref run executes release code. */
+/** Trusted channel controllers dispatch data; only tag-ref runs execute release builds. */
 export async function dispatchTagRelease(env = process.env, request = fetch) {
-  if (env.GITHUB_REPOSITORY !== 'anhquoctran/stage0' || env.GITHUB_REF !== 'refs/heads/main'
-    || env.GITHUB_REF_TYPE !== 'branch') throw new Error('Release controller must run on main');
+  const betaController = env.GITHUB_REF === 'refs/heads/beta' && /^v\d+\.\d+\.\d+-beta$/.test(env.RELEASE_TAG || '');
+  if (env.GITHUB_REPOSITORY !== 'anhquoctran/stage0' || (env.GITHUB_REF !== 'refs/heads/main' && !betaController)
+    || env.GITHUB_REF_TYPE !== 'branch') throw new Error('Release controller must run on main (or beta for Beta rollups)');
   const tag = env.RELEASE_TAG;
   if (!tag?.startsWith('v')) throw new Error('Invalid release tag');
   releaseChannel(tag.slice(1));

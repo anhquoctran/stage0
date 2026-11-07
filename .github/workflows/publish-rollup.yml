@@ -1,0 +1,58 @@
+name: Build approved periodic rollup
+
+on:
+  push:
+    branches: [beta, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage0-rollup-publication-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'anhquoctran/stage0' && (github.ref == 'refs/heads/beta' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      actions: write
+      pull-requests: read
+      security-events: read
+    steps:
+      # Always execute the trusted controller. Candidate code is only Git data;
+      # native builds are dispatched onto the immutable tag's isolated scope.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Check trusted main controller deployment
+        id: trusted_controller
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const required = ['.github/workflows/publish-rollup.yml', 'scripts/release-rollup-publish.mjs'];
+          const entries = required.map(file => fs.lstatSync(file, { throwIfNoEntry: false }));
+          if (entries.every(entry => !entry)) {
+            const message = 'Release controller is not deployed to trusted main yet. No build, tag or release was requested. Deploy the reviewed release policy to main before retrying publication.';
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'ready=false\n');
+            console.log(`::notice::${message}`);
+            if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${message}\n`);
+          } else {
+            const missing = required.filter((_, index) => !entries[index]?.isFile());
+            if (missing.length) throw new Error(`Incomplete trusted main controller deployment: missing ${missing.join(', ')}. Restore the reviewed control plane before publishing.`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'ready=true\n');
+          }
+          NODE
+      - name: Wait for approved merge CodeQL and dispatch the complete signed build
+        if: steps.trusted_controller.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/release-rollup-publish.mjs

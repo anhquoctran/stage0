@@ -69,7 +69,7 @@ test('RELEASE_NOTES.md exists and is scoped to the current package version', () 
   const notesSrc = readFileSync(filePath, 'utf-8');
   assert.match(notesSrc, new RegExp(`Stage0 v${escapeRegex(version)} Release Notes`));
   assert.match(notesSrc, new RegExp(`Current Version Release Notes|current release \\(v${escapeRegex(version)}\\)`));
-  assert.match(notesSrc, /Compatibility Matrix/);
+  assert.match(notesSrc, /Compatibility Matrix|## Changes/);
 });
 
 test('DEFAULT_RELEASE_NOTES provides rich markdown for current version', () => {

@@ -13,9 +13,11 @@ fn read_git(
     limit: usize,
     allow_truncation: bool,
 ) -> Result<(String, bool), String> {
+    let mut command_args = vec!["-c", "core.quotePath=false"];
+    command_args.extend_from_slice(args);
     let result = run_git_with_limits(
         repo,
-        args,
+        &command_args,
         limit,
         MAX_METADATA_BYTES,
         Duration::from_secs(120),
@@ -91,7 +93,7 @@ pub fn get_commit_details(repo: &str, hash: &str) -> Result<CommitDetail, String
     let (names, _) = read_git(repo, &diff_args("--name-status"), MAX_METADATA_BYTES, false)?;
     let (stats, _) = read_git(repo, &diff_args("--numstat"), MAX_METADATA_BYTES, false)?;
     let stats = parse_numstat_z(&stats);
-    let files = parse_name_status_z(&names)
+    let mut files: Vec<ChangedFile> = parse_name_status_z(&names)
         .into_iter()
         .map(|(status, path, old_path)| {
             let (additions, deletions, is_binary) = stats.get(&path).copied().unwrap_or_default();
@@ -106,6 +108,15 @@ pub fn get_commit_details(repo: &str, hash: &str) -> Result<CommitDetail, String
             }
         })
         .collect();
+    let (normalized, encoded_truncated) = super::text_patch::normalize_encoded_files(
+        repo,
+        parents.first().map(String::as_str),
+        &hash,
+        &mut files,
+        &raw_diff,
+        MAX_PATCH_BYTES,
+    );
+    raw_diff = normalized;
     Ok(CommitDetail {
         hash: hash.clone(),
         parents,
@@ -115,7 +126,7 @@ pub fn get_commit_details(repo: &str, hash: &str) -> Result<CommitDetail, String
         message: fields[5].trim_end_matches(['\n', '\r']).into(),
         files,
         raw_diff,
-        truncated,
+        truncated: truncated || encoded_truncated,
     })
 }
 

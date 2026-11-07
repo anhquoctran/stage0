@@ -4,7 +4,7 @@ import { X } from '../../../common/components/icons/X';
 import { formatDateTime } from '../../../common/utils/dateTime';
 import { useDateTimeLanguage } from '../../i18n/hooks/useDateTimeLanguage';
 import { useCommitDetails } from '../hooks/useCommitDetails';
-import { CommitFileDiff } from './CommitFileDiff';
+import { EncodedCommitFileDiff as CommitFileDiff } from './EncodedCommitFileDiff';
 
 export function CommitDetailsModal({ repoPath, commitHash, onClose }: {
   repoPath: string; commitHash: string; onClose: () => void;
@@ -22,7 +22,7 @@ export function CommitDetailsModal({ repoPath, commitHash, onClose }: {
     const keydown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close.current(); }
       if (event.key !== 'Tab') return;
-      const items = Array.from(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]') ?? []);
+      const items = Array.from(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], select:not(:disabled)') ?? []);
       const first = items[0], last = items.at(-1);
       if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog.current)) {
         event.preventDefault(); last?.focus();
@@ -66,7 +66,8 @@ export function CommitDetailsModal({ repoPath, commitHash, onClose }: {
               </button>)}
             </nav>
             <div className="min-h-0 min-w-0 flex-1 overflow-auto p-3">
-              {file ? <CommitFileDiff key={`${data.hash}:${file.path}`} file={file} rawDiff={data.raw_diff} />
+              {file ? <CommitFileDiff key={`${data.hash}:${file.path}`} file={file} rawDiff={data.raw_diff}
+                repoPath={repoPath} oldRef={data.parents[0] ?? null} newRef={data.hash} />
                 : <p className="p-3 text-xs text-subtext0">{t('git.commitDetails.noFileChanges')}</p>}
             </div>
           </div>
