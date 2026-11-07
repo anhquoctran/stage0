@@ -45,6 +45,8 @@ jobs:
     permissions:
       contents: write
       actions: write
+      pull-requests: read
+      security-events: read
     concurrency:
       group: stage0-release-prepare-${{ inputs.tag || github.ref_name || 'manual' }}
       cancel-in-progress: false
@@ -52,6 +54,9 @@ jobs:
       tag: ${{ steps.snapshot.outputs.tag }}
       sha: ${{ steps.snapshot.outputs.sha }}
       channel: ${{ steps.snapshot.outputs.channel }}
+      should_build: ${{ steps.snapshot.outputs.should_build }}
+      previous_tag: ${{ steps.snapshot.outputs.previous_tag }}
+      source_sha: ${{ steps.snapshot.outputs.source_sha }}
       publish_at: ${{ inputs.publish_at || '' }}
     steps:
       - name: Verify dispatched tag snapshot
@@ -79,9 +84,10 @@ jobs:
           RELEASE_RUN_ID: ${{ github.run_id }}
           RELEASE_SOURCE_SHA: ${{ github.sha }}
           RELEASE_INPUT_TAG: ${{ inputs.tag || github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/manual-release.mjs
       - name: Dispatch isolated tag release
-        if: github.ref_type != 'tag'
+        if: github.ref_type != 'tag' && steps.snapshot.outputs.should_build == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ steps.snapshot.outputs.tag }}
@@ -91,7 +97,7 @@ jobs:
 
   validate:
     # Builds execute in the tag's cache namespace, never the controller's main scope.
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' && needs.prepare.outputs.should_build == 'true'
     needs: prepare
     runs-on: ubuntu-22.04
     env:
@@ -156,10 +162,13 @@ jobs:
       TARGET_ARCH: ${{ matrix.arch }}
       RELEASE_TARGET: ${{ matrix.target }}
       RELEASE_BUNDLES: ${{ matrix.bundles }}
+      RELEASE_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+      RELEASE_PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
@@ -184,6 +193,9 @@ jobs:
       - name: Run Rust tests
         if: runner.os == 'Linux'
         run: cargo test --locked --manifest-path backend/Cargo.toml --lib
+      - name: Generate changelog for this release snapshot
+        shell: bash
+        run: node scripts/release-changelog.mjs "$RELEASE_TAG" "$RELEASE_SOURCE_SHA" "$RELEASE_PREVIOUS_TAG"
       - run: node scripts/generate-about-info.mjs
       - name: Build versioned and signed packages
         shell: bash
@@ -220,14 +232,21 @@ jobs:
       group: stage0-release-publication-${{ needs.prepare.outputs.channel }}
       cancel-in-progress: false
     env:
+      RELEASE_CHANNEL: ${{ needs.prepare.outputs.channel }}
       RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
       RELEASE_PUBLISH_AT: ${{ needs.prepare.outputs.publish_at }}
+      RELEASE_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+      RELEASE_PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}
     permissions:
       contents: write
+      pull-requests: read
+      security-events: read
+      actions: read
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
@@ -249,13 +268,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
+          node scripts/release-changelog.mjs "$RELEASE_TAG" "$RELEASE_SOURCE_SHA" "$RELEASE_PREVIOUS_TAG"
           if gh release view "$RELEASE_TAG" --json isDraft > release-state.json; then
             node -e "if (!JSON.parse(require('fs').readFileSync('release-state.json')).isDraft) throw new Error('Refusing to replace an already published release')"
           else
             gh release create "$RELEASE_TAG" --draft --verify-tag --title "Stage0 $RELEASE_TAG" --notes-file RELEASE_NOTES.md
           fi
+          gh release edit "$RELEASE_TAG" --notes-file RELEASE_NOTES.md
           gh release upload "$RELEASE_TAG" release-assets/* --clobber
           node scripts/prepare-release.mjs wait "$RELEASE_PUBLISH_AT"
+          RELEASE_CHANNEL="$RELEASE_CHANNEL" node scripts/release-promotion-cli.mjs verify-release
           CHANNEL=$(node --input-type=module -e 'import {releaseChannel} from "./scripts/release-channels.mjs"; console.log(releaseChannel(process.env.RELEASE_TAG.slice(1)))')
           if [[ "$CHANNEL" == "stable" ]]; then
             gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest

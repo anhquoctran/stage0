@@ -138,7 +138,7 @@ test('every named feature operation preserves its command, input, progress callb
     }
     assert.equal(Object.keys(service).length, expected.size);
   }
-  assert.equal(operations.size, 147); // Includes native fullscreen, the singleton Preferences window operations, atomic Preferences commit, and guarded comment deletion.
+  assert.equal(operations.size, 148); // Includes the read-only file encoding preview alongside the existing native operations.
 });
 
 

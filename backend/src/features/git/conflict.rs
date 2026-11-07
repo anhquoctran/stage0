@@ -1,5 +1,6 @@
 use super::runner::run_git;
 use super::{ConflictFilePreview, ConflictRegion, ConflictReport, ConflictedFileInfo};
+use crate::common::text_encoding::{decode_buffer, TextEncoding};
 use std::io::Read;
 
 const MAX_CONFLICT_FILE_BYTES: u64 = 8 * 1024 * 1024;
@@ -181,7 +182,8 @@ pub fn get_conflicted_file_preview(
                     "backend.git.conflictFileTooLarge",
                 ));
             }
-            if let Ok(content) = String::from_utf8(bytes) {
+            if let Ok(decoded) = decode_buffer(&bytes, None) {
+                let content = decoded.text;
                 on_disk_markers_count = content
                     .lines()
                     .filter(|line| line.starts_with("<<<<<<<"))
@@ -197,23 +199,26 @@ pub fn get_conflicted_file_preview(
     let base_spec = format!("{}:{}", effective_base, clean_path);
     let compare_spec = format!("{}:{}", effective_compare, clean_path);
 
-    let base_content = run_git(repo_path, &["show", &base_spec])
+    let read = |reference: &str| -> Result<_, String> {
+        super::text_content::read_blob_bytes(
+            repo_path,
+            reference,
+            &clean_path,
+            MAX_CONFLICT_FILE_BYTES as usize,
+        )
         .ok()
-        .map(|r| r.stdout);
-    let compare_content = run_git(repo_path, &["show", &compare_spec])
-        .ok()
-        .map(|r| r.stdout);
-    if base_content
-        .as_deref()
-        .is_some_and(|content| content.contains('\0'))
-        || compare_content
-            .as_deref()
-            .is_some_and(|content| content.contains('\0'))
-    {
-        return Err(crate::common::messages::code(
-            "backend.git.conflictBinaryNotSupported",
-        ));
-    }
+        .map(|bytes| decode_buffer(&bytes, None))
+        .transpose()
+        .map_err(|_| crate::common::messages::code("backend.git.conflictBinaryNotSupported"))
+    };
+    let base_blob = read(&effective_base)?;
+    let compare_blob = read(&effective_compare)?;
+    let encoded = base_blob
+        .iter()
+        .chain(compare_blob.iter())
+        .any(|blob| blob.guess.encoding != TextEncoding::Utf8);
+    let base_content = base_blob.map(|blob| blob.text);
+    let compare_content = compare_blob.map(|blob| blob.text);
 
     // 2. Find common ancestor
     let merge_base = run_git(
@@ -249,7 +254,27 @@ pub fn get_conflicted_file_preview(
             "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391".to_string()
         };
 
-        if let (Ok(b_oid), Ok(c_oid)) = (base_oid, compare_oid) {
+        if encoded {
+            let ancestor = if merge_base.is_empty() {
+                None
+            } else {
+                read(&merge_base)?
+            };
+            merged_content = super::text_merge::merge_decoded(
+                base_content.as_deref().unwrap_or_default(),
+                ancestor
+                    .as_ref()
+                    .map(|blob| blob.text.as_str())
+                    .unwrap_or_default(),
+                compare_content.as_deref().unwrap_or_default(),
+                base,
+                compare,
+            )?;
+            conflict_markers_count = merged_content
+                .lines()
+                .filter(|line| line.starts_with("<<<<<<<"))
+                .count();
+        } else if let (Ok(b_oid), Ok(c_oid)) = (base_oid, compare_oid) {
             let res = run_git(
                 repo_path,
                 &[
@@ -363,9 +388,14 @@ fn count_on_disk_conflict_markers(path: &std::path::Path, byte_budget: usize) ->
     let Ok(bytes_read) = file.take(to_read as u64).read_to_end(&mut bytes) else {
         return (0, 0);
     };
-    let count = bytes
-        .split(|byte| *byte == b'\n')
-        .filter(|line| line.starts_with(b"<<<<<<<"))
-        .count();
+    let count = decode_buffer(&bytes, None)
+        .map(|decoded| {
+            decoded
+                .text
+                .lines()
+                .filter(|line| line.starts_with("<<<<<<<"))
+                .count()
+        })
+        .unwrap_or(0);
     (count, bytes_read)
 }

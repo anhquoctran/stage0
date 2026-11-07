@@ -7,6 +7,14 @@ alwaysApply: true
 # Git strategy and branch protection
 
 - Follow `docs/architecture/git_strategy.md` and `AGENTS.md`.
+- **One worktree only**: use `/Users/anhquoctran/Workspaces/stage0` for every task.
+  Never create additional worktrees or temporary checkouts, including for reviews
+  or parallel work.
+- Before changing tasks/branches, inspect staged, unstaged and untracked changes,
+  then commit the current work on its working branch. Never discard work or
+  checkpoint on a protected branch; move changes to a working branch first.
+- Start each new standard task by fetching `origin` and switching to a new approved
+  branch from `origin/develop` in this same directory. Keep the hotfix exception below.
 - **Branch risk hierarchy**: `develop`/`feat/*`/`fix/*` (Highest risk, least stable) -> `nightly` (High risk) -> `beta` (Medium risk) -> `main` (Stable).
 - **SemVer vs. Stability**: `main` có thể không phải là bản có SemVer lớn nhất tại một thời điểm (do nightly/beta ra thường xuyên hơn), nhưng luôn là bản chính thức có độ ổn định cao nhất (`stable`).
 - **Never commit or push directly** to `main`, `beta`, `nightly`, or `develop`.

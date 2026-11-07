@@ -1,0 +1,202 @@
+[
+  {
+    "encoding": "UTF-8",
+    "hex": "48656c6c6f205669e1bb8774204e616d20e697a5e69cace8aa9e20f09f98800a",
+    "text": "Hello Việt Nam 日本語 😀\n"
+  },
+  {
+    "encoding": "UTF-8 with BOM",
+    "hex": "efbbbf48656c6c6f205669e1bb8774204e616d20e697a5e69cace8aa9e20f09f98800a",
+    "text": "Hello Việt Nam 日本語 😀\n"
+  },
+  {
+    "encoding": "UTF-16 LE",
+    "hex": "480065006c006c006f00200056006900c71e740020004e0061006d002000e5652c679e8a20003dd800de0a00",
+    "text": "Hello Việt Nam 日本語 😀\n"
+  },
+  {
+    "encoding": "UTF-16 BE",
+    "hex": "00480065006c006c006f0020005600691ec700740020004e0061006d002065e5672c8a9e0020d83dde00000a",
+    "text": "Hello Việt Nam 日本語 😀\n"
+  },
+  {
+    "encoding": "Windows-1250",
+    "hex": "50f8ed6c699a209e6c759d6f75e86bfd206bf9f220fa70ec6c20efe162656c736be920f364792e0a",
+    "text": "Příliš žluťoučký kůň úpěl ďábelské ódy.\n"
+  },
+  {
+    "encoding": "Windows-1251",
+    "hex": "cff0e8e2e5f220ece8f02e20ddf2ee20f2e5eaf1f2eee2fbe920f4e0e9eb20e4ebff20eff0eee2e5f0eae820eaeee4e8f0eee2eae82e0a",
+    "text": "Привет мир. Это текстовый файл для проверки кодировки.\n"
+  },
+  {
+    "encoding": "Windows-1252",
+    "hex": "4c6520636166e9206573742064e96ae0207072ea742e204672616ee76f697320e96372697420756e65206c657474726520e0204e6feb6c2e0a",
+    "text": "Le café est déjà prêt. François écrit une lettre à Noël.\n"
+  },
+  {
+    "encoding": "Windows-1253",
+    "hex": "cae1ebe7ecddf1e120eafcf3ece52e20c1f5f4fc20e5dfede1e920ddede120e1f1f7e5dfef20eae5e9ecddedeff52e0a",
+    "text": "Καλημέρα κόσμε. Αυτό είναι ένα αρχείο κειμένου.\n"
+  },
+  {
+    "encoding": "Windows-1254",
+    "hex": "54fc726be7653a20dd7374616e62756c2c20fdfefd6b2c20e7fdf02c20f6f06c652c20fc7afc6d2e0a",
+    "text": "Türkçe: İstanbul, ışık, çığ, öğle, üzüm.\n"
+  },
+  {
+    "encoding": "Windows-1255",
+    "hex": "f9ece5ed20f2e5eced2e20e6e4e520f7e5e1f520e8f7f1e820ece1e3e9f7fa20e4f7e9e3e5e32e0a",
+    "text": "שלום עולם. זהו קובץ טקסט לבדיקת הקידוד.\n"
+  },
+  {
+    "encoding": "Windows-1256",
+    "hex": "e3d1cdc8c720c8c7e1dac7e1e32e20e5d0c720e3e1dd20e4d5ed20e1c7cecac8c7d120c7e1cad1e3edd22e0a",
+    "text": "مرحبا بالعالم. هذا ملف نصي لاختبار الترميز.\n"
+  },
+  {
+    "encoding": "Windows-1257",
+    "hex": "c2626f6c732c20e8fb736b612c20e76b612c20ec696d656e652c20ed69727369732c20ef61756469732c20fb64656e732c20fe6f67732e0a",
+    "text": "Ābols, čūska, ēka, ģimene, ķirsis, ļaudis, ūdens, žogs.\n"
+  },
+  {
+    "encoding": "Windows-1258",
+    "hex": "5669eaf274204e616d3a20636861cc6f206261f26e2c207468eaec206769f5ec692e0a",
+    "text": "Việt Nam: chào bạn, thế giới.\n"
+  },
+  {
+    "encoding": "Windows-874",
+    "hex": "cac7d1cab4d5e2c5a120b9d5e8a4d7cde4bfc5eca2e9cda4c7d2c1cad3cbc3d1bab7b4cacdbaa1d2c3e0a2e9d2c3cbd1ca0a",
+    "text": "สวัสดีโลก นี่คือไฟล์ข้อความสำหรับทดสอบการเข้ารหัส\n"
+  },
+  {
+    "encoding": "ISO-8859-1",
+    "hex": "4c6520636166e9206573742064e96ae0207072ea742e204672616ee76f697320e96372697420756e65206c657474726520e0204e6feb6c2e0a",
+    "text": "Le café est déjà prêt. François écrit une lettre à Noël.\n"
+  },
+  {
+    "encoding": "ISO-8859-2",
+    "hex": "50f8ed6c69b920be6c75bb6f75e86bfd206bf9f220fa70ec6c20efe162656c736be920f364792e0a",
+    "text": "Příliš žluťoučký kůň úpěl ďábelské ódy.\n"
+  },
+  {
+    "encoding": "ISO-8859-4",
+    "hex": "c0626f6c732c20ba6b612c20fe64656e732e0a",
+    "text": "Ābols, ēka, ūdens.\n"
+  },
+  {
+    "encoding": "ISO-8859-5",
+    "hex": "bfe0d8d2d5e220dcd8e02e20cde2de20e2d5dae1e2ded2ebd920e4d0d9db20d4dbef20dfe0ded2d5e0dad820daded4d8e0ded2dad82e0a",
+    "text": "Привет мир. Это текстовый файл для проверки кодировки.\n"
+  },
+  {
+    "encoding": "ISO-8859-6",
+    "hex": "e5d1cdc8c720c8c7e4d9c7e4e52e20e7d0c720e5e4e120e6d5ea20e4c7cecac8c7d120c7e4cad1e5ead22e0a",
+    "text": "مرحبا بالعالم. هذا ملف نصي لاختبار الترميز.\n"
+  },
+  {
+    "encoding": "ISO-8859-7",
+    "hex": "cae1ebe7ecddf1e120eafcf3ece52e20c1f5f4fc20e5dfede1e920ddede120e1f1f7e5dfef20eae5e9ecddedeff52e0a",
+    "text": "Καλημέρα κόσμε. Αυτό είναι ένα αρχείο κειμένου.\n"
+  },
+  {
+    "encoding": "ISO-8859-8",
+    "hex": "f9ece5ed20f2e5eced2e20e6e4e520f7e5e1f520e8f7f1e820ece1e3e9f7fa20e4f7e9e3e5e32e0a",
+    "text": "שלום עולם. זהו קובץ טקסט לבדיקת הקידוד.\n"
+  },
+  {
+    "encoding": "ISO-8859-9",
+    "hex": "54fc726be7653a20dd7374616e62756c2c20fdfefd6b2c20e7fdf02c20f6f06c652c20fc7afc6d2e0a",
+    "text": "Türkçe: İstanbul, ışık, çığ, öğle, üzüm.\n"
+  },
+  {
+    "encoding": "ISO-8859-11",
+    "hex": "cac7d1cab4d5e2c5a120b9d5e8a4d7cde4bfc5eca2e9cda4c7d2c1cad3cbc3d1bab7b4cacdbaa1d2c3e0a2e9d2c3cbd1ca0a",
+    "text": "สวัสดีโลก นี่คือไฟล์ข้อความสำหรับทดสอบการเข้ารหัส\n"
+  },
+  {
+    "encoding": "ISO-8859-13",
+    "hex": "c2626f6c732c20e8fb736b612c20e76b612c20ec696d656e652c20ed69727369732c20ef61756469732c20fb64656e732c20fe6f67732e0a",
+    "text": "Ābols, čūska, ēka, ģimene, ķirsis, ļaudis, ūdens, žogs.\n"
+  },
+  {
+    "encoding": "ISO-8859-15",
+    "hex": "4c6520636166e9206573742064e96ae0207072ea742e204672616ee76f697320e96372697420756e65206c657474726520e0204e6feb6c2e0aa40a",
+    "text": "Le café est déjà prêt. François écrit une lettre à Noël.\n€\n"
+  },
+  {
+    "encoding": "KOI8-R",
+    "hex": "f0d2c9d7c5d420cdc9d22e20fcd4cf20d4c5cbd3d4cfd7d9ca20c6c1cacc20c4ccd120d0d2cfd7c5d2cbc920cbcfc4c9d2cfd7cbc92e0a",
+    "text": "Привет мир. Это текстовый файл для проверки кодировки.\n"
+  },
+  {
+    "encoding": "KOI8-U",
+    "hex": "f5cbd2c1a7cec13a20adc1cecfcb2c20a7d6c1cb2c20a4c4cea6d3d4d82c20d3d7a6d42e0a",
+    "text": "Україна: ґанок, їжак, єдність, світ.\n"
+  },
+  {
+    "encoding": "IBM437",
+    "hex": "4c652063616682206573742064826a8520707288742e204672616e876f697320826372697420756e65206c65747472652085204e6f896c2e0a",
+    "text": "Le café est déjà prêt. François écrit une lettre à Noël.\n"
+  },
+  {
+    "encoding": "IBM850",
+    "hex": "4c652063616682206573742064826a8520707288742e204672616e876f697320826372697420756e65206c65747472652085204e6f896c2e0a",
+    "text": "Le café est déjà prêt. François écrit une lettre à Noël.\n"
+  },
+  {
+    "encoding": "IBM852",
+    "hex": "50fda16c69e720a76c759c6f759f6bec206b85e520a370d86c20d4a062656c736b8220a264792e0a",
+    "text": "Příliš žluťoučký kůň úpěl ďábelské ódy.\n"
+  },
+  {
+    "encoding": "IBM865",
+    "hex": "44616e736b206f67206e6f72736b3a2091626c652c209b76656c73652c20626c866291722c20729b6467729b642e0a",
+    "text": "Dansk og norsk: æble, øvelse, blåbær, rødgrød.\n"
+  },
+  {
+    "encoding": "IBM866",
+    "hex": "8fe0a8a2a5e220aca8e02e209de2ae20e2a5aae1e2aea2eba920e4a0a9ab20a4abef20afe0aea2a5e0aaa820aaaea4a8e0aea2aaa82e0a",
+    "text": "Привет мир. Это текстовый файл для проверки кодировки.\n"
+  },
+  {
+    "encoding": "Macintosh",
+    "hex": "4c65206361668e2065737420648e6a8820707290742e204672616e8d6f6973208e6372697420756e65206c65747472652088204e6f916c2e0a",
+    "text": "Le café est déjà prêt. François écrit une lettre à Noël.\n"
+  },
+  {
+    "encoding": "Shift JIS",
+    "hex": "82b182f182c982bf82cd90a28a45814293fa967b8cea82cc95b68fcd82f090b382b582ad93c782dd8d9e82dd82dc82b781420a",
+    "text": "こんにちは世界。日本語の文章を正しく読み込みます。\n"
+  },
+  {
+    "encoding": "EUC-JP",
+    "hex": "a4b3a4f3a4cba4c1a4cfc0a4b3a6a1a3c6fccbdcb8eca4cecab8becfa4f2c0b5a4b7a4afc6c9a4dfb9fea4dfa4dea4b9a1a30a",
+    "text": "こんにちは世界。日本語の文章を正しく読み込みます。\n"
+  },
+  {
+    "encoding": "EUC-KR",
+    "hex": "bec8b3e7c7cfbcbcbfe420bcbcb0e82e20c5d8bdbac6ae20c6c4c0cfc0c720c0cec4dab5f9c0bb20c8aec0cec7d5b4cfb4d92e0a",
+    "text": "안녕하세요 세계. 텍스트 파일의 인코딩을 확인합니다.\n"
+  },
+  {
+    "encoding": "GB2312",
+    "hex": "c4e3bac3cac0bde7a1a3d5e2cac7b2e2cad4cec4b1becec4bcfeb5c4d6d0cec4c4dac8dda1a30a",
+    "text": "你好世界。这是测试文本文件的中文内容。\n"
+  },
+  {
+    "encoding": "GBK",
+    "hex": "c4e3bac3cac0bde7a1a3d5e2cac7b2e2cad4cec4b1becec4bcfeb5c4d6d0cec4c4dac8dda1a381400a",
+    "text": "你好世界。这是测试文本文件的中文内容。丂\n"
+  },
+  {
+    "encoding": "GB18030",
+    "hex": "c4e3bac3cac0bde7a1a3d5e2cac7b2e2cad4cec4b1becec4bcfeb5c4d6d0cec4c4dac8dda1a39439fc360a",
+    "text": "你好世界。这是测试文本文件的中文内容。😀\n"
+  },
+  {
+    "encoding": "Big5",
+    "hex": "a741a66ea540acc9a143b36fac4fb4fab8d5a4e5a672c0c9aed7aabaa4a4a4e5a4baae65a1430a",
+    "text": "你好世界。這是測試文字檔案的中文內容。\n"
+  }
+]

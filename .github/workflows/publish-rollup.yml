@@ -1,0 +1,39 @@
+name: Build approved periodic rollup
+
+on:
+  push:
+    branches: [beta, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage0-rollup-publication-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'anhquoctran/stage0' && (github.ref == 'refs/heads/beta' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      actions: write
+      pull-requests: read
+      security-events: read
+    steps:
+      # Always execute the trusted controller. Candidate code is only Git data;
+      # native builds are dispatched onto the immutable tag's isolated scope.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Wait for approved merge CodeQL and dispatch the complete signed build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/release-rollup-publish.mjs
