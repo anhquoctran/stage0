@@ -92,3 +92,45 @@ test('a published period source is never rebuilt and code-only source mutations 
   assert.equal(result.skipped, true); assert.match(result.reason, /already been published/);
   assert.equal(f.git('rev-parse', 'HEAD'), source); assert.equal(f.git('status', '--porcelain'), '');
 });
+
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+test('trusted controller rollout skips only an uninstalled main and blocks partial deployment without executing source code', async t => {
+  const workflow = fs.readFileSync(new URL('../.github/workflows/publish-rollup.yml', import.meta.url), 'utf8');
+  const script = workflow.match(/node --input-type=module <<'NODE'\n([\s\S]*?)\n\s*NODE/)[1];
+  assert.match(workflow, /ref: main/);
+  assert.match(workflow, /name: Wait for approved merge CodeQL[^\n]*\n\s+if: steps\.trusted_controller\.outputs\.ready == 'true'/);
+  for (const [name, files, ready, directories] of [
+    ['not deployed', [], false],
+    ['complete', ['.github/workflows/publish-rollup.yml', 'scripts/release-rollup-publish.mjs'], true],
+    ['script missing', ['.github/workflows/publish-rollup.yml'], null],
+    ['workflow missing', ['scripts/release-rollup-publish.mjs'], null],
+    ['invalid file types', ['.github/workflows/publish-rollup.yml', 'scripts/release-rollup-publish.mjs'], null, true],
+  ]) await t.test(name, t => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'stage0-controller-rollout-'));
+    t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+    for (const file of files) {
+      fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+      if (directories) fs.mkdirSync(path.join(root, file));
+      else fs.writeFileSync(path.join(root, file), 'throw new Error("Source code must never execute during the deployment check");\n');
+    }
+    const output = path.join(root, 'outputs'), summary = path.join(root, 'summary');
+    const run = () => execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
+      cwd: root, encoding: 'utf8', stdio: 'pipe', env: { ...process.env, GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: summary },
+    });
+    if (ready === null) {
+      assert.throws(run, /Incomplete trusted main controller deployment/);
+      assert.equal(fs.existsSync(output), false);
+    } else {
+      const log = run();
+      assert.equal(fs.readFileSync(output, 'utf8'), `ready=${ready}\n`);
+      if (!ready) {
+        assert.match(log, /::notice::/);
+        assert.match(fs.readFileSync(summary, 'utf8'), /No build, tag or release was requested/);
+      }
+    }
+  });
+});
