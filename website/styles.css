@@ -1424,122 +1424,87 @@ code, pre {
   text-decoration: underline;
 }
 
+.release-history-platforms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  align-items: start;
+  gap: 0.85rem;
+}
+.release-history-platform {
+  min-width: 0;
+  padding: 0.8rem;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+}
+.release-history-platform h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.65rem;
+  color: var(--ctp-text);
+  font-size: 0.85rem;
+}
+.release-history-asset-logo { color: var(--ctp-brand); }
 .release-history-assets {
   display: grid;
-  gap: 0.3rem;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-
-.release-history-asset-item {
-  min-width: 0;
+.release-history-asset-item { min-width: 0; }
+.release-history-asset-item + .release-history-asset-item {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border-subtle);
 }
-
 .release-history-asset-row {
   display: grid;
-  grid-template-areas: "logo details digest download";
-  grid-template-columns: 1.15rem minmax(0, 2.8fr) minmax(13rem, 3fr) minmax(5.5rem, auto);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "details download" "digest download";
+  gap: 0.3rem 0.65rem;
   align-items: center;
-  gap: 0.65rem;
-  min-height: 2.6rem;
-  padding: 0.45rem 0.65rem;
-  color: var(--ctp-subtext1);
-  font-size: 0.78rem;
-  font-weight: 500;
-}
-
-.release-history-asset-logo {
-  grid-area: logo;
-  color: var(--ctp-brand);
-  font-size: 1rem;
-  text-align: center;
-}
-
-.release-history-asset-details {
-  display: grid;
-  grid-area: details;
-  grid-template-columns: minmax(5.25rem, 0.8fr) minmax(4.5rem, 0.7fr) minmax(4.5rem, 0.65fr) minmax(4.5rem, 0.65fr);
-  align-items: center;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
-.release-history-asset-os,
-.release-history-asset-arch,
-.release-history-asset-format {
-  white-space: nowrap;
-}
-
-.release-history-asset-digest { grid-area: digest; }
-.release-history-download-button { grid-area: download; }
-
-.release-history-asset-os {
-  color: var(--ctp-text);
-  font-weight: 650;
-}
-
-.release-history-asset-size {
-  color: var(--ctp-subtext0);
   font-size: 0.75rem;
-  white-space: nowrap;
 }
-
-.release-history-asset-size.is-unavailable {
-  color: var(--ctp-overlay1);
+.release-history-asset-details {
+  grid-area: details;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.5rem;
+  min-width: 0;
+  color: var(--ctp-text);
 }
-
+.release-history-asset-arch { font-weight: 650; }
+.release-history-asset-format { color: var(--ctp-subtext1); font-size: 0.7rem; }
+.release-history-asset-size { color: var(--ctp-subtext0); font-size: 0.7rem; white-space: nowrap; }
 .release-history-asset-digest {
+  grid-area: digest;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  max-width: 100%;
+  gap: 0.35rem;
   min-width: 0;
-  padding: 0.35rem 0.5rem;
+  max-width: 100%;
+  justify-self: start;
+  padding: 0.15rem 0;
   border: 0;
   border-radius: 4px;
-  background: var(--bg-elevated);
+  background: transparent;
   color: var(--ctp-subtext0);
-  font-size: 0.68rem;
-  text-align: left;
+  font-size: 0.65rem;
   cursor: copy;
-  box-sizing: border-box;
-  overflow: hidden;
 }
-
-.release-history-asset-digest code {
-  display: block;
-  flex: 1 1 auto;
-  min-width: 0;
-  font-family: var(--font-mono, monospace);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.release-history-asset-digest:hover:not(:disabled) {
-  background: var(--ctp-surface0);
-  transform: none;
-}
-
-.release-history-asset-digest:active {
-  transform: none;
-}
-
-.release-history-asset-digest.is-unavailable,
-.release-history-asset-digest:disabled {
-  color: var(--ctp-overlay1);
-  cursor: not-allowed;
-}
-
+.release-history-asset-digest code { font-family: var(--font-mono, monospace); white-space: nowrap; }
+.release-history-asset-digest:hover:not(:disabled) { color: var(--ctp-brand); }
+.release-history-asset-digest:disabled { opacity: 0.5; cursor: default; }
 .release-history-download-button {
+  grid-area: download;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  min-height: 2rem;
-  padding: 0.35rem 0.55rem;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.6rem;
   border: 0;
   border-radius: 4px;
   background: var(--ctp-brand);
@@ -1547,43 +1512,22 @@ code, pre {
   font-size: 0.7rem;
   font-weight: 650;
   text-decoration: none;
-  white-space: nowrap;
 }
-
-.release-history-download-button:hover {
-  filter: brightness(1.08);
-}
-
-.release-history-download-button:active {
-  transform: none;
-}
-
-.release-history-pagination {
+.release-history-download-button:hover { filter: brightness(1.08); }
+.release-history-pagination,
+.release-history-page-numbers {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 0.85rem;
-  margin-top: 1.25rem;
-  color: var(--ctp-subtext0);
-  font-size: 0.8125rem;
+  gap: 0.25rem;
 }
-
-@media (max-width: 1150px) {
-  .release-history-asset-row {
-    grid-template-columns: 1.15rem minmax(0, 1fr) minmax(5.5rem, auto);
-    grid-template-areas:
-      "logo details download"
-      "logo digest digest";
-  }
-  .release-history-asset-details {
-    grid-template-columns: minmax(5rem, 1fr) repeat(3, minmax(4.5rem, 0.7fr));
-  }
-}
-
+.release-history-pagination { margin-top: 1rem; font-size: 0.8rem; }
 .release-history-page-button,
 .release-history-retry {
-  min-height: 2.35rem;
-  padding: 0.4rem 0.8rem;
+  min-width: 2rem;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.5rem;
   border: 0;
   border-radius: 4px;
   background: transparent;
@@ -1591,22 +1535,16 @@ code, pre {
   font: inherit;
   cursor: pointer;
 }
-
 .release-history-page-button:hover:not(:disabled),
-.release-history-retry:hover {
-  background: var(--ctp-surface0);
-  color: var(--ctp-text);
-  outline: 1px solid var(--border-muted);
-}
-
-.release-history-page-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.release-history-retry[hidden] {
-  display: none;
-}
+.release-history-retry:hover { background: var(--ctp-surface0); }
+.release-history-page-button[aria-current="page"],
+.release-history-page-button[aria-current="page"]:hover { background: var(--ctp-brand); color: #fff; }
+.release-history-page-button:disabled { opacity: 0.45; cursor: default; }
+.release-history-page-gap { color: var(--ctp-subtext0); padding: 0 0.15rem; }
+.release-history-retry[hidden] { display: none; }
+.release-history-pagination button:focus-visible,
+.release-history-asset-digest:focus-visible,
+.release-history-download-button:focus-visible { outline: 2px solid var(--ctp-brand); outline-offset: 3px; }
 
 .download-grid {
   display: grid;
@@ -2618,18 +2556,6 @@ code {
   .release-history-panel {
     padding: 0.85rem;
   }
-  .release-history-asset-row {
-    grid-template-columns: 1.15rem minmax(0, 1fr) minmax(5.5rem, auto);
-    grid-template-areas:
-      "logo details download"
-      "digest digest digest";
-    gap: 0.3rem 0.55rem;
-  }
-  .release-history-asset-details {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.2rem 0.5rem;
-  }
   .release-history-filters {
     gap: 1rem;
   }
@@ -2839,21 +2765,6 @@ code {
 }
 
 @media (max-width: 420px) {
-  .release-history-asset-row {
-    grid-template-columns: 1.15rem minmax(0, 1fr) minmax(5.5rem, auto);
-    grid-template-areas:
-      "logo details download"
-      "digest digest digest";
-    gap: 0.25rem 0.55rem;
-  }
-  .release-history-asset-details {
-    gap: 0.2rem 0.45rem;
-    font-size: 0.72rem;
-  }
-  .release-history-download-button {
-    align-self: center;
-    justify-self: end;
-  }
   .brand-link {
     gap: 0.35rem;
   }

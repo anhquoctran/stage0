@@ -78,31 +78,15 @@ test('hero uses left-aligned Fira Code typing over a partial grid background', (
   assert.match(page, /class="hero-typing-line hero-typing-accent text-highlight"\s*>Before You Push\./);
 });
 
-test('release archive exposes OS and architecture filters with responsive pagination', () => {
-  const mobile = mediaRules('768px');
-  const narrowMobile = mediaRules('420px');
-  const compactArchive = mediaRules('1150px');
+test('release archive uses grouped platforms and a labelled numeric pagination region', () => {
   const archive = page.match(/<section id="release-history"[\s\S]*?<\/section>/)?.[0] ?? '';
-
-  assert.match(archive, /data-history-os="windows"/);
-  assert.match(archive, /data-history-os="macos"/);
-  assert.match(archive, /data-history-os="linux"/);
-  assert.match(archive, /data-history-arch="x64"/);
-  assert.match(archive, /data-history-arch="arm64"/);
-  assert.match(archive, /id="release-history-previous"/);
-  assert.match(archive, /id="release-history-next"/);
-  assert.match(mobile, /\.release-history-card-header\s*\{\s*flex-direction:\s*column/);
-  assert.match(mobile, /\.release-history-filter,\s*\.release-filter-options\s*\{\s*width:\s*100%/);
-  assert.match(mobile, /\.release-channel-status\s*\{\s*flex:\s*0 1 auto;\s*width:\s*100%/);
-  assert.match(mobile, /\.release-history-asset-row\s*\{[^}]*"logo details download"[\s\S]*?"digest digest digest"/);
-  assert.match(mobile, /\.release-history-asset-details\s*\{[^}]*flex-wrap:\s*wrap/);
-  assert.match(narrowMobile, /\.release-history-asset-row\s*\{[^}]*"logo details download"[\s\S]*?"digest digest digest"/);
-  assert.match(compactArchive, /\.release-history-asset-row\s*\{[\s\S]*?grid-template-areas:[\s\S]*?digest/);
-  assert.match(styles, /\.release-history-asset-digest\s*\{[^}]*width:\s*100%;[^}]*overflow:\s*hidden/);
-  assert.match(styles, /\.release-history-asset-digest code\s*\{[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap/);
-  assert.match(styles, /\.release-history-download-button\s*\{[^}]*border:\s*0/);
+  for (const value of ['windows', 'macos', 'linux']) assert.ok(archive.includes(`data-history-os="${value}"`));
+  assert.match(archive, /<nav class="release-history-pagination" aria-label="Release history pages">/);
+  assert.match(archive, /aria-label="Previous page"/);
+  assert.match(archive, /aria-label="Next page"/);
+  assert.doesNotMatch(archive, />Page 1</);
+  assert.match(styles, /\.release-history-platforms\s*\{[^}]*minmax\(min\(100%, 18rem\), 1fr\)/);
   assert.doesNotMatch(styles, /\.release-history-asset-row:hover/);
-  assert.match(styles, /\.release-history-page-button,\s*\.release-history-retry\s*\{[^}]*border:\s*0/);
 });
 
 test('unselected download cards contrast with the light page background', () => {

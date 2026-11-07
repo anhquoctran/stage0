@@ -3262,26 +3262,27 @@
                         id="release-history-list"
                         class="release-history-list"
                     ></div>
-                    <div class="release-history-pagination">
+                    <nav class="release-history-pagination" aria-label="Release history pages">
                         <button
                             type="button"
                             id="release-history-previous"
+                            aria-label="Previous page"
                             class="release-history-page-button"
                             disabled
                         >
-                            Previous
+                            ‹
                         </button>
-                        <span id="release-history-page-label" aria-live="polite"
-                            >Page 1</span
-                        >
+                        <span id="release-history-page-label" class="release-history-page-numbers"></span>
                         <button
                             type="button"
                             id="release-history-next"
+                            aria-label="Next page"
                             class="release-history-page-button"
                             disabled
                         >
-                            Next
+                            ›
                         </button>
+                        <button type="button" id="release-history-load-more" class="release-history-retry" hidden>Load older releases</button>
                         <button
                             type="button"
                             id="release-history-retry"
@@ -3290,7 +3291,7 @@
                         >
                             Retry
                         </button>
-                    </div>
+                    </nav>
                 </div>
             </div>
         </section>

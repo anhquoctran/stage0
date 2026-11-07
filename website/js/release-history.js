@@ -197,21 +197,15 @@
     const row = document.createElement('div');
     row.className = 'release-history-asset-row';
 
-    const icon = document.createElement('i');
-    icon.className = `${asset.iconClass} release-history-asset-logo`;
-    icon.setAttribute('aria-hidden', 'true');
     const details = document.createElement('div');
     details.className = 'release-history-asset-details';
-    const os = document.createElement('span');
-    os.className = 'release-history-asset-os';
-    os.textContent = asset.osLabel;
     const arch = document.createElement('span');
     arch.className = 'release-history-asset-arch';
     arch.textContent = asset.archLabel;
     const format = document.createElement('span');
     format.className = 'release-history-asset-format';
     format.textContent = asset.formatLabel;
-    details.append(os, arch, format);
+    details.append(arch, format);
     const size = document.createElement('small');
     size.className = `release-history-asset-size${asset.size ? '' : ' is-unavailable'}`;
     size.textContent = asset.size || 'Size unavailable';
@@ -227,7 +221,7 @@
     const digestLabel = document.createElement('span');
     digestLabel.textContent = 'SHA-256';
     const digestValue = document.createElement('code');
-    digestValue.textContent = asset.digest || 'unavailable';
+    digestValue.textContent = asset.digest ? `${asset.digest.slice(0, 6)}…${asset.digest.slice(-6)}` : 'unavailable';
     digest.append(digestLabel, digestValue);
     if (asset.digest) digest.addEventListener('click', () => { void copyDigestToClipboard(asset.digest); });
 
@@ -245,7 +239,7 @@
     downloadLabel.textContent = 'Download';
     downloadButton.append(downloadLabel);
 
-    row.append(icon, details, digest, downloadButton);
+    row.append(details, digest, downloadButton);
     return row;
   }
 
@@ -286,16 +280,65 @@
     }
     header.append(titleRow, meta);
 
-    const assets = document.createElement('ul');
-    assets.className = 'release-history-assets';
+    const platforms = document.createElement('div');
+    platforms.className = 'release-history-platforms';
+    const groups = new Map();
     filteredAssets(release).forEach(asset => {
-      const item = document.createElement('li');
-      item.className = 'release-history-asset-item';
-      item.append(createAssetRow(asset));
-      assets.append(item);
+      if (!groups.has(asset.os)) groups.set(asset.os, []);
+      groups.get(asset.os).push(asset);
     });
-    card.append(header, assets);
+    groups.forEach(group => {
+      const platform = document.createElement('section');
+      platform.className = 'release-history-platform';
+      const heading = document.createElement('h4');
+      const icon = document.createElement('i');
+      icon.className = `${group[0].iconClass} release-history-asset-logo`;
+      icon.setAttribute('aria-hidden', 'true');
+      const name = document.createElement('span');
+      name.textContent = group[0].osLabel;
+      heading.append(icon, name);
+      const assets = document.createElement('ul');
+      assets.className = 'release-history-assets';
+      group.forEach(asset => {
+        const item = document.createElement('li');
+        item.className = 'release-history-asset-item';
+        item.append(createAssetRow(asset));
+        assets.append(item);
+      });
+      platform.append(heading, assets);
+      platforms.append(platform);
+    });
+    card.append(header, platforms);
     return card;
+  }
+
+  function renderPageNumbers(total) {
+    const container = byId('release-history-page-label');
+    if (!container) return;
+    const candidates = new Set([1, total, state.page - 1, state.page, state.page + 1]);
+    if (state.page <= 3) [2, 3, 4].forEach(page => candidates.add(page));
+    if (state.page >= total - 2) [total - 3, total - 2, total - 1].forEach(page => candidates.add(page));
+    const pages = [...candidates].filter(page => page >= 1 && page <= total).sort((a, b) => a - b);
+    const nodes = [];
+    pages.forEach((page, index) => {
+      if (index && page - pages[index - 1] > 1) {
+        const gap = document.createElement('span');
+        gap.className = 'release-history-page-gap';
+        gap.textContent = '…';
+        gap.setAttribute('aria-hidden', 'true');
+        nodes.push(gap);
+      }
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'release-history-page-button';
+      button.textContent = String(page);
+      button.disabled = state.loading;
+      button.setAttribute('aria-label', `Page ${page}`);
+      if (page === state.page) button.setAttribute('aria-current', 'page');
+      button.addEventListener('click', () => { state.page = page; render(); });
+      nodes.push(button);
+    });
+    container.replaceChildren(...nodes);
   }
 
   function render() {
@@ -309,15 +352,16 @@
 
     const previous = byId('release-history-previous');
     const next = byId('release-history-next');
-    const pageLabel = byId('release-history-page-label');
+    const loadMore = byId('release-history-load-more');
     const retry = byId('release-history-retry');
     const hasLoadedNextPage = releases.length > start + PAGE_SIZE;
     if (previous) previous.disabled = state.loading || state.page <= 1;
-    if (next) {
-      next.disabled = state.loading || (!hasLoadedNextPage && !state.hasMore);
-      next.textContent = hasLoadedNextPage ? 'Next' : state.hasMore ? 'Load older' : 'Next';
+    if (next) next.disabled = state.loading || !hasLoadedNextPage;
+    if (loadMore) {
+      loadMore.hidden = !state.hasMore;
+      loadMore.disabled = state.loading;
     }
-    if (pageLabel) pageLabel.textContent = `Page ${state.page}`;
+    renderPageNumbers(Math.max(1, Math.ceil(releases.length / PAGE_SIZE)));
     if (retry) retry.hidden = !state.error;
 
     if (state.loading) {
@@ -328,7 +372,7 @@
         : 'Could not load release history. Check your connection and retry.');
     } else if (!visible.length) {
       setStatus(state.hasMore
-        ? 'No releases match these filters in the loaded results. Choose “Load older” to search further back.'
+        ? 'No releases match these filters in the loaded results. Choose “Load older releases” to search further back.'
         : 'No releases match these filters.');
     } else {
       const end = Math.min(start + visible.length, releases.length);
@@ -483,6 +527,8 @@
     });
     const next = byId('release-history-next');
     if (next) next.addEventListener('click', () => { void nextPage(); });
+    const loadMore = byId('release-history-load-more');
+    if (loadMore) loadMore.addEventListener('click', () => { void fetchNextApiPage(); });
     const retry = byId('release-history-retry');
     if (retry) retry.addEventListener('click', () => {
       if (!state.loaded) void loadInitial();
