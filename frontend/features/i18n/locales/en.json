@@ -1273,7 +1273,7 @@
     "copied": "Copied",
     "author": "Author",
     "releaseDate": "Release date",
-    "architectureCommit": "Architecture / Commit",
+    "architecture": "Architecture",
     "copyDiagnostics": "Copy system and version information",
     "copiedInfo": "Copied info",
     "copyInfo": "Copy info",

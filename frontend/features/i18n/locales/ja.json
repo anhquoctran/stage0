@@ -1273,7 +1273,7 @@
     "copied": "コピーしました",
     "author": "作成者",
     "releaseDate": "リリース日",
-    "architectureCommit": "アーキテクチャ / コミット",
+    "architecture": "アーキテクチャ",
     "copyDiagnostics": "システムとバージョン情報をコピー",
     "copiedInfo": "情報をコピーしました",
     "copyInfo": "情報をコピー",

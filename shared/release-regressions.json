@@ -182,6 +182,11 @@
       "id": "regression-gate-self-defense",
       "runner": "node",
       "path": "scripts/release-regression.test.mjs"
+    },
+    {
+      "id": "about-version-no-commit",
+      "runner": "node",
+      "path": "scripts/about-version-no-commit.test.mjs"
     }
   ]
 }

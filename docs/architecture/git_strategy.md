@@ -101,6 +101,15 @@ For each new standard task, fetch `origin`, create a new branch from
 Keep existing branches and commits available when switching tasks. Hotfixes still
 use the release-branch bases and back-sync requirements in section 3.
 
+With strict up-to-date checks, the next `develop` → `nightly` promotion must also
+contain Nightly's previous promotion merge commit. If that commit is missing,
+create a working branch from `origin/develop`, merge `origin/nightly` into it,
+and merge the working branch back through a checked PR to `develop` first.
+Preserve Develop's newer fixes when reviewing this back-sync. Avoid opening
+opposing channel PRs with an empty file diff: GitHub can leave the ancestry-only
+PR without a merge result or required checks. Record the synchronization in the
+working PR's documentation so its purpose and validation remain reviewable.
+
 ```mermaid
 flowchart LR
     DEV["origin/develop"] -->|"git checkout -b feat/..."| WORK["Working Branch (feat/*, fix/*, refactor/*, ...)"]
