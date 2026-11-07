@@ -392,12 +392,14 @@ fn existing_stage0_database_is_never_overwritten_by_legacy_database() {
 #[test]
 fn database_fallback_requires_an_absolute_user_directory() {
     assert!(fallback_app_data_dir(Some(PathBuf::new()), None).is_err());
+    assert!(fallback_app_data_dir(
+        Some(PathBuf::from("relative-user")),
+        Some(PathBuf::from("relative-home")),
+    )
+    .is_err());
+    let home = std::env::current_dir().unwrap().join("stage0-home-fixture");
     assert_eq!(
-        fallback_app_data_dir(
-            Some(PathBuf::from("relative-user")),
-            Some(PathBuf::from("/users/stage0")),
-        )
-        .unwrap(),
-        PathBuf::from("/users/stage0/.local-virtual-mr")
+        fallback_app_data_dir(Some(PathBuf::from("relative-user")), Some(home.clone())).unwrap(),
+        home.join(".local-virtual-mr")
     );
 }

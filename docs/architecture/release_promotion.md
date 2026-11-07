@@ -154,3 +154,67 @@ retain their ordinary merge methods.
 Workflow files in an unmerged implementation PR do not activate this policy.
 Do not install an unsatisfiable required check before its workflows are deployed.
 No release branch is automatically merged by the rollout or by this implementation.
+
+## Regression protection and its limits
+
+A clean merge is not proof that old behavior is preserved. Before returning an
+assembled head, reject explicit reverts of commits already reachable from the
+target branch. Reverting newly introduced unstable work within the current
+source period remains allowed. An intentional rollback of target behavior needs
+a dedicated reviewed fix/hotfix, not automatic calendar accumulation.
+
+`shared/release-regressions.json` names protected behavior/security contracts.
+The initial set covers updater signature/version replay, archive validation and
+resource limits, DeepSeek thinking/tool continuations and truncated responses,
+discussion ownership/deletion/audit, reviewer errors/status/notifications, Git
+remote safety, HTML sanitization, codec compatibility, release authorization,
+retention of target-only hotfixes and regression-gate tampering.
+Register important bug fixes with a test that fails before the fix and passes
+afterward. Keep contracts about behavior and independent inputs, not incidental
+layout snapshots or fixed counts that would forbid adding supported codecs.
+
+The baseline is the **pre-merge target commit**, recorded in the rollup ledger
+and derivable from the release source merge's first parent. CI extracts the
+standalone runner from that commit before checking/executing the candidate. It
+runs frozen baseline assertions against candidate production code in the same
+checkout, restores the candidate test/fixture bytes even on failure, then also
+runs the current catalog (including new cases). Production modules are never
+replaced with old implementations. No second worktree is created.
+
+Protected case IDs, test paths and exact Rust test names cannot be removed.
+Protected assertions are append-only; existing fixture inputs cannot be changed
+or removed (new corpus entries may be added). Removing an assertion/test module,
+ignoring a contract, running zero matching tests or weakening the registry blocks
+release. Rust contracts must appear in `cargo test --list` and each exact named
+test must report one pass, zero failures and zero ignored tests. Node contracts
+must report actual executed tests without skips or todo cases.
+
+Test adapters may evolve when APIs change. A changed harness, runner or workflow
+requires a separate explicit acknowledgement in the promotion PR (`Regression
+control-plane changes reviewed`), in addition to normal QA and human approval.
+The old baseline assertions still run. Review adapters for behavior masking; a
+new mock implementation is not evidence that the real product works.
+
+Readonly PR CI runs the complete current Node suite plus frozen/current catalog
+contracts and the current Rust suite on Linux, macOS and Windows. After merge,
+Beta/Stable tag jobs again load the trusted target runner; Node baseline contracts
+run in validation, and Rust baseline contracts **plus all current Rust tests run
+on all six native release targets**, before signing/publication. A failure on any
+target blocks the complete release rather than publishing the successful subset.
+The promotion check still validates the exact merged tree and original build
+proofs; signature verification still authenticates the final package bytes.
+
+Install the initial registry/tests with the control plane on every target branch.
+During this first PR rollout only, a missing old registry may bootstrap from the
+new reviewed catalog, retaining old test bytes where they already exist. Ordinary
+Beta/Stable tag jobs have no bootstrap permission and fail when the target's
+registry/runner is missing. Initial registries describe features actually present
+on each branch; registries may differ and grow, but existing target cases cannot
+be dropped by a promotion. The protection preflight validates each branch's
+registry and test files before requiring its regression checks.
+
+These gates protect recorded regressions; they cannot prove the absence of every
+possible defect or an external provider/service change. Stable still requires QA
+of actual installers, upgrade paths, persisted data, native UI and platform
+integration. A missing test or unavailable platform check must be reported as a
+coverage gap, never described as a guaranteed regression-free release.
