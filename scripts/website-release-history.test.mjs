@@ -59,6 +59,7 @@ function fixture(responses) {
     'release-history-next',
     'release-history-page-label',
     'release-history-retry',
+    'release-history-stable-only',
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, new Element()]));
   const osFilters = ['all', 'windows', 'macos', 'linux'].map((value) => new Element({ 'data-history-os': value }));
@@ -226,4 +227,55 @@ test('release history paginates loaded results, then fetches the next GitHub pag
   assert.match(view.elements['release-history-list'].children[0].children[0].children[0].children[0].textContent, /v1\.0\.101/);
   assert.match(view.requests[0], /[?&]page=1/);
   assert.match(view.requests[1], /[?&]page=2/);
+});
+
+test('Stable only defaults on; toggling preserves OS and architecture filters without fetching again', async () => {
+  const view = fixture([{ releases: [
+    makeRelease('4-nightly', ['aarch64-unknown-linux-gnu-Stage0.deb']),
+    makeRelease('3-beta', ['aarch64-unknown-linux-gnu-Stage0.deb']),
+    makeRelease(2, ['aarch64-unknown-linux-gnu-Stage0.deb']),
+    makeRelease(1, ['x86_64-pc-windows-msvc-Stage0-setup.exe']),
+  ] }]);
+  await settle();
+  const toggle = view.elements['release-history-stable-only'];
+  const tags = () => view.elements['release-history-list'].children.map(card => card.children[0].children[0].children[0].textContent);
+  assert.equal(toggle.checked, true);
+  assert.deepEqual(tags(), ['v1.0.2', 'v1.0.1']);
+  view.osFilters.find(button => button.getAttribute('data-history-os') === 'linux').click();
+  view.archFilters.find(button => button.getAttribute('data-history-arch') === 'arm64').click();
+  assert.deepEqual(tags(), ['v1.0.2']);
+  toggle.checked = false;
+  toggle.listeners.change();
+  assert.deepEqual(tags(), ['v1.0.4-nightly', 'v1.0.3-beta', 'v1.0.2']);
+  toggle.checked = true;
+  toggle.listeners.change();
+  assert.deepEqual(tags(), ['v1.0.2']);
+  assert.equal(view.requests.length, 1);
+});
+
+test('changing Stable only resets pagination and keeps stable releases available on older API pages', async () => {
+  const previews = Array.from({ length: 100 }, (_, index) => makeRelease(`${index}-nightly`, [
+    'x86_64-pc-windows-msvc-Stage0-setup.exe',
+  ]));
+  const view = fixture([
+    { releases: previews, link: '<https://api.github.com/repos/anhquoctran/stage0/releases?page=2>; rel="next"' },
+    { releases: [makeRelease(101, ['x86_64-pc-windows-msvc-Stage0-setup.exe'])] },
+  ]);
+  await settle();
+  assert.equal(view.elements['release-history-list'].children.length, 0);
+  assert.equal(view.elements['release-history-next'].textContent, 'Load older');
+  await view.elements['release-history-next'].click();
+  await settle();
+  assert.equal(view.elements['release-history-list'].children.length, 1);
+  const toggle = view.elements['release-history-stable-only'];
+  toggle.checked = false;
+  toggle.listeners.change();
+  await view.elements['release-history-next'].click();
+  assert.equal(view.elements['release-history-page-label'].textContent, 'Page 2');
+  toggle.checked = true;
+  toggle.listeners.change();
+  assert.equal(view.elements['release-history-page-label'].textContent, 'Page 1');
+  assert.equal(view.elements['release-history-list'].children.length, 1);
+  assert.match(view.elements['release-history-list'].children[0].children[0].children[0].children[0].textContent, /v1\.0\.101/);
+  assert.equal(view.requests.length, 2);
 });
