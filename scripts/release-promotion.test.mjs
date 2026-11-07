@@ -1,3 +1,6 @@
+import { seedRegressionFixture } from './helpers/regressionFixture.mjs';
+import { commandFixture } from './helpers/commandFixture.mjs';
+import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs';
@@ -86,6 +89,7 @@ function gitFixture(t) {
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
   git('init', '-b', 'main'); git('config', 'user.name', 'Fixture'); git('config', 'user.email', 'test@example.test');
+  seedRegressionFixture(root);
   fs.writeFileSync(path.join(root, 'app.txt'), 'original'); git('add', '.'); git('commit', '-m', 'Base');
   const base = git('rev-parse', 'HEAD');
   git('checkout', '-b', 'nightly'); fs.writeFileSync(path.join(root, 'app.txt'), 'tested candidate');
@@ -204,7 +208,6 @@ test('a candidate tag containing untested source changes cannot certify its sour
 test('trusted PR workflow posts success/failure to the exact head SHA, never the base SHA', t => {
   const f = approvedFixture(t);
   f.pr.base.sha = f.base; f.pr.state = 'open'; f.pr.merged = false;
-  const bin = path.join(f.root, 'bin'); fs.mkdirSync(bin);
   const data = path.join(f.root, 'api.json'), log = path.join(f.root, 'requests.jsonl');
   const event = path.join(f.root, 'event.json'); fs.writeFileSync(event, '{"number":10}');
   const endpoints = ['pulls/10', 'releases/tags/v0.0.8-nightly',
@@ -216,34 +219,32 @@ test('trusted PR workflow posts success/failure to the exact head SHA, never the
   // Mock already-paginated endpoints expose page objects; CLI gh supplies that wrapper.
   for (const endpoint of endpoints.filter(e => e.startsWith('actions/'))) responses[endpoint] = responses[endpoint][0];
   fs.writeFileSync(data, JSON.stringify(responses));
-  fs.writeFileSync(path.join(bin, 'gh'), `#!/usr/bin/env node
-const fs = require('node:fs');
-const args = process.argv.slice(2), endpoint = args[1].replace('repos/anhquoctran/stage0/', '');
-if (args.includes('--method')) {
-  const body = JSON.parse(fs.readFileSync(0, 'utf8'));
-  fs.appendFileSync(process.env.FAKE_GH_LOG, JSON.stringify({endpoint, body}) + '\\n');
-  process.stdout.write(JSON.stringify(endpoint === 'pulls' ? {number:10, html_url:'https://github.com/anhquoctran/stage0/pull/10'} : {}));
-} else {
-  const value = JSON.parse(fs.readFileSync(process.env.FAKE_GH_DATA, 'utf8'))[endpoint];
-  if (value === undefined) throw new Error('Unexpected endpoint: ' + endpoint);
-  process.stdout.write(JSON.stringify(args.includes('--paginate') ? [value] : value));
-}
-`, { mode: 0o755 });
-  const env = { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH}`, FAKE_GH_DATA: data, FAKE_GH_LOG: log,
+  const mock = commandFixture(f.root, 'gh', (args, options) => {
+    const endpoint = args[1].replace('repos/anhquoctran/stage0/', '');
+    if (args.includes('--method')) {
+      const body = JSON.parse(options.input);
+      fs.appendFileSync(process.env.FAKE_GH_LOG, JSON.stringify({ endpoint, body }) + '\n');
+      return JSON.stringify(endpoint === 'pulls' ? { number: 10, html_url: 'https://github.com/anhquoctran/stage0/pull/10' } : {});
+    }
+    const value = JSON.parse(fs.readFileSync(process.env.FAKE_GH_DATA, 'utf8'))[endpoint];
+    if (value === undefined) throw new Error('Unexpected endpoint: ' + endpoint);
+    return JSON.stringify(args.includes('--paginate') ? [value] : value);
+  });
+  const env = { ...process.env, FAKE_GH_DATA: data, FAKE_GH_LOG: log,
     GITHUB_REPOSITORY: 'anhquoctran/stage0', GITHUB_EVENT_PATH: event, GITHUB_EVENT_NAME: 'pull_request_target',
     GITHUB_SHA: f.base, GITHUB_RUN_ID: '123',
   };
   const entry = new URL('./release-promotion-cli.mjs', import.meta.url);
-  execFileSync(process.execPath, [entry.pathname, 'check-pr'], { cwd: f.root, env, stdio: 'pipe' });
+  execFileSync(process.execPath, [...mock, fileURLToPath(entry), 'check-pr'], { cwd: f.root, env, stdio: 'pipe' });
   let requests = fs.readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
   assert.deepEqual(requests.map(r => r.body.state), ['pending', 'success']);
   assert.ok(requests.every(r => r.endpoint === `statuses/${f.source}`));
   assert.ok(requests.every(r => r.body.context === 'Release promotion policy'));
   responses['pulls/10'].body = 'Stage0-Candidate: v0.0.8-nightly\n'; fs.writeFileSync(data, JSON.stringify(responses));
-  assert.throws(() => execFileSync(process.execPath, [entry.pathname, 'check-pr'], { cwd: f.root, env, stdio: 'pipe' }), /checklist/);
+  assert.throws(() => execFileSync(process.execPath, [...mock, fileURLToPath(entry), 'check-pr'], { cwd: f.root, env, stdio: 'pipe' }), /checklist/);
   requests = fs.readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
   assert.equal(requests.at(-1).body.state, 'failure');
-  assert.throws(() => execFileSync(process.execPath, [entry.pathname, 'create'], { cwd: f.root, stdio: 'pipe', env: { ...env,
+  assert.throws(() => execFileSync(process.execPath, [...mock, fileURLToPath(entry), 'create'], { cwd: f.root, stdio: 'pipe', env: { ...env,
     GITHUB_REF: 'refs/heads/main', PROMOTION_CHANNEL: 'beta', PROMOTION_DATE: '2026-11-26',
   } }), /day 27/);
 });

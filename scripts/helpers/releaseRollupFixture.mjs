@@ -1,3 +1,4 @@
+import { seedRegressionFixture } from './regressionFixture.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -11,6 +12,7 @@ export function rollupFixture(t, { channel = 'nightly', conflict = false } = {})
   git('init', '-b', 'main'); git('config', 'user.name', 'Fixture'); git('config', 'user.email', 'fixture@example.test');
   git('remote', 'add', 'origin', root);
   fs.mkdirSync(path.join(root, '.github')); fs.writeFileSync(path.join(root, '.github/release-rollup.json'), '{"oldLedger":true}\n');
+  seedRegressionFixture(root);
   fs.writeFileSync(path.join(root, 'README'), 'base'); git('add', '.'); git('commit', '-m', 'Base');
   const baseSha = git('rev-parse', 'HEAD'); git('branch', 'beta');
   const releases = [], candidates = new Map();

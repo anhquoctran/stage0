@@ -23,6 +23,11 @@ test('rules protect all channels without bypass and require reviewed, current, a
   const [base, promotion] = releaseProtectionRules();
   assert.equal(base.conditions.ref_name.include.length, 4);
   assert.deepEqual(base.rules.find(rule => rule.type === 'pull_request').parameters.allowed_merge_methods, ['merge', 'squash', 'rebase']);
+  const regressions = base.rules.find(rule => rule.type === 'required_status_checks').parameters;
+  assert.equal(regressions.strict_required_status_checks_policy, true);
+  assert.deepEqual(regressions.required_status_checks.map(check => check.context), [
+    'Regression gate (ubuntu-22.04)', 'Regression gate (macos-latest)', 'Regression gate (windows-latest)',
+  ]);
   for (const ruleset of [base, promotion]) assert.deepEqual(ruleset.bypass_actors, []);
   assert.deepEqual(promotion.conditions.ref_name.include, ['refs/heads/beta', 'refs/heads/main']);
   const review = promotion.rules.find(rule => rule.type === 'pull_request').parameters;
@@ -38,7 +43,7 @@ test('rules protect all channels without bypass and require reviewed, current, a
 test('dry run never writes and missing rollout/PR permissions fail before any server mutation', () => {
   const missing = fakeApi({ missing: true });
   const report = configureReleaseProtection({ api: missing.api });
-  assert.equal(report.ready, false); assert.equal(report.issues.length, enforcementFiles.length * 4);
+  assert.equal(report.ready, false); assert.equal(report.issues.length, (enforcementFiles.length + 1) * 4);
   assert.equal(missing.writes.length, 0);
   assert.throws(() => configureReleaseProtection({ api: missing.api, apply: true }), /complete rollout/);
   assert.equal(missing.writes.length, 0);
@@ -54,4 +59,23 @@ test('activation updates only owned rulesets after all files match on every prot
   assert.equal(f.writes[0].endpoint, 'rulesets/10'); assert.equal(f.writes[0].method, 'PUT');
   assert.equal(f.writes[1].endpoint, 'rulesets'); assert.equal(f.writes[1].method, 'POST');
   assert.ok(f.writes.every(write => write.endpoint !== 'rulesets/99'));
+});
+
+test('rollout may omit an absent feature contract but never an existing feature or a provider/API failure', () => {
+  for (const state of ['absent', 'present', 'api-failure']) {
+    const f = fakeApi();
+    const api = (endpoint, options) => {
+      if (endpoint.startsWith('contents/shared/release-regressions.json?')) {
+        const catalog = JSON.parse(Buffer.from(f.api(endpoint).content, 'base64'));
+        catalog.cases = catalog.cases.filter(item => item.id !== 'text-encoding-contracts');
+        return { encoding: 'base64', content: Buffer.from(JSON.stringify(catalog)).toString('base64') };
+      }
+      if (endpoint.startsWith('contents/backend/src/common/text_encoding/mod.rs?') && state !== 'present') {
+        throw new Error(state === 'absent' ? '404' : '503 Service unavailable');
+      }
+      return f.api(endpoint, options);
+    };
+    assert.equal(configureReleaseProtection({ api }).ready, state === 'absent');
+    assert.equal(f.writes.length, 0);
+  }
 });

@@ -16,25 +16,32 @@ const summary = text => {
 };
 
 if (mode === 'check-pr') {
-  // pull_request_target uses trusted base code. Publish the status on PR HEAD
-  // explicitly, since its own GITHUB_SHA belongs to the base branch.
+  // pull_request_target uses trusted default-branch code. Publish the status on
+  // PR HEAD explicitly, since GITHUB_SHA belongs to the default branch.
   const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
   if (process.env.GITHUB_EVENT_NAME === 'workflow_dispatch' && process.env.GITHUB_REF !== 'refs/heads/main') throw new Error('Manual policy checks must run on main');
   const number = String(event.number || process.env.PROMOTION_PR || '');
   if (!/^\d+$/.test(number)) throw new Error('Invalid promotion PR number');
   const pr = promotionApi(`pulls/${number}`);
+  // Commit statuses are shared by every PR using this SHA. Never attach a
+  // release decision to a closed PR or an ordinary integration branch.
+  if (pr.state !== 'open' || !['beta', 'main'].includes(pr.base.ref)
+    || !/^(promotion|hotfix)\//i.test(pr.head.ref)) {
+    summary(`Skipped release approval for PR #${number} (${pr.state}, ${pr.head.ref} → ${pr.base.ref}). No release approval status was published. Beta/Stable require a frozen calendar rollup or certified hotfix.`);
+    process.exit(0);
+  }
   const status = (state, description) => promotionApi(`statuses/${pr.head.sha}`, { method: 'POST', body: {
     state, context: policy.promotion.requiredCheck, description,
     target_url: `https://github.com/${RELEASE_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,
   } });
-  status('pending', 'Verifying full release period, eligible builds and frozen merge tree');
+  status('pending', `Verifying release PR #${number} → ${pr.base.ref}: full period, builds and frozen tree`);
   try {
     const result = assertPromotionPullRequest(root, pr);
-    status('success', `Verified ${result.candidate.tag} → ${result.channel}`);
+    status('success', `Verified PR #${number}: ${result.candidate.tag} → ${result.channel}`);
     summary(`Verified ${result.candidate.tag} (${result.candidate.sourceSha}) → ${result.channel}, PR #${pr.number}. Human approval is required before merge.`);
   } catch (error) {
-    status('failure', 'Promotion blocked; see workflow summary');
-    summary(`Promotion blocked: ${error.message}`);
+    status('failure', `Release PR #${number} → ${pr.base.ref} blocked; see workflow summary`);
+    summary(`Promotion PR #${number} → ${pr.base.ref} blocked: ${error.message}`);
     throw error;
   }
 } else if (mode === 'create') {
