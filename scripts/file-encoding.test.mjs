@@ -2,19 +2,24 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { componentHarness, componentNodes, loadWithMocks } from './helpers/componentHarness.mjs';
 
-test('one compact encoding selector lists all codecs and Automatic resets the file', async () => {
+test('one compact custom encoding selector lists all codecs and Automatic resets the file', async () => {
   const harness = componentHarness();
-  const { FileEncodingPicker } = loadWithMocks(new URL('../frontend/features/git/components/diff-viewer/FileEncodingPicker.tsx', import.meta.url), { react: harness.react });
+  const { FileEncodingPicker } = loadWithMocks(new URL('../frontend/features/git/components/diff-viewer/FileEncodingPicker.tsx', import.meta.url), {
+    react: harness.react,
+    '../../../../common/components/CustomSelect': { CustomSelect: 'CustomSelect' },
+  });
   const changes = [];
   const nodes = componentNodes(await harness.render(FileEncodingPicker, {
     encoding: 'Windows-1251', onChange: encoding => changes.push(encoding),
   }));
-  const selects = nodes.filter(node => node.type === 'select');
-  assert.equal(selects.length, 1);
-  assert.equal(selects[0].props.value, 'Windows-1251');
-  assert.equal(nodes.filter(node => node.type === 'option').length, 41);
-  selects[0].props.onChange({ target: { value: 'UTF-16 BE' } });
-  selects[0].props.onChange({ target: { value: '' } });
+  const select = nodes.find(node => node.type === 'CustomSelect');
+  assert.ok(select);
+  assert.equal(nodes.some(node => node.type === 'select'), false);
+  assert.equal(select.props.value, 'Windows-1251');
+  assert.equal(select.props.options.length, 41);
+  assert.equal(select.props.options[0].value, '');
+  select.props.onChange('UTF-16 BE');
+  select.props.onChange('');
   assert.deepEqual(changes, ['UTF-16 BE', null]);
   harness.cleanup();
 });
