@@ -46,9 +46,9 @@ test('selects the last published release of the same channel, ignoring drafts, a
   assert.equal(previousChannelRelease('nightly', releases, 'v0.0.5-nightly'), 'v0.0.1-nightly');
 });
 
-test('both preview channels skip old or already released source, but Stable keeps its cadence', t => {
+test('Nightly skips old/already released source while Stable keeps its cadence', t => {
   const f = fixture(t);
-  for (const channel of ['nightly', 'beta']) {
+  for (const channel of ['nightly']) {
     const decision = sourceSha => previewBuildDecision({ root: f.root, channel, sourceSha, releases: [], now });
     assert.equal(decision(f.base).shouldBuild, false);
     const recent = f.commit('fix: new source', '2026-11-26T22:00:00Z');
@@ -61,6 +61,12 @@ test('both preview channels skip old or already released source, but Stable keep
     f.git('checkout', '--detach', f.base);
   }
   assert.equal(previewBuildDecision({ root: f.root, channel: 'stable', sourceSha: f.base, releases: [], now }).shouldBuild, true);
+});
+
+test('Beta retains month-old unreleased changes without requiring activity in the last 24h', t => {
+  const f = fixture(t);
+  assert.equal(previewBuildDecision({ root: f.root, channel: 'beta', sourceSha: f.base, releases: [], now }).shouldBuild, true);
+  assert.equal(previewBuildDecision({ root: f.root, channel: 'beta', sourceSha: f.base, releases: [published('v0.0.2-beta')], now }).shouldBuild, false);
 });
 
 test('the rolling 24-hour window is inclusive, excludes future commits and walks non-monotonic dates', t => {

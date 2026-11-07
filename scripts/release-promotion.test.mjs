@@ -36,7 +36,7 @@ test('only adjacent channel tags are valid frozen promotion refs', () => {
     ['promotion/beta/v0.0.8-nightly/../../main', 'beta']]) assert.throws(() => parsePromotionBranch(branch, channel));
 });
 
-test('soak starts after the later of publication and completed successful build; future dates fail closed', () => {
+test('certified hotfix observation starts after the later of publication and completed successful build; future dates fail closed', () => {
   const evidence = assertCandidateBuild(candidateFixture());
   const candidate = { tag: 'v0.0.8-nightly', ...evidence };
   assert.throws(() => assertCandidateAge(candidate, 'beta', new Date('2026-11-02T00:04:59Z')), /24 hours/);
@@ -136,8 +136,8 @@ function approvedFixture(t) {
   const merged = f.git('rev-parse', 'HEAD'); f.git('branch', 'beta', merged);
   const repo = { full_name: 'anhquoctran/stage0' };
   const pr = { number: 10, draft: false, merged: true, merged_at: '2026-11-03T00:00:00Z', state: 'closed', merge_commit_sha: merged,
-    user: { login: 'github-actions[bot]' }, head: { ref: 'promotion/beta/v0.0.8-nightly', sha: f.source, repo },
-    base: { ref: 'beta', sha: merged, repo }, body: '- [x] Smoke-tested install/update, launch, diff and reviewer on supported platforms.\n'
+    user: { login: 'github-actions[bot]' }, head: { ref: 'hotfix/beta/tested-fix', sha: f.source, repo },
+    base: { ref: 'beta', sha: merged, repo }, body: 'Stage0-Candidate: v0.0.8-nightly\n- [x] Smoke-tested install/update, launch, diff and reviewer on supported platforms.\n'
       + '- [x] Reviewed changes and known issues; ready for this channel.',
   };
   const reviews = [{ user: { login: 'maintainer', type: 'User' }, state: 'APPROVED', commit_id: f.source,
@@ -239,21 +239,11 @@ if (args.includes('--method')) {
   assert.deepEqual(requests.map(r => r.body.state), ['pending', 'success']);
   assert.ok(requests.every(r => r.endpoint === `statuses/${f.source}`));
   assert.ok(requests.every(r => r.body.context === 'Release promotion policy'));
-  responses['pulls/10'].body = ''; fs.writeFileSync(data, JSON.stringify(responses));
+  responses['pulls/10'].body = 'Stage0-Candidate: v0.0.8-nightly\n'; fs.writeFileSync(data, JSON.stringify(responses));
   assert.throws(() => execFileSync(process.execPath, [entry.pathname, 'check-pr'], { cwd: f.root, env, stdio: 'pipe' }), /checklist/);
   requests = fs.readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
   assert.equal(requests.at(-1).body.state, 'failure');
-  f.git('branch', '-f', 'beta', f.base);
-  responses['pulls?state=open&base=beta&head=anhquoctran:promotion%2Fbeta%2Fv0.0.8-nightly'] = [];
-  fs.writeFileSync(data, JSON.stringify(responses));
-  execFileSync(process.execPath, [entry.pathname, 'create'], { cwd: f.root, stdio: 'pipe', env: { ...env,
-    GITHUB_REF: 'refs/heads/main', PROMOTION_CHANNEL: 'beta', PROMOTION_TAG: 'v0.0.8-nightly',
-  } });
-  requests = fs.readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
-  const writes = requests.filter(r => !r.endpoint.startsWith('statuses/'));
-  assert.deepEqual(writes.map(r => r.endpoint), ['git/refs', 'pulls', 'actions/workflows/promotion-policy.yml/dispatches']);
-  assert.equal(writes[0].body.sha, f.source);
-  assert.equal(writes[1].body.base, 'beta');
-  assert.equal(writes[1].body.head, 'promotion/beta/v0.0.8-nightly');
-  assert.deepEqual(writes[2].body, { ref: 'main', inputs: { pr: '10' } });
+  assert.throws(() => execFileSync(process.execPath, [entry.pathname, 'create'], { cwd: f.root, stdio: 'pipe', env: { ...env,
+    GITHUB_REF: 'refs/heads/main', PROMOTION_CHANNEL: 'beta', PROMOTION_DATE: '2026-11-26',
+  } }), /day 27/);
 });

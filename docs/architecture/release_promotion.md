@@ -1,155 +1,150 @@
-# Release promotion: Nightly → Beta → Stable
+# Calendar release rollups: Nightly → Beta → Stable
 
-Only adjacent promotion is allowed: **published Nightly → Beta** and
-**published Beta → Stable (`main`)**. A branch name, a green unrelated CI run,
-or an arbitrary tag is not release evidence. The candidate is an immutable
-published tag and its recorded source commit, not the current moving channel head.
+Regular releases accumulate the whole closed period, rather than promoting one
+arbitrarily selected tag. UTC remains the release timezone.
 
-## Required gates
+| Target | Eligible published source builds | Closed period | Planning starts |
+| --- | --- | --- | --- |
+| Beta | Nightly | Day 28 of the previous month through the end of day 26 of the release month | Day 27, 00:00 UTC |
+| Stable (`main`) | Beta | The entire previous calendar quarter | January/April/July/October 1, 00:00 UTC |
 
-| Gate | Nightly → Beta | Beta → Stable |
-| --- | --- | --- |
-| Published candidate | `vX.Y.Z-nightly` | `vX.Y.Z-beta` |
-| Minimum observation | 24 hours | 168 hours (7 days) |
-| Original release evidence | Exact tag/SHA, successful validation, all six native build targets and publication | Same |
-| Packages | All eleven bundles, nine updater signatures, manifest and checksums; uploaded/nonempty, no replacement after successful build | Same |
-| Security | Successful CodeQL Actions/JS/Rust analysis on exact PR head; no candidate High/Critical alerts; API errors block | Same |
-| Integration | Target is an ancestor; exact tested source tree, no conflicts or extra changes | Same |
-| Human decision | Smoke-test/readiness checklist and one human approval of the exact head | Same |
-| Merge | PR only; **Create a merge commit**, no squash/rebase | Same |
-| Publication | Rebuild, sign and verify every package for the new version | Same |
+Windows are half-open: `[start, cutoff)`. Beta on 2026-11-27 includes Nightly
+releases published from 2026-10-28 00:00 through 2026-11-26 23:59:59.999 UTC.
+Stable on 2027-01-01 includes Beta releases from 2026-10-01 00:00 through
+2026-12-31 23:59:59.999 UTC, including the December 27 Beta.
 
-Observation begins at the later of the candidate's publication and completion
-of its successful release workflow. Editing notes does not reset it. Replacing
-assets after that run invalidates the candidate; publish a new version. The
-original release pipeline verifies package bytes/signatures with the embedded
-public key; promotion checks its successful complete run and asset timestamps,
-not merely a release title or a signature file's presence.
+The window classifies **published source builds**, not arbitrary commit dates.
+Snapshots already contain their dependencies/history. A late commit that has not
+appeared in an eligible published source build cannot be called tested/stable;
+it waits for a later eligible source build/period. Day-27 Nightlies are outside
+that month's Beta window, but subsequent snapshots retain their cumulative work.
 
-`shared/release-channels.json` owns the routes, observation hours and required
-status context. Changing this policy itself goes through normal reviewed code.
-There is no workflow input to waive gates or shorten observation for one run.
+## Stability and selection
 
-## Operator procedure
+CI cannot infer which feature is the most stable. The controller inventories all
+published builds in the period and accepts those with complete, successful
+release evidence: exact immutable tag/SHA, validation, all six native build
+platforms, publication, eleven bundles, nine updater signatures, manifest and
+checksums. A newer failed/pending attempt, replaced/missing asset or invalid
+source provenance rejects the source build, with its reason recorded for review.
+API/auth/history failures abort the whole plan; they do not silently drop builds.
+Drafts, unpublished/failed tags and channel aliases are not source releases.
 
-1. Merge desired changes through `develop` to `nightly` using PRs. Back-sync any
-   target-branch commits first, including previous promotion merge commits, so
-   the target is an ancestor of the candidate. Build/publish Nightly normally.
-2. Test the exact published installers/updater on supported OS/architectures.
-   Check launch, file diff/encoding, reviewer operation, upgrade path and known
-   regressions. Wait at least 24 hours after successful publication/build.
-3. In Actions, run **Promote tested release** on **main** with target `beta` and
-   the exact `vX.Y.Z-nightly` tag. It creates a frozen
-   `promotion/beta/<tag>` branch and a PR to `beta`. This automation-only branch
-   is an explicit exception to standard working branches from `develop`: it
-   points directly at the tested source commit and must never be amended.
-4. **Close and reopen the bot-authored PR once as the maintainer.** This human
-   event activates GitHub default CodeQL setup: PR events created with
-   GITHUB_TOKEN do not trigger other workflows. Wait for Actions/JS/Rust CodeQL
-   analyses, then complete both checklist boxes in the PR. **Release promotion policy** checks
-   the candidate and merge tree; an unchecked box keeps it failed. Approve the
-   exact head, resolve review threads and use **Create a merge commit**. The bot
-   authors the PR so the single repository maintainer can independently approve
-   it; the workflow never submits approval or merges it.
-5. The normal Beta schedule publishes only that approved promotion merge.
-   The existing 24-hour preview-activity rule still applies: merge close to the
-   scheduled build window (monthly on the 27th, preparation on the 26th at
-   23:00 UTC). An idle/unapproved Beta is not rebuilt. Merge does not immediately
-   publish a release.
-6. Test the published Beta and observe it for 7 days. Run the same promotion
-   workflow with target `stable` and the exact `vX.Y.Z-beta` tag. Review/approve
-   its frozen PR into `main`. The quarterly schedule or manual **Release Stage0**
-   on `main` then publishes Stable. Stable remains the default `--latest` release.
+Every eligible source snapshot is accumulated, in publication order, into the
+current target branch. This includes stable fixes from independent snapshots,
+not merely the last tag. Shared commits are deduplicated through Git ancestry;
+subsequent fixes/reverts retain their effects. The immutable ledger at
+`.github/release-rollup.json` records the window, base SHA, all source tags/SHAs,
+original build runs, rejected builds and the complete unique introduced commit
+list. Existing target changes are retained. A period with no eligible build or
+no new source content creates no PR, tag or build.
 
-A conflict, moved candidate branch, target branch change or additional fix
-requires back-syncing the target, rebuilding the preceding channel and selecting
-a new candidate. Never resolve conflicts directly inside the frozen promotion
-PR. Strict up-to-date status requirements close the gap if the target advances
-after validation. Squash/rebase merges are rejected again at publication.
+The final assembled batch must pass CodeQL Actions/JavaScript/Rust at its exact
+PR head, without High/Critical findings, and be explicitly accepted by a human
+who reviews the commit list, known regressions and smoke-test results. Green
+source builds alone do not approve a batch. The full newly assembled source is
+rebuilt on all six targets, signed and cryptographically verified before release.
+A rejected/failed batch is not published merely to meet the calendar deadline.
 
-A cancelled/failed validation can be rerun from Actions using **Release promotion
-guard** on `main`, input `pr`. Bot-created PRs are explicitly dispatched to this
-workflow because GITHUB_TOKEN-created PRs do not trigger another PR workflow.
-That dispatch runs the policy validator only; it does not trigger default CodeQL.
-The maintainer close/reopen step above is mandatory to start those analyses.
-This retains bot authorship (so the owner can approve) without introducing a
-privileged personal token or a second, conflicting CodeQL setup.
-PR edits/pushes normally revalidate automatically. If CodeQL is still running,
-wait for all three analyses and rerun the guard on `main`. Analyses from an old
-head or another branch do not satisfy this gate; unresolved alerts on an unrelated
-old `main` snapshot do not prevent promoting the candidate that fixes them. No candidate code runs in
-`pull_request_target`; checkout stays on the trusted base/controller SHA and
-candidate commits are read only as Git objects. The status is explicitly posted
-on the PR head because `pull_request_target` itself runs against the base SHA.
+Application conflicts stop the plan; no automatic ours/theirs resolution is
+allowed. Fix/revert unstable work in the source channel and publish a corrected
+eligible source build, then regenerate the period. Do not hand-edit the frozen
+head or remove commits without reassembling/retesting it. A known regression
+inherited by a later green build still requires an actual fix/revert and QA;
+ignoring the older build's tag does not remove its inherited code.
 
-## Release guard and audit trail
+Only the reserved ledger data path is normalized between channels while merging.
+A Beta ledger must not conflict with the previous Stable ledger as if it were
+application code. Original source histories remain reachable. Assembly commits
+are explicitly marked metadata and are omitted from product changelogs; actual
+source fixes/reverts remain in the normal same-channel release delta.
 
-Scheduled preparation, manual preparation, tag dispatch and final publication
-all call the same promotion validator. It requires the source to be the merge
-commit of a merged PR targeting the correct channel, a human approval matching
-its head and a successful bot policy status before merge. It recomputes the
-candidate/merge trees, original release evidence, age and CodeQL analyses/alerts scoped to the exact commit. PR validation scans
-the PR head; after merge, publication requires successful fresh analyses of the
-current target-branch merge commit (whose tree must equal the candidate). This
-also avoids relying on temporary PR analysis retention. If those scans are still
-running, preparation blocks until they finish.
-The source must still be the current target-channel head; a newer promotion
-invalidates an older in-flight build. Final publication rechecks after any wait
-for the release window. A successful
-past check cannot authorize a changed source or replaced asset.
+## Operator and workflow procedure
 
-The PR records candidate tag, source SHA, build URL, test acknowledgement and
-approval; Actions summaries record the decision. Release tags are detached
-version/changelog snapshots with one source parent and an explicit
-`Stage0-Source-Commit` trailer. Snapshot changes outside the generated release
-metadata allowlist are rejected. Existing legacy releases without that trailer
-remain downloadable but cannot become promotion candidates. Create a fresh
-Nightly after rollout.
+1. Merge work through `develop` → `nightly` using PRs. Nightly retains its daily
+   schedule and 24-hour new-source activity rule.
+2. **Accumulate periodic releases** runs on `main` at the cutoff (Beta day 27;
+   Stable quarter day 1). It opens a bot-authored frozen branch/PR such as
+   `promotion/beta/2026-11-27` → `beta`, or
+   `promotion/stable/2027-01-01` → `main`. It can also be dispatched manually
+   with channel and ISO release date to retry a closed period.
+3. Close and reopen the bot-authored PR once as the maintainer to trigger default
+   CodeQL. GITHUB_TOKEN-created PR events do not trigger other workflows. The
+   controller explicitly dispatches the policy workflow, but that dispatch alone
+   cannot start GitHub's default CodeQL analyses. No personal bot token is needed.
+4. Review every source build, commit/fix and rejected-build reason. Wait for
+   CodeQL, test the source builds and complete both QA/readiness checkboxes.
+   Approve the exact head and **Create a merge commit** on the scheduled UTC day.
+   The bot authors the PR so the single maintainer can independently approve.
+   The workflow never approves or merges a PR itself.
+5. **Build approved periodic rollup** reacts to the merge push on `beta`/`main`.
+   It uses the trusted `main` controller and waits up to 20 minutes for CodeQL
+   analyses of that exact merge commit. Other policy/security failures stop
+   immediately. It prepares only this channel's immutable version tag and
+   dispatches the existing isolated tag build/signature-verification pipeline.
+   It can be rerun manually on `beta`/`main` after transient failures.
+6. The release is published after approval/build/checks finish on day 27 or the
+   quarter's first day; midnight is the cutoff/start, not a promised instant of
+   publication. A missed day fails closed rather than silently publishing an old
+   period later. Stable remains the default `--latest` release.
 
-Urgent hotfix branches still originate at and target the affected release branch,
-with mandatory back-sync PRs to the remaining branches. A hotfix PR into Beta or
-Stable must declare exactly one line `Stage0-Candidate: vX.Y.Z-nightly` or
-`Stage0-Candidate: vX.Y.Z-beta`, respectively, and use the same two checklist
-lines generated by promotion PRs. Its complete tree must equal that published
-lower-channel candidate, with the same tests, observation, approval and merge
-requirements. A hotfix branch name is not a release-gate bypass. Incorporate and
-certify the fix through the preceding channel before publishing it.
+A target advance invalidates the frozen base/head. Close the superseded PR and
+remove only its working branch before regenerating; never force-push an approved
+batch. Repeated creation of an identical plan reuses its existing PR. A source
+already published for the period is not rebuilt. Conflicts and changed source
+build evidence likewise require regeneration and a new review.
 
-## Deployment and server-side enforcement
+The old **24-hour Nightly observation / 7-day Beta observation** does not govern
+calendar rollups: it would exclude the final Nightly fixes and December 27 Beta
+from the requested releases. Beta also no longer needs a new commit within the
+last 24 hours: unreleased changes anywhere in the monthly period count. Normal
+Beta/Stable paths require a full period ledger, so an old single-tag promotion
+or raw tag cannot bypass accumulation. Explicit certified hotfixes retain their
+separate adjacent-candidate observation and back-sync contracts.
 
-Workflow files in a feature PR do not change live branch protection. Deploy this
-policy before requiring its status; otherwise there is no workflow to satisfy
-it. Keep the existing `main` ruleset and CodeQL rules; add the two dedicated
-Stage0 rulesets rather than replacing existing protection.
+## Verification and audit
 
-1. Merge the implementation PR to `develop`. Through explicitly reviewed policy
-   rollout PRs, copy this exact enforcement implementation to `nightly`, `beta`
-   and `main` before enabling the new required check. This is a one-time control
-   plane bootstrap, not authorization to publish an uncertified build. Existing
-   release versions lack provenance and must not be promoted as a shortcut.
-2. Under Settings → Actions → General, enable **Allow GitHub Actions to create
-   and approve pull requests**. It allows the bot to create the PR; the code
-   does not approve. Keep automatic deletion of head branches **disabled** to
-   preserve the long-lived channel branches.
-3. From the merged implementation, run `node scripts/configure-release-protection.mjs`.
-   It is a read-only preflight showing missing files/settings and the proposed
-   rulesets. All twelve enforcement files must match byte-for-byte on all four
-   protected branches. Resolve every issue first.
-4. Run `node scripts/configure-release-protection.mjs --apply` with repository
-   administration permissions. It checks all prerequisites before any writes,
-   then idempotently creates/updates only its own named rulesets:
-   - All four long-lived branches: PR required, deletion/force-push forbidden,
-     review threads resolved; ordinary integration retains its merge methods.
-   - Beta/main: one approval, stale approvals dismissed, latest push independently
-     approved, required **Release promotion policy** from GitHub Actions, CodeQL
-     High/Critical findings and analysis errors blocked, branch
-     must be up to date, **no bypass actors** (including administrators).
-5. Publish a fresh Nightly, complete the observation/tests, and exercise the
-   first Beta promotion. Inspect the successful policy status on the PR head.
-   Release schedules remain unchanged.
+PR validation recomputes the period inventory, original source-build proofs,
+unique commit list, deterministic assembly objects and exact head SHA. It also
+checks target ancestry, QA and current PR-head CodeQL. At publication, the source
+must be the approved PR merge commit and the current target-channel head, with a
+human approval of that exact PR head and a successful bot policy status before
+merge. The merged tree must equal the assembled head. Current target-commit
+CodeQL is rechecked after merge and before publication. Superseded builds, expired
+periods, changed assets and altered ledgers cannot publish via a manual/tag retry.
 
-The preflight fails closed before mutation if rollout or bot PR permissions are
-missing. It does not weaken another ruleset, grant credentials, change repository
-Actions settings or merge any PR. GitHub administrators can always edit repository
-configuration; emergency policy changes must be explicit and audited rather than
-using an everyday workflow bypass input.
+Candidate sources are Git objects only: no checkout or execution of their scripts
+in the trusted controller. Assembly uses an isolated temporary **Git index**, not
+another worktree. All feature work still uses the repository's single checkout.
+Native builds run only in their immutable tag cache/security scope. Release tags
+retain one source parent and explicit `Stage0-Source-Commit` provenance. Legacy
+releases without that provenance cannot supply a rollup until rebuilt correctly.
+
+Urgent hotfixes still originate at their exact release branch and back-sync via
+PRs. They use `hotfix/<target>/<slug>` (or `hotfix/sync-<target>/<slug>`), declare
+one `Stage0-Candidate: vX.Y.Z-nightly` for Beta or `...-beta` for Stable and retain
+the existing candidate observation, exact-content, QA, approval and merge gates.
+They do not become a normal monthly/quarterly batch or bypass verification.
+
+## Deployment and enforcement
+
+Deploy this controller/workflow revision consistently to `develop`, `nightly`,
+`beta` and `main` through reviewed policy rollout PRs. Keep existing `main`
+security rules and the baseline PR/no-force-push/no-deletion rules intact.
+Enable Settings → Actions → General → **Allow GitHub Actions to create and
+approve pull requests** for bot PR creation; the code never submits approval.
+Keep automatic deletion of head branches disabled for long-lived branches.
+
+Run `node scripts/configure-release-protection.mjs` for read-only preflight.
+It lists every missing/different enforcement file and setting. After rollout,
+run it with `--apply` using repository administration permissions. It checks all
+files byte-for-byte on all four branches before any writes, then updates only
+its own named rulesets. Beta/main require a current passing promotion status
+from GitHub Actions, one human approval, stale-review dismissal, last-push
+approval, resolved threads, merge commits only and no bypass actors; CodeQL
+High/Critical findings and analysis errors block. Other integration branches
+retain their ordinary merge methods.
+
+Workflow files in an unmerged implementation PR do not activate this policy.
+Do not install an unsatisfiable required check before its workflows are deployed.
+No release branch is automatically merged by the rollout or by this implementation.
