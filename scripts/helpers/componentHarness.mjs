@@ -65,6 +65,7 @@ export function loadWithMocks(url, dependencies, context) {
       if (mock === new URL('../../frontend/features/i18n/i18n', import.meta.url).href) return { default: testI18n };
     } else if (Object.hasOwn(dependencies, id)) return dependencies[id];
     if (id === 'dayjs' || id.startsWith('dayjs/')) return { default: requirePackage(id) };
+    if (id === 'react-dom') return { createPortal: (children) => children };
     if (id === 'zustand') {
       return {
         create: (initializer) => {

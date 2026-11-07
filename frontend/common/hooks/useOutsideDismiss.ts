@@ -5,6 +5,7 @@ export function useOutsideDismiss(
   containerRef: RefObject<HTMLElement | null>,
   isOpen: boolean,
   onDismiss: () => void,
+  additionalRef?: RefObject<HTMLElement | null>,
 ) {
   const dismissRef = useRef(onDismiss);
   dismissRef.current = onDismiss;
@@ -23,6 +24,8 @@ export function useOutsideDismiss(
       }
       // composedPath also recognizes interactions retargeted across a shadow root.
       if (event.composedPath().includes(container) || container.contains(event.target as Node)) return;
+      const additional = additionalRef?.current;
+      if (additional && (event.composedPath().includes(additional) || additional.contains(event.target as Node))) return;
       dismissRef.current();
     };
 
@@ -36,5 +39,5 @@ export function useOutsideDismiss(
       ownerDocument.removeEventListener('click', handleOutside, true);
       ownerDocument.removeEventListener('focusin', handleOutside, true);
     };
-  }, [containerRef, isOpen]);
+  }, [additionalRef, containerRef, isOpen]);
 }

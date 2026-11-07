@@ -21,6 +21,8 @@ export function FileEncodingPicker({ encoding, onChange }: {
       className="w-44 max-w-full min-w-0"
       buttonClassName="w-full min-w-0 bg-mantle px-2 py-1 text-xs"
       dropdownWidth="w-full"
+      dropdownPlacement="auto"
+      portal
       align="left"
       aria-label={t('git.encoding.label')}
     />

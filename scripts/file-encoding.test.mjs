@@ -18,6 +18,8 @@ test('one compact custom encoding selector lists all codecs and Automatic resets
   assert.equal(select.props.value, 'Windows-1251');
   assert.equal(select.props.options.length, 41);
   assert.equal(select.props.options[0].value, '');
+  assert.equal(select.props.portal, true);
+  assert.equal(select.props.dropdownPlacement, 'auto');
   select.props.onChange('UTF-16 BE');
   select.props.onChange('');
   assert.deepEqual(changes, ['UTF-16 BE', null]);
