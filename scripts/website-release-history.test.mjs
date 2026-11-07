@@ -59,6 +59,7 @@ function fixture(responses) {
     'release-history-next',
     'release-history-page-label',
     'release-history-retry',
+    'release-history-load-more',
     'release-history-stable-only',
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, new Element()]));
@@ -110,6 +111,13 @@ async function settle() {
   await new Promise((resolve) => setImmediate(resolve));
 }
 
+function assetRows(card) {
+  return card.children[1].children.flatMap(group => group.children[1].children.map(item => item.children[0]));
+}
+function currentPage(view) {
+  return view.elements['release-history-page-label'].children.find(button => button.getAttribute('aria-current') === 'page').textContent;
+}
+
 test('release history loads automatically and filters artifacts by operating system and architecture', async () => {
   const view = fixture([{
     releases: [
@@ -135,27 +143,29 @@ test('release history loads automatically and filters artifacts by operating sys
   arm64.click();
   const [linuxArmRelease] = view.elements['release-history-list'].children;
   assert.equal(view.elements['release-history-list'].children.length, 1);
-  const assetRow = linuxArmRelease.children[1].children[0].children[0];
+  const assetRow = assetRows(linuxArmRelease)[0];
   assert.equal(assetRow.className, 'release-history-asset-row');
   assert.equal(assetRow.href, undefined, 'the full row is not a download link');
-  assert.equal(assetRow.children[0].className, 'fa-brands fa-linux release-history-asset-logo');
-  const details = assetRow.children[1];
+  const platform = linuxArmRelease.children[1].children[0];
+  assert.equal(platform.children[0].children[0].className, 'fa-brands fa-linux release-history-asset-logo');
+  assert.equal(platform.children[0].children[1].textContent, 'Linux');
+  const details = assetRow.children[0];
   assert.equal(details.className, 'release-history-asset-details');
-  assert.equal(details.children[0].textContent, 'Linux');
-  assert.equal(details.children[1].textContent, 'ARM64');
-  assert.equal(details.children[2].textContent, 'DEB');
-  assert.equal(details.children[3].textContent, '10 MB');
+  assert.equal(details.children[0].textContent, 'ARM64');
+  assert.equal(details.children[1].textContent, 'DEB');
+  assert.equal(details.children[2].textContent, '10 MB');
 
-  const digestButton = assetRow.children[2];
+  const digestButton = assetRow.children[1];
   const digest = `${'0'.repeat(63)}6`;
   assert.equal(digestButton.className, 'release-history-asset-digest');
   assert.equal(digestButton.children[0].textContent, 'SHA-256');
-  assert.equal(digestButton.children[1].textContent, digest);
+  assert.equal(digestButton.children[1].textContent, `${digest.slice(0, 6)}…${digest.slice(-6)}`);
+  assert.ok(digestButton.title.includes(digest));
   await digestButton.click();
   await settle();
   assert.deepEqual(view.clipboardWrites, [digest]);
 
-  const downloadButton = assetRow.children[3];
+  const downloadButton = assetRow.children[2];
   assert.equal(downloadButton.className, 'release-history-download-button');
   assert.match(downloadButton.href, /Stage0_arm64\.deb$/);
   assert.equal(downloadButton.children[1].textContent, 'Download');
@@ -177,20 +187,13 @@ test('release assets sort by OS, architecture, and uppercase extension label', a
   }]);
 
   await settle();
-  const assetList = view.elements['release-history-list'].children[0].children[1];
-  const rows = assetList.children.map(item => item.children[0]);
-  const sortedLabels = rows.map(row => row.children[1].children.slice(0, 3).map(value => value.textContent).join(' '));
-
-  assert.deepEqual(sortedLabels, [
-    'Linux ARM64 DEB',
-    'Linux ARM64 RPM',
-    'Linux AMD64 APPIMAGE',
-    'Linux AMD64 DEB',
-    'Linux AMD64 RPM',
-    'macOS ARM64 DMG',
-    'macOS AMD64 DMG',
-    'Windows ARM64 EXE',
-    'Windows AMD64 EXE',
+  const card = view.elements['release-history-list'].children[0];
+  const platforms = card.children[1].children;
+  assert.deepEqual(platforms.map(group => group.children[0].children[1].textContent), ['Linux', 'macOS', 'Windows']);
+  assert.deepEqual(platforms.map(group => group.children[1].children.length), [5, 2, 2]);
+  assert.deepEqual(assetRows(card).map(row => row.children[0].children.slice(0, 2).map(value => value.textContent).join(' ')), [
+    'ARM64 DEB', 'ARM64 RPM', 'AMD64 APPIMAGE', 'AMD64 DEB', 'AMD64 RPM',
+    'ARM64 DMG', 'AMD64 DMG', 'ARM64 EXE', 'AMD64 EXE',
   ]);
 });
 
@@ -206,21 +209,21 @@ test('release history paginates loaded results, then fetches the next GitHub pag
 
   await settle();
   assert.equal(view.elements['release-history-list'].children.length, 10);
-  assert.equal(view.elements['release-history-next'].textContent, 'Next');
+  assert.equal(view.elements['release-history-next'].disabled, false);
 
   await view.elements['release-history-next'].click();
-  assert.equal(view.elements['release-history-page-label'].textContent, 'Page 2');
+  assert.equal(currentPage(view), '2');
   assert.equal(view.elements['release-history-list'].children.length, 10);
   await view.elements['release-history-previous'].click();
-  assert.equal(view.elements['release-history-page-label'].textContent, 'Page 1');
+  assert.equal(currentPage(view), '1');
 
   view.archFilters.find((button) => button.getAttribute('data-history-arch') === 'x64').click();
   assert.equal(view.elements['release-history-list'].children.length, 0);
   await settle();
-  assert.equal(view.elements['release-history-next'].textContent, 'Load older');
+  assert.equal(view.elements['release-history-load-more'].hidden, false);
   assert.equal(view.requests.length, 1);
 
-  await view.elements['release-history-next'].click();
+  await view.elements['release-history-load-more'].click();
   await settle();
   assert.equal(view.requests.length, 2);
   assert.equal(view.elements['release-history-list'].children.length, 1);
@@ -263,19 +266,37 @@ test('changing Stable only resets pagination and keeps stable releases available
   ]);
   await settle();
   assert.equal(view.elements['release-history-list'].children.length, 0);
-  assert.equal(view.elements['release-history-next'].textContent, 'Load older');
-  await view.elements['release-history-next'].click();
+  assert.equal(view.elements['release-history-load-more'].hidden, false);
+  await view.elements['release-history-load-more'].click();
   await settle();
   assert.equal(view.elements['release-history-list'].children.length, 1);
   const toggle = view.elements['release-history-stable-only'];
   toggle.checked = false;
   toggle.listeners.change();
   await view.elements['release-history-next'].click();
-  assert.equal(view.elements['release-history-page-label'].textContent, 'Page 2');
+  assert.equal(currentPage(view), '2');
   toggle.checked = true;
   toggle.listeners.change();
-  assert.equal(view.elements['release-history-page-label'].textContent, 'Page 1');
+  assert.equal(currentPage(view), '1');
   assert.equal(view.elements['release-history-list'].children.length, 1);
   assert.match(view.elements['release-history-list'].children[0].children[0].children[0].children[0].textContent, /v1\.0\.101/);
   assert.equal(view.requests.length, 2);
+});
+
+
+test('numbered pagination stays bounded, supports direct jumps and marks the current page', async () => {
+  const view = fixture([{ releases: Array.from({ length: 100 }, (_, i) => makeRelease(i, ['x86_64-pc-windows-msvc-Stage0-setup.exe'])) }]);
+  await settle();
+  const pages = () => view.elements['release-history-page-label'].children;
+  assert.equal(currentPage(view), '1');
+  assert.ok(pages().length <= 7);
+  assert.ok(pages().some(node => node.textContent === '…'));
+  pages().find(node => node.textContent === '10').click();
+  assert.equal(currentPage(view), '10');
+  assert.equal(view.elements['release-history-next'].disabled, true);
+  assert.ok(pages().length <= 7);
+  pages().find(node => node.textContent === '9').click();
+  assert.equal(currentPage(view), '9');
+  assert.equal(view.elements['release-history-next'].disabled, false);
+  assert.equal(view.requests.length, 1);
 });

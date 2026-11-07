@@ -11,6 +11,12 @@ For Git branching, PR targets and release promotion, follow [Git strategy](docs/
 
 ## Git strategy and branching contracts
 
+- **Website exception**: GitHub Pages source lives on `website`. Create website
+  working branches from `origin/website` and target `website` with their PRs.
+  Website-only changes do not flow through `develop`, `nightly`, `beta`, or
+  `main`. Use the website's independent install/test/build commands in
+  `website/README.md`; application and release CI are not website gates.
+
 - **Exactly one worktree for this repository**:
   - Work only in `/Users/anhquoctran/Workspaces/stage0`. Never create additional
     worktrees or temporary checkouts for features, fixes, reviews, or parallel tasks.

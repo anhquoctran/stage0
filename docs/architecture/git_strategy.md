@@ -84,7 +84,16 @@ They must never be amended or conflict-resolved in place.
 
 ## 2. Standard Development Flow (Feature / Fix / Refactor / Chore)
 
-All standard development **must** branch off `origin/develop` and merge back
+### Independent GitHub Pages flow
+
+The `website` branch owns GitHub Pages separately from application releases.
+Website working branches start at `origin/website` and open PRs to `website`.
+This exception applies to website source, its build tool, website tests and Pages
+workflow configuration. Do not merge website-only work through the channel
+promotion chain. The website has its own package/lockfile and Ubuntu checks;
+only a push to `website` can deploy Pages. See `website/README.md`.
+
+All standard application development **must** branch off `origin/develop` and merge back
 into `develop` via Pull Request.
 
 ### One worktree, sequential task branches
