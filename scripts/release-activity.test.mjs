@@ -4,9 +4,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { previewBuildDecision, previousChannelRelease, publishedReleases, releaseSource } from './release-history.mjs';
+import { previewBuildDecision, previousChannelRelease, releaseSource } from './release-history.mjs';
 import { createReleaseChangelog, writeReleaseChangelog } from './release-changelog.mjs';
 import { prepareScheduledBranch } from './prepare-release.mjs';
+import { commandFixture } from './helpers/commandFixture.mjs';
 
 const now = new Date('2026-11-26T23:00:00Z');
 const published = (tag, date = '2026-11-25T00:00:00Z') => ({ tag_name: tag, published_at: date, draft: false });
@@ -172,17 +173,21 @@ test('scheduled skip creates no release tags, including when another due preview
 
 test('release history consumes all API pages and propagates API failure instead of treating it as no history', t => {
   const f = fixture(t);
-  const bin = path.join(f.dir, 'bin');
-  fs.mkdirSync(bin);
-  const executable = path.join(bin, 'gh');
-  fs.writeFileSync(executable, `#!/bin/sh\nprintf '%s' '${JSON.stringify([[published('v0.0.1-nightly')],
-    [{ ...published('v0.0.2-beta'), draft: true }, published('v0.0.3')]])}'\n`, { mode: 0o755 });
-  const oldPath = process.env.PATH;
-  process.env.PATH = `${bin}${path.delimiter}${oldPath}`;
-  t.after(() => { process.env.PATH = oldPath; });
-  assert.deepEqual(publishedReleases(f.root).map(release => release.tag_name), ['v0.0.1-nightly', 'v0.0.3']);
-  fs.writeFileSync(executable, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
-  assert.throws(() => publishedReleases(f.root));
+  const data = path.join(f.dir, 'api.json');
+  fs.writeFileSync(data, JSON.stringify([[published('v0.0.1-nightly')],
+    [{ ...published('v0.0.2-beta'), draft: true }, published('v0.0.3')]]));
+  const mock = commandFixture(f.dir, 'gh', () => {
+    const data = fs.readFileSync(process.env.FAKE_GH_DATA, 'utf8');
+    if (data === 'failure') throw new Error('API failed');
+    return data;
+  });
+  const module = new URL('./release-history.mjs', import.meta.url).href;
+  const readHistory = () => JSON.parse(execFileSync(process.execPath, [...mock, '--input-type=module', '--eval',
+    `import { publishedReleases } from ${JSON.stringify(module)}; console.log(JSON.stringify(publishedReleases(process.cwd())));`],
+  { cwd: f.root, encoding: 'utf8', stdio: 'pipe', env: { ...process.env, FAKE_GH_DATA: data } }));
+  assert.deepEqual(readHistory().map(release => release.tag_name), ['v0.0.1-nightly', 'v0.0.3']);
+  fs.writeFileSync(data, 'failure');
+  assert.throws(readHistory, /API failed/);
 });
 
 test('both workflow entry paths gate expensive jobs and carry one changelog baseline into bundles and publication', () => {

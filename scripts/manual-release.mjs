@@ -64,9 +64,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const channel = releaseChannel(result.tag.slice(1));
   const sourceSha = releaseSource(root, result.sha);
   assertPublishedPromotion({ root, channel, sourceSha });
+  const regressionBase = channel === 'nightly' ? '' : execFileSync('git', ['rev-parse', `${sourceSha}^1`], { encoding: 'utf8' }).trim();
   const decision = previewBuildDecision({ root, channel, sourceSha, releases, tag: result.tag });
   if (process.env.GITHUB_OUTPUT) {
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${result.tag}\nsha=${result.sha}\nchannel=${channel}\nshould_build=${decision.shouldBuild}\nprevious_tag=${decision.previousTag}\nsource_sha=${sourceSha}\n`);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${result.tag}\nsha=${result.sha}\nchannel=${channel}\nregression_base=${regressionBase}\nshould_build=${decision.shouldBuild}\nprevious_tag=${decision.previousTag}\nsource_sha=${sourceSha}\n`);
   }
   if (!decision.shouldBuild && process.env.GITHUB_STEP_SUMMARY) {
     fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\nSkipped ${channel}: ${decision.reason}.\n`);
