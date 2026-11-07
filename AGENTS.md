@@ -85,6 +85,19 @@ For Git branching, PR targets and release promotion, follow [Git strategy](docs/
   - Additions / new values: solid light green (`bg-emerald-600 text-white`), no border.
   - Keep small rounded corners (`rounded-sm`) and compact padding (`px-1.5 py-0.5`).
 
+## Regression contracts
+
+- Important bug fixes must add a failing-before/passing-after behavior regression
+  and register it in `shared/release-regressions.json`.
+- Preserve target-branch fixes when accumulating releases. A clean merge is not
+  sufficient: explicit target reverts, weakened/missing assertions or case IDs,
+  skipped/empty runs and failures on any native release target block publication.
+- Keep protected contracts extension-safe and append-only. Fixture inputs may
+  grow but old reference cases must remain intact. Changes to regression adapters
+  or the control plane require explicit promotion review; never hide failures by
+  weakening tests. Follow `docs/architecture/release_promotion.md`.
+- Report actual test/platform coverage; do not promise universal absence of regressions.
+
 ## Verification and handoff
 
 - Run `pnpm check:architecture`, relevant Node/Rust tests, and `cargo check
