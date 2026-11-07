@@ -26,6 +26,7 @@
     page: 1,
     os: 'all',
     arch: 'all',
+    stableOnly: true,
   };
 
   const elements = {};
@@ -157,7 +158,8 @@
   }
 
   function filteredReleases() {
-    return state.releases.filter(release => filteredAssets(release).length > 0);
+    return state.releases.filter(release => (!state.stableOnly || channelForTag(release.tag_name) === 'stable')
+      && filteredAssets(release).length > 0);
   }
 
   function updateFilterButtons(attribute, selectedValue) {
@@ -446,6 +448,15 @@
   }
 
   function bindControls() {
+    const stableOnly = byId('release-history-stable-only');
+    if (stableOnly) {
+      stableOnly.checked = state.stableOnly;
+      stableOnly.addEventListener('change', () => {
+        state.stableOnly = stableOnly.checked;
+        state.page = 1;
+        render();
+      });
+    }
     document.querySelectorAll('[data-history-os]').forEach(button => {
       button.addEventListener('click', () => {
         state.os = button.getAttribute('data-history-os');
