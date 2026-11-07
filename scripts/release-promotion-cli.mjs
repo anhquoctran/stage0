@@ -16,8 +16,8 @@ const summary = text => {
 };
 
 if (mode === 'check-pr') {
-  // pull_request_target uses trusted base code. Publish the status on PR HEAD
-  // explicitly, since its own GITHUB_SHA belongs to the base branch.
+  // pull_request_target uses trusted default-branch code. Publish the status on
+  // PR HEAD explicitly, since GITHUB_SHA belongs to the default branch.
   const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
   if (process.env.GITHUB_EVENT_NAME === 'workflow_dispatch' && process.env.GITHUB_REF !== 'refs/heads/main') throw new Error('Manual policy checks must run on main');
   const number = String(event.number || process.env.PROMOTION_PR || '');
