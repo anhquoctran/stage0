@@ -1273,7 +1273,7 @@
     "copied": "已複製",
     "author": "作者",
     "releaseDate": "發行日期",
-    "architectureCommit": "架構 / 提交",
+    "architecture": "架構",
     "copyDiagnostics": "複製系統與版本資訊",
     "copiedInfo": "資訊已複製",
     "copyInfo": "複製資訊",

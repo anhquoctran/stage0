@@ -1273,7 +1273,7 @@
     "copied": "已复制",
     "author": "作者",
     "releaseDate": "发布日期",
-    "architectureCommit": "架构 / 提交",
+    "architecture": "架构",
     "copyDiagnostics": "复制系统和版本信息",
     "copiedInfo": "信息已复制",
     "copyInfo": "复制信息",

@@ -2,7 +2,6 @@ export interface SoftwareAboutInfo {
   name: string;
   author: string;
   packageVersion: string;
-  gitCommit: string;
   arch: string;
   version: string;
   releaseDate: string;

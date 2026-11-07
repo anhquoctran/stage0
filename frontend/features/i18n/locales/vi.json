@@ -1273,7 +1273,7 @@
     "copied": "Đã sao chép",
     "author": "Tác giả",
     "releaseDate": "Ngày phát hành",
-    "architectureCommit": "Kiến trúc / Commit",
+    "architecture": "Kiến trúc",
     "copyDiagnostics": "Sao chép thông tin hệ thống và phiên bản",
     "copiedInfo": "Đã sao chép thông tin",
     "copyInfo": "Sao chép thông tin",

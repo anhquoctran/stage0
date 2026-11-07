@@ -1280,7 +1280,7 @@
     "copied": "Copiado",
     "author": "Autor",
     "releaseDate": "Data de lançamento",
-    "architectureCommit": "Arquitetura / commit",
+    "architecture": "Arquitetura",
     "copyDiagnostics": "Copiar informações do sistema e da versão",
     "copiedInfo": "Informações copiadas",
     "copyInfo": "Copiar informações",

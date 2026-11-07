@@ -3,7 +3,7 @@
  * Computes dynamic release information:
  *   - Name: Stage0
  *   - Author: Anh Quoc Tran
- *   - Version: <current_package_version>+[partial_sha1_commit].[os_name].[arch_name]
+ *   - Version: <current_package_version>+[os_name].[arch_name]
  *   - Release date: Build date in yyyy-MM-dd
  *   - Copyright: Copyright @ <current_year> <Author name>. Licensed under the MIT license.
  * 
@@ -20,7 +20,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -36,20 +35,7 @@ export function computeAboutInfo(options = {}) {
   const author = 'Anh Quoc Tran';
   const packageVersion = pkg.version || '0.0.1';
 
-  // 1. Partial SHA1 Commit
-  let gitCommit = 'dev0000';
-  try {
-    gitCommit = execSync('git rev-parse --short HEAD', {
-      cwd: ROOT_DIR,
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).toString().trim();
-  } catch {
-    gitCommit = process.env.GIT_COMMIT || '30991a1';
-  }
-  // Keep CI-provided values safe for use as a SemVer build identifier.
-  gitCommit = gitCommit.trim().toLowerCase().replace(/[^0-9a-z-]/g, '').slice(0, 7) || 'dev0000';
-
-  // 2. Target OS & Architecture
+  // 1. Target OS & Architecture
   const rawOs =
     options.os ||
     process.env.TARGET_OS ||
@@ -81,10 +67,10 @@ export function computeAboutInfo(options = {}) {
     arch = rawArch.replace(/[^0-9a-z-]/g, '') || 'amd64';
   }
 
-  // 3. SemVer with build metadata: <package_version>+<commit>.<os>.<architecture>
-  const version = `${packageVersion}+${gitCommit}.${osName}.${arch}`;
+  // 2. SemVer build metadata contains only the target OS and architecture.
+  const version = `${packageVersion}+${osName}.${arch}`;
 
-  // 4. Release date in yyyy-MM-dd
+  // 3. Release date in yyyy-MM-dd
   const datedPrerelease = packageVersion.match(/-(?:nightly|beta)\.(\d{4})(\d{2})(\d{2})\./);
   const explicitDate = String(options.releaseDate || process.env.STAGE0_RELEASE_DATE || '').slice(0, 10);
   let releaseDate;
@@ -101,7 +87,7 @@ export function computeAboutInfo(options = {}) {
   }
   const year = releaseDate.slice(0, 4);
 
-  // 5. Copyright format: Copyright @ curreny_year Author name. Licensed under the MIT license.
+  // 4. Copyright format: Copyright @ curreny_year Author name. Licensed under the MIT license.
   const copyright = `Copyright @ ${year} ${author}. Licensed under the MIT license.`;
   const license = 'MIT';
   const tagline = 'Local-First Virtual MR / PR Sandbox';
@@ -113,7 +99,6 @@ export function computeAboutInfo(options = {}) {
     name,
     author,
     packageVersion,
-    gitCommit,
     arch,
     version,
     releaseDate,

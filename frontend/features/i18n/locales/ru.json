@@ -1287,7 +1287,7 @@
     "copied": "Скопировано",
     "author": "Автор",
     "releaseDate": "Дата выпуска",
-    "architectureCommit": "Архитектура / коммит",
+    "architecture": "Архитектура",
     "copyDiagnostics": "Скопировать сведения о системе и версии",
     "copiedInfo": "Сведения скопированы",
     "copyInfo": "Скопировать сведения",
