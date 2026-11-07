@@ -1273,7 +1273,7 @@
     "copied": "복사됨",
     "author": "작성자",
     "releaseDate": "출시일",
-    "architectureCommit": "아키텍처 / 커밋",
+    "architecture": "아키텍처",
     "copyDiagnostics": "시스템 및 버전 정보 복사",
     "copiedInfo": "정보 복사됨",
     "copyInfo": "정보 복사",

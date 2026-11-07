@@ -120,6 +120,7 @@ test('About retains version information, copy and close alongside the updater pa
     assert.ok(buttons.some((node) => node.props.title === 'Copy version string'));
     assert.ok(buttons.some((node) => node.props.title === 'Copy system and version information'));
     assert.match(JSON.stringify(nodes), /fixture-version/);
+    assert.doesNotMatch(JSON.stringify(nodes), /fixture-commit|Git Commit/);
     assert.match(JSON.stringify(nodes), /Check for Updates/);
     buttons.find((node) => node.props['aria-label'] === 'Close About dialog').props.onClick();
     assert.equal(closed, 1);

@@ -1307,7 +1307,7 @@
     "copied": "تم النسخ",
     "author": "المؤلف",
     "releaseDate": "تاريخ الإصدار",
-    "architectureCommit": "البنية / الالتزام",
+    "architecture": "البنية",
     "copyDiagnostics": "نسخ معلومات النظام والإصدار",
     "copiedInfo": "تم نسخ المعلومات",
     "copyInfo": "نسخ المعلومات",
