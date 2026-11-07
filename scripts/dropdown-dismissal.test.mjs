@@ -118,7 +118,7 @@ for (const [name, path, exported, initialProps, placeholder] of controls) {
       tree = await harness.render(Component, props);
       assert.ok(search(tree), 'opens');
       if (name === 'common select') {
-        assert.match(nodes(tree).find((node) => node.props.className?.includes('bottom-full')).props.className, /\bbottom-full\b/,
+        assert.match(nodes(tree).find((node) => node.props?.className?.includes('bottom-full')).props.className, /\bbottom-full\b/,
           'upward placement keeps the font menu visible inside a scroll viewport');
         assert.equal(nodes(tree).find((node) => node.props.role === 'listbox').props.style.maxHeight, '9rem');
       }
@@ -150,6 +150,67 @@ for (const [name, path, exported, initialProps, placeholder] of controls) {
     }
   });
 }
+
+test('portalled custom select escapes clipping, fits the viewport, and dismisses outside', async () => {
+  const originalDocument = globalThis.document;
+  const originalWindow = globalThis.window;
+  const surface = eventSurface();
+  globalThis.document = surface.document;
+  globalThis.window = {
+    innerWidth: 320,
+    innerHeight: 260,
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  const harness = componentHarness();
+  const { CustomSelect } = loadWithMocks(new URL('../frontend/common/components/CustomSelect.tsx', import.meta.url), {
+    react: harness.react,
+    './icons/ChevronDown': { ChevronDown: () => null },
+    './icons/Check': { Check: () => null },
+  });
+  const portalTarget = {};
+  const props = {
+    value: 'automatic',
+    options: [{ value: 'automatic', label: 'Automatic' }, { value: 'utf8', label: 'UTF-8' }],
+    onChange() {},
+    portal: true,
+    dropdownPlacement: 'auto',
+    align: 'left',
+  };
+  try {
+    let tree = await harness.render(CustomSelect, props);
+    let nodes = componentNodes(tree);
+    const wrapper = nodes.find((node) => node.type === 'div' && node.props.className?.includes('relative inline-block'));
+    wrapper.props.ref.current = surface.container;
+    const trigger = nodes.find((node) => node.type === 'button');
+    trigger.props.ref.current = { getBoundingClientRect: () => ({ top: 40, bottom: 80, left: 20, right: 200, width: 180 }) };
+    trigger.props.onClick();
+
+    tree = await harness.render(CustomSelect, props);
+    nodes = componentNodes(tree);
+    const menu = nodes.find((node) => node.type === 'div' && node.props.style?.position === 'fixed');
+    assert.ok(menu, 'the menu is rendered in a viewport layer');
+    assert.deepEqual(
+      { top: menu.props.style.top, left: menu.props.style.left, width: menu.props.style.width },
+      { top: 86, left: 20, width: 180 },
+    );
+    assert.equal(menu.props.style.maxHeight, 166);
+    const listbox = nodes.find((node) => node.props.role === 'listbox');
+    assert.equal(listbox.props.style.maxHeight, '156px');
+
+    menu.props.ref.current = { ownerDocument: surface.document, contains: (target) => target === portalTarget };
+    surface.dispatch('pointerdown', portalTarget, { path: [portalTarget, menu.props.ref.current] });
+    tree = await harness.render(CustomSelect, props);
+    assert.ok(componentNodes(tree).some((node) => node.props.role === 'listbox'), 'inside interaction keeps the menu open');
+    surface.dispatch('click', surface.outside);
+    tree = await harness.render(CustomSelect, props);
+    assert.ok(!componentNodes(tree).some((node) => node.props.role === 'listbox'), 'outside click closes the menu');
+  } finally {
+    harness.cleanup();
+    globalThis.document = originalDocument;
+    globalThis.window = originalWindow;
+  }
+});
 
 test('MR reviewer/label pickers dismiss independently and preserve multi-selection and metadata refresh', async () => {
   const surface = eventSurface();
