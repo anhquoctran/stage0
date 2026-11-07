@@ -1,42 +1,64 @@
-export const DEFAULT_RELEASE_NOTES = `# Stage0 v0.0.1 Release Notes
+export const DEFAULT_RELEASE_NOTES = `# Stage0 v0.0.9-nightly Release Notes
 
-Stage0 is a local-first Virtual Merge Request and conflict prediction sandbox.
-This document describes the current release (v0.0.1).
+This document describes the current release (v0.0.9-nightly).
 
-## Highlights
+Changes since [v0.0.8-nightly](https://github.com/anhquoctran/stage0/releases/tag/v0.0.8-nightly) (nightly).
 
-- Check for software updates from About, with an optional daily background check.
-- Download updates from the official GitHub Releases repository, inspect progress and release notes, and explicitly install/restart after saving work.
-- Verify package signatures and signed versions before installation. Active reviews, Git operations and external agent work prevent update installation.
-- Support in-app updates for Linux x86_64 AppImage, Windows x86_64 NSIS, macOS Apple Silicon and macOS Intel.
-- Build all four targets with one release version; publish the stable update manifest only after all packages pass signature verification.
-- Improve Linux desktop title bars, application/Dock identity and Wayland tray detection.
-- Keep startup splash sizing and percentage labels consistent.
-- Harden reviewer custom instructions and discussion replies with scoped tools, bounded context, thread revision checks and authoritative publication guards.
+## Changes
 
-## Installation
+- Merge pull request \\#49 from anhquoctran/develop ([a7b8eda](https://github.com/anhquoctran/stage0/commit/a7b8eda7005188ed69545902bdcbe31a0b06342c))
+- Merge pull request \\#51 from anhquoctran/hotfix/sync-nightly/rollup-controller-bootstrap ([0e9cbb1](https://github.com/anhquoctran/stage0/commit/0e9cbb11b9fded03971bcc5f56db7e7fc53d0194))
+- fix\\(ci\\): handle initial trusted-main release controller rollout ([52258f6](https://github.com/anhquoctran/stage0/commit/52258f67031fc7ec7f1cecf5ded4557215de7009))
+- Merge pull request \\#44 from anhquoctran/fix/protected-release-regressions ([78043a6](https://github.com/anhquoctran/stage0/commit/78043a63adf0fa1eb164b740a9e8e30806513fce))
+- Merge pull request \\#46 from anhquoctran/develop ([c5b7ffc](https://github.com/anhquoctran/stage0/commit/c5b7ffc6ddfeb842987a1e8b1b088aff0e657258))
+- Merge pull request \\#45 from anhquoctran/feat/stable-release-archive-filter ([3c1de49](https://github.com/anhquoctran/stage0/commit/3c1de499ae395669ce683cb4b511f3d802e65664))
+- fix\\(test\\): use a native absolute path in database fallback coverage ([9268f4d](https://github.com/anhquoctran/stage0/commit/9268f4d8eb671d6a16eec7db272970511225c4a1))
+- feat\\(website\\): default release archive to stable builds ([8bf289b](https://github.com/anhquoctran/stage0/commit/8bf289b6c0ce8fecbdd6815d7916bc34b4edb5a3))
+- fix\\(test\\): embed the Windows manifest only for native library tests ([27609e1](https://github.com/anhquoctran/stage0/commit/27609e1914b86adb5361586f1b2ed4b59bc115bb))
+- fix\\(test\\): isolate release command fixtures across native platforms ([81f74fd](https://github.com/anhquoctran/stage0/commit/81f74fd35f8ae66fb989e250a4d9f182a77d0cb7))
+- fix\\(ci\\): preserve baseline assertions during regression rollout ([cbbe427](https://github.com/anhquoctran/stage0/commit/cbbe427f7762de1fea35006332452f9c349748eb))
+- fix\\(ci\\): normalize regression fixture paths on Windows ([a2687c5](https://github.com/anhquoctran/stage0/commit/a2687c5ac2152a0ceb49129c54dc2ffa99bf9cae))
+- fix\\(release\\): preserve regression contracts and target hotfixes ([122fc86](https://github.com/anhquoctran/stage0/commit/122fc86aae189c451e63dc92a0a44461c20e7a09))
+- Add protected regression gate for release channels ([84e6163](https://github.com/anhquoctran/stage0/commit/84e6163313c882023e6c7d9ef4e7f462eaad749a))
+- Merge pull request \\#43 from anhquoctran/feat/periodic-release-rollups ([41fb696](https://github.com/anhquoctran/stage0/commit/41fb696558ea391985a4e848a8c3cd79f5740ca9))
+- feat\\(release\\): accumulate verified monthly and quarterly source builds ([862bca3](https://github.com/anhquoctran/stage0/commit/862bca3f449387780badd35447f3ea8203ea85bf))
+- refactor\\(release\\): isolate immutable candidate source verification ([3c0c9c0](https://github.com/anhquoctran/stage0/commit/3c0c9c0d7e754a351194246cf6ee1dc5bb4b81ec))
+- Merge pull request \\#42 from anhquoctran/develop ([df5ef51](https://github.com/anhquoctran/stage0/commit/df5ef51db811cbb7d71df28d8d02b923a429bda8))
+- Merge pull request \\#41 from anhquoctran/docs/single-worktree-policy ([e66a784](https://github.com/anhquoctran/stage0/commit/e66a784f2cd07f8d1d41cd613cbf35ddbd860286))
+- Merge pull request \\#40 from anhquoctran/feat/strict-release-promotion ([30f5be8](https://github.com/anhquoctran/stage0/commit/30f5be8502db6a2e5bb3aaef28c0a6f10d09b9fb))
+- Merge pull request \\#39 from anhquoctran/feat/text-file-encodings ([4a954dd](https://github.com/anhquoctran/stage0/commit/4a954ddb35a75a75cbed30ed70012f2c687b1620))
+- docs: require a single worktree and sequential task branches ([01a890f](https://github.com/anhquoctran/stage0/commit/01a890fa973e26eaa859315f70a86f5a15f702a8))
+- feat\\(release\\): gate adjacent channel promotions on tested candidates ([d8c01e9](https://github.com/anhquoctran/stage0/commit/d8c01e91fc286aaf56a961b20fb813509c16b8c0))
+- feat\\(text\\): detect file encodings and add a simple per-file diff selector ([b427e05](https://github.com/anhquoctran/stage0/commit/b427e050e89b5597ef6f6021b274d1de84a7db3b))
+- Merge pull request \\#38 from anhquoctran/fix/release-activity-changelogs ([45ac2f3](https://github.com/anhquoctran/stage0/commit/45ac2f37a846bef9833f5632ce713115243a0627))
+- refactor\\(sandbox\\): isolate bounded file-range paging ([3a56736](https://github.com/anhquoctran/stage0/commit/3a56736991ae8b5b2c1b0394d2b19a4727a51042))
+- fix\\(release\\): skip idle previews and generate per-release changelogs ([3dc6769](https://github.com/anhquoctran/stage0/commit/3dc676997ff091ed08fd6cf8c07b202bb5f7a657))
+- Merge pull request \\#37 from anhquoctran/beta ([fa44606](https://github.com/anhquoctran/stage0/commit/fa44606679069f40ca41fd4a1de1589323acba33))
+- Merge pull request \\#36 from anhquoctran/main ([04df287](https://github.com/anhquoctran/stage0/commit/04df287299503a64a557f3483e51c4de71962c46))
+- Merge pull request \\#35 from anhquoctran/nightly ([304d122](https://github.com/anhquoctran/stage0/commit/304d1220e413e5c0459e0838b5bb1228645d078a))
+- Merge pull request \\#34 from anhquoctran/nightly ([9c36006](https://github.com/anhquoctran/stage0/commit/9c3600614c552ebb05596bc8f35d97cdee1103a6))
+- Merge pull request \\#33 from anhquoctran/beta ([d8e1635](https://github.com/anhquoctran/stage0/commit/d8e16352388cc54428feed8b81872f8370ac03ea))
+- Merge pull request \\#29 from anhquoctran/hotfix/main/remaining-codeql-alerts ([79738f3](https://github.com/anhquoctran/stage0/commit/79738f31128e1fef991f3a60ebff3bc483faf6d5))
+- Merge pull request \\#30 from anhquoctran/fix/remaining-codeql-alerts ([640f93c](https://github.com/anhquoctran/stage0/commit/640f93cd01515c96c6b1cee0c42a5f2541e05bf8))
+- Merge pull request \\#31 from anhquoctran/hotfix/beta/remaining-codeql-alerts ([6c62334](https://github.com/anhquoctran/stage0/commit/6c6233445654095b368ffe84a52b23153c76dc00))
+- fix\\(security\\): isolate release execution and resolve remaining CodeQL findings ([4209272](https://github.com/anhquoctran/stage0/commit/42092728745c40b0dc7644cd4d3e77771ec1e005))
+- fix\\(security\\): isolate release execution and resolve remaining CodeQL findings ([1828ec0](https://github.com/anhquoctran/stage0/commit/1828ec01eaf86933b0d2bc2da1e27c82e810da2d))
+- refactor\\(release\\): expose version preparation for explicit workspace roots ([280e88a](https://github.com/anhquoctran/stage0/commit/280e88af3ef77d0acc17b789ae94205bb3a6c805))
+- refactor\\(release\\): expose version preparation for explicit workspace roots ([a8675d6](https://github.com/anhquoctran/stage0/commit/a8675d67052bab7531e13eee638be23072efdb49))
+- fix\\(security\\): isolate release execution and resolve remaining CodeQL findings ([255735c](https://github.com/anhquoctran/stage0/commit/255735c4469edd70dfa0a059f2be3fc1d0407d90))
+- refactor\\(release\\): expose version preparation for explicit workspace roots ([796bd19](https://github.com/anhquoctran/stage0/commit/796bd19944d293b378e5f767e64d2440a2625731))
+- Merge pull request \\#28 from anhquoctran/nightly ([6f89f6c](https://github.com/anhquoctran/stage0/commit/6f89f6c979744fb1625041d013db30ee1f2b04a7))
+- Merge pull request \\#23 from anhquoctran/beta ([96722bb](https://github.com/anhquoctran/stage0/commit/96722bbc5ca07302c0ed8702c2d97f2a39f71402))
+- Merge pull request \\#26 from anhquoctran/nightly ([bd1c6fa](https://github.com/anhquoctran/stage0/commit/bd1c6faf36706955891b72f9b36a1d20945941a5))
+- Merge pull request \\#22 from anhquoctran/nightly ([051da6f](https://github.com/anhquoctran/stage0/commit/051da6fe81084f3cf8bc6d28912ac65f37d5bd1b))
+- Merge pull request \\#19 from anhquoctran/hotfix/beta/security-alerts ([f060605](https://github.com/anhquoctran/stage0/commit/f0606058d11439de67580064341eac77ccd311f7))
+- docs\\(security\\): record default-branch remediation and hotfix validation ([4aa685e](https://github.com/anhquoctran/stage0/commit/4aa685efb2b893381862a5486ff064eb10fafd69))
+- chore\\(deps-dev\\): bump vite from 6.4.3 to 6.4.5 ([fcb683f](https://github.com/anhquoctran/stage0/commit/fcb683f895f44aed3300bd9b7aeab01cb72fec48))
+- fix\\(security\\): remove vulnerable ZIP and crypto dependencies and harden rendering ([80daf89](https://github.com/anhquoctran/stage0/commit/80daf8927f6c7401f6d1e6542bfd8961ff99d06b))
+- Merge pull request \\#17 from anhquoctran/dependabot/npm\\_and\\_yarn/vite-6.4.5 ([ebe86b1](https://github.com/anhquoctran/stage0/commit/ebe86b1fb64f09e7c721c937a6503013de8f046c))
+- chore\\(deps-dev\\): bump vite from 6.4.3 to 6.4.5 ([7efd5b8](https://github.com/anhquoctran/stage0/commit/7efd5b84613d6d026a2194903c42dfc2e754b9e8))
+- Merge pull request \\#9 from anhquoctran/beta ([e65806a](https://github.com/anhquoctran/stage0/commit/e65806a131fa6aa458adada7632f85c953512ac5))
+- Merge pull request \\#8 from anhquoctran/nightly ([f6f95b7](https://github.com/anhquoctran/stage0/commit/f6f95b770c5d5c73f05c44c3feb3848747e79854))
 
-### Compatibility Matrix
-
-| Platform | CPU | Installer | In-app updates |
-|---|---|---|---|
-| Linux | x86_64 | AppImage | Supported |
-| Linux | x86_64 | Debian / RPM | Manual or package manager |
-| Windows | x86_64 | NSIS | Supported |
-| macOS | Apple Silicon | DMG / app | Supported |
-| macOS | Intel | DMG / app | Supported |
-
-Choose the asset matching your platform and CPU. Existing versions without an updater require a manual installation of this release once.
-
-- Linux: use AppImage for in-app updates. Debian and RPM packages remain available for manual/package-manager installation.
-- Windows: install the x86_64 NSIS setup executable. Windows ARM is not included.
-- macOS: install the matching Apple Silicon (\`aarch64\`) or Intel (\`x86_64\`) DMG/app.
-
-The initial macOS packages use ad-hoc signing and are not notarized by Apple; Gatekeeper may require approval in Privacy & Security. The Windows installer is not Authenticode signed. All updater payloads are separately signed with Stage0's update key.
-
-Updates never upload repository content or invoke AI services. Automatic checks can be disabled in About; downloading and installation always require user actions.
-
-## Verification scope
-
-Automated Node/Rust tests and Linux build checks are run before publication. CI compiles the native release packages on Linux, macOS and Windows. Compilation does not replace installed-app smoke testing on each supported desktop.
+[Full comparison](https://github.com/anhquoctran/stage0/compare/v0.0.8-nightly...a7b8eda7005188ed69545902bdcbe31a0b06342c)
 `;
