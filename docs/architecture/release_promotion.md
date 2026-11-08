@@ -133,6 +133,17 @@ Native builds run only in their immutable tag cache/security scope. Release tags
 retain one source parent and explicit `Stage0-Source-Commit` provenance. Legacy
 releases without that provenance cannot supply a rollup until rebuilt correctly.
 
+The trusted controller can precede a channel's About metadata schema. Inside the
+isolated tag context, both validation and packaging run
+`scripts/prepare-tag-metadata.mjs` before compiling. It regenerates metadata with
+the tag's own generator, checks the package version, and retains the snapshot's
+frozen release date. Matrix jobs override only the target OS and architecture.
+This avoids compiling stale controller fields such as `gitCommit` against a
+newer `SoftwareAboutInfo` type without executing channel scripts on Main.
+If a failed tag lacks this preparation step, rerunning that immutable tag still
+uses its old workflow. Merge the reviewed fix into the source channel and prepare
+a new version/tag; never move the old tag to repair it.
+
 Urgent hotfixes still originate at their exact release branch and back-sync via
 PRs. They use `hotfix/<target>/<slug>` (or `hotfix/sync-<target>/<slug>`), declare
 one `Stage0-Candidate: vX.Y.Z-nightly` for Beta or `...-beta` for Stable and retain
