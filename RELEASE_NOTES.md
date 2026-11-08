@@ -1,41 +1,52 @@
-# Stage0 v0.0.1 Release Notes
+# Stage0 v0.0.10-nightly Release Notes
 
-Stage0 is a local-first Virtual Merge Request and conflict prediction sandbox.
-This document describes the current release (v0.0.1).
+This document describes the current release (v0.0.10-nightly).
 
-## Highlights
+Changes since [v0.0.9-nightly](https://github.com/anhquoctran/stage0/releases/tag/v0.0.9-nightly) (nightly).
 
-- Check for software updates from About, with an optional daily background check.
-- Download updates from the official GitHub Releases repository, inspect progress and release notes, and explicitly install/restart after saving work.
-- Verify package signatures and signed versions before installation. Active reviews, Git operations and external agent work prevent update installation.
-- Support in-app updates for Linux x86_64 AppImage, Windows x86_64 NSIS, macOS Apple Silicon and macOS Intel.
-- Build all four targets with one release version; publish the stable update manifest only after all packages pass signature verification.
-- Improve Linux desktop title bars, application/Dock identity and Wayland tray detection.
-- Keep startup splash sizing and percentage labels consistent.
-- Harden reviewer custom instructions and discussion replies with scoped tools, bounded context, thread revision checks and authoritative publication guards.
+## Changes
 
-## Installation
+- Merge pull request \#69 from anhquoctran/develop ([ed02755](https://github.com/anhquoctran/stage0/commit/ed02755a1691ba515a9235c3af3350d7786a83a6))
+- Merge pull request \#72 from anhquoctran/fix/sync-nightly-before-promotion ([2fbef5a](https://github.com/anhquoctran/stage0/commit/2fbef5a79b86e4021957c6f0913d3bcf23d8b455))
+- docs\(git\): explain ancestry sync before Nightly promotion ([576fa1a](https://github.com/anhquoctran/stage0/commit/576fa1af8c1617470d41cbc6e012ad8cf9f1e9b1))
+- Merge Nightly ancestry before the next Develop promotion ([e82a7db](https://github.com/anhquoctran/stage0/commit/e82a7db730a025229cb5ce6890f7ee30ec0460b6))
+- Merge pull request \#68 from anhquoctran/fix/remove-commit-digest-from-version ([18a3e67](https://github.com/anhquoctran/stage0/commit/18a3e67f0c3bbd856de6c7e781554adee18abd79))
+- test\(about\): protect commit-free version metadata ([ced05bb](https://github.com/anhquoctran/stage0/commit/ced05bb0b4554becdd22992b55d01bc1a2aebb43))
+- fix\(about\): remove commit digest from version info ([2e7d830](https://github.com/anhquoctran/stage0/commit/2e7d8300f195fc5d6e5deb52e9e9811b438dee8e))
+- Merge pull request \#67 from anhquoctran/develop ([87c403b](https://github.com/anhquoctran/stage0/commit/87c403bdc473963608499dee45d6f9e26fa9a5ef))
+- Merge pull request \#66 from anhquoctran/fix/custom-encoding-dropdown ([424f2a6](https://github.com/anhquoctran/stage0/commit/424f2a69abf858e6d0d4b0121117a2b7c8f83b0e))
+- chore: bump build metadata to 0dc47f4 ([a01bbf9](https://github.com/anhquoctran/stage0/commit/a01bbf9ce36478ee9444f5464c4c017369d8718f))
+- fix\(git\): keep encoding dropdown above diff clipping ([0dc47f4](https://github.com/anhquoctran/stage0/commit/0dc47f4ecc260819158436f608f12c5951cce993))
+- test\(git\): cover custom encoding selector ([815b8fc](https://github.com/anhquoctran/stage0/commit/815b8fc8be1c61182f5060ccf5f7f430cd026aab))
+- fix\(git\): use custom file encoding dropdown ([60b88e7](https://github.com/anhquoctran/stage0/commit/60b88e7345d37079a22cdc08f56167b2c100a64f))
+- Merge pull request \#64 from anhquoctran/hotfix/sync-develop/main-controller-merge ([0b8de64](https://github.com/anhquoctran/stage0/commit/0b8de64b48a0a533017666da0d0e56c41c568837))
+- Retain approved Nightly merge in Develop back-sync ([5deee64](https://github.com/anhquoctran/stage0/commit/5deee64accb4d8b17401dff1569eda0044da4e54))
+- Merge pull request \#63 from anhquoctran/hotfix/sync-nightly/main-controller-merge ([4334631](https://github.com/anhquoctran/stage0/commit/4334631c57ebf2a91e5f5b3cb70d432bc165a39e))
+- Merge approved Main and Nightly controller ancestry into Develop ([4d4f381](https://github.com/anhquoctran/stage0/commit/4d4f3814c15c3e1014d06dbfe81f83b048c32c4c))
+- Merge approved Main controller rollout into Nightly ancestry ([13fe3ce](https://github.com/anhquoctran/stage0/commit/13fe3ce62f1999148695619b8c5af9d4f8fc7f0a))
+- Merge pull request \#60 from anhquoctran/hotfix/main/promotion-guard-scope ([323ac3c](https://github.com/anhquoctran/stage0/commit/323ac3c9b3184e07c6f50ab97d03d346c8f615bf))
+- Merge pull request \#61 from anhquoctran/hotfix/sync-nightly/promotion-guard-scope ([2c4bd33](https://github.com/anhquoctran/stage0/commit/2c4bd33a1183b7740cf59d3aaec493435889dbe7))
+- Merge pull request \#62 from anhquoctran/hotfix/sync-develop/promotion-guard-scope ([9538091](https://github.com/anhquoctran/stage0/commit/953809144887fe1fb8c515c161336e31ef150405))
+- Merge trusted Main guard deployment into Develop ([b516416](https://github.com/anhquoctran/stage0/commit/b516416df03ae90750809442bce7c6eb3241c8c5))
+- Merge trusted Main guard deployment into Nightly ([c766c85](https://github.com/anhquoctran/stage0/commit/c766c852cd35b5f6190e16090d22a3aee2effbba))
+- fix\(ci\): deploy scoped promotion checks to trusted main ([5dfad5d](https://github.com/anhquoctran/stage0/commit/5dfad5d8911a828ec2aa4de61007844057a28712))
+- Merge pull request \#58 from anhquoctran/hotfix/nightly/beta-history-sync ([2434986](https://github.com/anhquoctran/stage0/commit/24349861dcb39c628a246d5a457113980f77b687))
+- Merge pull request \#59 from anhquoctran/hotfix/sync-develop/beta-history-sync ([a1041c3](https://github.com/anhquoctran/stage0/commit/a1041c3a8d2935a539cbafbb27e71e61fc4f3656))
+- Merge Nightly required-check fix into Develop back-sync ([3e9a329](https://github.com/anhquoctran/stage0/commit/3e9a329b1f8ef372ba55d2169c52be9f8d4b9eec))
+- fix\(ci\): run required regressions once per pull request ([426db50](https://github.com/anhquoctran/stage0/commit/426db50826eefdeb0cceed7ce93c01b049d9042a))
+- Merge branch 'hotfix/nightly/beta-history-sync' into hotfix/sync-develop/beta-history-sync ([9429825](https://github.com/anhquoctran/stage0/commit/94298252c50a2ef9f7da64458f12fc31902c316f))
+- Merge beta history into nightly while retaining all current regression tests ([35b1810](https://github.com/anhquoctran/stage0/commit/35b1810deab328c8f1cc4c037a34dc6c54c16f17))
+- Merge pull request \#53 from anhquoctran/develop ([c858cab](https://github.com/anhquoctran/stage0/commit/c858cab765c65133d389bbbf7784f82fe4953c8f))
+- Merge pull request \#57 from anhquoctran/fix/develop-nightly-conflicts ([db60f2e](https://github.com/anhquoctran/stage0/commit/db60f2ea75140cf1d70f378ceda9b680eb97c00b))
+- Merge nightly history while preserving all develop regression tests ([53aa681](https://github.com/anhquoctran/stage0/commit/53aa681330b8f8ea3453bc5715eda56411970c69))
+- Merge pull request \#56 from anhquoctran/fix/promotion-policy-scope ([1848a84](https://github.com/anhquoctran/stage0/commit/1848a844dfa63ebd94df1853fa02cb37d0189843))
+- fix\(ci\): scope release approval to eligible promotion PRs ([72b2522](https://github.com/anhquoctran/stage0/commit/72b2522847d1a84d286431546d7b4549d1e296c9))
+- Merge pull request \#48 from anhquoctran/beta ([3ef9d78](https://github.com/anhquoctran/stage0/commit/3ef9d7846a1fbd564a739ee59474299dbf0ab849))
+- Merge pull request \#52 from anhquoctran/hotfix/sync-develop/rollup-controller-bootstrap ([d0d0c1c](https://github.com/anhquoctran/stage0/commit/d0d0c1cb3c566b4410ffd4b5d211d07b37bb3928))
+- Merge pull request \#50 from anhquoctran/hotfix/beta/rollup-controller-bootstrap ([97a1396](https://github.com/anhquoctran/stage0/commit/97a13967335dcace154b54cf37b6794ad1f4a87a))
+- Merge remote-tracking branch 'origin/develop' into hotfix/sync-develop/rollup-controller-bootstrap ([3fcc07a](https://github.com/anhquoctran/stage0/commit/3fcc07aa6cf2d18b6786e3e867e2d0af00f5c9fb))
+- fix\(ci\): handle initial trusted-main release controller rollout ([4500fc8](https://github.com/anhquoctran/stage0/commit/4500fc8f35258c5397f2bbaa069a8c08edd841da))
+- fix\(ci\): handle initial trusted-main release controller rollout ([bc19182](https://github.com/anhquoctran/stage0/commit/bc191825786555f0188f4825332b6984f2c6e6e0))
+- Merge pull request \#47 from anhquoctran/nightly ([7a5d571](https://github.com/anhquoctran/stage0/commit/7a5d5716e69ddfdc9e363fc811df1db8bbb9e2db))
 
-### Compatibility Matrix
-
-| Platform | CPU | Installer | In-app updates |
-|---|---|---|---|
-| Linux | x86_64 | AppImage | Supported |
-| Linux | x86_64 | Debian / RPM | Manual or package manager |
-| Windows | x86_64 | NSIS | Supported |
-| macOS | Apple Silicon | DMG / app | Supported |
-| macOS | Intel | DMG / app | Supported |
-
-Choose the asset matching your platform and CPU. Existing versions without an updater require a manual installation of this release once.
-
-- Linux: use AppImage for in-app updates. Debian and RPM packages remain available for manual/package-manager installation.
-- Windows: install the x86_64 NSIS setup executable. Windows ARM is not included.
-- macOS: install the matching Apple Silicon (`aarch64`) or Intel (`x86_64`) DMG/app.
-
-The initial macOS packages use ad-hoc signing and are not notarized by Apple; Gatekeeper may require approval in Privacy & Security. The Windows installer is not Authenticode signed. All updater payloads are separately signed with Stage0's update key.
-
-Updates never upload repository content or invoke AI services. Automatic checks can be disabled in About; downloading and installation always require user actions.
-
-## Verification scope
-
-Automated Node/Rust tests and Linux build checks are run before publication. CI compiles the native release packages on Linux, macOS and Windows. Compilation does not replace installed-app smoke testing on each supported desktop.
+[Full comparison](https://github.com/anhquoctran/stage0/compare/v0.0.9-nightly...ed02755a1691ba515a9235c3af3350d7786a83a6)
