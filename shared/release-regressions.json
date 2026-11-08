@@ -192,6 +192,11 @@
       "id": "tag-metadata-schema",
       "runner": "node",
       "path": "scripts/tag-metadata-schema.test.mjs"
+    },
+    {
+      "id": "react-portal-visible-focus",
+      "runner": "node",
+      "path": "scripts/react-dom-contracts.test.mjs"
     }
   ]
 }
