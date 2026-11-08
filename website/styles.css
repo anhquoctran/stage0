@@ -726,14 +726,6 @@ code, pre {
   .ai-persona-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .schedule-grid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-  .schedule-policy-grid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
 }
 
 @media (max-width: 1200px) {
@@ -2882,3 +2874,22 @@ html, body, button, input, select, textarea {
 code, pre, kbd, samp, .code-box, .mockup-editor, .branch-compare-pill, .mockup-file-item {
   font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
 }
+
+/* Keep schedule overrides after the desktop grid declarations. */
+@media (max-width: 1024px) {
+  .schedule-grid,
+  .schedule-policy-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+}
+.schedule-card,
+.schedule-policy-content { min-width: 0; }
+.schedule-policy-content { overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .schedule-card { padding: 1.1rem; }
+  .schedule-detail-item,
+  .schedule-card-footer { flex-wrap: wrap; }
+}
+.copy-btn.copied { background: #16a34a; color: #fff; border: 0; }
+.schedule-policy-content code { white-space: normal; overflow-wrap: anywhere; }

@@ -377,3 +377,14 @@ The full Node suite reports **519 tests / 487 pass / 32 fail**. The same 32 fail
 locations reproduce in an isolated source copy with the handwriting changes
 removed. They include stale i18n mocks, four-step onboarding expectations and
 other earlier contract expectations; this artwork change does not resolve them.
+
+## GitHub Pages website (website branch only)
+
+The website is an independent SvelteKit static project; it does not share the
+desktop application's React runtime, dependencies, or release CI. Its route owns
+a per-page release state instance, `website/src/lib/sections/` owns page sections,
+`mockup/` owns the interactive demo, and `releases/` separates catalog/platform
+rules, API/cache transport, reactive state and download/archive presentation.
+Use [website maintenance and verification](../../website/README.md) for component
+ownership, the Pages base path, and the independent Node/browser checks. Website
+PRs target `website`, not the application's integration branches.
