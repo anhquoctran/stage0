@@ -187,6 +187,11 @@
       "id": "about-version-no-commit",
       "runner": "node",
       "path": "scripts/about-version-no-commit.test.mjs"
+    },
+    {
+      "id": "tag-metadata-schema",
+      "runner": "node",
+      "path": "scripts/tag-metadata-schema.test.mjs"
     }
   ]
 }
