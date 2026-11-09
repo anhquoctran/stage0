@@ -69,10 +69,11 @@ export function CustomSelect<T extends string>({
     if (autoFocus) buttonRef.current?.focus();
   }, [autoFocus]);
 
+  const portalReady = !portal || portalPosition !== null;
   useEffect(() => {
-    if (isOpen && searchable) searchRef.current?.focus();
+    if (isOpen && searchable && portalReady) searchRef.current?.focus();
     if (!isOpen) setSearch('');
-  }, [isOpen, searchable]);
+  }, [isOpen, searchable, portalReady]);
 
   useEffect(() => {
     listRef.current?.querySelectorAll('[role="option"]')[highlightedIndex]?.scrollIntoView({ block: 'nearest' });

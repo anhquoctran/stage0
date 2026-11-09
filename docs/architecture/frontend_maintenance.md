@@ -377,3 +377,12 @@ The full Node suite reports **519 tests / 487 pass / 32 fail**. The same 32 fail
 locations reproduce in an isolated source copy with the handwriting changes
 removed. They include stale i18n mocks, four-step onboarding expectations and
 other earlier contract expectations; this artwork change does not resolve them.
+
+## Real React tests and coverage
+
+Colocated `*.test.ts(x)` files use Vitest/Testing Library with real React DOM and
+state; `*.browser.test.tsx` adds Chromium layout contracts. `tests/react/setup.ts`
+owns shared test-only i18n/cleanup and JSDOM's missing scroll API. Existing Node
+contracts and their frozen harness remain intact. Coverage configuration is separate
+from application Vite metadata generation. See [test coverage](test_coverage.md)
+for measurement scope, floors, native coverage limits and CI/report ownership.
