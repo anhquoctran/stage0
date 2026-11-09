@@ -71,7 +71,7 @@ export function CustomSelect<T extends string>({
 
   const portalReady = !portal || portalPosition !== null;
   useEffect(() => {
-    if (isOpen && searchable && portalReady) searchRef.current?.focus();
+    if (isOpen && searchable && portalReady) searchRef.current?.focus({ preventScroll: true });
     if (!isOpen) setSearch('');
   }, [isOpen, searchable, portalReady]);
 
@@ -242,7 +242,7 @@ export function CustomSelect<T extends string>({
           } : undefined}
           className={`absolute ${
             align === 'left' ? 'start-0' : 'end-0'
-          } ${dropdownPlacement === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'} ${dropdownWidth} bg-mantle border border-surface0 rounded-sm shadow-2xl z-50 py-1 overflow-hidden animate-in fade-in duration-100 ${menuClassName}`}
+          } ${dropdownPlacement === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'} ${dropdownWidth} bg-mantle border border-surface0 rounded-sm shadow-2xl z-50 py-1 overflow-hidden animate-in fade-in transition-opacity duration-100 ${menuClassName}`}
         >
           {searchable && <div className="px-2 py-1 border-b border-surface0 rounded-sm">
             <input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)}
