@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "catppuccin-latte",
+  "name": "Catppuccin Latte",
+  "kind": "light",
+  "version": "1.0.0",
+  "author": "Catppuccin / Stage0",
+  "colors": {}
+}

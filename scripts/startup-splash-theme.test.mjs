@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { readStylesheet } from './helpers/readStylesheet.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -172,7 +173,7 @@ test('useThemeStore and createPreferencesApplyAction persist theme mode to local
 });
 
 test('splash frame uses the same subtle rounded border as the custom macOS main frame', () => {
-  const html = fs.readFileSync('index.html', 'utf8');
+  const html = fs.readFileSync('index.html', 'utf8') + readStylesheet('themes/index.css');
   assert.match(html, /--window-frame-radius:\s*12px;/);
   assert.match(html, /\[data-platform="macos"\]\s+#startup-splash\s*\{[^}]*border: 1px solid var\(--splash-frame-border\);[^}]*border-radius: var\(--window-frame-radius\);/);
   assert.match(html, /--splash-frame-border:\s*#313244;/);

@@ -1,0 +1,254 @@
+/* Diff Viewer & Raw Viewer: Dynamic Font, BIU, Line Spacing & Ligatures via Preferences */
+.diff-view-wrapper,
+.diff-tailwindcss-wrapper,
+.diff-viewer-container,
+.diff-line-content,
+.diff-line-content-raw,
+.diff-line-content-item,
+.diff-line-num,
+.diff-line-hunk-header,
+.diff-raw-viewer {
+  font-family: var(--viewer-font-family, "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace) !important;
+  font-size: var(--viewer-font-size, 13px) !important;
+  font-weight: var(--viewer-font-weight, 400) !important;
+  font-style: var(--viewer-font-style, normal) !important;
+  text-decoration: var(--viewer-text-decoration, none) !important;
+  line-height: var(--viewer-line-height, 1.5) !important;
+  font-variant-ligatures: var(--viewer-font-ligatures, normal) !important;
+  -webkit-font-variant-ligatures: var(--viewer-font-ligatures, normal) !important;
+  font-feature-settings: var(--viewer-font-features, "liga" 1, "calt" 1) !important;
+  -webkit-font-feature-settings: var(--viewer-font-features, "liga" 1, "calt" 1) !important;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.diff-view-wrapper pre,
+.diff-view-wrapper code,
+.diff-view-wrapper span,
+.diff-view-wrapper td,
+.diff-view-wrapper tr,
+.diff-view-wrapper table,
+.diff-tailwindcss-wrapper pre,
+.diff-tailwindcss-wrapper code,
+.diff-tailwindcss-wrapper span,
+.diff-tailwindcss-wrapper td,
+.diff-raw-viewer,
+.diff-raw-viewer * {
+  font-family: var(--viewer-font-family, "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace) !important;
+  font-weight: var(--viewer-font-weight, 400) !important;
+  font-style: var(--viewer-font-style, normal) !important;
+  text-decoration: var(--viewer-text-decoration, none) !important;
+  line-height: var(--viewer-line-height, 1.5) !important;
+  font-variant-ligatures: var(--viewer-font-ligatures, normal) !important;
+  -webkit-font-variant-ligatures: var(--viewer-font-ligatures, normal) !important;
+  font-feature-settings: var(--viewer-font-features, "liga" 1, "calt" 1) !important;
+  -webkit-font-feature-settings: var(--viewer-font-features, "liga" 1, "calt" 1) !important;
+}
+
+/* @git-diff-view/react overrides for Catppuccin Aesthetic */
+.diff-view-wrapper {
+  background-color: var(--ctp-base) !important;
+  border-color: var(--ctp-surface0) !important;
+  color: var(--ctp-text) !important;
+}
+
+.diff-tailwindcss-wrapper {
+  background-color: var(--ctp-base) !important;
+  color: var(--ctp-text) !important;
+}
+
+.diff-tailwindcss-wrapper .split-diff-view,
+.diff-tailwindcss-wrapper .unified-diff-view {
+  background-color: var(--ctp-base) !important;
+}
+
+.diff-line-old {
+  background-color: color-mix(in srgb, var(--ctp-red) 16%, transparent) !important;
+}
+
+.diff-line-new {
+  background-color: color-mix(in srgb, var(--ctp-green) 16%, transparent) !important;
+}
+
+/* Share the Changes viewer's opaque palette with discussion excerpts. */
+.diff-tailwindcss-wrapper[data-theme] .diff-style-root {
+  --diff-add-content--: var(--diff-added-background);
+  --diff-del-content--: var(--diff-deleted-background);
+}
+
+.discussion-diff-added {
+  background-color: var(--diff-added-background);
+}
+
+.discussion-diff-deleted {
+  background-color: var(--diff-deleted-background);
+}
+
+.diff-line-hunk-header {
+  background-color: color-mix(in srgb, var(--ctp-blue) 14%, transparent) !important;
+  color: var(--ctp-blue) !important;
+}
+
+.diff-tailwindcss-wrapper .diff-line-num {
+  color: var(--ctp-overlay0) !important;
+  background-color: var(--ctp-mantle) !important;
+  border-color: var(--ctp-surface0) !important;
+}
+
+/* Catppuccin Syntax Highlighting */
+.diff-tailwindcss-wrapper .hljs,
+.syntax-highlight .hljs,
+.markdown-preview .hljs {
+  color: var(--ctp-text) !important;
+  background: transparent !important;
+}
+
+.diff-tailwindcss-wrapper .hljs {
+  background: var(--ctp-base) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-keyword,
+.diff-tailwindcss-wrapper .hljs-doctag,
+.diff-tailwindcss-wrapper .hljs-meta .hljs-keyword,
+.diff-tailwindcss-wrapper .hljs-template-tag,
+.syntax-highlight .hljs-keyword,
+.syntax-highlight .hljs-doctag,
+.syntax-highlight .hljs-meta .hljs-keyword,
+.syntax-highlight .hljs-template-tag,
+.markdown-preview .hljs-keyword,
+.markdown-preview .hljs-doctag,
+.markdown-preview .hljs-meta .hljs-keyword,
+.markdown-preview .hljs-template-tag {
+  color: var(--ctp-mauve) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-title,
+.diff-tailwindcss-wrapper .hljs-title.class_,
+.diff-tailwindcss-wrapper .hljs-title.function_,
+.syntax-highlight .hljs-title,
+.syntax-highlight .hljs-title.class_,
+.syntax-highlight .hljs-title.function_,
+.markdown-preview .hljs-title,
+.markdown-preview .hljs-title.class_,
+.markdown-preview .hljs-title.function_ {
+  color: var(--ctp-blue) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-string,
+.diff-tailwindcss-wrapper .hljs-regexp,
+.diff-tailwindcss-wrapper .hljs-meta .hljs-string,
+.syntax-highlight .hljs-string,
+.syntax-highlight .hljs-regexp,
+.syntax-highlight .hljs-meta .hljs-string,
+.markdown-preview .hljs-string,
+.markdown-preview .hljs-regexp,
+.markdown-preview .hljs-meta .hljs-string {
+  color: var(--ctp-green) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-number,
+.diff-tailwindcss-wrapper .hljs-literal,
+.diff-tailwindcss-wrapper .hljs-attr,
+.diff-tailwindcss-wrapper .hljs-attribute,
+.syntax-highlight .hljs-number,
+.syntax-highlight .hljs-literal,
+.syntax-highlight .hljs-attr,
+.syntax-highlight .hljs-attribute,
+.markdown-preview .hljs-number,
+.markdown-preview .hljs-literal,
+.markdown-preview .hljs-attr,
+.markdown-preview .hljs-attribute {
+  color: var(--ctp-peach) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-built_in,
+.diff-tailwindcss-wrapper .hljs-symbol,
+.diff-tailwindcss-wrapper .hljs-type,
+.syntax-highlight .hljs-built_in,
+.syntax-highlight .hljs-symbol,
+.syntax-highlight .hljs-type,
+.markdown-preview .hljs-built_in,
+.markdown-preview .hljs-symbol,
+.markdown-preview .hljs-type {
+  color: var(--ctp-yellow) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-comment,
+.diff-tailwindcss-wrapper .hljs-code,
+.syntax-highlight .hljs-comment,
+.syntax-highlight .hljs-code,
+.markdown-preview .hljs-comment,
+.markdown-preview .hljs-code {
+  color: var(--ctp-overlay0) !important;
+  font-style: italic;
+}
+
+.diff-tailwindcss-wrapper .hljs-variable,
+.syntax-highlight .hljs-variable,
+.markdown-preview .hljs-variable {
+  color: var(--ctp-rosewater) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-meta,
+.syntax-highlight .hljs-meta,
+.markdown-preview .hljs-meta {
+  color: var(--ctp-teal) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-punctuation,
+.markdown-preview .hljs-punctuation,
+.diff-tailwindcss-wrapper .hljs-operator,
+.syntax-highlight .hljs-punctuation,
+.syntax-highlight .hljs-operator,
+.markdown-preview .hljs-operator {
+  color: var(--ctp-subtext0) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-property,
+.syntax-highlight .hljs-property,
+.markdown-preview .hljs-property {
+  color: var(--ctp-sapphire) !important;
+}
+
+.diff-tailwindcss-wrapper .hljs-params,
+.syntax-highlight .hljs-params,
+.markdown-preview .hljs-params {
+  color: var(--ctp-subtext1) !important;
+}
+
+/* Smooth pulsing for conflict indicators */
+@keyframes conflict-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ctp-red) 40%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ctp-red) 0%, transparent);
+  }
+}
+
+.conflict-pulse {
+  animation: conflict-glow 2s infinite ease-in-out;
+}
+
+/* VSCode-style Active Diff Line Highlight */
+tr.stage0-active-line > td {
+  background-color: color-mix(in srgb, var(--ctp-surface1) 22%, transparent) !important;
+}
+
+tr.stage0-active-line > td.diff-line-old-num,
+tr.stage0-active-line > td.diff-line-new-num,
+tr.stage0-active-line > td.diff-line-num {
+  border-left: 2px solid var(--ctp-subtext0) !important;
+}
+
+/* Inline Git Blame Container */
+.stage0-inline-blame-wrapper {
+  display: inline-flex;
+  align-items: center;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
+  vertical-align: baseline;
+}
+

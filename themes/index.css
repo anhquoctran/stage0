@@ -1,0 +1,5 @@
+/* Built-in packages: load dark defaults before the light variant. */
+@import "./dark/catppuccin-mocha/theme.css";
+@import "./light/catppuccin-latte/theme.css";
+@import "./shared/light-controls.css";
+@import "./shared/light-search-tags.css";

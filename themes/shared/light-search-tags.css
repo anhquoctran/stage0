@@ -1,0 +1,12 @@
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .mr-list-search-filter-badge::before {
+  inset: -2px -3px;
+  border-color: color-mix(in srgb, var(--color-brand) 24%, white);
+  border-radius: var(--radius-sm);
+  background-color: color-mix(in srgb, var(--color-brand) 8%, white);
+  box-shadow: none;
+}
+
+:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .mr-list-search-filter-badge > span:last-child {
+  background-color: transparent;
+}
+

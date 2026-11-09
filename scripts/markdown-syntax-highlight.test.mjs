@@ -1,3 +1,4 @@
+import { readStylesheet } from './helpers/readStylesheet.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -32,10 +33,7 @@ test('MarkdownPreview component configures Marked with syntax highlighting code 
 });
 
 test('index.css includes Catppuccin syntax highlighting for .markdown-preview', () => {
-  const cssSource = readFileSync(
-    new URL('../frontend/core/styles/index.css', import.meta.url),
-    'utf-8'
-  );
+  const cssSource = readStylesheet(new URL('../frontend/core/styles/index.css', import.meta.url));
 
   assert.match(cssSource, /\.markdown-preview\s+\.hljs/);
   assert.match(cssSource, /\.markdown-preview\s+\.hljs-keyword/);
