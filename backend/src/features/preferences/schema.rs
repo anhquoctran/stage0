@@ -66,6 +66,12 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     validate_optional_bool(general, "addToPath", "general")?;
 
     let appearance = object_section(value, "appearance")?;
+    validate_optional_enum(
+        appearance,
+        "density",
+        "appearance",
+        &["standard", "compact", "touch"],
+    )?;
     if let Some(language) = appearance.get("language") {
         let language = language.as_str().ok_or_else(|| {
             crate::common::messages::failure(

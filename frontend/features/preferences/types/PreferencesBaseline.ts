@@ -1,3 +1,4 @@
+import type { UiDensity } from './UiDensity';
 import type { LinuxTitleBarMode } from '../../../core/types/LinuxTitleBarMode';
 import { type ThemeMode } from '../../../core/types/ThemeMode';
 import { type AiConfig } from '../../ai/types/AiConfig';
@@ -7,6 +8,7 @@ import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings'
 export interface PreferencesBaseline {
   keymap: KeymapSettings;
   uiFontFamily: string;
+  uiDensity: UiDensity;
   linuxTitleBar: LinuxTitleBarMode;
   themeMode: ThemeMode;
   fontFamily: string;

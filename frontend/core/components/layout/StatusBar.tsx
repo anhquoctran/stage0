@@ -31,7 +31,7 @@ export const StatusBar: React.FC = () => {
 
   return (
     <footer className={clsx(
-      'min-h-7 h-auto bg-mantle border-t border-surface0/80 px-3 py-1 flex items-center justify-between gap-2 text-[11px] text-subtext1 shrink-0 select-none z-10',
+      'ui-density-statusbar min-h-7 h-auto bg-mantle border-t border-surface0/80 px-3 py-1 flex items-center justify-between gap-2 text-[11px] text-subtext1 shrink-0 select-none z-10',
       customMac ? 'rounded-b-sm' : 'rounded-none',
     )}>
       {/* Left: Repository info & Active branch */}

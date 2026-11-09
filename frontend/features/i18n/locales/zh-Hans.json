@@ -199,7 +199,8 @@
       "ai-guardrails": "安全与防护",
       "git-binary": "Git 可执行文件",
       "git-credentials": "Git 凭据",
-      "notifications-settings": "推送与提醒"
+      "notifications-settings": "推送与提醒",
+      "appearance-density": "界面密度"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +274,10 @@
       "notifications-settings": {
         "title": "通知与推送提醒",
         "description": "配置操作系统原生通知和事件通道。"
+      },
+      "appearance-density": {
+        "title": "界面密度",
+        "description": "调整控件大小和间距，不改变文字大小。"
       }
     },
     "window": {
@@ -504,7 +509,20 @@
     "draftResetToast": "已将所有设置草稿重置为默认值（点击“应用”保存）",
     "appliedToast": "偏好设置已应用",
     "applyFailedWithDetail": "无法应用偏好设置：{{error}}。草稿仍然保留。",
-    "applyFailed": "无法应用偏好设置。草稿仍然保留。"
+    "applyFailed": "无法应用偏好设置。草稿仍然保留。",
+    "density": {
+      "title": "界面密度",
+      "description": "调整控件大小和间距，不改变文字大小。",
+      "default": "默认",
+      "standardDescription": "适合日常使用的均衡间距。",
+      "compactDescription": "更小的控件和更紧凑的行，以显示更多内容。",
+      "touchDescription": "更大的控件和间距，方便触控操作。",
+      "applyHint": "点击应用或OK后在所有窗口生效，无需重启。",
+      "conflict": "密度已在其他窗口或编辑器中更改。请重新打开偏好设置再应用。",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "刚刚",

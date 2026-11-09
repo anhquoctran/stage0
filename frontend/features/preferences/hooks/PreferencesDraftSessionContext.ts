@@ -1,3 +1,4 @@
+import type { UiDensity } from '../types/UiDensity';
 import type { LinuxTitleBarMode } from '../../../core/types/LinuxTitleBarMode';
 import type { Dispatch, SetStateAction } from 'react';
 import type { StoreApi, UseBoundStore } from 'zustand';
@@ -12,6 +13,7 @@ import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings'
 export interface PreferencesDraftSessionContext {
   storedKeymap: KeymapSettings;
   storedUiFontFamily: string;
+  storedUiDensity?: UiDensity;
   storedLinuxTitleBar: LinuxTitleBarMode;
   storedThemeMode: ThemeMode;
   storedFontFamily: string;

@@ -18,6 +18,7 @@ export function usePreferencesChangeCount({
         explorerContextMenu: session.draftExplorerContextMenu,
         addToPath: session.draftAddToPath,
         uiFontFamily: session.draftUiFontFamily,
+        uiDensity: session.draftUiDensity,
         linuxTitleBar: session.draftLinuxTitleBar,
         themeMode: session.draftThemeMode,
         fontFamily: session.draftFontFamily,
@@ -41,6 +42,7 @@ export function usePreferencesChangeCount({
   }, [
     session.draftKeymap,
     session.draftUiFontFamily,
+    session.draftUiDensity,
     session.draftLinuxTitleBar,
     session.draftShowInlineBlame,
     session.draftLaunchAtStartup,

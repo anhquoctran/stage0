@@ -5,11 +5,13 @@ import { type SandboxType } from '../../git/types/SandboxType';
 import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 import type { PreferencesDraftSessionContext } from './PreferencesDraftSessionContext';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
+import { DEFAULT_UI_DENSITY } from '../utils/uiDensity';
 import { DEFAULT_UI_FONT_FAMILY } from '../constants/uiFonts';
 
 export function usePreferencesDraftSession({
   storedKeymap = DEFAULT_KEYMAP,
   storedUiFontFamily = DEFAULT_UI_FONT_FAMILY,
+  storedUiDensity = DEFAULT_UI_DENSITY,
   storedLinuxTitleBar = 'system',
   storedThemeMode,
   storedFontFamily,
@@ -44,6 +46,7 @@ export function usePreferencesDraftSession({
 }: PreferencesDraftSessionContext) {
   const [draftKeymap, setDraftKeymap] = useState(storedKeymap);
   const [draftUiFontFamily, setDraftUiFontFamily] = useState(storedUiFontFamily);
+  const [draftUiDensity, setDraftUiDensity] = useState(storedUiDensity);
   const [draftLinuxTitleBar, setDraftLinuxTitleBar] = useState(storedLinuxTitleBar);
   const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
 
@@ -94,6 +97,7 @@ export function usePreferencesDraftSession({
   const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
     keymap: storedKeymap,
     uiFontFamily: storedUiFontFamily,
+    uiDensity: storedUiDensity,
     linuxTitleBar: storedLinuxTitleBar,
     themeMode: storedThemeMode,
     fontFamily: storedFontFamily,
@@ -133,6 +137,7 @@ export function usePreferencesDraftSession({
         wasOpenRef.current = true;
         setDraftKeymap(storedKeymap);
         setDraftUiFontFamily(storedUiFontFamily);
+        setDraftUiDensity(storedUiDensity);
         setDraftLinuxTitleBar(storedLinuxTitleBar);
         setDraftThemeMode(storedThemeMode);
         setDraftFontFamily(storedFontFamily);
@@ -164,7 +169,8 @@ export function usePreferencesDraftSession({
         setSavedBaseline({
           keymap: storedKeymap,
           uiFontFamily: storedUiFontFamily,
-    linuxTitleBar: storedLinuxTitleBar,
+          uiDensity: storedUiDensity,
+          linuxTitleBar: storedLinuxTitleBar,
           themeMode: storedThemeMode,
           fontFamily: storedFontFamily,
           fontSize: storedFontSize,
@@ -216,6 +222,7 @@ export function usePreferencesDraftSession({
     isPreferencesOpen,
     storedKeymap,
     storedUiFontFamily,
+    storedUiDensity,
     storedLinuxTitleBar,
     storedThemeMode,
     storedFontFamily,
@@ -245,6 +252,8 @@ export function usePreferencesDraftSession({
   return {
     draftKeymap,
     draftUiFontFamily,
+    draftUiDensity,
+    setDraftUiDensity,
     draftLinuxTitleBar,
     setDraftLinuxTitleBar,
     setDraftUiFontFamily,

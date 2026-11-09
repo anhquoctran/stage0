@@ -199,7 +199,8 @@
       "ai-guardrails": "Sécurité et garde-fous",
       "git-binary": "Exécutable Git",
       "git-credentials": "Identifiants Git",
-      "notifications-settings": "Alertes push"
+      "notifications-settings": "Alertes push",
+      "appearance-density": "Densité"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +274,10 @@
       "notifications-settings": {
         "title": "Notifications et alertes push",
         "description": "Configurez les notifications natives du système d’exploitation et les canaux d’événements."
+      },
+      "appearance-density": {
+        "title": "Densité",
+        "description": "Ajuster la taille des commandes et les espacements sans modifier la taille du texte."
       }
     },
     "window": {
@@ -504,7 +509,20 @@
     "draftResetToast": "Tous les brouillons de réglages ont été réinitialisés (cliquez sur Appliquer pour enregistrer)",
     "appliedToast": "Préférences appliquées",
     "applyFailedWithDetail": "Impossible d’appliquer les préférences : {{error}}. Vos brouillons sont conservés.",
-    "applyFailed": "Impossible d’appliquer les préférences. Vos brouillons sont conservés."
+    "applyFailed": "Impossible d’appliquer les préférences. Vos brouillons sont conservés.",
+    "density": {
+      "title": "Densité",
+      "description": "Ajuster la taille des commandes et les espacements sans modifier la taille du texte.",
+      "default": "Par défaut",
+      "standardDescription": "Espacement équilibré pour un usage quotidien.",
+      "compactDescription": "Commandes plus petites et lignes resserrées pour afficher plus de contenu.",
+      "touchDescription": "Commandes agrandies et espacements adaptés au tactile.",
+      "applyHint": "Les changements sont appliqués à toutes les fenêtres après Appliquer ou OK, sans redémarrage.",
+      "conflict": "La densité a changé ailleurs. Rouvrez les préférences avant de les appliquer.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "à l’instant",

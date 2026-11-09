@@ -207,6 +207,11 @@
       "id": "react-portal-visible-focus",
       "runner": "node",
       "path": "scripts/react-dom-contracts.test.mjs"
+    },
+    {
+      "id": "ui-density-preferences",
+      "runner": "node",
+      "path": "scripts/ui-density.test.mjs"
     }
   ]
 }

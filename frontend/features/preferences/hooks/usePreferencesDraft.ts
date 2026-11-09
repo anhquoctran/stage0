@@ -27,6 +27,7 @@ import { usePreferencesDraftSession } from './usePreferencesDraftSession';
 import { usePreferencesNavigation } from './usePreferencesNavigation';
 import { usePreferencesDismiss } from './usePreferencesDismiss';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
+import { DEFAULT_UI_DENSITY } from '../utils/uiDensity';
 import { DEFAULT_UI_FONT_FAMILY } from '../constants/uiFonts';
 import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
 import { usePreferencesLanguageDraft } from './usePreferencesLanguageDraft';
@@ -36,6 +37,7 @@ export function usePreferencesDraft() {
     isPreferencesOpen,
     keymap: storedKeymap,
     uiFontFamily: storedUiFontFamily,
+    uiDensity: storedUiDensity,
     linuxTitleBar: storedLinuxTitleBar,
     setIsPreferencesOpen,
     initialPreferencesTab,
@@ -101,6 +103,7 @@ export function usePreferencesDraft() {
   const session = usePreferencesDraftSession({
     storedKeymap,
     storedUiFontFamily,
+    storedUiDensity,
     storedLinuxTitleBar,
     storedThemeMode,
     storedFontFamily,
@@ -154,6 +157,8 @@ export function usePreferencesDraft() {
     languageDraft,
     draftKeymap: session.draftKeymap,
     draftUiFontFamily: session.draftUiFontFamily,
+    draftUiDensity: session.draftUiDensity,
+    setDraftUiDensity: session.setDraftUiDensity,
     draftLinuxTitleBar: session.draftLinuxTitleBar,
     setDraftKeymap: session.setDraftKeymap,
     applyingRef,
@@ -237,6 +242,7 @@ export function usePreferencesDraft() {
     languageDraft.reset();
     session.setDraftKeymap(structuredClone(DEFAULT_KEYMAP));
     session.setDraftUiFontFamily(DEFAULT_UI_FONT_FAMILY);
+    session.setDraftUiDensity(DEFAULT_UI_DENSITY);
     session.setDraftLinuxTitleBar('system');
     applyUiFontToDocument(DEFAULT_UI_FONT_FAMILY);
     session.setDraftThemeMode('system');
@@ -310,7 +316,9 @@ export function usePreferencesDraft() {
     },
     appearance: {
       draftUiFontFamily: session.draftUiFontFamily,
+      draftUiDensity: session.draftUiDensity,
       setDraftUiFontFamily: session.setDraftUiFontFamily,
+      setDraftUiDensity: session.setDraftUiDensity,
       draftThemeMode: session.draftThemeMode,
       setDraftThemeMode: session.setDraftThemeMode,
       draftThemeId: session.draftThemeId,

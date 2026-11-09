@@ -1,0 +1,68 @@
+/* Standard deliberately has no layout overrides: existing component sizes stay intact.
+ * These tokens affect application chrome/controls, never typography or editor lines.
+ * Document-level selectors also reach menus rendered in portals. */
+:root {
+  --density-control-height: 28px;
+  --density-control-padding: 6px;
+  --density-row-padding: 6px;
+  --density-setting-padding: 12px;
+  --density-toolbar-height: 64px;
+  --density-tabs-height: 40px;
+  --density-tab-height: 32px;
+  --density-status-height: 28px;
+  --density-panel-padding: 32px;
+}
+html[data-ui-density="compact"] {
+  --density-control-height: 24px;
+  --density-control-padding: 2px;
+  --density-row-padding: 3px;
+  --density-setting-padding: 8px;
+  --density-toolbar-height: 56px;
+  --density-tabs-height: 32px;
+  --density-tab-height: 26px;
+  --density-status-height: 24px;
+  --density-panel-padding: 20px;
+}
+html[data-ui-density="touch"] {
+  --density-control-height: 44px;
+  --density-control-padding: 8px;
+  --density-row-padding: 12px;
+  --density-setting-padding: 16px;
+  --density-toolbar-height: 80px;
+  --density-tabs-height: 56px;
+  --density-tab-height: 48px;
+  --density-status-height: 48px;
+  --density-panel-padding: 32px;
+}
+/* Explicit exemptions protect native window controls and fixed editor geometry.
+ * Checkboxes/radios retain native visuals; switches use an expanded hit area below. */
+html:is([data-ui-density="compact"], [data-ui-density="touch"]) {
+  :is(button:not([role="switch"]), input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], .sr-only), select, [role="option"], [role="menuitem"]):not([data-density-exempt], [data-density-exempt] *) {
+    min-height: var(--density-control-height);
+    height: auto;
+    padding-block: var(--density-control-padding);
+  }
+  .ui-density-toolbar { height: var(--density-toolbar-height); }
+  .ui-density-tabs { height: var(--density-tabs-height); flex-shrink: 0; }
+  .ui-density-tab { height: var(--density-tab-height); }
+  .ui-density-statusbar { min-height: var(--density-status-height); }
+  .ui-density-panel { padding: var(--density-panel-padding); }
+  [data-setting-row] { padding-block: var(--density-setting-padding); flex-wrap: wrap; }
+  .ui-density-row { padding-block: var(--density-row-padding); }
+}
+html[data-ui-density="touch"] {
+  button:not([role="switch"], [data-density-exempt], [data-density-exempt] *) { min-width: 44px; }
+  button[role="switch"]:not([data-density-exempt] *)::before {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, 44px);
+    height: 44px;
+  }
+}
+.density-choice:focus-within { outline: 2px solid var(--color-brand); outline-offset: 3px; }
+.density-preview { height: 140px; }
+.density-preview-row { height: 36px; }
+[data-density-preview="compact"] .density-preview-row { height: 24px; }
+[data-density-preview="touch"] .density-preview-row { height: 40px; }

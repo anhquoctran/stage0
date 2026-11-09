@@ -7,7 +7,7 @@ const PROPERTY_NAMES: Record<string, string[]> = {
   keymap: ['preset', 'overrides'],
   'keymap.overrides.[]': ['command', 'keys'],
   general: ['showInlineBlame', 'streamResponse', 'enableCodeReviewAssist', 'autoCheckUpdates'],
-  appearance: ['themeMode', 'linuxTitleBar', 'uiFont', 'viewerFont', 'markdownFont'],
+  appearance: ['density', 'themeMode', 'linuxTitleBar', 'uiFont', 'viewerFont', 'markdownFont'],
   'appearance.uiFont': ['fontFamily'],
   'appearance.markdownFont': ['fontFamily', 'codeFontFamily', 'editorFontFamily', 'fontSize', 'headingFontWeight'],
   'appearance.viewerFont': ['fontFamily', 'fontSize', 'isBold', 'isItalic', 'isUnderline', 'lineSpacing', 'enableLigatures'],
@@ -33,6 +33,7 @@ const PROPERTY_NAMES: Record<string, string[]> = {
 const VALUE_OPTIONS: Record<string, string[]> = {
   'keymap.preset': KEYMAP_PRESETS.map((preset) => preset.id),
   'keymap.overrides.[].command': keymapCatalog().filter((command) => command.editable).map((command) => command.id),
+  'appearance.density': ['standard', 'compact', 'touch'],
   'appearance.themeMode': ['system', 'dark', 'light'],
   'appearance.linuxTitleBar': ['system', 'custom'],
   'appearance.markdownFont.fontFamily': MARKDOWN_PROSE_FONTS,
