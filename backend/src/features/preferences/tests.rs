@@ -388,3 +388,37 @@ fn linux_title_bar_mode_is_optional_and_rejects_unsupported_values() {
         assert!(validate_schema(&settings).is_err());
     }
 }
+
+#[test]
+fn ui_density_defaults_and_supported_values_are_valid() {
+    let mut settings = parse_and_validate(DEFAULT_PREFERENCES).unwrap();
+    assert_eq!(settings["appearance"]["density"], "standard");
+    settings["appearance"]
+        .as_object_mut()
+        .unwrap()
+        .remove("density");
+    assert!(
+        validate_schema(&settings).is_ok(),
+        "Older preferences remain valid"
+    );
+    for density in ["standard", "compact", "touch"] {
+        settings["appearance"]["density"] = json!(density);
+        assert!(validate_schema(&settings).is_ok());
+    }
+}
+
+#[test]
+fn ui_density_rejects_unknown_modes_and_wrong_types() {
+    let mut settings = parse_and_validate(DEFAULT_PREFERENCES).unwrap();
+    for density in [
+        json!("dense"),
+        json!("Standard"),
+        json!(7),
+        json!(true),
+        json!([]),
+    ] {
+        settings["appearance"]["density"] = density;
+        let error = validate_schema(&settings).unwrap_err();
+        assert!(error.contains("appearance.density"), "{error}");
+    }
+}

@@ -189,7 +189,8 @@
       "ai-guardrails": "الأمان وضوابط الحماية",
       "git-binary": "ملف Git التنفيذي",
       "git-credentials": "بيانات اعتماد Git",
-      "notifications-settings": "الإشعارات والتنبيهات"
+      "notifications-settings": "الإشعارات والتنبيهات",
+      "appearance-density": "كثافة الواجهة"
     },
     "headers": {
       "general-keymaps": {
@@ -263,6 +264,10 @@
       "notifications-settings": {
         "title": "الإشعارات والتنبيهات الفورية",
         "description": "اضبط إشعارات نظام التشغيل الأصلية وقنوات الأحداث."
+      },
+      "appearance-density": {
+        "title": "كثافة الواجهة",
+        "description": "ضبط أحجام عناصر التحكم والمسافات دون تغيير حجم النص."
       }
     },
     "language": {
@@ -510,7 +515,20 @@
     "draftResetToast": "تمت إعادة ضبط كل مسودات الإعدادات إلى الوضع الافتراضي (انقر على «تطبيق» للحفظ)",
     "appliedToast": "تم تطبيق التفضيلات بنجاح",
     "applyFailedWithDetail": "تعذر تطبيق التفضيلات: {{error}}. لا تزال المسودات متاحة.",
-    "applyFailed": "تعذر تطبيق التفضيلات. لا تزال المسودات متاحة."
+    "applyFailed": "تعذر تطبيق التفضيلات. لا تزال المسودات متاحة.",
+    "density": {
+      "title": "كثافة الواجهة",
+      "description": "ضبط أحجام عناصر التحكم والمسافات دون تغيير حجم النص.",
+      "default": "افتراضي",
+      "standardDescription": "مسافات متوازنة للاستخدام اليومي.",
+      "compactDescription": "عناصر أصغر وصفوف متقاربة لعرض محتوى أكثر.",
+      "touchDescription": "عناصر أكبر ومسافات أوسع للتفاعل باللمس.",
+      "applyHint": "تسري التغييرات في كل النوافذ بعد تطبيق أو موافق، دون إعادة تشغيل.",
+      "conflict": "تغيرت الكثافة في نافذة أو محرر آخر. أعد فتح التفضيلات قبل التطبيق.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "الآن",

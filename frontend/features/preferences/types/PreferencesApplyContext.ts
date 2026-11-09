@@ -1,3 +1,4 @@
+import type { UiDensity } from './UiDensity';
 import type { LinuxTitleBarMode } from '../../../core/types/LinuxTitleBarMode';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import type { StoreApi, UseBoundStore } from 'zustand';
@@ -14,6 +15,8 @@ export interface PreferencesApplyContext {
   languageDraft?: LanguagePreferencesTransaction;
   draftKeymap: KeymapSettings;
   draftUiFontFamily: string;
+  draftUiDensity?: UiDensity;
+  setDraftUiDensity?: Dispatch<SetStateAction<UiDensity>>;
   draftLinuxTitleBar: LinuxTitleBarMode;
   setDraftKeymap: Dispatch<SetStateAction<KeymapSettings>>;
   applyingRef: RefObject<boolean>;

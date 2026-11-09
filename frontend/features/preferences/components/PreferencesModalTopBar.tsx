@@ -37,6 +37,7 @@ export const PreferencesModalTopBar: React.FC<{
   </button>;
   return (
     <div
+      data-density-exempt
       dir="ltr"
       onMouseDown={custom ? event => {
         if (event.button !== 0 || event.detail !== 1) return;

@@ -124,6 +124,7 @@ jobs:
       - run: pnpm check:architecture
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm test:react
       - name: Run frozen target Node regressions
         if: needs.prepare.outputs.channel != 'nightly'
         shell: bash

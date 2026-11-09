@@ -51,6 +51,8 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({ standalone =
     },
     appearance: {
       draftUiFontFamily,
+      draftUiDensity,
+      setDraftUiDensity,
       setDraftUiFontFamily,
       draftThemeMode,
       setDraftThemeMode,
@@ -148,6 +150,8 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({ standalone =
             <PreferencesTabContainer
               language={language}
               draftUiFontFamily={draftUiFontFamily}
+              draftUiDensity={draftUiDensity}
+              setDraftUiDensity={setDraftUiDensity}
               setDraftUiFontFamily={setDraftUiFontFamily}
               draftKeymap={draftKeymap}
               setDraftKeymap={setDraftKeymap}

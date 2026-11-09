@@ -199,7 +199,8 @@
       "ai-guardrails": "Seguridad y protecciones",
       "git-binary": "Ejecutable de Git",
       "git-credentials": "Credenciales de Git",
-      "notifications-settings": "Avisos push"
+      "notifications-settings": "Avisos push",
+      "appearance-density": "Densidad"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +274,10 @@
       "notifications-settings": {
         "title": "Notificaciones y avisos push",
         "description": "Configura las notificaciones nativas del sistema operativo y los canales de eventos."
+      },
+      "appearance-density": {
+        "title": "Densidad",
+        "description": "Ajusta los controles y el espaciado sin cambiar el tamaño del texto."
       }
     },
     "window": {
@@ -504,7 +509,20 @@
     "draftResetToast": "Se restablecieron todos los borradores a los valores predeterminados (pulsa Aplicar para guardar)",
     "appliedToast": "Preferencias aplicadas correctamente",
     "applyFailedWithDetail": "No se pudieron aplicar las preferencias: {{error}}. Los borradores siguen disponibles.",
-    "applyFailed": "No se pudieron aplicar las preferencias. Los borradores siguen disponibles."
+    "applyFailed": "No se pudieron aplicar las preferencias. Los borradores siguen disponibles.",
+    "density": {
+      "title": "Densidad",
+      "description": "Ajusta los controles y el espaciado sin cambiar el tamaño del texto.",
+      "default": "Predeterminado",
+      "standardDescription": "Espaciado equilibrado para el uso diario.",
+      "compactDescription": "Controles pequeños y filas compactas para mostrar más contenido.",
+      "touchDescription": "Controles más grandes y más espacio para interacción táctil.",
+      "applyHint": "Los cambios se aplican en todas las ventanas al pulsar Aplicar u OK, sin reiniciar.",
+      "conflict": "La densidad cambió en otra ventana o editor. Abre de nuevo Preferencias antes de aplicar.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "ahora mismo",

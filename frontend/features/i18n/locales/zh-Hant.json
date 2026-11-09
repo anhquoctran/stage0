@@ -199,7 +199,8 @@
       "ai-guardrails": "安全與防護",
       "git-binary": "Git 執行檔",
       "git-credentials": "Git 憑據",
-      "notifications-settings": "推送與提醒"
+      "notifications-settings": "推送與提醒",
+      "appearance-density": "介面密度"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +274,10 @@
       "notifications-settings": {
         "title": "通知與推送提醒",
         "description": "配置作業系統原生通知和事件通道。"
+      },
+      "appearance-density": {
+        "title": "介面密度",
+        "description": "調整控制項大小和間距，不改變文字大小。"
       }
     },
     "window": {
@@ -504,7 +509,20 @@
     "draftResetToast": "已將所有設定草稿重設為預設值（按下「套用」即可儲存）",
     "appliedToast": "已套用偏好設定",
     "applyFailedWithDetail": "無法套用偏好設定：{{error}}。草稿仍會保留。",
-    "applyFailed": "無法套用偏好設定。草稿仍會保留。"
+    "applyFailed": "無法套用偏好設定。草稿仍會保留。",
+    "density": {
+      "title": "介面密度",
+      "description": "調整控制項大小和間距，不改變文字大小。",
+      "default": "預設",
+      "standardDescription": "適合日常使用的均衡間距。",
+      "compactDescription": "較小的控制項和較緊湊的列，以顯示更多內容。",
+      "touchDescription": "較大的控制項和間距，方便觸控操作。",
+      "applyHint": "按下套用或OK後在所有視窗生效，無需重新啟動。",
+      "conflict": "密度已在其他視窗或編輯器中變更。請重新開啟偏好設定再套用。",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "剛剛",

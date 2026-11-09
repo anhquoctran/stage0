@@ -189,7 +189,8 @@
       "ai-guardrails": "Security & Guardrails",
       "git-binary": "Git Executable",
       "git-credentials": "Git Credentials",
-      "notifications-settings": "Push & Alerts"
+      "notifications-settings": "Push & Alerts",
+      "appearance-density": "Density"
     },
     "headers": {
       "general-keymaps": {
@@ -263,6 +264,10 @@
       "notifications-settings": {
         "title": "Notifications & Push Alerts",
         "description": "Configure native operating system notifications and event channels."
+      },
+      "appearance-density": {
+        "title": "Density",
+        "description": "Adjust control sizes and spacing without changing text size."
       }
     },
     "language": {
@@ -510,7 +515,20 @@
     "draftResetToast": "Reset all draft settings to defaults (click Apply to save)",
     "appliedToast": "Preferences applied successfully",
     "applyFailedWithDetail": "Could not apply preferences: {{error}}. Your drafts are still available.",
-    "applyFailed": "Could not apply preferences. Your drafts are still available."
+    "applyFailed": "Could not apply preferences. Your drafts are still available.",
+    "density": {
+      "title": "Density",
+      "description": "Adjust control sizes and spacing without changing text size.",
+      "default": "Default",
+      "standardDescription": "Balanced spacing for everyday use.",
+      "compactDescription": "Smaller controls and tighter rows to show more content.",
+      "touchDescription": "Larger controls and more space for touch interaction.",
+      "applyHint": "Changes take effect in all windows after Apply or OK. No restart required.",
+      "conflict": "Density changed in another window or editor. Reopen Preferences before applying.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "just now",

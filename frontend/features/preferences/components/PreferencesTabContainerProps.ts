@@ -1,3 +1,4 @@
+import type { UiDensity } from '../types/UiDensity';
 import type { LinuxTitleBarMode } from '../../../core/types/LinuxTitleBarMode';
 import React from 'react';
 import { type ThemeMode } from '../../../core/types/ThemeMode';
@@ -16,6 +17,8 @@ export interface PreferencesTabContainerProps {
   language: PreferencesLanguageTabProps;
   draftKeymap: KeymapSettings;
   draftUiFontFamily: string;
+  draftUiDensity: UiDensity;
+  setDraftUiDensity: React.Dispatch<React.SetStateAction<UiDensity>>;
   setDraftUiFontFamily: React.Dispatch<React.SetStateAction<string>>;
   setDraftKeymap: React.Dispatch<React.SetStateAction<KeymapSettings>>;
   currentTabId: PreferenceTab | null;
