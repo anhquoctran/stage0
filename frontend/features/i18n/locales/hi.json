@@ -189,7 +189,8 @@
       "ai-guardrails": "Security & Guardrails",
       "git-binary": "Git Executable",
       "git-credentials": "Git Credentials",
-      "notifications-settings": "Push & Alerts"
+      "notifications-settings": "Push & Alerts",
+      "appearance-density": "इंटरफ़ेस घनत्व"
     },
     "headers": {
       "general-keymaps": {
@@ -263,6 +264,10 @@
       "notifications-settings": {
         "title": "Notifications & Push Alerts",
         "description": "Configure native operating system notifications and event channels."
+      },
+      "appearance-density": {
+        "title": "इंटरफ़ेस घनत्व",
+        "description": "टेक्स्ट का आकार बदले बिना नियंत्रणों का आकार और अंतर बदलें।"
       }
     },
     "language": {
@@ -510,7 +515,20 @@
     "draftResetToast": "Reset all draft settings to defaults (click Apply to save)",
     "appliedToast": "Preferences applied successfully",
     "applyFailedWithDetail": "Could not apply preferences: {{error}}. Your drafts are still available.",
-    "applyFailed": "Could not apply preferences. Your drafts are still available."
+    "applyFailed": "Could not apply preferences. Your drafts are still available.",
+    "density": {
+      "title": "इंटरफ़ेस घनत्व",
+      "description": "टेक्स्ट का आकार बदले बिना नियंत्रणों का आकार और अंतर बदलें।",
+      "default": "डिफ़ॉल्ट",
+      "standardDescription": "रोज़मर्रा के उपयोग के लिए संतुलित अंतर।",
+      "compactDescription": "अधिक सामग्री दिखाने के लिए छोटे नियंत्रण और सघन पंक्तियाँ।",
+      "touchDescription": "स्पर्श से उपयोग के लिए बड़े नियंत्रण और अधिक अंतर।",
+      "applyHint": "लागू करें या OK दबाने पर सभी विंडो में बदलाव लागू होते हैं। पुनः शुरू करना ज़रूरी नहीं।",
+      "conflict": "घनत्व किसी अन्य विंडो या संपादक में बदला गया है। लागू करने से पहले प्राथमिकताएँ फिर से खोलें।",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "just now",

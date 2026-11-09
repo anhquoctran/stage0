@@ -14,7 +14,7 @@ export function markdownPreferencesHarness({ languageSettings } = {}) {
   const markdownFont = { fontFamily: 'Arial', codeFontFamily: 'Fira Code',
     editorFontFamily: 'Fira Code', fontSize: 14, headingFontWeight: 600 };
   const preferences = { ...viewerFont, isPreferencesOpen: true,
-    uiFontFamily: 'IBM Plex Sans',
+    uiFontFamily: 'IBM Plex Sans', uiDensity: languageSettings?.appearance?.density ?? 'standard',
     keymap: { preset: 'stage0', overrides: [] }, showInlineBlame: true,
     markdownFontFamily: markdownFont.fontFamily, markdownCodeFontFamily: markdownFont.codeFontFamily,
     markdownEditorFontFamily: markdownFont.editorFontFamily, markdownFontSize: markdownFont.fontSize,

@@ -199,7 +199,8 @@
       "ai-guardrails": "Sicherheit und Schutzregeln",
       "git-binary": "Git-Programm",
       "git-credentials": "Git-Zugangsdaten",
-      "notifications-settings": "Push und Hinweise"
+      "notifications-settings": "Push und Hinweise",
+      "appearance-density": "Dichte"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +274,10 @@
       "notifications-settings": {
         "title": "Benachrichtigungen und Push-Hinweise",
         "description": "Konfiguriere native Betriebssystembenachrichtigungen und Ereigniskanäle."
+      },
+      "appearance-density": {
+        "title": "Dichte",
+        "description": "Größe der Bedienelemente und Abstände ohne Änderung der Schriftgröße anpassen."
       }
     },
     "window": {
@@ -504,7 +509,20 @@
     "draftResetToast": "Alle Einstellungsentwürfe wurden zurückgesetzt (zum Speichern auf „Anwenden“ klicken)",
     "appliedToast": "Einstellungen erfolgreich angewendet",
     "applyFailedWithDetail": "Einstellungen konnten nicht angewendet werden: {{error}}. Deine Entwürfe sind weiterhin vorhanden.",
-    "applyFailed": "Einstellungen konnten nicht angewendet werden. Deine Entwürfe sind weiterhin vorhanden."
+    "applyFailed": "Einstellungen konnten nicht angewendet werden. Deine Entwürfe sind weiterhin vorhanden.",
+    "density": {
+      "title": "Dichte",
+      "description": "Größe der Bedienelemente und Abstände ohne Änderung der Schriftgröße anpassen.",
+      "default": "Standardwert",
+      "standardDescription": "Ausgewogene Abstände für den Alltag.",
+      "compactDescription": "Kleinere Bedienelemente und engere Zeilen für mehr Inhalt.",
+      "touchDescription": "Größere Bedienelemente und mehr Platz für Touchbedienung.",
+      "applyHint": "Änderungen gelten nach Anwenden oder OK in allen Fenstern. Kein Neustart nötig.",
+      "conflict": "Die Dichte wurde anderswo geändert. Einstellungen vor dem Anwenden erneut öffnen.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "gerade eben",

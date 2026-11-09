@@ -1,13 +1,16 @@
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import base from './vitest.config';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   ...base,
+  plugins: [...(base.plugins ?? []), tailwindcss()],
   test: {
     ...base.test,
     // Actual browser coverage of layout, portals and focus complements JSDOM.
     include: [
+      'frontend/features/preferences/components/tabs/PreferencesDensityTab.browser.test.tsx',
       'frontend/common/components/CustomSelect.test.tsx',
       'frontend/common/components/CustomSelect.browser.test.tsx',
       'frontend/features/git/components/diff-viewer/FileEncodingPicker.test.tsx',

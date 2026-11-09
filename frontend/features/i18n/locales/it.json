@@ -189,7 +189,8 @@
       "ai-guardrails": "Sicurezza e protezioni",
       "git-binary": "Eseguibile Git",
       "git-credentials": "Credenziali Git",
-      "notifications-settings": "Notifiche push e avvisi"
+      "notifications-settings": "Notifiche push e avvisi",
+      "appearance-density": "Densità"
     },
     "headers": {
       "general-keymaps": {
@@ -263,6 +264,10 @@
       "notifications-settings": {
         "title": "Notifiche e avvisi push",
         "description": "Configura le notifiche native del sistema operativo e i canali degli eventi."
+      },
+      "appearance-density": {
+        "title": "Densità",
+        "description": "Regola dimensioni dei controlli e spazi senza cambiare la dimensione del testo."
       }
     },
     "language": {
@@ -510,7 +515,20 @@
     "draftResetToast": "Tutte le bozze delle impostazioni sono state ripristinate (fai clic su Applica per salvare)",
     "appliedToast": "Preferenze applicate correttamente",
     "applyFailedWithDetail": "Impossibile applicare le preferenze: {{error}}. Le bozze sono ancora disponibili.",
-    "applyFailed": "Impossibile applicare le preferenze. Le bozze sono ancora disponibili."
+    "applyFailed": "Impossibile applicare le preferenze. Le bozze sono ancora disponibili.",
+    "density": {
+      "title": "Densità",
+      "description": "Regola dimensioni dei controlli e spazi senza cambiare la dimensione del testo.",
+      "default": "Predefinito",
+      "standardDescription": "Spazi equilibrati per l’uso quotidiano.",
+      "compactDescription": "Controlli più piccoli e righe compatte per mostrare più contenuti.",
+      "touchDescription": "Controlli più grandi e più spazio per l’interazione touch.",
+      "applyHint": "Le modifiche valgono in tutte le finestre dopo Applica o OK, senza riavvio.",
+      "conflict": "La densità è cambiata altrove. Riapri le preferenze prima di applicare.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "proprio ora",

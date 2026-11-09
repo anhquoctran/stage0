@@ -199,7 +199,8 @@
       "ai-guardrails": "Bảo mật & Guardrails",
       "git-binary": "Git executable",
       "git-credentials": "Thông tin xác thực Git",
-      "notifications-settings": "Push & cảnh báo"
+      "notifications-settings": "Push & cảnh báo",
+      "appearance-density": "Mật độ giao diện"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +274,10 @@
       "notifications-settings": {
         "title": "Thông báo và cảnh báo đẩy",
         "description": "Thiết lập thông báo gốc của hệ điều hành và các kênh sự kiện."
+      },
+      "appearance-density": {
+        "title": "Mật độ giao diện",
+        "description": "Điều chỉnh kích thước điều khiển và khoảng cách mà không thay đổi cỡ chữ."
       }
     },
     "window": {
@@ -504,7 +509,20 @@
     "draftResetToast": "Đã đặt lại mọi cài đặt nháp về mặc định (nhấn Áp dụng để lưu)",
     "appliedToast": "Đã áp dụng tùy chọn",
     "applyFailedWithDetail": "Không thể áp dụng tùy chọn: {{error}}. Các bản nháp vẫn được giữ lại.",
-    "applyFailed": "Không thể áp dụng tùy chọn. Các bản nháp vẫn được giữ lại."
+    "applyFailed": "Không thể áp dụng tùy chọn. Các bản nháp vẫn được giữ lại.",
+    "density": {
+      "title": "Mật độ giao diện",
+      "description": "Điều chỉnh kích thước điều khiển và khoảng cách mà không thay đổi cỡ chữ.",
+      "default": "Mặc định",
+      "standardDescription": "Khoảng cách cân bằng cho sử dụng hằng ngày.",
+      "compactDescription": "Điều khiển nhỏ và hàng gọn hơn để hiển thị nhiều nội dung.",
+      "touchDescription": "Điều khiển lớn và khoảng cách rộng hơn cho thao tác cảm ứng.",
+      "applyHint": "Thay đổi áp dụng cho mọi cửa sổ khi bấm Apply hoặc OK. Không cần khởi động lại.",
+      "conflict": "Mật độ đã thay đổi ở cửa sổ hoặc trình chỉnh sửa khác. Mở lại Preferences trước khi áp dụng.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "vừa xong",

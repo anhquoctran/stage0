@@ -248,7 +248,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         <div
           ref={diffContainerRef}
           onClick={handleDiffClick}
-          className="flex-1 overflow-auto bg-base p-2 relative rounded-sm"
+          data-density-exempt
+            className="flex-1 overflow-auto bg-base p-2 relative rounded-sm"
         >
           {/* Conflict Alert & Quick Summary Card inside Diff View */}
           {!selectedFile.is_binary && selectedFile.is_conflicted && activeConflictPreview && activeConflictPreview.conflict_regions.length > 0 && (

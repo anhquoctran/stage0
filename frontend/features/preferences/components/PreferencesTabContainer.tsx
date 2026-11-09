@@ -18,6 +18,7 @@ import { PreferencesGeneralTab } from './tabs/PreferencesGeneralTab';
 import { PreferencesMarkdownFontTab } from './tabs/PreferencesMarkdownFontTab';
 import { PreferencesThemeTab } from './tabs/PreferencesThemeTab';
 import { PreferencesKeymapTab } from './tabs/PreferencesKeymapTab';
+import { PreferencesDensityTab } from './tabs/PreferencesDensityTab';
 import { PreferencesUiFontTab } from './tabs/PreferencesUiFontTab';
 import { PreferencesLanguageTab } from '../../i18n/components/PreferencesLanguageTab';
 
@@ -25,6 +26,8 @@ export function PreferencesTabContainer({
   language,
   draftKeymap,
   draftUiFontFamily,
+  draftUiDensity,
+  setDraftUiDensity,
   setDraftUiFontFamily,
   setDraftKeymap,
   currentTabId,
@@ -96,6 +99,7 @@ export function PreferencesTabContainer({
         'general-settings',
         'general-keymaps',
         'appearance-theme',
+        'appearance-density',
         'appearance-language',
         'appearance-fonts',
         'appearance-ui-font',
@@ -116,7 +120,7 @@ export function PreferencesTabContainer({
 
   return (
     <div
-      className={`flex-1 overflow-y-auto ${currentTabId === 'ai-external-agents' ? 'px-5 py-4' : 'p-8'} bg-base flex flex-col`}
+      className={`ui-density-panel flex-1 overflow-y-auto ${currentTabId === 'ai-external-agents' ? 'px-5 py-4' : 'p-8'} bg-base flex flex-col`}
     >
       {/* Header Description */}
       {isKnownTab && (
@@ -182,6 +186,7 @@ export function PreferencesTabContainer({
           />
         </div>
       )}
+      {currentTabId === 'appearance-density' && <PreferencesDensityTab value={draftUiDensity} onChange={setDraftUiDensity} />}
       {currentTabId === 'appearance-language' && <PreferencesLanguageTab {...language} />}
 
       {/* VIEW: APPEARANCE - BUFFER FONT */}

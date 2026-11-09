@@ -14,6 +14,8 @@ import type { PreferencesApplyContext } from '../types/PreferencesApplyContext';
 import { type ViewerFontSettings } from '../types/ViewerFontSettings';
 import { keymapErrors } from '../../../core/services/keymaps/validation';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
+import { DEFAULT_UI_DENSITY, normalizeUiDensity, readUiDensity } from '../utils/uiDensity';
+import { applyUiDensityToDocument } from '../utils/applyUiDensityToDocument';
 import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
 import { languagePreferencesPatch, readLanguagePreferences } from '../../i18n/services/languagePreferences';
 import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
@@ -25,6 +27,8 @@ export function createPreferencesApplyAction({
   languageDraft,
   draftKeymap = DEFAULT_KEYMAP,
   draftUiFontFamily,
+  draftUiDensity = DEFAULT_UI_DENSITY,
+  setDraftUiDensity,
   draftLinuxTitleBar = 'system',
   setDraftKeymap,
   applyingRef,
@@ -96,6 +100,16 @@ export function createPreferencesApplyAction({
           throw new Error('Window title bar changed in another window. Reopen Preferences before applying');
         appearancePatch.linuxTitleBar = draftLinuxTitleBar;
       }
+      const densityChanged = draftUiDensity !== normalizeUiDensity(savedBaseline.uiDensity);
+      const validateDensity = (current: unknown) => {
+        const density = normalizeUiDensity(current);
+        if (densityChanged && density !== normalizeUiDensity(savedBaseline.uiDensity) && density !== draftUiDensity)
+          throw new Error(i18n.t('preferences.density.conflict'));
+      };
+      if (densityChanged) {
+        validateDensity(usePreferencesStore.getState().uiDensity);
+        appearancePatch.density = draftUiDensity;
+      }
       const uiFontChanged = draftUiFontFamily !== savedBaseline.uiFontFamily;
       if (uiFontChanged) {
         const currentUiFont = usePreferencesStore.getState().uiFontFamily;
@@ -159,8 +173,9 @@ export function createPreferencesApplyAction({
         aiDraftStore.getState(),
         aiBaseline,
         additionalPreferences,
-        languageDraft ? (settings) => {
-          languagePreferencesPatch(languageDraft.value, languageDraft.baseline, readLanguagePreferences(settings));
+        languageDraft || densityChanged ? (settings) => {
+          if (languageDraft) languagePreferencesPatch(languageDraft.value, languageDraft.baseline, readLanguagePreferences(settings));
+          validateDensity(readUiDensity(settings));
         } : undefined,
       );
       await languageDraft?.acceptCommitted();
@@ -171,10 +186,12 @@ export function createPreferencesApplyAction({
       applyThemeToDocument(resolvedTheme);
       persistThemeMode(draftThemeMode);
       const committedKeymap = keymapChanged ? draftKeymap : usePreferencesStore.getState().keymap ?? DEFAULT_KEYMAP;
+      const committedUiDensity = densityChanged ? draftUiDensity : normalizeUiDensity(usePreferencesStore.getState().uiDensity);
       const committedUiFont = uiFontChanged ? draftUiFontFamily : usePreferencesStore.getState().uiFontFamily;
       usePreferencesStore.setState({
         keymap: committedKeymap,
         uiFontFamily: committedUiFont,
+        uiDensity: committedUiDensity,
         linuxTitleBar: titleBarChanged ? draftLinuxTitleBar : usePreferencesStore.getState().linuxTitleBar ?? 'system',
         ...fontSettings,
         showInlineBlame: draftShowInlineBlame,
@@ -190,6 +207,7 @@ export function createPreferencesApplyAction({
       });
       applyViewerFontToDocument(fontSettings);
       applyUiFontToDocument(committedUiFont);
+      applyUiDensityToDocument(committedUiDensity);
       applyMarkdownFontToDocument(markdownFontSettings);
       const needsRestart = titleBarChanged ||
         draftGitBinaryId !== savedBaseline.gitBinaryId ||
@@ -219,6 +237,7 @@ export function createPreferencesApplyAction({
       setSavedBaseline({
         keymap: committedKeymap,
         uiFontFamily: committedUiFont,
+        uiDensity: committedUiDensity,
         linuxTitleBar: titleBarChanged ? draftLinuxTitleBar : usePreferencesStore.getState().linuxTitleBar ?? 'system',
         themeMode: draftThemeMode,
         fontFamily: draftFontFamily,
@@ -244,6 +263,7 @@ export function createPreferencesApplyAction({
         markdownHeadingWeight: draftMarkdownHeadingWeight,
       });
       setDraftKeymap(committedKeymap);
+      setDraftUiDensity?.(committedUiDensity);
       if (getApplicationServices().platform.capabilities.preferencesFile) {
         // Another window may commit while this response is in flight. Reconcile
         // local previews after publication, without treating a refresh failure

@@ -199,7 +199,8 @@
       "ai-guardrails": "보안 및 가드레일",
       "git-binary": "Git 실행 파일",
       "git-credentials": "Git 자격 증명",
-      "notifications-settings": "푸시 및 알림"
+      "notifications-settings": "푸시 및 알림",
+      "appearance-density": "화면 밀도"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +274,10 @@
       "notifications-settings": {
         "title": "알림 및 푸시 알림",
         "description": "운영 체제 기본 알림과 이벤트 채널을 설정합니다."
+      },
+      "appearance-density": {
+        "title": "화면 밀도",
+        "description": "글자 크기를 바꾸지 않고 컨트롤 크기와 간격을 조절합니다."
       }
     },
     "window": {
@@ -504,7 +509,20 @@
     "draftResetToast": "모든 설정 초안을 기본값으로 초기화했습니다(저장하려면 적용을 클릭하세요)",
     "appliedToast": "설정을 적용했습니다",
     "applyFailedWithDetail": "설정을 적용할 수 없습니다: {{error}}. 초안은 그대로 유지됩니다.",
-    "applyFailed": "설정을 적용할 수 없습니다. 초안은 그대로 유지됩니다."
+    "applyFailed": "설정을 적용할 수 없습니다. 초안은 그대로 유지됩니다.",
+    "density": {
+      "title": "화면 밀도",
+      "description": "글자 크기를 바꾸지 않고 컨트롤 크기와 간격을 조절합니다.",
+      "default": "기본값",
+      "standardDescription": "일상적인 사용을 위한 균형 잡힌 간격.",
+      "compactDescription": "작은 컨트롤과 좁은 행 간격으로 더 많은 내용을 표시합니다.",
+      "touchDescription": "터치 조작에 적합한 큰 컨트롤과 넓은 간격.",
+      "applyHint": "적용 또는 OK를 누르면 모든 창에 반영됩니다. 다시 시작할 필요가 없습니다.",
+      "conflict": "다른 창이나 편집기에서 밀도가 변경되었습니다. 환경설정을 다시 열어 적용하세요.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "방금",

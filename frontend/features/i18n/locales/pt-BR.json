@@ -199,7 +199,8 @@
       "ai-guardrails": "Segurança e proteções",
       "git-binary": "Executável do Git",
       "git-credentials": "Credenciais do Git",
-      "notifications-settings": "Push e alertas"
+      "notifications-settings": "Push e alertas",
+      "appearance-density": "Densidade"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +274,10 @@
       "notifications-settings": {
         "title": "Notificações e alertas push",
         "description": "Configure as notificações nativas do sistema operacional e os canais de eventos."
+      },
+      "appearance-density": {
+        "title": "Densidade",
+        "description": "Ajuste os controles e o espaçamento sem alterar o tamanho do texto."
       }
     },
     "window": {
@@ -504,7 +509,20 @@
     "draftResetToast": "Todos os rascunhos de configuração foram redefinidos (clique em Aplicar para salvar)",
     "appliedToast": "Preferências aplicadas",
     "applyFailedWithDetail": "Não foi possível aplicar as preferências: {{error}}. Seus rascunhos continuam disponíveis.",
-    "applyFailed": "Não foi possível aplicar as preferências. Seus rascunhos continuam disponíveis."
+    "applyFailed": "Não foi possível aplicar as preferências. Seus rascunhos continuam disponíveis.",
+    "density": {
+      "title": "Densidade",
+      "description": "Ajuste os controles e o espaçamento sem alterar o tamanho do texto.",
+      "default": "Padrão",
+      "standardDescription": "Espaçamento equilibrado para o uso diário.",
+      "compactDescription": "Controles menores e linhas compactas para mostrar mais conteúdo.",
+      "touchDescription": "Controles maiores e mais espaço para interação por toque.",
+      "applyHint": "As mudanças valem em todas as janelas após Aplicar ou OK, sem reiniciar.",
+      "conflict": "A densidade mudou em outra janela ou editor. Reabra as preferências antes de aplicar.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "agora mesmo",

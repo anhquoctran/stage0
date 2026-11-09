@@ -199,7 +199,8 @@
       "ai-guardrails": "セキュリティとガードレール",
       "git-binary": "Git 実行ファイル",
       "git-credentials": "Git 認証情報",
-      "notifications-settings": "プッシュ通知"
+      "notifications-settings": "プッシュ通知",
+      "appearance-density": "表示密度"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +274,10 @@
       "notifications-settings": {
         "title": "通知とプッシュ通知",
         "description": "OSのネイティブ通知とイベントチャンネルを設定します。"
+      },
+      "appearance-density": {
+        "title": "表示密度",
+        "description": "文字サイズを変えずにコントロールの大きさと間隔を調整します。"
       }
     },
     "window": {
@@ -504,7 +509,20 @@
     "draftResetToast": "すべての設定案を既定値に戻しました（保存するには「適用」を選択）",
     "appliedToast": "設定を適用しました",
     "applyFailedWithDetail": "設定を適用できませんでした: {{error}}。下書きは保持されています。",
-    "applyFailed": "設定を適用できませんでした。下書きは保持されています。"
+    "applyFailed": "設定を適用できませんでした。下書きは保持されています。",
+    "density": {
+      "title": "表示密度",
+      "description": "文字サイズを変えずにコントロールの大きさと間隔を調整します。",
+      "default": "既定",
+      "standardDescription": "普段の操作に適したバランスのよい間隔。",
+      "compactDescription": "小さなコントロールと狭い行間で多くの内容を表示。",
+      "touchDescription": "タッチ操作に適した大きなコントロールと広い間隔。",
+      "applyHint": "適用またはOKで全ウィンドウに反映されます。再起動は不要です。",
+      "conflict": "別のウィンドウまたはエディターで密度が変更されました。設定を開き直してから適用してください。",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "たった今",
