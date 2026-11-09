@@ -1,3 +1,4 @@
+import { subscribeDisplayScale } from '../common/utils/displayScale';
 import { useDesktopWindowChrome } from './hooks/useDesktopWindowChrome';
 import { useWindowChromeStore } from './store/useWindowChromeStore';
 import { useStartupSplash } from './hooks/useStartupSplash';
@@ -145,7 +146,9 @@ export const MainApp: React.FC = () => {
   }, [appServices, initApp, attachRepoToCurrentWindow, refreshDiff]);
 
   useEffect(() => {
-    void syncUnreadBadge(unreadCount);
+    const sync = () => { void syncUnreadBadge(unreadCount); };
+    sync();
+    return subscribeDisplayScale(sync);
   }, [unreadCount]);
 
   return (

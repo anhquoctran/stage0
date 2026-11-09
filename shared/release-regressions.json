@@ -212,6 +212,23 @@
       "id": "ui-density-preferences",
       "runner": "node",
       "path": "scripts/ui-density.test.mjs"
+    },
+    {
+      "id": "high-dpi-ui",
+      "runner": "node",
+      "path": "scripts/high-dpi-ui.test.mjs"
+    },
+    {
+      "id": "high-dpi-window-geometry",
+      "runner": "rust",
+      "path": "backend/src/core/window_manager/display_geometry_tests.rs",
+      "tests": [
+        "core::window_manager::display_geometry_tests::ordinary_work_areas_preserve_current_workspace_and_preferences_sizes",
+        "core::window_manager::display_geometry_tests::high_dpi_work_area_uses_logical_pixels_and_limits_minimums_too",
+        "core::window_manager::display_geometry_tests::fractional_scaling_and_native_frames_never_overflow_the_work_area",
+        "core::window_manager::display_geometry_tests::unavailable_monitor_keeps_safe_defaults_and_tiny_work_areas_stay_positive",
+        "core::window_manager::display_geometry_tests::fitting_monitor_transitions_preserve_fractional_user_geometry"
+      ]
     }
   ]
 }

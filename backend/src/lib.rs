@@ -111,6 +111,9 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             match event {
+                WindowEvent::ScaleFactorChanged { .. } => {
+                    window_manager::display_geometry::scale_changed(window);
+                }
                 WindowEvent::Focused(true) => {
                     menu::sync_repo_dependent_menus_for_window(
                         &window.app_handle(), window.label(),
