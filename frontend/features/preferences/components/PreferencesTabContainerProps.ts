@@ -40,6 +40,10 @@ export interface PreferencesTabContainerProps {
   showToast: (msg: string, level?: GitState['toastLevel']) => void;
   draftThemeMode: ThemeMode;
   setDraftThemeMode: React.Dispatch<React.SetStateAction<ThemeMode>>;
+  draftDarkThemeId: string;
+  setDraftDarkThemeId: React.Dispatch<React.SetStateAction<string>>;
+  draftLightThemeId: string;
+  setDraftLightThemeId: React.Dispatch<React.SetStateAction<string>>;
   draftFontFamily: string;
   setDraftFontFamily: React.Dispatch<React.SetStateAction<string>>;
   draftFontSize: number;

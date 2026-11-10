@@ -5,12 +5,16 @@ import { Monitor } from '../../../../common/components/icons/Monitor';
 import { Sun } from '../../../../common/components/icons/Sun';
 import { Moon } from '../../../../common/components/icons/Moon';
 import type { ThemeMode } from '../../../../core/types/ThemeMode';
-import { DEFAULT_THEMES, getTheme, themeDisplayName } from '../../../../core/themes/catalog';
+import { themeRegistry, themeDisplayName } from '../../../../core/themes/catalog';
 
 export const PreferencesThemeTab: React.FC<{
   draftThemeMode: ThemeMode;
   setDraftThemeMode: (mode: ThemeMode) => void;
-}> = ({ draftThemeMode, setDraftThemeMode }) => {
+  draftDarkThemeId: string;
+  setDraftDarkThemeId: (id: string) => void;
+  draftLightThemeId: string;
+  setDraftLightThemeId: (id: string) => void;
+}> = ({ draftThemeMode, setDraftThemeMode, draftDarkThemeId, setDraftDarkThemeId, draftLightThemeId, setDraftLightThemeId }) => {
   const { t } = useTranslation();
   return (
     <div className="space-y-4">
@@ -31,19 +35,29 @@ export const PreferencesThemeTab: React.FC<{
         </div>
       </SettingRow>
       <SettingRow title={t('preferences.theme.paletteTitle')} description={t('preferences.theme.paletteDescription')}>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {(['dark', 'light'] as const).map(kind => {
-            const theme = getTheme(DEFAULT_THEMES[kind]);
-            return <div key={kind} className="space-y-1">
-              <p className="text-[10px] text-subtext0">{t(`preferences.theme.${kind}`)}</p>
-              <button type="button" onClick={() => setDraftThemeMode(kind)} aria-pressed={draftThemeMode === kind}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-sm border text-xs cursor-pointer transition-colors ${
-                  draftThemeMode === kind ? 'border-brand bg-brand/10 text-text font-medium' : 'border-surface1/60 text-subtext0 bg-base hover:bg-mantle'
-                }`}>
-                <span className="w-3 h-3 rounded-full border border-surface1 shrink-0" style={{ backgroundColor: theme.colors.base }} />
-                <span>{themeDisplayName(theme.id, key => t(key))}</span>
-              </button>
-            </div>;
+            const selectedId = kind === 'dark' ? draftDarkThemeId : draftLightThemeId;
+            const setSelectedId = kind === 'dark' ? setDraftDarkThemeId : setDraftLightThemeId;
+            return <section key={kind} className="space-y-2" aria-label={`${t(`preferences.theme.${kind}`)} themes`}>
+              <h3 className="text-xs font-semibold text-subtext0">{t(`preferences.theme.${kind}`)}</h3>
+              <div className="grid grid-cols-1 gap-2">
+                {themeRegistry.list(kind).map(theme => (
+                  <button key={theme.id} type="button" onClick={() => setSelectedId(theme.id)} aria-pressed={selectedId === theme.id}
+                    className={`flex w-full items-center gap-2 px-3 py-2 rounded-sm border text-left text-xs cursor-pointer transition-colors ${
+                      selectedId === theme.id ? 'border-brand bg-brand/10 text-text font-medium' : 'border-surface1/60 text-subtext0 bg-base hover:bg-mantle'
+                    }`}>
+                    <span aria-hidden="true" className="w-3 h-3 rounded-full border border-surface1 shrink-0" style={{ backgroundColor: theme.colors.base }} />
+                    <span className="min-w-0 flex-1">{themeDisplayName(theme.id, key => t(key))}</span>
+                    <span className="flex shrink-0 gap-1" aria-hidden="true">
+                      {[theme.colors.base, theme.colors.brand ?? theme.colors.base, theme.colors.text ?? '#ffffff'].map((color, index) => (
+                        <span key={index} className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                      ))}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>;
           })}
         </div>
       </SettingRow>

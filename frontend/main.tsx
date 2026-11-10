@@ -214,6 +214,12 @@ async function startApp() {
       localStorage.setItem('stage0_catppuccin_theme_mode', startupThemeMode);
     } catch (_) {}
   }
+  for (const [setting, key] of [['darkThemeId', 'stage0_dark_theme_id'], ['lightThemeId', 'stage0_light_theme_id']] as const) {
+    const themeId = preferences?.appearance?.[setting];
+    if (typeof themeId === 'string') {
+      try { localStorage.setItem(key, themeId); } catch (_) {}
+    }
+  }
 
   startupProgress.complete('preferences');
   startupProgress.begin('interface');

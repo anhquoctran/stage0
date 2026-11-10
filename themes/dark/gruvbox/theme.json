@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "gruvbox",
+  "name": "Gruvbox Dark",
+  "kind": "dark",
+  "version": "1.0.0",
+  "author": "morhetz / Stage0",
+  "colors": { "base": "#282828", "brand": "#fe8019", "text": "#ebdbb2" }
+}

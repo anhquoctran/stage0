@@ -1,5 +1,9 @@
 /* Built-in packages: load dark defaults before the light variant. */
 @import "./dark/catppuccin-mocha/theme.css";
+@import "./dark/dracula/theme.css";
+@import "./dark/one-dark-pro/theme.css";
+@import "./dark/gruvbox/theme.css";
+@import "./dark/monokai/theme.css";
 @import "./light/catppuccin-latte/theme.css";
 @import "./shared/light-controls.css";
 @import "./shared/light-search-tags.css";

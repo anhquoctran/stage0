@@ -169,7 +169,7 @@ test('useThemeStore and createPreferencesApplyAction persist theme mode to local
   assert.ok(storeCode.includes("localStorage.setItem(STORAGE_KEY, mode)"), 'useThemeStore must save themeMode to localStorage');
 
   const applyActionCode = fs.readFileSync('frontend/features/preferences/services/createPreferencesApplyAction.ts', 'utf8');
-  assert.ok(applyActionCode.includes('persistThemeMode(draftThemeMode)'), 'createPreferencesApplyAction must persist draft theme mode');
+  assert.ok(applyActionCode.includes('persistThemeMode(committedThemeMode)'), 'createPreferencesApplyAction must persist the committed theme mode');
 });
 
 test('splash frame uses the same subtle rounded border as the custom macOS main frame', () => {

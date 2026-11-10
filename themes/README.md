@@ -6,7 +6,9 @@ metadata. Website styles remain independently owned by `website/`.
 ```text
 themes/
   dark/catppuccin-mocha/{theme.json,theme.css}
+  dark/{dracula,one-dark-pro,gruvbox,monokai}/{theme.json,theme.css}
   light/catppuccin-latte/{theme.json,theme.css}
+  THIRD_PARTY_NOTICES.md
   shared/                      # scheme rules, syntax roles, legacy adapters
   color-tokens.json            # allowed token → CSS property contract
   theme.schema.json            # package v1 editor schema
@@ -59,8 +61,8 @@ color roles without adding selectors or editing component CSS:
 Store repository-authored manifests under `dark/<id>/theme.json` or
 `light/<id>/theme.json`. Register a bundled manifest in
 `frontend/core/themes/catalog.ts`; token overrides take effect through the engine,
-so data-only additions need no CSS import or new component conditions. Only the
-legacy complete built-in palettes require CSS imports in `themes/index.css`.
+so data-only additions need no CSS import or new component conditions. Complete
+bundled palettes use CSS imports in `themes/index.css`.
 The built-in `colors.base` metadata also supplies its preview swatch.
 
 The public API is `frontend/core/themes/index.ts`:
@@ -81,23 +83,24 @@ untrusted `theme.css`, use `innerHTML`, inject package selectors or add scripts.
 
 ## Future FE installer boundary
 
-The installer UI, downloads, disk persistence, uninstall and per-kind selected-ID
-preferences are **not shipped in this refactor**. Preferences still persists the
-existing `appearance.themeMode` contract and offers the two default palettes in
-Dark/Light groups. Direct activation of an additional registered ID is currently
-session-local; only the mode persists. Do not advertise it as a persistent install.
+The installer UI, downloads, package disk persistence and uninstall are **not
+shipped**. Preferences persists the selected built-in IDs as
+`appearance.darkThemeId` and `appearance.lightThemeId`, separately from
+`appearance.themeMode`. Dracula, One Dark Pro, Gruvbox Dark and Monokai are
+available in the Dark group; Catppuccin Latte remains the bundled Light palette.
+These IDs select bundled palettes and do not imply that an external package
+installer is available.
 
 The next feature should enumerate installed JSON packages from an app-data theme
 directory, preflight with this API, then persist atomically under a validated ID.
 `./themes/` is the repository's source directory, not a writable install location
 inside a packaged app. Validate before registration/publication, preserve the old
 active theme on failure, protect built-in IDs, and fall back to the same kind on
-uninstall. Persist selected Dark/Light IDs separately from System/Dark/Light mode.
-Load installed definitions before resolving those IDs, and use a validated startup
-snapshot to preserve the no-flash first frame. Native I/O must use the existing
-platform service boundary; theme packages receive no capabilities or executable
-entry point. Add export/import/update and cross-window invalidation there, not in
-components or arbitrary CSS loading.
+uninstall. Load installed definitions before resolving selected IDs, and use a
+validated startup snapshot to preserve the no-flash first frame. Native I/O must
+use the existing platform service boundary; theme packages receive no
+capabilities or executable entry point. Add export/import/update and cross-window
+invalidation there, not in components or arbitrary CSS loading.
 
 ## References and verification
 

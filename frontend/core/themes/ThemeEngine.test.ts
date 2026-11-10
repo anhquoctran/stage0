@@ -1,5 +1,15 @@
 import { expect, it } from 'vitest';
-import { ThemeRegistry, validateTheme, applyRegisteredTheme, themeRegistry, themeColorScheme } from './index';
+import { ThemeRegistry, validateTheme, applyRegisteredTheme, themeRegistry, themeColorScheme, BUILT_IN_THEMES } from './index';
+
+it('registers the requested dark palettes alongside the existing defaults', () => {
+  expect(BUILT_IN_THEMES.map(theme => theme.id)).toEqual([
+    'catppuccin-mocha', 'catppuccin-latte', 'dracula', 'one-dark-pro', 'gruvbox', 'monokai',
+  ]);
+  expect(themeRegistry.list('dark').map(theme => theme.id)).toContain('dracula');
+  expect(themeRegistry.list('dark').map(theme => theme.id)).toContain('one-dark-pro');
+  expect(themeRegistry.list('dark').map(theme => theme.id)).toContain('gruvbox');
+  expect(themeRegistry.list('dark').map(theme => theme.id)).toContain('monokai');
+});
 
 it('classifies future theme ids independently of Catppuccin names and rejects unsafe packages before mutation', () => {
   const registry = new ThemeRegistry();
