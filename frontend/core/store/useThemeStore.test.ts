@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { persistThemeSelection, resolveTheme } from './useThemeStore';
 
-const selection = { darkThemeId: 'dracula', lightThemeId: 'catppuccin-latte' };
+const selection = { darkThemeId: 'dracula', lightThemeId: 'gruvbox-light' };
 
 it('resolves the selected palette for explicit and system modes', () => {
   const originalMatchMedia = window.matchMedia;
@@ -12,7 +12,7 @@ it('resolves the selected palette for explicit and system modes', () => {
   }));
   Object.defineProperty(window, 'matchMedia', { configurable: true, value: matchMedia });
   expect(resolveTheme('dark', selection)).toBe('dracula');
-  expect(resolveTheme('light', selection)).toBe('mocha-light');
+  expect(resolveTheme('light', selection)).toBe('gruvbox-light');
   expect(resolveTheme('system', selection)).toBe('dracula');
   if (originalMatchMedia) Object.defineProperty(window, 'matchMedia', { configurable: true, value: originalMatchMedia });
   else Reflect.deleteProperty(window, 'matchMedia');
@@ -21,5 +21,5 @@ it('resolves the selected palette for explicit and system modes', () => {
 it('persists the selected palette IDs for first-paint startup', () => {
   persistThemeSelection(selection);
   expect(localStorage.getItem('stage0_dark_theme_id')).toBe('dracula');
-  expect(localStorage.getItem('stage0_light_theme_id')).toBe('catppuccin-latte');
+  expect(localStorage.getItem('stage0_light_theme_id')).toBe('gruvbox-light');
 });

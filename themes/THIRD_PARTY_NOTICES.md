@@ -1,8 +1,8 @@
 # Third-party theme notices
 
-The bundled Dracula, One Dark Pro, Gruvbox Dark and Monokai palettes are adapted
-from the projects below. Stage0 maps their colors to its own semantic UI and
-syntax tokens. Their original projects and full MIT notices are linked here.
+The bundled palettes are adapted from the projects below. Stage0 maps their
+colors to its own semantic UI and syntax tokens. Their source projects and MIT
+notices are listed here.
 
 ## Dracula
 
@@ -10,17 +10,27 @@ Source: [dracula/dracula-theme](https://github.com/dracula/dracula-theme)
 
 Copyright (c) 2023 Dracula Theme
 
+The light Alucard palette uses Dracula's open-source palette specification.
+
 ## One Dark Pro
 
 Source: [Binaryify/OneDark-Pro](https://github.com/Binaryify/OneDark-Pro)
 
 Copyright (c) Binaryify
 
+## Atom One Light
+
+Source: [atom/one-light-syntax](https://github.com/atom/one-light-syntax)
+
+Copyright (c) 2016 GitHub Inc.
+
 ## Gruvbox Dark
 
 Source: [morhetz/gruvbox](https://github.com/morhetz/gruvbox)
 
 Copyright (c) Pavel Pertsev
+
+Gruvbox Light uses the light colors from the same palette.
 
 ## Monokai
 

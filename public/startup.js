@@ -57,7 +57,7 @@ window.__stage0_has_error__ = false;
     var savedDarkThemeId = window.localStorage.getItem('stage0_dark_theme_id');
     var savedLightThemeId = window.localStorage.getItem('stage0_light_theme_id');
     if (/^(catppuccin-mocha|dracula|one-dark-pro|gruvbox|monokai)$/.test(savedDarkThemeId || '')) darkThemeId = savedDarkThemeId;
-    if (savedLightThemeId === 'catppuccin-latte') lightThemeId = savedLightThemeId;
+    if (/^(catppuccin-latte|alucard|atom-one-light|gruvbox-light)$/.test(savedLightThemeId || '')) lightThemeId = savedLightThemeId;
   } catch (_) {}
   var selectedThemeId = isLight ? lightThemeId : darkThemeId;
   var theme = isLight

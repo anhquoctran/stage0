@@ -36,7 +36,7 @@ const VALUE_OPTIONS: Record<string, string[]> = {
   'appearance.density': ['standard', 'compact', 'touch'],
   'appearance.themeMode': ['system', 'dark', 'light'],
   'appearance.darkThemeId': ['catppuccin-mocha', 'dracula', 'one-dark-pro', 'gruvbox', 'monokai'],
-  'appearance.lightThemeId': ['catppuccin-latte'],
+  'appearance.lightThemeId': ['catppuccin-latte', 'alucard', 'atom-one-light', 'gruvbox-light'],
   'appearance.linuxTitleBar': ['system', 'custom'],
   'appearance.markdownFont.fontFamily': MARKDOWN_PROSE_FONTS,
   'appearance.markdownFont.codeFontFamily': MARKDOWN_CODE_FONTS,

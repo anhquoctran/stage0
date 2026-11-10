@@ -13,15 +13,25 @@ it('shows every bundled palette and stages palette selection independently of th
     draftLightThemeId="catppuccin-latte" setDraftLightThemeId={onLightThemeChange}
   />);
   const user = userEvent.setup();
-  await user.click(screen.getByRole('button', { name: 'Dracula' }));
+  const darkSelect = screen.getByRole('button', { name: 'Dark Color Palette' });
+  await user.click(darkSelect);
+  await user.click(screen.getByRole('option', { name: 'Dracula' }));
   expect(onDarkThemeChange).toHaveBeenLastCalledWith('dracula');
-  await user.click(screen.getByRole('button', { name: 'One Dark Pro' }));
+  await user.click(darkSelect);
+  await user.click(screen.getByRole('option', { name: 'One Dark Pro' }));
   expect(onDarkThemeChange).toHaveBeenLastCalledWith('one-dark-pro');
-  await user.click(screen.getByRole('button', { name: 'Gruvbox Dark' }));
+  await user.click(darkSelect);
+  await user.click(screen.getByRole('option', { name: 'Gruvbox Dark' }));
   expect(onDarkThemeChange).toHaveBeenLastCalledWith('gruvbox');
-  await user.click(screen.getByRole('button', { name: 'Monokai' }));
+  await user.click(darkSelect);
+  await user.click(screen.getByRole('option', { name: 'Monokai' }));
   expect(onDarkThemeChange).toHaveBeenLastCalledWith('monokai');
+  const lightSelect = screen.getByRole('button', { name: 'Light Color Palette' });
+  for (const [label, id] of [['Alucard', 'alucard'], ['Atom One Light', 'atom-one-light'], ['Gruvbox Light', 'gruvbox-light']]) {
+    await user.click(lightSelect);
+    await user.click(screen.getByRole('option', { name: label }));
+    expect(onLightThemeChange).toHaveBeenLastCalledWith(id);
+  }
   expect(onModeChange).not.toHaveBeenCalled();
-  expect(onLightThemeChange).not.toHaveBeenCalled();
   expect(document.documentElement).not.toHaveAttribute('data-color-scheme', 'light');
 });

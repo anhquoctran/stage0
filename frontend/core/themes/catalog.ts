@@ -4,12 +4,15 @@ import dracula from '../../../themes/dark/dracula/theme.json';
 import oneDarkPro from '../../../themes/dark/one-dark-pro/theme.json';
 import gruvbox from '../../../themes/dark/gruvbox/theme.json';
 import monokai from '../../../themes/dark/monokai/theme.json';
+import alucard from '../../../themes/light/alucard/theme.json';
+import atomOneLight from '../../../themes/light/atom-one-light/theme.json';
+import gruvboxLight from '../../../themes/light/gruvbox-light/theme.json';
 import { ThemeRegistry } from './ThemeRegistry';
 import type { ThemeDefinition } from './types/ThemeDefinition';
 
 export const themeRegistry = new ThemeRegistry();
 export const DEFAULT_THEMES = { dark: mocha.id, light: latte.id } as const;
-export const BUILT_IN_THEMES = [mocha, latte, dracula, oneDarkPro, gruvbox, monokai] as const;
+export const BUILT_IN_THEMES = [mocha, latte, dracula, oneDarkPro, gruvbox, monokai, alucard, atomOneLight, gruvboxLight] as const;
 const aliases: Record<string, string> = { mocha: mocha.id, 'mocha-light': latte.id, latte: latte.id,
   dark: mocha.id, light: latte.id, 'mocha-oled': mocha.id };
 for (const definition of BUILT_IN_THEMES) themeRegistry.register(definition);

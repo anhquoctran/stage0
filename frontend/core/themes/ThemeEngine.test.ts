@@ -4,11 +4,15 @@ import { ThemeRegistry, validateTheme, applyRegisteredTheme, themeRegistry, them
 it('registers the requested dark palettes alongside the existing defaults', () => {
   expect(BUILT_IN_THEMES.map(theme => theme.id)).toEqual([
     'catppuccin-mocha', 'catppuccin-latte', 'dracula', 'one-dark-pro', 'gruvbox', 'monokai',
+    'alucard', 'atom-one-light', 'gruvbox-light',
   ]);
   expect(themeRegistry.list('dark').map(theme => theme.id)).toContain('dracula');
   expect(themeRegistry.list('dark').map(theme => theme.id)).toContain('one-dark-pro');
   expect(themeRegistry.list('dark').map(theme => theme.id)).toContain('gruvbox');
   expect(themeRegistry.list('dark').map(theme => theme.id)).toContain('monokai');
+  expect(themeRegistry.list('light').map(theme => theme.id)).toEqual([
+    'catppuccin-latte', 'alucard', 'atom-one-light', 'gruvbox-light',
+  ]);
 });
 
 it('classifies future theme ids independently of Catppuccin names and rejects unsafe packages before mutation', () => {

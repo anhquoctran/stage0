@@ -7,7 +7,7 @@ metadata. Website styles remain independently owned by `website/`.
 themes/
   dark/catppuccin-mocha/{theme.json,theme.css}
   dark/{dracula,one-dark-pro,gruvbox,monokai}/{theme.json,theme.css}
-  light/catppuccin-latte/{theme.json,theme.css}
+  light/{catppuccin-latte,alucard,atom-one-light,gruvbox-light}/{theme.json,theme.css}
   THIRD_PARTY_NOTICES.md
   shared/                      # scheme rules, syntax roles, legacy adapters
   color-tokens.json            # allowed token → CSS property contract
@@ -87,9 +87,12 @@ The installer UI, downloads, package disk persistence and uninstall are **not
 shipped**. Preferences persists the selected built-in IDs as
 `appearance.darkThemeId` and `appearance.lightThemeId`, separately from
 `appearance.themeMode`. Dracula, One Dark Pro, Gruvbox Dark and Monokai are
-available in the Dark group; Catppuccin Latte remains the bundled Light palette.
-These IDs select bundled palettes and do not imply that an external package
-installer is available.
+available in the Dark group. The Light group also includes Dracula's Alucard,
+Atom One Light and Gruvbox Light. One Dark Pro's bundled variants are dark; Atom
+One Light is the companion theme from the original Atom One family. The bundled
+Monokai source is VS Code's dark-only theme; Monokai Pro Light is a separate
+product and is not bundled. These IDs select built-in palettes and do not imply
+that an external package installer is available.
 
 The next feature should enumerate installed JSON packages from an app-data theme
 directory, preflight with this API, then persist atomically under a validated ID.
