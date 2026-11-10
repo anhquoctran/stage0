@@ -46,29 +46,29 @@
   -webkit-font-feature-settings: var(--viewer-font-features, "liga" 1, "calt" 1) !important;
 }
 
-/* @git-diff-view/react overrides for Catppuccin Aesthetic */
+/* @git-diff-view/react overrides for theme tokens */
 .diff-view-wrapper {
-  background-color: var(--ctp-base) !important;
-  border-color: var(--ctp-surface0) !important;
-  color: var(--ctp-text) !important;
+  background-color: var(--theme-base) !important;
+  border-color: var(--theme-surface0) !important;
+  color: var(--theme-text) !important;
 }
 
 .diff-tailwindcss-wrapper {
-  background-color: var(--ctp-base) !important;
-  color: var(--ctp-text) !important;
+  background-color: var(--theme-base) !important;
+  color: var(--theme-text) !important;
 }
 
 .diff-tailwindcss-wrapper .split-diff-view,
 .diff-tailwindcss-wrapper .unified-diff-view {
-  background-color: var(--ctp-base) !important;
+  background-color: var(--theme-base) !important;
 }
 
 .diff-line-old {
-  background-color: color-mix(in srgb, var(--ctp-red) 16%, transparent) !important;
+  background-color: color-mix(in srgb, var(--theme-red) 16%, transparent) !important;
 }
 
 .diff-line-new {
-  background-color: color-mix(in srgb, var(--ctp-green) 16%, transparent) !important;
+  background-color: color-mix(in srgb, var(--theme-green) 16%, transparent) !important;
 }
 
 /* Share the Changes viewer's opaque palette with discussion excerpts. */
@@ -86,26 +86,26 @@
 }
 
 .diff-line-hunk-header {
-  background-color: color-mix(in srgb, var(--ctp-blue) 14%, transparent) !important;
-  color: var(--ctp-blue) !important;
+  background-color: color-mix(in srgb, var(--theme-blue) 14%, transparent) !important;
+  color: var(--theme-blue) !important;
 }
 
 .diff-tailwindcss-wrapper .diff-line-num {
-  color: var(--ctp-overlay0) !important;
-  background-color: var(--ctp-mantle) !important;
-  border-color: var(--ctp-surface0) !important;
+  color: var(--theme-overlay0) !important;
+  background-color: var(--theme-mantle) !important;
+  border-color: var(--theme-surface0) !important;
 }
 
-/* Catppuccin Syntax Highlighting */
+/* Theme-driven syntax highlighting */
 .diff-tailwindcss-wrapper .hljs,
 .syntax-highlight .hljs,
 .markdown-preview .hljs {
-  color: var(--ctp-text) !important;
+  color: var(--syntax-text) !important;
   background: transparent !important;
 }
 
 .diff-tailwindcss-wrapper .hljs {
-  background: var(--ctp-base) !important;
+  background: var(--theme-base) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-keyword,
@@ -120,7 +120,7 @@
 .markdown-preview .hljs-doctag,
 .markdown-preview .hljs-meta .hljs-keyword,
 .markdown-preview .hljs-template-tag {
-  color: var(--ctp-mauve) !important;
+  color: var(--syntax-keyword) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-title,
@@ -132,7 +132,7 @@
 .markdown-preview .hljs-title,
 .markdown-preview .hljs-title.class_,
 .markdown-preview .hljs-title.function_ {
-  color: var(--ctp-blue) !important;
+  color: var(--syntax-title) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-string,
@@ -144,7 +144,7 @@
 .markdown-preview .hljs-string,
 .markdown-preview .hljs-regexp,
 .markdown-preview .hljs-meta .hljs-string {
-  color: var(--ctp-green) !important;
+  color: var(--syntax-string) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-number,
@@ -159,7 +159,7 @@
 .markdown-preview .hljs-literal,
 .markdown-preview .hljs-attr,
 .markdown-preview .hljs-attribute {
-  color: var(--ctp-peach) !important;
+  color: var(--syntax-number) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-built_in,
@@ -171,7 +171,7 @@
 .markdown-preview .hljs-built_in,
 .markdown-preview .hljs-symbol,
 .markdown-preview .hljs-type {
-  color: var(--ctp-yellow) !important;
+  color: var(--syntax-builtin) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-comment,
@@ -180,20 +180,20 @@
 .syntax-highlight .hljs-code,
 .markdown-preview .hljs-comment,
 .markdown-preview .hljs-code {
-  color: var(--ctp-overlay0) !important;
+  color: var(--syntax-comment) !important;
   font-style: italic;
 }
 
 .diff-tailwindcss-wrapper .hljs-variable,
 .syntax-highlight .hljs-variable,
 .markdown-preview .hljs-variable {
-  color: var(--ctp-rosewater) !important;
+  color: var(--syntax-variable) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-meta,
 .syntax-highlight .hljs-meta,
 .markdown-preview .hljs-meta {
-  color: var(--ctp-teal) !important;
+  color: var(--syntax-meta) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-punctuation,
@@ -202,28 +202,28 @@
 .syntax-highlight .hljs-punctuation,
 .syntax-highlight .hljs-operator,
 .markdown-preview .hljs-operator {
-  color: var(--ctp-subtext0) !important;
+  color: var(--syntax-punctuation) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-property,
 .syntax-highlight .hljs-property,
 .markdown-preview .hljs-property {
-  color: var(--ctp-sapphire) !important;
+  color: var(--syntax-property) !important;
 }
 
 .diff-tailwindcss-wrapper .hljs-params,
 .syntax-highlight .hljs-params,
 .markdown-preview .hljs-params {
-  color: var(--ctp-subtext1) !important;
+  color: var(--syntax-params) !important;
 }
 
 /* Smooth pulsing for conflict indicators */
 @keyframes conflict-glow {
   0%, 100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ctp-red) 40%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--theme-red) 40%, transparent);
   }
   50% {
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ctp-red) 0%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-red) 0%, transparent);
   }
 }
 
@@ -233,13 +233,13 @@
 
 /* VSCode-style Active Diff Line Highlight */
 tr.stage0-active-line > td {
-  background-color: color-mix(in srgb, var(--ctp-surface1) 22%, transparent) !important;
+  background-color: color-mix(in srgb, var(--theme-surface1) 22%, transparent) !important;
 }
 
 tr.stage0-active-line > td.diff-line-old-num,
 tr.stage0-active-line > td.diff-line-new-num,
 tr.stage0-active-line > td.diff-line-num {
-  border-left: 2px solid var(--ctp-subtext0) !important;
+  border-left: 2px solid var(--theme-subtext0) !important;
 }
 
 /* Inline Git Blame Container */
@@ -251,4 +251,3 @@ tr.stage0-active-line > td.diff-line-num {
   pointer-events: auto;
   vertical-align: baseline;
 }
-

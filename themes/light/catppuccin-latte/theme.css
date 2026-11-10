@@ -1,53 +1,54 @@
 /* Stage0 Catppuccin Latte palette and startup colors. */
-[data-theme="mocha-light"],
-[data-theme="latte"],
-[data-theme="light"],
-.mocha-light,
-.latte,
-.light {
+:root[data-theme="mocha-light"],
+:root[data-theme="latte"],
+:root[data-theme="light"],
+:root.mocha-light,
+:root.latte,
+:root.light {
   color-scheme: light;
-  --brand: #9333ea;
-  --ctp-brand: #9333ea;
-  --ctp-on-accent: #ffffff;
-  --ctp-rosewater: #dc8a78;
-  --ctp-flamingo: #dd7878;
-  --ctp-pink: #ea76cb;
-  --ctp-mauve: #8839ef;
-  --ctp-red: #e11d48;
-  --ctp-maroon: #f43f5e;
-  --ctp-peach: #fe640b;
-  --ctp-yellow: #df8e1d;
-  --ctp-green: #40a02b;
-  --ctp-teal: #179299;
-  --ctp-sky: #04a5e5;
-  --ctp-sapphire: #209fb5;
-  --ctp-blue: #1e66f5;
-  --ctp-lavender: #7287fd;
-  --ctp-text: #3b3e53;
-  --ctp-subtext1: #4b5066;
-  --ctp-subtext0: #5b6075;
-  --ctp-overlay2: #666c80;
-  --ctp-overlay1: #7a8093;
-  --ctp-overlay0: #8d92a3;
-  --ctp-surface2: #969eae;
-  --ctp-surface1: #aab1c0;
-  --ctp-surface0: #bec4d0;
-  --ctp-base: #eff1f5;
-  --ctp-mantle: #e6e9ef;
-  --ctp-crust: #dce0e8;
+  --theme-brand: #9333ea;
+  --theme-primary-hover: #7e22ce;
+  --theme-primary-active: #6b21a8;
+  --theme-on-accent: #ffffff;
+  --theme-rosewater: #dc8a78;
+  --theme-flamingo: #dd7878;
+  --theme-pink: #ea76cb;
+  --theme-mauve: #8839ef;
+  --theme-red: #e11d48;
+  --theme-maroon: #f43f5e;
+  --theme-peach: #fe640b;
+  --theme-yellow: #df8e1d;
+  --theme-green: #40a02b;
+  --theme-teal: #179299;
+  --theme-sky: #04a5e5;
+  --theme-sapphire: #209fb5;
+  --theme-blue: #1e66f5;
+  --theme-lavender: #7287fd;
+  --theme-text: #3b3e53;
+  --theme-subtext1: #4b5066;
+  --theme-subtext0: #5b6075;
+  --theme-overlay2: #666c80;
+  --theme-overlay1: #7a8093;
+  --theme-overlay0: #8d92a3;
+  --theme-surface2: #969eae;
+  --theme-surface1: #aab1c0;
+  --theme-surface0: #bec4d0;
+  --theme-base: #eff1f5;
+  --theme-mantle: #e6e9ef;
+  --theme-crust: #dce0e8;
   --diff-added-background: #dafbe1;
   --diff-deleted-background: #ffebe9;
 
-  --bg-canvas: var(--ctp-crust);
-  --bg-subtle: var(--ctp-mantle);
-  --bg-surface: var(--ctp-base);
-  --bg-overlay: var(--ctp-surface0);
+  --bg-canvas: var(--theme-crust);
+  --bg-subtle: var(--theme-mantle);
+  --bg-surface: var(--theme-base);
+  --bg-overlay: var(--theme-surface0);
   --interactive-input-bg: #ffffff;
-  --border-default: var(--ctp-surface0);
-  --border-muted: var(--ctp-surface1);
-  --text-primary: var(--ctp-text);
-  --text-secondary: var(--ctp-subtext1);
-  --text-muted: var(--ctp-subtext0);
+  --border-default: var(--theme-surface0);
+  --border-muted: var(--theme-surface1);
+  --text-primary: var(--theme-text);
+  --text-secondary: var(--theme-subtext1);
+  --text-muted: var(--theme-subtext0);
   --backdrop-modal: rgba(59, 62, 83, 0.28);
   --preferences-card-bg: #f7f8fb;
   --preferences-card-border: #c7ccd8;
@@ -59,9 +60,9 @@
   --preferences-danger-icon-bg: rgba(255, 255, 255, 0.16);
 }
 
-      [data-theme="mocha-light"],
-      [data-theme="latte"],
-      [data-theme="light"] {
+      :root[data-theme="mocha-light"],
+      :root[data-theme="latte"],
+      :root[data-theme="light"] {
         --splash-bg: #dce0e8;
         --splash-text: #3b3e53;
         --splash-subtext: #4b5066;
@@ -83,4 +84,3 @@
         --splash-error: #c62845;
         --splash-warning: #9a5b00;
       }
-

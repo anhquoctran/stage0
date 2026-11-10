@@ -1,42 +1,28 @@
 import { create } from 'zustand';
-import type { CatppuccinTheme } from '../types/CatppuccinTheme';
+import type { ThemeId } from '../types/ThemeId';
+import { applyRegisteredTheme } from '../themes/applyTheme';
+import { themeColorScheme, resolvedThemeId, DEFAULT_THEMES } from '../themes/catalog';
 import type { ThemeMode } from '../types/ThemeMode';
 import type { ThemeState } from '../types/ThemeState';
 import { preferencesJsonService } from '../../features/preferences/services/preferencesJsonService';
 
 const STORAGE_KEY = 'stage0_catppuccin_theme_mode';
 
-function getSystemTheme(): CatppuccinTheme {
-  if (typeof window === 'undefined') return 'mocha';
+function getSystemTheme(): ThemeId {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return resolvedThemeId(DEFAULT_THEMES.dark);
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'mocha'
-    : 'mocha-light';
+    ? resolvedThemeId(DEFAULT_THEMES.dark)
+    : resolvedThemeId(DEFAULT_THEMES.light);
 }
 
-export function resolveTheme(mode: ThemeMode): CatppuccinTheme {
-  if (mode === 'dark') return 'mocha';
-  if (mode === 'light') return 'mocha-light';
+export function resolveTheme(mode: ThemeMode): ThemeId {
+  if (mode === 'dark') return resolvedThemeId(DEFAULT_THEMES.dark);
+  if (mode === 'light') return resolvedThemeId(DEFAULT_THEMES.light);
   return getSystemTheme();
 }
 
-export function applyThemeToDocument(theme: CatppuccinTheme) {
-  if (typeof document === 'undefined') return;
-
-  const root = document.documentElement;
-  root.setAttribute('data-theme', theme);
-
-  root.classList.remove('mocha', 'mocha-light', 'mocha-oled', 'latte', 'light', 'dark');
-
-  if (theme === 'mocha-light') {
-    root.classList.add('light', 'mocha-light', 'latte');
-    root.style.colorScheme = 'light';
-  } else {
-    root.classList.add('dark', 'mocha');
-    root.style.colorScheme = 'dark';
-  }
-
-  document.body.style.backgroundColor = 'var(--ctp-crust)';
-  document.body.style.color = 'var(--ctp-text)';
+export function applyThemeToDocument(theme: ThemeId) {
+  applyRegisteredTheme(resolvedThemeId(theme));
 }
 
 export function persistThemeMode(mode: ThemeMode) {
@@ -55,19 +41,23 @@ function getInitialThemeMode(): ThemeMode {
     persistThemeMode(configured);
     return configured;
   }
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved === 'system' || saved === 'dark' || saved === 'light') {
-    return saved as ThemeMode;
-  }
-  // Migration fallback from older key
-  const oldTheme = localStorage.getItem('stage0_catppuccin_theme');
-  if (oldTheme === 'mocha-light') {
-    persistThemeMode('light');
-    return 'light';
-  }
-  if (oldTheme === 'mocha') {
-    persistThemeMode('dark');
-    return 'dark';
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === 'system' || saved === 'dark' || saved === 'light') {
+      return saved as ThemeMode;
+    }
+    // Migration fallback from older key
+    const oldTheme = localStorage.getItem('stage0_catppuccin_theme');
+    if (oldTheme === 'mocha-light') {
+      persistThemeMode('light');
+      return 'light';
+    }
+    if (oldTheme === 'mocha') {
+      persistThemeMode('dark');
+      return 'dark';
+    }
+  } catch {
+    // Disabled localStorage must not prevent the theme/runtime from starting.
   }
   // Fresh installs follow the operating system until the user chooses a mode.
   return 'system';
@@ -91,8 +81,9 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     void preferencesJsonService.patch({ appearance: { themeMode: mode } }).catch((error) => console.error('Could not save preferences.json:', error));
   },
 
-  setTheme: (theme: CatppuccinTheme) => {
-    const mode: ThemeMode = theme === 'mocha-light' ? 'light' : 'dark';
+  setTheme: (theme: ThemeId) => {
+    const mode: ThemeMode = themeColorScheme(theme);
+    theme = resolvedThemeId(theme);
     applyThemeToDocument(theme);
     persistThemeMode(mode);
     set({ themeMode: mode, theme });
@@ -100,7 +91,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   },
 
   toggleTheme: () => {
-    const nextMode: ThemeMode = get().theme === 'mocha' ? 'light' : 'dark';
+    const nextMode: ThemeMode = themeColorScheme(get().theme) === 'dark' ? 'light' : 'dark';
     get().setThemeMode(nextMode);
   },
 }));
@@ -137,4 +128,5 @@ if (typeof window !== 'undefined') {
 }
 
 export type { ThemeMode } from '../types/ThemeMode';
+export type { ThemeId } from '../types/ThemeId';
 export type { CatppuccinTheme } from '../types/CatppuccinTheme';

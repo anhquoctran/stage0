@@ -3,3 +3,5 @@
 @import "./light/catppuccin-latte/theme.css";
 @import "./shared/light-controls.css";
 @import "./shared/light-search-tags.css";
+@import "./shared/compatibility.css";
+@import "./shared/syntax.css";

@@ -321,8 +321,6 @@ export function usePreferencesDraft() {
       setDraftUiDensity: session.setDraftUiDensity,
       draftThemeMode: session.draftThemeMode,
       setDraftThemeMode: session.setDraftThemeMode,
-      draftThemeId: session.draftThemeId,
-      setDraftThemeId: session.setDraftThemeId,
       draftFontFamily: session.draftFontFamily,
       setDraftFontFamily: session.setDraftFontFamily,
       draftFontSize: session.draftFontSize,

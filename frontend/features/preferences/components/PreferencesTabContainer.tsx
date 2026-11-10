@@ -49,8 +49,6 @@ export function PreferencesTabContainer({
   showToast,
   draftThemeMode,
   setDraftThemeMode,
-  draftThemeId,
-  setDraftThemeId,
   draftFontFamily,
   setDraftFontFamily,
   draftFontSize,
@@ -181,8 +179,6 @@ export function PreferencesTabContainer({
           <PreferencesThemeTab
             draftThemeMode={draftThemeMode}
             setDraftThemeMode={setDraftThemeMode}
-            draftThemeId={draftThemeId}
-            setDraftThemeId={setDraftThemeId}
           />
         </div>
       )}

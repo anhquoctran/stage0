@@ -5,7 +5,6 @@
 @import "overlayscrollbars/overlayscrollbars.css";
 @import "./button-surfaces.css";
 @import "./ui-density.css";
-@import "../../../themes/index.css";
 @import "./code-viewers.css";
 @import "./markdown-preview.css";
 
@@ -27,36 +26,36 @@
   --radius-xs: 2px;
   --radius-sm: 4px;
   --radius-md: 6px;
-  --color-brand: #9333ea;
-  --color-accent: #9333ea;
-  --color-primary: #9333ea;
-  --color-on-accent: var(--ctp-on-accent);
-  --color-rosewater: var(--ctp-rosewater);
-  --color-flamingo: var(--ctp-flamingo);
-  --color-pink: var(--ctp-pink);
-  --color-mauve: var(--ctp-mauve);
-  --color-red: var(--ctp-red);
-  --color-maroon: var(--ctp-maroon);
-  --color-peach: var(--ctp-peach);
-  --color-yellow: var(--ctp-yellow);
-  --color-green: var(--ctp-green);
-  --color-teal: var(--ctp-teal);
-  --color-sky: var(--ctp-sky);
-  --color-sapphire: var(--ctp-sapphire);
-  --color-blue: var(--ctp-blue);
-  --color-lavender: var(--ctp-lavender);
-  --color-text: var(--ctp-text);
-  --color-subtext1: var(--ctp-subtext1);
-  --color-subtext0: var(--ctp-subtext0);
-  --color-overlay2: var(--ctp-overlay2);
-  --color-overlay1: var(--ctp-overlay1);
-  --color-overlay0: var(--ctp-overlay0);
-  --color-surface2: var(--ctp-surface2);
-  --color-surface1: var(--ctp-surface1);
-  --color-surface0: var(--ctp-surface0);
-  --color-base: var(--ctp-base);
-  --color-mantle: var(--ctp-mantle);
-  --color-crust: var(--ctp-crust);
+  --color-brand: var(--theme-brand);
+  --color-accent: var(--theme-brand);
+  --color-primary: var(--theme-brand);
+  --color-on-accent: var(--theme-on-accent);
+  --color-rosewater: var(--theme-rosewater);
+  --color-flamingo: var(--theme-flamingo);
+  --color-pink: var(--theme-pink);
+  --color-mauve: var(--theme-mauve);
+  --color-red: var(--theme-red);
+  --color-maroon: var(--theme-maroon);
+  --color-peach: var(--theme-peach);
+  --color-yellow: var(--theme-yellow);
+  --color-green: var(--theme-green);
+  --color-teal: var(--theme-teal);
+  --color-sky: var(--theme-sky);
+  --color-sapphire: var(--theme-sapphire);
+  --color-blue: var(--theme-blue);
+  --color-lavender: var(--theme-lavender);
+  --color-text: var(--theme-text);
+  --color-subtext1: var(--theme-subtext1);
+  --color-subtext0: var(--theme-subtext0);
+  --color-overlay2: var(--theme-overlay2);
+  --color-overlay1: var(--theme-overlay1);
+  --color-overlay0: var(--theme-overlay0);
+  --color-surface2: var(--theme-surface2);
+  --color-surface1: var(--theme-surface1);
+  --color-surface0: var(--theme-surface0);
+  --color-base: var(--theme-base);
+  --color-mantle: var(--theme-mantle);
+  --color-crust: var(--theme-crust);
   --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
@@ -282,7 +281,7 @@ code, kbd, samp, pre {
 }
 
 [data-stage0-scrollbar-visible] {
-  scrollbar-color: color-mix(in srgb, var(--ctp-overlay1) 45%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--theme-overlay1) 45%, transparent) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -304,11 +303,11 @@ code, kbd, samp, pre {
 }
 
 *[data-stage0-scrollbar-visible]::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--ctp-overlay1) 45%, transparent);
+  background-color: color-mix(in srgb, var(--theme-overlay1) 45%, transparent);
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background-color: color-mix(in srgb, var(--ctp-overlay1) 72%, transparent);
+  background-color: color-mix(in srgb, var(--theme-overlay1) 72%, transparent);
 }
 
 ::-webkit-scrollbar-corner {
@@ -328,9 +327,9 @@ code, kbd, samp, pre {
   --os-track-bg-hover: transparent;
   --os-track-bg-active: transparent;
   --os-handle-border-radius: 999px;
-  --os-handle-bg: color-mix(in srgb, var(--ctp-overlay1) 45%, transparent);
-  --os-handle-bg-hover: color-mix(in srgb, var(--ctp-overlay1) 60%, transparent);
-  --os-handle-bg-active: color-mix(in srgb, var(--ctp-overlay1) 72%, transparent);
+  --os-handle-bg: color-mix(in srgb, var(--theme-overlay1) 45%, transparent);
+  --os-handle-bg-hover: color-mix(in srgb, var(--theme-overlay1) 60%, transparent);
+  --os-handle-bg-active: color-mix(in srgb, var(--theme-overlay1) 72%, transparent);
   --os-handle-interactive-area-offset: 4px;
 }
 
@@ -407,7 +406,7 @@ select:focus-visible {
 
 .repo-label-color-picker::-webkit-color-swatch,
 .repo-label-color-picker::-moz-color-swatch {
-  border: 1px solid var(--ctp-surface1);
+  border: 1px solid var(--theme-surface1);
   border-radius: var(--radius-sm, 4px);
 }
 
@@ -449,8 +448,8 @@ select:focus-visible {
   z-index: -1;
   content: "";
   inset: -2px -8px;
-  border: 1px solid var(--ctp-surface1);
-  background-color: var(--ctp-surface0);
+  border: 1px solid var(--theme-surface1);
+  background-color: var(--theme-surface0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
   pointer-events: none;
 }
@@ -464,7 +463,7 @@ select:focus-visible {
 
 .mr-list-sort-custom-select > button:hover {
   border-color: transparent !important;
-  background-color: var(--ctp-surface0) !important;
+  background-color: var(--theme-surface0) !important;
 }
 
 .mr-list-sort-custom-select > button:focus {
@@ -498,13 +497,13 @@ button.btn-primary {
 
 .btn-primary:hover:not(:disabled),
 button.btn-primary:hover:not(:disabled) {
-  background-color: #7e22ce !important;
+  background-color: var(--theme-primary-hover) !important;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--color-brand) 35%, transparent);
 }
 
 .btn-primary:active:not(:disabled),
 button.btn-primary:active:not(:disabled) {
-  background-color: #6b21a8 !important;
+  background-color: var(--theme-primary-active) !important;
 }
 
 .btn-primary:disabled,

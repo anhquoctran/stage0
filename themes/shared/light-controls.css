@@ -1,29 +1,29 @@
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext0/50"],
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext0/60"],
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext0/70"],
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext1/70"] {
-  color: var(--ctp-overlay2);
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext0/50"],
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext0/60"],
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext0/70"],
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) [class~="text-subtext1/70"] {
+  color: var(--theme-overlay2);
 }
 
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) :focus-visible {
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) :focus-visible {
   outline-color: var(--color-brand) !important;
 }
 
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) input:not([class~="bg-transparent"]):focus-visible,
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) textarea:not([class~="bg-transparent"]):focus-visible,
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) select:not([class~="bg-transparent"]):focus-visible {
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) input:not([class~="bg-transparent"]):focus-visible,
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) textarea:not([class~="bg-transparent"]):focus-visible,
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) select:not([class~="bg-transparent"]):focus-visible {
   border-color: var(--color-brand) !important;
   box-shadow: 0 0 0 1px var(--color-brand) !important;
 }
 
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) input::placeholder,
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) textarea::placeholder {
-  color: var(--ctp-overlay2) !important;
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) input::placeholder,
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) textarea::placeholder {
+  color: var(--theme-overlay2) !important;
   opacity: 1;
 }
 
 /* Keep editable controls visually distinct from disabled surfaces in light themes. */
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light)
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light)
   :is(
     input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not(:disabled):not([class~="bg-transparent"]),
     textarea:not(:disabled):not([class~="bg-transparent"]),
@@ -32,4 +32,3 @@
   ) {
   background-color: var(--interactive-input-bg);
 }
-

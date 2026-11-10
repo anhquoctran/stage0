@@ -1,3 +1,4 @@
+import { themeColorScheme } from '../../../core/themes/catalog';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
@@ -276,7 +277,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 oldCommit={diffPayload.merge_base_commit ?? diffPayload.base_commit}
                 newCommit={diffPayload.compare_commit}
                 viewMode={viewMode}
-                theme={theme === 'mocha' ? 'dark' : 'light'}
+                theme={themeColorScheme(theme)}
                 fontSize={fontSize}
               />
             </div>

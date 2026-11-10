@@ -1,4 +1,4 @@
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .mr-list-search-filter-badge::before {
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .mr-list-search-filter-badge::before {
   inset: -2px -3px;
   border-color: color-mix(in srgb, var(--color-brand) 24%, white);
   border-radius: var(--radius-sm);
@@ -6,7 +6,6 @@
   box-shadow: none;
 }
 
-:is([data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .mr-list-search-filter-badge > span:last-child {
+:is([data-color-scheme="light"], [data-theme="mocha-light"], [data-theme="latte"], [data-theme="light"], .mocha-light, .latte, .light) .mr-list-search-filter-badge > span:last-child {
   background-color: transparent;
 }
-

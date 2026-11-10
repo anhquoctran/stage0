@@ -5,5 +5,7 @@
   "kind": "light",
   "version": "1.0.0",
   "author": "Catppuccin / Stage0",
-  "colors": {}
+  "colors": {
+    "base": "#eff1f5"
+  }
 }

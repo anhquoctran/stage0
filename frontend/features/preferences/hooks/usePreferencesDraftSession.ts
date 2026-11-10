@@ -50,7 +50,6 @@ export function usePreferencesDraftSession({
   const [draftLinuxTitleBar, setDraftLinuxTitleBar] = useState(storedLinuxTitleBar);
   const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
 
-  const [draftThemeId, setDraftThemeId] = useState('catppuccin-mocha');
 
   const [draftFontFamily, setDraftFontFamily] = useState(storedFontFamily);
 
@@ -306,8 +305,6 @@ export function usePreferencesDraftSession({
     showResetConfirm,
     isApplied,
     showRestartPrompt,
-    draftThemeId,
-    setDraftThemeId,
     draftDiffViewMode,
     setDraftDiffViewMode,
     draftIgnoreWhitespace,
