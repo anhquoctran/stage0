@@ -10,7 +10,7 @@ export const SOFTWARE_ABOUT: SoftwareAboutInfo = {
   "packageVersion": "0.0.1",
   "arch": "aarch64",
   "version": "0.0.1+macos.aarch64",
-  "releaseDate": "2026-11-10",
+  "releaseDate": "2026-11-11",
   "currentYear": "2026",
   "copyright": "Copyright @ 2026 Anh Quoc Tran. Licensed under the MIT license.",
   "license": "MIT",
