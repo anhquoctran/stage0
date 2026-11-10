@@ -1,41 +1,19 @@
-# Stage0 v0.0.1 Release Notes
+# Stage0 v0.0.12-nightly Release Notes
 
-Stage0 is a local-first Virtual Merge Request and conflict prediction sandbox.
-This document describes the current release (v0.0.1).
+This document describes the current release (v0.0.12-nightly).
 
-## Highlights
+Changes since [v0.0.11-nightly](https://github.com/anhquoctran/stage0/releases/tag/v0.0.11-nightly) (nightly).
 
-- Check for software updates from About, with an optional daily background check.
-- Download updates from the official GitHub Releases repository, inspect progress and release notes, and explicitly install/restart after saving work.
-- Verify package signatures and signed versions before installation. Active reviews, Git operations and external agent work prevent update installation.
-- Support in-app updates for Linux x86_64 AppImage, Windows x86_64 NSIS, macOS Apple Silicon and macOS Intel.
-- Build all four targets with one release version; publish the stable update manifest only after all packages pass signature verification.
-- Improve Linux desktop title bars, application/Dock identity and Wayland tray detection.
-- Keep startup splash sizing and percentage labels consistent.
-- Harden reviewer custom instructions and discussion replies with scoped tools, bounded context, thread revision checks and authoritative publication guards.
+## Changes
 
-## Installation
+- Merge pull request \#79 from anhquoctran/develop ([f3b6de8](https://github.com/anhquoctran/stage0/commit/f3b6de85f43079b0b2a6926bccc80aaeb3e74250))
+- Merge pull request \#80 from anhquoctran/feat/configurable-ui-density ([df5390b](https://github.com/anhquoctran/stage0/commit/df5390be84331f7770d7171db93c253677029a12))
+- feat\(preferences\): add configurable UI density ([8224279](https://github.com/anhquoctran/stage0/commit/8224279b8fac721b453e6d571abbbbfed3440b8b))
+- Merge pull request \#78 from anhquoctran/test/coverage-and-react-dom ([961f38b](https://github.com/anhquoctran/stage0/commit/961f38b2f3144a4275e574d48403a02aff3dca3e))
+- test: measure application coverage and require real React regressions ([2ee2925](https://github.com/anhquoctran/stage0/commit/2ee2925b6267ceb82df83a77c67dc9d1f6ba3d72))
+- fix\(ui\): focus portalled search after the menu becomes visible ([2b06d0e](https://github.com/anhquoctran/stage0/commit/2b06d0e37f857c69cddf52e6527b0b2c2e599307))
+- Merge pull request \#76 from anhquoctran/nightly ([df29283](https://github.com/anhquoctran/stage0/commit/df29283b274fcfe6f91d920581197a602471863d))
+- Merge pull request \#75 from anhquoctran/hotfix/sync-develop/tag-metadata-validation ([44bf577](https://github.com/anhquoctran/stage0/commit/44bf5778de54726507883792f88ef225b296823d))
+- fix\(release\): normalize tag metadata before validation and packaging ([8215065](https://github.com/anhquoctran/stage0/commit/8215065ff860262bbd966db58937a191124803b7))
 
-### Compatibility Matrix
-
-| Platform | CPU | Installer | In-app updates |
-|---|---|---|---|
-| Linux | x86_64 | AppImage | Supported |
-| Linux | x86_64 | Debian / RPM | Manual or package manager |
-| Windows | x86_64 | NSIS | Supported |
-| macOS | Apple Silicon | DMG / app | Supported |
-| macOS | Intel | DMG / app | Supported |
-
-Choose the asset matching your platform and CPU. Existing versions without an updater require a manual installation of this release once.
-
-- Linux: use AppImage for in-app updates. Debian and RPM packages remain available for manual/package-manager installation.
-- Windows: install the x86_64 NSIS setup executable. Windows ARM is not included.
-- macOS: install the matching Apple Silicon (`aarch64`) or Intel (`x86_64`) DMG/app.
-
-The initial macOS packages use ad-hoc signing and are not notarized by Apple; Gatekeeper may require approval in Privacy & Security. The Windows installer is not Authenticode signed. All updater payloads are separately signed with Stage0's update key.
-
-Updates never upload repository content or invoke AI services. Automatic checks can be disabled in About; downloading and installation always require user actions.
-
-## Verification scope
-
-Automated Node/Rust tests and Linux build checks are run before publication. CI compiles the native release packages on Linux, macOS and Windows. Compilation does not replace installed-app smoke testing on each supported desktop.
+[Full comparison](https://github.com/anhquoctran/stage0/compare/v0.0.11-nightly...f3b6de85f43079b0b2a6926bccc80aaeb3e74250)
