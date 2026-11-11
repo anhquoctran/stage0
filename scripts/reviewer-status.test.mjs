@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import test from 'node:test';
-import { componentHarness, componentNodes, loadWithMocks, repositorySettingsFixture } from './helpers/componentHarness.mjs';
+import { componentHarness, componentNodes, loadWithMocks } from './helpers/componentHarness.mjs';
 const { create } = createRequire(import.meta.url)('zustand');
 const base = new URL('../frontend/', import.meta.url);
 
@@ -75,7 +75,7 @@ test('repository hydration preserves persisted terminal reviewer states', async 
   const statuses = ['failed', 'incomplete', 'interrupted', 'cancelled', 'reviewing'];
   const { createRepoDataSlice } = loadWithMocks(new URL('features/virtual-mr/store/slices/createRepoDataSlice.ts', base), {
     '../../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({
-      repositorySettings: { getDocument: async () => repositorySettingsFixture('repo') },
+      repositorySettings: { getRepoSettings: async () => null, listRepoLabels: async () => [] },
       virtualMrs: { listVirtualMrSessions: async () => [{ id: 'mr', repo_id: 'repo', reviewers: statuses.map((review_status) => ({ agent_id: review_status, review_status })) }] },
       discussions: { listMrDiscussions: async () => [], listMrDeletionActivity: async () => [] },
       gitHistory: { getCommitsBetweenRefs: async () => [], getGitUserIdentityCmd: async () => ['Alice', 'alice@test'] },

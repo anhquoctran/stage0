@@ -13,6 +13,16 @@ const translate = testI18n.t.bind(testI18n);
 
 export function loadWithMocks(url, dependencies, context) {
   if (!context) {
+    // Preserve legacy regression fixtures while the application moves to the
+    // versioned repository document API. Never swallow their simulated failures.
+    for (const [id, mock] of Object.entries(dependencies)) {
+      if (id.endsWith('/applicationRuntime') && typeof mock?.getApplicationServices === 'function') {
+        const original = mock.getApplicationServices;
+        dependencies = { ...dependencies, [id]: { ...mock,
+          getApplicationServices: (...args) => adaptRepositorySettingsFixture(original(...args)),
+        } };
+      }
+    }
     const originalDependencies = dependencies;
     dependencies = new Proxy({ ...dependencies }, {
       get: (target, key) => Object.hasOwn(target, key) ? target[key] : originalDependencies[key],
@@ -222,4 +232,22 @@ export function repositorySettingsFixture(repoId, labels = []) {
     },
     labels,
   };
+}
+
+function adaptRepositorySettingsFixture(services) {
+  const legacy = services.repositorySettings;
+  if (!legacy || legacy.getDocument || !legacy.getRepoSettings || !legacy.listRepoLabels) return services;
+  return { ...services, repositorySettings: { ...legacy,
+    getDocument: async ({ repoId }) => {
+      const saved = await legacy.getRepoSettings({ repoId });
+      const labels = await legacy.listRepoLabels({ repoId });
+      const document = repositorySettingsFixture(repoId, labels ?? []);
+      if (saved) Object.assign(document.settings, {
+        defaultBaseBranch: saved.default_base_branch,
+        inheritGlobalAgents: Boolean(saved.inherit_global_agents),
+        customAgentRules: saved.custom_agent_rules || '',
+      });
+      return document;
+    },
+  } };
 }
