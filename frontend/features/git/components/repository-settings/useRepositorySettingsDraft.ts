@@ -28,10 +28,20 @@ export function useRepositorySettingsDraft(open: boolean, repoId: string | undef
       setBaselineRevision(settings.revision);
       setConflict(false);
     } else {
-      // Preserve the draft when a file edit or another window changes its fields.
-      setConflict(true);
+      const dirty = customRules !== (prior.customAgentRules || '') || inheritAgents !== prior.inheritGlobalAgents
+        || defaultBaseBranch !== prior.defaultBaseBranch;
+      if (dirty) setConflict(true);
+      else {
+        // An editor save should immediately hydrate an untouched settings form.
+        baseline.current = settings;
+        setCustomRules(settings.customAgentRules || '');
+        setInheritAgents(settings.inheritGlobalAgents);
+        setDefaultBaseBranch(settings.defaultBaseBranch);
+        setBaselineRevision(settings.revision);
+        setConflict(false);
+      }
     }
-  }, [open, repoId, settings]);
+  }, [open, repoId, settings, customRules, inheritAgents, defaultBaseBranch]);
   const resetDraft = (next: RepoSettings) => {
     baseline.current = next;
     setCustomRules(next.customAgentRules || '');

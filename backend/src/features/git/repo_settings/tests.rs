@@ -351,3 +351,38 @@ fn restart_selects_old_or_complete_new_snapshot_after_process_exit() {
         }
     }
 }
+
+#[test]
+fn source_editor_rejects_invalid_and_stale_text_and_repairs_invalid_primary_atomically() {
+    let (_temp, root, backup) = fixture();
+    let before = load(&root, &backup).unwrap();
+    assert!(super::save_source(&root, &backup, &before.revision, "{bad", |_| panic!()).is_err());
+    assert_eq!(load(&root, &backup).unwrap().revision, before.revision);
+    let edited = before
+        .content
+        .replace("// keep this comment", "// user comment");
+    let saved = super::save_source(&root, &backup, &before.revision, &edited, |_| Ok(())).unwrap();
+    assert_eq!(saved.content, edited);
+    assert!(super::save_source(
+        &root,
+        &backup,
+        &before.revision,
+        &before.content,
+        |_| panic!()
+    )
+    .is_err());
+    let path = storage::path(&root).unwrap();
+    fs::write(&path, "{broken outside").unwrap();
+    let invalid = load(&root, &backup).unwrap();
+    assert!(invalid.validation_error.is_some());
+    let repaired = super::save_source(
+        &root,
+        &backup,
+        &invalid.revision,
+        &saved.content,
+        |_| Ok(()),
+    )
+    .unwrap();
+    assert!(repaired.validation_error.is_none());
+    assert_eq!(storage::read(&path).unwrap(), saved.content);
+}

@@ -85,3 +85,18 @@ after commit before an IPC response. These are not physical power-cut tests.
 Node tests cover publication on acknowledgement, queue ordering, stale responses
 and local ACP consent. React tests cover draft preservation, conflicts and Cancel.
 Native filesystem checks run locally on macOS; Windows/Linux require native CI.
+
+## Internal source editor
+
+The left footer action opens repos.jsonc in the existing JSONC editor surface,
+with a repository-owned document adapter. It shares highlighting, line numbers,
+indentation, scrolling and two-second autosave with Preferences. Repository editing
+does not call the global Preferences persistence service or offer its completions,
+schema URI or Reset action. A full-source save uses the same native coordinator,
+validation, revision check, durable replacement and publication as structured
+settings patches. Unlike patches it may repair an invalid primary document.
+
+The editor retains invalid/conflicting drafts and exposes Reload. Returning to
+Repository Settings awaits an active autosave and saves any newer text before
+closing; failure keeps the editor open. An untouched settings form hydrates the
+new values, while a dirty form retains its draft and reports conflicting fields.

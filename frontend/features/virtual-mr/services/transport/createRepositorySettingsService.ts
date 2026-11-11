@@ -3,6 +3,7 @@ import type { RepositorySettingsService } from './RepositorySettingsService';
 
 export function createRepositorySettingsService(transport: CommandTransport): RepositorySettingsService {
   return {
+    saveDocument: (input) => transport.executeCommand('save_repository_settings_document', input),
     getDocument: (input) => transport.executeCommand('get_repository_settings_document', input),
     commitDocument: (input) => transport.executeCommand('commit_repository_settings', input),
     createRepoLabel: (input) => transport.executeCommand('create_repo_label', input),

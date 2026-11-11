@@ -6,6 +6,7 @@ import type { PreferencesJsonCodeBufferContext } from './PreferencesJsonCodeBuff
 
 export function usePreferencesJsonCodeBuffer({
   draft,
+  completionProvider = getPreferencesJsonCompletions,
   setDraft,
   setSaveState,
   setError,
@@ -71,7 +72,7 @@ export function usePreferencesJsonCodeBuffer({
   };
 
   const updateCompletion = (source: string, cursor: number, explicit = false) => {
-    const next = getPreferencesJsonCompletions(source, cursor, explicit);
+    const next = completionProvider(source, cursor, explicit);
     setCompletion(next);
     setCompletionIndex(0);
   };

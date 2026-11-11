@@ -2494,6 +2494,9 @@
       "unknownAuthor": "Unknown"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · टिप्पणियाँ और अंतिम कॉमा समर्थित · 2 सेकंड बाद अपने आप सहेजता है",
+      "editFile": "repos.jsonc संपादित करें",
+      "editorTitle": "रिपॉज़िटरी सेटिंग JSONC",
       "fileConflict": "सेटिंग फ़ाइल बदल गई है। सहेजने से पहले इस संवाद को बंद करके फिर से खोलें।",
       "importLegacyReviewers": "इस कंप्यूटर पर पहले सहेजे गए समीक्षकों को आयात करें",
       "title": "Repository Settings",

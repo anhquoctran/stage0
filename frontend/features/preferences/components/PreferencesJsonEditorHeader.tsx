@@ -3,6 +3,9 @@ import type { PreferencesJsonEditorHeaderProps } from './PreferencesJsonEditorHe
 
 export function PreferencesJsonEditorHeader({
   isMac,
+  title,
+  description,
+  backLabel,
   saveState,
   handleClose,
 }: PreferencesJsonEditorHeaderProps) {
@@ -12,9 +15,9 @@ export function PreferencesJsonEditorHeader({
       className={`flex shrink-0 items-center justify-between border-b border-surface0 ${isMac ? 'pl-16 pe-4' : 'px-4'} py-3`}
     >
       <div>
-        <h2 className="text-sm font-semibold">{translateUiText('preferences.jsonEditor.editTitle')}</h2>
+        <h2 className="text-sm font-semibold">{title ?? translateUiText('preferences.jsonEditor.editTitle')}</h2>
         <p className="mt-1 text-xs text-subtext0">
-          {translateUiText('preferences.jsonEditor.description')}
+          {description ?? translateUiText('preferences.jsonEditor.description')}
         </p>
       </div>
       <div className="flex items-center gap-3">
@@ -29,7 +32,7 @@ export function PreferencesJsonEditorHeader({
           onClick={() => void handleClose()}
           className="border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
         >
-          {translateUiText('preferences.jsonEditor.backToPreferences')}
+          {backLabel ?? translateUiText('preferences.jsonEditor.backToPreferences')}
         </button>
       </div>
     </header>

@@ -120,15 +120,52 @@ pub fn commit(
     patch: &Value,
     publish: impl FnOnce(&RepositorySettingsDocument) -> Result<(), String>,
 ) -> Result<RepositorySettingsDocument, String> {
+    commit_candidate(
+        root,
+        recovery,
+        expected_revision,
+        |before| {
+            if let Some(error) = &before.validation_error {
+                return Err(error.clone());
+            }
+            jsonc::patch(&before.content, patch)
+        },
+        publish,
+    )
+}
+
+pub fn save_source(
+    root: &Path,
+    recovery: &Path,
+    expected_revision: &str,
+    content: &str,
+    publish: impl FnOnce(&RepositorySettingsDocument) -> Result<(), String>,
+) -> Result<RepositorySettingsDocument, String> {
+    // Validate before touching disk; unlike a UI patch, a complete document
+    // may repair an invalid primary while retaining its exact revision check.
+    jsonc::parse(content)?;
+    commit_candidate(
+        root,
+        recovery,
+        expected_revision,
+        |_| Ok(content.to_string()),
+        publish,
+    )
+}
+
+fn commit_candidate(
+    root: &Path,
+    recovery: &Path,
+    expected_revision: &str,
+    prepare: impl FnOnce(&RepositorySettingsDocument) -> Result<String, String>,
+    publish: impl FnOnce(&RepositorySettingsDocument) -> Result<(), String>,
+) -> Result<RepositorySettingsDocument, String> {
     transaction(root, || {
         let before = load_locked(root, recovery)?;
         if expected_revision.is_empty() || before.revision != expected_revision {
             return Err("Repository settings changed. Reload before saving.".into());
         }
-        if let Some(error) = before.validation_error {
-            return Err(error);
-        }
-        let content = jsonc::patch(&before.content, patch)?;
+        let content = prepare(&before)?;
         let settings = jsonc::parse(&content)?;
         let path = storage::path(root)?;
         // Editors do not participate in our coordinator. Detect changes again

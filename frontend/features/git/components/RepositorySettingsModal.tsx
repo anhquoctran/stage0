@@ -1,3 +1,4 @@
+import { RepositorySettingsJsonEditor } from './repository-settings/RepositorySettingsJsonEditor';
 import { useRepositorySettingsDraft } from './repository-settings/useRepositorySettingsDraft';
 import { hasLegacyRepoReviewers, importLegacyRepoReviewers } from '../../ai/services/importLegacyRepoReviewers';
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
@@ -33,6 +34,8 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
     defaultBaseBranch, setDefaultBaseBranch, baselineRevision, conflict, resetDraft } =
     useRepositorySettingsDraft(isOpen, currentRepo?.id, repoSettings);
   const [saving, setSaving] = useState(false);
+  const [isJsonEditorOpen, setIsJsonEditorOpen] = useState(false);
+  useEffect(() => { if (!isOpen) setIsJsonEditorOpen(false); }, [isOpen]);
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
@@ -65,7 +68,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
-      onClick={onClose}
+      onClick={() => { if (!isJsonEditorOpen) onClose(); }}
     >
       <div
         className="w-full max-w-4xl h-[720px] max-h-[calc(100dvh-2rem)] bg-base border border-surface0 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 rounded-sm"
@@ -224,7 +227,11 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
         </div>
 
         {/* FOOTER */}
-        <div className="shrink-0 px-6 py-3.5 border-t border-surface0 flex items-center justify-end bg-base/60 rounded-sm">
+        <div className="shrink-0 px-6 py-3.5 border-t border-surface0 flex items-center justify-between gap-3 bg-base/60 rounded-sm">
+          <button type="button" onClick={() => setIsJsonEditorOpen(true)} disabled={saving}
+            className="shrink-0 rounded-sm border border-surface1 bg-base px-3 py-1.5 text-xs text-subtext1 hover:text-text">
+            {translateUiText('git.repoSettingsModal.editFile')}
+          </button>
           <div className="flex items-center gap-2.5">
             <button
               type="button"
@@ -243,6 +250,8 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
             </button>
           </div>
         </div>
+        {isJsonEditorOpen && <RepositorySettingsJsonEditor key={currentRepo.id} repoId={currentRepo.id} repoPath={currentRepo.local_path}
+          onClose={() => setIsJsonEditorOpen(false)} />}
       </div>
     </div>
   );

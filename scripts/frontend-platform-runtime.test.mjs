@@ -138,7 +138,7 @@ test('every named feature operation preserves its command, input, progress callb
     }
     assert.equal(Object.keys(service).length, expected.size);
   }
-  assert.equal(operations.size, 150); // Includes the repository document read/transaction alongside the existing native operations.
+  assert.equal(operations.size, 151); // Includes the repository document read/transaction alongside the existing native operations.
 });
 
 

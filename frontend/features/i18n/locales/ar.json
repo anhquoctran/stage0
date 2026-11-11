@@ -2528,6 +2528,9 @@
       "unknownAuthor": "غير معروف"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · يدعم التعليقات والفواصل الختامية · حفظ تلقائي بعد ثانيتين",
+      "editFile": "تحرير repos.jsonc",
+      "editorTitle": "إعدادات المستودع بتنسيق JSONC",
       "fileConflict": "تم تغيير ملف الإعدادات. أغلق مربع الحوار وافتحه مجددًا قبل الحفظ.",
       "importLegacyReviewers": "استيراد المراجعين المحفوظين سابقًا على هذا الكمبيوتر",
       "title": "إعدادات المستودع",

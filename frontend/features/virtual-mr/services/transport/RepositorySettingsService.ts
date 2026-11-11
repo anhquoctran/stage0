@@ -4,6 +4,7 @@ import type { RepoSettingsRecord } from '../../types/RepoSettingsRecord';
 import type { RepoLabelRecord } from '../../types/RepoLabelRecord';
 
 export interface RepositorySettingsService {
+  saveDocument(input: { repoId: string; expectedRevision: string; content: string }): Promise<RepositorySettingsDocument>;
   getDocument(input: { repoId: string }): Promise<RepositorySettingsDocument>;
   commitDocument(input: { repoId: string; expectedRevision: string; patch: Partial<RepositorySettingsConfig> }): Promise<RepositorySettingsDocument>;
   createRepoLabel(input: { label: RepoLabelRecord; expectedRevision: string }): Promise<unknown>;

@@ -55,3 +55,14 @@ export function commitRepositorySettings(
 export function getRepositorySettingsSnapshot(repoId: string) {
   return documents.get(repoId);
 }
+
+export function saveRepositorySettingsSource(repoId: string, content: string, expectedRevision: string) {
+  const previous = queues.get(repoId) || Promise.resolve();
+  const pending = previous.catch(() => {}).then(async () => {
+    const saved = await getApplicationServices().repositorySettings.saveDocument({ repoId, content, expectedRevision });
+    return publish(repoId, saved);
+  });
+  queues.set(repoId, pending);
+  void pending.finally(() => { if (queues.get(repoId) === pending) queues.delete(repoId); }).catch(() => {});
+  return pending;
+}

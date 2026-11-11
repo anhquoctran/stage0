@@ -10,6 +10,12 @@ function fixture() {
   const documents = loadWithMocks(documentsUrl, {
     '../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({ repositorySettings: {
       getDocument: async () => structuredClone(current),
+      saveDocument: async ({ expectedRevision, content }) => {
+        calls.push({ expectedRevision, content });
+        if (rejected || expectedRevision !== current.revision) throw new Error('revision conflict');
+        current = { ...current, content, revision: `revision-${calls.length}`, publicationSequence: current.publicationSequence + 1 };
+        return structuredClone(current);
+      },
       commitDocument: async ({ expectedRevision, patch }) => {
         calls.push({ expectedRevision, patch });
         if (rejected || expectedRevision !== current.revision) throw new Error('revision conflict');
@@ -81,4 +87,21 @@ test('repository config cannot carry ACP consent and local consent is bound to e
     globalThis.localStorage = prior;
     harness.cleanup();
   }
+});
+
+test('source saves share the mutation queue and never silently rebase an editor revision', async () => {
+  const f = fixture();
+  const publications = [];
+  f.subscribeRepositorySettings((_, doc) => publications.push(doc));
+  await f.loadRepositorySettings('repo');
+  const patch = f.commitRepositorySettings('repo', () => ({ customAgentRules: 'committed from form' }));
+  const staleSource = f.saveRepositorySettingsSource('repo', 'stale source text', 'fixture-repo');
+  await patch;
+  await assert.rejects(staleSource, /conflict/);
+  assert.equal(f.current().settings.customAgentRules, 'committed from form');
+  assert.equal(publications.length, 2);
+  const content = '// user comment\n{"schemaVersion":1}';
+  const saved = await f.saveRepositorySettingsSource('repo', content, f.current().revision);
+  assert.equal(saved.content, content);
+  assert.equal(publications.length, 3);
 });

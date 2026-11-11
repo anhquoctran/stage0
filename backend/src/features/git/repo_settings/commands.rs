@@ -95,19 +95,51 @@ pub(crate) fn commit_document(
     let (root, recovery) = locations(app, repo_id)?;
     let mut labels = Vec::new();
     let mut saved = super::commit(&root, &recovery, expected_revision, patch, |doc| {
-        labels = app
-            .state::<Database>()
-            .project_repository_labels(repo_id, doc.settings["labels"].as_array().unwrap())?;
-        app.emit(
-            "repo-settings-changed",
-            json!({ "repoId": repo_id, "revision": doc.revision,
-            "publicationSequence": doc.publication_sequence }),
-        )
-        .map_err(|e| e.to_string())?;
+        labels = publish_document(app, repo_id, doc)?;
         Ok(())
     })?;
     saved.labels = labels;
     Ok(saved)
+}
+
+fn publish_document(
+    app: &AppHandle,
+    repo_id: &str,
+    doc: &RepositorySettingsDocument,
+) -> Result<Vec<crate::features::git::persistence::RepoLabelDb>, String> {
+    let labels = app
+        .state::<Database>()
+        .project_repository_labels(repo_id, doc.settings["labels"].as_array().unwrap())?;
+    app.emit(
+        "repo-settings-changed",
+        json!({"repoId": repo_id, "revision": doc.revision,
+        "publicationSequence": doc.publication_sequence}),
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(labels)
+}
+
+#[tauri::command]
+pub async fn save_repository_settings_document(
+    app: AppHandle,
+    repo_id: String,
+    expected_revision: String,
+    content: String,
+) -> Result<RepositorySettingsDocument, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let (root, recovery) = locations(&app, &repo_id)?;
+        let mut labels = Vec::new();
+        let mut saved =
+            super::save_source(&root, &recovery, &expected_revision, &content, |doc| {
+                labels = publish_document(&app, &repo_id, doc)?;
+                Ok(())
+            })?;
+        saved.labels = labels;
+        Ok(saved)
+    })
+    .await
+    .map_err(|e| format!("Repository settings worker failed: {e}"))?
+    .map_err(|e: String| crate::common::messages::command_error("git", e))
 }
 
 #[tauri::command]

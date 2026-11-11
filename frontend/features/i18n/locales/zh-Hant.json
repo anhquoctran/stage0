@@ -2494,6 +2494,9 @@
       "unknownAuthor": "未知"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · 支援註解和尾隨逗號 · 2 秒後自動儲存",
+      "editFile": "編輯 repos.jsonc",
+      "editorTitle": "儲存庫設定 JSONC",
       "fileConflict": "設定檔已變更。儲存前請關閉並重新開啟此對話方塊。",
       "importLegacyReviewers": "匯入先前儲存在此電腦上的審查者",
       "title": "儲存庫設定",

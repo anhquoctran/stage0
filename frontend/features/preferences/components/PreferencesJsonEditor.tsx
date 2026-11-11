@@ -7,9 +7,10 @@ import { PreferencesJsonEditorHeader } from './PreferencesJsonEditorHeader';
 import { usePreferencesJsonCodeBuffer } from './usePreferencesJsonCodeBuffer';
 import { usePreferencesJsonDocument } from './usePreferencesJsonDocument';
 
+const NO_COMPLETIONS = () => null;
 const PREFERENCES_SCHEMA_URI = 'https://stage0.app/schemas/preferences-v1.json';
 
-export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ onClose }) => {
+export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ onClose, adapter, title, backLabel, description, conflictMessage }) => {
   const { t: translateUiText } = useUiTextTranslation();
   const isMac = isMacOS();
   const {
@@ -23,7 +24,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
     reload,
     handleRestoreDefaults,
     error,
-  } = usePreferencesJsonDocument({ onClose });
+  } = usePreferencesJsonDocument({ onClose, adapter, conflictMessage });
 
   const {
     fontStyle,
@@ -43,21 +44,23 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
     completionPosition,
     completionIndex,
     applyCompletion,
-  } = usePreferencesJsonCodeBuffer({ draft, setDraft, setSaveState, setError });
+  } = usePreferencesJsonCodeBuffer({ draft, setDraft, setSaveState, setError,
+    ...(adapter ? { completionProvider: NO_COMPLETIONS } : {}),
+  });
 
   return createPortal(
     <section
       className="fixed inset-x-0 bottom-0 top-8.5 z-[90] flex min-h-0 flex-col bg-mantle text-text"
-      aria-label={translateUiText('preferences.jsonEditor.editTitle')}
+      aria-label={title ?? translateUiText('preferences.jsonEditor.editTitle')}
     >
-      <PreferencesJsonEditorHeader isMac={isMac} saveState={saveState} handleClose={handleClose} />
+      <PreferencesJsonEditorHeader isMac={isMac} saveState={saveState} handleClose={handleClose} title={title} backLabel={backLabel} description={description} />
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
         <div className="flex shrink-0 items-center justify-between gap-3 text-[11px] text-subtext0">
           <span className="truncate" title={document?.path}>
-            {document?.path ?? translateUiText('preferences.jsonEditor.loadingDocument')}
+            {document?.path ?? title ?? translateUiText('preferences.jsonEditor.loadingDocument')}
           </span>
           <div className="flex shrink-0 items-center gap-2">
-            <label htmlFor="preferences-json-schema" className="text-overlay1">
+            {!adapter && <><label htmlFor="preferences-json-schema" className="text-overlay1">
               {translateUiText('preferences.jsonEditor.schema')}
             </label>
             <input
@@ -66,7 +69,8 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
               value={PREFERENCES_SCHEMA_URI}
               className="w-[min(34vw,420px)] rounded-sm border border-surface0 bg-crust px-2 py-1 text-[10px] text-overlay1 disabled:opacity-80"
             />
-            {saveState === 'conflict' && (
+            </>}
+            {(saveState === 'conflict' || saveState === 'error' || saveState === 'invalid') && (
               <button
                 type="button"
                 onClick={() => void reload()}
@@ -75,13 +79,13 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
                 {translateUiText('preferences.jsonEditor.reloadLatest')}
               </button>
             )}
-            <button
+            {(!adapter || adapter.reset) && <button
               type="button"
               onClick={() => void handleRestoreDefaults()}
               className="border border-surface1 px-2 py-1 hover:bg-surface0 rounded-sm"
             >
               {translateUiText('preferences.jsonEditor.restoreDefaults')}
-            </button>
+            </button>}
           </div>
         </div>
         <div className="flex min-h-0 flex-1 overflow-hidden rounded-sm border border-surface0 bg-crust focus-within:border-primary">
@@ -128,6 +132,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
             <textarea
               ref={sourceRef}
               value={draft}
+              disabled={saveState === 'loading' || !document}
               onChange={(event) => {
                 setDraft(event.target.value);
                 setSaveState('saved');
@@ -163,7 +168,7 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
               onSelect={(event) => updateActiveLine(event.currentTarget)}
               onScroll={(event) => syncScroll(event.currentTarget)}
               spellCheck={false}
-              aria-label={translateUiText('preferences.jsonEditor.sourceLabel')}
+              aria-label={adapter ? document?.path ?? title : translateUiText('preferences.jsonEditor.sourceLabel')}
               className="absolute inset-0 h-full w-full resize-none overflow-auto whitespace-pre bg-transparent px-3 py-3 text-transparent caret-primary outline-none selection:bg-primary/25 rounded-sm"
               style={{ ...fontStyle, WebkitTextFillColor: 'transparent', tabSize: 2 }}
             />

@@ -34,3 +34,12 @@ it('retains scalar drafts across label/reviewer commits while Cancel discards th
   rerender({ open: true, settings: updated });
   expect(result.current.customRules).toBe('');
 });
+
+it('hydrates an untouched form after saving through the source editor', () => {
+  const { result, rerender } = renderHook(({ settings }) => useRepositorySettingsDraft(true, 'repo', settings),
+    { initialProps: { settings: original } });
+  rerender({ settings: { ...original, revision: 'editor', customAgentRules: 'saved in JSONC' } });
+  expect(result.current.customRules).toBe('saved in JSONC');
+  expect(result.current.baselineRevision).toBe('editor');
+  expect(result.current.conflict).toBe(false);
+});
