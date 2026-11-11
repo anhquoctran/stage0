@@ -49,8 +49,10 @@ export function PreferencesTabContainer({
   showToast,
   draftThemeMode,
   setDraftThemeMode,
-  draftThemeId,
-  setDraftThemeId,
+  draftDarkThemeId,
+  setDraftDarkThemeId,
+  draftLightThemeId,
+  setDraftLightThemeId,
   draftFontFamily,
   setDraftFontFamily,
   draftFontSize,
@@ -181,8 +183,10 @@ export function PreferencesTabContainer({
           <PreferencesThemeTab
             draftThemeMode={draftThemeMode}
             setDraftThemeMode={setDraftThemeMode}
-            draftThemeId={draftThemeId}
-            setDraftThemeId={setDraftThemeId}
+            draftDarkThemeId={draftDarkThemeId}
+            setDraftDarkThemeId={setDraftDarkThemeId}
+            draftLightThemeId={draftLightThemeId}
+            setDraftLightThemeId={setDraftLightThemeId}
           />
         </div>
       )}

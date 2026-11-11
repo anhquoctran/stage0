@@ -1,3 +1,4 @@
+import { themeColorScheme, themeDisplayName } from '../../themes/catalog';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Moon } from '../../../common/components/icons/Moon';
@@ -7,7 +8,7 @@ import { useThemeStore } from '../../store/useThemeStore';
 export const ThemeSwitcher: React.FC = () => {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useThemeStore();
-  const isLight = theme === 'mocha-light';
+  const isLight = themeColorScheme(theme) === 'light';
 
   return (
     <button
@@ -31,7 +32,7 @@ export const ThemeSwitcher: React.FC = () => {
       </div>
 
       <span className="text-[11px] font-semibold tracking-wide text-subtext1 group-hover:text-text transition-colors">
-        {isLight ? t('common.layout.mochaLight') : t('common.layout.mochaDark')}
+        {themeDisplayName(theme, key => t(key))}
       </span>
     </button>
   );

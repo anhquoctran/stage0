@@ -26,6 +26,7 @@ export function markdownPreferencesHarness({ languageSettings } = {}) {
     setState: (patch) => Object.assign(state, typeof patch === 'function' ? patch(state) : patch),
   });
   const snapshot = { aiConfig: {}, mcpServers: [], globalReviewers: [], externalAgents: [], guardrailPolicy: {} };
+  const themeState = { themeMode: 'system', darkThemeId: 'catppuccin-mocha', lightThemeId: 'catppuccin-latte' };
   const git = { activeSandboxType: 'in_memory', showToast() {}, refreshDiff() {} };
   const binaries = { activeBinaryId: 'system', activeBinaryPath: 'git', binaries: [],
     fetchActiveBinary: async () => ({ id: 'system', path: 'git' }) };
@@ -42,8 +43,8 @@ export function markdownPreferencesHarness({ languageSettings } = {}) {
         ? 'Language preferences changed in another window'
         : key === 'preferences.applyFailedWithDetail' ? `Could not apply preferences: ${options.error}` : key } },
       '../../../core/store/useThemeStore': {
-        useThemeStore: stateStore({ themeMode: 'system' }),
-        resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {},
+        useThemeStore: stateStore(themeState),
+        resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {}, persistThemeSelection() {},
       },
       '../store/usePreferencesStore': {
         usePreferencesStore: stateStore(preferences), DEFAULT_VIEWER_FONT_SETTINGS: viewerFont,
@@ -85,7 +86,7 @@ export function markdownPreferencesHarness({ languageSettings } = {}) {
   );
   const render = () => runner.render(usePreferencesDraft);
   render();
-  return { render, preferences, patches, previews, markdownFont,
+  return { render, preferences, patches, previews, markdownFont, themeState,
     fail: () => { failure = true; }, pause: (promise) => { paused = promise; },
     cleanup: () => { runner.cleanup(); if (languageSettings) globalThis.window = previousWindow; } };
 }

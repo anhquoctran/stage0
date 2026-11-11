@@ -20,6 +20,9 @@ use open_plan::OpenPlan;
 #[cfg(target_os = "windows")]
 mod snap_layout;
 pub mod startup_window;
+pub mod display_geometry;
+#[cfg(test)]
+mod display_geometry_tests;
 use startup_window::{request_maximize, SPLASH_HEIGHT, SPLASH_WIDTH};
 #[cfg(test)]
 mod startup_window_tests;

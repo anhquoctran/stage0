@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "monokai",
+  "name": "Monokai",
+  "kind": "dark",
+  "version": "1.0.0",
+  "author": "Microsoft / Stage0",
+  "colors": { "base": "#272822", "brand": "#ae81ff", "text": "#f8f8f2" }
+}

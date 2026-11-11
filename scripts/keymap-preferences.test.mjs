@@ -12,7 +12,7 @@ function applyFixture(draft = custom, current = original) {
   let failure = false, paused, saved;
   const store = { getState: () => prefs, setState: (value) => { Object.assign(prefs, value); calls.push('publish'); } };
   const { createPreferencesApplyAction } = loadWithMocks(url('features/preferences/services/createPreferencesApplyAction.ts'), {
-    '../../../core/store/useThemeStore': { applyThemeToDocument() {}, persistThemeMode() {}, resolveTheme: () => 'dark', useThemeStore: { setState() {} } },
+    '../../../core/store/useThemeStore': { applyThemeToDocument() {}, persistThemeMode() {}, persistThemeSelection() {}, resolveTheme: () => 'dark', useThemeStore: { setState() {} } },
     '../../ai/services/commitAiPreferences': { commitAiPreferences: async (_, __, patch) => {
       calls.push(['patch', structuredClone(patch)]); if (paused) await paused;
       if (failure) throw Error('Save failed'); return {};

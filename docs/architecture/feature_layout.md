@@ -64,3 +64,7 @@ hook, transaction and store-slice ownership. `pnpm check:architecture` also
 enforces a 450-physical-line budget for every frontend TypeScript file. Preserve
 the public root hooks/components when extracting named behavior; begin reviewing
 boundaries at 400 lines and aim for 100–300.
+
+Desktop theme packages live in the repository-root [`themes/`](../../themes/README.md)
+directory. `frontend/core/themes/` owns their typed runtime boundary; shared
+controls consume tokens rather than importing a particular palette.

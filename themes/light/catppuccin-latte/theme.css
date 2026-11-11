@@ -1,0 +1,86 @@
+/* Stage0 Catppuccin Latte palette and startup colors. */
+:root[data-theme="mocha-light"],
+:root[data-theme="latte"],
+:root[data-theme="light"],
+:root.mocha-light,
+:root.latte,
+:root.light {
+  color-scheme: light;
+  --theme-brand: #9333ea;
+  --theme-primary-hover: #7e22ce;
+  --theme-primary-active: #6b21a8;
+  --theme-on-accent: #ffffff;
+  --theme-rosewater: #dc8a78;
+  --theme-flamingo: #dd7878;
+  --theme-pink: #ea76cb;
+  --theme-mauve: #8839ef;
+  --theme-red: #e11d48;
+  --theme-maroon: #f43f5e;
+  --theme-peach: #fe640b;
+  --theme-yellow: #df8e1d;
+  --theme-green: #40a02b;
+  --theme-teal: #179299;
+  --theme-sky: #04a5e5;
+  --theme-sapphire: #209fb5;
+  --theme-blue: #1e66f5;
+  --theme-lavender: #7287fd;
+  --theme-text: #3b3e53;
+  --theme-subtext1: #4b5066;
+  --theme-subtext0: #5b6075;
+  --theme-overlay2: #666c80;
+  --theme-overlay1: #7a8093;
+  --theme-overlay0: #8d92a3;
+  --theme-surface2: #969eae;
+  --theme-surface1: #aab1c0;
+  --theme-surface0: #bec4d0;
+  --theme-base: #eff1f5;
+  --theme-mantle: #e6e9ef;
+  --theme-crust: #dce0e8;
+  --diff-added-background: #dafbe1;
+  --diff-deleted-background: #ffebe9;
+
+  --bg-canvas: var(--theme-crust);
+  --bg-subtle: var(--theme-mantle);
+  --bg-surface: var(--theme-base);
+  --bg-overlay: var(--theme-surface0);
+  --interactive-input-bg: #ffffff;
+  --border-default: var(--theme-surface0);
+  --border-muted: var(--theme-surface1);
+  --text-primary: var(--theme-text);
+  --text-secondary: var(--theme-subtext1);
+  --text-muted: var(--theme-subtext0);
+  --backdrop-modal: rgba(59, 62, 83, 0.28);
+  --preferences-card-bg: #f7f8fb;
+  --preferences-card-border: #c7ccd8;
+  --preferences-choice-selected-bg: rgba(147, 51, 234, 0.07);
+  --preferences-choice-selected-border: rgba(147, 51, 234, 0.42);
+  --preferences-danger-bg: #c62845;
+  --preferences-danger-border: #a91f38;
+  --preferences-danger-text: #ffffff;
+  --preferences-danger-icon-bg: rgba(255, 255, 255, 0.16);
+}
+
+      :root[data-theme="mocha-light"],
+      :root[data-theme="latte"],
+      :root[data-theme="light"] {
+        --splash-bg: #dce0e8;
+        --splash-text: #3b3e53;
+        --splash-subtext: #4b5066;
+        --splash-status: #5b6075;
+        --splash-muted: #666c80;
+        --splash-brand: #9333ea;
+        --splash-title-accent: #1e66f5;
+        --splash-logo-border: rgba(147, 51, 234, 0.38);
+        --splash-logo-bg: linear-gradient(135deg, rgba(147, 51, 234, 0.16), rgba(147, 51, 234, 0.07) 55%, #bec4d0);
+        --splash-logo-shadow: 0 12px 30px rgba(76, 79, 105, 0.16);
+        --splash-track-border: rgba(150, 158, 174, 0.72);
+        --splash-track-bg: rgba(190, 196, 208, 0.72);
+        --splash-frame-border: #bec4d0;
+        --splash-glow-blue: rgba(30, 102, 245, 0.12);
+        --splash-glow-purple: rgba(147, 51, 234, 0.1);
+        --splash-peach: #fe640b;
+        --splash-teal: #179299;
+        --splash-green: #40a02b;
+        --splash-error: #c62845;
+        --splash-warning: #9a5b00;
+      }

@@ -13,6 +13,8 @@ export function countUnsavedPreferences(
     uiDensity?: UiDensity;
     linuxTitleBar?: string;
     themeMode: string;
+    darkThemeId?: string;
+    lightThemeId?: string;
     fontFamily: string;
     fontSize: number;
     isBold: boolean;
@@ -41,6 +43,8 @@ export function countUnsavedPreferences(
   if (draft.explorerContextMenu !== undefined && draft.explorerContextMenu !== baseline.explorerContextMenu) count++;
   if (draft.addToPath !== undefined && draft.addToPath !== baseline.addToPath) count++;
   if (draft.themeMode !== baseline.themeMode) count++;
+  if (draft.darkThemeId !== undefined && draft.darkThemeId !== baseline.darkThemeId) count++;
+  if (draft.lightThemeId !== undefined && draft.lightThemeId !== baseline.lightThemeId) count++;
   if (draft.fontFamily !== baseline.fontFamily) count++;
   if (draft.fontSize !== baseline.fontSize) count++;
   if (draft.isBold !== baseline.isBold) count++;
