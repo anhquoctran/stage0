@@ -116,6 +116,29 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
             ));
         }
     }
+    for key in ["darkThemeId", "lightThemeId"] {
+        if let Some(theme_id) = appearance.get(key) {
+            let valid = theme_id.as_str().is_some_and(|id| {
+                let mut parts = id.split('-');
+                let first = parts.next().unwrap_or_default();
+                !id.is_empty()
+                    && id.len() <= 64
+                    && first
+                        .bytes()
+                        .next()
+                        .is_some_and(|byte| byte.is_ascii_lowercase())
+                    && parts.chain(std::iter::once(first)).all(|part| {
+                        !part.is_empty()
+                            && part
+                                .bytes()
+                                .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+                    })
+            });
+            if !valid {
+                return Err(format!("appearance.{key} must be a valid theme id"));
+            }
+        }
+    }
     if let Some(font) = appearance.get("viewerFont") {
         let font = font.as_object().ok_or_else(|| {
             crate::common::messages::failure(

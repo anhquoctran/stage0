@@ -1,6 +1,7 @@
 import {
   applyThemeToDocument,
   persistThemeMode,
+  persistThemeSelection,
   resolveTheme,
   useThemeStore,
 } from '../../../core/store/useThemeStore';
@@ -14,6 +15,7 @@ import type { PreferencesApplyContext } from '../types/PreferencesApplyContext';
 import { type ViewerFontSettings } from '../types/ViewerFontSettings';
 import { keymapErrors } from '../../../core/services/keymaps/validation';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
+import { DEFAULT_THEMES } from '../../../core/themes/catalog';
 import { DEFAULT_UI_DENSITY, normalizeUiDensity, readUiDensity } from '../utils/uiDensity';
 import { applyUiDensityToDocument } from '../utils/applyUiDensityToDocument';
 import { applyUiFontToDocument } from '../utils/applyUiFontToDocument';
@@ -47,6 +49,11 @@ export function createPreferencesApplyAction({
   draftMarkdownFontSize,
   draftMarkdownHeadingWeight,
   draftThemeMode,
+  setDraftThemeMode,
+  draftDarkThemeId,
+  setDraftDarkThemeId,
+  draftLightThemeId,
+  setDraftLightThemeId,
   savedBaseline,
   draftShowInlineBlame,
   draftLaunchAtStartup,
@@ -117,7 +124,25 @@ export function createPreferencesApplyAction({
           throw new Error('UI font changed in another window or editor. Reopen Preferences before applying your UI font draft');
         appearancePatch.uiFont = { fontFamily: draftUiFontFamily };
       }
-      if (draftThemeMode !== savedBaseline.themeMode) appearancePatch.themeMode = draftThemeMode;
+      const themeModeChanged = draftThemeMode !== savedBaseline.themeMode;
+      const currentThemeState = useThemeStore.getState?.();
+      if (themeModeChanged) {
+        if (currentThemeState?.themeMode !== undefined && currentThemeState.themeMode !== savedBaseline.themeMode && currentThemeState.themeMode !== draftThemeMode)
+          throw new Error('Theme mode changed in another window. Reopen Preferences before applying');
+        appearancePatch.themeMode = draftThemeMode;
+      }
+      if (draftDarkThemeId !== savedBaseline.darkThemeId) {
+        const currentDarkThemeId = currentThemeState?.darkThemeId;
+        if (currentDarkThemeId !== undefined && currentDarkThemeId !== savedBaseline.darkThemeId && currentDarkThemeId !== draftDarkThemeId)
+          throw new Error('Dark theme changed in another window. Reopen Preferences before applying');
+        appearancePatch.darkThemeId = draftDarkThemeId;
+      }
+      if (draftLightThemeId !== savedBaseline.lightThemeId) {
+        const currentLightThemeId = currentThemeState?.lightThemeId;
+        if (currentLightThemeId !== undefined && currentLightThemeId !== savedBaseline.lightThemeId && currentLightThemeId !== draftLightThemeId)
+          throw new Error('Light theme changed in another window. Reopen Preferences before applying');
+        appearancePatch.lightThemeId = draftLightThemeId;
+      }
       const fontChanged = (Object.keys(fontSettings) as Array<keyof ViewerFontSettings>).some(
         (key) => fontSettings[key] !== savedBaseline[key]
       );
@@ -181,10 +206,22 @@ export function createPreferencesApplyAction({
       await languageDraft?.acceptCommitted();
       aiDraftStore.getState().replace(committedAi);
       setAiBaseline(committedAi);
-      const resolvedTheme = resolveTheme(draftThemeMode);
-      useThemeStore.setState({ themeMode: draftThemeMode, theme: resolvedTheme });
+      const latestThemeState = useThemeStore.getState?.() ?? currentThemeState;
+      const committedThemeMode = themeModeChanged ? draftThemeMode : latestThemeState?.themeMode ?? savedBaseline.themeMode;
+      const themeSelection = {
+        darkThemeId: draftDarkThemeId !== savedBaseline.darkThemeId
+          ? draftDarkThemeId : latestThemeState?.darkThemeId ?? savedBaseline.darkThemeId ?? DEFAULT_THEMES.dark,
+        lightThemeId: draftLightThemeId !== savedBaseline.lightThemeId
+          ? draftLightThemeId : latestThemeState?.lightThemeId ?? savedBaseline.lightThemeId ?? DEFAULT_THEMES.light,
+      };
+      const resolvedTheme = resolveTheme(committedThemeMode, themeSelection);
+      useThemeStore.setState({ ...themeSelection, themeMode: committedThemeMode, theme: resolvedTheme });
       applyThemeToDocument(resolvedTheme);
-      persistThemeMode(draftThemeMode);
+      persistThemeMode(committedThemeMode);
+      persistThemeSelection(themeSelection);
+      setDraftThemeMode?.(committedThemeMode);
+      setDraftDarkThemeId?.(themeSelection.darkThemeId);
+      setDraftLightThemeId?.(themeSelection.lightThemeId);
       const committedKeymap = keymapChanged ? draftKeymap : usePreferencesStore.getState().keymap ?? DEFAULT_KEYMAP;
       const committedUiDensity = densityChanged ? draftUiDensity : normalizeUiDensity(usePreferencesStore.getState().uiDensity);
       const committedUiFont = uiFontChanged ? draftUiFontFamily : usePreferencesStore.getState().uiFontFamily;
@@ -239,7 +276,9 @@ export function createPreferencesApplyAction({
         uiFontFamily: committedUiFont,
         uiDensity: committedUiDensity,
         linuxTitleBar: titleBarChanged ? draftLinuxTitleBar : usePreferencesStore.getState().linuxTitleBar ?? 'system',
-        themeMode: draftThemeMode,
+        themeMode: committedThemeMode,
+        darkThemeId: themeSelection.darkThemeId,
+        lightThemeId: themeSelection.lightThemeId,
         fontFamily: draftFontFamily,
         fontSize: draftFontSize,
         isBold: draftIsBold,

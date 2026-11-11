@@ -1,0 +1,15 @@
+/* Syntax roles are independent overrides; defaults follow the active palette. */
+:root {
+  --syntax-text: var(--theme-text);
+  --syntax-keyword: var(--theme-mauve);
+  --syntax-title: var(--theme-blue);
+  --syntax-string: var(--theme-green);
+  --syntax-number: var(--theme-peach);
+  --syntax-builtin: var(--theme-yellow);
+  --syntax-comment: var(--theme-overlay0);
+  --syntax-variable: var(--theme-rosewater);
+  --syntax-meta: var(--theme-teal);
+  --syntax-punctuation: var(--theme-subtext0);
+  --syntax-property: var(--theme-sapphire);
+  --syntax-params: var(--theme-subtext1);
+}

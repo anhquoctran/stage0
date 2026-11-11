@@ -35,6 +35,11 @@ export interface PreferencesApplyContext {
   draftMarkdownFontSize: number;
   draftMarkdownHeadingWeight: number;
   draftThemeMode: ThemeMode;
+  setDraftThemeMode?: Dispatch<SetStateAction<ThemeMode>>;
+  draftDarkThemeId: string;
+  setDraftDarkThemeId?: Dispatch<SetStateAction<string>>;
+  draftLightThemeId: string;
+  setDraftLightThemeId?: Dispatch<SetStateAction<string>>;
   savedBaseline: PreferencesBaseline;
   draftShowInlineBlame: boolean;
   draftLaunchAtStartup: boolean;

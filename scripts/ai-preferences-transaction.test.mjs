@@ -291,7 +291,7 @@ function dialogFixture(commitHandler) {
     updateViewerFontSettings() {}, setShowInlineBlame() {},
   };
   let draftStore; let saves = 0; const child = () => null;
-  const themeState = { themeMode: 'system', theme: 'dark' };
+  const themeState = { themeMode: 'system', theme: 'dark', darkThemeId: 'catppuccin-mocha', lightThemeId: 'catppuccin-latte' };
   const useThemeStore = Object.assign(() => themeState, { setState: (value) => Object.assign(themeState, typeof value === 'function' ? value(themeState) : value) });
   const gitState = { activeSandboxType: 'in_memory', showToast() {}, refreshDiff() {} };
   const useGitStore = Object.assign(() => gitState, { getState: () => gitState, setState: (value) => Object.assign(gitState, typeof value === 'function' ? value(gitState) : value) });
@@ -304,7 +304,7 @@ function dialogFixture(commitHandler) {
     '../../i18n/i18n': { default: { t: translate } },
     '../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({ platform: { capabilities: { backend: false, preferencesFile: false } } }) },
     '../store/usePreferencesStore': { usePreferencesStore, checkFontLigaturesSupport: () => true, applyViewerFontToDocument() {}, DEFAULT_VIEWER_FONT_SETTINGS: preferences },
-    '../../../core/store/useThemeStore': { useThemeStore, resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {} },
+    '../../../core/store/useThemeStore': { useThemeStore, resolveTheme: () => 'dark', applyThemeToDocument() {}, persistThemeMode() {}, persistThemeSelection() {} },
     '../utils/applyUiFontToDocument': { applyUiFontToDocument() {} },
     '../utils/applyMarkdownFontToDocument': { applyMarkdownFontToDocument() {} },
     '../constants/fonts': { SUPPORTED_FONTS: [{ fontFamilyName: 'Fira Code' }] },

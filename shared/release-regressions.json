@@ -229,6 +229,12 @@
         "core::window_manager::display_geometry_tests::unavailable_monitor_keeps_safe_defaults_and_tiny_work_areas_stay_positive",
         "core::window_manager::display_geometry_tests::fitting_monitor_transitions_preserve_fractional_user_geometry"
       ]
+    },
+    {
+      "id": "theme-engine",
+      "runner": "node",
+      "path": "scripts/theme-engine.test.mjs",
+      "requires": "frontend/core/themes/index.ts"
     }
   ]
 }

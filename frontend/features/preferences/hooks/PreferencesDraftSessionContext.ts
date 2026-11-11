@@ -16,6 +16,8 @@ export interface PreferencesDraftSessionContext {
   storedUiDensity?: UiDensity;
   storedLinuxTitleBar: LinuxTitleBarMode;
   storedThemeMode: ThemeMode;
+  storedDarkThemeId: string;
+  storedLightThemeId: string;
   storedFontFamily: string;
   storedFontSize: number;
   storedIsBold: boolean;

@@ -11,6 +11,8 @@ export interface PreferencesBaseline {
   uiDensity: UiDensity;
   linuxTitleBar: LinuxTitleBarMode;
   themeMode: ThemeMode;
+  darkThemeId: string;
+  lightThemeId: string;
   fontFamily: string;
   fontSize: number;
   isBold: boolean;

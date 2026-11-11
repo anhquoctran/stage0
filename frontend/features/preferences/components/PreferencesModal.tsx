@@ -56,8 +56,10 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({ standalone =
       setDraftUiFontFamily,
       draftThemeMode,
       setDraftThemeMode,
-      draftThemeId,
-      setDraftThemeId,
+      draftDarkThemeId,
+      setDraftDarkThemeId,
+      draftLightThemeId,
+      setDraftLightThemeId,
       draftFontFamily,
       setDraftFontFamily,
       draftFontSize,
@@ -174,8 +176,10 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({ standalone =
               showToast={showToast}
               draftThemeMode={draftThemeMode}
               setDraftThemeMode={setDraftThemeMode}
-              draftThemeId={draftThemeId}
-              setDraftThemeId={setDraftThemeId}
+              draftDarkThemeId={draftDarkThemeId}
+              setDraftDarkThemeId={setDraftDarkThemeId}
+              draftLightThemeId={draftLightThemeId}
+              setDraftLightThemeId={setDraftLightThemeId}
               draftFontFamily={draftFontFamily}
               setDraftFontFamily={setDraftFontFamily}
               draftFontSize={draftFontSize}

@@ -51,21 +51,39 @@ window.__stage0_has_error__ = false;
 
   var prefersDark = !window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches;
   var isLight = mode === 'light' || (mode === 'system' && !prefersDark);
-  var theme = isLight ? 'mocha-light' : 'mocha';
+  var darkThemeId = 'catppuccin-mocha';
+  var lightThemeId = 'catppuccin-latte';
+  try {
+    var savedDarkThemeId = window.localStorage.getItem('stage0_dark_theme_id');
+    var savedLightThemeId = window.localStorage.getItem('stage0_light_theme_id');
+    if (/^(catppuccin-mocha|dracula|one-dark-pro|gruvbox|monokai)$/.test(savedDarkThemeId || '')) darkThemeId = savedDarkThemeId;
+    if (/^(catppuccin-latte|alucard|atom-one-light|gruvbox-light)$/.test(savedLightThemeId || '')) lightThemeId = savedLightThemeId;
+  } catch (_) {}
+  var selectedThemeId = isLight ? lightThemeId : darkThemeId;
+  var theme = isLight
+    ? (selectedThemeId === 'catppuccin-latte' ? 'mocha-light' : selectedThemeId)
+    : (selectedThemeId === 'catppuccin-mocha' ? 'mocha' : selectedThemeId);
   var root = document.documentElement;
 
   root.setAttribute('data-theme', theme);
+  root.setAttribute('data-theme-id', selectedThemeId);
   root.classList.remove('mocha', 'mocha-light', 'latte', 'light', 'dark');
   root.classList.add(isLight ? 'light' : 'dark');
-  root.classList.add(isLight ? 'mocha-light' : 'mocha');
-  if (isLight) root.classList.add('latte');
-  root.style.colorScheme = isLight ? 'light' : 'dark';
   if (isLight) {
+    root.classList.add('mocha-light', 'latte');
+  } else if (selectedThemeId === 'catppuccin-mocha') {
+    root.classList.add('mocha');
+  }
+  root.style.colorScheme = isLight ? 'light' : 'dark';
+  if (selectedThemeId === 'catppuccin-latte') {
     root.style.setProperty('--splash-bg', '#dce0e8');
     root.style.setProperty('--splash-text', '#3b3e53');
-  } else {
+  } else if (selectedThemeId === 'catppuccin-mocha') {
     root.style.setProperty('--splash-bg', '#11111b');
     root.style.setProperty('--splash-text', '#cdd6f4');
+  } else {
+    root.style.removeProperty('--splash-bg');
+    root.style.removeProperty('--splash-text');
   }
 })();
 

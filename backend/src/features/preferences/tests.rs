@@ -124,6 +124,14 @@ fn schema_validation_rejects_wrong_types_ranges_and_malformed_records() {
     });
     assert!(validate_schema(&valid).is_ok());
 
+    let mut invalid_theme = valid.clone();
+    invalid_theme["appearance"]["darkThemeId"] = json!("../unsafe");
+    assert!(validate_schema(&invalid_theme).is_err());
+    let mut valid_theme = valid.clone();
+    valid_theme["appearance"]["darkThemeId"] = json!("one-dark-pro");
+    valid_theme["appearance"]["lightThemeId"] = json!("catppuccin-latte");
+    assert!(validate_schema(&valid_theme).is_ok());
+
     let mut acp_reviewer = valid.clone();
     acp_reviewer["reviewers"] = json!([{
         "id": "custom-bot-acp-reviewer",

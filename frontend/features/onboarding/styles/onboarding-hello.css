@@ -1,7 +1,7 @@
 .onboarding-hello-halo {
   background:
-    radial-gradient(ellipse at 36% 38%, color-mix(in srgb, var(--ctp-peach) 8%, transparent), transparent 45%),
-    radial-gradient(ellipse at 65% 28%, color-mix(in srgb, var(--ctp-mauve) 9%, transparent), transparent 45%);
+    radial-gradient(ellipse at 36% 38%, color-mix(in srgb, var(--theme-peach) 8%, transparent), transparent 45%),
+    radial-gradient(ellipse at 65% 28%, color-mix(in srgb, var(--theme-mauve) 9%, transparent), transparent 45%);
 }
 
 .onboarding-hello-art {

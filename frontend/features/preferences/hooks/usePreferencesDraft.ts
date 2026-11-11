@@ -61,7 +61,7 @@ export function usePreferencesDraft() {
     markdownHeadingFontWeight: storedMarkdownHeadingWeight,
   } = usePreferencesStore();
 
-  const { themeMode: storedThemeMode } = useThemeStore();
+  const { themeMode: storedThemeMode, darkThemeId: storedDarkThemeId, lightThemeId: storedLightThemeId } = useThemeStore();
   const { activeSandboxType: storedSandboxType, showToast } = useGitStore();
   const [aiDraftStore] = useState(() => createAiPreferencesDraft(captureAiPreferences()));
   const aiDraft = aiDraftStore();
@@ -106,6 +106,8 @@ export function usePreferencesDraft() {
     storedUiDensity,
     storedLinuxTitleBar,
     storedThemeMode,
+    storedDarkThemeId,
+    storedLightThemeId,
     storedFontFamily,
     storedFontSize,
     storedIsBold,
@@ -177,6 +179,11 @@ export function usePreferencesDraft() {
     draftMarkdownFontSize: session.draftMarkdownFontSize,
     draftMarkdownHeadingWeight: session.draftMarkdownHeadingWeight,
     draftThemeMode: session.draftThemeMode,
+    setDraftThemeMode: session.setDraftThemeMode,
+    draftDarkThemeId: session.draftDarkThemeId,
+    setDraftDarkThemeId: session.setDraftDarkThemeId,
+    draftLightThemeId: session.draftLightThemeId,
+    setDraftLightThemeId: session.setDraftLightThemeId,
     savedBaseline: session.savedBaseline,
     draftShowInlineBlame: session.draftShowInlineBlame,
     draftLaunchAtStartup: session.draftLaunchAtStartup,
@@ -207,7 +214,10 @@ export function usePreferencesDraft() {
     if (applyingRef.current) return;
     languageDraft.discard();
     aiDraftStore.getState().replace(captureAiPreferences());
-    const resolvedTheme = resolveTheme(session.savedBaseline.themeMode);
+    const resolvedTheme = resolveTheme(session.savedBaseline.themeMode, {
+      darkThemeId: session.savedBaseline.darkThemeId,
+      lightThemeId: session.savedBaseline.lightThemeId,
+    });
     applyThemeToDocument(resolvedTheme);
     applyUiFontToDocument(session.savedBaseline.uiFontFamily);
 
@@ -246,7 +256,9 @@ export function usePreferencesDraft() {
     session.setDraftLinuxTitleBar('system');
     applyUiFontToDocument(DEFAULT_UI_FONT_FAMILY);
     session.setDraftThemeMode('system');
-    applyThemeToDocument(resolveTheme('system'));
+    session.setDraftDarkThemeId('catppuccin-mocha');
+    session.setDraftLightThemeId('catppuccin-latte');
+    applyThemeToDocument(resolveTheme('system', { darkThemeId: 'catppuccin-mocha', lightThemeId: 'catppuccin-latte' }));
 
     session.setDraftFontFamily(DEFAULT_VIEWER_FONT_SETTINGS.fontFamily);
     session.setDraftFontSize(DEFAULT_VIEWER_FONT_SETTINGS.fontSize);
@@ -321,8 +333,10 @@ export function usePreferencesDraft() {
       setDraftUiDensity: session.setDraftUiDensity,
       draftThemeMode: session.draftThemeMode,
       setDraftThemeMode: session.setDraftThemeMode,
-      draftThemeId: session.draftThemeId,
-      setDraftThemeId: session.setDraftThemeId,
+      draftDarkThemeId: session.draftDarkThemeId,
+      setDraftDarkThemeId: session.setDraftDarkThemeId,
+      draftLightThemeId: session.draftLightThemeId,
+      setDraftLightThemeId: session.setDraftLightThemeId,
       draftFontFamily: session.draftFontFamily,
       setDraftFontFamily: session.setDraftFontFamily,
       draftFontSize: session.draftFontSize,
