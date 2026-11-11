@@ -68,11 +68,11 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
       onClick={onClose}
     >
       <div
-        className="w-full max-w-4xl bg-base border border-surface0 shadow-2xl flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150 rounded-sm"
+        className="w-full max-w-4xl h-[720px] max-h-[calc(100dvh-2rem)] bg-base border border-surface0 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 rounded-sm"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="px-6 py-4 border-b border-surface0 flex items-center justify-between bg-crust rounded-sm">
+        <div className="shrink-0 px-6 py-4 border-b border-surface0 flex items-center justify-between bg-crust rounded-sm">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-surface0 text-text rounded-sm">
               <FolderCog className="w-5 h-5 text-brand" />
@@ -102,9 +102,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
         </div>
 
         {/* BODY (SIDEBAR + CONTENT) */}
-        <div className="flex-1 flex overflow-hidden min-h-[480px]">
+        <div className="flex-1 flex min-h-0 overflow-hidden">
           {/* TABS SIDEBAR */}
-          <div className="w-52 border-e border-surface0 bg-crust p-3 flex flex-col justify-between shrink-0 rounded-sm">
+          <div className="w-52 min-h-0 overflow-y-auto border-e border-surface0 bg-crust p-3 flex flex-col justify-between shrink-0 rounded-sm">
             <div className="space-y-1">
               <button
                 type="button"
@@ -181,7 +181,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
           </div>
 
           {/* CONTENT AREA */}
-          <div className="flex-1 p-6 overflow-y-auto bg-mantle rounded-sm">
+          <div className="flex-1 min-w-0 min-h-0 p-6 overflow-y-auto bg-mantle rounded-sm">
             <div className="mb-4 space-y-2">
               <p className="text-xs text-subtext0 font-mono">.stage0/repos.jsonc</p>
               {(repoSettings?.validationError || conflict) && <div role="alert" className="rounded-sm bg-red-600 text-white px-3 py-2 text-xs">
@@ -224,7 +224,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
         </div>
 
         {/* FOOTER */}
-        <div className="px-6 py-3.5 border-t border-surface0 flex items-center justify-end bg-base/60 rounded-sm">
+        <div className="shrink-0 px-6 py-3.5 border-t border-surface0 flex items-center justify-end bg-base/60 rounded-sm">
           <div className="flex items-center gap-2.5">
             <button
               type="button"
