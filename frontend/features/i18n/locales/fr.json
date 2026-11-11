@@ -2501,6 +2501,8 @@
       "unknownAuthor": "Inconnu"
     },
     "repoSettingsModal": {
+      "fileConflict": "Le fichier de configuration a changé. Fermez puis rouvrez cette boîte de dialogue avant de sauvegarder.",
+      "importLegacyReviewers": "Importer les réviseurs précédemment enregistrés sur cet ordinateur",
       "title": "Paramètres du dépôt",
       "close": "Fermer la boîte de dialogue",
       "remotes": "Dépôts distants",

@@ -2501,6 +2501,8 @@
       "unknownAuthor": "Sconosciuto"
     },
     "repoSettingsModal": {
+      "fileConflict": "Il file delle impostazioni è cambiato. Chiudi e riapri questa finestra prima di salvare.",
+      "importLegacyReviewers": "Importa i revisori precedentemente salvati su questo computer",
       "title": "Impostazioni del repository",
       "close": "Chiudi finestra di dialogo",
       "remotes": "Remoti",

@@ -260,12 +260,12 @@ export const RepositoryAgentsTab: React.FC<{
                 <RepositoryBotItem
                   key={bot.id}
                   bot={bot}
-                  toggleRepoActiveBotId={toggleRepoActiveBotId}
+                  toggleRepoActiveBotId={(repoId, botId) => { void toggleRepoActiveBotId(repoId, botId).catch((e) => showToast(String(e), 'error')); }}
                   currentRepoId={currentRepoId}
                   isChecked={isChecked}
                   isRepoExclusive={isRepoExclusive}
                   externalAgents={externalAgents}
-                  deleteRepoCustomReviewer={deleteRepoCustomReviewer}
+                  deleteRepoCustomReviewer={(repoId, botId) => { void deleteRepoCustomReviewer(repoId, botId).catch((e) => showToast(String(e), 'error')); }}
                 />
               );
             })}

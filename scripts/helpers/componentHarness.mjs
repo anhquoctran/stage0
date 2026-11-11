@@ -212,3 +212,14 @@ export function componentNodes(node) {
   }
   return [node, ...children];
 }
+
+export function repositorySettingsFixture(repoId, labels = []) {
+  return {
+    revision: `fixture-${repoId}`, publicationSequence: 1, content: '{}', validationError: null,
+    settings: { schemaVersion: 1, defaultBaseBranch: 'main', inheritGlobalAgents: true,
+      customAgentRules: '', activeAgentIds: null, customReviewers: [],
+      labels: labels.map(({ id, name, color, description }) => ({ id, name, color, description })),
+    },
+    labels,
+  };
+}

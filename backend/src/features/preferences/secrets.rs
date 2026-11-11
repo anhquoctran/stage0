@@ -9,7 +9,7 @@ pub(super) fn is_secret_env_name(name: &str) -> bool {
         || name.contains("key")
 }
 
-pub(super) fn reject_secrets(value: &Value, path: &str) -> Result<(), String> {
+pub(crate) fn reject_secrets(value: &Value, path: &str) -> Result<(), String> {
     match value {
         Value::Object(items) => {
             for (key, child) in items {

@@ -44,6 +44,7 @@ pub mod graph;
 pub mod ops;
 pub mod persistence;
 pub mod progress;
+pub mod repo_settings;
 pub mod runner;
 pub use git_operation_lease::GitOperationLease;
 pub mod watcher;

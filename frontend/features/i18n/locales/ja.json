@@ -2494,6 +2494,8 @@
       "unknownAuthor": "不明"
     },
     "repoSettingsModal": {
+      "fileConflict": "設定ファイルが変更されました。保存する前にこのダイアログを閉じて開き直してください。",
+      "importLegacyReviewers": "このコンピューターに以前保存したレビュアーをインポート",
       "title": "リポジトリ設定",
       "close": "ダイアログを閉じる",
       "remotes": "リモート",

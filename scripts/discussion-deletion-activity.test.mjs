@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { componentHarness, componentNodes, loadWithMocks } from './helpers/componentHarness.mjs';
+import { componentHarness, componentNodes, loadWithMocks, repositorySettingsFixture } from './helpers/componentHarness.mjs';
 
 const base = new URL('../frontend/features/virtual-mr/', import.meta.url);
 const activity = (id, kind, time) => ({
@@ -62,7 +62,7 @@ test('initial repository hydration includes persisted deletion history', async (
   let state = { sessions: [], closedSessionTabIds: [], fetchRemotesDetailed() {}, fetchTags() {} };
   const { createRepoDataSlice } = loadWithMocks(new URL('store/slices/createRepoDataSlice.ts', base), {
     '../../../../core/services/runtime/applicationRuntime': { getApplicationServices: () => ({
-      repositorySettings: { getRepoSettings: async () => null, listRepoLabels: async () => [] },
+      repositorySettings: { getDocument: async () => repositorySettingsFixture('repo') },
       virtualMrs: { listVirtualMrSessions: async () => [{ id: 'mr', repo_id: 'repo', status: 'open', created_at: '2026-11-02T00:00:00Z' }] },
       discussions: { listMrDiscussions: async () => [], listMrDeletionActivity: async () => structuredClone(history) },
       gitHistory: { getCommitsBetweenRefs: async () => [], getGitUserIdentityCmd: async () => ['Alice', 'alice@test'] },

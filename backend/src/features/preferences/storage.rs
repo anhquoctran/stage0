@@ -58,7 +58,7 @@ pub(super) fn secure_file(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-pub(super) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
+pub(crate) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
     let parent = path
         .parent()
         .ok_or_else(|| crate::common::messages::code("backend.preferences.invalidPath"))?;

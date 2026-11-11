@@ -2494,6 +2494,8 @@
       "unknownAuthor": "Không rõ"
     },
     "repoSettingsModal": {
+      "fileConflict": "File cấu hình đã thay đổi. Đóng và mở lại hộp thoại trước khi lưu.",
+      "importLegacyReviewers": "Nhập reviewer đã lưu trước đây trên máy này",
       "title": "Cài đặt kho mã",
       "close": "Đóng hộp thoại",
       "remotes": "Kho từ xa",

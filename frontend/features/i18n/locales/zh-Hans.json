@@ -2494,6 +2494,8 @@
       "unknownAuthor": "未知"
     },
     "repoSettingsModal": {
+      "fileConflict": "设置文件已更改。保存前请关闭并重新打开此对话框。",
+      "importLegacyReviewers": "导入此前保存在此计算机上的审查者",
       "title": "仓库设置",
       "close": "关闭对话框",
       "remotes": "远程仓库",

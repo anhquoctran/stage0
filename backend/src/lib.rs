@@ -349,6 +349,8 @@ pub fn run() {
             commands::get_clone_remote_refs,
             // Repo Settings & Labels
             commands::get_repo_settings,
+            features::git::repo_settings::commands::get_repository_settings_document,
+            features::git::repo_settings::commands::commit_repository_settings,
             commands::save_repo_settings,
             commands::list_repo_labels,
             commands::create_repo_label,

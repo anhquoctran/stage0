@@ -23,6 +23,14 @@ mod validation;
 mod validation_fields;
 mod validation_records;
 
+// Repository documents share the existing JSONC/CST and domain validators,
+// but have their own schema, commit coordinator and lock-free file protocol.
+pub(crate) use jsonc_patch::merge_object as merge_settings_object;
+pub(crate) use secrets::reject_secrets as reject_settings_secrets;
+pub(crate) use storage::atomic_write as write_settings_snapshot;
+pub(crate) use validation::strict_jsonc_options;
+pub(crate) use validation_records::validate_reviewer;
+
 pub use commands::*;
 pub use fonts::*;
 pub use manager::PreferencesManager;

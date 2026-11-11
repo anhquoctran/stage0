@@ -39,6 +39,18 @@ impl WatcherState {
             Duration::from_millis(300),
             move |res: Result<Vec<DebouncedEvent>, _>| match res {
                 Ok(events) => {
+                    if events.iter().any(|event| {
+                        event.path.ends_with(".stage0/repos.jsonc")
+                            || event.path.ends_with(".stage0")
+                    }) {
+                        let _ = app_clone.emit_to(
+                            &target_window,
+                            "repo-settings-file-changed",
+                            RepoChangedEvent {
+                                repo_path: target_repo.clone(),
+                            },
+                        );
+                    }
                     let has_relevant_changes = events.iter().any(|ev| !should_ignore(&ev.path));
                     if has_relevant_changes {
                         let _ = app_clone.emit_to(

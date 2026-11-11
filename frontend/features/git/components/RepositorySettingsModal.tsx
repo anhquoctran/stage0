@@ -1,3 +1,5 @@
+import { useRepositorySettingsDraft } from './repository-settings/useRepositorySettingsDraft';
+import { hasLegacyRepoReviewers, importLegacyRepoReviewers } from '../../ai/services/importLegacyRepoReviewers';
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState, useEffect } from 'react';
 import { X } from '../../../common/components/icons/X';
@@ -27,10 +29,10 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
     initialTab
   );
 
-  const [customRules, setCustomRules] = useState(repoSettings?.customAgentRules || '');
-  const [inheritAgents, setInheritAgents] = useState(repoSettings?.inheritGlobalAgents ?? true);
-  const [defaultBaseBranch, setDefaultBaseBranch] = useState(repoSettings?.defaultBaseBranch || 'main');
-
+  const { customRules, setCustomRules, inheritAgents, setInheritAgents,
+    defaultBaseBranch, setDefaultBaseBranch, baselineRevision, conflict, resetDraft } =
+    useRepositorySettingsDraft(isOpen, currentRepo?.id, repoSettings);
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
@@ -38,18 +40,17 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
   }, [initialTab, isOpen]);
 
   useEffect(() => {
-    if (repoSettings) {
-      setCustomRules(repoSettings.customAgentRules || '');
-      setInheritAgents(repoSettings.inheritGlobalAgents);
-      setDefaultBaseBranch(repoSettings.defaultBaseBranch || 'main');
-    }
-  }, [repoSettings]);
+    if (isOpen && currentRepo) void useVirtualMrStore.getState().refreshRepoMetadata(currentRepo.id)
+      .catch((error) => showToast(String(error), 'error'));
+  }, [isOpen, currentRepo?.id, showToast]);
 
   if (!isOpen || !currentRepo) return null;
 
   const handleSaveSettings = async () => {
+    setSaving(true);
     try {
       await saveRepoSettings({
+        revision: baselineRevision,
         defaultBaseBranch,
         inheritGlobalAgents: inheritAgents,
         customAgentRules: customRules,
@@ -57,8 +58,8 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
       showToast(translateUiText('git.repoSettingsModal.saved'));
       onClose();
     } catch (err: any) {
-      showToast(translateUiText('git.repoSettingsModal.saveFailed', { error: err }));
-    }
+      showToast(translateUiText('git.repoSettingsModal.saveFailed', { error: String(err) }), 'error');
+    } finally { setSaving(false); }
   };
 
   return (
@@ -181,6 +182,27 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
 
           {/* CONTENT AREA */}
           <div className="flex-1 p-6 overflow-y-auto bg-mantle rounded-sm">
+            <div className="mb-4 space-y-2">
+              <p className="text-xs text-subtext0 font-mono">.stage0/repos.jsonc</p>
+              {(repoSettings?.validationError || conflict) && <div role="alert" className="rounded-sm bg-red-600 text-white px-3 py-2 text-xs">
+                {repoSettings?.validationError || translateUiText('git.repoSettingsModal.fileConflict')}
+                <button type="button" className="ms-3 rounded-sm border-0 bg-white text-black px-2 py-1"
+                  onClick={async () => {
+                    try {
+                      await useVirtualMrStore.getState().refreshRepoMetadata(currentRepo.id);
+                      const next = useVirtualMrStore.getState().repoSettings;
+                      if (next) resetDraft(next);
+                    } catch (error) { showToast(String(error), 'error'); }
+                  }}>{translateUiText('common.layout.refresh')}</button>
+              </div>}
+              {hasLegacyRepoReviewers(currentRepo.id) && <button type="button"
+                className="rounded-sm border-0 bg-surface0 px-3 py-1.5 text-xs text-text"
+                onClick={() => { void importLegacyRepoReviewers(currentRepo.id)
+                  .then(() => showToast(translateUiText('git.repoSettingsModal.saved')))
+                  .catch((error) => showToast(String(error), 'error')); }}>
+                {translateUiText('git.repoSettingsModal.importLegacyReviewers')}
+              </button>}
+            </div>
             {activeTab === 'remotes' && <RepositoryRemotesTab />}
             {activeTab === 'branches' && (
               <RepositoryBranchesTab
@@ -214,6 +236,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
             <button
               type="button"
               onClick={handleSaveSettings}
+              disabled={saving || conflict || !baselineRevision || !!repoSettings?.validationError}
               className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand rounded-sm"
             >
               {translateUiText('git.repoSettingsModal.save')}

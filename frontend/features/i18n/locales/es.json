@@ -2501,6 +2501,8 @@
       "unknownAuthor": "Desconocido"
     },
     "repoSettingsModal": {
+      "fileConflict": "El archivo de configuración ha cambiado. Cierre y vuelva a abrir este diálogo antes de guardar.",
+      "importLegacyReviewers": "Importar revisores guardados anteriormente en este equipo",
       "title": "Configuración del repositorio",
       "close": "Cerrar diálogo",
       "remotes": "Remotos",

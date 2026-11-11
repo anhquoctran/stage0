@@ -2494,6 +2494,8 @@
       "unknownAuthor": "Unknown"
     },
     "repoSettingsModal": {
+      "fileConflict": "The settings file changed. Close and reopen this dialog before saving.",
+      "importLegacyReviewers": "Import reviewers previously saved on this computer",
       "title": "Repository Settings",
       "close": "Close modal",
       "remotes": "Remotes",

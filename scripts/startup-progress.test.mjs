@@ -374,7 +374,7 @@ function mainFixture(t) {
 test('main-screen readiness waits for repository attachment and matching Virtual MR data', async t => {
   const f = mainFixture(t);
   await f.render();
-  assert.equal(f.registrations.length, 2);
+  assert.equal(f.registrations.length, 4);
   assert.equal(f.readiness.at(-1), false);
   f.registrations.forEach(registration => registration.resolve(() => {}));
   await flush();
@@ -425,7 +425,7 @@ test('subscriptions resolving after unmount are disposed without starting window
   f.cleanup();
   f.registrations.forEach(registration => registration.resolve(() => { stopped++; }));
   await flush();
-  assert.equal(stopped, 2);
+  assert.equal(stopped, 4);
   assert.deepEqual(f.calls, []);
   assert.deepEqual(f.initCalls, []);
 });

@@ -1,10 +1,10 @@
+import { getRepositorySettingsSnapshot, loadRepositorySettings } from '../../services/repositorySettingsDocuments';
+import { repoSettingsFromDocument } from '../../utils/repoSettingsFromDocument';
 import { getApplicationServices } from '../../../../core/services/runtime/applicationRuntime';
 
 import type { StateCreator } from 'zustand';
 import { flushSessionWrites } from '../../services/sessionPersistence';
 import { type RepoLabel } from '../../types/RepoLabel';
-import { type RepoSettings } from '../../types/RepoSettings';
-import { AVAILABLE_AI_BOTS } from '../../types/virtualMr';
 import { type VirtualMrCommit } from '../../types/VirtualMrCommit';
 import { type VirtualMrDiscussion } from '../../types/VirtualMrDiscussion';
 import { type VirtualMrSession } from '../../types/VirtualMrSession';
@@ -50,8 +50,8 @@ export const createRepoDataSlice: StateCreator<
   loadRepoData: async (
     repoId: string,
     repoPath: string,
-    availableBranches: string[],
-    defaultBase?: string
+    _availableBranches: string[],
+    _defaultBase?: string
   ) => {
     const requestVersion = ++repoDataRequestVersion;
     const repoKey = `${repoId}:${repoPath}`;
@@ -76,55 +76,12 @@ export const createRepoDataSlice: StateCreator<
     });
 
     try {
-      // 1. Load Repo Settings
-      let settings: RepoSettings | null = null;
-      try {
-        const dbSettings = await getApplicationServices().repositorySettings.getRepoSettings({ repoId });
-        if (dbSettings) {
-          settings = {
-            repoId: dbSettings.repo_id,
-            defaultBaseBranch: dbSettings.default_base_branch,
-            inheritGlobalAgents: Boolean(dbSettings.inherit_global_agents),
-            customAgentRules: dbSettings.custom_agent_rules || '',
-            activeAgentIds: AVAILABLE_AI_BOTS.map((b) => b.id),
-          };
-        }
-      } catch (err) {
-        console.warn('Failed to load repo settings:', err);
-      }
-
-      if (!settings) {
-        const smartBase =
-          defaultBase ||
-          (availableBranches.includes('main') ? 'main' : undefined) ||
-          (availableBranches.includes('origin/main') ? 'origin/main' : undefined) ||
-          (availableBranches.includes('master') ? 'master' : undefined) ||
-          (availableBranches.includes('origin/master') ? 'origin/master' : undefined) ||
-          availableBranches[0] ||
-          'HEAD';
-        settings = {
-          repoId,
-          defaultBaseBranch: smartBase,
-          inheritGlobalAgents: true,
-          customAgentRules: '',
-          activeAgentIds: AVAILABLE_AI_BOTS.map((b) => b.id),
-        };
-      }
-
-      // 2. Load Labels
-      let labels: RepoLabel[] = [];
-      try {
-        const dbLabels = await getApplicationServices().repositorySettings.listRepoLabels({ repoId });
-        labels = (dbLabels || []).map((l) => ({
-          id: l.id,
-          repoId: l.repo_id,
-          name: l.name,
-          color: l.color,
-          description: l.description || undefined,
-        }));
-      } catch (err) {
-        console.warn('Failed to load repo labels:', err);
-      }
+      // Never replace an invalid document with silently synthesized defaults.
+      const doc = await loadRepositorySettings(repoId);
+      const labels: RepoLabel[] = doc.labels.map((label) => ({
+        id: label.id, repoId: label.repo_id, name: label.name,
+        color: label.color, description: label.description || undefined,
+      }));
 
       // 3. Load User Identity
       const localAuthor = await loadLocalGitAuthor(repoPath);
@@ -232,10 +189,15 @@ export const createRepoDataSlice: StateCreator<
         }
       }
 
+      const latest = getRepositorySettingsSnapshot(repoId) ?? doc;
+      const latestLabels = latest.labels.map((label) => ({ id: label.id, repoId,
+        name: label.name, color: label.color, description: label.description || undefined }));
       set({
-        repoSettings: settings,
-        repoLabels: labels,
-        sessions,
+        repoSettings: repoSettingsFromDocument(repoId, latest),
+        repoLabels: latestLabels,
+        sessions: sessions.map((session) => ({ ...session,
+          labels: session.labels.flatMap((label) => latestLabels.find((item) => item.id === label.id) ?? []),
+        })),
         activeSessionId,
         closedSessionTabIds,
         isLoadingSessions: false,
@@ -252,45 +214,21 @@ export const createRepoDataSlice: StateCreator<
 
   refreshRepoMetadata: async (repoId: string) => {
     const requestVersion = ++repoMetadataRequestVersion;
-    const [settingsResult, labelsResult] = await Promise.allSettled([
-      getApplicationServices().repositorySettings.getRepoSettings({ repoId }),
-      getApplicationServices().repositorySettings.listRepoLabels({ repoId }),
-    ]);
-
-    if (requestVersion !== repoMetadataRequestVersion || get().currentRepoId !== repoId) return;
-
-    const updates: Partial<Pick<VirtualMrState, 'repoSettings' | 'repoLabels'>> = {};
-    if (settingsResult.status === 'fulfilled') {
-      const dbSettings = settingsResult.value;
-      const currentSettings = get().repoSettings;
-      if (dbSettings) {
-        updates.repoSettings = {
-          repoId: dbSettings.repo_id,
-          defaultBaseBranch:
-            dbSettings.default_base_branch || currentSettings?.defaultBaseBranch || 'HEAD',
-          inheritGlobalAgents: Boolean(dbSettings.inherit_global_agents),
-          customAgentRules: dbSettings.custom_agent_rules || '',
-          activeAgentIds: currentSettings?.activeAgentIds || AVAILABLE_AI_BOTS.map((bot) => bot.id),
-          customReviewers: currentSettings?.customReviewers,
-        };
-      }
-    } else {
-      console.warn('Failed to refresh repository settings:', settingsResult.reason);
-    }
-
-    if (labelsResult.status === 'fulfilled') {
-      updates.repoLabels = (labelsResult.value || []).map((label) => ({
-        id: label.id,
-        repoId: label.repo_id,
-        name: label.name,
-        color: label.color,
+    try {
+      const doc = await loadRepositorySettings(repoId);
+      if (requestVersion !== repoMetadataRequestVersion || get().currentRepoId !== repoId) return;
+      set({ repoSettings: repoSettingsFromDocument(repoId, doc), repoLabels: doc.labels.map((label) => ({
+        id: label.id, repoId: label.repo_id, name: label.name, color: label.color,
         description: label.description || undefined,
-      }));
-    } else {
-      console.warn('Failed to refresh repository labels:', labelsResult.reason);
+      })) });
+      if (doc.validationError) throw new Error(doc.validationError);
+    } catch (error) {
+      // Keep the last committed runtime snapshot and surface the failure.
+      console.warn('Failed to refresh repository settings:', error);
+      const prior = get().repoSettings;
+      if (get().currentRepoId === repoId && prior) set({ repoSettings: { ...prior, validationError: String(error) } });
+      throw error;
     }
-
-    if (Object.keys(updates).length > 0) set(updates);
   },
 
   resetRepoData: () => {
