@@ -186,7 +186,7 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
           {/* CONTENT AREA */}
           <div className="flex-1 min-w-0 min-h-0 p-6 overflow-y-auto bg-mantle rounded-sm">
             <div className="mb-4 space-y-2">
-              <p className="text-xs text-subtext0 font-mono">.stage0/repos.jsonc</p>
+              <p className="text-xs text-subtext0 font-mono">.stage0/repos.json</p>
               {(repoSettings?.validationError || conflict) && <div role="alert" className="rounded-sm bg-red-600 text-white px-3 py-2 text-xs">
                 {repoSettings?.validationError || translateUiText('git.repoSettingsModal.fileConflict')}
                 <button type="button" className="ms-3 rounded-sm border-0 bg-white text-black px-2 py-1"

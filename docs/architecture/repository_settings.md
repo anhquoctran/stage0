@@ -1,7 +1,8 @@
 # Repository settings document and commit protocol
 
-`.stage0/repos.jsonc` at each Git worktree root is the sole authority for Stage0
-repository configuration. Remotes, branches and tags remain Git operations.
+`.stage0/repos.json` at each Git worktree root is the sole authority for Stage0
+repository configuration. The `.json` extension intentionally retains JSONC syntax
+(comments and trailing commas), like Preferences. Remotes, branches and tags remain Git operations.
 Ordinary settings, reviewer definitions/selections and labels share one document;
 no credentials, absolute machine paths, SQLite repository ID or source-transfer
 consent are exported. JSONC comments and unrelated formatting survive UI patches.
@@ -88,7 +89,7 @@ Native filesystem checks run locally on macOS; Windows/Linux require native CI.
 
 ## Internal source editor
 
-The left footer action opens repos.jsonc in the existing JSONC editor surface,
+The left footer action opens repos.json in the existing JSONC editor surface,
 with a repository-owned document adapter. It shares highlighting, line numbers,
 indentation, scrolling and two-second autosave with Preferences. Repository editing
 does not call the global Preferences persistence service or offer its completions,
@@ -100,3 +101,11 @@ The editor retains invalid/conflicting drafts and exposes Reload. Returning to
 Repository Settings awaits an active autosave and saves any newer text before
 closing; failure keeps the editor open. An untouched settings form hydrates the
 new values, while a dirty form retains its draft and reports conflicting fields.
+
+## Earlier filename compatibility
+
+When repos.json is absent but `.stage0/repos.jsonc` exists, Stage0 validates and
+copies the old file byte-for-byte using no-clobber initialization. The old file is
+retained to avoid deleting external edits. Once repos.json exists it is the sole
+authority; the old filename is ignored. An invalid old file is reported without
+creating defaults or altering it. The internal recovery filename is unchanged.

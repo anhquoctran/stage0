@@ -11,7 +11,7 @@ export function RepositorySettingsJsonEditor({ repoId, repoPath, onClose }: {
   const { t } = useTranslation();
   const adapter = useMemo<JsonEditorDocumentAdapter>(() => {
     const display = (doc: RepositorySettingsDocument) => ({ ...doc,
-      path: `${repoPath.replace(/[\\/]+$/, '')}/.stage0/repos.jsonc`,
+      path: `${repoPath.replace(/[\\/]+$/, '')}/.stage0/repos.json`,
     });
     return {
       load: async () => display(await loadRepositorySettings(repoId)),

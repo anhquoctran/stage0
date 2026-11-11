@@ -2502,7 +2502,7 @@
     },
     "repoSettingsModal": {
       "editorDescription": "JSONC · supporta commenti e virgole finali · salvataggio automatico dopo 2 secondi",
-      "editFile": "Modifica repos.jsonc",
+      "editFile": "Modifica repos.json",
       "editorTitle": "Impostazioni del repository in JSONC",
       "fileConflict": "Il file delle impostazioni è cambiato. Chiudi e riapri questa finestra prima di salvare.",
       "importLegacyReviewers": "Importa i revisori precedentemente salvati su questo computer",

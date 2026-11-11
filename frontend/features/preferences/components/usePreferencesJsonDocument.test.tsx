@@ -5,7 +5,7 @@ import type { JsonEditorDocument } from '../types/JsonEditorDocument';
 
 const preferences = vi.hoisted(() => ({ load: vi.fn(), saveText: vi.fn(), reset: vi.fn() }));
 vi.mock('../services/preferencesJsonService', () => ({ preferencesJsonService: preferences }));
-const baseline: JsonEditorDocument = { path: '/repo/.stage0/repos.jsonc', revision: 'one', content: '{"schemaVersion":1}' };
+const baseline: JsonEditorDocument = { path: '/repo/.stage0/repos.json', revision: 'one', content: '{"schemaVersion":1}' };
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 

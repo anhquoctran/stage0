@@ -2495,7 +2495,7 @@
     },
     "repoSettingsModal": {
       "editorDescription": "JSONC · コメントと末尾のカンマに対応 · 2 秒後に自動保存",
-      "editFile": "repos.jsonc を編集",
+      "editFile": "repos.json を編集",
       "editorTitle": "リポジトリ設定 JSONC",
       "fileConflict": "設定ファイルが変更されました。保存する前にこのダイアログを閉じて開き直してください。",
       "importLegacyReviewers": "このコンピューターに以前保存したレビュアーをインポート",

@@ -40,7 +40,7 @@ impl WatcherState {
             move |res: Result<Vec<DebouncedEvent>, _>| match res {
                 Ok(events) => {
                     if events.iter().any(|event| {
-                        event.path.ends_with(".stage0/repos.jsonc")
+                        event.path.ends_with(".stage0/repos.json")
                             || event.path.ends_with(".stage0")
                     }) {
                         let _ = app_clone.emit_to(

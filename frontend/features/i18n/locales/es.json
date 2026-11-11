@@ -2502,7 +2502,7 @@
     },
     "repoSettingsModal": {
       "editorDescription": "JSONC · admite comentarios y comas finales · guardado automático tras 2 segundos",
-      "editFile": "Editar repos.jsonc",
+      "editFile": "Editar repos.json",
       "editorTitle": "Configuración del repositorio en JSONC",
       "fileConflict": "El archivo de configuración ha cambiado. Cierre y vuelva a abrir este diálogo antes de guardar.",
       "importLegacyReviewers": "Importar revisores guardados anteriormente en este equipo",

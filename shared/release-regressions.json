@@ -250,7 +250,8 @@
         "features::git::repo_settings::tests::label_projection_preserves_mr_links_and_is_scoped_to_each_clone",
         "features::git::repo_settings::tests::fresh_repository_initializes_defaults_at_root_once",
         "features::git::repo_settings::tests::restart_selects_old_or_complete_new_snapshot_after_process_exit",
-        "features::git::repo_settings::tests::source_editor_rejects_invalid_and_stale_text_and_repairs_invalid_primary_atomically"
+        "features::git::repo_settings::tests::source_editor_rejects_invalid_and_stale_text_and_repairs_invalid_primary_atomically",
+        "features::git::repo_settings::tests::json_filename_retains_jsonc_syntax_and_migrates_old_name_without_clobbering"
       ],
       "requires": "backend/src/features/git/repo_settings/mod.rs"
     },

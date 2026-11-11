@@ -150,7 +150,7 @@ fn invalid_external_edit_is_preserved_and_recovery_is_explicit() {
     .is_err());
     fs::write(&path, before.content).unwrap();
     assert!(load(&root, &backup).unwrap().validation_error.is_none());
-    assert!(!path.with_extension("jsonc.lock").exists());
+    assert!(!path.with_extension("json.lock").exists());
 }
 
 #[test]
@@ -282,7 +282,7 @@ fn fresh_repository_initializes_defaults_at_root_once() {
         .success());
     let initialized = load(&root, &recovery).unwrap();
     assert_eq!(initialized.settings, schema::defaults("HEAD")); // An unborn branch is not a usable comparison ref.
-    assert!(root.join(".stage0/repos.jsonc").is_file());
+    assert!(root.join(".stage0/repos.json").is_file());
     let reopened = load(&root, &recovery).unwrap();
     assert_eq!(initialized.revision, reopened.revision);
     assert!(fs::read_dir(root.join(".stage0"))
@@ -385,4 +385,33 @@ fn source_editor_rejects_invalid_and_stale_text_and_repairs_invalid_primary_atom
     .unwrap();
     assert!(repaired.validation_error.is_none());
     assert_eq!(storage::read(&path).unwrap(), saved.content);
+}
+
+#[test]
+fn json_filename_retains_jsonc_syntax_and_migrates_old_name_without_clobbering() {
+    let (_temp, root, backup) = fixture();
+    let primary = root.join(".stage0/repos.json");
+    let old = root.join(".stage0/repos.jsonc");
+    let mut config = schema::defaults("main");
+    config["customAgentRules"] = json!("legacy instructions");
+    let mut source = serde_json::to_string_pretty(&config).unwrap();
+    source.insert(source.rfind('}').unwrap(), ',');
+    let source = format!("// retain comments and trailing commas\n{source}\n");
+    fs::write(&old, &source).unwrap();
+    let canonical = fs::read_to_string(&primary).unwrap();
+    assert_ne!(
+        load(&root, &backup).unwrap().settings["customAgentRules"],
+        "legacy instructions"
+    );
+    assert_eq!(fs::read_to_string(&primary).unwrap(), canonical);
+    fs::remove_file(&primary).unwrap();
+    let migrated = load(&root, &backup).unwrap();
+    assert_eq!(migrated.settings["customAgentRules"], "legacy instructions");
+    assert_eq!(fs::read_to_string(&primary).unwrap(), source);
+    assert_eq!(fs::read_to_string(&old).unwrap(), source);
+    fs::remove_file(&primary).unwrap();
+    fs::write(&old, "{invalid old config").unwrap();
+    assert!(load(&root, &backup).is_err());
+    assert!(!primary.exists());
+    assert_eq!(fs::read_to_string(&old).unwrap(), "{invalid old config");
 }

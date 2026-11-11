@@ -30,14 +30,14 @@ it('opens the repository JSONC file internally and saves it before returning to 
   const user = userEvent.setup();
   fixture.save.mockImplementation(async (_repoId, content) => ({ ...fixture.doc, content, revision: 'second' }));
   render(<RepositorySettingsModal isOpen onClose={onClose} />);
-  await user.click(screen.getByRole('button', { name: 'Edit repos.jsonc' }));
-  const source = await screen.findByRole('textbox', { name: '/repo-a/.stage0/repos.jsonc' });
+  await user.click(screen.getByRole('button', { name: 'Edit repos.json' }));
+  const source = await screen.findByRole('textbox', { name: '/repo-a/.stage0/repos.json' });
   await waitFor(() => expect(source).toHaveValue(fixture.doc.content));
   const edited = '// user comment\n{"schemaVersion":1}';
   fireEvent.change(source, { target: { value: edited } });
   await user.click(screen.getByRole('button', { name: 'Repository Settings' }));
   await waitFor(() => expect(fixture.save).toHaveBeenCalledWith('repo-a', edited, 'first'));
-  await waitFor(() => expect(screen.queryByRole('textbox', { name: '/repo-a/.stage0/repos.jsonc' })).not.toBeInTheDocument());
+  await waitFor(() => expect(screen.queryByRole('textbox', { name: '/repo-a/.stage0/repos.json' })).not.toBeInTheDocument());
   expect(screen.getByRole('heading', { name: 'Repository Settings' })).toBeVisible();
   expect(onClose).not.toHaveBeenCalled();
 });

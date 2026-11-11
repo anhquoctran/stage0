@@ -2495,7 +2495,7 @@
     },
     "repoSettingsModal": {
       "editorDescription": "JSONC · Kommentare und abschließende Kommas unterstützt · automatisches Speichern nach 2 Sekunden",
-      "editFile": "repos.jsonc bearbeiten",
+      "editFile": "repos.json bearbeiten",
       "editorTitle": "Repository-Einstellungen in JSONC",
       "fileConflict": "Die Einstellungsdatei wurde geändert. Schließen und öffnen Sie diesen Dialog vor dem Speichern erneut.",
       "importLegacyReviewers": "Zuvor auf diesem Computer gespeicherte Reviewer importieren",

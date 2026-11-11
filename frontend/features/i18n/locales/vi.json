@@ -2495,7 +2495,7 @@
     },
     "repoSettingsModal": {
       "editorDescription": "JSONC · hỗ trợ chú thích và dấu phẩy cuối · tự lưu sau 2 giây",
-      "editFile": "Sửa repos.jsonc",
+      "editFile": "Sửa repos.json",
       "editorTitle": "Cấu hình kho lưu trữ JSONC",
       "fileConflict": "File cấu hình đã thay đổi. Đóng và mở lại hộp thoại trước khi lưu.",
       "importLegacyReviewers": "Nhập reviewer đã lưu trước đây trên máy này",

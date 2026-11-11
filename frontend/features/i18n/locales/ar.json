@@ -2529,7 +2529,7 @@
     },
     "repoSettingsModal": {
       "editorDescription": "JSONC · يدعم التعليقات والفواصل الختامية · حفظ تلقائي بعد ثانيتين",
-      "editFile": "تحرير repos.jsonc",
+      "editFile": "تحرير repos.json",
       "editorTitle": "إعدادات المستودع بتنسيق JSONC",
       "fileConflict": "تم تغيير ملف الإعدادات. أغلق مربع الحوار وافتحه مجددًا قبل الحفظ.",
       "importLegacyReviewers": "استيراد المراجعين المحفوظين سابقًا على هذا الكمبيوتر",

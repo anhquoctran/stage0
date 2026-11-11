@@ -98,12 +98,17 @@ fn load_locked(root: &Path, recovery: &Path) -> Result<RepositorySettingsDocumen
             Ok(document(content, settings, None))
         }
         Err(error) => {
-            let settings = storage::read(&backup).and_then(|text| jsonc::parse(&text))
-                .map_err(|_| format!(".stage0/repos.jsonc: {error}. No valid recovery snapshot; repair the file."))?;
+            let settings = storage::read(&backup)
+                .and_then(|text| jsonc::parse(&text))
+                .map_err(|_| {
+                    format!(
+                        ".stage0/repos.json: {error}. No valid recovery snapshot; repair the file."
+                    )
+                })?;
             Ok(document(
                 content,
                 settings,
-                Some(format!(".stage0/repos.jsonc: {error}")),
+                Some(format!(".stage0/repos.json: {error}")),
             ))
         }
     }

@@ -39,7 +39,23 @@ pub fn path(root: &Path) -> Result<PathBuf, String> {
         Err(e) => return Err(format!("Cannot create .stage0: {e}")),
     }
     regular(&directory, true)?;
-    Ok(directory.join("repos.jsonc"))
+    let path = directory.join("repos.json");
+    if !path.try_exists().map_err(|e| e.to_string())? {
+        let legacy = directory.join("repos.jsonc");
+        match fs::symlink_metadata(&legacy) {
+            Ok(_) => {
+                let content = read(&legacy)?;
+                super::jsonc::parse(&content)
+                    .map_err(|error| format!("Cannot migrate repos.jsonc: {error}"))?;
+                // Preserve comments and formatting. Never overwrite a concurrent
+                // creator, or delete an old file an external editor may be using.
+                initialize(&path, &content)?;
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => (),
+            Err(error) => return Err(error.to_string()),
+        }
+    }
+    Ok(path)
 }
 
 pub fn read(path: &Path) -> Result<String, String> {
@@ -56,7 +72,7 @@ pub fn read(path: &Path) -> Result<String, String> {
     if bytes.len() > MAX_BYTES {
         return Err("Repository settings exceed 1 MiB".into());
     }
-    String::from_utf8(bytes).map_err(|_| "repos.jsonc must be UTF-8".into())
+    String::from_utf8(bytes).map_err(|_| "repos.json must be UTF-8".into())
 }
 
 pub fn write(path: &Path, content: &str) -> Result<(), String> {

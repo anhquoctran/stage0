@@ -2495,7 +2495,7 @@
     },
     "repoSettingsModal": {
       "editorDescription": "JSONC · 주석 및 후행 쉼표 지원 · 2초 후 자동 저장",
-      "editFile": "repos.jsonc 편집",
+      "editFile": "repos.json 편집",
       "editorTitle": "저장소 설정 JSONC",
       "fileConflict": "설정 파일이 변경되었습니다. 저장하기 전에 이 대화 상자를 닫았다가 다시 여세요.",
       "importLegacyReviewers": "이 컴퓨터에 이전에 저장한 리뷰어 가져오기",

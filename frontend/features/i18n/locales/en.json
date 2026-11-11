@@ -2495,7 +2495,7 @@
     },
     "repoSettingsModal": {
       "editorDescription": "JSONC · comments and trailing commas supported · autosaves after 2 seconds",
-      "editFile": "Edit repos.jsonc",
+      "editFile": "Edit repos.json",
       "editorTitle": "Repository Settings JSONC",
       "fileConflict": "The settings file changed. Close and reopen this dialog before saving.",
       "importLegacyReviewers": "Import reviewers previously saved on this computer",

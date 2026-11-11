@@ -57,13 +57,13 @@ pub fn parse(content: &str) -> Result<Value, String> {
     let parsed =
         parse_to_ast(content, &Default::default(), &strict_jsonc_options()).map_err(|e| {
             format!(
-                "repos.jsonc line {}, column {}: {}",
+                "repos.json line {}, column {}: {}",
                 e.line_display(),
                 e.column_display(),
                 e.kind()
             )
         })?;
-    let node = parsed.value.ok_or("repos.jsonc is empty")?;
+    let node = parsed.value.ok_or("repos.json is empty")?;
     unique_keys(&node)?;
     let value: Value = jsonc_parser::parse_to_serde_value(content, &strict_jsonc_options())
         .map_err(|e| e.to_string())?;
