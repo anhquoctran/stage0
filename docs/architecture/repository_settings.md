@@ -97,8 +97,7 @@ schema URI or Reset action. A full-source save uses the same native coordinator,
 validation, revision check, durable replacement and publication as structured
 settings patches. Unlike patches it may repair an invalid primary document.
 
-The editor retains invalid/conflicting drafts and exposes Reload. Returning to
-Repository Settings awaits an active autosave and saves any newer text before
+The editor retains invalid/conflicting drafts and exposes Reload. Closing the editor with its X button or Escape awaits an active autosave and saves any newer text before
 closing; failure keeps the editor open. An untouched settings form hydrates the
 new values, while a dirty form retains its draft and reports conflicting fields.
 
@@ -109,3 +108,8 @@ copies the old file byte-for-byte using no-clobber initialization. The old file 
 retained to avoid deleting external edits. Once repos.json exists it is the sole
 authority; the old filename is ignored. An invalid old file is reported without
 creating defaults or altering it. The internal recovery filename is unchanged.
+
+The Preferences and repository source editors share the same explicit X close
+control. Escape dismisses an open completion list first; otherwise it closes the
+editor through the same save-aware path and does not dismiss the parent settings
+dialog. Concurrent close requests are coalesced while a save is pending.

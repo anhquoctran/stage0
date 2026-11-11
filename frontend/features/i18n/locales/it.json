@@ -449,6 +449,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Chiudi editor JSON",
       "editTitle": "Modifica preferences.json",
       "description": "JSONC · supporta commenti e virgole finali · Ctrl+Space per i suggerimenti · salvataggio automatico dopo 2 secondi",
       "saveState": {

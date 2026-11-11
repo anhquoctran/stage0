@@ -20,5 +20,5 @@ export function RepositorySettingsJsonEditor({ repoId, repoPath, onClose }: {
   }, [repoId, repoPath]);
   return <PreferencesJsonEditor adapter={adapter} onClose={onClose}
     description={t('git.repoSettingsModal.editorDescription')} conflictMessage={t('git.repoSettingsModal.fileConflict')}
-    title={t('git.repoSettingsModal.editorTitle')} backLabel={t('git.repoSettingsModal.title')} />;
+    title={t('git.repoSettingsModal.editorTitle')} />;
 }

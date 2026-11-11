@@ -443,6 +443,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Закрыть редактор JSON",
       "editTitle": "Редактировать preferences.json",
       "description": "JSONC · поддерживаются комментарии и завершающие запятые · Ctrl+Space для подсказок · автосохранение через 2 секунды",
       "saveState": {

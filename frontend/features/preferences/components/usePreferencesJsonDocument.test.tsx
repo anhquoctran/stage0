@@ -37,6 +37,7 @@ it('waits for an in-flight autosave and commits newer text before returning to s
   let closing!: Promise<void>;
   act(() => { closing = result.current.handleClose(); });
   expect(onClose).not.toHaveBeenCalled();
+  await act(async () => result.current.handleClose()); // A rapid second close must not duplicate the in-flight operation.
   await act(async () => { finish({ ...baseline, content: 'first edit', revision: 'two' }); await closing; });
   expect(adapter.saveText).toHaveBeenLastCalledWith('second edit', 'two');
   expect(onClose).toHaveBeenCalledOnce();

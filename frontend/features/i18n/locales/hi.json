@@ -449,6 +449,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "JSON संपादक बंद करें",
       "editTitle": "Edit in preferences.json",
       "description": "JSONC · comments and trailing commas supported · Ctrl+Space for completions · autosaves after 2 seconds",
       "saveState": {

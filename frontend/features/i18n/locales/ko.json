@@ -443,6 +443,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "JSON 편집기 닫기",
       "editTitle": "preferences.json 편집",
       "description": "JSONC · 주석과 후행 쉼표 지원 · Ctrl+Space로 자동 완성 · 2초 후 자동 저장",
       "saveState": {

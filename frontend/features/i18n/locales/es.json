@@ -443,6 +443,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Cerrar el editor JSON",
       "editTitle": "Editar preferences.json",
       "description": "JSONC · admite comentarios y comas finales · Ctrl+Space muestra sugerencias · guarda automáticamente tras 2 segundos",
       "saveState": {

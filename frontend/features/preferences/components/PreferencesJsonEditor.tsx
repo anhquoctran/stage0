@@ -10,7 +10,7 @@ import { usePreferencesJsonDocument } from './usePreferencesJsonDocument';
 const NO_COMPLETIONS = () => null;
 const PREFERENCES_SCHEMA_URI = 'https://stage0.app/schemas/preferences-v1.json';
 
-export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ onClose, adapter, title, backLabel, description, conflictMessage }) => {
+export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ onClose, adapter, title, description, conflictMessage }) => {
   const { t: translateUiText } = useUiTextTranslation();
   const isMac = isMacOS();
   const {
@@ -48,12 +48,24 @@ export const PreferencesJsonEditor: React.FC<PreferencesJsonEditorProps> = ({ on
     ...(adapter ? { completionProvider: NO_COMPLETIONS } : {}),
   });
 
+  React.useEffect(() => {
+    // The source is disabled during loading; focus it once it becomes editable.
+    // Until then the close control keeps keyboard actions inside the editor.
+    if (document && saveState !== 'loading') sourceRef.current?.focus();
+  }, [document?.path, saveState === 'loading']);
+
   return createPortal(
     <section
       className="fixed inset-x-0 bottom-0 top-8.5 z-[90] flex min-h-0 flex-col bg-mantle text-text"
       aria-label={title ?? translateUiText('preferences.jsonEditor.editTitle')}
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape' || event.defaultPrevented || event.nativeEvent.isComposing) return;
+        event.preventDefault();
+        event.stopPropagation();
+        void handleClose();
+      }}
     >
-      <PreferencesJsonEditorHeader isMac={isMac} saveState={saveState} handleClose={handleClose} title={title} backLabel={backLabel} description={description} />
+      <PreferencesJsonEditorHeader isMac={isMac} saveState={saveState} handleClose={handleClose} title={title} description={description} />
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
         <div className="flex shrink-0 items-center justify-between gap-3 text-[11px] text-subtext0">
           <span className="truncate" title={document?.path}>

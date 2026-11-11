@@ -443,6 +443,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "關閉 JSON 編輯器",
       "editTitle": "編輯 preferences.json",
       "description": "JSONC · 支援註解和尾隨逗號 · 按 Ctrl+Space 取得補全 · 2 秒後自動儲存",
       "saveState": {

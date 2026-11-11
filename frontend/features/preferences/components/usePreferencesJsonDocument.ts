@@ -17,6 +17,7 @@ export function usePreferencesJsonDocument({ onClose, adapter, conflictMessage }
   const draftRef = useRef(draft);
   draftRef.current = draft;
   const savingRef = useRef<Promise<boolean> | null>(null);
+  const closingRef = useRef(false);
   const [pollKey, setPollKey] = useState(0);
 
   const acceptDocument = useCallback((next: JsonEditorDocument) => {
@@ -113,8 +114,12 @@ export function usePreferencesJsonDocument({ onClose, adapter, conflictMessage }
   }, [acceptDocument, service, pollKey, conflictMessage]);
 
   const handleClose = async () => {
-    if ((savingRef.current || draftRef.current !== savedTextRef.current) && !(await saveNow())) return;
-    onClose();
+    if (closingRef.current) return;
+    closingRef.current = true;
+    try {
+      if ((savingRef.current || draftRef.current !== savedTextRef.current) && !(await saveNow())) return;
+      onClose();
+    } finally { closingRef.current = false; }
   };
   const handleRestoreDefaults = async () => {
     try { if (service.reset) acceptDocument(await service.reset()); }

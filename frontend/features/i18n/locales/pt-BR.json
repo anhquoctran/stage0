@@ -443,6 +443,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Fechar editor JSON",
       "editTitle": "Editar preferences.json",
       "description": "JSONC · aceita comentários e vírgulas finais · Ctrl+Space para sugestões · salva automaticamente após 2 segundos",
       "saveState": {

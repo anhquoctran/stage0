@@ -443,6 +443,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Đóng trình sửa JSON",
       "editTitle": "Chỉnh sửa preferences.json",
       "description": "JSONC · hỗ trợ chú thích và dấu phẩy cuối · Ctrl+Space để gợi ý · tự lưu sau 2 giây",
       "saveState": {

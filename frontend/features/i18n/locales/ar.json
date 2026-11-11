@@ -449,6 +449,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "إغلاق محرر JSON",
       "editTitle": "تحرير preferences.json",
       "description": "JSONC · يدعم التعليقات والفواصل اللاحقة · Ctrl+Space للاقتراحات · حفظ تلقائي بعد ثانيتين",
       "saveState": {

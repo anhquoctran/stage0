@@ -1,3 +1,4 @@
+import { X } from '../../../common/components/icons/X';
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import type { PreferencesJsonEditorHeaderProps } from './PreferencesJsonEditorHeaderProps';
 
@@ -5,7 +6,6 @@ export function PreferencesJsonEditorHeader({
   isMac,
   title,
   description,
-  backLabel,
   saveState,
   handleClose,
 }: PreferencesJsonEditorHeaderProps) {
@@ -29,10 +29,13 @@ export function PreferencesJsonEditorHeader({
         </span>
         <button
           type="button"
+          autoFocus
           onClick={() => void handleClose()}
-          className="border border-surface1 px-3 py-1.5 text-xs hover:bg-surface0 rounded-sm"
+          aria-label={translateUiText('preferences.jsonEditor.closeEditor')}
+          title={translateUiText('preferences.jsonEditor.closeEditor')}
+          className="shrink-0 border-0 p-2 text-subtext0 hover:bg-surface0 hover:text-text rounded-sm"
         >
-          {backLabel ?? translateUiText('preferences.jsonEditor.backToPreferences')}
+          <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </header>
