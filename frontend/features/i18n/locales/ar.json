@@ -449,6 +449,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "إغلاق محرر JSON",
       "editTitle": "تحرير preferences.json",
       "description": "JSONC · يدعم التعليقات والفواصل اللاحقة · Ctrl+Space للاقتراحات · حفظ تلقائي بعد ثانيتين",
       "saveState": {
@@ -2528,6 +2529,11 @@
       "unknownAuthor": "غير معروف"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · يدعم التعليقات والفواصل الختامية · حفظ تلقائي بعد ثانيتين",
+      "editFile": "تحرير repos.json",
+      "editorTitle": "إعدادات المستودع بتنسيق JSONC",
+      "fileConflict": "تم تغيير ملف الإعدادات. أغلق مربع الحوار وافتحه مجددًا قبل الحفظ.",
+      "importLegacyReviewers": "استيراد المراجعين المحفوظين سابقًا على هذا الكمبيوتر",
       "title": "إعدادات المستودع",
       "close": "إغلاق مربع الحوار",
       "remotes": "المستودعات البعيدة",

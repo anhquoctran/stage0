@@ -235,6 +235,40 @@
       "runner": "node",
       "path": "scripts/theme-engine.test.mjs",
       "requires": "frontend/core/themes/index.ts"
+    },
+    {
+      "id": "repository-settings-transactions",
+      "runner": "rust",
+      "path": "backend/src/features/git/repo_settings/tests.rs",
+      "tests": [
+        "features::git::repo_settings::tests::invalid_and_stale_writes_leave_committed_snapshot_intact",
+        "features::git::repo_settings::tests::duplicate_keys_and_resource_exhaustion_are_rejected_before_deserialization",
+        "features::git::repo_settings::tests::competing_transactions_have_one_winner_and_no_lost_update",
+        "features::git::repo_settings::tests::invalid_external_edit_is_preserved_and_recovery_is_explicit",
+        "features::git::repo_settings::tests::precommit_failure_preserves_old_state_and_uncertain_commit_never_rolls_back",
+        "features::git::repo_settings::tests::initialization_is_no_clobber_and_existing_editor_handles_remain_usable",
+        "features::git::repo_settings::tests::label_projection_preserves_mr_links_and_is_scoped_to_each_clone",
+        "features::git::repo_settings::tests::fresh_repository_initializes_defaults_at_root_once",
+        "features::git::repo_settings::tests::restart_selects_old_or_complete_new_snapshot_after_process_exit",
+        "features::git::repo_settings::tests::source_editor_rejects_invalid_and_stale_text_and_repairs_invalid_primary_atomically",
+        "features::git::repo_settings::tests::json_filename_retains_jsonc_syntax_and_migrates_old_name_without_clobbering"
+      ],
+      "requires": "backend/src/features/git/repo_settings/mod.rs"
+    },
+    {
+      "id": "repository-settings-publication",
+      "runner": "node",
+      "path": "scripts/repository-settings.test.mjs",
+      "requires": "frontend/features/virtual-mr/services/repositorySettingsDocuments.ts"
+    },
+    {
+      "id": "settings-open-reader-atomic-replace",
+      "runner": "rust",
+      "path": "backend/src/features/preferences/storage_tests.rs",
+      "tests": [
+        "features::preferences::storage_tests::atomic_replacement_keeps_open_readers_on_their_original_snapshot"
+      ],
+      "requires": "backend/src/features/git/repo_settings/mod.rs"
     }
   ]
 }

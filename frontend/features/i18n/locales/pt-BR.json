@@ -443,6 +443,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Fechar editor JSON",
       "editTitle": "Editar preferences.json",
       "description": "JSONC · aceita comentários e vírgulas finais · Ctrl+Space para sugestões · salva automaticamente após 2 segundos",
       "saveState": {
@@ -2501,6 +2502,11 @@
       "unknownAuthor": "Desconhecido"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · aceita comentários e vírgulas finais · salva automaticamente após 2 segundos",
+      "editFile": "Editar repos.json",
+      "editorTitle": "Configurações do repositório em JSONC",
+      "fileConflict": "O arquivo de configurações mudou. Feche e reabra esta janela antes de salvar.",
+      "importLegacyReviewers": "Importar revisores salvos anteriormente neste computador",
       "title": "Configurações do repositório",
       "close": "Fechar diálogo",
       "remotes": "Remotos",

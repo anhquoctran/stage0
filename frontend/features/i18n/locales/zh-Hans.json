@@ -443,6 +443,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "关闭 JSON 编辑器",
       "editTitle": "编辑 preferences.json",
       "description": "JSONC · 支持注释和尾随逗号 · 按 Ctrl+Space 获取补全 · 2 秒后自动保存",
       "saveState": {
@@ -2494,6 +2495,11 @@
       "unknownAuthor": "未知"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · 支持注释和尾随逗号 · 2 秒后自动保存",
+      "editFile": "编辑 repos.json",
+      "editorTitle": "仓库设置 JSONC",
+      "fileConflict": "设置文件已更改。保存前请关闭并重新打开此对话框。",
+      "importLegacyReviewers": "导入此前保存在此计算机上的审查者",
       "title": "仓库设置",
       "close": "关闭对话框",
       "remotes": "远程仓库",

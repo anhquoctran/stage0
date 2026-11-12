@@ -443,6 +443,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Đóng trình sửa JSON",
       "editTitle": "Chỉnh sửa preferences.json",
       "description": "JSONC · hỗ trợ chú thích và dấu phẩy cuối · Ctrl+Space để gợi ý · tự lưu sau 2 giây",
       "saveState": {
@@ -2494,6 +2495,11 @@
       "unknownAuthor": "Không rõ"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · hỗ trợ chú thích và dấu phẩy cuối · tự lưu sau 2 giây",
+      "editFile": "Sửa repos.json",
+      "editorTitle": "Cấu hình kho lưu trữ JSONC",
+      "fileConflict": "File cấu hình đã thay đổi. Đóng và mở lại hộp thoại trước khi lưu.",
+      "importLegacyReviewers": "Nhập reviewer đã lưu trước đây trên máy này",
       "title": "Cài đặt kho mã",
       "close": "Đóng hộp thoại",
       "remotes": "Kho từ xa",

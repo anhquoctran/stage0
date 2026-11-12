@@ -449,6 +449,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Close JSON editor",
       "editTitle": "Edit in preferences.json",
       "description": "JSONC · comments and trailing commas supported · Ctrl+Space for completions · autosaves after 2 seconds",
       "saveState": {
@@ -2494,6 +2495,11 @@
       "unknownAuthor": "Unknown"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · comments and trailing commas supported · autosaves after 2 seconds",
+      "editFile": "Edit repos.json",
+      "editorTitle": "Repository Settings JSONC",
+      "fileConflict": "The settings file changed. Close and reopen this dialog before saving.",
+      "importLegacyReviewers": "Import reviewers previously saved on this computer",
       "title": "Repository Settings",
       "close": "Close modal",
       "remotes": "Remotes",
