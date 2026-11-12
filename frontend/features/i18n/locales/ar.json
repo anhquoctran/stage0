@@ -53,7 +53,10 @@
       "commentPlaceholder": "اكتب تعليقًا أو الصق أو أفلت الصور هنا…",
       "dismissWarning": "إغلاق التحذير",
       "noContentToPreview": "لا يوجد محتوى لمعاينته",
-      "submit": "إرسال"
+      "submit": "إرسال",
+      "mentionTarget": "الإشارة إلى شخص أو طلب دمج أو التزام",
+      "mergeRequest": "طلب دمج",
+      "commit": "التزام"
     },
     "layout": {
       "activeFile": "الملف النشط: {{path}}",
@@ -966,7 +969,9 @@
       "reviewingNow": "جارٍ إجراء المراجعة",
       "aiAgentTitle": "{{name}} (وكيل ذكاء اصطناعي)",
       "deleteOwnContent": "حذف تعليقك أو مناقشتك",
-      "deleteFailed": "تعذّر الحذف: {{error}}"
+      "deleteFailed": "تعذّر الحذف: {{error}}",
+      "referenceUnavailable": "هذا المرجع غير متاح في المستودع الحالي.",
+      "referenceHistoryUnavailable": "تعذّر تحميل سجل الالتزامات. تظل المراجع الحالية متاحة."
     },
     "listDialog": {
       "sortRecentlyUpdated": "الأحدث تحديثًا",

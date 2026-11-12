@@ -53,7 +53,10 @@
       "commentPlaceholder": "コメントを入力、貼り付け、または画像をドロップ…",
       "dismissWarning": "警告を閉じる",
       "noContentToPreview": "プレビューする内容がありません",
-      "submit": "送信"
+      "submit": "送信",
+      "mentionTarget": "ユーザー、MR、コミットを参照",
+      "mergeRequest": "マージリクエスト",
+      "commit": "コミット"
     },
     "layout": {
       "activeFile": "アクティブなファイル: {{path}}",
@@ -932,7 +935,9 @@
       "reviewingNow": "レビュー中",
       "aiAgentTitle": "{{name}} (AI エージェント)",
       "deleteOwnContent": "自分のコメントまたはディスカッションを削除",
-      "deleteFailed": "削除できませんでした：{{error}}"
+      "deleteFailed": "削除できませんでした：{{error}}",
+      "referenceUnavailable": "この参照は現在のリポジトリでは利用できません。",
+      "referenceHistoryUnavailable": "コミット履歴を読み込めませんでした。既存の参照は引き続き利用できます。"
     },
     "listDialog": {
       "sortRecentlyUpdated": "最近更新",

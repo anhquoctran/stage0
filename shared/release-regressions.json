@@ -282,6 +282,11 @@
       "tests": [
         "features::updates::tests::retired_nightly_versions_never_use_or_accept_a_nightly_feed"
       ]
+    },
+    {
+      "id": "discussion-entity-mentions",
+      "runner": "node",
+      "path": "scripts/discussion-entity-mentions.test.mjs"
     }
   ]
 }

@@ -53,7 +53,10 @@
       "commentPlaceholder": "撰写评论、粘贴内容或拖放图片…",
       "dismissWarning": "关闭警告",
       "noContentToPreview": "没有可预览的内容",
-      "submit": "提交"
+      "submit": "提交",
+      "mentionTarget": "提及用户、MR 或提交",
+      "mergeRequest": "合并请求",
+      "commit": "提交"
     },
     "layout": {
       "activeFile": "当前文件：{{path}}",
@@ -932,7 +935,9 @@
       "reviewingNow": "正在审查",
       "aiAgentTitle": "{{name}}（AI 代理）",
       "deleteOwnContent": "删除自己的评论或讨论",
-      "deleteFailed": "无法删除：{{error}}"
+      "deleteFailed": "无法删除：{{error}}",
+      "referenceUnavailable": "此引用在当前仓库中不可用。",
+      "referenceHistoryUnavailable": "无法加载提交历史。现有引用仍然可用。"
     },
     "listDialog": {
       "sortRecentlyUpdated": "最近更新",

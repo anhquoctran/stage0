@@ -1,4 +1,4 @@
-import React, { useId, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getMarkdownFormattingAtCaret } from '../utils/markdownFormatting';
 import type { MarkdownEditorProps } from '../types/MarkdownEditorProps';
@@ -29,6 +29,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onGenerateDraft,
   extraActions,
   mentionOptions = [],
+  onMentionQueryChange,
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
@@ -58,9 +59,12 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       : null;
   const suggestions = mentionQuery
     ? mentionOptions.filter((item) =>
-        `${item.label} ${item.id}`.toLocaleLowerCase().includes(mentionQuery.query)
-      )
+        `${item.label} ${item.id} ${item.description ?? ''}`.toLocaleLowerCase().includes(mentionQuery.query)
+      ).slice(0, 50)
     : [];
+  useEffect(() => {
+    onMentionQueryChange?.(mentionQuery?.query ?? null);
+  }, [mentionQuery?.query, onMentionQueryChange]);
   const selectedMentionIndex = Math.min(activeMentionIndex, Math.max(0, suggestions.length - 1));
 
   const applyMention = (option: MentionOption) => {

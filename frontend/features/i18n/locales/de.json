@@ -53,7 +53,10 @@
       "commentPlaceholder": "Kommentar schreiben, einfügen oder Bilder hier ablegen…",
       "dismissWarning": "Warnung schließen",
       "noContentToPreview": "Kein Inhalt zur Vorschau",
-      "submit": "Senden"
+      "submit": "Senden",
+      "mentionTarget": "Person, MR oder Commit erwähnen",
+      "mergeRequest": "Merge Request",
+      "commit": "Commit"
     },
     "layout": {
       "activeFile": "Aktive Datei: {{path}}",
@@ -932,7 +935,9 @@
       "reviewingNow": "wird geprüft",
       "aiAgentTitle": "{{name}} (KI-Agent)",
       "deleteOwnContent": "Eigenen Kommentar oder Diskussion löschen",
-      "deleteFailed": "Löschen fehlgeschlagen: {{error}}"
+      "deleteFailed": "Löschen fehlgeschlagen: {{error}}",
+      "referenceUnavailable": "Diese Referenz ist im aktuellen Repository nicht verfügbar.",
+      "referenceHistoryUnavailable": "Der Commit-Verlauf konnte nicht geladen werden. Vorhandene Referenzen bleiben verfügbar."
     },
     "listDialog": {
       "sortRecentlyUpdated": "Zuletzt aktualisiert",
