@@ -53,7 +53,10 @@
       "commentPlaceholder": "Escreva um comentário, cole ou largue imagens aqui…",
       "dismissWarning": "Dispensar aviso",
       "noContentToPreview": "Sem conteúdo para pré-visualizar",
-      "submit": "Submeter"
+      "submit": "Submeter",
+      "mentionTarget": "Mencionar pessoa, MR ou commit",
+      "mergeRequest": "Pedido de integração",
+      "commit": "Commit"
     },
     "layout": {
       "activeFile": "Ficheiro ativo: {{path}}",
@@ -939,7 +942,9 @@
       "reviewingNow": "a rever agora",
       "aiAgentTitle": "{{name}} (agente de IA)",
       "deleteOwnContent": "Eliminar o seu comentário ou discussão",
-      "deleteFailed": "Não foi possível eliminar: {{error}}"
+      "deleteFailed": "Não foi possível eliminar: {{error}}",
+      "referenceUnavailable": "Esta referência não está disponível no repositório atual.",
+      "referenceHistoryUnavailable": "Não foi possível carregar o histórico de commits. As referências existentes continuam disponíveis."
     },
     "listDialog": {
       "sortRecentlyUpdated": "Atualizados recentemente",

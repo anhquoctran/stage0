@@ -53,7 +53,10 @@
       "commentPlaceholder": "댓글을 작성하거나 붙여넣고 이미지를 놓으세요…",
       "dismissWarning": "경고 닫기",
       "noContentToPreview": "미리 볼 내용이 없습니다",
-      "submit": "제출"
+      "submit": "제출",
+      "mentionTarget": "사용자, MR 또는 커밋 언급",
+      "mergeRequest": "병합 요청",
+      "commit": "커밋"
     },
     "layout": {
       "activeFile": "활성 파일: {{path}}",
@@ -932,7 +935,9 @@
       "reviewingNow": "검토 중",
       "aiAgentTitle": "{{name}} (AI 에이전트)",
       "deleteOwnContent": "내 댓글 또는 토론 삭제",
-      "deleteFailed": "삭제하지 못했습니다: {{error}}"
+      "deleteFailed": "삭제하지 못했습니다: {{error}}",
+      "referenceUnavailable": "현재 저장소에서 이 참조를 사용할 수 없습니다.",
+      "referenceHistoryUnavailable": "커밋 기록을 불러오지 못했습니다. 기존 참조는 계속 사용할 수 있습니다."
     },
     "listDialog": {
       "sortRecentlyUpdated": "최근 업데이트순",

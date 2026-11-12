@@ -13,7 +13,7 @@ export function MarkdownMentionPopup({
     <div
       id={mentionListId}
       role="listbox"
-      aria-label={t('common.markdown.mentionParticipant')}
+      aria-label={t('common.markdown.mentionTarget')}
       className="mt-1 max-h-40 overflow-y-auto border border-surface1 bg-mantle shadow-lg rounded-sm"
     >
       {suggestions.map((option, index) => (
@@ -29,7 +29,8 @@ export function MarkdownMentionPopup({
           className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-xs rounded-sm ${selectedMentionIndex === index ? 'bg-surface1 text-text' : 'text-subtext1 hover:bg-surface0'}`}
         >
           <span className="min-w-0 truncate font-medium">
-            @{option.label}
+            {(option.kind === 'reviewer' || option.kind === 'assignee') && '@'}{option.label}
+            {option.description && <span className="ms-2 text-[10px] font-normal text-subtext0">{option.description}</span>}
             {mentionOptions.some(
               (other) =>
                 other.id !== option.id && other.kind === option.kind && other.label === option.label
@@ -40,7 +41,7 @@ export function MarkdownMentionPopup({
             )}
           </span>
           <span className="shrink-0 text-[10px] text-subtext0">
-            {option.kind === 'reviewer' ? t('common.markdown.aiReviewer') : t('common.markdown.assignee')}
+            {t(`common.markdown.${{ reviewer: 'aiReviewer', assignee: 'assignee', mr: 'mergeRequest', commit: 'commit' }[option.kind]}`)}
           </span>
         </button>
       ))}

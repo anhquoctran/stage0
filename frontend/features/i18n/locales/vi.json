@@ -53,7 +53,10 @@
       "commentPlaceholder": "Viết bình luận, dán hoặc thả ảnh vào đây…",
       "dismissWarning": "Đóng cảnh báo",
       "noContentToPreview": "Không có nội dung để xem trước",
-      "submit": "Gửi"
+      "submit": "Gửi",
+      "mentionTarget": "Nhắc đến người, MR hoặc commit",
+      "mergeRequest": "Merge request",
+      "commit": "Commit"
     },
     "layout": {
       "activeFile": "Tệp đang mở: {{path}}",
@@ -932,7 +935,9 @@
       "reviewingNow": "đang review",
       "aiAgentTitle": "{{name}} (tác nhân AI)",
       "deleteOwnContent": "Xóa bình luận hoặc thảo luận của bạn",
-      "deleteFailed": "Không thể xóa: {{error}}"
+      "deleteFailed": "Không thể xóa: {{error}}",
+      "referenceUnavailable": "Tham chiếu này không còn khả dụng trong repository hiện tại.",
+      "referenceHistoryUnavailable": "Không tải được lịch sử commit. Bạn vẫn có thể dùng các tham chiếu đã có."
     },
     "listDialog": {
       "sortRecentlyUpdated": "Mới cập nhật gần đây",

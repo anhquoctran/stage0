@@ -53,7 +53,10 @@
       "commentPlaceholder": "Напишите комментарий, вставьте текст или перетащите изображения сюда…",
       "dismissWarning": "Скрыть предупреждение",
       "noContentToPreview": "Нет содержимого для предпросмотра",
-      "submit": "Отправить"
+      "submit": "Отправить",
+      "mentionTarget": "Упомянуть человека, MR или коммит",
+      "mergeRequest": "Запрос на слияние",
+      "commit": "Коммит"
     },
     "layout": {
       "activeFile": "Активный файл: {{path}}",
@@ -946,7 +949,9 @@
       "reviewingNow": "идёт проверка",
       "aiAgentTitle": "{{name}} (ИИ-агент)",
       "deleteOwnContent": "Удалить свой комментарий или обсуждение",
-      "deleteFailed": "Не удалось удалить: {{error}}"
+      "deleteFailed": "Не удалось удалить: {{error}}",
+      "referenceUnavailable": "Эта ссылка недоступна в текущем репозитории.",
+      "referenceHistoryUnavailable": "Не удалось загрузить историю коммитов. Существующие ссылки остаются доступными."
     },
     "listDialog": {
       "sortRecentlyUpdated": "Сначала недавно обновлённые",

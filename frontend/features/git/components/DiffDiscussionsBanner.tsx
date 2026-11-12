@@ -7,9 +7,8 @@ import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../store/useGitStore';
 import { openFileInEditor } from '../utils/fileActions';
 import { type ReviewActionType } from '../../virtual-mr/types/ReviewActionType';
-import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
+import { DiscussionMarkdownEditor } from '../../virtual-mr/components/discussion/DiscussionMarkdownEditor';
 import { DiscussionThread } from '../../virtual-mr/components/DiscussionThread';
-import { getDiscussionMentionOptions } from '../../virtual-mr/utils/discussionMentions';
 import type { DiffDiscussionsBannerProps } from '../types/DiffDiscussionsBannerProps';
 import { useTranslation } from 'react-i18next';
 
@@ -136,9 +135,9 @@ export const DiffDiscussionsBanner: React.FC<DiffDiscussionsBannerProps> = ({ se
             </div>
           </div>
 
-          <MarkdownEditor
+          <DiscussionMarkdownEditor
             value={commentText}
-            mentionOptions={getDiscussionMentionOptions(session)}
+            session={session}
             onChange={setCommentText}
             placeholder={t('common.markdown.commentPlaceholder')}
             rows={5}

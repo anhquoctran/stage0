@@ -53,7 +53,10 @@
       "commentPlaceholder": "撰寫留言、貼上內容或拖放圖片至此處…",
       "dismissWarning": "關閉警告",
       "noContentToPreview": "沒有可預覽的內容",
-      "submit": "提交"
+      "submit": "提交",
+      "mentionTarget": "提及使用者、MR 或提交",
+      "mergeRequest": "合併請求",
+      "commit": "提交"
     },
     "layout": {
       "activeFile": "目前檔案：{{path}}",
@@ -932,7 +935,9 @@
       "reviewingNow": "正在審查",
       "aiAgentTitle": "{{name}}（AI 代理）",
       "deleteOwnContent": "刪除自己的留言或討論",
-      "deleteFailed": "無法刪除：{{error}}"
+      "deleteFailed": "無法刪除：{{error}}",
+      "referenceUnavailable": "此參照在目前儲存庫中無法使用。",
+      "referenceHistoryUnavailable": "無法載入提交歷史。現有參照仍可使用。"
     },
     "listDialog": {
       "sortRecentlyUpdated": "最近更新",
