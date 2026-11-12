@@ -1008,7 +1008,7 @@ code, pre {
 
 .schedule-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -1036,10 +1036,6 @@ code, pre {
 
 .schedule-card-beta {
   border-top: 3px solid var(--ctp-blue);
-}
-
-.schedule-card-nightly {
-  border-top: 3px solid var(--ctp-mauve);
 }
 
 .schedule-card-header {
@@ -1072,12 +1068,6 @@ code, pre {
   background-color: rgba(137, 180, 250, 0.15);
   color: var(--ctp-blue);
   border: 1px solid rgba(137, 180, 250, 0.3);
-}
-
-.badge-nightly {
-  background-color: rgba(203, 166, 247, 0.15);
-  color: var(--ctp-mauve);
-  border: 1px solid rgba(203, 166, 247, 0.3);
 }
 
 .schedule-risk-tag {
@@ -1400,10 +1390,6 @@ code, pre {
 
 .release-channel-tag.beta {
   color: var(--ctp-yellow);
-}
-
-.release-channel-tag.nightly {
-  color: var(--ctp-mauve);
 }
 
 .release-history-notes-link {

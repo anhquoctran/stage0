@@ -91,19 +91,7 @@ test('channels, custom version picker, empty channels and hero remain independen
     /tag\/v1\.0\.2-beta/,
   );
   await expect(page.locator('#hero-download-btn')).toHaveAttribute('href', stableURL);
-  await page.locator('#release-browser [data-release-channel="nightly"]').click();
-  await expect(page.locator('#release-channel-status')).toHaveText(
-    'No nightly releases are available yet.',
-  );
-  await expect(page.locator('[data-download-key="windowsExe"]')).toHaveAttribute(
-    'href',
-    'https://github.com/anhquoctran/stage0/releases',
-  );
-  await expect(page.locator('#selected-release-link')).toHaveAttribute(
-    'href',
-    'https://github.com/anhquoctran/stage0/releases',
-  );
-  await expect(page.locator('#hero-download-btn')).toHaveAttribute('href', stableURL);
+  await expect(page.locator('[data-release-channel="nightly"]')).toHaveCount(0);
   await page.locator('#release-schedule [data-release-channel="stable"]').click();
   await expect(page.locator('#release-version-label')).toHaveText('v1.0.2');
 });
@@ -150,7 +138,7 @@ test('stable downloads remain available when the newest 100 releases are preview
     (url) =>
       url.pathname.endsWith('/latest')
         ? stable
-        : Array.from({ length: 100 }, (_, i) => release(`v1.0.${i}-nightly`)),
+        : Array.from({ length: 100 }, (_, i) => release(`v1.0.${i}-beta`)),
     { platform: 'Win32', userAgent: 'Windows Win64 x64' },
   );
   await expect(page.locator('#hero-download-btn')).toHaveAttribute('href', /\/v0\.0\.4\//);
@@ -205,4 +193,20 @@ test('custom version picker supports Escape and outside-click dismissal', async 
   await page.locator('#release-version-trigger').click();
   await page.locator('#download h2').click();
   await expect(page.locator('#release-version-picker')).not.toHaveAttribute('open');
+});
+
+test('an empty Beta channel never reuses Stable package links', async ({ page }) => {
+  await open(page, [release('v1.0.2')], { platform: 'Win32', userAgent: 'Windows Win64 x64' });
+  const stableURL = await page.locator('#hero-download-btn').getAttribute('href');
+  await page.locator('#release-browser [data-release-channel="beta"]').click();
+  await expect(page.locator('#release-channel-status')).toHaveText(
+    'No beta releases are available yet.',
+  );
+  for (const selector of ['[data-download-key="windowsExe"]', '#selected-release-link']) {
+    await expect(page.locator(selector)).toHaveAttribute(
+      'href',
+      'https://github.com/anhquoctran/stage0/releases',
+    );
+  }
+  await expect(page.locator('#hero-download-btn')).toHaveAttribute('href', stableURL);
 });

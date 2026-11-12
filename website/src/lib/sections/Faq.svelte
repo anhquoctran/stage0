@@ -37,41 +37,26 @@
           aria-expanded={active === 1}
           onclick={() => (active = active === 1 ? -1 : 1)}
         >
-          <span>What is Stage0's release schedule across Stable, Beta, and Nightly channels?</span>
+          <span>What is Stage0's release schedule across Stable and Beta channels?</span>
           <i class="fa-solid fa-chevron-down faq-arrow"></i>
         </button>
         <div class="faq-answer">
-          Stage0 follows an automated multi-channel release pipeline designed for predictable,
-          scheduled delivery strictly at <strong>00:00:00 UTC</strong>:
-          <ul
-            style="
-                                    margin: 0.75rem 0 0.75rem 1.25rem;
-                                    line-height: 1.6;
-                                "
-          >
+          Stage0 has two release channels, with all calendar windows measured in UTC:
+          <ul style="margin: 0.75rem 0 0.75rem 1.25rem; line-height: 1.6;">
             <li>
-              <strong>Stable (<code>origin/main</code>)</strong>: Released quarterly at 00:00 UTC on
-              the 1st day of the first month of each quarter (Jan 1, Apr 1, Jul 1, Oct 1). SemVer:
-              <code>0.0.x</code>. This is the official production build with maximum stability.
+              <strong>Stable (<code>origin/main</code>)</strong>: Quarterly on January 1, April 1,
+              July 1 and October 1, accumulating approved Beta builds from the previous quarter.
+              Versions use <code>0.0.x</code>. This is the official production release.
             </li>
             <li>
-              <strong>Beta (<code>origin/beta</code>)</strong>: Released monthly at 00:00 UTC on the
-              27th of every month. SemVer:
-              <code>0.0.x-beta</code>. For teams and contributors testing feature-complete
-              stabilization builds.
-            </li>
-            <li>
-              <strong>Nightly (<code>origin/nightly</code>)</strong>: Released daily at 00:00 UTC
-              every single day. SemVer: <code>0.0.x-nightly</code>. For active preview and
-              bleeding-edge validation.
+              <strong>Beta (<code>origin/beta</code>)</strong>: Monthly on day 27, accumulating
+              tested development PR merges from the previous month’s day 28 through day 26. Versions
+              use <code>0.0.x-beta</code>.
             </li>
           </ul>
-          To ensure exact timing, GitHub Actions triggers a
-          <strong>60-minute pre-build window</strong> at
-          <code>23:00 UTC</code> to compile, sign with Minisign, and stage all 9 packages across 6
-          OS targets before releasing to the public at exact 00:00 UTC. While preview channels
-          increment patch numbers more frequently, <code>main</code> is authoritative as the official
-          production release and in-app updaters never auto-upgrade Stable users to preview builds.
+          Periods close at<strong>00:00 UTC</strong>. Publication follows required checks, human QA
+          and approval, and signed builds on the scheduled day. Empty or unchanged periods are
+          skipped. Stable is the default, and in-app updates never switch Stable users to Beta.
         </div>
       </div>
 

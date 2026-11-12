@@ -13,8 +13,8 @@
       <span class="section-tag">Get Started Today</span>
       <h2 class="section-title">Download Stage0 for your desktop</h2>
       <p class="section-desc">
-        Choose a stable, beta, or nightly release for Windows, macOS, and Linux. Free and open
-        source under the MIT License.
+        Choose a stable or beta release for Windows, macOS, and Linux. Free and open source under
+        the MIT License.
       </p>
     </div>
 

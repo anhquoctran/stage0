@@ -2,8 +2,7 @@
 
 The `website` branch owns GitHub Pages independently of the desktop release
 branches. Create website work branches from `origin/website` and target `website`
-with their PRs. Do not promote website-only work through Develop, Nightly, Beta,
-or Main. This is the website-specific exception to the application's Git flow.
+with their PRs. Do not promote website-only work through Develop, Beta, or Main. This is the website-specific exception to the application's Git flow.
 
 ## Development and verification
 
@@ -64,3 +63,6 @@ and release promotion workflows continue to target the application's branches.
 The `github-pages` environment permits only `website`. The previous
 `Deploy static content to Pages` workflow stays disabled so Main pushes cannot
 replace this site. These settings are separate from release branch protections.
+
+The public site offers only Stable and Beta. Retired Nightly tags are excluded
+from downloads and the archive even when returned by the GitHub API.

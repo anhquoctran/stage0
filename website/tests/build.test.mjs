@@ -17,15 +17,20 @@ test('GitHub Pages contains prerendered HTML, hashed bundles, metadata and stati
   for (const path of ['src', 'js', 'node_modules', 'package.json', 'pnpm-lock.yaml'])
     assert.equal(existsSync(new URL(path, output)), false);
   assert.match(html, /id="release-schedule"/);
-  for (const text of [
-    'Quarterly (00:00 UTC)',
-    '27th of every month at 00:00:00 UTC',
-    'Every day at 00:00:00 UTC',
-    '00:00:00 UTC Release Guarantee',
-  ])
+  for (const text of ['Quarterly (UTC)', '27th of every month (UTC)', 'Reviewed Calendar Releases'])
     assert.ok(html.includes(text));
   assert.match(html, /Autonomous AI Code Review\./);
   assert.match(html, /application\/ld\+json/);
   assert.match(html, /rel="canonical" href="https:\/\/anhquoctran.github.io\/stage0\/"/);
   assert.match(html, /id="release-history-stable-only" checked/);
+});
+
+test('public site advertises only supported channels and no daily release promise', () => {
+  const html = readFileSync(new URL('index.html', output), 'utf8');
+  assert.doesNotMatch(
+    html,
+    /Nightly Channel|Select Nightly|data-release-channel="nightly"|60-minute pre-build|23:00 UTC/,
+  );
+  assert.match(html, /Stable Channel/);
+  assert.match(html, /Beta Channel/);
 });
