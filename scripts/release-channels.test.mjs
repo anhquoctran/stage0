@@ -11,11 +11,11 @@ import { prepareScheduledBranch } from './prepare-release.mjs';
 import { setProjectVersion } from './bump-version.mjs';
 import { verifyReleaseVersion, createUpdateManifest } from './release-artifacts.mjs';
 
-test('Beta and Stable increase patch versions without reusing historical release numbers', () => {
+test('low-level tag reservation preserves explicit history and stable/Beta SemVer ordering', () => {
   const tags = ['v0.1.12'];
   const versions = ['0.0.1', '0.0.2-beta', '0.0.3-beta', '0.0.4', '0.0.5-beta'];
   for (const expected of versions) {
-    const actual = nextReleaseVersion(expected.endsWith('-beta') ? 'beta' : 'stable', tags);
+    const actual = nextReleaseVersion(expected.endsWith('-beta') ? 'beta' : 'stable', tags, '0.0.1');
     assert.equal(actual, expected); tags.push(`v${actual}`);
   }
   for (let i = 1; i < versions.length; i++) assert.equal(compareSemver(versions[i - 1], versions[i]), -1);
@@ -29,7 +29,7 @@ test('only the monthly and quarterly UTC windows allocate scheduled releases', (
   assert.deepEqual(dueReleaseChannels(regular), []);
   const monthly = new Date('2026-11-26T23:00:00Z');
   assert.deepEqual(dueReleaseChannels(monthly), ['beta']);
-  assert.equal(scheduledVersion('beta', monthly, ['v0.0.26-nightly']), '0.0.27-beta');
+  assert.equal(scheduledVersion('beta', monthly, ['v0.0.26-nightly']), '0.0.5-beta');
   const quarterly = new Date('2026-12-31T23:00:00Z');
   assert.deepEqual(dueReleaseChannels(quarterly), ['stable']);
   assert.equal(scheduledVersion('stable', quarterly, ['v0.0.60-beta']), '0.0.61');
@@ -52,7 +52,7 @@ test('source branches and schedules map exclusively to develop, beta and main', 
   for (const cron of ['0 23 * * *', '0 12 * * *']) assert.throws(() => resolveScheduledChannel(cron), /Unknown release schedule/);
   assert.deepEqual(scheduledReleasePlan('beta', new Date('2026-11-26T23:12:00Z'), ['v0.0.10-nightly']), {
     channel: 'beta', branch: 'origin/beta', developmentBranch: 'origin/develop',
-    version: '0.0.11-beta', tag: 'v0.0.11-beta', publishAt: '2026-11-27T00:00:00.000Z', releaseDate: '2026-11-27',
+    version: '0.0.5-beta', tag: 'v0.0.5-beta', publishAt: '2026-11-27T00:00:00.000Z', releaseDate: '2026-11-27',
   });
 });
 
@@ -118,11 +118,11 @@ test('Beta/Stable preparation reuses immutable snapshots and never pushes protec
   const options = { root, promotionGuard: () => null, releases: [], onlyChannel: true };
   const first = prepareScheduledBranch({ ...options, schedule: 'beta', now: new Date('2026-11-27T00:10:00Z') });
   const retry = prepareScheduledBranch({ ...options, schedule: 'beta', now: new Date('2026-11-27T00:15:00Z') });
-  assert.equal(first.tag, 'v0.0.2-beta'); assert.equal(retry.tag, first.tag); assert.equal(retry.reused, true);
+  assert.equal(first.tag, 'v0.0.5-beta'); assert.equal(retry.tag, first.tag); assert.equal(retry.reused, true);
   assert.equal(git('rev-parse', `${first.tag}^`), beta);
   assert.equal(JSON.parse(git('show', `${first.tag}:backend/about.json`)).releaseDate, '2026-11-27');
   const stable = prepareScheduledBranch({ ...options, schedule: 'stable', now: new Date('2027-01-01T00:10:00Z') });
-  assert.equal(stable.tag, 'v0.0.3'); assert.equal(git('rev-parse', `${stable.tag}^`), main);
+  assert.equal(stable.tag, 'v0.0.6'); assert.equal(git('rev-parse', `${stable.tag}^`), main);
   assert.equal(JSON.parse(git('show', `${stable.tag}:backend/about.json`)).releaseDate, '2027-01-01');
   assert.equal(git('rev-parse', 'main'), main); assert.equal(git('rev-parse', 'beta'), beta);
   assert.equal(git('tag', '--list', '*nightly*'), '');

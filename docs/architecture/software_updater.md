@@ -149,8 +149,10 @@ on January/April/July/October 1. See [release promotion](release_promotion.md) f
 period windows, exact-tree CI evidence, human QA, approvals and signed native
 build requirements. Empty/unchanged periods do not allocate tags or builds.
 
-Each release increments PATCH above existing tags in the current major/minor
-line, including retired historical tags, to avoid reuse or regression. Historical
+The current baseline is **0.0.4**, and the next build receives **0.0.5** (with
+`-beta` for Beta). Each release increments PATCH above the baseline and existing
+Stable/Beta tags in the current major/minor line. Retired Nightly tags do not
+participate in allocation; historical Git refs remain intact. Historical
 metadata readers retain old provenance formats; release entry points accept only
 suffixless Stable or the short `-beta` suffix. Main remains the production
 `--latest` authority even when Beta has a larger SemVer. Stable users never

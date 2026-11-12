@@ -8,7 +8,7 @@ export const policy = JSON.parse(fs.readFileSync(path.join(root, 'shared/release
 export const CHANNEL_PRIORITY = ['beta', 'stable'];
 
 const CORE_PATTERN = '(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)';
-// Historical tags still reserve their patch numbers; they cannot authorize a new release.
+// Low-level reservation also understands historical tags supplied by the caller.
 const TAG_LINE_RE = new RegExp(`^v${CORE_PATTERN}(?:-(nightly|beta)(?:\\.[1-9]\\d{7}\\.(?:0|[1-9]\\d*))?)?$`);
 
 export function releaseChannel(version) {
@@ -92,6 +92,20 @@ export function nextReleaseVersion(channel, tags = [], baseVersion = policy.base
   return formatChannelVersion(`${major}.${minor}.${nextPatch}`, channel);
 }
 
+/** Allocate the next build from the current baseline and enabled channels only. */
+export function nextBuildVersion(channel, tags = [], currentVersion = policy.baseVersion) {
+  if (!Object.hasOwn(policy.channels, channel)) throw new Error('Unknown release channel');
+  if (releaseChannel(currentVersion) !== 'stable') throw new Error('Build baseline must be a stable MAJOR.MINOR.PATCH');
+  if (!Array.isArray(tags)) throw new Error('Release tags must be an array');
+  const [major, minor, patch] = currentVersion.split('.');
+  const floor = `${major}.${minor}.${BigInt(patch) + 1n}`;
+  const activeTags = tags.filter(tag => {
+    const match = TAG_LINE_RE.exec(tag);
+    return match && (!match[4] || Object.hasOwn(policy.channels, match[4]));
+  });
+  return formatChannelVersion(nextReleaseVersion('stable', activeTags, floor), channel);
+}
+
 export function scheduledVersion(channel, now = new Date(), tags = []) {
   if (!Object.hasOwn(policy.channels, channel)) throw new Error('Unknown release channel');
   if (!channelCrons(channel).length) throw new Error('Channel does not have a release schedule');
@@ -101,7 +115,7 @@ export function scheduledVersion(channel, now = new Date(), tags = []) {
   const simulatedTags = [...tags];
   let assigned;
   for (const currentChannel of sequence) {
-    const version = nextReleaseVersion(currentChannel, simulatedTags);
+    const version = nextBuildVersion(currentChannel, simulatedTags);
     simulatedTags.push(`v${version}`);
     if (currentChannel === channel) assigned = version;
   }

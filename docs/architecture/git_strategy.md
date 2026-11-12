@@ -2,7 +2,7 @@
 
 Stage0 uses `develop → beta → main`. Nightly is permanently retired: no daily
 build, source promotion, release tag, download channel or updater feed may be
-reintroduced. Old tags reserve their version numbers and remain historical data.
+reintroduced. Old tags remain historical data; retired channels do not reserve new build numbers.
 
 ## Branches and protection
 
@@ -73,8 +73,12 @@ objects/data. Candidate scripts run in isolated tag cache scopes, never in the
 main controller cache. Deploy controller/workflow changes consistently through
 reviewed PRs; do not bypass protection to bootstrap deployment.
 
-Versions use monotonically increasing `0.0.x-beta` / `0.0.x`, counting historical
-tags to prevent reuse. Each channel's changelog compares source commits with its
+The current build baseline is `0.0.4`; the next build is `0.0.5` (or `0.0.5-beta`
+for Beta). Active Stable/Beta tags reserve patch numbers, including unpublished
+snapshots, so their identities are never reused. Retired Nightly tags remain for
+audit and are excluded from new allocation. `nextBuildVersion` owns this policy;
+`nextReleaseVersion` is the lower-level reservation primitive for an explicitly
+provided tag inventory. Each channel's changelog compares source commits with its
 previous **published** same-channel release; aliases/drafts/failed tags do not
 consume changes. Bundle/About/GitHub notes share that frozen baseline. New
 releases never copy a fixed list from an earlier release.
