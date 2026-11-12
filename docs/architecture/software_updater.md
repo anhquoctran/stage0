@@ -15,7 +15,7 @@ cannot supply URLs, keys or packages.
 
 The installed package SemVer selects one fixed channel endpoint:
 `https://github.com/anhquoctran/stage0/releases/download/channel-stable/latest.json`,
-`channel-beta/latest.json` or `channel-nightly/latest.json`.
+or `channel-beta/latest.json`. Retired/unknown prereleases cannot select a preview feed.
 Unknown prereleases cannot cross into a supported channel. Manifest candidate
 versions must match the installed channel. Changing channels requires installing
 the desired build; no new user preference or client-supplied URL is introduced.
@@ -93,7 +93,7 @@ workflow credentials when they are available.
 2. Set Actions secret `TAURI_SIGNING_PRIVATE_KEY` to the private key matching
    `plugins.updater.pubkey`; set `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` for an
    encrypted key. Never commit either private value.
-3. For Stable, open **Actions → Release Stage0 → Run workflow**, select the source branch and run it without entering a tag. CI chooses a free stable version, synchronizes metadata, creates a detached release commit and pushes its tag. A stable tag push alone does not release. Nightly/Beta tags may trigger automatically. Tag/version drift blocks the build.
+3. For Stable, open **Actions → Release Stage0 → Run workflow**, select the source branch and run it without entering a tag. CI chooses a free stable version, synchronizes metadata, creates a detached release commit and pushes its tag. A stable tag push alone does not release. Beta tags may trigger automatically; retired tags are rejected. Tag/version drift blocks the build.
 4. `.github/workflows/release.yml` checks architecture, TypeScript and Node tests,
    runs Rust tests on Linux and builds all nine required editions across six native
    OS/architecture targets. The artifact gate checks every required bundle before
@@ -139,94 +139,33 @@ cargo run --locked --manifest-path scripts/release-verifier/Cargo.toml -- \
 Local verification on Fedora 44 does not establish compatibility with older
 Ubuntu systems; the published Linux packages are built on Ubuntu 22.04 by CI.
 
-## Release channels and version reset
+## Release channels and version allocation
 
-`shared/release-channels.json` is the canonical base/cadence/branch policy. Stage0
-restarts at **0.0.1** in Q4 2026. Code is branched from `origin/develop` into
-channel source branches. `scripts/release-channels.mjs` validates channel
-versions, resolves scheduled source branches, derives scheduled versions in UTC,
-and holds final publication until the exact `00:00:00 UTC` release window. Stable
-has no suffix; `-stable` is a SemVer prerelease and is rejected by the release gate.
+`shared/release-channels.json` defines only Beta and Stable. Development integrates
+through checked PRs into `origin/develop` and is never packaged as a daily release.
+Beta (`origin/beta`, `0.0.x-beta`) accumulates tested development snapshots on
+monthly day 27. Stable (`origin/main`, `0.0.x`) accumulates signed published Betas
+on January/April/July/October 1. See [release promotion](release_promotion.md) for
+period windows, exact-tree CI evidence, human QA, approvals and signed native
+build requirements. Empty/unchanged periods do not allocate tags or builds.
 
-- Development branch: `origin/develop` (feature integration branch from which release channels are branched).
-- Nightly (`origin/nightly`): `0.0.2-nightly`, published daily at **00:00 UTC** (pre-build cron starts 60 minutes earlier at `23:00 UTC` daily: `0 23 * * *`).
-- Beta (`origin/beta`): `0.0.3-beta`, published monthly on the **27th at 00:00 UTC** (pre-build cron starts on the 26th at `23:00 UTC`: `0 23 26 * *`).
-- Stable (`origin/main`): `0.0.4`, published quarterly on the **1st day of the first month of each quarter (Jan 1, Apr 1, Jul 1, Oct 1) at 00:00 UTC** (pre-build crons start at `23:00 UTC` on the preceding day: `0 23 31 3,12 *` and `0 23 30 6,9 *`), or manually on demand via **GitHub Actions → Release Stage0 → Run workflow**.
+Each release increments PATCH above existing tags in the current major/minor
+line, including retired historical tags, to avoid reuse or regression. Historical
+metadata readers retain old provenance formats; release entry points accept only
+suffixless Stable or the short `-beta` suffix. Main remains the production
+`--latest` authority even when Beta has a larger SemVer. Stable users never
+upgrade automatically to previews.
 
-Every release across all channels increments `PATCH` (`0.0.x`) sequentially above
-the highest existing release tag in the current `MAJOR.MINOR` line (`0.0.1` ->
-`0.0.2-nightly` -> `0.0.3-beta` -> `0.0.4`), appending `-nightly` or `-beta` for
-prereleases and no suffix for Stable. This guarantees that whichever release is
-published later always has the strictly largest SemVer. When two schedules share
-the same `00:00 UTC` window (such as Nightly + Beta on the 27th, or Nightly +
-Stable on day 1 of a quarter), `prepareScheduledBranch` assigns versions in fixed
-ascending order (`nightly` first, then `beta` / `stable` with a higher SemVer).
-At any given moment, `main` may not carry the highest SemVer number, because Nightly
-(daily) and Beta (monthly) preview releases continue to advance their patch numbers
-(`0.0.x-nightly`, `0.0.x-beta`) between quarterly Stable releases. However, `main`
-is authoritative as the official production release with the highest stability. The updater
-feed `channel-stable` serves only stable builds, GitHub marks `main` as `--latest`
-(while preview channels are marked `--prerelease`), and the website downloads always prioritize `main`.
-When CI starts during the 60-minute pre-build lead window (`23:00 UTC`),
-`targetReleaseTime` resolves to the upcoming `00:00:00 UTC` boundary so `About`
-metadata and `latest.json` match the exact publication date. Separate feeds
-intentionally avoid cross-channel promotion. Maintainers must change the base
-version deliberately for a future MINOR/MAJOR release.
+`promote-release.yml` plans complete periods from trusted Main code.
+`publish-rollup.yml` authorizes the exact approved merge, prepares a detached
+metadata snapshot and immutable tag, then dispatches isolated `release.yml`
+validation and six native builds. Protected source branches remain untouched.
+Each platform regenerates About metadata for its target/frozen release date.
+Packages/signatures/checksums are verified before leaving the draft state, and
+complete promotion authorization is checked again immediately before publication.
+Nightly scheduling and the intermediate channel have been removed permanently.
 
-`scheduled-release.yml` fetches and detaches the channel's configured source branch
-(`origin/nightly`, `origin/beta` or `origin/main`), prepares a detached release
-commit with synchronized versions and metadata, pushes only its immutable tag, and
-calls `release.yml` with both `tag` and `publish_at` (`YYYY-MM-DDT00:00:00.000Z`).
-Branch refs remain unchanged. Every platform builds the exact tag; per-target
-About metadata is regenerated before packaging. In `publish`, all bundles and
-signatures are verified and uploaded to the draft release first; `prepare-release.mjs wait`
-then holds until exact `00:00:00 UTC` before flipping `draft=false` and updating
-`channel-<channel>/latest.json`. Per-channel publication concurrency groups allow
-simultaneous channel schedules (such as Nightly + Beta on the 27th, or Nightly +
-Stable at quarter start) to build and publish on time at `00:00 UTC` without blocking
-each other.
-
-Schedules become active after these workflows reach the default branch and
-Actions is enabled. Signing secrets remain required. GitHub cron is best-effort
-and may be delayed; the 60-minute pre-build window absorbs runner startup and
-multi-platform build time.
-
-The deliberate reset from 0.1.x to 0.0.1 is a SemVer downgrade. Existing 0.1.x
-installations need one manual installation; the updater's downgrade/replay
-protections remain enabled. The new stable feed also avoids accidentally
-offering legacy 0.1.x releases to a fresh 0.0.1 installation. No old Git tags
-or GitHub Releases are deleted or rewritten.
-
-Stable trigger restriction: scheduled/reusable channel workflows and manual
-`workflow_dispatch` can publish Stable releases; raw stable tag pushes are rejected.
-
-## One-click manual Stable release
-
-`release.yml` starts with a write-scoped preparation job. On workflow_dispatch,
-`scripts/manual-release.mjs` uses the selected branch SHA and the package's stable
-version line. It selects the first available PATCH above existing stable tags in
-that MAJOR.MINOR line; unrelated legacy 0.1.x tags do not undo the 0.0 reset.
-The initial unused 0.0.1 is kept. A new Run workflow invocation can advance PATCH;
-major/minor changes remain an explicit source-version decision.
-
-Preparation synchronizes package/Cargo/Tauri/About/release notes, creates a
-detached commit and pushes only its immutable tag. It does not commit to or push
-the selected branch. Commit trailers bind the Actions run ID and original SHA;
-Re-run jobs reuses that exact snapshot and rejects a source mismatch. Failed
-release runs may leave reserved version tags; a new run selects a new free patch.
-The resolved SHA feeds validation, every platform build and publication.
-Already-published releases remain protected from replacement. Automatic callers
-can only resolve existing nightly/beta tags. Signing credentials and passing
-checks are still required; tag preparation does not bypass release verification.
-
-Local verification covers a temporary bare Git remote: initial automatic tag
-creation, version synchronization, retry identity, next PATCH selection and
-unchanged source-branch/previous-tag refs. No GitHub release was created by these
-tests.
-
-One-click verification: actionlint 1.7.7 passed for release.yml and
-scheduled-release.yml (shellcheck integration disabled); architecture,
-TypeScript, Cargo check and 34 focused Node tests passed. Tests pushed tags only
-to temporary local bare repositories. Remote GitHub permissions, signing secrets,
-full matrix builds and actual publication still require an Actions run after
-these changes are merged.
+Keep controller changes deployed consistently through reviewed PRs to Develop,
+Beta and Main. Manual Stable preparation and tag rebuilds must still satisfy
+approved-source authorization. Passing signing/build jobs alone cannot authorize
+a release. Never publish a release by bypassing required PR checks or approval.

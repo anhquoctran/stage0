@@ -2,7 +2,7 @@ name: Release Stage0
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v*', '!v*-nightly*']
   workflow_dispatch:
     inputs:
       publish_at:
@@ -36,10 +36,10 @@ jobs:
     if: >-
       github.repository == 'anhquoctran/stage0' &&
       (github.ref_type == 'tag' || github.ref == 'refs/heads/main') &&
+      !contains(inputs.tag || github.ref_name, '-nightly') &&
       (github.event_name == 'workflow_dispatch' ||
        github.event_name == 'schedule' ||
        github.event_name == 'workflow_call' ||
-       contains(inputs.tag || github.ref_name, '-nightly') ||
        contains(inputs.tag || github.ref_name, '-beta'))
     runs-on: ubuntu-22.04
     permissions:
@@ -126,7 +126,6 @@ jobs:
       - run: pnpm test
       - run: pnpm test:react
       - name: Run frozen target Node regressions
-        if: needs.prepare.outputs.channel != 'nightly'
         shell: bash
         run: |
           git show "$REGRESSION_BASE:scripts/release-regression-runner.mjs" > "$RUNNER_TEMP/stage0-regressions.mjs"
@@ -214,7 +213,6 @@ jobs:
           choco install strawberryperl --no-progress --yes
           echo 'C:\Strawberry\perl\bin' >> "$GITHUB_PATH"
       - name: Run frozen target Rust regressions
-        if: needs.prepare.outputs.channel != 'nightly'
         shell: bash
         run: |
           git show "$REGRESSION_BASE:scripts/release-regression-runner.mjs" > "$RUNNER_TEMP/stage0-regressions.mjs"

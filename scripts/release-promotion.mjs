@@ -5,10 +5,11 @@ import { assertRollupPullRequest, rollupBranchDate } from './release-rollup.mjs'
 import { fetchPromotionSource } from './release-promotion-source.mjs';
 export { fetchPromotionSource } from './release-promotion-source.mjs';
 import { promotionApi, assertPromotionSecurity } from './release-promotion-github.mjs';
+import { fetchDevelopmentCandidate } from './release-development-source.mjs';
 
 export function promotionRoute(channel) {
   const route = Object.hasOwn(policy.promotion.routes, channel) ? policy.promotion.routes[channel] : null;
-  if (!route) throw new Error('Only nightly → beta and beta → stable promotions are supported');
+  if (!route) throw new Error('Only develop → beta and beta → stable promotions are supported');
   return route;
 }
 
@@ -16,6 +17,10 @@ export function parsePromotionBranch(branch, channel) {
   const prefix = `promotion/${channel}/`;
   if (!branch?.startsWith(prefix)) throw new Error(`Use a frozen ${prefix}TAG branch`);
   const tag = branch.slice(prefix.length);
+  if (promotionRoute(channel).from === 'develop') {
+    if (!/^develop\/pr-[1-9]\d*\/[a-f0-9]{40}$/.test(tag)) throw new Error('Candidate must identify an immutable develop PR merge');
+    return tag;
+  }
   if (!tag.startsWith('v') || releaseChannel(tag.slice(1)) !== promotionRoute(channel).from) {
     throw new Error('Candidate tag must belong to the immediately preceding channel');
   }
@@ -61,10 +66,11 @@ export function assertPromotionPullRequest(root, pr, { api = promotionApi, now =
   } else {
     // Urgent certified hotfixes retain the explicit adjacent-candidate route.
     if (!hotfix) throw new Error('Regular promotions require a complete calendar-period rollup, not one candidate tag');
-    const declared = pr.body?.match(/^Stage0-Candidate: (v[^\s]+)$/gm) || [];
+    const declared = pr.body?.match(/^Stage0-Candidate: ([^\s]+)$/gm) || [];
     if (declared.length !== 1) throw new Error('Declare exactly one Stage0-Candidate for a certified hotfix');
     const tag = parsePromotionBranch(`promotion/${channel}/${declared[0].slice('Stage0-Candidate: '.length)}`, channel);
-    candidate = fetchPromotionSource(root, tag, api);
+    candidate = promotionRoute(channel).from === 'develop'
+      ? fetchDevelopmentCandidate(root, tag, api, now) : fetchPromotionSource(root, tag, api);
     assertCandidateAge(candidate, channel, now);
     let baseSha = pr.base.sha;
     if (merged) {
@@ -118,7 +124,6 @@ export function assertPromotionPullRequest(root, pr, { api = promotionApi, now =
 
 /** Shared by scheduled, manual and tag entry points, before allocating a version. */
 export function assertPublishedPromotion({ root, channel, sourceSha, api = promotionApi, now = new Date() }) {
-  if (channel === 'nightly') return null;
   const source = releaseSource(root, sourceSha);
   const branch = promotionRoute(channel).branch;
   const prs = api(`commits/${source}/pulls?per_page=100`, { paginated: true });

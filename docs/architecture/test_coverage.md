@@ -70,7 +70,7 @@ it; later PRs cannot lower the existing policy through the coverage check.
 
 ## CI and branch enforcement
 
-`Protected regressions` runs on PRs into Develop, Nightly, Beta and Main. All three
+`Protected regressions` runs on PRs into Develop, Beta and Main. All three
 OS jobs keep Node tests, frozen target regressions, real React DOM tests and the
 complete Rust suite. Ubuntu additionally runs the Chromium contracts and measures
 React/Rust coverage, using the instrumented Rust run in place of a duplicate full
