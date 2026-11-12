@@ -12,10 +12,17 @@ import {
 
 test('channels accept supported historical tags and reject malformed tags', () => {
   for (const tag of ['v0.0.4', 'v1.2.3']) assert.equal(releaseChannelFromTag(tag), 'stable');
-  for (const channel of ['beta', 'nightly'])
+  for (const channel of ['beta'])
     for (const tag of [`v1.2.3-${channel}`, `v1.2.3-${channel}.20261108.1`])
       assert.equal(releaseChannelFromTag(tag), channel);
-  for (const tag of ['1.2.3', 'v01.2.3', 'v1.2.3-rc', 'v1.2.3-nightly+evil'])
+  for (const tag of [
+    '1.2.3',
+    'v01.2.3',
+    'v1.2.3-rc',
+    'v1.2.3-nightly+evil',
+    'v1.2.3-nightly',
+    'v1.2.3-nightly.20261108.1',
+  ])
     assert.equal(releaseChannelFromTag(tag), null);
 });
 

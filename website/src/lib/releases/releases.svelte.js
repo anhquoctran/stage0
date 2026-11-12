@@ -124,7 +124,7 @@ export function createReleases() {
       );
     },
     selectChannel(value) {
-      if (['stable', 'beta', 'nightly'].includes(value)) {
+      if (['stable', 'beta'].includes(value)) {
         channel = value;
         selectedTag = '';
       }

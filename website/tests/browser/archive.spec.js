@@ -117,7 +117,7 @@ test('Stable only defaults on; toggling preserves OS and architecture filters wi
   await page.locator('[data-history-arch="arm64"]').click();
   await expect(tags(page)).toHaveText(['v1.0.2']);
   await toggle.uncheck();
-  await expect(tags(page)).toHaveText(['v1.0.4-nightly', 'v1.0.3-beta', 'v1.0.2']);
+  await expect(tags(page)).toHaveText(['v1.0.3-beta', 'v1.0.2']);
   await toggle.check();
   await expect(tags(page)).toHaveText(['v1.0.2']);
   expect(requests).toHaveLength(1);
@@ -126,7 +126,7 @@ test('Stable only defaults on; toggling preserves OS and architecture filters wi
 test('changing Stable only resets pagination and keeps stable releases available on older API pages', async ({
   page,
 }) => {
-  const first = Array.from({ length: 100 }, (_, i) => release(`v1.0.${i}-nightly`, [names[8]]));
+  const first = Array.from({ length: 100 }, (_, i) => release(`v1.0.${i}-beta`, [names[8]]));
   const requests = await open(page, (url) =>
     url.searchParams.get('page') === '2' ? [release('v1.0.101', [names[8]])] : first,
   );

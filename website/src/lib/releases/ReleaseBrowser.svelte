@@ -49,7 +49,7 @@
   </div>
   <div class="release-browser-controls">
     <div class="release-channel-picker" role="group" aria-label="Release channel">
-      {#each ['stable', 'beta', 'nightly'] as channel}
+      {#each ['stable', 'beta'] as channel}
         <button
           type="button"
           class="release-channel-button"
