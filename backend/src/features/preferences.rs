@@ -52,3 +52,6 @@ static PROCESS_PREFERENCES_WRITE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::
 mod commit_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod storage_tests;

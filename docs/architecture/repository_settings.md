@@ -42,7 +42,7 @@ Revision hashes are mandatory. The complete candidate is validated before any
 primary write; the revision is rechecked immediately before replacement.
 
 A same-directory temporary file is flushed, atomically replaces the primary,
-and its directory is synchronized on Unix. Windows replacement uses write-through;
+and its directory is synchronized on Unix. Windows replacement uses write-through when available; open-reader replacements use the standard-library POSIX rename fallback followed by a file flush;
 initialization omits replacement and never clobbers another creator. The primary
 replacement is the commit point. Only afterwards are runtime snapshots/events
 published. Publication sequence numbers reject late responses in the frontend;

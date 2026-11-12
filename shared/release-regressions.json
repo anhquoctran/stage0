@@ -260,6 +260,15 @@
       "runner": "node",
       "path": "scripts/repository-settings.test.mjs",
       "requires": "frontend/features/virtual-mr/services/repositorySettingsDocuments.ts"
+    },
+    {
+      "id": "settings-open-reader-atomic-replace",
+      "runner": "rust",
+      "path": "backend/src/features/preferences/storage_tests.rs",
+      "tests": [
+        "features::preferences::storage_tests::atomic_replacement_keeps_open_readers_on_their_original_snapshot"
+      ],
+      "requires": "backend/src/features/git/repo_settings/mod.rs"
     }
   ]
 }
