@@ -20,7 +20,7 @@ function fixture(t, date) {
   git('config', 'user.email', 'fixture@example.test');
   git('remote', 'add', 'origin', origin);
   for (const dir of ['scripts', 'shared', 'backend', 'website']) fs.mkdirSync(path.join(root, dir));
-  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-promotion.mjs', 'release-regression-preservation.mjs', 'release-regression-runner.mjs', 'release-promotion-source.mjs', 'release-rollup.mjs', 'release-rollup-tree.mjs', 'release-period.mjs', 'release-promotion-github.mjs', 'release-channels.mjs', 'release-history.mjs', 'release-changelog.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
+  for (const name of ['manual-release.mjs', 'prepare-release.mjs', 'release-promotion.mjs', 'release-regression-preservation.mjs', 'release-regression-runner.mjs', 'release-promotion-source.mjs', 'release-development-source.mjs', 'release-rollup.mjs', 'release-rollup-tree.mjs', 'release-period.mjs', 'release-promotion-github.mjs', 'release-channels.mjs', 'release-history.mjs', 'release-changelog.mjs', 'bump-version.mjs', 'generate-about-info.mjs']) {
     fs.copyFileSync(new URL(name, import.meta.url), path.join(root, 'scripts', name));
   }
   fs.copyFileSync(new URL('../shared/release-channels.json', import.meta.url), path.join(root, 'shared/release-channels.json'));
@@ -86,25 +86,18 @@ test('release preparation uses preloaded controller code rather than executing c
   assert.equal(f.git('show', `${release.sha}:scripts/prepare-release.mjs`), 'throw new Error("untrusted source code executed");');
 });
 
-test('actual preview tag entry points skip stale sources and accept fresh sources without preparing another tag', async t => {
+test('actual retired tag entry points fail before output, tag or working tree mutation regardless of source freshness', async t => {
   for (const event of ['push', 'workflow_dispatch']) {
-    for (const stale of [true, false]) {
-      await t.test(`${event}, ${stale ? 'stale' : 'fresh'}`, t => {
-        const f = fixture(t, stale ? '2000-01-01T00:00:00Z' : undefined);
-        const tag = 'v0.0.2-nightly';
-        f.git('tag', tag);
-        const output = path.join(f.root, 'outputs'), summary = path.join(f.root, 'summary');
-        execFileSync(process.execPath, [...f.mock, 'scripts/manual-release.mjs'], { cwd: f.root, env: {
-          ...process.env,
-          RELEASE_EVENT: event, RELEASE_REF_TYPE: 'tag', RELEASE_INPUT_TAG: tag,
-          GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: summary,
-        } });
-        assert.match(fs.readFileSync(output, 'utf8'), new RegExp(`should_build=${!stale}\\n`));
-        assert.equal(f.git('tag', '--list'), tag);
-        assert.equal(f.git('rev-parse', 'HEAD'), f.sourceSha);
-        if (stale) assert.match(fs.readFileSync(summary, 'utf8'), /Skipped nightly: No new source commits in the last 24 hours/);
-      });
-    }
+    for (const stale of [true, false]) await t.test(`${event}, ${stale ? 'stale' : 'fresh'}`, t => {
+      const f = fixture(t, stale ? '2000-01-01T00:00:00Z' : undefined);
+      const tag = 'v0.0.2-nightly'; f.git('tag', tag);
+      const output = path.join(f.root, 'outputs');
+      assert.throws(() => execFileSync(process.execPath, [...f.mock, 'scripts/manual-release.mjs'], { cwd: f.root, stdio: 'pipe', env: {
+        ...process.env, RELEASE_EVENT: event, RELEASE_REF_TYPE: 'tag', RELEASE_INPUT_TAG: tag, GITHUB_OUTPUT: output,
+      } }), /Release version must be stable/);
+      assert.equal(fs.existsSync(output), false);
+      assert.equal(f.git('tag', '--list'), tag); assert.equal(f.git('rev-parse', 'HEAD'), f.sourceSha);
+    });
   }
 });
 

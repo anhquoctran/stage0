@@ -4,7 +4,7 @@ import path from 'node:path';
 import { parse } from 'yaml';
 
 const RULESET_NAME = 'Stage0 integration Actions checks';
-export const protectedTestBranches = ['develop', 'nightly', 'beta', 'main'];
+export const protectedTestBranches = ['develop', 'beta', 'main'];
 export const regressionChecks = ['ubuntu-22.04', 'macos-latest', 'windows-latest'].map(os => ({ context: `Regression gate (${os})`, integration_id: 15368 }));
 
 export function regressionRuleset(existing) {
@@ -20,7 +20,7 @@ export function regressionRuleset(existing) {
   }
   Object.assign(status.parameters, { strict_required_status_checks_policy: true, do_not_enforce_on_create: false });
   return { name: existing.name, target: 'branch', enforcement: 'active', bypass_actors: [],
-    conditions: { ref_name: { include: [...new Set([...existing.conditions.ref_name.include, ...protectedTestBranches.map(branch => `refs/heads/${branch}`)])], exclude: [] } }, rules };
+    conditions: { ref_name: { include: [...new Set([...existing.conditions.ref_name.include.filter(ref => !ref.endsWith('/nightly')), ...protectedTestBranches.map(branch => `refs/heads/${branch}`)])], exclude: [] } }, rules };
 }
 
 export function configureRegressionChecks({ api, apply = false }) {

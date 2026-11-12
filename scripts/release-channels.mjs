@@ -5,15 +5,16 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const policy = JSON.parse(fs.readFileSync(path.join(root, 'shared/release-channels.json'), 'utf8'));
-export const CHANNEL_PRIORITY = ['nightly', 'beta', 'stable'];
+export const CHANNEL_PRIORITY = ['beta', 'stable'];
 
 const CORE_PATTERN = '(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)';
+// Historical tags still reserve their patch numbers; they cannot authorize a new release.
 const TAG_LINE_RE = new RegExp(`^v${CORE_PATTERN}(?:-(nightly|beta)(?:\\.[1-9]\\d{7}\\.(?:0|[1-9]\\d*))?)?$`);
 
 export function releaseChannel(version) {
   if (new RegExp(`^${CORE_PATTERN}$`).test(version)) return 'stable';
-  const match = new RegExp(`^${CORE_PATTERN}-(nightly|beta)$`).exec(version);
-  if (!match) throw new Error('Release version must be stable MAJOR.MINOR.PATCH or a -nightly/-beta prerelease');
+  const match = new RegExp(`^${CORE_PATTERN}-(beta)$`).exec(version);
+  if (!match) throw new Error('Release version must be stable MAJOR.MINOR.PATCH or a -beta prerelease');
   return match[4];
 }
 
@@ -65,7 +66,7 @@ export function dueReleaseChannels(now = new Date(), leadMinutes = policy.leadMi
   const releaseTime = targetReleaseTime(now, leadMinutes);
   const epoch = new Date(policy.epoch);
   if (releaseTime < epoch) throw new Error('Invalid release time');
-  const due = ['nightly'];
+  const due = [];
   if (releaseTime.getUTCDate() === policy.channels.beta.releaseDayOfMonth) {
     due.push('beta');
   }
@@ -168,7 +169,7 @@ export function validateGitFlowBranch({ headBranch, baseBranch = policy.gitFlow.
     const slug = head.slice(policy.gitFlow.hotfixPrefix.length);
     if (!slug || !/^[a-z0-9][a-z0-9._/-]*$/i.test(slug)) throw new Error('Invalid hotfix branch name');
     if (!Object.hasOwn(policy.gitFlow.syncTargets, base)) {
-      throw new Error('Hotfix branches must branch off and target main, beta or nightly');
+      throw new Error('Hotfix branches must branch off and target main or beta');
     }
     return {
       kind: 'hotfix',

@@ -269,6 +269,19 @@
         "features::preferences::storage_tests::atomic_replacement_keeps_open_readers_on_their_original_snapshot"
       ],
       "requires": "backend/src/features/git/repo_settings/mod.rs"
+    },
+    {
+      "id": "release-without-nightly",
+      "runner": "node",
+      "path": "scripts/remove-nightly-release.test.mjs"
+    },
+    {
+      "id": "updater-without-nightly",
+      "runner": "rust",
+      "path": "backend/src/features/updates/tests.rs",
+      "tests": [
+        "features::updates::tests::retired_nightly_versions_never_use_or_accept_a_nightly_feed"
+      ]
     }
   ]
 }

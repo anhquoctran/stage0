@@ -3,14 +3,13 @@
   "epoch": "2026-10-01T00:00:00Z",
   "developmentBranch": "origin/develop",
   "leadMinutes": 60,
-  "previewActivityHours": 24,
   "promotion": {
     "requiredCheck": "Release promotion policy",
     "periodTimeZone": "UTC",
-    "selection": "all-eligible-published-builds-with-human-QA",
+    "selection": "all-eligible-source-snapshots-with-human-QA",
     "routes": {
       "beta": {
-        "from": "nightly",
+        "from": "develop",
         "branch": "beta",
         "hotfixMinimumAgeHours": 24
       },
@@ -22,32 +21,51 @@
     }
   },
   "gitFlow": {
-    "protectedBranches": ["main", "beta", "nightly", "develop"],
+    "protectedBranches": [
+      "main",
+      "beta",
+      "develop"
+    ],
     "defaultBaseBranch": "develop",
-    "workBranchPrefixes": ["feat/", "fix/", "refactor/", "perf/", "docs/", "test/", "chore/"],
+    "workBranchPrefixes": [
+      "feat/",
+      "fix/",
+      "refactor/",
+      "perf/",
+      "docs/",
+      "test/",
+      "chore/"
+    ],
     "hotfixPrefix": "hotfix/",
     "riskLevels": {
-      "work": { "risk": "highest", "stability": "unstable" },
-      "develop": { "risk": "highest", "stability": "unstable" },
-      "nightly": { "risk": "high", "stability": "preview" },
-      "beta": { "risk": "medium", "stability": "stabilizing" },
-      "main": { "risk": "low", "stability": "stable" }
+      "work": {
+        "risk": "highest",
+        "stability": "unstable"
+      },
+      "develop": {
+        "risk": "highest",
+        "stability": "unstable"
+      },
+      "beta": {
+        "risk": "medium",
+        "stability": "stabilizing"
+      },
+      "main": {
+        "risk": "low",
+        "stability": "stable"
+      }
     },
     "syncTargets": {
-      "main": ["beta", "nightly", "develop"],
-      "beta": ["nightly", "develop"],
-      "nightly": ["develop"]
+      "main": [
+        "beta",
+        "develop"
+      ],
+      "beta": [
+        "develop"
+      ]
     }
   },
   "channels": {
-    "nightly": {
-      "branch": "origin/nightly",
-      "cadence": "daily",
-      "risk": "high",
-      "stability": "preview",
-      "releaseTimeUtc": "00:00",
-      "cron": "0 23 * * *"
-    },
     "beta": {
       "branch": "origin/beta",
       "cadence": "monthly",
@@ -65,7 +83,9 @@
       "releaseDayOfQuarter": 1,
       "releaseTimeUtc": "00:00",
       "cron": "0 0 1 1,4,7,10 *",
-      "crons": ["0 0 1 1,4,7,10 *"]
+      "crons": [
+        "0 0 1 1,4,7,10 *"
+      ]
     }
   }
 }
