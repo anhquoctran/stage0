@@ -1,10 +1,11 @@
 name: Protected regressions
+run-name: 'Regression checks · PR #${{ github.event.pull_request.number }} · ${{ github.base_ref }} · ${{ github.event.pull_request.head.sha }}'
 
 on:
   # One required-check suite per PR head. A second push suite with the same
   # job names leaves cancelled required checks when PR concurrency supersedes it.
   pull_request:
-    branches: [develop, nightly, beta, main]
+    branches: [develop, beta, main]
     types: [opened, reopened, synchronize, ready_for_review]
 
 permissions:
@@ -41,7 +42,7 @@ jobs:
             BASELINE_SHA="$PR_BASE_SHA"
           else
             BASE_BRANCH=develop
-            if [[ "$SOURCE_BRANCH" =~ ^hotfix/(sync-)?(main|beta|nightly|develop)/ ]]; then
+            if [[ "$SOURCE_BRANCH" =~ ^hotfix/(sync-)?(main|beta|develop)/ ]]; then
               BASE_BRANCH="${BASH_REMATCH[2]}"
             fi
             BASELINE_SHA=$(git rev-parse "origin/$BASE_BRANCH")

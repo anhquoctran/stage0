@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { dispatchTagRelease } from './dispatch-tag-release.mjs';
 
 const environment = () => ({ GITHUB_REPOSITORY: 'anhquoctran/stage0', GITHUB_REF: 'refs/heads/main',
-  GITHUB_REF_TYPE: 'branch', RELEASE_TAG: 'v0.0.8-nightly', RELEASE_SNAPSHOT_SHA: 'a'.repeat(40),
+  GITHUB_REF_TYPE: 'branch', RELEASE_TAG: 'v0.0.8-beta', RELEASE_SNAPSHOT_SHA: 'a'.repeat(40),
   RELEASE_PUBLISH_AT: '2026-11-05T00:00:00.000Z', GH_TOKEN: 'fixture-not-a-real-token' });
 
 test('main controller dispatches the immutable tag context and retains the publication window', async t => {

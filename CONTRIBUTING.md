@@ -50,7 +50,7 @@ To work on Stage0 locally, you will need:
 
 ### Branching Strategy
 
-Protected build and integration branches (`main`, `beta`, `nightly`, `develop`) do not accept direct commits or direct pushes. See [docs/architecture/git_strategy.md](./docs/architecture/git_strategy.md) for the full Git Flow and release promotion diagram.
+Protected build and integration branches (`main`, `beta`, `develop`) do not accept direct commits or direct pushes. See [docs/architecture/git_strategy.md](./docs/architecture/git_strategy.md) for the full Git Flow and release promotion diagram.
 
 For all standard work, create a descriptive branch off `origin/develop`:
 
@@ -69,7 +69,7 @@ Common prefixes:
 - `refactor/`: Code reorganization without functional changes
 - `test/`: Test additions and harness improvements
 - `chore/`: Dependency updates, tooling, and build scripts
-- `hotfix/<target-branch>/`: Urgent fixes branched directly from `origin/main`, `origin/beta`, or `origin/nightly` (must be synchronized back to the remaining branches after merge)
+- `hotfix/<target-branch>/`: Urgent fixes branched directly from `origin/main` or `origin/beta` (must be synchronized back to the remaining branches after merge)
 
 ---
 
@@ -153,3 +153,5 @@ Examples:
 4. Respond promptly to any reviewer feedback.
 
 Thank you for helping make Stage0 better for everyone!
+
+Nightly is permanently retired. Release flow: checked Develop snapshots -> monthly Beta -> quarterly Stable.
