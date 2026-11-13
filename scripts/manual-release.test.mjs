@@ -37,28 +37,28 @@ function fixture(t, date) {
   return { root, origin, git, sourceSha, branch, mock };
 }
 
-test('manual dispatch chooses the next free stable patch across all channel tags without reviving legacy 0.1.x', () => {
-  assert.equal(nextStableVersion('0.0.1', []), '0.0.1');
-  assert.equal(nextStableVersion('0.0.1', ['v0.1.12']), '0.0.1');
+test('manual dispatch advances the current build past active channel tags without reviving legacy 0.1.x', () => {
+  assert.equal(nextStableVersion('0.0.1', []), '0.0.2');
+  assert.equal(nextStableVersion('0.0.1', ['v0.1.12']), '0.0.2');
   assert.equal(nextStableVersion('0.0.1', ['v0.1.12', 'v0.0.2-nightly', 'v0.0.3-beta']), '0.0.4');
   assert.equal(nextStableVersion('0.0.1', ['v0.0.8', 'v0.0.1', 'v0.0.3']), '0.0.9');
-  assert.equal(nextStableVersion('0.0.10', ['v0.0.1']), '0.0.10');
+  assert.equal(nextStableVersion('0.0.10', ['v0.0.1']), '0.0.11');
   assert.throws(() => nextStableVersion('0.0.2-beta', []), /stable package/);
 });
 
 test('one click prepares and pushes an immutable version tag; reruns reuse it and main stays unchanged', t => {
   const f = fixture(t);
   const first = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] });
-  assert.equal(first.tag, 'v0.0.1');
+  assert.equal(first.tag, 'v0.0.2');
   assert.equal(f.git('rev-parse', `refs/heads/${f.branch}`), f.sourceSha);
   assert.notEqual(first.sha, f.sourceSha);
   const remote = execFileSync('git', ['--git-dir', f.origin, 'rev-parse', first.tag], { encoding: 'utf8' }).trim();
   assert.equal(remote, first.sha);
-  assert.equal(JSON.parse(f.git('show', `${first.tag}:package.json`)).version, '0.0.1');
+  assert.equal(JSON.parse(f.git('show', `${first.tag}:package.json`)).version, '0.0.2');
   assert.deepEqual(prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: f.sourceSha, releases: [] }), first);
   const second = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '102', sourceSha: f.sourceSha, releases: [] });
-  assert.equal(second.tag, 'v0.0.2');
-  assert.equal(JSON.parse(f.git('show', `${second.tag}:backend/about.json`)).packageVersion, '0.0.2');
+  assert.equal(second.tag, 'v0.0.3');
+  assert.equal(JSON.parse(f.git('show', `${second.tag}:backend/about.json`)).packageVersion, '0.0.3');
   assert.equal(f.git('rev-parse', first.tag), first.sha, 'Earlier tags are never rewritten');
   assert.equal(f.git('rev-parse', `refs/heads/${f.branch}`), f.sourceSha);
   assert.throws(() => prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '101', sourceSha: second.sha, releases: [] }), /source mismatch/);
@@ -82,7 +82,7 @@ test('release preparation uses preloaded controller code rather than executing c
   f.git('commit', '-m', 'Change source tooling');
   const sourceSha = f.git('rev-parse', 'HEAD');
   const release = prepareManualRelease({ promotionGuard: () => null, root: f.root, runId: '103', sourceSha, releases: [] });
-  assert.equal(JSON.parse(f.git('show', `${release.sha}:package.json`)).version, '0.0.1');
+  assert.equal(JSON.parse(f.git('show', `${release.sha}:package.json`)).version, '0.0.2');
   assert.equal(f.git('show', `${release.sha}:scripts/prepare-release.mjs`), 'throw new Error("untrusted source code executed");');
 });
 

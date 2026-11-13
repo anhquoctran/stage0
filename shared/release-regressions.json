@@ -70,6 +70,11 @@
       "path": "scripts/release-artifacts.test.mjs"
     },
     {
+      "id": "active-build-version-allocation",
+      "runner": "node",
+      "path": "scripts/build-version-allocation.test.mjs"
+    },
+    {
       "id": "website-download-detection",
       "runner": "node",
       "path": "scripts/website-download-detection.test.mjs"

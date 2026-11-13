@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { nextReleaseVersion, releaseChannel } from './release-channels.mjs';
+import { nextBuildVersion, releaseChannel } from './release-channels.mjs';
 import { setReleaseVersion } from './prepare-release.mjs';
 import { publishedReleases, previewBuildDecision, releaseSource } from './release-history.mjs';
 import { assertPublishedPromotion } from './release-promotion.mjs';
@@ -11,7 +11,7 @@ import { createReleaseChangelog } from './release-changelog.mjs';
 /** Legacy releases from other version lines do not undo the deliberate 0.0 reset. */
 export function nextStableVersion(current, tags) {
   if (releaseChannel(current) !== 'stable') throw new Error('Select a branch with a stable package version');
-  return nextReleaseVersion('stable', tags, current);
+  return nextBuildVersion('stable', tags, current);
 }
 
 export function prepareManualRelease({ runId, sourceSha, root = process.cwd(), releases = publishedReleases(root), promotionGuard = assertPublishedPromotion }) {

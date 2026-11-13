@@ -2,8 +2,8 @@
 
 Nightly is retired permanently. `scheduled-release.yml` is removed and its
 GitHub workflow is disabled. New Nightly tags, manual builds, release manifests
-and update feeds are forbidden. Historical tags remain reserved version numbers;
-reading their provenance does not enable publishing that channel.
+and update feeds are forbidden. Historical tags remain available for audit, but retired channels do not reserve
+new build numbers. Reading their provenance does not enable publishing that channel.
 
 ## Calendar and source eligibility
 
