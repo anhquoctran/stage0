@@ -13,7 +13,7 @@ import os from 'os';
 import net from 'net';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { computeAboutInfo } from './generate-about-info.mjs';
+import { readDevelopmentAboutInfo } from './generate-about-info.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -68,7 +68,8 @@ if (!Number.isInteger(DESIRED_PORT) || DESIRED_PORT < 1 || DESIRED_PORT > 65535)
 }
 
 // Compute display metadata for the banner without rewriting release files.
-const releaseInfo = computeAboutInfo({
+const releaseInfo = readDevelopmentAboutInfo({
+  root: ROOT_DIR,
   arch: ARCH,
   os: PLATFORM === 'win32' ? 'windows' : PLATFORM === 'darwin' ? 'macos' : 'linux',
 });
