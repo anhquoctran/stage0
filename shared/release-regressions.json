@@ -304,6 +304,11 @@
       "path": "scripts/review-discussion-ownership.test.mjs"
     },
     {
+      "id": "discussion-reference-triggers",
+      "runner": "node",
+      "path": "scripts/discussion-reference-triggers.test.mjs"
+    },
+    {
       "id": "review-discussion-ownership-enforcement",
       "runner": "rust",
       "path": "backend/src/features/review/runtime/tests/reply_ownership_tests.rs",

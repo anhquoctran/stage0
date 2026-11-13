@@ -265,3 +265,67 @@ it('cannot publish a late SHA lookup into another repository or query', async ()
     expect(f.message).not.toHaveBeenCalled();
     expect(screen.queryByRole('option', { name: /dddddddd/ })).not.toBeInTheDocument();
 });
+
+it('uses !MR_ID for MR-only suggestions and opens the selected immutable MR identity', async () => {
+    const user = userEvent.setup();
+    render(<Editor />);
+    await user.type(screen.getByRole('combobox'), '!mr-b');
+    const options = await screen.findAllByRole('option');
+    expect(options).toHaveLength(1);
+    expect(options[0]).toHaveTextContent('Related safety fix');
+    expect(f.graph).not.toHaveBeenCalled();
+    expect(f.resolveSha).not.toHaveBeenCalled();
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('source')).toHaveTextContent('(#mr-mention/mr/mr-b)');
+    await user.click(screen.getByRole('button', { name: 'Preview' }));
+    await user.click(screen.getByRole('link', { name: '!mr-b' }));
+    expect(f.mr.switchSession).toHaveBeenCalledWith('mr-b');
+});
+
+it('uses #partial_digest for commit-only suggestions and retains the full SHA in the link', async () => {
+    const user = userEvent.setup();
+    render(<Editor />);
+    await user.type(screen.getByRole('combobox'), '#AAAAAAA');
+    expect(await screen.findAllByRole('option')).toHaveLength(1);
+    await user.keyboard('{Tab}');
+    expect(screen.getByTestId('source')).toHaveTextContent(`[#aaaaaaaa](#mr-mention/commit/${sha})`);
+    await user.click(screen.getByRole('button', { name: 'Preview' }));
+    await user.click(screen.getByRole('link', { name: '#aaaaaaaa' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent(`/repo-a:${sha}`);
+});
+
+it('resolves #digests outside recent history without interpreting unknown hashes as another mention kind', async () => {
+    const old = 'e'.repeat(40);
+    f.resolveSha.mockResolvedValue(old);
+    f.message.mockResolvedValue('fix: older referenced commit');
+    const user = userEvent.setup();
+    render(<Editor />);
+    await user.type(screen.getByRole('combobox'), '#eeeeeee');
+    await screen.findByRole('option', { name: /older referenced commit/ });
+    expect(f.resolveSha).toHaveBeenCalledWith({ repoPath: '/repo-a', reference: 'eeeeeee' });
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('source')).toHaveTextContent(`(#mr-mention/commit/${old})`);
+    await user.clear(screen.getByRole('combobox'));
+    f.resolveSha.mockRejectedValue(new Error('Ambiguous hash'));
+    await user.type(screen.getByRole('combobox'), '#fffffff');
+    await waitFor(() => expect(f.resolveSha).toHaveBeenCalledWith({ repoPath: '/repo-a', reference: 'fffffff' }));
+    expect(screen.queryByRole('option')).not.toBeInTheDocument();
+    expect(screen.getByTestId('source')).toHaveTextContent('#fffffff');
+});
+
+it('cancels an in-flight hash lookup when switching from # to ! with the same query', async () => {
+    let finish!: (hash: string) => void;
+    f.resolveSha.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
+    f.mr.sessions.push({ ...related, id: 'ddddddd' });
+    const user = userEvent.setup();
+    render(<Editor />);
+    const input = screen.getByRole('combobox');
+    await user.type(input, '#ddddddd');
+    await waitFor(() => expect(f.resolveSha).toHaveBeenCalledTimes(1));
+    await user.clear(input);
+    await user.type(input, '!ddddddd');
+    await screen.findByRole('option', { name: /Related safety fix/ });
+    await act(async () => { finish('d'.repeat(40)); });
+    expect(f.message).not.toHaveBeenCalled();
+    expect(screen.getAllByRole('option')).toHaveLength(1);
+});

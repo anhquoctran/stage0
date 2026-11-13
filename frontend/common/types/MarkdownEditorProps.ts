@@ -20,5 +20,5 @@ export interface MarkdownEditorProps {
   onGenerateDraft?: () => void;
   extraActions?: React.ReactNode;
   mentionOptions?: MentionOption[];
-  onMentionQueryChange?: (query: string | null) => void;
+  onMentionQueryChange?: (query: string | null, trigger?: '@' | '!' | '#') => void;
 }
