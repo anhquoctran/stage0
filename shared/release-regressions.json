@@ -297,6 +297,22 @@
       "id": "development-build-date-stability",
       "runner": "node",
       "path": "scripts/dev-metadata.test.mjs"
+    },
+    {
+      "id": "review-discussion-ownership-routing",
+      "runner": "node",
+      "path": "scripts/review-discussion-ownership.test.mjs"
+    },
+    {
+      "id": "review-discussion-ownership-enforcement",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/reply_ownership_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::reply_ownership_tests::human_threads_reject_unsolicited_replies_at_every_backend_boundary",
+        "features::review::runtime::tests::reply_ownership_tests::human_thread_mentions_address_only_the_requested_reviewer_and_do_not_transfer_ownership",
+        "features::review::runtime::tests::reply_ownership_tests::finding_followups_stay_with_their_original_assigned_reviewer_including_legacy_runs",
+        "features::review::runtime::tests::reply_ownership_tests::publication_rechecks_ownership_after_an_assigned_reviewer_is_removed"
+      ]
     }
   ]
 }

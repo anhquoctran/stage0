@@ -60,9 +60,15 @@ Ordinary user-created discussions and replies enqueue
 `queueAssignedDiscussionReply`, not a full MR batch. A per-session queue waits
 for existing reviews/batches, coalesces repeated requests for a thread and
 refreshes context between reviewers. Exact direct mentions route replies;
-quoted/code mentions do not. Without an explicit recipient, the original
-assigned bot is preferred. Backend checks remain authoritative and require a
-currently assigned, eligible reviewer.
+quoted/code mentions do not. A human-created thread requires a direct reviewer
+mention in the latest comment; MR/commit references and previous bot replies
+never grant ownership. Without an explicit recipient, only the currently
+assigned bot that authored the root finding may answer a user followup. There
+is no fallback to the first assigned bot. Missing/unrecognized UI root identity
+requires an explicit mention; the backend also recognizes historical run-ID
+authors from same-session persisted review metadata. `review/discussion_reply.rs`
+enforces root provenance and addressing at admission, context delivery, action
+staging and transactional publication, including actions from full-review runs.
 
 The exact root body `[@Assigned reviewer](#mr-mention/reviewer/<encoded-id>) review`
 is a separate host workflow. The frontend recognizes the editor-generated

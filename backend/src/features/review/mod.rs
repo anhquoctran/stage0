@@ -5,6 +5,7 @@ pub mod connectors;
 pub mod context;
 pub mod coordinator;
 mod debug_log;
+mod discussion_reply;
 mod discussion_revision;
 pub(crate) mod discussion_snippets;
 mod input_screen;

@@ -42,8 +42,8 @@ export function discussionReplyRecipients(discussion: VirtualMrDiscussion, ids: 
   const mentioned = directReviewerMentions(latest.body, ids);
   if (latest.authorType === 'user') {
     if (mentioned.length) return mentioned;
-    const originalReviewer = comments[0]?.authorId;
-    return [ids.find((id) => id === originalReviewer) || ids[0]].filter((id): id is string => Boolean(id));
+    const root = discussion.rootComment;
+    return root?.authorType === 'ai_agent' && ids.includes(root.authorId) ? [root.authorId] : [];
   }
   if (latest.authorType === 'ai_agent') return mentioned.filter((id) => id !== latest.authorId);
   return [];

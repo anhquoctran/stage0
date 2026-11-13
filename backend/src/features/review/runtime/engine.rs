@@ -78,7 +78,7 @@ pub(super) async fn execute_with_adapter(
         })?
     };
     let participants = mentions::participants(&db.conn(), &run.session_id)?;
-    let prompt=json!({"task":"Review this Virtual MR snapshot. Compare the source branch with the target branch, inspect unresolved discussions, publish evidence-backed inline findings, reply to users or AI peers who directly mention you when needed, and resolve only verified fixes", "mrTitle":mr_title,"targetBranch":target_branch,"sourceBranch":source_branch,"reviewerId":run.reviewer_id,"participants":participants,"baseSha":run.snapshot.base_sha,"headSha":run.snapshot.head_sha,"mergeBaseSha":run.snapshot.merge_base_sha,"changedFileCount":run.snapshot.changed_files.len(),"excludedFileCount":run.snapshot.excluded_files.len()}).to_string();
+    let prompt=json!({"task":"Review this Virtual MR snapshot. Compare the source branch with the target branch, inspect unresolved discussions, publish evidence-backed inline findings, reply to user followups on your own root findings or users/AI peers who directly mention you when needed, and resolve only verified fixes", "mrTitle":mr_title,"targetBranch":target_branch,"sourceBranch":source_branch,"reviewerId":run.reviewer_id,"participants":participants,"baseSha":run.snapshot.base_sha,"headSha":run.snapshot.head_sha,"mergeBaseSha":run.snapshot.merge_base_sha,"changedFileCount":run.snapshot.changed_files.len(),"excludedFileCount":run.snapshot.excluded_files.len()}).to_string();
     let mut initial: serde_json::Value = serde_json::from_str(&prompt).map_err(|_| {
         crate::common::messages::failure(
             "backend.review.buildContextFailed",

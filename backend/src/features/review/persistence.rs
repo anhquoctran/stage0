@@ -191,19 +191,13 @@ impl Database {
                             "The discussion changed before the AI reply could be posted".into()
                         );
                     }
-                    let (kind, id, previous_body): (String, String, String) = tx.query_row(
-                        "SELECT author_type,author_id,body FROM virtual_mr_comments WHERE id=?1", [target_comment_id],
-                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-                    ).map_err(|error| error.to_string())?;
-                    if !super::mentions::can_reply_to_comment(
+                    if !super::discussion_reply::can_reply(
                         &tx,
                         &run.session_id,
                         run.reviewer_id.as_deref(),
-                        &kind,
-                        &id,
-                        &previous_body,
+                        discussion_id,
                     ) {
-                        return Err("AI reply requires an unanswered user comment or a direct mention from another reviewer".into());
+                        return Err("AI reply requires a direct reviewer mention or a user followup to this reviewer's own finding".into());
                     }
                     let now = chrono::Utc::now().to_rfc3339();
                     tx.execute(
