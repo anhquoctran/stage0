@@ -124,8 +124,8 @@ fn finding_followups_stay_with_their_original_assigned_reviewer_including_legacy
     assert!(scope::validate_request(&db, &request).is_ok());
     request.reviewer_id = Some("other".into());
     assert!(scope::validate_request(&db, &request).is_err());
-    // Neither a matching human ID nor a matching display name is bot provenance.
-    db.conn().execute_batch("UPDATE virtual_mr_comments SET author_type='user',author_id='bot',author_name='Bot' WHERE id='root';").unwrap();
+    // A matching human ID or display name never replaces a direct mention.
+    db.conn().execute_batch("UPDATE virtual_mr_comments SET author_type='user',author_id='bot',author_name='Bot' WHERE id='root'; UPDATE virtual_mr_comments SET body='Please explain without a mention' WHERE id='user';").unwrap();
     request.reviewer_id = Some("bot".into());
     assert!(scope::validate_request(&db, &request).is_err());
 }

@@ -127,7 +127,7 @@ pub(super) async fn dispatch_action(
                 Ok(discussion) if !discussion_reply::can_reply(
                     &db.conn(), &run.session_id, run.reviewer_id.as_deref(), &discussion.id,
                 ) => {
-                    Err("Reply requires a direct reviewer mention or a user followup to this reviewer's own finding".into())
+                    Err("Reply requires a direct mention of this assigned reviewer in the latest comment".into())
                 }
                 Ok(discussion) => {
                     state.replied_discussions.insert(discussion_id.clone());

@@ -26,7 +26,7 @@ impl ReviewToolRegistry {
             });
             for tool in &mut registry.native {
                 if tool["name"] == "submit_review" {
-                    tool["description"] = serde_json::json!("Finish this discussion-reply-only run after queuing its reply. Use decision comment and an empty findings list. Summarize what was explained or remains unverified; this is not a full MR review or verdict.");
+                    tool["description"] = serde_json::json!("Finish this discussion-reply-only run after reading its complete root and latest comment. Reply only if the direct mention warrants a useful response; otherwise finish without queuing a reply and explain why no reply is needed in the summary. Use decision comment and an empty findings list; this is not a full MR review or verdict.");
                     tool["parameters"]["properties"]["decision"]["enum"] =
                         serde_json::json!(["comment"]);
                     tool["parameters"]["properties"]["findings"]["maxItems"] = serde_json::json!(0);

@@ -5,7 +5,7 @@ use crate::features::review::{debug_log, security};
 use serde_json::{json, Value};
 use std::sync::{Arc, Mutex};
 
-/// Returns true only after the validated findings and discussion actions are published.
+/// Completes validated publication or a deliberate, fully observed no-reply check.
 pub(super) async fn submit_review(
     db: &Database,
     run: &mut ReviewRun,
@@ -19,14 +19,13 @@ pub(super) async fn submit_review(
         results.push((call, json!({"isError":true,"error":error})));
         return Ok(false);
     }
-    if state
-        .reply_discussion_id
-        .as_ref()
-        .is_some_and(|id| !state.replied_discussions.contains(id))
-    {
-        results.push((call, json!({"isError":true,"error":"Queue a reply to the assigned discussion before finishing this reply-only run."})));
-        return Ok(false);
-    }
+    let skip_reply = match super::reply_completion::validate(db, run, state) {
+        Ok(skip) => skip,
+        Err(error) => {
+            results.push((call, json!({"isError":true,"error":error})));
+            return Ok(false);
+        }
+    };
     let submitted_findings: Vec<ReviewFinding> =
         serde_json::from_value(call.arguments["findings"].clone()).map_err(|_| {
             crate::common::messages::failure(
@@ -133,12 +132,17 @@ pub(super) async fn submit_review(
                 return Ok(false);
             }
         }
-        db.publish_review_actions(run, &state.pending_discussion_actions)?;
-        run.published = true;
+        if skip_reply {
+            run.published = false;
+            db.save_review_run(run)?;
+        } else {
+            db.publish_review_actions(run, &state.pending_discussion_actions)?;
+            run.published = true;
+        }
         db.review_event(
             &run.id,
             "submitted",
-            json!({"findingCount":run.findings.len(),"discussionActions":state.pending_discussion_actions.len(),"coverage":run.status}),
+            json!({"findingCount":run.findings.len(),"discussionActions":state.pending_discussion_actions.len(),"coverage":run.status,"replySkipped":skip_reply}),
         )?;
         debug_log::log(format_args!(
             "event=review_submitted run={} decision={} status={} findings={} discussion_actions={} inspected_files={} context_bytes={}",

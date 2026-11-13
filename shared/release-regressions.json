@@ -323,6 +323,23 @@
         "features::review::runtime::tests::reply_ownership_tests::finding_followups_stay_with_their_original_assigned_reviewer_including_legacy_runs",
         "features::review::runtime::tests::reply_ownership_tests::publication_rechecks_ownership_after_an_assigned_reviewer_is_removed"
       ]
+    },
+    {
+      "id": "review-mention-only-queue",
+      "runner": "node",
+      "path": "scripts/review-mention-only.test.mjs"
+    },
+    {
+      "id": "review-mention-only-and-silent-completion",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/mention_reply_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::mention_reply_tests::finding_authorship_never_replaces_a_direct_mention_in_the_latest_comment",
+        "features::review::runtime::tests::mention_reply_tests::native_and_acp_may_finish_without_a_reply_after_reading_an_unhelpful_mention",
+        "features::review::runtime::tests::mention_reply_tests::no_reply_completion_requires_complete_context_and_rejects_stale_observations",
+        "features::review::runtime::tests::mention_reply_tests::full_review_cannot_stage_or_publish_an_unmentioned_own_finding_reply",
+        "features::review::runtime::tests::mention_reply_tests::deliberate_no_reply_checks_are_quiet_but_errors_still_notify"
+      ]
     }
   ]
 }

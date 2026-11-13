@@ -197,7 +197,7 @@ impl Database {
                         run.reviewer_id.as_deref(),
                         discussion_id,
                     ) {
-                        return Err("AI reply requires a direct reviewer mention or a user followup to this reviewer's own finding".into());
+                        return Err("AI reply requires a direct mention of this assigned reviewer in the latest comment".into());
                     }
                     let now = chrono::Utc::now().to_rfc3339();
                     tx.execute(

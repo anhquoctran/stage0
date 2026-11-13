@@ -6,6 +6,7 @@ import type { ReviewState } from '../types/ReviewState';
 import type { ReviewBotConfig } from '../types/ReviewBotConfig';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import { getManualReviewBlockReason } from '../../virtual-mr/utils/manualReviewAvailability';
+import { addressedDiscussionReplyRecipients } from '../utils/discussionReplyRecipients';
 
 const startingSessionIds = new Set<string>();
 
@@ -148,6 +149,15 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     catch { /* The store records the error for the open review panel. */ }
   },
   startForSession: async (sessionId, config, allowRemote, reviewer, generateDescription = false, replyDiscussionId, manualReviewDiscussionId) => {
+    if (replyDiscussionId) {
+      if (!reviewer) return null;
+      const discussion = useVirtualMrStore.getState().sessions.find((item) => item.id === sessionId)
+        ?.discussions.find((item) => item.id === replyDiscussionId);
+      // Hydrated comments permit an early, silent rejection; backend admission also
+      // enforces this policy when callers have not loaded the thread in this window.
+      if (discussion && (discussion.rootComment || discussion.children?.length)
+        && !addressedDiscussionReplyRecipients(discussion, [reviewer.id]).includes(reviewer.id)) return null;
+    }
     if (startingSessionIds.has(sessionId) || Object.values(get().activeRuns).some((run) => run.sessionId === sessionId && run.status === 'running')) return null;
     startingSessionIds.add(sessionId);
     set((state) => ({ isStarting: true, error: null,

@@ -1,10 +1,25 @@
-//! Thread ownership is required in addition to comment-level addressing.
+//! Direct addressing is required independently of thread ownership.
 use super::mentions;
 use rusqlite::Connection;
-use serde_json::Value;
 
-/// Used at admission, context delivery, staging and transactional publication.
-/// Read persisted root provenance rather than inferring ownership from replies.
+/// Bare mentions and punctuation carry no question for the model to assess.
+fn has_content(body: &str) -> bool {
+    let mut remaining = body.to_owned();
+    let mut offset = 0;
+    while let Some(start) = remaining[offset..].find("[@").map(|at| at + offset) {
+        let Some(link) = remaining[start..].find("](#mr-mention/reviewer/") else {
+            break;
+        };
+        let Some(end) = remaining[start + link..].find(')') else {
+            break;
+        };
+        remaining.replace_range(start..start + link + end + 1, "");
+        offset = start;
+    }
+    remaining.chars().any(char::is_alphanumeric)
+}
+
+/// Shared admission, listing, staging and transactional publication gate.
 pub(super) fn can_reply(
     conn: &Connection,
     session_id: &str,
@@ -21,46 +36,24 @@ pub(super) fn can_reply(
     if !assigned {
         return false;
     }
-    let thread = conn.query_row(
-        "SELECT root.author_type,root.author_id,latest.author_type,latest.author_id,latest.body
-         FROM virtual_mr_discussions d
-         JOIN virtual_mr_comments root ON root.rowid=(SELECT MIN(c.rowid) FROM virtual_mr_comments c WHERE c.discussion_id=d.id)
-         JOIN virtual_mr_comments latest ON latest.rowid=(SELECT MAX(c.rowid) FROM virtual_mr_comments c WHERE c.discussion_id=d.id)
+    let latest = conn.query_row(
+        "SELECT c.author_type,c.author_id,c.body FROM virtual_mr_discussions d
+         JOIN virtual_mr_comments c ON c.rowid=(SELECT MAX(latest.rowid) FROM virtual_mr_comments latest WHERE latest.discussion_id=d.id)
          WHERE d.id=?1 AND d.session_id=?2 AND d.is_resolved=0",
         [discussion_id, session_id],
-        |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?,
-            row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?)),
+        |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?)),
     );
-    let Ok((root_type, root_id, latest_type, latest_id, body)) = thread else {
+    let Ok((kind, author_id, body)) = latest else {
         return false;
     };
-    if !mentions::can_reply_to_comment(
-        conn,
-        session_id,
-        Some(reviewer_id),
-        &latest_type,
-        &latest_id,
-        &body,
-    ) {
-        return false;
-    }
-    if latest_type != "user" || mentions::has_reviewer_mention(&body, reviewer_id) {
-        return true;
-    }
-    // An unaddressed human followup belongs only to this finding's original bot.
-    if root_type != "ai_agent" {
-        return false;
-    }
-    if root_id == reviewer_id {
-        return true;
-    }
-    // Historical AI comments stored the review run ID instead of reviewer ID.
-    conn.query_row(
-        "SELECT payload FROM ai_review_runs WHERE id=?1 AND session_id=?2",
-        [&root_id, session_id],
-        |row| row.get::<_, String>(0),
-    )
-    .ok()
-    .and_then(|payload| serde_json::from_str::<Value>(&payload).ok())
-    .is_some_and(|run| run["reviewerId"].as_str() == Some(reviewer_id))
+    has_content(&body)
+        && mentions::has_reviewer_mention(&body, reviewer_id)
+        && mentions::can_reply_to_comment(
+            conn,
+            session_id,
+            Some(reviewer_id),
+            &kind,
+            &author_id,
+            &body,
+        )
 }
