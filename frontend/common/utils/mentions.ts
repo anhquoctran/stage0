@@ -1,8 +1,8 @@
 import type { MentionOption } from '../types/MentionOption';
 
 export function formatMention(option: MentionOption, trigger?: '!' | '#'): string {
-  const display = trigger === '!' && option.kind === 'mr' ? `!${option.id.slice(0, 8)}`
-    : trigger === '#' && option.kind === 'commit' ? `#${option.id.slice(0, 8)}` : option.label;
+  const display = option.insertLabel ?? (trigger === '!' && option.kind === 'mr' ? `!${option.id.slice(0, 8)}`
+    : trigger === '#' && option.kind === 'commit' ? `#${option.id.slice(0, 8)}` : option.label);
   const label = display.replace(/[\\`*_{}\[\]<>!|]/g, '\\$&').replace(/[\r\n]+/g, ' ');
   const prefix = option.kind === 'reviewer' || option.kind === 'assignee' ? '@' : '';
   return `[${prefix}${label}](#mr-mention/${option.kind}/${encodeURIComponent(option.id)})`;

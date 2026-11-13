@@ -117,7 +117,7 @@ it('uses the real keyboard picker to insert and preview a persisted MR link that
     ).not.toBeInTheDocument();
     await user.keyboard('{Enter}');
     expect(screen.getByTestId('source')).toHaveTextContent(
-        '[MR mr-b · Related safety fix](#mr-mention/mr/mr-b)',
+        '[Related safety fix #mr-b](#mr-mention/mr/mr-b)',
     );
     expect(input).toHaveFocus();
     await user.click(screen.getByRole('button', { name: 'Preview' }));
@@ -139,7 +139,7 @@ it('searches recent history by subject and opens the full SHA from a preview; es
     );
     await user.click(screen.getByRole('button', { name: 'Preview' }));
     await user.click(
-        screen.getByRole('link', { name: historySha.slice(0, 8) }),
+        screen.getByRole('link', { name: `fix: historical repair (${historySha.slice(0, 8)})` }),
     );
     expect(screen.getByRole('dialog')).toHaveTextContent(
         `/repo-a:${historySha}`,
@@ -278,7 +278,7 @@ it('uses !MR_ID for MR-only suggestions and opens the selected immutable MR iden
     await user.keyboard('{Enter}');
     expect(screen.getByTestId('source')).toHaveTextContent('(#mr-mention/mr/mr-b)');
     await user.click(screen.getByRole('button', { name: 'Preview' }));
-    await user.click(screen.getByRole('link', { name: '!mr-b' }));
+    await user.click(screen.getByRole('link', { name: 'Related safety fix #mr-b' }));
     expect(f.mr.switchSession).toHaveBeenCalledWith('mr-b');
 });
 
@@ -288,9 +288,9 @@ it('uses #partial_digest for commit-only suggestions and retains the full SHA in
     await user.type(screen.getByRole('combobox'), '#AAAAAAA');
     expect(await screen.findAllByRole('option')).toHaveLength(1);
     await user.keyboard('{Tab}');
-    expect(screen.getByTestId('source')).toHaveTextContent(`[#aaaaaaaa](#mr-mention/commit/${sha})`);
+    expect(screen.getByTestId('source')).toHaveTextContent(`[fix: original (aaaaaaaa)](#mr-mention/commit/${sha})`);
     await user.click(screen.getByRole('button', { name: 'Preview' }));
-    await user.click(screen.getByRole('link', { name: '#aaaaaaaa' }));
+    await user.click(screen.getByRole('link', { name: 'fix: original (aaaaaaaa)' }));
     expect(screen.getByRole('dialog')).toHaveTextContent(`/repo-a:${sha}`);
 });
 

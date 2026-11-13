@@ -24,6 +24,7 @@ export function getDiscussionEntityOptions(
         kind: 'mr',
         id: item.id,
         label: `MR ${item.id.slice(0, 8)} · ${item.title}`,
+        insertLabel: `${item.title?.trim() ?? ''} #${item.id}`.trim(),
     }));
     const seen = new Set<string>();
     for (const commit of [
@@ -34,11 +35,13 @@ export function getDiscussionEntityOptions(
         if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(hash) || seen.has(hash))
             continue;
         seen.add(hash);
+        const subject = commit.subject?.split(/\r?\n/, 1)[0].trim() ?? '';
         options.push({
             kind: 'commit',
             id: hash,
             label: hash.slice(0, 8),
             description: commit.subject,
+            insertLabel: subject ? `${subject} (${hash.slice(0, 8)})` : hash.slice(0, 8),
         });
     }
     return options;

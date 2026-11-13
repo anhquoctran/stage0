@@ -309,6 +309,11 @@
       "path": "scripts/discussion-reference-triggers.test.mjs"
     },
     {
+      "id": "discussion-reference-labels",
+      "runner": "node",
+      "path": "scripts/discussion-reference-labels.test.mjs"
+    },
+    {
       "id": "review-discussion-ownership-enforcement",
       "runner": "rust",
       "path": "backend/src/features/review/runtime/tests/reply_ownership_tests.rs",
