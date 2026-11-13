@@ -1,7 +1,9 @@
 import type { MentionOption } from '../types/MentionOption';
 
-export function formatMention(option: MentionOption): string {
-  const label = option.label.replace(/[\\`*_{}\[\]<>!|]/g, '\\$&').replace(/[\r\n]+/g, ' ');
+export function formatMention(option: MentionOption, trigger?: '!' | '#'): string {
+  const display = option.insertLabel ?? (trigger === '!' && option.kind === 'mr' ? `!${option.id.slice(0, 8)}`
+    : trigger === '#' && option.kind === 'commit' ? `#${option.id.slice(0, 8)}` : option.label);
+  const label = display.replace(/[\\`*_{}\[\]<>!|]/g, '\\$&').replace(/[\r\n]+/g, ' ');
   const prefix = option.kind === 'reviewer' || option.kind === 'assignee' ? '@' : '';
   return `[${prefix}${label}](#mr-mention/${option.kind}/${encodeURIComponent(option.id)})`;
 }
@@ -18,7 +20,9 @@ export function parseMentionReference(href: string): Pick<MentionOption, 'id' | 
   catch { return null; }
 }
 
-export function getMentionQuery(value: string, caret: number) {
+export function getMentionQuery(value: string, caret: number): {
+  start: number; end: number; query: string; trigger?: '!' | '#';
+} | null {
   const before = value.slice(0, caret);
   let fence: string | null = null;
   let inlineTicks = 0;
@@ -40,9 +44,12 @@ export function getMentionQuery(value: string, caret: number) {
   const literalLine = currentLine.replace(/\\./g, '');
   if (literalLine.lastIndexOf('[') > literalLine.lastIndexOf(']')
     || /\]\([^)]*$/.test(literalLine)) return null;
-  const match = /(?:^|[\s(])@([\p{L}\p{N}_.-]*)$/u.exec(before);
+  const match = /(?:^|[\s(])([@!#])([\p{L}\p{N}_.-]*)$/u.exec(before);
   if (!match) return null;
-  const start = caret - match[1].length - 1;
+  const trigger = match[1] as '@' | '!' | '#';
+  if (trigger === '#' && !/^[a-f0-9]{0,64}$/i.test(match[2])) return null;
+  const start = caret - match[2].length - 1;
   const tail = /^[\p{L}\p{N}_.-]*/u.exec(value.slice(caret))?.[0] ?? '';
-  return { start, end: caret + tail.length, query: match[1].toLocaleLowerCase() };
+  const query = { start, end: caret + tail.length, query: match[2].toLocaleLowerCase() };
+  return trigger === '@' ? query : { ...query, trigger };
 }

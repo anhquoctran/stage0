@@ -15,7 +15,7 @@ pub(super) fn setup(root: &str) -> (TestRepo, ReviewRun, Arc<Mutex<ReviewContext
         )
         .unwrap();
     db.conn().execute("INSERT INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,created_at,updated_at) VALUES('root','thread','ai_agent','bot','Bot',?1,'now','now')", [root]).unwrap();
-    db.conn().execute_batch("INSERT INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,created_at,updated_at) VALUES('user','thread','user','alice','Alice','Please explain or recheck the fix','now','now');").unwrap();
+    db.conn().execute_batch("INSERT INTO virtual_mr_comments(id,discussion_id,author_type,author_id,author_name,body,created_at,updated_at) VALUES('user','thread','user','alice','Alice','[@Bot](#mr-mention/reviewer/bot) Please explain or recheck the fix','now','now');").unwrap();
     (repo, run, Arc::new(Mutex::new(context)), db)
 }
 

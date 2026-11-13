@@ -60,9 +60,26 @@ Ordinary user-created discussions and replies enqueue
 `queueAssignedDiscussionReply`, not a full MR batch. A per-session queue waits
 for existing reviews/batches, coalesces repeated requests for a thread and
 refreshes context between reviewers. Exact direct mentions route replies;
-quoted/code mentions do not. Without an explicit recipient, the original
-assigned bot is preferred. Backend checks remain authoritative and require a
-currently assigned, eligible reviewer.
+quoted/code mentions do not. Every thread, including a finding authored by the
+reviewer, requires an explicit mention of that reviewer in the latest comment.
+MR/commit references, ownership and earlier bot replies never authorize a reply.
+The UI keeps routing candidates separate from the mention-only admission gate in
+`useReviewStore.startForSession` (hydrated comments are checked before IPC); bare
+mentions/punctuation are rejected and rejected candidates are not requeued unless
+another run is actually busy;
+`review/discussion_reply.rs` independently checks assignment and direct addressing
+at admission, listing, staging and transactional publication, also for full reviews.
+
+A mention only permits the reviewer to consider responding. Native and ACP prompts
+require a substantive question, useful clarification, requested analysis or new
+evidence; greetings, acknowledgements, mention-only messages and repeated answers
+should receive no reply. The model may finish with `submit_review` and no queued
+reply. `runtime/reply_completion.rs` requires the complete root/latest comment and
+an unchanged current revision before this deliberate no-op. The run is recorded
+as completed but unpublished, with its reason in the summary. No comment, finding,
+MR description/verdict update or success notification is produced. Failures and
+incomplete checks still notify. Completed no-reply checks share the same bounded
+comment-version cache as replies, preventing repeated work on unchanged mentions.
 
 The exact root body `[@Assigned reviewer](#mr-mention/reviewer/<encoded-id>) review`
 is a separate host workflow. The frontend recognizes the editor-generated
@@ -85,8 +102,8 @@ default to full-review scope. A reply run exposes only:
 The registry, dispatch/submission checks and publication transaction enforce the
 scope independently. No description generation, new findings, resolutions, MR
 approval, other-thread actions or reviewer/MR status updates are authorized.
-Completion requires a queued reply. `completed` here means a completed discussion
-reply, not full MR coverage; the UI identifies it explicitly. Git-change and
+Completion requires a queued reply or a fully observed, fresh no-reply decision.
+`completed` here means a completed discussion check, not full MR coverage; the UI identifies it explicitly. Git-change and
 explicit full-review workflows retain the complete review tool set and guards.
 
 Reply budgets are 16 turns, 24 tool calls, 32 KiB delivered context, 384 KiB

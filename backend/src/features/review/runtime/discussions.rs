@@ -4,7 +4,7 @@ use crate::{
     core::db::Database,
     features::{
         review::{
-            context::ReviewContext, discussion_revision, input_screen, mentions, security,
+            context::ReviewContext, discussion_reply, discussion_revision, input_screen, security,
             ReviewRun, ReviewToolCall,
         },
         virtual_mr::persistence::{VirtualMrCommentDb, VirtualMrDiscussionDb},
@@ -70,16 +70,12 @@ pub(super) fn list(
             })
             .map(|(_, c)| present(c, 0, 200))
             .collect::<Vec<_>>();
-        let can_reply = latest.is_some_and(|c| {
-            mentions::can_reply_to_comment(
-                &db.conn(),
-                &run.session_id,
-                run.reviewer_id.as_deref(),
-                &c.author_type,
-                &c.author_id,
-                &c.body,
-            )
-        });
+        let can_reply = discussion_reply::can_reply(
+            &db.conn(),
+            &run.session_id,
+            run.reviewer_id.as_deref(),
+            &discussion.id,
+        );
         threads.push(json!({"id":discussion.id,"filePath":discussion.file_path,"side":discussion.diff_side,
             "lineNumber":discussion.line_number,"commitId":discussion.commit_id,"canReply":can_reply,
             "discussionRevision":discussion_revision::of(discussion),"targetCommentId":latest.map(|c| &c.id),

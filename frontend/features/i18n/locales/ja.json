@@ -856,7 +856,9 @@
       "newest": "新しい順",
       "noMatchingActivity": "このフィルターに一致するアクティビティはありません。",
       "deletedDiscussion": "がディスカッションを削除しました",
-      "deletedReply": "が返信を削除しました"
+      "deletedReply": "が返信を削除しました",
+      "resolvedBotDiscussion": "次のレビュアーのディスカッションを解決しました：",
+      "reopenedBotDiscussion": "次のレビュアーのディスカッションを再開しました："
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} をクローズしました",

@@ -381,6 +381,7 @@ pub fn run() {
             commands::list_mr_discussions,
             commands::delete_mr_comment,
             commands::list_mr_deletion_activity,
+            commands::list_mr_discussion_activity,
             commands::create_mr_discussion,
             commands::add_mr_comment,
             commands::resolve_mr_discussion,

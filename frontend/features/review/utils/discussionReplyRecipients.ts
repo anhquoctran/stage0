@@ -35,6 +35,7 @@ export function directReviewerMentions(body: string, ids: string[]): string[] {
   return [...found];
 }
 
+/** Routing candidates only. Execution additionally requires a direct mention below. */
 export function discussionReplyRecipients(discussion: VirtualMrDiscussion, ids: string[]): string[] {
   const comments = getDiscussionComments(discussion);
   const latest = comments.at(-1);
@@ -42,9 +43,19 @@ export function discussionReplyRecipients(discussion: VirtualMrDiscussion, ids: 
   const mentioned = directReviewerMentions(latest.body, ids);
   if (latest.authorType === 'user') {
     if (mentioned.length) return mentioned;
-    const originalReviewer = comments[0]?.authorId;
-    return [ids.find((id) => id === originalReviewer) || ids[0]].filter((id): id is string => Boolean(id));
+    const root = discussion.rootComment;
+    return root?.authorType === 'ai_agent' && ids.includes(root.authorId) ? [root.authorId] : [];
   }
   if (latest.authorType === 'ai_agent') return mentioned.filter((id) => id !== latest.authorId);
   return [];
+}
+
+/** The execution policy is mention-only, including followups on the bot's own findings. */
+export function addressedDiscussionReplyRecipients(discussion: VirtualMrDiscussion, ids: string[]): string[] {
+  const latest = getDiscussionComments(discussion).at(-1);
+  if (!latest) return [];
+  const content = latest.body.replace(/\[@(?:\\.|[^\\\]\r\n])+\]\(#mr-mention\/reviewer\/[^)\s]+\)/gu, '');
+  if (!/[\p{L}\p{N}]/u.test(content)) return [];
+  const mentioned = directReviewerMentions(latest.body, ids);
+  return discussionReplyRecipients(discussion, ids).filter((id) => mentioned.includes(id));
 }

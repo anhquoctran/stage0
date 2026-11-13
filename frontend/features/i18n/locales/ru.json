@@ -870,7 +870,9 @@
       "newest": "Сначала новые",
       "noMatchingActivity": "Нет событий, соответствующих фильтру.",
       "deletedDiscussion": "удалил(а) обсуждение",
-      "deletedReply": "удалил(а) ответ"
+      "deletedReply": "удалил(а) ответ",
+      "resolvedBotDiscussion": "решил обсуждение от",
+      "reopenedBotDiscussion": "повторно открыл обсуждение от"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} закрыт",

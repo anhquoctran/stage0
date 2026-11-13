@@ -27,9 +27,10 @@ export function useDiscussionEntityOptions(session: VirtualMrSession) {
         subject: string;
     } | null>(null);
     const requestHistory = useCallback(
-        (query: string | null) => {
-            setSearch(query);
-            if (query !== null) setRequested(scope);
+        (query: string | null, trigger: '@' | '!' | '#' = '@') => {
+            const commitQuery = trigger === '!' ? null : query;
+            setSearch(commitQuery);
+            if (commitQuery !== null) setRequested(scope);
         },
         [scope],
     );

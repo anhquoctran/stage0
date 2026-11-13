@@ -297,6 +297,64 @@
       "id": "development-build-date-stability",
       "runner": "node",
       "path": "scripts/dev-metadata.test.mjs"
+    },
+    {
+      "id": "review-discussion-ownership-routing",
+      "runner": "node",
+      "path": "scripts/review-discussion-ownership.test.mjs"
+    },
+    {
+      "id": "discussion-reference-triggers",
+      "runner": "node",
+      "path": "scripts/discussion-reference-triggers.test.mjs"
+    },
+    {
+      "id": "discussion-reference-labels",
+      "runner": "node",
+      "path": "scripts/discussion-reference-labels.test.mjs"
+    },
+    {
+      "id": "review-discussion-ownership-enforcement",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/reply_ownership_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::reply_ownership_tests::human_threads_reject_unsolicited_replies_at_every_backend_boundary",
+        "features::review::runtime::tests::reply_ownership_tests::human_thread_mentions_address_only_the_requested_reviewer_and_do_not_transfer_ownership",
+        "features::review::runtime::tests::reply_ownership_tests::finding_followups_stay_with_their_original_assigned_reviewer_including_legacy_runs",
+        "features::review::runtime::tests::reply_ownership_tests::publication_rechecks_ownership_after_an_assigned_reviewer_is_removed"
+      ]
+    },
+    {
+      "id": "review-mention-only-queue",
+      "runner": "node",
+      "path": "scripts/review-mention-only.test.mjs"
+    },
+    {
+      "id": "discussion-resolution-activity-ui",
+      "runner": "node",
+      "path": "scripts/discussion-resolution-activity.test.mjs"
+    },
+    {
+      "id": "discussion-resolution-activity-storage",
+      "runner": "rust",
+      "path": "backend/src/features/virtual_mr/persistence/discussion_resolution_tests.rs",
+      "tests": [
+        "features::virtual_mr::persistence::discussion_resolution::tests::manual_bot_resolution_records_durable_actor_target_and_real_transitions_only",
+        "features::virtual_mr::persistence::discussion_resolution::tests::failed_audit_writes_roll_back_resolution_and_do_not_leave_success_history",
+        "features::virtual_mr::persistence::discussion_resolution::tests::human_threads_with_bot_replies_do_not_become_bot_review_discussions"
+      ]
+    },
+    {
+      "id": "review-mention-only-and-silent-completion",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/mention_reply_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::mention_reply_tests::finding_authorship_never_replaces_a_direct_mention_in_the_latest_comment",
+        "features::review::runtime::tests::mention_reply_tests::native_and_acp_may_finish_without_a_reply_after_reading_an_unhelpful_mention",
+        "features::review::runtime::tests::mention_reply_tests::no_reply_completion_requires_complete_context_and_rejects_stale_observations",
+        "features::review::runtime::tests::mention_reply_tests::full_review_cannot_stage_or_publish_an_unmentioned_own_finding_reply",
+        "features::review::runtime::tests::mention_reply_tests::deliberate_no_reply_checks_are_quiet_but_errors_still_notify"
+      ]
     }
   ]
 }

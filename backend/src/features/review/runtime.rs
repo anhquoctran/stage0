@@ -7,6 +7,7 @@ mod discussions;
 mod engine;
 mod initial_context;
 mod prompt;
+mod reply_completion;
 mod review_actions;
 mod scope;
 mod submission;

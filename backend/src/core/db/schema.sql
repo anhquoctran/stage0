@@ -160,6 +160,21 @@ CREATE TABLE IF NOT EXISTS virtual_mr_deletion_activity (
 );
 CREATE INDEX IF NOT EXISTS idx_vmr_deletion_activity_session ON virtual_mr_deletion_activity(session_id);
 
+-- Manual review-discussion transitions survive removal of their original thread.
+CREATE TABLE IF NOT EXISTS virtual_mr_discussion_activity (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    discussion_id TEXT NOT NULL,
+    action TEXT NOT NULL CHECK(action IN ('resolved','reopened')),
+    actor_id TEXT NOT NULL,
+    actor_name TEXT NOT NULL,
+    reviewer_name TEXT NOT NULL,
+    file_path TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(session_id) REFERENCES virtual_mr_sessions(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_vmr_discussion_activity_session ON virtual_mr_discussion_activity(session_id);
+
 CREATE INDEX IF NOT EXISTS idx_vmr_repo ON virtual_mr_sessions(repo_id);
 CREATE INDEX IF NOT EXISTS idx_vmr_repo_updated ON virtual_mr_sessions(repo_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_labels_repo ON repo_labels(repo_id);

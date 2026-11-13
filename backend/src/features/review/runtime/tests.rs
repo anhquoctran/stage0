@@ -99,5 +99,7 @@ mod discussion_fixture;
 mod discussion_security;
 mod http;
 mod injection;
+mod mention_reply_tests;
 mod policy;
+mod reply_ownership_tests;
 mod truncation;

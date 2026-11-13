@@ -7,7 +7,7 @@ use super::{
 use crate::core::db::Database;
 use crate::features::review::persistence::ReviewDiscussionAction;
 use crate::features::review::{context::ReviewContext, ReviewFinding, ReviewRun, ReviewToolCall};
-use crate::features::review::{mentions, security};
+use crate::features::review::{discussion_reply, security};
 use serde_json::{json, Value};
 use std::sync::{Arc, Mutex};
 
@@ -124,10 +124,10 @@ pub(super) async fn dispatch_action(
                 Ok(_) if state.replied_discussions.contains(&discussion_id) || state.resolved_discussions.contains(&discussion_id) => {
                     Err(crate::common::messages::code("backend.review.discussionActionQueued"))
                 }
-                Ok(discussion) if discussion.comments.last().is_none_or(|comment| !mentions::can_reply_to_comment(
-                    &db.conn(), &run.session_id, run.reviewer_id.as_deref(), &comment.author_type, &comment.author_id, &comment.body,
-                )) => {
-                    Err("Reply requires the latest unanswered user comment or a direct mention from another AI reviewer".into())
+                Ok(discussion) if !discussion_reply::can_reply(
+                    &db.conn(), &run.session_id, run.reviewer_id.as_deref(), &discussion.id,
+                ) => {
+                    Err("Reply requires a direct mention of this assigned reviewer in the latest comment".into())
                 }
                 Ok(discussion) => {
                     state.replied_discussions.insert(discussion_id.clone());

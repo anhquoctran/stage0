@@ -863,7 +863,9 @@
       "newest": "Plus récents",
       "noMatchingActivity": "Aucune activité ne correspond à ce filtre.",
       "deletedDiscussion": "a supprimé une discussion",
-      "deletedReply": "a supprimé une réponse"
+      "deletedReply": "a supprimé une réponse",
+      "resolvedBotDiscussion": "a résolu une discussion de",
+      "reopenedBotDiscussion": "a rouvert une discussion de"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} fermé",
