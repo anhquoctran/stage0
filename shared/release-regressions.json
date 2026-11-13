@@ -287,6 +287,11 @@
       "id": "discussion-entity-mentions",
       "runner": "node",
       "path": "scripts/discussion-entity-mentions.test.mjs"
+    },
+    {
+      "id": "development-build-date-stability",
+      "runner": "node",
+      "path": "scripts/dev-metadata.test.mjs"
     }
   ]
 }
