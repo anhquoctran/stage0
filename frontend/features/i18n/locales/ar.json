@@ -890,7 +890,9 @@
       "newest": "الأحدث",
       "noMatchingActivity": "لا يوجد نشاط يطابق عامل التصفية هذا.",
       "deletedDiscussion": "حذف مناقشة",
-      "deletedReply": "حذف ردًا"
+      "deletedReply": "حذف ردًا",
+      "resolvedBotDiscussion": "حلّ نقاشًا بواسطة",
+      "reopenedBotDiscussion": "أعاد فتح نقاش بواسطة"
     },
     "bottomBar": {
       "closedToast": "تم إغلاق طلب الدمج الافتراضي #{{title}}",

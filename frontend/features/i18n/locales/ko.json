@@ -856,7 +856,9 @@
       "newest": "최신 순",
       "noMatchingActivity": "이 필터에 해당하는 활동이 없습니다.",
       "deletedDiscussion": "님이 토론을 삭제했습니다",
-      "deletedReply": "님이 답글을 삭제했습니다"
+      "deletedReply": "님이 답글을 삭제했습니다",
+      "resolvedBotDiscussion": "다음 리뷰어의 토론을 해결했습니다:",
+      "reopenedBotDiscussion": "다음 리뷰어의 토론을 다시 열었습니다:"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}}을 닫았습니다",

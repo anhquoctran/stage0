@@ -1,4 +1,5 @@
 import type { VirtualMrDeletionActivity } from './VirtualMrDeletionActivity';
+import type { VirtualMrDiscussionActivity } from './VirtualMrDiscussionActivity';
 import type { VirtualMrStatus } from './VirtualMrStatus';
 import type { VirtualMrReviewer } from './VirtualMrReviewer';
 import type { RepoLabel } from './RepoLabel';
@@ -29,4 +30,5 @@ export interface VirtualMrSession {
   descriptionUpdatedAt?: string;
   titleHistory?: VirtualMrTitleChange[];
   deletionActivity?: VirtualMrDeletionActivity[];
+  discussionActivity?: VirtualMrDiscussionActivity[];
 }

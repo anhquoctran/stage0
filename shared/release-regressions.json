@@ -330,6 +330,21 @@
       "path": "scripts/review-mention-only.test.mjs"
     },
     {
+      "id": "discussion-resolution-activity-ui",
+      "runner": "node",
+      "path": "scripts/discussion-resolution-activity.test.mjs"
+    },
+    {
+      "id": "discussion-resolution-activity-storage",
+      "runner": "rust",
+      "path": "backend/src/features/virtual_mr/persistence/discussion_resolution_tests.rs",
+      "tests": [
+        "features::virtual_mr::persistence::discussion_resolution::tests::manual_bot_resolution_records_durable_actor_target_and_real_transitions_only",
+        "features::virtual_mr::persistence::discussion_resolution::tests::failed_audit_writes_roll_back_resolution_and_do_not_leave_success_history",
+        "features::virtual_mr::persistence::discussion_resolution::tests::human_threads_with_bot_replies_do_not_become_bot_review_discussions"
+      ]
+    },
+    {
       "id": "review-mention-only-and-silent-completion",
       "runner": "rust",
       "path": "backend/src/features/review/runtime/tests/mention_reply_tests.rs",

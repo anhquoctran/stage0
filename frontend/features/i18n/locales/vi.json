@@ -856,7 +856,9 @@
       "newest": "Mới nhất",
       "noMatchingActivity": "Không có hoạt động nào khớp với bộ lọc này.",
       "deletedDiscussion": "đã xóa một thảo luận",
-      "deletedReply": "đã xóa một trả lời"
+      "deletedReply": "đã xóa một trả lời",
+      "resolvedBotDiscussion": "đã giải quyết một thảo luận của",
+      "reopenedBotDiscussion": "đã mở lại một thảo luận của"
     },
     "bottomBar": {
       "closedToast": "Đã đóng Virtual MR #{{title}}",

@@ -1,7 +1,9 @@
 mod attachment_commands;
 mod discussion_deletion;
+mod discussion_resolution;
 pub use attachment_commands::*;
 pub use discussion_deletion::*;
+pub use discussion_resolution::*;
 
 use crate::core::db::Database;
 use crate::features::git::ops::{get_commits_between, get_git_user_identity, GitCommitItem};
@@ -320,14 +322,17 @@ pub async fn resolve_mr_discussion(
         if resolve_type == "ai_verified" {
             crate::features::ai::review_availability::require_review_runtime()?;
         }
-        let db = app.state::<Database>();
-        db.resolve_discussion(
-            &discussion_id,
-            is_resolved,
-            &resolve_type,
-            resolved_by.as_deref(),
-        )
-        .map_err(|e| e.to_string())
+        let _ = resolved_by; // Audit identity comes from repository Git config, not the client.
+        tauri::async_runtime::spawn_blocking(move || {
+            discussion_resolution::resolve_as_local_user(
+                &app.state::<Database>(),
+                &discussion_id,
+                is_resolved,
+                &resolve_type,
+            )
+        })
+        .await
+        .map_err(|error| error.to_string())?
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))

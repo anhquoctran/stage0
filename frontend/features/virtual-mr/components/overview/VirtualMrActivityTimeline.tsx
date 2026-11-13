@@ -1,5 +1,7 @@
 import { Trash2 } from '../../../../common/components/icons/Trash2';
 import { DeletionActivityItem } from './DeletionActivityItem';
+import { DiscussionActivityItem } from './DiscussionActivityItem';
+import { CheckCircle2 } from '../../../../common/components/icons/CheckCircle2';
 import React, { useMemo, useState } from 'react';
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { Bot } from '../../../../common/components/icons/Bot';
@@ -230,6 +232,13 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
       });
     });
 
+    (session.discussionActivity ?? []).forEach((activity) => {
+      list.push({
+        id: `resolution-${activity.id}`, type: 'resolution', author: activity.actorName,
+        timestamp: activity.createdAt, render: () => <DiscussionActivityItem activity={activity} />,
+      });
+    });
+
     // Sort items
     list.sort((a, b) => {
       const timeA = new Date(a.timestamp).getTime() || 0;
@@ -252,6 +261,8 @@ export const VirtualMrActivityTimeline: React.FC<VirtualMrActivityTimelineProps>
 
   const getEventIcon = (type: VirtualMrTimelineEvent['type']) => {
     switch (type) {
+      case 'resolution':
+        return <CheckCircle2 className="w-3 h-3 text-green" />;
       case 'deletion':
         return <Trash2 className="w-3 h-3 text-subtext0" />;
       case 'created':

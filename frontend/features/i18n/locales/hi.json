@@ -856,7 +856,9 @@
       "newest": "Newest",
       "noMatchingActivity": "No activity matching this filter.",
       "deletedDiscussion": "ने एक चर्चा हटाई",
-      "deletedReply": "ने एक जवाब हटाया"
+      "deletedReply": "ने एक जवाब हटाया",
+      "resolvedBotDiscussion": "की चर्चा हल की:",
+      "reopenedBotDiscussion": "की चर्चा फिर से खोली:"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} closed",

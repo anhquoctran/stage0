@@ -856,7 +856,9 @@
       "newest": "Newest",
       "noMatchingActivity": "No activity matching this filter.",
       "deletedDiscussion": "deleted a discussion",
-      "deletedReply": "deleted a reply"
+      "deletedReply": "deleted a reply",
+      "resolvedBotDiscussion": "resolved a discussion by",
+      "reopenedBotDiscussion": "reopened a discussion by"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} closed",

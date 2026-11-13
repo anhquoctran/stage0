@@ -856,7 +856,9 @@
       "newest": "最新",
       "noMatchingActivity": "沒有符合此篩選條件的活動。",
       "deletedDiscussion": "刪除了一個討論",
-      "deletedReply": "刪除了一則回覆"
+      "deletedReply": "刪除了一則回覆",
+      "resolvedBotDiscussion": "解決了以下審查者的討論：",
+      "reopenedBotDiscussion": "重新開啟了以下審查者的討論："
     },
     "bottomBar": {
       "closedToast": "已關閉 Virtual MR #{{title}}",
