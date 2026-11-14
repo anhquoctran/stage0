@@ -3284,7 +3284,10 @@
       "saveRunStateFailed": "검토 상태를 저장할 수 없습니다: {{error}}",
       "runNotFound": "검토 실행을 찾을 수 없습니다.",
       "invalidStoredRun": "저장된 검토 실행이 유효하지 않습니다.",
-      "interruptedByShutdown": "이 실행이 완료되기 전에 애플리케이션이 중지되었습니다. 새 검토를 시작하세요."
+      "interruptedByShutdown": "이 실행이 완료되기 전에 애플리케이션이 중지되었습니다. 새 검토를 시작하세요.",
+      "tokenBudgetExceededDetails": "Stage0가 리뷰를 중단했습니다. 누적 입력 및 출력 토큰: {{used}} / {{limit}}. 이는 실행별 로컬 제한이며 제공업체의 컨텍스트 창이나 계정 한도가 아닙니다. MR을 나누거나 추론 강도를 낮추세요. 리뷰가 완료되지 않았습니다.",
+      "requestBudgetExceeded": "Stage0가 전송 전에 중단했습니다. 단일 요청 크기: {{used}} / {{limit}}바이트. 컨텍스트를 줄이거나 MR을 나누세요. 리뷰가 완료되지 않았습니다.",
+      "wireBudgetExceeded": "Stage0가 다음 요청 전에 중단했습니다. 재시도분을 포함한 누적 전송 예약량: {{used}} / {{limit}}바이트. 제공업체의 토큰 오류가 아닌 로컬 제한입니다. MR을 나누세요. 리뷰가 완료되지 않았습니다."
     },
     "credentials": {
       "accountRequired": "계정 이름을 입력하세요.",

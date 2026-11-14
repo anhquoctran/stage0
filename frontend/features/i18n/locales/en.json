@@ -3284,7 +3284,10 @@
       "saveRunStateFailed": "Could not save review state: {{error}}",
       "runNotFound": "Review run not found.",
       "invalidStoredRun": "Invalid stored review run.",
-      "interruptedByShutdown": "Application stopped before this run finished. Start a new review; it was not completed or approved."
+      "interruptedByShutdown": "Application stopped before this run finished. Start a new review; it was not completed or approved.",
+      "tokenBudgetExceededDetails": "Stage0 stopped this review: {{used}} / {{limit}} cumulative input + output tokens. This is a local per-run limit, not the provider context window or account quota. Split the MR into smaller changes or reduce reviewer reasoning effort. The review is incomplete.",
+      "requestBudgetExceeded": "Stage0 stopped before sending a request: {{used}} / {{limit}} bytes in one request. Reduce the review context or split the MR. The review is incomplete.",
+      "wireBudgetExceeded": "Stage0 stopped before the next request: {{used}} / {{limit}} reserved cumulative transport bytes, including retry allowances. This is a local limit, not a provider token error. Split the MR. The review is incomplete."
     },
     "credentials": {
       "accountRequired": "Enter an account name.",

@@ -87,6 +87,7 @@ pub(super) async fn execute_with_adapter(
         )
     })?;
     initial["reviewPreferences"] = super::prompt::review_preferences(config);
+    initial["executionBudget"] = super::budget::initial(token_limit, max_turns, max_calls);
     initial["replyDiscussionId"] = json!(config.reply_discussion_id);
     if reply_only {
         initial["task"] = json!("Answer the latest eligible comment in the assigned discussion. This is not an MR review or approval.");
@@ -98,6 +99,7 @@ pub(super) async fn execute_with_adapter(
     let mut decode_recoveries = 0;
     let mut provider_retries = 0;
     let mut expanded_output = false;
+    let mut budget_warned = false;
     let mut state = ReviewToolState::new(config.generate_description);
     super::scope::configure(db, config, &mut state)?;
     let has_open_discussions = db
@@ -149,9 +151,15 @@ pub(super) async fn execute_with_adapter(
     for turn in 0..max_turns {
         run.turns = turn + 1;
         if run.usage_tokens >= token_limit {
-            return Err(crate::common::messages::code(
-                "backend.review.tokenBudgetExceeded",
-            ));
+            return Err(super::budget::tokens(db, run, token_limit)?);
+        }
+        if !budget_warned {
+            if let Some(warning) = super::budget::warning(run, token_limit, wire_bytes, wire_limit)
+            {
+                history.extend(adapter.initial_history(&warning.to_string()));
+                db.review_event(&run.id, "budget_warning", warning)?;
+                budget_warned = true;
+            }
         }
         let output_tokens = adapter
             .output_token_limit(expanded_output)
@@ -163,19 +171,14 @@ pub(super) async fn execute_with_adapter(
         wire_bytes =
             wire_bytes.saturating_add(bytes.saturating_mul(adapter.retry_reserve_factor()));
         if bytes > MAX_REQUEST_BYTES || wire_bytes > wire_limit {
-            debug_log::log(format_args!(
-                "event=review_budget_exhausted run={} turn={} request_bytes={} estimated_wire_bytes={} usage_tokens={}",
-                debug_log::safe_label(&run.id, 80),
-                run.turns,
+            return Err(super::budget::request(
+                db,
+                run,
                 bytes,
+                MAX_REQUEST_BYTES,
                 wire_bytes,
-                run.usage_tokens
-            ));
-            return Err(crate::common::messages::failure(
-                "backend.review.tokenBudgetExceeded",
-                serde_json::json!({}),
-                "Review token budget exhausted".to_string(),
-            ));
+                wire_limit,
+            )?);
         }
         db.review_event(
             &run.id,
@@ -279,9 +282,7 @@ pub(super) async fn execute_with_adapter(
             )?;
             db.save_review_run(run)?;
             if run.usage_tokens >= token_limit {
-                return Err(crate::common::messages::code(
-                    "backend.review.tokenBudgetExceeded",
-                ));
+                return Err(super::budget::tokens(db, run, token_limit)?);
             }
             if retry {
                 expanded_output = true;
@@ -381,16 +382,7 @@ pub(super) async fn execute_with_adapter(
             has_refusal
         ));
         if run.usage_tokens > token_limit {
-            debug_log::log(format_args!(
-                "event=review_budget_exhausted run={} reason=reported_token_limit usage_tokens={} limit=selected_run_budget",
-                debug_log::safe_label(&run.id, 80),
-                run.usage_tokens
-            ));
-            return Err(crate::common::messages::failure(
-                "backend.review.tokenBudgetExceeded",
-                serde_json::json!({}),
-                "Review token budget exhausted".to_string(),
-            ));
+            return Err(super::budget::tokens(db, run, token_limit)?);
         }
         if calls.is_empty() {
             debug_log::log(format_args!(

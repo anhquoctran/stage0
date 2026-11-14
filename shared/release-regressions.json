@@ -355,6 +355,16 @@
         "features::review::runtime::tests::mention_reply_tests::full_review_cannot_stage_or_publish_an_unmentioned_own_finding_reply",
         "features::review::runtime::tests::mention_reply_tests::deliberate_no_reply_checks_are_quiet_but_errors_still_notify"
       ]
+    },
+    {
+      "id": "review-budget-diagnostics",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/budget_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::budget_tests::deepseek_cumulative_usage_explains_the_local_limit_before_executing_over_budget_calls",
+        "features::review::runtime::tests::budget_tests::budget_warning_allows_safe_completion_without_raising_limits_or_claiming_approval",
+        "features::review::runtime::tests::budget_tests::request_and_cumulative_wire_limits_are_not_misreported_as_provider_tokens"
+      ]
     }
   ]
 }
