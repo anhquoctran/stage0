@@ -3284,7 +3284,10 @@
       "saveRunStateFailed": "無法儲存審查狀態：{{error}}",
       "runNotFound": "未找到審查執行。",
       "invalidStoredRun": "無效的已儲存審查執行。",
-      "interruptedByShutdown": "應用程式在此次執行完成前已停止。請開始新的審查；它未完成或未獲核准。"
+      "interruptedByShutdown": "應用程式在此次執行完成前已停止。請開始新的審查；它未完成或未獲核准。",
+      "tokenBudgetExceededDetails": "Stage0 已停止審查：累計輸入與輸出 token 為 {{used}} / {{limit}}。這是單次執行的本機限制，並非供應商的上下文視窗或帳戶配額。請拆分 MR 或降低推理強度。審查尚未完成。",
+      "requestBudgetExceeded": "Stage0 在傳送前停止：單次請求為 {{used}} / {{limit}} 位元組。請減少上下文或拆分 MR。審查尚未完成。",
+      "wireBudgetExceeded": "Stage0 在下一次請求前停止：包含重試預留的累計傳輸量為 {{used}} / {{limit}} 位元組。這是本機限制，並非供應商的 token 錯誤。請拆分 MR。審查尚未完成。"
     },
     "credentials": {
       "accountRequired": "請輸入帳戶名稱。",

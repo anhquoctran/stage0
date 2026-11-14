@@ -3284,7 +3284,10 @@
       "saveRunStateFailed": "无法保存审查状态：{{error}}",
       "runNotFound": "未找到审查运行。",
       "invalidStoredRun": "无效的存储审查运行。",
-      "interruptedByShutdown": "应用程序在此次运行完成前已停止。请开始新的审查；它未完成或未获批准。"
+      "interruptedByShutdown": "应用程序在此次运行完成前已停止。请开始新的审查；它未完成或未获批准。",
+      "tokenBudgetExceededDetails": "Stage0 已停止评审：累计输入和输出 token 为 {{used}} / {{limit}}。这是单次运行的本地限制，并非提供商的上下文窗口或账户配额。请拆分 MR 或降低推理强度。评审尚未完成。",
+      "requestBudgetExceeded": "Stage0 在发送前停止：单次请求为 {{used}} / {{limit}} 字节。请减少上下文或拆分 MR。评审尚未完成。",
+      "wireBudgetExceeded": "Stage0 在下一次请求前停止：包含重试预留的累计传输量为 {{used}} / {{limit}} 字节。这是本地限制，并非提供商的 token 错误。请拆分 MR。评审尚未完成。"
     },
     "credentials": {
       "accountRequired": "请输入账户名称。",
