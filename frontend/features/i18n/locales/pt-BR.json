@@ -3305,7 +3305,10 @@
       "saveRunStateFailed": "Não foi possível salvar o estado da revisão: {{error}}",
       "runNotFound": "Execução da revisão não encontrada.",
       "invalidStoredRun": "Execução de revisão armazenada inválida.",
-      "interruptedByShutdown": "O aplicativo foi interrompido antes do término desta execução. Inicie uma nova revisão."
+      "interruptedByShutdown": "O aplicativo foi interrompido antes do término desta execução. Inicie uma nova revisão.",
+      "tokenBudgetExceededDetails": "O Stage0 interrompeu a revisão: {{used}} / {{limit}} tokens acumulados de entrada e saída. É um limite local por execução, não do contexto ou da conta do provedor. Divida a MR ou reduza o esforço de raciocínio. A revisão está incompleta.",
+      "requestBudgetExceeded": "O Stage0 parou antes do envio: {{used}} / {{limit}} bytes em uma solicitação. Reduza o contexto ou divida a MR. A revisão está incompleta.",
+      "wireBudgetExceeded": "O Stage0 parou antes da próxima solicitação: {{used}} / {{limit}} bytes de transporte acumulados reservados, incluindo novas tentativas. Limite local, não erro de tokens do provedor. Divida a MR. A revisão está incompleta."
     },
     "credentials": {
       "accountRequired": "Informe o nome da conta.",

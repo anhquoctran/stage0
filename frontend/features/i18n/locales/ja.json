@@ -3298,7 +3298,10 @@
       "saveRunStateFailed": "レビューの状態を保存できませんでした: {{error}}",
       "runNotFound": "レビュー実行が見つかりません。",
       "invalidStoredRun": "無効な保存済みレビュー実行です。",
-      "interruptedByShutdown": "この実行が完了する前にアプリケーションが停止しました。新しいレビューを開始してください。"
+      "interruptedByShutdown": "この実行が完了する前にアプリケーションが停止しました。新しいレビューを開始してください。",
+      "tokenBudgetExceededDetails": "Stage0 がレビューを停止しました。入出力トークンの累計は {{used}} / {{limit}} です。これは実行ごとのローカル制限で、プロバイダーのコンテキスト長やアカウント上限ではありません。MR を分割するか推論強度を下げてください。レビューは未完了です。",
+      "requestBudgetExceeded": "Stage0 は送信前に停止しました。1 リクエストのサイズは {{used}} / {{limit}} バイトです。コンテキストを減らすか MR を分割してください。レビューは未完了です。",
+      "wireBudgetExceeded": "Stage0 は次のリクエスト前に停止しました。再試行分を含む累計通信予約量は {{used}} / {{limit}} バイトです。ローカル制限であり、プロバイダーのトークンエラーではありません。MR を分割してください。レビューは未完了です。"
     },
     "credentials": {
       "accountRequired": "アカウント名を入力してください。",

@@ -1,6 +1,7 @@
 //! Review lifecycle and stable entry points. The bounded loop and tool actions live in child modules.
 mod action_dispatch;
 mod audit;
+mod budget;
 mod compact_prompt;
 pub(super) mod completion_notification;
 mod discussion_observation;

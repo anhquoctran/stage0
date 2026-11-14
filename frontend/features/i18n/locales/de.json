@@ -3298,7 +3298,10 @@
       "saveRunStateFailed": "Review-Status konnte nicht gespeichert werden: {{error}}",
       "runNotFound": "Review-Lauf nicht gefunden.",
       "invalidStoredRun": "Ungültiger gespeicherter Review-Lauf.",
-      "interruptedByShutdown": "Die Anwendung wurde gestoppt, bevor dieser Lauf abgeschlossen war. Starten Sie ein neues Review."
+      "interruptedByShutdown": "Die Anwendung wurde gestoppt, bevor dieser Lauf abgeschlossen war. Starten Sie ein neues Review.",
+      "tokenBudgetExceededDetails": "Stage0 hat die Prüfung gestoppt: {{used}} / {{limit}} kumulierte Eingabe- und Ausgabetokens. Dies ist ein lokales Limit pro Lauf, kein Kontext- oder Kontolimit des Anbieters. MR aufteilen oder den Denkaufwand verringern. Die Prüfung ist unvollständig.",
+      "requestBudgetExceeded": "Stage0 hat vor dem Senden gestoppt: {{used}} / {{limit}} Bytes in einer Anfrage. Kontext reduzieren oder MR aufteilen. Die Prüfung ist unvollständig.",
+      "wireBudgetExceeded": "Stage0 hat vor der nächsten Anfrage gestoppt: {{used}} / {{limit}} reservierte kumulierte Transportbytes einschließlich Wiederholungen. Lokales Limit, kein Tokenfehler des Anbieters. MR aufteilen. Die Prüfung ist unvollständig."
     },
     "credentials": {
       "accountRequired": "Gib einen Kontonamen ein.",
