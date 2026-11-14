@@ -3302,7 +3302,7 @@
       "tokenBudgetExceededDetails": "Stage0 已停止審查：累計輸入與輸出 token 為 {{used}} / {{limit}}。這是單次執行的本機限制，並非供應商的上下文視窗或帳戶配額。請拆分 MR 或降低推理強度。審查尚未完成。",
       "requestBudgetExceeded": "Stage0 在傳送前停止：單次請求為 {{used}} / {{limit}} 位元組。請減少上下文或拆分 MR。審查尚未完成。",
       "wireBudgetExceeded": "Stage0 在下一次請求前停止：包含重試預留的累計傳輸量為 {{used}} / {{limit}} 位元組。這是本機限制，並非供應商的 token 錯誤。請拆分 MR。審查尚未完成。",
-      "tokenBudgetCannotContinue": "審查已在再次呼叫 API 前停止：已使用 {used}/{limit} 個權杖，下一次請求約需 {inputEstimate} 個輸入權杖。未傳送額外請求。審查尚未完成。"
+      "tokenBudgetCannotContinue": "審查已在再次呼叫 API 前停止：已使用 {used}/{limit} 個權杖，下一次請求約需 {inputEstimate} 個輸入權杖。未傳送額外請求。審查尚未完成。 預算還必須為完整回應保留足夠的輸出權杖。"
     },
     "credentials": {
       "accountRequired": "請輸入帳戶名稱。",

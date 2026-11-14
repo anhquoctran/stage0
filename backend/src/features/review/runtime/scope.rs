@@ -167,6 +167,14 @@ pub(super) fn configure(
 }
 
 pub(super) fn validate_call(state: &ReviewToolState, call: &ReviewToolCall) -> Result<(), String> {
+    if !state.description_updated
+        && matches!(
+            call.name.as_str(),
+            "create_review_discussion" | "reply_to_discussion" | "resolve_discussion"
+        )
+    {
+        return Err("Generate the required MR description before discussion actions".into());
+    }
     if state.finalizing && call.name != "submit_review" {
         return Err("The remaining review budget is reserved for submit_review".into());
     }

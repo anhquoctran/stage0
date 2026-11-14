@@ -1,4 +1,5 @@
 //! Reserve replayed input before granting an output allowance; never change hard limits.
+use super::tool_state::ReviewToolState;
 use crate::{
     core::db::Database,
     features::review::{model_adapter::ReviewModelAdapter, ReviewRun},
@@ -24,8 +25,18 @@ impl RequestBudget {
         tools: &[Value],
         requested_output: u64,
         token_limit: u64,
-        allow_finalization: bool,
+        state: &mut ReviewToolState,
+        description_source_ready: bool,
     ) -> Result<(Value, u64), String> {
+        let phase_tools = super::description_phase::prepare(
+            state,
+            description_source_ready,
+            adapter,
+            history,
+            tools,
+        );
+        let tools = phase_tools.as_slice();
+        let allow_finalization = state.description_updated && state.reply_discussion_id.is_none();
         let remaining = token_limit.saturating_sub(run.usage_tokens);
         let preview = adapter.payload(system, history, tools, requested_output);
         if allow_finalization
@@ -48,12 +59,16 @@ impl RequestBudget {
         };
         let preview = adapter.payload(system, history, active_tools, requested_output);
         let bytes = adapter.request_size(&preview);
-        if let Some(input) = self.estimate(bytes).filter(|input| *input >= remaining) {
-            db.review_event(&run.id,"budget_exhausted",json!({"resource":"estimated_request_tokens","used":run.usage_tokens,"limit":token_limit,"nextInputEstimate":input,"requestSent":false}))?;
+        let minimum_output = adapter.minimum_output_tokens();
+        if let Some(input) = self
+            .estimate(bytes)
+            .filter(|input| input.saturating_add(minimum_output.max(1)) > remaining)
+        {
+            db.review_event(&run.id,"budget_exhausted",json!({"resource":"estimated_request_tokens","used":run.usage_tokens,"limit":token_limit,"nextInputEstimate":input,"minimumOutputTokens":minimum_output,"availableOutputTokens":remaining.saturating_sub(input),"requestSent":false}))?;
             return Err(crate::common::messages::failure(
                 "backend.review.tokenBudgetCannotContinue",
                 json!({"used":run.usage_tokens,"limit":token_limit,"inputEstimate":input}),
-                "Remaining review token budget cannot cover estimated next input; no request sent"
+                "Remaining review token budget cannot cover estimated next input and output headroom; no request sent"
                     .into(),
             ));
         }

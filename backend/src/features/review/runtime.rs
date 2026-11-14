@@ -4,6 +4,7 @@ mod audit;
 mod budget;
 mod compact_prompt;
 pub(super) mod completion_notification;
+mod description_phase;
 mod discussion_observation;
 mod discussions;
 mod engine;

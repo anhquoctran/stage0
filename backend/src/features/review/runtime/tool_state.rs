@@ -6,6 +6,7 @@ use std::collections::{HashMap, HashSet};
 pub(super) struct ReviewToolState {
     pub had_errors: bool,
     pub finalizing: bool,
+    pub workflow_phase: Option<&'static str>,
     pub pending_findings: Vec<ReviewFinding>,
     pub pending_discussion_actions: Vec<ReviewDiscussionAction>,
     pub description_updated: bool,
@@ -22,6 +23,7 @@ impl ReviewToolState {
         Self {
             had_errors: false,
             finalizing: false,
+            workflow_phase: None,
             pending_findings: Vec::new(),
             pending_discussion_actions: Vec::new(),
             description_updated: !generate_description,

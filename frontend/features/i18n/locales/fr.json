@@ -3309,7 +3309,7 @@
       "tokenBudgetExceededDetails": "Stage0 a arrêté la revue : {{used}} / {{limit}} jetons cumulés en entrée et sortie. Il s’agit d’une limite locale par exécution, pas du contexte ou du quota du fournisseur. Divisez la MR ou réduisez l’effort de raisonnement. La revue est incomplète.",
       "requestBudgetExceeded": "Stage0 s’est arrêté avant l’envoi : {{used}} / {{limit}} octets dans une requête. Réduisez le contexte ou divisez la MR. La revue est incomplète.",
       "wireBudgetExceeded": "Stage0 s’est arrêté avant la prochaine requête : {{used}} / {{limit}} octets de transport cumulés réservés, nouvelles tentatives comprises. Limite locale, pas une erreur de jetons du fournisseur. Divisez la MR. La revue est incomplète.",
-      "tokenBudgetCannotContinue": "Revue arrêtée avant un nouvel appel API : {used}/{limit} jetons utilisés ; la prochaine requête nécessite environ {inputEstimate} jetons en entrée. Aucune requête supplémentaire envoyée. La revue est incomplète."
+      "tokenBudgetCannotContinue": "Revue arrêtée avant un nouvel appel API : {used}/{limit} jetons utilisés ; la prochaine requête nécessite environ {inputEstimate} jetons en entrée. Aucune requête supplémentaire envoyée. La revue est incomplète. Le budget doit aussi réserver assez de jetons de sortie pour une réponse complète."
     },
     "credentials": {
       "accountRequired": "Saisissez un nom de compte.",

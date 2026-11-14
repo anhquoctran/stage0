@@ -12,6 +12,11 @@ pub trait ReviewModelAdapter: Send + Sync {
         2048
     }
 
+    /// Optional floor for thinking/tool output. Never send a knowingly starved continuation.
+    fn minimum_output_tokens(&self) -> u64 {
+        0
+    }
+
     /// Observed input usage enables best-effort reservation for the next request.
     /// None preserves accounting for adapters that cannot separate input/output.
     fn input_token_usage(&self, _response: &Value) -> Option<u64> {

@@ -446,6 +446,17 @@
       "id": "mention-person-trigger",
       "runner": "node",
       "path": "scripts/mention-person-trigger.test.mjs"
+    },
+    {
+      "id": "review-description-output-headroom",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/output_headroom_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::output_headroom_tests::failed_run_telemetry_never_sends_a_504_token_thinking_continuation",
+        "features::review::runtime::tests::output_headroom_tests::full_preload_generates_description_first_then_returns_to_full_review_with_output_headroom",
+        "features::review::runtime::tests::output_headroom_tests::projected_description_phase_never_grants_coverage_or_allows_publication_before_delivery",
+        "features::review::runtime::tests::output_headroom_tests::deepseek_output_floor_tracks_thinking_without_changing_the_user_reasoning_setting"
+      ]
     }
   ]
 }

@@ -181,6 +181,8 @@ pub(super) async fn execute_with_adapter(
         let requested_output = adapter
             .output_token_limit(expanded_output)
             .min(token_limit.saturating_sub(run.usage_tokens));
+        let description_source_ready =
+            super::description_phase::source_ready(context, initial_diff.as_ref())?;
         let (body, output_tokens) = request_budget.prepare(
             db,
             run,
@@ -190,7 +192,8 @@ pub(super) async fn execute_with_adapter(
             tools,
             requested_output,
             token_limit,
-            state.description_updated && !reply_only,
+            &mut state,
+            description_source_ready,
         )?;
         state.finalizing = request_budget.finalizing;
         let bytes = adapter.request_size(&body);

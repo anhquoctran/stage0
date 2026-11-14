@@ -85,3 +85,38 @@ cost. No paid model calls are made by these tests. A real model may need more
 investigation than fits the bounded budget; such a run must still be incomplete
 or report limited coverage rather than claim an unsupported approval. Local
 execution is macOS; PR CI owns Windows/Linux native coverage.
+
+
+## Follow-up: prevent output starvation during required description generation
+
+A later real run stopped at 61,675 tokens because its fourth request was given
+only 504 output tokens. The preceding request had 18,080 observed input tokens
+and 66,445 encoded bytes; the next planning preview was 69,031 bytes and had
+21,426 tokens remaining. Conservative input reservation left 504 for thinking
+and the tool response. Description generation was still pending, preventing the
+normal submit-only finalization transition. This was a controller starvation
+bug rather than proof that the provider's configured output limit was too small.
+
+`runtime/description_phase.rs` now owns a bounded inventory → description → review
+workflow. Complete initial source delivery selects only `update_mr_description`
+for the first model turn; partial packets expose the inventory/diff tools until
+actual coverage is complete. The projected initial packet affects tool selection
+only: coverage is still committed after successful delivery, and metadata writes
+still revalidate actual coverage and concurrent edits. Each phase transition adds
+one host instruction. Once the description is saved, the full review tool set
+returns and already delivered source/reasoning remains intact. Early discussion
+mutations are independently rejected while a required description is pending.
+
+The adapter contract adds an optional minimum output allowance. Native DeepSeek
+thinking uses a local planning floor of 4,096 tokens, within its existing 16,384
+initial output ceiling; this is a Stage0 safety margin, not a claimed provider
+minimum or a quality guarantee. Requests with observed input that cannot leave
+this headroom stop before another paid call, using the existing incomplete-budget
+classification and an explicit output-headroom explanation. Thinking is never
+automatically disabled and the 64,000 total limit is unchanged.
+
+Four additional protected cases replay the 504-token planning calculation without
+user source, verify a complete ten-file description-first workflow, prove that
+projected source cannot authorize an early write, and check native thinking/none
+adapter behavior. The protocol/usage fixture validates orchestration only; no
+live provider request or user quota is consumed by these tests.
