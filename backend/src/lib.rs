@@ -337,6 +337,8 @@ pub fn run() {
             commands::get_ai_review,
             commands::list_ai_reviews,
             commands::cancel_ai_review,
+            features::review::feedback::list_review_feedback_memories,
+            features::review::feedback::forget_review_feedback,
             features::review::local_context::get_review_context_cache,
             features::review::local_context::clear_review_context_cache,
             features::review::local_context::install_review_context_model,

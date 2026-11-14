@@ -171,6 +171,8 @@ pub(super) fn validate_call(state: &ReviewToolState, call: &ReviewToolCall) -> R
         if !matches!(
             call.name.as_str(),
             "list_open_discussions"
+                | "list_review_feedback"
+                | "classify_review_feedback"
                 | "read_discussion_comment"
                 | "get_file_diff"
                 | "read_file_range"

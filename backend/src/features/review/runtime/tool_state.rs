@@ -11,6 +11,8 @@ pub(super) struct ReviewToolState {
     pub description_must_be_empty: bool,
     pub replied_discussions: HashSet<String>,
     pub resolved_discussions: HashSet<String>,
+    pub feedback_candidates: Option<Vec<String>>,
+    pub feedback_observations: HashMap<String, DiscussionObservation>,
     pub observations: HashMap<String, DiscussionObservation>,
     pub reply_discussion_id: Option<String>,
     pub reply_file_path: Option<String>,
@@ -27,6 +29,8 @@ impl ReviewToolState {
             replied_discussions: HashSet::new(),
             resolved_discussions: HashSet::new(),
             observations: HashMap::new(),
+            feedback_observations: HashMap::new(),
+            feedback_candidates: None,
             reply_discussion_id: None,
             reply_file_path: None,
         }

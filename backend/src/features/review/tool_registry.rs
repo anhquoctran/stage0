@@ -35,6 +35,9 @@ impl ReviewToolRegistry {
         }
         registry
     }
+    pub(crate) fn enable_feedback(&mut self) {
+        self.native.extend(super::feedback::tools::definitions());
+    }
     pub(crate) fn enable_related_context(&mut self) {
         self.native.push(schemas::related_context_tool());
     }

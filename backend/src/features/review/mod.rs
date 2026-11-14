@@ -8,6 +8,7 @@ mod debug_log;
 mod discussion_reply;
 mod discussion_revision;
 pub(crate) mod discussion_snippets;
+pub mod feedback;
 mod input_screen;
 pub mod local_context;
 mod mentions;

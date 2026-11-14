@@ -24,6 +24,8 @@ pub struct ReviewContext {
     pub limited: bool,
     pub bytes: usize,
     pub max_bytes: usize,
+    /// Host lifecycle capability; absent from IPC and standalone evidence-only contexts.
+    pub(crate) feedback_enabled: bool,
     guards: Arc<GuardrailsEngine>,
     diff_offsets: HashMap<String, usize>,
     diff_cache: HashMap<String, Arc<diff::SnapshotDiff>>,
@@ -62,6 +64,7 @@ impl ReviewContext {
             limited: false,
             bytes: 0,
             max_bytes: 128 * 1024,
+            feedback_enabled: false,
             diff_offsets: HashMap::new(),
             diff_cache: HashMap::new(),
             diff_cache_bytes: 0,

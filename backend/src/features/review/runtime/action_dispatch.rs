@@ -108,6 +108,14 @@ pub(super) async fn dispatch_action(
                 Err(error) => Err(error),
             }
         }
+        "list_review_feedback" => super::feedback_actions::list(
+            db,
+            run,
+            state,
+            context,
+            call.arguments["offset"].as_u64().unwrap() as usize,
+        ),
+        "classify_review_feedback" => super::feedback_actions::classify(db, run, state, call),
         "list_open_discussions" => {
             let offset = call.arguments["offset"].as_u64().unwrap_or(0) as usize;
             super::discussions::list(db, run, state, context, offset)

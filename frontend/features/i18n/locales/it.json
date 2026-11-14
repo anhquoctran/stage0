@@ -2798,6 +2798,14 @@
       "installFailed": "Impossibile installare il modello locale. Controlla connessione e spazio su disco.",
       "clearFailed": "Impossibile svuotare la cache del contesto.",
       "repair": "Verifica / ripara modello"
+    },
+    "memory": {
+      "title": "Memoria delle revisioni",
+      "description": "I rifiuti espliciti vengono appresi alla prossima risposta o revisione. I ricordi pertinenti sono condivisi tra revisori e fornitori di questo repository.",
+      "empty": "Nessun riscontro memorizzato.",
+      "forget": "Dimentica questo riscontro",
+      "error": "Impossibile caricare o aggiornare la memoria delle revisioni.",
+      "immediate": "La rimozione è immediata; Annulla non ripristina il riscontro."
     }
   },
   "backend": {
