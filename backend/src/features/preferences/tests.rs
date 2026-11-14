@@ -124,6 +124,14 @@ fn schema_validation_rejects_wrong_types_ranges_and_malformed_records() {
     });
     assert!(validate_schema(&valid).is_ok());
 
+    let mut invalid_theme = valid.clone();
+    invalid_theme["appearance"]["darkThemeId"] = json!("../unsafe");
+    assert!(validate_schema(&invalid_theme).is_err());
+    let mut valid_theme = valid.clone();
+    valid_theme["appearance"]["darkThemeId"] = json!("one-dark-pro");
+    valid_theme["appearance"]["lightThemeId"] = json!("catppuccin-latte");
+    assert!(validate_schema(&valid_theme).is_ok());
+
     let mut acp_reviewer = valid.clone();
     acp_reviewer["reviewers"] = json!([{
         "id": "custom-bot-acp-reviewer",
@@ -386,5 +394,39 @@ fn linux_title_bar_mode_is_optional_and_rejects_unsupported_values() {
     for mode in [json!("auto"), json!(true), json!(42)] {
         settings["appearance"]["linuxTitleBar"] = mode;
         assert!(validate_schema(&settings).is_err());
+    }
+}
+
+#[test]
+fn ui_density_defaults_and_supported_values_are_valid() {
+    let mut settings = parse_and_validate(DEFAULT_PREFERENCES).unwrap();
+    assert_eq!(settings["appearance"]["density"], "standard");
+    settings["appearance"]
+        .as_object_mut()
+        .unwrap()
+        .remove("density");
+    assert!(
+        validate_schema(&settings).is_ok(),
+        "Older preferences remain valid"
+    );
+    for density in ["standard", "compact", "touch"] {
+        settings["appearance"]["density"] = json!(density);
+        assert!(validate_schema(&settings).is_ok());
+    }
+}
+
+#[test]
+fn ui_density_rejects_unknown_modes_and_wrong_types() {
+    let mut settings = parse_and_validate(DEFAULT_PREFERENCES).unwrap();
+    for density in [
+        json!("dense"),
+        json!("Standard"),
+        json!(7),
+        json!(true),
+        json!([]),
+    ] {
+        settings["appearance"]["density"] = density;
+        let error = validate_schema(&settings).unwrap_err();
+        assert!(error.contains("appearance.density"), "{error}");
     }
 }

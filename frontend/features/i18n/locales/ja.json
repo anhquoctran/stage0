@@ -53,7 +53,10 @@
       "commentPlaceholder": "コメントを入力、貼り付け、または画像をドロップ…",
       "dismissWarning": "警告を閉じる",
       "noContentToPreview": "プレビューする内容がありません",
-      "submit": "送信"
+      "submit": "送信",
+      "mentionTarget": "ユーザー、MR、コミットを参照",
+      "mergeRequest": "マージリクエスト",
+      "commit": "コミット"
     },
     "layout": {
       "activeFile": "アクティブなファイル: {{path}}",
@@ -111,9 +114,9 @@
       "noRecentRepositories": "最近使ったリポジトリはありません",
       "removeFromRecents": "最近の項目から削除",
       "viewAboutStage0": "Stage0 の情報を表示",
-      "switchToDarkTheme": "Catppuccin Mocha（ダーク）に切り替え",
-      "switchToLightTheme": "Catppuccin Mocha Light（ライト）に切り替え",
-      "toggleTheme": "Catppuccin Mocha のライト/ダークを切り替え",
+      "switchToDarkTheme": "ダークモードに切り替え",
+      "switchToLightTheme": "ライトモードに切り替え",
+      "toggleTheme": "ライト/ダークモードを切り替え",
       "mochaLight": "Mocha ライト",
       "mochaDark": "Mocha ダーク",
       "productDescriptor": "Virtual MR サンドボックス",
@@ -199,7 +202,8 @@
       "ai-guardrails": "セキュリティとガードレール",
       "git-binary": "Git 実行ファイル",
       "git-credentials": "Git 認証情報",
-      "notifications-settings": "プッシュ通知"
+      "notifications-settings": "プッシュ通知",
+      "appearance-density": "表示密度"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +277,10 @@
       "notifications-settings": {
         "title": "通知とプッシュ通知",
         "description": "OSのネイティブ通知とイベントチャンネルを設定します。"
+      },
+      "appearance-density": {
+        "title": "表示密度",
+        "description": "文字サイズを変えずにコントロールの大きさと間隔を調整します。"
       }
     },
     "window": {
@@ -438,6 +446,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "JSON エディターを閉じる",
       "editTitle": "preferences.json を編集",
       "description": "JSONC · コメントと末尾のカンマに対応 · Ctrl+Space で補完 · 2 秒後に自動保存",
       "saveState": {
@@ -490,7 +499,7 @@
       "light": "ライト",
       "dark": "ダーク",
       "paletteTitle": "カラーパレット",
-      "paletteDescription": "ダークモードで使用する Catppuccin の配色です。",
+      "paletteDescription": "ライトモードとダークモードで個別に配色を選択します。",
       "mocha": "モカ",
       "latte": "ラテ"
     },
@@ -504,7 +513,20 @@
     "draftResetToast": "すべての設定案を既定値に戻しました（保存するには「適用」を選択）",
     "appliedToast": "設定を適用しました",
     "applyFailedWithDetail": "設定を適用できませんでした: {{error}}。下書きは保持されています。",
-    "applyFailed": "設定を適用できませんでした。下書きは保持されています。"
+    "applyFailed": "設定を適用できませんでした。下書きは保持されています。",
+    "density": {
+      "title": "表示密度",
+      "description": "文字サイズを変えずにコントロールの大きさと間隔を調整します。",
+      "default": "既定",
+      "standardDescription": "普段の操作に適したバランスのよい間隔。",
+      "compactDescription": "小さなコントロールと狭い行間で多くの内容を表示。",
+      "touchDescription": "タッチ操作に適した大きなコントロールと広い間隔。",
+      "applyHint": "適用またはOKで全ウィンドウに反映されます。再起動は不要です。",
+      "conflict": "別のウィンドウまたはエディターで密度が変更されました。設定を開き直してから適用してください。",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "たった今",
@@ -834,7 +856,9 @@
       "newest": "新しい順",
       "noMatchingActivity": "このフィルターに一致するアクティビティはありません。",
       "deletedDiscussion": "がディスカッションを削除しました",
-      "deletedReply": "が返信を削除しました"
+      "deletedReply": "が返信を削除しました",
+      "resolvedBotDiscussion": "次のレビュアーのディスカッションを解決しました：",
+      "reopenedBotDiscussion": "次のレビュアーのディスカッションを再開しました："
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} をクローズしました",
@@ -913,7 +937,9 @@
       "reviewingNow": "レビュー中",
       "aiAgentTitle": "{{name}} (AI エージェント)",
       "deleteOwnContent": "自分のコメントまたはディスカッションを削除",
-      "deleteFailed": "削除できませんでした：{{error}}"
+      "deleteFailed": "削除できませんでした：{{error}}",
+      "referenceUnavailable": "この参照は現在のリポジトリでは利用できません。",
+      "referenceHistoryUnavailable": "コミット履歴を読み込めませんでした。既存の参照は引き続き利用できます。"
     },
     "listDialog": {
       "sortRecentlyUpdated": "最近更新",
@@ -1273,7 +1299,7 @@
     "copied": "コピーしました",
     "author": "作成者",
     "releaseDate": "リリース日",
-    "architectureCommit": "アーキテクチャ / コミット",
+    "architecture": "アーキテクチャ",
     "copyDiagnostics": "システムとバージョン情報をコピー",
     "copiedInfo": "情報をコピーしました",
     "copyInfo": "情報をコピー",
@@ -2476,6 +2502,11 @@
       "unknownAuthor": "不明"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · コメントと末尾のカンマに対応 · 2 秒後に自動保存",
+      "editFile": "repos.json を編集",
+      "editorTitle": "リポジトリ設定 JSONC",
+      "fileConflict": "設定ファイルが変更されました。保存する前にこのダイアログを閉じて開き直してください。",
+      "importLegacyReviewers": "このコンピューターに以前保存したレビュアーをインポート",
       "title": "リポジトリ設定",
       "close": "ダイアログを閉じる",
       "remotes": "リモート",
@@ -2746,6 +2777,28 @@
       "someReviewersCouldNotFinish": "一部の AI レビュアーが完了できませんでした: {{errors}}",
       "reviewerCouldNotStart": "AI レビュアーを開始できませんでした: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI レビュアーが更新された Virtual MR を確認できませんでした: {{error}}"
+    },
+    "localContext": {
+      "title": "レビューコンテキストのローカルキャッシュ",
+      "description": "不変のソースを再利用し、レビュー内のコンテキスト重複を避けます。保存後に適用されます。",
+      "modelDescription": "任意の意味検索は端末上で動作します。モデルを一度ダウンロードすると、ソースを埋め込みサービスへ送信しません。部分的なインデックスは必須の差分確認を代替しません。",
+      "ready": "ローカルモデルをインストール済み",
+      "notInstalled": "完全一致キャッシュは利用可能です。意味検索モデルは未インストールです",
+      "download": "ローカルモデルをダウンロード（{{size}} MiB）",
+      "installing": "ローカルモデルをダウンロード中…",
+      "clear": "全リポジトリのキャッシュを消去",
+      "size": "キャッシュ容量：{{size}} MiB",
+      "installFailed": "ローカルモデルをインストールできません。接続と空き容量を確認してください。",
+      "clearFailed": "コンテキストキャッシュを消去できません。",
+      "repair": "モデルを確認・修復"
+    },
+    "memory": {
+      "title": "レビューの記憶",
+      "description": "明確な拒否は次の返信またはレビュー時に記憶されます。関連する記憶はこのリポジトリのレビュアーとプロバイダー間で共有されます。",
+      "empty": "記憶されたフィードバックはありません。",
+      "forget": "このフィードバックを忘れる",
+      "error": "レビューの記憶を読み込みまたは更新できませんでした。",
+      "immediate": "削除は即時に反映され、キャンセルしても復元されません。"
     }
   },
   "backend": {
@@ -3253,7 +3306,10 @@
       "saveRunStateFailed": "レビューの状態を保存できませんでした: {{error}}",
       "runNotFound": "レビュー実行が見つかりません。",
       "invalidStoredRun": "無効な保存済みレビュー実行です。",
-      "interruptedByShutdown": "この実行が完了する前にアプリケーションが停止しました。新しいレビューを開始してください。"
+      "interruptedByShutdown": "この実行が完了する前にアプリケーションが停止しました。新しいレビューを開始してください。",
+      "tokenBudgetExceededDetails": "Stage0 がレビューを停止しました。入出力トークンの累計は {{used}} / {{limit}} です。これは実行ごとのローカル制限で、プロバイダーのコンテキスト長やアカウント上限ではありません。MR を分割するか推論強度を下げてください。レビューは未完了です。",
+      "requestBudgetExceeded": "Stage0 は送信前に停止しました。1 リクエストのサイズは {{used}} / {{limit}} バイトです。コンテキストを減らすか MR を分割してください。レビューは未完了です。",
+      "wireBudgetExceeded": "Stage0 は次のリクエスト前に停止しました。再試行分を含む累計通信予約量は {{used}} / {{limit}} バイトです。ローカル制限であり、プロバイダーのトークンエラーではありません。MR を分割してください。レビューは未完了です。"
     },
     "credentials": {
       "accountRequired": "アカウント名を入力してください。",

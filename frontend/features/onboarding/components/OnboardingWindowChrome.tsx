@@ -16,6 +16,7 @@ export function OnboardingWindowChrome() {
   return (
     <div
       dir="ltr"
+      data-density-exempt
       data-tauri-drag-region={!linux}
       onMouseDown={titleBarMouseDown(profile, services.application, mac)}
       className="absolute inset-x-0 top-0 z-30 flex h-8.5 items-center justify-between rounded-none bg-transparent cursor-default"

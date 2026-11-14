@@ -1,7 +1,7 @@
-export const DEFAULT_RELEASE_NOTES = `# Stage0 v0.0.1 Release Notes
+export const DEFAULT_RELEASE_NOTES = `# Stage0 v0.0.4 Release Notes
 
 Stage0 is a local-first Virtual Merge Request and conflict prediction sandbox.
-This document describes the current release (v0.0.1).
+This document describes the current release (v0.0.4).
 
 ## Highlights
 

@@ -53,7 +53,10 @@
       "commentPlaceholder": "Escreva um comentário, cole ou solte imagens aqui…",
       "dismissWarning": "Dispensar aviso",
       "noContentToPreview": "Nenhum conteúdo para pré-visualizar",
-      "submit": "Enviar"
+      "submit": "Enviar",
+      "mentionTarget": "Mencionar pessoa, MR ou commit",
+      "mergeRequest": "Solicitação de mesclagem",
+      "commit": "Commit"
     },
     "layout": {
       "activeFile": "Arquivo ativo: {{path}}",
@@ -111,9 +114,9 @@
       "noRecentRepositories": "Nenhum repositório recente",
       "removeFromRecents": "Remover dos recentes",
       "viewAboutStage0": "Ver informações do Stage0",
-      "switchToDarkTheme": "Mudar para Catppuccin Mocha (escuro)",
-      "switchToLightTheme": "Mudar para Catppuccin Mocha Light (claro)",
-      "toggleTheme": "Alternar modo claro/escuro do Catppuccin Mocha",
+      "switchToDarkTheme": "Mudar para o modo escuro",
+      "switchToLightTheme": "Mudar para o modo claro",
+      "toggleTheme": "Alternar entre modo claro e escuro",
       "mochaLight": "Mocha claro",
       "mochaDark": "Mocha escuro",
       "productDescriptor": "Sandbox de Virtual MR",
@@ -199,7 +202,8 @@
       "ai-guardrails": "Segurança e proteções",
       "git-binary": "Executável do Git",
       "git-credentials": "Credenciais do Git",
-      "notifications-settings": "Push e alertas"
+      "notifications-settings": "Push e alertas",
+      "appearance-density": "Densidade"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +277,10 @@
       "notifications-settings": {
         "title": "Notificações e alertas push",
         "description": "Configure as notificações nativas do sistema operacional e os canais de eventos."
+      },
+      "appearance-density": {
+        "title": "Densidade",
+        "description": "Ajuste os controles e o espaçamento sem alterar o tamanho do texto."
       }
     },
     "window": {
@@ -438,6 +446,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Fechar editor JSON",
       "editTitle": "Editar preferences.json",
       "description": "JSONC · aceita comentários e vírgulas finais · Ctrl+Space para sugestões · salva automaticamente após 2 segundos",
       "saveState": {
@@ -490,7 +499,7 @@
       "light": "Claro",
       "dark": "Escuro",
       "paletteTitle": "Paleta de cores",
-      "paletteDescription": "Variante Catppuccin usada no modo escuro.",
+      "paletteDescription": "Escolha uma paleta independente para os modos claro e escuro.",
       "mocha": "Mocha",
       "latte": "Latte"
     },
@@ -504,7 +513,20 @@
     "draftResetToast": "Todos os rascunhos de configuração foram redefinidos (clique em Aplicar para salvar)",
     "appliedToast": "Preferências aplicadas",
     "applyFailedWithDetail": "Não foi possível aplicar as preferências: {{error}}. Seus rascunhos continuam disponíveis.",
-    "applyFailed": "Não foi possível aplicar as preferências. Seus rascunhos continuam disponíveis."
+    "applyFailed": "Não foi possível aplicar as preferências. Seus rascunhos continuam disponíveis.",
+    "density": {
+      "title": "Densidade",
+      "description": "Ajuste os controles e o espaçamento sem alterar o tamanho do texto.",
+      "default": "Padrão",
+      "standardDescription": "Espaçamento equilibrado para o uso diário.",
+      "compactDescription": "Controles menores e linhas compactas para mostrar mais conteúdo.",
+      "touchDescription": "Controles maiores e mais espaço para interação por toque.",
+      "applyHint": "As mudanças valem em todas as janelas após Aplicar ou OK, sem reiniciar.",
+      "conflict": "A densidade mudou em outra janela ou editor. Reabra as preferências antes de aplicar.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "agora mesmo",
@@ -841,7 +863,9 @@
       "newest": "Mais recentes",
       "noMatchingActivity": "Nenhuma atividade corresponde a este filtro.",
       "deletedDiscussion": "excluiu uma discussão",
-      "deletedReply": "excluiu uma resposta"
+      "deletedReply": "excluiu uma resposta",
+      "resolvedBotDiscussion": "resolveu uma discussão de",
+      "reopenedBotDiscussion": "reabriu uma discussão de"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} fechado",
@@ -920,7 +944,9 @@
       "reviewingNow": "revisando agora",
       "aiAgentTitle": "{{name}} (agente de IA)",
       "deleteOwnContent": "Excluir seu comentário ou discussão",
-      "deleteFailed": "Não foi possível excluir: {{error}}"
+      "deleteFailed": "Não foi possível excluir: {{error}}",
+      "referenceUnavailable": "Esta referência não está disponível no repositório atual.",
+      "referenceHistoryUnavailable": "Não foi possível carregar o histórico de commits. As referências existentes continuam disponíveis."
     },
     "listDialog": {
       "sortRecentlyUpdated": "Atualizados recentemente",
@@ -1280,7 +1306,7 @@
     "copied": "Copiado",
     "author": "Autor",
     "releaseDate": "Data de lançamento",
-    "architectureCommit": "Arquitetura / Commit",
+    "architecture": "Arquitetura",
     "copyDiagnostics": "Copiar informações do sistema e da versão",
     "copiedInfo": "Informações copiadas",
     "copyInfo": "Copiar informações",
@@ -2483,6 +2509,11 @@
       "unknownAuthor": "Desconhecido"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · aceita comentários e vírgulas finais · salva automaticamente após 2 segundos",
+      "editFile": "Editar repos.json",
+      "editorTitle": "Configurações do repositório em JSONC",
+      "fileConflict": "O arquivo de configurações mudou. Feche e reabra esta janela antes de salvar.",
+      "importLegacyReviewers": "Importar revisores salvos anteriormente neste computador",
       "title": "Configurações do repositório",
       "close": "Fechar diálogo",
       "remotes": "Remotos",
@@ -2753,6 +2784,28 @@
       "someReviewersCouldNotFinish": "Alguns revisores de IA não conseguiram concluir: {{errors}}",
       "reviewerCouldNotStart": "Não foi possível iniciar o revisor de IA: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "O revisor de IA não conseguiu verificar a MR virtual atualizada: {{error}}"
+    },
+    "localContext": {
+      "title": "Cache local do contexto de revisão",
+      "description": "Reutilize código imutável e evite contexto repetido durante a revisão. Aplicado após salvar.",
+      "modelDescription": "A pesquisa semântica opcional é executada neste dispositivo. Baixe o modelo uma vez; o código não é enviado a serviços de embeddings. O índice parcial não substitui a cobertura obrigatória dos diffs.",
+      "ready": "Modelo local instalado",
+      "notInstalled": "Cache exato disponível; modelo semântico ausente",
+      "download": "Baixar modelo local ({{size}} MiB)",
+      "installing": "Baixando modelo local…",
+      "clear": "Limpar os caches de todos os repositórios",
+      "size": "Tamanho do cache: {{size}} MiB",
+      "installFailed": "Não foi possível instalar o modelo local. Verifique a conexão e o espaço em disco.",
+      "clearFailed": "Não foi possível limpar o cache de contexto.",
+      "repair": "Verificar / reparar modelo"
+    },
+    "memory": {
+      "title": "Memória de revisão",
+      "description": "Recusas claras são aprendidas na próxima resposta ou revisão. Memórias relevantes são compartilhadas entre revisores e provedores deste repositório.",
+      "empty": "Nenhum comentário memorizado.",
+      "forget": "Esquecer este comentário",
+      "error": "Não foi possível carregar ou atualizar a memória de revisão.",
+      "immediate": "Esquecer tem efeito imediato; Cancelar não restaura o comentário."
     }
   },
   "backend": {
@@ -3260,7 +3313,10 @@
       "saveRunStateFailed": "Não foi possível salvar o estado da revisão: {{error}}",
       "runNotFound": "Execução da revisão não encontrada.",
       "invalidStoredRun": "Execução de revisão armazenada inválida.",
-      "interruptedByShutdown": "O aplicativo foi interrompido antes do término desta execução. Inicie uma nova revisão."
+      "interruptedByShutdown": "O aplicativo foi interrompido antes do término desta execução. Inicie uma nova revisão.",
+      "tokenBudgetExceededDetails": "O Stage0 interrompeu a revisão: {{used}} / {{limit}} tokens acumulados de entrada e saída. É um limite local por execução, não do contexto ou da conta do provedor. Divida a MR ou reduza o esforço de raciocínio. A revisão está incompleta.",
+      "requestBudgetExceeded": "O Stage0 parou antes do envio: {{used}} / {{limit}} bytes em uma solicitação. Reduza o contexto ou divida a MR. A revisão está incompleta.",
+      "wireBudgetExceeded": "O Stage0 parou antes da próxima solicitação: {{used}} / {{limit}} bytes de transporte acumulados reservados, incluindo novas tentativas. Limite local, não erro de tokens do provedor. Divida a MR. A revisão está incompleta."
     },
     "credentials": {
       "accountRequired": "Informe o nome da conta.",

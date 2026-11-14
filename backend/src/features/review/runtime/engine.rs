@@ -55,7 +55,15 @@ pub(super) async fn execute_with_adapter(
             })?
             .max_bytes = 32 * 1024;
     }
-    let system = build_system_prompt(config);
+    let compact = context
+        .lock()
+        .map(|ctx| ctx.local_context_metrics().is_some())
+        .unwrap_or(false);
+    let mut system = if compact {
+        super::compact_prompt::build(config)
+    } else {
+        build_system_prompt(config)
+    };
     let (mr_title, target_branch, source_branch) = {
         let conn = db.conn();
         conn.query_row(
@@ -78,7 +86,7 @@ pub(super) async fn execute_with_adapter(
         })?
     };
     let participants = mentions::participants(&db.conn(), &run.session_id)?;
-    let prompt=json!({"task":"Review this Virtual MR snapshot. Compare the source branch with the target branch, inspect unresolved discussions, publish evidence-backed inline findings, reply to users or AI peers who directly mention you when needed, and resolve only verified fixes", "mrTitle":mr_title,"targetBranch":target_branch,"sourceBranch":source_branch,"reviewerId":run.reviewer_id,"participants":participants,"baseSha":run.snapshot.base_sha,"headSha":run.snapshot.head_sha,"mergeBaseSha":run.snapshot.merge_base_sha,"changedFileCount":run.snapshot.changed_files.len(),"excludedFileCount":run.snapshot.excluded_files.len()}).to_string();
+    let prompt=json!({"task":"Review this Virtual MR snapshot. Compare the source branch with the target branch, inspect unresolved discussions, publish evidence-backed inline findings, reply only to users/AI peers who directly mention you in the latest comment and need a useful response; otherwise leave the thread unchanged, and resolve only verified fixes", "mrTitle":mr_title,"targetBranch":target_branch,"sourceBranch":source_branch,"reviewerId":run.reviewer_id,"participants":participants,"baseSha":run.snapshot.base_sha,"headSha":run.snapshot.head_sha,"mergeBaseSha":run.snapshot.merge_base_sha,"changedFileCount":run.snapshot.changed_files.len(),"excludedFileCount":run.snapshot.excluded_files.len()}).to_string();
     let mut initial: serde_json::Value = serde_json::from_str(&prompt).map_err(|_| {
         crate::common::messages::failure(
             "backend.review.buildContextFailed",
@@ -87,17 +95,28 @@ pub(super) async fn execute_with_adapter(
         )
     })?;
     initial["reviewPreferences"] = super::prompt::review_preferences(config);
+    initial["executionBudget"] = super::budget::initial(token_limit, max_turns, max_calls);
     initial["replyDiscussionId"] = json!(config.reply_discussion_id);
     if reply_only {
         initial["task"] = json!("Answer the latest eligible comment in the assigned discussion. This is not an MR review or approval.");
     }
-    let registry = ReviewToolRegistry::for_request(config);
+    let mut registry = ReviewToolRegistry::for_request(config);
+    if !reply_only
+        && context
+            .lock()
+            .map(|ctx| ctx.related_context_available())
+            .unwrap_or(false)
+    {
+        registry.enable_related_context();
+    }
+    super::feedback_actions::configure(db, run, context, &mut registry, &mut initial, &mut system)?;
     let tools = registry.definitions();
     let mut wire_bytes = 0usize;
     let mut recovered_missing_tool_call = false;
     let mut decode_recoveries = 0;
     let mut provider_retries = 0;
     let mut expanded_output = false;
+    let mut budget_warned = false;
     let mut state = ReviewToolState::new(config.generate_description);
     super::scope::configure(db, config, &mut state)?;
     let has_open_discussions = db
@@ -149,9 +168,15 @@ pub(super) async fn execute_with_adapter(
     for turn in 0..max_turns {
         run.turns = turn + 1;
         if run.usage_tokens >= token_limit {
-            return Err(crate::common::messages::code(
-                "backend.review.tokenBudgetExceeded",
-            ));
+            return Err(super::budget::tokens(db, run, token_limit)?);
+        }
+        if !budget_warned {
+            if let Some(warning) = super::budget::warning(run, token_limit, wire_bytes, wire_limit)
+            {
+                history.extend(adapter.initial_history(&warning.to_string()));
+                db.review_event(&run.id, "budget_warning", warning)?;
+                budget_warned = true;
+            }
         }
         let output_tokens = adapter
             .output_token_limit(expanded_output)
@@ -163,19 +188,14 @@ pub(super) async fn execute_with_adapter(
         wire_bytes =
             wire_bytes.saturating_add(bytes.saturating_mul(adapter.retry_reserve_factor()));
         if bytes > MAX_REQUEST_BYTES || wire_bytes > wire_limit {
-            debug_log::log(format_args!(
-                "event=review_budget_exhausted run={} turn={} request_bytes={} estimated_wire_bytes={} usage_tokens={}",
-                debug_log::safe_label(&run.id, 80),
-                run.turns,
+            return Err(super::budget::request(
+                db,
+                run,
                 bytes,
+                MAX_REQUEST_BYTES,
                 wire_bytes,
-                run.usage_tokens
-            ));
-            return Err(crate::common::messages::failure(
-                "backend.review.tokenBudgetExceeded",
-                serde_json::json!({}),
-                "Review token budget exhausted".to_string(),
-            ));
+                wire_limit,
+            )?);
         }
         db.review_event(
             &run.id,
@@ -279,9 +299,7 @@ pub(super) async fn execute_with_adapter(
             )?;
             db.save_review_run(run)?;
             if run.usage_tokens >= token_limit {
-                return Err(crate::common::messages::code(
-                    "backend.review.tokenBudgetExceeded",
-                ));
+                return Err(super::budget::tokens(db, run, token_limit)?);
             }
             if retry {
                 expanded_output = true;
@@ -381,16 +399,7 @@ pub(super) async fn execute_with_adapter(
             has_refusal
         ));
         if run.usage_tokens > token_limit {
-            debug_log::log(format_args!(
-                "event=review_budget_exhausted run={} reason=reported_token_limit usage_tokens={} limit=selected_run_budget",
-                debug_log::safe_label(&run.id, 80),
-                run.usage_tokens
-            ));
-            return Err(crate::common::messages::failure(
-                "backend.review.tokenBudgetExceeded",
-                serde_json::json!({}),
-                "Review token budget exhausted".to_string(),
-            ));
+            return Err(super::budget::tokens(db, run, token_limit)?);
         }
         if calls.is_empty() {
             debug_log::log(format_args!(

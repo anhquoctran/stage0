@@ -1,7 +1,7 @@
 use super::tool_state::ReviewToolState;
 use crate::{
     core::db::Database,
-    features::review::{mentions, ReviewRequest, ReviewToolCall},
+    features::review::{discussion_reply, mentions, ReviewRequest, ReviewToolCall},
 };
 
 pub(crate) fn validate_request(db: &Database, config: &ReviewRequest) -> Result<(), String> {
@@ -34,16 +34,14 @@ pub(crate) fn validate_request(db: &Database, config: &ReviewRequest) -> Result<
             .ok_or_else(|| {
                 crate::common::messages::code("backend.review.openDiscussionNotFound")
             })?;
-        let latest = thread.comments.last().ok_or_else(|| {
+        thread.comments.last().ok_or_else(|| {
             crate::common::messages::code("backend.review.discussionHasNoComment")
         })?;
-        if !mentions::can_reply_to_comment(
+        if !discussion_reply::can_reply(
             &db.conn(),
             &config.session_id,
             config.reviewer_id.as_deref(),
-            &latest.author_type,
-            &latest.author_id,
-            &latest.body,
+            &thread.id,
         ) {
             return Err(crate::common::messages::code(
                 "backend.review.commentNotAddressedToReviewer",
@@ -173,6 +171,8 @@ pub(super) fn validate_call(state: &ReviewToolState, call: &ReviewToolCall) -> R
         if !matches!(
             call.name.as_str(),
             "list_open_discussions"
+                | "list_review_feedback"
+                | "classify_review_feedback"
                 | "read_discussion_comment"
                 | "get_file_diff"
                 | "read_file_range"

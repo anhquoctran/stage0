@@ -14,6 +14,7 @@ export interface AiConfig {
   reviewerInstructions: string;
   streamResponse: boolean;
   enableCodeReviewAssist: boolean;
+  localReviewContext?: boolean;
   /** Non-secret connection details remembered separately for each built-in provider. */
   providerSettings?: Partial<Record<AiProviderId, AiProviderSettings>>;
   /** Providers the user explicitly added to Preferences. */

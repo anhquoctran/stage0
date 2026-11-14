@@ -32,6 +32,11 @@ export const SETTINGS_TREE: TreeCategory[] = [
         keywords: ['theme', 'dark', 'light', 'mocha', 'latte', 'color', 'mode', 'appearance', 'palette'],
       },
       {
+        id: 'appearance-density', label: 'Density', title: 'Interface Density',
+        description: 'Choose comfortable, compact, or touch-friendly interface spacing.',
+        keywords: ['density', 'standard', 'compact', 'touch', 'spacing', 'controls', 'size'],
+      },
+      {
         id: 'appearance-language',
         label: 'Language',
         title: 'Language & Localization',

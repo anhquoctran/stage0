@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "catppuccin-mocha",
+  "name": "Catppuccin Mocha",
+  "kind": "dark",
+  "version": "1.0.0",
+  "author": "Catppuccin / Stage0",
+  "colors": {
+    "base": "#1e1e2e"
+  }
+}

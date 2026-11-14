@@ -1,10 +1,11 @@
 name: Protected regressions
+run-name: 'Regression checks · PR #${{ github.event.pull_request.number }} · ${{ github.base_ref }} · ${{ github.event.pull_request.head.sha }}'
 
 on:
   # One required-check suite per PR head. A second push suite with the same
   # job names leaves cancelled required checks when PR concurrency supersedes it.
   pull_request:
-    branches: [develop, nightly, beta, main]
+    branches: [develop, beta, main]
     types: [opened, reopened, synchronize, ready_for_review]
 
 permissions:
@@ -41,7 +42,7 @@ jobs:
             BASELINE_SHA="$PR_BASE_SHA"
           else
             BASE_BRANCH=develop
-            if [[ "$SOURCE_BRANCH" =~ ^hotfix/(sync-)?(main|beta|nightly|develop)/ ]]; then
+            if [[ "$SOURCE_BRANCH" =~ ^hotfix/(sync-)?(main|beta|develop)/ ]]; then
               BASE_BRANCH="${BASH_REMATCH[2]}"
             fi
             BASELINE_SHA=$(git rev-parse "origin/$BASE_BRANCH")
@@ -88,12 +89,47 @@ jobs:
       - run: pnpm check:architecture
       - run: pnpm typecheck
       - run: pnpm test
+      - name: Run React DOM tests on macOS and Windows
+        if: runner.os != 'Linux'
+        run: pnpm test:react
+      - name: Measure frontend coverage including untested application sources
+        if: runner.os == 'Linux'
+        run: pnpm test:coverage:react
+      - name: Install Chromium for real layout/focus regressions
+        if: runner.os == 'Linux'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run React browser regressions
+        if: runner.os == 'Linux'
+        run: pnpm test:react:browser
       - name: Run frozen target regressions against candidate code
         shell: bash
         run: |
           node "$RUNNER_TEMP/stage0-regressions.mjs" "$BASELINE_SHA" node
           node "$RUNNER_TEMP/stage0-regressions.mjs" "$BASELINE_SHA" rust
       - name: Run complete candidate Rust suite
+        if: runner.os != 'Linux'
         env:
           STAGE0_RUST_TEST_MANIFEST: ${{ runner.os == 'Windows' && '1' || '0' }}
         run: cargo test --locked --manifest-path backend/Cargo.toml --lib
+      - name: Install pinned Rust coverage tooling
+        if: runner.os == 'Linux'
+        run: |
+          rustup component add llvm-tools-preview
+          cargo install cargo-llvm-cov --version 0.9.1 --locked
+      - name: Run complete candidate Rust suite with coverage
+        if: runner.os == 'Linux'
+        run: pnpm test:coverage:rust
+      - name: Enforce coverage floors against the trusted PR base
+        if: runner.os == 'Linux'
+        shell: bash
+        run: node scripts/check-test-coverage.mjs --baseline-ref "$BASELINE_SHA"
+      - name: Preserve coverage reports and browser diagnostics
+        if: always() && runner.os == 'Linux'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: application-test-coverage
+          path: |
+            coverage/
+            .vitest/attachments/
+          retention-days: 7
+          if-no-files-found: error

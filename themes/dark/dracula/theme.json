@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "dracula",
+  "name": "Dracula",
+  "kind": "dark",
+  "version": "1.0.0",
+  "author": "Dracula Theme",
+  "colors": { "base": "#282a36", "brand": "#bd93f9", "text": "#f8f8f2" }
+}

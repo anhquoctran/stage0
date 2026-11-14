@@ -53,7 +53,10 @@
       "commentPlaceholder": "اكتب تعليقًا أو الصق أو أفلت الصور هنا…",
       "dismissWarning": "إغلاق التحذير",
       "noContentToPreview": "لا يوجد محتوى لمعاينته",
-      "submit": "إرسال"
+      "submit": "إرسال",
+      "mentionTarget": "الإشارة إلى شخص أو طلب دمج أو التزام",
+      "mergeRequest": "طلب دمج",
+      "commit": "التزام"
     },
     "layout": {
       "activeFile": "الملف النشط: {{path}}",
@@ -111,9 +114,9 @@
       "noRecentRepositories": "لا توجد مستودعات أخيرة",
       "removeFromRecents": "إزالة من الأخيرة",
       "viewAboutStage0": "عرض معلومات Stage0",
-      "switchToDarkTheme": "التبديل إلى Catppuccin Mocha (داكن)",
-      "switchToLightTheme": "التبديل إلى Catppuccin Mocha Light (فاتح)",
-      "toggleTheme": "تبديل الوضع الفاتح/الداكن لـ Catppuccin Mocha",
+      "switchToDarkTheme": "التبديل إلى الوضع الداكن",
+      "switchToLightTheme": "التبديل إلى الوضع الفاتح",
+      "toggleTheme": "تبديل الوضع الفاتح/الداكن",
       "mochaLight": "Mocha فاتح",
       "mochaDark": "Mocha داكن",
       "productDescriptor": "بيئة Virtual MR المعزولة",
@@ -189,7 +192,8 @@
       "ai-guardrails": "الأمان وضوابط الحماية",
       "git-binary": "ملف Git التنفيذي",
       "git-credentials": "بيانات اعتماد Git",
-      "notifications-settings": "الإشعارات والتنبيهات"
+      "notifications-settings": "الإشعارات والتنبيهات",
+      "appearance-density": "كثافة الواجهة"
     },
     "headers": {
       "general-keymaps": {
@@ -263,6 +267,10 @@
       "notifications-settings": {
         "title": "الإشعارات والتنبيهات الفورية",
         "description": "اضبط إشعارات نظام التشغيل الأصلية وقنوات الأحداث."
+      },
+      "appearance-density": {
+        "title": "كثافة الواجهة",
+        "description": "ضبط أحجام عناصر التحكم والمسافات دون تغيير حجم النص."
       }
     },
     "language": {
@@ -444,6 +452,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "إغلاق محرر JSON",
       "editTitle": "تحرير preferences.json",
       "description": "JSONC · يدعم التعليقات والفواصل اللاحقة · Ctrl+Space للاقتراحات · حفظ تلقائي بعد ثانيتين",
       "saveState": {
@@ -496,7 +505,7 @@
       "light": "فاتح",
       "dark": "داكن",
       "paletteTitle": "لوحة الألوان",
-      "paletteDescription": "نسق Catppuccin المستخدم في الوضع الداكن.",
+      "paletteDescription": "اختر لوحة ألوان مستقلة للوضعين الفاتح والداكن.",
       "mocha": "موكا",
       "latte": "لاتيه"
     },
@@ -510,7 +519,20 @@
     "draftResetToast": "تمت إعادة ضبط كل مسودات الإعدادات إلى الوضع الافتراضي (انقر على «تطبيق» للحفظ)",
     "appliedToast": "تم تطبيق التفضيلات بنجاح",
     "applyFailedWithDetail": "تعذر تطبيق التفضيلات: {{error}}. لا تزال المسودات متاحة.",
-    "applyFailed": "تعذر تطبيق التفضيلات. لا تزال المسودات متاحة."
+    "applyFailed": "تعذر تطبيق التفضيلات. لا تزال المسودات متاحة.",
+    "density": {
+      "title": "كثافة الواجهة",
+      "description": "ضبط أحجام عناصر التحكم والمسافات دون تغيير حجم النص.",
+      "default": "افتراضي",
+      "standardDescription": "مسافات متوازنة للاستخدام اليومي.",
+      "compactDescription": "عناصر أصغر وصفوف متقاربة لعرض محتوى أكثر.",
+      "touchDescription": "عناصر أكبر ومسافات أوسع للتفاعل باللمس.",
+      "applyHint": "تسري التغييرات في كل النوافذ بعد تطبيق أو موافق، دون إعادة تشغيل.",
+      "conflict": "تغيرت الكثافة في نافذة أو محرر آخر. أعد فتح التفضيلات قبل التطبيق.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "الآن",
@@ -868,7 +890,9 @@
       "newest": "الأحدث",
       "noMatchingActivity": "لا يوجد نشاط يطابق عامل التصفية هذا.",
       "deletedDiscussion": "حذف مناقشة",
-      "deletedReply": "حذف ردًا"
+      "deletedReply": "حذف ردًا",
+      "resolvedBotDiscussion": "حلّ نقاشًا بواسطة",
+      "reopenedBotDiscussion": "أعاد فتح نقاش بواسطة"
     },
     "bottomBar": {
       "closedToast": "تم إغلاق طلب الدمج الافتراضي #{{title}}",
@@ -947,7 +971,9 @@
       "reviewingNow": "جارٍ إجراء المراجعة",
       "aiAgentTitle": "{{name}} (وكيل ذكاء اصطناعي)",
       "deleteOwnContent": "حذف تعليقك أو مناقشتك",
-      "deleteFailed": "تعذّر الحذف: {{error}}"
+      "deleteFailed": "تعذّر الحذف: {{error}}",
+      "referenceUnavailable": "هذا المرجع غير متاح في المستودع الحالي.",
+      "referenceHistoryUnavailable": "تعذّر تحميل سجل الالتزامات. تظل المراجع الحالية متاحة."
     },
     "listDialog": {
       "sortRecentlyUpdated": "الأحدث تحديثًا",
@@ -1307,7 +1333,7 @@
     "copied": "تم النسخ",
     "author": "المؤلف",
     "releaseDate": "تاريخ الإصدار",
-    "architectureCommit": "البنية / الالتزام",
+    "architecture": "البنية",
     "copyDiagnostics": "نسخ معلومات النظام والإصدار",
     "copiedInfo": "تم نسخ المعلومات",
     "copyInfo": "نسخ المعلومات",
@@ -2510,6 +2536,11 @@
       "unknownAuthor": "غير معروف"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · يدعم التعليقات والفواصل الختامية · حفظ تلقائي بعد ثانيتين",
+      "editFile": "تحرير repos.json",
+      "editorTitle": "إعدادات المستودع بتنسيق JSONC",
+      "fileConflict": "تم تغيير ملف الإعدادات. أغلق مربع الحوار وافتحه مجددًا قبل الحفظ.",
+      "importLegacyReviewers": "استيراد المراجعين المحفوظين سابقًا على هذا الكمبيوتر",
       "title": "إعدادات المستودع",
       "close": "إغلاق مربع الحوار",
       "remotes": "المستودعات البعيدة",
@@ -2780,6 +2811,28 @@
       "someReviewersCouldNotFinish": "تعذر على بعض مراجعي الذكاء الاصطناعي الإكمال: {{errors}}",
       "reviewerCouldNotStart": "تعذر بدء مراجع الذكاء الاصطناعي: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "تعذر على مراجع الذكاء الاصطناعي فحص MR الافتراضي المحدّث: {{error}}"
+    },
+    "localContext": {
+      "title": "ذاكرة سياق المراجعة المحلية",
+      "description": "أعد استخدام المصدر الثابت وتجنب تكرار السياق في المراجعة. يسري بعد حفظ الإعدادات.",
+      "modelDescription": "يعمل البحث الدلالي الاختياري على جهازك. نزّل النموذج مرة واحدة؛ لا يُرسل المصدر إلى خدمة تضمين. الفهرس الجزئي لا يستبدل تغطية الفروق المطلوبة.",
+      "ready": "النموذج المحلي مثبت",
+      "notInstalled": "الذاكرة الدقيقة متاحة؛ النموذج الدلالي غير مثبت",
+      "download": "تنزيل النموذج المحلي ({{size}} MiB)",
+      "installing": "جارٍ تنزيل النموذج المحلي…",
+      "clear": "مسح ذاكرة جميع المستودعات",
+      "size": "حجم الذاكرة: {{size}} MiB",
+      "installFailed": "تعذر تثبيت النموذج المحلي. تحقق من الاتصال والمساحة المتاحة.",
+      "clearFailed": "تعذر مسح ذاكرة السياق.",
+      "repair": "فحص / إصلاح النموذج"
+    },
+    "memory": {
+      "title": "ذاكرة المراجعة",
+      "description": "يتم تذكر الرفض الواضح في الرد أو المراجعة التالية. تُشارك الذكريات ذات الصلة بين المراجعين ومزودي الخدمة في هذا المستودع.",
+      "empty": "لا توجد ملاحظات محفوظة بعد.",
+      "forget": "نسيان هذه الملاحظة",
+      "error": "تعذر تحميل ذاكرة المراجعة أو تحديثها.",
+      "immediate": "يسري النسيان فورًا؛ الإلغاء لا يستعيد الملاحظة."
     }
   },
   "backend": {
@@ -3287,7 +3340,10 @@
       "saveRunStateFailed": "تعذر حفظ حالة المراجعة: {{error}}",
       "runNotFound": "لم يتم العثور على تشغيل المراجعة.",
       "invalidStoredRun": "تشغيل مراجعة محفوظ غير صالح.",
-      "interruptedByShutdown": "توقف التطبيق قبل انتهاء هذا التشغيل. ابدأ مراجعة جديدة؛ لم تكتمل أو تتم الموافقة عليها."
+      "interruptedByShutdown": "توقف التطبيق قبل انتهاء هذا التشغيل. ابدأ مراجعة جديدة؛ لم تكتمل أو تتم الموافقة عليها.",
+      "tokenBudgetExceededDetails": "أوقف Stage0 المراجعة: {{used}} / {{limit}} رمزًا تراكميًا للإدخال والإخراج. هذا حد محلي لكل تشغيل، وليس نافذة سياق المزود أو حصة الحساب. قسّم MR أو قلّل جهد الاستدلال. المراجعة غير مكتملة.",
+      "requestBudgetExceeded": "توقف Stage0 قبل الإرسال: {{used}} / {{limit}} بايت في طلب واحد. قلّل السياق أو قسّم MR. المراجعة غير مكتملة.",
+      "wireBudgetExceeded": "توقف Stage0 قبل الطلب التالي: {{used}} / {{limit}} بايت نقل تراكمية محجوزة، بما فيها إعادة المحاولة. هذا حد محلي وليس خطأ رموز من المزود. قسّم MR. المراجعة غير مكتملة."
     },
     "credentials": {
       "accountRequired": "أدخل اسم الحساب.",

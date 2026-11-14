@@ -1,3 +1,4 @@
+import { subscribeDisplayScale } from '../common/utils/displayScale';
 import { useDesktopWindowChrome } from './hooks/useDesktopWindowChrome';
 import { useWindowChromeStore } from './store/useWindowChromeStore';
 import { useStartupSplash } from './hooks/useStartupSplash';
@@ -79,6 +80,19 @@ export const MainApp: React.FC = () => {
                 void reviewAssignedSessionAfterGitChange(event.repo_path);
               }
             })),
+            register(appServices.platform.events.subscribe<{ repoId: string }>('repo-settings-changed', (event) => {
+              if (useGitStore.getState().currentRepo?.id === event.repoId) {
+                void useVirtualMrStore.getState().refreshRepoMetadata(event.repoId)
+                  .catch((error) => useGitStore.getState().showToast(String(error), 'error'));
+              }
+            })),
+            register(appServices.platform.events.subscribe<{ repo_path: string }>('repo-settings-file-changed', (event) => {
+              const repo = useGitStore.getState().currentRepo;
+              if (repo?.local_path === event.repo_path) {
+                void useVirtualMrStore.getState().refreshRepoMetadata(repo.id)
+                  .catch((error) => useGitStore.getState().showToast(String(error), 'error'));
+              }
+            })),
             register(appServices.platform.events.subscribe<RepoInfo>('repo-open-request', (event) => {
               void attachRepoToCurrentWindow(event);
             })),
@@ -145,7 +159,9 @@ export const MainApp: React.FC = () => {
   }, [appServices, initApp, attachRepoToCurrentWindow, refreshDiff]);
 
   useEffect(() => {
-    void syncUnreadBadge(unreadCount);
+    const sync = () => { void syncUnreadBadge(unreadCount); };
+    sync();
+    return subscribeDisplayScale(sync);
   }, [unreadCount]);
 
   return (

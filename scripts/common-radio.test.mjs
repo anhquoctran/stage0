@@ -1,3 +1,4 @@
+import { readStylesheet } from './helpers/readStylesheet.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -15,10 +16,7 @@ test('Radio.tsx renders circular rounded-full radio button with inner circular d
 });
 
 test('index.css enforces circular border-radius for input[type="radio"]', () => {
-  const cssSrc = readFileSync(
-    new URL('../frontend/core/styles/index.css', import.meta.url),
-    'utf-8'
-  );
+  const cssSrc = readStylesheet(new URL('../frontend/core/styles/index.css', import.meta.url));
   assert.match(cssSrc, /input\[type="radio"\]\s*\{\s*border-radius:\s*9999px\s*!important;\s*\}/);
 });
 

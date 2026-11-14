@@ -2,7 +2,7 @@ name: Release Stage0
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v*', '!v*-nightly*']
   workflow_dispatch:
     inputs:
       publish_at:
@@ -36,10 +36,10 @@ jobs:
     if: >-
       github.repository == 'anhquoctran/stage0' &&
       (github.ref_type == 'tag' || github.ref == 'refs/heads/main') &&
+      !contains(inputs.tag || github.ref_name, '-nightly') &&
       (github.event_name == 'workflow_dispatch' ||
        github.event_name == 'schedule' ||
        github.event_name == 'workflow_call' ||
-       contains(inputs.tag || github.ref_name, '-nightly') ||
        contains(inputs.tag || github.ref_name, '-beta'))
     runs-on: ubuntu-22.04
     permissions:
@@ -119,11 +119,13 @@ jobs:
       - run: npm install --global pnpm@12.14.0
       - run: pnpm install --frozen-lockfile
       - run: node scripts/release-artifacts.mjs version "$RELEASE_TAG"
+      - name: Regenerate metadata using the tag schema
+        run: node scripts/prepare-tag-metadata.mjs
       - run: pnpm check:architecture
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm test:react
       - name: Run frozen target Node regressions
-        if: needs.prepare.outputs.channel != 'nightly'
         shell: bash
         run: |
           git show "$REGRESSION_BASE:scripts/release-regression-runner.mjs" > "$RUNNER_TEMP/stage0-regressions.mjs"
@@ -211,7 +213,6 @@ jobs:
           choco install strawberryperl --no-progress --yes
           echo 'C:\Strawberry\perl\bin' >> "$GITHUB_PATH"
       - name: Run frozen target Rust regressions
-        if: needs.prepare.outputs.channel != 'nightly'
         shell: bash
         run: |
           git show "$REGRESSION_BASE:scripts/release-regression-runner.mjs" > "$RUNNER_TEMP/stage0-regressions.mjs"
@@ -223,7 +224,8 @@ jobs:
       - name: Generate changelog for this release snapshot
         shell: bash
         run: node scripts/release-changelog.mjs "$RELEASE_TAG" "$RELEASE_SOURCE_SHA" "$RELEASE_PREVIOUS_TAG"
-      - run: node scripts/generate-about-info.mjs
+      - name: Regenerate metadata using the target platform and frozen date
+        run: node scripts/prepare-tag-metadata.mjs
       - name: Build versioned and signed packages
         shell: bash
         env:

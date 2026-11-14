@@ -53,7 +53,10 @@
       "commentPlaceholder": "댓글을 작성하거나 붙여넣고 이미지를 놓으세요…",
       "dismissWarning": "경고 닫기",
       "noContentToPreview": "미리 볼 내용이 없습니다",
-      "submit": "제출"
+      "submit": "제출",
+      "mentionTarget": "사용자, MR 또는 커밋 언급",
+      "mergeRequest": "병합 요청",
+      "commit": "커밋"
     },
     "layout": {
       "activeFile": "활성 파일: {{path}}",
@@ -111,9 +114,9 @@
       "noRecentRepositories": "최근 저장소가 없습니다",
       "removeFromRecents": "최근 항목에서 제거",
       "viewAboutStage0": "Stage0 정보 보기",
-      "switchToDarkTheme": "Catppuccin Mocha(다크)로 전환",
-      "switchToLightTheme": "Catppuccin Mocha Light(라이트)로 전환",
-      "toggleTheme": "Catppuccin Mocha 다크/라이트 전환",
+      "switchToDarkTheme": "다크 모드로 전환",
+      "switchToLightTheme": "라이트 모드로 전환",
+      "toggleTheme": "라이트/다크 모드 전환",
       "mochaLight": "Mocha 라이트",
       "mochaDark": "Mocha 다크",
       "productDescriptor": "Virtual MR 샌드박스",
@@ -199,7 +202,8 @@
       "ai-guardrails": "보안 및 가드레일",
       "git-binary": "Git 실행 파일",
       "git-credentials": "Git 자격 증명",
-      "notifications-settings": "푸시 및 알림"
+      "notifications-settings": "푸시 및 알림",
+      "appearance-density": "화면 밀도"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +277,10 @@
       "notifications-settings": {
         "title": "알림 및 푸시 알림",
         "description": "운영 체제 기본 알림과 이벤트 채널을 설정합니다."
+      },
+      "appearance-density": {
+        "title": "화면 밀도",
+        "description": "글자 크기를 바꾸지 않고 컨트롤 크기와 간격을 조절합니다."
       }
     },
     "window": {
@@ -438,6 +446,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "JSON 편집기 닫기",
       "editTitle": "preferences.json 편집",
       "description": "JSONC · 주석과 후행 쉼표 지원 · Ctrl+Space로 자동 완성 · 2초 후 자동 저장",
       "saveState": {
@@ -490,7 +499,7 @@
       "light": "라이트",
       "dark": "다크",
       "paletteTitle": "색상 팔레트",
-      "paletteDescription": "다크 모드에서 사용할 Catppuccin 색상입니다.",
+      "paletteDescription": "라이트 모드와 다크 모드의 팔레트를 각각 선택합니다.",
       "mocha": "모카",
       "latte": "라테"
     },
@@ -504,7 +513,20 @@
     "draftResetToast": "모든 설정 초안을 기본값으로 초기화했습니다(저장하려면 적용을 클릭하세요)",
     "appliedToast": "설정을 적용했습니다",
     "applyFailedWithDetail": "설정을 적용할 수 없습니다: {{error}}. 초안은 그대로 유지됩니다.",
-    "applyFailed": "설정을 적용할 수 없습니다. 초안은 그대로 유지됩니다."
+    "applyFailed": "설정을 적용할 수 없습니다. 초안은 그대로 유지됩니다.",
+    "density": {
+      "title": "화면 밀도",
+      "description": "글자 크기를 바꾸지 않고 컨트롤 크기와 간격을 조절합니다.",
+      "default": "기본값",
+      "standardDescription": "일상적인 사용을 위한 균형 잡힌 간격.",
+      "compactDescription": "작은 컨트롤과 좁은 행 간격으로 더 많은 내용을 표시합니다.",
+      "touchDescription": "터치 조작에 적합한 큰 컨트롤과 넓은 간격.",
+      "applyHint": "적용 또는 OK를 누르면 모든 창에 반영됩니다. 다시 시작할 필요가 없습니다.",
+      "conflict": "다른 창이나 편집기에서 밀도가 변경되었습니다. 환경설정을 다시 열어 적용하세요.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "방금",
@@ -834,7 +856,9 @@
       "newest": "최신 순",
       "noMatchingActivity": "이 필터에 해당하는 활동이 없습니다.",
       "deletedDiscussion": "님이 토론을 삭제했습니다",
-      "deletedReply": "님이 답글을 삭제했습니다"
+      "deletedReply": "님이 답글을 삭제했습니다",
+      "resolvedBotDiscussion": "다음 리뷰어의 토론을 해결했습니다:",
+      "reopenedBotDiscussion": "다음 리뷰어의 토론을 다시 열었습니다:"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}}을 닫았습니다",
@@ -913,7 +937,9 @@
       "reviewingNow": "검토 중",
       "aiAgentTitle": "{{name}} (AI 에이전트)",
       "deleteOwnContent": "내 댓글 또는 토론 삭제",
-      "deleteFailed": "삭제하지 못했습니다: {{error}}"
+      "deleteFailed": "삭제하지 못했습니다: {{error}}",
+      "referenceUnavailable": "현재 저장소에서 이 참조를 사용할 수 없습니다.",
+      "referenceHistoryUnavailable": "커밋 기록을 불러오지 못했습니다. 기존 참조는 계속 사용할 수 있습니다."
     },
     "listDialog": {
       "sortRecentlyUpdated": "최근 업데이트순",
@@ -1273,7 +1299,7 @@
     "copied": "복사됨",
     "author": "작성자",
     "releaseDate": "출시일",
-    "architectureCommit": "아키텍처 / 커밋",
+    "architecture": "아키텍처",
     "copyDiagnostics": "시스템 및 버전 정보 복사",
     "copiedInfo": "정보 복사됨",
     "copyInfo": "정보 복사",
@@ -2476,6 +2502,11 @@
       "unknownAuthor": "알 수 없음"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · 주석 및 후행 쉼표 지원 · 2초 후 자동 저장",
+      "editFile": "repos.json 편집",
+      "editorTitle": "저장소 설정 JSONC",
+      "fileConflict": "설정 파일이 변경되었습니다. 저장하기 전에 이 대화 상자를 닫았다가 다시 여세요.",
+      "importLegacyReviewers": "이 컴퓨터에 이전에 저장한 리뷰어 가져오기",
       "title": "저장소 설정",
       "close": "대화상자 닫기",
       "remotes": "원격 저장소",
@@ -2746,6 +2777,28 @@
       "someReviewersCouldNotFinish": "일부 AI 리뷰어가 완료하지 못했습니다: {{errors}}",
       "reviewerCouldNotStart": "AI 리뷰어를 시작할 수 없습니다: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI 리뷰어가 업데이트된 가상 MR을 확인할 수 없습니다: {{error}}"
+    },
+    "localContext": {
+      "title": "리뷰 컨텍스트 로컬 캐시",
+      "description": "변경 불가능한 소스를 재사용하고 리뷰 내 중복 컨텍스트를 줄입니다. 저장 후 적용됩니다.",
+      "modelDescription": "선택적 의미 검색은 이 기기에서 실행됩니다. 모델을 한 번 다운로드하면 소스를 임베딩 서비스에 보내지 않습니다. 부분 인덱스는 필수 diff 검토를 대체하지 않습니다.",
+      "ready": "로컬 모델 설치됨",
+      "notInstalled": "정확 일치 캐시 사용 가능; 의미 검색 모델 미설치",
+      "download": "로컬 모델 다운로드 ({{size}} MiB)",
+      "installing": "로컬 모델 다운로드 중…",
+      "clear": "모든 저장소 캐시 지우기",
+      "size": "캐시 크기: {{size}} MiB",
+      "installFailed": "로컬 모델을 설치할 수 없습니다. 연결과 디스크 여유 공간을 확인하세요.",
+      "clearFailed": "컨텍스트 캐시를 지울 수 없습니다.",
+      "repair": "모델 확인 / 복구"
+    },
+    "memory": {
+      "title": "리뷰 기억",
+      "description": "명확한 거절은 다음 답변이나 리뷰에서 학습됩니다. 관련 기억은 이 저장소의 리뷰어와 공급자 간에 공유됩니다.",
+      "empty": "기억된 피드백이 없습니다.",
+      "forget": "이 피드백 잊기",
+      "error": "리뷰 기억을 불러오거나 업데이트하지 못했습니다.",
+      "immediate": "삭제는 즉시 적용되며 취소해도 복원되지 않습니다."
     }
   },
   "backend": {
@@ -3253,7 +3306,10 @@
       "saveRunStateFailed": "검토 상태를 저장할 수 없습니다: {{error}}",
       "runNotFound": "검토 실행을 찾을 수 없습니다.",
       "invalidStoredRun": "저장된 검토 실행이 유효하지 않습니다.",
-      "interruptedByShutdown": "이 실행이 완료되기 전에 애플리케이션이 중지되었습니다. 새 검토를 시작하세요."
+      "interruptedByShutdown": "이 실행이 완료되기 전에 애플리케이션이 중지되었습니다. 새 검토를 시작하세요.",
+      "tokenBudgetExceededDetails": "Stage0가 리뷰를 중단했습니다. 누적 입력 및 출력 토큰: {{used}} / {{limit}}. 이는 실행별 로컬 제한이며 제공업체의 컨텍스트 창이나 계정 한도가 아닙니다. MR을 나누거나 추론 강도를 낮추세요. 리뷰가 완료되지 않았습니다.",
+      "requestBudgetExceeded": "Stage0가 전송 전에 중단했습니다. 단일 요청 크기: {{used}} / {{limit}}바이트. 컨텍스트를 줄이거나 MR을 나누세요. 리뷰가 완료되지 않았습니다.",
+      "wireBudgetExceeded": "Stage0가 다음 요청 전에 중단했습니다. 재시도분을 포함한 누적 전송 예약량: {{used}} / {{limit}}바이트. 제공업체의 토큰 오류가 아닌 로컬 제한입니다. MR을 나누세요. 리뷰가 완료되지 않았습니다."
     },
     "credentials": {
       "accountRequired": "계정 이름을 입력하세요.",

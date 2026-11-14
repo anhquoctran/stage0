@@ -8,7 +8,8 @@ export function createPixels(seed: number): Array<{ x: number; y: number }> {
       state ^= state << 5;
       state >>>= 0;
       if ((state & 1) === 1) {
-        pixels.push({ x, y }, { x: 4 - x, y });
+        pixels.push({ x, y });
+        if (x !== 2) pixels.push({ x: 4 - x, y });
       }
     }
   }

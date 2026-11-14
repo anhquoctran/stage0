@@ -1,4 +1,4 @@
-import React, { useId, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getMarkdownFormattingAtCaret } from '../utils/markdownFormatting';
 import type { MarkdownEditorProps } from '../types/MarkdownEditorProps';
@@ -29,6 +29,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onGenerateDraft,
   extraActions,
   mentionOptions = [],
+  onMentionQueryChange,
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
@@ -57,15 +58,20 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       ? getMentionQuery(value, mentionCaret)
       : null;
   const suggestions = mentionQuery
-    ? mentionOptions.filter((item) =>
-        `${item.label} ${item.id}`.toLocaleLowerCase().includes(mentionQuery.query)
-      )
+    ? mentionOptions.filter((item) => {
+        if (mentionQuery.trigger === '!') return item.kind === 'mr' && item.id.toLowerCase().startsWith(mentionQuery.query);
+        if (mentionQuery.trigger === '#') return item.kind === 'commit' && item.id.toLowerCase().startsWith(mentionQuery.query);
+        return `${item.label} ${item.id} ${item.description ?? ''}`.toLocaleLowerCase().includes(mentionQuery.query);
+      }).slice(0, 50)
     : [];
+  useEffect(() => {
+    onMentionQueryChange?.(mentionQuery?.query ?? null, mentionQuery?.trigger ?? '@');
+  }, [mentionQuery?.query, mentionQuery?.trigger, onMentionQueryChange]);
   const selectedMentionIndex = Math.min(activeMentionIndex, Math.max(0, suggestions.length - 1));
 
   const applyMention = (option: MentionOption) => {
     if (!mentionQuery) return;
-    const inserted = formatMention(option);
+    const inserted = formatMention(option, mentionQuery.trigger);
     const after = value.slice(mentionQuery.end);
     const separator = /^[\s.,;:!?)]/.test(after) ? '' : ' ';
     const nextCaret = mentionQuery.start + inserted.length + separator.length;

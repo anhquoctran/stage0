@@ -22,6 +22,8 @@ export function MarkdownFooterActions({
         {showActions && (
           <span>
             {mentionOptions.length > 0 && <span>{t('common.markdown.typeToMention')} · </span>}
+            {mentionOptions.some((option) => option.kind === 'mr') && <span>!MR_ID · </span>}
+            {mentionOptions.some((option) => option.kind === 'commit') && <span>#commit · </span>}
             {t('common.markdown.tipPress')} <kbd className="px-1 py-0.5 bg-surface0 border border-surface1">
               Ctrl
             </kbd> + <kbd className="px-1 py-0.5 bg-surface0 border border-surface1">Enter</kbd>{' '}

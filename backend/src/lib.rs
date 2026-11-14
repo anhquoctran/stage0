@@ -111,6 +111,9 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             match event {
+                WindowEvent::ScaleFactorChanged { .. } => {
+                    window_manager::display_geometry::scale_changed(window);
+                }
                 WindowEvent::Focused(true) => {
                     menu::sync_repo_dependent_menus_for_window(
                         &window.app_handle(), window.label(),
@@ -198,6 +201,9 @@ pub fn run() {
 
             let initial_repos = db.get_recent_repositories().unwrap_or_default();
             app.manage(db);
+            if let Ok(cache_dir) = handle.path().app_cache_dir() {
+                app.manage(features::review::local_context::LocalContextRuntime::new(cache_dir.join("review-context")));
+            }
             features::credentials::preference_snapshot::initialize(handle);
             features::preferences::recover_prepared_credentials(handle);
 
@@ -331,6 +337,11 @@ pub fn run() {
             commands::get_ai_review,
             commands::list_ai_reviews,
             commands::cancel_ai_review,
+            features::review::feedback::list_review_feedback_memories,
+            features::review::feedback::forget_review_feedback,
+            features::review::local_context::get_review_context_cache,
+            features::review::local_context::clear_review_context_cache,
+            features::review::local_context::install_review_context_model,
             commands::publish_ai_review,
             commands::fetch_ai_models,
             commands::get_available_sandboxes,
@@ -346,6 +357,9 @@ pub fn run() {
             commands::get_clone_remote_refs,
             // Repo Settings & Labels
             commands::get_repo_settings,
+            features::git::repo_settings::commands::get_repository_settings_document,
+            features::git::repo_settings::commands::commit_repository_settings,
+            features::git::repo_settings::commands::save_repository_settings_document,
             commands::save_repo_settings,
             commands::list_repo_labels,
             commands::create_repo_label,
@@ -375,6 +389,7 @@ pub fn run() {
             commands::list_mr_discussions,
             commands::delete_mr_comment,
             commands::list_mr_deletion_activity,
+            commands::list_mr_discussion_activity,
             commands::create_mr_discussion,
             commands::add_mr_comment,
             commands::resolve_mr_discussion,

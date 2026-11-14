@@ -3,6 +3,7 @@ use crate::common::text_encoding::TextEncoding;
 use crate::features::review::security;
 use std::{collections::BTreeSet, sync::Arc};
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub(super) struct SnapshotDiff {
     pub lines: Vec<String>,
     pub redacted: bool,
@@ -36,6 +37,22 @@ impl ReviewContext {
         if let Some(diff) = self.diff_cache.get(path) {
             return Ok(Arc::clone(diff));
         }
+        let gate = self.local_cache.as_ref().map(|cache| cache.read_gate());
+        let _read = gate.as_ref().and_then(|gate| gate.lock().ok());
+        let persistent_key = self.local_cache.as_ref().map(|c| {
+            c.key(
+                "diff",
+                &serde_json::json!([self.snapshot.merge_base_sha, self.snapshot.head_sha, path]),
+            )
+        });
+        if let (Some(cache), Some(key)) = (&self.local_cache, &persistent_key) {
+            if let Some(diff) = cache
+                .get(key)
+                .and_then(|v| serde_json::from_value::<SnapshotDiff>(v).ok())
+            {
+                return Ok(Arc::new(diff));
+            }
+        }
         let native = super::snapshot::git_bytes(
             &self.snapshot.repo_path,
             &[
@@ -59,6 +76,13 @@ impl ReviewContext {
         )?;
         let base = self.decoded_blob_at(path, &self.snapshot.merge_base_sha)?;
         let head = self.decoded_blob_at(path, &self.snapshot.head_sha)?;
+        if let Some(cache) = &self.local_cache {
+            for (side, blob) in [("base", base.as_ref()), ("head", head.as_ref())] {
+                if let Some(blob) = blob {
+                    cache.observe(path, side, &security::redact(&blob.text));
+                }
+            }
+        }
         let encoded = base
             .iter()
             .chain(head.iter())
@@ -157,6 +181,11 @@ impl ReviewContext {
             prefixes,
             coordinates,
         });
+        if let (Some(cache), Some(key)) = (&self.local_cache, &persistent_key) {
+            if let Ok(value) = serde_json::to_value(diff.as_ref()) {
+                cache.put(key, &value);
+            }
+        }
         let cache_bytes = diff
             .lines
             .iter()

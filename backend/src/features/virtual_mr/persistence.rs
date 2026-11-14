@@ -1,4 +1,7 @@
 mod virtual_mr_deletion_activity;
+mod virtual_mr_discussion_activity;
+pub use virtual_mr_discussion_activity::VirtualMrDiscussionActivity;
+mod discussion_resolution;
 pub use virtual_mr_deletion_activity::VirtualMrDeletionActivity;
 pub(super) mod deletion_activity;
 mod virtual_mr_session_db;

@@ -53,7 +53,10 @@
       "commentPlaceholder": "撰写评论、粘贴内容或拖放图片…",
       "dismissWarning": "关闭警告",
       "noContentToPreview": "没有可预览的内容",
-      "submit": "提交"
+      "submit": "提交",
+      "mentionTarget": "提及用户、MR 或提交",
+      "mergeRequest": "合并请求",
+      "commit": "提交"
     },
     "layout": {
       "activeFile": "当前文件：{{path}}",
@@ -111,9 +114,9 @@
       "noRecentRepositories": "没有最近使用的仓库",
       "removeFromRecents": "从最近记录中移除",
       "viewAboutStage0": "查看 Stage0 信息",
-      "switchToDarkTheme": "切换到 Catppuccin Mocha（深色）",
-      "switchToLightTheme": "切换到 Catppuccin Mocha Light（浅色）",
-      "toggleTheme": "切换 Catppuccin Mocha 深色/浅色模式",
+      "switchToDarkTheme": "切换到深色模式",
+      "switchToLightTheme": "切换到浅色模式",
+      "toggleTheme": "切换浅色/深色模式",
       "mochaLight": "Mocha 浅色",
       "mochaDark": "Mocha 深色",
       "productDescriptor": "Virtual MR 沙盒",
@@ -199,7 +202,8 @@
       "ai-guardrails": "安全与防护",
       "git-binary": "Git 可执行文件",
       "git-credentials": "Git 凭据",
-      "notifications-settings": "推送与提醒"
+      "notifications-settings": "推送与提醒",
+      "appearance-density": "界面密度"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +277,10 @@
       "notifications-settings": {
         "title": "通知与推送提醒",
         "description": "配置操作系统原生通知和事件通道。"
+      },
+      "appearance-density": {
+        "title": "界面密度",
+        "description": "调整控件大小和间距，不改变文字大小。"
       }
     },
     "window": {
@@ -438,6 +446,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "关闭 JSON 编辑器",
       "editTitle": "编辑 preferences.json",
       "description": "JSONC · 支持注释和尾随逗号 · 按 Ctrl+Space 获取补全 · 2 秒后自动保存",
       "saveState": {
@@ -490,7 +499,7 @@
       "light": "浅色",
       "dark": "深色",
       "paletteTitle": "配色方案",
-      "paletteDescription": "深色模式下使用的 Catppuccin 配色。",
+      "paletteDescription": "为浅色和深色模式分别选择配色。",
       "mocha": "摩卡",
       "latte": "拿铁"
     },
@@ -504,7 +513,20 @@
     "draftResetToast": "已将所有设置草稿重置为默认值（点击“应用”保存）",
     "appliedToast": "偏好设置已应用",
     "applyFailedWithDetail": "无法应用偏好设置：{{error}}。草稿仍然保留。",
-    "applyFailed": "无法应用偏好设置。草稿仍然保留。"
+    "applyFailed": "无法应用偏好设置。草稿仍然保留。",
+    "density": {
+      "title": "界面密度",
+      "description": "调整控件大小和间距，不改变文字大小。",
+      "default": "默认",
+      "standardDescription": "适合日常使用的均衡间距。",
+      "compactDescription": "更小的控件和更紧凑的行，以显示更多内容。",
+      "touchDescription": "更大的控件和间距，方便触控操作。",
+      "applyHint": "点击应用或OK后在所有窗口生效，无需重启。",
+      "conflict": "密度已在其他窗口或编辑器中更改。请重新打开偏好设置再应用。",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "刚刚",
@@ -834,7 +856,9 @@
       "newest": "最新",
       "noMatchingActivity": "没有符合此筛选条件的活动。",
       "deletedDiscussion": "删除了一个讨论",
-      "deletedReply": "删除了一条回复"
+      "deletedReply": "删除了一条回复",
+      "resolvedBotDiscussion": "解决了以下审查者的讨论：",
+      "reopenedBotDiscussion": "重新打开了以下审查者的讨论："
     },
     "bottomBar": {
       "closedToast": "已关闭 Virtual MR #{{title}}",
@@ -913,7 +937,9 @@
       "reviewingNow": "正在审查",
       "aiAgentTitle": "{{name}}（AI 代理）",
       "deleteOwnContent": "删除自己的评论或讨论",
-      "deleteFailed": "无法删除：{{error}}"
+      "deleteFailed": "无法删除：{{error}}",
+      "referenceUnavailable": "此引用在当前仓库中不可用。",
+      "referenceHistoryUnavailable": "无法加载提交历史。现有引用仍然可用。"
     },
     "listDialog": {
       "sortRecentlyUpdated": "最近更新",
@@ -1273,7 +1299,7 @@
     "copied": "已复制",
     "author": "作者",
     "releaseDate": "发布日期",
-    "architectureCommit": "架构 / 提交",
+    "architecture": "架构",
     "copyDiagnostics": "复制系统和版本信息",
     "copiedInfo": "信息已复制",
     "copyInfo": "复制信息",
@@ -2476,6 +2502,11 @@
       "unknownAuthor": "未知"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · 支持注释和尾随逗号 · 2 秒后自动保存",
+      "editFile": "编辑 repos.json",
+      "editorTitle": "仓库设置 JSONC",
+      "fileConflict": "设置文件已更改。保存前请关闭并重新打开此对话框。",
+      "importLegacyReviewers": "导入此前保存在此计算机上的审查者",
       "title": "仓库设置",
       "close": "关闭对话框",
       "remotes": "远程仓库",
@@ -2746,6 +2777,28 @@
       "someReviewersCouldNotFinish": "部分 AI 审查者未能完成：{{errors}}",
       "reviewerCouldNotStart": "无法启动 AI 审查者：{{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI 审查者无法检查更新后的虚拟 MR：{{error}}"
+    },
+    "localContext": {
+      "title": "评审上下文本地缓存",
+      "description": "复用不可变源代码并减少同一评审中的重复上下文。保存设置后生效。",
+      "modelDescription": "可选语义搜索在本机运行。只需下载一次模型，源代码不会发送给嵌入服务。部分索引不能替代必需的差异覆盖。",
+      "ready": "已安装本地模型",
+      "notInstalled": "精确缓存可用；尚未安装语义模型",
+      "download": "下载本地模型（{{size}} MiB）",
+      "installing": "正在下载本地模型…",
+      "clear": "清除所有仓库缓存",
+      "size": "缓存大小：{{size}} MiB",
+      "installFailed": "无法安装本地模型。请检查网络连接和磁盘空间。",
+      "clearFailed": "无法清除上下文缓存。",
+      "repair": "检查／修复模型"
+    },
+    "memory": {
+      "title": "审查记忆",
+      "description": "明确的拒绝会在下次回复或审查时记住。相关记忆由此仓库的审查者和提供商共享。",
+      "empty": "尚无已记住的反馈。",
+      "forget": "忘记此反馈",
+      "error": "无法加载或更新审查记忆。",
+      "immediate": "忘记操作立即生效，取消不会恢复。"
     }
   },
   "backend": {
@@ -3253,7 +3306,10 @@
       "saveRunStateFailed": "无法保存审查状态：{{error}}",
       "runNotFound": "未找到审查运行。",
       "invalidStoredRun": "无效的存储审查运行。",
-      "interruptedByShutdown": "应用程序在此次运行完成前已停止。请开始新的审查；它未完成或未获批准。"
+      "interruptedByShutdown": "应用程序在此次运行完成前已停止。请开始新的审查；它未完成或未获批准。",
+      "tokenBudgetExceededDetails": "Stage0 已停止评审：累计输入和输出 token 为 {{used}} / {{limit}}。这是单次运行的本地限制，并非提供商的上下文窗口或账户配额。请拆分 MR 或降低推理强度。评审尚未完成。",
+      "requestBudgetExceeded": "Stage0 在发送前停止：单次请求为 {{used}} / {{limit}} 字节。请减少上下文或拆分 MR。评审尚未完成。",
+      "wireBudgetExceeded": "Stage0 在下一次请求前停止：包含重试预留的累计传输量为 {{used}} / {{limit}} 字节。这是本地限制，并非提供商的 token 错误。请拆分 MR。评审尚未完成。"
     },
     "credentials": {
       "accountRequired": "请输入账户名称。",

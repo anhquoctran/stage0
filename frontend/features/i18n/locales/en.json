@@ -53,7 +53,10 @@
       "commentPlaceholder": "Write a comment, paste, or drop images here…",
       "dismissWarning": "Dismiss warning",
       "noContentToPreview": "No content to preview",
-      "submit": "Submit"
+      "submit": "Submit",
+      "mentionTarget": "Mention a person, MR or commit",
+      "mergeRequest": "Merge request",
+      "commit": "Commit"
     },
     "layout": {
       "activeFile": "Active file: {{path}}",
@@ -111,9 +114,9 @@
       "noRecentRepositories": "No recent repositories",
       "removeFromRecents": "Remove from recent repositories",
       "viewAboutStage0": "View about Stage0",
-      "switchToDarkTheme": "Switch to Catppuccin Mocha (dark)",
-      "switchToLightTheme": "Switch to Catppuccin Mocha Light (light)",
-      "toggleTheme": "Toggle Catppuccin Mocha dark/light mode",
+      "switchToDarkTheme": "Switch to dark mode",
+      "switchToLightTheme": "Switch to light mode",
+      "toggleTheme": "Toggle light/dark mode",
       "mochaLight": "Mocha Light",
       "mochaDark": "Mocha Dark",
       "productDescriptor": "Virtual MR Sandbox",
@@ -189,7 +192,8 @@
       "ai-guardrails": "Security & Guardrails",
       "git-binary": "Git Executable",
       "git-credentials": "Git Credentials",
-      "notifications-settings": "Push & Alerts"
+      "notifications-settings": "Push & Alerts",
+      "appearance-density": "Density"
     },
     "headers": {
       "general-keymaps": {
@@ -263,6 +267,10 @@
       "notifications-settings": {
         "title": "Notifications & Push Alerts",
         "description": "Configure native operating system notifications and event channels."
+      },
+      "appearance-density": {
+        "title": "Density",
+        "description": "Adjust control sizes and spacing without changing text size."
       }
     },
     "language": {
@@ -444,6 +452,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Close JSON editor",
       "editTitle": "Edit in preferences.json",
       "description": "JSONC · comments and trailing commas supported · Ctrl+Space for completions · autosaves after 2 seconds",
       "saveState": {
@@ -496,7 +505,7 @@
       "light": "Light",
       "dark": "Dark",
       "paletteTitle": "Color Palette",
-      "paletteDescription": "Catppuccin flavour used when dark mode is active.",
+      "paletteDescription": "Choose a palette independently for dark and light mode.",
       "mocha": "Mocha",
       "latte": "Latte"
     },
@@ -510,7 +519,20 @@
     "draftResetToast": "Reset all draft settings to defaults (click Apply to save)",
     "appliedToast": "Preferences applied successfully",
     "applyFailedWithDetail": "Could not apply preferences: {{error}}. Your drafts are still available.",
-    "applyFailed": "Could not apply preferences. Your drafts are still available."
+    "applyFailed": "Could not apply preferences. Your drafts are still available.",
+    "density": {
+      "title": "Density",
+      "description": "Adjust control sizes and spacing without changing text size.",
+      "default": "Default",
+      "standardDescription": "Balanced spacing for everyday use.",
+      "compactDescription": "Smaller controls and tighter rows to show more content.",
+      "touchDescription": "Larger controls and more space for touch interaction.",
+      "applyHint": "Changes take effect in all windows after Apply or OK. No restart required.",
+      "conflict": "Density changed in another window or editor. Reopen Preferences before applying.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "just now",
@@ -834,7 +856,9 @@
       "newest": "Newest",
       "noMatchingActivity": "No activity matching this filter.",
       "deletedDiscussion": "deleted a discussion",
-      "deletedReply": "deleted a reply"
+      "deletedReply": "deleted a reply",
+      "resolvedBotDiscussion": "resolved a discussion by",
+      "reopenedBotDiscussion": "reopened a discussion by"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} closed",
@@ -913,7 +937,9 @@
       "reviewingNow": "reviewing now",
       "aiAgentTitle": "{{name}} (AI Agent)",
       "deleteOwnContent": "Delete your comment or discussion",
-      "deleteFailed": "Could not delete: {{error}}"
+      "deleteFailed": "Could not delete: {{error}}",
+      "referenceUnavailable": "This reference is unavailable in the current repository.",
+      "referenceHistoryUnavailable": "Commit history could not be loaded. Existing references remain available."
     },
     "listDialog": {
       "sortRecentlyUpdated": "Recently updated",
@@ -1273,7 +1299,7 @@
     "copied": "Copied",
     "author": "Author",
     "releaseDate": "Release date",
-    "architectureCommit": "Architecture / Commit",
+    "architecture": "Architecture",
     "copyDiagnostics": "Copy system and version information",
     "copiedInfo": "Copied info",
     "copyInfo": "Copy info",
@@ -2476,6 +2502,11 @@
       "unknownAuthor": "Unknown"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · comments and trailing commas supported · autosaves after 2 seconds",
+      "editFile": "Edit repos.json",
+      "editorTitle": "Repository Settings JSONC",
+      "fileConflict": "The settings file changed. Close and reopen this dialog before saving.",
+      "importLegacyReviewers": "Import reviewers previously saved on this computer",
       "title": "Repository Settings",
       "close": "Close modal",
       "remotes": "Remotes",
@@ -2746,6 +2777,28 @@
       "someReviewersCouldNotFinish": "Some AI reviewers could not finish: {{errors}}",
       "reviewerCouldNotStart": "AI reviewer could not start: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI reviewer could not check the updated Virtual MR: {{error}}"
+    },
+    "localContext": {
+      "title": "Local review context cache",
+      "description": "Reuse immutable source locally and avoid repeated context within a review. Applies after saving settings.",
+      "modelDescription": "Optional semantic search runs on your device. Download the model once; source is not sent to an embedding service. The index is partial and never replaces required diff coverage.",
+      "ready": "Local model installed",
+      "notInstalled": "Exact cache available; semantic model not installed",
+      "download": "Download local model ({{size}} MiB)",
+      "installing": "Downloading local model…",
+      "clear": "Clear all repository caches",
+      "size": "Cache: {{size}} MiB",
+      "installFailed": "Could not install the local model. Check your connection and available disk space.",
+      "clearFailed": "Could not clear the context cache.",
+      "repair": "Check / repair model"
+    },
+    "memory": {
+      "title": "Review memory",
+      "description": "Clear rejections are learned during the next reviewer reply or review. Relevant memories are shared by reviewers in this repository, across providers.",
+      "empty": "No remembered feedback yet.",
+      "forget": "Forget this feedback",
+      "error": "Could not load or update review memory.",
+      "immediate": "Forgetting takes effect immediately; Cancel does not restore it."
     }
   },
   "backend": {
@@ -3253,7 +3306,10 @@
       "saveRunStateFailed": "Could not save review state: {{error}}",
       "runNotFound": "Review run not found.",
       "invalidStoredRun": "Invalid stored review run.",
-      "interruptedByShutdown": "Application stopped before this run finished. Start a new review; it was not completed or approved."
+      "interruptedByShutdown": "Application stopped before this run finished. Start a new review; it was not completed or approved.",
+      "tokenBudgetExceededDetails": "Stage0 stopped this review: {{used}} / {{limit}} cumulative input + output tokens. This is a local per-run limit, not the provider context window or account quota. Split the MR into smaller changes or reduce reviewer reasoning effort. The review is incomplete.",
+      "requestBudgetExceeded": "Stage0 stopped before sending a request: {{used}} / {{limit}} bytes in one request. Reduce the review context or split the MR. The review is incomplete.",
+      "wireBudgetExceeded": "Stage0 stopped before the next request: {{used}} / {{limit}} reserved cumulative transport bytes, including retry allowances. This is a local limit, not a provider token error. Split the MR. The review is incomplete."
     },
     "credentials": {
       "accountRequired": "Enter an account name.",

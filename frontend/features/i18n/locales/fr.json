@@ -53,7 +53,10 @@
       "commentPlaceholder": "Écrivez un commentaire, collez ou déposez des images ici…",
       "dismissWarning": "Ignorer l’avertissement",
       "noContentToPreview": "Aucun contenu à prévisualiser",
-      "submit": "Envoyer"
+      "submit": "Envoyer",
+      "mentionTarget": "Mentionner une personne, une MR ou un commit",
+      "mergeRequest": "Demande de fusion",
+      "commit": "Commit"
     },
     "layout": {
       "activeFile": "Fichier actif : {{path}}",
@@ -111,9 +114,9 @@
       "noRecentRepositories": "Aucun dépôt récent",
       "removeFromRecents": "Retirer des éléments récents",
       "viewAboutStage0": "Afficher les informations de Stage0",
-      "switchToDarkTheme": "Passer à Catppuccin Mocha (sombre)",
-      "switchToLightTheme": "Passer à Catppuccin Mocha Light (clair)",
-      "toggleTheme": "Basculer le thème clair/sombre Catppuccin Mocha",
+      "switchToDarkTheme": "Passer en mode sombre",
+      "switchToLightTheme": "Passer en mode clair",
+      "toggleTheme": "Basculer entre les modes clair et sombre",
       "mochaLight": "Mocha clair",
       "mochaDark": "Mocha sombre",
       "productDescriptor": "Sandbox Virtual MR",
@@ -199,7 +202,8 @@
       "ai-guardrails": "Sécurité et garde-fous",
       "git-binary": "Exécutable Git",
       "git-credentials": "Identifiants Git",
-      "notifications-settings": "Alertes push"
+      "notifications-settings": "Alertes push",
+      "appearance-density": "Densité"
     },
     "headers": {
       "general-keymaps": {
@@ -273,6 +277,10 @@
       "notifications-settings": {
         "title": "Notifications et alertes push",
         "description": "Configurez les notifications natives du système d’exploitation et les canaux d’événements."
+      },
+      "appearance-density": {
+        "title": "Densité",
+        "description": "Ajuster la taille des commandes et les espacements sans modifier la taille du texte."
       }
     },
     "window": {
@@ -438,6 +446,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "Fermer l’éditeur JSON",
       "editTitle": "Modifier preferences.json",
       "description": "JSONC · commentaires et virgules finales pris en charge · Ctrl+Space pour les suggestions · enregistrement automatique après 2 secondes",
       "saveState": {
@@ -490,7 +499,7 @@
       "light": "Clair",
       "dark": "Sombre",
       "paletteTitle": "Palette de couleurs",
-      "paletteDescription": "Variante Catppuccin utilisée en mode sombre.",
+      "paletteDescription": "Choisissez une palette séparément pour les modes clair et sombre.",
       "mocha": "Moka",
       "latte": "Latte"
     },
@@ -504,7 +513,20 @@
     "draftResetToast": "Tous les brouillons de réglages ont été réinitialisés (cliquez sur Appliquer pour enregistrer)",
     "appliedToast": "Préférences appliquées",
     "applyFailedWithDetail": "Impossible d’appliquer les préférences : {{error}}. Vos brouillons sont conservés.",
-    "applyFailed": "Impossible d’appliquer les préférences. Vos brouillons sont conservés."
+    "applyFailed": "Impossible d’appliquer les préférences. Vos brouillons sont conservés.",
+    "density": {
+      "title": "Densité",
+      "description": "Ajuster la taille des commandes et les espacements sans modifier la taille du texte.",
+      "default": "Par défaut",
+      "standardDescription": "Espacement équilibré pour un usage quotidien.",
+      "compactDescription": "Commandes plus petites et lignes resserrées pour afficher plus de contenu.",
+      "touchDescription": "Commandes agrandies et espacements adaptés au tactile.",
+      "applyHint": "Les changements sont appliqués à toutes les fenêtres après Appliquer ou OK, sans redémarrage.",
+      "conflict": "La densité a changé ailleurs. Rouvrez les préférences avant de les appliquer.",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "à l’instant",
@@ -841,7 +863,9 @@
       "newest": "Plus récents",
       "noMatchingActivity": "Aucune activité ne correspond à ce filtre.",
       "deletedDiscussion": "a supprimé une discussion",
-      "deletedReply": "a supprimé une réponse"
+      "deletedReply": "a supprimé une réponse",
+      "resolvedBotDiscussion": "a résolu une discussion de",
+      "reopenedBotDiscussion": "a rouvert une discussion de"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} fermé",
@@ -920,7 +944,9 @@
       "reviewingNow": "analyse en cours",
       "aiAgentTitle": "{{name}} (agent IA)",
       "deleteOwnContent": "Supprimer votre commentaire ou discussion",
-      "deleteFailed": "Suppression impossible : {{error}}"
+      "deleteFailed": "Suppression impossible : {{error}}",
+      "referenceUnavailable": "Cette référence est indisponible dans le dépôt actuel.",
+      "referenceHistoryUnavailable": "Impossible de charger l’historique des commits. Les références existantes restent disponibles."
     },
     "listDialog": {
       "sortRecentlyUpdated": "Récemment mis à jour",
@@ -1280,7 +1306,7 @@
     "copied": "Copié",
     "author": "Auteur",
     "releaseDate": "Date de publication",
-    "architectureCommit": "Architecture / commit",
+    "architecture": "Architecture",
     "copyDiagnostics": "Copier les informations système et de version",
     "copiedInfo": "Infos copiées",
     "copyInfo": "Copier les infos",
@@ -2483,6 +2509,11 @@
       "unknownAuthor": "Inconnu"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · commentaires et virgules finales acceptés · sauvegarde automatique après 2 secondes",
+      "editFile": "Modifier repos.json",
+      "editorTitle": "Paramètres du dépôt en JSONC",
+      "fileConflict": "Le fichier de configuration a changé. Fermez puis rouvrez cette boîte de dialogue avant de sauvegarder.",
+      "importLegacyReviewers": "Importer les réviseurs précédemment enregistrés sur cet ordinateur",
       "title": "Paramètres du dépôt",
       "close": "Fermer la boîte de dialogue",
       "remotes": "Dépôts distants",
@@ -2753,6 +2784,28 @@
       "someReviewersCouldNotFinish": "Certains réviseurs IA n’ont pas pu terminer : {{errors}}",
       "reviewerCouldNotStart": "Impossible de démarrer le réviseur IA : {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "Le réviseur IA n’a pas pu vérifier la MR virtuelle mise à jour : {{error}}"
+    },
+    "localContext": {
+      "title": "Cache local du contexte de revue",
+      "description": "Réutilisez le code immuable localement et évitez les répétitions de contexte. Applicable après enregistrement.",
+      "modelDescription": "La recherche sémantique facultative fonctionne sur cet appareil. Téléchargez le modèle une fois ; aucun code n’est envoyé à un service d’embedding. L’index partiel ne remplace pas la couverture des diffs.",
+      "ready": "Modèle local installé",
+      "notInstalled": "Cache exact disponible ; modèle sémantique absent",
+      "download": "Télécharger le modèle local ({{size}} MiB)",
+      "installing": "Téléchargement du modèle local…",
+      "clear": "Vider tous les caches des dépôts",
+      "size": "Taille du cache : {{size}} MiB",
+      "installFailed": "Impossible d’installer le modèle local. Vérifiez la connexion et l’espace disque.",
+      "clearFailed": "Impossible de vider le cache de contexte.",
+      "repair": "Vérifier / réparer le modèle"
+    },
+    "memory": {
+      "title": "Mémoire de revue",
+      "description": "Les refus explicites sont mémorisés lors de la prochaine réponse ou revue. Les souvenirs pertinents sont partagés entre les réviseurs et fournisseurs de ce dépôt.",
+      "empty": "Aucun retour mémorisé.",
+      "forget": "Oublier ce retour",
+      "error": "Impossible de charger ou de modifier la mémoire de revue.",
+      "immediate": "L’oubli est immédiat ; Annuler ne restaure pas ce retour."
     }
   },
   "backend": {
@@ -3260,7 +3313,10 @@
       "saveRunStateFailed": "Impossible d'enregistrer l'état de la révision : {{error}}",
       "runNotFound": "Exécution de révision introuvable.",
       "invalidStoredRun": "Exécution de révision stockée non valide.",
-      "interruptedByShutdown": "L'application s'est arrêtée avant la fin de cette exécution. Lancez une nouvelle révision."
+      "interruptedByShutdown": "L'application s'est arrêtée avant la fin de cette exécution. Lancez une nouvelle révision.",
+      "tokenBudgetExceededDetails": "Stage0 a arrêté la revue : {{used}} / {{limit}} jetons cumulés en entrée et sortie. Il s’agit d’une limite locale par exécution, pas du contexte ou du quota du fournisseur. Divisez la MR ou réduisez l’effort de raisonnement. La revue est incomplète.",
+      "requestBudgetExceeded": "Stage0 s’est arrêté avant l’envoi : {{used}} / {{limit}} octets dans une requête. Réduisez le contexte ou divisez la MR. La revue est incomplète.",
+      "wireBudgetExceeded": "Stage0 s’est arrêté avant la prochaine requête : {{used}} / {{limit}} octets de transport cumulés réservés, nouvelles tentatives comprises. Limite locale, pas une erreur de jetons du fournisseur. Divisez la MR. La revue est incomplète."
     },
     "credentials": {
       "accountRequired": "Saisissez un nom de compte.",

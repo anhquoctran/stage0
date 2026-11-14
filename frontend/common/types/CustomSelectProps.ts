@@ -13,8 +13,9 @@ export interface CustomSelectProps<T extends string> {
   buttonClassName?: string;
   menuClassName?: string;
   dropdownWidth?: string;
-  dropdownPlacement?: 'top' | 'bottom';
+  dropdownPlacement?: 'top' | 'bottom' | 'auto';
   dropdownListMaxHeight?: string;
+  portal?: boolean;
   placeholder?: string;
   align?: 'left' | 'right';
   'aria-label'?: string;

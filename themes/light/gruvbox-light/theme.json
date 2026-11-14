@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "gruvbox-light",
+  "name": "Gruvbox Light",
+  "kind": "light",
+  "version": "1.0.0",
+  "author": "morhetz / Stage0",
+  "colors": { "base": "#fbf1c7", "brand": "#af3a03", "text": "#3c3836" }
+}

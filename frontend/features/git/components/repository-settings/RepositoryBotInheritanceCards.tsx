@@ -102,8 +102,9 @@ export function RepositoryBotInheritanceCards({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                resetRepoToGlobal(currentRepoId);
-                showToast(translateUiText('git.repositoryBotInheritance.resetToast'));
+                void resetRepoToGlobal(currentRepoId)
+                  .then(() => showToast(translateUiText('git.repositoryBotInheritance.resetToast')))
+                  .catch((error) => showToast(String(error), 'error'));
               }}
               className="text-[11px] text-subtext0 hover:text-text flex items-center gap-1 cursor-pointer rounded-sm"
               title={translateUiText('git.repositoryBotInheritance.resetTitle')}

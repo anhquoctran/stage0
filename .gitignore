@@ -71,3 +71,11 @@ Thumbs.db
 *.temp
 screenshot*.png
 npm_cache/
+
+# Test coverage reports
+coverage/
+*.profraw
+*.profdata
+
+# Browser test diagnostics
+.vitest/

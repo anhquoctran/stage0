@@ -70,6 +70,11 @@
       "path": "scripts/release-artifacts.test.mjs"
     },
     {
+      "id": "active-build-version-allocation",
+      "runner": "node",
+      "path": "scripts/build-version-allocation.test.mjs"
+    },
+    {
       "id": "website-download-detection",
       "runner": "node",
       "path": "scripts/website-download-detection.test.mjs"
@@ -182,6 +187,261 @@
       "id": "regression-gate-self-defense",
       "runner": "node",
       "path": "scripts/release-regression.test.mjs"
+    },
+    {
+      "id": "about-version-no-commit",
+      "runner": "node",
+      "path": "scripts/about-version-no-commit.test.mjs"
+    },
+    {
+      "id": "tag-metadata-schema",
+      "runner": "node",
+      "path": "scripts/tag-metadata-schema.test.mjs"
+    },
+    {
+      "id": "test-coverage-policy",
+      "runner": "node",
+      "path": "scripts/test-coverage-report.test.mjs"
+    },
+    {
+      "id": "required-native-regression-checks",
+      "runner": "node",
+      "path": "scripts/configure-regression-checks.test.mjs"
+    },
+    {
+      "id": "react-portal-visible-focus",
+      "runner": "node",
+      "path": "scripts/react-dom-contracts.test.mjs"
+    },
+    {
+      "id": "ui-density-preferences",
+      "runner": "node",
+      "path": "scripts/ui-density.test.mjs"
+    },
+    {
+      "id": "high-dpi-ui",
+      "runner": "node",
+      "path": "scripts/high-dpi-ui.test.mjs"
+    },
+    {
+      "id": "high-dpi-window-geometry",
+      "runner": "rust",
+      "path": "backend/src/core/window_manager/display_geometry_tests.rs",
+      "tests": [
+        "core::window_manager::display_geometry_tests::ordinary_work_areas_preserve_current_workspace_and_preferences_sizes",
+        "core::window_manager::display_geometry_tests::high_dpi_work_area_uses_logical_pixels_and_limits_minimums_too",
+        "core::window_manager::display_geometry_tests::fractional_scaling_and_native_frames_never_overflow_the_work_area",
+        "core::window_manager::display_geometry_tests::unavailable_monitor_keeps_safe_defaults_and_tiny_work_areas_stay_positive",
+        "core::window_manager::display_geometry_tests::fitting_monitor_transitions_preserve_fractional_user_geometry"
+      ]
+    },
+    {
+      "id": "theme-engine",
+      "runner": "node",
+      "path": "scripts/theme-engine.test.mjs",
+      "requires": "frontend/core/themes/index.ts"
+    },
+    {
+      "id": "repository-settings-transactions",
+      "runner": "rust",
+      "path": "backend/src/features/git/repo_settings/tests.rs",
+      "tests": [
+        "features::git::repo_settings::tests::invalid_and_stale_writes_leave_committed_snapshot_intact",
+        "features::git::repo_settings::tests::duplicate_keys_and_resource_exhaustion_are_rejected_before_deserialization",
+        "features::git::repo_settings::tests::competing_transactions_have_one_winner_and_no_lost_update",
+        "features::git::repo_settings::tests::invalid_external_edit_is_preserved_and_recovery_is_explicit",
+        "features::git::repo_settings::tests::precommit_failure_preserves_old_state_and_uncertain_commit_never_rolls_back",
+        "features::git::repo_settings::tests::initialization_is_no_clobber_and_existing_editor_handles_remain_usable",
+        "features::git::repo_settings::tests::label_projection_preserves_mr_links_and_is_scoped_to_each_clone",
+        "features::git::repo_settings::tests::fresh_repository_initializes_defaults_at_root_once",
+        "features::git::repo_settings::tests::restart_selects_old_or_complete_new_snapshot_after_process_exit",
+        "features::git::repo_settings::tests::source_editor_rejects_invalid_and_stale_text_and_repairs_invalid_primary_atomically",
+        "features::git::repo_settings::tests::json_filename_retains_jsonc_syntax_and_migrates_old_name_without_clobbering"
+      ],
+      "requires": "backend/src/features/git/repo_settings/mod.rs"
+    },
+    {
+      "id": "repository-settings-publication",
+      "runner": "node",
+      "path": "scripts/repository-settings.test.mjs",
+      "requires": "frontend/features/virtual-mr/services/repositorySettingsDocuments.ts"
+    },
+    {
+      "id": "settings-open-reader-atomic-replace",
+      "runner": "rust",
+      "path": "backend/src/features/preferences/storage_tests.rs",
+      "tests": [
+        "features::preferences::storage_tests::atomic_replacement_keeps_open_readers_on_their_original_snapshot"
+      ],
+      "requires": "backend/src/features/git/repo_settings/mod.rs"
+    },
+    {
+      "id": "release-without-nightly",
+      "runner": "node",
+      "path": "scripts/remove-nightly-release.test.mjs"
+    },
+    {
+      "id": "updater-without-nightly",
+      "runner": "rust",
+      "path": "backend/src/features/updates/tests.rs",
+      "tests": [
+        "features::updates::tests::retired_nightly_versions_never_use_or_accept_a_nightly_feed"
+      ]
+    },
+    {
+      "id": "discussion-entity-mentions",
+      "runner": "node",
+      "path": "scripts/discussion-entity-mentions.test.mjs"
+    },
+    {
+      "id": "development-build-date-stability",
+      "runner": "node",
+      "path": "scripts/dev-metadata.test.mjs"
+    },
+    {
+      "id": "review-discussion-ownership-routing",
+      "runner": "node",
+      "path": "scripts/review-discussion-ownership.test.mjs"
+    },
+    {
+      "id": "discussion-reference-triggers",
+      "runner": "node",
+      "path": "scripts/discussion-reference-triggers.test.mjs"
+    },
+    {
+      "id": "discussion-reference-labels",
+      "runner": "node",
+      "path": "scripts/discussion-reference-labels.test.mjs"
+    },
+    {
+      "id": "review-discussion-ownership-enforcement",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/reply_ownership_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::reply_ownership_tests::human_threads_reject_unsolicited_replies_at_every_backend_boundary",
+        "features::review::runtime::tests::reply_ownership_tests::human_thread_mentions_address_only_the_requested_reviewer_and_do_not_transfer_ownership",
+        "features::review::runtime::tests::reply_ownership_tests::finding_followups_stay_with_their_original_assigned_reviewer_including_legacy_runs",
+        "features::review::runtime::tests::reply_ownership_tests::publication_rechecks_ownership_after_an_assigned_reviewer_is_removed"
+      ]
+    },
+    {
+      "id": "review-mention-only-queue",
+      "runner": "node",
+      "path": "scripts/review-mention-only.test.mjs"
+    },
+    {
+      "id": "discussion-resolution-activity-ui",
+      "runner": "node",
+      "path": "scripts/discussion-resolution-activity.test.mjs"
+    },
+    {
+      "id": "discussion-resolution-activity-storage",
+      "runner": "rust",
+      "path": "backend/src/features/virtual_mr/persistence/discussion_resolution_tests.rs",
+      "tests": [
+        "features::virtual_mr::persistence::discussion_resolution::tests::manual_bot_resolution_records_durable_actor_target_and_real_transitions_only",
+        "features::virtual_mr::persistence::discussion_resolution::tests::failed_audit_writes_roll_back_resolution_and_do_not_leave_success_history",
+        "features::virtual_mr::persistence::discussion_resolution::tests::human_threads_with_bot_replies_do_not_become_bot_review_discussions"
+      ]
+    },
+    {
+      "id": "review-mention-only-and-silent-completion",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/mention_reply_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::mention_reply_tests::finding_authorship_never_replaces_a_direct_mention_in_the_latest_comment",
+        "features::review::runtime::tests::mention_reply_tests::native_and_acp_may_finish_without_a_reply_after_reading_an_unhelpful_mention",
+        "features::review::runtime::tests::mention_reply_tests::no_reply_completion_requires_complete_context_and_rejects_stale_observations",
+        "features::review::runtime::tests::mention_reply_tests::full_review_cannot_stage_or_publish_an_unmentioned_own_finding_reply",
+        "features::review::runtime::tests::mention_reply_tests::deliberate_no_reply_checks_are_quiet_but_errors_still_notify"
+      ]
+    },
+    {
+      "id": "review-budget-diagnostics",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/budget_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::budget_tests::deepseek_cumulative_usage_explains_the_local_limit_before_executing_over_budget_calls",
+        "features::review::runtime::tests::budget_tests::budget_warning_allows_safe_completion_without_raising_limits_or_claiming_approval",
+        "features::review::runtime::tests::budget_tests::request_and_cumulative_wire_limits_are_not_misreported_as_provider_tokens"
+      ]
+    },
+    {
+      "id": "local-review-context-storage",
+      "runner": "rust",
+      "path": "backend/src/features/review/local_context/storage_tests.rs",
+      "tests": [
+        "features::review::local_context::storage_tests::exact_cache_is_durable_versioned_and_rejects_corruption",
+        "features::review::local_context::storage_tests::vector_metadata_commit_atomically_and_search_is_snapshot_scoped",
+        "features::review::local_context::storage_tests::cache_clear_invalidates_stale_readers_and_queued_writes"
+      ]
+    },
+    {
+      "id": "local-review-context-authorization",
+      "runner": "rust",
+      "path": "backend/src/features/review/context/local_context_tests.rs",
+      "tests": [
+        "features::review::context::local_context_tests::persisted_source_does_not_transfer_coverage_and_evidence_bypasses_cache",
+        "features::review::context::local_context_tests::only_successfully_delivered_large_context_can_be_referenced",
+        "features::review::context::local_context_tests::disk_failure_and_missing_embedding_model_preserve_normal_source_reads",
+        "features::review::context::local_context_tests::rejected_output_is_not_deduplicated_on_a_later_successful_read",
+        "features::review::context::local_context_tests::concurrent_exact_misses_share_only_the_source_read_not_run_coverage",
+        "features::review::context::local_context_tests::uncertified_agent_history_retention_keeps_complete_tool_outputs"
+      ]
+    },
+    {
+      "id": "local-review-context-tool-loop",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/local_context_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::local_context_tests::native_tool_loop_reuses_delivered_context_without_reusing_a_verdict"
+      ]
+    },
+    {
+      "id": "compact-review-prompt",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/compact_prompt_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::compact_prompt_tests::compact_prompt_preserves_authority_scope_and_reduces_fixed_input"
+      ]
+    },
+    {
+      "id": "local-review-embedding-validation",
+      "runner": "rust",
+      "path": "backend/src/features/review/local_context/model_tests.rs",
+      "tests": [
+        "features::review::local_context::model_tests::embeddings_are_normalized_and_invalid_vectors_are_rejected"
+      ]
+    },
+    {
+      "id": "local-review-context-preferences",
+      "runner": "node",
+      "path": "scripts/local-review-context.test.mjs"
+    },
+    {
+      "id": "review-feedback-memory-storage",
+      "runner": "rust",
+      "path": "backend/src/features/review/feedback/tests.rs",
+      "tests": [
+        "features::review::feedback::tests::human_rejection_is_durable_repo_scoped_and_does_not_change_verdict_or_thread",
+        "features::review::feedback::tests::forgetting_is_immediate_scoped_and_does_not_relearn_the_same_comment",
+        "features::review::feedback::tests::edits_deletions_and_stale_context_invalidate_feedback_without_trusting_bots",
+        "features::review::feedback::tests::questions_are_processed_once_and_explicit_retraction_forgets_prior_memory",
+        "features::review::feedback::tests::memory_and_audit_commit_together_and_never_persist_secrets"
+      ]
+    },
+    {
+      "id": "review-feedback-memory-runtime",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/feedback_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::feedback_tests::feedback_requires_complete_fresh_delivery_and_never_grants_unmentioned_reply_permission",
+        "features::review::runtime::tests::feedback_tests::native_and_acp_learn_natural_feedback_in_existing_reply_run_without_posting_an_answer",
+        "features::review::runtime::tests::feedback_tests::feedback_from_closed_mrs_is_available_to_future_reviews_only_in_the_same_repo",
+        "features::review::runtime::tests::feedback_tests::classifying_a_page_never_skips_remaining_feedback_and_relevant_context_is_bounded",
+        "features::review::runtime::tests::feedback_tests::memory_capability_never_authorizes_other_threads_findings_or_verdicts",
+        "features::review::runtime::tests::feedback_tests::shared_comment_pages_satisfy_both_views_without_bypassing_reply_guards"
+      ]
     }
   ]
 }

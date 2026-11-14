@@ -1,3 +1,6 @@
+import { RepositorySettingsJsonEditor } from './repository-settings/RepositorySettingsJsonEditor';
+import { useRepositorySettingsDraft } from './repository-settings/useRepositorySettingsDraft';
+import { hasLegacyRepoReviewers, importLegacyRepoReviewers } from '../../ai/services/importLegacyRepoReviewers';
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useState, useEffect } from 'react';
 import { X } from '../../../common/components/icons/X';
@@ -27,10 +30,12 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
     initialTab
   );
 
-  const [customRules, setCustomRules] = useState(repoSettings?.customAgentRules || '');
-  const [inheritAgents, setInheritAgents] = useState(repoSettings?.inheritGlobalAgents ?? true);
-  const [defaultBaseBranch, setDefaultBaseBranch] = useState(repoSettings?.defaultBaseBranch || 'main');
-
+  const { customRules, setCustomRules, inheritAgents, setInheritAgents,
+    defaultBaseBranch, setDefaultBaseBranch, baselineRevision, conflict, resetDraft } =
+    useRepositorySettingsDraft(isOpen, currentRepo?.id, repoSettings);
+  const [saving, setSaving] = useState(false);
+  const [isJsonEditorOpen, setIsJsonEditorOpen] = useState(false);
+  useEffect(() => { if (!isOpen) setIsJsonEditorOpen(false); }, [isOpen]);
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
@@ -38,18 +43,17 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
   }, [initialTab, isOpen]);
 
   useEffect(() => {
-    if (repoSettings) {
-      setCustomRules(repoSettings.customAgentRules || '');
-      setInheritAgents(repoSettings.inheritGlobalAgents);
-      setDefaultBaseBranch(repoSettings.defaultBaseBranch || 'main');
-    }
-  }, [repoSettings]);
+    if (isOpen && currentRepo) void useVirtualMrStore.getState().refreshRepoMetadata(currentRepo.id)
+      .catch((error) => showToast(String(error), 'error'));
+  }, [isOpen, currentRepo?.id, showToast]);
 
   if (!isOpen || !currentRepo) return null;
 
   const handleSaveSettings = async () => {
+    setSaving(true);
     try {
       await saveRepoSettings({
+        revision: baselineRevision,
         defaultBaseBranch,
         inheritGlobalAgents: inheritAgents,
         customAgentRules: customRules,
@@ -57,21 +61,21 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
       showToast(translateUiText('git.repoSettingsModal.saved'));
       onClose();
     } catch (err: any) {
-      showToast(translateUiText('git.repoSettingsModal.saveFailed', { error: err }));
-    }
+      showToast(translateUiText('git.repoSettingsModal.saveFailed', { error: String(err) }), 'error');
+    } finally { setSaving(false); }
   };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
-      onClick={onClose}
+      onClick={() => { if (!isJsonEditorOpen) onClose(); }}
     >
       <div
-        className="w-full max-w-4xl bg-base border border-surface0 shadow-2xl flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150 rounded-sm"
+        className="w-full max-w-4xl h-[720px] max-h-[calc(100dvh-2rem)] bg-base border border-surface0 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 rounded-sm"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="px-6 py-4 border-b border-surface0 flex items-center justify-between bg-crust rounded-sm">
+        <div className="shrink-0 px-6 py-4 border-b border-surface0 flex items-center justify-between bg-crust rounded-sm">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-surface0 text-text rounded-sm">
               <FolderCog className="w-5 h-5 text-brand" />
@@ -101,9 +105,9 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
         </div>
 
         {/* BODY (SIDEBAR + CONTENT) */}
-        <div className="flex-1 flex overflow-hidden min-h-[480px]">
+        <div className="flex-1 flex min-h-0 overflow-hidden">
           {/* TABS SIDEBAR */}
-          <div className="w-52 border-e border-surface0 bg-crust p-3 flex flex-col justify-between shrink-0 rounded-sm">
+          <div className="w-52 min-h-0 overflow-y-auto border-e border-surface0 bg-crust p-3 flex flex-col justify-between shrink-0 rounded-sm">
             <div className="space-y-1">
               <button
                 type="button"
@@ -180,7 +184,28 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
           </div>
 
           {/* CONTENT AREA */}
-          <div className="flex-1 p-6 overflow-y-auto bg-mantle rounded-sm">
+          <div className="flex-1 min-w-0 min-h-0 p-6 overflow-y-auto bg-mantle rounded-sm">
+            <div className="mb-4 space-y-2">
+              <p className="text-xs text-subtext0 font-mono">.stage0/repos.json</p>
+              {(repoSettings?.validationError || conflict) && <div role="alert" className="rounded-sm bg-red-600 text-white px-3 py-2 text-xs">
+                {repoSettings?.validationError || translateUiText('git.repoSettingsModal.fileConflict')}
+                <button type="button" className="ms-3 rounded-sm border-0 bg-white text-black px-2 py-1"
+                  onClick={async () => {
+                    try {
+                      await useVirtualMrStore.getState().refreshRepoMetadata(currentRepo.id);
+                      const next = useVirtualMrStore.getState().repoSettings;
+                      if (next) resetDraft(next);
+                    } catch (error) { showToast(String(error), 'error'); }
+                  }}>{translateUiText('common.layout.refresh')}</button>
+              </div>}
+              {hasLegacyRepoReviewers(currentRepo.id) && <button type="button"
+                className="rounded-sm border-0 bg-surface0 px-3 py-1.5 text-xs text-text"
+                onClick={() => { void importLegacyRepoReviewers(currentRepo.id)
+                  .then(() => showToast(translateUiText('git.repoSettingsModal.saved')))
+                  .catch((error) => showToast(String(error), 'error')); }}>
+                {translateUiText('git.repoSettingsModal.importLegacyReviewers')}
+              </button>}
+            </div>
             {activeTab === 'remotes' && <RepositoryRemotesTab />}
             {activeTab === 'branches' && (
               <RepositoryBranchesTab
@@ -202,7 +227,11 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
         </div>
 
         {/* FOOTER */}
-        <div className="px-6 py-3.5 border-t border-surface0 flex items-center justify-end bg-base/60 rounded-sm">
+        <div className="shrink-0 px-6 py-3.5 border-t border-surface0 flex items-center justify-between gap-3 bg-base/60 rounded-sm">
+          <button type="button" onClick={() => setIsJsonEditorOpen(true)} disabled={saving}
+            className="shrink-0 rounded-sm border border-surface1 bg-base px-3 py-1.5 text-xs text-subtext1 hover:text-text">
+            {translateUiText('git.repoSettingsModal.editFile')}
+          </button>
           <div className="flex items-center gap-2.5">
             <button
               type="button"
@@ -214,12 +243,15 @@ export const RepositorySettingsModal: React.FC<RepositorySettingsModalProps> = (
             <button
               type="button"
               onClick={handleSaveSettings}
+              disabled={saving || conflict || !baselineRevision || !!repoSettings?.validationError}
               className="px-5 py-1.5 bg-brand hover:bg-brand/90 text-on-accent font-semibold text-xs transition-colors cursor-pointer shadow-md shadow-brand/20 border border-brand rounded-sm"
             >
               {translateUiText('git.repoSettingsModal.save')}
             </button>
           </div>
         </div>
+        {isJsonEditorOpen && <RepositorySettingsJsonEditor key={currentRepo.id} repoId={currentRepo.id} repoPath={currentRepo.local_path}
+          onClose={() => setIsJsonEditorOpen(false)} />}
       </div>
     </div>
   );

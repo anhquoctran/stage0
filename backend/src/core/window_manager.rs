@@ -17,6 +17,9 @@ mod window_startup_context;
 pub use window_startup_context::WindowStartupContext;
 mod open_plan;
 use open_plan::OpenPlan;
+pub mod display_geometry;
+#[cfg(test)]
+mod display_geometry_tests;
 #[cfg(target_os = "windows")]
 mod snap_layout;
 pub mod startup_window;
@@ -146,6 +149,7 @@ pub fn open_repo_path(
                 format!("Failed to register repository: {error}"),
             )
         })?;
+    crate::features::git::repo_settings::commands::load_document(app, &repo.id)?;
     crate::features::credentials::schedule_system_git_credential_rescan(app);
     let context = RepositoryContext {
         identity,

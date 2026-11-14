@@ -1,7 +1,6 @@
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import { CustomSelect } from '../../../../common/components/CustomSelect';
-import { MarkdownEditor } from '../../../../common/components/MarkdownEditor';
-import { getDiscussionMentionOptions } from '../../utils/discussionMentions';
+import { DiscussionMarkdownEditor } from './DiscussionMarkdownEditor';
 import type { DiscussionReplyBoxProps } from './DiscussionReplyBoxProps';
 
 export function DiscussionReplyBox({
@@ -64,14 +63,14 @@ export function DiscussionReplyBox({
           </div>
 
           {/* GitLab Markdown Editor */}
-          <MarkdownEditor
+          <DiscussionMarkdownEditor
             value={body}
             onChange={setBody}
             rows={6}
             minHeight="150px"
             maxHeight="500px"
             autoFocus
-            mentionOptions={getDiscussionMentionOptions(session)}
+            session={session}
             placeholder={translateUiText('common.markdown.commentPlaceholder')}
             showActions={false}
             onSubmit={() => submit(resolveThread)}

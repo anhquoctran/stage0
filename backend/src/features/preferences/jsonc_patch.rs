@@ -1,7 +1,7 @@
 use jsonc_parser::cst::{CstInputValue, CstObject};
 use serde_json::{Map, Value};
 
-pub(super) fn merge_object(target: &CstObject, patch: &Map<String, Value>) -> Result<(), String> {
+pub(crate) fn merge_object(target: &CstObject, patch: &Map<String, Value>) -> Result<(), String> {
     for (key, value) in patch {
         if is_delete_marker(value) {
             if let Some(property) = target.get(key) {

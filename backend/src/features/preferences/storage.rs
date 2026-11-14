@@ -58,7 +58,7 @@ pub(super) fn secure_file(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-pub(super) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
+pub(crate) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
     let parent = path
         .parent()
         .ok_or_else(|| crate::common::messages::code("backend.preferences.invalidPath"))?;
@@ -103,9 +103,24 @@ pub(super) fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
                 )
             };
             if moved == 0 {
-                return Err(crate::common::messages::code(
-                    "backend.preferences.atomicReplaceFailed",
-                ));
+                let move_error = io::Error::last_os_error();
+                // Windows' legacy rename may reject an open destination even
+                // when the reader permits deletion. Rust's rename uses the
+                // FileRenameInfoEx/POSIX fallback for this case, preserving
+                // readers' old snapshots without deleting the destination first.
+                fs::rename(&temp, path).map_err(|error| {
+                    crate::common::messages::failure(
+                        "backend.preferences.atomicReplaceFailed",
+                        serde_json::json!({}),
+                        format!("Atomic settings replacement failed: write-through rename: {move_error}; compatible rename: {error}"),
+                    )
+                })?;
+                // The compatible rename has no write-through flag. Flush the
+                // still-open replacement after renaming; callers reconcile any
+                // failure here as an uncertain post-commit outcome.
+                file.sync_all().map_err(|_| {
+                    crate::common::messages::code("backend.preferences.durableFlushFailed")
+                })?;
             }
         }
         #[cfg(not(windows))]

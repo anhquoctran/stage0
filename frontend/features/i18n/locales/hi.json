@@ -53,7 +53,10 @@
       "commentPlaceholder": "Write a comment, paste, or drop images here…",
       "dismissWarning": "Dismiss warning",
       "noContentToPreview": "No content to preview",
-      "submit": "Submit"
+      "submit": "Submit",
+      "mentionTarget": "व्यक्ति, MR या कमिट का उल्लेख करें",
+      "mergeRequest": "मर्ज अनुरोध",
+      "commit": "कमिट"
     },
     "layout": {
       "activeFile": "Active file: {{path}}",
@@ -111,9 +114,9 @@
       "noRecentRepositories": "No recent repositories",
       "removeFromRecents": "Remove from recent repositories",
       "viewAboutStage0": "View about Stage0",
-      "switchToDarkTheme": "Switch to Catppuccin Mocha (dark)",
-      "switchToLightTheme": "Switch to Catppuccin Mocha Light (light)",
-      "toggleTheme": "Toggle Catppuccin Mocha dark/light mode",
+      "switchToDarkTheme": "Switch to dark mode",
+      "switchToLightTheme": "Switch to light mode",
+      "toggleTheme": "Toggle light/dark mode",
       "mochaLight": "Mocha Light",
       "mochaDark": "Mocha Dark",
       "productDescriptor": "Virtual MR Sandbox",
@@ -189,7 +192,8 @@
       "ai-guardrails": "Security & Guardrails",
       "git-binary": "Git Executable",
       "git-credentials": "Git Credentials",
-      "notifications-settings": "Push & Alerts"
+      "notifications-settings": "Push & Alerts",
+      "appearance-density": "इंटरफ़ेस घनत्व"
     },
     "headers": {
       "general-keymaps": {
@@ -263,6 +267,10 @@
       "notifications-settings": {
         "title": "Notifications & Push Alerts",
         "description": "Configure native operating system notifications and event channels."
+      },
+      "appearance-density": {
+        "title": "इंटरफ़ेस घनत्व",
+        "description": "टेक्स्ट का आकार बदले बिना नियंत्रणों का आकार और अंतर बदलें।"
       }
     },
     "language": {
@@ -444,6 +452,7 @@
       }
     },
     "jsonEditor": {
+      "closeEditor": "JSON संपादक बंद करें",
       "editTitle": "Edit in preferences.json",
       "description": "JSONC · comments and trailing commas supported · Ctrl+Space for completions · autosaves after 2 seconds",
       "saveState": {
@@ -496,7 +505,7 @@
       "light": "Light",
       "dark": "Dark",
       "paletteTitle": "Color Palette",
-      "paletteDescription": "Catppuccin flavour used when dark mode is active.",
+      "paletteDescription": "Choose a palette independently for dark and light mode.",
       "mocha": "Mocha",
       "latte": "Latte"
     },
@@ -510,7 +519,20 @@
     "draftResetToast": "Reset all draft settings to defaults (click Apply to save)",
     "appliedToast": "Preferences applied successfully",
     "applyFailedWithDetail": "Could not apply preferences: {{error}}. Your drafts are still available.",
-    "applyFailed": "Could not apply preferences. Your drafts are still available."
+    "applyFailed": "Could not apply preferences. Your drafts are still available.",
+    "density": {
+      "title": "इंटरफ़ेस घनत्व",
+      "description": "टेक्स्ट का आकार बदले बिना नियंत्रणों का आकार और अंतर बदलें।",
+      "default": "डिफ़ॉल्ट",
+      "standardDescription": "रोज़मर्रा के उपयोग के लिए संतुलित अंतर।",
+      "compactDescription": "अधिक सामग्री दिखाने के लिए छोटे नियंत्रण और सघन पंक्तियाँ।",
+      "touchDescription": "स्पर्श से उपयोग के लिए बड़े नियंत्रण और अधिक अंतर।",
+      "applyHint": "लागू करें या OK दबाने पर सभी विंडो में बदलाव लागू होते हैं। पुनः शुरू करना ज़रूरी नहीं।",
+      "conflict": "घनत्व किसी अन्य विंडो या संपादक में बदला गया है। लागू करने से पहले प्राथमिकताएँ फिर से खोलें।",
+      "standard": "Standard",
+      "compact": "Compact",
+      "touch": "Touch"
+    }
   },
   "dateTime": {
     "justNow": "just now",
@@ -834,7 +856,9 @@
       "newest": "Newest",
       "noMatchingActivity": "No activity matching this filter.",
       "deletedDiscussion": "ने एक चर्चा हटाई",
-      "deletedReply": "ने एक जवाब हटाया"
+      "deletedReply": "ने एक जवाब हटाया",
+      "resolvedBotDiscussion": "की चर्चा हल की:",
+      "reopenedBotDiscussion": "की चर्चा फिर से खोली:"
     },
     "bottomBar": {
       "closedToast": "Virtual MR #{{title}} closed",
@@ -913,7 +937,9 @@
       "reviewingNow": "reviewing now",
       "aiAgentTitle": "{{name}} (AI Agent)",
       "deleteOwnContent": "अपनी टिप्पणी या चर्चा हटाएँ",
-      "deleteFailed": "हटाया नहीं जा सका: {{error}}"
+      "deleteFailed": "हटाया नहीं जा सका: {{error}}",
+      "referenceUnavailable": "यह संदर्भ वर्तमान रिपॉज़िटरी में उपलब्ध नहीं है।",
+      "referenceHistoryUnavailable": "कमिट इतिहास लोड नहीं हो सका। मौजूदा संदर्भ उपलब्ध रहेंगे।"
     },
     "listDialog": {
       "sortRecentlyUpdated": "Recently updated",
@@ -1273,7 +1299,7 @@
     "copied": "Copied",
     "author": "Author",
     "releaseDate": "Release date",
-    "architectureCommit": "Architecture / Commit",
+    "architecture": "Architecture",
     "copyDiagnostics": "Copy system and version information",
     "copiedInfo": "Copied info",
     "copyInfo": "Copy info",
@@ -2476,6 +2502,11 @@
       "unknownAuthor": "Unknown"
     },
     "repoSettingsModal": {
+      "editorDescription": "JSONC · टिप्पणियाँ और अंतिम कॉमा समर्थित · 2 सेकंड बाद अपने आप सहेजता है",
+      "editFile": "repos.json संपादित करें",
+      "editorTitle": "रिपॉज़िटरी सेटिंग JSONC",
+      "fileConflict": "सेटिंग फ़ाइल बदल गई है। सहेजने से पहले इस संवाद को बंद करके फिर से खोलें।",
+      "importLegacyReviewers": "इस कंप्यूटर पर पहले सहेजे गए समीक्षकों को आयात करें",
       "title": "Repository Settings",
       "close": "Close modal",
       "remotes": "Remotes",
@@ -2746,6 +2777,28 @@
       "someReviewersCouldNotFinish": "Some AI reviewers could not finish: {{errors}}",
       "reviewerCouldNotStart": "AI reviewer could not start: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI reviewer could not check the updated Virtual MR: {{error}}"
+    },
+    "localContext": {
+      "title": "स्थानीय समीक्षा संदर्भ कैश",
+      "description": "अपरिवर्तनीय स्रोत का पुनः उपयोग करें और समीक्षा में दोहराया संदर्भ घटाएँ। सहेजने के बाद लागू होता है।",
+      "modelDescription": "वैकल्पिक अर्थ आधारित खोज इस उपकरण पर चलती है। मॉडल एक बार डाउनलोड करें; स्रोत किसी एम्बेडिंग सेवा को नहीं भेजा जाता। आंशिक इंडेक्स आवश्यक diff कवरेज का विकल्प नहीं है।",
+      "ready": "स्थानीय मॉडल स्थापित है",
+      "notInstalled": "सटीक कैश उपलब्ध है; अर्थ आधारित मॉडल स्थापित नहीं है",
+      "download": "स्थानीय मॉडल डाउनलोड करें ({{size}} MiB)",
+      "installing": "स्थानीय मॉडल डाउनलोड हो रहा है…",
+      "clear": "सभी रिपॉजिटरी के कैश मिटाएँ",
+      "size": "कैश आकार: {{size}} MiB",
+      "installFailed": "स्थानीय मॉडल स्थापित नहीं हो सका। कनेक्शन और डिस्क स्थान जाँचें।",
+      "clearFailed": "संदर्भ कैश मिटाया नहीं जा सका।",
+      "repair": "मॉडल जाँचें / सुधारें"
+    },
+    "memory": {
+      "title": "समीक्षा स्मृति",
+      "description": "स्पष्ट अस्वीकृतियाँ अगली प्रतिक्रिया या समीक्षा में याद की जाती हैं। प्रासंगिक स्मृतियाँ इस रिपॉज़िटरी के समीक्षकों और प्रदाताओं में साझा होती हैं।",
+      "empty": "अभी कोई प्रतिक्रिया याद नहीं की गई है।",
+      "forget": "यह प्रतिक्रिया भूलें",
+      "error": "समीक्षा स्मृति लोड या अपडेट नहीं हो सकी।",
+      "immediate": "भूलना तुरंत लागू होता है; रद्द करने से इसे वापस नहीं लाया जाता।"
     }
   },
   "backend": {
@@ -3253,7 +3306,10 @@
       "saveRunStateFailed": "समीक्षा स्थिति सहेजी नहीं जा सकी: {{error}}",
       "runNotFound": "समीक्षा रन नहीं मिला।",
       "invalidStoredRun": "अमान्य संग्रहीत समीक्षा रन।",
-      "interruptedByShutdown": "यह रन समाप्त होने से पहले एप्लिकेशन बंद हो गया। एक नई समीक्षा शुरू करें।"
+      "interruptedByShutdown": "यह रन समाप्त होने से पहले एप्लिकेशन बंद हो गया। एक नई समीक्षा शुरू करें।",
+      "tokenBudgetExceededDetails": "Stage0 ने समीक्षा रोकी: कुल इनपुट और आउटपुट टोकन {{used}} / {{limit}} हैं। यह प्रति रन स्थानीय सीमा है, प्रदाता की संदर्भ विंडो या खाते का कोटा नहीं। MR को छोटे हिस्सों में बाँटें या तर्क प्रयास घटाएँ। समीक्षा अधूरी है।",
+      "requestBudgetExceeded": "Stage0 अनुरोध भेजने से पहले रुका: एक अनुरोध में {{used}} / {{limit}} बाइट। संदर्भ घटाएँ या MR बाँटें। समीक्षा अधूरी है।",
+      "wireBudgetExceeded": "Stage0 अगले अनुरोध से पहले रुका: पुनः प्रयास सहित आरक्षित संचयी संचार {{used}} / {{limit}} बाइट। यह स्थानीय सीमा है, प्रदाता की टोकन त्रुटि नहीं। MR बाँटें। समीक्षा अधूरी है।"
     },
     "credentials": {
       "accountRequired": "Enter an account name.",
