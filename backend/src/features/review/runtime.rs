@@ -7,6 +7,7 @@ pub(super) mod completion_notification;
 mod discussion_observation;
 mod discussions;
 mod engine;
+mod feedback_actions;
 mod initial_context;
 mod prompt;
 mod reply_completion;
@@ -59,6 +60,9 @@ pub async fn run(
             100
         )
     ));
+    if let Ok(mut ctx) = context.lock() {
+        ctx.feedback_enabled = true;
+    }
     super::local_context::attach(
         app.clone(),
         Arc::clone(&context),

@@ -211,3 +211,20 @@ CREATE TABLE IF NOT EXISTS app_settings (
     value TEXT NOT NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Human feedback is local to this repository; never a model verdict cache.
+CREATE TABLE IF NOT EXISTS review_feedback (
+    id TEXT PRIMARY KEY,
+    repo_id TEXT NOT NULL REFERENCES repositories(id) ON DELETE CASCADE,
+    discussion_id TEXT NOT NULL UNIQUE,
+    comment_id TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    source_key TEXT NOT NULL,
+    processed_key TEXT NOT NULL,
+    finding TEXT NOT NULL CHECK(length(finding) <= 800),
+    feedback TEXT NOT NULL CHECK(length(feedback) <= 800),
+    reason TEXT NOT NULL CHECK(length(reason) <= 400),
+    active INTEGER NOT NULL CHECK(active IN (0,1)),
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_review_feedback_repo ON review_feedback(repo_id, active, updated_at);

@@ -59,7 +59,7 @@ pub(super) async fn execute_with_adapter(
         .lock()
         .map(|ctx| ctx.local_context_metrics().is_some())
         .unwrap_or(false);
-    let system = if compact {
+    let mut system = if compact {
         super::compact_prompt::build(config)
     } else {
         build_system_prompt(config)
@@ -109,6 +109,7 @@ pub(super) async fn execute_with_adapter(
     {
         registry.enable_related_context();
     }
+    super::feedback_actions::configure(db, run, context, &mut registry, &mut initial, &mut system)?;
     let tools = registry.definitions();
     let mut wire_bytes = 0usize;
     let mut recovered_missing_tool_call = false;

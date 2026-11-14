@@ -13,7 +13,7 @@ use crate::{
 use serde_json::{json, Value};
 use std::sync::{Arc, Mutex};
 
-fn present(comment: &VirtualMrCommentDb, offset: usize, limit: usize) -> Value {
+pub(super) fn present(comment: &VirtualMrCommentDb, offset: usize, limit: usize) -> Value {
     let body = security::redact(&comment.body);
     let total = body.chars().count();
     let end = offset.saturating_add(limit).min(total);
@@ -25,7 +25,7 @@ fn present(comment: &VirtualMrCommentDb, offset: usize, limit: usize) -> Value {
         "screeningFlags":input_screen::flags(&comment.body)})
 }
 
-fn record(observation: &mut DiscussionObservation, comment: &Value) {
+pub(super) fn record(observation: &mut DiscussionObservation, comment: &Value) {
     let start = comment["bodyOffset"].as_u64().unwrap() as usize;
     let end = start + comment["body"].as_str().unwrap().chars().count();
     observation.record(
@@ -117,25 +117,39 @@ pub(super) fn read_comment(
 ) -> Result<Value, String> {
     let id = call.arguments["discussionId"].as_str().unwrap();
     let revision = call.arguments["discussionRevision"].as_str().unwrap();
-    let observation = state.observations.get_mut(id).ok_or_else(|| {
+    let feedback_page = state.feedback_observations.get(id).is_some_and(|o| {
+        o.revision == revision
+            && [o.root_id.as_str(), o.target_id.as_str()]
+                .contains(&call.arguments["commentId"].as_str().unwrap())
+    });
+    let observation = if feedback_page {
+        &mut state.feedback_observations
+    } else {
+        &mut state.observations
+    }
+    .get_mut(id)
+    .ok_or_else(|| {
         crate::common::messages::failure(
             "backend.review.listDiscussionBeforePages",
             serde_json::json!({}),
             "List the discussion before reading comment pages".into(),
         )
     })?;
-    let discussion = db
-        .list_discussions(&run.session_id)
-        .map_err(|e| e.to_string())?
-        .into_iter()
-        .find(|d| d.id == id && !d.is_resolved)
-        .ok_or_else(|| {
-            crate::common::messages::failure(
-                "backend.review.openDiscussionNotFound",
-                serde_json::json!({}),
-                "Open discussion not found".into(),
-            )
-        })?;
+    let discussion = if feedback_page {
+        crate::features::review::feedback::thread(db, id)?
+    } else {
+        db.list_discussions(&run.session_id)
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .find(|d| d.id == id && !d.is_resolved)
+    }
+    .ok_or_else(|| {
+        crate::common::messages::failure(
+            "backend.review.openDiscussionNotFound",
+            serde_json::json!({}),
+            "Open discussion not found".into(),
+        )
+    })?;
     if observation.revision != revision || discussion_revision::of(&discussion) != revision {
         return Err(crate::common::messages::failure(
             "backend.review.discussionChangedRelist",
@@ -173,6 +187,15 @@ pub(super) fn read_comment(
         })?
         .deliver_external("read_discussion_comment", present(comment, offset, 1200))?;
     record(observation, &value);
+    // One successful read can satisfy both independently listed views of the same revision.
+    let other = if feedback_page {
+        &mut state.observations
+    } else {
+        &mut state.feedback_observations
+    };
+    if let Some(other) = other.get_mut(id).filter(|other| other.revision == revision) {
+        record(other, &value);
+    }
     Ok(value)
 }
 

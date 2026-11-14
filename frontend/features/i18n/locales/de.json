@@ -2791,6 +2791,14 @@
       "installFailed": "Lokales Modell konnte nicht installiert werden. Verbindung und freien Speicher prüfen.",
       "clearFailed": "Kontextcache konnte nicht geleert werden.",
       "repair": "Modell prüfen / reparieren"
+    },
+    "memory": {
+      "title": "Review-Erinnerungen",
+      "description": "Eindeutige Ablehnungen werden bei der nächsten Antwort oder Prüfung erfasst. Relevante Erinnerungen gelten für alle Reviewer und Anbieter dieses Repositorys.",
+      "empty": "Noch keine Rückmeldungen gespeichert.",
+      "forget": "Diese Rückmeldung vergessen",
+      "error": "Review-Erinnerungen konnten nicht geladen oder aktualisiert werden.",
+      "immediate": "Vergessen gilt sofort; Abbrechen stellt die Erinnerung nicht wieder her."
     }
   },
   "backend": {

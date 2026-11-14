@@ -417,6 +417,31 @@
       "id": "local-review-context-preferences",
       "runner": "node",
       "path": "scripts/local-review-context.test.mjs"
+    },
+    {
+      "id": "review-feedback-memory-storage",
+      "runner": "rust",
+      "path": "backend/src/features/review/feedback/tests.rs",
+      "tests": [
+        "features::review::feedback::tests::human_rejection_is_durable_repo_scoped_and_does_not_change_verdict_or_thread",
+        "features::review::feedback::tests::forgetting_is_immediate_scoped_and_does_not_relearn_the_same_comment",
+        "features::review::feedback::tests::edits_deletions_and_stale_context_invalidate_feedback_without_trusting_bots",
+        "features::review::feedback::tests::questions_are_processed_once_and_explicit_retraction_forgets_prior_memory",
+        "features::review::feedback::tests::memory_and_audit_commit_together_and_never_persist_secrets"
+      ]
+    },
+    {
+      "id": "review-feedback-memory-runtime",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/feedback_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::feedback_tests::feedback_requires_complete_fresh_delivery_and_never_grants_unmentioned_reply_permission",
+        "features::review::runtime::tests::feedback_tests::native_and_acp_learn_natural_feedback_in_existing_reply_run_without_posting_an_answer",
+        "features::review::runtime::tests::feedback_tests::feedback_from_closed_mrs_is_available_to_future_reviews_only_in_the_same_repo",
+        "features::review::runtime::tests::feedback_tests::classifying_a_page_never_skips_remaining_feedback_and_relevant_context_is_bounded",
+        "features::review::runtime::tests::feedback_tests::memory_capability_never_authorizes_other_threads_findings_or_verdicts",
+        "features::review::runtime::tests::feedback_tests::shared_comment_pages_satisfy_both_views_without_bypassing_reply_guards"
+      ]
     }
   ]
 }
